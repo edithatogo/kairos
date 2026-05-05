@@ -17,11 +17,13 @@ Distributed implementations must preserve the same message semantics:
   minimum aggregation.
 
 The current Track 35 crates intentionally compile without system MPI or tonic
-dependencies. Their transport methods panic until the real backends are wired in.
+dependencies. Their transports are dependency-free protocol emulators: they
+round-trip messages locally, count barriers, and reduce GVT candidates so
+transport semantics can be checked before real MPI/gRPC runtimes are wired in.
 
 Validation commands:
 
 ```powershell
-cargo test --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi
-cargo test --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc
+cargo check --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi --tests
+cargo check --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc --tests
 ```

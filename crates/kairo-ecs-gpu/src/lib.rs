@@ -19,7 +19,8 @@ pub mod wgpu {
 
 pub use buffer::{BufferUsage, GpuBuffer, GpuBufferError, TypedGpuBuffer};
 pub use compute::{
-    AgentParticle, CpuFallbackCompute, DesEvent, GpuCompute, GpuComputeError, GpuState,
-    GpuStepStats,
+    AgentParticle, CpuFallbackCompute, DesEvent, GpuBackendAvailability, GpuCompute,
+    GpuComputeError, GpuState, GpuStepStats, CUDA_BACKEND_NOT_CONFIGURED,
+    WGPU_BACKEND_NOT_CONFIGURED,
 };
 pub use transfer::{TransferDirection, TransferPlan, TransferStep};

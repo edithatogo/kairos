@@ -1,6 +1,8 @@
 # Kairos WebGPU Demo
 
-This static demo scaffolds the Track 33 browser experience. It detects WebGPU availability, exposes agent-count and backend controls, and runs a CPU fallback animation until the Wasm/WebGPU module is integrated.
+This static demo scaffolds the Track 33 browser experience. It detects WebGPU API availability, exposes agent-count and backend controls, and runs a dependency-free CPU fallback animation until the Wasm/WebGPU module is integrated.
+
+Current contract: selecting WebGPU reports `backend not configured` when the browser API is present. The page does not claim browser GPU dispatch or performance until Track 09 Wasm bindings and real WebGPU device setup are wired.
 
 Run the local smoke test:
 

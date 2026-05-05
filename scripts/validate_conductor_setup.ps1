@@ -104,6 +104,8 @@ foreach ($track in $trackDirs) {
     }
 }
 
+& (Join-Path $PSScriptRoot "validate_track_no_skip_claims.ps1")
+
 $workflowFiles = @(Get-ChildItem -LiteralPath ".github/workflows" -Filter "*.yml")
 $bootstrapAllowed = @(
     "ci-bindings.yml"

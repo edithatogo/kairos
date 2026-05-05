@@ -61,9 +61,42 @@ impl StreamMessage {
     pub fn arrow_field_names() -> &'static [&'static str] {
         arrow_schema::EVENT_LOG_FIELDS
     }
+
+    pub fn validate_event_log_contract(&self) -> Result<(), StreamError> {
+        if self.stream != arrow_schema::EVENT_LOG_STREAM {
+            return Err(StreamError::new(format!(
+                "stream {} does not match {}",
+                self.stream,
+                arrow_schema::EVENT_LOG_STREAM
+            )));
+        }
+        if self.run_id.trim().is_empty() {
+            return Err(StreamError::new("run_id must not be empty"));
+        }
+        if self.time_scale != "ticks" {
+            return Err(StreamError::new(format!(
+                "time_scale must be ticks, got {}",
+                self.time_scale
+            )));
+        }
+        if self.event_kind.trim().is_empty() {
+            return Err(StreamError::new("event_kind must not be empty"));
+        }
+        if self
+            .payload_ref
+            .as_ref()
+            .is_some_and(|payload_ref| payload_ref.trim().is_empty())
+        {
+            return Err(StreamError::new(
+                "payload_ref must not be empty when present",
+            ));
+        }
+
+        Ok(())
+    }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StreamStatus {
     Dispatched,
     Cancelled,
@@ -194,6 +227,7 @@ pub mod adapters {
 
     impl EventSink for InMemoryStream {
         fn publish(&mut self, message: StreamMessage) -> Result<(), StreamError> {
+            message.validate_event_log_contract()?;
             self.messages.push(message);
             Ok(())
         }
@@ -268,6 +302,7 @@ mod tests {
                 "payload_ref"
             ]
         );
+        assert!(message.validate_event_log_contract().is_ok());
     }
 
     #[test]
@@ -286,5 +321,34 @@ mod tests {
         let contract = PacingContract::new(Duration::ZERO, Duration::from_millis(1));
 
         assert!(contract.is_err());
+    }
+
+    #[test]
+    fn event_log_contract_rejects_invalid_required_fields() {
+        let mut message = StreamMessage::event_log("run-1", 42, 7);
+        message.run_id.clear();
+
+        let error = message
+            .validate_event_log_contract()
+            .expect_err("blank run_id should fail");
+
+        assert_eq!(error.to_string(), "run_id must not be empty");
+    }
+
+    #[test]
+    fn in_memory_sink_rejects_invalid_contract_message() {
+        let mut stream = InMemoryStream::default();
+        let mut message = StreamMessage::event_log("run-1", 42, 7);
+        message.payload_ref = Some(" ".to_string());
+
+        let error = stream
+            .publish(message)
+            .expect_err("blank payload_ref should fail");
+
+        assert_eq!(
+            error.to_string(),
+            "payload_ref must not be empty when present"
+        );
+        assert!(stream.is_empty());
     }
 }

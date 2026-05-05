@@ -2,11 +2,11 @@
 
 ## Summary
 
-Track 40 is in spec-design mode. No `kairo-ecs-debug` crate exists yet. This track defines the time-travel debugging contracts — event trace format, snapshot + delta encoding, debugger CLI, and browser timeline scrubber — before any implementation lands. The trace recorder observes the scheduler without modifying its behavior.
+Track 40 has moved beyond spec-design into an offline-testable scaffold. The `kairo-ecs-debug` crate now defines the trace schema, sparse snapshots, event deltas, reconstruction, stepping, backward movement, tick seek, inspection, breakpoint matching, and trace-line validation. The browser demo renders a versioned fixture and has a Node-based smoke validator that checks the trace fixture and step/back controls without browser dependencies.
 
 ## Files changed
 
-No code files were changed in this handoff pass.
+`crates/kairo-ecs-debug/`, `docs/debugging/`, `website/time-travel-demo/`, and this handoff file.
 
 ## Contracts consumed
 
@@ -14,11 +14,12 @@ No code files were changed in this handoff pass.
 
 ## Contracts changed
 
-No contracts have been changed yet for this track.
+No upstream scheduler or experiment-runner contracts were changed. The debug crate exposes `TRACE_SCHEMA = "kairo.ecs.trace.v1"` and `validate_trace_lines` as the local trace conformance surface for this scaffold.
 
 ## Tests added
 
-No track-specific tests were added yet. The active gate is the workspace compilation check plus the conductor validators in `scripts\validate_conductor_setup.ps1` and `scripts\validate_track_coverage.ps1`.
+- Unit tests in `crates/kairo-ecs-debug/src/lib.rs` cover replay reconstruction, step/back/goto, breakpoint matching, schema encoding, and trace-line validation.
+- `website/time-travel-demo/validate-demo.mjs` validates the fixture schema, monotonic ticks, initial render, and step/back behavior with a minimal DOM harness.
 
 ## Known risks
 
@@ -26,4 +27,4 @@ The trace file size for large simulations (10M+ events) is the primary scalabili
 
 ## Integration notes
 
-Next step: publish the event trace format contract with the scheduler observer trait, then scaffold the debug crate once the core event dispatch hook points are defined and the conformance snapshot format is stable.
+Next step: integrate the trace recorder with scheduler observer hook points and replace the line-oriented scaffold encoding with the Track 04 Arrow IPC trace serialization once that schema is available in this worker's writable scope.

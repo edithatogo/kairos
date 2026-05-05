@@ -4,6 +4,7 @@ const agentCountSelect = document.querySelector("#agent-count");
 const backendSelect = document.querySelector("#backend");
 const resetButton = document.querySelector("#reset");
 const metricBackend = document.querySelector("#metric-backend");
+const metricDispatch = document.querySelector("#metric-dispatch");
 const metricAgents = document.querySelector("#metric-agents");
 const metricFps = document.querySelector("#metric-fps");
 const metricCompute = document.querySelector("#metric-compute");
@@ -14,6 +15,27 @@ let lastFrame = performance.now();
 
 function hasWebGpu() {
   return Boolean(navigator.gpu);
+}
+
+function resolveBackendStatus(requestedBackend) {
+  if (requestedBackend !== "webgpu") {
+    return {
+      backendLabel: "CPU fallback",
+      dispatchLabel: "dependency-free reference step"
+    };
+  }
+
+  if (!hasWebGpu()) {
+    return {
+      backendLabel: "WebGPU API unavailable",
+      dispatchLabel: "CPU fallback active"
+    };
+  }
+
+  return {
+    backendLabel: "WebGPU API detected",
+    dispatchLabel: "backend not configured"
+  };
 }
 
 function resetAgents() {
@@ -50,8 +72,9 @@ function frame(now) {
   lastFrame = now;
 
   const requestedBackend = backendSelect.value;
-  const effectiveBackend = requestedBackend === "webgpu" && hasWebGpu() ? "WebGPU ready" : "CPU fallback";
-  metricBackend.textContent = effectiveBackend;
+  const backendStatus = resolveBackendStatus(requestedBackend);
+  metricBackend.textContent = backendStatus.backendLabel;
+  metricDispatch.textContent = backendStatus.dispatchLabel;
 
   const computeStart = performance.now();
   stepCpu(dt);

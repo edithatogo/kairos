@@ -1,3 +1,10 @@
+use std::collections::HashSet;
+
+use crate::{
+    error::{validation_error, FmiResult},
+    FmiError,
+};
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ModelDescription {
     pub model_name: String,
@@ -55,6 +62,35 @@ impl ModelDescription {
         self
     }
 
+    pub fn validate(&self) -> FmiResult<()> {
+        require_non_empty("modelName", &self.model_name)?;
+        require_non_empty("guid", &self.guid)?;
+        require_non_empty("generationTool", &self.generation_tool)?;
+
+        let mut names = HashSet::new();
+        let mut value_references = HashSet::new();
+        for variable in &self.variables {
+            require_non_empty("ScalarVariable.name", &variable.name)?;
+            if !names.insert(variable.name.as_str()) {
+                return Err(validation_error(
+                    "modelDescription.xml",
+                    format!("duplicate ScalarVariable name '{}'", variable.name),
+                ));
+            }
+            if !value_references.insert(variable.value_reference) {
+                return Err(validation_error(
+                    "modelDescription.xml",
+                    format!(
+                        "duplicate ScalarVariable valueReference {}",
+                        variable.value_reference
+                    ),
+                ));
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn to_fmi2_xml(&self) -> String {
         let mut xml = String::new();
         xml.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -89,6 +125,17 @@ impl ModelDescription {
         xml.push_str("  </ModelStructure>\n");
         xml.push_str("</fmiModelDescription>\n");
         xml
+    }
+}
+
+fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
+    if value.trim().is_empty() {
+        Err(validation_error(
+            "modelDescription.xml",
+            format!("{field} must not be empty"),
+        ))
+    } else {
+        Ok(())
     }
 }
 
@@ -170,5 +217,18 @@ mod tests {
         assert!(xml.contains("fmiVersion=\"2.0\""));
         assert!(xml.contains("name=\"position\""));
         assert!(xml.contains("<Real />"));
+    }
+
+    #[test]
+    fn rejects_duplicate_value_references() {
+        let error = ModelDescription::new("oscillator", "{kairo-test}")
+            .with_variable(ScalarVariable::real_input("force", 1))
+            .with_variable(ScalarVariable::real_output("position", 1))
+            .validate()
+            .expect_err("duplicate value reference");
+
+        assert!(error
+            .to_string()
+            .contains("duplicate ScalarVariable valueReference 1"));
     }
 }

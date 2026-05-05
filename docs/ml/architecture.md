@@ -7,9 +7,13 @@ dependencies. The crate boundary is:
 - `OrtSession`: ONNX Runtime-facing session wrapper surface. The current scaffold
   performs deterministic shape-checked passthrough inference until the real ONNX
   dependency is introduced.
+- `ModelMetadata::validate` and `OrtSession::validate_input`: dependency-free
+  checks for model identity, non-empty shapes, non-zero dimensions, and input
+  shape compatibility.
 - `NeuralSystem`: simulation tick hook contract for model-backed systems.
 - `InferenceTickHook`: phase-filtered runner that can execute models before or
-  after the ECS systems owned by Track 01.
+  after the ECS systems owned by Track 01. `try_register` validates model
+  metadata before a system is accepted.
 
 All backends remain feature-gated:
 
@@ -20,4 +24,5 @@ All backends remain feature-gated:
 | `burn` | Pure Rust inference | scaffold alias |
 | `gymnasium` | Python/RL integration | Rust-side space contract |
 
-The default build must not link ONNX Runtime, TensorRT, Burn, or Python.
+The default build must not link ONNX Runtime, TensorRT, Burn, or Python. The
+current ONNX-facing session is a contract double, not an ONNX Runtime binding.

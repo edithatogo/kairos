@@ -2,7 +2,7 @@
 
 ## Summary
 
-Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. The current implementation covers feature-gated crate boundaries, unpacked FMU layout detection, FMI 2.0 ABI function-table and safe instance wrappers, initial `modelDescription.xml` generation, minimal AAS JSON descriptor serialization, change-detected digital-twin publications, state snapshot/diff/apply helpers, docs, and a runnable basic-import example.
+Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. The current implementation covers feature-gated crate boundaries, unpacked FMU layout detection, dependency-free FMU import/export layout validation, FMI 2.0 ABI function-table and safe instance wrappers, initial `modelDescription.xml` generation with structural validation, minimal AAS JSON descriptor serialization with structural validation, change-detected digital-twin publications, state snapshot/diff/apply helpers, docs, and a runnable basic-import example.
 
 ## Files created
 
@@ -13,6 +13,7 @@ Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. 
 - Passed: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --no-default-features`
 - Passed: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2`
 - Passed: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`
+- Passed: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests`
 - Passed: `cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml`
 - Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2`; the Rust crate compiles, then Windows linking fails because `link.exe` resolves to `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe` and reports `couldn't create signal pipe, Win32 error 5`.
 
@@ -52,7 +53,7 @@ Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. 
 ## Risks and unresolved questions
 
 - `.fmu` archive extraction and dynamic symbol loading are blocked until dependency policy accepts archive and dynamic-loading crates such as `zip` and `libloading`, or an equivalent internal implementation is provided.
-- Root workspace integration is blocked for this worker because Track 38 ownership did not include root `Cargo.toml`; the crate is currently an isolated package with its own `[workspace]`.
+- Root workspace integration is complete: `crates/kairo-ecs-fmi` is listed in the root workspace and covered by `cargo check --workspace`.
 - FMI model exchange (ME) semantics deferred to post-v1.0; co-simulation (CS) only in initial release.
 - FMI 3.0 scheduled execution and clock support deferred to post-v1.0.
 - FMU subprocess sandboxing for crash isolation requires platform-specific IPC; initial release may run in-process with documented risk.

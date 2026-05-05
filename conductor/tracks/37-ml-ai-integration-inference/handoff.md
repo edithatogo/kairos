@@ -2,7 +2,7 @@
 
 ## Summary
 
-Track 37 now has the first concrete ML scaffold. `kairo-ecs-ml` defines shape-checked tensors, an ONNX-facing session wrapper surface, `NeuralSystem`, phase-filtered `InferenceTickHook`, feature-gated backend modules, a DE surrogate example, and a Gymnasium-compatible Python wrapper that can import without optional Gymnasium installed.
+Track 37 now has the first concrete ML scaffold. `kairo-ecs-ml` defines shape-checked tensors, dependency-free model metadata and input-shape validation, an ONNX-facing session wrapper surface, `NeuralSystem`, phase-filtered `InferenceTickHook`, feature-gated backend modules, a DE surrogate example, and a Gymnasium-compatible Python wrapper that can import without optional Gymnasium installed.
 
 ## Files created
 
@@ -38,14 +38,16 @@ Track 37 now has the first concrete ML scaffold. `kairo-ecs-ml` defines shape-ch
 - `crates/kairo-ecs-ml/tests/feature_matrix.rs`
 - Unit tests in `crates/kairo-ecs-ml/src/lib.rs`
 - `python/kairo_gym/tests/test_env_contract.py`
+- Contract checks now reject blank model names/versions, empty or zero-dimensional tensor/model shapes, input/model shape mismatches, invalid Gym space sizes, and string actions before runtime integration is attempted.
 
 Validated:
 
 - `cargo check --manifest-path crates/kairo-ecs-ml/Cargo.toml --no-default-features`
 - `cargo check --manifest-path crates/kairo-ecs-ml/Cargo.toml --all-features`
+- `cargo check --manifest-path crates/kairo-ecs-ml/Cargo.toml --tests --no-default-features`
+- `cargo check --manifest-path crates/kairo-ecs-ml/Cargo.toml --tests --all-features`
 - `cargo check --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx`
-- `cargo fmt --manifest-path crates/kairo-ecs-ml/Cargo.toml --all --check`
-- `cargo fmt --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --all --check`
+- `rustfmt --check crates/kairo-ecs-ml/src/lib.rs crates/kairo-ecs-ml/tests/feature_matrix.rs examples/ml-surrogate/de-surrogate/src/main.rs`
 - `$env:PYTHONPATH='python/kairo_gym/src'; python -m unittest discover -s python/kairo_gym/tests`
 - `$env:PYTHONPATH='python/kairo_gym/src'; python -m compileall -q python/kairo_gym/src python/kairo_gym/tests`
 
@@ -63,4 +65,4 @@ All three commands compiled code but failed at Windows link time because this sh
 - TensorRT requires NVIDIA GPU, CUDA toolkit, and TensorRT SDK; testing will need self-hosted GPU runners.
 - Neural surrogate accuracy threshold (5%) may be too strict for stochastic domains; threshold should be domain-configurable.
 - Gymnasium API stability: the envelope pattern isolates `kairo_gym` from upstream changes, but breaking releases may force patches.
-- `crates/kairo-ecs-ml/` is now included in the root workspace; optional runtime backends still need dependency-policy review before real ONNX/TensorRT/Burn adapters are added.
+- `crates/kairo-ecs-ml/` is now included in the root workspace; optional runtime backends still need dependency-policy review before real ONNX/TensorRT/Burn adapters are added. The current ONNX-facing session is a contract double and does not load or execute ONNX Runtime.

@@ -70,6 +70,8 @@ foreach ($dir in $trackDirs) {
     }
 }
 
+& (Join-Path $PSScriptRoot "validate_track_no_skip_claims.ps1")
+
 function Assert-Contains {
     param(
         [string]$Content,

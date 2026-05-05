@@ -1,9 +1,10 @@
-const events = [
+const fallbackEvents = [
   { tick: 0, state: { "machine.status": "idle" } },
   { tick: 2, state: { "machine.status": "queued" } },
   { tick: 4, state: { "machine.status": "busy" } },
   { tick: 8, state: { "machine.status": "complete" } },
 ];
+const events = window.KAIRO_TRACE_EVENTS || fallbackEvents;
 
 let cursor = 0;
 let timer = null;

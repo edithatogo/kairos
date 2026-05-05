@@ -8,6 +8,11 @@ The initial export surface writes an unpacked FMI 2.0 package layout:
 
 This is enough to validate model metadata generation before introducing native compilation and `.fmu` archive packaging.
 
+Before writing, `ModelDescription::validate()` rejects empty identifiers,
+empty generation metadata, duplicate scalar-variable names, and duplicate FMI
+value references. After writing, `validate_unpacked_export_layout()` can be used
+as a dependency-free package-structure gate before a later archive step.
+
 ```rust
 use kairo_ecs_fmi::export::model_description::{ModelDescription, ScalarVariable};
 use kairo_ecs_fmi::export::packager::write_unpacked_fmu;

@@ -26,6 +26,7 @@ This track is explicitly non-blocking for library release. Container images are 
 - **Slurm**: `sbatch hpc/slurm/submit-experiment.sh --scenario scenarios/factory_bottleneck_v1.yaml --output s3://my-bucket/runs/ --partition gpu --nodes 1`
 - **Spot resilience**: Signal handler traps SIGTERM, writes checkpoint atomically. Resume path: `kairo-ecs-cli resume --checkpoint /output/checkpoint.json`
 - **Telemetry output**: `docker run -e OUTPUT_BACKEND=s3 -e S3_BUCKET=my-bucket kairo-ecs-cli run ...` writes `<run-id>.arrow` and `<run-id>.arrow.sha256` to S3.
+- **Offline validation**: `python cloud\validate_cloud_hpc.py` validates JSON manifests, rendered Kubernetes Job shape, local telemetry checksum sidecars, and provider upload manifest schema without live credentials.
 
 ## Risks and unresolved questions
 

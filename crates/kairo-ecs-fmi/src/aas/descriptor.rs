@@ -1,4 +1,8 @@
 use crate::aas::submodel::AasSubmodel;
+use crate::{
+    error::{validation_error, FmiResult},
+    FmiError,
+};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AasDescriptor {
@@ -23,6 +27,16 @@ impl AasDescriptor {
         self
     }
 
+    pub fn validate(&self) -> FmiResult<()> {
+        require_non_empty("AAS id", &self.id)?;
+        require_non_empty("AAS idShort", &self.id_short)?;
+        require_non_empty("asset kind", &self.asset_kind)?;
+        for submodel in &self.submodels {
+            submodel.validate()?;
+        }
+        Ok(())
+    }
+
     pub fn to_json(&self) -> String {
         let submodels = self
             .submodels
@@ -42,4 +56,32 @@ impl AasDescriptor {
 
 fn escape_json(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
+    if value.trim().is_empty() {
+        Err(validation_error(
+            "AAS descriptor",
+            format!("{field} must not be empty"),
+        ))
+    } else {
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::aas::submodel::AasProperty;
+
+    #[test]
+    fn validates_nested_submodels() {
+        let descriptor = AasDescriptor::new("urn:kairo:test", "kairoTest").with_submodel(
+            AasSubmodel::new("urn:kairo:test:state", "state")
+                .with_property(AasProperty::new("queueDepth", "xs:integer")),
+        );
+
+        descriptor.validate().expect("valid descriptor");
+        assert!(descriptor.to_json().contains("queueDepth"));
+    }
 }

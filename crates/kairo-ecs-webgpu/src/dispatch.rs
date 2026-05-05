@@ -13,7 +13,20 @@ pub struct DispatchStats {
     pub downloaded_bytes: usize,
 }
 
-pub fn run_webgpu_step(agents: &mut [AgentSnapshot], dt: f32, seed: u32) -> DispatchStats {
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum WebGpuDispatchError {
+    BrowserBackendNotConfigured,
+}
+
+pub fn try_run_browser_webgpu_step(
+    _agents: &mut [AgentSnapshot],
+    _dt: f32,
+    _seed: u32,
+) -> Result<DispatchStats, WebGpuDispatchError> {
+    Err(WebGpuDispatchError::BrowserBackendNotConfigured)
+}
+
+pub fn run_reference_step(agents: &mut [AgentSnapshot], dt: f32, seed: u32) -> DispatchStats {
     for (index, agent) in agents.iter_mut().enumerate() {
         let jitter = pcg_jitter(seed, index as u32) * 0.001;
         agent.x += (agent.vx + jitter) * dt;
@@ -50,8 +63,18 @@ mod tests {
             257
         ];
 
-        let stats = run_webgpu_step(&mut agents, 0.016, 7);
+        let stats = run_reference_step(&mut agents, 0.016, 7);
 
         assert_eq!(stats.workgroups, 2);
+    }
+
+    #[test]
+    fn browser_dispatch_reports_backend_not_configured() {
+        let mut agents = [];
+
+        assert_eq!(
+            try_run_browser_webgpu_step(&mut agents, 0.016, 7),
+            Err(WebGpuDispatchError::BrowserBackendNotConfigured)
+        );
     }
 }

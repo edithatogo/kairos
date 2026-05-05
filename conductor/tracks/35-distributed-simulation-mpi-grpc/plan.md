@@ -12,7 +12,7 @@ Completed with artifacts and validation:
   `rsmpi`, `tonic`, or `prost` dependency was introduced in this scaffold.
 - Phase 1 / Task 1.1: transport boundary is documented in
   `docs/distributed/transport-trait.md`; `MpiTransport` and `GrpcTransport`
-  placeholders implement Track 34's `PdesTransport`.
+  dependency-free protocol emulators implement Track 34's `PdesTransport`.
 - Phase 1 / Task 1.2: entity migration protocol is documented in
   `docs/distributed/entity-migration-protocol.md`.
 - Phase 1 / Task 1.3: distributed telemetry aggregation is documented in

@@ -15,6 +15,7 @@ Rule: a check is marked complete only when an artifact exists and the validation
 | WGSL DES shader scaffold exists | complete | `src/shaders/des_dispatch.wgsl` | shader source inspected by file presence; naga compile pending backend dependency |
 | wgpu backend module is feature-gated | complete | `src/wgpu/backend.rs` | `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --no-default-features` |
 | CUDA backend module is feature-gated | complete | `src/backends/cuda_backend.rs` | `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --no-default-features` |
+| Feature-gated native backends report explicit not-configured errors | complete | `src/wgpu/backend.rs`, `src/backends/cuda_backend.rs` | `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --features wgpu-backend,cuda-backend --tests` |
 | CPU-vs-GPU ABM parity harness exists | partial | `tests/parity.rs`, CPU fallback contract | executable test blocked by Windows linker in this shell |
 | CPU-vs-GPU DES parity harness exists | partial | `tests/parity_des.rs`, CPU fallback contract | executable test blocked by Windows linker in this shell |
 | Kernel IR design doc exists | complete | `docs/gpu-compute/kernel-ir.md` | `rg -n "Kernel IR" docs/gpu-compute/kernel-ir.md` |

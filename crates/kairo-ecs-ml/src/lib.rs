@@ -16,6 +16,7 @@ impl Tensor {
     pub fn new(shape: impl Into<Vec<usize>>, values: impl Into<Vec<f32>>) -> Result<Self, MlError> {
         let shape = shape.into();
         let values = values.into();
+        validate_shape("tensor shape", &shape)?;
         let expected_len = shape.iter().product::<usize>();
 
         if expected_len != values.len() {
@@ -67,6 +68,20 @@ pub struct ModelMetadata {
     pub output_shape: Vec<usize>,
 }
 
+impl ModelMetadata {
+    pub fn validate(&self) -> Result<(), MlError> {
+        if self.name.trim().is_empty() {
+            return Err(MlError::new("model name must not be empty"));
+        }
+        if self.version.trim().is_empty() {
+            return Err(MlError::new("model version must not be empty"));
+        }
+        validate_shape("model input_shape", &self.input_shape)?;
+        validate_shape("model output_shape", &self.output_shape)?;
+        Ok(())
+    }
+}
+
 pub trait NeuralSystem: Send + Sync {
     fn metadata(&self) -> &ModelMetadata;
     fn tick_phase(&self) -> TickPhase;
@@ -88,6 +103,12 @@ impl InferenceTickHook {
 
     pub fn register(&mut self, system: Arc<dyn NeuralSystem>) {
         self.systems.push(system);
+    }
+
+    pub fn try_register(&mut self, system: Arc<dyn NeuralSystem>) -> Result<(), MlError> {
+        system.metadata().validate()?;
+        self.systems.push(system);
+        Ok(())
     }
 
     pub fn run_phase(&self, phase: TickPhase, input: &Tensor) -> Result<Vec<Tensor>, MlError> {
@@ -132,13 +153,16 @@ impl OrtSession {
             return Err(MlError::new("model bytes must not be empty"));
         }
 
+        let metadata = ModelMetadata {
+            name: name.into(),
+            version: version.into(),
+            input_shape,
+            output_shape,
+        };
+        metadata.validate()?;
+
         Ok(Self {
-            metadata: ModelMetadata {
-                name: name.into(),
-                version: version.into(),
-                input_shape,
-                output_shape,
-            },
+            metadata,
             model_bytes,
         })
     }
@@ -165,13 +189,7 @@ impl OrtSession {
     }
 
     pub fn run(&self, input: &Tensor) -> Result<Tensor, MlError> {
-        if input.shape() != self.metadata.input_shape {
-            return Err(MlError::new(format!(
-                "input shape {:?} does not match model shape {:?}",
-                input.shape(),
-                self.metadata.input_shape
-            )));
-        }
+        self.validate_input(input)?;
 
         let output_len = self.metadata.output_shape.iter().product::<usize>();
         let mut output = Vec::with_capacity(output_len);
@@ -185,6 +203,18 @@ impl OrtSession {
         }
 
         Tensor::new(self.metadata.output_shape.clone(), output)
+    }
+
+    pub fn validate_input(&self, input: &Tensor) -> Result<(), MlError> {
+        if input.shape() != self.metadata.input_shape {
+            return Err(MlError::new(format!(
+                "input shape {:?} does not match model shape {:?}",
+                input.shape(),
+                self.metadata.input_shape
+            )));
+        }
+
+        Ok(())
     }
 
     pub fn model_size_bytes(&self) -> usize {
@@ -248,6 +278,19 @@ impl Display for MlError {
 
 impl Error for MlError {}
 
+fn validate_shape(label: &str, shape: &[usize]) -> Result<(), MlError> {
+    if shape.is_empty() {
+        return Err(MlError::new(format!("{} must not be empty", label)));
+    }
+    if shape.contains(&0) {
+        return Err(MlError::new(format!(
+            "{} dimensions must be non-zero",
+            label
+        )));
+    }
+    Ok(())
+}
+
 #[cfg(feature = "onnx")]
 pub mod onnx {
     pub type Session = crate::OrtSession;
@@ -296,6 +339,34 @@ mod tests {
     }
 
     #[test]
+    fn tensor_rejects_zero_dimension() {
+        let tensor = Tensor::new(vec![2, 0], Vec::<f32>::new());
+
+        assert_eq!(
+            tensor.expect_err("zero dimension should fail").to_string(),
+            "tensor shape dimensions must be non-zero"
+        );
+    }
+
+    #[test]
+    fn metadata_rejects_blank_name_and_empty_shapes() {
+        let metadata = ModelMetadata {
+            name: " ".to_string(),
+            version: "1".to_string(),
+            input_shape: vec![1],
+            output_shape: vec![1],
+        };
+
+        assert_eq!(
+            metadata
+                .validate()
+                .expect_err("blank name should fail")
+                .to_string(),
+            "model name must not be empty"
+        );
+    }
+
+    #[test]
     fn ort_session_runs_shape_checked_inference() {
         let session =
             OrtSession::from_bytes("identity", "0", [1, 2, 3], vec![2], vec![2]).expect("session");
@@ -330,5 +401,41 @@ mod tests {
             .run_phase(TickPhase::AfterSystems, &input)
             .expect("after")
             .is_empty());
+    }
+
+    #[test]
+    fn try_register_validates_model_metadata_contract() {
+        struct InvalidSystem(ModelMetadata);
+
+        impl NeuralSystem for InvalidSystem {
+            fn metadata(&self) -> &ModelMetadata {
+                &self.0
+            }
+
+            fn tick_phase(&self) -> TickPhase {
+                TickPhase::BeforeSystems
+            }
+
+            fn fallback_policy(&self) -> FallbackPolicy {
+                FallbackPolicy::FailTick
+            }
+
+            fn predict(&self, _input: &Tensor) -> Result<Tensor, MlError> {
+                Ok(Tensor::scalar(0.0))
+            }
+        }
+
+        let mut hook = InferenceTickHook::new();
+        let error = hook
+            .try_register(Arc::new(InvalidSystem(ModelMetadata {
+                name: "invalid".to_string(),
+                version: "".to_string(),
+                input_shape: vec![1],
+                output_shape: vec![1],
+            })))
+            .expect_err("blank version should fail");
+
+        assert_eq!(error.to_string(), "model version must not be empty");
+        assert!(hook.is_empty());
     }
 }

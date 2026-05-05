@@ -12,13 +12,15 @@ Implemented artifacts:
   - `MpiRankAssignment`;
   - stable `MpiMessageTag` values for event, null, migration, and telemetry
     messages;
-  - `MpiTransport` placeholder implementing the Track 34 `PdesTransport`
-    boundary and panicking until the real backend is wired.
+  - dependency-free `MpiTransport` protocol emulator implementing the Track 34
+    `PdesTransport` boundary for compile-checked message round-trip and GVT
+    reduction tests.
 - `crates/kairo-ecs-grpc/` with:
   - `GrpcPeer`;
   - `GrpcTransportConfig`;
-  - `GrpcTransport` placeholder implementing the Track 34 `PdesTransport`
-    boundary and panicking until the real backend is wired.
+  - dependency-free `GrpcTransport` protocol emulator implementing the Track 34
+    `PdesTransport` boundary for compile-checked message round-trip and GVT
+    reduction tests.
 - `docs/distributed/transport-trait.md`
 - `docs/distributed/entity-migration-protocol.md`
 - `docs/distributed/telemetry-aggregation.md`
@@ -31,6 +33,10 @@ Passed:
 ```powershell
 cargo check --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi
 cargo check --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc
+cargo check --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi --tests
+cargo check --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc --tests
+cargo fmt --manifest-path crates/kairo-ecs-mpi/Cargo.toml -- --check
+cargo fmt --manifest-path crates/kairo-ecs-grpc/Cargo.toml -- --check
 ```
 
 Attempted unit-test commands:
@@ -48,7 +54,8 @@ Win32 error 5 while creating signal/mapping objects.
 
 - Real `rsmpi` transport is not implemented.
 - Real `tonic`/`prost` gRPC transport is not implemented.
-- End-to-end 2-node MPI/gRPC tests are not implemented.
+- End-to-end 2-node MPI/gRPC tests are not implemented; only local protocol
+  emulator checks are present.
 - Entity migration runtime serialization and handshake are not implemented.
 - Distributed telemetry runtime aggregation is not implemented.
 - gRPC fault tolerance is not implemented.

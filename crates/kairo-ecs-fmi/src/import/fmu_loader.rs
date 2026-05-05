@@ -1,7 +1,10 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::{error::io_error, FmiError, FmiResult};
+use crate::{
+    error::{io_error, validation_error},
+    FmiError, FmiResult,
+};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FmuLayout {
@@ -14,11 +17,9 @@ pub struct FmuLayout {
 impl FmuLayout {
     pub fn from_unpacked_dir(root: impl Into<PathBuf>) -> FmiResult<Self> {
         let root = root.into();
-        let model_description = root.join("modelDescription.xml");
-        if !model_description.is_file() {
-            return Err(FmiError::MissingModelDescription { root });
-        }
+        validate_unpacked_fmu_layout(&root)?;
 
+        let model_description = root.join("modelDescription.xml");
         let platform = current_fmi_platform();
         let binary = find_platform_binary(&root, &platform)?;
         Ok(Self {
@@ -43,6 +44,21 @@ impl FmuLayout {
 
     pub fn platform(&self) -> &str {
         &self.platform
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct FmuLayoutReport {
+    pub root: PathBuf,
+    pub platform: String,
+    pub model_description: PathBuf,
+    pub binary_dir: PathBuf,
+    pub binary_candidates: Vec<PathBuf>,
+}
+
+impl FmuLayoutReport {
+    pub fn selected_binary(&self) -> Option<&Path> {
+        self.binary_candidates.first().map(PathBuf::as_path)
     }
 }
 
@@ -93,6 +109,65 @@ pub fn current_fmi_platform() -> String {
     };
 
     format!("{os}{arch}")
+}
+
+pub fn validate_unpacked_fmu_layout(root: impl AsRef<Path>) -> FmiResult<FmuLayoutReport> {
+    let root = root.as_ref();
+    if !root.is_dir() {
+        return Err(validation_error(
+            "FMU layout",
+            format!("root is not a directory: {}", root.display()),
+        ));
+    }
+
+    let model_description = root.join("modelDescription.xml");
+    if !model_description.is_file() {
+        return Err(FmiError::MissingModelDescription {
+            root: root.to_path_buf(),
+        });
+    }
+
+    let platform = current_fmi_platform();
+    let binary_dir = root.join("binaries").join(&platform);
+    if !binary_dir.is_dir() {
+        return Err(validation_error(
+            "FMU layout",
+            format!(
+                "missing binary directory for platform {} at {}",
+                platform,
+                binary_dir.display()
+            ),
+        ));
+    }
+
+    let extension = shared_library_extension();
+    let mut binary_candidates = Vec::new();
+    for entry in fs::read_dir(&binary_dir)
+        .map_err(|error| io_error("read FMU binary directory", binary_dir.clone(), error))?
+    {
+        let entry =
+            entry.map_err(|error| io_error("read FMU binary entry", binary_dir.clone(), error))?;
+        let path = entry.path();
+        if path.is_file() && path.extension().and_then(|value| value.to_str()) == Some(extension) {
+            binary_candidates.push(path);
+        }
+    }
+    binary_candidates.sort();
+
+    if binary_candidates.is_empty() {
+        return Err(FmiError::MissingBinary {
+            platform,
+            root: root.to_path_buf(),
+        });
+    }
+
+    Ok(FmuLayoutReport {
+        root: root.to_path_buf(),
+        platform,
+        model_description,
+        binary_dir,
+        binary_candidates,
+    })
 }
 
 fn find_platform_binary(root: &Path, platform: &str) -> FmiResult<PathBuf> {
@@ -155,6 +230,24 @@ mod tests {
         let layout = FmuLayout::from_unpacked_dir(&root).expect("layout");
         assert_eq!(layout.platform(), platform);
         assert!(layout.model_description().ends_with("modelDescription.xml"));
+
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn reports_missing_platform_binary_directory() {
+        let root = std::env::temp_dir().join(format!(
+            "kairo-fmu-missing-binary-dir-{}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("time")
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).expect("root dir");
+        fs::write(root.join("modelDescription.xml"), "<fmiModelDescription />").expect("xml");
+
+        let error = validate_unpacked_fmu_layout(&root).expect_err("missing binary dir");
+        assert!(error.to_string().contains("missing binary directory"));
 
         fs::remove_dir_all(root).expect("cleanup");
     }

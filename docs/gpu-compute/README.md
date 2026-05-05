@@ -9,7 +9,7 @@ Current artifacts:
 - `architecture.md` defines host-to-device buffer flow.
 - `event-ordering.md` defines deterministic and nondeterministic DES event behavior.
 - `hardware-requirements.md` records the hardware matrix required before performance claims are accepted.
-- `benchmark-results.md` is a controlled placeholder until GPU hardware runs are available.
+- `benchmark-results.md` is an explicit no-results evidence file until GPU hardware runs are available.
 
 Validation commands:
 

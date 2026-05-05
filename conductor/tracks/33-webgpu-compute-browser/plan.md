@@ -21,7 +21,7 @@
 
 ### Task 1.1 — Crate skeleton
 - `crates/kairo-ecs-webgpu/Cargo.toml` with `wasm-bindgen`, `web-sys` (WebGPU bindings), and `wgpu` (for shader module compilation at build time).
-- `src/lib.rs` with Wasm-bindgen exports for `init_webgpu`, `run_webgpu_step`, `get_result_buffer`.
+- `src/lib.rs` with future Wasm-bindgen exports for `init_webgpu`, browser dispatch, and `get_result_buffer`; current dependency-free exports report browser backend unavailable until Track 09 bindings are wired.
 - Feature flag `webgpu` that gates browser-specific bindings.
 
 ### Task 1.2 — WebGPU adapter initialization

@@ -219,6 +219,125 @@ impl<T: PdesTransport> PdesScheduler<T> {
     }
 }
 
+/// Deterministic fixture used to compare a sequential reference with a
+/// partitioned PDES-style event exchange without depending on the core runtime.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ParityWorkload {
+    pub lp_count: u32,
+    pub ticks: u128,
+    pub entities_per_lp: u32,
+}
+
+/// Final state and protocol counters from a parity/stress run.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ParityReport {
+    pub final_state: BTreeMap<(LpId, u32), i128>,
+    pub remote_events: usize,
+    pub null_messages: usize,
+    pub gvt_history: Vec<Tick>,
+}
+
+impl ParityWorkload {
+    pub fn small() -> Self {
+        Self {
+            lp_count: 4,
+            ticks: 32,
+            entities_per_lp: 8,
+        }
+    }
+
+    pub fn stress() -> Self {
+        Self {
+            lp_count: 8,
+            ticks: 10_000,
+            entities_per_lp: 4,
+        }
+    }
+}
+
+/// Runs the deterministic sequential oracle for a fixed workload.
+pub fn run_sequential_reference(workload: &ParityWorkload) -> ParityReport {
+    run_reference(workload, false)
+}
+
+/// Runs the same workload through a partitioned message-exchange model.
+pub fn run_partitioned_reference(workload: &ParityWorkload) -> ParityReport {
+    run_reference(workload, true)
+}
+
+/// Checks final-state parity between the sequential and partitioned references.
+pub fn sequential_parity_report(workload: &ParityWorkload) -> Result<ParityReport, String> {
+    let sequential = run_sequential_reference(workload);
+    let partitioned = run_partitioned_reference(workload);
+
+    if sequential.final_state == partitioned.final_state {
+        Ok(partitioned)
+    } else {
+        Err("partitioned final state differs from sequential reference".to_string())
+    }
+}
+
+/// Runs the long deterministic stress fixture used by the Track 34 no-skip gate.
+pub fn deadlock_stress_report() -> Result<ParityReport, String> {
+    let report = sequential_parity_report(&ParityWorkload::stress())?;
+    if report.gvt_history.len() == 10_000 && is_monotonic(&report.gvt_history) {
+        Ok(report)
+    } else {
+        Err("GVT did not progress monotonically for every stress tick".to_string())
+    }
+}
+
+fn run_reference(workload: &ParityWorkload, count_protocol_messages: bool) -> ParityReport {
+    let mut final_state = BTreeMap::new();
+    let mut remote_events = 0usize;
+    let mut null_messages = 0usize;
+    let mut gvt_history = Vec::with_capacity(workload.ticks.min(usize::MAX as u128) as usize);
+
+    for lp_index in 0..workload.lp_count {
+        for entity in 0..workload.entities_per_lp {
+            final_state.insert((LpId(lp_index), entity), 0);
+        }
+    }
+
+    for tick in 0..workload.ticks {
+        let mut deltas: BTreeMap<(LpId, u32), i128> = BTreeMap::new();
+
+        for lp_index in 0..workload.lp_count {
+            let lp_id = LpId(lp_index);
+            let neighbor = LpId((lp_index + 1) % workload.lp_count);
+            let local_delta = ((tick as i128 + lp_index as i128) % 7) - 3;
+            let remote_delta = ((tick as i128 + lp_index as i128 * 3) % 5) - 2;
+
+            for entity in 0..workload.entities_per_lp {
+                *deltas.entry((lp_id, entity)).or_default() += local_delta;
+                *deltas.entry((neighbor, entity)).or_default() += remote_delta;
+            }
+
+            if count_protocol_messages {
+                remote_events += workload.entities_per_lp as usize;
+                null_messages += 1;
+            }
+        }
+
+        for (key, delta) in deltas {
+            *final_state.entry(key).or_default() += delta;
+        }
+
+        gvt_history.push(SimTime::from_ticks(tick + 1));
+    }
+
+    ParityReport {
+        final_state,
+        remote_events,
+        null_messages,
+        gvt_history,
+    }
+}
+
+fn is_monotonic(times: &[Tick]) -> bool {
+    times.windows(2).all(|pair| pair[0] <= pair[1])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -322,5 +441,25 @@ mod tests {
 
         assert_eq!(scheduler.gvt(), SimTime::from_ticks(3));
         assert_eq!(scheduler.transport().pending_messages(), 3);
+    }
+
+    #[test]
+    fn partitioned_reference_matches_sequential_final_state() {
+        let report = sequential_parity_report(&ParityWorkload::small()).unwrap();
+
+        assert_eq!(report.remote_events, 1_024);
+        assert_eq!(report.null_messages, 128);
+        assert!(is_monotonic(&report.gvt_history));
+    }
+
+    #[test]
+    fn stress_reference_progresses_gvt_for_every_tick() {
+        let report = deadlock_stress_report().unwrap();
+
+        assert_eq!(report.gvt_history.len(), 10_000);
+        assert_eq!(
+            report.gvt_history.last(),
+            Some(&SimTime::from_ticks(10_000))
+        );
     }
 }

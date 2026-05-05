@@ -15,6 +15,10 @@ pub enum FmiError {
         platform: String,
         root: PathBuf,
     },
+    Validation {
+        artifact: &'static str,
+        message: String,
+    },
     FmiStatus {
         operation: &'static str,
         status: i32,
@@ -47,6 +51,9 @@ impl fmt::Display for FmiError {
                 platform,
                 root.display()
             ),
+            Self::Validation { artifact, message } => {
+                write!(f, "{} validation failed: {}", artifact, message)
+            }
             Self::FmiStatus { operation, status } => {
                 write!(f, "{} returned FMI status {}", operation, status)
             }
@@ -78,5 +85,13 @@ pub(crate) fn io_error(operation: &'static str, path: PathBuf, error: std::io::E
         operation,
         path,
         message: error.to_string(),
+    }
+}
+
+#[allow(dead_code)]
+pub(crate) fn validation_error(artifact: &'static str, message: impl Into<String>) -> FmiError {
+    FmiError::Validation {
+        artifact,
+        message: message.into(),
     }
 }

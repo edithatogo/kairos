@@ -2,11 +2,11 @@
 
 ## Status
 
-Initial scaffold implemented. Browser-native WebGPU device wiring is still blocked, but the crate facade, adapter/bridge/dispatch scaffolds, WebGPU WGSL shader, static demo, smoke test, and comparison/subset docs now exist.
+Initial scaffold implemented and tightened. Browser-native WebGPU device wiring is still blocked, and the crate now reports that explicitly through `BrowserBindingsNotConfigured` / `BrowserBackendNotConfigured` contracts. The crate facade, adapter/bridge/reference-dispatch scaffolds, WebGPU WGSL shader, static demo, smoke test, and comparison/subset docs exist.
 
 ## Summary
 
-Track 33 delivers GPU-accelerated simulation in the browser via WebGPU compute shaders, paired with the Track 09 Wasm binding layer. The `kairo-ecs-webgpu` crate compiles to Wasm and shares kernel designs with Track 32 (native GPU). A browser demo page at `website/webgpu-demo/` showcases live ABM simulation at 30fps+ for 100K agents using the user's GPU. This is a unique SOTA differentiator — no other Rust ECS framework provides GPU-accelerated simulation directly in the browser. WebGPU support is detected at runtime with graceful fallback to CPU Wasm.
+Track 33 is building toward GPU-accelerated simulation in the browser via WebGPU compute shaders, paired with the Track 09 Wasm binding layer. The current `kairo-ecs-webgpu` crate is dependency-free and exposes adapter, bridge, reference dispatch, and explicit backend-unavailable contracts. The browser demo at `website/webgpu-demo/` runs a CPU fallback animation, detects the WebGPU API, and labels real WebGPU dispatch as `backend not configured` until Wasm bindings and device setup land. No browser GPU dispatch or 30fps/100K-agent performance claim is made by the current artifacts.
 
 ## Files created in this track
 
@@ -41,14 +41,15 @@ Track 33 delivers GPU-accelerated simulation in the browser via WebGPU compute s
 
 ## Contracts produced
 
-- `crates/kairo-ecs-webgpu/` — dependency-free default WebGPU facade with adapter, bridge, and dispatch scaffolds.
-- `website/webgpu-demo/` — static browser demo with WebGPU detection, CPU fallback animation, controls, and metric panels.
+- `crates/kairo-ecs-webgpu/` — dependency-free default WebGPU facade with adapter, bridge, reference dispatch, and backend-not-configured contracts.
+- `website/webgpu-demo/` — static browser demo with WebGPU API detection, CPU fallback animation, backend-not-configured dispatch label, controls, and metric panels.
 - `docs/gpu-compute/webgpu-wgsl-subset.md` — WebGPU WGSL feature restrictions.
 - `docs/gpu-compute/webgpu-comparison.md` — WebGPU vs native GPU comparison.
 
 ## Validation
 
 - Passed: `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --no-default-features`
+- Passed: `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --features webgpu --tests`
 - Passed after formatting: `cargo fmt --manifest-path crates/kairo-ecs-webgpu/Cargo.toml`
 - Passed: `npm test --prefix website/webgpu-demo`
 - Blocked: `cargo test --manifest-path crates/kairo-ecs-webgpu/Cargo.toml` because this shell resolves `link.exe` to Git's `usr\bin\link.exe`, which exits with `couldn't create signal pipe, Win32 error 5`; `rust-lld` also lacks Windows SDK import libraries in this environment.
@@ -58,7 +59,7 @@ Track 33 delivers GPU-accelerated simulation in the browser via WebGPU compute s
 - **webgpu-crate-compiles** — WebGPU crate compiles to Wasm. Blocking for PRs touching the WebGPU crate.
 - **webgpu-demo-loads** — Demo page loads and detects WebGPU. Blocking for PRs touching the demo.
 - **webgpu-cpu-parity** — WebGPU output matches CPU Wasm for same seed. Blocking for WebGPU kernel PRs.
-- **webgpu-framerate** — Demo maintains >=30fps for 100K agents. Informational only; becomes blocking at RC.
+- **webgpu-framerate** — Demo maintains >=30fps for 100K agents after real browser WebGPU dispatch is configured. Informational only; becomes blocking at RC.
 - **webgpu-cross-browser** — Smoke test passes on Chrome, Edge, Firefox Nightly. Informational only; becomes blocking at RC.
 
 All WebGPU gates require headless Chrome with `--enable-unsafe-webgpu` flag. Gates are informational when no GPU is present in CI.

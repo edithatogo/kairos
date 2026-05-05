@@ -13,13 +13,28 @@ fn featureless_tick_hook_runs_registered_model() {
         FallbackPolicy::UseOriginalSystem,
     );
     let mut hook = InferenceTickHook::new();
-    hook.register(Arc::new(system));
+    hook.try_register(Arc::new(system)).expect("register");
 
     let output = hook
         .run_phase(TickPhase::BeforeSystems, &Tensor::scalar(3.0))
         .expect("inference");
 
     assert_eq!(output[0].values(), &[3.0]);
+}
+
+#[test]
+fn featureless_session_rejects_input_shape_mismatch_before_inference() {
+    let session = OrtSession::from_bytes("identity", "0", [1], vec![2], vec![2]).expect("session");
+    let input = Tensor::scalar(3.0);
+
+    let error = session
+        .validate_input(&input)
+        .expect_err("shape mismatch should fail");
+
+    assert_eq!(
+        error.to_string(),
+        "input shape [1] does not match model shape [2]"
+    );
 }
 
 #[cfg(feature = "onnx")]

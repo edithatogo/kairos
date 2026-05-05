@@ -55,6 +55,10 @@ point for distributed GVT:
 
 ## Current blockers
 
-- Track 34 sequential parity and stress tests are not implemented yet.
-- Track 35 may proceed with transport implementation, but should not mark
-  distributed parity complete until Track 34 has a real parity fixture.
+- Track 34 now has deterministic sequential parity and 8-LP, 10,000-tick stress
+  fixtures that compile under `cargo check --tests`.
+- Runtime execution of those tests remains blocked in the local Windows shell by
+  the `link.exe` issue described in the Track 34 handoff.
+- Track 35 may use the Track 34 fixtures for protocol-level parity work, but
+  should not mark distributed runtime parity complete until real MPI/gRPC
+  backends and 2-node execution checks exist.

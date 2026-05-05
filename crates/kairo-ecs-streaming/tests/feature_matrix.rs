@@ -25,6 +25,20 @@ fn snapshot_provider_filters_by_arrow_stream_name() {
     assert_eq!(snapshot.len(), 1);
 }
 
+#[test]
+fn in_memory_adapter_enforces_event_log_contract() {
+    let mut stream = InMemoryStream::default();
+    let mut message = StreamMessage::event_log("featureless", 10, 1);
+    message.event_kind = " ".to_string();
+
+    let error = stream
+        .publish(message)
+        .expect_err("blank event kind should be rejected");
+
+    assert_eq!(error.to_string(), "event_kind must not be empty");
+    assert!(stream.is_empty());
+}
+
 #[cfg(feature = "kafka")]
 #[test]
 fn kafka_feature_exposes_adapter_type() {

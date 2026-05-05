@@ -1,15 +1,12 @@
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum AdapterStatus {
-    Unavailable,
-    Available,
+    BrowserBindingsNotConfigured,
+    BrowserApiUnavailable,
+    BrowserApiDetected,
 }
 
 pub fn detect_adapter() -> AdapterStatus {
-    if is_webgpu_available() {
-        AdapterStatus::Available
-    } else {
-        AdapterStatus::Unavailable
-    }
+    AdapterStatus::BrowserBindingsNotConfigured
 }
 
 pub fn is_webgpu_available() -> bool {
@@ -22,6 +19,10 @@ mod tests {
 
     #[test]
     fn native_ci_reports_webgpu_unavailable() {
-        assert_eq!(detect_adapter(), AdapterStatus::Unavailable);
+        assert_eq!(
+            detect_adapter(),
+            AdapterStatus::BrowserBindingsNotConfigured
+        );
+        assert!(!is_webgpu_available());
     }
 }

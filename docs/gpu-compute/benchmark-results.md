@@ -7,6 +7,7 @@ The current accepted validation is limited to:
 - GPU crate compiles without default GPU dependencies.
 - CPU fallback parity harness produces deterministic ABM and DES output.
 - WGSL shader source exists for native GPU backend implementation.
+- Feature-gated native backend modules report explicit `*-backend-not-configured` errors until real backend dependencies are introduced.
 
 Before marking `gpu-speedup-threshold` complete, record:
 

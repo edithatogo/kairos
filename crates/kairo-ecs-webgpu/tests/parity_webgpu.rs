@@ -1,14 +1,26 @@
-use kairo_ecs_webgpu::{run_webgpu_step, AgentSnapshot};
+use kairo_ecs_webgpu::{
+    run_reference_step, try_run_browser_webgpu_step, AgentSnapshot, WebGpuDispatchError,
+};
 
 #[test]
-fn fixed_seed_webgpu_contract_matches_cpu_reference() {
+fn fixed_seed_reference_contract_matches_cpu_reference() {
     let mut cpu = seed_agents();
-    let mut webgpu_contract = seed_agents();
+    let mut dependency_free_contract = seed_agents();
 
     run_cpu_step(&mut cpu, 0.016, 99);
-    run_webgpu_step(&mut webgpu_contract, 0.016, 99);
+    run_reference_step(&mut dependency_free_contract, 0.016, 99);
 
-    assert_eq!(cpu, webgpu_contract);
+    assert_eq!(cpu, dependency_free_contract);
+}
+
+#[test]
+fn browser_webgpu_dispatch_is_explicitly_unavailable_until_configured() {
+    let mut agents = seed_agents();
+
+    assert_eq!(
+        try_run_browser_webgpu_step(&mut agents, 0.016, 99),
+        Err(WebGpuDispatchError::BrowserBackendNotConfigured)
+    );
 }
 
 fn seed_agents() -> Vec<AgentSnapshot> {

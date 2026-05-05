@@ -37,6 +37,12 @@ pub enum GpuComputeError {
     EntityOutOfRange { entity_id: u64, entity_count: usize },
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum GpuBackendAvailability {
+    CpuFallback,
+    BackendNotConfigured(&'static str),
+}
+
 /// Backend-independent GPU compute contract.
 pub trait GpuCompute {
     fn backend_name(&self) -> &'static str;
@@ -45,6 +51,9 @@ pub trait GpuCompute {
     fn run_des_step(&mut self, events: &[DesEvent]) -> Result<GpuStepStats, GpuComputeError>;
     fn download_state(&self) -> Result<GpuState, GpuComputeError>;
 }
+
+pub const WGPU_BACKEND_NOT_CONFIGURED: &str = "wgpu-backend-not-configured";
+pub const CUDA_BACKEND_NOT_CONFIGURED: &str = "cuda-backend-not-configured";
 
 /// Deterministic fallback used by CI and by parity tests on machines without GPU hardware.
 #[derive(Clone, Debug, Default)]

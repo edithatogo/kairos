@@ -1,3 +1,10 @@
+use std::collections::HashSet;
+
+use crate::{
+    error::{validation_error, FmiResult},
+    FmiError,
+};
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AasSubmodel {
     pub id: String,
@@ -26,6 +33,24 @@ impl AasSubmodel {
         self
     }
 
+    pub fn validate(&self) -> FmiResult<()> {
+        require_non_empty("submodel id", &self.id)?;
+        require_non_empty("submodel idShort", &self.id_short)?;
+
+        let mut property_ids = HashSet::new();
+        for property in &self.elements {
+            property.validate()?;
+            if !property_ids.insert(property.id_short.as_str()) {
+                return Err(validation_error(
+                    "AAS descriptor",
+                    format!("duplicate property idShort '{}'", property.id_short),
+                ));
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn to_json(&self) -> String {
         let elements = self
             .elements
@@ -52,14 +77,37 @@ impl AasProperty {
     }
 
     pub fn to_json(&self) -> String {
+        let semantic_id = self.semantic_id.as_ref().map_or(String::new(), |value| {
+            format!(
+                ",\"semanticId\":{{\"type\":\"ExternalReference\",\"keys\":[{{\"type\":\"GlobalReference\",\"value\":\"{}\"}}]}}",
+                escape_json(value)
+            )
+        });
         format!(
-            "{{\"modelType\":\"Property\",\"idShort\":\"{}\",\"valueType\":\"{}\"}}",
+            "{{\"modelType\":\"Property\",\"idShort\":\"{}\",\"valueType\":\"{}\"{}}}",
             escape_json(&self.id_short),
-            escape_json(&self.value_type)
+            escape_json(&self.value_type),
+            semantic_id
         )
+    }
+
+    pub fn validate(&self) -> FmiResult<()> {
+        require_non_empty("property idShort", &self.id_short)?;
+        require_non_empty("property valueType", &self.value_type)
     }
 }
 
 fn escape_json(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
+    if value.trim().is_empty() {
+        Err(validation_error(
+            "AAS descriptor",
+            format!("{field} must not be empty"),
+        ))
+    } else {
+        Ok(())
+    }
 }

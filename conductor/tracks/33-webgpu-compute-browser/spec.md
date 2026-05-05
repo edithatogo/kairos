@@ -25,10 +25,10 @@ This track depends on Track 09 (TypeScript/Wasm binding) for the Wasm module sca
 
 ## Outputs
 
-- `crates/kairo-ecs-webgpu/` — Rust crate producing a WebGPU compute Wasm module.
-- `website/webgpu-demo/` — browser demo page with live ABM simulation at 30fps+ for 100K agents.
-- Performance comparison: WebGPU Wasm vs CPU Wasm for ABM particle update.
-- Cross-browser smoke test results (Chrome, Edge, Firefox Nightly).
+- `crates/kairo-ecs-webgpu/` — Rust crate that currently provides dependency-free WebGPU contracts and should later produce a WebGPU compute Wasm module.
+- `website/webgpu-demo/` — browser demo page that currently runs CPU fallback animation and labels WebGPU dispatch as backend-not-configured until real device setup lands.
+- Performance comparison: WebGPU Wasm vs CPU Wasm for ABM particle update, only after a real browser WebGPU backend and reference hardware run exist.
+- Cross-browser smoke test results (Chrome, Edge, Firefox Nightly), only after browser automation and WebGPU flags/runners are available.
 
 ## Owned paths
 
@@ -70,5 +70,5 @@ Use the gates in `conductor/quality-gates.md`. Track-specific gates:
 - `webgpu-crate-compiles` — `kairo-ecs-webgpu` compiles to Wasm via `wasm-pack`.
 - `webgpu-demo-loads` — the demo page loads in a browser and detects WebGPU availability.
 - `webgpu-cpu-parity` — WebGPU compute output matches CPU Wasm output for same seed.
-- `webgpu-framerate` — demo maintains >=30fps for 100K-agent ABM on reference hardware.
+- `webgpu-framerate` — demo maintains >=30fps for 100K-agent ABM on reference hardware after real WebGPU dispatch is configured.
 - `webgpu-cross-browser` — smoke test passes on Chrome, Edge, Firefox Nightly.

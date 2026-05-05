@@ -2,11 +2,11 @@
 
 ## Status
 
-Initial scaffold implemented. Native GPU backends are still placeholders, but the crate facade, buffer/transfer layers, WGSL shader scaffolds, CPU fallback parity harnesses, and GPU compute documentation now exist.
+Initial scaffold implemented and tightened. Native GPU backends now expose explicit `*-backend-not-configured` contracts instead of silently falling back to CPU work. The crate facade, buffer/transfer layers, WGSL shader scaffolds, CPU fallback parity harnesses, and GPU compute documentation exist.
 
 ## Summary
 
-Track 32 delivers GPU-accelerated simulation compute for KairoECS. The `kairo-ecs-gpu` crate provides a cross-platform GPU backend using wgpu (Vulkan/Metal/DX12) and optionally cudarc for CUDA. A shared kernel IR ensures CPU and GPU paths produce deterministic identical output for the same random seed. GPU acceleration is optional, gated behind a `gpu` cargo feature, and non-blocking for headless release. Target: 10x+ speedup on 1M-agent ABM scenarios with memory overhead under 1 GB for 10M entities.
+Track 32 is building toward GPU-accelerated simulation compute for KairoECS. The current `kairo-ecs-gpu` crate provides a dependency-free facade, CPU fallback contract, feature-gated wgpu/CUDA backend types, and explicit unavailable responses for real backend dispatch. GPU acceleration is optional, gated behind cargo feature flags, and non-blocking for headless release. The 10x+ speedup and 10M-entity memory targets remain future hardware-validated goals, not current claims.
 
 ## Files created in this track
 
@@ -46,16 +46,17 @@ Track 32 delivers GPU-accelerated simulation compute for KairoECS. The `kairo-ec
 
 ## Contracts produced
 
-- `crates/kairo-ecs-gpu/` — dependency-free default GPU facade with feature-gated backend placeholders.
+- `crates/kairo-ecs-gpu/` — dependency-free default GPU facade with feature-gated backend-not-configured contracts.
 - `docs/gpu-compute/kernel-ir.md` — shared kernel IR.
 - `docs/gpu-compute/backend-selection.md` — backend tradeoffs.
 - `docs/gpu-compute/event-ordering.md` — deterministic and nondeterministic DES scheduling rules.
 - `docs/gpu-compute/hardware-requirements.md` — hardware evidence matrix.
-- `docs/gpu-compute/benchmark-results.md` — controlled placeholder that explicitly makes no speedup claim yet.
+- `docs/gpu-compute/benchmark-results.md` — benchmark evidence file that explicitly makes no speedup claim yet.
 
 ## Validation
 
 - Passed: `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --no-default-features`
+- Passed: `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --features wgpu-backend,cuda-backend --tests`
 - Passed after formatting: `cargo fmt --manifest-path crates/kairo-ecs-gpu/Cargo.toml`
 - Blocked: `cargo test --manifest-path crates/kairo-ecs-gpu/Cargo.toml` because this shell resolves `link.exe` to Git's `usr\bin\link.exe`, which exits with `couldn't create signal pipe, Win32 error 5`; `rust-lld` also lacks Windows SDK import libraries in this environment.
 

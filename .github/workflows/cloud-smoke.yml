@@ -8,6 +8,7 @@ on:
       - "cloud/**"
       - "hpc/**"
       - "docs/cloud-hpc/**"
+      - "website/time-travel-demo/**"
       - ".github/workflows/cloud-smoke.yml"
   push:
     branches: [main]
@@ -17,6 +18,7 @@ on:
       - "cloud/**"
       - "hpc/**"
       - "docs/cloud-hpc/**"
+      - "website/time-travel-demo/**"
       - ".github/workflows/cloud-smoke.yml"
 
 permissions:
@@ -54,6 +56,13 @@ jobs:
           printf 'arrow-smoke-sample\n' > /tmp/kairo-input/telemetry.arrow
           python docker/telemetry-plugin/cloud-output.py --input /tmp/kairo-input/telemetry.arrow --destination file:///tmp/kairo-output
           sha256sum -c /tmp/kairo-output/telemetry.arrow.sha256
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      - name: Validate time-travel demo fixture
+        run: node website/time-travel-demo/validate-demo.mjs
 
       - name: Docker image build
         run: docker build -t kairo-ecs-cli:cloud-smoke -f docker/Dockerfile .

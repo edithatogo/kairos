@@ -29,6 +29,14 @@ class KairoGymConfig:
     action_size: int = 2
     max_steps: int = 128
 
+    def __post_init__(self) -> None:
+        for name in ("observation_size", "action_size", "max_steps"):
+            value = getattr(self, name)
+            if not isinstance(value, int):
+                raise TypeError(f"{name} must be an integer")
+            if value <= 0:
+                raise ValueError(f"{name} must be greater than zero")
+
 
 class _BaseEnv:
     pass
@@ -93,6 +101,8 @@ def _coerce_action(action: Any, size: int) -> list[float]:
         action = action.tolist()
     if isinstance(action, (int, float)):
         action = [float(action)]
+    if isinstance(action, (str, bytes)):
+        raise TypeError("action must be numeric or an iterable of numeric values")
     values = [float(value) for value in action]
     if len(values) < size:
         values.extend([0.0] * (size - len(values)))

@@ -7,6 +7,8 @@ the default build. The public surface is intentionally small:
 - `EventSink` publishes telemetry or deltas from a running simulation.
 - `SnapshotProvider` exposes point-in-time snapshots for query-style transports
   such as Arrow Flight.
+- `StreamMessage::validate_event_log_contract` enforces the dependency-free
+  message contract before the in-memory adapter accepts a message.
 - `WallClockPacer` records the real-time pacing contract without changing the
   virtual-time scheduler owned by Track 01.
 
@@ -25,4 +27,6 @@ NATS consumers see the same logical payload.
 | `arrow-flight` | Snapshot query endpoint | off |
 
 The current scaffold exposes in-memory adapter aliases for each feature so CI can
-prove feature isolation before broker dependencies are introduced.
+prove feature isolation before broker dependencies are introduced. These aliases
+are contract test doubles only; they are not Kafka, NATS, WebSocket, or Arrow
+Flight runtime clients.

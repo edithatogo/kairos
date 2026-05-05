@@ -143,6 +143,65 @@ impl Display for DebuggerError {
 
 impl std::error::Error for DebuggerError {}
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum TraceValidationError {
+    MissingSchema,
+    UnsupportedSchema(String),
+    TickOutOfOrder { previous: u128, current: u128 },
+    MalformedLine(String),
+}
+
+impl Display for TraceValidationError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::MissingSchema => write!(f, "trace is missing schema header"),
+            Self::UnsupportedSchema(schema) => write!(f, "unsupported trace schema: {schema}"),
+            Self::TickOutOfOrder { previous, current } => {
+                write!(f, "trace ticks out of order: {current} after {previous}")
+            }
+            Self::MalformedLine(line) => write!(f, "malformed trace line: {line}"),
+        }
+    }
+}
+
+impl std::error::Error for TraceValidationError {}
+
+pub fn validate_trace_lines(input: &str) -> Result<(), TraceValidationError> {
+    let mut lines = input.lines();
+    let schema = lines.next().ok_or(TraceValidationError::MissingSchema)?;
+    if schema != format!("schema\t{TRACE_SCHEMA}") {
+        let actual = schema
+            .strip_prefix("schema\t")
+            .unwrap_or(schema)
+            .to_string();
+        return Err(TraceValidationError::UnsupportedSchema(actual));
+    }
+
+    let mut previous_tick = 0;
+    for line in lines {
+        let mut parts = line.split('\t');
+        let kind = parts
+            .next()
+            .ok_or_else(|| TraceValidationError::MalformedLine(line.to_string()))?;
+        let tick = parts
+            .next()
+            .ok_or_else(|| TraceValidationError::MalformedLine(line.to_string()))?
+            .parse::<u128>()
+            .map_err(|_| TraceValidationError::MalformedLine(line.to_string()))?;
+        if kind != "snapshot" && kind != "delta" {
+            return Err(TraceValidationError::MalformedLine(line.to_string()));
+        }
+        if tick < previous_tick {
+            return Err(TraceValidationError::TickOutOfOrder {
+                previous: previous_tick,
+                current: tick,
+            });
+        }
+        previous_tick = tick;
+    }
+    Ok(())
+}
+
 #[derive(Clone, Debug)]
 pub struct Debugger {
     trace: EventTrace,
@@ -303,5 +362,31 @@ mod tests {
         assert!(trace
             .encode_lines()
             .starts_with("schema\tkairo.ecs.trace.v1\n"));
+    }
+
+    #[test]
+    fn trace_line_validation_accepts_encoded_trace() {
+        let mut trace = EventTrace::default();
+        trace.record_event(event(2, 1, 0), BTreeMap::new());
+        trace.record_event(event(4, 2, 1), BTreeMap::new());
+
+        assert_eq!(validate_trace_lines(&trace.encode_lines()), Ok(()));
+    }
+
+    #[test]
+    fn trace_line_validation_rejects_out_of_order_ticks() {
+        let input = concat!(
+            "schema\tkairo.ecs.trace.v1\n",
+            "delta\t4\t0\t0\t0\tcustom:1\t\n",
+            "delta\t2\t1\t0\t1\tcustom:2\t\n",
+        );
+
+        assert!(matches!(
+            validate_trace_lines(input),
+            Err(TraceValidationError::TickOutOfOrder {
+                previous: 4,
+                current: 2
+            })
+        ));
     }
 }

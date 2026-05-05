@@ -7,6 +7,8 @@
 | `crates/kairo-ecs-grpc/` compiles with `--features grpc` on all Tier 1 platforms | yes | yes | yes | yes |
 | Single-node build is unaffected when `mpi` and `grpc` features are disabled | yes | yes | yes | yes |
 | Track 34 `PdesTransport` boundary is documented with ThreadChannel, MPI, and gRPC scaffold implementations | yes | yes | yes | yes |
+| MPI protocol emulator compiles message round-trip and GVT reduction checks under `cargo check --tests` | yes | yes | yes | yes |
+| gRPC protocol emulator compiles message round-trip and GVT reduction checks under `cargo check --tests` | yes | yes | yes | yes |
 | Entity migration protocol is documented in `docs/distributed/entity-migration-protocol.md` | yes | yes | yes | yes |
 | Distributed telemetry aggregation design is documented in `docs/distributed/telemetry-aggregation.md` | yes | yes | yes | yes |
 | Deployment guide exists in `docs/distributed/deployment-guide.md` | no | yes | yes | yes |

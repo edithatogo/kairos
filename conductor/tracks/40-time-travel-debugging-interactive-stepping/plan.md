@@ -57,10 +57,13 @@ Completed with artifact evidence:
 - Phase 2 debug crate scaffold: `crates/kairo-ecs-debug/` contains a standalone crate with trace snapshots, deltas, reconstruction, stepping, backward movement, tick seek, inspection, and breakpoint matching.
 - Phase 2 smoke tests: `crates/kairo-ecs-debug/src/lib.rs` includes unit tests for replay reconstruction, stepping/back/goto, breakpoint matching, and trace schema encoding.
 - Phase 3 browser scrubber scaffold: `website/time-travel-demo/` provides a static timeline with play/pause, step/back, event selection, and state inspection.
+- Phase 3 trace demo validation increment: `website/time-travel-demo/trace-fixture.json` declares `kairo.ecs.trace.v1`; `validate-demo.mjs` validates fixture monotonicity plus initial render and step/back controls offline.
+- Phase 3 trace validation increment: `crates/kairo-ecs-debug::validate_trace_lines` rejects missing schema, unsupported schema, malformed records, and out-of-order ticks.
 
 Validation evidence:
 
 - `cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests` passed.
+- `node website\time-travel-demo\validate-demo.mjs` passed.
 
 Not marked complete:
 

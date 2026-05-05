@@ -4,6 +4,7 @@ Track 38 starts with FMI 2.0 co-simulation import. The current crate exposes the
 
 - unpacked FMU layout detection under `binaries/<platform>/`
 - `modelDescription.xml` presence checks
+- dependency-free layout validation with explicit missing-root, missing-binary-directory, and missing-binary diagnostics
 - FMI 2.0 function-table types
 - `Fmi2CoSimulationInstance` lifecycle and scalar access wrappers
 
@@ -16,6 +17,11 @@ let layout = FmuLayout::from_unpacked_dir("path/to/unpacked-fmu")?;
 println!("FMU binary for this host: {}", layout.binary().display());
 # Ok::<(), kairo_ecs_fmi::FmiError>(())
 ```
+
+For pre-flight checks that should not instantiate a runtime wrapper, call
+`validate_unpacked_fmu_layout`. The returned report records the host platform,
+`modelDescription.xml` path, platform binary directory, and discovered shared
+library candidates.
 
 ## Platform directory mapping
 

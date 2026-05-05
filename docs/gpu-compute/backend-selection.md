@@ -24,4 +24,9 @@ Use CUDA for:
 
 ## Current implementation state
 
-The initial crate scaffold exposes feature-gated backend modules and a deterministic CPU fallback parity harness. Real device initialization remains blocked until backend dependencies are introduced and GPU runners are available.
+The current crate exposes feature-gated backend modules with explicit unavailable contracts:
+
+- `wgpu-backend` reports `wgpu-backend-not-configured`.
+- `cuda-backend` reports `cuda-backend-not-configured`.
+
+Those modules do not silently execute CPU fallback work. The deterministic `CpuFallbackCompute` path is separate and exists for dependency-free validation only. Real device initialization remains blocked until backend dependencies are introduced and GPU runners are available.

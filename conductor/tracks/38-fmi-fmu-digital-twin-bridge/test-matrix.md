@@ -6,7 +6,12 @@
 | `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2` | yes | yes | yes |
 | `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi3` | no | no | yes |
 | `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features` | yes | yes | yes |
+| `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests` | yes | yes | yes |
 | `cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml` | yes | yes | yes |
+| Dependency-free unpacked FMU layout validation reports missing platform binary directories | yes | yes | yes |
+| Dependency-free unpacked FMU export validation reports missing package artifacts | yes | yes | yes |
+| `modelDescription.xml` structural validation rejects duplicate names/value references | yes | yes | yes |
+| AAS structural validation rejects missing IDs and duplicate property IDs | yes | yes | yes |
 | FMU shared library loads from `.fmu` archive | yes | yes | yes |
 | Unpacked FMU layout detects `modelDescription.xml` and host binary path | yes | yes | yes |
 | `fmi2Instantiate` + `fmi2SetupExperiment` + `fmi2EnterInitializationMode` success | yes | yes | yes |
@@ -35,5 +40,6 @@
 - Passing: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --no-default-features`
 - Passing: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2`
 - Passing: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`
+- Passing: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests`
 - Passing: `cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml`
 - Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2` currently reaches Rust code generation but fails at Windows link time because `link.exe` resolves to Git's `usr/bin/link.exe` and exits with `couldn't create signal pipe, Win32 error 5`.

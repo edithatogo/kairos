@@ -1,0 +1,29 @@
+{
+  "schema": "kairo.ecs.trace.v1",
+  "events": [
+    {
+      "tick": 0,
+      "state": {
+        "machine.status": "idle"
+      }
+    },
+    {
+      "tick": 2,
+      "state": {
+        "machine.status": "queued"
+      }
+    },
+    {
+      "tick": 4,
+      "state": {
+        "machine.status": "busy"
+      }
+    },
+    {
+      "tick": 8,
+      "state": {
+        "machine.status": "complete"
+      }
+    }
+  ]
+}

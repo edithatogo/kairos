@@ -9,7 +9,10 @@ pub mod dispatch;
 
 pub use adapter::{is_webgpu_available, AdapterStatus};
 pub use bridge::{BufferBridge, BufferBridgeError, BufferDescriptor};
-pub use dispatch::{run_webgpu_step, AgentSnapshot, DispatchStats};
+pub use dispatch::{
+    run_reference_step, try_run_browser_webgpu_step, AgentSnapshot, DispatchStats,
+    WebGpuDispatchError,
+};
 
 pub fn init_webgpu() -> AdapterStatus {
     adapter::detect_adapter()
