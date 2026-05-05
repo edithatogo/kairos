@@ -5,6 +5,10 @@ on:
     - cron: '0 9 1 * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   create-assessment-issue:
     runs-on: ubuntu-latest

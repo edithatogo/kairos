@@ -17,6 +17,11 @@ function isExternal(link) {
   return /^[a-z][a-z0-9+.-]*:/i.test(link) || link.startsWith("#");
 }
 
+function isWithinRepo(target) {
+  const relative = path.relative(repoRoot, target);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
 function checkMarkdownLinks(sourceFile) {
   const absoluteSource = path.join(repoRoot, sourceFile);
   const source = fs.readFileSync(absoluteSource, "utf8");
@@ -33,7 +38,7 @@ function checkMarkdownLinks(sourceFile) {
     }
 
     const target = path.resolve(sourceDir, localLink);
-    if (!target.startsWith(repoRoot) || !fs.existsSync(target)) {
+    if (!isWithinRepo(target) || !fs.existsSync(target)) {
       failures.push(`${sourceFile}: missing link target ${rawLink}`);
     }
   }
@@ -64,6 +69,22 @@ function checkNavigationLinks(manifest) {
 function main() {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   const failures = [];
+
+  const criticalPaths = [
+    "docs/install.md",
+    "docs/ffi/ffi-guide.md",
+    "docs/arrow/schema-reference.md",
+    "docs/tutorials/r-getting-started.md",
+    "docs/tutorials/julia-getting-started.md",
+    "docs/tutorials/csharp-getting-started.md",
+    "docs/tutorials/go-getting-started.md",
+  ];
+
+  for (const criticalPath of criticalPaths) {
+    if (!manifest.requiredPaths.includes(criticalPath)) {
+      failures.push(`manifest: missing required path ${criticalPath}`);
+    }
+  }
 
   for (const requiredPath of manifest.requiredPaths) {
     if (!existsRelative(requiredPath)) {

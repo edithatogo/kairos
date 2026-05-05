@@ -2,9 +2,22 @@
 
 use kairo_ecs_types::EntityId;
 
+/// Rotation constant for seed derivation mixing (splitmix64)
+const SEED_ROTATE_CONST: u32 = 17;
+
+/// splitmix64 algorithm constants
+const SPLITMIX64_GAMMA: u64 = 0x9E3779B97F4A7C15;
+const SPLITMIX64_SHIFT1: u32 = 30;
+const SPLITMIX64_MULT1: u64 = 0xBF58476D1CE4E5B9;
+const SPLITMIX64_SHIFT2: u32 = 27;
+const SPLITMIX64_MULT2: u64 = 0x94D049BB133111EB;
+const SPLITMIX64_SHIFT3: u32 = 31;
+
 /// Deterministic stream seed derived from run seed and entity handle.
 pub fn derive_entity_seed(run_seed: u64, entity: EntityId) -> u64 {
-    splitmix64(run_seed ^ entity.index.rotate_left(17) ^ u64::from(entity.generation))
+    splitmix64(
+        run_seed ^ entity.index.rotate_left(SEED_ROTATE_CONST) ^ u64::from(entity.generation),
+    )
 }
 
 #[derive(Clone, Debug)]
@@ -24,11 +37,11 @@ impl DeterministicStream {
 }
 
 fn splitmix64(mut x: u64) -> u64 {
-    x = x.wrapping_add(0x9E3779B97F4A7C15);
+    x = x.wrapping_add(SPLITMIX64_GAMMA);
     let mut z = x;
-    z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
-    z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
-    z ^ (z >> 31)
+    z = (z ^ (z >> SPLITMIX64_SHIFT1)).wrapping_mul(SPLITMIX64_MULT1);
+    z = (z ^ (z >> SPLITMIX64_SHIFT2)).wrapping_mul(SPLITMIX64_MULT2);
+    z ^ (z >> SPLITMIX64_SHIFT3)
 }
 
 #[cfg(test)]

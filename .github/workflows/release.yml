@@ -49,7 +49,10 @@ jobs:
           cargo test --workspace --all-features --no-run
           cargo publish --dry-run --workspace
       - name: Build release manifest
-        run: python packaging/scripts/build_release_manifest.py --version "${{ github.event.inputs.version }}" --dry-run "${{ github.event.inputs.dry_run }}"
+        env:
+          RELEASE_VERSION: ${{ github.event.inputs.version }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: python packaging/scripts/build_release_manifest.py --version "${RELEASE_VERSION}" --dry-run "${DRY_RUN}"
       - name: Validate release manifest
         run: |
           test -f dist/release-artifact-manifest.json

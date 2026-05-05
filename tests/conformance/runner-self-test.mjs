@@ -40,6 +40,14 @@ assert.deepEqual(parseConformanceArgs(['--fixture', 'a,b', '--kind=ordering', '-
   fixtureIds: ['a,b'],
   kinds: ['ordering'],
 });
+assert.throws(
+  () => parseConformanceArgs(['--fixture', '--format', 'text']),
+  /--fixture requires a value/,
+);
+assert.throws(
+  () => parseConformanceArgs(['--output']),
+  /--output requires a value/,
+);
 
 const cliList = JSON.parse(runConformanceCli([
   '--list',
@@ -63,6 +71,7 @@ console.log(JSON.stringify({
     'runConformance',
     'listConformance',
     'parseConformanceArgs',
+    'parseConformanceArgs missing values',
     'runner CLI --list',
     'runner CLI --fixture',
   ],

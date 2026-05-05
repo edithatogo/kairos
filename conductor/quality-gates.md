@@ -371,3 +371,4 @@ pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate
 | Red-team review | yes | yes | yes | yes |
 | Compatibility promise page | yes | yes | yes | yes |
 | Reproducibility docs | partial | yes | yes | yes |
+| Client-side search | no | yes | yes | yes |

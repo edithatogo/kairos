@@ -354,18 +354,24 @@ export function parseConformanceArgs(argv) {
     kinds: [],
   };
 
+  function readOptionValue(index, name) {
+    const value = argv[index + 1];
+    assert(value && !value.startsWith('--'), `${name} requires a value`);
+    return value;
+  }
+
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--help' || arg === '-h') options.help = true;
     else if (arg === '--list') options.list = true;
-    else if (arg === '--root') options.root = argv[++index];
-    else if (arg === '--fixture') options.fixtureIds.push(argv[++index]);
+    else if (arg === '--root') options.root = readOptionValue(index++, '--root');
+    else if (arg === '--fixture') options.fixtureIds.push(readOptionValue(index++, '--fixture'));
     else if (arg.startsWith('--fixture=')) options.fixtureIds.push(arg.slice('--fixture='.length));
-    else if (arg === '--kind') options.kinds.push(argv[++index]);
+    else if (arg === '--kind') options.kinds.push(readOptionValue(index++, '--kind'));
     else if (arg.startsWith('--kind=')) options.kinds.push(arg.slice('--kind='.length));
-    else if (arg === '--format') options.format = argv[++index];
+    else if (arg === '--format') options.format = readOptionValue(index++, '--format');
     else if (arg.startsWith('--format=')) options.format = arg.slice('--format='.length);
-    else if (arg === '--output') options.output = argv[++index];
+    else if (arg === '--output') options.output = readOptionValue(index++, '--output');
     else if (arg.startsWith('--output=')) options.output = arg.slice('--output='.length);
     else throw new Error(`unknown argument: ${arg}`);
   }

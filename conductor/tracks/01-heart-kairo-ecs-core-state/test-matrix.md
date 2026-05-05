@@ -11,6 +11,7 @@
 - `cargo test --workspace`
 - `cargo check --tests -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-rng` is the local Windows linker-safe gate when executable test linking is blocked.
 - `cargo check --tests -p kairo-ecs-state` must cover the deterministic `WorldSnapshot` API consumed by Track 05 visualization without linking a test executable.
+- Local Windows linker blocker verified 2026-05-06: `rustc -Vv` uses host `x86_64-pc-windows-msvc`, but PATH resolves `link.exe` to Git for Windows (`C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`), `where cl` finds no MSVC compiler, and `vswhere -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64` returns no VC tools installation path. On this machine, use the `cargo check --tests` gate unless a proper MSVC build-tools environment is explicitly activated.
 - Fixture presence check for `conformance/fixtures/deterministic_ordering.json`, `conformance/fixtures/cancellation.json`, and `conformance/fixtures/rng_replay.json`
 - `scripts/validate_conductor_setup.ps1` and `scripts/validate_track_coverage.ps1` both succeed
 

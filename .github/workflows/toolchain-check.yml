@@ -37,6 +37,9 @@ on:
       - "bindings/go/go.mod"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   static-policy:
     name: Static matrix and gate policy
@@ -60,7 +63,7 @@ jobs:
             expected-prefix: "1.96"
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@master
+      - uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: ${{ matrix.channel }}
           components: rustfmt,clippy

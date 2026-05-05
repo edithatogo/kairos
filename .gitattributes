@@ -1,0 +1,44 @@
+# Auto-detect text files and normalize line endings
+* text=auto
+
+# Source code
+*.rs text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.ts text eol=lf
+*.r text eol=lf
+*.R text eol=lf
+*.jl text eol=lf
+*.cs text eol=lf
+*.go text eol=lf
+*.toml text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.svg text eol=lf
+*.mmd text eol=lf
+*.ps1 text eol=lf
+*.sh text eol=lf
+*.h text eol=lf
+*.c text eol=lf
+*.proto text eol=lf
+*.xml text eol=lf
+*.csproj text eol=lf
+*.sln text eol=lf
+*.cff text eol=lf
+*.bib text eol=lf
+*.ipynb text eol=lf
+*.lock text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.wasm binary

@@ -235,6 +235,9 @@ requireTerms('.github/workflows/conformance.yml', [
 ]);
 
 requireTerms('.github/workflows/validate-conductor.yml', [
+  'ubuntu-latest',
+  'windows-latest',
+  'fail-fast: false',
   'conductor/**',
   '.github/workflows/**',
   'scripts/validation/**',

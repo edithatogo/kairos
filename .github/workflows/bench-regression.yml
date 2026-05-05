@@ -22,6 +22,9 @@ on:
       - 'conductor/tracks/31-performance-regression-guard/**'
       - '.github/workflows/bench-regression.yml'
 
+permissions:
+  contents: read
+
 jobs:
   regression-check:
     runs-on: ubuntu-latest

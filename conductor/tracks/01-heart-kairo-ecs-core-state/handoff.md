@@ -36,6 +36,7 @@ The next contract surface is the deterministic ordering and replay behavior in `
 - `cargo check -p kairo-ecs-state --tests` covers the deterministic `WorldSnapshot` API without linking a Windows test executable.
 - `cargo clippy -p kairo-ecs-state --all-targets -- -D warnings`
 - `cargo test -p kairo-ecs-state` was attempted but blocked by the local Windows linker resolving `link.exe` to Git for Windows (`C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`), which failed with `couldn't create signal pipe, Win32 error 5`.
+- 2026-05-06 linker follow-up: `rustc -Vv` reports host `x86_64-pc-windows-msvc`, `where link` resolves only Git for Windows `link.exe`, `where cl` finds no MSVC compiler on PATH, and `vswhere -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64` returned no installation path. `cargo test -p kairo-ecs-state` still fails before running tests because Rust invokes the Git `link.exe`; this run returned exit code `0xc0000142` with the same Git `link.exe` signal-pipe failure. `cargo check --tests -p kairo-ecs-state` remains the local validation gate until an MSVC linker environment is available.
 - Prior validation also recorded the same local linker blocker for `cargo test -p kairo-ecs-core`.
 
 ## Known risks

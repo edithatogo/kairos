@@ -6,6 +6,9 @@
   },
   "requiredPaths": [
     "docs/adr/",
+    "docs/arrow/schema-reference.md",
+    "docs/ffi/ffi-guide.md",
+    "docs/install.md",
     "docs/README.md",
     "docs/api/api-review-template.md",
     "docs/benchmarks/benchmark-policy.md",
@@ -16,6 +19,10 @@
     "docs/developer-experience/docs-workflow.md",
     "docs/interoperability/standards-review.md",
     "docs/playground/headless-snapshot.md",
+    "docs/tutorials/csharp-getting-started.md",
+    "docs/tutorials/go-getting-started.md",
+    "docs/tutorials/julia-getting-started.md",
+    "docs/tutorials/r-getting-started.md",
     "docs/release/",
     "docs/research/citation.md",
     "docs/scenarios/factory-bottleneck-run-replay.md",
@@ -45,6 +52,7 @@
     {
       "title": "Start",
       "links": [
+        { "label": "Install", "path": "docs/install.md", "href": "../../docs/install.md" },
         { "label": "Documentation overview", "path": "docs/README.md" },
         { "label": "Implemented crate inventory", "path": "crates/README.md" },
         { "label": "Language binding inventory", "path": "bindings/README.md" },
@@ -57,7 +65,11 @@
         { "label": "Factory bottleneck scenario", "path": "docs/scenarios/factory-bottleneck-run-replay.md" },
         { "label": "Headless snapshot playground", "path": "docs/playground/headless-snapshot.md" },
         { "label": "Starter kits", "path": "docs/starter-kits/README.md" },
-        { "label": "Model zoo inventory", "path": "docs/model-zoo/inventory.md" }
+        { "label": "Model zoo inventory", "path": "docs/model-zoo/inventory.md" },
+        { "label": "R Quickstart", "path": "docs/tutorials/r-getting-started.md", "href": "../../docs/tutorials/r-getting-started.md" },
+        { "label": "Julia Quickstart", "path": "docs/tutorials/julia-getting-started.md", "href": "../../docs/tutorials/julia-getting-started.md" },
+        { "label": "C# Quickstart", "path": "docs/tutorials/csharp-getting-started.md", "href": "../../docs/tutorials/csharp-getting-started.md" },
+        { "label": "Go Quickstart", "path": "docs/tutorials/go-getting-started.md", "href": "../../docs/tutorials/go-getting-started.md" }
       ]
     },
     {
@@ -78,7 +90,9 @@
         { "label": "Compatibility governance", "path": "docs/design/compatibility-governance.md" },
         { "label": "Interoperability standards", "path": "docs/interoperability/standards-review.md" },
         { "label": "Benchmark policy", "path": "docs/benchmarks/benchmark-policy.md" },
-        { "label": "Release compatibility", "path": "docs/release/compatibility.md" }
+        { "label": "Release compatibility", "path": "docs/release/compatibility.md" },
+        { "label": "FFI Guide", "path": "docs/ffi/ffi-guide.md", "href": "../../docs/ffi/ffi-guide.md" },
+        { "label": "Arrow Schema", "path": "docs/arrow/schema-reference.md", "href": "../../docs/arrow/schema-reference.md" }
       ]
     },
     {

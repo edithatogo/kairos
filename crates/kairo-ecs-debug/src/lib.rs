@@ -7,6 +7,9 @@ use kairo_ecs_types::{DispatchedEvent, EntityId, EventId, EventKind, SimTime};
 
 pub const TRACE_SCHEMA: &str = "kairo.ecs.trace.v1";
 
+pub const SNAPSHOT_FIELD_COUNT: usize = 3;
+pub const DELTA_FIELD_COUNT: usize = 7;
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TraceSnapshot {
     pub tick: u128,

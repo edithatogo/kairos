@@ -5,6 +5,21 @@ use kairo_ecs_rng::DeterministicStream;
 use kairo_ecs_state::World;
 use kairo_ecs_types::{EventKind, ScheduleRequest, SimTime, StepOutcome};
 
+/// Default benchmark scale (1M events/entities)
+const BENCH_SCALE: u64 = 1_000_000;
+
+/// Smoke test scale (reduced for CI speed)
+const SMOKE_SCALE: u64 = 4;
+
+/// Hybrid benchmark scale
+const HYBRID_BENCH_SCALE: u64 = 100_000;
+
+/// Priority range modulus
+const PRIORITY_RANGE: u64 = 11;
+
+/// Seed-derived priority modulus
+const SEED_PRIORITY_MOD: u64 = 7;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct BenchmarkScenario {
     pub id: &'static str,
@@ -16,38 +31,38 @@ pub struct BenchmarkScenario {
 pub const BENCHMARK_SCENARIOS: &[BenchmarkScenario] = &[
     BenchmarkScenario {
         id: "schedule_1m_events",
-        scale: 1_000_000,
-        smoke_scale: 4,
+        scale: BENCH_SCALE,
+        smoke_scale: SMOKE_SCALE,
         requires_native_link_tests: false,
     },
     BenchmarkScenario {
         id: "pop_1m_events",
-        scale: 1_000_000,
-        smoke_scale: 4,
+        scale: BENCH_SCALE,
+        smoke_scale: SMOKE_SCALE,
         requires_native_link_tests: false,
     },
     BenchmarkScenario {
         id: "schedule_cancel_1m_mixed",
-        scale: 1_000_000,
-        smoke_scale: 4,
+        scale: BENCH_SCALE,
+        smoke_scale: SMOKE_SCALE,
         requires_native_link_tests: false,
     },
     BenchmarkScenario {
         id: "create_1m_entities",
-        scale: 1_000_000,
-        smoke_scale: 4,
+        scale: BENCH_SCALE,
+        smoke_scale: SMOKE_SCALE,
         requires_native_link_tests: false,
     },
     BenchmarkScenario {
         id: "component_insert_1m",
-        scale: 1_000_000,
-        smoke_scale: 4,
+        scale: BENCH_SCALE,
+        smoke_scale: SMOKE_SCALE,
         requires_native_link_tests: false,
     },
     BenchmarkScenario {
         id: "hybrid_des_abm_smoke_100k",
-        scale: 100_000,
-        smoke_scale: 4,
+        scale: HYBRID_BENCH_SCALE,
+        smoke_scale: SMOKE_SCALE,
         requires_native_link_tests: false,
     },
 ];
@@ -59,7 +74,7 @@ pub fn schedule_1m_events_preview(seed: u64, count: u64) -> StepOutcome {
 
     for index in 0..count {
         let entity = world.spawn();
-        let priority = (rng.next_u64() % 11) as i32;
+        let priority = (rng.next_u64() % PRIORITY_RANGE) as i32;
         scheduler.schedule(ScheduleRequest {
             at: SimTime::from_ticks(index as u128),
             priority,
@@ -75,7 +90,7 @@ pub fn hybrid_des_abm_smoke_preview(seed: u64) -> StepOutcome {
     let mut scheduler = Scheduler::new();
     let mut world = World::new();
     let entity = world.spawn();
-    let priority = (seed % 7) as i32;
+    let priority = (seed % SEED_PRIORITY_MOD) as i32;
 
     scheduler.schedule(ScheduleRequest {
         at: SimTime::from_ticks(1),

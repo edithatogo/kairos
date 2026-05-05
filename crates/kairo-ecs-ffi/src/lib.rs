@@ -14,6 +14,18 @@ use kairo_ecs_types::{EventId, EventKind, ScheduleRequest, SimDuration, SimTime,
 
 pub const KAIRO_ECS_FFI_VERSION: u32 = 1;
 
+/// Default seed for FFI engine creation
+const FFI_DEFAULT_SEED: u64 = 1;
+
+/// Sentinel for tick overflow in stats
+const TICKS_OVERFLOW_SENTINEL: u64 = u64::MAX;
+
+/// Default last-error message when no error has occurred
+const DEFAULT_ERROR_MSG: &str = "ok";
+
+/// Fallback error message
+const FALLBACK_ERROR_MSG: &str = "invalid error";
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct KairoEcsBuffer {
@@ -183,7 +195,7 @@ static REGISTRY: OnceLock<Mutex<BridgeRegistry>> = OnceLock::new();
 static TELEMETRY_STORE: OnceLock<Mutex<HashMap<usize, Vec<u8>>>> = OnceLock::new();
 
 thread_local! {
-    static LAST_ERROR: RefCell<CString> = RefCell::new(CString::new("ok").expect("static string"));
+    static LAST_ERROR: RefCell<CString> = RefCell::new(CString::new(DEFAULT_ERROR_MSG).expect("static string"));
 }
 
 fn registry() -> &'static Mutex<BridgeRegistry> {
@@ -212,7 +224,7 @@ fn with_engine_mut<R>(
 
 fn set_last_error(message: &str) {
     let c_string = CString::new(message)
-        .unwrap_or_else(|_| CString::new("invalid error").expect("static string"));
+        .unwrap_or_else(|_| CString::new(FALLBACK_ERROR_MSG).expect("static string"));
     LAST_ERROR.with(|slot| {
         *slot.borrow_mut() = c_string;
     });
@@ -249,7 +261,7 @@ pub extern "C" fn kairo_ecs_engine_new() -> u64 {
     ffi_boundary(0, || match registry().lock() {
         Ok(mut registry) => {
             let mut engine = EngineState::default();
-            engine._run_seed = 1;
+            engine._run_seed = FFI_DEFAULT_SEED;
             registry.insert(engine)
         }
         Err(_) => {
@@ -406,7 +418,7 @@ pub extern "C" fn kairo_ecs_stats(handle: u64) -> KairoEcsStats {
             ) {
                 stats.now_ticks = now_ticks;
             } else {
-                stats.now_ticks = u64::MAX;
+                stats.now_ticks = TICKS_OVERFLOW_SENTINEL;
             }
             stats.pending_events = engine.scheduler.pending_events() as u64;
             stats

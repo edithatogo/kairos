@@ -66,11 +66,33 @@ def workspace_members(root: Path) -> set[str]:
     return {f"{member}/Cargo.toml" for member in re.findall(r'"([^"]+)"', match.group(1))}
 
 
+def resolve_repo_output(root: Path, relative_path: str, label: str) -> Path:
+    if not isinstance(relative_path, str) or not relative_path:
+        raise SystemExit(f"{label} output path is empty")
+    if Path(relative_path).is_absolute():
+        raise SystemExit(f"{label} output path must be repo-relative: {relative_path}")
+    normalized = Path(relative_path)
+    if ".." in normalized.parts:
+        raise SystemExit(f"{label} output path must stay inside the repository: {relative_path}")
+    if normalized.parts[:1] != ("dist",):
+        raise SystemExit(f"{label} output path must stay under ignored dist/: {relative_path}")
+    resolved = (root / normalized).resolve()
+    try:
+        resolved.relative_to(root.resolve())
+    except ValueError as exc:
+        raise SystemExit(f"{label} output path must stay inside the repository: {relative_path}") from exc
+    return resolved
+
+
 def build(root: Path, inventory_path: Path, version: str, dry_run: str, check_only: bool) -> dict:
     inventory = load_inventory(inventory_path)
     output = inventory.get("output", {})
-    artifact_manifest = root / output.get("artifact_manifest", "dist/release-artifact-manifest.json")
-    checksum_manifest = root / output.get("checksum_manifest", "dist/SHA256SUMS")
+    artifact_manifest = resolve_repo_output(
+        root, output.get("artifact_manifest", "dist/release-artifact-manifest.json"), "artifact_manifest"
+    )
+    checksum_manifest = resolve_repo_output(
+        root, output.get("checksum_manifest", "dist/SHA256SUMS"), "checksum_manifest"
+    )
     artifacts = []
     seen_paths = set()
 

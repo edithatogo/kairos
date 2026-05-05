@@ -76,6 +76,49 @@ function assertNavigationCoverage(manifest, failures) {
   }
 }
 
+function assertSearchIndex(failures) {
+  const searchIndexPath = path.join(buildDir, "search-index.json");
+  if (!fs.existsSync(searchIndexPath)) {
+    fail("search index missing: website/build/search-index.json", failures);
+  }
+}
+
+function assertDarkModeCSS(failures) {
+  const indexPath = path.join(buildDir, "index.html");
+  if (!fs.existsSync(indexPath)) {
+    return;
+  }
+  const html = fs.readFileSync(indexPath, "utf8");
+  if (!html.includes("prefers-color-scheme: dark")) {
+    fail("dark mode CSS not present in index.html", failures);
+  }
+}
+
+function assertSEOMetadata(failures) {
+  const indexPath = path.join(buildDir, "index.html");
+  if (!fs.existsSync(indexPath)) {
+    return;
+  }
+  const html = fs.readFileSync(indexPath, "utf8");
+  for (const meta of ['og:title', 'og:description', 'canonical']) {
+    if (!html.includes(`property="${meta}"`) && !html.includes(`name="${meta}"`) && !html.includes(`rel="${meta}"`)) {
+      fail(`SEO metadata missing in index.html: ${meta}`, failures);
+    }
+  }
+}
+
+function assertMultiPageRender(failures) {
+  const docsBuildDir = path.join(buildDir, "docs");
+  if (!fs.existsSync(docsBuildDir)) {
+    fail("docs build directory missing: website/build/docs/", failures);
+    return;
+  }
+  const dirs = fs.readdirSync(docsBuildDir, { withFileTypes: true }).filter(d => d.isDirectory());
+  if (dirs.length < 5) {
+    fail(`multi-page render: expected at least 5 page directories under website/build/docs/, found ${dirs.length}`, failures);
+  }
+}
+
 function assertDocsIndex(failures, manifest) {
   const indexPath = path.join(buildDir, "docs-index.json");
   if (!fs.existsSync(indexPath)) {
@@ -122,6 +165,10 @@ function main() {
   assertHomeQuality(manifest, failures);
   assertNavigationCoverage(manifest, failures);
   assertDocsIndex(failures, manifest);
+  assertSearchIndex(failures);
+  assertDarkModeCSS(failures);
+  assertSEOMetadata(failures);
+  assertMultiPageRender(failures);
 
   if (failures.length > 0) {
     process.stderr.write(`${failures.join("\n")}\n`);

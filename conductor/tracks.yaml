@@ -53,7 +53,7 @@ tracks:
       - deterministic-ordering-fixture
   - id: 02
     name: The Bridge - kairo-ecs-ffi, UniFFI and Diplomat
-    status: In Progress
+    status: Planned
     owner: ffi-agent + uniffi-agent + diplomat-agent
     depends_on: ["01", "12"]
     owned_paths:
@@ -67,7 +67,7 @@ tracks:
       - header-diff
   - id: 03
     name: The Flow - DES Trajectory API and ABM Behavior API
-    status: In Progress
+    status: Planned
     owner: des-api-agent + abm-api-agent
     depends_on: ["01", "26"]
     owned_paths:
@@ -79,7 +79,7 @@ tracks:
       - abm-fixture
   - id: 04
     name: The Analyst - kairo-ecs-arrow
-    status: In Progress
+    status: Spec Approved
     owner: arrow-agent
     depends_on: ["01", "12", "26"]
     owned_paths:
@@ -91,7 +91,7 @@ tracks:
       - arrow-roundtrip
   - id: 05
     name: The Window - kairo-ecs-viz
-    status: In Progress
+    status: Planned
     owner: viz-agent
     depends_on: ["01"]
     owned_paths:
@@ -103,7 +103,7 @@ tracks:
       - headless-core-check
   - id: 06
     name: Python Binding 3.10-3.14
-    status: In Progress
+    status: Planned
     owner: python-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -116,7 +116,7 @@ tracks:
       - arrow-roundtrip
   - id: 07
     name: R Binding
-    status: In Progress
+    status: Planned
     owner: r-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -127,7 +127,7 @@ tracks:
       - arrow-roundtrip
   - id: 08
     name: Julia Binding
-    status: In Progress
+    status: Planned
     owner: julia-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -138,7 +138,7 @@ tracks:
       - arrow-roundtrip
   - id: 09
     name: TypeScript/Wasm Binding
-    status: In Progress
+    status: Planned
     owner: typescript-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -151,7 +151,7 @@ tracks:
       - browser-smoke
   - id: 10
     name: C# Binding .NET 10-11
-    status: In Progress
+    status: Planned
     owner: csharp-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -163,7 +163,7 @@ tracks:
       - nuget-pack
   - id: 11
     name: Go Binding
-    status: In Progress
+    status: Planned
     owner: go-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -239,7 +239,7 @@ tracks:
       - changelog-check
   - id: 17
     name: Community Adoption, Education & Ecosystem
-    status: In Progress
+    status: Planned
     owner: community-agent
     depends_on: ["14"]
     owned_paths:
@@ -289,7 +289,7 @@ tracks:
       - vulnerability-policy
   - id: 21
     name: Verification, Validation & Uncertainty
-    status: In Progress
+    status: Planned
     owner: vv-uq-agent
     depends_on: ["01", "04", "12"]
     owned_paths:
@@ -302,7 +302,7 @@ tracks:
       - seed-manifest
   - id: 22
     name: Experiment Runner & Scenario Management
-    status: In Progress
+    status: Planned
     owner: experiment-agent
     depends_on: ["01", "04", "12"]
     owned_paths:
@@ -316,7 +316,7 @@ tracks:
       - resumability-plan
   - id: 23
     name: Domain Starter Kits & Model Zoo
-    status: In Progress
+    status: Planned
     owner: model-zoo-agent
     depends_on: ["03", "14"]
     owned_paths:
@@ -329,7 +329,7 @@ tracks:
       - example-maturity-labels
   - id: 24
     name: Playground, Demos & Visualization UX
-    status: In Progress
+    status: Planned
     owner: playground-agent
     depends_on: ["05", "09", "14"]
     owned_paths:
@@ -340,7 +340,7 @@ tracks:
       - non-core-dependency-check
   - id: 25
     name: API Design Review & Compatibility Governance
-    status: In Progress
+    status: Spec Approved
     owner: api-governance-agent
     depends_on: ["00", "02", "26"]
     owned_paths:
@@ -351,7 +351,7 @@ tracks:
       - compatibility-matrix
   - id: 26
     name: Interoperability Standards Review
-    status: In Progress
+    status: Spec Approved
     owner: interop-agent
     depends_on: ["00"]
     owned_paths:
@@ -420,7 +420,7 @@ tracks:
       - threshold-definition-exists
   - id: 32
     name: GPU Compute Acceleration
-    status: In Progress
+    status: Planned
     owner: gpu-compute-agent
     depends_on: ["01"]
     owned_paths:
@@ -431,7 +431,7 @@ tracks:
       - gpu-benchmark-threshold
   - id: 33
     name: WebGPU Compute for Browser
-    status: In Progress
+    status: Planned
     owner: webgpu-agent
     depends_on: ["09", "32"]
     owned_paths:
@@ -442,7 +442,7 @@ tracks:
       - wasm-gpu-parity
   - id: 34
     name: PDES & Parallel Execution
-    status: In Progress
+    status: Planned
     owner: pdes-agent
     depends_on: ["01"]
     owned_paths:
@@ -453,7 +453,7 @@ tracks:
       - gvt-progression-check
   - id: 35
     name: Distributed Simulation (MPI/gRPC)
-    status: In Progress
+    status: Planned
     owner: distributed-agent
     depends_on: ["34"]
     owned_paths:
@@ -466,7 +466,7 @@ tracks:
       - entity-migration-check
   - id: 36
     name: Streaming & Real-Time Processing
-    status: In Progress
+    status: Planned
     owner: streaming-agent
     depends_on: ["04", "22"]
     owned_paths:
@@ -478,7 +478,7 @@ tracks:
       - realtime-wallclock-check
   - id: 37
     name: ML/AI Integration & Inference
-    status: In Progress
+    status: Planned
     owner: ml-integration-agent
     depends_on: ["23"]
     owned_paths:
@@ -490,7 +490,7 @@ tracks:
       - gymnasium-env-smoke
   - id: 38
     name: FMI/FMU & Digital Twin Bridge
-    status: In Progress
+    status: Planned
     owner: fmi-agent
     depends_on: ["26", "36", "02"]
     owned_paths:
@@ -503,7 +503,7 @@ tracks:
       - aas-validate
   - id: 39
     name: Cloud/HPC Batch Runners
-    status: In Progress
+    status: Planned
     owner: cloud-agent
     depends_on: ["22", "15"]
     owned_paths:
@@ -516,7 +516,7 @@ tracks:
       - spot-checkpoint-test
   - id: 40
     name: Time-Travel Debugging & Interactive Stepping
-    status: In Progress
+    status: Planned
     owner: timetravel-agent
     depends_on: ["01", "12"]
     owned_paths:

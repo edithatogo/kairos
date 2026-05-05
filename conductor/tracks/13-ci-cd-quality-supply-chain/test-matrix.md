@@ -9,6 +9,7 @@
 - Conformance runs the checked-in Node validators, including the Track 07-13 hardening check, without depending on central script edits.
 - Conformance runs the Track 12-20 evidence check so release, citation, benchmark, and supply-chain evidence cannot be skipped silently.
 - Track 13 metadata alignment validates `conductor/tracks.yaml` without changing track statuses and maps `workflow-presence`, `cargo-metadata`, and `dependency-policy` to checked-in workflow evidence.
+- Validate Conductor runs on both `ubuntu-latest` and `windows-latest` so PowerShell and Node validators are exercised cross-platform.
 - Package dry-runs and binding CI fail when their own manifests are missing instead of skipping quietly.
 - TypeScript binding smoke runs its declared scripts instead of treating them as optional.
 - Benchmark smoke runs the offline metadata harness and `kairo-ecs-bench` compile check.
