@@ -1,102 +1,73 @@
 # Interoperability Standards Review
 
 This page records which interoperability standards KairoECS is aligning with,
-which ones are only conceptual references, and which ones are intentionally
-deferred. It is a review artifact, not a compatibility promise.
+which ones are only partial or deferred, and which ones are intentionally not
+claimed. It is a review artifact, not a compatibility promise.
 
-## Standards in scope
+## Status vocabulary
 
-| Standard or ecosystem | KairoECS mapping | Status |
-|---|---|---|
-| DEVS | DES event ordering, scheduler vocabulary, and replay terminology | Supported as conceptual alignment |
-| FMI / FMU | Digital-twin and co-simulation interchange | Deferred |
-| SBML | Continuous or biochemical model exchange | Deferred |
-| CellML | Continuous model exchange | Deferred |
-| OpenTelemetry semantic conventions | Trace and log naming guidance | Partial |
-| Arrow C Data Interface | Cross-language data exchange for telemetry and event buffers | Supported |
-| Arrow IPC | Portable telemetry and event-log exchange | Supported |
-| Parquet | Persisted analytical output for runs and comparisons | Supported |
-| Mesa | ABM teaching and migration reference point | Conceptual |
-| Agents.jl | ABM teaching and migration reference point | Conceptual |
-| MASON | ABM teaching and migration reference point | Conceptual |
-| NetLogo | ABM teaching and migration reference point | Conceptual |
-| SimPy | DES teaching and migration reference point | Conceptual |
-| simmer | DES teaching and migration reference point | Conceptual |
-| ConcurrentSim.jl | DES teaching and migration reference point | Conceptual |
-| SimSharp | DES teaching and migration reference point | Conceptual |
-| AnyLogic-style multimethod modeling | User mental model for hybrid systems | Conceptual |
+| Label | Meaning for release language |
+|---|---|
+| Supported | KairoECS has a checked-in implementation or contract surface that can be referenced, with evidence named below. |
+| Partial | KairoECS aligns with a subset of the standard or convention, but missing behavior must be named in the same row. |
+| Deferred | The standard is a planned or plausible bridge target, but current release language must not claim support. |
+| Unsupported | The standard is explicitly outside the current compatibility claim; use only as a comparison or teaching reference. |
 
-## Mapping notes
+## Standards mapping
 
-### DEVS
+| Standard | Label | KairoECS surface | Evidence in repo | Missing behavior or release guard |
+|---|---|---|---|---|
+| DEVS | Partial | Event ordering, scheduler vocabulary, and deterministic replay concepts. | `conductor/tracks/26-interoperability-standards-review/spec.md`; `docs/trustworthy-simulation/replay-and-seeds.md`. | No DEVS model import/export, coupled-model protocol, DEVS simulator conformance suite, or runtime compatibility claim. |
+| FMI/FMU | Partial | FMI 2.0 unpacked FMU layout checks, `modelDescription.xml` presence checks, function-table types, lifecycle wrapper, and unpacked export layout generation. | `docs/fmi-digital-twin/import-guide.md`; `docs/fmi-digital-twin/export-guide.md`; `crates/kairo-ecs-fmi/src/import/fmu_loader.rs`; `crates/kairo-ecs-fmi/src/export/packager.rs`. | Dynamic symbol loading, archive extraction, deterministic `.fmu` packaging, FMI XSD validation, compiled platform binaries, and OpenModelica round-trip comparison remain beta/1.0 work. |
+| SBML | Deferred | Future continuous or biochemical model bridge target. | `conductor/tracks/26-interoperability-standards-review/spec.md`; this standards review. | No SBML parser, writer, semantic mapping, unit handling, solver bridge, or fixture coverage. |
+| CellML | Deferred | Future continuous model bridge target. | `conductor/tracks/26-interoperability-standards-review/spec.md`; this standards review. | No CellML parser, writer, variable/unit mapping, solver bridge, or fixture coverage. |
+| OpenTelemetry semantic conventions | Partial | Trace, span, log, and metric naming guidance only. | `docs/debugging/trace-format.md`; `docs/streaming/stream-schema.md`; this standards review. | No native OpenTelemetry exporter, OTLP payload contract, resource/span semantic-convention matrix, or semantic-convention drift monitor. |
+| Arrow C Data Interface | Partial | Field-level Arrow type contract for `kairo_ecs.event_log.v1` event-log records. | `crates/kairo-ecs-arrow/src/lib.rs`; `crates/kairo-ecs-arrow/tests/schema_compatibility.rs`; `schemas/arrow/event_log_v1.schema.json`. | No exported ArrowArray/ArrowSchema FFI boundary or zero-copy cross-language C Data Interface fixture yet. |
+| Arrow IPC | Deferred | Integration target for event logs, stream payloads, and time-travel traces. | `docs/streaming/stream-schema.md`; `docs/debugging/trace-format.md`; `conductor/tracks/04-analyst-kairo-ecs-arrow/handoff.md`. | Current Track 04 roundtrip uses dependency-light smoke bytes, not full Arrow IPC. Release language must not claim Arrow IPC support until IPC serialization and reader fixtures exist. |
+| Parquet | Deferred | Planned persisted analytical output for runs, comparisons, VVUQ, and replay artifacts. | `docs/trustworthy-simulation/replay-and-seeds.md`; `conductor/trustworthy-simulation.md`; `conductor/verification-validation-uncertainty.md`. | No Parquet writer, schema evolution tests, compression policy, or reader compatibility fixtures. |
 
-KairoECS uses DEVS as a vocabulary match for event ordering, atomic versus
-coupled model thinking, and deterministic replay. The repo does not claim DEVS
-import/export or simulator-to-simulator runtime compatibility.
+## Ecosystem references
 
-### FMI / FMU
-
-FMI and FMU are future bridge targets for digital-twin and co-simulation work.
-At this stage, they are not supported artifacts in the repo.
-
-### SBML and CellML
-
-SBML and CellML are useful references for continuous and hybrid models, but the
-current codebase is still DES/ABM-first. These standards are documented so
-future bridge work has a named target, not because the current implementation
-can load or emit them.
-
-### OpenTelemetry
-
-OpenTelemetry semantic conventions are useful for naming traces, spans, and
-logs. The repo may align terminology with OTel where it helps observability, but
-that does not mean KairoECS emits native OTel payloads.
-
-### Arrow
-
-Arrow C Data Interface, Arrow IPC, and Parquet are the first-class exchange
-targets for telemetry and result data. These are the standards that most
-directly affect cross-language parity and benchmark reproducibility.
-
-### DES and ABM ecosystems
-
-Mesa, Agents.jl, MASON, NetLogo, SimPy, simmer, ConcurrentSim.jl, and SimSharp
-are listed as teaching and migration references. They help with terminology,
-example framing, and docs, but they are not compatibility claims.
-
-## Gaps
-
-- No runtime DEVS import/export.
-- No FMI/FMU co-simulation bridge.
-- No SBML or CellML loader/emitter.
-- No native OpenTelemetry exporter contract.
-- No claim of semantic equivalence with Mesa, Agents.jl, MASON, NetLogo,
-  SimPy, simmer, ConcurrentSim.jl, or SimSharp.
-- No claim that conceptual mappings imply behavioral equivalence.
+| Ecosystem | Label | Use allowed in docs | Release guard |
+|---|---|---|---|
+| Mesa, Agents.jl, MASON, NetLogo | Unsupported | ABM teaching, migration examples, and vocabulary comparison. | Do not claim behavioral equivalence or model import/export. |
+| SimPy, simmer, ConcurrentSim.jl, SimSharp | Unsupported | DES teaching, migration examples, and vocabulary comparison. | Do not claim API compatibility or trajectory equivalence. |
+| AnyLogic-style multimethod modeling | Unsupported | User mental model for hybrid systems. | Do not claim project or model interchange. |
 
 ## Release-impacting assertions
 
 The following assertions matter for release review:
 
-- Any claim that KairoECS supports Arrow exchange must name the exact surface:
-  C Data Interface, Arrow IPC, or Parquet.
-- Any claim that KairoECS is interoperable with another simulator must say
-  whether it is a conceptual mapping, a data-exchange mapping, or a runtime
-  compatibility claim.
-- Any Arrow schema change can affect downstream bindings and benchmark outputs
-  and therefore needs review against the track's compatibility and reproducibility
-  expectations.
-- Any OpenTelemetry alignment must not be written as a native OTel export claim
-  unless an exporter exists.
-- Any future FMI/FMU, SBML, or CellML bridge must be treated as deferred work
-  until a concrete interchange contract exists.
+- Any Arrow claim must name the exact surface: Arrow C Data Interface,
+  Arrow IPC, or Parquet. Field-level Arrow type alignment is not the same as
+  Arrow IPC or Parquet support.
+- Arrow schema changes to `kairo_ecs.event_log.v1` can affect downstream
+  bindings, benchmark outputs, stream adapters, replay artifacts, and release
+  compatibility notes.
+- OpenTelemetry semantic-convention alignment must not be written as native
+  OTel or OTLP export support unless an exporter and fixture suite exist.
+- FMI/FMU support must name the exact maturity level. Current evidence supports
+  partial unpacked-layout and lifecycle/export scaffolding only; arbitrary
+  third-party FMU execution is not supported.
+- SBML, CellML, Arrow IPC, and Parquet remain deferred until concrete
+  interchange contracts and conformance fixtures exist.
+- unsupported ecosystem references are comparison aids only and cannot appear in
+  compatibility promises.
 
-## How to read this page
+## Red-team checks
 
-- Supported means the repo already treats the standard as a real exchange
-  surface or primary naming target.
-- Partial means only the vocabulary or a subset of the concepts are aligned.
-- Conceptual means the standard is helpful for teaching or documentation, but
-  not for runtime compatibility claims.
-- Deferred means the mapping is important enough to name now, but not yet
-  implemented.
+| Prompt | Required answer before release language is allowed |
+|---|---|
+| Does the claim imply runtime compatibility with another simulator? | Name the standard, the exact KairoECS surface, and the passing conformance fixture. |
+| Does the claim say Arrow without a surface? | Rewrite to Arrow C Data Interface field alignment, Arrow IPC, or Parquet. |
+| Does the claim mention OpenTelemetry? | State whether this is naming guidance or an implemented exporter. |
+| Does the claim mention FMI/FMU? | State whether this is unpacked-layout validation, export layout generation, lifecycle wrapper support, or full FMU execution. |
+| Does the claim mention SBML or CellML? | Mark it deferred unless a parser/writer and solver bridge exist. |
+
+## Local validation
+
+Run the Track 26 validator after editing this page:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/26-interoperability-standards-review/validate-standards-review.ps1
+```

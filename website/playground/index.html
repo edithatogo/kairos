@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>KairoECS Playground</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workspace" aria-labelledby="playground-title">
+        <header class="masthead">
+          <div>
+            <p class="eyebrow">KairoECS Playground</p>
+            <h1 id="playground-title">Headless visualization snapshot</h1>
+          </div>
+          <a class="source-link" href="../../examples/viz/headless-snapshot/src/main.rs">Source</a>
+        </header>
+
+        <div class="layout">
+          <section class="viewport" aria-label="Visualization snapshot">
+            <canvas id="snapshot-canvas" width="760" height="420"></canvas>
+          </section>
+
+          <aside class="inspector" aria-label="Snapshot details">
+            <dl>
+              <div>
+                <dt>Tick</dt>
+                <dd id="tick-value">pending</dd>
+              </div>
+              <div>
+                <dt>Entities</dt>
+                <dd id="entity-count">pending</dd>
+              </div>
+              <div>
+                <dt>Bounds</dt>
+                <dd id="bounds-value">pending</dd>
+              </div>
+              <div>
+                <dt>Fixture</dt>
+                <dd><code id="fixture-path">headless-snapshot.json</code></dd>
+              </div>
+            </dl>
+            <ol id="entity-list" class="entity-list"></ol>
+          </aside>
+        </div>
+
+        <footer class="status">
+          <code id="source-path">examples/viz/headless-snapshot</code>
+          <span id="claim-boundary">Loading fixture.</span>
+        </footer>
+      </section>
+    </main>
+    <script src="main.js"></script>
+  </body>
+</html>

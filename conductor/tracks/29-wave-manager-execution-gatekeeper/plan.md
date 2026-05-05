@@ -6,7 +6,7 @@
 - Parse `conductor/tracks.yaml` to extract all track IDs, statuses, and dependencies.
 - Cross-reference with `conductor/track-map.md` for the full DAG.
 - Identify any tracks with circular or underspecified dependencies and escalate.
-- Confirm that wave membership can be derived from the dependency graph.
+- Confirm that wave membership can be derived from the dependency graph without relying on a fixed track count or fixed maximum wave.
 
 ### Task 0.2 - Lock the owned surface
 - Keep all new work to `conductor/tracks/29-wave-manager-execution-gatekeeper/`.
@@ -22,7 +22,7 @@
   - Wave 2: Tracks depending on Wave-1 or lower.
   - Wave 3: Tracks depending on Wave-2 or lower.
   - Wave 4: Tracks depending on Wave-3 or lower.
-  - Wave 5: Integration and release tracks.
+  - Wave N: Tracks depending on Wave-(N-1) or lower.
 - Publish the mapping in `conductor/wave-policy.md`.
 
 ### Task 1.2 - Define gating rules
@@ -66,6 +66,7 @@
 
 ### Task 4.1 - Validate wave policy consistency
 - Run both gates against the current track status snapshot.
+- Run the report-only mode to capture derived wave membership and critical-path heatmap.
 - Verify no false positives (tracks blocked when deps are actually "Done").
 - Verify no false negatives (tracks allowed when deps are not "Done").
 

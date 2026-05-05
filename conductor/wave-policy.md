@@ -1,109 +1,129 @@
 # KairoECS Wave Policy
 
-This policy prevents track work from being skipped or advanced out of order.
+This policy is generated from the current dependency graph in `conductor/tracks.yaml`.
+It prevents track work from being skipped or advanced without its direct and
+transitive dependency evidence.
 
-## Wave 0
+Validation command:
 
-Tracks:
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1
+```
 
-- 00 Project Foundation, Governance & Naming
-- 13 CI/CD, Code Quality & Supply Chain
-- 14 Documentation Site & Education
-- 16 Release Governance & Maintenance
-- 27 Developer Experience & Reproducible Environments
+Use `-ReportOnly` to print the derived wave membership, dependency closure, and
+critical-path heatmap without returning a blocking exit code.
 
-Requirement:
+## Derived Wave Membership
 
-- All Wave 0 tracks must have explicit owners, required artifacts, and a validation path before Wave 1 starts.
+Wave numbers are topological depths:
 
-## Wave 1
+- A track with no dependencies is Wave 0.
+- A track with dependencies is assigned to one plus the highest wave of its
+  direct dependencies.
+- If `conductor/tracks.yaml` changes, rerun the validator and update this
+  section from the report.
 
-Tracks:
+Current snapshot generated on 2026-05-06 from `conductor/tracks.yaml`:
 
-- 01 The Heart: kairo-ecs-core & kairo-ecs-state
-- 12 Conformance, Testing & Benchmarks
+| Wave | Tracks |
+|---:|---|
+| 0 | 00 |
+| 1 | 01, 12, 13, 14, 19, 26, 27, 28, 29 |
+| 2 | 02, 03, 04, 05, 17, 18, 20, 30, 32, 34, 40 |
+| 3 | 21, 22, 23, 25, 31, 35 |
+| 4 | 06, 07, 08, 09, 10, 11, 16, 36, 37 |
+| 5 | 15, 24, 33, 38 |
+| 6 | 39 |
 
-Requirement:
+## Release Gatekeeper Tracks
 
-- Wave 1 may start only after Track 00 is accepted and Wave 0 control artifacts exist.
+- 29 Wave Manager & Execution Gatekeeper: owns `wave-progression-check` and `dependency-closure-check`.
+- 30 Toolchain & Version Support Matrix: consumes the wave policy when toolchain gates are promoted.
+- 31 Performance Regression Guard: consumes the wave policy when benchmark regression gates are promoted.
 
-## Wave 2
+The current graph derives Wave 6 because Track 39 depends on Track 15, and Track
+15 is already Wave 5. This replaces the previous fixed 0-5 assumption with a
+graph-derived rule so the policy remains correct when the canonical track
+inventory changes.
 
-Tracks:
+## Gate Rules
 
-- 02 The Bridge: kairo-ecs-ffi, UniFFI & Diplomat
-- 03 The Flow: DES Trajectory API & ABM Behavior API
-- 04 The Analyst: kairo-ecs-arrow
-- 05 The Window: kairo-ecs-viz
+### No-skip controls
 
-Requirement:
+The wave gates are no-skip controls: report-only mode can document current
+dependency blockers, but blocking mode must fail when a track advances before
+its direct or transitive dependencies are `Done` or explicitly waived by an ADR.
 
-- Wave 2 may start only after the core contract inputs from Tracks 01 and 12 exist.
+1. Every track must appear exactly once in `conductor/tracks.yaml`.
+2. Every track must have a declared owner and at least one required gate.
+3. Every track directory must contain `spec.md`, `plan.md`,
+   `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
+4. Every `depends_on` target must exist in the canonical track inventory.
+5. Dependency cycles are blocking errors.
+6. A track in `In Progress`, `In Review`, or `Done` must have every direct
+   dependency marked `Done`.
+7. A track in `In Progress`, `In Review`, or `Done` must have every transitive
+   dependency marked `Done`.
+8. `In Review` and `Done` handoffs must name changed files, commands run, gate
+   results, and explicit waivers.
+9. Release tracks must treat missing dependency evidence as a blocker, not as a
+   future enhancement.
 
-## Wave 3
+## Gate Definitions
 
-Tracks:
+### wave-progression-check
 
-- 06 Python Binding 3.10-3.14
-- 07 R Binding
-- 08 Julia Binding
-- 09 TypeScript/Wasm Binding
-- 10 C# Binding .NET 10-11
-- 11 Go Binding
+`wave-progression-check` enforces local readiness for each direct dependency.
+It fails with the advancing track ID, dependency ID, and dependency status when a
+track is beyond `Planned` and any direct dependency is not `Done`.
 
-Requirement:
+Example current blocker:
 
-- Wave 3 may start only after Track 02 has a release-candidate facade and Track 12 has fixture stability.
+```text
+Track 01 is In Progress but direct dependency 00 is Spec Approved, not Done.
+```
 
-## Wave 4
+### dependency-closure-check
 
-Tracks:
+`dependency-closure-check` computes the full transitive closure for each track.
+It fails when any dependency in that closure is not `Done`, and it also reports
+unknown dependencies and dependency cycles.
 
-- 15 Packaging, Publishing & Delivery
-- 17 Community Adoption, Education & Ecosystem
-- 18 Comparative Benchmarks & Reproducibility
-- 19 Research Software, Citation & Archival
-- 20 OpenSSF, Supply Chain Trust & Institutional Readiness
-- 21 Verification, Validation & Uncertainty
-- 22 Experiment Runner & Scenario Management
-- 23 Domain Starter Kits & Model Zoo
-- 24 Playground, Demos & Visualization UX
-- 25 API Design Review & Compatibility Governance
-- 26 Interoperability Standards Review
-- 28 Red Team & Devil's Advocate Review
-- 33 WebGPU Compute for Browser
-- 34 PDES & Parallel Execution
-- 36 Streaming & Real-Time Processing
-- 37 ML/AI Integration & Inference
-- 38 FMI/FMU & Digital Twin Bridge
-- 39 Cloud/HPC Batch Runners
-- 40 Time-Travel Debugging & Interactive Stepping
+Example current blocker:
 
-Requirement:
+```text
+Track 39 is In Progress but transitive dependency 15 is In Progress, not Done.
+```
 
-- Wave 4 may only move when the release-gating tracks 20, 25, and 28 are current and no earlier-wave track is missing required artifacts.
+## Critical-Path Heatmap
 
-## Wave 5
+The heatmap ranks tracks by the number of downstream tracks they gate through
+the current dependency graph.
 
-Tracks:
+| Rank | Track | Wave | Direct dependents | Transitive dependents | Current status |
+|---:|---:|---:|---:|---:|---|
+| 1 | 00 | 0 | 13 | 40 | Spec Approved |
+| 2 | 01 | 1 | 10 | 28 | In Progress |
+| 3 | 12 | 1 | 14 | 21 | In Progress |
+| 4 | 26 | 1 | 4 | 20 | In Progress |
+| 5 | 04 | 2 | 9 | 14 | In Progress |
+| 6 | 02 | 2 | 8 | 13 | In Progress |
+| 7 | 25 | 3 | 7 | 11 | In Progress |
+| 8 | 14 | 1 | 4 | 6 | In Progress |
+| 9 | 09 | 4 | 3 | 4 | In Progress |
+| 10 | 13 | 1 | 3 | 4 | In Progress |
 
-- 29 Wave Manager & Execution Gatekeeper
-- 30 Toolchain & Version Support Matrix
-- 31 Performance Regression Guard
-- 32 GPU Compute Acceleration
-- 35 Distributed Simulation (MPI/gRPC)
+## Exception Path
 
-Requirement:
+A maintainer override requires an ADR before release or merge signoff. The ADR
+must name:
 
-- Wave 5 tracks are always-on control tracks. They may start immediately, but their required artifacts and validation paths must exist before the repo can claim release-readiness for governance, toolchain, or performance guarantees.
+- the failed gate,
+- the blocked track and dependency chain,
+- the reason the dependency can be bypassed,
+- the compensating control,
+- the approving maintainer,
+- the expiry or follow-up issue.
 
-## No-skip controls
-
-1. Every track must have `spec.md`, `plan.md`, `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
-2. Every track must appear in `conductor/tracks.yaml`.
-3. Every track must have a declared owner and at least one required gate.
-4. A track may not be marked `In Progress` unless its readiness level is documented.
-5. A later wave may not start if an earlier wave has an unresolved required artifact.
-6. Release tracks must treat missing evidence as a blocker rather than as a future enhancement.
-7. Track directories are derived from `conductor/tracks.yaml`; validators must not hard-code the previous track count.
-8. `In Review` and `Done` require handoff evidence naming changed files, commands run, gate results, and explicit waivers. Planned or R0 tracks may contain design handoffs, but those handoffs are not implementation evidence.
+Overrides do not change `conductor/tracks.yaml`; they only document a human
+exception to a failed gate.

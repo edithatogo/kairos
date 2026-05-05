@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Enforce the wave policy (waves 0-5) — ensure Wave 0 tracks complete before Wave 1 starts, validate that no track advances without its dependencies, and own the critical-path gate.
+Enforce the graph-derived wave policy — ensure earlier dependency waves complete before dependent tracks advance, validate that no track advances without its dependencies, and own the critical-path gate.
 
 ## Why this track exists
 
@@ -25,7 +25,7 @@ This track starts immediately and runs alongside all tracks. It does not produce
 
 ## Outputs
 
-- A validated wave policy (`conductor/wave-policy.md`) with explicit wave membership, gating rules, and escalation paths.
+- A validated wave policy (`conductor/wave-policy.md`) with explicit graph-derived wave membership, gating rules, and escalation paths.
 - Gate definitions for `wave-progression-check` and `dependency-closure-check`.
 - Enforcement logic that blocks a track from entering "In Progress" unless all dependencies are "Done".
 - A critical-path heatmap showing which tracks gate other tracks.
@@ -47,7 +47,7 @@ This track starts immediately and runs alongside all tracks. It does not produce
 
 ## Acceptance criteria
 
-- Every track in `conductor/tracks.yaml` is assigned to exactly one wave (0-5).
+- Every track in `conductor/tracks.yaml` is assigned to exactly one derived wave.
 - The wave policy prevents a Wave-N track from advancing to "In Progress" while any Wave-(N-1) dependency is not "Done".
 - The `wave-progression-check` gate returns a blocking failure with a specific track ID and missing dependency when violated.
 - The `dependency-closure-check` gate validates transitive dependency completion.

@@ -3,7 +3,11 @@ description: Ensure each track only starts when its declared dependencies are re
 inputs:
   - conductor/tracks.yaml
   - conductor/tracks.md
+command: powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1
 checks:
   - Every dependency id exists in the canonical track inventory.
+  - Dependency cycles are detected and reported as blocking errors.
   - No track is marked In Progress while a required dependency is still Planned.
+  - No track is marked In Progress, In Review, or Done while any transitive dependency is not Done.
   - Track 29-31 control surfaces remain visible in the release gate model.
+report_only_command: powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -ReportOnly

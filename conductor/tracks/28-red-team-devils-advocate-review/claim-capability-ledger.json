@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "freshness_date": "2026-05-06",
+  "freshness_window_days": 14,
+  "release_stage_scope": ["beta", "rc", "1.0"],
+  "owner_required_for": ["blocker", "warning"],
+  "entries": [
+    {
+      "id": "CVC-01",
+      "claim": "Rust core and state are ready for public release",
+      "verdict": "gated-candidate",
+      "class": "warning",
+      "owner": "core-scheduler-agent; ecs-agent; release-agent",
+      "stage_impact": "Blocks beta+ if conformance or package dry-run is absent or failing",
+      "evidence": ["Cargo.toml", "crates/kairo-ecs-core", "crates/kairo-ecs-state", ".github/workflows/ci-core.yml", ".github/workflows/conformance.yml", ".github/workflows/package-dry-run.yml"],
+      "counterexample": "Rust core is production-ready without current CI and conformance evidence"
+    },
+    {
+      "id": "CVC-02",
+      "claim": "Python/R/Julia/TypeScript/C#/Go are production-ready",
+      "verdict": "preview-only",
+      "class": "blocker",
+      "owner": "binding owners; release-agent",
+      "stage_impact": "Blocks RC/1.0 stable multi-binding claims until per-binding checks and package dry-runs are green",
+      "evidence": ["bindings/python", "bindings/r", "bindings/julia", "bindings/typescript", "bindings/csharp", "bindings/go", ".github/workflows/ci-bindings.yml", "packaging/release-package-manifest.json"],
+      "counterexample": "Six stable bindings because package roots exist"
+    },
+    {
+      "id": "CVC-03",
+      "claim": "Benchmarks are reproducible and publication-ready",
+      "verdict": "smoke-plan-only",
+      "class": "warning",
+      "owner": "performance-agent",
+      "stage_impact": "Blocks public benchmark claims at alpha+ unless raw outputs, fixtures, and commands are versioned together",
+      "evidence": ["benches/benchmark-plan.md", "conformance/fixtures/manifest.json", ".github/workflows/benchmark-smoke.yml"],
+      "counterexample": "Fastest or comparative benchmark graph without raw command, fixture IDs, and environment"
+    },
+    {
+      "id": "CVC-04",
+      "claim": "Conformance fixtures support scheduler and binding claims",
+      "verdict": "ready-fixtures-only",
+      "class": "blocker",
+      "owner": "conformance-agent",
+      "stage_impact": "Blocks beta+ claims outside ready fixture coverage",
+      "evidence": ["conformance/fixtures/manifest.json", ".github/workflows/conformance.yml"],
+      "counterexample": "DES, ABM, hybrid, Arrow, or FFI fixture conformance while those fixture IDs remain planned"
+    },
+    {
+      "id": "CVC-05",
+      "claim": "Fuzzing coverage supports safety claims",
+      "verdict": "smoke-lane-only",
+      "class": "warning",
+      "owner": "security-agent; conformance-agent",
+      "stage_impact": "Blocks RC/1.0 native or FFI safety claims unless scoped",
+      "evidence": [".github/workflows/fuzzing.yml"],
+      "counterexample": "Memory safe across all FFI bindings from one smoke lane"
+    },
+    {
+      "id": "CVC-06",
+      "claim": "Docs maturity and public guidance are complete",
+      "verdict": "guidance-only",
+      "class": "warning",
+      "owner": "docs-agent",
+      "stage_impact": "Blocks beta+ if docs imply features whose gate rows are not green",
+      "evidence": ["website/src/index.md", "docs/trustworthy-simulation", "docs/community", "conductor/delivery-readiness-checklist.md"],
+      "counterexample": "Docs claiming future binding or package availability as current"
+    },
+    {
+      "id": "CVC-07",
+      "claim": "OpenSSF and supply-chain readiness are done",
+      "verdict": "gate-infrastructure-only",
+      "class": "blocker",
+      "owner": "security-agent; release-agent",
+      "stage_impact": "Blocks RC/1.0 native artifacts without SBOM, checksum, and provenance evidence",
+      "evidence": ["SECURITY.md", "CODEOWNERS", ".github/workflows/scorecard.yml", ".github/workflows/dependency-review.yml", ".github/workflows/sbom-attestations.yml", ".github/workflows/release-attestations.yml"],
+      "counterexample": "SLSA/OpenSSF ready before generated artifacts are attached"
+    },
+    {
+      "id": "CVC-08",
+      "claim": "API compatibility governance is complete",
+      "verdict": "policy-only",
+      "class": "blocker",
+      "owner": "api-governance-agent; release-agent",
+      "stage_impact": "Blocks RC/1.0 for renamed or breaking public roots without ADR and migration note",
+      "evidence": ["conductor/contracts/versioning-compatibility.md", "docs/release/compatibility.md", "docs/adr", "conductor/delivery-readiness-checklist.md"],
+      "counterexample": "Breaking package root rename presented as a minor release detail"
+    },
+    {
+      "id": "CVC-09",
+      "claim": "Interoperability standards review is complete",
+      "verdict": "standards-gap-map-only",
+      "class": "warning",
+      "owner": "interoperability-agent",
+      "stage_impact": "Blocks interoperability claims beyond documented mappings",
+      "evidence": ["docs/interoperability/standards-review.md", "conductor/tracks/26-interoperability-standards-review"],
+      "counterexample": "Semantic compatibility with Mesa, Agents.jl, MASON, NetLogo, or DEVS tooling"
+    },
+    {
+      "id": "CVC-10",
+      "claim": "Release artifact evidence exists for the current release train",
+      "verdict": "not-yet-supported",
+      "class": "blocker",
+      "owner": "release-agent",
+      "stage_impact": "Blocks RC/1.0 publication claims about artifacts, checksums, SBOM, or provenance",
+      "evidence": ["docs/release/release-checklist.md", "packaging/release-package-manifest.json", "dist/release-artifact-manifest.json"],
+      "counterexample": "Release notes saying artifacts, checksums, and SBOM are attached before the manifest exists"
+    }
+  ]
+}

@@ -13,6 +13,19 @@ The claim-vs-capability boundary now includes concrete conformance validation, p
 - Conformance claims must stay tied to the ready fixture manifest and the conformance workflow that validates those fixture IDs and canonical benchmark names.
 - Supply-chain claims must stay tied to `sbom-attestations.yml`, `release-attestations.yml`, and the release artifact manifest/checksum path, not just to checklist prose.
 - Compatibility and interoperability claims should be treated as release blockers until the relevant checklist rows and track docs are current.
+- Release artifact evidence is not present until `dist/release-artifact-manifest.json`, `dist/SHA256SUMS`, and the SBOM/provenance outputs exist for the target release train.
+
+## Blocker rubric
+
+| Class | Trigger | Owner requirement | Release effect |
+|---|---|---|---|
+| Blocker | Unsupported claim touches package publication, safety/security, compatibility, benchmark comparison, native artifacts, or release readiness | Must name a remediation owner and release-manager decision owner | Blocks beta, RC, and 1.0 unless evidence is produced or explicitly accepted |
+| Warning | Claim is partly true but overbroad, stale, missing maturity label, or backed only by smoke/checklist evidence | Must name a track owner or subagent | Blocks RC/1.0 if unresolved |
+| Note | Concern is not release-facing for the planned stage | Owner optional but preferred | Handoff only |
+
+## Freshness rule
+
+`reviews/red-team-report.md` is stale if its freshness date is older than 14 days or if beta, RC, or 1.0 planning has started since the last review. A stale report is treated as missing release evidence until Track 28 re-runs the ledger, confirms owners, and records the validation commands in the track test matrix.
 
 ## Planning rules
 
@@ -22,3 +35,4 @@ The claim-vs-capability boundary now includes concrete conformance validation, p
 4. Do not claim compatibility stability without ADRs, migration notes, and explicit package-root alignment.
 5. Do not claim interoperability beyond the standards map and documented gaps.
 6. Use the readiness checklist as the source of truth for release planning.
+7. Do not accept a blocker row without an owner, evidence path, and stage impact.

@@ -69,3 +69,19 @@ one hybrid example
 one reproducible benchmark
 one docs site
 ```
+
+## Release challenge ledger
+
+| Objection | Capability needed to defeat the objection | Current owner | Release consequence |
+|---|---|---|---|
+| Use Julia instead | Honest comparative benchmark plus interoperability/migration map | performance-agent, interoperability-agent | Any Julia-comparison claim blocks until Track 18 evidence and Track 26 mappings are current |
+| Six bindings are a trap | Staged package manifest, maturity labels, per-binding smoke/package checks | release-agent, binding owners | RC/1.0 must not describe all bindings as stable unless each published binding is green |
+| DES plus ABM creates a weak API | Separate DES and ABM examples plus shared conformance semantics | des-api-agent, abm-api-agent, conformance-agent | Blocks broad "equal paradigms" claims until both example paths run |
+| ECS is not user value | User docs lead with simulation workflows, not internal storage | docs-agent | Docs must avoid selling ECS as the main analyst-facing value |
+| Arrow is not zero-copy | Exact copy/lifetime semantics by language and schema version | arrow-agent, binding owners | Any universal zero-copy claim is a blocker |
+| Visualization will eat the project | Optional visualization and playground maturity labels | viz-agent, docs-agent | Visualization cannot block a core release or imply kernel readiness |
+| First release should be boring | Narrow v0.1 hero path with explicit exclusions | release-agent | Public release notes must name preview/experimental surfaces and omit unsupported SOTA claims |
+
+## Owner and freshness rule
+
+These objections must be rechecked with the red-team report before beta, RC, or 1.0 planning. Any objection that becomes release-facing must be promoted to a blocker or warning in `reviews/red-team-report.md` with an owner, evidence path, and stage impact.

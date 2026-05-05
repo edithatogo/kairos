@@ -13,7 +13,9 @@ KairoECS is a Rust-first simulation engine for deterministic event scheduling, E
 - [Starter kits](../../docs/starter-kits/README.md)
 - [Scenario run and replay](../../docs/scenarios/factory-bottleneck-run-replay.md)
 - [Playground](../../docs/community/playground.md)
+- [Headless snapshot playground](../../docs/playground/headless-snapshot.md)
 - [Citation and archival](../../docs/research/citation.md)
+- [Developer workflow](../../docs/developer-experience/docs-workflow.md)
 - [Trustworthy simulation](../../docs/trustworthy-simulation/verification-validation-uncertainty.md)
 - [Factory bottleneck VVUQ note](../../docs/validation/factory-bottleneck-v1-vvuq-note.md)
 

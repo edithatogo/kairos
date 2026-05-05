@@ -222,6 +222,42 @@ $trackChecks = @(
         Concrete = @("examples/model-zoo", "examples/starter-kits", "docs/model-zoo", "docs/starter-kits")
     },
     @{
+        Id = "24"
+        Path = "conductor/tracks/24-playground-demos-visualization-ux"
+        Crates = @()
+        Concrete = @("website/playground", "docs/playground", "website/scripts/smoke-playground.mjs", "docs/community/playground.md")
+    },
+    @{
+        Id = "25"
+        Path = "conductor/tracks/25-api-design-review-compatibility-governance"
+        Crates = @()
+        Concrete = @("docs/design/protected-surface-inventory.json", "docs/design/compatibility-governance.md", "docs/design/validate-compatibility-pack.ps1", "conductor/contracts/versioning-compatibility.md")
+    },
+    @{
+        Id = "26"
+        Path = "conductor/tracks/26-interoperability-standards-review"
+        Crates = @()
+        Concrete = @("docs/interoperability", "conductor/interoperability-standards.md", "conductor/tracks/26-interoperability-standards-review/validate-standards-review.ps1")
+    },
+    @{
+        Id = "27"
+        Path = "conductor/tracks/27-developer-experience-reproducible-environments"
+        Crates = @()
+        Concrete = @("justfile", "docs/developer-experience", "scripts/dx")
+    },
+    @{
+        Id = "28"
+        Path = "conductor/tracks/28-red-team-devils-advocate-review"
+        Crates = @()
+        Concrete = @("reviews", "conductor/red-team-review.md", "conductor/devils-advocate-review.md", "conductor/tracks/28-red-team-devils-advocate-review/claim-capability-ledger.json")
+    },
+    @{
+        Id = "29"
+        Path = "conductor/tracks/29-wave-manager-execution-gatekeeper"
+        Crates = @()
+        Concrete = @("conductor/wave-policy.md", "conductor/gates", "conductor/tracks/29-wave-manager-execution-gatekeeper/validate-wave-gates.ps1")
+    },
+    @{
         Id = "32"
         Path = "conductor/tracks/32-gpu-compute-acceleration"
         Crates = @("crates/kairo-ecs-gpu")

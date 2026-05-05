@@ -6,19 +6,48 @@ KairoECS is credible as a repository, but release claims still outrun the curren
 
 The release posture should stay staged: kernel and conformance first, then binding/package dry-runs, then docs and release-evidence claims, then public publication.
 
-## Claim-vs-capability ledger
+## Review metadata
 
-| Claim | Current repository capability | Release risk | Planning consequence |
+| Field | Value |
+|---|---|
+| Freshness date | 2026-05-06 |
+| Freshness window | Re-run for every beta, RC, or 1.0 release plan; otherwise stale after 14 days |
+| Machine-readable ledger | `conductor/tracks/28-red-team-devils-advocate-review/claim-capability-ledger.json` |
+| Evidence commands | `Test-Path` and `Get-Content` commands recorded in `conductor/tracks/28-red-team-devils-advocate-review/test-matrix.md` |
+| Required owner check | Every blocker or warning row must name a track owner, subagent, or release role |
+
+## Claim-versus-capability ledger
+
+| ID | Public or planning claim | Capability evidence checked | Current verdict | Owner | Stage impact | Counterexample that must stay out of release language |
+|---|---|---|---|---|---|---|
+| CVC-01 | Rust core and state are ready for public release | `Cargo.toml`; `crates/kairo-ecs-types/`; `crates/kairo-ecs-core/`; `crates/kairo-ecs-state/`; `crates/kairo-ecs-rng/`; `.github/workflows/ci-core.yml`; `.github/workflows/conformance.yml`; `.github/workflows/package-dry-run.yml` | Supported only as a gated Rust-core candidate | core-scheduler-agent, ecs-agent, release-agent | Blocks beta+ if conformance or package dry-run is absent/failing | "Rust core is production-ready" without current CI and conformance evidence |
+| CVC-02 | Python/R/Julia/TypeScript/C#/Go are production-ready | `bindings/python/`; `bindings/r/`; `bindings/julia/`; `bindings/typescript/`; `bindings/csharp/`; `bindings/go/`; `.github/workflows/ci-bindings.yml`; `packaging/release-package-manifest.json` | Not supported as production-ready; supported only as staged or preview surfaces | binding owners, release-agent | Blocks RC/1.0 for any published binding with failed smoke/package checks | "Six stable bindings" because package roots exist |
+| CVC-03 | Benchmarks are reproducible and publication-ready | `benches/benchmark-plan.md`; `conformance/fixtures/manifest.json`; `.github/workflows/benchmark-smoke.yml` | Supported only as a smoke/reproducibility plan until raw outputs are versioned | performance-agent | Blocks public benchmark claims at alpha+ | "Fastest" or comparative graph without raw command, fixture IDs, and environment |
+| CVC-04 | Conformance fixtures support scheduler and binding claims | `conformance/fixtures/manifest.json`; `.github/workflows/conformance.yml` | Supported for ready fixtures only: `scheduler_ordering_v1`, `scheduler_cancellation_v1`, `rng_reproducibility_v1`, `vvuq_scenario_replay_v1` | conformance-agent | Blocks beta+ claims outside ready fixture coverage | Claiming DES, ABM, hybrid, Arrow, or FFI fixture conformance while those fixture IDs remain planned |
+| CVC-05 | Fuzzing coverage supports safety claims | `.github/workflows/fuzzing.yml`; optional `fuzz/` target presence | Not supported as broad safety coverage; supported as a smoke lane only | security-agent, conformance-agent | Blocks RC/1.0 native/FFI safety claims unless scoped | "Memory safe across all FFI bindings" from one smoke lane |
+| CVC-06 | Docs maturity and public guidance are complete | `website/src/index.md`; `docs/trustworthy-simulation/`; `docs/community/`; `conductor/delivery-readiness-checklist.md` | Supported as guidance surfaces, not implementation proof | docs-agent | Blocks beta+ if docs imply features whose gate rows are not green | Quickstarts or docs claiming future binding/package availability as current |
+| CVC-07 | OpenSSF and supply-chain readiness are done | `SECURITY.md`; `CODEOWNERS`; `.github/workflows/scorecard.yml`; `.github/workflows/dependency-review.yml`; `.github/workflows/sbom-attestations.yml`; `.github/workflows/release-attestations.yml` | Supported as gate infrastructure; not supported as shipped release evidence | security-agent, release-agent | Blocks RC/1.0 native artifacts without SBOM/checksum/provenance evidence | "SLSA/OpenSSF ready" before generated artifacts are attached |
+| CVC-08 | API compatibility governance is complete | `conductor/contracts/versioning-compatibility.md`; `docs/release/compatibility.md`; `docs/adr/`; `conductor/delivery-readiness-checklist.md` | Supported as policy; enforcement must be proven per release | api-governance-agent, release-agent | Blocks RC/1.0 for renamed or breaking public roots without ADR/migration note | Breaking package root rename presented as a minor release detail |
+| CVC-09 | Interoperability standards review is complete | `docs/interoperability/standards-review.md`; Track 26 references | Supported only as a standards/gap map | interoperability-agent | Blocks interoperability claims beyond documented mappings | Claiming semantic compatibility with Mesa, Agents.jl, MASON, NetLogo, or DEVS tooling |
+| CVC-10 | Release artifact evidence exists for the current release train | `docs/release/release-checklist.md`; `packaging/release-package-manifest.json`; expected `dist/release-artifact-manifest.json` | Not yet supported: `dist/release-artifact-manifest.json` was absent in the focused check | release-agent | Blocks RC/1.0 publication | Release notes saying artifacts, checksums, and SBOM are attached before the manifest exists |
+
+## Blocker rubric
+
+| Class | Definition | Required action | Release effect |
 |---|---|---|---|
-| Rust core and state are ready for public release | `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-state`, and `crates/kairo-ecs-rng` are checked in, and `ci-core.yml`, `package-dry-run.yml`, `benchmark-smoke.yml`, `fuzzing.yml`, and `conformance.yml` exist | The code exists and the repo now has concrete conformance and packaging lanes, but release claims still depend on those checks passing for the target surface | Keep Rust core release-gated until conformance, package dry-runs, and benchmark smoke checks are verified in CI |
-| Python/R/Julia/TypeScript/C#/Go are production-ready | The six binding package roots exist and are wired into `ci-bindings.yml` and `package-dry-run.yml` | CI currently proves smoke checks, manifest presence, and dry-run packaging, not ecosystem maturity or long-term compatibility | Treat all non-Rust package roots as release-gated surfaces, not stable promises, until their per-binding checks pass |
-| Benchmarks are reproducible and publication-ready | `benches/benchmark-plan.md`, `conformance/fixtures/manifest.json`, and `.github/workflows/benchmark-smoke.yml` exist | The smoke workflow proves the harness is present and invokable; it does not itself prove comparison quality or fairness | Do not publish benchmark claims without the benchmark plan, fixture IDs, and raw outputs staying versioned together |
-| Conformance fixtures are current enough to support binding and scheduler claims | `conformance/fixtures/manifest.json` and `.github/workflows/conformance.yml` validate the ready fixture set and canonical benchmark names | The workflow proves only the checked-in ready fixtures and named scenarios; planned fixtures remain future work | Keep conformance claims tied to the ready fixture IDs and canonical benchmark scenarios only |
-| Fuzzing coverage is complete enough to support safety claims | `.github/workflows/fuzzing.yml` exists and invokes `cargo fuzz run ffi_boundary` if `fuzz/` is present | The workflow is a smoke gate, not proof of exhaustive coverage | Keep safety claims scoped to the checked-in fuzz target and its current lane only |
-| Docs maturity and public guidance are done | `website/src/index.md`, `docs/trustworthy-simulation/replay-and-seeds.md`, `docs/trustworthy-simulation/verification-validation-uncertainty.md`, `conductor/community-adoption.md`, `conductor/experiment-runner.md`, and `conductor/domain-model-zoo.md` exist | The docs are present, but they are guidance documents and landing/index surfaces, not proof that every referenced capability is implemented end-to-end | Keep docs language aligned to current capability and avoid implying a finished release unless the readiness rows are green |
-| OpenSSF and supply-chain readiness are done | `conductor/delivery-readiness-checklist.md`, `conductor/quality-gates.md`, and the concrete `sbom-attestations.yml` / `release-attestations.yml` workflows explicitly call out SBOM, provenance, dependency review, and waiver handling | The repository now has actual attestation workflows, but that is still not the same as shipped release evidence | Treat the gate rows and attestation workflows as blockers until the corresponding artifacts are present and passing for the target release |
-| API compatibility governance is complete | `conductor/contracts/versioning-compatibility.md`, `conductor/delivery-readiness-checklist.md`, and `conductor/quality-gates.md` name compatibility policy, ADRs, and migration notes | The policy exists as text; the repo still needs releases to prove it is being enforced | Do not allow package-root renames or breaking API claims without a recorded ADR and migration note |
-| Interoperability standards review is complete | Track 26 exists and names a standards inventory plus mapping table | The track is review-oriented; it does not itself guarantee broad cross-ecosystem parity | Avoid claiming full interoperability beyond the mapped, supported translations |
+| Blocker | Unsupported or false claim affects a public release surface, safety/security statement, package publication, compatibility promise, or benchmark/comparison claim | Remove/downgrade the claim, produce evidence, or record explicit release-manager acceptance with owner and expiry | Blocks beta, RC, and 1.0 unless accepted; Critical blockers also block alpha |
+| Warning | Claim is directionally true but narrower than stated, stale, missing owner, or backed only by smoke/checklist evidence | Rewrite the claim with maturity labels and add owner/follow-up | Does not block alpha; blocks RC/1.0 if still unresolved |
+| Note | Concern is real but not tied to current release language or release artifacts | Track as handoff/risk only | Does not block release unless it becomes release-facing |
+
+## Freshness and owner validation
+
+The report is current only when all of the following are true:
+
+- the freshness date is within 14 days of release planning, or the report was re-run for the specific beta/RC/1.0 gate
+- every `Blocker` or `Warning` row in the claim ledger names an owner
+- every release-facing blocker has a matching row in `conductor/delivery-readiness-checklist.md`
+- any missing evidence path is either downgraded in release language or explicitly accepted by the release manager
+- the local validation commands in the Track 28 test matrix have been run and recorded
 
 ## Top release-blocking risks and patch status
 

@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "source_of_truth": "conductor/contracts/versioning-compatibility.md",
+  "release_note": "docs/release/compatibility.md",
+  "surfaces": [
+    {
+      "id": "rust-types-api",
+      "kind": "rust_api",
+      "root": "crates/kairo-ecs-types",
+      "status": "experimental",
+      "example": "SimTime, SimDuration, EventId, EntityId, shared errors, and versioned DTOs",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "root_renamed", "public_semantics_changed_without_adr"]
+    },
+    {
+      "id": "rust-core-api",
+      "kind": "rust_api",
+      "root": "crates/kairo-ecs-core",
+      "status": "experimental",
+      "example": "Scheduler ordering, run loop, queue behavior, cancellation, and deterministic event ordering",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "root_renamed", "public_semantics_changed_without_adr"]
+    },
+    {
+      "id": "rust-state-api",
+      "kind": "rust_api",
+      "root": "crates/kairo-ecs-state",
+      "status": "experimental",
+      "example": "Entity/component storage, generational handles, query behavior, and state snapshots",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "root_renamed", "public_semantics_changed_without_adr"]
+    },
+    {
+      "id": "rust-rng-api",
+      "kind": "rust_api",
+      "root": "crates/kairo-ecs-rng",
+      "status": "experimental",
+      "example": "Deterministic seed derivation, stream naming, and distribution behavior",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "root_renamed", "deterministic_output_changed_without_version_bump"]
+    },
+    {
+      "id": "c-abi",
+      "kind": "c_abi",
+      "root": "include/kairo_ecs.h",
+      "status": "migration-only-until-public-preview",
+      "example": "kairo_ecs_ffi_version, handle ownership, status codes, and exported C symbols",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta", "abi_review"],
+      "release_hold_when": ["root_missing", "signature_changed_without_adr", "ownership_changed_without_migration_note"]
+    },
+    {
+      "id": "arrow-event-log-schema",
+      "kind": "arrow_schema",
+      "root": "schemas/arrow/event_log_v1.schema.json",
+      "status": "migration-only-until-telemetry-preview",
+      "example": "Event log schema fields, metadata keys, nullability, and schema version",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta", "schema_version_bump"],
+      "release_hold_when": ["root_missing", "field_removed_or_retyped_without_major_schema_version", "schema_output_changed_without_compatibility_note"]
+    },
+    {
+      "id": "python-api",
+      "kind": "host_api",
+      "root": "bindings/python",
+      "status": "experimental",
+      "example": "Python import root, scheduler wrapper, Arrow helpers, and package-level API",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "root_renamed", "host_behavior_changed_without_migration_note"]
+    },
+    {
+      "id": "r-api",
+      "kind": "host_api",
+      "root": "bindings/r",
+      "status": "experimental",
+      "example": "R package root, external pointer lifecycle, Arrow helpers, and exported functions",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "root_renamed", "host_behavior_changed_without_migration_note"]
+    },
+    {
+      "id": "julia-api",
+      "kind": "host_api",
+      "root": "bindings/julia",
+      "status": "experimental",
+      "example": "Julia module root, ccall wrappers, artifact loading, and Arrow integration",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "root_renamed", "host_behavior_changed_without_migration_note"]
+    },
+    {
+      "id": "typescript-wasm-api",
+      "kind": "host_api",
+      "root": "bindings/typescript",
+      "status": "experimental",
+      "example": "TypeScript package root, Wasm loader, browser/Node entrypoints, and typed API",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "root_renamed", "host_behavior_changed_without_migration_note"]
+    },
+    {
+      "id": "csharp-api",
+      "kind": "host_api",
+      "root": "bindings/csharp",
+      "status": "experimental",
+      "example": "C# solution root, SafeHandle lifecycle, P/Invoke signatures, and target framework API",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "root_renamed", "host_behavior_changed_without_migration_note"]
+    },
+    {
+      "id": "go-api",
+      "kind": "host_api",
+      "root": "bindings/go",
+      "status": "experimental",
+      "example": "Go module root, cgo wrapper, Close lifecycle, and exported package API",
+      "breaking_change_requires": ["compatibility_note", "adr", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "root_renamed", "host_behavior_changed_without_migration_note"]
+    },
+    {
+      "id": "conformance-fixtures",
+      "kind": "conformance",
+      "root": "conformance/fixtures",
+      "status": "experimental",
+      "example": "Shared deterministic fixture inputs, expected outputs, ordering, and replay contracts",
+      "breaking_change_requires": ["compatibility_note", "adr_when_public", "fixture_version_bump", "migration_note_before_beta"],
+      "release_hold_when": ["root_missing", "deterministic_fixture_output_changed_without_version_bump"]
+    }
+  ]
+}

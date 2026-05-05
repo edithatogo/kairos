@@ -136,14 +136,15 @@ Exception review is intentionally human-gated. Any exception must be recorded wi
 ### API compatibility
 
 ```bash
-# surface inventory reviewed for Rust crates and binding package roots:
-# crates/kairo-ecs-types, crates/kairo-ecs-core, crates/kairo-ecs-state, crates/kairo-ecs-rng
-# bindings/python, bindings/r, bindings/julia, bindings/typescript, bindings/csharp, bindings/go
+pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1
+pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate
+# surface inventory reviewed for Rust crates, C ABI, Arrow schemas, host APIs, and conformance fixtures:
+# docs/design/protected-surface-inventory.json
 # breaking-change definition present in conductor/contracts/versioning-compatibility.md
 # ADR required for protected-surface changes
 # migration notes required for breaking changes
 # package matrix and catalog must match the live binding/package roots
-# compatibility notes must name the affected package root before beta or later
+# compatibility notes must name the affected protected root before beta or later
 ```
 
 ### Red-team / release block review

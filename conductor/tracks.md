@@ -28,9 +28,9 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 21 | Verification, Validation & Uncertainty | In Progress | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |
 | 22 | Experiment Runner & Scenario Management | In Progress | `experiment-agent` | See `conductor/tracks/22-*/spec.md` |
 | 23 | Domain Starter Kits & Model Zoo | In Progress | `model-zoo-agent` | See `conductor/tracks/23-*/spec.md` |
-| 24 | Playground, Demos & Visualization UX | Planned | `playground-agent` | See `conductor/tracks/24-*/spec.md` |
-| 25 | API Design Review & Compatibility Governance | Spec Approved | `api-governance-agent` | See `conductor/tracks/25-*/spec.md` |
-| 26 | Interoperability Standards Review | Spec Approved | `interop-agent` | See `conductor/tracks/26-*/spec.md` |
+| 24 | Playground, Demos & Visualization UX | In Progress | `playground-agent` | See `conductor/tracks/24-*/spec.md` |
+| 25 | API Design Review & Compatibility Governance | In Progress | `api-governance-agent` | See `conductor/tracks/25-*/spec.md` |
+| 26 | Interoperability Standards Review | In Progress | `interop-agent` | See `conductor/tracks/26-*/spec.md` |
 | 27 | Developer Experience & Reproducible Environments | In Progress | `dx-agent` | See `conductor/tracks/27-*/spec.md` |
 | 28 | Red Team & Devil's Advocate Review | In Progress | `redteam-agent` | See `conductor/tracks/28-*/spec.md` |
 | 29 | Wave Manager & Execution Gatekeeper | In Progress | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |

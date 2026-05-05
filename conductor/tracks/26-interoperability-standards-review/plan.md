@@ -25,6 +25,8 @@
   - FMI/FMU, SBML, and CellML -> future bridge targets that are not yet implemented.
 - Tie each mapping to a comparison target that already exists in the repo, such as `conductor/experiment-runner.md`, `docs/trustworthy-simulation/replay-and-seeds.md`, or the Arrow schema work.
 
+Worker 3 evidence note: `docs/interoperability/standards-review.md` now carries the concrete standards mapping with required labels for DEVS, FMI/FMU, SBML, CellML, OpenTelemetry semantic conventions, Arrow C Data Interface, Arrow IPC, and Parquet. `conductor/interoperability-standards.md` mirrors the current labels for conductor-facing readers.
+
 ### Task 1.2 — Add review criteria
 - Add red-team prompts for false interoperability claims, partial mappings, and ambiguous terminology.
 - Add devil's advocate objections about whether the standard mapping is useful in practice.
@@ -39,6 +41,8 @@
 - Add docs linting, inventory checks, and smoke validation for any generated mapping tables.
 - Use path guards for future interoperability artifacts that are not created yet.
 - Keep the validation local to this track's docs and the docs page it owns.
+
+Worker 3 evidence note: local validation is available at `conductor/tracks/26-interoperability-standards-review/validate-standards-review.ps1`. It checks the eight required standards, the supported/partial/deferred/unsupported vocabulary, evidence citations, release-impacting assertions, and exactly eight primary mapping rows.
 
 ### Task 2.2 — Connect to release gates
 - Define what standards-review evidence is required before alpha, beta, RC, and 1.0 claims.
@@ -67,3 +71,5 @@
 ### Task 4.2 — Update risk register
 - Move resolved risks to mitigated.
 - Keep unresolved interoperability gaps as blockers until the mapping is explicit.
+
+Worker 3 evidence note: the risk register now includes explicit risks for overstated Arrow IPC/Parquet support, FMI/FMU scaffold overclaiming, OpenTelemetry exporter overclaiming, and unsupported ecosystem comparisons becoming compatibility claims.

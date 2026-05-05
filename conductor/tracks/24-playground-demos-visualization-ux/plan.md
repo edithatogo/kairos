@@ -15,8 +15,10 @@
 ## Phase 1 — Minimum viable public artifact
 
 ### Task 1.1 — Create the first usable version
-- Produce the smallest playable demo page or visualization note that helps a user understand the current repo state.
-- Use a real KairoECS example path, screenshot target, or fixture reference that can be exercised in the browser.
+- [x] Produce the smallest playable demo page or visualization note that helps a user understand the current repo state.
+- [x] Use a real KairoECS example path, screenshot target, or fixture reference that can be exercised in the browser.
+
+Evidence: `website/playground/index.html` renders `website/playground/headless-snapshot.json`, anchored to `examples/viz/headless-snapshot/src/main.rs`.
 
 ### Task 1.2 — Add review criteria
 - Add red-team prompts for misleading motion, broken layouts, and demos that overstate the implementation.
@@ -26,8 +28,10 @@
 ## Phase 2 — Automation and validation
 
 ### Task 2.1 — Wire into CI where possible
-- Add docs linting, asset-existence checks, and smoke tests for any local preview or demo page.
+- [x] Add docs linting, asset-existence checks, and smoke tests for any local preview or demo page.
 - Use path guards for playground assets that are not created yet.
+
+Evidence: `node website/scripts/smoke-playground.mjs` validates the page assets, fixture schema, source anchor, summary counts, and bounds.
 
 ### Task 2.2 — Connect to release gates
 - Define what demo and visualization evidence is required before alpha, beta, RC, and 1.0 claims.
@@ -40,8 +44,10 @@
 - Provide example assets or fixture references rather than prose-only handoffs.
 
 ### Task 3.2 — Add community-facing documentation
-- Ensure the docs site has a page explaining how to use the playground and read the visuals.
-- Link from the docs index or contributor guide where the page is easy to find.
+- [x] Ensure the docs site has a page explaining how to use the playground and read the visuals.
+- [x] Link from the docs index or contributor guide where the page is easy to find.
+
+Evidence: `docs/community/playground.md` names the implemented slice and `docs/playground/headless-snapshot.md` records the local commands.
 
 ## Phase 4 — Closeout
 

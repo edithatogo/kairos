@@ -17,6 +17,7 @@ The playground page should present:
 
 These are the first demo targets the page should reference:
 
+- `website/playground/index.html` anchored to `examples/viz/headless-snapshot/`
 - `examples/des/mm1_queue/`
 - `examples/des/factory_bottleneck/`
 - `examples/abm/schelling/`
@@ -47,3 +48,25 @@ The docs home page should link to this page from the community section so users 
 - name the visible demo targets
 - distinguish current docs from future visuals
 - give reviewers a stable place to check whether the playground claim is honest
+
+## First implemented slice
+
+The first local playground page is `website/playground/index.html`. It renders `website/playground/headless-snapshot.json`, which is tied back to `examples/viz/headless-snapshot/src/main.rs`.
+
+Run the focused smoke check with:
+
+```powershell
+node website/scripts/smoke-playground.mjs
+```
+
+Run the source example with:
+
+```powershell
+cargo run --manifest-path examples/viz/headless-snapshot/Cargo.toml
+```
+
+If the local Windows linker is not configured, use the non-linking check:
+
+```powershell
+cargo check --manifest-path examples/viz/headless-snapshot/Cargo.toml
+```

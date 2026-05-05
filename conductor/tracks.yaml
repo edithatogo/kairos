@@ -329,7 +329,7 @@ tracks:
       - example-maturity-labels
   - id: 24
     name: Playground, Demos & Visualization UX
-    status: Planned
+    status: In Progress
     owner: playground-agent
     depends_on: ["05", "09", "14"]
     owned_paths:
@@ -340,7 +340,7 @@ tracks:
       - non-core-dependency-check
   - id: 25
     name: API Design Review & Compatibility Governance
-    status: Spec Approved
+    status: In Progress
     owner: api-governance-agent
     depends_on: ["00", "02", "26"]
     owned_paths:
@@ -351,7 +351,7 @@ tracks:
       - compatibility-matrix
   - id: 26
     name: Interoperability Standards Review
-    status: Spec Approved
+    status: In Progress
     owner: interop-agent
     depends_on: ["00"]
     owned_paths:

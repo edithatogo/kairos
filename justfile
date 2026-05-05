@@ -28,16 +28,21 @@ test:
     cargo nextest run --workspace --all-features
 
 docs-bootstrap:
-    cd website && npm ci
+    npm --prefix website ci
 
 docs-build:
-    cd website && npm ci && npm run build
+    npm --prefix website ci
+    npm --prefix website run build
 
 docs-dev:
-    cd website && npm ci && npm start
+    npm --prefix website ci
+    npm --prefix website start
+
+docs-smoke:
+    node scripts/dx/validate-docs-workflow.mjs
 
 check-docs:
-    cd website && npm ci && npm run build && test -f build/index.html && rg -n "docs/adr/|docs/api/api-review-template.md|docs/benchmarks/benchmark-policy.md|docs/community/|docs/design/api-review.md|docs/interoperability/standards-review.md|docs/release/|docs/research/|docs/trustworthy-simulation/" src/index.md
+    node scripts/dx/validate-docs-workflow.mjs
 
 security:
     cargo deny check

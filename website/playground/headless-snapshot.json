@@ -1,0 +1,43 @@
+{
+  "schema": "kairo.ecs.playground.headless-snapshot.v1",
+  "title": "Headless visualization snapshot",
+  "sourceExamplePath": "examples/viz/headless-snapshot",
+  "sourceProgram": "examples/viz/headless-snapshot/src/main.rs",
+  "command": "cargo run --manifest-path examples/viz/headless-snapshot/Cargo.toml",
+  "frame": {
+    "atTicks": 12,
+    "entities": [
+      {
+        "id": {
+          "index": 1,
+          "generation": 0
+        },
+        "label": "triage",
+        "xMilli": 0,
+        "yMilli": 0
+      },
+      {
+        "id": {
+          "index": 2,
+          "generation": 0
+        },
+        "label": "bed-12",
+        "xMilli": 1250,
+        "yMilli": 500
+      }
+    ],
+    "events": []
+  },
+  "expectedSummary": {
+    "atTicks": 12,
+    "entityCount": 2,
+    "eventCount": 0,
+    "bounds": {
+      "minXMilli": 0,
+      "minYMilli": 0,
+      "maxXMilli": 1250,
+      "maxYMilli": 500
+    }
+  },
+  "claimBoundary": "This page renders a committed headless snapshot fixture. It does not claim browser-side Wasm simulation execution."
+}

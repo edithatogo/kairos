@@ -6,7 +6,10 @@
     "docs/benchmarks/reproduce-comparison.md",
     "docs/community/",
     "docs/design/api-review.md",
+    "docs/design/compatibility-governance.md",
+    "docs/developer-experience/docs-workflow.md",
     "docs/interoperability/standards-review.md",
+    "docs/playground/headless-snapshot.md",
     "docs/release/",
     "docs/research/citation.md",
     "docs/scenarios/factory-bottleneck-run-replay.md",
@@ -24,6 +27,7 @@
     "bindings/go/README.md",
     "examples/docs/README.md",
     "examples/starter-kits/starter-kits.yaml",
+    "website/playground/index.html",
     "conductor/tracks/14-docs-site-education/test-matrix.md"
   ],
   "siteSources": [

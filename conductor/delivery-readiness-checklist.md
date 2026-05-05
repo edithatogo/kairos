@@ -47,6 +47,12 @@ Use this before every alpha, beta, release candidate, and stable release.
 - [ ] Maintainers documented.
 - [ ] Naming due diligence complete.
 - [ ] Compatibility policy names the live Rust and binding package roots.
+- [ ] `docs/design/protected-surface-inventory.json` names every protected Rust, C ABI, Arrow, host API, and conformance root.
+- [ ] `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1` passes for the policy pack.
+- [ ] `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate` passes before beta, RC, or 1.0.
+- [ ] Breaking protected-surface changes have ADRs before merge.
+- [ ] Breaking protected-surface changes have migration notes before beta, RC, or 1.0.
+- [ ] Release notes and compatibility notes name the exact affected protected roots.
 - [ ] OpenSSF/supply-chain readiness rows from Track 20 are green.
 - [ ] API compatibility review rows from Track 25 are green.
 - [ ] Red-team blocker rows from Track 28 are green or explicitly waived.
@@ -115,12 +121,17 @@ Use this before every alpha, beta, release candidate, and stable release.
 ## Red-team readiness
 
 - [ ] `reviews/red-team-report.md` reviewed.
+- [ ] `reviews/red-team-report.md` includes a freshness date within 14 days of release planning or was re-run for the target beta/RC/1.0 gate.
+- [ ] Claim-versus-capability ledger rows name evidence, verdict, owner, stage impact, and counterexample language to avoid.
+- [ ] Blocker rubric is applied: Blocker, Warning, or Note.
 - [ ] All critical red-team findings resolved or explicitly accepted.
+- [ ] Every blocker or warning has a named owner and follow-up path.
+- [ ] Missing release evidence paths are downgraded in release notes or explicitly accepted by the release manager.
 - [ ] Devil's advocate objections are addressed in release notes.
 - [ ] Any preview/experimental claims are labelled clearly.
 - [ ] .NET 11 lane is marked preview/experimental until GA.
 - [ ] Arrow zero-copy claims specify exact copy/lifetime behavior.
 - [ ] FFI memory safety tests passed for published bindings.
-- [ ] Red-team freshness date is current for the release stage being planned.
-- [ ] Release blockers have named owners and follow-up issues.
+- [ ] `dist/release-artifact-manifest.json`, `dist/SHA256SUMS`, and SBOM/provenance evidence exist before RC or 1.0 native artifact claims.
+- [ ] Red-team validation commands from `conductor/tracks/28-red-team-devils-advocate-review/test-matrix.md` have been run for this release stage.
 - [ ] Wave 5 control tracks are current.

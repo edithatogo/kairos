@@ -3,7 +3,11 @@ description: Ensure later waves do not skip unresolved earlier-wave dependencies
 inputs:
   - conductor/tracks.yaml
   - conductor/wave-policy.md
+command: powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1
 checks:
   - Every track has a declared owner and required gates.
   - Every track appears exactly once in the human and machine track indexes.
+  - Every track has the six required conductor artifacts.
   - A later wave cannot start if an earlier wave is missing required artifacts.
+  - A track in In Progress, In Review, or Done cannot have a direct dependency that is not Done.
+report_only_command: powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -ReportOnly
