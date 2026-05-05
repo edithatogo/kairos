@@ -79,6 +79,10 @@ function Assert-No-StaleEvidence {
         return
     }
     $status = $statusMatch.Groups[1].Value.Trim()
+    $existingConcreteForStatus = @($ConcretePaths | Where-Object { Test-Path -LiteralPath $_ })
+    if (($status -eq "Planned") -and ($existingConcreteForStatus.Count -gt 0)) {
+        Add-Issue -Message "Track $TrackId is still Planned in conductor/tracks.yaml despite concrete owned paths: $($existingConcreteForStatus -join ', ')"
+    }
     if (($status -eq "Done" -or $status -eq "In Review") -and ($content -match "Not marked complete|Not complete|Blocked validation|blocked until|not implemented|remain future work")) {
         Add-Issue -Message "Track $TrackId status is $status but its evidence still names incomplete or blocked work"
     }
@@ -160,8 +164,17 @@ $controlFiles = @(
 
 foreach ($file in $controlFiles | Where-Object { Test-Path -LiteralPath $_ }) {
     $content = Get-Content -LiteralPath $file -Raw
-    if ($content -match "(?i)(expected|exactly|required)\s+(32|41)\s+track") {
+    if ($content -match '(?i)(expected|exactly|required)\s+(32|41)\s+track') {
         Add-Issue -Message "Hard-coded track count found in control file: $file"
+    }
+    if ($content -match 'There are\s+32\s+track directories') {
+        Add-Issue -Message "Stale 32-track directory count found in control file: $file"
+    }
+    if ($content -match 'covering tracks\s+`00`\s+through\s+`31`') {
+        Add-Issue -Message "Stale 00-31 coverage claim found in control file: $file"
+    }
+    if ($content -match 'Tracks?\s+32-40.*R0|Track\s+3[2-9]\).*Planned only|Track\s+40\).*Planned only') {
+        Add-Issue -Message "Stale planning-only readiness claim for Tracks 32-40 found in control file: $file"
     }
 }
 

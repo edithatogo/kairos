@@ -1,6 +1,6 @@
 # KairoECS Implementation Readiness
 
-Last verified: 2026-05-05
+Last verified: 2026-05-06
 
 ## Purpose
 
@@ -27,21 +27,21 @@ The Conductor setup is complete, but implementation should move through explicit
 | Docs site | R2 | `website/package.json` builds a static placeholder. |
 | GitHub automation surface | R2 | `.github/` workflows, CODEOWNERS, dependency review, and release scaffolding exist. |
 | Packaging | R1 | `packaging/README.md` exists; ecosystem package dirs wait for manifests. |
-| GPU Compute (Track 32) | R0 | Planned only. |
-| WebGPU Compute (Track 33) | R0 | Planned only. |
-| PDES & Parallel Execution (Track 34) | R0 | Planned only. |
-| Distributed Simulation (Track 35) | R0 | Planned only. |
-| Streaming & Real-Time (Track 36) | R0 | Planned only. |
-| ML/AI Integration (Track 37) | R0 | Planned only. |
-| FMI/FMU Digital Twin (Track 38) | R0 | Planned only. |
-| Cloud/HPC Batch Runners (Track 39) | R0 | Planned only. |
-| Time-Travel Debugging (Track 40) | R0 | Planned only. |
+| GPU Compute (Track 32) | R2 | `crates/kairo-ecs-gpu` exists, is wired into the root workspace, and has explicit unavailable-backend contracts plus feature compile gates. |
+| WebGPU Compute (Track 33) | R2 | `crates/kairo-ecs-webgpu` and `website/webgpu-demo` exist with browser dispatch capability checks and demo smoke tests. |
+| PDES & Parallel Execution (Track 34) | R2 | `crates/kairo-ecs-pdes` exists with parity and deadlock-stress report fixtures. |
+| Distributed Simulation (Track 35) | R2 | `crates/kairo-ecs-mpi` and `crates/kairo-ecs-grpc` exist with dependency-free transport protocol emulators and compile gates. |
+| Streaming & Real-Time (Track 36) | R2 | `crates/kairo-ecs-streaming` exists with event-log contract validation and feature compile gates. |
+| ML/AI Integration (Track 37) | R2 | `crates/kairo-ecs-ml`, `examples/ml-surrogate`, and `python/kairo_gym` exist with metadata, shape, and action validation. |
+| FMI/FMU Digital Twin (Track 38) | R2 | `crates/kairo-ecs-fmi` and `examples/fmi-co-simulation` exist with unpacked FMU, modelDescription, and AAS validation. |
+| Cloud/HPC Batch Runners (Track 39) | R2 | `cloud`, `docker`, `k8s`, `hpc/slurm`, and `docs/cloud-hpc` exist with offline cloud/HPC manifest validation. |
+| Time-Travel Debugging (Track 40) | R2 | `crates/kairo-ecs-debug` and `website/time-travel-demo` exist with trace-line validation and a Node demo smoke harness. |
 
 ## Enforcement rule
 
 Once a track moves to `In Progress`, the files listed in `conductor/tracks.yaml` for that track must exist or be explicitly waived in the track handoff. Once an ecosystem package manifest is added, matching CI must fail on errors rather than skip.
 
-Tracks cannot move to `In Review` or `Done` from planning text alone. A closeout must identify the owned files that exist in the worktree, the commands that exercised each required gate, and any waived gate with an owner and follow-up. For Tracks 32-40, `R0` means planning-only even if a handoff drafts future implementation language; implementation claims require matching owned paths and command evidence before status can advance.
+Tracks cannot move to `In Review` or `Done` from planning text alone. A closeout must identify the owned files that exist in the worktree, the commands that exercised each required gate, and any waived gate with an owner and follow-up. For Tracks 32-40, R2 means a real checked-in implementation slice exists and compiles or validates locally; it does not imply release-candidate completeness.
 
 ## Immediate critical path
 

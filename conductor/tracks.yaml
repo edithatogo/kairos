@@ -409,7 +409,7 @@ tracks:
       - threshold-definition-exists
   - id: 32
     name: GPU Compute Acceleration
-    status: Planned
+    status: In Progress
     owner: gpu-compute-agent
     depends_on: ["01"]
     owned_paths:
@@ -420,7 +420,7 @@ tracks:
       - gpu-benchmark-threshold
   - id: 33
     name: WebGPU Compute for Browser
-    status: Planned
+    status: In Progress
     owner: webgpu-agent
     depends_on: ["09", "32"]
     owned_paths:
@@ -431,7 +431,7 @@ tracks:
       - wasm-gpu-parity
   - id: 34
     name: PDES & Parallel Execution
-    status: Planned
+    status: In Progress
     owner: pdes-agent
     depends_on: ["01"]
     owned_paths:
@@ -442,7 +442,7 @@ tracks:
       - gvt-progression-check
   - id: 35
     name: Distributed Simulation (MPI/gRPC)
-    status: Planned
+    status: In Progress
     owner: distributed-agent
     depends_on: ["34"]
     owned_paths:
@@ -455,7 +455,7 @@ tracks:
       - entity-migration-check
   - id: 36
     name: Streaming & Real-Time Processing
-    status: Planned
+    status: In Progress
     owner: streaming-agent
     depends_on: ["04", "22"]
     owned_paths:
@@ -467,7 +467,7 @@ tracks:
       - realtime-wallclock-check
   - id: 37
     name: ML/AI Integration & Inference
-    status: Planned
+    status: In Progress
     owner: ml-integration-agent
     depends_on: ["23"]
     owned_paths:
@@ -479,7 +479,7 @@ tracks:
       - gymnasium-env-smoke
   - id: 38
     name: FMI/FMU & Digital Twin Bridge
-    status: Planned
+    status: In Progress
     owner: fmi-agent
     depends_on: ["26", "36", "02"]
     owned_paths:
@@ -492,7 +492,7 @@ tracks:
       - aas-validate
   - id: 39
     name: Cloud/HPC Batch Runners
-    status: Planned
+    status: In Progress
     owner: cloud-agent
     depends_on: ["22", "15"]
     owned_paths:
@@ -505,7 +505,7 @@ tracks:
       - spot-checkpoint-test
   - id: 40
     name: Time-Travel Debugging & Interactive Stepping
-    status: Planned
+    status: In Progress
     owner: timetravel-agent
     depends_on: ["01", "12"]
     owned_paths:

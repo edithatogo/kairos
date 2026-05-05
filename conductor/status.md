@@ -1,6 +1,6 @@
 # KairoECS Conductor Status
 
-Last verified: 2026-05-05
+Last verified: 2026-05-06
 
 ## Setup state
 
@@ -30,7 +30,7 @@ The GitHub automation surface is also present under `.github/` with workflow, de
 
 ## Track state
 
-There are 32 track directories under `conductor/tracks`, covering tracks `00` through `31`.
+There are 41 track directories under `conductor/tracks`, covering tracks `00` through `40`.
 
 Each track has the required Conductor artifact shape:
 
@@ -52,6 +52,7 @@ The repo now has a first executable implementation skeleton:
 - initial conformance fixtures under `conformance/fixtures`
 - buildable placeholder docs site under `website`
 - binding and packaging root directories with README guardrails
+- GPU, WebGPU, PDES, MPI/gRPC, streaming, ML, FMI, cloud/HPC, and time-travel debug implementation slices with smoke validators
 - GitHub workflow scaffolding under `.github/`
 
 See `conductor/implementation-readiness.md` for readiness levels and CI enforcement rules.
