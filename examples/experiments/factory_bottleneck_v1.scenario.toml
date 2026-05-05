@@ -1,0 +1,11 @@
+schema_version = "kairoecs.scenario.v1"
+scenario_id = "factory_bottleneck_v1"
+model_id = "kairoecs.scheduler.ordering"
+fixture_id = "scheduler_ordering_v1"
+fixture_path = "conformance/fixtures/deterministic_ordering.json"
+base_seed = 12345
+replications = 2
+max_events = 4
+artifact_root = "runs/factory_bottleneck_v1"
+resume_checkpoint_every_events = 2
+expected_kind_order = "1,2,4,3"

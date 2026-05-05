@@ -30,7 +30,7 @@ The GitHub automation surface is also present under `.github/` with workflow, de
 
 ## Track state
 
-There are 41 track directories under `conductor/tracks`, covering tracks `00` through `40`.
+Track directories under `conductor/tracks` are expected to match the track IDs declared in `conductor/tracks.yaml`.
 
 Each track has the required Conductor artifact shape:
 
@@ -52,6 +52,7 @@ The repo now has a first executable implementation skeleton:
 - initial conformance fixtures under `conformance/fixtures`
 - buildable placeholder docs site under `website`
 - binding and packaging root directories with README guardrails
+- FFI, DES/ABM, Arrow telemetry, headless visualization, VVUQ, and experiment-runner implementation slices with smoke validators
 - GPU, WebGPU, PDES, MPI/gRPC, streaming, ML, FMI, cloud/HPC, and time-travel debug implementation slices with smoke validators
 - GitHub workflow scaffolding under `.github/`
 

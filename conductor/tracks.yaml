@@ -53,7 +53,7 @@ tracks:
       - deterministic-ordering-fixture
   - id: 02
     name: The Bridge - kairo-ecs-ffi, UniFFI and Diplomat
-    status: Planned
+    status: In Progress
     owner: ffi-agent + uniffi-agent + diplomat-agent
     depends_on: ["01", "12"]
     owned_paths:
@@ -67,7 +67,7 @@ tracks:
       - header-diff
   - id: 03
     name: The Flow - DES Trajectory API and ABM Behavior API
-    status: Planned
+    status: In Progress
     owner: des-api-agent + abm-api-agent
     depends_on: ["01", "26"]
     owned_paths:
@@ -79,7 +79,7 @@ tracks:
       - abm-fixture
   - id: 04
     name: The Analyst - kairo-ecs-arrow
-    status: Planned
+    status: In Progress
     owner: arrow-agent
     depends_on: ["01", "12", "26"]
     owned_paths:
@@ -91,7 +91,7 @@ tracks:
       - arrow-roundtrip
   - id: 05
     name: The Window - kairo-ecs-viz
-    status: Planned
+    status: In Progress
     owner: viz-agent
     depends_on: ["01"]
     owned_paths:
@@ -286,7 +286,7 @@ tracks:
       - vulnerability-policy
   - id: 21
     name: Verification, Validation & Uncertainty
-    status: Planned
+    status: In Progress
     owner: vv-uq-agent
     depends_on: ["01", "04", "12"]
     owned_paths:
@@ -297,7 +297,7 @@ tracks:
       - seed-manifest
   - id: 22
     name: Experiment Runner & Scenario Management
-    status: Planned
+    status: In Progress
     owner: experiment-agent
     depends_on: ["01", "04", "12"]
     owned_paths:

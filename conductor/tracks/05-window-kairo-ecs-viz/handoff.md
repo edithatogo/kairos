@@ -2,28 +2,51 @@
 
 ## Summary
 
-Track 05 is still in docs-and-visualization planning mode. The repo currently has the website build/dev scripts and `website/src/index.md`, but no `kairo-ecs-viz` package or visualization example package yet. This track is defining the rendering contract against the current state and scheduler surfaces before the package exists.
+Track 05 now has a minimal R2 visualization slice. `kairo-ecs-viz` is a dependency-light crate that defines the frame contract, validates headless frames, and returns deterministic frame summaries without opening a window or linking GUI dependencies. Optional renderer feature names are explicit (`wgpu-renderer`, `bevy-renderer`) and currently report not-configured status until real renderer dependencies are deliberately introduced.
 
 ## Files changed
 
-No code files were changed in this handoff pass.
+- `Cargo.toml`
+- `crates/kairo-ecs-viz/Cargo.toml`
+- `crates/kairo-ecs-viz/src/lib.rs`
+- `crates/kairo-ecs-viz/tests/feature_matrix.rs`
+- `examples/viz/headless-snapshot/Cargo.toml`
+- `examples/viz/headless-snapshot/src/main.rs`
+- `website/docs/visualization/README.md`
+- `conductor/tracks/05-window-kairo-ecs-viz/test-matrix.md`
+- `conductor/tracks/05-window-kairo-ecs-viz/handoff.md`
 
 ## Contracts consumed
 
-`conductor/workflow.md`, `conductor/contracts/core-contract.md`, and `conductor/contracts/conformance-contract.md`.
+`conductor/workflow.md`, `conductor/contracts/core-contract.md`, and `conductor/contracts/conformance-contract.md`. The code consumes only `kairo-ecs-types` identity, time, and event-kind types.
 
 ## Contracts changed
 
-No contracts have been changed yet for this track.
+No shared core contracts were changed.
 
 ## Tests added
 
-No track-specific tests were added yet. The active gate is the shared Rust test surface, the website build, and the conductor validators in `scripts\validate_conductor_setup.ps1` and `scripts\validate_track_coverage.ps1`.
+- Unit tests in `crates/kairo-ecs-viz/src/lib.rs` for headless summary rendering and validation.
+- Integration tests in `crates/kairo-ecs-viz/tests/feature_matrix.rs` for explicit renderer feature state and empty-frame smoke coverage.
+- Headless example package in `examples/viz/headless-snapshot`.
+
+Smoke gates:
+
+```bash
+cargo check --manifest-path crates/kairo-ecs-viz/Cargo.toml --no-default-features
+cargo check --manifest-path crates/kairo-ecs-viz/Cargo.toml --no-default-features --tests
+cargo check --manifest-path crates/kairo-ecs-viz/Cargo.toml --all-features --tests
+cargo check --manifest-path examples/viz/headless-snapshot/Cargo.toml
+cargo check -p kairo-ecs-core --no-default-features
+cargo tree -p kairo-ecs-core --no-default-features
+```
 
 ## Known risks
 
-The visualization contract needs to stay aligned with the core state and scheduler surfaces so the docs and examples do not drift from the implementation. A mismatch here would make the website examples misleading even if the build still passes.
+The visualization contract still needs to stay aligned with the core state and scheduler surfaces so docs and examples do not drift from implementation. Real WGPU/Bevy rendering remains intentionally absent in this slice and should only be added behind explicit opt-in features with CI gates that do not require a display server.
+
+On this Windows host, commands that link Rust test or example executables still fail because `link.exe` resolves to `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe` and exits with `couldn't create signal pipe, Win32 error 5`. Track 05 therefore uses `cargo check ... --tests` and example `cargo check` as the required headless smoke gates until the linker path is corrected.
 
 ## Integration notes
 
-Next step: publish the first visualization input model and wire it to the existing website build path before introducing a package crate or any render-specific example code.
+The core workspace remains headless-safe: no core crate depends on `kairo-ecs-viz`, and the viz crate's default features are empty. Next step is to add fixture-backed conversion from accepted ECS snapshots into `RenderFrame` without changing core contracts.

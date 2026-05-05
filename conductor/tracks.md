@@ -6,10 +6,10 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 |---:|---|---|---|---|
 | 00 | Project Foundation, Governance & Naming | Spec Approved | `foundation-agent` | See `conductor/tracks/00-*/spec.md` |
 | 01 | The Heart: kairo-ecs-core & kairo-ecs-state | In Progress | `core-scheduler-agent + ecs-agent + contracts-agent` | See `conductor/tracks/01-*/spec.md` |
-| 02 | The Bridge: kairo-ecs-ffi, UniFFI & Diplomat | Planned | `ffi-agent + uniffi-agent + diplomat-agent` | See `conductor/tracks/02-*/spec.md` |
-| 03 | The Flow: DES Trajectory API & ABM Behavior API | Planned | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
-| 04 | The Analyst: kairo-ecs-arrow | Planned | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
-| 05 | The Window: kairo-ecs-viz | Planned | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
+| 02 | The Bridge: kairo-ecs-ffi, UniFFI & Diplomat | In Progress | `ffi-agent + uniffi-agent + diplomat-agent` | See `conductor/tracks/02-*/spec.md` |
+| 03 | The Flow: DES Trajectory API & ABM Behavior API | In Progress | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
+| 04 | The Analyst: kairo-ecs-arrow | In Progress | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
+| 05 | The Window: kairo-ecs-viz | In Progress | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
 | 06 | Python Binding 3.10-3.14 | Planned | `python-agent` | See `conductor/tracks/06-*/spec.md` |
 | 07 | R Binding | Planned | `r-agent` | See `conductor/tracks/07-*/spec.md` |
 | 08 | Julia Binding | Planned | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
@@ -25,8 +25,8 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 18 | Comparative Benchmarks & Reproducibility | In Progress | `benchmark-agent` | See `conductor/tracks/18-*/spec.md` |
 | 19 | Research Software, Citation & Archival | In Progress | `research-agent` | See `conductor/tracks/19-*/spec.md` |
 | 20 | OpenSSF, Supply Chain Trust & Institutional Readiness | In Progress | `security-agent` | See `conductor/tracks/20-*/spec.md` |
-| 21 | Verification, Validation & Uncertainty | Planned | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |
-| 22 | Experiment Runner & Scenario Management | Planned | `experiment-agent` | See `conductor/tracks/22-*/spec.md` |
+| 21 | Verification, Validation & Uncertainty | In Progress | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |
+| 22 | Experiment Runner & Scenario Management | In Progress | `experiment-agent` | See `conductor/tracks/22-*/spec.md` |
 | 23 | Domain Starter Kits & Model Zoo | Planned | `model-zoo-agent` | See `conductor/tracks/23-*/spec.md` |
 | 24 | Playground, Demos & Visualization UX | Planned | `playground-agent` | See `conductor/tracks/24-*/spec.md` |
 | 25 | API Design Review & Compatibility Governance | Spec Approved | `api-governance-agent` | See `conductor/tracks/25-*/spec.md` |

@@ -36,6 +36,18 @@
       ]
     },
     {
+      "id": "vvuq_scenario_replay_v1",
+      "status": "ready",
+      "kind": "vvuq",
+      "source": "vvuq_scenario_replay.json",
+      "consumers": ["21", "22"],
+      "assertions": [
+        "scenario manifest and seed manifest exist",
+        "replay comparison is tied to scheduler_ordering_v1",
+        "summary hash and required output names stay stable"
+      ]
+    },
+    {
       "id": "zero_delay_guard_v1",
       "status": "planned",
       "kind": "scheduler",

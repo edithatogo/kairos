@@ -55,7 +55,7 @@ const readyFixtures = manifest.fixtures.filter((fixture) => fixture.status === '
 const readyIds = readyFixtures.map((fixture) => fixture.id);
 
 assert(
-  readyIds.join(',') === 'scheduler_ordering_v1,scheduler_cancellation_v1,rng_reproducibility_v1',
+  readyIds.join(',') === 'scheduler_ordering_v1,scheduler_cancellation_v1,rng_reproducibility_v1,vvuq_scenario_replay_v1',
   `unexpected ready fixture set: ${readyIds.join(',')}`
 );
 
@@ -105,6 +105,30 @@ for (const fixture of readyFixtures) {
     assert(
       JSON.stringify(observedStream) === JSON.stringify(payload.expected_stream),
       'rng reproducibility fixture did not match expected_stream'
+    );
+  }
+
+  if (fixture.id === 'vvuq_scenario_replay_v1') {
+    assert(payload.scenario_id === 'factory_bottleneck_v1', 'vvuq fixture scenario_id changed');
+    assert(payload.replay_fixture_id === 'scheduler_ordering_v1', 'vvuq fixture replay fixture changed');
+    assert(payload.comparison_basis === 'expected_kind_order', 'vvuq fixture comparison basis changed');
+    assert(existsSync(payload.scenario_manifest), `missing scenario manifest: ${payload.scenario_manifest}`);
+    assert(existsSync(payload.seed_manifest), `missing seed manifest: ${payload.seed_manifest}`);
+    assert(
+      Array.isArray(payload.expected_kind_order) &&
+        JSON.stringify(payload.expected_kind_order) === JSON.stringify([1, 2, 4, 3]),
+      'vvuq fixture expected_kind_order changed'
+    );
+    assert(
+      /^[0-9a-f]{16}$/.test(payload.expected_summary_hash),
+      'vvuq fixture expected_summary_hash must be a 64-bit lowercase hex string'
+    );
+    assert(
+      Array.isArray(payload.required_outputs) &&
+        ['manifest.json', 'summary.json', 'replay-comparison.json', 'resumability-plan.json'].every((name) =>
+          payload.required_outputs.includes(name)
+        ),
+      'vvuq fixture missing required output names'
     );
   }
 }

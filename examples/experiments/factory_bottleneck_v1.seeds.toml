@@ -1,0 +1,9 @@
+schema_version = "kairoecs.seed.v1"
+scenario_id = "factory_bottleneck_v1"
+base_seed = 12345
+fixture_id = "scheduler_ordering_v1"
+
+[streams]
+arrival_process = 1001
+service_process = 1002
+resource_allocator = 1003

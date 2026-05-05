@@ -40,6 +40,26 @@ as the accepted evidence set. Prose by itself is not enough.
 The docs page should stay aligned with replay/scenario fixtures so a reader can
 move from a claim to a reproducible run without guessing at hidden inputs.
 
+## R2 local evidence slice
+
+Added a committed VVUQ scenario replay fixture:
+
+- `conformance/fixtures/vvuq_scenario_replay.json`
+- `docs/trustworthy-simulation/scenario-evidence.md`
+- `examples/experiments/factory_bottleneck_v1.scenario.toml`
+- `examples/experiments/factory_bottleneck_v1.seeds.toml`
+
+The fixture is deliberately narrow. It verifies deterministic replay for
+`scheduler_ordering_v1` and records the claim boundary as verification smoke
+only. It does not claim real-world validation or quantified uncertainty.
+
+Validation evidence:
+
+```bash
+node tests/conformance/conformance-check.mjs
+cargo check -p kairo-ecs-cli
+```
+
 ## Risks and unresolved questions
 
 The main risk is overstating confidence when the evidence only supports a

@@ -1,0 +1,18 @@
+{
+  "fixture": "vvuq_scenario_replay",
+  "version": 1,
+  "scenario_id": "factory_bottleneck_v1",
+  "scenario_manifest": "examples/experiments/factory_bottleneck_v1.scenario.toml",
+  "seed_manifest": "examples/experiments/factory_bottleneck_v1.seeds.toml",
+  "replay_fixture_id": "scheduler_ordering_v1",
+  "comparison_basis": "expected_kind_order",
+  "expected_kind_order": [1, 2, 4, 3],
+  "expected_summary_hash": "1d53b73b244a84de",
+  "required_outputs": [
+    "manifest.json",
+    "summary.json",
+    "replay-comparison.json",
+    "resumability-plan.json"
+  ],
+  "claim_boundary": "verification smoke only; not a real-world validation or uncertainty claim"
+}

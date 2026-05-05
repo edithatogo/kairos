@@ -90,6 +90,42 @@ function Assert-No-StaleEvidence {
 
 $trackChecks = @(
     @{
+        Id = "02"
+        Path = "conductor/tracks/02-bridge-kairo-ecs-ffi-uniffi-diplomat"
+        Crates = @("crates/kairo-ecs-ffi", "crates/kairo-ecs-uniffi", "crates/kairo-ecs-diplomat")
+        Concrete = @("crates/kairo-ecs-ffi", "crates/kairo-ecs-uniffi", "crates/kairo-ecs-diplomat", "include")
+    },
+    @{
+        Id = "03"
+        Path = "conductor/tracks/03-flow-des-trajectory-abm-behavior"
+        Crates = @("crates/kairo-ecs-des", "crates/kairo-ecs-abm")
+        Concrete = @("crates/kairo-ecs-des", "crates/kairo-ecs-abm", "examples/flow")
+    },
+    @{
+        Id = "04"
+        Path = "conductor/tracks/04-analyst-kairo-ecs-arrow"
+        Crates = @("crates/kairo-ecs-arrow")
+        Concrete = @("crates/kairo-ecs-arrow", "schemas/arrow", "examples/telemetry")
+    },
+    @{
+        Id = "05"
+        Path = "conductor/tracks/05-window-kairo-ecs-viz"
+        Crates = @("crates/kairo-ecs-viz")
+        Concrete = @("crates/kairo-ecs-viz", "examples/viz", "website/docs/visualization")
+    },
+    @{
+        Id = "21"
+        Path = "conductor/tracks/21-verification-validation-uncertainty"
+        Crates = @()
+        Concrete = @("docs/trustworthy-simulation", "conformance")
+    },
+    @{
+        Id = "22"
+        Path = "conductor/tracks/22-experiment-runner-scenario-management"
+        Crates = @("crates/kairo-ecs-cli")
+        Concrete = @("crates/kairo-ecs-cli", "examples/experiments")
+    },
+    @{
         Id = "32"
         Path = "conductor/tracks/32-gpu-compute-acceleration"
         Crates = @("crates/kairo-ecs-gpu")
@@ -166,6 +202,9 @@ foreach ($file in $controlFiles | Where-Object { Test-Path -LiteralPath $_ }) {
     $content = Get-Content -LiteralPath $file -Raw
     if ($content -match '(?i)(expected|exactly|required)\s+(32|41)\s+track') {
         Add-Issue -Message "Hard-coded track count found in control file: $file"
+    }
+    if ($content -match 'There are\s+\d+\s+track directories') {
+        Add-Issue -Message "Hard-coded track directory count found in control file: $file"
     }
     if ($content -match 'There are\s+32\s+track directories') {
         Add-Issue -Message "Stale 32-track directory count found in control file: $file"

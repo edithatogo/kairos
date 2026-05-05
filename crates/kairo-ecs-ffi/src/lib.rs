@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::os::raw::c_char;
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
 
@@ -217,6 +218,20 @@ fn set_last_error(message: &str) {
     });
 }
 
+fn ffi_boundary<R>(default: R, f: impl FnOnce() -> R) -> R {
+    match catch_unwind(AssertUnwindSafe(f)) {
+        Ok(value) => value,
+        Err(_) => {
+            set_last_error("panic crossed ffi boundary");
+            default
+        }
+    }
+}
+
+fn ffi_boundary_status(f: impl FnOnce() -> KairoEcsStatusCode) -> KairoEcsStatusCode {
+    ffi_boundary(KairoEcsStatusCode::KAIRO_ECS_ERR_PANIC, f)
+}
+
 fn ticks_to_u64(ticks: u128, label: &str) -> Result<u64, KairoEcsStatusCode> {
     u64::try_from(ticks).map_err(|_| {
         set_last_error(label);
@@ -226,24 +241,27 @@ fn ticks_to_u64(ticks: u128, label: &str) -> Result<u64, KairoEcsStatusCode> {
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_ffi_version() -> u32 {
-    KAIRO_ECS_FFI_VERSION
+    ffi_boundary(0, || KAIRO_ECS_FFI_VERSION)
 }
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_engine_new() -> u64 {
-    match registry().lock() {
+    ffi_boundary(0, || match registry().lock() {
         Ok(mut registry) => {
             let mut engine = EngineState::default();
             engine._run_seed = 1;
             registry.insert(engine)
         }
-        Err(_) => 0,
-    }
+        Err(_) => {
+            set_last_error("engine registry poisoned");
+            0
+        }
+    })
 }
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_engine_free(handle: u64) -> KairoEcsStatusCode {
-    match registry().lock() {
+    ffi_boundary_status(|| match registry().lock() {
         Ok(mut registry) => match registry.remove(handle) {
             Some(_) => KairoEcsStatusCode::KAIRO_ECS_OK,
             None => {
@@ -255,27 +273,29 @@ pub extern "C" fn kairo_ecs_engine_free(handle: u64) -> KairoEcsStatusCode {
             set_last_error("engine registry poisoned");
             KairoEcsStatusCode::KAIRO_ECS_ERR_PANIC
         }
-    }
+    })
 }
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_engine_reset(handle: u64) -> KairoEcsStatusCode {
-    match with_engine_mut(handle, |engine| engine.reset()) {
+    ffi_boundary_status(|| match with_engine_mut(handle, |engine| engine.reset()) {
         Ok(()) => KairoEcsStatusCode::KAIRO_ECS_OK,
         Err(code) => code,
-    }
+    })
 }
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_engine_current_time(handle: u64) -> u64 {
-    with_engine_mut(handle, |engine| {
-        ticks_to_u64(
-            engine.scheduler.now().ticks(),
-            "simulation time exceeds ffi tick range",
-        )
+    ffi_boundary(0, || {
+        with_engine_mut(handle, |engine| {
+            ticks_to_u64(
+                engine.scheduler.now().ticks(),
+                "simulation time exceeds ffi tick range",
+            )
+        })
+        .and_then(|result| result)
+        .unwrap_or(0)
     })
-    .and_then(|result| result)
-    .unwrap_or(0)
 }
 
 #[no_mangle]
@@ -285,10 +305,12 @@ pub extern "C" fn kairo_ecs_schedule_at(
     priority: i32,
     kind: u32,
 ) -> u64 {
-    with_engine_mut(handle, |engine| {
-        engine.schedule_at(at_ticks, priority, kind)
+    ffi_boundary(0, || {
+        with_engine_mut(handle, |engine| {
+            engine.schedule_at(at_ticks, priority, kind)
+        })
+        .unwrap_or(0)
     })
-    .unwrap_or(0)
 }
 
 #[no_mangle]
@@ -298,57 +320,63 @@ pub extern "C" fn kairo_ecs_schedule_after(
     priority: i32,
     kind: u32,
 ) -> u64 {
-    with_engine_mut(handle, |engine| {
-        engine
-            .schedule_after(after_ticks, priority, kind)
-            .ok_or_else(|| {
-                set_last_error("ffi tick range exceeded");
-                KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
-            })
+    ffi_boundary(0, || {
+        with_engine_mut(handle, |engine| {
+            engine
+                .schedule_after(after_ticks, priority, kind)
+                .ok_or_else(|| {
+                    set_last_error("ffi tick range exceeded");
+                    KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
+                })
+        })
+        .and_then(|result| result)
+        .unwrap_or(0)
     })
-    .and_then(|result| result)
-    .unwrap_or(0)
 }
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_cancel_event(handle: u64, event: u64) -> KairoEcsStatusCode {
-    match with_engine_mut(handle, |engine| engine.cancel(event)) {
-        Ok(Ok(true)) => KairoEcsStatusCode::KAIRO_ECS_OK,
-        Ok(Ok(false)) => KairoEcsStatusCode::KAIRO_ECS_ERR_NOT_FOUND,
-        Ok(Err(code)) => code,
-        Err(code) => code,
-    }
+    ffi_boundary_status(
+        || match with_engine_mut(handle, |engine| engine.cancel(event)) {
+            Ok(Ok(true)) => KairoEcsStatusCode::KAIRO_ECS_OK,
+            Ok(Ok(false)) => KairoEcsStatusCode::KAIRO_ECS_ERR_NOT_FOUND,
+            Ok(Err(code)) => code,
+            Err(code) => code,
+        },
+    )
 }
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_step(handle: u64) -> KairoEcsStatusCode {
-    match with_engine_mut(handle, |engine| engine.scheduler.step()) {
-        Ok(outcome) => {
-            match outcome {
-                StepOutcome::Dispatched(_) => {}
-                StepOutcome::Empty => {}
-                StepOutcome::LimitReached => {}
-            }
-            KairoEcsStatusCode::KAIRO_ECS_OK
+    ffi_boundary_status(|| {
+        match with_engine_mut(handle, |engine| {
+            let outcome = engine.scheduler.step();
+            engine.apply_outcome(outcome);
+        }) {
+            Ok(()) => KairoEcsStatusCode::KAIRO_ECS_OK,
+            Err(code) => code,
         }
-        Err(code) => code,
-    }
+    })
 }
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_run_for(handle: u64, max_events: u64) -> KairoEcsStatusCode {
-    match with_engine_mut(handle, |engine| engine.run_for(max_events)) {
-        Ok(_) => KairoEcsStatusCode::KAIRO_ECS_OK,
-        Err(code) => code,
-    }
+    ffi_boundary_status(
+        || match with_engine_mut(handle, |engine| engine.run_for(max_events)) {
+            Ok(_) => KairoEcsStatusCode::KAIRO_ECS_OK,
+            Err(code) => code,
+        },
+    )
 }
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_run_until(handle: u64, time_limit_ticks: u64) -> KairoEcsStatusCode {
-    match with_engine_mut(handle, |engine| engine.run_until(time_limit_ticks)) {
-        Ok(_) => KairoEcsStatusCode::KAIRO_ECS_OK,
-        Err(code) => code,
-    }
+    ffi_boundary_status(|| {
+        match with_engine_mut(handle, |engine| engine.run_until(time_limit_ticks)) {
+            Ok(_) => KairoEcsStatusCode::KAIRO_ECS_OK,
+            Err(code) => code,
+        }
+    })
 }
 
 #[no_mangle]
@@ -357,30 +385,34 @@ pub extern "C" fn kairo_ecs_run_until_or_for(
     time_limit_ticks: u64,
     max_events: u64,
 ) -> KairoEcsStatusCode {
-    match with_engine_mut(handle, |engine| {
-        engine.run_until_or_for(time_limit_ticks, max_events)
-    }) {
-        Ok(_) => KairoEcsStatusCode::KAIRO_ECS_OK,
-        Err(code) => code,
-    }
+    ffi_boundary_status(|| {
+        match with_engine_mut(handle, |engine| {
+            engine.run_until_or_for(time_limit_ticks, max_events)
+        }) {
+            Ok(_) => KairoEcsStatusCode::KAIRO_ECS_OK,
+            Err(code) => code,
+        }
+    })
 }
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_stats(handle: u64) -> KairoEcsStats {
-    with_engine_mut(handle, |engine| {
-        let mut stats = engine.stats;
-        if let Ok(now_ticks) = ticks_to_u64(
-            engine.scheduler.now().ticks(),
-            "simulation time exceeds ffi tick range",
-        ) {
-            stats.now_ticks = now_ticks;
-        } else {
-            stats.now_ticks = u64::MAX;
-        }
-        stats.pending_events = engine.scheduler.pending_events() as u64;
-        stats
+    ffi_boundary(KairoEcsStats::default(), || {
+        with_engine_mut(handle, |engine| {
+            let mut stats = engine.stats;
+            if let Ok(now_ticks) = ticks_to_u64(
+                engine.scheduler.now().ticks(),
+                "simulation time exceeds ffi tick range",
+            ) {
+                stats.now_ticks = now_ticks;
+            } else {
+                stats.now_ticks = u64::MAX;
+            }
+            stats.pending_events = engine.scheduler.pending_events() as u64;
+            stats
+        })
+        .unwrap_or_default()
     })
-    .unwrap_or_default()
 }
 
 #[no_mangle]
@@ -390,8 +422,9 @@ pub extern "C" fn kairo_ecs_last_error_message() -> *const c_char {
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_telemetry_flush_ipc(handle: u64) -> KairoEcsBuffer {
-    match with_engine_mut(handle, |engine| {
-        format!(
+    ffi_boundary(KairoEcsBuffer::default(), || {
+        match with_engine_mut(handle, |engine| {
+            format!(
             "{{\"now_ticks\":{},\"scheduled_events\":{},\"dispatched_events\":{},\"cancelled_events\":{},\"pending_events\":{}}}",
             engine.stats.now_ticks,
             engine.stats.scheduled_events,
@@ -400,32 +433,103 @@ pub extern "C" fn kairo_ecs_telemetry_flush_ipc(handle: u64) -> KairoEcsBuffer {
             engine.stats.pending_events
         )
         .into_bytes()
-    }) {
-        Ok(bytes) => {
-            let mut store = telemetry_store().lock().expect("telemetry store");
-            let ptr = bytes.as_ptr();
-            let len = bytes.len();
-            store.insert(ptr as usize, bytes);
-            KairoEcsBuffer { data: ptr, len }
+        }) {
+            Ok(bytes) => {
+                let mut store = match telemetry_store().lock() {
+                    Ok(store) => store,
+                    Err(_) => {
+                        set_last_error("telemetry store poisoned");
+                        return KairoEcsBuffer::default();
+                    }
+                };
+                let ptr = bytes.as_ptr();
+                let len = bytes.len();
+                store.insert(ptr as usize, bytes);
+                KairoEcsBuffer { data: ptr, len }
+            }
+            Err(_) => KairoEcsBuffer::default(),
         }
-        Err(_) => KairoEcsBuffer::default(),
-    }
+    })
 }
 
 #[no_mangle]
 pub extern "C" fn kairo_ecs_buffer_free(buffer: KairoEcsBuffer) {
-    if buffer.data.is_null() || buffer.len == 0 {
-        return;
-    }
+    ffi_boundary((), || {
+        if buffer.data.is_null() || buffer.len == 0 {
+            return;
+        }
 
-    if let Ok(mut store) = telemetry_store().lock() {
-        store.remove(&(buffer.data as usize));
-    }
+        if let Ok(mut store) = telemetry_store().lock() {
+            store.remove(&(buffer.data as usize));
+        }
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const GENERATED_HEADER: &str = r#"#ifndef KAIRO_ECS_H
+#define KAIRO_ECS_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef uint64_t KairoEcsEngineHandle;
+typedef uint64_t KairoEcsEventHandle;
+
+typedef enum KairoEcsStatusCode {
+  KAIRO_ECS_OK = 0,
+  KAIRO_ECS_ERR_INVALID_ARGUMENT = 1,
+  KAIRO_ECS_ERR_NOT_FOUND = 2,
+  KAIRO_ECS_ERR_ALREADY_FREED = 3,
+  KAIRO_ECS_ERR_PANIC = 100,
+} KairoEcsStatusCode;
+
+typedef struct KairoEcsBuffer {
+  const uint8_t* data;
+  size_t len;
+} KairoEcsBuffer;
+
+typedef struct KairoEcsStats {
+  uint64_t now_ticks;
+  uint64_t scheduled_events;
+  uint64_t dispatched_events;
+  uint64_t cancelled_events;
+  uint64_t pending_events;
+} KairoEcsStats;
+
+uint32_t kairo_ecs_ffi_version(void);
+KairoEcsEngineHandle kairo_ecs_engine_new(void);
+KairoEcsStatusCode kairo_ecs_engine_free(KairoEcsEngineHandle handle);
+KairoEcsStatusCode kairo_ecs_engine_reset(KairoEcsEngineHandle handle);
+uint64_t kairo_ecs_engine_current_time(KairoEcsEngineHandle handle);
+KairoEcsEventHandle kairo_ecs_schedule_at(KairoEcsEngineHandle handle, uint64_t at_ticks, int32_t priority, uint32_t kind);
+KairoEcsEventHandle kairo_ecs_schedule_after(KairoEcsEngineHandle handle, uint64_t after_ticks, int32_t priority, uint32_t kind);
+KairoEcsStatusCode kairo_ecs_cancel_event(KairoEcsEngineHandle handle, KairoEcsEventHandle event);
+KairoEcsStatusCode kairo_ecs_step(KairoEcsEngineHandle handle);
+KairoEcsStatusCode kairo_ecs_run_for(KairoEcsEngineHandle handle, uint64_t max_events);
+KairoEcsStatusCode kairo_ecs_run_until(KairoEcsEngineHandle handle, uint64_t time_limit_ticks);
+KairoEcsStatusCode kairo_ecs_run_until_or_for(KairoEcsEngineHandle handle, uint64_t time_limit_ticks, uint64_t max_events);
+KairoEcsStats kairo_ecs_stats(KairoEcsEngineHandle handle);
+const char* kairo_ecs_last_error_message(void);
+KairoEcsBuffer kairo_ecs_telemetry_flush_ipc(KairoEcsEngineHandle handle);
+void kairo_ecs_buffer_free(KairoEcsBuffer buffer);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+"#;
+
+    fn test_trigger_panic() -> KairoEcsStatusCode {
+        ffi_boundary_status(|| panic!("test panic"))
+    }
 
     #[test]
     fn ffi_version_is_stable() {
@@ -440,6 +544,10 @@ mod tests {
             kairo_ecs_engine_free(handle),
             KairoEcsStatusCode::KAIRO_ECS_OK
         );
+        assert_eq!(
+            kairo_ecs_engine_free(handle),
+            KairoEcsStatusCode::KAIRO_ECS_ERR_ALREADY_FREED
+        );
     }
 
     #[test]
@@ -449,9 +557,27 @@ mod tests {
         assert_ne!(event, 0);
         assert_eq!(kairo_ecs_step(handle), KairoEcsStatusCode::KAIRO_ECS_OK);
         assert_eq!(kairo_ecs_engine_current_time(handle), 10);
+        let stats = kairo_ecs_stats(handle);
+        assert_eq!(stats.scheduled_events, 1);
+        assert_eq!(stats.dispatched_events, 1);
+        assert_eq!(stats.pending_events, 0);
         assert_eq!(
             kairo_ecs_engine_free(handle),
             KairoEcsStatusCode::KAIRO_ECS_OK
         );
+    }
+
+    #[test]
+    fn panic_boundary_returns_panic_status() {
+        assert_eq!(
+            test_trigger_panic(),
+            KairoEcsStatusCode::KAIRO_ECS_ERR_PANIC
+        );
+    }
+
+    #[test]
+    fn canonical_header_matches_generated_surface() {
+        let canonical = include_str!("../../../include/kairo_ecs.h");
+        assert_eq!(canonical.replace("\r\n", "\n"), GENERATED_HEADER);
     }
 }

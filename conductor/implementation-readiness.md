@@ -27,6 +27,12 @@ The Conductor setup is complete, but implementation should move through explicit
 | Docs site | R2 | `website/package.json` builds a static placeholder. |
 | GitHub automation surface | R2 | `.github/` workflows, CODEOWNERS, dependency review, and release scaffolding exist. |
 | Packaging | R1 | `packaging/README.md` exists; ecosystem package dirs wait for manifests. |
+| FFI bridge (Track 02) | R2 | `crates/kairo-ecs-ffi`, `kairo-ecs-uniffi`, `kairo-ecs-diplomat`, and `include/kairo_ecs.h` exist with lifecycle, panic-boundary, and header-diff compile gates. |
+| DES/ABM flow API (Track 03) | R2 | `crates/kairo-ecs-des`, `crates/kairo-ecs-abm`, and `examples/flow` exist with deterministic DES/ABM smoke coverage. |
+| Arrow telemetry (Track 04) | R2 | `crates/kairo-ecs-arrow`, `schemas/arrow`, and `examples/telemetry` exist with versioned event-log schema and roundtrip smoke coverage. |
+| Visualization (Track 05) | R2 | `crates/kairo-ecs-viz`, `examples/viz`, and `website/docs/visualization` exist with headless-safe optional renderer contracts. |
+| Verification, validation, and uncertainty (Track 21) | R2 | `docs/trustworthy-simulation` and conformance fixtures include replay, seed, and VVUQ evidence boundaries. |
+| Experiment runner and scenario management (Track 22) | R2 | `crates/kairo-ecs-cli` and `examples/experiments` exist with scenario manifest and replay validation smoke coverage. |
 | GPU Compute (Track 32) | R2 | `crates/kairo-ecs-gpu` exists, is wired into the root workspace, and has explicit unavailable-backend contracts plus feature compile gates. |
 | WebGPU Compute (Track 33) | R2 | `crates/kairo-ecs-webgpu` and `website/webgpu-demo` exist with browser dispatch capability checks and demo smoke tests. |
 | PDES & Parallel Execution (Track 34) | R2 | `crates/kairo-ecs-pdes` exists with parity and deadlock-stress report fixtures. |
@@ -41,7 +47,7 @@ The Conductor setup is complete, but implementation should move through explicit
 
 Once a track moves to `In Progress`, the files listed in `conductor/tracks.yaml` for that track must exist or be explicitly waived in the track handoff. Once an ecosystem package manifest is added, matching CI must fail on errors rather than skip.
 
-Tracks cannot move to `In Review` or `Done` from planning text alone. A closeout must identify the owned files that exist in the worktree, the commands that exercised each required gate, and any waived gate with an owner and follow-up. For Tracks 32-40, R2 means a real checked-in implementation slice exists and compiles or validates locally; it does not imply release-candidate completeness.
+Tracks cannot move to `In Review` or `Done` from planning text alone. A closeout must identify the owned files that exist in the worktree, the commands that exercised each required gate, and any waived gate with an owner and follow-up. R2 means a real checked-in implementation slice exists and compiles or validates locally; it does not imply release-candidate completeness.
 
 ## Immediate critical path
 

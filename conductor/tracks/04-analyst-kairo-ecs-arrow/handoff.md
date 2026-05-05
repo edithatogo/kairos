@@ -2,11 +2,19 @@
 
 ## Summary
 
-Track 04 is still in schema-design mode. The repo currently has the `schemas/arrow` documentation surface and the shared conformance fixtures, but no `kairo-ecs-arrow` package yet. This track is defining the exporter contract against the core event model before any package implementation lands.
+Track 04 now has a minimal R2 event-log slice. The new `kairo-ecs-arrow` crate defines the `kairo_ecs.event_log.v1` schema, maps `kairo-ecs-types::DispatchedEvent` into versioned event-log records, validates schema fields, and round-trips deterministic smoke bytes without adding native Arrow library requirements.
 
 ## Files changed
 
-No code files were changed in this handoff pass.
+- `Cargo.toml`
+- `Cargo.lock`
+- `crates/kairo-ecs-arrow/Cargo.toml`
+- `crates/kairo-ecs-arrow/src/lib.rs`
+- `crates/kairo-ecs-arrow/tests/schema_compatibility.rs`
+- `schemas/arrow/README.md`
+- `schemas/arrow/event_log_v1.schema.json`
+- `examples/telemetry/README.md`
+- `examples/telemetry/event_log_roundtrip.rs`
 
 ## Contracts consumed
 
@@ -14,16 +22,25 @@ No code files were changed in this handoff pass.
 
 ## Contracts changed
 
-No contracts have been changed yet for this track.
+No shared conductor contract files were changed. The Track 04 schema artifact adds an explicit `schema_version` field and encodes generational event/entity handles as `FixedSizeBinary(12)` while preserving the event-log stream name and core ordering fields.
 
 ## Tests added
 
-No track-specific tests were added yet. The active gate is the shared Rust test surface plus the conductor validators in `scripts\validate_conductor_setup.ps1` and `scripts\validate_track_coverage.ps1`.
+- `cargo test -p kairo-ecs-arrow`
+- `crates/kairo-ecs-arrow/tests/schema_compatibility.rs` checks field order, schema versioning, and event-log roundtrip preservation of time/priority/sequence.
+
+## Validation run
+
+- `cargo fmt --package kairo-ecs-arrow --check` passed.
+- `cargo fmt --all --check` passed after concurrent workspace formatting settled.
+- `cargo check -p kairo-ecs-arrow --tests` passed.
+- `cargo check -p kairo-ecs-arrow --examples` passed.
+- `cargo test -p kairo-ecs-arrow` reached compilation but could not link on this Windows host because `link.exe` resolves to `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`; MSVC link libraries were not available on `PATH`.
 
 ## Known risks
 
-The schema needs to stay aligned with the core event model and the conformance fixtures so that telemetry does not drift from the rest of the workspace. If the Arrow field names move ahead of the event contracts, downstream consumers will not be able to validate the emitted payloads cleanly.
+The current roundtrip payload is a dependency-light smoke format, not full Arrow IPC. Full Arrow IPC/Parquet export remains a later Track 04 step once dependency policy and cross-language consumer expectations are settled.
 
 ## Integration notes
 
-Next step: publish the first Arrow schema artifact, then wire a minimal telemetry export path to it once the package skeleton exists and the event tags are stable.
+The crate depends only on `kairo-ecs-types`. The root workspace manifest was updated only to register `crates/kairo-ecs-arrow` so package-scoped cargo checks can compile.

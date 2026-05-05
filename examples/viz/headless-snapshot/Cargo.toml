@@ -1,0 +1,17 @@
+[package]
+name = "kairo-viz-headless-snapshot"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/edithatogo/kairos"
+rust-version = "1.76"
+
+[dependencies]
+kairo-ecs-types = { path = "../../../crates/kairo-ecs-types" }
+kairo-ecs-viz = { path = "../../../crates/kairo-ecs-viz", default-features = false }
+
+[[bin]]
+name = "kairo-viz-headless-snapshot"
+path = "src/main.rs"
+
+[workspace]

@@ -62,6 +62,15 @@ This is the same pattern used by the deterministic replay and scenario fixtures
 elsewhere in the repo. Track 21 makes the interpretation layer explicit:
 what the fixture proves, what it does not prove, and where uncertainty remains.
 
+The current local smoke path is documented in
+`docs/trustworthy-simulation/scenario-evidence.md`. It uses
+`examples/experiments/factory_bottleneck_v1.scenario.toml`,
+`examples/experiments/factory_bottleneck_v1.seeds.toml`, and the
+`scheduler_ordering_v1` conformance fixture. The evidence boundary is narrow:
+the replay comparison verifies deterministic event ordering for that fixture,
+while validation and uncertainty claims remain limited to the written
+interpretation note.
+
 ## Reading a claim
 
 When a release note, docs page, or example says a result is verified,

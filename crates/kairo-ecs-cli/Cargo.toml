@@ -1,7 +1,12 @@
 [package]
 name = "kairo-ecs-cli"
-edition = "2024"
 version = "0.1.0"
 description = "KairoECS CLI for experiment execution and scenario management"
+edition.workspace = true
 license.workspace = true
 repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+kairo-ecs-core = { path = "../kairo-ecs-core" }
+kairo-ecs-types = { path = "../kairo-ecs-types" }

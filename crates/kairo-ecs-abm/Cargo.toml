@@ -1,0 +1,16 @@
+[package]
+name = "kairo-ecs-abm"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+kairo-ecs-core = { path = "../kairo-ecs-core" }
+kairo-ecs-rng = { path = "../kairo-ecs-rng" }
+kairo-ecs-state = { path = "../kairo-ecs-state" }
+kairo-ecs-types = { path = "../kairo-ecs-types" }
+
+[lib]
+path = "src/lib.rs"

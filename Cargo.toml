@@ -5,9 +5,12 @@ members = [
   "crates/kairo-ecs-core",
   "crates/kairo-ecs-state",
   "crates/kairo-ecs-rng",
+  "crates/kairo-ecs-des",
+  "crates/kairo-ecs-abm",
   "crates/kairo-ecs-ffi",
   "crates/kairo-ecs-uniffi",
   "crates/kairo-ecs-diplomat",
+  "crates/kairo-ecs-arrow",
   "crates/kairo-ecs-bench",
   "crates/kairo-ecs-cli",
   "crates/kairo-ecs-gpu",
@@ -19,6 +22,7 @@ members = [
   "crates/kairo-ecs-ml",
   "crates/kairo-ecs-fmi",
   "crates/kairo-ecs-debug",
+  "crates/kairo-ecs-viz",
 ]
 
 [workspace.package]

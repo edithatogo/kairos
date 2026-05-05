@@ -1,0 +1,22 @@
+{
+  "stream": "kairo_ecs.event_log.v1",
+  "schema_version": 1,
+  "compatibility": {
+    "major": 1,
+    "additive_nullable_fields": "compatible",
+    "field_removal_or_type_change": "new_major_schema_required"
+  },
+  "fields": [
+    { "name": "schema_version", "type": "UInt16", "nullable": false },
+    { "name": "run_id", "type": "Utf8", "nullable": false },
+    { "name": "event_id", "type": "FixedSizeBinary(12)", "nullable": false, "encoding": "u64 index little-endian followed by u32 generation little-endian" },
+    { "name": "entity_id", "type": "FixedSizeBinary(12)", "nullable": true, "encoding": "u64 index little-endian followed by u32 generation little-endian" },
+    { "name": "time_ticks", "type": "FixedSizeBinary(16)", "nullable": false, "encoding": "u128 little-endian" },
+    { "name": "time_scale", "type": "Utf8", "nullable": false, "allowed": ["ticks"] },
+    { "name": "priority", "type": "Int32", "nullable": false },
+    { "name": "sequence", "type": "UInt64", "nullable": false },
+    { "name": "event_kind", "type": "Utf8", "nullable": false },
+    { "name": "status", "type": "Utf8", "nullable": false, "allowed": ["dispatched", "cancelled", "skipped", "error"] },
+    { "name": "payload_ref", "type": "Utf8", "nullable": true }
+  ]
+}
