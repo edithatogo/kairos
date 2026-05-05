@@ -5,7 +5,7 @@
 | Track docs exist and render cleanly | `just docs-build` | yes | yes | yes | yes |
 | `conductor/quality-gates.md` includes the exact OpenSSF and supply-chain gate section | `rg -n "scorecard.yml|dependency-review.yml|sbom-attestations.yml|release-attestations.yml|waiver|exception" conductor/quality-gates.md` | yes | yes | yes | yes |
 | `conductor/release-engineering.md` names the trust workflows and release artifacts | `rg -n "scorecard.yml|dependency-review.yml|sbom-attestations.yml|release-attestations.yml|SBOM|provenance|waiver" conductor/release-engineering.md` | yes | yes | yes | yes |
-| `SECURITY.md`, `CODEOWNERS`, and dependency policy are present | `Test-Path SECURITY.md; Test-Path CODEOWNERS; Test-Path .github/dependabot.yml` | no | yes | yes | yes |
+| `SECURITY.md`, `CODEOWNERS`, and dependency policy are present | `Test-Path SECURITY.md; Test-Path CODEOWNERS; Test-Path renovate.json` | no | yes | yes | yes |
 | Scorecard workflow exists | `Test-Path .github/workflows/scorecard.yml` | no | yes | yes | yes |
 | Dependency review workflow exists and fails on high severity | `rg -n "fail-on-severity: high" .github/workflows/dependency-review.yml` | no | yes | yes | yes |
 | SBOM and provenance workflows exist | `Test-Path .github/workflows/sbom-attestations.yml; Test-Path .github/workflows/release-attestations.yml` | no | yes | yes | yes |

@@ -36,6 +36,6 @@ jobs:
             exit 1
           fi
       - name: Run zizmor
-        uses: zizmorcore/zizmor-action@v0.1.0
+        uses: zizmorcore/zizmor-action@v0.5.3
         with:
           persona: auditor

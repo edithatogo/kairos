@@ -1,0 +1,55 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "dependencyDashboard": true,
+  "labels": [
+    "dependencies"
+  ],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 4,
+  "rangeStrategy": "bump",
+  "packageRules": [
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github-actions"
+    },
+    {
+      "matchManagers": [
+        "nuget"
+      ],
+      "matchPackageNames": [
+        "/^MSTest\\./",
+        "Microsoft.NET.Test.Sdk"
+      ],
+      "groupName": "dotnet-test-dependencies"
+    },
+    {
+      "matchManagers": [
+        "cargo"
+      ],
+      "groupName": "rust-crates"
+    },
+    {
+      "matchManagers": [
+        "npm"
+      ],
+      "groupName": "javascript-packages"
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "groupName": "go-modules"
+    },
+    {
+      "matchDatasources": [
+        "pypi"
+      ],
+      "groupName": "python-packages"
+    }
+  ]
+}
