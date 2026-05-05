@@ -2,7 +2,14 @@
 
 ## Summary
 
-Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. The current implementation covers feature-gated crate boundaries, unpacked FMU layout detection, dependency-free FMU import/export layout validation, FMI 2.0 ABI function-table and safe instance wrappers, initial `modelDescription.xml` generation with structural validation, minimal AAS JSON descriptor serialization with structural validation, change-detected digital-twin publications, state snapshot/diff/apply helpers, docs, and a runnable basic-import example.
+Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. The current implementation covers feature-gated crate boundaries, unpacked FMU layout detection, dependency-free FMU import/export layout validation, FMI 2.0 ABI function-table and safe instance wrappers, initial `modelDescription.xml` generation with dependency-free structural validation, minimal AAS JSON descriptor serialization with structural validation, validated change-detected digital-twin publications, state snapshot/diff/apply helpers, docs, and a runnable basic-import example.
+
+## Latest hardening slice
+
+- Import validation now rejects `modelDescription.xml` files that lack an `fmiModelDescription` root marker or FMI 2.0/3.0 version marker before checking platform binaries.
+- FMI 2.0 export generation now emits output model-structure entries as `Outputs/Unknown index="..."` and validates generated XML markers/counts before writing an unpacked package.
+- AAS descriptor validation now rejects duplicate submodel IDs and duplicate submodel `idShort` values in addition to nested property validation.
+- Digital-twin connector validation now has fallible construction/publication paths for finite positive sample rates, finite non-negative epsilon values, valid topic prefixes, and finite values.
 
 ## Files created
 
@@ -12,10 +19,13 @@ Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. 
 
 - Passed: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --no-default-features`
 - Passed: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2`
+- Passed: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi3`
 - Passed: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`
 - Passed: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests`
 - Passed: `cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml`
-- Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2`; the Rust crate compiles, then Windows linking fails because `link.exe` resolves to `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe` and reports `couldn't create signal pipe, Win32 error 5`.
+- Passed: `cargo fmt --manifest-path crates/kairo-ecs-fmi/Cargo.toml`
+- Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`; the Rust crate compiles, then Windows linking fails because `link.exe` resolves to `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe` and reports `couldn't create signal pipe, Win32 error 5`.
+- Blocked: `$env:RUSTFLAGS='-Clinker=rust-lld'; cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`; the override bypasses Git's `link.exe` but `rust-lld` cannot find Windows SDK import libraries including `kernel32.lib`, `ntdll.lib`, `userenv.lib`, `ws2_32.lib`, and `dbghelp.lib`.
 
 ## Contracts consumed
 

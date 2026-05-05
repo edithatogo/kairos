@@ -18,6 +18,14 @@ pub struct Fmi2CoSimulationInstance {
 }
 
 impl Fmi2CoSimulationInstance {
+    /// Builds an FMI 2 co-simulation wrapper from an already-instantiated FMI component.
+    ///
+    /// # Safety
+    ///
+    /// `component` must be a valid FMI component created by the same FMU function table,
+    /// and every function pointer in `table` must remain valid for the lifetime of the
+    /// returned wrapper. The wrapper will call `terminate` and `free_instance` during drop
+    /// when appropriate, so callers must not free the component elsewhere.
     pub unsafe fn from_raw_parts(component: Fmi2Component, table: Fmi2FunctionTable) -> Self {
         Self {
             component,

@@ -2,6 +2,14 @@
 
 `cloud/azure/batch-job.json` and `cloud/azure/batch-array.json` provide account-neutral job templates. The submit helper expects an existing Batch pool and a container image readable from the pool.
 
+## Offline validation
+
+Run `python cloud\validate_cloud_hpc.py` from the repository root. The offline validator parses the Azure JSON templates and checks job termination policy, sweep metadata, submit-helper use of `az batch job create`, task creation, container image wiring, and `KAIRO_OUTPUT_URI` environment propagation.
+
+## Live validation
+
+The offline check is not an Azure Batch API validation. Before marking Azure Batch ready, create a canary job and task in a test Batch account, then record the account, pool, job id, task id, terminal status, and output/checksum evidence.
+
 Required permissions:
 
 - Batch job create

@@ -6,13 +6,16 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 pub mod arrow_schema {
+    pub const SCHEMA_VERSION: u16 = 1;
     pub const EVENT_LOG_STREAM: &str = "kairo_ecs.event_log.v1";
     pub const METRIC_SAMPLE_STREAM: &str = "kairo_ecs.metric_sample.v1";
     pub const ENTITY_SNAPSHOT_STREAM: &str = "kairo_ecs.entity_snapshot.v1";
     pub const RESOURCE_SNAPSHOT_STREAM: &str = "kairo_ecs.resource_snapshot.v1";
     pub const CONFORMANCE_RESULT_STREAM: &str = "kairo_ecs.conformance_result.v1";
+    pub const TIME_SCALE_TICKS: &str = "ticks";
 
     pub const EVENT_LOG_FIELDS: &[&str] = &[
+        "schema_version",
         "run_id",
         "event_id",
         "entity_id",
@@ -24,11 +27,23 @@ pub mod arrow_schema {
         "status",
         "payload_ref",
     ];
+
+    pub fn is_known_stream(stream: &str) -> bool {
+        matches!(
+            stream,
+            EVENT_LOG_STREAM
+                | METRIC_SAMPLE_STREAM
+                | ENTITY_SNAPSHOT_STREAM
+                | RESOURCE_SNAPSHOT_STREAM
+                | CONFORMANCE_RESULT_STREAM
+        )
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StreamMessage {
     pub stream: &'static str,
+    pub schema_version: u16,
     pub run_id: String,
     pub event_id: Option<u64>,
     pub entity_id: Option<u64>,
@@ -45,11 +60,12 @@ impl StreamMessage {
     pub fn event_log(run_id: impl Into<String>, time_ticks: u128, sequence: u64) -> Self {
         Self {
             stream: arrow_schema::EVENT_LOG_STREAM,
+            schema_version: arrow_schema::SCHEMA_VERSION,
             run_id: run_id.into(),
-            event_id: None,
+            event_id: Some(sequence),
             entity_id: None,
             time_ticks,
-            time_scale: "ticks".to_string(),
+            time_scale: arrow_schema::TIME_SCALE_TICKS.to_string(),
             priority: 0,
             sequence,
             event_kind: "custom".to_string(),
@@ -70,12 +86,23 @@ impl StreamMessage {
                 arrow_schema::EVENT_LOG_STREAM
             )));
         }
+        if self.schema_version != arrow_schema::SCHEMA_VERSION {
+            return Err(StreamError::new(format!(
+                "schema_version must be {}, got {}",
+                arrow_schema::SCHEMA_VERSION,
+                self.schema_version
+            )));
+        }
         if self.run_id.trim().is_empty() {
             return Err(StreamError::new("run_id must not be empty"));
         }
-        if self.time_scale != "ticks" {
+        if self.event_id.is_none() {
+            return Err(StreamError::new("event_id must be present"));
+        }
+        if self.time_scale != arrow_schema::TIME_SCALE_TICKS {
             return Err(StreamError::new(format!(
-                "time_scale must be ticks, got {}",
+                "time_scale must be {}, got {}",
+                arrow_schema::TIME_SCALE_TICKS,
                 self.time_scale
             )));
         }
@@ -198,7 +225,12 @@ impl WallClockPacer {
             .contract
             .tick_duration
             .saturating_mul(tick_index as u32);
-        self.started_at.elapsed().abs_diff(target)
+        let elapsed = self.started_at.elapsed();
+        if elapsed >= target {
+            elapsed - target
+        } else {
+            target - elapsed
+        }
     }
 
     pub fn within_tolerance(&self, tick_index: u64) -> bool {
@@ -208,11 +240,13 @@ impl WallClockPacer {
 
 pub mod adapters {
     use super::{EventSink, EventSource, SnapshotProvider, StreamError, StreamMessage};
+    use std::collections::HashMap;
 
     #[derive(Debug, Default)]
     pub struct InMemoryStream {
         messages: Vec<StreamMessage>,
         read_index: usize,
+        last_sequence_by_run: HashMap<String, u64>,
     }
 
     impl InMemoryStream {
@@ -228,6 +262,16 @@ pub mod adapters {
     impl EventSink for InMemoryStream {
         fn publish(&mut self, message: StreamMessage) -> Result<(), StreamError> {
             message.validate_event_log_contract()?;
+            if let Some(last_sequence) = self.last_sequence_by_run.get(&message.run_id) {
+                if message.sequence <= *last_sequence {
+                    return Err(StreamError::new(format!(
+                        "sequence must increase per run_id: last {}, got {}",
+                        last_sequence, message.sequence
+                    )));
+                }
+            }
+            self.last_sequence_by_run
+                .insert(message.run_id.clone(), message.sequence);
             self.messages.push(message);
             Ok(())
         }
@@ -245,6 +289,10 @@ pub mod adapters {
 
     impl SnapshotProvider for InMemoryStream {
         fn snapshot(&self, stream: &'static str) -> Result<Vec<StreamMessage>, StreamError> {
+            if !super::arrow_schema::is_known_stream(stream) {
+                return Err(StreamError::new(format!("unknown stream: {stream}")));
+            }
+
             Ok(self
                 .messages
                 .iter()
@@ -287,9 +335,11 @@ mod tests {
         let message = StreamMessage::event_log("run-1", 42, 7);
 
         assert_eq!(message.stream, arrow_schema::EVENT_LOG_STREAM);
+        assert_eq!(message.schema_version, arrow_schema::SCHEMA_VERSION);
         assert_eq!(
             StreamMessage::arrow_field_names(),
             [
+                "schema_version",
                 "run_id",
                 "event_id",
                 "entity_id",
@@ -336,6 +386,30 @@ mod tests {
     }
 
     #[test]
+    fn event_log_contract_rejects_missing_event_id() {
+        let mut message = StreamMessage::event_log("run-1", 42, 7);
+        message.event_id = None;
+
+        let error = message
+            .validate_event_log_contract()
+            .expect_err("missing event_id should fail");
+
+        assert_eq!(error.to_string(), "event_id must be present");
+    }
+
+    #[test]
+    fn event_log_contract_rejects_wrong_schema_version() {
+        let mut message = StreamMessage::event_log("run-1", 42, 7);
+        message.schema_version = 2;
+
+        let error = message
+            .validate_event_log_contract()
+            .expect_err("wrong schema_version should fail");
+
+        assert_eq!(error.to_string(), "schema_version must be 1, got 2");
+    }
+
+    #[test]
     fn in_memory_sink_rejects_invalid_contract_message() {
         let mut stream = InMemoryStream::default();
         let mut message = StreamMessage::event_log("run-1", 42, 7);
@@ -350,5 +424,34 @@ mod tests {
             "payload_ref must not be empty when present"
         );
         assert!(stream.is_empty());
+    }
+
+    #[test]
+    fn in_memory_sink_rejects_sequence_regression_for_same_run() {
+        let mut stream = InMemoryStream::default();
+
+        stream
+            .publish(StreamMessage::event_log("run-1", 42, 2))
+            .expect("first publish");
+        let error = stream
+            .publish(StreamMessage::event_log("run-1", 43, 2))
+            .expect_err("duplicate sequence should fail");
+
+        assert_eq!(
+            error.to_string(),
+            "sequence must increase per run_id: last 2, got 2"
+        );
+        assert_eq!(stream.len(), 1);
+    }
+
+    #[test]
+    fn snapshot_rejects_unknown_stream_name() {
+        let stream = InMemoryStream::default();
+
+        let error = stream
+            .snapshot("kairo_ecs.unknown.v1")
+            .expect_err("unknown stream should fail");
+
+        assert_eq!(error.to_string(), "unknown stream: kairo_ecs.unknown.v1");
     }
 }

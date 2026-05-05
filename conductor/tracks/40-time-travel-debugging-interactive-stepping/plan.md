@@ -69,3 +69,25 @@ Not marked complete:
 
 - `cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` did not execute because the local Windows linker setup is broken: `where link` resolves to Git's `usr\bin\link.exe`, which failed with Win32 error 5; retrying with `RUSTFLAGS='-C linker=rust-lld'` failed because `kernel32.lib`, `ntdll.lib`, `userenv.lib`, `ws2_32.lib`, and `dbghelp.lib` are not on `LIB`.
 - Arrow IPC serialization and experiment-runner integration remain future work because they require Track 04/22 integration outside this worker's write paths.
+
+## Hardening slice evidence — 2026-05-06
+
+Completed inside Track 40-owned files only:
+
+- Fixed debugger cursor semantics so a new debugger starts at the initial snapshot and the first `step` lands on the first delta instead of skipping to the second delta.
+- Added `cursor_tick`, `current_state`, and `run_until_breakpoint` library helpers to support focused stepping, replay, inspection, and breakpoint smoke coverage.
+- Hardened `validate_trace_lines` to reject malformed snapshot/delta record shapes, invalid delta numeric fields, empty event kinds, missing schema, unsupported schema, and out-of-order ticks.
+- Expanded the static timeline validator to catch duplicate event dots after re-render and verify active-dot state plus event-dot selection refreshing the state inspector.
+- Updated `docs/debugging/` and `test-matrix.md` to separate current offline scaffold behavior from deferred Track 04/12/22 integration claims.
+
+Validation evidence:
+
+- `cargo fmt --manifest-path crates\kairo-ecs-debug\Cargo.toml --check` passed.
+- `cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests` passed.
+- `cargo clippy --manifest-path crates\kairo-ecs-debug\Cargo.toml --all-targets -- -D warnings` passed.
+- `node website\time-travel-demo\validate-demo.mjs` passed.
+
+Blocked validation:
+
+- `cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` still fails before test execution because `link.exe` resolves to Git's `usr\bin\link.exe` and exits with Win32 error 5 while creating a signal pipe.
+- `$env:RUSTFLAGS='-C linker=rust-lld'; cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` still fails before test execution because `rust-lld` cannot find `kernel32.lib`, `ntdll.lib`, `userenv.lib`, `ws2_32.lib`, and `dbghelp.lib`.

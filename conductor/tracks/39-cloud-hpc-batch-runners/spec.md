@@ -6,7 +6,7 @@ Production-scale simulation execution. Docker images, Kubernetes operator, AWS B
 
 ## Why this track exists
 
-The kairo-ecs-cli from Track 22 gives users a local experiment runner. Production simulation workloads require scale: hundreds of parameter-sweep runs, long-running ensembles on HPC clusters, and burst-compute across cloud providers. This track builds the containerized, orchestrated, and cloud-portable execution layer so that users can run KairoECS simulations at any scale — from a single Docker container to a 1,000-node Slurm cluster — with resilience against spot/preemptible instance interruptions and cloud-storage telemetry output.
+The kairo-ecs-cli from Track 22 gives users a local experiment runner. Production simulation workloads require scale: hundreds of parameter-sweep runs, long-running ensembles on HPC clusters, and burst-compute across cloud providers. This track builds toward a containerized, orchestrated, and cloud-portable execution layer so that users can run KairoECS simulations from a single Docker container through site-managed cloud/HPC batch environments, with explicit validation gates for spot/preemptible interruption handling and cloud-storage telemetry output.
 
 ## Primary subagent
 
@@ -48,12 +48,20 @@ Depends on Track 22 (experiment runner CLI) and Track 15 (packaging). The CLI bi
 
 ## Acceptance criteria
 
+These are release targets, not claims about the current scaffold. Current verified evidence is limited to offline manifest/policy validation unless a live Docker, Kubernetes, Slurm, AWS, GCP, or Azure command is recorded in `handoff.md`.
+
 - Docker image builds successfully for `linux/amd64` and `linux/arm64` and runs `kairo-ecs-cli run` inside the container.
 - Kubernetes operator creates a `KairoECSExperiment` CR, launches a pod, and marks the experiment as completed after successful execution.
 - Slurm script submits a job array, each job runs a parameter-sweep variant, and the script blocks until all jobs complete.
 - Spot instance interruption signal (SIGTERM) triggers a checkpoint write; on next launch, the experiment resumes from the checkpoint with identical final state.
 - Telemetry output writes to S3-compatible storage with a SHA-256 checksum file alongside the Arrow output.
 - AWS Batch, GCP Batch, and Azure Batch job definitions are validated against provider schemas.
+
+## Current verified scope
+
+- `cloud/validate_cloud_hpc.py` performs offline validation for Dockerfile/entrypoint policy, Kubernetes CRD/sample/operator rendering, AWS/GCP/Azure template shape, Slurm signal/checkpoint wiring, checkpoint/spot policy documentation, and telemetry checksum sidecars/provider upload manifests.
+- Provider upload is currently represented by local upload manifest generation for `s3://`, `gs://`, and `az://` destinations; live object-store writes require provider-specific implementation and credentials.
+- Slurm and cloud provider acceptance require live scheduler/provider validation before readiness is claimed.
 
 ## Release implications
 

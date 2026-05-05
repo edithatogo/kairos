@@ -92,6 +92,7 @@ impl ModelDescription {
     }
 
     pub fn to_fmi2_xml(&self) -> String {
+        debug_assert!(self.validate().is_ok());
         let mut xml = String::new();
         xml.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         xml.push_str(&format!(
@@ -114,17 +115,52 @@ impl ModelDescription {
         }
         xml.push_str("  </ModelVariables>\n");
         xml.push_str("  <ModelStructure>\n");
-        for (index, variable) in self.variables.iter().enumerate() {
-            if variable.causality == Causality::Output {
-                xml.push_str(&format!(
-                    "    <Output valueReference=\"{}\" />\n",
-                    index + 1
-                ));
+        let output_indexes = self
+            .variables
+            .iter()
+            .enumerate()
+            .filter_map(|(index, variable)| {
+                (variable.causality == Causality::Output).then_some(index + 1)
+            })
+            .collect::<Vec<_>>();
+        if !output_indexes.is_empty() {
+            xml.push_str("    <Outputs>\n");
+            for index in output_indexes {
+                xml.push_str(&format!("      <Unknown index=\"{}\" />\n", index));
             }
+            xml.push_str("    </Outputs>\n");
         }
         xml.push_str("  </ModelStructure>\n");
         xml.push_str("</fmiModelDescription>\n");
         xml
+    }
+
+    pub fn validate_generated_fmi2_xml(&self) -> FmiResult<()> {
+        self.validate()?;
+        let xml = self.to_fmi2_xml();
+        require_contains(&xml, "fmiVersion=\"2.0\"")?;
+        require_contains(&xml, "<CoSimulation modelIdentifier=\"kairo_ecs_model\" />")?;
+        require_contains(&xml, "<ModelVariables>")?;
+        require_contains(&xml, "</ModelVariables>")?;
+        require_contains(&xml, "<ModelStructure>")?;
+        require_contains(&xml, "</ModelStructure>")?;
+
+        let output_count = self
+            .variables
+            .iter()
+            .filter(|variable| variable.causality == Causality::Output)
+            .count();
+        let unknown_count = xml.matches("<Unknown index=\"").count();
+        if unknown_count != output_count {
+            return Err(validation_error(
+                "modelDescription.xml",
+                format!(
+                    "generated ModelStructure has {} output Unknown entries for {} output variables",
+                    unknown_count, output_count
+                ),
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -136,6 +172,17 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         ))
     } else {
         Ok(())
+    }
+}
+
+fn require_contains(xml: &str, marker: &'static str) -> FmiResult<()> {
+    if xml.contains(marker) {
+        Ok(())
+    } else {
+        Err(validation_error(
+            "modelDescription.xml",
+            format!("generated XML is missing {marker}"),
+        ))
     }
 }
 
@@ -217,6 +264,8 @@ mod tests {
         assert!(xml.contains("fmiVersion=\"2.0\""));
         assert!(xml.contains("name=\"position\""));
         assert!(xml.contains("<Real />"));
+        assert!(xml.contains("<Outputs>"));
+        assert!(xml.contains("<Unknown index=\"2\" />"));
     }
 
     #[test]
@@ -230,5 +279,14 @@ mod tests {
         assert!(error
             .to_string()
             .contains("duplicate ScalarVariable valueReference 1"));
+    }
+
+    #[test]
+    fn validates_generated_fmi2_xml_structure() {
+        ModelDescription::new("oscillator", "{kairo-test}")
+            .with_variable(ScalarVariable::real_input("force", 1))
+            .with_variable(ScalarVariable::real_output("position", 2))
+            .validate_generated_fmi2_xml()
+            .expect("generated XML structure");
     }
 }

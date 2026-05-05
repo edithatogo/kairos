@@ -23,6 +23,10 @@ fn snapshot_provider_filters_by_arrow_stream_name() {
         .expect("snapshot");
 
     assert_eq!(snapshot.len(), 1);
+    assert_eq!(
+        snapshot[0].schema_version,
+        kairo_ecs_streaming::arrow_schema::SCHEMA_VERSION
+    );
 }
 
 #[test]
@@ -37,6 +41,49 @@ fn in_memory_adapter_enforces_event_log_contract() {
 
     assert_eq!(error.to_string(), "event_kind must not be empty");
     assert!(stream.is_empty());
+}
+
+#[test]
+fn in_memory_adapter_rejects_unversioned_event_log_contract() {
+    let mut stream = InMemoryStream::default();
+    let mut message = StreamMessage::event_log("featureless", 10, 1);
+    message.schema_version = 0;
+
+    let error = stream
+        .publish(message)
+        .expect_err("wrong schema version should be rejected");
+
+    assert_eq!(error.to_string(), "schema_version must be 1, got 0");
+    assert!(stream.is_empty());
+}
+
+#[test]
+fn in_memory_adapter_rejects_sequence_regression_per_run() {
+    let mut stream = InMemoryStream::default();
+    stream
+        .publish(StreamMessage::event_log("featureless", 10, 2))
+        .expect("publish first message");
+
+    let error = stream
+        .publish(StreamMessage::event_log("featureless", 11, 1))
+        .expect_err("lower sequence should be rejected");
+
+    assert_eq!(
+        error.to_string(),
+        "sequence must increase per run_id: last 2, got 1"
+    );
+    assert_eq!(stream.len(), 1);
+}
+
+#[test]
+fn snapshot_provider_rejects_unknown_stream_name() {
+    let stream = InMemoryStream::default();
+
+    let error = stream
+        .snapshot("kairo_ecs.unknown.v1")
+        .expect_err("unknown stream should be rejected");
+
+    assert_eq!(error.to_string(), "unknown stream: kairo_ecs.unknown.v1");
 }
 
 #[cfg(feature = "kafka")]

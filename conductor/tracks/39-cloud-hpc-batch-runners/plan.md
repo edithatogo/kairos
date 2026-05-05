@@ -134,6 +134,7 @@ Completed with artifact evidence:
 - Phase 5 checkpoint/interrupt scaffold: `docker/entrypoint.sh` writes an atomic checkpoint manifest on `SIGTERM`; Slurm scripts request `--signal=B:SIGTERM@120`.
 - Phase 6 telemetry scaffold: `docker/telemetry-plugin/cloud-output.py` writes SHA-256 sidecars and local/provider upload manifests.
 - Phase 6 offline validation increment: `cloud/validate_cloud_hpc.py` now renders the sample Kubernetes Job, checks indexed completion/env wiring, copies a local Arrow telemetry fixture with a SHA-256 sidecar, and verifies an `s3://` provider upload manifest without requiring credentials.
+- Hardening slice: `cloud/validate_cloud_hpc.py` now also checks Dockerfile/entrypoint invariants, Kubernetes CRD/sample shape, AWS/GCP/Azure template wiring, Slurm syntax and signal/checkpoint wiring, provider documentation disclaimers, and checkpoint/spot policy documentation. Slurm checkpoint defaults are local filesystem paths rather than remote output URIs.
 
 Validation evidence:
 

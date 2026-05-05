@@ -126,6 +126,7 @@ pub fn validate_unpacked_fmu_layout(root: impl AsRef<Path>) -> FmiResult<FmuLayo
             root: root.to_path_buf(),
         });
     }
+    validate_model_description_marker(&model_description)?;
 
     let platform = current_fmi_platform();
     let binary_dir = root.join("binaries").join(&platform);
@@ -168,6 +169,27 @@ pub fn validate_unpacked_fmu_layout(root: impl AsRef<Path>) -> FmiResult<FmuLayo
         binary_dir,
         binary_candidates,
     })
+}
+
+fn validate_model_description_marker(path: &Path) -> FmiResult<()> {
+    let contents = fs::read_to_string(path)
+        .map_err(|error| io_error("read modelDescription.xml", path.to_path_buf(), error))?;
+    if !contents.contains("<fmiModelDescription") {
+        return Err(validation_error(
+            "FMU layout",
+            format!(
+                "{} does not contain an fmiModelDescription root",
+                path.display()
+            ),
+        ));
+    }
+    if !contents.contains("fmiVersion=\"2.0\"") && !contents.contains("fmiVersion=\"3.0\"") {
+        return Err(validation_error(
+            "FMU layout",
+            format!("{} does not declare FMI version 2.0 or 3.0", path.display()),
+        ));
+    }
+    Ok(())
 }
 
 fn find_platform_binary(root: &Path, platform: &str) -> FmiResult<PathBuf> {
@@ -220,7 +242,11 @@ mod tests {
         let platform = current_fmi_platform();
         let binary_dir = root.join("binaries").join(&platform);
         fs::create_dir_all(&binary_dir).expect("binary dir");
-        fs::write(root.join("modelDescription.xml"), "<fmiModelDescription />").expect("xml");
+        fs::write(
+            root.join("modelDescription.xml"),
+            "<fmiModelDescription fmiVersion=\"2.0\" />",
+        )
+        .expect("xml");
         fs::write(
             binary_dir.join(format!("model.{}", shared_library_extension())),
             [],
@@ -244,10 +270,39 @@ mod tests {
                 .as_nanos()
         ));
         fs::create_dir_all(&root).expect("root dir");
-        fs::write(root.join("modelDescription.xml"), "<fmiModelDescription />").expect("xml");
+        fs::write(
+            root.join("modelDescription.xml"),
+            "<fmiModelDescription fmiVersion=\"2.0\" />",
+        )
+        .expect("xml");
 
         let error = validate_unpacked_fmu_layout(&root).expect_err("missing binary dir");
         assert!(error.to_string().contains("missing binary directory"));
+
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn rejects_model_description_without_fmi_version() {
+        let root = std::env::temp_dir().join(format!(
+            "kairo-fmu-invalid-model-description-{}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("time")
+                .as_nanos()
+        ));
+        let platform = current_fmi_platform();
+        let binary_dir = root.join("binaries").join(&platform);
+        fs::create_dir_all(&binary_dir).expect("binary dir");
+        fs::write(root.join("modelDescription.xml"), "<fmiModelDescription />").expect("xml");
+        fs::write(
+            binary_dir.join(format!("model.{}", shared_library_extension())),
+            [],
+        )
+        .expect("binary");
+
+        let error = validate_unpacked_fmu_layout(&root).expect_err("invalid model description");
+        assert!(error.to_string().contains("does not declare FMI version"));
 
         fs::remove_dir_all(root).expect("cleanup");
     }

@@ -3,7 +3,7 @@
 Track 38 starts with FMI 2.0 co-simulation import. The current crate exposes the first safe boundary:
 
 - unpacked FMU layout detection under `binaries/<platform>/`
-- `modelDescription.xml` presence checks
+- `modelDescription.xml` presence checks plus a dependency-free FMI version/root marker check
 - dependency-free layout validation with explicit missing-root, missing-binary-directory, and missing-binary diagnostics
 - FMI 2.0 function-table types
 - `Fmi2CoSimulationInstance` lifecycle and scalar access wrappers
@@ -21,7 +21,9 @@ println!("FMU binary for this host: {}", layout.binary().display());
 For pre-flight checks that should not instantiate a runtime wrapper, call
 `validate_unpacked_fmu_layout`. The returned report records the host platform,
 `modelDescription.xml` path, platform binary directory, and discovered shared
-library candidates.
+library candidates. The validator does not perform XSD validation and does not
+prove that the FMU can be instantiated; it only rejects packaging mistakes that
+can be found before archive extraction and dynamic loading are introduced.
 
 ## Platform directory mapping
 

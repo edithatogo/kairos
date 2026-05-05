@@ -2,11 +2,11 @@
 
 ## Summary
 
-Defined the production-scale execution layer for KairoECS simulations. Established a containerized execution pipeline (multi-arch Docker image wrapping `kairo-ecs-cli`), a Kubernetes operator with a `KairoECSExperiment` CRD, cloud batch provider job definitions (AWS Batch, GCP Batch, Azure Batch), Slurm HPC job submission scripts with checkpoint hooks, spot/preemptible instance resilience via SIGTERM trapping and checkpoint/resume, and a cloud storage telemetry output plugin writing Arrow files with SHA-256 checksums to S3/GCS/Azure Blob.
+Defined the scaffold and offline validation layer for production-scale KairoECS execution. The current verified scope is manifest shape, local rendering, shell syntax, checkpoint/spot policy wiring, and local telemetry checksum behavior. Live Docker builds, Kubernetes cluster reconciliation, Slurm scheduler submission, and AWS/GCP/Azure provider API acceptance still require environment-backed validation before readiness claims.
 
 ## Files changed
 
-`conductor/tracks/39-cloud-hpc-batch-runners/spec.md`, `conductor/tracks/39-cloud-hpc-batch-runners/plan.md`, `conductor/tracks/39-cloud-hpc-batch-runners/agent-contract.md`, `conductor/tracks/39-cloud-hpc-batch-runners/risk-register.md`, `conductor/tracks/39-cloud-hpc-batch-runners/test-matrix.md`, `conductor/tracks/39-cloud-hpc-batch-runners/handoff.md`, `docker/Dockerfile`, `docker/docker-bake.hcl`, `docker/entrypoint.sh`, `docker/telemetry-plugin/cloud-output.py`, `k8s/crd/kairoecs-experiment.yaml`, `k8s/operator/`, `cloud/aws/batch-job-definition.yaml`, `cloud/aws/batch-array-template.yaml`, `cloud/aws/submit-experiment.sh`, `cloud/gcp/batch-job.json`, `cloud/gcp/batch-array.json`, `cloud/gcp/submit-experiment.sh`, `cloud/azure/batch-job.json`, `cloud/azure/batch-array.json`, `cloud/azure/submit-experiment.ps1`, `hpc/slurm/submit-experiment.sh`, `hpc/slurm/submit-sweep.sh`, `hpc/slurm/resume.sh`, `docs/cloud-hpc/slurm.md`, `docs/cloud-hpc/aws-batch.md`, `docs/cloud-hpc/gcp-batch.md`, `docs/cloud-hpc/azure-batch.md`, `.github/workflows/cloud-smoke.yml`
+`conductor/tracks/39-cloud-hpc-batch-runners/spec.md`, `conductor/tracks/39-cloud-hpc-batch-runners/plan.md`, `conductor/tracks/39-cloud-hpc-batch-runners/agent-contract.md`, `conductor/tracks/39-cloud-hpc-batch-runners/risk-register.md`, `conductor/tracks/39-cloud-hpc-batch-runners/test-matrix.md`, `conductor/tracks/39-cloud-hpc-batch-runners/handoff.md`, `docker/Dockerfile`, `docker/docker-bake.hcl`, `docker/entrypoint.sh`, `docker/telemetry-plugin/cloud-output.py`, `k8s/crd/kairoecs-experiment.yaml`, `k8s/operator/`, `cloud/aws/batch-job-definition.yaml`, `cloud/aws/batch-array-template.yaml`, `cloud/aws/submit-experiment.sh`, `cloud/gcp/batch-job.json`, `cloud/gcp/batch-array.json`, `cloud/gcp/submit-experiment.sh`, `cloud/azure/batch-job.json`, `cloud/azure/batch-array.json`, `cloud/azure/submit-experiment.ps1`, `hpc/slurm/submit-experiment.sh`, `hpc/slurm/submit-sweep.sh`, `hpc/slurm/resume.sh`, `docs/cloud-hpc/slurm.md`, `docs/cloud-hpc/aws-batch.md`, `docs/cloud-hpc/gcp-batch.md`, `docs/cloud-hpc/azure-batch.md`, `docs/cloud-hpc/checkpoint-spot-policy.md`
 
 ## Contracts consumed
 
@@ -24,9 +24,13 @@ This track is explicitly non-blocking for library release. Container images are 
 - **Docker**: `docker build -t kairo-ecs-cli:latest . && docker run kairo-ecs-cli:latest run --help`
 - **K8s operator**: `kubectl apply -f k8s/crd/kairoecs-experiment.yaml && kubectl apply -f k8s/operator/ && kubectl create -f k8s/samples/hello-world-experiment.yaml`
 - **Slurm**: `sbatch hpc/slurm/submit-experiment.sh --scenario scenarios/factory_bottleneck_v1.yaml --output s3://my-bucket/runs/ --partition gpu --nodes 1`
-- **Spot resilience**: Signal handler traps SIGTERM, writes checkpoint atomically. Resume path: `kairo-ecs-cli resume --checkpoint /output/checkpoint.json`
-- **Telemetry output**: `docker run -e OUTPUT_BACKEND=s3 -e S3_BUCKET=my-bucket kairo-ecs-cli run ...` writes `<run-id>.arrow` and `<run-id>.arrow.sha256` to S3.
-- **Offline validation**: `python cloud\validate_cloud_hpc.py` validates JSON manifests, rendered Kubernetes Job shape, local telemetry checksum sidecars, and provider upload manifest schema without live credentials.
+- **Spot resilience scaffold**: Signal handlers trap SIGTERM and write local checkpoint manifests atomically. Full stateful resume depends on Track 22 CLI checkpoint/resume behavior.
+- **Telemetry output scaffold**: local file destinations copy Arrow files and write `.sha256` sidecars; `s3://`, `gs://`, and `az://` destinations currently write provider upload manifests for later provider-specific upload execution.
+- **Offline validation**: `python cloud\validate_cloud_hpc.py` validates Dockerfile/entrypoint policy, JSON/YAML/text manifest invariants, rendered Kubernetes Job shape, Slurm shell syntax where `bash` is available, local telemetry checksum sidecars, and provider upload manifest schema without live credentials.
+
+## Latest validation evidence
+
+- 2026-05-06: `python cloud\validate_cloud_hpc.py` passed after the hardening slice. It covered Docker non-root entrypoint wiring, Kubernetes CRD/sample/operator rendering, AWS/GCP/Azure template shape, Slurm checkpoint/signal wiring, provider docs, local telemetry checksum sidecars, and provider upload manifest generation.
 
 ## Risks and unresolved questions
 

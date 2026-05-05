@@ -7,8 +7,9 @@
 | `kairo-ecs-ml` compiles with `--features tensorrt` | no | yes | yes |
 | `kairo-ecs-ml` compiles with `--features burn` | no | yes | yes |
 | `kairo-ecs-ml` compiles with `--all-features` | yes | yes | yes |
-| ONNX model loads and infers inside simulation tick | yes | yes | yes |
-| ONNX inference does not deadlock under 1000 consecutive ticks | yes | yes | yes |
+| ONNX-facing scaffold validates metadata, tensor shapes, and backend-not-configured status without runtime dependencies | yes | yes | yes |
+| Real ONNX model loads and infers inside simulation tick | no | yes | yes |
+| Real ONNX inference does not deadlock under 1000 consecutive ticks | no | yes | yes |
 | Consecutive inference runs without memory leak | no | yes | yes |
 | Neural surrogate accuracy within 5% of original system | no | yes | yes |
 | `kairo_gym` Python package imports and passes Gymnasium API check (`check_env`) | yes | yes | yes |
@@ -21,3 +22,7 @@
 | Docs: surrogate authoring guide includes runnable example | no | no | yes |
 | `cargo test` passes without GPU hardware (CPU-only CI) | yes | yes | yes |
 | `cargo test --features onnx` passes on CI with ONNX Runtime installed | no | yes | yes |
+
+Alpha scope note: current `OrtSession` is a dependency-free contract double. It
+must not be reported as evidence that ONNX Runtime, TensorRT, Burn, or surrogate
+accuracy validation has been integrated.

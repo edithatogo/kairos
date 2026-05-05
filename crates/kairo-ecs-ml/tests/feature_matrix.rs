@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use kairo_ecs_ml::{
-    FallbackPolicy, InferenceTickHook, OrtNeuralSystem, OrtSession, Tensor, TickPhase,
+    ensure_backend_configured, Backend, BackendStatus, FallbackPolicy, InferenceTickHook,
+    OrtNeuralSystem, OrtSession, Tensor, TickPhase,
 };
 
 #[test]
@@ -35,6 +36,20 @@ fn featureless_session_rejects_input_shape_mismatch_before_inference() {
         error.to_string(),
         "input shape [1] does not match model shape [2]"
     );
+}
+
+#[test]
+fn featureless_session_reports_backend_not_configured() {
+    let session = OrtSession::from_bytes("identity", "0", [1], vec![1], vec![1]).expect("session");
+
+    assert_eq!(
+        session.runtime_status(),
+        BackendStatus::NotConfigured {
+            backend: Backend::OnnxRuntime,
+            reason: "ONNX Runtime adapter is not wired in the dependency-free scaffold"
+        }
+    );
+    assert!(ensure_backend_configured(Backend::Burn).is_err());
 }
 
 #[cfg(feature = "onnx")]

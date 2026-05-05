@@ -19,6 +19,14 @@ cat > "$script" <<SLURM
 set -euo pipefail
 variant="\${SLURM_ARRAY_TASK_ID}"
 export KAIRO_OUTPUT_URI="${output_uri}/variant-\${variant}"
+export KAIRO_CHECKPOINT_DIR="\${KAIRO_CHECKPOINT_DIR:-${TMPDIR:-/tmp}/kairo/checkpoints/variant-\${variant}}"
+mkdir -p "\$KAIRO_CHECKPOINT_DIR"
+
+on_term() {
+  kairo-ecs-cli checkpoint --output "\$KAIRO_CHECKPOINT_DIR" || true
+}
+trap on_term TERM
+
 kairo-ecs-cli run --scenario "${scenario_prefix}/variant-\${variant}.yaml"
 SLURM
 

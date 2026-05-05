@@ -10,7 +10,7 @@ The `aas` feature provides a dependency-light AAS descriptor scaffold for mappin
 | Component field type | `valueType` |
 | Domain semantic tag | Property semantic ID |
 
-The current implementation serializes a minimal AAS JSON envelope suitable for schema-hardening in the next pass. `AasDescriptor::validate()` performs dependency-free structural checks for required IDs, required `idShort` values, required property value types, and duplicate property IDs inside a submodel. `AasProperty::to_json()` also carries `semanticId` references when present, so ontology links are not silently dropped.
+The current implementation serializes a minimal AAS JSON envelope suitable for schema-hardening in the next pass. `AasDescriptor::validate()` performs dependency-free structural checks for required IDs, required `idShort` values, duplicate submodel IDs, duplicate submodel `idShort` values, required property value types, and duplicate property IDs inside a submodel. `AasProperty::to_json()` also carries `semanticId` references when present, so ontology links are not silently dropped.
 
 Full AASX Package Explorer validation is still a Track 38 release gate.
 

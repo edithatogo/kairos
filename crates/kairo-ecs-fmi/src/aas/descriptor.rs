@@ -3,6 +3,7 @@ use crate::{
     error::{validation_error, FmiResult},
     FmiError,
 };
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AasDescriptor {
@@ -31,8 +32,22 @@ impl AasDescriptor {
         require_non_empty("AAS id", &self.id)?;
         require_non_empty("AAS idShort", &self.id_short)?;
         require_non_empty("asset kind", &self.asset_kind)?;
+        let mut submodel_ids = HashSet::new();
+        let mut submodel_id_shorts = HashSet::new();
         for submodel in &self.submodels {
             submodel.validate()?;
+            if !submodel_ids.insert(submodel.id.as_str()) {
+                return Err(validation_error(
+                    "AAS descriptor",
+                    format!("duplicate submodel id '{}'", submodel.id),
+                ));
+            }
+            if !submodel_id_shorts.insert(submodel.id_short.as_str()) {
+                return Err(validation_error(
+                    "AAS descriptor",
+                    format!("duplicate submodel idShort '{}'", submodel.id_short),
+                ));
+            }
         }
         Ok(())
     }
@@ -83,5 +98,15 @@ mod tests {
 
         descriptor.validate().expect("valid descriptor");
         assert!(descriptor.to_json().contains("queueDepth"));
+    }
+
+    #[test]
+    fn rejects_duplicate_submodel_ids() {
+        let descriptor = AasDescriptor::new("urn:kairo:test", "kairoTest")
+            .with_submodel(AasSubmodel::new("urn:kairo:test:state", "state"))
+            .with_submodel(AasSubmodel::new("urn:kairo:test:state", "stateCopy"));
+
+        let error = descriptor.validate().expect_err("duplicate submodel id");
+        assert!(error.to_string().contains("duplicate submodel id"));
     }
 }

@@ -2,11 +2,11 @@
 
 ## Summary
 
-Track 40 has moved beyond spec-design into an offline-testable scaffold. The `kairo-ecs-debug` crate now defines the trace schema, sparse snapshots, event deltas, reconstruction, stepping, backward movement, tick seek, inspection, breakpoint matching, and trace-line validation. The browser demo renders a versioned fixture and has a Node-based smoke validator that checks the trace fixture and step/back controls without browser dependencies.
+Track 40 remains an offline-testable scaffold, not a scheduler-integrated debugger. The `kairo-ecs-debug` crate defines the trace schema, sparse snapshots, event deltas, reconstruction, stepping, backward movement, tick seek, inspection, breakpoint matching, and trace-line validation. This hardening slice fixed first-step cursor behavior, added run-to-breakpoint/current-state helpers, tightened line validation, and expanded the browser demo smoke validator.
 
 ## Files changed
 
-`crates/kairo-ecs-debug/`, `docs/debugging/`, `website/time-travel-demo/`, and this handoff file.
+`crates/kairo-ecs-debug/`, `docs/debugging/`, `website/time-travel-demo/`, and Track 40 conductor files.
 
 ## Contracts consumed
 
@@ -18,8 +18,20 @@ No upstream scheduler or experiment-runner contracts were changed. The debug cra
 
 ## Tests added
 
-- Unit tests in `crates/kairo-ecs-debug/src/lib.rs` cover replay reconstruction, step/back/goto, breakpoint matching, schema encoding, and trace-line validation.
-- `website/time-travel-demo/validate-demo.mjs` validates the fixture schema, monotonic ticks, initial render, and step/back behavior with a minimal DOM harness.
+- Unit tests in `crates/kairo-ecs-debug/src/lib.rs` cover replay reconstruction, initial-snapshot-to-first-delta stepping, step/back/goto, run-to-breakpoint, schema encoding, and trace-line validation rejection cases.
+- `website/time-travel-demo/validate-demo.mjs` validates the fixture schema, monotonic ticks, initial render, active event marker, step/back behavior, no duplicate event dots after re-render, event-dot selection, and state inspector refresh with a minimal DOM harness.
+
+## Validation evidence — 2026-05-06
+
+- `cargo fmt --manifest-path crates\kairo-ecs-debug\Cargo.toml --check` passed.
+- `cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests` passed.
+- `cargo clippy --manifest-path crates\kairo-ecs-debug\Cargo.toml --all-targets -- -D warnings` passed.
+- `node website\time-travel-demo\validate-demo.mjs` passed.
+
+Blocked:
+
+- `cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` failed before test execution because `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe` returned Win32 error 5 while creating a signal pipe.
+- `$env:RUSTFLAGS='-C linker=rust-lld'; cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` failed before test execution because the MSVC import libraries `kernel32.lib`, `ntdll.lib`, `userenv.lib`, `ws2_32.lib`, and `dbghelp.lib` are not on the linker search path.
 
 ## Known risks
 
@@ -27,4 +39,4 @@ The trace file size for large simulations (10M+ events) is the primary scalabili
 
 ## Integration notes
 
-Next step: integrate the trace recorder with scheduler observer hook points and replace the line-oriented scaffold encoding with the Track 04 Arrow IPC trace serialization once that schema is available in this worker's writable scope.
+Next step: integrate the trace recorder with scheduler observer hook points and replace the line-oriented scaffold encoding with the Track 04 Arrow IPC trace serialization once that schema is available outside this Track 40-only write boundary.

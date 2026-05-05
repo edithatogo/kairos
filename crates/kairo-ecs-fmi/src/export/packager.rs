@@ -19,6 +19,7 @@ pub fn write_unpacked_fmu(
 ) -> FmiResult<FmuPackageLayout> {
     let root = root.as_ref().to_path_buf();
     model_description.validate()?;
+    model_description.validate_generated_fmi2_xml()?;
 
     let resources_dir = root.join("resources");
     let sources_dir = root.join("sources");

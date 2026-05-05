@@ -12,6 +12,14 @@ Runtime code must reject tensor shape mismatches before inference. Model stalene
 is treated as a release risk when a surrogate replaces domain logic and no
 validation run exists for the current model version.
 
+Tensor payloads must contain only finite `f32` values. NaN and infinity are
+rejected at tensor construction so invalid model inputs do not enter the
+simulation tick path.
+
+Until real backends are wired, `BackendStatus::NotConfigured` is the expected
+state for ONNX Runtime, TensorRT, and Burn. A scenario must not treat the
+dependency-free scaffold as proof that a real model backend is available.
+
 Fallback policies:
 
 - `HoldLastOutput`: use the last successful prediction.

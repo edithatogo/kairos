@@ -1,5 +1,13 @@
 # Slurm Batch Execution
 
+## Offline validation
+
+Run `python cloud\validate_cloud_hpc.py` from the repository root. The offline validator checks Slurm script syntax when `bash` is available, confirms `--signal=B:SIGTERM@120`, validates job-array index wiring, and confirms checkpoint/resume command wiring.
+
+## Live validation
+
+The offline check does not prove a site scheduler accepts the generated scripts. Before marking a cluster ready, run `sbatch --test-only` if supported, otherwise submit a one-task canary to a short/debug partition and record the cluster, partition, job id, terminal status, and checkpoint/output paths.
+
 Submit a single experiment with:
 
 ```bash

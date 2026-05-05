@@ -67,6 +67,36 @@ cargo bench --workspace
 
 **entity-migration-check**: `cargo check --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi --tests` and `cargo check --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc --tests` - validates the dependency-free migration envelope contracts for both distributed transport scaffolds.
 
+### Tracks 36-40 streaming, ML, FMI, cloud/HPC, and debugging gates
+
+**kafka-smoke**: `cargo test -p kairo-ecs-streaming --features kafka` - validates the dependency-free Kafka feature surface and adapter type alias exposed by the Track 36 R2 scaffold. It does not prove a live Kafka broker connection until a broker-backed integration harness is added.
+
+**arrow-flight-smoke**: `cargo test -p kairo-ecs-streaming --features arrow-flight` - validates the Arrow Flight feature surface and event-log stream contract exposed by the Track 36 R2 scaffold. It does not prove an Arrow Flight server/client runtime.
+
+**realtime-wallclock-check**: `cargo test -p kairo-ecs-streaming --no-default-features` - validates event-log message shape, wall-clock pacing contracts, and no-adapter operation for the Track 36 R2 scaffold. It does not claim production latency or broker throughput.
+
+**onnx-inference-smoke**: `cargo test -p kairo-ecs-ml --features onnx` and `cargo check --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx` - validates model metadata, tensor shape checks, deterministic passthrough inference, and the ONNX feature alias in the Track 37 R2 scaffold. It does not prove ONNX Runtime execution or model accuracy.
+
+**gymnasium-env-smoke**: `cargo test -p kairo-ecs-ml --features gymnasium` plus the local `python/kairo_gym` tests when Python test dependencies are available - validates Rust-side action/space contracts and the Python environment contract scaffold. It does not prove RL training-loop performance.
+
+**fmi-import-smoke**: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2 --tests` and `cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml` - validates unpacked FMU layout and FMI 2 import contract compilation for Track 38 R2. It does not prove shared-library FMU execution.
+
+**fmi-export-smoke**: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests` - validates modelDescription generation and unpacked export-layout checks for Track 38 R2. It does not prove full `.fmu` archive packaging or third-party tool roundtrip.
+
+**aas-validate**: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features aas --tests` - validates dependency-free AAS descriptor/submodel structural checks for Track 38 R2. It does not prove AASX Package Explorer schema conformance.
+
+**docker-build**: `python cloud/validate_cloud_hpc.py` plus `docker build` when Docker is available - validates Track 39 Dockerfile and offline cloud/HPC manifest scaffolds. The Python validator is the portable R2 gate; live container execution remains a later gate.
+
+**kubernetes-smoke**: `python cloud/validate_cloud_hpc.py` - validates the Kubernetes CRD/sample/operator manifest shape for Track 39 R2. It does not prove a live cluster, controller deployment, or pod lifecycle.
+
+**spot-checkpoint-test**: `python cloud/validate_cloud_hpc.py` - validates checkpoint/resume script and telemetry-output scaffold contracts for Track 39 R2. It does not prove cloud spot/preemptible interruption handling.
+
+**trace-record-replay**: `cargo test -p kairo-ecs-debug` and `node website/time-travel-demo/validate-demo.mjs` - validates trace-line encoding, fixture loading, reconstruction, and replay-oriented offline demo checks for Track 40 R2. It does not prove Arrow IPC trace storage or live record/replay integration.
+
+**fwd-back-parity**: `cargo test -p kairo-ecs-debug` - validates forward/backward stepping and tick seek behavior over the offline trace model for Track 40 R2. It does not prove large-trace performance.
+
+**breakpoint-smoke**: `cargo test -p kairo-ecs-debug` - validates event-kind breakpoint matching and CLI command names for Track 40 R2. It does not prove interactive debugging of a running simulation.
+
 ### Tracks 03-05 specific gates
 
 **des-fixture**: `cargo test -p kairo-ecs-des --test des_resource_queue_v1` — the DES resource queue fixture must exist and pass.

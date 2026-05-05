@@ -21,6 +21,11 @@ The current scaffold uses:
 
 Track 36 owns the final streaming wire contract. This track must adapt to that contract instead of inventing a parallel telemetry protocol.
 
+`DigitalTwinConnector::try_new()` rejects non-positive sample rates and negative
+or non-finite epsilon values. `try_publish_changes()` rejects empty topic
+prefixes, prefixes with leading/trailing slashes, and non-finite values before
+returning publication records.
+
 ## State synchronization
 
 Snapshots are sorted by key before checksumming so the same state has the same checksum regardless of collection order. The checksum is a drift-detection guard, not a cryptographic integrity mechanism.

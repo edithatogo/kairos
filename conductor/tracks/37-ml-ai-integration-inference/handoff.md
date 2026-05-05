@@ -2,7 +2,7 @@
 
 ## Summary
 
-Track 37 now has the first concrete ML scaffold. `kairo-ecs-ml` defines shape-checked tensors, dependency-free model metadata and input-shape validation, an ONNX-facing session wrapper surface, `NeuralSystem`, phase-filtered `InferenceTickHook`, feature-gated backend modules, a DE surrogate example, and a Gymnasium-compatible Python wrapper that can import without optional Gymnasium installed.
+Track 37 now has the first concrete ML scaffold. `kairo-ecs-ml` defines shape-checked tensors, dependency-free model metadata and tick-boundary input/output-shape validation, finite tensor-value validation, an ONNX-facing session wrapper surface, explicit backend-not-configured status, `NeuralSystem`, phase-filtered `InferenceTickHook`, feature-gated backend modules, a DE surrogate example, and a Gymnasium-compatible Python wrapper that can import without optional Gymnasium installed.
 
 ## Files created
 
@@ -38,7 +38,8 @@ Track 37 now has the first concrete ML scaffold. `kairo-ecs-ml` defines shape-ch
 - `crates/kairo-ecs-ml/tests/feature_matrix.rs`
 - Unit tests in `crates/kairo-ecs-ml/src/lib.rs`
 - `python/kairo_gym/tests/test_env_contract.py`
-- Contract checks now reject blank model names/versions, empty or zero-dimensional tensor/model shapes, input/model shape mismatches, invalid Gym space sizes, and string actions before runtime integration is attempted.
+- Contract checks now reject blank model names/versions, empty or zero-dimensional tensor/model shapes, non-finite tensor values, tick-hook input/output shape mismatches, invalid Gym space sizes, string actions, non-iterable actions, and non-finite action values before runtime integration is attempted.
+- Backend status checks now report that ONNX Runtime, TensorRT, and Burn are not configured in the dependency-free scaffold; the scaffold must not be used as evidence of real backend execution.
 
 Validated:
 
@@ -57,7 +58,7 @@ Blocked validation:
 - `cargo test --manifest-path crates/kairo-ecs-ml/Cargo.toml --all-features`
 - `cargo run --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx`
 
-All three commands compiled code but failed at Windows link time because this shell resolves `link.exe` to Git's `usr\bin\link.exe`; rerunning with `rust-lld` then failed because Windows SDK libraries such as `kernel32.lib` were not visible.
+The two `cargo test` commands compiled code but failed at Windows link time because this shell resolves `link.exe` to Git's `usr\bin\link.exe`, which failed with `couldn't create signal pipe, Win32 error 5`. Earlier example execution was also blocked by the same Windows linker setup; `cargo check` for the example passes.
 
 ## Risks and unresolved questions
 

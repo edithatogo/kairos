@@ -27,14 +27,23 @@ const elements = new Map();
 
 function element(id) {
   if (!elements.has(id)) {
+    let markup = "";
     elements.set(id, {
       id,
       children: [],
       className: "",
       textContent: "",
       type: "",
-      innerHTML: "",
       listeners: {},
+      get innerHTML() {
+        return markup;
+      },
+      set innerHTML(value) {
+        markup = value;
+        if (value === "") {
+          this.children = [];
+        }
+      },
       appendChild(child) {
         this.children.push(child);
       },
@@ -76,6 +85,9 @@ if (tick !== "tick 0") {
 if (events.length !== fixture.events.length) {
   throw new Error(`expected ${fixture.events.length} event controls, got ${events.length}`);
 }
+if (events.filter((event) => event.className.includes("active")).length !== 1) {
+  throw new Error("expected exactly one active timeline event");
+}
 if (state["machine.status"] !== "idle") {
   throw new Error("expected initial state to render machine.status=idle");
 }
@@ -84,8 +96,20 @@ element("step").listeners.click();
 if (element("tick").textContent !== "tick 2") {
   throw new Error("step control did not advance to tick 2");
 }
+if (element("events").children.length !== fixture.events.length) {
+  throw new Error("step re-render duplicated timeline controls");
+}
 
 element("back").listeners.click();
 if (element("tick").textContent !== "tick 0") {
   throw new Error("back control did not return to tick 0");
+}
+
+element("events").children[2].listeners.click();
+const selectedState = JSON.parse(element("state").textContent);
+if (element("tick").textContent !== "tick 4") {
+  throw new Error("timeline event dot did not select tick 4");
+}
+if (selectedState["machine.status"] !== "busy") {
+  throw new Error("timeline event dot did not refresh the state inspector");
 }

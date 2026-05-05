@@ -255,6 +255,31 @@ foreach ($row in @(
     Assert-Contains -Content $qualityGates -Needle $row -Label "quality-gates.md"
 }
 
+foreach ($row in @(
+    "### Tracks 36-40 streaming, ML, FMI, cloud/HPC, and debugging gates",
+    "**kafka-smoke**",
+    "**arrow-flight-smoke**",
+    "**realtime-wallclock-check**",
+    "**onnx-inference-smoke**",
+    "**gymnasium-env-smoke**",
+    "**fmi-import-smoke**",
+    "**fmi-export-smoke**",
+    "**aas-validate**",
+    "**docker-build**",
+    "**kubernetes-smoke**",
+    "**spot-checkpoint-test**",
+    "**trace-record-replay**",
+    "**fwd-back-parity**",
+    "**breakpoint-smoke**",
+    "does not prove a live Kafka broker connection",
+    "does not prove ONNX Runtime execution",
+    "does not prove shared-library FMU execution",
+    "live container execution remains a later gate",
+    "does not prove interactive debugging of a running simulation"
+)) {
+    Assert-Contains -Content $qualityGates -Needle $row -Label "quality-gates.md"
+}
+
 $wavePolicy = Get-Content -LiteralPath "conductor/wave-policy.md" -Raw
 foreach ($row in @(
     "Wave 5",

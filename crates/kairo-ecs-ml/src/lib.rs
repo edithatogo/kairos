@@ -27,6 +27,7 @@ impl Tensor {
                 values.len()
             )));
         }
+        validate_finite_values("tensor values", &values)?;
 
         Ok(Self { shape, values })
     }
@@ -115,7 +116,12 @@ impl InferenceTickHook {
         self.systems
             .iter()
             .filter(|system| system.tick_phase() == phase)
-            .map(|system| system.predict(input))
+            .map(|system| {
+                validate_model_input(system.metadata(), input)?;
+                let output = system.predict(input)?;
+                validate_model_output(system.metadata(), &output)?;
+                Ok(output)
+            })
             .collect()
     }
 
@@ -220,6 +226,13 @@ impl OrtSession {
     pub fn model_size_bytes(&self) -> usize {
         self.model_bytes.len()
     }
+
+    pub fn runtime_status(&self) -> BackendStatus {
+        BackendStatus::NotConfigured {
+            backend: Backend::OnnxRuntime,
+            reason: "ONNX Runtime adapter is not wired in the dependency-free scaffold",
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -291,6 +304,63 @@ fn validate_shape(label: &str, shape: &[usize]) -> Result<(), MlError> {
     Ok(())
 }
 
+fn validate_finite_values(label: &str, values: &[f32]) -> Result<(), MlError> {
+    if values.iter().any(|value| !value.is_finite()) {
+        return Err(MlError::new(format!("{} must be finite", label)));
+    }
+    Ok(())
+}
+
+fn validate_model_input(metadata: &ModelMetadata, input: &Tensor) -> Result<(), MlError> {
+    if input.shape() != metadata.input_shape.as_slice() {
+        return Err(MlError::new(format!(
+            "input shape {:?} does not match model {}:{} input_shape {:?}",
+            input.shape(),
+            metadata.name,
+            metadata.version,
+            metadata.input_shape
+        )));
+    }
+    Ok(())
+}
+
+fn validate_model_output(metadata: &ModelMetadata, output: &Tensor) -> Result<(), MlError> {
+    if output.shape() != metadata.output_shape.as_slice() {
+        return Err(MlError::new(format!(
+            "output shape {:?} does not match model {}:{} output_shape {:?}",
+            output.shape(),
+            metadata.name,
+            metadata.version,
+            metadata.output_shape
+        )));
+    }
+    Ok(())
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Backend {
+    OnnxRuntime,
+    TensorRt,
+    Burn,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum BackendStatus {
+    Configured {
+        backend: Backend,
+    },
+    NotConfigured {
+        backend: Backend,
+        reason: &'static str,
+    },
+}
+
+pub fn ensure_backend_configured(backend: Backend) -> Result<(), MlError> {
+    Err(MlError::new(format!(
+        "{backend:?} backend is not configured in the dependency-free Track 37 scaffold"
+    )))
+}
+
 #[cfg(feature = "onnx")]
 pub mod onnx {
     pub type Session = crate::OrtSession;
@@ -345,6 +415,16 @@ mod tests {
         assert_eq!(
             tensor.expect_err("zero dimension should fail").to_string(),
             "tensor shape dimensions must be non-zero"
+        );
+    }
+
+    #[test]
+    fn tensor_rejects_non_finite_values() {
+        let tensor = Tensor::new(vec![1], vec![f32::NAN]);
+
+        assert_eq!(
+            tensor.expect_err("NaN should fail").to_string(),
+            "tensor values must be finite"
         );
     }
 
@@ -404,6 +484,88 @@ mod tests {
     }
 
     #[test]
+    fn tick_hook_rejects_input_shape_before_predict() {
+        struct PanickingSystem(ModelMetadata);
+
+        impl NeuralSystem for PanickingSystem {
+            fn metadata(&self) -> &ModelMetadata {
+                &self.0
+            }
+
+            fn tick_phase(&self) -> TickPhase {
+                TickPhase::BeforeSystems
+            }
+
+            fn fallback_policy(&self) -> FallbackPolicy {
+                FallbackPolicy::FailTick
+            }
+
+            fn predict(&self, _input: &Tensor) -> Result<Tensor, MlError> {
+                panic!("predict must not run after input shape validation fails")
+            }
+        }
+
+        let mut hook = InferenceTickHook::new();
+        hook.try_register(Arc::new(PanickingSystem(ModelMetadata {
+            name: "shape-guard".to_string(),
+            version: "1".to_string(),
+            input_shape: vec![2],
+            output_shape: vec![1],
+        })))
+        .expect("register");
+
+        let error = hook
+            .run_phase(TickPhase::BeforeSystems, &Tensor::scalar(1.0))
+            .expect_err("wrong input shape should fail");
+
+        assert_eq!(
+            error.to_string(),
+            "input shape [1] does not match model shape-guard:1 input_shape [2]"
+        );
+    }
+
+    #[test]
+    fn tick_hook_rejects_bad_output_shape_after_predict() {
+        struct BadOutputSystem(ModelMetadata);
+
+        impl NeuralSystem for BadOutputSystem {
+            fn metadata(&self) -> &ModelMetadata {
+                &self.0
+            }
+
+            fn tick_phase(&self) -> TickPhase {
+                TickPhase::BeforeSystems
+            }
+
+            fn fallback_policy(&self) -> FallbackPolicy {
+                FallbackPolicy::FailTick
+            }
+
+            fn predict(&self, _input: &Tensor) -> Result<Tensor, MlError> {
+                Ok(Tensor::scalar(1.0))
+            }
+        }
+
+        let mut hook = InferenceTickHook::new();
+        hook.try_register(Arc::new(BadOutputSystem(ModelMetadata {
+            name: "shape-guard".to_string(),
+            version: "1".to_string(),
+            input_shape: vec![1],
+            output_shape: vec![2],
+        })))
+        .expect("register");
+
+        let error = hook
+            .run_phase(TickPhase::BeforeSystems, &Tensor::scalar(1.0))
+            .expect_err("wrong output shape should fail");
+
+        assert_eq!(
+            error.to_string(),
+            "output shape [1] does not match model shape-guard:1 output_shape [2]"
+        );
+    }
+
+    #[test]
     fn try_register_validates_model_metadata_contract() {
         struct InvalidSystem(ModelMetadata);
 
@@ -437,5 +599,25 @@ mod tests {
 
         assert_eq!(error.to_string(), "model version must not be empty");
         assert!(hook.is_empty());
+    }
+
+    #[test]
+    fn backend_status_reports_dependency_free_scaffold() {
+        let session =
+            OrtSession::from_bytes("identity", "0", [1], vec![1], vec![1]).expect("session");
+
+        assert_eq!(
+            session.runtime_status(),
+            BackendStatus::NotConfigured {
+                backend: Backend::OnnxRuntime,
+                reason: "ONNX Runtime adapter is not wired in the dependency-free scaffold"
+            }
+        );
+        assert_eq!(
+            ensure_backend_configured(Backend::TensorRt)
+                .expect_err("backend should not be configured")
+                .to_string(),
+            "TensorRt backend is not configured in the dependency-free Track 37 scaffold"
+        );
     }
 }

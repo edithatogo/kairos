@@ -179,17 +179,32 @@ pub fn validate_trace_lines(input: &str) -> Result<(), TraceValidationError> {
 
     let mut previous_tick = 0;
     for line in lines {
-        let mut parts = line.split('\t');
+        let parts = line.split('\t').collect::<Vec<_>>();
         let kind = parts
-            .next()
+            .first()
             .ok_or_else(|| TraceValidationError::MalformedLine(line.to_string()))?;
         let tick = parts
-            .next()
+            .get(1)
             .ok_or_else(|| TraceValidationError::MalformedLine(line.to_string()))?
             .parse::<u128>()
             .map_err(|_| TraceValidationError::MalformedLine(line.to_string()))?;
-        if kind != "snapshot" && kind != "delta" {
-            return Err(TraceValidationError::MalformedLine(line.to_string()));
+        match *kind {
+            "snapshot" if parts.len() == 3 => {}
+            "delta" if parts.len() == 7 => {
+                parts[2]
+                    .parse::<u64>()
+                    .map_err(|_| TraceValidationError::MalformedLine(line.to_string()))?;
+                parts[3]
+                    .parse::<u32>()
+                    .map_err(|_| TraceValidationError::MalformedLine(line.to_string()))?;
+                parts[4]
+                    .parse::<u64>()
+                    .map_err(|_| TraceValidationError::MalformedLine(line.to_string()))?;
+                if parts[5].is_empty() {
+                    return Err(TraceValidationError::MalformedLine(line.to_string()));
+                }
+            }
+            _ => return Err(TraceValidationError::MalformedLine(line.to_string())),
         }
         if tick < previous_tick {
             return Err(TraceValidationError::TickOutOfOrder {
@@ -205,7 +220,7 @@ pub fn validate_trace_lines(input: &str) -> Result<(), TraceValidationError> {
 #[derive(Clone, Debug)]
 pub struct Debugger {
     trace: EventTrace,
-    cursor: usize,
+    cursor: Option<usize>,
     breakpoints: Vec<Breakpoint>,
 }
 
@@ -213,7 +228,7 @@ impl Debugger {
     pub fn new(trace: EventTrace) -> Self {
         Self {
             trace,
-            cursor: 0,
+            cursor: None,
             breakpoints: Vec::new(),
         }
     }
@@ -222,18 +237,21 @@ impl Debugger {
         if self.trace.deltas.is_empty() {
             return Err(DebuggerError::EmptyTrace);
         }
-        if self.cursor + 1 < self.trace.deltas.len() {
-            self.cursor += 1;
-        }
-        Ok(&self.trace.deltas[self.cursor])
+        let next = self
+            .cursor
+            .map(|cursor| (cursor + 1).min(self.trace.deltas.len() - 1))
+            .unwrap_or(0);
+        self.cursor = Some(next);
+        Ok(&self.trace.deltas[next])
     }
 
     pub fn back(&mut self) -> Result<&TraceDelta, DebuggerError> {
         if self.trace.deltas.is_empty() {
             return Err(DebuggerError::EmptyTrace);
         }
-        self.cursor = self.cursor.saturating_sub(1);
-        Ok(&self.trace.deltas[self.cursor])
+        let previous = self.cursor.unwrap_or(0).saturating_sub(1);
+        self.cursor = Some(previous);
+        Ok(&self.trace.deltas[previous])
     }
 
     pub fn goto_tick(&mut self, tick: u128) -> Result<&TraceDelta, DebuggerError> {
@@ -243,18 +261,28 @@ impl Debugger {
             .iter()
             .position(|delta| delta.tick >= tick)
             .ok_or(DebuggerError::TickNotFound(tick))?;
-        self.cursor = index;
-        Ok(&self.trace.deltas[self.cursor])
+        self.cursor = Some(index);
+        Ok(&self.trace.deltas[index])
     }
 
     pub fn inspect(&self, key: &str) -> Option<String> {
         let tick = self
-            .trace
-            .deltas
-            .get(self.cursor)
+            .cursor
+            .and_then(|cursor| self.trace.deltas.get(cursor))
             .map(|delta| delta.tick)
             .unwrap_or(0);
         self.trace.reconstruct_at(tick).get(key).cloned()
+    }
+
+    pub fn cursor_tick(&self) -> u128 {
+        self.cursor
+            .and_then(|cursor| self.trace.deltas.get(cursor))
+            .map(|delta| delta.tick)
+            .unwrap_or(0)
+    }
+
+    pub fn current_state(&self) -> BTreeMap<String, String> {
+        self.trace.reconstruct_at(self.cursor_tick())
     }
 
     pub fn add_breakpoint(&mut self, breakpoint: Breakpoint) {
@@ -266,12 +294,32 @@ impl Debugger {
     }
 
     pub fn next_breakpoint(&self) -> Option<&TraceDelta> {
-        self.trace.deltas.iter().skip(self.cursor).find(|delta| {
+        let start = self.cursor.map(|cursor| cursor + 1).unwrap_or(0);
+        self.trace.deltas.iter().skip(start).find(|delta| {
             self.breakpoints.iter().any(|breakpoint| match breakpoint {
                 Breakpoint::EventKind(kind) => &delta.kind == kind,
                 Breakpoint::Entity(entity) => delta.entity.as_ref() == Some(entity),
             })
         })
+    }
+
+    pub fn run_until_breakpoint(&mut self) -> Option<&TraceDelta> {
+        let start = self.cursor.map(|cursor| cursor + 1).unwrap_or(0);
+        let index = self
+            .trace
+            .deltas
+            .iter()
+            .enumerate()
+            .skip(start)
+            .find(|(_, delta)| {
+                self.breakpoints.iter().any(|breakpoint| match breakpoint {
+                    Breakpoint::EventKind(kind) => &delta.kind == kind,
+                    Breakpoint::Entity(entity) => delta.entity.as_ref() == Some(entity),
+                })
+            })
+            .map(|(index, _)| index)?;
+        self.cursor = Some(index);
+        self.trace.deltas.get(index)
     }
 }
 
@@ -317,6 +365,23 @@ mod tests {
         }
     }
 
+    fn machine_trace() -> EventTrace {
+        let mut trace = EventTrace::default();
+        let mut initial = BTreeMap::new();
+        initial.insert("machine.status".to_string(), "idle".to_string());
+        trace.snapshot(SimTime::from_ticks(0), initial);
+
+        let mut queued = BTreeMap::new();
+        queued.insert("machine.status".to_string(), "queued".to_string());
+        trace.record_event(event(2, 1, 0), queued);
+
+        let mut busy = BTreeMap::new();
+        busy.insert("machine.status".to_string(), "busy".to_string());
+        trace.record_event(event(4, 9, 1), busy);
+
+        trace
+    }
+
     #[test]
     fn replay_reconstructs_state_from_snapshot_and_deltas() {
         let mut trace = EventTrace::default();
@@ -334,25 +399,30 @@ mod tests {
 
     #[test]
     fn debugger_steps_back_and_goto_tick() {
-        let mut trace = EventTrace::default();
-        trace.record_event(event(2, 1, 0), BTreeMap::new());
-        trace.record_event(event(4, 2, 1), BTreeMap::new());
+        let mut debugger = Debugger::new(machine_trace());
 
-        let mut debugger = Debugger::new(trace);
+        assert_eq!(debugger.cursor_tick(), 0);
+        assert_eq!(debugger.inspect("machine.status").as_deref(), Some("idle"));
+        assert_eq!(debugger.step().unwrap().tick, 2);
+        assert_eq!(
+            debugger.current_state()["machine.status"],
+            "queued",
+            "first step should move from the initial snapshot to the first delta"
+        );
         assert_eq!(debugger.step().unwrap().tick, 4);
         assert_eq!(debugger.back().unwrap().tick, 2);
         assert_eq!(debugger.goto_tick(3).unwrap().tick, 4);
+        assert_eq!(debugger.inspect("machine.status").as_deref(), Some("busy"));
     }
 
     #[test]
     fn breakpoint_matches_event_kind() {
-        let mut trace = EventTrace::default();
-        trace.record_event(event(2, 1, 0), BTreeMap::new());
-        trace.record_event(event(4, 9, 1), BTreeMap::new());
-        let mut debugger = Debugger::new(trace);
+        let mut debugger = Debugger::new(machine_trace());
         debugger.add_breakpoint(Breakpoint::EventKind(EventKind::Custom(9)));
 
         assert_eq!(debugger.next_breakpoint().unwrap().tick, 4);
+        assert_eq!(debugger.run_until_breakpoint().unwrap().tick, 4);
+        assert_eq!(debugger.inspect("machine.status").as_deref(), Some("busy"));
         assert_eq!(debugger.list_breakpoints().len(), 1);
     }
 
@@ -387,6 +457,43 @@ mod tests {
                 previous: 4,
                 current: 2
             })
+        ));
+    }
+
+    #[test]
+    fn trace_line_validation_rejects_missing_or_unsupported_schema() {
+        assert_eq!(
+            validate_trace_lines(""),
+            Err(TraceValidationError::MissingSchema)
+        );
+        assert_eq!(
+            validate_trace_lines("schema\tkairo.ecs.trace.v0\n"),
+            Err(TraceValidationError::UnsupportedSchema(
+                "kairo.ecs.trace.v0".to_string()
+            ))
+        );
+    }
+
+    #[test]
+    fn trace_line_validation_rejects_malformed_delta_fields() {
+        let malformed_event_id = concat!(
+            "schema\tkairo.ecs.trace.v1\n",
+            "snapshot\t0\t\n",
+            "delta\t2\tnot-an-id\t0\t0\tcustom:1\t\n",
+        );
+        let missing_delta_map = concat!(
+            "schema\tkairo.ecs.trace.v1\n",
+            "snapshot\t0\t\n",
+            "delta\t2\t0\t0\t0\tcustom:1\n",
+        );
+
+        assert!(matches!(
+            validate_trace_lines(malformed_event_id),
+            Err(TraceValidationError::MalformedLine(_))
+        ));
+        assert!(matches!(
+            validate_trace_lines(missing_delta_map),
+            Err(TraceValidationError::MalformedLine(_))
         ));
     }
 }

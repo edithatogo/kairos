@@ -26,7 +26,7 @@
 Current artifacts:
 - `crates/kairo-ecs-fmi/` exists as a root workspace crate with `fmi2`, `fmi3`, `aas`, and `digital-twin` feature flags.
 - Unpacked FMU layout detection locates `modelDescription.xml` and the current host's `binaries/<platform>/` shared library.
-- Dependency-free import layout validation now reports missing roots, missing `modelDescription.xml`, missing platform binary directories, and missing shared-library candidates before dynamic loading is introduced.
+- Dependency-free import layout validation now reports missing roots, missing `modelDescription.xml`, missing platform binary directories, missing shared-library candidates, and malformed `modelDescription.xml` root/FMI-version markers before dynamic loading is introduced.
 - `.fmu` zip extraction and dynamic symbol loading are explicitly blocked pending dependency approval for archive and dynamic-loading crates.
 - FMI 2.0 function-table types and safe wrapper methods exist for setup, initialization, stepping, termination, and real/integer/boolean/string scalar access.
 
@@ -59,8 +59,8 @@ Current artifacts:
 - Generate `modelStructure` with `outputs` → `derivatives` → `initialUnknowns` dependency chain.
 
 Current artifacts:
-- `ModelDescription` and `ScalarVariable` generate initial FMI 2.0 XML with scalar variables and output model-structure entries.
-- `ModelDescription::validate()` rejects empty identifiers, duplicate scalar-variable names, and duplicate value references; `validate_unpacked_export_layout()` checks the written unpacked FMU package shape.
+- `ModelDescription` and `ScalarVariable` generate initial FMI 2.0 XML with scalar variables and FMI 2.0 `<ModelStructure><Outputs><Unknown index="...">` output entries.
+- `ModelDescription::validate()` rejects empty identifiers, duplicate scalar-variable names, and duplicate value references; `ModelDescription::validate_generated_fmi2_xml()` checks dependency-free generated XML markers and output structure counts; `validate_unpacked_export_layout()` checks the written unpacked FMU package shape.
 - KairoECS component-schema discovery and FMI XSD validation remain open.
 
 ### Task 2.2 — FMU export build pipeline
@@ -87,7 +87,7 @@ Current artifacts:
 
 Current artifacts:
 - `AasDescriptor`, `AasSubmodel`, and `AasProperty` serialize a minimal AAS JSON envelope behind the `aas` feature.
-- `AasDescriptor::validate()` checks required descriptor/submodel/property identifiers and duplicate property IDs without external schema dependencies; property `semanticId` values are serialized when present.
+- `AasDescriptor::validate()` checks required descriptor/submodel/property identifiers, duplicate submodel IDs, duplicate submodel `idShort` values, and duplicate property IDs without external schema dependencies; property `semanticId` values are serialized when present.
 - Schema validation against AASX Package Explorer remains open.
 
 ### Task 3.2 — Live data bridge
@@ -97,6 +97,7 @@ Current artifacts:
 
 Current artifacts:
 - `DigitalTwinConnector` publishes value-reference changes when `abs(delta) > epsilon`.
+- `DigitalTwinConnector::try_new()` and `try_publish_changes()` validate positive finite sample rates, finite non-negative epsilon values, topic-prefix shape, and finite publication values before returning publication records.
 - Final Track 36 Arrow/protobuf integration remains open.
 
 ### Task 3.3 — State synchronization

@@ -13,7 +13,11 @@ dependencies. The crate boundary is:
 - `NeuralSystem`: simulation tick hook contract for model-backed systems.
 - `InferenceTickHook`: phase-filtered runner that can execute models before or
   after the ECS systems owned by Track 01. `try_register` validates model
-  metadata before a system is accepted.
+  metadata before a system is accepted. `run_phase` rejects input shape
+  mismatches before calling `predict` and rejects output shape mismatches before
+  returning predictions to a caller.
+- `BackendStatus` and `ensure_backend_configured`: explicit dependency-free
+  contract for reporting that a runtime backend is not configured yet.
 
 All backends remain feature-gated:
 
@@ -26,3 +30,5 @@ All backends remain feature-gated:
 
 The default build must not link ONNX Runtime, TensorRT, Burn, or Python. The
 current ONNX-facing session is a contract double, not an ONNX Runtime binding.
+It can validate metadata, tensor shapes, finite tensor values, and tick-hook
+shape contracts, but it does not load or execute a real ONNX graph.

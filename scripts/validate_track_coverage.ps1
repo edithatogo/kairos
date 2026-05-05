@@ -109,6 +109,31 @@ foreach ($row in @(
     Assert-Contains -Content $qualityGates -Needle $row -Label "quality-gates.md"
 }
 
+foreach ($row in @(
+    "### Tracks 36-40 streaming, ML, FMI, cloud/HPC, and debugging gates",
+    "**kafka-smoke**",
+    "**arrow-flight-smoke**",
+    "**realtime-wallclock-check**",
+    "**onnx-inference-smoke**",
+    "**gymnasium-env-smoke**",
+    "**fmi-import-smoke**",
+    "**fmi-export-smoke**",
+    "**aas-validate**",
+    "**docker-build**",
+    "**kubernetes-smoke**",
+    "**spot-checkpoint-test**",
+    "**trace-record-replay**",
+    "**fwd-back-parity**",
+    "**breakpoint-smoke**",
+    "does not prove a live Kafka broker connection",
+    "does not prove ONNX Runtime execution",
+    "does not prove shared-library FMU execution",
+    "live container execution remains a later gate",
+    "does not prove interactive debugging of a running simulation"
+)) {
+    Assert-Contains -Content $qualityGates -Needle $row -Label "quality-gates.md"
+}
+
 $wavePolicy = Get-Content -LiteralPath "conductor/wave-policy.md" -Raw
 foreach ($row in @(
     "Wave 5",
@@ -340,6 +365,52 @@ $trackChecks = @(
             'Defined the performance regression detection framework for KairoECS',
             'bench-regression.yml',
             'benchmark-regression-check'
+        )
+    },
+    @{
+        Path = "conductor/tracks/36-streaming-real-time-processing/test-matrix.md"
+        Needles = @(
+            'cargo test -p kairo-ecs-streaming --features kafka',
+            'cargo test -p kairo-ecs-streaming --features arrow-flight',
+            'cargo test -p kairo-ecs-streaming --no-default-features',
+            'pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo'
+        )
+    },
+    @{
+        Path = "conductor/tracks/37-ml-ai-integration-inference/test-matrix.md"
+        Needles = @(
+            '`kairo-ecs-ml` compiles with `--features onnx`',
+            '`kairo_gym` Python package imports and passes Gymnasium API check (`check_env`)',
+            'Feature flag isolation: each feature compiles independently (`cargo hack`)'
+        )
+    },
+    @{
+        Path = "conductor/tracks/38-fmi-fmu-digital-twin-bridge/test-matrix.md"
+        Needles = @(
+            '`cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2`',
+            'Dependency-free unpacked FMU layout validation reports missing platform binary directories',
+            '`modelDescription.xml` structural validation rejects duplicate names/value references',
+            'AAS structural validation rejects missing IDs and duplicate property IDs',
+            'Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2`'
+        )
+    },
+    @{
+        Path = "conductor/tracks/39-cloud-hpc-batch-runners/test-matrix.md"
+        Needles = @(
+            '`docker/Dockerfile` exists and `docker build` succeeds for native arch',
+            'Kubernetes CRD (`kairoecs-experiment.yaml`) is valid against `apiextensions.k8s.io/v1` schema',
+            'Spot checkpoint/restore test: send SIGTERM to running container, verify checkpoint file written with non-zero size',
+            'Cloud smoke workflow includes Docker build, CLI smoke, and Slurm syntax check'
+        )
+    },
+    @{
+        Path = "conductor/tracks/40-time-travel-debugging-interactive-stepping/test-matrix.md"
+        Needles = @(
+            'cargo test -p kairo-ecs-debug',
+            '**trace-roundtrip**',
+            '**forward-backward-parity**',
+            '**breakpoint-smoke**',
+            'pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo'
         )
     },
     @{

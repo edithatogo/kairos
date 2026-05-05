@@ -37,6 +37,20 @@ class KairoGymContractTests(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, "action must be numeric"):
             env.step("bad-action")
 
+    def test_step_rejects_non_finite_actions(self):
+        env = KairoGymEnv()
+        env.reset()
+
+        with self.assertRaisesRegex(ValueError, "action values must be finite"):
+            env.step([float("nan")])
+
+    def test_step_rejects_non_iterable_actions(self):
+        env = KairoGymEnv()
+        env.reset()
+
+        with self.assertRaisesRegex(TypeError, "action must be numeric"):
+            env.step(None)
+
 
 if __name__ == "__main__":
     unittest.main()

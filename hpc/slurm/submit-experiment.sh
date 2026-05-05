@@ -33,7 +33,8 @@ cat > "$script" <<SLURM
 
 set -euo pipefail
 export KAIRO_OUTPUT_URI="${output}"
-export KAIRO_CHECKPOINT_DIR="\${KAIRO_CHECKPOINT_DIR:-${output}/checkpoints}"
+export KAIRO_CHECKPOINT_DIR="\${KAIRO_CHECKPOINT_DIR:-${TMPDIR:-/tmp}/kairo/checkpoints}"
+mkdir -p "\$KAIRO_CHECKPOINT_DIR"
 
 on_term() {
   kairo-ecs-cli checkpoint --output "\$KAIRO_CHECKPOINT_DIR" || true

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Any
 
 try:
@@ -83,10 +84,12 @@ class KairoGymEnv(_BaseEnv):
 
 
 def build_observation_space(size: int):
+    _validate_space_size("observation size", size)
     return spaces.Box(low=-1.0e9, high=1.0e9, shape=(size,), dtype=float)
 
 
 def build_action_space(size: int):
+    _validate_space_size("action size", size)
     return spaces.Box(low=-1.0, high=1.0, shape=(size,), dtype=float)
 
 
@@ -103,7 +106,19 @@ def _coerce_action(action: Any, size: int) -> list[float]:
         action = [float(action)]
     if isinstance(action, (str, bytes)):
         raise TypeError("action must be numeric or an iterable of numeric values")
-    values = [float(value) for value in action]
+    try:
+        values = [float(value) for value in action]
+    except TypeError as error:
+        raise TypeError("action must be numeric or an iterable of numeric values") from error
+    if any(not math.isfinite(value) for value in values):
+        raise ValueError("action values must be finite")
     if len(values) < size:
         values.extend([0.0] * (size - len(values)))
     return values[:size]
+
+
+def _validate_space_size(label: str, size: int) -> None:
+    if not isinstance(size, int):
+        raise TypeError(f"{label} must be an integer")
+    if size <= 0:
+        raise ValueError(f"{label} must be greater than zero")

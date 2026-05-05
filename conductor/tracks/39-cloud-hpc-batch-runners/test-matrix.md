@@ -3,6 +3,7 @@
 | Check | Required by alpha | Required by beta | Required by 1.0 |
 |---:|---:|---:|---:|
 | Track docs exist and render cleanly (spec, plan, agent-contract, risk-register, handoff) | yes | yes | yes |
+| Offline Track 39 validator covers Docker, K8s, cloud batch, Slurm, checkpoint policy, and telemetry sidecars without provider credentials | yes | yes | yes |
 | `docker/Dockerfile` exists and `docker build` succeeds for native arch | yes | yes | yes |
 | `docker build` succeeds for `linux/amd64` and `linux/arm64` (multi-arch) | no | yes | yes |
 | `docker run kairo-ecs-cli:<tag> run --help` exits 0 and produces expected CLI help text | yes | yes | yes |

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Embed ML inference directly in the simulation loop. Support ONNX Runtime for cross-platform inference, TensorRT for NVIDIA GPU-optimized inference, and neural surrogate models that replace slow physics/behavior sub-models for 100-1000x speedup. Provide a Gymnasium-compatible Python environment for RL training.
+Embed ML inference directly in the simulation loop. Support ONNX Runtime for cross-platform inference, TensorRT for NVIDIA GPU-optimized inference, and neural surrogate models that can replace slow physics/behavior sub-models when benchmarked accuracy and speedup are documented. Provide a Gymnasium-compatible Python environment for RL training.
 
 ## Why this track exists
 
@@ -22,7 +22,8 @@ Simulation models increasingly rely on learned components: surrogate models that
 ## Owned paths
 
 ```text
-crates/kairo-ecs-ml/, docs/ml/, examples/ml-surrogate/
+crates/kairo-ecs-ml/, docs/ml/, examples/ml-surrogate/, python/kairo_gym/,
+conductor/tracks/37-ml-ai-integration-inference/
 ```
 
 ## Blocked paths
@@ -72,4 +73,7 @@ crates/kairo-ecs-runtime/ — owned by Track 29 (wave manager, execution gating)
 
 ## Status
 
-Planned
+Planned. The current alpha scaffold is dependency-free contract validation only:
+it validates model metadata, tensor values, tick-boundary tensor shapes, action
+values, and backend-not-configured reporting. It does not load or execute real
+ONNX Runtime, TensorRT, or Burn models yet.

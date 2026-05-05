@@ -359,6 +359,48 @@ foreach ($file in $controlFiles | Where-Object { Test-Path -LiteralPath $_ }) {
     if ($content -match 'Tracks?\s+32-40.*R0|Track\s+3[2-9]\).*Planned only|Track\s+40\).*Planned only') {
         Add-Issue -Message "Stale planning-only readiness claim for Tracks 32-40 found in control file: $file"
     }
+    if ($file -notlike "*validate_track_no_skip_claims.ps1") {
+        if ($content -match 'Tracks?\s+36-40.*(complete|production-ready|release-ready|runtime complete|cloud complete|broker complete|ML complete|FMI complete|debug complete)') {
+            Add-Issue -Message "Overbroad completion claim for Tracks 36-40 found in control file: $file"
+        }
+        if ($content -match '(?i)(live Kafka broker|live Arrow Flight server|ONNX Runtime execution|shared-library FMU execution|live Kubernetes cluster|cloud spot interruption handling|interactive debugging of a running simulation).*(is proven|proved|complete|validated|green)') {
+            Add-Issue -Message "Runtime capability overclaim for Tracks 36-40 found in control file: $file"
+        }
+    }
+}
+
+$qualityGates = Get-Content -LiteralPath "conductor/quality-gates.md" -Raw
+foreach ($gate in @(
+    "kafka-smoke",
+    "arrow-flight-smoke",
+    "realtime-wallclock-check",
+    "onnx-inference-smoke",
+    "gymnasium-env-smoke",
+    "fmi-import-smoke",
+    "fmi-export-smoke",
+    "aas-validate",
+    "docker-build",
+    "kubernetes-smoke",
+    "spot-checkpoint-test",
+    "trace-record-replay",
+    "fwd-back-parity",
+    "breakpoint-smoke"
+)) {
+    if ($qualityGates -notmatch [regex]::Escape("**$gate**")) {
+        Add-Issue -Message "Track 36-40 required gate is missing from conductor/quality-gates.md: $gate"
+    }
+}
+
+foreach ($boundary in @(
+    "does not prove a live Kafka broker connection",
+    "does not prove ONNX Runtime execution",
+    "does not prove shared-library FMU execution",
+    "live container execution remains a later gate",
+    "does not prove interactive debugging of a running simulation"
+)) {
+    if ($qualityGates -notmatch [regex]::Escape($boundary)) {
+        Add-Issue -Message "Track 36-40 quality gate boundary is missing: $boundary"
+    }
 }
 
 if ($issues.Count -gt 0) {

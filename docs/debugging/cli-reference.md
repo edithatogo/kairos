@@ -9,4 +9,9 @@ Planned commands:
 - `break on <event-kind>`: add an event-kind breakpoint.
 - `list-breakpoints`: show active breakpoints.
 
-The first scaffold implements the command names and the library behavior behind stepping, backward movement, tick seek, inspection, and breakpoint matching.
+Current scaffold status:
+
+- The binary accepts the command names and prints a scaffold message.
+- The library starts at the initial snapshot; the first `step` moves to the first delta.
+- `back`, `goto <tick>`, `inspect`, event-kind/entity breakpoints, and `run_until_breakpoint` are covered by crate smoke tests.
+- Full trace-file CLI execution remains deferred until the Track 22 runner integration is available.
