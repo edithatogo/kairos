@@ -1,0 +1,10 @@
+target/
+.git/
+.github/
+conductor/
+docs/
+website/
+bindings/
+templates/
+**/*.log
+**/.DS_Store

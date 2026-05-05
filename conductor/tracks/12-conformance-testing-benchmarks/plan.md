@@ -40,6 +40,21 @@
 - Ensure no other subagent-owned paths were modified without handoff.
 - Verify Track 01, Track 02, and Track 06-11 can consume the manifest without renaming fixtures.
 
+### Chaos engineering phase
+
+- Define chaos experiment manifest format (JSON, similar to conformance fixtures).
+- Implement fault injection harness that reads manifest and executes experiments.
+- Run chaos experiments in CI as part of nightly pipeline.
+- Document resilience expectations in `docs/testing/chaos-engineering.md`.
+
+### Deep fuzzing phase
+
+- Add `arbitrary` derive to all public types in `kairo-ecs-types`.
+- Write structure-aware fuzz target for scheduler ordering invariants.
+- Write differential fuzz harness comparing Rust FFI output to binding outputs.
+- Submit to OSS-Fuzz for continuous fuzzing.
+- Add fuzz coverage reports to CI.
+
 ## Phase 5 — Closeout
 
 - Complete `handoff.md`.

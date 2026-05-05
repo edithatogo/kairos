@@ -117,6 +117,33 @@ Benchmark expectations:
 - Tracks 06-11 measure binding overhead against the same scenario names and report the wrapper cost separately from the core kernel cost.
 - Track 18 consumes the published baseline, not a new naming scheme.
 
+### Chaos engineering
+
+The conformance suite MUST include chaos experiments that verify the system degrades gracefully:
+
+Fault injection types:
+- **Event corruption**: inject malformed event data (negative ticks, null entity, invalid priority).
+- **Entity exhaustion**: spawn entities until handle space is exhausted.
+- **Telemetry loss**: truncate Arrow IPC output mid-write.
+- **Ordering inversion**: feed events in reverse-time order.
+
+Resilience expectations:
+- No panic, no abort, no UB (undefined behaviour) for any injected fault.
+- Corrupted events produce `KAIRO_ECS_ERR_INVALID_ARGUMENT`, not silent misbehavior.
+- Exhausted entity space produces a clear error, not a crash or wraparound.
+- Telemetry truncation produces a valid partial Arrow IPC file with an error marker.
+
+### Deep fuzzing
+
+Beyond the single `cargo-fuzz` target, structure-aware fuzzing MUST cover:
+
+- `#[derive(Arbitrary)]` on all public types (SimTime, SimDuration, EventId, EntityId, ScheduleRequest, DispatchedEvent, StepOutcome).
+- Structure-aware fuzz target: generate random event sequences, feed to scheduler, verify ordering invariants hold.
+- Differential fuzzing: run identical event sequences through Rust C ABI and Python/R/Julia/TS/C#/Go bindings, verify identical output.
+- OSS-Fuzz integration: register kairo-ecs-core and kairo-ecs-ffi fuzz targets with Google OSS-Fuzz for continuous fuzzing.
+
+Chaos and fuzzing checks are release-gating for beta and beyond.
+
 ## Acceptance criteria
 
 - Owned paths are created and documented.

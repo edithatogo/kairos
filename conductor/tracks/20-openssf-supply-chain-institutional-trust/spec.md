@@ -32,6 +32,16 @@ This track is designed to run in parallel with core implementation. The subagent
 - A short exception process for allowed-failure or not-yet-supported tooling.
 - Handoff notes for release, CI, and red-team subagents.
 
+### Third-party security audit
+
+Before v1.0, KairoECS SHALL undergo an independent security audit:
+
+- Scope: scheduler determinism guarantees, FFI memory safety, Arrow deserialisation safety, supply-chain integrity (all dependencies audited).
+- Auditor: OSTIF-affiliated or equivalent Rust security auditor.
+- Funding: apply for OSTIF audit sponsorship or budget from institutional partners.
+- Cadence: initial audit before v1.0; follow-up audit for any major architecture change (PDES, GPU, distributed).
+- Public report: audit findings published in `docs/security/audit-report.md`.
+
 ## Owned paths
 
 - `conductor/tracks/20-openssf-supply-chain-institutional-trust/`

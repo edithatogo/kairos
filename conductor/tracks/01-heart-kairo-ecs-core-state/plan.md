@@ -88,3 +88,19 @@
 - Add docs for binding agents.
 - Do not let binding tracks start from Track 01 alone; require Track 02 and Track 12 readiness as defined in `lanes.md`.
 
+## Phase 6 — SIMD acceleration
+
+- Gate: ECS storage strategy ADR is accepted and component storage is implemented.
+- Implement `std::simd` batch operations on the chosen storage layout (sparse-set, slotmap, or archetype).
+- Add SIMD-vs-scalar benchmark scenarios to the Track 12 benchmark harness.
+- Document autovectorisation guidance in the core performance docs.
+- Update `conductor/performance-thresholds.md` with SIMD baseline and regression thresholds.
+
+## Phase 7 — Formal verification
+
+- Gate: Sequential scheduler determinism is proven by Track 12 conformance fixtures passing on all platforms.
+- Write Kani proofs for scheduler ordering invariants.
+- If threading is added (Track 34), write loom tests for concurrent queue safety.
+- Add Creusot contracts to scheduler public API.
+- Publish verification results in `docs/verification/` and link from release notes.
+

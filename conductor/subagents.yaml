@@ -281,3 +281,71 @@ agents:
       - conductor/benchmarks-reproducibility.md
       - conformance/fixtures/
     handoff_protocol: ADR for threshold changes
+
+  - id: gpu-compute-agent
+    tracks: ["32"]
+    owned_paths:
+      - crates/kairo-ecs-gpu/
+      - docs/gpu-compute/
+    handoff_protocol: core scheduler internals
+
+  - id: webgpu-agent
+    tracks: ["33"]
+    owned_paths:
+      - crates/kairo-ecs-webgpu/
+      - website/webgpu-demo/
+    handoff_protocol: Wasm GPU kernel design
+
+  - id: pdes-agent
+    tracks: ["34"]
+    owned_paths:
+      - crates/kairo-ecs-pdes/
+      - docs/pdes/
+    handoff_protocol: sequential scheduler contract
+
+  - id: distributed-agent
+    tracks: ["35"]
+    owned_paths:
+      - crates/kairo-ecs-mpi/
+      - crates/kairo-ecs-grpc/
+      - docs/distributed/
+    handoff_protocol: PDES LP model
+
+  - id: streaming-agent
+    tracks: ["36"]
+    owned_paths:
+      - crates/kairo-ecs-streaming/
+      - docs/streaming/
+    handoff_protocol: Arrow telemetry schema
+
+  - id: ml-integration-agent
+    tracks: ["37"]
+    owned_paths:
+      - crates/kairo-ecs-ml/
+      - docs/ml/
+      - examples/ml-surrogate/
+    handoff_protocol: model zoo domain semantics
+
+  - id: fmi-agent
+    tracks: ["38"]
+    owned_paths:
+      - crates/kairo-ecs-fmi/
+      - docs/fmi-digital-twin/
+      - examples/fmi-co-simulation/
+    handoff_protocol: FFI C ABI contract
+
+  - id: cloud-agent
+    tracks: ["39"]
+    owned_paths:
+      - docker/
+      - k8s/
+      - docs/cloud-hpc/
+    handoff_protocol: release packaging pipeline
+
+  - id: timetravel-agent
+    tracks: ["40"]
+    owned_paths:
+      - crates/kairo-ecs-debug/
+      - docs/debugging/
+      - website/time-travel-demo/
+    handoff_protocol: deterministic core semantics

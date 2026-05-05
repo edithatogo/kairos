@@ -1,0 +1,39 @@
+# Test Matrix: Track 38 FMI/FMU & Digital Twin Bridge
+
+| Check | Required by alpha | Required by beta | Required by 1.0 |
+|---|---:|---:|---:|
+| `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --no-default-features` | yes | yes | yes |
+| `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2` | yes | yes | yes |
+| `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi3` | no | no | yes |
+| `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features` | yes | yes | yes |
+| `cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml` | yes | yes | yes |
+| FMU shared library loads from `.fmu` archive | yes | yes | yes |
+| Unpacked FMU layout detects `modelDescription.xml` and host binary path | yes | yes | yes |
+| `fmi2Instantiate` + `fmi2SetupExperiment` + `fmi2EnterInitializationMode` success | yes | yes | yes |
+| `fmi2DoStep` × 1000 without crash, memory leak, or state corruption | yes | yes | yes |
+| `fmi2GetReal`/`fmi2SetReal` scalar round-trip preserves value | yes | yes | yes |
+| `fmi2Terminate` + `fmi2FreeInstance` clean resource release | yes | yes | yes |
+| `modelDescription.xml` generation passes FMI 2.0 XSD validation | no | yes | yes |
+| FMU export: archive structure conforms to FMI 2.0 specification | no | yes | yes |
+| FMU export: OpenModelica round-trip trajectory matches within 1e-6 tolerance | no | yes | yes |
+| FMU import smoke test passes on Linux (x86_64) | yes | yes | yes |
+| FMU import smoke test passes on macOS (arm64) | no | yes | yes |
+| FMU import smoke test passes on Windows (x86_64) | no | yes | yes |
+| AAS JSON descriptor validates against AASX Package Explorer schema | no | no | yes |
+| Live data bridge: FMU output variable changes published to streaming topic | no | no | yes |
+| Digital twin state synchronization: snapshot → diff → apply round-trip | no | no | yes |
+| Digital twin stale-state detection triggers alert above threshold | no | no | yes |
+| FMU subprocess sandbox: crash isolation works (FMU SIGSEGV does not kill host) | no | no | yes |
+| FMI 3.0 `fmi3InstantiateCoSimulation` + `fmi3DoStep` success | no | no | yes |
+| `modelDescription.xml` generation passes FMI 3.0 XSD validation | no | no | yes |
+| Docs: FMI import guide exists and includes runnable example | no | yes | yes |
+| Docs: FMI export guide exists and includes OpenModelica workflow | no | no | yes |
+| Docs: AAS mapping reference documents component-to-submodel rules | no | no | yes |
+
+## Current local validation
+
+- Passing: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --no-default-features`
+- Passing: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2`
+- Passing: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`
+- Passing: `cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml`
+- Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2` currently reaches Rust code generation but fails at Windows link time because `link.exe` resolves to Git's `usr/bin/link.exe` and exits with `couldn't create signal pipe, Win32 error 5`.

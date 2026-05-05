@@ -1,0 +1,20 @@
+[package]
+name = "de-surrogate"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/edithatogo/kairos"
+rust-version = "1.76"
+
+[features]
+default = []
+onnx = ["kairo-ecs-ml/onnx"]
+
+[dependencies]
+kairo-ecs-ml = { path = "../../../crates/kairo-ecs-ml", default-features = false }
+
+[[bin]]
+name = "de-surrogate"
+path = "src/main.rs"
+
+[workspace]

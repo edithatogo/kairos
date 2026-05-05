@@ -16,6 +16,8 @@
 - Do not widen the track beyond TypeScript/Wasm adapter validation.
 - Stop at local bundle and fixture validation until Track 12 owns parity and Track 15 owns package dry-runs.
 
+- `wasmtime` smoke test: load `kairo-ecs-wasm` module on `wasm32-wasip2` target and run a 10K event simulation.
+
 ## CI command
 
 ```bash

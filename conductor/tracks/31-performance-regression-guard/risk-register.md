@@ -10,3 +10,4 @@
 | Comparison script produces incorrect percentage calculations | 2 | 4 | 8 | Unit-test the comparison logic; validate against manual calculation on a known delta | perf-regression-agent | Comparison unit test fails |
 | `bench-regression.yml` times out on CI due to long benchmark runs | 3 | 3 | 9 | Set per-benchmark timeouts; sample only critical-path benchmarks on every PR, run full suite nightly | ci-agent | `bench-regression.yml` times out on main branch |
 | Track 12 or Track 18 renames or removes a benchmark, orphaning threshold entries | 3 | 3 | 9 | `threshold-definition-exists` gate detects orphaned thresholds and requires cleanup | perf-regression-agent | Orphaned threshold detected by gate |
+| Energy tooling unavailable on CI runner OS | 3 | 2 | 6 | Use `CodeCarbon` as primary, `Scaphandre` as fallback; run energy measurements on Linux runners only; document platform gaps | perf-regression-agent | Energy data missing from >1 consecutive benchmark report |

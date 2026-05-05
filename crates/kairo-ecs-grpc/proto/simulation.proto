@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package kairo.ecs.simulation.v1;
+
+message RemoteEvent {
+  uint32 source_lp = 1;
+  uint32 dest_lp = 2;
+  uint64 tick = 3;
+  bytes event_payload = 4;
+}
+
+message MigrationRequest {
+  uint64 entity_index = 1;
+  uint32 entity_generation = 2;
+  uint32 source_lp = 3;
+  uint32 dest_lp = 4;
+  string migration_id = 5;
+  repeated ComponentBlob components = 6;
+}
+
+message ComponentBlob {
+  string component_type_id = 1;
+  bytes payload = 2;
+}
+
+message MigrationAck {
+  string migration_id = 1;
+  bool applied = 2;
+  string message = 3;
+}
+
+message TelemetryBatch {
+  uint32 source_lp = 1;
+  bytes arrow_ipc_payload = 2;
+}
+
+message GvtProposal {
+  uint32 source_lp = 1;
+  uint64 local_min_tick = 2;
+}
+
+message GvtDecision {
+  uint64 gvt_tick = 1;
+}
+
+service SimulationTransport {
+  rpc ExchangeEvents(stream RemoteEvent) returns (stream RemoteEvent);
+  rpc MigrateEntity(MigrationRequest) returns (MigrationAck);
+  rpc StreamTelemetry(stream TelemetryBatch) returns (MigrationAck);
+  rpc GvtSync(GvtProposal) returns (GvtDecision);
+}

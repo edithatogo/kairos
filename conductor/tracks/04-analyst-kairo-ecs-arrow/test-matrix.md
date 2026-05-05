@@ -9,6 +9,8 @@
 - `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo` to confirm Track 04 is still represented in the registry and wave policy.
 - `cargo test --workspace` once a real `kairo-ecs-arrow` crate exists and starts exporting Arrow payloads.
 
+| OTel export smoke test (OTLP collector receives spans) | no | yes | yes | yes |
+
 ## Current CI commands
 
 ```bash

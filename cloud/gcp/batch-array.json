@@ -1,0 +1,26 @@
+{
+  "taskGroups": [
+    {
+      "taskSpec": {
+        "runnables": [
+          {
+            "container": {
+              "imageUri": "${KAIRO_IMAGE}",
+              "commands": ["run", "--scenario", "${KAIRO_SCENARIO_PREFIX}/variant-${BATCH_TASK_INDEX}.yaml"]
+            }
+          }
+        ],
+        "environment": {
+          "variables": {
+            "KAIRO_OUTPUT_URI": "${KAIRO_OUTPUT_URI}/variant-${BATCH_TASK_INDEX}"
+          }
+        }
+      },
+      "taskCount": "${KAIRO_SWEEP_SIZE}",
+      "parallelism": "${KAIRO_PARALLELISM}"
+    }
+  ],
+  "logsPolicy": {
+    "destination": "CLOUD_LOGGING"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "kairo-ecs-job",
+  "displayName": "KairoECS experiment",
+  "usesTaskDependencies": false,
+  "onAllTasksComplete": "terminateJob"
+}

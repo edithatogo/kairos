@@ -36,6 +36,15 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 29 | Wave Manager & Execution Gatekeeper | In Progress | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |
 | 30 | Toolchain & Version Support Matrix | In Progress | `toolchain-agent` | See `conductor/tracks/30-*/spec.md` |
 | 31 | Performance Regression Guard | In Progress | `perf-regression-agent` | See `conductor/tracks/31-*/spec.md` |
+| 32 | GPU Compute Acceleration | Planned | `gpu-compute-agent` | See `conductor/tracks/32-*/spec.md` |
+| 33 | WebGPU Compute for Browser | Planned | `webgpu-agent` | See `conductor/tracks/33-*/spec.md` |
+| 34 | PDES & Parallel Execution | Planned | `pdes-agent` | See `conductor/tracks/34-*/spec.md` |
+| 35 | Distributed Simulation (MPI/gRPC) | Planned | `distributed-agent` | See `conductor/tracks/35-*/spec.md` |
+| 36 | Streaming & Real-Time Processing | Planned | `streaming-agent` | See `conductor/tracks/36-*/spec.md` |
+| 37 | ML/AI Integration & Inference | Planned | `ml-integration-agent` | See `conductor/tracks/37-*/spec.md` |
+| 38 | FMI/FMU & Digital Twin Bridge | Planned | `fmi-agent` | See `conductor/tracks/38-*/spec.md` |
+| 39 | Cloud/HPC Batch Runners | Planned | `cloud-agent` | See `conductor/tracks/39-*/spec.md` |
+| 40 | Time-Travel Debugging & Interactive Stepping | Planned | `timetravel-agent` | See `conductor/tracks/40-*/spec.md` |
 
 ## Track status vocabulary
 
@@ -53,3 +62,5 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 - Tracks 07, 08, 10, and 11 can remain preview until C ABI and Arrow schema stability are proven.
 - Track 05 must remain optional and non-blocking for headless releases.
 - GitHub automation, dependency review, scorecard, SBOM, and release workflows already exist under `.github/`; registry publication manifests remain planned work under Tracks 15 and 20.
+- Tracks 34, 35, and 38 are release-critical for distributed simulation, FMI digital-twin, and PDES infrastructure.
+- Tracks 32, 33, 36, 37, 39, and 40 are non-release-critical (enhancement only).

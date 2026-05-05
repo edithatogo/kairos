@@ -1,0 +1,8 @@
+jobName: kairo-ecs-sweep
+jobQueue: ${AWS_BATCH_JOB_QUEUE}
+jobDefinition: kairo-ecs-cli
+arrayProperties:
+  size: ${KAIRO_SWEEP_SIZE}
+parameters:
+  scenario: ${KAIRO_SCENARIO_PREFIX}/variant-${AWS_BATCH_JOB_ARRAY_INDEX}.yaml
+  output_uri: ${KAIRO_OUTPUT_URI}/variant-${AWS_BATCH_JOB_ARRAY_INDEX}

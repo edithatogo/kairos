@@ -1,0 +1,22 @@
+# Test Matrix: Track 33 WebGPU Compute for Browser
+
+Rule: a check is marked complete only when an artifact exists and the validation command is recorded here.
+
+| Check | Status | Artifact | Validation |
+|---|---|---|---|
+| Track docs exist and render cleanly | complete | `conductor/tracks/33-webgpu-compute-browser/*.md` | `rg -n "WebGPU Compute" conductor/tracks/33-webgpu-compute-browser` |
+| `crates/kairo-ecs-webgpu/` crate skeleton exists with `Cargo.toml` | complete | `crates/kairo-ecs-webgpu/Cargo.toml`, `src/lib.rs` | `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --no-default-features` |
+| Native CI reports WebGPU unavailable safely | complete | `src/adapter.rs` | `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --no-default-features` |
+| Buffer bridge validates WebGPU alignment constraints | complete | `src/bridge.rs` | `cargo test --manifest-path crates/kairo-ecs-webgpu/Cargo.toml` blocked by Windows linker; `cargo check` passes |
+| Dispatch orchestration scaffold exists with 256-thread workgroup math | complete | `src/dispatch.rs` | `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --no-default-features` |
+| WebGPU WGSL ABM shader scaffold exists | complete | `src/shaders/abm_webgpu.wgsl` | shader source inspected by file presence; browser/naga compile pending dependencies |
+| CPU vs WebGPU parity harness exists | partial | `tests/parity_webgpu.rs`, CPU fallback contract | executable test blocked by Windows linker in this shell |
+| Demo page exists with canvas, agent count, backend toggle, and metrics | complete | `website/webgpu-demo/index.html`, `styles.css`, `src/main.js` | `npm test --prefix website/webgpu-demo` |
+| Demo has static smoke test | complete | `website/webgpu-demo/scripts/smoke.mjs` | `npm test --prefix website/webgpu-demo` |
+| Demo README exists | complete | `website/webgpu-demo/README.md` | `rg -n "npm test" website/webgpu-demo/README.md` |
+| WebGPU WGSL subset doc exists | complete | `docs/gpu-compute/webgpu-wgsl-subset.md` | `rg -n "64-bit atomics|workgroups" docs/gpu-compute/webgpu-wgsl-subset.md` |
+| WebGPU vs native comparison doc exists | complete | `docs/gpu-compute/webgpu-comparison.md` | `rg -n "Native GPU|Browser WebGPU" docs/gpu-compute/webgpu-comparison.md` |
+| `wasm-pack build --target web` succeeds | blocked | no Track 09 Wasm binding package yet | blocked until wasm-bindgen/web-sys dependencies can be introduced and fetched |
+| Browser WebGPU device initialization | blocked | no browser binding dependency yet | blocked until wasm-bindgen/web-sys dependency wiring and headless Chrome WebGPU validation are available |
+| 100K-agent >=30 FPS claim | blocked | no hardware/browser run yet | blocked until real WebGPU backend and reference GPU/browser results are available |
+| Cross-browser smoke test | blocked | no Playwright/Puppeteer setup in owned scope yet | blocked until browser test harness and installed target browsers are available |

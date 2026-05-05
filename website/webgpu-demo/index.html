@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kairos WebGPU Compute Demo</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <section class="toolbar" aria-label="Simulation controls">
+        <label>
+          Agents
+          <select id="agent-count">
+            <option value="10000">10K</option>
+            <option value="50000">50K</option>
+            <option value="100000" selected>100K</option>
+            <option value="500000">500K</option>
+          </select>
+        </label>
+        <label>
+          Backend
+          <select id="backend">
+            <option value="webgpu">WebGPU</option>
+            <option value="cpu">CPU Wasm fallback</option>
+          </select>
+        </label>
+        <button id="reset" type="button">Reset</button>
+      </section>
+
+      <canvas id="viewport" width="960" height="540" aria-label="Agent simulation viewport"></canvas>
+
+      <section class="metrics" aria-label="Performance metrics">
+        <div><span>Backend</span><strong id="metric-backend">detecting</strong></div>
+        <div><span>Agents</span><strong id="metric-agents">100000</strong></div>
+        <div><span>FPS</span><strong id="metric-fps">0</strong></div>
+        <div><span>Compute</span><strong id="metric-compute">0.00 ms</strong></div>
+        <div><span>Render</span><strong id="metric-render">0.00 ms</strong></div>
+      </section>
+
+      <section class="comparison" aria-label="Performance comparison">
+        <table>
+          <thead>
+            <tr><th>Scenario</th><th>CPU Wasm</th><th>WebGPU</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>100K ABM</td><td>pending hardware run</td><td>pending hardware run</td><td>not claimed</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+[package]
+name = "kairo-ecs-fmi"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/edithatogo/kairos"
+rust-version = "1.76"
+
+[features]
+default = []
+fmi2 = []
+fmi3 = []
+aas = []
+digital-twin = ["fmi2"]
+
+[lib]
+name = "kairo_ecs_fmi"
+path = "src/lib.rs"

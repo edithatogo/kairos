@@ -19,3 +19,4 @@
 | Baseline values are updateable when intentional performance changes are accepted | no | no | yes | yes |
 | Orphaned thresholds (benchmark removed but threshold remains) are detected and flagged | no | no | yes | yes |
 | Gate does not block release (non-critical track) | yes | yes | yes | yes |
+| Energy measurement produces valid joule data (CodeCarbon or Scaphandre integrated) | no | no | yes | yes |

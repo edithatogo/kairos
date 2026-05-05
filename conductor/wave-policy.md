@@ -71,6 +71,13 @@ Tracks:
 - 25 API Design Review & Compatibility Governance
 - 26 Interoperability Standards Review
 - 28 Red Team & Devil's Advocate Review
+- 33 WebGPU Compute for Browser
+- 34 PDES & Parallel Execution
+- 36 Streaming & Real-Time Processing
+- 37 ML/AI Integration & Inference
+- 38 FMI/FMU & Digital Twin Bridge
+- 39 Cloud/HPC Batch Runners
+- 40 Time-Travel Debugging & Interactive Stepping
 
 Requirement:
 
@@ -83,6 +90,8 @@ Tracks:
 - 29 Wave Manager & Execution Gatekeeper
 - 30 Toolchain & Version Support Matrix
 - 31 Performance Regression Guard
+- 32 GPU Compute Acceleration
+- 35 Distributed Simulation (MPI/gRPC)
 
 Requirement:
 
@@ -96,3 +105,5 @@ Requirement:
 4. A track may not be marked `In Progress` unless its readiness level is documented.
 5. A later wave may not start if an earlier wave has an unresolved required artifact.
 6. Release tracks must treat missing evidence as a blocker rather than as a future enhancement.
+7. Track directories are derived from `conductor/tracks.yaml`; validators must not hard-code the previous track count.
+8. `In Review` and `Done` require handoff evidence naming changed files, commands run, gate results, and explicit waivers. Planned or R0 tracks may contain design handoffs, but those handoffs are not implementation evidence.

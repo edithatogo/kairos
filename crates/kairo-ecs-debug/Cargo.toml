@@ -1,0 +1,17 @@
+[package]
+name = "kairo-ecs-debug"
+version = "0.0.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/edithatogo/kairos"
+rust-version = "1.76"
+
+[dependencies]
+kairo-ecs-types = { path = "../kairo-ecs-types" }
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "kairo-ecs-debug"
+path = "src/main.rs"

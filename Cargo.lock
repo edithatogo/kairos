@@ -24,6 +24,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "kairo-ecs-debug"
+version = "0.0.0"
+dependencies = [
+ "kairo-ecs-types",
+]
+
+[[package]]
 name = "kairo-ecs-diplomat"
 version = "0.1.0"
 dependencies = [
@@ -37,6 +44,41 @@ dependencies = [
  "kairo-ecs-core",
  "kairo-ecs-rng",
  "kairo-ecs-state",
+ "kairo-ecs-types",
+]
+
+[[package]]
+name = "kairo-ecs-fmi"
+version = "0.1.0"
+
+[[package]]
+name = "kairo-ecs-gpu"
+version = "0.1.0"
+
+[[package]]
+name = "kairo-ecs-grpc"
+version = "0.0.0"
+dependencies = [
+ "kairo-ecs-pdes",
+ "kairo-ecs-types",
+]
+
+[[package]]
+name = "kairo-ecs-ml"
+version = "0.1.0"
+
+[[package]]
+name = "kairo-ecs-mpi"
+version = "0.0.0"
+dependencies = [
+ "kairo-ecs-pdes",
+ "kairo-ecs-types",
+]
+
+[[package]]
+name = "kairo-ecs-pdes"
+version = "0.0.0"
+dependencies = [
  "kairo-ecs-types",
 ]
 
@@ -55,6 +97,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "kairo-ecs-streaming"
+version = "0.1.0"
+
+[[package]]
 name = "kairo-ecs-types"
 version = "0.0.0"
 
@@ -64,3 +110,7 @@ version = "0.1.0"
 dependencies = [
  "kairo-ecs-ffi",
 ]
+
+[[package]]
+name = "kairo-ecs-webgpu"
+version = "0.1.0"

@@ -1,0 +1,66 @@
+# Handoff: Track 37 ML/AI Integration & Inference
+
+## Summary
+
+Track 37 now has the first concrete ML scaffold. `kairo-ecs-ml` defines shape-checked tensors, an ONNX-facing session wrapper surface, `NeuralSystem`, phase-filtered `InferenceTickHook`, feature-gated backend modules, a DE surrogate example, and a Gymnasium-compatible Python wrapper that can import without optional Gymnasium installed.
+
+## Files created
+
+- `crates/kairo-ecs-ml/Cargo.toml`
+- `crates/kairo-ecs-ml/src/lib.rs`
+- `crates/kairo-ecs-ml/tests/feature_matrix.rs`
+- `docs/ml/architecture.md`
+- `docs/ml/model-versioning.md`
+- `docs/ml/surrogate-authoring.md`
+- `examples/ml-surrogate/de-surrogate/Cargo.toml`
+- `examples/ml-surrogate/de-surrogate/src/main.rs`
+- `python/kairo_gym/pyproject.toml`
+- `python/kairo_gym/setup.cfg`
+- `python/kairo_gym/src/kairo_gym/__init__.py`
+- `python/kairo_gym/src/kairo_gym/env.py`
+- `python/kairo_gym/tests/test_env_contract.py`
+
+## Contracts consumed
+
+- Track 01: ECS tick boundary concepts from `conductor/contracts/core-contract.md`.
+- Track 06: Python binding track requirement for a separate Gymnasium wrapper.
+- Track 23: Domain model examples for surrogate validation.
+- Track 32: GPU device/memory contract, still required before TensorRT implementation can move beyond a blocked stub.
+
+## Release gates affected
+
+- ML features are non-blocking for v1.0 (gated behind Cargo feature flags).
+- `kairo_gym` Python package is distributed separately from the Rust crate.
+- Default build path (`cargo build`) must exclude all ML dependencies.
+
+## Tests added
+
+- `crates/kairo-ecs-ml/tests/feature_matrix.rs`
+- Unit tests in `crates/kairo-ecs-ml/src/lib.rs`
+- `python/kairo_gym/tests/test_env_contract.py`
+
+Validated:
+
+- `cargo check --manifest-path crates/kairo-ecs-ml/Cargo.toml --no-default-features`
+- `cargo check --manifest-path crates/kairo-ecs-ml/Cargo.toml --all-features`
+- `cargo check --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx`
+- `cargo fmt --manifest-path crates/kairo-ecs-ml/Cargo.toml --all --check`
+- `cargo fmt --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --all --check`
+- `$env:PYTHONPATH='python/kairo_gym/src'; python -m unittest discover -s python/kairo_gym/tests`
+- `$env:PYTHONPATH='python/kairo_gym/src'; python -m compileall -q python/kairo_gym/src python/kairo_gym/tests`
+
+Blocked validation:
+
+- `cargo test --manifest-path crates/kairo-ecs-ml/Cargo.toml --no-default-features`
+- `cargo test --manifest-path crates/kairo-ecs-ml/Cargo.toml --all-features`
+- `cargo run --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx`
+
+All three commands compiled code but failed at Windows link time because this shell resolves `link.exe` to Git's `usr\bin\link.exe`; rerunning with `rust-lld` then failed because Windows SDK libraries such as `kernel32.lib` were not visible.
+
+## Risks and unresolved questions
+
+- ONNX Runtime version compatibility across Linux, macOS, and Windows: CI matrix will need per-platform ONNX Runtime installation.
+- TensorRT requires NVIDIA GPU, CUDA toolkit, and TensorRT SDK; testing will need self-hosted GPU runners.
+- Neural surrogate accuracy threshold (5%) may be too strict for stochastic domains; threshold should be domain-configurable.
+- Gymnasium API stability: the envelope pattern isolates `kairo_gym` from upstream changes, but breaking releases may force patches.
+- `crates/kairo-ecs-ml/` is now included in the root workspace; optional runtime backends still need dependency-policy review before real ONNX/TensorRT/Burn adapters are added.

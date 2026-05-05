@@ -10,6 +10,15 @@ members = [
   "crates/kairo-ecs-diplomat",
   "crates/kairo-ecs-bench",
   "crates/kairo-ecs-cli",
+  "crates/kairo-ecs-gpu",
+  "crates/kairo-ecs-webgpu",
+  "crates/kairo-ecs-pdes",
+  "crates/kairo-ecs-mpi",
+  "crates/kairo-ecs-grpc",
+  "crates/kairo-ecs-streaming",
+  "crates/kairo-ecs-ml",
+  "crates/kairo-ecs-fmi",
+  "crates/kairo-ecs-debug",
 ]
 
 [workspace.package]

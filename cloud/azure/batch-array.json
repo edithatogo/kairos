@@ -1,0 +1,11 @@
+{
+  "id": "kairo-ecs-sweep",
+  "displayName": "KairoECS parameter sweep",
+  "metadata": [
+    {
+      "name": "sweepSize",
+      "value": "${KAIRO_SWEEP_SIZE}"
+    }
+  ],
+  "onAllTasksComplete": "terminateJob"
+}

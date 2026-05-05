@@ -1,0 +1,14 @@
+[package]
+name = "kairo-ecs-webgpu"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/edithatogo/kairos"
+rust-version = "1.76"
+
+[features]
+default = []
+webgpu = []
+
+[lints.rust]
+unsafe_code = "forbid"

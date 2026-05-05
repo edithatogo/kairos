@@ -1,0 +1,62 @@
+name: Cloud/HPC Smoke
+
+on:
+  pull_request:
+    paths:
+      - "docker/**"
+      - "k8s/**"
+      - "cloud/**"
+      - "hpc/**"
+      - "docs/cloud-hpc/**"
+      - ".github/workflows/cloud-smoke.yml"
+  push:
+    branches: [main]
+    paths:
+      - "docker/**"
+      - "k8s/**"
+      - "cloud/**"
+      - "hpc/**"
+      - "docs/cloud-hpc/**"
+      - ".github/workflows/cloud-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  offline-cloud-hpc-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate cloud and HPC manifests
+        run: python cloud/validate_cloud_hpc.py
+
+      - name: Render Kubernetes job from sample experiment
+        run: python k8s/operator/kairoecs_operator.py --experiment k8s/samples/experiment.json --output /tmp/kairo-job.json
+
+      - name: Syntax-check Python helpers
+        run: python -m py_compile cloud/validate_cloud_hpc.py k8s/operator/kairoecs_operator.py docker/telemetry-plugin/cloud-output.py
+
+      - name: Syntax-check shell entrypoints
+        run: |
+          bash -n docker/entrypoint.sh
+          bash -n hpc/slurm/submit-experiment.sh
+          bash -n hpc/slurm/submit-sweep.sh
+          bash -n hpc/slurm/resume.sh
+
+      - name: Telemetry plugin checksum smoke
+        run: |
+          mkdir -p /tmp/kairo-input /tmp/kairo-output
+          printf 'arrow-smoke-sample\n' > /tmp/kairo-input/telemetry.arrow
+          python docker/telemetry-plugin/cloud-output.py --input /tmp/kairo-input/telemetry.arrow --destination file:///tmp/kairo-output
+          sha256sum -c /tmp/kairo-output/telemetry.arrow.sha256
+
+      - name: Docker image build
+        run: docker build -t kairo-ecs-cli:cloud-smoke -f docker/Dockerfile .
+
+      - name: CLI help smoke
+        run: docker run --rm kairo-ecs-cli:cloud-smoke --help

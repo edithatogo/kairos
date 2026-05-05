@@ -1,0 +1,24 @@
+jobDefinitionName: kairo-ecs-cli
+type: container
+platformCapabilities:
+  - FARGATE
+containerProperties:
+  image: ${KAIRO_IMAGE}
+  command:
+    - run
+    - --scenario
+    - Ref::scenario
+  resourceRequirements:
+    - type: VCPU
+      value: "2"
+    - type: MEMORY
+      value: "4096"
+  environment:
+    - name: KAIRO_OUTPUT_URI
+      value: Ref::output_uri
+    - name: KAIRO_CHECKPOINT_DIR
+      value: /tmp/kairo/checkpoints
+retryStrategy:
+  attempts: 2
+timeout:
+  attemptDurationSeconds: 86400

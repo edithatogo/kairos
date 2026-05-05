@@ -1,0 +1,18 @@
+[package]
+name = "kairo-ecs-grpc"
+version = "0.0.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/edithatogo/kairos"
+rust-version = "1.76"
+
+[dependencies]
+kairo-ecs-pdes = { path = "../kairo-ecs-pdes" }
+kairo-ecs-types = { path = "../kairo-ecs-types" }
+
+[features]
+default = []
+grpc = []
+
+[lib]
+path = "src/lib.rs"

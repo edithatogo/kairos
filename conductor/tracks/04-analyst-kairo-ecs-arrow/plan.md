@@ -27,6 +27,14 @@
 - Add fixture parity checks for the exporter output against Track 12.
 - Add benchmarks where serialization or export volume matters.
 
+### Phase 3b — OpenTelemetry export
+
+- Add `tracing-opentelemetry` and `opentelemetry-otlp` as optional dependencies.
+- Implement `OtelLayer` that translates `tracing` spans into OTel spans.
+- Map KairoECS event-kinds to OTel span names: `kairo_ecs.event.dispatch`, `kairo_ecs.run.step`, etc.
+- Map scheduler stats (event_count, cancelled_count, queue_depth) to OTel metrics.
+- Add smoke test that starts an OTLP collector in CI and verifies span export.
+
 ## Phase 4 — Cross-track integration
 
 - Run owned tests.

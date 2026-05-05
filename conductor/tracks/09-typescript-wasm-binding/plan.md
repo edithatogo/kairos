@@ -40,3 +40,11 @@
 - Confirm CI gates.
 - Mark track ready for integration.
 
+## Phase 7 — WASI support
+
+- Add `wasm32-wasip2` target to build configuration.
+- Integrate `wasmtime` runtime for testing; verify `wasmer` compatibility.
+- Implement WASI Preview 2 bindings for server-side sandboxed execution.
+- Add WASI smoke test: load `kairo-ecs-wasm` module in `wasmtime` and execute a 10K event simulation.
+- Document WASI deployment scenarios (cloud-native runners, edge, plugin systems).
+

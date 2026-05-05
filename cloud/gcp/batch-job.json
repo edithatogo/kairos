@@ -1,0 +1,41 @@
+{
+  "taskGroups": [
+    {
+      "taskSpec": {
+        "runnables": [
+          {
+            "container": {
+              "imageUri": "${KAIRO_IMAGE}",
+              "commands": ["run", "--scenario", "${KAIRO_SCENARIO}"]
+            }
+          }
+        ],
+        "environment": {
+          "variables": {
+            "KAIRO_OUTPUT_URI": "${KAIRO_OUTPUT_URI}",
+            "KAIRO_CHECKPOINT_DIR": "/tmp/kairo/checkpoints"
+          }
+        },
+        "computeResource": {
+          "cpuMilli": 2000,
+          "memoryMib": 4096
+        },
+        "maxRetryCount": 1
+      },
+      "taskCount": 1,
+      "parallelism": 1
+    }
+  ],
+  "allocationPolicy": {
+    "instances": [
+      {
+        "policy": {
+          "machineType": "e2-standard-2"
+        }
+      }
+    ]
+  },
+  "logsPolicy": {
+    "destination": "CLOUD_LOGGING"
+  }
+}

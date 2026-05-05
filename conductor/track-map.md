@@ -38,6 +38,15 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 29 | Wave Manager & Execution Gatekeeper | Enforce wave policy (waves 0-5), validate dependency closure, own critical path gates | wave-manager-agent | Starts immediately alongside all tracks |
 | 30 | Toolchain & Version Support Matrix | Own cross-language toolchain version matrix, version-drop policy, CI coverage | toolchain-agent | Starts immediately |
 | 31 | Performance Regression Guard | Automated performance regression detection, threshold-based CI comparison gates | perf-regression-agent | Starts after benchmark harness and comparative benchmarks scaffold |
+| 32 | GPU Compute Acceleration | GPU-accelerated ECS operations, CUDA/Vulkan/OpenCL backends | gpu-compute-agent | After core scheduler |
+| 33 | WebGPU Compute for Browser | WebGPU-based browser-side compute via Wasm shaders | webgpu-agent | After Wasm binding and GPU kernel design |
+| 34 | PDES & Parallel Execution | Parallel discrete-event simulation engine with GVT | pdes-agent | After sequential scheduler contract |
+| 35 | Distributed Simulation (MPI/gRPC) | Multi-node distributed simulation via MPI and gRPC | distributed-agent | After PDES LP model |
+| 36 | Streaming & Real-Time Processing | Real-time telemetry streaming via Kafka/Arrow Flight | streaming-agent | After Arrow telemetry and experiment runner |
+| 37 | ML/AI Integration & Inference | ONNX/ORT inference and Gymnasium environments for surrogate modeling | ml-integration-agent | After model zoo |
+| 38 | FMI/FMU & Digital Twin Bridge | FMI 3.0 import/export, Asset Administration Shell, digital twin co-simulation | fmi-agent | After standards review, streaming, and FFI |
+| 39 | Cloud/HPC Batch Runners | Docker/Kubernetes runners, spot-instance checkpointing, batch job orchestration | cloud-agent | After experiment runner CLI and packaging |
+| 40 | Time-Travel Debugging & Interactive Stepping | Deterministic trace/record/replay, breakpoints, forward/backward stepping | timetravel-agent | After deterministic core and conformance snapshots |
 
 ## Release-critical path
 
@@ -52,9 +61,12 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
   -> 16 Release governance
   -> 20 OpenSSF/trust gates
   -> 25 API compatibility review
-   -> 28 Red-team review
-   -> 29 Wave Manager gatekeeper
-   -> 30 Toolchain version matrix
+  -> 28 Red-team review
+  -> 29 Wave Manager gatekeeper
+  -> 30 Toolchain version matrix
+  -> 34 PDES & Parallel Execution (release-critical)
+  -> 35 Distributed Simulation MPI/gRPC (release-critical)
+  -> 38 FMI/FMU Digital Twin Bridge (release-critical)
 ```
 
 ## Expanded dependency DAG
@@ -93,6 +105,15 @@ flowchart TD
     T29[29 Wave Manager]
     T30[30 Toolchain Matrix]
     T31[31 Perf Regression]
+    T32[32 GPU Compute]
+    T33[33 WebGPU Browser]
+    T34[34 PDES Parallel]
+    T35[35 Distributed MPI/gRPC]
+    T36[36 Streaming Real-Time]
+    T37[37 ML/AI Inference]
+    T38[38 FMI/FMU Digital Twin]
+    T39[39 Cloud/HPC Batch]
+    T40[40 Time-Travel Debug]
 
     T00 --> T01
     T00 --> T13
@@ -196,6 +217,22 @@ flowchart TD
     T12 --> T31
     T18 --> T31
     T31 --> T13
+
+    T01 --> T32
+    T32 --> T33
+    T09 --> T33
+    T01 --> T34
+    T34 --> T35
+    T04 --> T36
+    T22 --> T36
+    T22 --> T39
+    T15 --> T39
+    T23 --> T37
+    T26 --> T38
+    T36 --> T38
+    T02 --> T38
+    T01 --> T40
+    T12 --> T40
 ```
 
 ## Subagent swimlanes
@@ -364,9 +401,23 @@ flowchart LR
   28 Red-team no-critical-blocker signoff
   29 Wave-policy enforcement gate
   30 Toolchain-matrix-current gate
+  34 PDES & Parallel Execution (release-critical)
+  35 Distributed Simulation MPI/gRPC (release-critical)
+  38 FMI/FMU Digital Twin Bridge (release-critical)
 ```
 
-### Group E: performance quality assurance
+### Group E: post-core enhancements
+
+```text
+  32 GPU Compute Acceleration
+  33 WebGPU Compute for Browser
+  36 Streaming & Real-Time Processing
+  37 ML/AI Integration & Inference
+  39 Cloud/HPC Batch Runners
+  40 Time-Travel Debugging & Interactive Stepping
+```
+
+### Group F: performance quality assurance
 
 ```text
   31 Performance regression guard

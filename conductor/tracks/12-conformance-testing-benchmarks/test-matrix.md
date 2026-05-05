@@ -22,3 +22,11 @@ just validate-conformance
 test -f benches/benchmark-plan.md
 test -f conformance/fixtures/README.md
 ```
+
+## Test matrix
+
+| Test | Status | Rust (Track 01) | FFI (Track 02) | Bindings (Track 06-11) |
+|---|---|---|---|---|
+| Chaos experiments pass (no panic, correct error codes) | pending | yes | yes | yes |
+| OSS-Fuzz integration active with ≥2 fuzz targets | no | yes | yes | yes |
+```

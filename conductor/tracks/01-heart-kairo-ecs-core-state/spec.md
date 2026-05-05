@@ -147,6 +147,26 @@ hybrid_des_abm_smoke_100k
 
 
 
+### Phase 6 — SIMD acceleration
+
+Once the ECS storage strategy is settled via ADR 0001, SIMD vectorisation MUST be applied to component batch operations:
+
+- Use `std::simd` (Rust nightly, stabilised for portable SIMD) for batch iteration over component columns.
+- Target operations: component insertion in batches, system execution over matching archetypes, Arrow column encoding/decoding in Track 04.
+- Autovectorisation guidance: prefer `ChunksExact` iterators over scalar loops; use `#[rustc_auto_vectorize]` or equivalent pragmas where possible.
+- Benchmark thresholds: SIMD path must show ≥2x throughput improvement on component_insert_1m vs scalar baseline.
+
+### Phase 7 — Formal verification
+
+After the sequential scheduler is proven deterministic via Track 12 conformance fixtures, apply formal methods to key scheduler invariants:
+
+- **Kani** (`kani` crate): prove that `(time, priority, sequence)` ordering is total, transitive, and deterministic — no two runs with the same seed can produce different event dispatch orders.
+- **loom** (`loom` crate): if threading is added (Track 34 PDES), verify that the event queue is free of data races under concurrent push/pop.
+- **Creusot** (`creusot` crate): specify and verify that `cancel()` does not break heap invariants (no event can be dispatched after its cancel returns true).
+
+Formal verification is optional and does not block release. It is a continuous improvement target.
+
+
 ## Acceptance criteria
 
 - Owned paths are created and documented.

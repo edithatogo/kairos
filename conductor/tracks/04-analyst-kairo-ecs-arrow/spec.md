@@ -39,6 +39,16 @@ Most tracks are parallel-safe after their contract inputs are accepted. See `con
 - Schema definitions in `schemas/arrow/`.
 - Telemetry examples in `examples/telemetry/`.
 
+### OpenTelemetry SDK integration
+
+KairoECS telemetry MUST bridge to the OpenTelemetry ecosystem via `tracing-opentelemetry`:
+
+- Export event dispatch spans as OTel spans via OTLP/gRPC exporter.
+- Export simulation run metrics (event count, dispatch latency, entity count) via OTel metrics API.
+- Export Arrow event log records as OTel log records with structured attributes.
+- OTel integration is gated behind a Cargo feature flag (`otel-export`).
+- Target backends: Jaeger (traces), Prometheus (metrics via OTel bridge), Grafana (unified).
+
 ## Blocked paths
 
 - `crates/kairo-ecs-core/` — owned by Track 01.

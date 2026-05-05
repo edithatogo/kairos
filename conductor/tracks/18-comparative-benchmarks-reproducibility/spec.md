@@ -32,6 +32,18 @@ This track is designed to run in parallel with core implementation. The subagent
 - `benchmarks/scenarios/`: scenario definition files (JSON/YAML) with seed, entity count, step count, and measurement config.
 - `conductor/tracks/18-comparative-benchmarks-reproducibility/test-matrix.md`: CI gate (benchmark runs without regression, metadata completeness check).
 
+### Extended comparator framework list
+
+In addition to SimPy, simmer, Mesa, Agents.jl, MASON, and NetLogo, the benchmark suite SHALL include comparisons against:
+
+- **FLAME GPU** — GPU-accelerated ABM (agent-based model) for GPU parity benchmarking (Track 32).
+- **Repast HPC** — distributed ABM for multi-node parity benchmarking (Track 35).
+- **NS-3** — network simulation for DES event dispatch throughput comparison.
+- **OMNeT++** — discrete event network simulation for scheduler performance comparison.
+- **SimGrid** — distributed systems simulation for MPI/gRPC parity (Track 35).
+- **µsik / WarpIV / ROSS** — PDES engines for parallel execution parity (Track 34).
+- **EcoLab / Golly** — cellular automata for RNG/state update throughput comparison.
+
 ## Acceptance criteria
 
 - The track has a clear public-facing output, not just internal notes.

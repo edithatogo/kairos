@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>KairoECS Time Travel Demo</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main>
+      <section class="timeline" aria-label="Time travel debugger">
+        <header>
+          <h1>KairoECS Time Travel</h1>
+          <output id="tick">tick 0</output>
+        </header>
+        <div id="events" class="events"></div>
+        <div class="controls">
+          <button id="back" type="button">Back</button>
+          <button id="play" type="button">Play</button>
+          <button id="step" type="button">Step</button>
+        </div>
+        <pre id="state"></pre>
+      </section>
+    </main>
+    <script src="main.js"></script>
+  </body>
+</html>

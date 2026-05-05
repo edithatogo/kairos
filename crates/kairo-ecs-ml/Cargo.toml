@@ -1,0 +1,16 @@
+[package]
+name = "kairo-ecs-ml"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/edithatogo/kairos"
+rust-version = "1.76"
+
+[features]
+default = []
+onnx = []
+tensorrt = []
+burn = []
+gymnasium = []
+
+[dependencies]

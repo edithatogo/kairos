@@ -1,0 +1,9 @@
+# Risk Register — 36 Streaming & Real-Time Processing
+
+| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+|---|---|---|---|---|---|---|
+| Message ordering violations in distributed streams across multiple broker partitions | 3 | 5 | 15 | Include monotonic sequence numbers in every stream message; consumer validates ordering and reports gaps; deterministic replay from recorded trace bypasses broker ordering concerns | streaming-agent | Any conformance fixture run via stream produces non-deterministic output |
+| Backpressure on fast simulation when consumer cannot drain broker fast enough | 4 | 4 | 16 | Configurable buffer limits with bounded channels; producer blocks or drops with warning when buffer exceeds threshold; benchmark throughput with consumer lag simulation | streaming-agent | Backpressure causes >5% tick-rate degradation in benchmark suite |
+| Serialization overhead for Arrow IPC over streaming transports negates real-time latency goals | 3 | 4 | 12 | Zero-copy Arrow IPC where possible; benchmark serialization/deserialization latency per adapter; provide raw-byte passthrough mode for low-latency use cases | streaming-agent | Arrow IPC serialization latency exceeds 1 ms per message on reference hardware |
+| Kafka/NATS broker availability in CI prevents integration test execution | 4 | 3 | 12 | Use Testcontainers or embedded broker binaries for CI; provide mock transport layer for unit tests; feature-flag to skip integration tests when broker unavailable | streaming-agent | CI integration test step fails on main branch for >24 hours |
+| Real-time wall-clock mode drifts from virtual time causing HIL desynchronization | 3 | 4 | 12 | Configurable drift tolerance with adaptive pacing; drift monitor emits warnings at threshold; conformance fixture validates wall-clock mode against trace replay | streaming-agent | Wall-clock drift exceeds ±5 ms per tick in HIL integration test |

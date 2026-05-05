@@ -407,3 +407,112 @@ tracks:
     required_gates:
       - benchmark-regression-check
       - threshold-definition-exists
+  - id: 32
+    name: GPU Compute Acceleration
+    status: Planned
+    owner: gpu-compute-agent
+    depends_on: ["01"]
+    owned_paths:
+      - crates/kairo-ecs-gpu/
+      - docs/gpu-compute/
+    required_gates:
+      - gpu-parity-check
+      - gpu-benchmark-threshold
+  - id: 33
+    name: WebGPU Compute for Browser
+    status: Planned
+    owner: webgpu-agent
+    depends_on: ["09", "32"]
+    owned_paths:
+      - crates/kairo-ecs-webgpu/
+      - website/webgpu-demo/
+    required_gates:
+      - browser-webgpu-smoke
+      - wasm-gpu-parity
+  - id: 34
+    name: PDES & Parallel Execution
+    status: Planned
+    owner: pdes-agent
+    depends_on: ["01"]
+    owned_paths:
+      - crates/kairo-ecs-pdes/
+      - docs/pdes/
+    required_gates:
+      - pdes-sequential-parity
+      - gvt-progression-check
+  - id: 35
+    name: Distributed Simulation (MPI/gRPC)
+    status: Planned
+    owner: distributed-agent
+    depends_on: ["34"]
+    owned_paths:
+      - crates/kairo-ecs-mpi/
+      - crates/kairo-ecs-grpc/
+      - docs/distributed/
+    required_gates:
+      - mpi-smoke
+      - grpc-smoke
+      - entity-migration-check
+  - id: 36
+    name: Streaming & Real-Time Processing
+    status: Planned
+    owner: streaming-agent
+    depends_on: ["04", "22"]
+    owned_paths:
+      - crates/kairo-ecs-streaming/
+      - docs/streaming/
+    required_gates:
+      - kafka-smoke
+      - arrow-flight-smoke
+      - realtime-wallclock-check
+  - id: 37
+    name: ML/AI Integration & Inference
+    status: Planned
+    owner: ml-integration-agent
+    depends_on: ["23"]
+    owned_paths:
+      - crates/kairo-ecs-ml/
+      - docs/ml/
+      - examples/ml-surrogate/
+    required_gates:
+      - onnx-inference-smoke
+      - gymnasium-env-smoke
+  - id: 38
+    name: FMI/FMU & Digital Twin Bridge
+    status: Planned
+    owner: fmi-agent
+    depends_on: ["26", "36", "02"]
+    owned_paths:
+      - crates/kairo-ecs-fmi/
+      - docs/fmi-digital-twin/
+      - examples/fmi-co-simulation/
+    required_gates:
+      - fmi-import-smoke
+      - fmi-export-smoke
+      - aas-validate
+  - id: 39
+    name: Cloud/HPC Batch Runners
+    status: Planned
+    owner: cloud-agent
+    depends_on: ["22", "15"]
+    owned_paths:
+      - docker/
+      - k8s/
+      - docs/cloud-hpc/
+    required_gates:
+      - docker-build
+      - kubernetes-smoke
+      - spot-checkpoint-test
+  - id: 40
+    name: Time-Travel Debugging & Interactive Stepping
+    status: Planned
+    owner: timetravel-agent
+    depends_on: ["01", "12"]
+    owned_paths:
+      - crates/kairo-ecs-debug/
+      - docs/debugging/
+      - website/time-travel-demo/
+    required_gates:
+      - trace-record-replay
+      - fwd-back-parity
+      - breakpoint-smoke

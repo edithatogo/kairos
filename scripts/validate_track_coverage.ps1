@@ -13,15 +13,51 @@ if ($tracksYaml -notmatch "required_gates:") {
 }
 
 $wavePolicy = Get-Content -LiteralPath "conductor/wave-policy.md" -Raw
-foreach ($track in @("00","01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31")) {
+
+function Get-TrackIdsFromTracksYaml {
+    param([string]$Path)
+
+    $content = Get-Content -LiteralPath $Path -Raw
+    $ids = [regex]::Matches($content, '(?m)^\s*-\s*id:\s*(\d+)\s*$') |
+        ForEach-Object { "{0:D2}" -f [int]$_.Groups[1].Value }
+
+    return @($ids | Sort-Object -Unique)
+}
+
+$expectedTrackIds = @(Get-TrackIdsFromTracksYaml -Path "conductor/tracks.yaml")
+if ($expectedTrackIds.Count -eq 0) {
+    throw "No track ids found in conductor/tracks.yaml"
+}
+
+foreach ($track in $expectedTrackIds) {
     if ($tracksYaml -notmatch "id:\s*$track") {
         throw "tracks.yaml missing track id $track"
     }
 }
 
-$trackDirs = Get-ChildItem -LiteralPath "conductor/tracks" -Directory
-if ($trackDirs.Count -ne 32) {
-    throw "Expected 32 track directories, found $($trackDirs.Count)"
+$tracksIndex = Get-Content -LiteralPath "conductor/tracks.md" -Raw
+foreach ($track in $expectedTrackIds) {
+    if ($tracksIndex -notmatch "\|\s*$track\s*\|") {
+        throw "tracks.md missing track row $track"
+    }
+}
+
+$trackDirs = @(Get-ChildItem -LiteralPath "conductor/tracks" -Directory)
+$actualTrackIds = @($trackDirs | ForEach-Object {
+    if ($_.Name -match '^(\d+)-') {
+        "{0:D2}" -f [int]$matches[1]
+    } else {
+        throw "Track directory name does not start with a numeric id: $($_.Name)"
+    }
+} | Sort-Object -Unique)
+
+$missingTrackIds = @($expectedTrackIds | Where-Object { $actualTrackIds -notcontains $_ })
+$extraTrackIds = @($actualTrackIds | Where-Object { $expectedTrackIds -notcontains $_ })
+if ($missingTrackIds.Count -gt 0 -or $extraTrackIds.Count -gt 0) {
+    throw "Track directory ids do not match conductor/tracks.yaml. Missing: $($missingTrackIds -join ', '); Extra: $($extraTrackIds -join ', ')"
+}
+if ($trackDirs.Count -ne $expectedTrackIds.Count) {
+    throw "Expected $($expectedTrackIds.Count) track directories from conductor/tracks.yaml, found $($trackDirs.Count)"
 }
 
 $requiredFiles = @("spec.md","plan.md","agent-contract.md","risk-register.md","test-matrix.md","handoff.md")

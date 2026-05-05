@@ -126,6 +126,15 @@ flowchart TD
 | interop-agent | Standards/migration mapping | standards review docs | core architecture alone |
 | dx-agent | Contributor environments | devcontainer/Nix/devbox/bootstrap plan | CI release gates alone |
 | redteam-agent | Adversarial review | red-team findings and release blockers | mitigations without owner agreement |
+| gpu-compute-agent | GPU-accelerated ECS operations | `kairo-ecs-gpu`, GPU parity tests | core scheduler internals |
+| webgpu-agent | WebGPU browser-side compute | `kairo-ecs-webgpu`, browser demos | Wasm GPU kernel design |
+| pdes-agent | Parallel discrete-event simulation | `kairo-ecs-pdes`, GVT tests | sequential scheduler contract |
+| distributed-agent | Multi-node distributed simulation | `kairo-ecs-mpi`, `kairo-ecs-grpc`, cluster tests | PDES LP model |
+| streaming-agent | Real-time telemetry streaming | `kairo-ecs-streaming`, Kafka/Arrow Flight tests | Arrow telemetry schema |
+| ml-integration-agent | ONNX inference and Gymnasium environments | `kairo-ecs-ml`, ML surrogate examples | model zoo domain semantics |
+| fmi-agent | FMI/FMU and digital twin co-simulation | `kairo-ecs-fmi`, FMI import/export, AAS | FFI C ABI contract |
+| cloud-agent | Docker/Kubernetes batch runners | `docker/`, `k8s/`, spot checkpointing | release packaging pipeline |
+| timetravel-agent | Deterministic trace/replay debugging | `kairo-ecs-debug`, breakpoints, time-travel demos | deterministic core semantics |
 ```
 
 ---

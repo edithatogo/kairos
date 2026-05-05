@@ -31,6 +31,16 @@ This track depends on the benchmark harness (Track 12) and comparative benchmark
 - Gate definitions for `benchmark-regression-check` and `threshold-definition-exists`.
 - Handoff notes for CI, benchmark, and release subagents.
 
+### Energy efficiency and carbon tracking
+
+The performance regression guard SHALL include energy efficiency metrics:
+
+- Integrate CodeCarbon or Scaphandre to measure joules-per-benchmark-run.
+- Publish perf-per-watt metric alongside raw timing: `events_per_joule = event_count / joules_consumed`.
+- Carbon intensity: multiply energy by grid carbon intensity (gCO2/kWh) for runner location.
+- Green Software Foundation SCI score: report software carbon intensity for each benchmark scenario.
+- Acceptance: before v1.0, every published benchmark MUST include energy data.
+
 ## Owned paths
 
 - `conductor/performance-thresholds.md`

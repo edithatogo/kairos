@@ -62,9 +62,37 @@ $requiredTrackFiles = @(
     "handoff.md"
 )
 
+function Get-TrackIdsFromTracksYaml {
+    param([string]$Path)
+
+    $content = Get-Content -LiteralPath $Path -Raw
+    $ids = [regex]::Matches($content, '(?m)^\s*-\s*id:\s*(\d+)\s*$') |
+        ForEach-Object { "{0:D2}" -f [int]$_.Groups[1].Value }
+
+    return @($ids | Sort-Object -Unique)
+}
+
+$expectedTrackIds = @(Get-TrackIdsFromTracksYaml -Path "conductor/tracks.yaml")
+if ($expectedTrackIds.Count -eq 0) {
+    throw "No track ids found in conductor/tracks.yaml"
+}
+
 $trackDirs = @(Get-ChildItem -LiteralPath "conductor/tracks" -Directory)
-if ($trackDirs.Count -ne 32) {
-    throw "Expected 32 track directories, found $($trackDirs.Count)"
+$actualTrackIds = @($trackDirs | ForEach-Object {
+    if ($_.Name -match '^(\d+)-') {
+        "{0:D2}" -f [int]$matches[1]
+    } else {
+        throw "Track directory name does not start with a numeric id: $($_.Name)"
+    }
+} | Sort-Object -Unique)
+
+$missingTrackIds = @($expectedTrackIds | Where-Object { $actualTrackIds -notcontains $_ })
+$extraTrackIds = @($actualTrackIds | Where-Object { $expectedTrackIds -notcontains $_ })
+if ($missingTrackIds.Count -gt 0 -or $extraTrackIds.Count -gt 0) {
+    throw "Track directory ids do not match conductor/tracks.yaml. Missing: $($missingTrackIds -join ', '); Extra: $($extraTrackIds -join ', ')"
+}
+if ($trackDirs.Count -ne $expectedTrackIds.Count) {
+    throw "Expected $($expectedTrackIds.Count) track directories from conductor/tracks.yaml, found $($trackDirs.Count)"
 }
 
 foreach ($track in $trackDirs) {

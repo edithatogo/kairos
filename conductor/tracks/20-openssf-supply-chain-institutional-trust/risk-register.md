@@ -7,3 +7,4 @@
 | A missing policy file is treated as advisory instead of blocking | 3 | 4 | 12 | Make `SECURITY.md`, `CODEOWNERS`, and dependency policy release inputs | release-agent | Release candidate lacks required policy file |
 | A temporary tooling gap is mistaken for a policy waiver | 3 | 3 | 9 | Separate allowed-failure lanes from approved exceptions | security-agent | Allowed-failure lane result used to justify exception |
 | Another worker is asked to author the trust policy | 2 | 3 | 6 | Keep ownership in this track and hand off only dependent checks | track subagent | Trust policy PR authored by non-track member |
+| Audit funding not secured before v1.0 | 3 | 4 | 12 | Apply for OSTIF sponsorship early in beta phase; budget fallback from institutional partners; track as release blocker if unfunded | security-agent | 1.0 release date set without confirmed audit funding |

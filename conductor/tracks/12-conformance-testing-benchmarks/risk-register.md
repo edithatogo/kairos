@@ -8,3 +8,5 @@
 | Package/version mismatch | 3 | 5 | 15 | Use publishing dry-runs before production | conformance-agent | Any dry-run reveals version mismatch |
 | Fixture naming drift | 3 | 3 | 9 | Freeze fixture IDs in `conformance/fixtures/manifest.json` | conformance-agent | Fixture ID collision or rename detected |
 | Benchmark naming drift | 3 | 3 | 9 | Keep scenario names stable in `benches/benchmark-plan.md` | conformance-agent | Benchmark name change not reflected in plan |
+| Chaos experiment finds a release-blocking crash | 2 | 5 | 10 | Treat as P0 bug; fix before next release stage | conformance-agent | Any chaos experiment panics or produces UB |
+| Fuzzing finds soundness bug in scheduler determinism | 2 | 5 | 10 | Treat as release blocker for beta+; fix before proceeding | conformance-agent | Structure-aware fuzz finds event ordering violation |

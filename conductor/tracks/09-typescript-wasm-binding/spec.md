@@ -39,6 +39,15 @@ Most tracks are parallel-safe after their contract inputs are accepted. See `con
 - Wasm module in `crates/kairo-ecs-wasm/`.
 - Browser + Node.js smoke tests.
 
+### WASI support (Phase 7)
+
+Beyond browser/Node targets, the Wasm binding SHALL support WASI Preview 2 (`wasm32-wasip2`) for server-side sandboxed execution:
+
+- Target: `wasm32-wasip2` in addition to `wasm32-unknown-unknown` (browser).
+- Runtime: `wasmtime` for testing and deployment; `wasmer` as alternative.
+- Use case: cloud-native simulation runners, edge deployment, sandboxed plugin systems.
+- Acceptance: `kairo-ecs-wasm` module loads in `wasmtime` and executes a 10K event simulation.
+
 ## Blocked paths
 
 - `crates/` (except `crates/kairo-ecs-wasm/`) — owned by Tracks 01–05.

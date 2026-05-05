@@ -1,0 +1,23 @@
+{
+  "apiVersion": "kairo.ecs/v1alpha1",
+  "kind": "KairoECSExperiment",
+  "metadata": {
+    "name": "factory-bottleneck"
+  },
+  "spec": {
+    "image": "kairo-ecs-cli:latest",
+    "parallelism": 2,
+    "scenarioRef": {
+      "configMapName": "factory-bottleneck-scenario",
+      "key": "scenario.yaml"
+    },
+    "storage": {
+      "backend": "filesystem",
+      "path": "/var/lib/kairo/output"
+    },
+    "checkpoint": {
+      "enabled": true,
+      "interval": "5m"
+    }
+  }
+}
