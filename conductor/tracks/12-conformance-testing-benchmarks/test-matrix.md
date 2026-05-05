@@ -8,7 +8,9 @@
 - JSON syntax check for each ready fixture under `conformance/fixtures`
 - Benchmark plan presence and scenario-name check under `benches`
 - `node tests/conformance/conformance-check.mjs`
+- `node tests/conformance/runner-self-test.mjs`
 - `node tests/conformance/track07_13_hardening_check.mjs`
+- `node tests/conformance/track12_20_evidence_check.mjs`
 - `python benches/benchmark_smoke.py`
 - `cargo check -p kairo-ecs-bench`
 
@@ -18,7 +20,9 @@
 cargo test --workspace
 test -f .github/workflows/conformance.yml
 node tests/conformance/conformance-check.mjs
+node tests/conformance/runner-self-test.mjs
 node tests/conformance/track07_13_hardening_check.mjs
+node tests/conformance/track12_20_evidence_check.mjs
 node -e "const fs=require('fs'); const manifest=JSON.parse(fs.readFileSync('conformance/fixtures/manifest.json','utf8')); const required=['scheduler_ordering_v1','scheduler_cancellation_v1','rng_reproducibility_v1','vvuq_scenario_replay_v1']; for (const id of required) { const f=manifest.fixtures.find(x => x.id === id); if (!f || f.status !== 'ready') throw new Error('Missing ready fixture: ' + id); if (!fs.existsSync('conformance/fixtures/' + f.source)) throw new Error('Missing ready fixture file: ' + f.source); }"
 node -e "const fs=require('fs'); const manifest=JSON.parse(fs.readFileSync('conformance/fixtures/manifest.json','utf8')); const scenarios=['schedule_1m_events','pop_1m_events','schedule_cancel_1m_mixed','create_1m_entities','component_insert_1m','hybrid_des_abm_smoke_100k']; for (const scenario of scenarios) { const b=manifest.benchmarks.find(x => x.id === scenario); if (!b || b.status !== 'canonical') throw new Error('Missing canonical benchmark: ' + scenario); }"
 node -e "const fs=require('fs'); const plan=fs.readFileSync('benches/benchmark-plan.md','utf8'); for (const scenario of ['schedule_1m_events','pop_1m_events','schedule_cancel_1m_mixed','create_1m_entities','component_insert_1m','hybrid_des_abm_smoke_100k']) { if (!plan.includes(scenario)) throw new Error('Missing benchmark scenario: ' + scenario); }"

@@ -24,6 +24,29 @@ fn featureless_tick_hook_runs_registered_model() {
 }
 
 #[test]
+fn featureless_tick_hook_rejects_duplicate_model_registration() {
+    let session = OrtSession::from_bytes("identity", "1", [1], vec![1], vec![1]).expect("session");
+    let first = OrtNeuralSystem::new(
+        session.clone(),
+        TickPhase::BeforeSystems,
+        FallbackPolicy::UseOriginalSystem,
+    );
+    let second = OrtNeuralSystem::new(
+        session,
+        TickPhase::AfterSystems,
+        FallbackPolicy::UseOriginalSystem,
+    );
+    let mut hook = InferenceTickHook::new();
+
+    hook.try_register(Arc::new(first)).expect("register first");
+    let error = hook
+        .try_register(Arc::new(second))
+        .expect_err("duplicate should fail");
+
+    assert_eq!(error.to_string(), "model identity:1 is already registered");
+}
+
+#[test]
 fn featureless_session_rejects_input_shape_mismatch_before_inference() {
     let session = OrtSession::from_bytes("identity", "0", [1], vec![2], vec![2]).expect("session");
     let input = Tensor::scalar(3.0);

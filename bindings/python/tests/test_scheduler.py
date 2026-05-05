@@ -40,6 +40,25 @@ def test_scheduler_cancellation_skips_event_without_reordering_rest() -> None:
     assert [event.kind for event in scheduler.trace] == [1, 3]
 
 
+def test_scheduler_rejects_unknown_duplicate_and_dispatched_cancellation() -> None:
+    scheduler = kairo_ecs.Scheduler()
+    dispatched = scheduler.schedule_at(1, kind=1)
+    cancelled = scheduler.schedule_at(2, kind=2)
+    unknown = kairo_ecs.EventId(999, 0)
+
+    assert scheduler.cancel(unknown) is False
+    assert scheduler.cancel(cancelled) is True
+    assert scheduler.cancel(cancelled) is False
+
+    outcome, event = scheduler.step()
+
+    assert outcome is kairo_ecs.StepOutcome.DISPATCHED
+    assert event is not None
+    assert event.id == dispatched
+    assert scheduler.cancel(dispatched) is False
+    assert scheduler.pending_events == 0
+
+
 def test_run_until_reports_limit_when_future_event_remains() -> None:
     scheduler = kairo_ecs.Scheduler()
     scheduler.schedule_at(1, kind=1)

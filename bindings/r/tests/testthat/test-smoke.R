@@ -32,6 +32,23 @@ test_that("scheduler dispatch order is deterministic", {
   expect_identical(log$sequence, c(2, 3, 1))
 })
 
+test_that("scheduler rejects unknown duplicate and dispatched cancellation", {
+  scheduler <- kairoecs_new_scheduler(run_id = "cancel")
+  scheduler <- kairoecs_schedule_at(scheduler, 1, "dispatched")
+  scheduler <- kairoecs_schedule_at(scheduler, 2, "cancelled")
+
+  expect_error(kairoecs_cancel_event(scheduler, 999), "not pending")
+
+  scheduler <- kairoecs_cancel_event(scheduler, 2)
+  expect_error(kairoecs_cancel_event(scheduler, 2), "not pending")
+
+  scheduler <- kairoecs_run_until(scheduler, 1)
+  expect_error(kairoecs_cancel_event(scheduler, 1), "not pending")
+
+  log <- kairoecs_event_log(scheduler)
+  expect_identical(log$status, c("dispatched", "cancelled"))
+})
+
 test_that("event log roundtrip preserves the v1 schema facade", {
   scheduler <- kairoecs_new_scheduler(run_id = "roundtrip", time_scale = "ticks")
   scheduler <- kairoecs_schedule_at(scheduler, 1, "arrive", entity_id = 42)

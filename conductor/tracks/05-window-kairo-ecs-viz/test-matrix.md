@@ -4,6 +4,7 @@
 
 - `cargo check --manifest-path crates/kairo-ecs-viz/Cargo.toml --no-default-features` to prove the visualization crate compiles without renderer features or GUI dependencies.
 - `cargo check --manifest-path crates/kairo-ecs-viz/Cargo.toml --no-default-features --tests` to prove the headless frame contract tests compile without linking GUI dependencies.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\05-window-kairo-ecs-viz\validate-state-snapshot.ps1` to prove the Track 01 `WorldSnapshot` to Track 05 `RenderFrame` path exists and compiles through linker-safe gates.
 - `cargo check --manifest-path crates/kairo-ecs-viz/Cargo.toml --all-features --tests` to prove optional renderer feature names compile and report explicit not-configured status.
 - `cargo check --manifest-path examples/viz/headless-snapshot/Cargo.toml` for a no-window example compile smoke test.
 - `cargo check -p kairo-ecs-core --no-default-features` to prove the headless core remains independent of visualization.
@@ -20,6 +21,7 @@
 ```bash
 cargo check --manifest-path crates/kairo-ecs-viz/Cargo.toml --no-default-features
 cargo check --manifest-path crates/kairo-ecs-viz/Cargo.toml --no-default-features --tests
+pwsh -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\05-window-kairo-ecs-viz\validate-state-snapshot.ps1
 cargo check --manifest-path crates/kairo-ecs-viz/Cargo.toml --all-features --tests
 cargo check --manifest-path examples/viz/headless-snapshot/Cargo.toml
 cargo check -p kairo-ecs-core --no-default-features

@@ -15,3 +15,4 @@
 | Benchmark smoke metadata validates against manifest | `python benches/benchmark_smoke.py` | yes | yes | yes |
 | Track 18 reproducibility evidence validates against manifest | `python benches/benchmark_reproducibility.py` | yes | yes | yes |
 | Public reproduction page is linked into docs manifest | `npm --prefix website run check:links` | yes | yes | yes |
+| Aggregate Track 12-20 evidence gate keeps benchmark evidence wired | `node tests/conformance/track12_20_evidence_check.mjs` | yes | yes | yes |

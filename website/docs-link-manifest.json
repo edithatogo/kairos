@@ -1,6 +1,12 @@
 {
+  "site": {
+    "title": "KairoECS Documentation",
+    "description": "Dependency-light static documentation for KairoECS users and contributors.",
+    "canonicalRoot": "/"
+  },
   "requiredPaths": [
     "docs/adr/",
+    "docs/README.md",
     "docs/api/api-review-template.md",
     "docs/benchmarks/benchmark-policy.md",
     "docs/benchmarks/reproduce-comparison.md",
@@ -32,6 +38,86 @@
   ],
   "siteSources": [
     "website/src/index.md",
+    "docs/README.md",
     "examples/docs/README.md"
-  ]
+  ],
+  "navigationSections": [
+    {
+      "title": "Start",
+      "links": [
+        { "label": "Documentation overview", "path": "docs/README.md" },
+        { "label": "Implemented crate inventory", "path": "crates/README.md" },
+        { "label": "Language binding inventory", "path": "bindings/README.md" },
+        { "label": "Documentation examples", "path": "examples/docs/README.md" }
+      ]
+    },
+    {
+      "title": "Tutorials and Examples",
+      "links": [
+        { "label": "Factory bottleneck scenario", "path": "docs/scenarios/factory-bottleneck-run-replay.md" },
+        { "label": "Headless snapshot playground", "path": "docs/playground/headless-snapshot.md" },
+        { "label": "Starter kits", "path": "docs/starter-kits/README.md" },
+        { "label": "Model zoo inventory", "path": "docs/model-zoo/inventory.md" }
+      ]
+    },
+    {
+      "title": "Language Quickstarts",
+      "links": [
+        { "label": "Python", "path": "bindings/python/README.md" },
+        { "label": "R", "path": "bindings/r/README.md" },
+        { "label": "Julia", "path": "bindings/julia/README.md" },
+        { "label": "TypeScript/Wasm", "path": "bindings/typescript/README.md" },
+        { "label": "C#", "path": "bindings/csharp/README.md" },
+        { "label": "Go", "path": "bindings/go/README.md" }
+      ]
+    },
+    {
+      "title": "Reference",
+      "links": [
+        { "label": "API review", "path": "docs/design/api-review.md" },
+        { "label": "Compatibility governance", "path": "docs/design/compatibility-governance.md" },
+        { "label": "Interoperability standards", "path": "docs/interoperability/standards-review.md" },
+        { "label": "Benchmark policy", "path": "docs/benchmarks/benchmark-policy.md" },
+        { "label": "Release compatibility", "path": "docs/release/compatibility.md" }
+      ]
+    },
+    {
+      "title": "Trust and Operations",
+      "links": [
+        { "label": "Trustworthy simulation", "path": "docs/trustworthy-simulation/verification-validation-uncertainty.md" },
+        { "label": "Citation and archival", "path": "docs/research/citation.md" },
+        { "label": "Supply-chain verification", "path": "docs/release/supply-chain-verification.md" },
+        { "label": "Contributor onboarding", "path": "docs/community/contributor-onboarding.md" }
+      ]
+    }
+  ],
+  "quality": {
+    "requiredBuildOutputs": [
+      "website/build/index.html",
+      "website/build/docs-index.json",
+      "website/build/docs/README.html",
+      "website/build/examples/docs/README.html",
+      "website/build/sitemap.xml",
+      "website/build/robots.txt"
+    ],
+    "minimumGeneratedPages": 20,
+    "requiredHomePhrases": [
+      "Start Here",
+      "Tutorials and Examples",
+      "Language Quickstarts",
+      "Documentation Quality Gate",
+      "Jupyter notebooks and figures"
+    ],
+    "requiredConcepts": [
+      "tutorial",
+      "example",
+      "quickstart",
+      "notebook",
+      "figure",
+      "release",
+      "compatibility",
+      "citation"
+    ],
+    "maxIndexHtmlBytes": 70000
+  }
 }

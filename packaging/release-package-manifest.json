@@ -6,6 +6,37 @@
     "artifact_manifest": "dist/release-artifact-manifest.json",
     "checksum_manifest": "dist/SHA256SUMS"
   },
+  "local_dry_run_sequence": {
+    "sequence_id": "track15-r2-local-registry-package-dry-run",
+    "scope": "offline package inventory and local evidence generation only",
+    "publish_manifests_allowed": false,
+    "steps": [
+      {
+        "order": 1,
+        "name": "validate package inventory",
+        "command": "python packaging/scripts/build_release_manifest.py --check",
+        "network_required": false,
+        "writes": []
+      },
+      {
+        "order": 2,
+        "name": "generate local release evidence",
+        "command": "python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run",
+        "network_required": false,
+        "writes": [
+          "dist/release-artifact-manifest.json",
+          "dist/SHA256SUMS"
+        ]
+      },
+      {
+        "order": 3,
+        "name": "validate offline dry-run gate",
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1",
+        "network_required": false,
+        "writes": []
+      }
+    ]
+  },
   "surfaces": [
     {
       "ecosystem": "rust",
@@ -15,8 +46,7 @@
       "fallback": "GitHub Releases source archive",
       "dry_run_commands": [
         "cargo metadata --no-deps --format-version 1",
-        "cargo package --allow-dirty --workspace",
-        "cargo publish --dry-run --workspace"
+        "cargo package --allow-dirty --workspace"
       ],
       "manifests": [
         { "package": "workspace", "path": "Cargo.toml" },

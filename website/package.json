@@ -6,6 +6,8 @@
   "scripts": {
     "build": "node scripts/build.js",
     "check:links": "node scripts/check-links.js",
+    "check:quality": "node scripts/validate-quality.js",
+    "check:all": "npm run check:links && npm run build && npm run check:quality",
     "dev": "node scripts/dev.js",
     "start": "node scripts/dev.js",
     "serve": "node scripts/dev.js"

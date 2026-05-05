@@ -20,3 +20,27 @@ Track 12 owns the shared runner once the public CLI/API surface exists. Until th
 manifest schema, checks each ready fixture payload, and executes the deterministic
 ordering, cancellation, RNG, and VVUQ smoke assertions without requiring native
 binding link tests.
+
+## Local runner
+
+Run all ready fixtures:
+
+```bash
+node tests/conformance/runner.mjs
+```
+
+List ready fixtures and benchmark metadata without executing payload checks:
+
+```bash
+node tests/conformance/runner.mjs --list
+```
+
+Run one fixture or fixture kind:
+
+```bash
+node tests/conformance/runner.mjs --fixture scheduler_ordering_v1
+node tests/conformance/runner.mjs --kind rng
+```
+
+`tests/conformance/conformance-check.mjs` keeps the CI-compatible default report.
+`tests/conformance/runner-self-test.mjs` exercises the local API and CLI filters.

@@ -9,8 +9,8 @@ the default build. The public surface is intentionally small:
   such as Arrow Flight.
 - `StreamMessage::validate_event_log_contract` enforces the dependency-free
   message contract before the in-memory adapter accepts a message.
-- `InMemoryStream` rejects per-run sequence regressions so ordering checks can
-  run without Kafka, NATS, WebSocket, or Arrow Flight services.
+- `InMemoryStream` rejects per-run sequence and time regressions so ordering
+  checks can run without Kafka, NATS, WebSocket, or Arrow Flight services.
 - `WallClockPacer` records the real-time pacing contract without changing the
   virtual-time scheduler owned by Track 01.
 

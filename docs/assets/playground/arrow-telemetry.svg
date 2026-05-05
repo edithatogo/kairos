@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Arrow telemetry table and chart</title>
+  <desc id="desc">A conceptual telemetry figure showing Arrow-like tabular rows beside a compact chart used by playground documentation.</desc>
+  <metadata>
+    Source: generated vector asset for KairoECS documentation. Scope: conceptual playground figure, not a runtime screenshot.
+  </metadata>
+  <rect width="960" height="420" fill="#fbfbff"/>
+  <rect x="56" y="48" width="848" height="324" rx="14" fill="#ffffff" stroke="#302a48" stroke-width="3"/>
+  <text x="88" y="94" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#302a48">Arrow telemetry</text>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <rect x="88" y="132" width="420" height="194" rx="8" fill="#f2efff" stroke="#6850a8" stroke-width="2"/>
+    <rect x="88" y="132" width="420" height="40" fill="#6850a8"/>
+    <text x="112" y="158" font-size="15" font-weight="700" fill="#ffffff">tick</text>
+    <text x="212" y="158" font-size="15" font-weight="700" fill="#ffffff">queue_len</text>
+    <text x="342" y="158" font-size="15" font-weight="700" fill="#ffffff">throughput</text>
+    <g fill="#302a48" font-size="15">
+      <text x="112" y="204">0</text><text x="232" y="204">4</text><text x="372" y="204">0</text>
+      <text x="112" y="246">8</text><text x="232" y="246">2</text><text x="372" y="246">3</text>
+      <text x="112" y="288">12</text><text x="232" y="288">1</text><text x="372" y="288">6</text>
+    </g>
+    <rect x="568" y="132" width="260" height="194" rx="8" fill="#f9f7ff" stroke="#6850a8" stroke-width="2"/>
+    <line x1="606" y1="286" x2="786" y2="286" stroke="#302a48" stroke-width="2"/>
+    <line x1="606" y1="170" x2="606" y2="286" stroke="#302a48" stroke-width="2"/>
+    <path d="M612 270 L656 242 L700 252 L744 202 L786 184" fill="none" stroke="#6850a8" stroke-width="6"/>
+    <circle cx="612" cy="270" r="6" fill="#6850a8"/>
+    <circle cx="656" cy="242" r="6" fill="#6850a8"/>
+    <circle cx="700" cy="252" r="6" fill="#6850a8"/>
+    <circle cx="744" cy="202" r="6" fill="#6850a8"/>
+    <circle cx="786" cy="184" r="6" fill="#6850a8"/>
+  </g>
+</svg>

@@ -70,3 +70,9 @@ Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. 
 - AAS schema is evolving; the connector must track AAS specification releases.
 - OpenModelica CI availability: OpenModelica must be installed on CI runners for round-trip validation.
 - Cross-compilation of FMU binaries (e.g., building a Linux FMU from macOS) requires documented toolchain paths.
+
+## Worker 6 hardening evidence — 2026-05-06
+
+- Added checked digital-twin snapshot construction and diff application via `TwinStateSnapshot::try_new()` and `try_apply()`.
+- Checked synchronization now rejects empty keys, duplicate keys, removed empty keys, and diffs whose `from_tick` does not match the base snapshot tick.
+- Updated `docs/fmi-digital-twin/deployment-model.md` and the test matrix to keep the current evidence bounded to local/offline validation.

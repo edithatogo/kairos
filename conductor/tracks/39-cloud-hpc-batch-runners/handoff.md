@@ -38,3 +38,9 @@ This track is explicitly non-blocking for library release. Container images are 
 - Cloud provider emulators (LocalStack, Azurite, GCP emulator) may lag behind production APIs — dry-run validation in CI may pass while production submission fails due to API drift.
 - Multi-arch Docker builds on GitHub Actions free-tier runners may be slow for ARM64 emulation. QEMU-based cross-compilation is a workaround but increases build complexity and risk of architecture-specific bugs.
 - Kubernetes operator version testing matrix (3 K8s versions) requires a CI environment with kind/minikube. GitHub Actions runner disk space may be tight for multi-version matrix.
+
+## Worker 6 hardening evidence — 2026-05-06
+
+- Added pre-render validation to `k8s/operator/kairoecs_operator.py` for experiment kind, spec shape, non-empty image, positive parallelism, valid storage backend, and non-empty storage path.
+- Added aggregate Track 36-40 validator coverage that renders the sample Kubernetes Job and verifies invalid local experiment specs fail before rendering.
+- No live Docker, Kubernetes, Slurm, AWS, GCP, or Azure runtime claim was added; current evidence remains offline manifest/policy validation only.

@@ -40,3 +40,27 @@ Before claiming provider readiness, run the provider-native validation for the r
 - Slurm: run `sbatch --test-only` if the site supports it, otherwise submit a one-task canary to a short/debug partition.
 
 Record provider, region/cluster, command, job id, terminal status, and output/checksum evidence in the Track 39 handoff.
+
+## Tutorial: offline cloud/HPC smoke
+
+Use these commands before publishing cloud/HPC documentation or examples:
+
+```bash
+python cloud\validate_cloud_hpc.py
+python k8s\operator\kairoecs_operator.py --experiment k8s\samples\experiment.json
+python docker\telemetry-plugin\cloud-output.py --input path\to\events.arrow --destination file:///tmp/kairo-telemetry
+```
+
+The first command validates Docker, Kubernetes, cloud batch, Slurm, checkpoint,
+documentation-boundary, and telemetry sidecar invariants. The second command
+renders the sample `KairoECSExperiment` to a `batch/v1` indexed Job without a
+cluster. The third command is a local file-copy tutorial for Arrow telemetry plus
+SHA-256 sidecar generation.
+
+## Evidence boundary
+
+Offline evidence is suitable for docs examples, schema review, and PR smoke
+checks. It is not provider acceptance evidence. Do not claim Docker image
+runtime, Kubernetes reconciliation, Slurm scheduling, AWS Batch, GCP Batch, Azure
+Batch, object-store upload, or checkpoint/resume correctness unless those live
+commands were run and recorded with terminal status and output evidence.

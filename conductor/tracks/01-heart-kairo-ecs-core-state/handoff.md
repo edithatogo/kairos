@@ -25,12 +25,18 @@ The next contract surface is the deterministic ordering and replay behavior in `
 
 - Unit tests cover fixed-tick time overflow, scheduler ordering, cancellation, bounded runs, state lifecycle, and deterministic RNG replay.
 - This review pass added regression coverage that cancellation rejects unknown or already-dispatched IDs and does not let cancelled future events force a false limit outcome.
+- The state crate now exposes a deterministic `WorldSnapshot` over live entities. Snapshot entities are sorted by `(index, generation)` so downstream Track 04/05 consumers do not inherit nondeterministic `HashSet` iteration order.
+- This pass hardened `ComponentStore` for generational handles: duplicate inserts replace the existing row, stale generations cannot read or remove a component at the same index, and a newer generation supersedes the stale indexed row deterministically.
 
 ## Validation run
 
-- `cargo fmt -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-rng --check`
+- `cargo fmt --package kairo-ecs-state`
+- `cargo fmt --package kairo-ecs-types --package kairo-ecs-core --package kairo-ecs-state --package kairo-ecs-rng --check`
 - `cargo check --tests -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-rng`
-- `cargo test -p kairo-ecs-core` was attempted but blocked by the local Windows linker resolving `link.exe` to Git for Windows (`C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`), which failed with `couldn't create signal pipe, Win32 error 5`.
+- `cargo check -p kairo-ecs-state --tests` covers the deterministic `WorldSnapshot` API without linking a Windows test executable.
+- `cargo clippy -p kairo-ecs-state --all-targets -- -D warnings`
+- `cargo test -p kairo-ecs-state` was attempted but blocked by the local Windows linker resolving `link.exe` to Git for Windows (`C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`), which failed with `couldn't create signal pipe, Win32 error 5`.
+- Prior validation also recorded the same local linker blocker for `cargo test -p kairo-ecs-core`.
 
 ## Known risks
 

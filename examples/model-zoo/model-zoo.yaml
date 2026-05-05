@@ -5,6 +5,8 @@ models:
     maturity: benchmark
     path: examples/des/mm1_queue
     docs: examples/des/mm1_queue/README.md
+    tutorial: examples/model-zoo/notebooks/model-zoo-tour.ipynb
+    figure: examples/model-zoo/figures/model-zoo-flow.svg
     outputs: [event_trace, queue_length, utilization]
   - id: factory_bottleneck
     title: Factory bottleneck
@@ -12,6 +14,8 @@ models:
     maturity: reference
     path: examples/des/factory_bottleneck
     docs: examples/des/factory_bottleneck/README.md
+    tutorial: examples/model-zoo/notebooks/model-zoo-tour.ipynb
+    figure: examples/model-zoo/figures/model-zoo-flow.svg
     outputs: [throughput, wait_time, work_in_process]
   - id: flocking
     title: Flocking behavior
@@ -19,6 +23,8 @@ models:
     maturity: reference
     path: examples/abm/flocking
     docs: examples/abm/flocking/README.md
+    tutorial: examples/model-zoo/notebooks/model-zoo-tour.ipynb
+    figure: examples/model-zoo/figures/model-zoo-flow.svg
     outputs: [agent_positions, cohesion, separation]
   - id: emergency_department_flow
     title: Emergency department flow
@@ -26,4 +32,6 @@ models:
     maturity: domain-preview
     path: examples/hybrid/emergency_department_flow
     docs: examples/hybrid/emergency_department_flow/README.md
+    tutorial: examples/model-zoo/notebooks/model-zoo-tour.ipynb
+    figure: examples/model-zoo/figures/model-zoo-flow.svg
     outputs: [length_of_stay, wait_time, resource_utilization]

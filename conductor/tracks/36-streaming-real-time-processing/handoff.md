@@ -50,3 +50,9 @@ The streaming adapters must remain strictly additive and feature-gated. Any leak
 ## Integration notes
 
 `crates/kairo-ecs-streaming/` is included in the root workspace. The current Kafka, NATS, WebSocket, and Arrow Flight feature modules are in-memory contract test doubles only. The next implementation step is to replace those aliases with real adapters while keeping every external dependency feature-gated.
+
+## Worker 6 hardening evidence — 2026-05-06
+
+- Added per-run `time_ticks` monotonicity enforcement to the in-memory stream sink; this complements the existing per-run sequence guard and catches local replay-order regressions before broker adapters land.
+- Added `conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1`, an aggregate offline validator for Tracks 36-40.
+- Updated `docs/streaming/stream-schema.md` and this track's test matrix to document the bounded local ordering check.

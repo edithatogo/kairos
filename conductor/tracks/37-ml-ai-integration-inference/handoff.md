@@ -67,3 +67,9 @@ The two `cargo test` commands compiled code but failed at Windows link time beca
 - Neural surrogate accuracy threshold (5%) may be too strict for stochastic domains; threshold should be domain-configurable.
 - Gymnasium API stability: the envelope pattern isolates `kairo_gym` from upstream changes, but breaking releases may force patches.
 - `crates/kairo-ecs-ml/` is now included in the root workspace; optional runtime backends still need dependency-policy review before real ONNX/TensorRT/Burn adapters are added. The current ONNX-facing session is a contract double and does not load or execute ONNX Runtime.
+
+## Worker 6 hardening evidence — 2026-05-06
+
+- Added duplicate `(model name, model version)` rejection to `InferenceTickHook::try_register` so audit and stale-model checks are not ambiguous.
+- Added Rust tests for duplicate model registration and documented the rule in `docs/ml/model-versioning.md`.
+- Added Track 37 coverage to the Track 36-40 aggregate offline validator, including `kairo_gym` tests with `PYTHONPATH` set to the package source tree.

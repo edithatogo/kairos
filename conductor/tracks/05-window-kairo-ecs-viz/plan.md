@@ -23,6 +23,7 @@
 ## Phase 3 — Implementation
 
 - Implement the smallest useful vertical slice: a single rendered state snapshot or event-stream frame.
+- Add deterministic conversion from the Track 01 `WorldSnapshot` surface into a headless `RenderFrame`.
 - Add unit tests and integration tests.
 - Add fixture-driven checks only for the visualization inputs this track owns.
 - Add benchmarks where frame generation or rendering becomes performance-sensitive.

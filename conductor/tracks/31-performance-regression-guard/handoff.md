@@ -17,6 +17,9 @@ native benchmark outputs are promoted.
 `conductor/performance-thresholds.md`, `benches/regression/README.md`,
 `benches/regression/compare.py`, `benches/regression/sample-base.json`,
 `benches/regression/sample-current.json`,
+`benches/regression/sample-current-regression.json`,
+`benches/regression/sample-current-unknown.json`,
+`conductor/tracks/31-performance-regression-guard/validate-track31.ps1`,
 `.github/workflows/bench-regression.yml`
 
 ## Contracts consumed
@@ -43,6 +46,11 @@ native benchmark outputs are promoted.
 - `python benches/regression/compare.py --base benches/regression/sample-base.json --current benches/regression/sample-current.json --report .tmp/track31-compare-report.json`
   exercises the regression comparison path with owned local JSON fixtures.
   Result: pass.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\31-performance-regression-guard\validate-track31.ps1`
+  exercises both positive and negative gate fixtures. Result: pass. The negative
+  checks prove that a missing canonical threshold, an unknown benchmark result
+  ID, and a blocking `schedule_1m_events` regression all fail with report
+  details before any performance claim is accepted.
 - `python benches/benchmark_smoke.py` verifies the consumed Track 12 metadata
   remains valid. Result: pass.
 - `python -m py_compile benches/regression/compare.py` verifies Python syntax.

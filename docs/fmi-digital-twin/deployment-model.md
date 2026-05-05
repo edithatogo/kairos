@@ -29,3 +29,8 @@ returning publication records.
 ## State synchronization
 
 Snapshots are sorted by key before checksumming so the same state has the same checksum regardless of collection order. The checksum is a drift-detection guard, not a cryptographic integrity mechanism.
+
+Use `TwinStateSnapshot::try_new()` and `TwinStateSnapshot::try_apply()` for
+validated synchronization paths. The checked path rejects empty keys, duplicate
+keys, removed empty keys, and diffs whose `from_tick` does not match the base
+snapshot tick before applying state changes.

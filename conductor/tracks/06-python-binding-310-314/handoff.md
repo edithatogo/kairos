@@ -35,8 +35,10 @@ Python binding now has a minimal real R2 slice that is importable on the local i
 
 - `bindings/python/tests/test_import.py` now verifies package identity, `self_check()`, and FFI-not-configured status.
 - `bindings/python/tests/test_scheduler.py` verifies deterministic scheduler ordering, cancellation, bounded run behavior, and stats.
+- `bindings/python/tests/test_scheduler.py` now also verifies unknown, duplicate, and already-dispatched cancellation rejection.
 - `bindings/python/tests/test_arrow.py` verifies event-log v1 field order and smoke-byte roundtrip.
 - `bindings/python/tests/test_ffi.py` verifies native library paths are not loaded implicitly.
+- `conductor/tracks/06-python-binding-310-314/validate-bindings06-11.ps1` guards the deterministic facade and metadata boundaries for binding Tracks 06-11 without requiring native artifacts or unavailable R/Julia runtimes.
 
 ## Known risks
 

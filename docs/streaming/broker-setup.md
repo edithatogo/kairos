@@ -47,3 +47,25 @@ semantics are out of scope for Track 36.
 
 Until real clients land, this page is a configuration contract rather than an
 operational setup guide.
+
+## Tutorial: local contract smoke
+
+Use the broker-free path while developing docs, examples, and feature gates:
+
+```bash
+cargo check --manifest-path crates/kairo-ecs-streaming/Cargo.toml --all-features --tests
+cargo test --manifest-path crates/kairo-ecs-streaming/Cargo.toml --no-default-features
+```
+
+The first command proves that all adapter feature modules compile together. The
+second command is the runtime unit-test gate once the local linker can execute
+Rust tests. Neither command connects to Kafka, NATS, WebSocket clients, or Arrow
+Flight servers.
+
+## Evidence boundary
+
+Current evidence proves the message contract, feature isolation, and in-memory
+ordering guards. It does not prove broker authentication, broker acknowledgements,
+partition ordering, consumer lag handling, TLS, backpressure, or Arrow Flight RPC
+compatibility. Record those separately in `handoff.md` when live services are
+actually run.

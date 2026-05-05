@@ -21,6 +21,22 @@ if ($manifest.production_publish_enabled -ne $false) {
 if ($manifest.release_stage -ne 'r2-dry-run') {
     throw "Expected release_stage r2-dry-run, found $($manifest.release_stage)"
 }
+if ($manifest.local_dry_run_sequence.publish_manifests_allowed -ne $false) {
+    throw 'local_dry_run_sequence.publish_manifests_allowed must remain false'
+}
+$expectedStepOrder = 1
+foreach ($step in $manifest.local_dry_run_sequence.steps) {
+    if ($step.order -ne $expectedStepOrder) {
+        throw "Unexpected local dry-run sequence order at step $($step.name)"
+    }
+    if ($step.network_required -ne $false) {
+        throw "Local dry-run step must be offline: $($step.name)"
+    }
+    if ($step.command -match '\b(publish|upload|login|token|credential|api[-_]?key)\b') {
+        throw "Local dry-run step contains unsafe command text: $($step.command)"
+    }
+    $expectedStepOrder += 1
+}
 
 $expected = @('rust', 'python', 'r', 'julia', 'typescript', 'csharp', 'go')
 $actual = @($manifest.surfaces | ForEach-Object { $_.ecosystem })
@@ -52,6 +68,15 @@ if ($manifest.output.checksum_manifest -ne 'dist/SHA256SUMS') {
     throw 'Unexpected checksum_manifest output path'
 }
 
+$publishManifestFiles = @(
+    Get-ChildItem -LiteralPath 'packaging','dist' -Recurse -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -match '(?i)(publish|publication).*manifest|manifest.*(publish|publication)' }
+)
+if ($publishManifestFiles.Count -gt 0) {
+    throw "Publish manifest files are not allowed in this dry-run sequence: $($publishManifestFiles.FullName -join ', ')"
+}
+
 Write-Host "track15_status=ok"
 Write-Host "ecosystems=$($actual -join ',')"
 Write-Host "production_publish_enabled=$($manifest.production_publish_enabled)"
+Write-Host "local_dry_run_sequence=$($manifest.local_dry_run_sequence.sequence_id)"

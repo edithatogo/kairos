@@ -39,10 +39,17 @@ export interface DispatchedEvent extends Omit<ScheduledEvent, "status"> {
   readonly status: "dispatched";
 }
 
+export interface CancelledEvent extends Omit<ScheduledEvent, "status"> {
+  readonly status: "cancelled";
+}
+
+export type SchedulerEvent = ScheduledEvent | DispatchedEvent | CancelledEvent;
+
 export interface SchedulerSnapshot {
   readonly currentTimeTicks: bigint;
   readonly queuedEvents: readonly ScheduledEvent[];
   readonly dispatchedEvents: readonly DispatchedEvent[];
+  readonly cancelledEvents: readonly CancelledEvent[];
 }
 
 export interface ArrowEventLogRow {
@@ -88,6 +95,7 @@ export declare class SchedulerFacade {
   get currentTimeTicks(): bigint;
   scheduleAt(input: ScheduledEventInput): ScheduledEvent;
   scheduleAfter(delayTicks: bigint | number | string, input?: Omit<ScheduledEventInput, "timeTicks">): ScheduledEvent;
+  cancel(eventId: bigint | number | string): boolean;
   step(): DispatchedEvent | null;
   runFor(maxEvents: number): readonly DispatchedEvent[];
   snapshot(): SchedulerSnapshot;
@@ -96,4 +104,4 @@ export declare class SchedulerFacade {
 
 export declare function createSchedulerFacade(): SchedulerFacade;
 export declare function roundTripArrowEventLog(payload: ArrowEventLogPayload): ArrowEventLogPayload;
-export declare function compareScheduledEvents(left: ScheduledEvent, right: ScheduledEvent): number;
+export declare function compareScheduledEvents(left: SchedulerEvent, right: SchedulerEvent): number;

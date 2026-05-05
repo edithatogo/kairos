@@ -6,7 +6,7 @@ Trace files use schema `kairo.ecs.trace.v1`. The implementation scaffold records
 - event deltas keyed by dispatched event id, priority, sequence, entity, and event kind
 - state changes as deterministic key/value maps
 
-The Rust crate currently exposes an offline line encoding for smoke tests. `validate_trace_lines` checks the schema header, record kind, tick ordering, and basic delta field shape before replay smoke tests use the trace in memory. Arrow IPC serialization remains the integration target for the Track 04 telemetry bridge and must preserve the same logical fields.
+The Rust crate currently exposes an offline line encoding for smoke tests. `validate_trace_lines` checks the schema header, record kind, tick ordering, event-kind encoding, and basic delta field shape before replay smoke tests use the trace in memory. Arrow IPC serialization remains the integration target for the Track 04 telemetry bridge and must preserve the same logical fields.
 
 Forward compatibility rules:
 

@@ -32,6 +32,7 @@ The dependency-free validator rejects:
 - blank `payload_ref` values when a payload reference is present.
 
 The in-memory scaffold adapter also rejects duplicate or decreasing `sequence`
-values for the same `run_id`. That check is a local ordering guard only; real
-broker adapters still need partition, acknowledgement, and replay tests before
-they can claim runtime ordering guarantees.
+values for the same `run_id`, and rejects decreasing `time_ticks` for the same
+`run_id`. Those checks are local ordering guards only; real broker adapters
+still need partition, acknowledgement, and replay tests before they can claim
+runtime ordering guarantees.

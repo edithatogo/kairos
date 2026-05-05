@@ -8,6 +8,7 @@ KairoECS adoption should read like a product path, not an internal note dump.
 |---|---|---|
 | Discover | Read the docs home page and this adoption page. | `website/src/index.md`, `docs/community/README.md` |
 | Choose an example | Pick a model by paradigm and maturity. | `docs/community/model-zoo.md` |
+| Learn the workflow | Follow a Rust, Python, Wasm/TypeScript, or model-building tutorial. | `docs/tutorials/index.md` |
 | Inspect the entry point | Open the example README before running anything. | `examples/model-zoo/README.md` |
 | Run or review | Follow the example README command or smoke-check note. | `examples/des/`, `examples/abm/`, `examples/hybrid/` |
 | Trust the result | Read replay, seed, uncertainty, and citation guidance. | `docs/trustworthy-simulation/`, `docs/research/citation.md` |
@@ -17,6 +18,7 @@ KairoECS adoption should read like a product path, not an internal note dump.
 
 - A clear landing page with maturity labels.
 - A model zoo with concrete example directories.
+- Tutorial learning paths for Rust, Python, Wasm/TypeScript, and first model design.
 - A quick path from example to local execution.
 - A contributor path that points at issue labels, governance, and checks.
 - Citation and trust guidance that explains what a successful run proves and how to reference it.
@@ -26,6 +28,7 @@ KairoECS adoption should read like a product path, not an internal note dump.
 - `docs/community/README.md`
 - `website/src/index.md`
 - `docs/community/model-zoo.md`
+- `docs/tutorials/index.md`
 - `docs/community/playground.md`
 - `docs/community/contributor-onboarding.md`
 - `docs/research/citation.md`

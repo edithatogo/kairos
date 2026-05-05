@@ -12,6 +12,10 @@ Runtime code must reject tensor shape mismatches before inference. Model stalene
 is treated as a release risk when a surrogate replaces domain logic and no
 validation run exists for the current model version.
 
+The tick-hook registry rejects duplicate `(model name, model version)` entries
+when `try_register` is used. Registering two systems with the same model identity
+would make audit logs ambiguous and can hide stale-model deployments.
+
 Tensor payloads must contain only finite `f32` values. NaN and infinity are
 rejected at tensor construction so invalid model inputs do not enter the
 simulation tick path.

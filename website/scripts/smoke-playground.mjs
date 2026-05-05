@@ -28,11 +28,15 @@ if (!fs.existsSync(sourceProgram)) {
 }
 
 const source = fs.readFileSync(sourceProgram, "utf8");
-const labels = fixture.frame.entities.map((entity) => entity.label);
-for (const label of labels) {
-  if (!source.includes(`"${label}"`)) {
-    throw new Error(`fixture label ${label} is not anchored in ${fixture.sourceProgram}`);
-  }
+const spawnCount = source.match(/\bworld\.spawn\(\);/g)?.length ?? 0;
+if (spawnCount !== fixture.frame.entities.length) {
+  throw new Error(
+    `fixture entity count is not anchored in ${fixture.sourceProgram}: ` +
+      `source has ${spawnCount} spawns, fixture has ${fixture.frame.entities.length} entities`,
+  );
+}
+if (!source.includes("SimTime::from_ticks(12)")) {
+  throw new Error(`fixture tick is not anchored in ${fixture.sourceProgram}`);
 }
 
 const summary = fixture.expectedSummary;

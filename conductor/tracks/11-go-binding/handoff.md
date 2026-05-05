@@ -27,6 +27,7 @@ The Go binding now has a minimal real module slice: a pure-Go deterministic sche
 
 - `TestSchedulerOrderingIsDeterministic`
 - `TestCancellationSkipsEvent`
+- `TestCancellationRejectsUnknownDuplicateAndDispatchedEvent`
 - `TestNativeFFIExplicitlyNotConfigured`
 - `TestCloseIsExplicitAndIdempotent`
 - Existing version/self-check smoke tests retained and widened for native status.
@@ -42,5 +43,6 @@ The Go binding now has a minimal real module slice: a pure-Go deterministic sche
 - Keep the track bounded to the Go package and local validation commands.
 - Do not add proxy publication, module signing, or registry credentials here.
 - Validation run from `bindings/go`: `go test ./...`, `go vet ./...`, `go mod tidy`.
+- The cancellation hardening validation was also covered by `conductor/tracks/06-python-binding-310-314/validate-bindings06-11.ps1`.
 - Local `go version` reported `go1.26.2 windows/amd64` after a telemetry token permission warning.
 - No release, registry, or remote publication side effects were performed.

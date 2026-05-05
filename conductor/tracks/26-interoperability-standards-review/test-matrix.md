@@ -11,6 +11,7 @@
 | Known gaps are documented with explicit missing behavior | yes | yes | yes |
 | Red-team objections about false interoperability claims are answered | yes | yes | yes |
 | Local Track 26 standards validator passes | yes | yes | yes |
+| Cross-track evidence-boundary guard keeps standards labels and deferred claims explicit | yes | yes | yes |
 
 ## Evidence checks
 
@@ -25,6 +26,7 @@
 ## Validation commands
 
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/26-interoperability-standards-review/validate-standards-review.ps1`
+- `node scripts/validation/validate-track21-27-evidence-boundaries.mjs`
 - `node scripts/validation/validate-tracks21-27.mjs`
 - `just docs-build`
 - `just check-docs`

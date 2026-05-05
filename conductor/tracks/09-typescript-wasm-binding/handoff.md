@@ -37,6 +37,7 @@ contract crate that can be cargo-checked without `wasm-bindgen`,
 ## Tests added
 
 - TypeScript scheduler ordering test for `(timeTicks, priority, sequence)`.
+- TypeScript cancellation test for unknown, duplicate, and already-dispatched event IDs, with cancelled rows preserved in the event-log facade.
 - TypeScript event-log JSON roundtrip test for `kairo_ecs.event_log.v1` rows.
 - TypeScript native Wasm `not-configured` and injected-loader tests.
 - Rust unit tests in `crates/kairo-ecs-wasm` for status and event ordering.
@@ -49,6 +50,7 @@ contract crate that can be cargo-checked without `wasm-bindgen`,
 - `npm run build` — pass.
 - `cargo check --manifest-path crates/kairo-ecs-wasm/Cargo.toml` — pass.
 - `cargo check --tests --manifest-path crates/kairo-ecs-wasm/Cargo.toml` — pass.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` — pass.
 - `cargo test --manifest-path crates/kairo-ecs-wasm/Cargo.toml` — blocked by local Windows linker selection; Git's `usr\bin\link.exe` returned `couldn't create signal pipe, Win32 error 5`.
 
 ## Known risks

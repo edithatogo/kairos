@@ -108,6 +108,16 @@ impl InferenceTickHook {
 
     pub fn try_register(&mut self, system: Arc<dyn NeuralSystem>) -> Result<(), MlError> {
         system.metadata().validate()?;
+        if self.systems.iter().any(|existing| {
+            existing.metadata().name == system.metadata().name
+                && existing.metadata().version == system.metadata().version
+        }) {
+            return Err(MlError::new(format!(
+                "model {}:{} is already registered",
+                system.metadata().name,
+                system.metadata().version
+            )));
+        }
         self.systems.push(system);
         Ok(())
     }
@@ -599,6 +609,28 @@ mod tests {
 
         assert_eq!(error.to_string(), "model version must not be empty");
         assert!(hook.is_empty());
+    }
+
+    #[test]
+    fn try_register_rejects_duplicate_model_name_and_version() {
+        let session =
+            OrtSession::from_bytes("identity", "1", [1], vec![1], vec![1]).expect("session");
+        let system = OrtNeuralSystem::new(
+            session.clone(),
+            TickPhase::BeforeSystems,
+            FallbackPolicy::FailTick,
+        );
+        let duplicate =
+            OrtNeuralSystem::new(session, TickPhase::AfterSystems, FallbackPolicy::FailTick);
+        let mut hook = InferenceTickHook::new();
+
+        hook.try_register(Arc::new(system)).expect("register");
+        let error = hook
+            .try_register(Arc::new(duplicate))
+            .expect_err("duplicate model version should fail");
+
+        assert_eq!(error.to_string(), "model identity:1 is already registered");
+        assert_eq!(hook.len(), 1);
     }
 
     #[test]

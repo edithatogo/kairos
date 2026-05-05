@@ -9,11 +9,27 @@ on:
       - 'bindings/**'
       - 'conductor/contracts/**'
       - 'conductor/tracks/12-conformance-testing-benchmarks/**'
+      - 'conductor/tracks/13-ci-cd-quality-supply-chain/**'
+      - 'conductor/tracks/14-docs-site-education/**'
+      - 'conductor/tracks/15-packaging-publishing-delivery/**'
+      - 'conductor/tracks/16-release-governance-maintenance/**'
+      - 'conductor/tracks/17-community-adoption-education-ecosystem/**'
+      - 'conductor/tracks/18-comparative-benchmarks-reproducibility/**'
+      - 'conductor/tracks/19-research-software-citation-archival/**'
+      - 'conductor/tracks/20-openssf-supply-chain-institutional-trust/**'
       - 'conductor/tracks/07-r-binding/**'
       - 'conductor/tracks/08-julia-binding/**'
       - 'conductor/tracks/09-typescript-wasm-binding/**'
       - 'conductor/tracks/10-csharp-dotnet-10-11-binding/**'
       - 'conductor/tracks/11-go-binding/**'
+      - 'docs/release/**'
+      - 'docs/research/**'
+      - 'docs/benchmarks/**'
+      - 'SECURITY.md'
+      - 'CITATION.cff'
+      - 'codemeta.json'
+      - '.zenodo.json'
+      - 'packaging/**'
   push:
     branches: [main]
 
@@ -99,3 +115,4 @@ jobs:
         run: |
           node tests/conformance/conformance-check.mjs
           node tests/conformance/track07_13_hardening_check.mjs
+          node tests/conformance/track12_20_evidence_check.mjs

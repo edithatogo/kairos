@@ -16,11 +16,13 @@
 | Resumability plan smoke exists | yes | yes | yes |
 | Scenario index references real manifests and fixtures | yes | yes | yes |
 | Read-only local scenario smoke validator passes | yes | yes | yes |
+| Scenario claim boundary is machine-checked as local smoke only | yes | yes | yes |
 
 ## Local validation commands
 
 ```bash
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scenarios/validate-track22-smoke.ps1
+node scripts/validation/validate-track21-27-evidence-boundaries.mjs
 cargo check -p kairo-ecs-cli
 cargo run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml
 cargo run -p kairo-ecs-cli -- replay --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1

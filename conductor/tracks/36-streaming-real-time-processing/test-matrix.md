@@ -34,4 +34,5 @@ These checks are expected to remain runnable without external services:
 cargo check -p kairo-ecs-streaming --no-default-features
 cargo check -p kairo-ecs-streaming --all-features --tests
 rustfmt --check crates/kairo-ecs-streaming/src/lib.rs crates/kairo-ecs-streaming/tests/feature_matrix.rs
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1 -SkipCargoTests
 ```

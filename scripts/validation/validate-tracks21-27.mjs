@@ -53,6 +53,12 @@ const checks = [
     command: "node",
     args: ["scripts/dx/validate-docs-workflow.mjs"],
   },
+  {
+    track: "21-27",
+    name: "cross-track evidence boundaries",
+    command: "node",
+    args: ["scripts/validation/validate-track21-27-evidence-boundaries.mjs"],
+  },
 ];
 
 function runCheck(check) {

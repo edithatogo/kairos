@@ -27,3 +27,16 @@ Validate the inventory without writing outputs:
 ```bash
 python packaging/scripts/build_release_manifest.py --check
 ```
+
+## First local registry/package dry-run sequence
+
+The first Track 15 sequence is intentionally offline and does not add publish
+manifests:
+
+1. `python packaging/scripts/build_release_manifest.py --check`
+2. `python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run`
+3. `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1`
+
+The validator rejects sequence steps that require network access, credentials,
+uploads, or publish commands. Publish manifests remain out of scope until the
+release gates explicitly allow them.

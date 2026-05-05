@@ -27,6 +27,27 @@ def load_inventory(path: Path) -> dict:
     data = json.loads(path.read_text(encoding="utf-8"))
     if data.get("production_publish_enabled") is not False:
         raise SystemExit("production_publish_enabled must remain false for dry-run packaging")
+    sequence = data.get("local_dry_run_sequence")
+    if not isinstance(sequence, dict):
+        raise SystemExit("release package inventory has no local_dry_run_sequence")
+    if sequence.get("publish_manifests_allowed") is not False:
+        raise SystemExit("publish manifests must remain disabled for the local dry-run sequence")
+    steps = sequence.get("steps")
+    if not isinstance(steps, list) or not steps:
+        raise SystemExit("local_dry_run_sequence has no steps")
+    expected_order = list(range(1, len(steps) + 1))
+    actual_order = [step.get("order") for step in steps]
+    if actual_order != expected_order:
+        raise SystemExit("local_dry_run_sequence steps must be ordered from 1 without gaps")
+    forbidden = re.compile(r"\b(publish|upload|login|token|credential|api[-_]?key)\b", re.IGNORECASE)
+    for step in steps:
+        command = step.get("command", "")
+        if not isinstance(command, str) or not command:
+            raise SystemExit("local_dry_run_sequence step has no command")
+        if forbidden.search(command):
+            raise SystemExit(f"local dry-run step is not offline/non-publishing: {command}")
+        if step.get("network_required") is not False:
+            raise SystemExit(f"local dry-run step must not require network: {command}")
     surfaces = data.get("surfaces")
     if not isinstance(surfaces, list) or not surfaces:
         raise SystemExit("release package inventory has no surfaces")
@@ -109,6 +130,7 @@ def build(root: Path, inventory_path: Path, version: str, dry_run: str, check_on
         "release_stage": inventory.get("release_stage"),
         "production_publish_enabled": False,
         "source_inventory": inventory_path.relative_to(root).as_posix(),
+        "local_dry_run_sequence": inventory["local_dry_run_sequence"],
         "artifact_count": len(artifacts),
         "artifacts": artifacts,
     }

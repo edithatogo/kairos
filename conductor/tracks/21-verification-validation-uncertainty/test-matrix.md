@@ -13,6 +13,7 @@
 | Red-team limit check | The page explains what the evidence does not prove. | yes | yes | yes |
 | VVUQ scenario fixture check | The conformance runner validates the scenario/seed replay evidence fixture. | yes | yes | yes |
 | VVUQ note fixture check | The validation note names the committed scenario, seed, replay fixture, comparison basis, required outputs, and uncertainty limits. | yes | yes | yes |
+| Cross-track evidence-boundary guard | The aggregate Track 21-27 validator rejects missing artifacts, broadened claims, or unsynchronised docs. | yes | yes | yes |
 
 ## Local validation commands
 
@@ -23,6 +24,7 @@ test -f conductor/tracks/21-verification-validation-uncertainty/test-matrix.md
 test -f conductor/tracks/21-verification-validation-uncertainty/risk-register.md
 rg -n "verification|validation|uncertainty|scenario|seed|replay|trace|evidence boundary" docs/trustworthy-simulation/verification-validation-uncertainty.md conductor/tracks/21-verification-validation-uncertainty
 node scripts/validation/validate-vvuq-note.mjs
+node scripts/validation/validate-track21-27-evidence-boundaries.mjs
 node tests/conformance/conformance-check.mjs
 node scripts/validation/validate-tracks21-27.mjs
 ```

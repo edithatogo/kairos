@@ -247,6 +247,7 @@ pub mod adapters {
         messages: Vec<StreamMessage>,
         read_index: usize,
         last_sequence_by_run: HashMap<String, u64>,
+        last_time_by_run: HashMap<String, u128>,
     }
 
     impl InMemoryStream {
@@ -270,8 +271,18 @@ pub mod adapters {
                     )));
                 }
             }
+            if let Some(last_time) = self.last_time_by_run.get(&message.run_id) {
+                if message.time_ticks < *last_time {
+                    return Err(StreamError::new(format!(
+                        "time_ticks must not decrease per run_id: last {}, got {}",
+                        last_time, message.time_ticks
+                    )));
+                }
+            }
             self.last_sequence_by_run
                 .insert(message.run_id.clone(), message.sequence);
+            self.last_time_by_run
+                .insert(message.run_id.clone(), message.time_ticks);
             self.messages.push(message);
             Ok(())
         }
@@ -440,6 +451,24 @@ mod tests {
         assert_eq!(
             error.to_string(),
             "sequence must increase per run_id: last 2, got 2"
+        );
+        assert_eq!(stream.len(), 1);
+    }
+
+    #[test]
+    fn in_memory_sink_rejects_time_regression_for_same_run() {
+        let mut stream = InMemoryStream::default();
+
+        stream
+            .publish(StreamMessage::event_log("run-1", 42, 1))
+            .expect("first publish");
+        let error = stream
+            .publish(StreamMessage::event_log("run-1", 41, 2))
+            .expect_err("time regression should fail");
+
+        assert_eq!(
+            error.to_string(),
+            "time_ticks must not decrease per run_id: last 42, got 41"
         );
         assert_eq!(stream.len(), 1);
     }

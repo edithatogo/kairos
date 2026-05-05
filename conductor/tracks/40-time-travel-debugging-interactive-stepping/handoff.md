@@ -40,3 +40,9 @@ The trace file size for large simulations (10M+ events) is the primary scalabili
 ## Integration notes
 
 Next step: integrate the trace recorder with scheduler observer hook points and replace the line-oriented scaffold encoding with the Track 04 Arrow IPC trace serialization once that schema is available outside this Track 40-only write boundary.
+
+## Worker 6 hardening evidence — 2026-05-06
+
+- Tightened line-trace validation so delta event kinds must use the supported `custom:<u32>` encoding.
+- Added a malformed event-kind rejection test and updated `docs/debugging/trace-format.md`.
+- Added Track 40 coverage to the Track 36-40 aggregate offline validator alongside the static timeline demo validator.

@@ -7,6 +7,7 @@ repository = "https://github.com/edithatogo/kairos"
 rust-version = "1.76"
 
 [dependencies]
+kairo-ecs-state = { path = "../../../crates/kairo-ecs-state" }
 kairo-ecs-types = { path = "../../../crates/kairo-ecs-types" }
 kairo-ecs-viz = { path = "../../../crates/kairo-ecs-viz", default-features = false }
 

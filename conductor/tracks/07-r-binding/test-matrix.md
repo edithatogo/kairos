@@ -14,6 +14,7 @@
 - Added deterministic pure-R scheduler smoke coverage for:
   - explicit native FFI not-configured status;
   - deterministic event ordering by `time_ticks`, `priority`, `sequence`, and `event_id`;
+  - rejection of unknown, duplicate, and already-dispatched cancellation attempts;
   - base-R event-log roundtrip preserving the `kairo_ecs.event_log.v1` field order.
 - Added `tests/smoke-base.R` so a base-R-only smoke path exists when `testthat` is not installed.
 - `R CMD check --no-manual .` is blocked on this machine because `R` resolves to a PowerShell alias and `Rscript` is not on `PATH`.
@@ -25,6 +26,7 @@
 ## Focused local validation
 
 - `node tests/conformance/track07_13_hardening_check.mjs` verifies this track no longer claims packaging ownership and records the no-release boundary.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` verifies the R cancellation guard, package metadata, and no-native-runtime boundary without requiring R on PATH.
 - `Rscript tests/smoke-base.R` remains the preferred offline smoke command once `Rscript` is on `PATH`.
 
 ## Future-surface controls

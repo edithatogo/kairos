@@ -1,5 +1,6 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const REQUIRED_READY_FIXTURE_IDS = Object.freeze([
   'scheduler_ordering_v1',
@@ -230,6 +231,7 @@ export function runFixture(fixture, payload) {
       JSON.stringify(observedKinds) === JSON.stringify(payload.expected_kind_order),
       'scheduler ordering fixture did not match expected_kind_order'
     );
+    return { observed_kind_order: observedKinds };
   }
 
   if (fixture.id === 'scheduler_cancellation_v1') {
@@ -239,6 +241,7 @@ export function runFixture(fixture, payload) {
       JSON.stringify(observedKinds) === JSON.stringify(payload.expected_kind_order),
       'scheduler cancellation fixture did not match expected_kind_order'
     );
+    return { observed_kind_order: observedKinds };
   }
 
   if (fixture.id === 'rng_reproducibility_v1') {
@@ -247,30 +250,184 @@ export function runFixture(fixture, payload) {
       JSON.stringify(observedStream) === JSON.stringify(payload.expected_stream),
       'rng reproducibility fixture did not match expected_stream'
     );
+    return { observed_stream: observedStream };
   }
+
+  if (fixture.id === 'vvuq_scenario_replay_v1') {
+    return {
+      scenario_id: payload.scenario_id,
+      replay_fixture_id: payload.replay_fixture_id,
+      expected_summary_hash: payload.expected_summary_hash,
+    };
+  }
+
+  return {};
 }
 
-export function runConformance(root = process.cwd()) {
+function normalizeList(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.flatMap((item) => normalizeList(item));
+  return String(value)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+export function listConformance(root = process.cwd(), options = {}) {
   const manifest = loadJson('conformance/fixtures/manifest.json', root);
   const readyIds = validateManifest(manifest, root);
-  const readyFixtures = manifest.fixtures.filter((fixture) => fixture.status === 'ready');
+  const fixtureIds = normalizeList(options.fixtureIds ?? options.fixtureId);
+  const kinds = normalizeList(options.kinds ?? options.kind);
+  let readyFixtures = manifest.fixtures.filter((fixture) => fixture.status === 'ready');
+
+  if (fixtureIds.length > 0) {
+    const requested = new Set(fixtureIds);
+    const knownReady = new Set(readyFixtures.map((fixture) => fixture.id));
+    for (const id of requested) {
+      assert(knownReady.has(id), `requested fixture is not ready or does not exist: ${id}`);
+    }
+    readyFixtures = readyFixtures.filter((fixture) => requested.has(fixture.id));
+  }
+
+  if (kinds.length > 0) {
+    const requestedKinds = new Set(kinds);
+    readyFixtures = readyFixtures.filter((fixture) => requestedKinds.has(fixture.kind));
+    assert(readyFixtures.length > 0, `no ready fixtures matched kind filter: ${kinds.join(',')}`);
+  }
+
+  return {
+    status: 'ok',
+    manifest: 'conformance/fixtures/manifest.json',
+    ready_fixtures: readyIds,
+    selected_fixtures: readyFixtures.map((fixture) => ({
+      id: fixture.id,
+      kind: fixture.kind,
+      source: fixture.source,
+      consumers: fixture.consumers,
+      assertions: fixture.assertions,
+    })),
+    canonical_benchmarks: manifest.benchmarks.map((benchmark) => ({
+      id: benchmark.id,
+      owner: benchmark.owner,
+      measure: benchmark.measure,
+    })),
+  };
+}
+
+export function runConformance(root = process.cwd(), options = {}) {
+  if (typeof root === 'object' && root !== null) {
+    options = root;
+    root = options.root ?? process.cwd();
+  }
+
+  const listing = listConformance(root, options);
   const results = [];
 
-  for (const fixture of readyFixtures) {
+  for (const fixture of listing.selected_fixtures) {
     const payload = validateFixturePayload(fixture, root);
-    runFixture(fixture, payload);
+    const observed = runFixture(fixture, payload);
     results.push({
       id: fixture.id,
+      kind: fixture.kind,
       source: fixture.source,
+      consumers: fixture.consumers,
+      assertions: fixture.assertions,
+      observed,
       status: 'pass',
     });
   }
 
   return {
-    manifest: 'conformance/fixtures/manifest.json',
-    ready_fixtures: readyIds,
+    manifest: listing.manifest,
+    ready_fixtures: listing.ready_fixtures,
+    selected_fixtures: listing.selected_fixtures.map((fixture) => fixture.id),
     validated_fixtures: results.length,
     results,
     status: 'ok',
   };
+}
+
+export function parseConformanceArgs(argv) {
+  const options = {
+    format: 'json',
+    fixtureIds: [],
+    kinds: [],
+  };
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === '--help' || arg === '-h') options.help = true;
+    else if (arg === '--list') options.list = true;
+    else if (arg === '--root') options.root = argv[++index];
+    else if (arg === '--fixture') options.fixtureIds.push(argv[++index]);
+    else if (arg.startsWith('--fixture=')) options.fixtureIds.push(arg.slice('--fixture='.length));
+    else if (arg === '--kind') options.kinds.push(argv[++index]);
+    else if (arg.startsWith('--kind=')) options.kinds.push(arg.slice('--kind='.length));
+    else if (arg === '--format') options.format = argv[++index];
+    else if (arg.startsWith('--format=')) options.format = arg.slice('--format='.length);
+    else if (arg === '--output') options.output = argv[++index];
+    else if (arg.startsWith('--output=')) options.output = arg.slice('--output='.length);
+    else throw new Error(`unknown argument: ${arg}`);
+  }
+
+  assert(['json', 'text'].includes(options.format), `unsupported format: ${options.format}`);
+  return options;
+}
+
+function renderText(report) {
+  const lines = [`status: ${report.status}`];
+  const fixtures = report.results ?? report.selected_fixtures ?? [];
+  for (const fixture of fixtures) {
+    const id = typeof fixture === 'string' ? fixture : fixture.id;
+    const source = typeof fixture === 'string' ? '' : ` (${fixture.source})`;
+    lines.push(`fixture: ${id}${source}`);
+  }
+  if ('validated_fixtures' in report) lines.push(`validated_fixtures: ${report.validated_fixtures}`);
+  return `${lines.join('\n')}\n`;
+}
+
+function renderReport(report, format) {
+  if (format === 'text') return renderText(report);
+  return `${JSON.stringify(report, null, 2)}\n`;
+}
+
+function usage() {
+  return `Usage: node tests/conformance/runner.mjs [options]
+
+Options:
+  --list                 List ready fixtures and canonical benchmarks without executing fixtures.
+  --fixture <id>         Execute one ready fixture. May be repeated or comma-separated.
+  --kind <kind>          Execute ready fixtures of one kind. May be repeated or comma-separated.
+  --format <json|text>   Output format. Defaults to json.
+  --output <path>        Write the rendered report to a local file.
+  --root <path>          Repository root. Defaults to the current working directory.
+`;
+}
+
+export function runConformanceCli(argv, cwd = process.cwd()) {
+  const options = parseConformanceArgs(argv);
+  if (options.help) {
+    return usage();
+  }
+
+  const root = options.root ? resolve(options.root) : cwd;
+  const report = options.list ? listConformance(root, options) : runConformance(root, options);
+  const output = renderReport(report, options.format);
+
+  if (options.output) writeFileSync(options.output, output, 'utf8');
+  return output;
+}
+
+function main(argv) {
+  process.stdout.write(runConformanceCli(argv));
+}
+
+const invokedPath = process.argv[1] ? resolve(process.argv[1]) : '';
+if (invokedPath === fileURLToPath(import.meta.url)) {
+  try {
+    main(process.argv.slice(2));
+  } catch (error) {
+    process.stderr.write(`${error.message}\n`);
+    process.exitCode = 1;
+  }
 }

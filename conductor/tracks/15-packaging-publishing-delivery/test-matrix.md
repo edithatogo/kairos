@@ -7,6 +7,8 @@
 - Dry-run coverage for every ecosystem that supports packaging locally.
 - Docs coverage for any change to package naming, registry order, or release policy.
 - No-production-publish check: the track must not introduce live publish commands.
+- No-publish-manifest check: the first local sequence must not add publish or publication manifest files.
+- Aggregate Track 12-20 evidence check: the package manifest remains dry-run only and wired into conformance CI.
 
 ## Track-specific commands
 
@@ -16,6 +18,7 @@ rg -n "dry-run|draft only|preview|reservation|fallback" conductor/package-matrix
 python packaging/scripts/build_release_manifest.py --check
 python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1
+node tests/conformance/track12_20_evidence_check.mjs
 ```
 
 ## R2 dry-run matrix
@@ -39,7 +42,21 @@ enabled.
 
 `validate-packaging-dry-run.ps1` verifies the seven ecosystem surfaces, dry-run
 release stage, disabled production publishing flag, fallback entries, manifest
-paths, and expected release evidence output paths.
+paths, expected release evidence output paths, the ordered local dry-run
+sequence, and the absence of publish manifest files.
+
+## First local sequence
+
+1. Validate inventory without writes:
+   `python packaging/scripts/build_release_manifest.py --check`
+2. Generate local release evidence only:
+   `python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run`
+3. Re-run the offline gate:
+   `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1`
+
+This sequence is the first local registry/package dry-run. It does not contact
+registries, use credentials, upload artifacts, publish packages, or create
+publish manifests.
 
 ## Registry checks to land later
 

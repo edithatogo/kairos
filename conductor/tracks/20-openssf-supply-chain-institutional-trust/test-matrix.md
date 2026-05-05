@@ -20,3 +20,4 @@
 | Release waiver and exception process is documented | `rg -n "waiver|exception|override|allowed-failure" conductor/quality-gates.md conductor/release-engineering.md conductor/tracks/20-openssf-supply-chain-institutional-trust/plan.md` | no | yes | yes | yes |
 | RC artifact-tree evidence is named | `rg -n "RELEASE.txt|SHA256SUMS|sbom.spdx.json" conductor/quality-gates.md conductor/delivery-readiness-checklist.md conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md` | no | dry-run | yes | yes |
 | Red-team or release-blocker escalation path is defined | `rg -n "red-team|release blocker|escalation" conductor/tracks/28-red-team-devils-advocate-review/spec.md conductor/release-engineering.md` | yes | yes | yes | yes |
+| Aggregate Track 12-20 evidence gate keeps trust evidence wired | `node tests/conformance/track12_20_evidence_check.mjs` | yes | yes | yes | yes |

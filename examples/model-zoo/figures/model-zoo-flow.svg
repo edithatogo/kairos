@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="260" viewBox="0 0 960 260" role="img" aria-labelledby="title desc">
+  <title id="title">KairoECS model-zoo documentation flow</title>
+  <desc id="desc">A four step flow from inventory to example README, starter kit, and expected outputs.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#31572c" />
+    </marker>
+  </defs>
+  <rect width="960" height="260" fill="#f8faf8" />
+  <g font-family="Arial, sans-serif" font-size="18" fill="#172117">
+    <rect x="40" y="70" width="180" height="90" rx="8" fill="#d8f3dc" stroke="#31572c" stroke-width="2" />
+    <text x="130" y="105" text-anchor="middle" font-weight="700">Inventory</text>
+    <text x="130" y="132" text-anchor="middle" font-size="14">model-zoo.yaml</text>
+    <rect x="285" y="70" width="180" height="90" rx="8" fill="#e9ecef" stroke="#495057" stroke-width="2" />
+    <text x="375" y="105" text-anchor="middle" font-weight="700">Example README</text>
+    <text x="375" y="132" text-anchor="middle" font-size="14">maturity + outputs</text>
+    <rect x="530" y="70" width="180" height="90" rx="8" fill="#fff3bf" stroke="#8d6b00" stroke-width="2" />
+    <text x="620" y="105" text-anchor="middle" font-weight="700">Starter Kit</text>
+    <text x="620" y="132" text-anchor="middle" font-size="14">domain path</text>
+    <rect x="775" y="70" width="145" height="90" rx="8" fill="#d0ebff" stroke="#1c7ed6" stroke-width="2" />
+    <text x="847" y="105" text-anchor="middle" font-weight="700">Outputs</text>
+    <text x="847" y="132" text-anchor="middle" font-size="14">bounded claims</text>
+    <line x1="220" y1="115" x2="280" y2="115" stroke="#31572c" stroke-width="3" marker-end="url(#arrow)" />
+    <line x1="465" y1="115" x2="525" y2="115" stroke="#31572c" stroke-width="3" marker-end="url(#arrow)" />
+    <line x1="710" y1="115" x2="770" y2="115" stroke="#31572c" stroke-width="3" marker-end="url(#arrow)" />
+    <text x="480" y="215" text-anchor="middle" font-size="15">Validate with examples/model-zoo/validate-inventory.ps1 before publishing docs.</text>
+  </g>
+</svg>

@@ -4,14 +4,19 @@
 
 Track 05 now has a minimal R2 visualization slice. `kairo-ecs-viz` is a dependency-light crate that defines the frame contract, validates headless frames, and returns deterministic frame summaries without opening a window or linking GUI dependencies. Optional renderer feature names are explicit (`wgpu-renderer`, `bevy-renderer`) and currently report not-configured status until real renderer dependencies are deliberately introduced.
 
+This pass added the next Track 01/05 integration increment: `kairo-ecs-state` now exposes a deterministic `WorldSnapshot`, and `kairo-ecs-viz` converts that snapshot into a headless `RenderFrame` with stable entity labels and positions.
+
 ## Files changed
 
 - `Cargo.toml`
+- `Cargo.lock`
 - `crates/kairo-ecs-viz/Cargo.toml`
 - `crates/kairo-ecs-viz/src/lib.rs`
 - `crates/kairo-ecs-viz/tests/feature_matrix.rs`
+- `crates/kairo-ecs-state/src/lib.rs`
 - `examples/viz/headless-snapshot/Cargo.toml`
 - `examples/viz/headless-snapshot/src/main.rs`
+- `conductor/tracks/05-window-kairo-ecs-viz/validate-state-snapshot.ps1`
 - `website/docs/visualization/README.md`
 - `conductor/tracks/05-window-kairo-ecs-viz/test-matrix.md`
 - `conductor/tracks/05-window-kairo-ecs-viz/handoff.md`
@@ -27,8 +32,11 @@ No shared core contracts were changed.
 ## Tests added
 
 - Unit tests in `crates/kairo-ecs-viz/src/lib.rs` for headless summary rendering and validation.
+- Unit tests in `crates/kairo-ecs-state/src/lib.rs` for deterministic live-entity snapshot ordering.
+- Unit tests in `crates/kairo-ecs-viz/src/lib.rs` for `WorldSnapshot` to `RenderFrame` conversion.
 - Integration tests in `crates/kairo-ecs-viz/tests/feature_matrix.rs` for explicit renderer feature state and empty-frame smoke coverage.
 - Headless example package in `examples/viz/headless-snapshot`.
+- Track-local validator `conductor/tracks/05-window-kairo-ecs-viz/validate-state-snapshot.ps1`.
 
 Smoke gates:
 
@@ -39,6 +47,7 @@ cargo check --manifest-path crates/kairo-ecs-viz/Cargo.toml --all-features --tes
 cargo check --manifest-path examples/viz/headless-snapshot/Cargo.toml
 cargo check -p kairo-ecs-core --no-default-features
 cargo tree -p kairo-ecs-core --no-default-features
+pwsh -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\05-window-kairo-ecs-viz\validate-state-snapshot.ps1
 ```
 
 ## Known risks
@@ -49,4 +58,4 @@ On this Windows host, commands that link Rust test or example executables still 
 
 ## Integration notes
 
-The core workspace remains headless-safe: no core crate depends on `kairo-ecs-viz`, and the viz crate's default features are empty. Next step is to add fixture-backed conversion from accepted ECS snapshots into `RenderFrame` without changing core contracts.
+The core workspace remains headless-safe: no core crate depends on `kairo-ecs-viz`, and the viz crate's default features are empty. The first fixture-ready ECS snapshot conversion path is now implemented through `WorldSnapshot`; the next step is to add richer snapshot payloads once Track 01 introduces component storage beyond live entity IDs.

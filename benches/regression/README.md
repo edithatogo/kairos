@@ -15,3 +15,13 @@ This directory holds the comparison and validation material for Track 31.
 - `sample-base.json` and `sample-current.json` are small local fixtures for
   validating the comparison path without running or editing the benchmark
   harness.
+- `sample-current-regression.json` and `sample-current-unknown.json` are
+  negative fixtures used by the Track 31 validator to prove that blocking
+  regressions and unregistered result IDs fail before any performance claim is
+  accepted.
+
+Run the offline gate from the repository root:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\31-performance-regression-guard\validate-track31.ps1
+```

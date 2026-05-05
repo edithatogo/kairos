@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Event timeline inspector</title>
+  <desc id="desc">A conceptual timeline figure showing deterministic ticks, selected events, and a details panel for playground event inspection.</desc>
+  <metadata>
+    Source: generated vector asset for KairoECS documentation. Scope: conceptual playground figure, not a runtime screenshot.
+  </metadata>
+  <rect width="960" height="420" fill="#fbfcfe"/>
+  <rect x="54" y="48" width="852" height="324" rx="14" fill="#ffffff" stroke="#223047" stroke-width="3"/>
+  <text x="86" y="92" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#223047">Event timeline</text>
+  <text x="86" y="122" font-family="Segoe UI, Arial, sans-serif" font-size="16" fill="#536076">Inspect ordered events without claiming live runtime execution.</text>
+  <line x1="100" y1="214" x2="630" y2="214" stroke="#2c6fbb" stroke-width="6"/>
+  <g font-family="Segoe UI, Arial, sans-serif" fill="#223047">
+    <circle cx="130" cy="214" r="15" fill="#2c6fbb"/>
+    <circle cx="250" cy="214" r="15" fill="#2c6fbb"/>
+    <circle cx="374" cy="214" r="19" fill="#d98216"/>
+    <circle cx="502" cy="214" r="15" fill="#2c6fbb"/>
+    <circle cx="620" cy="214" r="15" fill="#2c6fbb"/>
+    <text x="118" y="258" font-size="15">t=0</text>
+    <text x="235" y="258" font-size="15">t=4</text>
+    <text x="354" y="258" font-size="15">t=8</text>
+    <text x="485" y="258" font-size="15">t=12</text>
+    <text x="600" y="258" font-size="15">t=16</text>
+  </g>
+  <rect x="690" y="144" width="168" height="164" rx="10" fill="#eef4ff" stroke="#2c6fbb" stroke-width="2"/>
+  <text x="714" y="180" font-family="Segoe UI, Arial, sans-serif" font-size="19" font-weight="700" fill="#173f6d">Selected event</text>
+  <text x="714" y="214" font-family="Segoe UI, Arial, sans-serif" font-size="15" fill="#173f6d">tick: 8</text>
+  <text x="714" y="242" font-family="Segoe UI, Arial, sans-serif" font-size="15" fill="#173f6d">entity: worker-2</text>
+  <text x="714" y="270" font-family="Segoe UI, Arial, sans-serif" font-size="15" fill="#173f6d">kind: queue leave</text>
+</svg>

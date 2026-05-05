@@ -37,3 +37,25 @@ can be found before archive extraction and dynamic loading are introduced.
 ## Lifecycle contract
 
 The safe wrapper maps non-success FMI status codes into `FmiError::FmiStatus` and always attempts `fmi2Terminate` and `fmi2FreeInstance` in `Drop`. The import runtime still needs the dynamic loader implementation before it can instantiate arbitrary third-party FMUs directly from disk.
+
+## Tutorial: unpacked FMU preflight
+
+Use this sequence for documentation examples and CI smoke checks that must not
+load third-party native code:
+
+```bash
+cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests
+cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml
+```
+
+In Rust, point `FmuLayout::from_unpacked_dir` at an already-unpacked FMU root and
+inspect the selected host binary path before attempting dynamic loading in a
+later integration environment.
+
+## Evidence boundary
+
+Current preflight evidence proves local package layout checks, FMI root/version
+markers, feature-gated wrapper compilation, and safe wrapper types. It does not
+prove `.fmu` zip extraction, dynamic library loading, `fmi2Instantiate`, a
+1000-step co-simulation run, OpenModelica compatibility, FMI XSD validation, or
+AASX Package Explorer validation.

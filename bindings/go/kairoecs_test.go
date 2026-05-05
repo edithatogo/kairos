@@ -76,6 +76,36 @@ func TestCancellationSkipsEvent(t *testing.T) {
 	}
 }
 
+func TestCancellationRejectsUnknownDuplicateAndDispatchedEvent(t *testing.T) {
+	engine := NewEngine()
+	defer engine.Close()
+
+	dispatched, err := engine.ScheduleAt(1, 0, "dispatched")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cancelled, err := engine.ScheduleAt(2, 0, "cancelled")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := engine.CancelEvent(EventID(999)); !errors.Is(err, ErrEventNotFound) {
+		t.Fatalf("unexpected unknown cancellation error: %v", err)
+	}
+	if err := engine.CancelEvent(cancelled); err != nil {
+		t.Fatalf("expected first cancellation to succeed: %v", err)
+	}
+	if err := engine.CancelEvent(cancelled); !errors.Is(err, ErrEventNotFound) {
+		t.Fatalf("unexpected duplicate cancellation error: %v", err)
+	}
+	if _, ok, err := engine.Step(); err != nil || !ok {
+		t.Fatalf("expected dispatched event, ok=%v err=%v", ok, err)
+	}
+	if err := engine.CancelEvent(dispatched); !errors.Is(err, ErrEventNotFound) {
+		t.Fatalf("unexpected dispatched cancellation error: %v", err)
+	}
+}
+
 func TestNativeFFIExplicitlyNotConfigured(t *testing.T) {
 	if NativeAvailable() {
 		t.Fatal("native FFI unexpectedly available")

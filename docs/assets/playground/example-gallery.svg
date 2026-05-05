@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Example gallery</title>
+  <desc id="desc">A conceptual gallery figure showing discrete-event, agent-based, and hybrid simulation examples linked from the playground.</desc>
+  <metadata>
+    Source: generated vector asset for KairoECS documentation. Scope: conceptual playground figure, not a runtime screenshot.
+  </metadata>
+  <rect width="960" height="420" fill="#f8fffe"/>
+  <rect x="56" y="48" width="848" height="324" rx="14" fill="#ffffff" stroke="#174f4a" stroke-width="3"/>
+  <text x="88" y="94" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#174f4a">Example gallery</text>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <rect x="98" y="142" width="220" height="168" rx="10" fill="#e9f7f5" stroke="#1d786f" stroke-width="3"/>
+    <text x="124" y="184" font-size="22" font-weight="700" fill="#174f4a">DES</text>
+    <text x="124" y="220" font-size="16" fill="#174f4a">MM1 queue</text>
+    <text x="124" y="250" font-size="16" fill="#174f4a">Factory bottleneck</text>
+    <rect x="370" y="142" width="220" height="168" rx="10" fill="#eef4ff" stroke="#2c6fbb" stroke-width="3"/>
+    <text x="396" y="184" font-size="22" font-weight="700" fill="#173f6d">ABM</text>
+    <text x="396" y="220" font-size="16" fill="#173f6d">Schelling</text>
+    <text x="396" y="250" font-size="16" fill="#173f6d">Flocking</text>
+    <rect x="642" y="142" width="220" height="168" rx="10" fill="#fff4e6" stroke="#a95f00" stroke-width="3"/>
+    <text x="668" y="184" font-size="22" font-weight="700" fill="#663900">Hybrid</text>
+    <text x="668" y="220" font-size="16" fill="#663900">Emergency flow</text>
+    <text x="668" y="250" font-size="16" fill="#663900">Supply chain</text>
+  </g>
+</svg>

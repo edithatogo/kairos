@@ -10,6 +10,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
+use kairo_ecs_state::WorldSnapshot;
 use kairo_ecs_types::{EntityId, EventKind, SimTime};
 
 pub const WGPU_RENDERER_NOT_CONFIGURED: &str =
@@ -65,6 +66,21 @@ impl RenderFrame {
             entities: Vec::new(),
             events: Vec::new(),
         }
+    }
+
+    pub fn from_world_snapshot(at: SimTime, snapshot: &WorldSnapshot) -> Self {
+        snapshot
+            .entities()
+            .iter()
+            .enumerate()
+            .fold(Self::new(at), |frame, (index, entity)| {
+                frame.with_entity(FrameEntity::new(
+                    entity.id,
+                    format!("entity-{}", entity.id.index),
+                    index as i64 * 1_000,
+                    0,
+                ))
+            })
     }
 
     pub fn with_entity(mut self, entity: FrameEntity) -> Self {
@@ -234,6 +250,29 @@ mod tests {
                 min_y_milli: -50,
                 max_x_milli: 900,
                 max_y_milli: 250,
+            })
+        );
+    }
+
+    #[test]
+    fn converts_world_snapshot_to_deterministic_headless_frame() {
+        let mut world = kairo_ecs_state::World::new();
+        world.spawn();
+        world.spawn();
+
+        let frame = RenderFrame::from_world_snapshot(SimTime::from_ticks(12), &world.snapshot());
+        let summary = render_headless(&frame).expect("headless summary");
+
+        assert_eq!(summary.at_ticks, 12);
+        assert_eq!(summary.entity_count, 2);
+        assert_eq!(summary.event_count, 0);
+        assert_eq!(
+            summary.bounds,
+            Some(FrameBounds {
+                min_x_milli: 0,
+                min_y_milli: 0,
+                max_x_milli: 1_000,
+                max_y_milli: 0,
             })
         );
     }

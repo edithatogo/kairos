@@ -106,6 +106,36 @@ function Assert-StarterKitReadme {
     if ($content -notmatch '(?im)^##\s+Dependency list\s*$') {
         throw "starter-kit entry $KitId README is missing a dependency list section"
     }
+    if ($content -notmatch '(?im)^##\s+Expected outputs\s*$') {
+        throw "starter-kit entry $KitId README is missing an expected outputs section"
+    }
+    if ($content -notmatch '(?im)^##\s+Validation commands\s*$') {
+        throw "starter-kit entry $KitId README is missing a validation commands section"
+    }
+}
+
+function Assert-ModelReadme {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RelativePath,
+        [Parameter(Mandatory = $true)]
+        [string]$ModelId
+    )
+
+    $fullPath = Join-Path $RepoRoot $RelativePath
+    $content = Get-Content -LiteralPath $fullPath -Raw
+    if ($content -notmatch '(?im)^Maturity:\s*`?[A-Za-z0-9_-]+`?\s*$') {
+        throw "model-zoo entry $ModelId README is missing a maturity label"
+    }
+    if ($content -notmatch '(?im)^##\s+Tutorial path\s*$') {
+        throw "model-zoo entry $ModelId README is missing a tutorial path section"
+    }
+    if ($content -notmatch '(?im)^##\s+Expected outputs\s*$') {
+        throw "model-zoo entry $ModelId README is missing an expected outputs section"
+    }
+    if ($content -notmatch '(?im)^##\s+Validation commands\s*$') {
+        throw "model-zoo entry $ModelId README is missing a validation commands section"
+    }
 }
 
 $modelZooPath = Join-Path $RepoRoot 'examples/model-zoo/model-zoo.yaml'
@@ -133,6 +163,13 @@ foreach ($model in $models) {
     $modelIds[$model.id] = $true
     Assert-RelativePath $model.path "model-zoo entry $($model.id)"
     Assert-RelativePath $model.docs "model-zoo entry $($model.id)"
+    Assert-ModelReadme $model.docs $model.id
+    if ($model.tutorial) {
+        Assert-RelativePath $model.tutorial "model-zoo entry $($model.id) tutorial"
+    }
+    if ($model.figure) {
+        Assert-RelativePath $model.figure "model-zoo entry $($model.id) figure"
+    }
 }
 
 foreach ($kit in $kits) {

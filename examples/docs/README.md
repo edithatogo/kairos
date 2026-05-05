@@ -2,6 +2,14 @@
 
 This directory contains code examples and tutorial entry points referenced by the documentation site.
 
+## Tutorial paths
+
+- [Tutorial index](../../docs/tutorials/index.md)
+- [Rust getting started](../../docs/tutorials/rust-getting-started.md)
+- [Python getting started](../../docs/tutorials/python-getting-started.md)
+- [Wasm and TypeScript getting started](../../docs/tutorials/wasm-getting-started.md)
+- [Model-building tutorial](../../docs/tutorials/model-building.md)
+
 ## Current source-backed examples
 
 - [Factory bottleneck DES example](../des/factory_bottleneck/README.md)

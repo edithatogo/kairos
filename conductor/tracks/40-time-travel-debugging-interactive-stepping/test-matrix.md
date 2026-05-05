@@ -38,4 +38,5 @@ cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests
 cargo clippy --manifest-path crates\kairo-ecs-debug\Cargo.toml --all-targets -- -D warnings
 cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml
 node website\time-travel-demo\validate-demo.mjs
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1 -SkipCargoTests
 ```

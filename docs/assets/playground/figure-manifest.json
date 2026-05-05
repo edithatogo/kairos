@@ -1,0 +1,39 @@
+{
+  "figures": [
+    {
+      "id": "playground-overview",
+      "path": "docs/assets/playground/playground-overview.svg",
+      "title": "KairoECS playground overview",
+      "alt": "Conceptual KairoECS playground home showing the snapshot demo, timeline, resource queue, telemetry, and gallery entry points.",
+      "source": "Generated SVG documentation asset; conceptual figure, not a runtime screenshot."
+    },
+    {
+      "id": "timeline-inspector",
+      "path": "docs/assets/playground/timeline-inspector.svg",
+      "title": "Event timeline inspector",
+      "alt": "Conceptual event timeline showing ordered ticks and a selected event details panel.",
+      "source": "Generated SVG documentation asset; conceptual figure, not a runtime screenshot."
+    },
+    {
+      "id": "resource-queue",
+      "path": "docs/assets/playground/resource-queue.svg",
+      "title": "Resource queue visualizer",
+      "alt": "Conceptual queue visualizer showing waiting entities, a constrained service resource, and throughput output.",
+      "source": "Generated SVG documentation asset; conceptual figure, not a runtime screenshot."
+    },
+    {
+      "id": "arrow-telemetry",
+      "path": "docs/assets/playground/arrow-telemetry.svg",
+      "title": "Arrow telemetry table and chart",
+      "alt": "Conceptual Arrow telemetry view showing table rows beside a compact chart.",
+      "source": "Generated SVG documentation asset; conceptual figure, not a runtime screenshot."
+    },
+    {
+      "id": "example-gallery",
+      "path": "docs/assets/playground/example-gallery.svg",
+      "title": "Example gallery",
+      "alt": "Conceptual example gallery showing discrete-event, agent-based, and hybrid simulation tutorial paths.",
+      "source": "Generated SVG documentation asset; conceptual figure, not a runtime screenshot."
+    }
+  ]
+}

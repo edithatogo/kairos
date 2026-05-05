@@ -37,9 +37,14 @@ assert.equal(
 
 const scheduler = createSchedulerFacade();
 scheduler.scheduleAt({ timeTicks: 10n, priority: 0, eventKind: "late" });
+const cancelled = scheduler.scheduleAt({ timeTicks: 7n, priority: 0, eventKind: "cancelled" });
 scheduler.scheduleAt({ timeTicks: 5n, priority: 99, eventKind: "first" });
 scheduler.scheduleAt({ timeTicks: 10n, priority: -1, eventKind: "priority" });
 scheduler.scheduleAfter(10n, { priority: 1, eventKind: "sequence" });
+
+assert.equal(scheduler.cancel(999n), false);
+assert.equal(scheduler.cancel(cancelled.eventId), true);
+assert.equal(scheduler.cancel(cancelled.eventId), false);
 
 const dispatched = scheduler.runFor(4);
 assert.deepEqual(
@@ -54,11 +59,13 @@ assert.deepEqual(
   eventLog.rows.map((row) => [row.eventKind, row.timeTicks, row.status]),
   [
     ["first", "5", "dispatched"],
+    ["cancelled", "7", "cancelled"],
     ["priority", "10", "dispatched"],
     ["late", "10", "dispatched"],
     ["sequence", "10", "dispatched"],
   ],
 );
+assert.equal(scheduler.cancel(dispatched[0].eventId), false);
 assert.deepEqual(roundTripArrowEventLog(eventLog), eventLog);
 assert.throws(
   () => roundTripArrowEventLog({ schema: "other" as typeof EVENT_LOG_SCHEMA_NAME, rows: [] }),

@@ -118,6 +118,19 @@ func (e *Engine) CancelEvent(id EventID) error {
 	if id == 0 || id >= e.nextID {
 		return ErrEventNotFound
 	}
+	if _, ok := e.cancelled[id]; ok {
+		return ErrEventNotFound
+	}
+	foundPending := false
+	for _, evt := range e.events {
+		if evt.ID == id {
+			foundPending = true
+			break
+		}
+	}
+	if !foundPending {
+		return ErrEventNotFound
+	}
 	e.cancelled[id] = struct{}{}
 	return nil
 }

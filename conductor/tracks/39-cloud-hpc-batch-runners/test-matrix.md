@@ -24,3 +24,9 @@
 | Cloud smoke workflow includes Docker build, CLI smoke, and Slurm syntax check | yes | yes | yes |
 | Multi-arch build gated behind release tag trigger (not run on every PR) | no | yes | yes |
 | Telemetry checksum verification is automated in CI using local S3-compatible service (MinIO/moto) | no | no | yes |
+
+## Current local validation
+
+- `python cloud\validate_cloud_hpc.py` remains the detailed Track 39 offline validator.
+- `python k8s\operator\kairoecs_operator.py --experiment k8s\samples\experiment.json` renders the sample `batch/v1` indexed Job.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1 -SkipCargoTests` runs the aggregate Track 36-40 offline gate and verifies the Kubernetes operator rejects invalid local experiment specs before rendering.

@@ -13,6 +13,12 @@ scheduler <- kairoecs_new_scheduler(run_id = "base-smoke")
 scheduler <- kairoecs_schedule_at(scheduler, 2, "second", priority = 0)
 scheduler <- kairoecs_schedule_at(scheduler, 1, "first", priority = 0)
 scheduler <- kairoecs_run_until(scheduler, 2)
+tryCatch(
+  kairoecs_cancel_event(scheduler, 1),
+  error = function(err) {
+    stopifnot(grepl("not pending", conditionMessage(err), fixed = TRUE))
+  }
+)
 
 log <- kairoecs_arrow_roundtrip(kairoecs_event_log(scheduler))
 stopifnot(identical(log$event_kind, c("first", "second")))

@@ -12,6 +12,7 @@ wgpu-renderer = []
 bevy-renderer = []
 
 [dependencies]
+kairo-ecs-state = { path = "../kairo-ecs-state" }
 kairo-ecs-types = { path = "../kairo-ecs-types" }
 
 [lints.rust]

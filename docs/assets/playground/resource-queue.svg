@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Resource queue visualizer</title>
+  <desc id="desc">A conceptual resource queue figure showing waiting entities, a constrained service resource, and throughput output for playground tutorials.</desc>
+  <metadata>
+    Source: generated vector asset for KairoECS documentation. Scope: conceptual playground figure, not a runtime screenshot.
+  </metadata>
+  <rect width="960" height="420" fill="#fffdfa"/>
+  <rect x="56" y="52" width="848" height="316" rx="14" fill="#ffffff" stroke="#2b2b2b" stroke-width="3"/>
+  <text x="88" y="98" font-family="Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" fill="#2b2b2b">Queue and resource view</text>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="108" y="164" font-size="18" font-weight="700" fill="#6b3b00">Waiting queue</text>
+    <line x1="116" y1="230" x2="430" y2="230" stroke="#a95f00" stroke-width="8"/>
+    <circle cx="130" cy="230" r="26" fill="#f6b25d" stroke="#a95f00" stroke-width="3"/>
+    <circle cx="210" cy="230" r="26" fill="#f6b25d" stroke="#a95f00" stroke-width="3"/>
+    <circle cx="290" cy="230" r="26" fill="#f6b25d" stroke="#a95f00" stroke-width="3"/>
+    <circle cx="370" cy="230" r="26" fill="#f6b25d" stroke="#a95f00" stroke-width="3"/>
+    <text x="498" y="164" font-size="18" font-weight="700" fill="#245334">Resource</text>
+    <rect x="494" y="194" width="150" height="90" rx="12" fill="#eaf6ec" stroke="#2f7d45" stroke-width="3"/>
+    <text x="528" y="247" font-size="18" fill="#245334">capacity 2</text>
+    <path d="M654 238 H790" stroke="#2f7d45" stroke-width="8" marker-end="url(#arrow)"/>
+    <text x="716" y="164" font-size="18" font-weight="700" fill="#245334">Output</text>
+    <rect x="786" y="200" width="36" height="58" fill="#2f7d45"/>
+    <rect x="834" y="176" width="36" height="82" fill="#6ba96f"/>
+  </g>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L6,3 z" fill="#2f7d45"/>
+    </marker>
+  </defs>
+</svg>

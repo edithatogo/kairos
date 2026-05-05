@@ -7,6 +7,7 @@ This directory is the public community entry point for KairoECS. It is intention
 | Goal | Page | What it proves |
 |---|---|---|
 | Decide whether KairoECS fits your use case | [Adoption path](adoption.md) | The project has a clear first-user path and honest maturity labels. |
+| Follow a tutorial | [Tutorial learning paths](../tutorials/index.md) | Rust, Python, Wasm/TypeScript, and model-building paths are source-backed and claim-bounded. |
 | Find a concrete example | [Model zoo](model-zoo.md) | Examples are listed with paradigm, maturity, and checked-in README paths. |
 | Make a first contribution | [Contributor onboarding](contributor-onboarding.md) | A contributor can find setup, issue, branch, check, and PR expectations. |
 | Understand project governance | [Governance](governance.md) | Decision-making, conduct, security, and maintainer paths are discoverable. |
@@ -26,3 +27,18 @@ Track 17 treats these files as the minimum real community slice:
 - `conductor/tracks/17-community-adoption-education-ecosystem/test-matrix.md`
 
 The gate passes only when the files exist, relative links resolve, the model-zoo docs agree with the YAML inventory, and the Track 17 test matrix names the `onboarding-docs` gate.
+
+## R2 docs-tutorials gate
+
+The tutorial layer is intentionally checked-in and offline:
+
+- `docs/tutorials/index.md`
+- `docs/tutorials/rust-getting-started.md`
+- `docs/tutorials/python-getting-started.md`
+- `docs/tutorials/wasm-getting-started.md`
+- `docs/tutorials/model-building.md`
+- `docs/tutorials/validate-tutorials.ps1`
+- `examples/docs/README.md`
+
+Run `powershell -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1`
+after changing tutorial links, learning-path names, or example cross-links.

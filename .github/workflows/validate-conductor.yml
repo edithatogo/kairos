@@ -5,9 +5,17 @@ on:
     branches: [main]
     paths:
       - 'conductor/**'
+      - '.github/workflows/**'
+      - 'scripts/validation/**'
+      - 'deny.toml'
+      - 'rust-toolchain.toml'
   pull_request:
     paths:
       - 'conductor/**'
+      - '.github/workflows/**'
+      - 'scripts/validation/**'
+      - 'deny.toml'
+      - 'rust-toolchain.toml'
   schedule:
     - cron: '0 8 * * 1'
   workflow_dispatch:
@@ -29,6 +37,9 @@ jobs:
 
       - name: Validate conductor artifacts
         run: pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1
+
+      - name: Validate Track 13 metadata alignment
+        run: node scripts/validation/validate-track13-metadata.mjs
 
       - name: Validate track coverage
         run: pwsh -NoProfile -File scripts/validate_track_coverage.ps1

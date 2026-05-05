@@ -10,6 +10,8 @@
 - Changelog policy static check for public release-surface changes.
 - Release governance evidence check for compatibility, deprecation, and
   maintenance handoff docs.
+- Aggregate Track 12-20 evidence check for release, citation, benchmark, and
+  supply-chain gate wiring.
 
 ## CI commands
 
@@ -21,6 +23,7 @@ test -f .github/workflows/release.yml
 test -f .github/workflows/release-attestations.yml
 pwsh -NoProfile -File scripts/validate_conductor_setup.ps1 -SkipCargo
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/16-release-governance-maintenance/validate-release-governance.ps1
+node tests/conformance/track12_20_evidence_check.mjs
 ```
 
 ## R2 governance slice checks

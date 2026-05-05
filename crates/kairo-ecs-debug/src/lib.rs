@@ -200,7 +200,7 @@ pub fn validate_trace_lines(input: &str) -> Result<(), TraceValidationError> {
                 parts[4]
                     .parse::<u64>()
                     .map_err(|_| TraceValidationError::MalformedLine(line.to_string()))?;
-                if parts[5].is_empty() {
+                if parse_encoded_event_kind(parts[5]).is_none() {
                     return Err(TraceValidationError::MalformedLine(line.to_string()));
                 }
             }
@@ -327,6 +327,11 @@ fn encode_kind(kind: &EventKind) -> String {
     match kind {
         EventKind::Custom(value) => format!("custom:{value}"),
     }
+}
+
+fn parse_encoded_event_kind(value: &str) -> Option<EventKind> {
+    let raw = value.strip_prefix("custom:")?;
+    raw.parse::<u32>().ok().map(EventKind::Custom)
 }
 
 fn encode_map(map: &BTreeMap<String, String>) -> String {
@@ -493,6 +498,29 @@ mod tests {
         ));
         assert!(matches!(
             validate_trace_lines(missing_delta_map),
+            Err(TraceValidationError::MalformedLine(_))
+        ));
+    }
+
+    #[test]
+    fn trace_line_validation_rejects_malformed_custom_event_kind() {
+        let malformed_kind = concat!(
+            "schema\tkairo.ecs.trace.v1\n",
+            "snapshot\t0\t\n",
+            "delta\t2\t0\t0\t0\tcustom:not-a-u32\t\n",
+        );
+        let unsupported_kind = concat!(
+            "schema\tkairo.ecs.trace.v1\n",
+            "snapshot\t0\t\n",
+            "delta\t2\t0\t0\t0\tdomain:arrival\t\n",
+        );
+
+        assert!(matches!(
+            validate_trace_lines(malformed_kind),
+            Err(TraceValidationError::MalformedLine(_))
+        ));
+        assert!(matches!(
+            validate_trace_lines(unsupported_kind),
             Err(TraceValidationError::MalformedLine(_))
         ));
     }

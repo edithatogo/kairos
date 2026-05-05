@@ -39,10 +39,17 @@ export interface DispatchedEvent extends Omit<ScheduledEvent, "status"> {
   readonly status: "dispatched";
 }
 
+export interface CancelledEvent extends Omit<ScheduledEvent, "status"> {
+  readonly status: "cancelled";
+}
+
+export type SchedulerEvent = ScheduledEvent | DispatchedEvent | CancelledEvent;
+
 export interface SchedulerSnapshot {
   readonly currentTimeTicks: bigint;
   readonly queuedEvents: readonly ScheduledEvent[];
   readonly dispatchedEvents: readonly DispatchedEvent[];
+  readonly cancelledEvents: readonly CancelledEvent[];
 }
 
 export interface ArrowEventLogRow {
@@ -151,6 +158,7 @@ export class SchedulerFacade {
   #nextSequence = 0n;
   #queue: ScheduledEvent[] = [];
   #dispatched: DispatchedEvent[] = [];
+  #cancelled: CancelledEvent[] = [];
 
   get currentTimeTicks(): bigint {
     return this.#currentTimeTicks;
@@ -181,6 +189,20 @@ export class SchedulerFacade {
       ...input,
       timeTicks: this.#currentTimeTicks + normalizeUnsignedBigInt(delayTicks, "delayTicks"),
     });
+  }
+
+  cancel(eventId: bigint | number | string): boolean {
+    const normalizedEventId = normalizeUnsignedBigInt(eventId, "eventId");
+    const index = this.#queue.findIndex((event) => event.eventId === normalizedEventId);
+
+    if (index < 0) {
+      return false;
+    }
+
+    const [event] = this.#queue.splice(index, 1);
+    this.#cancelled.push({ ...event, status: "cancelled" });
+    this.#cancelled.sort(compareScheduledEvents);
+    return true;
   }
 
   step(): DispatchedEvent | null {
@@ -218,11 +240,12 @@ export class SchedulerFacade {
       currentTimeTicks: this.#currentTimeTicks,
       queuedEvents: [...this.#queue],
       dispatchedEvents: [...this.#dispatched],
+      cancelledEvents: [...this.#cancelled],
     };
   }
 
   eventLog(runId: string): ArrowEventLogPayload {
-    const rows = [...this.#queue, ...this.#dispatched]
+    const rows = [...this.#queue, ...this.#dispatched, ...this.#cancelled]
       .sort(compareScheduledEvents)
       .map((event) => toArrowEventLogRow(runId, event));
 
@@ -245,13 +268,13 @@ export function roundTripArrowEventLog(payload: ArrowEventLogPayload): ArrowEven
   return JSON.parse(JSON.stringify(payload)) as ArrowEventLogPayload;
 }
 
-export function compareScheduledEvents(left: ScheduledEvent, right: ScheduledEvent): number {
+export function compareScheduledEvents(left: SchedulerEvent, right: SchedulerEvent): number {
   return compareBigInt(left.timeTicks, right.timeTicks)
     || left.priority - right.priority
     || compareBigInt(left.sequence, right.sequence);
 }
 
-function toArrowEventLogRow(runId: string, event: ScheduledEvent | DispatchedEvent): ArrowEventLogRow {
+function toArrowEventLogRow(runId: string, event: SchedulerEvent): ArrowEventLogRow {
   const normalizedRunId = runId.trim();
   if (normalizedRunId.length === 0) {
     throw new Error("runId must not be empty");

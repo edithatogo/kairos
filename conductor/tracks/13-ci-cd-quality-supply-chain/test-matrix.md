@@ -7,6 +7,8 @@
 - Docs and release workflows fail when `website/`, `conductor/release-engineering.md`, or the release workflow files are missing.
 - Conformance validates fixture structure and expected replay data.
 - Conformance runs the checked-in Node validators, including the Track 07-13 hardening check, without depending on central script edits.
+- Conformance runs the Track 12-20 evidence check so release, citation, benchmark, and supply-chain evidence cannot be skipped silently.
+- Track 13 metadata alignment validates `conductor/tracks.yaml` without changing track statuses and maps `workflow-presence`, `cargo-metadata`, and `dependency-policy` to checked-in workflow evidence.
 - Package dry-runs and binding CI fail when their own manifests are missing instead of skipping quietly.
 - TypeScript binding smoke runs its declared scripts instead of treating them as optional.
 - Benchmark smoke runs the offline metadata harness and `kairo-ecs-bench` compile check.
@@ -28,6 +30,8 @@ cargo doc --workspace --all-features --no-deps
 for f in .github/workflows/*.yml; do test -s "$f"; done
 node tests/conformance/conformance-check.mjs
 node tests/conformance/track07_13_hardening_check.mjs
+node tests/conformance/track12_20_evidence_check.mjs
+node scripts/validation/validate-track13-metadata.mjs
 python benches/benchmark_smoke.py
 cargo check -p kairo-ecs-bench
 test -f .github/dependabot.yml

@@ -10,6 +10,7 @@
 - `cargo test -p kairo-ecs-rng`
 - `cargo test --workspace`
 - `cargo check --tests -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-rng` is the local Windows linker-safe gate when executable test linking is blocked.
+- `cargo check --tests -p kairo-ecs-state` must cover the deterministic `WorldSnapshot` API consumed by Track 05 visualization without linking a test executable.
 - Fixture presence check for `conformance/fixtures/deterministic_ordering.json`, `conformance/fixtures/cancellation.json`, and `conformance/fixtures/rng_replay.json`
 - `scripts/validate_conductor_setup.ps1` and `scripts/validate_track_coverage.ps1` both succeed
 
@@ -33,3 +34,7 @@ test -f conformance/fixtures/rng_replay.json
 ## Review-hardening coverage
 
 The Track 01 scheduler tests must include cancellation regression coverage for unknown IDs, already-dispatched IDs, duplicate cancellation, and cancelled future events that should not force a false `LimitReached` after active work finishes.
+
+The Track 01 state tests must include deterministic snapshot ordering for live entities so downstream Arrow and visualization consumers do not depend on `HashSet` iteration order.
+
+The Track 01 state component-store tests must include generational handle coverage: same-entity replacement must not duplicate dense rows, stale generations must not read or remove the current component for the same index, and a newer generation must supersede the stale indexed row deterministically.

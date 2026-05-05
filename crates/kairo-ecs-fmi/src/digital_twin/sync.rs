@@ -19,6 +19,27 @@ pub struct TwinStateDiff {
     pub removed: Vec<String>,
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct TwinStateError {
+    message: String,
+}
+
+impl TwinStateError {
+    fn new(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+        }
+    }
+}
+
+impl std::fmt::Display for TwinStateError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.message)
+    }
+}
+
+impl std::error::Error for TwinStateError {}
+
 impl TwinStateSnapshot {
     pub fn new(tick: u64, mut entries: Vec<TwinStateEntry>) -> Self {
         entries.sort_by(|left, right| left.key.cmp(&right.key));
@@ -28,6 +49,11 @@ impl TwinStateSnapshot {
             checksum,
             entries,
         }
+    }
+
+    pub fn try_new(tick: u64, entries: Vec<TwinStateEntry>) -> Result<Self, TwinStateError> {
+        validate_entries("snapshot", &entries)?;
+        Ok(Self::new(tick, entries))
     }
 
     pub fn diff(&self, next: &Self) -> TwinStateDiff {
@@ -82,6 +108,20 @@ impl TwinStateSnapshot {
 
         Self::new(diff.to_tick, entries)
     }
+
+    pub fn try_apply(&self, diff: &TwinStateDiff) -> Result<Self, TwinStateError> {
+        if diff.from_tick != self.tick {
+            return Err(TwinStateError::new(format!(
+                "diff from_tick {} does not match snapshot tick {}",
+                diff.from_tick, self.tick
+            )));
+        }
+        validate_entries("changed entries", &diff.changed)?;
+        if diff.removed.iter().any(|key| key.trim().is_empty()) {
+            return Err(TwinStateError::new("removed keys must not be empty"));
+        }
+        Ok(self.apply(diff))
+    }
 }
 
 impl TwinStateEntry {
@@ -102,6 +142,24 @@ fn checksum(tick: u64, entries: &[TwinStateEntry]) -> u64 {
         }
     }
     hash
+}
+
+fn validate_entries(label: &str, entries: &[TwinStateEntry]) -> Result<(), TwinStateError> {
+    let mut keys = std::collections::BTreeSet::new();
+    for entry in entries {
+        if entry.key.trim().is_empty() {
+            return Err(TwinStateError::new(format!(
+                "{label} keys must not be empty"
+            )));
+        }
+        if !keys.insert(entry.key.clone()) {
+            return Err(TwinStateError::new(format!(
+                "{label} contains duplicate key {}",
+                entry.key
+            )));
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -127,5 +185,42 @@ mod tests {
 
         let diff = before.diff(&after);
         assert_eq!(before.apply(&diff), after);
+        assert_eq!(before.try_apply(&diff).expect("checked apply"), after);
+    }
+
+    #[test]
+    fn checked_snapshot_rejects_duplicate_keys() {
+        let error = TwinStateSnapshot::try_new(
+            1,
+            vec![
+                TwinStateEntry::new("position", "1.0"),
+                TwinStateEntry::new("position", "2.0"),
+            ],
+        )
+        .expect_err("duplicate key should fail");
+
+        assert_eq!(
+            error.to_string(),
+            "snapshot contains duplicate key position"
+        );
+    }
+
+    #[test]
+    fn checked_apply_rejects_wrong_base_tick() {
+        let before = TwinStateSnapshot::try_new(1, vec![TwinStateEntry::new("position", "1.0")])
+            .expect("snapshot");
+        let diff = TwinStateDiff {
+            from_tick: 0,
+            to_tick: 2,
+            changed: vec![TwinStateEntry::new("position", "2.0")],
+            removed: Vec::new(),
+        };
+
+        let error = before.try_apply(&diff).expect_err("wrong base should fail");
+
+        assert_eq!(
+            error.to_string(),
+            "diff from_tick 0 does not match snapshot tick 1"
+        );
     }
 }

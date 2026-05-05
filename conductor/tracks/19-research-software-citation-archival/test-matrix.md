@@ -14,6 +14,7 @@
 | Release gate integration | `rg -n "citation|archiv|release|Zenodo|DOI|0.4.0-alpha.1" conductor/release-engineering.md conductor/tracks/19-research-software-citation-archival/handoff.md` | no | yes | yes |
 | Citation guidance is explicit enough for reuse | `rg -n "CITATION.cff|codemeta|Zenodo|release notes|DOI|version" docs/research/citation.md conductor/tracks/19-research-software-citation-archival/handoff.md` | yes | yes | yes |
 | Red-team objections about archival durability are answered | `rg -n "durability|archive|metadata|DOI|release note|repository URL" conductor/tracks/19-research-software-citation-archival/handoff.md docs/research/citation.md` | yes | yes | yes |
+| Aggregate Track 12-20 evidence gate keeps citation metadata synchronized | `node tests/conformance/track12_20_evidence_check.mjs` | yes | yes | yes |
 
 ## Latest focused validation
 

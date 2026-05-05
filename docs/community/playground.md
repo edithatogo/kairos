@@ -38,6 +38,36 @@ The docs page should call out the screenshot or asset targets that make the play
 
 If the screenshots are not yet checked in, the page should say they are pending assets rather than implying they already exist.
 
+## Current committed figures
+
+The current docs build uses lightweight SVG figures instead of bitmap screenshots. They are committed under `docs/assets/playground/` so reviewers can inspect them in source control and so the documentation remains buildable without a browser screenshot pipeline.
+
+![Conceptual KairoECS playground home showing the snapshot demo, timeline, resource queue, telemetry, and gallery entry points.](../assets/playground/playground-overview.svg)
+
+Source: Generated SVG documentation asset; conceptual figure, not a runtime screenshot.
+
+![Conceptual event timeline showing ordered ticks and a selected event details panel.](../assets/playground/timeline-inspector.svg)
+
+Source: Generated SVG documentation asset; conceptual figure, not a runtime screenshot.
+
+![Conceptual queue visualizer showing waiting entities, a constrained service resource, and throughput output.](../assets/playground/resource-queue.svg)
+
+Source: Generated SVG documentation asset; conceptual figure, not a runtime screenshot.
+
+![Conceptual Arrow telemetry view showing table rows beside a compact chart.](../assets/playground/arrow-telemetry.svg)
+
+Source: Generated SVG documentation asset; conceptual figure, not a runtime screenshot.
+
+![Conceptual example gallery showing discrete-event, agent-based, and hybrid simulation tutorial paths.](../assets/playground/example-gallery.svg)
+
+Source: Generated SVG documentation asset; conceptual figure, not a runtime screenshot.
+
+Validate figure references and metadata with:
+
+```powershell
+node docs/assets/validate-playground-figures.mjs
+```
+
 ## How the docs site links to it
 
 The docs home page should link to this page from the community section so users can reach it from the first docs screen.

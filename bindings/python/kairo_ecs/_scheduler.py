@@ -26,7 +26,7 @@ class Scheduler:
 
     @property
     def pending_events(self) -> int:
-        return max(0, len(self._heap) - len(self._cancelled))
+        return sum(1 for item in self._heap if item[3] not in self._cancelled)
 
     @property
     def dispatched_events(self) -> int:
@@ -60,9 +60,11 @@ class Scheduler:
         return self.schedule_at(self._now.ticks + after_ticks, priority=priority, kind=kind)
 
     def cancel(self, event_id: EventId) -> bool:
-        before = len(self._cancelled)
+        if event_id in self._cancelled or not self._is_pending(event_id):
+            return False
+
         self._cancelled.add(event_id)
-        return len(self._cancelled) != before
+        return True
 
     def step(self) -> tuple[StepOutcome, DispatchedEvent | None]:
         while self._heap:
@@ -117,3 +119,6 @@ class Scheduler:
             "pending_events": self.pending_events,
             "dispatched_events": self._dispatched,
         }
+
+    def _is_pending(self, event_id: EventId) -> bool:
+        return any(item[3] == event_id for item in self._heap)

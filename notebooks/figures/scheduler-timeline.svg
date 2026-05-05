@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="220" viewBox="0 0 760 220" role="img" aria-labelledby="title desc">
+  <title id="title">KairoECS scheduler timeline</title>
+  <desc id="desc">Events ordered by simulation tick, priority, and insertion sequence; one event is cancelled before dispatch.</desc>
+  <rect width="760" height="220" fill="#ffffff"/>
+  <line x1="80" y1="150" x2="700" y2="150" stroke="#263238" stroke-width="3"/>
+  <text x="72" y="180" font-family="Arial, sans-serif" font-size="14" fill="#263238">0</text>
+  <text x="235" y="180" font-family="Arial, sans-serif" font-size="14" fill="#263238">5</text>
+  <text x="395" y="180" font-family="Arial, sans-serif" font-size="14" fill="#263238">10</text>
+  <text x="555" y="180" font-family="Arial, sans-serif" font-size="14" fill="#263238">15</text>
+  <circle cx="240" cy="150" r="9" fill="#0072B2"/>
+  <text x="190" y="120" font-family="Arial, sans-serif" font-size="14" fill="#263238">kind 1</text>
+  <text x="181" y="138" font-family="Arial, sans-serif" font-size="12" fill="#455A64">dispatches first</text>
+  <circle cx="400" cy="150" r="9" fill="#009E73"/>
+  <text x="346" y="92" font-family="Arial, sans-serif" font-size="14" fill="#263238">kind 2</text>
+  <text x="322" y="110" font-family="Arial, sans-serif" font-size="12" fill="#455A64">higher priority at same tick</text>
+  <circle cx="432" cy="150" r="9" fill="#D55E00"/>
+  <text x="438" y="132" font-family="Arial, sans-serif" font-size="14" fill="#263238">kind 4</text>
+  <text x="438" y="112" font-family="Arial, sans-serif" font-size="12" fill="#455A64">same priority, later sequence</text>
+  <circle cx="560" cy="150" r="9" fill="#B0BEC5"/>
+  <line x1="548" y1="138" x2="572" y2="162" stroke="#B71C1C" stroke-width="4"/>
+  <line x1="572" y1="138" x2="548" y2="162" stroke="#B71C1C" stroke-width="4"/>
+  <text x="526" y="120" font-family="Arial, sans-serif" font-size="14" fill="#263238">kind 3</text>
+  <text x="504" y="138" font-family="Arial, sans-serif" font-size="12" fill="#455A64">cancelled before dispatch</text>
+</svg>

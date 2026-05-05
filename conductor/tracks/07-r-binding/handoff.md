@@ -38,9 +38,11 @@ R binding work stays inside `bindings/r/` and now exposes a concrete package sur
 - Smoke tests for exported R helpers.
 - Smoke tests for explicit native FFI not-configured status.
 - Smoke tests for deterministic scheduler/event ordering.
+- Smoke tests for rejecting unknown, duplicate, and already-dispatched cancellation attempts.
 - Smoke tests for base-R event-log roundtrip schema normalization.
 - Base-R smoke script for environments without `testthat`.
 - Local package validation via `testthat::test_dir()` and `R CMD check`.
+- Cross-binding static validation via `conductor/tracks/06-python-binding-310-314/validate-bindings06-11.ps1`.
 
 ## Validation status — 2026-05-06
 

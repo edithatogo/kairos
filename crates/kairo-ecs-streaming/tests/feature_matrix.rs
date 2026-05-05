@@ -76,6 +76,24 @@ fn in_memory_adapter_rejects_sequence_regression_per_run() {
 }
 
 #[test]
+fn in_memory_adapter_rejects_time_regression_per_run() {
+    let mut stream = InMemoryStream::default();
+    stream
+        .publish(StreamMessage::event_log("featureless", 10, 1))
+        .expect("publish first message");
+
+    let error = stream
+        .publish(StreamMessage::event_log("featureless", 9, 2))
+        .expect_err("lower tick should be rejected");
+
+    assert_eq!(
+        error.to_string(),
+        "time_ticks must not decrease per run_id: last 10, got 9"
+    );
+    assert_eq!(stream.len(), 1);
+}
+
+#[test]
 fn snapshot_provider_rejects_unknown_stream_name() {
     let stream = InMemoryStream::default();
 

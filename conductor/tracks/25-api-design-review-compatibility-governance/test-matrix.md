@@ -22,12 +22,14 @@
 | Any public API, ABI, or schema change without an ADR is rejected | no | yes | yes | yes |
 | Any breaking change without a migration note is rejected at beta and beyond | no | yes | yes | yes |
 | Any root mismatch between policy and release docs is a release hold | no | yes | yes | yes |
+| Cross-track evidence-boundary guard keeps release-boundary wording present | yes | yes | yes | yes |
 
 ## Evidence commands
 
 ```powershell
 pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1
 pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate
+node scripts/validation/validate-track21-27-evidence-boundaries.mjs
 node scripts/validation/validate-tracks21-27.mjs
 rg -n "validate-compatibility-pack|protected-surface-inventory|Breaking-change rules|Release hold criteria" conductor/contracts/versioning-compatibility.md conductor/quality-gates.md conductor/delivery-readiness-checklist.md docs/design
 ```

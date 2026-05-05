@@ -26,3 +26,12 @@
 Alpha scope note: current `OrtSession` is a dependency-free contract double. It
 must not be reported as evidence that ONNX Runtime, TensorRT, Burn, or surrogate
 accuracy validation has been integrated.
+
+Local aggregate validator:
+
+```bash
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests
+```
+
+This validator checks the dependency-free ML crate, the `kairo_gym` contract
+tests with `PYTHONPATH` set to the package source tree, and bounded-claim docs.

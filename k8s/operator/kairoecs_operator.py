@@ -8,7 +8,31 @@ import json
 from pathlib import Path
 
 
+VALID_STORAGE_BACKENDS = {"filesystem", "s3", "gcs", "azure"}
+
+
+def validate_experiment(experiment: dict) -> None:
+    if experiment.get("kind") != "KairoECSExperiment":
+        raise ValueError("experiment kind must be KairoECSExperiment")
+    spec = experiment.get("spec")
+    if not isinstance(spec, dict):
+        raise ValueError("experiment spec must be an object")
+    if not str(spec.get("image", "")).strip():
+        raise ValueError("spec.image must not be empty")
+    parallelism = int(spec.get("parallelism", 1))
+    if parallelism < 1:
+        raise ValueError("spec.parallelism must be greater than zero")
+    storage = spec.get("storage")
+    if not isinstance(storage, dict):
+        raise ValueError("spec.storage must be an object")
+    if storage.get("backend") not in VALID_STORAGE_BACKENDS:
+        raise ValueError("spec.storage.backend must be one of azure, filesystem, gcs, s3")
+    if not str(storage.get("path", "")).strip():
+        raise ValueError("spec.storage.path must not be empty")
+
+
 def render_job(experiment: dict) -> dict:
+    validate_experiment(experiment)
     metadata = experiment.get("metadata", {})
     spec = experiment["spec"]
     name = metadata.get("name", "kairo-experiment")

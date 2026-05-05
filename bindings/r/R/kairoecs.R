@@ -84,6 +84,9 @@ kairoecs_cancel_event <- function(scheduler, event_id) {
 
   idx <- scheduler$events$event_id == as.numeric(event_id) &
     scheduler$events$status == "scheduled"
+  if (!any(idx)) {
+    stop("Event is not pending and cannot be cancelled.", call. = FALSE)
+  }
   scheduler$events$status[idx] <- "cancelled"
   scheduler
 }

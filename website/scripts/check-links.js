@@ -41,6 +41,26 @@ function checkMarkdownLinks(sourceFile) {
   return failures;
 }
 
+function checkNavigationLinks(manifest) {
+  const failures = [];
+  for (const section of manifest.navigationSections || []) {
+    if (!section.title || !Array.isArray(section.links) || section.links.length === 0) {
+      failures.push(`manifest: navigation section is incomplete: ${JSON.stringify(section)}`);
+      continue;
+    }
+    for (const link of section.links) {
+      if (!link.label || !link.path) {
+        failures.push(`manifest: navigation link is incomplete in ${section.title}`);
+        continue;
+      }
+      if (!existsRelative(link.path)) {
+        failures.push(`manifest: navigation target missing ${link.path}`);
+      }
+    }
+  }
+  return failures;
+}
+
 function main() {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   const failures = [];
@@ -59,13 +79,15 @@ function main() {
     failures.push(...checkMarkdownLinks(sourceFile));
   }
 
+  failures.push(...checkNavigationLinks(manifest));
+
   if (failures.length > 0) {
     process.stderr.write(`${failures.join("\n")}\n`);
     process.exit(1);
   }
 
   process.stdout.write(
-    `Checked ${manifest.requiredPaths.length} required paths and ${manifest.siteSources.length} markdown sources.\n`
+    `Checked ${manifest.requiredPaths.length} required paths, ${manifest.siteSources.length} markdown sources, and ${(manifest.navigationSections || []).length} navigation sections.\n`
   );
 }
 
