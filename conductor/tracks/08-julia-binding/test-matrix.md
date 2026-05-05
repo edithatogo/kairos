@@ -15,6 +15,11 @@
 - `arrow_event_log_schema` exposes the `kairo_ecs.event_log.v1` field order without requiring Arrow.jl at package load time.
 - `ffi_status` and `is_ffi_configured` explicitly report that native FFI is not configured.
 
+## Focused local validation
+
+- `node tests/conformance/track07_13_hardening_check.mjs` verifies this track no longer claims packaging ownership and records the no-release boundary.
+- `julia --project=. -e 'using Pkg; Pkg.test()'` remains the package smoke command once Julia is on `PATH`.
+
 ## Future-surface controls
 
 - Do not add General registry publishing, package server release automation, or credentials here.

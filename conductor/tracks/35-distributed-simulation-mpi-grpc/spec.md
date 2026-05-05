@@ -2,7 +2,11 @@
 
 ## Purpose
 
-Scale KairoECS simulation beyond a single machine. MPI transport for HPC clusters (low-latency, RDMA-capable), gRPC transport for cloud deployments (tolerant of latency, works across subnets). Entity migration protocol, distributed Arrow telemetry aggregation, and fault tolerance for gRPC mode.
+Scale KairoECS simulation beyond a single machine. The current checked-in slice
+is a dependency-free MPI/gRPC protocol emulator and documentation set that keeps
+transport contracts visible without requiring system MPI, tonic, or prost at
+build time. Real MPI/gRPC networking, cluster execution, Arrow batch transport,
+and fault-tolerance claims remain future acceptance targets.
 
 ## Why this track exists
 
@@ -26,15 +30,14 @@ Depends on Track 34 (PDES — shares the `LogicalProcess` trait and event exchan
 
 ## Outputs
 
-- `crates/kairo-ecs-mpi/` — MPI communication layer using `rsmpi` crate:
-  - MPI-based event exchange implementing Track 34's exchange protocol.
-  - MPI-based GVT synchronization (all-reduce for minimum timestamp).
-  - MPI bootstrap: rank assignment, LP-to-rank mapping.
-- `crates/kairo-ecs-grpc/` — gRPC communication layer:
+- `crates/kairo-ecs-mpi/` — dependency-free MPI contract emulator:
+  - Message envelopes and rank/LP mapping validation for Track 34's exchange protocol.
+  - GVT reduction contract checks that stand in for a future MPI all-reduce.
+  - Rank assignment validation without linking system MPI.
+- `crates/kairo-ecs-grpc/` — dependency-free gRPC contract emulator:
   - Protobuf service definition for event exchange, entity migration, and telemetry aggregation.
-  - gRPC-based event exchange with configurable timeouts and retry.
-  - gRPC-based GVT synchronization.
-  - Fault tolerance: worker failure detection, reconnection, graceful degradation.
+  - Request/response validators for event exchange, migration, telemetry, and heartbeat classification.
+  - Explicit placeholder transport until tonic/prost networking is introduced.
 - `docs/distributed/` — design documentation:
   - Architecture overview: MPI vs. gRPC mode selection.
   - Entity migration protocol specification.
@@ -74,7 +77,11 @@ Depends on Track 34 (PDES — shares the `LogicalProcess` trait and event exchan
 
 ## Release implications
 
-Non-blocking for single-machine release. Distributed mode gated behind feature flags `mpi` and `grpc`. MPI support requires system `libmpi` — not bundled. gRPC support is self-contained via `tonic`/`prost`. Distributed mode is an opt-in capability for advanced users with cluster or cloud infrastructure.
+Non-blocking for single-machine release. Distributed mode gated behind feature
+flags `mpi` and `grpc`. The current MPI and gRPC crates are dependency-free and
+do not yet link system MPI, tonic, or prost runtime networking. Distributed
+mode is an opt-in capability for advanced users with cluster or cloud
+infrastructure once real transports are implemented and validated.
 
 ## Non-goals
 

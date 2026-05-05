@@ -26,6 +26,7 @@ cargo run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/
 cargo run -p kairo-ecs-cli -- replay --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1
 cargo run -p kairo-ecs-cli -- resume-plan --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1
 node tests/conformance/conformance-check.mjs
+node scripts/validation/validate-tracks21-27.mjs
 ```
 
 ## Latest focused validation evidence

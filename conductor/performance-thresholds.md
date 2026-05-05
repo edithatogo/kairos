@@ -36,3 +36,7 @@ duration using one of these common keys:
 
 Durations are compared as lower-is-better wall-clock means. Throughput metrics
 must be converted to durations before being passed to the guard.
+
+The comparator rejects duplicate result IDs, result IDs that are not in the
+threshold table, and missing result IDs for either the baseline or current run.
+This keeps renamed preview benchmarks from silently passing the regression gate.

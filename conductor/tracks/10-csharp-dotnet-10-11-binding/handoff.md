@@ -21,7 +21,6 @@ The C# binding track now has a minimal real managed binding slice: package metad
 `bindings/csharp/tests/Kairo.ECS.Tests/DeterministicSchedulerTests.cs`
 `bindings/csharp/tests/Kairo.ECS.Tests/NativeBindingTests.cs`
 `bindings/csharp/README.md`
-`packaging/nuget/README.md`
 `conductor/tracks/10-csharp-dotnet-10-11-binding/spec.md`
 `conductor/tracks/10-csharp-dotnet-10-11-binding/plan.md`
 `conductor/tracks/10-csharp-dotnet-10-11-binding/test-matrix.md`
@@ -72,3 +71,4 @@ Blocked: full `net11.0` local validation is still blocked by the installed .NET 
 - Keep the implementation isolated to the C# package and local validation.
 - Do not add NuGet publish automation or registry credentials here.
 - Treat .NET 11 as preview until the runtime lane is stable in CI.
+- No release, registry, or remote publication side effects were performed.

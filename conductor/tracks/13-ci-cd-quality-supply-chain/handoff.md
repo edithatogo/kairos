@@ -2,12 +2,14 @@
 
 ## Summary
 
-CI and supply-chain gates now cover `cargo fmt`, `cargo clippy`, `cargo test`, docs builds, release attestations, and the package dry-run workflows that feed Tracks 12, 14, 15, 20, 25, and 28. The binding, package, benchmark, and fuzz workflows now fail when their owned manifests or harness directories are missing instead of quietly skipping the job.
+CI and supply-chain gates now cover core Rust quality, binding smoke workflows, conformance fixture validation, benchmark smoke checks, dependency policy, and workflow security checks. This pass also wires the Track 07-13 hardening validator into the conformance workflow and keeps release/registry actions out of local validation.
 
 ## Files changed
 
 Current R2 slice:
 
+`.github/workflows/conformance.yml`
+`.github/workflows/benchmark-smoke.yml`
 `.github/dependabot.yml`
 `.github/workflows/actions-security.yml`
 `.github/workflows/ci-policy.yml`
@@ -21,13 +23,11 @@ Current R2 slice:
 Earlier Track 13 pass:
 
 `.github/workflows/ci-core.yml`
-`.github/workflows/conformance.yml`
 `.github/workflows/docs.yml`
 `.github/workflows/ci-bindings.yml`
 `.github/workflows/package-dry-run.yml`
 `.github/workflows/release.yml`
 `.github/workflows/release-attestations.yml`
-`.github/workflows/benchmark-smoke.yml`
 `.github/workflows/benchmarks.yml`
 `.github/workflows/fuzzing.yml`
 `.github/workflows/docs-quality.yml`
@@ -48,7 +48,7 @@ None.
 
 ## Tests added
 
-Workflow existence checks, Rust metadata checks, cargo-deny/audit gates, Dependabot coverage, and CI skip guard checks are documented in `test-matrix.md`.
+Workflow existence checks, Rust metadata checks, cargo-deny/audit gates, Dependabot coverage, CI skip guard checks, offline conformance checks, Track 07-13 hardening, and benchmark smoke checks are documented in `test-matrix.md`.
 
 ## Known risks
 
@@ -56,5 +56,7 @@ Binding, package, benchmark, and fuzz jobs require checked-in manifests or harne
 
 ## Integration notes
 
-Tracks 12, 14, 15, 20, 25, and 28 consume these gates directly. Keep future workflow changes aligned with `conductor/quality-gates.md` and `conductor/delivery-readiness-checklist.md`.
+Tracks 07-13, 14, 15, 20, 25, and 28 consume these gates directly. Keep future workflow changes aligned with `conductor/quality-gates.md` and `conductor/delivery-readiness-checklist.md`.
+
+No release, registry, or remote publication side effects were performed.
 

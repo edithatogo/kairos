@@ -4,7 +4,7 @@
 
 - Read `conductor/workflow.md`, `conductor/contracts/arrow-schema-contract.md`, and `conductor/contracts/conformance-contract.md`.
 - Read the current shared scaffolds in `schemas/arrow`, `conformance/fixtures`, and the core crates that already exist in the workspace.
-- Confirm the intended owned paths remain `crates/kairo-ecs-arrow`, `schemas/arrow`, and `examples/telemetry/`; only the schema documentation scaffold exists today.
+- Confirm the intended owned paths remain `crates/kairo-ecs-arrow`, `schemas/arrow`, and `examples/telemetry/`; the crate, schema JSON, and telemetry example now exist as a minimal dependency-light event-log slice.
 - Create `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
 
 ## Phase 1 — Contract alignment
@@ -16,8 +16,8 @@
 
 ## Phase 2 — Scaffold
 
-- Create the package/crate/module skeleton when `crates/kairo-ecs-arrow` is introduced.
-- Add Arrow schema smoke tests that prove the shared workspace checks are wired into CI.
+- Maintain the `kairo-ecs-arrow` crate skeleton already registered in the workspace.
+- Keep Arrow schema smoke tests that prove the event-log field order, schema version, and smoke-byte roundtrip compile under package-focused gates.
 - Add schema docs that describe the telemetry payload shape without implying the exporter already exists.
 
 ## Phase 3 — Implementation

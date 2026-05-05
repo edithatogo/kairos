@@ -20,3 +20,10 @@
 Last local evidence recorded by Worker 2:
 
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1` -> pass; reported `version=0.4.0-alpha.1`, `repository=https://github.com/edithatogo/kairos`, and `archive_status=pre-release metadata seed, not yet DOI-minted`.
+
+Review-hardening expectation:
+
+- Re-run the validator after any edit to `CITATION.cff`, `codemeta.json`,
+  `.zenodo.json`, `paper/`, `docs/research/citation.md`, or release notes.
+  The current status must remain explicit: pre-release metadata seed, not yet
+  DOI-minted.

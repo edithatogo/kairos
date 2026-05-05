@@ -19,8 +19,11 @@ Track 02 FFI RC and Track 04 Arrow schema RC.
 ## Owned paths
 
 ```text
-bindings/r, packaging/r
+bindings/r
 ```
+
+Packaging, registry, and release dry-run work is explicitly out of scope for
+this binding slice.
 
 ## Parallel-safe with
 

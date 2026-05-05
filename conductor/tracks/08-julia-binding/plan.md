@@ -4,7 +4,8 @@
 
 - Read `conductor/workflow.md`.
 - Read relevant contracts under `conductor/contracts/`.
-- Confirm owned paths: `bindings/julia, packaging/julia`.
+- Confirm owned paths: `bindings/julia`.
+- Keep packaging, registry, and release dry-run work out of this slice.
 - Create `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
 
 ## Phase 1 — Contract alignment

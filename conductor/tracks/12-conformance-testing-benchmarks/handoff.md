@@ -2,7 +2,7 @@
 
 ## Summary
 
-Documented the scheduler, cancellation, RNG, and VVUQ fixture IDs plus benchmark scenario names so downstream tracks can validate against stable manifests. Added a reusable bootstrap conformance runner and metadata-only benchmark smoke harness that do not require native binding link tests.
+Documented the scheduler, cancellation, RNG, and VVUQ fixture IDs plus benchmark scenario names so downstream tracks can validate against stable manifests. Added a reusable bootstrap conformance runner, Track 07-13 hardening validator, and metadata-only benchmark smoke harness that do not require native binding link tests.
 
 ## Files changed
 
@@ -18,6 +18,7 @@ Documented the scheduler, cancellation, RNG, and VVUQ fixture IDs plus benchmark
 `tests/conformance/README.md`
 `tests/conformance/runner.mjs`
 `tests/conformance/conformance-check.mjs`
+`tests/conformance/track07_13_hardening_check.mjs`
 `benches/README.md`
 `benches/benchmark-plan.md`
 `benches/benchmark-smoke.json`
@@ -42,6 +43,7 @@ Current local checks:
 
 ```text
 node tests/conformance/conformance-check.mjs
+node tests/conformance/track07_13_hardening_check.mjs
 python benches/benchmark_smoke.py
 cargo check -p kairo-ecs-bench
 ```
@@ -49,6 +51,7 @@ cargo check -p kairo-ecs-bench
 ## Known risks
 
 Fixture and benchmark names must stay stable once Track 01 and the binding tracks start consuming them.
+Chaos and OSS-Fuzz language in the plan/spec remains future scope until checked-in harnesses exist.
 
 ## Integration notes
 

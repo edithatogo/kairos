@@ -62,3 +62,6 @@ validate-track-docs:
 
 validate-conformance:
     pwsh -NoProfile -File scripts/validate_conformance_fixtures.ps1
+
+validate-tracks21-27:
+    node scripts/validation/validate-tracks21-27.mjs

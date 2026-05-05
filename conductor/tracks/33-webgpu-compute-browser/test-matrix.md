@@ -16,6 +16,7 @@ Rule: a check is marked complete only when an artifact exists and the validation
 | Demo page exists with canvas, agent count, backend toggle, metrics, and backend-not-configured label | complete | `website/webgpu-demo/index.html`, `styles.css`, `src/main.js` | `npm test --prefix website/webgpu-demo` |
 | Demo has static smoke test | complete | `website/webgpu-demo/scripts/smoke.mjs` | `npm test --prefix website/webgpu-demo` |
 | Browser-GPU-free WGSL subset validator exists | complete | `website/webgpu-demo/scripts/validate-wgsl-subset.mjs`, `docs/gpu-compute/webgpu-wgsl-subset.md` | `npm run validate:wgsl --prefix website/webgpu-demo` |
+| Track 33 offline validator checks crate, demo, WGSL, and no-performance-claim boundaries | complete | `conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1` | `pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1` |
 | Demo README exists | complete | `website/webgpu-demo/README.md` | `rg -n "npm test" website/webgpu-demo/README.md` |
 | WebGPU WGSL subset doc exists | complete | `docs/gpu-compute/webgpu-wgsl-subset.md` | `rg -n "64-bit atomics|workgroups" docs/gpu-compute/webgpu-wgsl-subset.md` |
 | WebGPU vs native comparison doc exists | complete | `docs/gpu-compute/webgpu-comparison.md` | `rg -n "Native GPU|Browser WebGPU" docs/gpu-compute/webgpu-comparison.md` |

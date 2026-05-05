@@ -24,6 +24,7 @@ test -f conductor/tracks/21-verification-validation-uncertainty/risk-register.md
 rg -n "verification|validation|uncertainty|scenario|seed|replay|trace|evidence boundary" docs/trustworthy-simulation/verification-validation-uncertainty.md conductor/tracks/21-verification-validation-uncertainty
 node scripts/validation/validate-vvuq-note.mjs
 node tests/conformance/conformance-check.mjs
+node scripts/validation/validate-tracks21-27.mjs
 ```
 
 ## Current evidence - 2026-05-06

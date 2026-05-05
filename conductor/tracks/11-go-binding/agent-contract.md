@@ -7,8 +7,11 @@ go-agent
 ## Owned paths
 
 ```text
-bindings/go, packaging/go
+bindings/go
 ```
+
+Module release preparation stays out of this track slice until the
+packaging/release track explicitly owns it.
 
 ## Handoff rules
 

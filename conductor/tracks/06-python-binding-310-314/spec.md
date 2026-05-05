@@ -2,7 +2,7 @@
 
 ## Mission
 
-Provide idiomatic Python package with wheels, pyarrow integration, conformance tests, and Python 3.10-3.14 support.
+Provide an idiomatic Python package surface for Python 3.10-3.14. The current implementation slice is dependency-light and importable without native artifacts; wheels, pyarrow integration, and full conformance-runner packaging remain follow-up work after Track 02/15 artifacts are stable.
 
 ## Primary subagent
 
@@ -19,7 +19,7 @@ Track 02 FFI RC and Track 04 Arrow schema RC.
 ## Owned paths
 
 ```text
-bindings/python, packaging/python
+bindings/python
 ```
 
 ## Blocked paths
@@ -43,10 +43,10 @@ Tracks 07-11 (other language bindings) — all bindings are parallel-safe after 
 
 ## Outputs
 
-- Python package with wheels for CPython 3.10-3.14.
-- pyarrow integration for telemetry reading.
-- Conformance test runner that executes Track 12 shared fixtures.
-- Package dry-run for PyPI publication.
+- Importable Python package surface under `bindings/python`.
+- Explicit native-FFI status boundary until packaged native artifacts are available.
+- Dependency-light scheduler and event-log smoke coverage aligned with Tracks 01, 02, and 04.
+- Future outputs: wheels for CPython 3.10-3.14, pyarrow telemetry integration, Track 12 conformance runner, and package dry-run for PyPI publication.
 
 
 ## Python version matrix

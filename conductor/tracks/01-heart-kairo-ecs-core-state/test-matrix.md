@@ -9,6 +9,7 @@
 - `cargo test -p kairo-ecs-state`
 - `cargo test -p kairo-ecs-rng`
 - `cargo test --workspace`
+- `cargo check --tests -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-rng` is the local Windows linker-safe gate when executable test linking is blocked.
 - Fixture presence check for `conformance/fixtures/deterministic_ordering.json`, `conformance/fixtures/cancellation.json`, and `conformance/fixtures/rng_replay.json`
 - `scripts/validate_conductor_setup.ps1` and `scripts/validate_track_coverage.ps1` both succeed
 
@@ -28,3 +29,7 @@ test -f conformance/fixtures/deterministic_ordering.json
 test -f conformance/fixtures/cancellation.json
 test -f conformance/fixtures/rng_replay.json
 ```
+
+## Review-hardening coverage
+
+The Track 01 scheduler tests must include cancellation regression coverage for unknown IDs, already-dispatched IDs, duplicate cancellation, and cancelled future events that should not force a false `LimitReached` after active work finishes.

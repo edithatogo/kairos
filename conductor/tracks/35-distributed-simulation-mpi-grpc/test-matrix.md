@@ -3,14 +3,15 @@
 | Check | Alpha | Beta | RC | 1.0 |
 |---:|---:|---:|---:|---:|
 | Track docs exist under `conductor/tracks/35-distributed-simulation-mpi-grpc/` | yes | yes | yes | yes |
-| `crates/kairo-ecs-mpi/` compiles with `--features mpi` on Linux | yes | yes | yes | yes |
-| `crates/kairo-ecs-grpc/` compiles with `--features grpc` on all Tier 1 platforms | yes | yes | yes | yes |
+| `crates/kairo-ecs-mpi/` dependency-free emulator compiles with `--features mpi --tests` | yes | yes | yes | yes |
+| `crates/kairo-ecs-grpc/` dependency-free emulator compiles with `--features grpc --tests` | yes | yes | yes | yes |
 | Single-node build is unaffected when `mpi` and `grpc` features are disabled | yes | yes | yes | yes |
 | Track 34 `PdesTransport` boundary is documented with ThreadChannel, MPI, and gRPC scaffold implementations | yes | yes | yes | yes |
 | MPI protocol emulator compiles message round-trip and GVT reduction checks under `cargo check --tests` | yes | yes | yes | yes |
 | gRPC protocol emulator compiles message round-trip and GVT reduction checks under `cargo check --tests` | yes | yes | yes | yes |
 | MPI local protocol validators cover rank uniqueness, stable tags, migration envelope, and telemetry envelope | yes | yes | yes | yes |
 | gRPC local protocol validators cover peer/config validation, migration envelope, telemetry envelope, and heartbeat failure classification | yes | yes | yes | yes |
+| Track 35 offline validator checks compile, placeholder-transport boundaries, and production-use caveats | yes | yes | yes | yes |
 | Entity migration protocol is documented in `docs/distributed/entity-migration-protocol.md` | yes | yes | yes | yes |
 | Distributed telemetry aggregation design is documented in `docs/distributed/telemetry-aggregation.md` | yes | yes | yes | yes |
 | Deployment guide exists in `docs/distributed/deployment-guide.md` | no | yes | yes | yes |
@@ -29,3 +30,10 @@
 | MPI mode works with OpenMPI and MPICH on Linux | no | no | yes | yes |
 | MPI mode works with MS-MPI on Windows | no | no | no | yes |
 | Distributed mode does not block single-machine release | yes | yes | yes | yes |
+
+## Focused Validation Commands
+
+| Command | Result | Evidence |
+|---|---|---|
+| `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1` | Local offline gate | Checks MPI/gRPC emulator compilation and verifies docs/code still label real transport networking as future work. |
+| `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1 -RunTests` | Optional runtime gate | Runs MPI/gRPC unit tests when the local linker/toolchain can execute Rust test binaries. |

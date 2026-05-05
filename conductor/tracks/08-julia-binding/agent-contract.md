@@ -7,8 +7,11 @@ julia-agent
 ## Owned paths
 
 ```text
-bindings/julia, packaging/julia
+bindings/julia
 ```
+
+Packaging and registry preparation stay out of this track slice until the
+packaging/release track explicitly owns them.
 
 ## Handoff rules
 

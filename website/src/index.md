@@ -25,6 +25,7 @@ KairoECS is a Rust-first simulation engine for deterministic event scheduling, E
 - Binding bridges and facades: `kairo-ecs-uniffi`, `kairo-ecs-diplomat`, `kairo-ecs-wasm`, plus preview language packages for Python, R, Julia, TypeScript/Wasm, C#, and Go.
 - Optional and advanced tracks now represented in docs: visualization, GPU/WebGPU, PDES, distributed MPI/gRPC, streaming, ML inference, FMI digital twin, cloud/HPC, and time-travel debugging.
 - Native binding status remains explicit: preview packages may expose pure-language scheduler facades while reporting native FFI as not configured until Track 02 publishes stable local artifacts.
+- Maturity language is staged: alpha means evidence-backed but limited, beta means wider release gates are active, and stable remains blocked until compatibility and release-candidate gates pass.
 
 ## Binding Quick Links
 

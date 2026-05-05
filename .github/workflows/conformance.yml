@@ -9,7 +9,11 @@ on:
       - 'bindings/**'
       - 'conductor/contracts/**'
       - 'conductor/tracks/12-conformance-testing-benchmarks/**'
-      - 'scripts/validate_conformance_fixtures.ps1'
+      - 'conductor/tracks/07-r-binding/**'
+      - 'conductor/tracks/08-julia-binding/**'
+      - 'conductor/tracks/09-typescript-wasm-binding/**'
+      - 'conductor/tracks/10-csharp-dotnet-10-11-binding/**'
+      - 'conductor/tracks/11-go-binding/**'
   push:
     branches: [main]
 
@@ -21,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate fixture manifest and benchmark inventory
+      - name: Validate conformance fixtures and benchmark inventory
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -31,7 +35,8 @@ jobs:
           foreach ($fixturePath in @(
             'conformance/fixtures/deterministic_ordering.json',
             'conformance/fixtures/cancellation.json',
-            'conformance/fixtures/rng_replay.json'
+            'conformance/fixtures/rng_replay.json',
+            'conformance/fixtures/vvuq_scenario_replay.json'
           )) {
             if (-not (Test-Path -LiteralPath $fixturePath)) {
               throw "Missing ready fixture file: $fixturePath"
@@ -48,7 +53,8 @@ jobs:
           $requiredReadyIds = @(
             'scheduler_ordering_v1',
             'scheduler_cancellation_v1',
-            'rng_reproducibility_v1'
+            'rng_reproducibility_v1',
+            'vvuq_scenario_replay_v1'
           )
           foreach ($id in $requiredReadyIds) {
             $fixture = $manifest.fixtures | Where-Object { $_.id -eq $id }
@@ -89,6 +95,7 @@ jobs:
               throw "Missing benchmark scenario: $scenario"
             }
           }
-      - name: Validate conformance fixtures
+      - name: Run offline conformance validators
         run: |
-          pwsh -NoProfile -File scripts/validate_conformance_fixtures.ps1
+          node tests/conformance/conformance-check.mjs
+          node tests/conformance/track07_13_hardening_check.mjs

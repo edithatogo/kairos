@@ -26,11 +26,11 @@ This track is designed to run in parallel with core implementation. The subagent
 
 ## Outputs
 
-- `CITATION.cff`: validated metadata with authors, title, version, doi, repository-url.
-- `codemeta.json`: auto-generated from CITATION.cff and Cargo.toml, validated in CI.
-- `paper/`: JOSS-formatted software paper describing KairoECS architecture, benchmarks, and research contribution.
-- `docs/archival.md`: archival plan with Zenodo DOI reservation, release-archive workflow, and provenance record.
-- `conductor/tracks/19-research-software-citation-archival/test-matrix.md`: CI gate (CITATION.cff validation, codemeta.json sync check).
+- `CITATION.cff`: validated pre-release metadata with authors, title, version, release date, license, and repository URL. DOI remains absent until a Zenodo draft or minted DOI exists.
+- `codemeta.json`: checked-in CodeMeta seed kept synchronized with `CITATION.cff` release version, date, license, and repository URL.
+- `paper/`: software-paper seed describing KairoECS architecture, benchmarks, and research contribution without claiming journal submission or acceptance.
+- `docs/research/citation.md`: archival plan with the current Zenodo/DOI status, release-archive workflow, and provenance record requirements.
+- `conductor/tracks/19-research-software-citation-archival/test-matrix.md`: local gate for `CITATION.cff`, `codemeta.json`, `.zenodo.json`, paper metadata, and release-note citation status.
 
 ## Acceptance criteria
 

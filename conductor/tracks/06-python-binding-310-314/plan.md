@@ -4,7 +4,7 @@
 
 - Read `conductor/workflow.md`.
 - Read relevant contracts under `conductor/contracts/`.
-- Confirm owned paths: `bindings/python, packaging/python`.
+- Confirm owned paths for this review pass: `bindings/python`.
 - Create `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
 
 ## Phase 1 — Contract alignment
@@ -15,7 +15,7 @@
 
 ## Phase 2 — Scaffold
 
-- Create package/crate/module skeleton.
+- Maintain the package skeleton already present under `bindings/python/kairo_ecs`.
 - Add import and wheel smoke tests for the supported Python matrix.
 - Document the binding package boundary, supported interpreter range, and fixture hookup in the package README once the package boundary is in place.
 

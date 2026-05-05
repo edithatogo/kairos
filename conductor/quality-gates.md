@@ -35,6 +35,128 @@ cargo bench --workspace
 
 ## Gate definitions
 
+### Central required-gate catalogue
+
+Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID. Track agents may add stricter track-local commands, but central status cannot move a track to `In Review`, `Done`, beta, RC, or 1.0 unless each required gate has either passed evidence or an explicit waiver with owner, expiry, and follow-up.
+
+**metadata-check**: validates project metadata, license files, maintainer/governance files, and Conductor setup references.
+
+**naming-due-diligence**: validates naming due-diligence and release-stage naming evidence before public package claims.
+
+**cargo-fmt**: `cargo fmt --all --check`.
+
+**cargo-clippy**: `cargo clippy --workspace --all-targets --all-features -- -D warnings`.
+
+**cargo-test**: `cargo test --workspace` or the narrower track-approved workspace test command when full workspace testing is blocked with a documented reason.
+
+**deterministic-ordering-fixture**: validates the deterministic ordering conformance fixture and any scheduler code that consumes it.
+
+**ffi-lifecycle-tests**: validates FFI handle lifecycle, allocation/free, and double-free guard behavior for the checked-in FFI slice.
+
+**panic-boundary-tests**: validates panic containment and error reporting across FFI boundary code.
+
+**header-diff**: validates that generated or maintained C headers match the checked-in public header contract.
+
+**arrow-roundtrip**: validates Arrow schema/event-log roundtrip behavior for the relevant crate or binding surface.
+
+**pytest**: runs the Python package test suite when `bindings/python` is in scope.
+
+**ruff**: runs Python lint/format checks for `bindings/python`.
+
+**wheel-build**: builds or dry-runs the Python wheel surface without publishing.
+
+**r-cmd-check**: runs the R package check or the repository's local static equivalent when R tooling is unavailable and the handoff records the limitation.
+
+**julia-pkg-test**: runs the Julia package tests or the repository's local static equivalent when Julia tooling is unavailable and the handoff records the limitation.
+
+**tsc**: runs TypeScript type checking without emitting artifacts.
+
+**vitest**: runs the TypeScript test suite.
+
+**browser-smoke**: validates browser/demo behavior through the checked-in smoke harness for the relevant website or Wasm surface.
+
+**dotnet-test-net10**: runs .NET 10 tests for the C# binding surface.
+
+**dotnet-test-net11-preview**: validates the .NET 11 preview lane only as experimental until GA support is documented.
+
+**nuget-pack**: validates NuGet package packing without publishing.
+
+**go-test**: runs Go package tests for the Go binding surface.
+
+**go-vet**: runs `go vet` for the Go binding surface.
+
+**cgo-smoke**: validates the Go/native bridge status boundary without claiming stable native FFI unless artifacts exist.
+
+**fixture-schema-check**: validates conformance fixture JSON shape and manifest coverage.
+
+**benchmark-smoke**: validates benchmark metadata or target compilation without claiming stable comparative timings unless result artifacts exist.
+
+**workflow-presence**: validates required GitHub workflow files exist and do not silently skip concrete R2 surfaces.
+
+**cargo-metadata**: validates Rust workspace metadata is readable and includes checked-in crates.
+
+**dependency-policy**: validates dependency policy files and workflow references.
+
+**docs-build**: builds the docs site or runs the repository's documented static docs build.
+
+**link-check-plan**: validates docs link-check coverage through `website/docs-link-manifest.json` and local link checks.
+
+**package-dry-run**: validates package inventory/dry-run output without publishing.
+
+**checksums**: validates checksum manifest generation for release artifacts when artifacts exist.
+
+**release-checklist**: validates release checklist coverage and stage-specific blockers.
+
+**compatibility-policy**: validates release compatibility policy and protected-surface references.
+
+**changelog-check**: validates changelog presence and release-note readiness.
+
+**onboarding-docs**: validates contributor/community onboarding docs and entry points.
+
+**benchmark-metadata**: validates benchmark plan, fixture IDs, seeds, and measurement metadata.
+
+**raw-results-policy**: validates that raw benchmark-result requirements are documented before performance claims.
+
+**citation-metadata**: validates citation metadata files and no-fake-DOI boundaries.
+
+**archival-plan**: validates archive/release metadata and the publication handoff path.
+
+**scorecard**: validates OpenSSF Scorecard workflow presence and staged evidence requirements.
+
+**sbom-plan**: validates SBOM/provenance workflow presence and release-stage artifact requirements.
+
+**vulnerability-policy**: validates vulnerability reporting, dependency review, and exception handling.
+
+**replay-fixture**: validates replay fixture linkage and documented reproducibility limits.
+
+**seed-manifest**: validates seed/replay manifest coverage for uncertainty and validation claims.
+
+**scenario-manifest**: validates scenario manifest shape and concrete fixture references.
+
+**resumability-plan**: validates scenario resume/replay handling and output-shape documentation.
+
+**example-maturity-labels**: validates starter-kit/model-zoo maturity labels and concrete example paths.
+
+**non-core-dependency-check**: validates optional/demo dependencies do not leak into core workspace requirements.
+
+**api-review-template**: validates API review intake and protected-surface review templates.
+
+**compatibility-matrix**: validates compatibility matrix coverage for current Rust, C ABI, Arrow, host API, and binding roots.
+
+**standards-mapping**: validates interoperability mapping rows and status labels.
+
+**adr-recommendations**: validates ADR recommendations for interoperability or protected-surface decisions.
+
+**bootstrap-smoke**: validates local bootstrap/developer workflow commands for the current R2 setup.
+
+**toolchain-docs**: validates toolchain documentation and environment setup references.
+
+**no-critical-release-blockers**: validates red-team blocker ledger state and release-stage owner/follow-up coverage.
+
+**wave-progression-check**: `pwsh -NoProfile -File conductor/tracks/29-wave-manager-execution-gatekeeper/validate-wave-gates.ps1` and `conductor/gates/wave-progression-check.yml` must derive wave eligibility from `conductor/tracks.yaml`.
+
+**dependency-closure-check**: `pwsh -NoProfile -File conductor/tracks/29-wave-manager-execution-gatekeeper/validate-wave-gates.ps1` and `conductor/gates/dependency-closure-check.yml` must block review/done claims when dependencies are not sufficiently mature or explicitly waived.
+
 ### Track 30 toolchain and version support gates
 
 **toolchain-matrix-current**: `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` plus `.github/workflows/toolchain-check.yml` live setup lanes - the support matrix must name Rust, Python, R, Julia, TypeScript/Wasm, C#, and Go, must include min/latest/deprecation/OS-arch coverage columns, and every `CI-covered` selector must install and report the declared major/minor version.

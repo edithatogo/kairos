@@ -19,8 +19,11 @@ Track 02 FFI RC and Track 04 Arrow schema RC.
 ## Owned paths
 
 ```text
-bindings/julia, packaging/julia
+bindings/julia
 ```
+
+Packaging, registry, and release dry-run work is explicitly out of scope for
+this binding slice.
 
 ## Parallel-safe with
 

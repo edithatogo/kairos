@@ -22,3 +22,4 @@
 | 2026-05-06 | `cargo run --manifest-path examples/viz/headless-snapshot/Cargo.toml` | fail | Windows linker blocker. First run selected Git `usr/bin/link.exe` and failed with `couldn't create signal pipe, Win32 error 5`; retry after removing that PATH entry failed with `linker link.exe not found`. |
 | 2026-05-06 | `npm --prefix website run check:links` | pass | Output: `Checked 25 required paths and 2 markdown sources.` Confirms docs link manifest and Markdown links still resolve after adding playground docs. |
 | 2026-05-06 | `npm --prefix website run build` | pass | Output: `Built C:\Users\60217257\repos\kairos\website\build\index.html`. Confirms the docs home build still renders. |
+| 2026-05-06 | `node scripts/validation/validate-tracks21-27.mjs` | pass | Ran the playground smoke with the adjacent Track 21-27 local validators; all seven track checks passed. |

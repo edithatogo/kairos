@@ -7,8 +7,11 @@ typescript-agent
 ## Owned paths
 
 ```text
-bindings/typescript, crates/kairo-ecs-wasm, packaging/npm
+bindings/typescript, crates/kairo-ecs-wasm
 ```
+
+Package publishing and registry preparation stay out of this track slice until
+the packaging/release track explicitly owns them.
 
 ## Handoff rules
 

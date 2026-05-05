@@ -12,6 +12,7 @@
 - `npm pack` to validate package contents before any future registry work.
 - `wasm-pack test --node` only if the binding uses wasm-pack as its local validation path.
 - `cargo test --manifest-path crates/kairo-ecs-wasm/Cargo.toml` is optional until a runner linker is configured; the 2026-05-06 local attempt failed because Git's `usr\bin\link.exe` was selected and could not create a signal pipe.
+- `node tests/conformance/track07_13_hardening_check.mjs` verifies this track no longer claims package publishing ownership or unimplemented server runtime support.
 
 ## Future-surface controls
 
@@ -20,7 +21,9 @@
 - Do not widen the track beyond TypeScript/Wasm adapter validation.
 - Stop at local bundle and fixture validation until Track 12 owns parity and Track 15 owns package dry-runs.
 
-- `wasmtime` smoke test: load `kairo-ecs-wasm` module on `wasm32-wasip2` target and run a 10K event simulation.
+## Focused local validation
+
+- Keep the checked-in validation to `npm` scripts, `cargo check`, and the Track 07-13 hardening check until a runtime runner is added in a later track.
 
 ## CI command
 

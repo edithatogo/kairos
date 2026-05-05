@@ -4,7 +4,7 @@
 
 - Read `conductor/workflow.md`, `conductor/contracts/core-contract.md`, and `conductor/contracts/conformance-contract.md`.
 - Read the current shared scaffolds in `crates/kairo-ecs-core`, `crates/kairo-ecs-types`, `crates/kairo-ecs-state`, `crates/kairo-ecs-rng`, and the example README stubs under `examples/des/` and `examples/abm/`.
-- Confirm the intended owned paths remain `crates/kairo-ecs-des`, `crates/kairo-ecs-abm`, and `examples/flow/`; those package directories are still pending, so this track starts as contract and API design work.
+- Confirm the intended owned paths remain `crates/kairo-ecs-des`, `crates/kairo-ecs-abm`, and `examples/flow/`; the crate directories now exist and this track is in a minimal implementation-slice state.
 - Create `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
 
 ## Phase 1 — Contract alignment
@@ -16,8 +16,8 @@
 
 ## Phase 2 — Scaffold
 
-- Create package/crate/module skeletons for the DES and ABM surfaces once the owned directories are introduced.
-- Add DES/ABM smoke tests that prove the shared workspace checks are wired into CI.
+- Maintain the DES and ABM crate skeletons already registered in the workspace.
+- Keep DES/ABM smoke tests proving the shared scheduler ordering and deterministic behavior-update paths compile under package-focused gates.
 - Add docs stubs that name the concrete DES trajectory and ABM behavior follow-ups without claiming the packages are complete.
 
 ## Phase 3 — Implementation

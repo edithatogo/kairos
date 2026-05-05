@@ -8,6 +8,7 @@
 - `conductor/tracks.yaml` exists as the machine-readable index.
 - Initial implementation-readiness files exist.
 - The setup validators succeed against the current tree.
+- Track 00-06 review validator succeeds against the current track artifacts and owned implementation paths.
 
 ## CI commands
 
@@ -21,4 +22,10 @@ test -f Cargo.toml
 test -d crates
 test -d conformance/fixtures
 test -d website
+```
+
+## Review-hardening validation
+
+```bash
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/00-project-foundation-governance-naming/validate-track00-06-review.ps1
 ```

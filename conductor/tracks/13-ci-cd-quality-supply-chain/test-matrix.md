@@ -6,10 +6,11 @@
 - Core CI runs `cargo fmt --all --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings`, and `cargo test --workspace`.
 - Docs and release workflows fail when `website/`, `conductor/release-engineering.md`, or the release workflow files are missing.
 - Conformance validates fixture structure and expected replay data.
+- Conformance runs the checked-in Node validators, including the Track 07-13 hardening check, without depending on central script edits.
 - Package dry-runs and binding CI fail when their own manifests are missing instead of skipping quietly.
 - TypeScript binding smoke runs its declared scripts instead of treating them as optional.
-- Benchmark and fuzzing workflows fail when the harness directories are missing.
-- Benchmark artifact upload fails when the artifact tree is empty.
+- Benchmark smoke runs the offline metadata harness and `kairo-ecs-bench` compile check.
+- Fuzzing workflows fail when harness directories are missing.
 
 ## CI commands
 
@@ -25,6 +26,10 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo nextest run --workspace --all-features
 cargo doc --workspace --all-features --no-deps
 for f in .github/workflows/*.yml; do test -s "$f"; done
+node tests/conformance/conformance-check.mjs
+node tests/conformance/track07_13_hardening_check.mjs
+python benches/benchmark_smoke.py
+cargo check -p kairo-ecs-bench
 test -f .github/dependabot.yml
 rg -n 'rust-version = "1\.76"' Cargo.toml
 rg -n 'channel = "stable"' rust-toolchain.toml

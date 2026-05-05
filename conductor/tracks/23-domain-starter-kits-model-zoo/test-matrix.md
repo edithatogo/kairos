@@ -18,3 +18,4 @@
 |---|---|---|---|
 | Model-zoo and starter-kit inventory/link check | `pwsh -NoProfile -File examples/model-zoo/validate-inventory.ps1` | Pass | Validated 4 model-zoo entries and 1 starter-kit entries. |
 | Concrete starter-kit path | `examples/starter-kits/starter-kits.yaml` | Pass | `manufacturing-bottleneck` maps to `examples/des/factory_bottleneck` and model-zoo id `factory_bottleneck`. |
+| Tracks 21-27 aggregate smoke | `node scripts/validation/validate-tracks21-27.mjs` | Pass | Ran this inventory validator with the adjacent Track 21-27 local validators; all seven track checks passed. |

@@ -2,6 +2,7 @@
 
 | Check | Validation command | Alpha | Beta | RC | 1.0 |
 |---|---|---:|---:|---:|---:|
+| Track-local supply-chain trust validator passes | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/20-openssf-supply-chain-institutional-trust/validate-supply-chain-trust.ps1` | yes | yes | yes | yes |
 | Track docs exist and render cleanly | `just docs-build` | yes | yes | yes | yes |
 | Trust checklist names staged alpha/beta/RC/1.0 evidence | `rg -n "Release trust checklist|Alpha|Beta|RC|1.0|SECURITY.md|CODEOWNERS|scorecard.yml|dependency-review.yml|sbom-attestations.yml|release-attestations.yml" conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md` | yes | yes | yes | yes |
 | Exception process records approvers, expiry, stage impact, and allowed-failure boundary | `rg -n "Temporary operational exception|Release-stage exception|Permanent policy waiver|approver|expiry|Allowed-failure" conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md` | yes | yes | yes | yes |

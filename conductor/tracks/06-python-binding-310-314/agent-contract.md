@@ -7,7 +7,7 @@ python-agent
 ## Owned paths
 
 ```text
-bindings/python, packaging/python
+bindings/python
 ```
 
 ## Handoff rules

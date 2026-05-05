@@ -2,7 +2,12 @@
 
 ## Purpose
 
-Provide GPU-accelerated simulation compute via CUDA, Metal, and Vulkan compute shaders. Target 10-100x speedup for ABM particle updates and DES event dispatch running on GPU hardware. GPU acceleration is optional and gated behind a cargo feature flag — the CPU scheduler remains the default and always-available path.
+Provide a GPU-compute acceleration path for CUDA and wgpu-backed Metal, Vulkan,
+and DX12 compute shaders. The current checked-in slice is a dependency-free
+contract scaffold with explicit unavailable-backend responses; the 10-100x ABM
+and DES speedup target remains a hardware-validated future goal. GPU
+acceleration is optional and gated behind cargo feature flags; the CPU scheduler
+remains the default and always-available path.
 
 ## Why this track exists
 
@@ -26,11 +31,11 @@ This track depends on the core scheduler contract (Track 01) and the FFI layer (
 
 ## Outputs
 
-- `crates/kairo-ecs-gpu/` — Rust crate with wgpu compute shaders (Metal/Vulkan/DX12 cross-platform) + cudarc for CUDA.
-- `docs/gpu-compute/` — GPU API design doc, kernel portability guide, CUDA vs wgpu tradeoffs.
-- CPU-vs-GPU parity test suite proving identical output for same random seed.
-- Benchmark results documenting speedup (1M+ agent ABM scenario, 10M+ entity stress test).
-- Cargo feature flag `gpu` that gates all GPU code paths.
+- `crates/kairo-ecs-gpu/` — Rust crate with a dependency-free facade, CPU fallback contract, feature-gated backend stubs, and WGSL shader scaffolds.
+- `docs/gpu-compute/` — GPU API design docs, kernel portability guide, CUDA vs wgpu tradeoffs, memory contract, and explicit no-results benchmark boundary.
+- CPU-vs-GPU parity harness scaffolding that currently validates fallback/reference contracts; real GPU parity remains blocked until a backend and GPU runner exist.
+- Benchmark evidence file documenting that no speedup result is currently available.
+- Cargo feature flags `gpu`, `wgpu-backend`, and `cuda-backend` that gate optional GPU code paths without adding default GPU dependencies.
 
 ## Owned paths
 
@@ -48,9 +53,9 @@ This track depends on the core scheduler contract (Track 01) and the FFI layer (
 
 ## Acceptance criteria
 
-1. GPU kernel produces identical output to CPU path for the same random seed, validated by parity test suite.
-2. 10x+ speedup on a 1M-agent ABM scenario (particle update + neighbor check) vs single-threaded CPU.
-3. GPU memory overhead stays under 1 GB for 10M entities (buffer allocations, staging buffers, workgroup metadata).
+1. GPU kernel produces identical output to CPU path for the same random seed, validated by a parity test suite on a real backend.
+2. 10x+ speedup on a 1M-agent ABM scenario (particle update + neighbor check) vs single-threaded CPU, with hardware, driver, command, and raw output recorded.
+3. GPU memory overhead stays under 1 GB for 10M entities (buffer allocations, staging buffers, workgroup metadata), with hardware-backed measurement recorded.
 4. The `gpu` cargo feature compiles all GPU code; without the feature, zero GPU dependency enters the build.
 5. Parity test passes on at least one GPU backend (CUDA or wgpu with Vulkan/Metal).
 6. Benchmark script in `docs/gpu-compute/` reproduces the speedup claim on documented hardware.

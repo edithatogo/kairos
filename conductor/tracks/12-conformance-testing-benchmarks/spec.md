@@ -73,12 +73,13 @@ arrow_event_log_v1
 ffi_lifecycle_v1
 ```
 
-Current bootstrap files are the first three ready fixtures:
+Current bootstrap files with ready status:
 
 ```text
 conformance/fixtures/deterministic_ordering.json
 conformance/fixtures/cancellation.json
 conformance/fixtures/rng_replay.json
+conformance/fixtures/vvuq_scenario_replay.json
 ```
 
 Each ready fixture must define:

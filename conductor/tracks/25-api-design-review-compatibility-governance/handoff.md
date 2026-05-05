@@ -68,7 +68,7 @@ Observed results:
 
 - Protected root existence check: pass; all 13 `Test-Path` checks returned `True`.
 - Policy-pack validation: pass; `compatibility pack validation passed: 13 protected surfaces`.
-- Release-gate validation: pass after integration updated `docs/release/compatibility.md` to name `include/kairo_ecs.h` and `schemas/arrow/event_log_v1.schema.json`.
+- Release-gate validation: pass; `docs/release/compatibility.md` currently names all 13 protected roots required by `docs/design/protected-surface-inventory.json`.
 - Reference search: pass; policy, readiness, quality-gate, design-index, and validator references were found.
 - Rust formatting check: pass; `cargo fmt --all --check` exited 0.
 

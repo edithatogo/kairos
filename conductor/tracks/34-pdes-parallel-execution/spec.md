@@ -2,11 +2,21 @@
 
 ## Purpose
 
-Add parallel discrete event simulation (PDES) to the KairoECS scheduler. Conservative PDES (Chandy-Misra-Bryant algorithm) first — each logical process (LP) maintains its own event queue and exchanges events with lookahead. Optimistic PDES (Time Warp) as a research spike for a later iteration.
+Add a parallel discrete event simulation (PDES) path beside the KairoECS
+scheduler. The current checked-in slice is a conservative, dependency-free
+PDES scaffold with deterministic reference validation for logical processes,
+GVT progression, null-message traffic, and deadlock-smoke evidence. It is not
+yet wired into the core scheduler and does not claim real speedup.
 
 ## Why this track exists
 
-The sequential scheduler from Track 01 is proven deterministic but cannot exploit multi-core machines. PDES enables partitioning a simulation world across logical processes running on separate threads or cores, trading deterministic ordering for throughput. This track builds the conservative PDES path so that partitioned worlds benefit from parallelism while producing identical final states to the sequential scheduler.
+The sequential scheduler from Track 01 is proven deterministic but cannot
+exploit multi-core machines. PDES enables partitioning a simulation world across
+logical processes running on separate threads or cores, trading deterministic
+ordering for throughput. This track builds the conservative PDES path so that
+partitioned worlds can eventually benefit from parallelism while preserving
+final-state parity with the sequential scheduler. Current evidence is
+scaffold/protocol validation only.
 
 ## Primary subagent
 

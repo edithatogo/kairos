@@ -7,8 +7,11 @@ csharp-agent
 ## Owned paths
 
 ```text
-bindings/csharp, packaging/nuget
+bindings/csharp
 ```
+
+Package publishing and registry preparation stay out of this track slice until
+the packaging/release track explicitly owns them.
 
 ## Handoff rules
 

@@ -40,6 +40,12 @@ The track now uses explicit file-existence checks, required-text checks for the
 R2 governance docs, the changelog policy static check definition, and the
 conductor setup validator as its baseline gate.
 
+Focused offline validator:
+
+```text
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/16-release-governance-maintenance/validate-release-governance.ps1
+```
+
 ## Known risks
 
 The changelog policy is documented and locally checkable, but still needs a PR
@@ -55,3 +61,9 @@ Track 15 should continue to own package paths and production publish enablement.
 Track 16 owns the release-governance evidence and should be consulted before a
 publish job is enabled. Tracks 13, 20, 25, and 28 should treat this track as the
 source of release-governance expectations.
+
+## Review-hardening update
+
+Added a track-local release-governance validator that checks the changelog,
+compatibility, deprecation, release-note, and maintenance handoff claims
+against checked-in docs.

@@ -14,6 +14,11 @@
 - Deterministic scheduler conformance tests for `(time_ticks, priority, sequence)` ordering, cancellation, and bounded run-loop behavior.
 - Native FFI configuration smoke tests that require an explicit not-configured result when runtime assets are absent.
 
+## Focused local validation
+
+- `node tests/conformance/track07_13_hardening_check.mjs` verifies this track no longer claims package publishing ownership and records the no-release boundary.
+- The green local lane is `net10.0`; the `net11.0` lane remains experimental until a stable SDK is available in CI.
+
 ## Native FFI validation status
 
 - Native load validation is blocked until Track 02 provides the stable native runtime artifact.

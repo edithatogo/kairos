@@ -28,6 +28,7 @@
 ```powershell
 pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1
 pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate
+node scripts/validation/validate-tracks21-27.mjs
 rg -n "validate-compatibility-pack|protected-surface-inventory|Breaking-change rules|Release hold criteria" conductor/contracts/versioning-compatibility.md conductor/quality-gates.md conductor/delivery-readiness-checklist.md docs/design
 ```
 
@@ -36,6 +37,7 @@ rg -n "validate-compatibility-pack|protected-surface-inventory|Breaking-change r
 | Command | Result | Evidence |
 |---|---|---|
 | `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1` | pass | `compatibility pack validation passed: 13 protected surfaces` |
-| `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate` | fail | `docs/release/compatibility.md` does not name `include/kairo_ecs.h` or `schemas/arrow/event_log_v1.schema.json` |
+| `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate` | pass | `compatibility release-gate validation passed: 13 protected surfaces` |
 | `rg -n "validate-compatibility-pack|protected-surface-inventory|Breaking-change rules|Release hold criteria" conductor/contracts/versioning-compatibility.md conductor/quality-gates.md conductor/delivery-readiness-checklist.md docs/design` | pass | Found policy, readiness, quality-gate, design-index, and validator references |
 | `cargo fmt --all --check` | pass | Rust formatting gate passed; no formatting changes needed |
+| `node scripts/validation/validate-tracks21-27.mjs` | pass | Ran the non-release compatibility policy pack check with adjacent Track 21-27 local validators; all seven track checks passed. |

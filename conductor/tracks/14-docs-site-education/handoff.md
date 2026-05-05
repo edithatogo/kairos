@@ -24,6 +24,7 @@ Build, repository-doc-tree, binding-link, and docs-link-manifest checks are spec
 
 ## Validation evidence
 
+- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/14-docs-site-education/validate-docs-site.ps1`
 - `npm --prefix website ci`
 - `npm --prefix website run check:links`
 - `npm --prefix website run build`
@@ -36,3 +37,9 @@ The site currently renders a single static home page; routed pages for each docs
 ## Integration notes
 
 Use `just docs-build` for CI-style validation and `just docs-dev` for local preview.
+
+## Review-hardening update
+
+Added a track-local offline validator that checks the docs package scripts,
+link manifest paths, site sources, and current binding/docs tree references.
+This keeps Track 14 evidence executable without changing central quality gates.

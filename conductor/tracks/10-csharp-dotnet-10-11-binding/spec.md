@@ -19,8 +19,11 @@ Track 02 FFI RC and Track 04 Arrow schema RC.
 ## Owned paths
 
 ```text
-bindings/csharp/Kairo.ECS.sln, bindings/csharp/src/Kairo.ECS, bindings/csharp/tests/Kairo.ECS.Tests, packaging/nuget
+bindings/csharp/Kairo.ECS.sln, bindings/csharp/src/Kairo.ECS, bindings/csharp/tests/Kairo.ECS.Tests
 ```
+
+Package publishing, registry, and release dry-run work is explicitly out of
+scope for this binding slice.
 
 ## Parallel-safe with
 

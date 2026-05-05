@@ -129,10 +129,13 @@ def extract_results(path: Path) -> dict[str, float]:
         benchmark_id = first_present(record, ["id", "name", "benchmark", "scenario"])
         if benchmark_id is None:
             raise ValueError(f"{path} contains a record without an ID")
+        benchmark_id = str(benchmark_id)
+        if benchmark_id in results:
+            raise ValueError(f"{path} contains duplicate result ID {benchmark_id}")
         mean = extract_mean(record)
         if mean <= 0:
             raise ValueError(f"{benchmark_id} in {path} has non-positive mean {mean}")
-        results[str(benchmark_id)] = mean
+        results[benchmark_id] = mean
     return results
 
 
@@ -182,6 +185,18 @@ def compare_results(
     return rows
 
 
+def validate_result_ids(
+    base: dict[str, float], current: dict[str, float], thresholds: dict[str, Threshold]
+) -> dict[str, list[str]]:
+    threshold_ids = set(thresholds)
+    return {
+        "missing_base_results": sorted(threshold_ids - set(base)),
+        "missing_current_results": sorted(threshold_ids - set(current)),
+        "unknown_base_results": sorted(set(base) - threshold_ids),
+        "unknown_current_results": sorted(set(current) - threshold_ids),
+    }
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--thresholds", type=Path, default=DEFAULT_THRESHOLDS)
@@ -211,12 +226,11 @@ def main() -> int:
             raise SystemExit("--base and --current must be supplied together")
         base = extract_results(args.base)
         current = extract_results(args.current)
+        result_id_coverage = validate_result_ids(base, current, thresholds)
         comparison = compare_results(base, current, thresholds)
-        missing_results = sorted(set(thresholds) - (set(base) & set(current)))
         report["comparison"] = comparison
-        report["missing_results"] = missing_results
-        if missing_results:
-            failures.append("missing_results")
+        report["result_id_coverage"] = result_id_coverage
+        failures.extend(name for name, values in result_id_coverage.items() if values)
         if any(row["status"] == "fail" for row in comparison):
             failures.append("blocking_regression")
         report["status"] = "pass" if not failures else "fail"

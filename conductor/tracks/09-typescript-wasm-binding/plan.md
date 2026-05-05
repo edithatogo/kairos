@@ -4,7 +4,8 @@
 
 - Read `conductor/workflow.md`.
 - Read relevant contracts under `conductor/contracts/`.
-- Confirm owned paths: `bindings/typescript, crates/kairo-ecs-wasm, packaging/npm`.
+- Confirm owned paths: `bindings/typescript, crates/kairo-ecs-wasm`.
+- Keep package publishing, registry, and release dry-run work out of this slice.
 - Create `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
 
 ## Phase 1 — Contract alignment
@@ -40,11 +41,8 @@
 - Confirm CI gates.
 - Mark track ready for integration.
 
-## Phase 7 — WASI support
+## Deferred runtime expansion
 
-- Add `wasm32-wasip2` target to build configuration.
-- Integrate `wasmtime` runtime for testing; verify `wasmer` compatibility.
-- Implement WASI Preview 2 bindings for server-side sandboxed execution.
-- Add WASI smoke test: load `kairo-ecs-wasm` module in `wasmtime` and execute a 10K event simulation.
-- Document WASI deployment scenarios (cloud-native runners, edge, plugin systems).
+Server-side sandbox runtime targets are deferred until a later track explicitly
+accepts that scope and provides a checked-in runner.
 

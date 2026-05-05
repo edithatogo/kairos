@@ -19,8 +19,11 @@ Track 02 FFI RC; Track 04 Arrow schema.
 ## Owned paths
 
 ```text
-bindings/typescript, crates/kairo-ecs-wasm, packaging/npm
+bindings/typescript, crates/kairo-ecs-wasm
 ```
+
+Package publishing, registry, and release dry-run work is explicitly out of
+scope for this binding slice.
 
 ## Parallel-safe with
 
@@ -39,14 +42,11 @@ Most tracks are parallel-safe after their contract inputs are accepted. See `con
 - Wasm module in `crates/kairo-ecs-wasm/`.
 - Browser + Node.js smoke tests.
 
-### WASI support (Phase 7)
+### Deferred runtime expansion
 
-Beyond browser/Node targets, the Wasm binding SHALL support WASI Preview 2 (`wasm32-wasip2`) for server-side sandboxed execution:
-
-- Target: `wasm32-wasip2` in addition to `wasm32-unknown-unknown` (browser).
-- Runtime: `wasmtime` for testing and deployment; `wasmer` as alternative.
-- Use case: cloud-native simulation runners, edge deployment, sandboxed plugin systems.
-- Acceptance: `kairo-ecs-wasm` module loads in `wasmtime` and executes a 10K event simulation.
+The current checked-in surface is a browser/Node contract crate and TypeScript
+facade. Server-side sandbox runtimes are not claimed by this slice because no
+checked-in runner or native artifact path exists yet.
 
 ## Blocked paths
 

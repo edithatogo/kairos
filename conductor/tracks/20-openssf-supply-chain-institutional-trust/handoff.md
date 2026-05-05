@@ -24,6 +24,7 @@ The concrete risk is a missing or incomplete GitHub Actions workflow for Scoreca
 
 ## Validation evidence
 
+- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/20-openssf-supply-chain-institutional-trust/validate-supply-chain-trust.ps1`
 - `rg -n "Release trust checklist|Temporary operational exception|Permanent policy waiver|RELEASE.txt|SHA256SUMS|sbom.spdx.json" conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md`
 - `rg -n "OpenSSF and supply-chain readiness|scorecard.yml|dependency-review.yml|sbom-attestations.yml|release-attestations.yml|allowed-failure|exception" conductor/delivery-readiness-checklist.md`
 - `rg -n "Machine-checkable release-trust references|fail-on-severity|actions/attest|sbom.spdx.json|SHA256SUMS|Exception review" conductor/quality-gates.md`
@@ -31,3 +32,9 @@ The concrete risk is a missing or incomplete GitHub Actions workflow for Scoreca
 - `pwsh -NoProfile -File scripts/validate_track_docs_clean.ps1`
 - `npm run build` from `website/`
 - `git diff --check -- conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md conductor/tracks/20-openssf-supply-chain-institutional-trust/plan.md conductor/tracks/20-openssf-supply-chain-institutional-trust/test-matrix.md conductor/tracks/20-openssf-supply-chain-institutional-trust/risk-register.md conductor/tracks/20-openssf-supply-chain-institutional-trust/handoff.md conductor/delivery-readiness-checklist.md conductor/quality-gates.md`
+
+## Review-hardening update
+
+Added a track-local offline validator for release-trust evidence and softened
+the audit language in `spec.md` so Track 20 does not imply an audit report
+exists before it is checked in.

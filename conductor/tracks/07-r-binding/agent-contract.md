@@ -7,8 +7,11 @@ r-agent
 ## Owned paths
 
 ```text
-bindings/r, packaging/r
+bindings/r
 ```
+
+Packaging and registry preparation stay out of this track slice until the
+packaging/release track explicitly owns them.
 
 ## Handoff rules
 

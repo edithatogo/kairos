@@ -15,6 +15,7 @@ rg -n "Rust|Python|R|Julia|TypeScript|C#|Go" conductor/package-matrix.md conduct
 rg -n "dry-run|draft only|preview|reservation|fallback" conductor/package-matrix.md conductor/release-engineering.md
 python packaging/scripts/build_release_manifest.py --check
 python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1
 ```
 
 ## R2 dry-run matrix
@@ -33,6 +34,12 @@ The manifest/checksum builder is the local validation gate for this slice. It
 does not execute registry commands; it verifies that the package inventory,
 registry modes, and checksum evidence can be generated before publishing is
 enabled.
+
+## Focused offline validator
+
+`validate-packaging-dry-run.ps1` verifies the seven ecosystem surfaces, dry-run
+release stage, disabled production publishing flag, fallback entries, manifest
+paths, and expected release evidence output paths.
 
 ## Registry checks to land later
 

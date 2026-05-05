@@ -4,7 +4,7 @@
 
 - Read `conductor/workflow.md`, `conductor/contracts/core-contract.md`, and `conductor/contracts/conformance-contract.md`.
 - Read the current `website` scaffold in `website/package.json`, `website/scripts/build.js`, `website/scripts/dev.js`, and `website/src/index.md`.
-- Confirm the intended owned paths remain `crates/kairo-ecs-viz`, `examples/viz`, and `website/docs/visualization/`; only the website docs scaffold exists today.
+- Confirm the intended owned paths remain `crates/kairo-ecs-viz`, `examples/viz`, and `website/docs/visualization/`; the headless viz crate, example package, and visualization docs now exist as a minimal implementation slice.
 - Create `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
 
 ## Phase 1 — Contract alignment
@@ -16,9 +16,9 @@
 
 ## Phase 2 — Scaffold
 
-- Create the package/crate/module skeleton when `crates/kairo-ecs-viz` is introduced.
+- Maintain the `kairo-ecs-viz` crate skeleton already registered in the workspace.
 - Add visualization smoke tests that prove the shared workspace checks are wired into CI.
-- Use the existing website build and dev scripts to host the visualization docs while the package crate is still pending.
+- Use the existing website build and dev scripts to host the visualization docs while renderer-backed examples remain future work.
 
 ## Phase 3 — Implementation
 

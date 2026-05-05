@@ -61,4 +61,5 @@ R binding work stays inside `bindings/r/` and now exposes a concrete package sur
 - Keep the implementation at the R boundary until the shared conformance and packaging tracks are complete.
 - Do not add CRAN release automation or cross-language adapters here.
 - Replace the pure-R scheduler facade with stable-C-ABI calls only after Track 02 exposes a verified native library path and ownership/finalizer rules for R external pointers.
+- No release, registry, or remote publication side effects were performed.
 

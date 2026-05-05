@@ -370,6 +370,32 @@ foreach ($file in $controlFiles | Where-Object { Test-Path -LiteralPath $_ }) {
 }
 
 $qualityGates = Get-Content -LiteralPath "conductor/quality-gates.md" -Raw
+$requiredGateIds = [System.Collections.Generic.List[string]]::new()
+$inRequiredGates = $false
+foreach ($line in ($tracksYaml -split "`r?`n")) {
+    if ($line -match '^\s{4}required_gates:\s*$') {
+        $inRequiredGates = $true
+        continue
+    }
+    if ($inRequiredGates -and $line -match '^\s{6}-\s+([a-z][a-z0-9-]*)\s*$') {
+        $requiredGateIds.Add($matches[1])
+        continue
+    }
+    if ($inRequiredGates -and $line -match '^\s{4}[a-z_]+:') {
+        $inRequiredGates = $false
+    }
+}
+$requiredGateIds = @($requiredGateIds | Sort-Object -Unique)
+$definedGateIds = @([regex]::Matches($qualityGates, '\*\*([a-z][a-z0-9-]*)\*\*') |
+    ForEach-Object { $_.Groups[1].Value } |
+    Sort-Object -Unique)
+
+foreach ($gate in $requiredGateIds) {
+    if ($definedGateIds -notcontains $gate) {
+        Add-Issue -Message "Required gate from conductor/tracks.yaml is missing from conductor/quality-gates.md: $gate"
+    }
+}
+
 foreach ($gate in @(
     "kafka-smoke",
     "arrow-flight-smoke",

@@ -42,6 +42,7 @@ Local manifest/checksum validation:
 ```text
 python packaging/scripts/build_release_manifest.py --check
 python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1
 ```
 
 ## Known risks
@@ -54,3 +55,9 @@ not execute ecosystem pack commands or contact registries.
 ## Integration notes
 
 Keep release work in draft and dry-run mode until name reservations, toolchain support, and registry policies are verified.
+
+## Review-hardening update
+
+Added a track-local dry-run validator that checks the package manifest
+structure and fails if the track drifts toward production publishing before
+the release gates are met.

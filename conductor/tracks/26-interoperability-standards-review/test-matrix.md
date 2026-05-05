@@ -25,6 +25,7 @@
 ## Validation commands
 
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/26-interoperability-standards-review/validate-standards-review.ps1`
+- `node scripts/validation/validate-tracks21-27.mjs`
 - `just docs-build`
 - `just check-docs`
 - `rg -n "DEVS|FMI/FMU|SBML|CellML|OpenTelemetry|Arrow C Data Interface|Arrow IPC|Parquet|supported|partial|deferred|unsupported" docs/interoperability/standards-review.md conductor/tracks/26-interoperability-standards-review`
@@ -36,4 +37,5 @@
 | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/26-interoperability-standards-review/validate-standards-review.ps1` | Pass | `Track 26 standards review validation passed: 8 standards, 4 labels, evidence, and release guards found.` |
 | `rg -n "DEVS\|FMI/FMU\|SBML\|CellML\|OpenTelemetry\|Arrow C Data Interface\|Arrow IPC\|Parquet\|Supported\|Partial\|Deferred\|Unsupported" docs/interoperability/standards-review.md conductor/interoperability-standards.md conductor/tracks/26-interoperability-standards-review` | Pass | Output showed the required standard names and labels in the public review, conductor mirror, handoff, risk register, test matrix, plan, spec, and validator. |
 | `just check-docs` | Fail | `just` is not recognized on PATH in this PowerShell session. |
-| `node scripts/dx/validate-docs-workflow.mjs` | Fail after build | Link check passed and `website/build/index.html` was built, then the workflow exited with `spawn EPERM`. |
+| `node scripts/dx/validate-docs-workflow.mjs` | Pass | Link check passed with 29 required paths and 2 Markdown sources, `website/build/index.html` was built, and preview smoke passed at `http://127.0.0.1:41727/`. |
+| `node scripts/validation/validate-tracks21-27.mjs` | Pass | Ran the Track 26 standards validator with the adjacent Track 21-27 local validators; all seven track checks passed. |

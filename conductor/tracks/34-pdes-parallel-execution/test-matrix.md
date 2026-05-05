@@ -12,6 +12,7 @@
 | Sequential parity test passes — PDES final state matches sequential for partitioned worlds | no | yes | yes | yes |
 | Sequential parity fixture compiles under `cargo check --tests` | yes | yes | yes | yes |
 | Conservative PDES validator reports parity, GVT, protocol traffic, and deadlock-smoke evidence | yes | yes | yes | yes |
+| Track 34 offline validator checks compile, feature isolation, and no-speedup-claim boundaries | yes | yes | yes | yes |
 | PDES benchmark suite exists in `benches/pdes/` for 4/8/16/32 LP configurations | no | yes | yes | yes |
 | Speedup of 2x+ on 4 cores versus sequential baseline | no | no | yes | yes |
 | Speedup of 4x+ on 8 cores versus sequential baseline | no | no | yes | yes |
@@ -26,3 +27,10 @@
 | Time Warp research spike findings documented in `docs/pdes/time-warp-spike.md` | no | no | yes | yes |
 | PDES does not block release when feature flag is disabled | yes | yes | yes | yes |
 | Cross-platform LP communication works on Linux, macOS, and Windows (thread-based) | no | no | yes | yes |
+
+## Focused Validation Commands
+
+| Command | Result | Evidence |
+|---|---|---|
+| `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1` | Local offline gate | Checks default and `pdes` test compilation plus docs/benchmark boundaries that prohibit scheduler-integration or speedup claims. |
+| `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1 -RunTests` | Optional runtime gate | Runs PDES unit tests when the local linker/toolchain can execute Rust test binaries. |

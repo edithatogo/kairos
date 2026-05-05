@@ -22,6 +22,11 @@
   - checked that exported functions have Rd aliases across `man/*.Rd`;
   - checked package skeleton files are present under `bindings/r/`.
 
+## Focused local validation
+
+- `node tests/conformance/track07_13_hardening_check.mjs` verifies this track no longer claims packaging ownership and records the no-release boundary.
+- `Rscript tests/smoke-base.R` remains the preferred offline smoke command once `Rscript` is on `PATH`.
+
 ## Future-surface controls
 
 - Do not add CRAN submission automation, registry credentials, or release publication here.

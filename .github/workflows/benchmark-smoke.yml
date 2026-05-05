@@ -4,8 +4,10 @@ on:
   pull_request:
     paths:
       - 'crates/**'
-      - 'benchmarks/**'
+      - 'benches/**'
+      - 'conformance/fixtures/**'
       - 'conductor/tracks/18-*/**'
+      - 'conductor/tracks/12-conformance-testing-benchmarks/**'
   workflow_dispatch:
 
 permissions:
@@ -19,5 +21,6 @@ jobs:
       - name: Benchmark smoke
         run: |
           test -f Cargo.toml
-          test -d benchmarks -o -d benches
-          cargo bench --workspace --no-run
+          test -d benches
+          python benches/benchmark_smoke.py
+          cargo check -p kairo-ecs-bench

@@ -20,6 +20,7 @@ test -f conductor/quality-gates.md
 test -f .github/workflows/release.yml
 test -f .github/workflows/release-attestations.yml
 pwsh -NoProfile -File scripts/validate_conductor_setup.ps1 -SkipCargo
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/16-release-governance-maintenance/validate-release-governance.ps1
 ```
 
 ## R2 governance slice checks
@@ -35,6 +36,7 @@ Select-String -Path docs/release/release-governance.md -Pattern 'Compatibility g
 Select-String -Path docs/release/changelog-policy.md -Pattern 'Public release surface changed without CHANGELOG.md'
 Select-String -Path docs/release/compatibility.md -Pattern 'Deprecation register'
 Select-String -Path docs/release/maintenance-handoff.md -Pattern 'R2 handoff status'
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/16-release-governance-maintenance/validate-release-governance.ps1
 ```
 
 ## CI gate definition

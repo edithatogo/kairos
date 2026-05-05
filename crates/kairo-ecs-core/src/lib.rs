@@ -68,15 +68,26 @@ impl Scheduler {
     }
 
     pub fn cancel(&mut self, id: EventId) -> bool {
+        if self.cancelled.contains(&id) || !self.heap.iter().any(|entry| entry.id == id) {
+            return false;
+        }
+
         self.cancelled.insert(id)
     }
 
     pub fn pending_events(&self) -> usize {
-        self.heap.len().saturating_sub(self.cancelled.len())
+        self.heap
+            .iter()
+            .filter(|entry| !self.cancelled.contains(&entry.id))
+            .count()
     }
 
     fn next_event_at(&self) -> Option<SimTime> {
-        self.heap.peek().map(|entry| entry.request.at)
+        self.heap
+            .iter()
+            .filter(|entry| !self.cancelled.contains(&entry.id))
+            .map(|entry| entry.request.at)
+            .min()
     }
 
     pub fn step(&mut self) -> StepOutcome {
@@ -121,7 +132,7 @@ impl Scheduler {
             }
         }
 
-        if self.heap.is_empty() {
+        if self.pending_events() == 0 {
             if matches!(last, StepOutcome::Empty) {
                 StepOutcome::Empty
             } else {
@@ -163,7 +174,7 @@ impl Scheduler {
         for _ in 0..max_events {
             match self.next_event_at() {
                 Some(next_at) if next_at > time_limit => {
-                    return if self.heap.is_empty() {
+                    return if self.pending_events() == 0 {
                         last
                     } else {
                         StepOutcome::LimitReached
@@ -178,7 +189,7 @@ impl Scheduler {
             }
         }
 
-        if self.heap.is_empty() {
+        if self.pending_events() == 0 {
             last
         } else {
             StepOutcome::LimitReached
@@ -226,6 +237,7 @@ mod tests {
         scheduler.schedule(request(3, 0, 3));
 
         scheduler.cancel(cancelled);
+        assert!(!scheduler.cancel(cancelled));
         assert_eq!(scheduler.pending_events(), 2);
 
         let first = scheduler.step();
@@ -236,6 +248,34 @@ mod tests {
         assert!(matches!(second, StepOutcome::Dispatched(_)));
         assert_eq!(third, StepOutcome::Empty);
         assert_eq!(scheduler.pending_events(), 0);
+    }
+
+    #[test]
+    fn cancellation_rejects_unknown_and_dispatched_events() {
+        let mut scheduler = Scheduler::new();
+        let dispatched = scheduler.schedule(request(1, 0, 1));
+
+        assert!(matches!(scheduler.step(), StepOutcome::Dispatched(_)));
+        assert!(!scheduler.cancel(dispatched));
+        assert!(!scheduler.cancel(EventId {
+            index: 999,
+            generation: 0,
+        }));
+        assert_eq!(scheduler.pending_events(), 0);
+    }
+
+    #[test]
+    fn cancelled_future_event_does_not_force_limit_after_active_events_finish() {
+        let mut scheduler = Scheduler::new();
+        scheduler.schedule(request(1, 0, 1));
+        let cancelled = scheduler.schedule(request(100, 0, 2));
+        assert!(scheduler.cancel(cancelled));
+
+        let outcome = scheduler.run_for(8);
+
+        assert!(matches!(outcome, StepOutcome::Dispatched(_)));
+        assert_eq!(scheduler.pending_events(), 0);
+        assert_eq!(scheduler.step(), StepOutcome::Empty);
     }
 
     #[test]

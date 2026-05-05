@@ -34,13 +34,15 @@ This track is designed to run in parallel with core implementation. The subagent
 
 ### Third-party security audit
 
-Before v1.0, KairoECS SHALL undergo an independent security audit:
+Before v1.0, KairoECS should either complete an independent security audit or
+record an explicit release-blocking exception:
 
 - Scope: scheduler determinism guarantees, FFI memory safety, Arrow deserialisation safety, supply-chain integrity (all dependencies audited).
 - Auditor: OSTIF-affiliated or equivalent Rust security auditor.
 - Funding: apply for OSTIF audit sponsorship or budget from institutional partners.
 - Cadence: initial audit before v1.0; follow-up audit for any major architecture change (PDES, GPU, distributed).
-- Public report: audit findings published in `docs/security/audit-report.md`.
+- Public report: audit findings should be published under `docs/security/` once
+  the audit exists. Do not claim an audit report before the file is checked in.
 
 ## Owned paths
 

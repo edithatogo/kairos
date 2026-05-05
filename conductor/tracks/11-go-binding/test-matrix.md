@@ -17,6 +17,11 @@
 - Do not widen beyond the Go binding and local validation boundary.
 - Stop at local test/vet/tidy validation until Track 12 owns parity and Track 15 owns dry-runs.
 
+## Focused local validation
+
+- `node tests/conformance/track07_13_hardening_check.mjs` verifies this track no longer claims module release ownership and records the no-release boundary.
+- `go test ./...`, `go vet ./...`, and `go mod tidy` remain the offline binding gates from `bindings/go`.
+
 ## CI command
 
 ```bash

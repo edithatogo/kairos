@@ -4,7 +4,8 @@
 
 - Read `conductor/workflow.md`.
 - Read relevant contracts under `conductor/contracts/`.
-- Confirm owned paths: `bindings/go, packaging/go`.
+- Confirm owned paths: `bindings/go`.
+- Keep module release, proxy, and tag preparation out of this slice.
 - Create `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
 
 ## Phase 1 — Contract alignment

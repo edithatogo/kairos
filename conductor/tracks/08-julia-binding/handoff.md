@@ -12,7 +12,6 @@ The package exposes pure-Julia deterministic event ordering, an event-log schema
 `bindings/julia/README.md`
 `bindings/julia/src/KairoECS.jl`
 `bindings/julia/test/runtests.jl`
-`packaging/julia/README.md`
 `conductor/tracks/08-julia-binding/test-matrix.md`
 `conductor/tracks/08-julia-binding/handoff.md`
 
@@ -38,8 +37,8 @@ The package exposes pure-Julia deterministic event ordering, an event-log schema
 
 - `Get-Command julia` failed on 2026-05-06 because Julia is not on PATH.
 - `julia --project=. -e 'using Pkg; Pkg.test()'` from `bindings/julia/` is blocked locally until Julia is available.
-- `git diff --check -- bindings\julia packaging\julia conductor\tracks\08-julia-binding` passed with only line-ending normalization warnings.
-- `rg -n "ordered_events|arrow_event_log_schema|ffi_status|blocked locally|not configured" bindings\julia packaging\julia conductor\tracks\08-julia-binding -S` confirmed the implemented API and evidence markers.
+- `git diff --check -- bindings\julia conductor\tracks\08-julia-binding` passed with only line-ending normalization warnings.
+- `rg -n "ordered_events|arrow_event_log_schema|ffi_status|blocked locally|not configured" bindings\julia conductor\tracks\08-julia-binding -S` confirmed the implemented API and evidence markers.
 
 ## Known risks
 
@@ -52,3 +51,4 @@ The package exposes pure-Julia deterministic event ordering, an event-log schema
 
 - Keep the Julia surface isolated from other language bindings and from release automation.
 - Do not add General registry publication or package-server controls here.
+- No release, registry, or remote publication side effects were performed.

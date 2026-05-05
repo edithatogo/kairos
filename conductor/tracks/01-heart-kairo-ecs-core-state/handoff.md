@@ -2,11 +2,16 @@
 
 ## Summary
 
-Track 01 is anchored by `lanes.md`, the shared conformance fixtures, and the workspace validators. The current control surface is `conformance/fixtures/manifest.json`, `conformance/fixtures/deterministic_ordering.json`, `conformance/fixtures/cancellation.json`, `conformance/fixtures/rng_replay.json`, `scripts/validate_conductor_setup.ps1`, and `scripts/validate_track_coverage.ps1`.
+Track 01 now has a minimal implemented core slice anchored by `lanes.md`, the shared conformance fixtures, and package-focused cargo gates. The current implementation surface is `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-state`, and `crates/kairo-ecs-rng`.
 
 ## Files changed
 
-No code files were changed in this handoff pass.
+- `crates/kairo-ecs-types/src/lib.rs`
+- `crates/kairo-ecs-core/src/lib.rs`
+- `crates/kairo-ecs-state/src/lib.rs`
+- `crates/kairo-ecs-rng/src/lib.rs`
+- `conductor/tracks/01-heart-kairo-ecs-core-state/handoff.md`
+- `conductor/tracks/01-heart-kairo-ecs-core-state/test-matrix.md`
 
 ## Contracts consumed
 
@@ -18,7 +23,14 @@ The next contract surface is the deterministic ordering and replay behavior in `
 
 ## Tests added
 
-The track now has a concrete validator path through `scripts/validate_conductor_setup.ps1` and `scripts/validate_track_coverage.ps1`, plus fixture-presence checks for the three bootstrap conformance files.
+- Unit tests cover fixed-tick time overflow, scheduler ordering, cancellation, bounded runs, state lifecycle, and deterministic RNG replay.
+- This review pass added regression coverage that cancellation rejects unknown or already-dispatched IDs and does not let cancelled future events force a false limit outcome.
+
+## Validation run
+
+- `cargo fmt -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-rng --check`
+- `cargo check --tests -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-rng`
+- `cargo test -p kairo-ecs-core` was attempted but blocked by the local Windows linker resolving `link.exe` to Git for Windows (`C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`), which failed with `couldn't create signal pipe, Win32 error 5`.
 
 ## Known risks
 
@@ -26,4 +38,4 @@ The main risk is drifting out of sync with `lanes.md` if the implementation slic
 
 ## Integration notes
 
-Next implementation step: land the first vertical slice for time, identity, and deterministic event ordering, then keep the fixture manifest and validator coverage aligned as each lane closes.
+Next implementation step: bind the implemented scheduler/state/RNG slice to shared conformance fixtures and keep the fixture manifest aligned as each lane closes.

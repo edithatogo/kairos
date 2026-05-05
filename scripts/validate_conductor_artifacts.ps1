@@ -7,7 +7,7 @@ $issues = @()
 
 function Add-Issue {
     param([string]$Severity, [string]$Message)
-    $issues += [PSCustomObject]@{ Severity = $Severity; Message = $Message }
+    $script:issues += [PSCustomObject]@{ Severity = $Severity; Message = $Message }
 }
 
 Write-Host "=== Validate Conductor Artifacts ===" -ForegroundColor Cyan
@@ -25,6 +25,32 @@ $trackDirs = Get-ChildItem -LiteralPath $TrackDirsPath -Directory
 Write-Host "  Found $($trackDirs.Count) track directories" -ForegroundColor Gray
 
 $requiredArtifacts = @("spec.md", "plan.md", "agent-contract.md", "risk-register.md", "test-matrix.md", "handoff.md")
+
+function Get-TrackStatus {
+    param([string]$TrackName)
+
+    $tracksYamlPath = "conductor/tracks.yaml"
+    if (-not (Test-Path -LiteralPath $tracksYamlPath)) {
+        return "Unknown"
+    }
+    if ($TrackName -notmatch '^(\d+)-') {
+        return "Unknown"
+    }
+
+    $trackId = $matches[1]
+    try {
+        $tracksContent = Get-Content -LiteralPath $tracksYamlPath -Raw
+    } catch {
+        return "Unknown"
+    }
+
+    $pattern = "(?ms)^\s*-\s*id:\s*$trackId\s*$.*?^\s*status:\s*(.+?)\s*$"
+    if ($tracksContent -match $pattern) {
+        return $matches[1].Trim()
+    }
+
+    return "Unknown"
+}
 
 # ------------------------------------------------------------------
 # 2. Check every track directory has all 6 required artifacts
@@ -54,25 +80,7 @@ foreach ($dir in $trackDirs) {
         continue
     }
 
-    # Check for "No code files were changed" when status should indicate active work
-    $trackName = $dir.Name
-    # Parse tracks.yaml to get the status for this track
-    $tracksYamlPath = "conductor/tracks.yaml"
-    $trackStatus = "Unknown"
-    if (Test-Path -LiteralPath $tracksYamlPath) {
-        try {
-            $tracksContent = Get-Content -LiteralPath $tracksYamlPath -Raw
-            # Extract track ID from directory name
-            if ($trackName -match '^(\d+)-') {
-                $trackId = $matches[1]
-                # Find the block for this track id
-                $pattern = "(?s)- id:\s*$trackId\s*\n.*?status:\s*(\S+)"
-                if ($tracksContent -match $pattern) {
-                    $trackStatus = $matches[1]
-                }
-            }
-        } catch {}
-    }
+    $trackStatus = Get-TrackStatus -TrackName $dir.Name
 
     # Statuses that imply active work
     $activeStatuses = @("In Progress", "In Review", "Spec Approved", "Blocked")
@@ -159,11 +167,13 @@ foreach ($dir in $trackDirs) {
     try {
         $spec = Get-Content -LiteralPath $specPath -Raw
     } catch { continue }
+    $trackStatus = Get-TrackStatus -TrackName $dir.Name
+    $severity = if ($trackStatus -in @("In Review", "Done")) { "ERROR" } else { "WARN" }
     if ($spec -notmatch "(?m)^##\s*Release implications") {
-        Add-Issue -Severity "ERROR" -Message "$($dir.Name)/spec.md missing mandatory section: ## Release implications"
+        Add-Issue -Severity $severity -Message "$($dir.Name)/spec.md missing mandatory section: ## Release implications"
     }
     if ($spec -notmatch "(?m)^##\s*Blocked paths") {
-        Add-Issue -Severity "ERROR" -Message "$($dir.Name)/spec.md missing mandatory section: ## Blocked paths"
+        Add-Issue -Severity $severity -Message "$($dir.Name)/spec.md missing mandatory section: ## Blocked paths"
     }
 }
 

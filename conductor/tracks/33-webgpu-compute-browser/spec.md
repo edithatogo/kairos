@@ -2,7 +2,12 @@
 
 ## Purpose
 
-Run GPU-accelerated simulation directly in the browser via WebGPU compute shaders, paired with the Track 09 TypeScript/Wasm binding layer. This delivers a unique state-of-the-art differentiator: high-performance ABM and DES simulation running on the user's own GPU within a browser tab, without server round-trips or native installation.
+Run GPU-accelerated simulation directly in the browser via WebGPU compute
+shaders, paired with the Track 09 TypeScript/Wasm binding layer. The current
+checked-in slice is a CPU-fallback demo plus dependency-free WebGPU contracts
+that explicitly report `backend-not-configured`; high-performance browser GPU
+simulation remains a target until real Wasm bindings, device setup, and browser
+hardware validation land.
 
 ## Why this track exists
 

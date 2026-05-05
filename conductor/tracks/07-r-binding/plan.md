@@ -5,7 +5,7 @@
 - Read `conductor/workflow.md`.
 - Read relevant contracts under `conductor/contracts/`.
 - Confirm the binding-owned path slice: `bindings/r`.
-- Keep `packaging/r` out of this slice until the packaging track owns it.
+- Keep package release paths out of this slice until the packaging track owns them.
 - Maintain `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
 
 ## Phase 1 — Contract alignment

@@ -19,8 +19,11 @@ Track 02 FFI RC and Track 04 Arrow schema RC.
 ## Owned paths
 
 ```text
-bindings/go, packaging/go
+bindings/go
 ```
+
+Module release, proxy, and tag preparation is explicitly out of scope for this
+binding slice.
 
 ## Parallel-safe with
 

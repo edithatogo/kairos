@@ -64,4 +64,5 @@ contract crate that can be cargo-checked without `wasm-bindgen`,
 - Do not add npm publish automation or registry credentials here.
 - Replace the injected-loader contract with a generated wasm-pack loader once the
   native artifact path is ready.
+- No release, registry, or remote publication side effects were performed.
 

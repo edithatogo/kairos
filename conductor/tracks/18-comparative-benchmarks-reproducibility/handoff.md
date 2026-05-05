@@ -45,6 +45,12 @@ and required docs artifacts.
 Validates that the new reproduction page is reachable through the docs link
 manifest and that local Markdown links remain valid.
 
+`powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/18-comparative-benchmarks-reproducibility/validate-benchmark-reproducibility.ps1`
+
+Validates the Track 18 docs and manifest boundary without running native
+benchmark measurements: ready fixture IDs, canonical benchmark IDs,
+metadata-gate caveat, and the benchmark smoke workflow reference.
+
 ## Local validation on 2026-05-06
 
 | Command | Result | Evidence |
@@ -76,3 +82,8 @@ baselines change after publication. Keep `benches/benchmark-plan.md` and
 claims remain blocked until raw benchmark output, command capture, host
 metadata, baseline versions are archived, and the Windows linker path is using
 the expected MSVC build-tools linker rather than Git's Unix `link.exe`.
+
+## Review-hardening update
+
+Added a track-local offline validator so the Track 18 evidence boundary can be
+checked even when native benchmark linking is unavailable.

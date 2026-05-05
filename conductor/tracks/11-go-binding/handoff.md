@@ -10,7 +10,6 @@ The Go binding now has a minimal real module slice: a pure-Go deterministic sche
 - `bindings/go/kairoecs_test.go`
 - `bindings/go/README.md`
 - `bindings/go/go.mod`
-- `packaging/go/README.md`
 - `conductor/tracks/11-go-binding/test-matrix.md`
 - `conductor/tracks/11-go-binding/handoff.md`
 
@@ -44,3 +43,4 @@ The Go binding now has a minimal real module slice: a pure-Go deterministic sche
 - Do not add proxy publication, module signing, or registry credentials here.
 - Validation run from `bindings/go`: `go test ./...`, `go vet ./...`, `go mod tidy`.
 - Local `go version` reported `go1.26.2 windows/amd64` after a telemetry token permission warning.
+- No release, registry, or remote publication side effects were performed.
