@@ -31,6 +31,12 @@ The Conductor setup is complete, but implementation should move through explicit
 | DES/ABM flow API (Track 03) | R2 | `crates/kairo-ecs-des`, `crates/kairo-ecs-abm`, and `examples/flow` exist with deterministic DES/ABM smoke coverage. |
 | Arrow telemetry (Track 04) | R2 | `crates/kairo-ecs-arrow`, `schemas/arrow`, and `examples/telemetry` exist with versioned event-log schema and roundtrip smoke coverage. |
 | Visualization (Track 05) | R2 | `crates/kairo-ecs-viz`, `examples/viz`, and `website/docs/visualization` exist with headless-safe optional renderer contracts. |
+| Python binding (Track 06) | R2 | `bindings/python` exposes deterministic scheduler, event, Arrow roundtrip, and explicit native-FFI status facades with pytest coverage. |
+| R binding (Track 07) | R2 | `bindings/r` exposes deterministic scheduler, event-log, and explicit native-FFI status facades with package docs and static checks. |
+| Julia binding (Track 08) | R2 | `bindings/julia` exposes deterministic event ordering, Arrow schema, and explicit native-FFI status facades with package tests. |
+| TypeScript/Wasm binding (Track 09) | R2 | `bindings/typescript` and `crates/kairo-ecs-wasm` expose scheduler, event-log, and browser-safe wasm loading contracts with npm and cargo checks. |
+| C# binding (Track 10) | R2 | `bindings/csharp` exposes deterministic scheduler/event and native status facades with .NET 10 test/build/pack validation. |
+| Go binding (Track 11) | R2 | `bindings/go` exposes deterministic scheduler/event and explicit cgo/native not-configured behavior with `go test` and `go vet` validation. |
 | Verification, validation, and uncertainty (Track 21) | R2 | `docs/trustworthy-simulation` and conformance fixtures include replay, seed, and VVUQ evidence boundaries. |
 | Experiment runner and scenario management (Track 22) | R2 | `crates/kairo-ecs-cli` and `examples/experiments` exist with scenario manifest and replay validation smoke coverage. |
 | GPU Compute (Track 32) | R2 | `crates/kairo-ecs-gpu` exists, is wired into the root workspace, and has explicit unavailable-backend contracts plus feature compile gates. |

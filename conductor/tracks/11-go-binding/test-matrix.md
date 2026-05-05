@@ -2,11 +2,13 @@
 
 ## Required tests
 
-- `go test ./...` for the Go binding coverage.
-- `go test -run TestConformance ./...` or equivalent when Track 12 fixtures are wired in.
-- `go test -race ./...` if the binding introduces concurrency-sensitive code.
-- `go vet ./...` to catch static issues before package validation.
-- `go mod tidy` to keep module metadata consistent before any future release work.
+| Gate | Command | Status | Notes |
+|---|---|---|---|
+| Unit/smoke | `go test ./...` | Passing | Covers version smoke, deterministic scheduler ordering, cancellation, explicit close lifecycle, and native-not-configured behavior. |
+| Static analysis | `go vet ./...` | Passing | Run inside `bindings/go`. |
+| Module metadata | `go mod tidy` | Passing | No external dependencies after tidy. |
+| Conformance fixtures | `go test -run TestConformance ./...` | Deferred | Track 12 fixtures are not wired into the Go binding yet. |
+| Race tests | `go test -race ./...` | Not required for this slice | The preview scheduler is single-engine/single-goroutine and introduces no shared concurrent access API. |
 
 ## Future-surface controls
 
@@ -18,6 +20,13 @@
 ## CI command
 
 ```bash
-go test ./... && go vet ./... && go mod tidy
+go test ./...
+go vet ./...
+go mod tidy
 ```
+
+## Validation notes
+
+- Go toolchain observed locally: `go1.26.2 windows/amd64`.
+- `go version` emitted a telemetry token permission warning under `%APPDATA%\go\telemetry`, but `go test`, `go vet`, and `go mod tidy` completed successfully from `bindings/go`.
 

@@ -1,0 +1,99 @@
+export declare const PACKAGE_NAME: "@kairo-ecs/typescript";
+export declare const BINDING_KIND: "typescript-wasm";
+export declare const EVENT_LOG_SCHEMA_NAME: "kairo_ecs.event_log.v1";
+export declare const NOT_CONFIGURED_STATUS: "not-configured";
+
+export interface BindingSurfaceInfo {
+  readonly packageName: typeof PACKAGE_NAME;
+  readonly bindingKind: typeof BINDING_KIND;
+  readonly version: string;
+  readonly runtimeTargets: readonly ("node" | "browser")[];
+}
+
+export interface BindingSurfaceOptions {
+  readonly version?: string;
+  readonly runtimeTargets?: readonly ("node" | "browser")[];
+}
+
+export interface ScheduledEventInput {
+  readonly timeTicks: bigint | number | string;
+  readonly priority?: number;
+  readonly eventKind?: string;
+  readonly entityId?: bigint | number | string | null;
+  readonly payloadRef?: string | null;
+}
+
+export interface ScheduledEvent {
+  readonly eventId: bigint;
+  readonly entityId: bigint | null;
+  readonly timeTicks: bigint;
+  readonly timeScale: "ticks";
+  readonly priority: number;
+  readonly sequence: bigint;
+  readonly eventKind: string;
+  readonly status: "scheduled";
+  readonly payloadRef: string | null;
+}
+
+export interface DispatchedEvent extends Omit<ScheduledEvent, "status"> {
+  readonly status: "dispatched";
+}
+
+export interface SchedulerSnapshot {
+  readonly currentTimeTicks: bigint;
+  readonly queuedEvents: readonly ScheduledEvent[];
+  readonly dispatchedEvents: readonly DispatchedEvent[];
+}
+
+export interface ArrowEventLogRow {
+  readonly runId: string;
+  readonly eventId: string;
+  readonly entityId: string | null;
+  readonly timeTicks: string;
+  readonly timeScale: "ticks";
+  readonly priority: number;
+  readonly sequence: string;
+  readonly eventKind: string;
+  readonly status: "scheduled" | "dispatched" | "cancelled" | "skipped" | "error";
+  readonly payloadRef: string | null;
+}
+
+export interface ArrowEventLogPayload {
+  readonly schema: typeof EVENT_LOG_SCHEMA_NAME;
+  readonly rows: readonly ArrowEventLogRow[];
+}
+
+export interface NativeWasmStatus {
+  readonly status: typeof NOT_CONFIGURED_STATUS | "ready";
+  readonly reason?: string;
+}
+
+export interface NativeWasmLoader {
+  readonly load: () => Promise<unknown> | unknown;
+}
+
+export declare function createBindingSurfaceInfo(options?: BindingSurfaceOptions): BindingSurfaceInfo;
+export declare function normalizeVersion(value: string): string;
+export declare function normalizeRuntimeTargets(value: readonly ("node" | "browser")[]): readonly ("node" | "browser")[];
+export declare function describeBindingSurface(options?: BindingSurfaceOptions): string;
+
+export declare class NativeWasmNotConfiguredError extends Error {
+  constructor(message?: string);
+}
+
+export declare function nativeWasmStatus(loader?: Partial<NativeWasmLoader>): NativeWasmStatus;
+export declare function loadNativeWasm(loader?: Partial<NativeWasmLoader>): Promise<unknown>;
+
+export declare class SchedulerFacade {
+  get currentTimeTicks(): bigint;
+  scheduleAt(input: ScheduledEventInput): ScheduledEvent;
+  scheduleAfter(delayTicks: bigint | number | string, input?: Omit<ScheduledEventInput, "timeTicks">): ScheduledEvent;
+  step(): DispatchedEvent | null;
+  runFor(maxEvents: number): readonly DispatchedEvent[];
+  snapshot(): SchedulerSnapshot;
+  eventLog(runId: string): ArrowEventLogPayload;
+}
+
+export declare function createSchedulerFacade(): SchedulerFacade;
+export declare function roundTripArrowEventLog(payload: ArrowEventLogPayload): ArrowEventLogPayload;
+export declare function compareScheduledEvents(left: ScheduledEvent, right: ScheduledEvent): number;

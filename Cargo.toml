@@ -23,6 +23,7 @@ members = [
   "crates/kairo-ecs-fmi",
   "crates/kairo-ecs-debug",
   "crates/kairo-ecs-viz",
+  "crates/kairo-ecs-wasm",
 ]
 
 [workspace.package]

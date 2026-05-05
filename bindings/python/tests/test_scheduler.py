@@ -1,0 +1,53 @@
+from __future__ import annotations
+
+import kairo_ecs
+
+
+def test_scheduler_dispatches_by_time_priority_then_sequence() -> None:
+    scheduler = kairo_ecs.Scheduler()
+    scheduler.schedule_at(10, priority=2, kind=3)
+    scheduler.schedule_at(5, priority=9, kind=1)
+    scheduler.schedule_at(10, priority=1, kind=2)
+    scheduler.schedule_at(10, priority=1, kind=4)
+
+    kinds: list[int] = []
+    while True:
+        outcome, event = scheduler.step()
+        if outcome is kairo_ecs.StepOutcome.EMPTY:
+            break
+        assert event is not None
+        kinds.append(event.kind)
+
+    assert kinds == [1, 2, 4, 3]
+    assert scheduler.stats() == {
+        "current_time_ticks": 10,
+        "pending_events": 0,
+        "dispatched_events": 4,
+    }
+
+
+def test_scheduler_cancellation_skips_event_without_reordering_rest() -> None:
+    scheduler = kairo_ecs.Scheduler()
+    scheduler.schedule_at(1, kind=1)
+    cancelled = scheduler.schedule_at(2, kind=2)
+    scheduler.schedule_at(3, kind=3)
+
+    assert scheduler.cancel(cancelled) is True
+    assert scheduler.pending_events == 2
+
+    scheduler.run_for(10)
+
+    assert [event.kind for event in scheduler.trace] == [1, 3]
+
+
+def test_run_until_reports_limit_when_future_event_remains() -> None:
+    scheduler = kairo_ecs.Scheduler()
+    scheduler.schedule_at(1, kind=1)
+    scheduler.schedule_at(4, kind=2)
+
+    outcome, event = scheduler.run_until(1)
+
+    assert outcome is kairo_ecs.StepOutcome.LIMIT_REACHED
+    assert event is not None
+    assert event.kind == 1
+    assert scheduler.pending_events == 1

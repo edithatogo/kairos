@@ -1,3 +1,9 @@
+export(kairoecs_arrow_roundtrip)
+export(kairoecs_cancel_event)
+export(kairoecs_event_log)
+export(kairoecs_ffi_status)
+export(kairoecs_new_scheduler)
 export(kairoecs_package_info)
+export(kairoecs_run_until)
+export(kairoecs_schedule_at)
 export(kairoecs_surface_ready)
-

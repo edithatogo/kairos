@@ -148,5 +148,9 @@ dependencies = [
 ]
 
 [[package]]
+name = "kairo-ecs-wasm"
+version = "0.0.0"
+
+[[package]]
 name = "kairo-ecs-webgpu"
 version = "0.1.0"

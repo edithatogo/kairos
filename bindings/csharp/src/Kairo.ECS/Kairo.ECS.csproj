@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net10.0</TargetFrameworks>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -8,14 +8,17 @@
     <PackageId>Kairo.ECS</PackageId>
     <Version>0.1.0-preview.1</Version>
     <Authors>KairoECS</Authors>
-    <Description>C# binding surface for Kairo ECS.</Description>
+    <Description>C# binding surface for deterministic Kairo ECS scheduler and native FFI package handoff.</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/edithatogo/kairos</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/edithatogo/kairos</PackageProjectUrl>
+    <PackageTags>simulation;ecs;des;binding;scheduler</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <NuGetAudit>false</NuGetAudit>
     <UseSharedCompilation>false</UseSharedCompilation>
     <IsPackable>true</IsPackable>
+    <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 
   <ItemGroup>

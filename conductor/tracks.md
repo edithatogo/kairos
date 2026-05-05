@@ -10,12 +10,12 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 03 | The Flow: DES Trajectory API & ABM Behavior API | In Progress | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
 | 04 | The Analyst: kairo-ecs-arrow | In Progress | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
 | 05 | The Window: kairo-ecs-viz | In Progress | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
-| 06 | Python Binding 3.10-3.14 | Planned | `python-agent` | See `conductor/tracks/06-*/spec.md` |
-| 07 | R Binding | Planned | `r-agent` | See `conductor/tracks/07-*/spec.md` |
-| 08 | Julia Binding | Planned | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
-| 09 | TypeScript/Wasm Binding | Planned | `typescript-agent` | See `conductor/tracks/09-*/spec.md` |
-| 10 | C# Binding .NET 10-11 | Planned | `csharp-agent` | See `conductor/tracks/10-*/spec.md` |
-| 11 | Go Binding | Planned | `go-agent` | See `conductor/tracks/11-*/spec.md` |
+| 06 | Python Binding 3.10-3.14 | In Progress | `python-agent` | See `conductor/tracks/06-*/spec.md` |
+| 07 | R Binding | In Progress | `r-agent` | See `conductor/tracks/07-*/spec.md` |
+| 08 | Julia Binding | In Progress | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
+| 09 | TypeScript/Wasm Binding | In Progress | `typescript-agent` | See `conductor/tracks/09-*/spec.md` |
+| 10 | C# Binding .NET 10-11 | In Progress | `csharp-agent` | See `conductor/tracks/10-*/spec.md` |
+| 11 | Go Binding | In Progress | `go-agent` | See `conductor/tracks/11-*/spec.md` |
 | 12 | Conformance, Testing & Benchmarks | In Progress | `conformance-agent + performance-agent` | See `conductor/tracks/12-*/spec.md` |
 | 13 | CI/CD, Code Quality & Supply Chain | In Progress | `ci-agent + security-agent` | See `conductor/tracks/13-*/spec.md` |
 | 14 | Documentation Site & Education | In Progress | `docs-agent` | See `conductor/tracks/14-*/spec.md` |

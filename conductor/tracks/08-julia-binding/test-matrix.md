@@ -2,11 +2,18 @@
 
 ## Required tests
 
-- `julia --project -e 'using Pkg; Pkg.test()'` for Julia package coverage.
-- `julia --project -e 'using Pkg; Pkg.instantiate()'` to verify environment resolution.
-- `julia --project -e 'include("tests/conformance.jl")'` or equivalent when Track 12 fixtures are consumed.
-- `julia --project -e 'using Pkg; Pkg.precompile()'` to catch package-load regressions early.
-- `julia --project -e 'using Pkg; Pkg.build()'` only when package metadata is present.
+| Gate | Command | Status | Evidence |
+|---|---|---|---|
+| Package tests | `julia --project=. -e 'using Pkg; Pkg.test()'` from `bindings/julia/` | blocked locally | `Get-Command julia` failed on 2026-05-06 because Julia is not on PATH. Tests are present in `bindings/julia/test/runtests.jl`. |
+| Environment resolution | `julia --project=. -e 'using Pkg; Pkg.instantiate()'` from `bindings/julia/` | blocked locally | `Get-Command julia` failed on 2026-05-06. Package has no registry dependencies in this slice. |
+| Precompile smoke | `julia --project=. -e 'using Pkg; Pkg.precompile()'` from `bindings/julia/` | blocked locally | `Get-Command julia` failed on 2026-05-06. |
+| Conformance bridge | `julia --project=. -e 'include("test/runtests.jl")'` from `bindings/julia/` | blocked locally | Uses local deterministic ordering and schema facade checks until Track 12 fixture runner is wired; local execution requires Julia. |
+
+## Implemented coverage
+
+- `ordered_events` returns events sorted by `(time_ticks, priority, sequence)`.
+- `arrow_event_log_schema` exposes the `kairo_ecs.event_log.v1` field order without requiring Arrow.jl at package load time.
+- `ffi_status` and `is_ffi_configured` explicitly report that native FFI is not configured.
 
 ## Future-surface controls
 
@@ -18,6 +25,8 @@
 ## CI command
 
 ```bash
-julia --project -e 'using Pkg; Pkg.test()' && julia --project -e 'using Pkg; Pkg.instantiate()'
+cd bindings/julia
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
+julia --project=. -e 'using Pkg; Pkg.test()'
 ```
 

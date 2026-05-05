@@ -11,3 +11,41 @@ test_that("surface readiness check passes", {
   expect_true(kairoecs_surface_ready())
 })
 
+test_that("native FFI status is explicit", {
+  status <- kairoecs_ffi_status()
+
+  expect_false(status$configured)
+  expect_true(grepl("not configured", status$reason, fixed = TRUE))
+  expect_true(is.na(status$abi))
+})
+
+test_that("scheduler dispatch order is deterministic", {
+  scheduler <- kairoecs_new_scheduler(run_id = "smoke")
+  scheduler <- kairoecs_schedule_at(scheduler, 10, "late", priority = 1)
+  scheduler <- kairoecs_schedule_at(scheduler, 5, "first", priority = 0)
+  scheduler <- kairoecs_schedule_at(scheduler, 10, "same-time-earlier-priority", priority = 0)
+  scheduler <- kairoecs_run_until(scheduler, 10)
+
+  log <- kairoecs_event_log(scheduler)
+  expect_identical(log$event_kind, c("first", "same-time-earlier-priority", "late"))
+  expect_identical(log$status, rep("dispatched", 3))
+  expect_identical(log$sequence, c(2, 3, 1))
+})
+
+test_that("event log roundtrip preserves the v1 schema facade", {
+  scheduler <- kairoecs_new_scheduler(run_id = "roundtrip", time_scale = "ticks")
+  scheduler <- kairoecs_schedule_at(scheduler, 1, "arrive", entity_id = 42)
+
+  log <- kairoecs_arrow_roundtrip(kairoecs_event_log(scheduler))
+
+  expect_identical(attr(log, "kairoecs_schema"), "kairo_ecs.event_log.v1")
+  expect_identical(
+    names(log),
+    c(
+      "run_id", "event_id", "entity_id", "time_ticks", "time_scale",
+      "priority", "sequence", "event_kind", "status", "payload_ref"
+    )
+  )
+  expect_identical(log$run_id, "roundtrip")
+  expect_identical(log$entity_id, 42)
+})

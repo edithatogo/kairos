@@ -114,6 +114,42 @@ $trackChecks = @(
         Concrete = @("crates/kairo-ecs-viz", "examples/viz", "website/docs/visualization")
     },
     @{
+        Id = "06"
+        Path = "conductor/tracks/06-python-binding-310-314"
+        Crates = @()
+        Concrete = @("bindings/python", "packaging/python")
+    },
+    @{
+        Id = "07"
+        Path = "conductor/tracks/07-r-binding"
+        Crates = @()
+        Concrete = @("bindings/r", "packaging/r")
+    },
+    @{
+        Id = "08"
+        Path = "conductor/tracks/08-julia-binding"
+        Crates = @()
+        Concrete = @("bindings/julia", "packaging/julia")
+    },
+    @{
+        Id = "09"
+        Path = "conductor/tracks/09-typescript-wasm-binding"
+        Crates = @("crates/kairo-ecs-wasm")
+        Concrete = @("bindings/typescript", "crates/kairo-ecs-wasm", "packaging/npm")
+    },
+    @{
+        Id = "10"
+        Path = "conductor/tracks/10-csharp-dotnet-10-11-binding"
+        Crates = @()
+        Concrete = @("bindings/csharp", "packaging/nuget")
+    },
+    @{
+        Id = "11"
+        Path = "conductor/tracks/11-go-binding"
+        Crates = @()
+        Concrete = @("bindings/go", "packaging/go")
+    },
+    @{
         Id = "21"
         Path = "conductor/tracks/21-verification-validation-uncertainty"
         Crates = @()

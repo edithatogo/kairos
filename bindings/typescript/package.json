@@ -16,7 +16,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node scripts/build.mjs",
     "prepare": "npm run build",
     "prepack": "npm run build",
     "typecheck": "node --experimental-strip-types --check src/index.ts",
