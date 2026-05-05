@@ -1,9 +1,9 @@
 # Risk Register: Track 27 Developer Experience & Reproducible Environments
 
-| Risk | Likelihood | Impact | Mitigation | Owner |
-|---|---:|---:|---|---|
-| Track becomes documentation-only and does not change user outcomes | Medium | High | Require public artifact plus release gate | track subagent |
-| Subagent invents behavior that conflicts with core contracts | Medium | High | Contract-first workflow and ADR requirement | contracts-agent |
-| Scope creep delays kernel MVP | Medium | Medium | Keep core independent; stage outputs by alpha/beta/1.0 | release-agent |
-| Community-facing claim exceeds implemented capability | Medium | High | Mark maturity status and require conformance fixtures | docs-agent |
-| Automation relies on unavailable tooling | Medium | Medium | Use dry-run/allowed-failure lanes until toolchain is stable | ci-agent |
+| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+|---|---|---|---|---|---|---|
+| Dev environment not reproducible across operating systems | 4 | 4 | 16 | Nix flake or devcontainer definition with locked inputs; CI validates fresh checkout builds on all platforms | devx-agent | Fresh checkout fails `cargo build` on any supported OS |
+| Container/devcontainer drift from CI environment | 3 | 4 | 12 | Use same base image in devcontainer and CI; scheduled rebuild to detect drift | ci-agent | Devcontainer and CI diverge by >1 dependency version |
+| Toolchain version conflicts in dev environment | 3 | 4 | 12 | Lock all toolchains in `rust-toolchain.toml` + devShell; pin wasm-pack, wasm-bindgen, and binding toolchains | devx-agent | Toolchain version mismatch blocks developer build |
+| Onboarding time >30 minutes to first `cargo build` | 4 | 3 | 12 | One-command setup script; benchmark fresh-clone-to-build time in CI | devx-agent | Fresh-clone-to-build exceeds 30min benchmark |
+| Dependency cache invalidation on every checkout | 3 | 3 | 9 | Document `sccache` and `cargo-chef` usage; verify cache hits in CI | ci-agent | Cache miss rate >20% on incremental builds |

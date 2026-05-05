@@ -1,9 +1,9 @@
 # Risk Register: Track 26 Interoperability Standards Review
 
-| Risk | Likelihood | Impact | Mitigation | Owner |
-|---|---:|---:|---|---|
-| Track becomes documentation-only and does not change user outcomes | Medium | High | Require public artifact plus release gate | track subagent |
-| Subagent invents behavior that conflicts with core contracts | Medium | High | Contract-first workflow and ADR requirement | contracts-agent |
-| Scope creep delays kernel MVP | Medium | Medium | Keep core independent; stage outputs by alpha/beta/1.0 | release-agent |
-| Community-facing claim exceeds implemented capability | Medium | High | Mark maturity status and require conformance fixtures | docs-agent |
-| Automation relies on unavailable tooling | Medium | Medium | Use dry-run/allowed-failure lanes until toolchain is stable | ci-agent |
+| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+|---|---|---|---|---|---|---|
+| Interoperability standard chosen without binding conformance requirement | 3 | 4 | 12 | Every adopted standard must map to a CI-checked conformance assertion | interop-agent | Standard referenced in spec without CI conformance check |
+| Cross-binding data format drift | 3 | 4 | 12 | Contract-first workflow; shared Arrow schema and C header as single source of truth | contracts-agent | Any binding diverges from canonical schema |
+| Standard version compatibility not tracked | 3 | 4 | 12 | Maintain a standards-version matrix; test against minimum and current versions in CI | interop-agent | Version matrix stale or missing for any adopted standard |
+| Interoperability claim exceeds implemented capability | 3 | 4 | 12 | Mark maturity status for each standard; require conformance fixtures | docs-agent | Interop claim published without conformance fixture pass |
+| Standards body changes break compliance | 3 | 3 | 9 | Monitor standards-body release feeds; scheduled CI against latest spec versions | interop-agent | Standards-body update triggers unplanned compliance work |
