@@ -95,7 +95,7 @@ jobs:
               raise SystemExit(f'unexpected artifact kinds: {sorted(kinds)}')
           PY
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: kairo-ecs-release-${{ github.event.inputs.version }}
           path: dist/
