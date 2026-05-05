@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check PR metadata and commits
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const pattern = /\[(skip ci|ci skip|no ci|skip actions|actions skip)\]|skip-checks:\s*true/i;

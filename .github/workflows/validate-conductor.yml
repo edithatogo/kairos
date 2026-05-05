@@ -19,7 +19,7 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Validate conductor setup
         run: pwsh -NoProfile -File scripts/validate_conductor_setup.ps1

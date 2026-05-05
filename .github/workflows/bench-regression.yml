@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Validate benchmark metadata
         run: python benches/benchmark_smoke.py
       - name: Validate threshold coverage
@@ -35,7 +35,7 @@ jobs:
       - name: Compile benchmark targets
         run: cargo bench --workspace --no-run
       - name: Upload regression guard report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: bench-regression-threshold-report
