@@ -1,0 +1,120 @@
+name: Package Dry Runs
+
+on:
+  pull_request:
+    paths:
+      - 'crates/**'
+      - 'bindings/**'
+      - 'templates/**'
+      - '.github/workflows/package-dry-run.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rust-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cargo package dry run
+        run: |
+          test -f Cargo.toml
+          test -f crates/kairo-ecs-core/Cargo.toml
+          test -f crates/kairo-ecs-rng/Cargo.toml
+          test -f crates/kairo-ecs-state/Cargo.toml
+          test -f crates/kairo-ecs-types/Cargo.toml
+          cargo metadata --no-deps --format-version 1 >/dev/null
+          cargo test --workspace --all-features --no-run
+          cargo publish --dry-run --workspace
+  python-package:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Python package dry run
+        run: |
+          test -f bindings/python/pyproject.toml
+          test -d bindings/python/kairo_ecs
+          python -m pip install -U build twine
+          cd bindings/python
+          python -m build
+          twine check dist/*
+  r-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+      - name: R package dry run
+        run: |
+          test -f bindings/r/DESCRIPTION
+          test -f bindings/r/NAMESPACE
+          test -d bindings/r/R
+          cd bindings/r
+          R CMD build .
+          R CMD check --no-manual --as-cran *.tar.gz
+  julia-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+      - name: Julia package dry run
+        run: |
+          test -f bindings/julia/Project.toml
+          test -d bindings/julia/src
+          test -d bindings/julia/test
+          cd bindings/julia
+          julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.test()'
+  go-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - name: Go package dry run
+        run: |
+          test -f bindings/go/go.mod
+          test -f bindings/go/kairoecs.go
+          test -f bindings/go/kairoecs_test.go
+          cd bindings/go
+          go test ./...
+  npm-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 'lts/*' }
+      - name: npm pack dry run
+        run: |
+          test -f bindings/typescript/package.json
+          test -f bindings/typescript/tsconfig.json
+          test -d bindings/typescript/src
+          cd bindings/typescript
+          npm ci
+          npm run typecheck
+          npm test
+          npm pack --dry-run
+  nuget-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x' }
+      - name: dotnet pack dry run
+        run: |
+          test -f bindings/csharp/Kairo.ECS.sln
+          test -f bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj
+          test -f bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj
+          dotnet restore bindings/csharp/Kairo.ECS.sln
+          dotnet test bindings/csharp/Kairo.ECS.sln -c Release --no-restore
+          dotnet pack bindings/csharp/Kairo.ECS.sln -c Release

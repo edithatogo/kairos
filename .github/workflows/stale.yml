@@ -1,0 +1,12 @@
+name: Stale Issues and PRs
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Stale issue workflow initialized for maintenance coverage."

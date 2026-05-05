@@ -1,0 +1,13 @@
+Package: kairoECS
+Title: Event-Component Simulation Bindings
+Version: 0.1.0
+Authors@R: c(person("KairoECS", "Maintainers", role = c("aut", "cre"), email = "maintainers@example.com"))
+Description: R bindings for the KairoECS Rust simulation engine.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.0
+Depends: R (>= 4.2)
+Imports: arrow, jsonlite, rlang, vctrs
+Suggests: testthat, lintr, pkgdown
+Config/testthat/edition: 3

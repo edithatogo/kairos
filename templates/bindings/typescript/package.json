@@ -1,0 +1,24 @@
+{
+  "name": "@kairo-ecs/core",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "docs": "typedoc src/index.ts"
+  },
+  "dependencies": {
+    "apache-arrow": "latest"
+  },
+  "devDependencies": {
+    "typescript": "latest",
+    "vite": "latest",
+    "vitest": "latest",
+    "typedoc": "latest",
+    "eslint": "latest",
+    "prettier": "latest"
+  }
+}

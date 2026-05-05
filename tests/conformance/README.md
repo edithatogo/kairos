@@ -1,0 +1,18 @@
+# Conformance Tests
+
+Language bindings should execute the JSON fixtures under `conformance/fixtures` and compare results with the Rust reference behavior.
+
+## Runner contract
+
+1. Load `conformance/fixtures/manifest.json`.
+2. Execute every fixture marked `ready`.
+3. Compare the observed dispatch order, summary, schema fingerprint, or RNG replay result with the fixture contract.
+4. Emit a stable conformance report that names the fixture ID, source file, and pass/fail outcome.
+
+## Downstream use
+
+- Track 01 should consume the ready scheduler and RNG fixtures first.
+- Track 02 should reuse the same manifest when the stable facade is available.
+- Tracks 06-11 should treat the manifest as the authority for shared fixture IDs and assertions.
+
+Track 12 owns the shared runner once the public CLI/API surface exists.

@@ -1,0 +1,283 @@
+schema_version: 1
+agents:
+  - id: foundation-agent
+    tracks: ["00"]
+    owned_paths:
+      - README.md
+      - LICENSE.md
+      - governance/
+      - docs/adr/
+      - conductor/status.md
+    handoff_protocol: ADR for contract changes
+
+  - id: core-scheduler-agent
+    tracks: ["01"]
+    owned_paths:
+      - crates/kairo-ecs-core/
+    handoff_protocol: FFI wrapper code
+
+  - id: ecs-agent
+    tracks: ["01"]
+    owned_paths:
+      - crates/kairo-ecs-state/
+    handoff_protocol: scheduler internals
+
+  - id: contracts-agent
+    tracks: ["01"]
+    owned_paths:
+      - crates/kairo-ecs-types/
+    handoff_protocol: language wrappers
+
+  - id: ffi-agent
+    tracks: ["02"]
+    owned_paths:
+      - crates/kairo-ecs-ffi/
+      - include/
+    handoff_protocol: host-language ergonomics
+
+  - id: uniffi-agent
+    tracks: ["02"]
+    owned_paths:
+      - crates/kairo-ecs-uniffi/
+    handoff_protocol: C ABI contract
+
+  - id: diplomat-agent
+    tracks: ["02"]
+    owned_paths:
+      - crates/kairo-ecs-diplomat/
+    handoff_protocol: C ABI contract
+
+  - id: des-api-agent
+    tracks: ["03"]
+    owned_paths:
+      - crates/kairo-ecs-des/
+      - examples/flow/
+    handoff_protocol: ECS internals
+
+  - id: abm-api-agent
+    tracks: ["03"]
+    owned_paths:
+      - crates/kairo-ecs-abm/
+      - examples/flow/
+    handoff_protocol: scheduler internals
+
+  - id: arrow-agent
+    tracks: ["04"]
+    owned_paths:
+      - crates/kairo-ecs-arrow/
+      - schemas/arrow/
+      - examples/telemetry/
+    handoff_protocol: DES/ABM behavior semantics
+
+  - id: viz-agent
+    tracks: ["05"]
+    owned_paths:
+      - crates/kairo-ecs-viz/
+      - examples/viz/
+      - website/docs/visualization/
+    handoff_protocol: headless core
+
+  - id: python-agent
+    tracks: ["06"]
+    owned_paths:
+      - bindings/python/
+      - packaging/python/
+    handoff_protocol: FFI internals
+
+  - id: r-agent
+    tracks: ["07"]
+    owned_paths:
+      - bindings/r/
+      - packaging/r/
+    handoff_protocol: FFI internals
+
+  - id: julia-agent
+    tracks: ["08"]
+    owned_paths:
+      - bindings/julia/
+      - packaging/julia/
+    handoff_protocol: FFI internals
+
+  - id: typescript-agent
+    tracks: ["09"]
+    owned_paths:
+      - bindings/typescript/
+      - crates/kairo-ecs-wasm/
+      - packaging/npm/
+    handoff_protocol: FFI internals
+
+  - id: csharp-agent
+    tracks: ["10"]
+    owned_paths:
+      - bindings/csharp/
+      - packaging/nuget/
+    handoff_protocol: FFI internals
+
+  - id: go-agent
+    tracks: ["11"]
+    owned_paths:
+      - bindings/go/
+      - packaging/go/
+    handoff_protocol: FFI internals
+
+  - id: conformance-agent
+    tracks: ["12"]
+    owned_paths:
+      - conformance/
+      - tests/conformance/
+    handoff_protocol: package implementation
+
+  - id: performance-agent
+    tracks: ["12"]
+    owned_paths:
+      - benches/
+      - crates/kairo-ecs-bench/
+    handoff_protocol: public API design
+
+  - id: ci-agent
+    tracks: ["13"]
+    owned_paths:
+      - .github/
+    handoff_protocol: product code without owner
+
+  - id: security-agent
+    tracks: ["13", "20"]
+    owned_paths:
+      - SECURITY.md
+      - .github/workflows/scorecard.yml
+      - .github/workflows/sbom-attestations.yml
+      - deny.toml
+      - rust-toolchain.toml
+    handoff_protocol: release approvals alone
+
+  - id: docs-agent
+    tracks: ["14"]
+    owned_paths:
+      - docs/
+      - website/
+      - examples/docs/
+    handoff_protocol: API contracts without ADR
+
+  - id: release-agent
+    tracks: ["15", "16"]
+    owned_paths:
+      - packaging/
+      - .github/workflows/release.yml
+      - docs/release/
+      - CHANGELOG.md
+    handoff_protocol: compatibility policy alone
+
+  - id: governance-agent
+    tracks: ["16"]
+    owned_paths:
+      - conductor/maintenance-governance.md
+      - docs/release/
+      - CHANGELOG.md
+    handoff_protocol: ADR for contract changes
+
+  - id: community-agent
+    tracks: ["17"]
+    owned_paths:
+      - docs/community/
+      - examples/
+    handoff_protocol: release claims
+
+  - id: benchmark-agent
+    tracks: ["18"]
+    owned_paths:
+      - docs/benchmarks/
+      - benches/
+    handoff_protocol: marketing claims alone
+
+  - id: research-agent
+    tracks: ["19"]
+    owned_paths:
+      - CITATION.cff
+      - codemeta.json
+      - .zenodo.json
+      - paper/
+    handoff_protocol: release metadata without release-agent
+
+  - id: vv-uq-agent
+    tracks: ["21"]
+    owned_paths:
+      - docs/trustworthy-simulation/
+      - conformance/
+    handoff_protocol: kernel determinism semantics
+
+  - id: experiment-agent
+    tracks: ["22"]
+    owned_paths:
+      - crates/kairo-ecs-cli/
+      - examples/experiments/
+    handoff_protocol: scheduler internals
+
+  - id: model-zoo-agent
+    tracks: ["23"]
+    owned_paths:
+      - examples/model-zoo/
+      - docs/community/
+    handoff_protocol: core crate APIs
+
+  - id: playground-agent
+    tracks: ["24"]
+    owned_paths:
+      - website/
+      - examples/viz/
+    handoff_protocol: visualization core contract
+
+  - id: api-governance-agent
+    tracks: ["25"]
+    owned_paths:
+      - conductor/api-design-review.md
+      - docs/design/
+    handoff_protocol: API acceptance without maintainers
+
+  - id: interop-agent
+    tracks: ["26"]
+    owned_paths:
+      - docs/interoperability/
+      - conductor/interoperability-standards.md
+    handoff_protocol: core architecture alone
+
+  - id: dx-agent
+    tracks: ["27"]
+    owned_paths:
+      - .devcontainer/
+      - devbox.json
+      - mise.toml
+      - scripts/
+      - justfile
+    handoff_protocol: CI release gates alone
+
+  - id: redteam-agent
+    tracks: ["28"]
+    owned_paths:
+      - reviews/
+      - conductor/red-team-review.md
+      - conductor/devils-advocate-review.md
+    handoff_protocol: mitigations without owner agreement
+
+  - id: wave-manager-agent
+    tracks: []
+    owned_paths:
+      - conductor/wave-policy.md
+      - conductor/tracks.yaml
+    handoff_protocol: ADR for wave boundary changes
+
+  - id: toolchain-agent
+    tracks: []
+    owned_paths:
+      - rust-toolchain.toml
+      - deny.toml
+      - justfile
+      - scripts/bootstrap.sh
+    handoff_protocol: ADR for toolchain version bumps
+
+  - id: perf-regression-agent
+    tracks: []
+    owned_paths:
+      - benches/
+      - conductor/benchmarks-reproducibility.md
+      - conformance/fixtures/
+    handoff_protocol: ADR for threshold changes

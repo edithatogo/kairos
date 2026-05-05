@@ -1,0 +1,11 @@
+flowchart LR
+    Contributor[Contributor]
+    Regular[Regular contributor]
+    Steward[Track steward]
+    Maintainer[Maintainer]
+    Release[Release manager]
+    Security[Security responder]
+
+    Contributor --> Regular --> Steward --> Maintainer
+    Maintainer --> Release
+    Maintainer --> Security

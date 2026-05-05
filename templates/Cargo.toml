@@ -1,0 +1,45 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/kairo-ecs-types",
+  "crates/kairo-ecs-core",
+  "crates/kairo-ecs-state",
+  "crates/kairo-ecs-rng",
+  "crates/kairo-ecs-des",
+  "crates/kairo-ecs-abm",
+  "crates/kairo-ecs-arrow",
+  "crates/kairo-ecs-ffi",
+  "crates/kairo-ecs-uniffi",
+  "crates/kairo-ecs-diplomat",
+  "crates/kairo-ecs-wasm",
+  "crates/kairo-ecs-viz",
+  "crates/kairo-ecs-cli",
+  "crates/kairo-ecs-conformance",
+  "crates/kairo-ecs-bench",
+]
+
+[workspace.package]
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/<org>/kairo-ecs"
+rust-version = "1.85"
+
+[workspace.dependencies]
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+smallvec = "1"
+slotmap = "1"
+slab = "0.4"
+hashbrown = "0.14"
+rand = "0.8"
+rand_core = "0.6"
+rand_chacha = "0.3"
+rand_distr = "0.4"
+arrow-array = "*"
+arrow-schema = "*"
+arrow-ipc = "*"
+parquet = "*"
+proptest = "1"
+criterion = "0.5"

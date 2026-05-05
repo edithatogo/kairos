@@ -1,0 +1,41 @@
+name: Release Attestations
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_path:
+        description: Path to the release artifacts to attest
+        required: true
+        default: dist
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  attest:
+    runs-on: ubuntu-latest
+    env:
+      ARTIFACT_PATH: ${{ github.event.inputs.artifact_path || 'dist' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify release artifacts exist
+        run: |
+          test -d "${ARTIFACT_PATH}"
+          test -f "${ARTIFACT_PATH}/RELEASE.txt"
+          test -f "${ARTIFACT_PATH}/SHA256SUMS"
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0
+      - name: Generate SBOM
+        run: syft dir:${ARTIFACT_PATH} -o spdx-json=${ARTIFACT_PATH}/sbom.spdx.json
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-sbom-spdx
+          path: ${{ env.ARTIFACT_PATH }}/sbom.spdx.json
+      - name: Attest SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ env.ARTIFACT_PATH }}
+          sbom-path: ${{ env.ARTIFACT_PATH }}/sbom.spdx.json

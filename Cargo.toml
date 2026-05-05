@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/kairo-ecs-types",
+  "crates/kairo-ecs-core",
+  "crates/kairo-ecs-state",
+  "crates/kairo-ecs-rng",
+  "crates/kairo-ecs-ffi",
+  "crates/kairo-ecs-uniffi",
+  "crates/kairo-ecs-diplomat",
+  "crates/kairo-ecs-bench",
+  "crates/kairo-ecs-cli",
+]
+
+[workspace.package]
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/edithatogo/kairos"
+rust-version = "1.76"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"

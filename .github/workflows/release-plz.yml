@@ -1,0 +1,12 @@
+name: Release Plz
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * 1'
+
+jobs:
+  release-plz:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Release-plz workflow initialized for maintenance coverage."

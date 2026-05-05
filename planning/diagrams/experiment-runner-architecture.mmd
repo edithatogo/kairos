@@ -1,0 +1,12 @@
+flowchart LR
+    Manifest[Scenario manifest]
+    Sweep[Parameter sweep]
+    Seeds[Seed allocator]
+    Queue[Run queue]
+    Workers[Workers]
+    Engine[KairoECS engine]
+    Telemetry[Arrow/Parquet]
+    Result[Result manifest]
+    Compare[Comparison report]
+
+    Manifest --> Sweep --> Seeds --> Queue --> Workers --> Engine --> Telemetry --> Result --> Compare

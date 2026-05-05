@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "root": "conformance/fixtures",
+  "fixtures": [
+    {
+      "id": "scheduler_ordering_v1",
+      "status": "ready",
+      "kind": "ordering",
+      "source": "deterministic_ordering.json",
+      "consumers": ["01", "02", "06", "07", "08", "09", "10", "11"],
+      "assertions": [
+        "order by time, priority, sequence",
+        "expected_kind_order matches the emitted trace"
+      ]
+    },
+    {
+      "id": "scheduler_cancellation_v1",
+      "status": "ready",
+      "kind": "cancellation",
+      "source": "cancellation.json",
+      "consumers": ["01", "02", "06", "07", "08", "09", "10", "11"],
+      "assertions": [
+        "cancelled events do not appear in the remaining dispatch order",
+        "remaining dispatch order stays stable"
+      ]
+    },
+    {
+      "id": "rng_reproducibility_v1",
+      "status": "ready",
+      "kind": "rng",
+      "source": "rng_replay.json",
+      "consumers": ["01", "02", "06", "07", "08", "09", "10", "11"],
+      "assertions": [
+        "same run seed and entity handle yield the same stream",
+        "entity-derived RNG stays deterministic across bindings"
+      ]
+    },
+    {
+      "id": "zero_delay_guard_v1",
+      "status": "planned",
+      "kind": "scheduler",
+      "source": null,
+      "consumers": ["01", "02", "06", "07", "08", "09", "10", "11"],
+      "assertions": [
+        "zero-delay loops are rejected or guarded consistently",
+        "no livelock is introduced by the guardrail"
+      ]
+    },
+    {
+      "id": "des_resource_queue_v1",
+      "status": "planned",
+      "kind": "des",
+      "source": null,
+      "consumers": ["01", "02", "06", "07", "08", "09", "10", "11"],
+      "assertions": [
+        "resource queue behavior is stable",
+        "queue semantics do not change across bindings"
+      ]
+    },
+    {
+      "id": "abm_behavior_update_v1",
+      "status": "planned",
+      "kind": "abm",
+      "source": null,
+      "consumers": ["01", "02", "06", "07", "08", "09", "10", "11"],
+      "assertions": [
+        "behavior updates are deterministic",
+        "summary metrics remain reproducible"
+      ]
+    },
+    {
+      "id": "hybrid_des_abm_v1",
+      "status": "planned",
+      "kind": "hybrid",
+      "source": null,
+      "consumers": ["01", "02", "06", "07", "08", "09", "10", "11"],
+      "assertions": [
+        "mixed DES and ABM execution keeps event order stable",
+        "trace and summary outputs stay compatible"
+      ]
+    },
+    {
+      "id": "arrow_event_log_v1",
+      "status": "planned",
+      "kind": "arrow",
+      "source": null,
+      "consumers": ["04", "01", "02", "06", "07", "08", "09", "10", "11"],
+      "assertions": [
+        "Arrow schema fingerprint is stable",
+        "event-log columns match Track 04 schema"
+      ]
+    },
+    {
+      "id": "ffi_lifecycle_v1",
+      "status": "planned",
+      "kind": "ffi",
+      "source": null,
+      "consumers": ["02", "06", "07", "08", "09", "10", "11"],
+      "assertions": [
+        "handles are created and released safely",
+        "no leak, double free, or panic crosses the FFI boundary"
+      ]
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": "schedule_1m_events",
+      "status": "canonical",
+      "owner": "01",
+      "measure": "scheduler insertion throughput",
+      "consumer_behavior": "Measure wrapper overhead against the same kernel"
+    },
+    {
+      "id": "pop_1m_events",
+      "status": "canonical",
+      "owner": "01",
+      "measure": "queue drain throughput",
+      "consumer_behavior": "Measure wrapper overhead against the same kernel"
+    },
+    {
+      "id": "schedule_cancel_1m_mixed",
+      "status": "canonical",
+      "owner": "01",
+      "measure": "cancellation stability under load",
+      "consumer_behavior": "Reuse the same scenario name and input mix"
+    },
+    {
+      "id": "create_1m_entities",
+      "status": "canonical",
+      "owner": "01",
+      "measure": "entity allocator throughput",
+      "consumer_behavior": "Reuse the same scenario name and report wrapper cost"
+    },
+    {
+      "id": "component_insert_1m",
+      "status": "canonical",
+      "owner": "01",
+      "measure": "component store throughput",
+      "consumer_behavior": "Reuse the same scenario name and report wrapper cost"
+    },
+    {
+      "id": "hybrid_des_abm_smoke_100k",
+      "status": "canonical",
+      "owner": "01",
+      "measure": "mixed DES and ABM smoke path",
+      "consumer_behavior": "Reuse the same scenario name and report wrapper cost"
+    }
+  ]
+}

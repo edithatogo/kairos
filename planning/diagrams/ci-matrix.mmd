@@ -1,0 +1,21 @@
+flowchart LR
+    CI[GitHub Actions]
+    Rust[Rust stable/MSRV]
+    Py[Python 3.10-3.14]
+    R[R CMD check]
+    Julia[Julia Pkg.test]
+    TS[Node + Wasm]
+    CS[.NET 10-11]
+    Go[Go test]
+    Docs[Docusaurus]
+    Sec[CodeQL/audit/deny/SBOM]
+
+    CI --> Rust
+    CI --> Py
+    CI --> R
+    CI --> Julia
+    CI --> TS
+    CI --> CS
+    CI --> Go
+    CI --> Docs
+    CI --> Sec

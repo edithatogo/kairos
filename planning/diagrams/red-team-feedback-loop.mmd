@@ -1,0 +1,10 @@
+flowchart TD
+    Track[Track plan] --> Premortem[Pre-mortem]
+    Premortem --> Build[Build artifacts]
+    Build --> RedTeam[Red-team review]
+    RedTeam --> Findings[Findings]
+    Findings --> Blockers{Release blockers?}
+    Blockers -- yes --> Mitigate[Mitigate]
+    Blockers -- no --> Accept[Accept residual risk]
+    Mitigate --> RedTeam
+    Accept --> Release[Release gate]

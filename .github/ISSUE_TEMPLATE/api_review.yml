@@ -1,0 +1,25 @@
+name: API design review
+description: Propose or change a public API, ABI, or Arrow schema
+title: "api: "
+labels: [api-review, needs-adr]
+body:
+  - type: textarea
+    id: feature
+    attributes:
+      label: Feature
+      description: What user problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: surfaces
+    attributes:
+      label: Surface matrix
+      description: Rust, C ABI, Python, R, Julia, TypeScript, C#, Go
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility impact
+    validations:
+      required: true

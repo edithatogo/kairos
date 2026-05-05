@@ -1,0 +1,53 @@
+flowchart TD
+    T00[00 Foundation/Governance/Naming]
+    T01[01 Heart: kairo-ecs-core + kairo-ecs-state]
+    T02[02 Bridge: kairo-ecs-ffi + UniFFI/Diplomat]
+    T03[03 Flow: DES Trajectory + ABM Behavior]
+    T04[04 Analyst: kairo-ecs-arrow]
+    T05[05 Window: kairo-ecs-viz]
+    T06[06 Python 3.10-3.14]
+    T07[07 R]
+    T08[08 Julia]
+    T09[09 TypeScript/Wasm]
+    T10[10 C# .NET 10-11]
+    T11[11 Go]
+    T12[12 Conformance/Benchmarks]
+    T13[13 CI/CD/Supply Chain]
+    T14[14 Docs Site]
+    T15[15 Packaging/Publishing]
+    T16[16 Release Governance/Maintenance]
+
+    T00 --> T01
+    T00 --> T13
+    T00 --> T14
+    T00 --> T16
+    T00 --> T12
+    T01 --> T02
+    T01 --> T03
+    T01 --> T04
+    T01 --> T05
+    T02 --> T06
+    T02 --> T07
+    T02 --> T08
+    T02 --> T09
+    T02 --> T10
+    T02 --> T11
+    T04 --> T06
+    T04 --> T07
+    T04 --> T08
+    T04 --> T09
+    T04 --> T10
+    T04 --> T11
+    T03 --> T12
+    T04 --> T12
+    T05 --> T14
+    T06 --> T15
+    T07 --> T15
+    T08 --> T15
+    T09 --> T15
+    T10 --> T15
+    T11 --> T15
+    T12 --> T15
+    T13 --> T15
+    T14 --> T15
+    T16 --> T15

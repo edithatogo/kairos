@@ -1,0 +1,8 @@
+flowchart LR
+    Scenario[TOML scenario] --> Matrix[Parameter matrix]
+    Matrix --> Seeds[Seed expansion]
+    Seeds --> Workers[Parallel workers]
+    Workers --> Arrow[Arrow outputs]
+    Workers --> Logs[Structured logs]
+    Arrow --> Report[Comparison report]
+    Logs --> Report

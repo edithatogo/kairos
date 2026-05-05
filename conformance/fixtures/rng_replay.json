@@ -1,0 +1,8 @@
+{
+  "fixture": "rng_replay",
+  "version": 1,
+  "run_seed": 7,
+  "entity": { "index": 42, "generation": 0 },
+  "requirement": "same run seed and entity handle produce the same stream"
+}
+

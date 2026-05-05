@@ -1,0 +1,18 @@
+flowchart TD
+    Proposal[Public API proposal]
+    Rust[Rust shape]
+    CABI[C ABI shape]
+    Bindings[All host-language shapes]
+    ABIImpact{ABI/schema impact?}
+    ADR[ADR required]
+    Fixture[Conformance fixture]
+    Review[API governance review]
+    Accept[Accepted]
+    Reject[Reject/rework]
+
+    Proposal --> Rust --> CABI --> Bindings --> ABIImpact
+    ABIImpact -- yes --> ADR --> Fixture
+    ABIImpact -- no --> Fixture
+    Fixture --> Review
+    Review -- pass --> Accept
+    Review -- fail --> Reject

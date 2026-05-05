@@ -1,0 +1,13 @@
+# Test Matrix: Track 18 Comparative Benchmarks & Reproducibility
+
+| Check | Validation command | Required by alpha | Required by beta | Required by 1.0 |
+|---|---|---:|---:|---:|
+| Benchmark plan exists | `Test-Path benches/benchmark-plan.md` | yes | yes | yes |
+| Fixture manifest exists | `Test-Path conformance/fixtures/manifest.json` | yes | yes | yes |
+| Ready fixture IDs are named | `rg -n "scheduler_ordering_v1|scheduler_cancellation_v1|rng_reproducibility_v1" conformance/fixtures/manifest.json conductor/tracks/18-comparative-benchmarks-reproducibility/plan.md conductor/tracks/18-comparative-benchmarks-reproducibility/handoff.md` | yes | yes | yes |
+| Measurement inputs are explicit | `rg -n "seed|fixture|baseline|comparison|repeatable" benches/benchmark-plan.md conductor/tracks/18-comparative-benchmarks-reproducibility/plan.md` | yes | yes | yes |
+| Smoke workflow matches the real contract | `rg -n "benchmark-smoke|cargo bench --workspace --no-run|test -f Cargo.toml|test -d benchmarks -o -d benches" .github/workflows/benchmark-smoke.yml` | yes | yes | yes |
+| Artifact existence check | `Test-Path conformance/fixtures/manifest.json; Test-Path benches/benchmark-plan.md; Test-Path .github/workflows/benchmark-smoke.yml` | yes | yes | yes |
+| Comparison criteria are explicit | `rg -n "comparison|baseline|fixture|seed|host" conductor/tracks/18-comparative-benchmarks-reproducibility/plan.md conductor/tracks/18-comparative-benchmarks-reproducibility/handoff.md` | no | yes | yes |
+| Reproducibility claim is tied to a real fixture or benchmark target | `rg -n "scheduler_ordering_v1|scheduler_cancellation_v1|rng_reproducibility_v1|benchmark" benches/benchmark-plan.md conductor/tracks/18-comparative-benchmarks-reproducibility/plan.md conductor/tracks/18-comparative-benchmarks-reproducibility/handoff.md` | yes | yes | yes |
+| Red-team objections about host variance are answered | `rg -n "host variance|unstable host|seed|determin" conductor/tracks/18-comparative-benchmarks-reproducibility/plan.md conductor/tracks/18-comparative-benchmarks-reproducibility/handoff.md` | yes | yes | yes |

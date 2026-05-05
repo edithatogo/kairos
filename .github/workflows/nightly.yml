@@ -1,0 +1,22 @@
+name: nightly
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  heavy-rust-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+      - uses: Swatinem/rust-cache@v2
+      - name: Heavy checks
+        run: |
+          test -f Cargo.toml
+          cargo +nightly miri test -p kairo-ecs-core
+          cargo +nightly miri test -p kairo-ecs-state
+          cargo bench --workspace

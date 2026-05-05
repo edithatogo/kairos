@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.12.0/.schema/devbox.schema.json",
+  "packages": [
+    "rustup",
+    "pkg-config",
+    "openssl",
+    "python314",
+    "nodejs",
+    "go",
+    "julia",
+    "R",
+    "dotnet-sdk_10",
+    "just",
+    "cargo-nextest",
+    "cargo-vet"
+  ],
+  "shell": {
+    "init_hook": [
+      "echo 'KairoECS devbox environment ready'",
+      "rustup component add clippy rustfmt >/dev/null 2>&1 || true"
+    ],
+    "scripts": {
+      "test": [
+        "just test"
+      ],
+      "validate": [
+        "just dev-validate"
+      ]
+    }
+  }
+}

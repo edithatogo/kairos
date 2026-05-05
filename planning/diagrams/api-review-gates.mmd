@@ -1,0 +1,13 @@
+flowchart TD
+    Proposal[Feature proposal] --> Rust[Rust API]
+    Proposal --> CABI[C ABI]
+    Proposal --> Host[Host-language APIs]
+    Rust --> Matrix[Compatibility matrix]
+    CABI --> Matrix
+    Host --> Matrix
+    Matrix --> ADR{ADR needed?}
+    ADR -- yes --> Decision[Decision record]
+    ADR -- no --> Fixtures[Conformance fixtures]
+    Decision --> Fixtures
+    Fixtures --> Docs[Docs]
+    Docs --> Merge[Merge]

@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use KairoECS in research or operational analysis, please cite the project using this metadata. Keep this file synchronized with the release note, archive note, and Zenodo draft before the first archived release."
+title: "KairoECS: A Rust-first multi-method simulation engine for DES and ABM"
+version: "0.4.0-alpha.1"
+date-released: "2026-05-05"
+type: software
+authors:
+  - name: "KairoECS contributors"
+abstract: "KairoECS is a Rust-first multi-method simulation engine treating discrete event simulation and agent-based modeling as equal paradigms, with polyglot bindings and Arrow telemetry."
+keywords:
+  - simulation
+  - discrete-event-simulation
+  - agent-based-modeling
+  - rust
+  - apache-arrow
+license: "Apache-2.0 OR MIT"
+repository-code: "https://github.com/edithatogo/kairos"

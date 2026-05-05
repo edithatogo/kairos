@@ -1,0 +1,23 @@
+flowchart TD
+    Naming[Naming conflict]
+    Bindings[Six bindings diverge]
+    FFI[Unsafe FFI]
+    Supply[Native supply-chain risk]
+    Claims[Overpromised performance/zero-copy]
+    DueDiligence[Naming due diligence gate]
+    APIReview[API review + conformance]
+    Fuzz[Fuzz + Miri + ownership docs]
+    Trust[SBOM + attestations + Scorecard]
+    Benchmark[Benchmark policy + caveats]
+    Release[Release readiness]
+
+    Naming --> DueDiligence
+    Bindings --> APIReview
+    FFI --> Fuzz
+    Supply --> Trust
+    Claims --> Benchmark
+    DueDiligence --> Release
+    APIReview --> Release
+    Fuzz --> Release
+    Trust --> Release
+    Benchmark --> Release

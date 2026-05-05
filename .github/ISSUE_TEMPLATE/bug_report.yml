@@ -1,0 +1,36 @@
+name: Bug report
+description: Report a reproducible problem
+title: "bug: "
+labels: [bug, needs-repro]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: KairoECS version/commit
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - Rust
+        - C ABI/FFI
+        - Python
+        - R
+        - Julia
+        - TypeScript/Wasm
+        - C#
+        - Go
+        - Docs
+        - CI/release

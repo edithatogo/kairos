@@ -1,0 +1,34 @@
+name: Validate Conductor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'conductor/**'
+  pull_request:
+    paths:
+      - 'conductor/**'
+  schedule:
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate conductor setup
+        run: pwsh -NoProfile -File scripts/validate_conductor_setup.ps1
+
+      - name: Validate conductor DAG
+        run: pwsh -NoProfile -File scripts/validate_conductor_dag.ps1
+
+      - name: Validate conductor artifacts
+        run: pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1
+
+      - name: Validate track coverage
+        run: pwsh -NoProfile -File scripts/validate_track_coverage.ps1

@@ -1,0 +1,23 @@
+flowchart LR
+    PR[PR + merge queue]
+    CI[CI quality gates]
+    Nightly[Nightly heavy checks]
+    RC[Release branch]
+    Dry[Registry dry-runs]
+    Docs[Docs version build]
+    Artifacts[Native artifacts + checksums]
+    SBOM[SBOM/provenance]
+    Release[GitHub Release]
+    Publish[crates/PyPI/npm/NuGet/R/Julia/Go]
+
+    PR --> CI --> RC
+    Nightly --> RC
+    RC --> Dry
+    RC --> Docs
+    RC --> Artifacts
+    RC --> SBOM
+    Dry --> Release
+    Docs --> Release
+    Artifacts --> Release
+    SBOM --> Release
+    Release --> Publish

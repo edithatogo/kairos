@@ -1,0 +1,94 @@
+name: Conformance Fixtures
+
+on:
+  pull_request:
+    paths:
+      - 'conformance/**'
+      - 'benches/**'
+      - 'crates/**'
+      - 'bindings/**'
+      - 'conductor/contracts/**'
+      - 'conductor/tracks/12-conformance-testing-benchmarks/**'
+      - 'scripts/validate_conformance_fixtures.ps1'
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  fixture-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate fixture manifest and benchmark inventory
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $manifestPath = 'conformance/fixtures/manifest.json'
+          $fixturesRoot = 'conformance/fixtures'
+          $benchPlanPath = 'benches/benchmark-plan.md'
+          foreach ($fixturePath in @(
+            'conformance/fixtures/deterministic_ordering.json',
+            'conformance/fixtures/cancellation.json',
+            'conformance/fixtures/rng_replay.json'
+          )) {
+            if (-not (Test-Path -LiteralPath $fixturePath)) {
+              throw "Missing ready fixture file: $fixturePath"
+            }
+          }
+          if (-not (Test-Path -LiteralPath $manifestPath)) {
+            throw "Missing manifest: $manifestPath"
+          }
+          if (-not (Test-Path -LiteralPath $benchPlanPath)) {
+            throw "Missing benchmark plan: $benchPlanPath"
+          }
+
+          $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+          $requiredReadyIds = @(
+            'scheduler_ordering_v1',
+            'scheduler_cancellation_v1',
+            'rng_reproducibility_v1'
+          )
+          foreach ($id in $requiredReadyIds) {
+            $fixture = $manifest.fixtures | Where-Object { $_.id -eq $id }
+            if (-not $fixture) {
+              throw "Missing fixture in manifest: $id"
+            }
+            if ($fixture.status -ne 'ready') {
+              throw "Fixture is not ready: $id"
+            }
+            $fixturePath = Join-Path $fixturesRoot $fixture.source
+            if (-not (Test-Path -LiteralPath $fixturePath)) {
+              throw "Missing ready fixture file: $fixturePath"
+            }
+            Get-Content -LiteralPath $fixturePath -Raw | ConvertFrom-Json | Out-Null
+          }
+
+          if (-not $manifest.benchmarks) {
+            throw 'Missing benchmark inventory in manifest'
+          }
+          $requiredScenarios = @(
+            'schedule_1m_events',
+            'pop_1m_events',
+            'schedule_cancel_1m_mixed',
+            'create_1m_entities',
+            'component_insert_1m',
+            'hybrid_des_abm_smoke_100k'
+          )
+          $benchmarkPlan = Get-Content -LiteralPath $benchPlanPath -Raw
+          foreach ($scenario in $requiredScenarios) {
+            $benchmark = $manifest.benchmarks | Where-Object { $_.id -eq $scenario }
+            if (-not $benchmark) {
+              throw "Missing benchmark in manifest: $scenario"
+            }
+            if ($benchmark.status -ne 'canonical') {
+              throw "Benchmark is not canonical: $scenario"
+            }
+            if ($benchmarkPlan -notmatch [regex]::Escape($scenario)) {
+              throw "Missing benchmark scenario: $scenario"
+            }
+          }
+      - name: Validate conformance fixtures
+        run: |
+          pwsh -NoProfile -File scripts/validate_conformance_fixtures.ps1

@@ -1,0 +1,34 @@
+name: Feature request
+description: Propose a KairoECS feature
+title: "feat: "
+labels: ["kind:feature", "status:needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Public surface affected
+      options:
+        - Rust API
+        - C ABI
+        - Python
+        - R
+        - Julia
+        - TypeScript/Wasm
+        - C#
+        - Go
+        - Arrow schema
+        - Docs/examples only
+    validations:
+      required: true

@@ -1,0 +1,20 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "KairoECS",
+  "description": "Rust-first multi-method simulation engine for DES and ABM with polyglot bindings and Arrow telemetry.",
+  "version": "0.4.0-alpha.1",
+  "datePublished": "2026-05-05",
+  "programmingLanguage": [
+    "Rust",
+    "Python",
+    "R",
+    "Julia",
+    "TypeScript",
+    "C#",
+    "Go"
+  ],
+  "license": "https://spdx.org/licenses/Apache-2.0.html OR https://spdx.org/licenses/MIT.html",
+  "codeRepository": "https://github.com/edithatogo/kairos",
+  "developmentStatus": "active"
+}

@@ -1,0 +1,38 @@
+name: ci-core
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  rust-core:
+    name: Rust core quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Install cargo tools
+        run: |
+          cargo install cargo-nextest cargo-deny cargo-audit --locked
+      - name: Verify workspace readiness
+        run: |
+          test -f Cargo.toml
+          cargo metadata --no-deps --format-version 1 >/dev/null
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - name: Tests
+        run: cargo nextest run --workspace --all-features
+      - name: Docs
+        run: cargo doc --workspace --all-features --no-deps
+      - name: Dependency policy
+        run: |
+          test -f deny.toml
+          cargo deny check
+          cargo audit

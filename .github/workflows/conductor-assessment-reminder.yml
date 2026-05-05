@@ -1,0 +1,41 @@
+name: Conductor Monthly Assessment Reminder
+
+on:
+  schedule:
+    - cron: '0 9 1 * *'
+  workflow_dispatch:
+
+jobs:
+  create-assessment-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for existing open assessment issue this month
+        id: check-existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          MONTH=$(date +%B)
+          YEAR=$(date +%Y)
+          SEARCH="Monthly assessment — $MONTH $YEAR"
+          EXISTING=$(gh issue list \
+            --repo ${{ github.repository }} \
+            --search "$SEARCH in:title" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+          echo "existing=$EXISTING" >> $GITHUB_OUTPUT
+
+      - name: Create assessment issue
+        if: steps.check-existing.outputs.existing == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          MONTH=$(date +%B)
+          YEAR=$(date +%Y)
+          gh issue create \
+            --repo ${{ github.repository }} \
+            --title "Monthly assessment — $MONTH $YEAR" \
+            --label "conductor,assessment,recurring" \
+            --body-file .github/ISSUE_TEMPLATE/conductor-assessment.md

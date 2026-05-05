@@ -1,0 +1,13 @@
+# KairoECS CODEOWNERS template
+/crates/kairo-ecs-core/ @kairo-ecs/core-maintainers
+/crates/kairo-ecs-state/ @kairo-ecs/core-maintainers
+/crates/kairo-ecs-ffi/ @kairo-ecs/ffi-maintainers
+/crates/kairo-ecs-arrow/ @kairo-ecs/data-maintainers
+/bindings/python/ @kairo-ecs/python-maintainers
+/bindings/r/ @kairo-ecs/r-maintainers
+/bindings/julia/ @kairo-ecs/julia-maintainers
+/bindings/typescript/ @kairo-ecs/typescript-maintainers
+/bindings/csharp/ @kairo-ecs/csharp-maintainers
+/bindings/go/ @kairo-ecs/go-maintainers
+/docs/ @kairo-ecs/docs-maintainers
+/.github/ @kairo-ecs/release-maintainers

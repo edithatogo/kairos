@@ -1,0 +1,13 @@
+{
+  "fixture": "deterministic_ordering",
+  "version": 1,
+  "ordering": ["time", "priority", "sequence"],
+  "events": [
+    { "at_ticks": 10, "priority": 2, "sequence": 0, "kind": 3 },
+    { "at_ticks": 5, "priority": 9, "sequence": 1, "kind": 1 },
+    { "at_ticks": 10, "priority": 1, "sequence": 2, "kind": 2 },
+    { "at_ticks": 10, "priority": 1, "sequence": 3, "kind": 4 }
+  ],
+  "expected_kind_order": [1, 2, 4, 3]
+}
+

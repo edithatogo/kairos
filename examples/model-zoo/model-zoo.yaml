@@ -1,0 +1,29 @@
+models:
+  - id: mm1_queue
+    title: M/M/1 queue
+    paradigm: DES
+    maturity: benchmark
+    path: examples/des/mm1_queue
+    docs: examples/des/mm1_queue/README.md
+    outputs: [event_trace, queue_length, utilization]
+  - id: factory_bottleneck
+    title: Factory bottleneck
+    paradigm: DES
+    maturity: reference
+    path: examples/des/factory_bottleneck
+    docs: examples/des/factory_bottleneck/README.md
+    outputs: [throughput, wait_time, work_in_process]
+  - id: flocking
+    title: Flocking behavior
+    paradigm: ABM
+    maturity: reference
+    path: examples/abm/flocking
+    docs: examples/abm/flocking/README.md
+    outputs: [agent_positions, cohesion, separation]
+  - id: emergency_department_flow
+    title: Emergency department flow
+    paradigm: hybrid
+    maturity: domain-preview
+    path: examples/hybrid/emergency_department_flow
+    docs: examples/hybrid/emergency_department_flow/README.md
+    outputs: [length_of_stay, wait_time, resource_utilization]

@@ -1,0 +1,25 @@
+name: Model zoo contribution
+description: Propose or contribute a model zoo example
+title: "model: "
+labels: ["kind:example", "model-zoo", "status:needs-triage"]
+body:
+  - type: input
+    id: model_name
+    attributes:
+      label: Model name
+    validations:
+      required: true
+  - type: dropdown
+    id: paradigm
+    attributes:
+      label: Paradigm
+      options: [DES, ABM, Hybrid, Experiment/RL, Digital twin]
+    validations:
+      required: true
+  - type: textarea
+    id: contents
+    attributes:
+      label: Included artifacts
+      description: README, scenario manifest, seed manifest, expected output, code, docs.
+    validations:
+      required: true

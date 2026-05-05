@@ -1,0 +1,26 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "KairoECS",
+  "description": "A Rust-based multi-method simulation engine for DES and ABM with Arrow telemetry and multi-language bindings.",
+  "programmingLanguage": [
+    "Rust",
+    "Python",
+    "R",
+    "Julia",
+    "TypeScript",
+    "C#",
+    "Go"
+  ],
+  "license": "https://spdx.org/licenses/Apache-2.0",
+  "codeRepository": "https://github.com/<org>/kairo-ecs",
+  "runtimePlatform": [
+    "Rust",
+    "CPython 3.10-3.14",
+    ".NET 10-11",
+    "WebAssembly"
+  ],
+  "softwareRequirements": [
+    "Apache Arrow"
+  ]
+}

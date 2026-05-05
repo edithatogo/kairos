@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use KairoECS, please cite the software release and any model zoo example you use."
+title: "KairoECS: A multi-method simulation engine for DES and ABM"
+version: "0.0.0"
+date-released: "YYYY-MM-DD"
+abstract: "KairoECS is a Rust-based multi-method simulation engine with DES and ABM support, Arrow telemetry, deterministic replay, and multi-language bindings."
+authors:
+  - family-names: "TBD"
+    given-names: "TBD"
+license: "Apache-2.0 OR MIT"
+repository-code: "https://github.com/<org>/kairo-ecs"
+url: "https://<org>.github.io/kairoecs/"

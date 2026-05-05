@@ -1,0 +1,26 @@
+{
+  "name": "@kairo-ecs/typescript",
+  "version": "0.1.0",
+  "description": "TypeScript/Wasm binding surface for Kairo ECS",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "prepack": "npm run build",
+    "typecheck": "node --experimental-strip-types --check src/index.ts",
+    "test": "node --experimental-strip-types test/index.test.ts"
+  },
+  "license": "Apache-2.0"
+}

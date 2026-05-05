@@ -1,0 +1,34 @@
+{
+  "name": "KairoECS polyglot dev",
+  "image": "mcr.microsoft.com/devcontainers/rust:1-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.14"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "10.0"
+    }
+  },
+  "postCreateCommand": "rustup component add clippy rustfmt && cargo install cargo-nextest --locked && cargo install cargo-vet --locked && cargo install just --locked || true",
+  "remoteEnv": {
+    "RUSTUP_TOOLCHAIN": "stable",
+    "CARGO_HOME": "/usr/local/cargo"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "ms-python.python",
+        "golang.Go",
+        "ms-dotnettools.csharp"
+      ]
+    }
+  }
+}

@@ -1,0 +1,27 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kairo.ECS", "src\Kairo.ECS\Kairo.ECS.csproj", "{7C36B3F2-60C0-41D4-8ACB-61B176E3A43A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kairo.ECS.Tests", "tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj", "{D7D64620-4C5D-4C33-9E2D-0D90B3A8B2E5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7C36B3F2-60C0-41D4-8ACB-61B176E3A43A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C36B3F2-60C0-41D4-8ACB-61B176E3A43A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C36B3F2-60C0-41D4-8ACB-61B176E3A43A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C36B3F2-60C0-41D4-8ACB-61B176E3A43A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7D64620-4C5D-4C33-9E2D-0D90B3A8B2E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7D64620-4C5D-4C33-9E2D-0D90B3A8B2E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7D64620-4C5D-4C33-9E2D-0D90B3A8B2E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7D64620-4C5D-4C33-9E2D-0D90B3A8B2E5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,23 @@
+name: Benchmark Smoke
+
+on:
+  pull_request:
+    paths:
+      - 'crates/**'
+      - 'benchmarks/**'
+      - 'conductor/tracks/18-*/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Benchmark smoke
+        run: |
+          test -f Cargo.toml
+          test -d benchmarks -o -d benches
+          cargo bench --workspace --no-run

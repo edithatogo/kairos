@@ -1,0 +1,101 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release
+        required: true
+      dry_run:
+        description: Dry run only
+        required: true
+        default: 'true'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release-dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install Python build tools
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Install Node LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Validate release checklist
+        run: |
+          test -f Cargo.toml
+          test -f docs/release/release-checklist.md
+          test -f docs/release/supply-chain-verification.md
+          test -f bindings/python/pyproject.toml
+          test -f bindings/r/DESCRIPTION
+          test -f bindings/julia/Project.toml
+          test -f bindings/typescript/package.json
+          test -f bindings/csharp/Kairo.ECS.sln
+          test -f bindings/go/go.mod
+          cargo metadata --no-deps --format-version 1 >/dev/null
+          cargo test --workspace --all-features --no-run
+          cargo publish --dry-run --workspace
+      - name: Build release manifest
+        run: |
+          mkdir -p dist
+          python - <<'PY'
+          import hashlib, json, pathlib
+          root = pathlib.Path('.')
+          manifest = {
+              'version': '${{ github.event.inputs.version }}',
+              'dry_run': '${{ github.event.inputs.dry_run }}',
+              'artifacts': [
+                  {'kind': 'rust', 'path': 'Cargo.toml'},
+                  {'kind': 'python', 'path': 'bindings/python/pyproject.toml'},
+                  {'kind': 'r', 'path': 'bindings/r/DESCRIPTION'},
+                  {'kind': 'julia', 'path': 'bindings/julia/Project.toml'},
+                  {'kind': 'npm', 'path': 'bindings/typescript/package.json'},
+                  {'kind': 'nuget', 'path': 'bindings/csharp/Kairo.ECS.sln'},
+                  {'kind': 'go', 'path': 'bindings/go/go.mod'},
+              ],
+          }
+          required = manifest['artifacts']
+          resolved = []
+          for item in required:
+              rel = item['path']
+              path = root / rel
+              if not path.exists() or not path.is_file():
+                  raise SystemExit(f'missing release artifact: {rel}')
+              digest = hashlib.sha256(path.read_bytes()).hexdigest()
+              resolved.append({'path': rel, 'sha256': digest, 'kind': item.get('kind', 'unknown')})
+          out = {'version': manifest['version'], 'dry_run': manifest['dry_run'], 'artifacts': resolved}
+          (root / 'dist' / 'release-artifact-manifest.json').write_text(json.dumps(out, indent=2) + '\n', encoding='utf-8')
+          (root / 'dist' / 'SHA256SUMS').write_text('\n'.join(f"{entry['sha256']}  {entry['path']}" for entry in resolved) + '\n', encoding='utf-8')
+          PY
+      - name: Validate release manifest
+        run: |
+          test -f dist/release-artifact-manifest.json
+          test -f dist/SHA256SUMS
+          python - <<'PY'
+          import json, pathlib
+          data = json.loads(pathlib.Path('dist/release-artifact-manifest.json').read_text(encoding='utf-8'))
+          artifacts = data.get('artifacts', [])
+          if len(artifacts) != 7:
+              raise SystemExit(f'unexpected artifact count: {len(artifacts)}')
+          kinds = {entry.get('kind') for entry in artifacts}
+          if kinds != {'rust', 'python', 'r', 'julia', 'npm', 'nuget', 'go'}:
+              raise SystemExit(f'unexpected artifact kinds: {sorted(kinds)}')
+          PY
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kairo-ecs-release-${{ github.event.inputs.version }}
+          path: dist/

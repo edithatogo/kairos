@@ -1,0 +1,409 @@
+schema_version: 1
+last_verified: 2026-05-05
+status_vocabulary:
+  - Planned
+  - Spec Approved
+  - In Progress
+  - In Review
+  - Blocked
+  - Done
+  - Deferred
+  - Cancelled
+composite_gates:
+  ffi-rc-slice:
+    description: "FFI Release Candidate ready — all binding tracks (06-11) can begin implementation"
+    required:
+      - id: "02"
+        status: "Spec Approved"
+      - id: "04"
+        status: "Spec Approved"
+      - id: "12"
+        status: "In Progress"
+      - id: "25"
+        status: "Spec Approved"
+tracks:
+  - id: 00
+    name: Project Foundation, Governance & Naming
+    status: Spec Approved
+    owner: foundation-agent
+    depends_on: []
+    owned_paths:
+      - README.md
+      - LICENSE.md
+      - governance/
+      - docs/adr/
+      - conductor/status.md
+    required_gates:
+      - metadata-check
+      - naming-due-diligence
+  - id: 01
+    name: The Heart - kairo-ecs-core and kairo-ecs-state
+    status: In Progress
+    owner: core-scheduler-agent + ecs-agent + contracts-agent
+    depends_on: ["00"]
+    owned_paths:
+      - crates/kairo-ecs-types/
+      - crates/kairo-ecs-core/
+      - crates/kairo-ecs-state/
+      - crates/kairo-ecs-rng/
+    required_gates:
+      - cargo-fmt
+      - cargo-clippy
+      - cargo-test
+      - deterministic-ordering-fixture
+  - id: 02
+    name: The Bridge - kairo-ecs-ffi, UniFFI and Diplomat
+    status: Planned
+    owner: ffi-agent + uniffi-agent + diplomat-agent
+    depends_on: ["01", "12"]
+    owned_paths:
+      - crates/kairo-ecs-ffi/
+      - crates/kairo-ecs-uniffi/
+      - crates/kairo-ecs-diplomat/
+      - include/
+    required_gates:
+      - ffi-lifecycle-tests
+      - panic-boundary-tests
+      - header-diff
+  - id: 03
+    name: The Flow - DES Trajectory API and ABM Behavior API
+    status: Planned
+    owner: des-api-agent + abm-api-agent
+    depends_on: ["01", "26"]
+    owned_paths:
+      - crates/kairo-ecs-des/
+      - crates/kairo-ecs-abm/
+      - examples/flow/
+    required_gates:
+      - des-fixture
+      - abm-fixture
+  - id: 04
+    name: The Analyst - kairo-ecs-arrow
+    status: Planned
+    owner: arrow-agent
+    depends_on: ["01", "12", "26"]
+    owned_paths:
+      - crates/kairo-ecs-arrow/
+      - schemas/arrow/
+      - examples/telemetry/
+    required_gates:
+      - arrow-schema-versioning
+      - arrow-roundtrip
+  - id: 05
+    name: The Window - kairo-ecs-viz
+    status: Planned
+    owner: viz-agent
+    depends_on: ["01"]
+    owned_paths:
+      - crates/kairo-ecs-viz/
+      - examples/viz/
+      - website/docs/visualization/
+    required_gates:
+      - optional-feature-check
+      - headless-core-check
+  - id: 06
+    name: Python Binding 3.10-3.14
+    status: Planned
+    owner: python-agent
+    depends_on: ["02", "04", "12", "25"]
+    owned_paths:
+      - bindings/python/
+      - packaging/python/
+    required_gates:
+      - pytest
+      - ruff
+      - wheel-build
+      - arrow-roundtrip
+  - id: 07
+    name: R Binding
+    status: Planned
+    owner: r-agent
+    depends_on: ["02", "04", "12", "25"]
+    owned_paths:
+      - bindings/r/
+      - packaging/r/
+    required_gates:
+      - r-cmd-check
+      - arrow-roundtrip
+  - id: 08
+    name: Julia Binding
+    status: Planned
+    owner: julia-agent
+    depends_on: ["02", "04", "12", "25"]
+    owned_paths:
+      - bindings/julia/
+      - packaging/julia/
+    required_gates:
+      - julia-pkg-test
+      - arrow-roundtrip
+  - id: 09
+    name: TypeScript/Wasm Binding
+    status: Planned
+    owner: typescript-agent
+    depends_on: ["02", "04", "12", "25"]
+    owned_paths:
+      - bindings/typescript/
+      - crates/kairo-ecs-wasm/
+      - packaging/npm/
+    required_gates:
+      - tsc
+      - vitest
+      - browser-smoke
+  - id: 10
+    name: C# Binding .NET 10-11
+    status: Planned
+    owner: csharp-agent
+    depends_on: ["02", "04", "12", "25"]
+    owned_paths:
+      - bindings/csharp/
+      - packaging/nuget/
+    required_gates:
+      - dotnet-test-net10
+      - dotnet-test-net11-preview
+      - nuget-pack
+  - id: 11
+    name: Go Binding
+    status: Planned
+    owner: go-agent
+    depends_on: ["02", "04", "12", "25"]
+    owned_paths:
+      - bindings/go/
+      - packaging/go/
+    required_gates:
+      - go-test
+      - go-vet
+      - cgo-smoke
+  - id: 12
+    name: Conformance, Testing & Benchmarks
+    status: In Progress
+    owner: conformance-agent + performance-agent
+    depends_on: ["00"]
+    owned_paths:
+      - conformance/
+      - tests/conformance/
+      - benches/
+      - crates/kairo-ecs-bench/
+    required_gates:
+      - fixture-schema-check
+      - cargo-test
+      - benchmark-smoke
+  - id: 13
+    name: CI/CD, Code Quality & Supply Chain
+    status: In Progress
+    owner: ci-agent + security-agent
+    depends_on: ["00"]
+    owned_paths:
+      - .github/
+      - deny.toml
+      - rust-toolchain.toml
+    required_gates:
+      - workflow-presence
+      - cargo-metadata
+      - dependency-policy
+  - id: 14
+    name: Documentation Site & Education
+    status: In Progress
+    owner: docs-agent
+    depends_on: ["00"]
+    owned_paths:
+      - docs/
+      - website/
+      - examples/docs/
+    required_gates:
+      - docs-build
+      - link-check-plan
+  - id: 15
+    name: Packaging, Publishing & Delivery
+    status: In Progress
+    owner: release-agent
+    depends_on: ["06", "09", "12", "13", "14", "16", "20", "28"]
+    owned_paths:
+      - packaging/
+      - .github/workflows/release.yml
+      - docs/release/
+    required_gates:
+      - package-dry-run
+      - checksums
+      - release-checklist
+  - id: 16
+    name: Release Governance & Maintenance
+    status: In Progress
+    owner: release-agent + governance-agent
+    depends_on: ["00", "25"]
+    owned_paths:
+      - conductor/maintenance-governance.md
+      - docs/release/
+      - CHANGELOG.md
+    required_gates:
+      - compatibility-policy
+      - changelog-check
+  - id: 17
+    name: Community Adoption, Education & Ecosystem
+    status: Planned
+    owner: community-agent
+    depends_on: ["14"]
+    owned_paths:
+      - docs/community/
+      - examples/
+    required_gates:
+      - onboarding-docs
+  - id: 18
+    name: Comparative Benchmarks & Reproducibility
+    status: In Progress
+    owner: benchmark-agent
+    depends_on: ["01", "12"]
+    owned_paths:
+      - docs/benchmarks/
+      - benches/
+    required_gates:
+      - benchmark-metadata
+      - raw-results-policy
+  - id: 19
+    name: Research Software, Citation & Archival
+    status: In Progress
+    owner: research-agent
+    depends_on: ["00"]
+    owned_paths:
+      - CITATION.cff
+      - codemeta.json
+      - .zenodo.json
+      - paper/
+    required_gates:
+      - citation-metadata
+      - archival-plan
+  - id: 20
+    name: OpenSSF, Supply Chain Trust & Institutional Readiness
+    status: In Progress
+    owner: security-agent
+    depends_on: ["00", "13"]
+    owned_paths:
+      - SECURITY.md
+      - .github/workflows/scorecard.yml
+      - .github/workflows/sbom-attestations.yml
+    required_gates:
+      - scorecard
+      - sbom-plan
+      - vulnerability-policy
+  - id: 21
+    name: Verification, Validation & Uncertainty
+    status: Planned
+    owner: vv-uq-agent
+    depends_on: ["01", "04", "12"]
+    owned_paths:
+      - docs/trustworthy-simulation/
+      - conformance/
+    required_gates:
+      - replay-fixture
+      - seed-manifest
+  - id: 22
+    name: Experiment Runner & Scenario Management
+    status: Planned
+    owner: experiment-agent
+    depends_on: ["01", "04", "12"]
+    owned_paths:
+      - crates/kairo-ecs-cli/
+      - examples/experiments/
+    required_gates:
+      - scenario-manifest
+      - resumability-plan
+  - id: 23
+    name: Domain Starter Kits & Model Zoo
+    status: Planned
+    owner: model-zoo-agent
+    depends_on: ["03", "14"]
+    owned_paths:
+      - examples/model-zoo/
+      - docs/community/
+    required_gates:
+      - example-maturity-labels
+  - id: 24
+    name: Playground, Demos & Visualization UX
+    status: Planned
+    owner: playground-agent
+    depends_on: ["05", "09", "14"]
+    owned_paths:
+      - website/
+      - examples/viz/
+    required_gates:
+      - browser-smoke
+      - non-core-dependency-check
+  - id: 25
+    name: API Design Review & Compatibility Governance
+    status: Spec Approved
+    owner: api-governance-agent
+    depends_on: ["00", "02", "26"]
+    owned_paths:
+      - conductor/api-design-review.md
+      - docs/design/
+    required_gates:
+      - api-review-template
+      - compatibility-matrix
+  - id: 26
+    name: Interoperability Standards Review
+    status: Spec Approved
+    owner: interop-agent
+    depends_on: ["00"]
+    owned_paths:
+      - docs/interoperability/
+      - conductor/interoperability-standards.md
+    required_gates:
+      - standards-mapping
+      - adr-recommendations
+  - id: 27
+    name: Developer Experience & Reproducible Environments
+    status: In Progress
+    owner: dx-agent
+    depends_on: ["00"]
+    owned_paths:
+      - .devcontainer/
+      - devbox.json
+      - mise.toml
+      - scripts/
+      - justfile
+    required_gates:
+      - bootstrap-smoke
+      - toolchain-docs
+  - id: 28
+    name: Red Team & Devil's Advocate Review
+    status: In Progress
+    owner: redteam-agent
+    depends_on: ["00"]
+    owned_paths:
+      - reviews/
+      - conductor/red-team-review.md
+      - conductor/devils-advocate-review.md
+    required_gates:
+      - no-critical-release-blockers
+  - id: 29
+    name: Wave Manager & Execution Gatekeeper
+    status: Planned
+    owner: wave-manager-agent
+    depends_on: ["00"]
+    owned_paths:
+      - conductor/wave-policy.md
+    required_gates:
+      - wave-progression-check
+      - dependency-closure-check
+  - id: 30
+    name: Toolchain & Version Support Matrix
+    status: Planned
+    owner: toolchain-agent
+    depends_on: ["00", "13"]
+    owned_paths:
+      - conductor/toolchain-matrix.md
+      - .github/workflows/toolchain-check.yml
+    required_gates:
+      - toolchain-matrix-current
+      - version-drop-policy-check
+  - id: 31
+    name: Performance Regression Guard
+    status: Planned
+    owner: perf-regression-agent
+    depends_on: ["01", "12", "18"]
+    owned_paths:
+      - conductor/performance-thresholds.md
+      - benches/regression/
+      - .github/workflows/bench-regression.yml
+    required_gates:
+      - benchmark-regression-check
+      - threshold-definition-exists

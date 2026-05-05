@@ -1,0 +1,7 @@
+[package]
+name = "kairo-ecs-cli"
+edition = "2024"
+version = "0.1.0"
+description = "KairoECS CLI for experiment execution and scenario management"
+license.workspace = true
+repository.workspace = true

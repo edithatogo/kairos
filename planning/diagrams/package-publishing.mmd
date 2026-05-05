@@ -1,0 +1,28 @@
+flowchart TD
+    Native[libkairo_ecs native library]
+    Header[C headers]
+    Rust[crates.io]
+    Py[PyPI wheels]
+    R[R-universe / CRAN later]
+    Julia[Julia artifacts / General later]
+    Npm[npm Wasm package]
+    NuGet[NuGet net10/net11]
+    Go[Go module tags]
+    GH[GitHub Releases]
+    Pages[GitHub Pages]
+
+    Native --> GH
+    Header --> GH
+    Native --> Py
+    Native --> R
+    Native --> Julia
+    Native --> NuGet
+    Native --> Go
+    Native --> Npm
+    Rust --> GH
+    Py --> Pages
+    R --> Pages
+    Julia --> Pages
+    Npm --> Pages
+    NuGet --> Pages
+    Go --> Pages

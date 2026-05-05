@@ -1,0 +1,21 @@
+{
+  "title": "KairoECS: A Rust-first multi-method simulation engine for DES and ABM",
+  "upload_type": "software",
+  "version": "0.4.0-alpha.1",
+  "publication_date": "2026-05-05",
+  "access_right": "open",
+  "description": "KairoECS is a Rust-first multi-method simulation engine treating DES and ABM as equal paradigms with polyglot bindings and Arrow telemetry.",
+  "creators": [
+    {
+      "name": "KairoECS contributors"
+    }
+  ],
+  "license": "Apache-2.0 OR MIT",
+  "keywords": [
+    "simulation",
+    "DES",
+    "ABM",
+    "Rust",
+    "Apache Arrow"
+  ]
+}

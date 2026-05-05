@@ -1,0 +1,36 @@
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '33 2 * * 2'
+
+permissions:
+  contents: read
+
+jobs:
+  criterion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run benchmarks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f Cargo.toml
+          if [ -d benches ] || [ -d benchmarks ]; then
+            cargo bench --workspace --all-features
+          else
+            echo "Missing benchmark harness: expected benches/ or benchmarks/ to exist."
+            exit 1
+          fi
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-artifacts
+          path: |
+            target/criterion/**
+            benchmarks/**
+          if-no-files-found: error

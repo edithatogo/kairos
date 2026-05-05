@@ -1,0 +1,18 @@
+flowchart LR
+    Host[Python / R / Julia / TypeScript / C# / Go]
+    Bindings[Idiomatic binding packages]
+    FFI[kairo-ecs-ffi C ABI]
+    Core[kairo-ecs-core scheduler]
+    ECS[kairo-ecs-state entity storage]
+    Flow[kairo-ecs-des + kairo-ecs-abm]
+    Arrow[kairo-ecs-arrow]
+    Viz[kairo-ecs-viz]
+    Docs[GitHub Pages docs]
+
+    Host --> Bindings --> FFI --> Core --> ECS
+    ECS --> Flow
+    Core --> Arrow
+    ECS --> Arrow
+    ECS --> Viz
+    Arrow --> Host
+    Docs -. examples .-> Host

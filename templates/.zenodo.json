@@ -1,0 +1,14 @@
+{
+  "title": "KairoECS: A multi-method simulation engine for DES and ABM",
+  "description": "KairoECS is a Rust-based multi-method simulation engine with deterministic DES/ABM execution, Arrow telemetry, reproducibility manifests, and multi-language bindings.",
+  "license": "Apache-2.0",
+  "upload_type": "software",
+  "keywords": [
+    "simulation",
+    "discrete event simulation",
+    "agent-based modeling",
+    "Rust",
+    "Apache Arrow",
+    "reproducibility"
+  ]
+}

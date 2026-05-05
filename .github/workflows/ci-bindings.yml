@@ -1,0 +1,104 @@
+name: ci-bindings
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  python:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Python binding smoke
+        run: |
+          test -f bindings/python/pyproject.toml
+          python -m pip install -U pip maturin pytest ruff pyarrow
+          cd bindings/python
+          ruff check .
+          pytest -q
+
+  r:
+    name: R binding
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+      - name: R smoke
+        run: |
+          test -f bindings/r/DESCRIPTION
+          Rscript -e 'install.packages(c("rcmdcheck","testthat","arrow"), repos="https://cloud.r-project.org")'
+          Rscript -e 'rcmdcheck::rcmdcheck("bindings/r", args="--no-manual", error_on="warning")'
+
+  julia:
+    name: Julia binding
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+      - name: Julia smoke
+        run: |
+          test -f bindings/julia/Project.toml
+          julia --project=bindings/julia -e 'using Pkg; Pkg.instantiate(); Pkg.test()'
+
+  typescript:
+    name: TypeScript/Wasm binding
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+      - name: TypeScript smoke
+        run: |
+          test -f bindings/typescript/package.json
+          cd bindings/typescript
+          npm ci
+          npm run typecheck
+          npm test
+
+  csharp:
+    name: C# .NET ${{ matrix.dotnet-version }}
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dotnet-version: '10.0.x'
+            experimental: false
+          - dotnet-version: '11.0.x'
+            experimental: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+      - name: C# smoke
+        run: |
+          test -f bindings/csharp/Kairo.ECS.sln
+          dotnet test bindings/csharp/Kairo.ECS.sln -c Release
+
+  go:
+    name: Go binding
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+      - name: Go smoke
+        run: |
+          test -f bindings/go/go.mod
+          cd bindings/go
+          go test ./...

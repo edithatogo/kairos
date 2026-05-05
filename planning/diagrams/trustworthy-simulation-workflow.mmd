@@ -1,0 +1,23 @@
+flowchart TD
+    Model[Model code]
+    Scenario[Scenario manifest]
+    Seeds[Seed manifest]
+    Run[KairoECS run]
+    Trace[Event trace]
+    Arrow[Arrow/Parquet output]
+    Stats[Summary statistics]
+    Uncertainty[Uncertainty report]
+    Replay[Replay command]
+    Citation[Citation metadata]
+
+    Model --> Run
+    Scenario --> Run
+    Seeds --> Run
+    Run --> Trace
+    Run --> Arrow
+    Arrow --> Stats
+    Stats --> Uncertainty
+    Trace --> Replay
+    Scenario --> Citation
+    Seeds --> Citation
+    Arrow --> Citation

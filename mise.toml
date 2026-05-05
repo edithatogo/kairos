@@ -1,0 +1,11 @@
+[tools]
+rust = "stable"
+python = "3.14"
+node = "lts"
+go = "latest"
+julia = "latest"
+R = "latest"
+dotnet = "10.0"
+just = "latest"
+"ubi:dtolnay/cargo-nextest" = "latest"
+"ubi:mozilla/cargo-vet" = "latest"

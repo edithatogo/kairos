@@ -1,0 +1,21 @@
+name: Conductor Track Task
+description: Track or subagent work item
+body:
+  - type: input
+    id: track
+    attributes:
+      label: Track
+      placeholder: "01 The Heart"
+  - type: input
+    id: subagent
+    attributes:
+      label: Subagent
+      placeholder: "core-scheduler-agent"
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
