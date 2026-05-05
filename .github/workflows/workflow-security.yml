@@ -61,6 +61,6 @@ jobs:
           test -f .github/workflows/package-dry-run.yml
           test -f .github/workflows/release.yml
       - name: Run zizmor
-        uses: zizmorcore/zizmor-action@v0.1.2
+        uses: zizmorcore/zizmor-action@v0.5.3
         with:
           persona: pedantic
