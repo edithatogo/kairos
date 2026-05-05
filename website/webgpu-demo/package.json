@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "validate:wgsl": "node scripts/validate-wgsl-subset.mjs",
+    "test": "npm run smoke && npm run validate:wgsl"
   }
 }

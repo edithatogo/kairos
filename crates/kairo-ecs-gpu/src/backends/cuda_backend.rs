@@ -25,6 +25,10 @@ impl GpuCompute for CudaBackend {
         CUDA_BACKEND_NOT_CONFIGURED
     }
 
+    fn capabilities(&self) -> crate::compute::GpuBackendCapabilities {
+        crate::compute::GpuBackendCapabilities::not_configured(CUDA_BACKEND_NOT_CONFIGURED)
+    }
+
     fn upload_state(&mut self, _state: &GpuState) -> Result<GpuStepStats, GpuComputeError> {
         Err(GpuComputeError::UnsupportedBackend(
             CUDA_BACKEND_NOT_CONFIGURED,
@@ -63,6 +67,10 @@ mod tests {
             GpuBackendAvailability::BackendNotConfigured(CUDA_BACKEND_NOT_CONFIGURED)
         );
         assert_eq!(backend.backend_name(), CUDA_BACKEND_NOT_CONFIGURED);
+        assert_eq!(
+            backend.capabilities(),
+            crate::compute::GpuBackendCapabilities::not_configured(CUDA_BACKEND_NOT_CONFIGURED)
+        );
         assert_eq!(
             backend.upload_state(&GpuState::default()),
             Err(GpuComputeError::UnsupportedBackend(

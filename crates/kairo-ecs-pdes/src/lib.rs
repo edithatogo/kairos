@@ -94,6 +94,17 @@ impl ThreadChannelTransport {
     pub fn pending_messages(&self) -> usize {
         self.inboxes.values().map(VecDeque::len).sum()
     }
+
+    fn pending_min_timestamp(&self) -> Option<Tick> {
+        self.inboxes
+            .values()
+            .flat_map(|messages| messages.iter())
+            .map(|message| match message {
+                PdesMessage::Event(event) => event.tick,
+                PdesMessage::Null(message) => message.safe_time,
+            })
+            .min()
+    }
 }
 
 impl PdesTransport for ThreadChannelTransport {
@@ -108,12 +119,12 @@ impl PdesTransport for ThreadChannelTransport {
     fn barrier(&mut self) {}
 
     fn all_reduce_min(&mut self, timestamp: Tick) -> Tick {
+        self.gvt_candidates.clear();
         self.gvt_candidates.push(timestamp);
-        self.gvt_candidates
-            .iter()
-            .copied()
-            .min()
-            .unwrap_or(timestamp)
+        let local_min = timestamp;
+
+        self.pending_min_timestamp()
+            .map_or(local_min, |pending_min| local_min.min(pending_min))
     }
 }
 
@@ -237,6 +248,19 @@ pub struct ParityReport {
     pub gvt_history: Vec<Tick>,
 }
 
+/// Conservative PDES validation evidence for local gates and handoff notes.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PdesValidationEvidence {
+    pub workload: ParityWorkload,
+    pub final_state_parity: bool,
+    pub gvt_monotonic: bool,
+    pub gvt_reaches_final_tick: bool,
+    pub deadlock_smoke: bool,
+    pub remote_events: usize,
+    pub null_messages: usize,
+    pub gvt_samples: usize,
+}
+
 impl ParityWorkload {
     pub fn small() -> Self {
         Self {
@@ -267,6 +291,8 @@ pub fn run_partitioned_reference(workload: &ParityWorkload) -> ParityReport {
 
 /// Checks final-state parity between the sequential and partitioned references.
 pub fn sequential_parity_report(workload: &ParityWorkload) -> Result<ParityReport, String> {
+    validate_workload(workload)?;
+
     let sequential = run_sequential_reference(workload);
     let partitioned = run_partitioned_reference(workload);
 
@@ -280,11 +306,71 @@ pub fn sequential_parity_report(workload: &ParityWorkload) -> Result<ParityRepor
 /// Runs the long deterministic stress fixture used by the Track 34 no-skip gate.
 pub fn deadlock_stress_report() -> Result<ParityReport, String> {
     let report = sequential_parity_report(&ParityWorkload::stress())?;
-    if report.gvt_history.len() == 10_000 && is_monotonic(&report.gvt_history) {
+    if report.gvt_history.len() == 10_000
+        && is_monotonic(&report.gvt_history)
+        && report.gvt_history.last() == Some(&SimTime::from_ticks(10_000))
+        && report.remote_events > 0
+        && report.null_messages > 0
+    {
         Ok(report)
     } else {
-        Err("GVT did not progress monotonically for every stress tick".to_string())
+        Err(
+            "deadlock stress fixture did not produce complete conservative PDES evidence"
+                .to_string(),
+        )
     }
+}
+
+/// Builds local validation evidence for conservative PDES quality gates.
+pub fn validate_conservative_pdes(
+    workloads: &[ParityWorkload],
+) -> Result<Vec<PdesValidationEvidence>, String> {
+    if workloads.is_empty() {
+        return Err("at least one PDES workload is required".to_string());
+    }
+
+    workloads
+        .iter()
+        .map(|workload| {
+            let report = sequential_parity_report(workload)?;
+            let final_tick = SimTime::from_ticks(workload.ticks);
+            let gvt_monotonic = is_monotonic(&report.gvt_history);
+            let gvt_reaches_final_tick = report.gvt_history.last() == Some(&final_tick);
+            let deadlock_smoke = report.gvt_history.len() == workload.ticks as usize
+                && gvt_monotonic
+                && gvt_reaches_final_tick
+                && report.remote_events > 0
+                && report.null_messages > 0;
+
+            Ok(PdesValidationEvidence {
+                workload: workload.clone(),
+                final_state_parity: true,
+                gvt_monotonic,
+                gvt_reaches_final_tick,
+                deadlock_smoke,
+                remote_events: report.remote_events,
+                null_messages: report.null_messages,
+                gvt_samples: report.gvt_history.len(),
+            })
+        })
+        .collect()
+}
+
+fn validate_workload(workload: &ParityWorkload) -> Result<(), String> {
+    if workload.lp_count == 0 {
+        return Err("PDES workload must include at least one LP".to_string());
+    }
+    if workload.ticks == 0 {
+        return Err("PDES workload must include at least one tick".to_string());
+    }
+    if workload.entities_per_lp == 0 {
+        return Err("PDES workload must include at least one entity per LP".to_string());
+    }
+    if workload.ticks > usize::MAX as u128 {
+        return Err("PDES workload tick count exceeds addressable validation samples".to_string());
+    }
+
+    Ok(())
 }
 
 fn run_reference(workload: &ParityWorkload, count_protocol_messages: bool) -> ParityReport {
@@ -444,6 +530,35 @@ mod tests {
     }
 
     #[test]
+    fn in_memory_gvt_includes_inflight_message_timestamps() {
+        let event = RemoteEvent {
+            source_lp: LpId(0),
+            dest_lp: LpId(1),
+            tick: SimTime::from_ticks(1),
+            event_payload: b"early".to_vec(),
+        };
+        let transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
+        let mut scheduler = PdesScheduler::new(transport);
+
+        scheduler.add_lp(
+            LpId(0),
+            segment(LpId(0)),
+            vec![LpId(1)],
+            Box::new(TestLp::new(0, vec![event])),
+        );
+        scheduler.add_lp(
+            LpId(1),
+            segment(LpId(1)),
+            vec![LpId(0)],
+            Box::new(TestLp::new(0, Vec::new())),
+        );
+
+        scheduler.step_until(SimTime::from_ticks(3));
+
+        assert_eq!(scheduler.gvt(), SimTime::from_ticks(1));
+    }
+
+    #[test]
     fn partitioned_reference_matches_sequential_final_state() {
         let report = sequential_parity_report(&ParityWorkload::small()).unwrap();
 
@@ -460,6 +575,43 @@ mod tests {
         assert_eq!(
             report.gvt_history.last(),
             Some(&SimTime::from_ticks(10_000))
+        );
+    }
+
+    #[test]
+    fn conservative_validator_reports_parity_gvt_and_deadlock_evidence() {
+        let evidence = validate_conservative_pdes(&[
+            ParityWorkload::small(),
+            ParityWorkload {
+                lp_count: 2,
+                ticks: 64,
+                entities_per_lp: 2,
+            },
+        ])
+        .unwrap();
+
+        assert_eq!(evidence.len(), 2);
+        assert!(evidence.iter().all(|item| item.final_state_parity));
+        assert!(evidence.iter().all(|item| item.gvt_monotonic));
+        assert!(evidence.iter().all(|item| item.gvt_reaches_final_tick));
+        assert!(evidence.iter().all(|item| item.deadlock_smoke));
+        assert!(evidence.iter().all(|item| item.remote_events > 0));
+        assert!(evidence.iter().all(|item| item.null_messages > 0));
+    }
+
+    #[test]
+    fn validator_rejects_empty_or_degenerate_workloads() {
+        assert_eq!(
+            validate_conservative_pdes(&[]),
+            Err("at least one PDES workload is required".to_string())
+        );
+        assert_eq!(
+            sequential_parity_report(&ParityWorkload {
+                lp_count: 0,
+                ticks: 1,
+                entities_per_lp: 1,
+            }),
+            Err("PDES workload must include at least one LP".to_string())
         );
     }
 }

@@ -9,6 +9,8 @@ GVT = min(local_time_of_all_LPs, min_timestamp_of_all_inflight_messages)
 Track 34 starts with a conservative scaffold:
 
 - each LP reports its local time;
+- the in-memory transport folds pending remote-event ticks and null-message
+  safe times into its local reduction;
 - the transport provides `all_reduce_min(timestamp)`;
 - the scheduler advances every LP to the computed minimum.
 
@@ -21,3 +23,5 @@ Validation command:
 ```powershell
 cargo test --manifest-path crates/kairo-ecs-pdes/Cargo.toml --features pdes
 ```
+
+The local validator evidence is documented in `docs/pdes/validation-evidence.md`.

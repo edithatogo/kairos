@@ -131,8 +131,8 @@ foreach ($row in @(
 
 $perfThresholds = Get-Content -LiteralPath "conductor/performance-thresholds.md" -Raw
 foreach ($row in @(
-    "schedule_1m_events_preview",
-    "hybrid_des_abm_smoke_preview"
+    "schedule_1m_events",
+    "hybrid_des_abm_smoke_100k"
 )) {
     Assert-Contains -Content $perfThresholds -Needle $row -Label "conductor/performance-thresholds.md"
 }

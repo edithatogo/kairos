@@ -22,6 +22,85 @@ pub struct GpuState {
     pub entity_values: Vec<i32>,
 }
 
+impl GpuState {
+    pub fn footprint(&self) -> Result<GpuStateFootprint, GpuComputeError> {
+        Ok(GpuStateFootprint {
+            particles_bytes: checked_slice_bytes::<AgentParticle>(self.particles.len())?,
+            entity_values_bytes: checked_slice_bytes::<i32>(self.entity_values.len())?,
+        })
+    }
+}
+
+/// Host-visible footprint for a flat state upload/download cycle.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct GpuStateFootprint {
+    pub particles_bytes: usize,
+    pub entity_values_bytes: usize,
+}
+
+impl GpuStateFootprint {
+    pub fn total_bytes(self) -> usize {
+        self.particles_bytes
+            .saturating_add(self.entity_values_bytes)
+    }
+
+    pub fn checked_total_bytes(self) -> Result<usize, GpuComputeError> {
+        self.particles_bytes
+            .checked_add(self.entity_values_bytes)
+            .ok_or(GpuComputeError::MemorySizeOverflow)
+    }
+
+    pub fn fits_within(self, budget: GpuMemoryBudget) -> bool {
+        let Ok(total_bytes) = self.checked_total_bytes() else {
+            return false;
+        };
+
+        total_bytes <= budget.max_device_bytes
+            && total_bytes.saturating_mul(2) <= budget.max_staging_bytes
+    }
+}
+
+/// Memory budget that can be evaluated without opening a GPU device.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct GpuMemoryBudget {
+    pub max_device_bytes: usize,
+    pub max_staging_bytes: usize,
+}
+
+impl GpuMemoryBudget {
+    pub const fn new(max_device_bytes: usize, max_staging_bytes: usize) -> Self {
+        Self {
+            max_device_bytes,
+            max_staging_bytes,
+        }
+    }
+}
+
+pub const TRACK32_TARGET_MEMORY_BUDGET: GpuMemoryBudget =
+    GpuMemoryBudget::new(1_000_000_000, 2_000_000_000);
+pub const DEFAULT_WORKGROUP_SIZE: u32 = 256;
+
+/// Deterministic kernel dispatch shape shared by CPU fallback and backend stubs.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct DispatchShape {
+    pub workgroup_size: u32,
+    pub workgroup_count: u32,
+    pub invocation_count: u32,
+}
+
+impl DispatchShape {
+    pub fn for_items(item_count: usize) -> Result<Self, GpuComputeError> {
+        let invocation_count =
+            u32::try_from(item_count).map_err(|_| GpuComputeError::DispatchSizeOverflow)?;
+        Ok(Self {
+            workgroup_size: DEFAULT_WORKGROUP_SIZE,
+            workgroup_count: invocation_count.saturating_add(DEFAULT_WORKGROUP_SIZE - 1)
+                / DEFAULT_WORKGROUP_SIZE,
+            invocation_count,
+        })
+    }
+}
+
 /// Runtime metrics reported by a compute backend.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct GpuStepStats {
@@ -35,6 +114,8 @@ pub enum GpuComputeError {
     UnsupportedBackend(&'static str),
     BufferShapeMismatch { expected: usize, actual: usize },
     EntityOutOfRange { entity_id: u64, entity_count: usize },
+    MemorySizeOverflow,
+    DispatchSizeOverflow,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -43,9 +124,41 @@ pub enum GpuBackendAvailability {
     BackendNotConfigured(&'static str),
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct GpuBackendCapabilities {
+    pub backend_name: &'static str,
+    pub availability: GpuBackendAvailability,
+    pub max_workgroup_size: u32,
+    pub supports_zero_copy_borrow: bool,
+    pub supports_unified_memory: bool,
+}
+
+impl GpuBackendCapabilities {
+    pub const fn cpu_fallback() -> Self {
+        Self {
+            backend_name: "cpu-fallback",
+            availability: GpuBackendAvailability::CpuFallback,
+            max_workgroup_size: DEFAULT_WORKGROUP_SIZE,
+            supports_zero_copy_borrow: false,
+            supports_unified_memory: false,
+        }
+    }
+
+    pub const fn not_configured(backend_name: &'static str) -> Self {
+        Self {
+            backend_name,
+            availability: GpuBackendAvailability::BackendNotConfigured(backend_name),
+            max_workgroup_size: DEFAULT_WORKGROUP_SIZE,
+            supports_zero_copy_borrow: false,
+            supports_unified_memory: false,
+        }
+    }
+}
+
 /// Backend-independent GPU compute contract.
 pub trait GpuCompute {
     fn backend_name(&self) -> &'static str;
+    fn capabilities(&self) -> GpuBackendCapabilities;
     fn upload_state(&mut self, state: &GpuState) -> Result<GpuStepStats, GpuComputeError>;
     fn run_abm_step(&mut self, dt: f32, seed: u64) -> Result<GpuStepStats, GpuComputeError>;
     fn run_des_step(&mut self, events: &[DesEvent]) -> Result<GpuStepStats, GpuComputeError>;
@@ -82,11 +195,15 @@ impl GpuCompute for CpuFallbackCompute {
         "cpu-fallback"
     }
 
+    fn capabilities(&self) -> GpuBackendCapabilities {
+        GpuBackendCapabilities::cpu_fallback()
+    }
+
     fn upload_state(&mut self, state: &GpuState) -> Result<GpuStepStats, GpuComputeError> {
+        let footprint = state.footprint()?;
         self.state = state.clone();
         Ok(GpuStepStats {
-            uploaded_bytes: state.particles.len() * core::mem::size_of::<AgentParticle>()
-                + state.entity_values.len() * core::mem::size_of::<i32>(),
+            uploaded_bytes: footprint.checked_total_bytes()?,
             downloaded_bytes: 0,
             dispatched_workgroups: 0,
         })
@@ -102,7 +219,8 @@ impl GpuCompute for CpuFallbackCompute {
         Ok(GpuStepStats {
             uploaded_bytes: 0,
             downloaded_bytes: 0,
-            dispatched_workgroups: ((self.state.particles.len() as u32).saturating_add(255)) / 256,
+            dispatched_workgroups: DispatchShape::for_items(self.state.particles.len())?
+                .workgroup_count,
         })
     }
 
@@ -125,13 +243,18 @@ impl GpuCompute for CpuFallbackCompute {
         Ok(GpuStepStats {
             uploaded_bytes: events.len() * core::mem::size_of::<DesEvent>(),
             downloaded_bytes: 0,
-            dispatched_workgroups: ((events.len() as u32).saturating_add(255)) / 256,
+            dispatched_workgroups: DispatchShape::for_items(events.len())?.workgroup_count,
         })
     }
 
     fn download_state(&self) -> Result<GpuState, GpuComputeError> {
         Ok(self.state.clone())
     }
+}
+
+fn checked_slice_bytes<T>(len: usize) -> Result<usize, GpuComputeError> {
+    len.checked_mul(core::mem::size_of::<T>())
+        .ok_or(GpuComputeError::MemorySizeOverflow)
 }
 
 #[cfg(test)]
@@ -158,5 +281,41 @@ mod tests {
         b.run_abm_step(0.25, 42).unwrap();
 
         assert_eq!(a.download_state().unwrap(), b.download_state().unwrap());
+    }
+
+    #[test]
+    fn state_footprint_tracks_flat_buffer_bytes() {
+        let state = GpuState {
+            particles: vec![
+                AgentParticle {
+                    x: 0.0,
+                    y: 0.0,
+                    vx: 1.0,
+                    vy: 1.0,
+                };
+                2
+            ],
+            entity_values: vec![1, 2, 3],
+        };
+
+        let footprint = state.footprint().unwrap();
+
+        assert_eq!(
+            footprint.total_bytes(),
+            2 * core::mem::size_of::<AgentParticle>() + 3 * core::mem::size_of::<i32>()
+        );
+        assert!(footprint.fits_within(TRACK32_TARGET_MEMORY_BUDGET));
+    }
+
+    #[test]
+    fn dispatch_shape_uses_webgpu_safe_workgroups() {
+        assert_eq!(
+            DispatchShape::for_items(257).unwrap(),
+            DispatchShape {
+                workgroup_size: DEFAULT_WORKGROUP_SIZE,
+                workgroup_count: 2,
+                invocation_count: 257,
+            }
+        );
     }
 }

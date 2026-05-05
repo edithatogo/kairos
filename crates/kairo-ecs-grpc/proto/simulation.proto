@@ -32,6 +32,8 @@ message MigrationAck {
 message TelemetryBatch {
   uint32 source_lp = 1;
   bytes arrow_ipc_payload = 2;
+  uint64 tick_start = 3;
+  uint64 tick_end = 4;
 }
 
 message GvtProposal {

@@ -258,6 +258,18 @@ $trackChecks = @(
         Concrete = @("conductor/wave-policy.md", "conductor/gates", "conductor/tracks/29-wave-manager-execution-gatekeeper/validate-wave-gates.ps1")
     },
     @{
+        Id = "30"
+        Path = "conductor/tracks/30-toolchain-version-support-matrix"
+        Crates = @()
+        Concrete = @("conductor/toolchain-matrix.md", ".github/workflows/toolchain-check.yml", "conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1")
+    },
+    @{
+        Id = "31"
+        Path = "conductor/tracks/31-performance-regression-guard"
+        Crates = @()
+        Concrete = @("conductor/performance-thresholds.md", "benches/regression", ".github/workflows/bench-regression.yml")
+    },
+    @{
         Id = "32"
         Path = "conductor/tracks/32-gpu-compute-acceleration"
         Crates = @("crates/kairo-ecs-gpu")

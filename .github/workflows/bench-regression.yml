@@ -2,14 +2,41 @@ name: Benchmark Regression Guard
 
 on:
   pull_request:
+    paths:
+      - 'crates/kairo-ecs-core/**'
+      - 'crates/kairo-ecs-state/**'
+      - 'benches/**'
+      - 'crates/kairo-ecs-bench/**'
+      - 'conductor/performance-thresholds.md'
+      - 'conductor/tracks/31-performance-regression-guard/**'
+      - '.github/workflows/bench-regression.yml'
   push:
     branches:
       - main
+    paths:
+      - 'crates/kairo-ecs-core/**'
+      - 'crates/kairo-ecs-state/**'
+      - 'benches/**'
+      - 'crates/kairo-ecs-bench/**'
+      - 'conductor/performance-thresholds.md'
+      - 'conductor/tracks/31-performance-regression-guard/**'
+      - '.github/workflows/bench-regression.yml'
 
 jobs:
   regression-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: Validate regression thresholds
-        run: python benches/regression/compare.py
+      - name: Validate benchmark metadata
+        run: python benches/benchmark_smoke.py
+      - name: Validate threshold coverage
+        run: python benches/regression/compare.py --report bench-regression-threshold-report.json
+      - name: Compile benchmark targets
+        run: cargo bench --workspace --no-run
+      - name: Upload regression guard report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bench-regression-threshold-report
+          path: bench-regression-threshold-report.json

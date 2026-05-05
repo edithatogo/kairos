@@ -55,6 +55,8 @@ The Conductor setup is complete, but implementation should move through explicit
 | Developer experience and reproducible environments (Track 27) | R2 | `justfile`, `docs/developer-experience/docs-workflow.md`, and `scripts/dx/validate-docs-workflow.mjs` define and validate the docs bootstrap/build/dev flow. |
 | Red team and devil's advocate review (Track 28) | R2 | `reviews/red-team-report.md` and `claim-capability-ledger.json` track release claims, evidence, owners, and blocker classes. |
 | Wave manager and execution gatekeeper (Track 29) | R2 | `conductor/wave-policy.md`, `conductor/gates`, and `validate-wave-gates.ps1` derive waves, dependency closure, and critical-path blockers from `tracks.yaml`. |
+| Toolchain and version support matrix (Track 30) | R2 | `conductor/toolchain-matrix.md`, `.github/workflows/toolchain-check.yml`, and `validate-toolchain-matrix.ps1` define supported ecosystems, version-drop policy, and CI install checks. |
+| Performance regression guard (Track 31) | R2 | `conductor/performance-thresholds.md`, `benches/regression/compare.py`, and `.github/workflows/bench-regression.yml` define benchmark thresholds and regression comparison gates. |
 | GPU Compute (Track 32) | R2 | `crates/kairo-ecs-gpu` exists, is wired into the root workspace, and has explicit unavailable-backend contracts plus feature compile gates. |
 | WebGPU Compute (Track 33) | R2 | `crates/kairo-ecs-webgpu` and `website/webgpu-demo` exist with browser dispatch capability checks and demo smoke tests. |
 | PDES & Parallel Execution (Track 34) | R2 | `crates/kairo-ecs-pdes` exists with parity and deadlock-stress report fixtures. |

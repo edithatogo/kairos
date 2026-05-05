@@ -2,11 +2,11 @@
 
 ## Status
 
-Initial scaffold implemented and tightened. Browser-native WebGPU device wiring is still blocked, and the crate now reports that explicitly through `BrowserBindingsNotConfigured` / `BrowserBackendNotConfigured` contracts. The crate facade, adapter/bridge/reference-dispatch scaffolds, WebGPU WGSL shader, static demo, smoke test, and comparison/subset docs exist.
+Initial scaffold implemented and tightened. Browser-native WebGPU device wiring is still blocked, and the crate now reports that explicitly through `BrowserBindingsNotConfigured` / `BrowserBackendNotConfigured` contracts. The crate facade, adapter/bridge/reference-dispatch scaffolds, fallback/parity capability metadata, WebGPU WGSL shader, static demo, smoke test, GPU-free WGSL subset validator, and comparison/subset docs exist.
 
 ## Summary
 
-Track 33 is building toward GPU-accelerated simulation in the browser via WebGPU compute shaders, paired with the Track 09 Wasm binding layer. The current `kairo-ecs-webgpu` crate is dependency-free and exposes adapter, bridge, reference dispatch, and explicit backend-unavailable contracts. The browser demo at `website/webgpu-demo/` runs a CPU fallback animation, detects the WebGPU API, and labels real WebGPU dispatch as `backend not configured` until Wasm bindings and device setup land. No browser GPU dispatch or 30fps/100K-agent performance claim is made by the current artifacts.
+Track 33 is building toward GPU-accelerated simulation in the browser via WebGPU compute shaders, paired with the Track 09 Wasm binding layer. The current `kairo-ecs-webgpu` crate is dependency-free and exposes adapter, bridge, reference dispatch, fallback/parity metadata, and explicit backend-unavailable contracts. The browser demo at `website/webgpu-demo/` runs a CPU fallback animation, detects the WebGPU API, and labels real WebGPU dispatch as `backend-not-configured` until Wasm bindings and device setup land. No browser GPU dispatch or 30fps/100K-agent performance claim is made by the current artifacts.
 
 ## Files created in this track
 
@@ -20,6 +20,7 @@ Track 33 is building toward GPU-accelerated simulation in the browser via WebGPU
 - `crates/kairo-ecs-webgpu/src/lib.rs`
 - `crates/kairo-ecs-webgpu/src/adapter.rs`
 - `crates/kairo-ecs-webgpu/src/bridge.rs`
+- `crates/kairo-ecs-webgpu/src/capability.rs`
 - `crates/kairo-ecs-webgpu/src/dispatch.rs`
 - `crates/kairo-ecs-webgpu/src/shaders/abm_webgpu.wgsl`
 - `crates/kairo-ecs-webgpu/tests/parity_webgpu.rs`
@@ -27,6 +28,7 @@ Track 33 is building toward GPU-accelerated simulation in the browser via WebGPU
 - `website/webgpu-demo/styles.css`
 - `website/webgpu-demo/src/main.js`
 - `website/webgpu-demo/scripts/smoke.mjs`
+- `website/webgpu-demo/scripts/validate-wgsl-subset.mjs`
 - `website/webgpu-demo/package.json`
 - `website/webgpu-demo/README.md`
 - `docs/gpu-compute/webgpu-wgsl-subset.md`
@@ -41,9 +43,9 @@ Track 33 is building toward GPU-accelerated simulation in the browser via WebGPU
 
 ## Contracts produced
 
-- `crates/kairo-ecs-webgpu/` — dependency-free default WebGPU facade with adapter, bridge, reference dispatch, and backend-not-configured contracts.
-- `website/webgpu-demo/` — static browser demo with WebGPU API detection, CPU fallback animation, backend-not-configured dispatch label, controls, and metric panels.
-- `docs/gpu-compute/webgpu-wgsl-subset.md` — WebGPU WGSL feature restrictions.
+- `crates/kairo-ecs-webgpu/` — dependency-free default WebGPU facade with adapter, bridge, fallback/parity metadata, reference dispatch, and backend-not-configured contracts.
+- `website/webgpu-demo/` — static browser demo with WebGPU API detection, CPU fallback animation, backend-not-configured dispatch label, controls, metric panels, and GPU-free static validation.
+- `docs/gpu-compute/webgpu-wgsl-subset.md` — WebGPU WGSL feature restrictions and local validator contract.
 - `docs/gpu-compute/webgpu-comparison.md` — WebGPU vs native GPU comparison.
 
 ## Validation
@@ -52,7 +54,8 @@ Track 33 is building toward GPU-accelerated simulation in the browser via WebGPU
 - Passed: `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --features webgpu --tests`
 - Passed after formatting: `cargo fmt --manifest-path crates/kairo-ecs-webgpu/Cargo.toml`
 - Passed: `npm test --prefix website/webgpu-demo`
-- Blocked: `cargo test --manifest-path crates/kairo-ecs-webgpu/Cargo.toml` because this shell resolves `link.exe` to Git's `usr\bin\link.exe`, which exits with `couldn't create signal pipe, Win32 error 5`; `rust-lld` also lacks Windows SDK import libraries in this environment.
+- Passed: `npm run validate:wgsl --prefix website/webgpu-demo`
+- Blocked: `cargo test --manifest-path crates/kairo-ecs-webgpu/Cargo.toml` because this shell resolves `link.exe` to Git's `usr\bin\link.exe`, which exits before linking (`0xc0000142`) after reporting `couldn't create signal pipe, Win32 error 5`; `rust-lld` also lacks Windows SDK import libraries in this environment.
 
 ## Release gates affected
 

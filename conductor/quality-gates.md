@@ -35,6 +35,38 @@ cargo bench --workspace
 
 ## Gate definitions
 
+### Track 30 toolchain and version support gates
+
+**toolchain-matrix-current**: `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` plus `.github/workflows/toolchain-check.yml` live setup lanes - the support matrix must name Rust, Python, R, Julia, TypeScript/Wasm, C#, and Go, must include min/latest/deprecation/OS-arch coverage columns, and every `CI-covered` selector must install and report the declared major/minor version.
+
+**version-drop-policy-check**: `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` - the matrix must retain the version-drop policy, proposed-drops table, release-note/README notice requirement, 2-release-cycle-or-6-month notice period, and documented removal criteria before any supported version or CI lane is removed.
+
+### Track 31 performance regression gates
+
+**threshold-definition-exists**: `python benches/regression/compare.py` - every active benchmark in `benches/benchmark-smoke.json` and `conformance/fixtures/manifest.json` must have exactly one row in `conductor/performance-thresholds.md`; orphaned threshold rows fail the gate.
+
+**benchmark-regression-check**: `python benches/regression/compare.py --base <base-results.json> --current <current-results.json>` - supplied benchmark result pairs must report benchmark name, base mean, current mean, percent change, threshold, gate class, and pass/fail status. Until Track 12 publishes stable native benchmark artifacts, `.github/workflows/bench-regression.yml` runs threshold coverage plus benchmark target compilation rather than full base-vs-PR native timing.
+
+### Tracks 32-35 accelerator, PDES, and distributed gates
+
+**gpu-parity-check**: `pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTest` plus `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --features wgpu-backend,cuda-backend --tests` - validates the GPU crate contract, feature isolation, explicit unavailable-backend errors, and scaffold parity harness compilation. Real hardware CPU-vs-GPU parity remains blocked until backend dependencies and GPU runners are introduced.
+
+**gpu-benchmark-threshold**: `rg -n "not yet available|not publish speedup" docs/gpu-compute/benchmark-results.md` - blocks unsupported GPU speedup claims until Track 12 benchmark outputs and hardware runner evidence exist.
+
+**browser-webgpu-smoke**: `npm test --prefix website/webgpu-demo` and `npm run validate:wgsl --prefix website/webgpu-demo` - validates the static browser demo, fallback state, and GPU-free WGSL subset. Real browser WebGPU device initialization remains blocked until Wasm/browser dependency wiring and browser-runner proof exist.
+
+**wasm-gpu-parity**: `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --features webgpu --tests` - validates the WebGPU crate's CPU fallback/parity metadata and explicit not-configured dispatch behavior. Real Wasm/WebGPU parity remains blocked until Track 09 and WebGPU runtime bindings are available.
+
+**pdes-sequential-parity**: `cargo check --manifest-path crates/kairo-ecs-pdes/Cargo.toml --features pdes --tests` - validates that PDES parity fixtures compile. Runtime parity execution is blocked in this Windows shell by linker resolution and production parallel scheduling remains future work.
+
+**gvt-progression-check**: `cargo check --manifest-path crates/kairo-ecs-pdes/Cargo.toml --features pdes --tests` - validates that GVT progression evidence and deadlock-smoke fixture code compile. Production GVT stress execution remains a beta/RC gate.
+
+**mpi-smoke**: `cargo check --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi --tests` - validates the MPI transport protocol emulator, rank/tag checks, migration envelope, and telemetry envelope. Real `rsmpi` transport remains future work.
+
+**grpc-smoke**: `cargo check --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc --tests` - validates the gRPC protocol emulator, peer/config checks, migration envelope, telemetry envelope, and heartbeat classification. Real `tonic` service wiring remains future work.
+
+**entity-migration-check**: `cargo check --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi --tests` and `cargo check --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc --tests` - validates the dependency-free migration envelope contracts for both distributed transport scaffolds.
+
 ### Tracks 03-05 specific gates
 
 **des-fixture**: `cargo test -p kairo-ecs-des --test des_resource_queue_v1` — the DES resource queue fixture must exist and pass.

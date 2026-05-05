@@ -11,12 +11,14 @@
 | CMB null-message protocol is implemented for deadlock avoidance | no | yes | yes | yes |
 | Sequential parity test passes — PDES final state matches sequential for partitioned worlds | no | yes | yes | yes |
 | Sequential parity fixture compiles under `cargo check --tests` | yes | yes | yes | yes |
+| Conservative PDES validator reports parity, GVT, protocol traffic, and deadlock-smoke evidence | yes | yes | yes | yes |
 | PDES benchmark suite exists in `benches/pdes/` for 4/8/16/32 LP configurations | no | yes | yes | yes |
 | Speedup of 2x+ on 4 cores versus sequential baseline | no | no | yes | yes |
 | Speedup of 4x+ on 8 cores versus sequential baseline | no | no | yes | yes |
 | GVT progresses monotonically under representative simulation loads | no | yes | yes | yes |
 | Deadlock-free stress test passes (10,000+ ticks, random events, 8 LPs, timeout) | no | no | yes | yes |
 | Deadlock-stress fixture compiles under `cargo check --tests` | yes | yes | yes | yes |
+| Runtime PDES unit tests execute on this Windows workstation | blocked | yes | yes | yes |
 | `pdes-sequential-parity` gate exists in `conductor/quality-gates.md` | no | yes | yes | yes |
 | `pdes-gvt-progression` gate exists in `conductor/quality-gates.md` | no | yes | yes | yes |
 | `pdes-deadlock-free` gate exists in `conductor/quality-gates.md` | no | yes | yes | yes |

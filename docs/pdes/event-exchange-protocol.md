@@ -19,6 +19,11 @@ future events from the sender.
 The Track 34 scaffold implements `RemoteEvent`, `NullMessage`, and `PdesMessage`
 and emits null messages from `PdesScheduler::step_until`.
 
+`validate_conservative_pdes()` records non-empty remote-event and null-message
+counts for each accepted workload. The check is intentionally conservative: it
+proves that the fixture exercised the protocol path, not that production
+distributed transports are complete.
+
 Validation command:
 
 ```powershell

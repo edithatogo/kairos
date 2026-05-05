@@ -57,6 +57,7 @@ The repo now has a first executable implementation skeleton:
 - conformance runner, CI policy, docs link-check, package dry-run, release governance, and community onboarding slices with local validators
 - benchmark reproducibility, citation/archive metadata, OpenSSF trust evidence, VVUQ notes, scenario indexing, and starter-kit/model-zoo inventory slices with local validators
 - playground, compatibility governance, interoperability mapping, docs workflow, red-team ledger, and wave-gate slices with local validators
+- toolchain version matrix and performance regression guard slices with CI workflows and local validators
 - GPU, WebGPU, PDES, MPI/gRPC, streaming, ML, FMI, cloud/HPC, and time-travel debug implementation slices with smoke validators
 - GitHub workflow scaffolding under `.github/`
 

@@ -1,0 +1,10 @@
+{
+  "benchmarks": [
+    { "id": "schedule_1m_events", "mean": 1.0 },
+    { "id": "pop_1m_events", "mean": 1.0 },
+    { "id": "schedule_cancel_1m_mixed", "mean": 1.0 },
+    { "id": "create_1m_entities", "mean": 1.0 },
+    { "id": "component_insert_1m", "mean": 1.0 },
+    { "id": "hybrid_des_abm_smoke_100k", "mean": 1.0 }
+  ]
+}

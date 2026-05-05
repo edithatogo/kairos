@@ -10,4 +10,6 @@ Run the local smoke test:
 npm test --prefix website/webgpu-demo
 ```
 
+The test is intentionally browser-GPU-free. It checks the static demo contract and validates the local WGSL shader against the current Track 33 subset notes.
+
 Browser validation for the real WebGPU path is blocked until Track 09 provides the Wasm binding package and this track wires browser device initialization.

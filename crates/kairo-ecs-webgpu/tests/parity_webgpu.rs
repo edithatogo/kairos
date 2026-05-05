@@ -1,5 +1,6 @@
 use kairo_ecs_webgpu::{
-    run_reference_step, try_run_browser_webgpu_step, AgentSnapshot, WebGpuDispatchError,
+    browser_capability, run_reference_step, try_run_browser_webgpu_step, AgentSnapshot,
+    ComputeBackend, ParityStatus, WebGpuDispatchError,
 };
 
 #[test]
@@ -21,6 +22,16 @@ fn browser_webgpu_dispatch_is_explicitly_unavailable_until_configured() {
         try_run_browser_webgpu_step(&mut agents, 0.016, 99),
         Err(WebGpuDispatchError::BrowserBackendNotConfigured)
     );
+}
+
+#[test]
+fn capability_metadata_identifies_fallback_parity_contract() {
+    let capability = browser_capability(ComputeBackend::BrowserWebGpu);
+
+    assert_eq!(capability.requested_backend, ComputeBackend::BrowserWebGpu);
+    assert_eq!(capability.effective_backend, ComputeBackend::CpuFallback);
+    assert_eq!(capability.parity_status, ParityStatus::ReferenceOnly);
+    assert!(!capability.browser_gpu_required_for_validation);
 }
 
 fn seed_agents() -> Vec<AgentSnapshot> {

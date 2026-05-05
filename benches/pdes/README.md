@@ -17,3 +17,8 @@ Current validation:
 ```powershell
 cargo test --manifest-path crates/kairo-ecs-pdes/Cargo.toml --features pdes
 ```
+
+Until Track 12 integrates a real benchmark target, PDES evidence is limited to
+the local validator in `kairo-ecs-pdes`: final-state parity, GVT progression,
+protocol traffic counts, and deadlock-smoke completion. Do not publish speedup
+claims from this directory.

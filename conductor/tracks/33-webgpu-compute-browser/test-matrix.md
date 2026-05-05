@@ -9,11 +9,13 @@ Rule: a check is marked complete only when an artifact exists and the validation
 | Native CI reports WebGPU unavailable safely | complete | `src/adapter.rs` | `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --no-default-features` |
 | Buffer bridge validates WebGPU alignment constraints | complete | `src/bridge.rs` | `cargo test --manifest-path crates/kairo-ecs-webgpu/Cargo.toml` blocked by Windows linker; `cargo check` passes |
 | Dispatch orchestration scaffold exists with 256-thread workgroup math | complete | `src/dispatch.rs` | `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --no-default-features` |
+| Fallback/parity metadata reports CPU reference contract without browser GPU | complete | `src/capability.rs`, `tests/parity_webgpu.rs` | `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --features webgpu --tests` |
 | Browser WebGPU dispatch reports explicit not-configured error | complete | `src/dispatch.rs`, `tests/parity_webgpu.rs` | `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --features webgpu --tests` |
-| WebGPU WGSL ABM shader scaffold exists | complete | `src/shaders/abm_webgpu.wgsl` | shader source inspected by file presence; browser/naga compile pending dependencies |
+| WebGPU WGSL ABM shader scaffold exists | complete | `src/shaders/abm_webgpu.wgsl` | `npm run validate:wgsl --prefix website/webgpu-demo` |
 | CPU vs WebGPU parity harness exists | partial | `tests/parity_webgpu.rs`, CPU fallback contract | executable test blocked by Windows linker in this shell |
 | Demo page exists with canvas, agent count, backend toggle, metrics, and backend-not-configured label | complete | `website/webgpu-demo/index.html`, `styles.css`, `src/main.js` | `npm test --prefix website/webgpu-demo` |
 | Demo has static smoke test | complete | `website/webgpu-demo/scripts/smoke.mjs` | `npm test --prefix website/webgpu-demo` |
+| Browser-GPU-free WGSL subset validator exists | complete | `website/webgpu-demo/scripts/validate-wgsl-subset.mjs`, `docs/gpu-compute/webgpu-wgsl-subset.md` | `npm run validate:wgsl --prefix website/webgpu-demo` |
 | Demo README exists | complete | `website/webgpu-demo/README.md` | `rg -n "npm test" website/webgpu-demo/README.md` |
 | WebGPU WGSL subset doc exists | complete | `docs/gpu-compute/webgpu-wgsl-subset.md` | `rg -n "64-bit atomics|workgroups" docs/gpu-compute/webgpu-wgsl-subset.md` |
 | WebGPU vs native comparison doc exists | complete | `docs/gpu-compute/webgpu-comparison.md` | `rg -n "Native GPU|Browser WebGPU" docs/gpu-compute/webgpu-comparison.md` |

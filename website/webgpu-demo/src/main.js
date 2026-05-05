@@ -10,6 +10,13 @@ const metricFps = document.querySelector("#metric-fps");
 const metricCompute = document.querySelector("#metric-compute");
 const metricRender = document.querySelector("#metric-render");
 
+const fallbackContract = {
+  parity: "reference-only",
+  fallback: "cpu",
+  webgpuDispatch: "backend-not-configured",
+  browserGpuRequiredForStaticValidation: false
+};
+
 let agents = [];
 let lastFrame = performance.now();
 
@@ -21,20 +28,20 @@ function resolveBackendStatus(requestedBackend) {
   if (requestedBackend !== "webgpu") {
     return {
       backendLabel: "CPU fallback",
-      dispatchLabel: "dependency-free reference step"
+      dispatchLabel: `dependency-free reference step (${fallbackContract.parity})`
     };
   }
 
   if (!hasWebGpu()) {
     return {
       backendLabel: "WebGPU API unavailable",
-      dispatchLabel: "CPU fallback active"
+      dispatchLabel: `CPU fallback active (${fallbackContract.parity})`
     };
   }
 
   return {
     backendLabel: "WebGPU API detected",
-    dispatchLabel: "backend not configured"
+    dispatchLabel: fallbackContract.webgpuDispatch
   };
 }
 

@@ -15,3 +15,10 @@ Required:
 - Explicit uniform or storage-buffer parameters.
 - Bounds checks using the logical item count.
 - Deterministic integer RNG compatible with the native WGSL kernel.
+
+Current Track 33 ABM subset:
+
+- `@workgroup_size(256)` is the maximum accepted workgroup size for browser smoke validation.
+- Agent storage layout is `vec2<f32>` position plus `vec2<f32>` velocity.
+- Dispatch parameters are supplied through a uniform block containing `dt`, `seed`, `count`, and padding.
+- The local validator is static and GPU-free: `npm run validate:wgsl --prefix website/webgpu-demo`.

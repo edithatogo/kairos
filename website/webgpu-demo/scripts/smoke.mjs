@@ -9,7 +9,15 @@ for (const required of ["agent-count", "backend", "metric-dispatch", "metric-fps
   }
 }
 
-for (const required of ["navigator.gpu", "backend not configured", "resolveBackendStatus", "requestAnimationFrame", "stepCpu"]) {
+for (const required of [
+  "navigator.gpu",
+  "backend-not-configured",
+  "fallbackContract",
+  "reference-only",
+  "resolveBackendStatus",
+  "requestAnimationFrame",
+  "stepCpu"
+]) {
   if (!js.includes(required)) {
     throw new Error(`Missing demo behavior: ${required}`);
   }

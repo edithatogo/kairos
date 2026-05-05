@@ -9,6 +9,8 @@
 | Track 34 `PdesTransport` boundary is documented with ThreadChannel, MPI, and gRPC scaffold implementations | yes | yes | yes | yes |
 | MPI protocol emulator compiles message round-trip and GVT reduction checks under `cargo check --tests` | yes | yes | yes | yes |
 | gRPC protocol emulator compiles message round-trip and GVT reduction checks under `cargo check --tests` | yes | yes | yes | yes |
+| MPI local protocol validators cover rank uniqueness, stable tags, migration envelope, and telemetry envelope | yes | yes | yes | yes |
+| gRPC local protocol validators cover peer/config validation, migration envelope, telemetry envelope, and heartbeat failure classification | yes | yes | yes | yes |
 | Entity migration protocol is documented in `docs/distributed/entity-migration-protocol.md` | yes | yes | yes | yes |
 | Distributed telemetry aggregation design is documented in `docs/distributed/telemetry-aggregation.md` | yes | yes | yes | yes |
 | Deployment guide exists in `docs/distributed/deployment-guide.md` | no | yes | yes | yes |

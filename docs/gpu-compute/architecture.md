@@ -20,3 +20,16 @@ The GPU path is an accelerator behind a facade rather than a replacement schedul
 ## Feature isolation
 
 The default crate build contains no GPU dependencies. Native GPU backend code is enabled through feature flags and must remain optional.
+
+## Hardware-independent checks
+
+The GPU crate exposes contract helpers that do not need a device:
+
+- `GpuState::footprint()` computes flat upload/download bytes.
+- `TRACK32_TARGET_MEMORY_BUDGET` records the current 1 GB device and 2 GB staging-budget smoke target.
+- `DispatchShape::for_items()` computes the shared 256-thread workgroup launch shape.
+- `GpuBackendCapabilities` makes fallback, wgpu, and CUDA availability explicit.
+
+These checks are not performance evidence. They exist to catch feature leakage,
+memory-shape drift, and dispatch-contract drift on CPU-only developer machines
+before GPU runner validation is available.

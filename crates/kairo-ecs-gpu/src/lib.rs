@@ -19,8 +19,9 @@ pub mod wgpu {
 
 pub use buffer::{BufferUsage, GpuBuffer, GpuBufferError, TypedGpuBuffer};
 pub use compute::{
-    AgentParticle, CpuFallbackCompute, DesEvent, GpuBackendAvailability, GpuCompute,
-    GpuComputeError, GpuState, GpuStepStats, CUDA_BACKEND_NOT_CONFIGURED,
-    WGPU_BACKEND_NOT_CONFIGURED,
+    AgentParticle, CpuFallbackCompute, DesEvent, DispatchShape, GpuBackendAvailability,
+    GpuBackendCapabilities, GpuCompute, GpuComputeError, GpuMemoryBudget, GpuState,
+    GpuStateFootprint, GpuStepStats, CUDA_BACKEND_NOT_CONFIGURED, DEFAULT_WORKGROUP_SIZE,
+    TRACK32_TARGET_MEMORY_BUDGET, WGPU_BACKEND_NOT_CONFIGURED,
 };
 pub use transfer::{TransferDirection, TransferPlan, TransferStep};

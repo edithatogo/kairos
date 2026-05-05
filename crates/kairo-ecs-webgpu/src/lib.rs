@@ -5,10 +5,14 @@
 
 pub mod adapter;
 pub mod bridge;
+pub mod capability;
 pub mod dispatch;
 
 pub use adapter::{is_webgpu_available, AdapterStatus};
 pub use bridge::{BufferBridge, BufferBridgeError, BufferDescriptor};
+pub use capability::{
+    browser_capability, BrowserCapability, ComputeBackend, ParityStatus, WEBGPU_WORKGROUP_SIZE,
+};
 pub use dispatch::{
     run_reference_step, try_run_browser_webgpu_step, AgentSnapshot, DispatchStats,
     WebGpuDispatchError,

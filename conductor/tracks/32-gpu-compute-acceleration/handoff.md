@@ -2,11 +2,11 @@
 
 ## Status
 
-Initial scaffold implemented and tightened. Native GPU backends now expose explicit `*-backend-not-configured` contracts instead of silently falling back to CPU work. The crate facade, buffer/transfer layers, WGSL shader scaffolds, CPU fallback parity harnesses, and GPU compute documentation exist.
+Initial scaffold implemented and tightened. Native GPU backends now expose explicit `*-backend-not-configured` contracts instead of silently falling back to CPU work. The crate facade, buffer/transfer layers, WGSL shader scaffolds, CPU fallback parity harnesses, GPU compute documentation, hardware-independent memory/dispatch contracts, and local feature-isolation validator exist.
 
 ## Summary
 
-Track 32 is building toward GPU-accelerated simulation compute for KairoECS. The current `kairo-ecs-gpu` crate provides a dependency-free facade, CPU fallback contract, feature-gated wgpu/CUDA backend types, and explicit unavailable responses for real backend dispatch. GPU acceleration is optional, gated behind cargo feature flags, and non-blocking for headless release. The 10x+ speedup and 10M-entity memory targets remain future hardware-validated goals, not current claims.
+Track 32 is building toward GPU-accelerated simulation compute for KairoECS. The current `kairo-ecs-gpu` crate provides a dependency-free facade, CPU fallback contract, feature-gated wgpu/CUDA backend types, explicit unavailable responses for real backend dispatch, `GpuBackendCapabilities`, `GpuState::footprint()`, `DispatchShape`, and `TRACK32_TARGET_MEMORY_BUDGET`. GPU acceleration is optional, gated behind cargo feature flags, and non-blocking for headless release. The 10x+ speedup and 10M-entity memory targets remain future hardware-validated goals, not current claims.
 
 ## Files created in this track
 
@@ -27,14 +27,17 @@ Track 32 is building toward GPU-accelerated simulation compute for KairoECS. The
 - `crates/kairo-ecs-gpu/src/shaders/des_dispatch.wgsl`
 - `crates/kairo-ecs-gpu/tests/parity.rs`
 - `crates/kairo-ecs-gpu/tests/parity_des.rs`
+- `crates/kairo-ecs-gpu/tests/contract_smoke.rs`
 - `docs/gpu-compute/README.md`
 - `docs/gpu-compute/kernel-ir.md`
 - `docs/gpu-compute/backend-selection.md`
 - `docs/gpu-compute/architecture.md`
+- `docs/gpu-compute/memory-contract.md`
 - `docs/gpu-compute/event-ordering.md`
 - `docs/gpu-compute/hardware-requirements.md`
 - `docs/gpu-compute/benchmark-results.md`
 - `docs/gpu-compute/maintainer-notes.md`
+- `conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1`
 
 ## Contracts consumed
 
@@ -47,7 +50,9 @@ Track 32 is building toward GPU-accelerated simulation compute for KairoECS. The
 ## Contracts produced
 
 - `crates/kairo-ecs-gpu/` — dependency-free default GPU facade with feature-gated backend-not-configured contracts.
+- `crates/kairo-ecs-gpu/` — hardware-independent footprint, dispatch-shape, and backend-capability contracts for CPU-only validation.
 - `docs/gpu-compute/kernel-ir.md` — shared kernel IR.
+- `docs/gpu-compute/memory-contract.md` — memory budget and dispatch contract.
 - `docs/gpu-compute/backend-selection.md` — backend tradeoffs.
 - `docs/gpu-compute/event-ordering.md` — deterministic and nondeterministic DES scheduling rules.
 - `docs/gpu-compute/hardware-requirements.md` — hardware evidence matrix.
@@ -57,8 +62,10 @@ Track 32 is building toward GPU-accelerated simulation compute for KairoECS. The
 
 - Passed: `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --no-default-features`
 - Passed: `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --features wgpu-backend,cuda-backend --tests`
+- Passed: `cargo tree --manifest-path crates/kairo-ecs-gpu/Cargo.toml --no-default-features` with no forbidden GPU dependency entries.
+- Passed: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\32-gpu-compute-acceleration\validate-track32.ps1 -SkipCargoTest`
 - Passed after formatting: `cargo fmt --manifest-path crates/kairo-ecs-gpu/Cargo.toml`
-- Blocked: `cargo test --manifest-path crates/kairo-ecs-gpu/Cargo.toml` because this shell resolves `link.exe` to Git's `usr\bin\link.exe`, which exits with `couldn't create signal pipe, Win32 error 5`; `rust-lld` also lacks Windows SDK import libraries in this environment.
+- Blocked: `cargo test --manifest-path crates/kairo-ecs-gpu/Cargo.toml` because this shell resolves `link.exe` to Git's `usr\bin\link.exe`, which exits with `0xc0000142` and `couldn't create signal pipe, Win32 error 5`; earlier `rust-lld` attempts also lacked Windows SDK import libraries in this environment.
 
 ## Release gates affected
 
@@ -74,6 +81,7 @@ All GPU gates are informational when no GPU hardware is present in CI. Only `gpu
 
 - The shared kernel IR design must balance expressiveness against portability. WGSL and CUDA have fundamentally different memory models (binding groups vs raw pointers). The IR may need to be the lowest common denominator, limiting optimization.
 - GPU parity testing on CI is blocked by lack of GPU hardware. Initial parity testing must be manual or on self-hosted runners. This delays the feedback loop for kernel changes.
+- CPU-only validation can now catch memory footprint and dispatch-shape drift, but it cannot prove backend-specific alignment, allocation overhead, or real device limits.
 - Nondeterministic workgroup scheduling means the GPU DES dispatch path is not strictly equivalent to the CPU path for all workloads. The parity test must carefully scope which scenarios are valid.
 - Platform fragmentation across Metal, CUDA, and Vulkan means maintaining N backend-specific code paths for N backends. The `GpuCompute` trait abstraction helps but does not eliminate this.
 - The `gpu` feature flag strategy (`#[cfg(feature = "gpu")]`) must be rigorously enforced — a single un-gated import of `wgpu` leaks GPU into every downstream crate.
