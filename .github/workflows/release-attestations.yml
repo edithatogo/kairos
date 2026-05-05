@@ -19,7 +19,7 @@ jobs:
     env:
       ARTIFACT_PATH: ${{ github.event.inputs.artifact_path || 'dist' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Verify release artifacts exist
         run: |
           test -d "${ARTIFACT_PATH}"

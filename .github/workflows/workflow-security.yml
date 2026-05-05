@@ -18,7 +18,7 @@ jobs:
   actionlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Inventory workflow files
         run: |
           test -f .github/workflows/scorecard.yml
@@ -47,7 +47,7 @@ jobs:
   zizmor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Inventory workflow files
         run: |
           test -f .github/workflows/scorecard.yml
