@@ -1,42 +1,86 @@
-# Risk Register — <!-- __TRACK_ID__ --> <!-- __TRACK_NAME__ -->
+# Risk Register Template
 
-## Severity scoring
+## Severity Scoring
 
-| Severity band | Score range | Action |
-|---|---|---|
-| Low | 1-6 | Accept, note in handoff.md |
-| Medium | 7-14 | Accept with mitigation plan; owner must acknowledge |
-| High | 15-20 | Mitigation required before track status can advance to In Review |
-| Critical / Release-Blocker | 20+ | Track blocked; release-agent and governance-agent must review; ADR required |
+Each risk is scored by multiplying **Likelihood (L)** by **Impact (I)**:
 
-**Escalation rule**: Any Medium risk whose mitigation deadline passes without resolution must be escalated to High. Track owner must file an escalation issue and notify governance-agent within 48 hours of deadline expiry.
+**Severity = L × I**
 
-## Active risks
+### Likelihood Scale (1-5)
 
-| # | Risk | Likelihood (1-5) | Impact (1-5) | Severity (L x I) | Mitigation | Owner | Trigger / Escalation |
-|---|---|---|---|---|---|---|---|
-| 1 | <!-- Describe the risk --> | <!-- 1-5 --> | <!-- 1-5 --> | <!-- L x I --> | <!-- Concrete mitigation steps --> | <!-- Agent or role --> | <!-- Condition that triggers escalation --> |
-| 2 | <!-- ... --> | | | | | | |
+| Value | Label | Description |
+|-------|-------|-------------|
+| 1 | Rare | Would require exceptional circumstances; never seen before |
+| 2 | Unlikely | Could happen but not expected under normal operation |
+| 3 | Possible | Might occur at some point; has been observed in similar projects |
+| 4 | Likely | Will probably occur; has happened before or conditions favor it |
+| 5 | Almost Certain | Expected to occur; multiple paths lead to this outcome |
 
-<!-- Add rows as needed. Copy the empty row template below:
+### Impact Scale (1-5)
 
-| <N> | <risk description> | <1-5> | <1-5> | <L*I> | <mitigation> | <owner> | <trigger> |
+| Value | Label | Description |
+|-------|-------|-------------|
+| 1 | Negligible | No noticeable effect on project outcomes |
+| 2 | Minor | Minor inconvenience; workaround exists; no schedule impact |
+| 3 | Moderate | Noticeable delay or quality reduction; partial workaround |
+| 4 | Major | Significant delay, cost, or quality impact; may affect release |
+| 5 | Critical | Project blocker; release cannot proceed; existential threat |
 
--->
+### Severity Thresholds
 
-## Resolved / historical
+| Range | Label | Action |
+|-------|-------|--------|
+| 1-4 | Low | Monitor; accept or document |
+| 5-8 | Medium | Active mitigation required; track in sprint |
+| 9-15 | High | Escalate to track owner; mitigation must be in place before next phase |
+| 16-25 | Critical / Release-Blocker | Immediate escalation; release cannot proceed until resolved or accepted by governance |
 
-| # | Risk | Resolution | Resolved date | Resolved by |
-|---|---|---|---|---|
-| <!-- 1 --> | <!-- risk description --> | <!-- how it was resolved --> | <!-- YYYY-MM-DD --> | <!-- agent or role --> |
+## Table Format
 
-## Instructions
+```markdown
+# Risk Register — {Track Number} {Track Title}
 
-1. **Likelihood**: 1 = near-certain it will NOT happen, 5 = near-certain it WILL happen within the track timeline.
-2. **Impact**: 1 = cosmetic or trivial, 5 = blocks release or breaks compatibility promises.
-3. **Severity**: Multiply Likelihood x Impact. Score 1-25.
-4. **Mitigation**: Must be a concrete, verifiable action. Avoid vague mitigations like "be careful."
-5. **Owner**: Must be a named subagent from `conductor/subagents.yaml` or a specific role (e.g. "governance-agent").
-6. **Trigger / Escalation**: Define the observable condition that triggers escalation (e.g. "CI benchmark regression >5%", "ADR not submitted by beta freeze").
-7. Update this register whenever a risk materializes, is mitigated, or its likelihood/impact changes.
-8. Mark resolved risks in the historical table; do not delete rows from the active table.
+| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+|---|---|---|---|---|---|---|
+| {Risk description} | {1-5} | {1-5} | {L×I} | {What will be done to reduce likelihood or impact} | {responsible-agent} | {Condition that triggers escalation} |
+```
+
+### Column Definitions
+
+- **Risk**: A concise description of the risk (what could go wrong)
+- **L**: Likelihood score (1-5 per the Likelihood Scale above)
+- **I**: Impact score (1-5 per the Impact Scale above)
+- **Sev**: Severity = L × I (auto-calculated)
+- **Mitigation**: Action taken or planned to reduce likelihood or impact. Must be testable or verifiable.
+- **Owner**: The agent or role accountable for managing this risk. Use `{domain}-agent` naming convention (e.g., `core-agent`, `ci-agent`, `release-agent`).
+- **Escalation trigger**: A specific, observable condition that—if met—requires immediate escalation to the track owner or release governance. Must be falsifiable (it must be possible to determine whether the condition has been met).
+
+## Escalation Triggers
+
+Escalation triggers are specific, measurable conditions. Good triggers are:
+
+- **Observable**: Someone can definitively determine if the condition has been met
+- **Actionable**: Meeting the condition implies a concrete next step (raise issue, block release, notify owner)
+- **Time-bound where applicable**: "if X persists for >N days" rather than "if X happens"
+
+### Examples of Good Escalation Triggers
+
+- "Any conformance fixture fails against canonical output"
+- "Test PyPI dry-run fails"
+- "CRAN submission pending >2 weeks after release"
+- ">20% regression on any tracked benchmark"
+- "Two consecutive changes made without an ADR"
+
+### Examples of Poor Escalation Triggers
+
+- "If things go wrong" (not observable)
+- "Quality degrades" (not measurable)
+- "Team is unhappy" (not falsifiable)
+
+## Guidelines
+
+1. Each track should have **4-9 risks** covering the most impactful failure modes.
+2. Every Severity ≥ 9 risk should have an escalation trigger that is actionable before a release.
+3. Every Severity ≥ 16 risk should have an escalation trigger that **blocks the release**.
+4. Review and update the risk register at each phase transition (Spec Approved → In Progress → Review → Done).
+5. When a risk materializes, add a dated note or link to the incident/issue.
