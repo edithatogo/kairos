@@ -50,6 +50,9 @@ Use this before every alpha, beta, release candidate, and stable release.
 - [ ] OpenSSF/supply-chain readiness rows from Track 20 are green.
 - [ ] API compatibility review rows from Track 25 are green.
 - [ ] Red-team blocker rows from Track 28 are green or explicitly waived.
+- [ ] Wave manager controls from Track 29 are green.
+- [ ] Toolchain matrix and version-drop policy from Track 30 are green.
+- [ ] Performance regression guard from Track 31 is green or explicitly marked advisory.
 
 ## Publishing readiness
 
@@ -105,3 +108,4 @@ Use this before every alpha, beta, release candidate, and stable release.
 - [ ] FFI memory safety tests passed for published bindings.
 - [ ] Red-team freshness date is current for the release stage being planned.
 - [ ] Release blockers have named owners and follow-up issues.
+- [ ] Wave 5 control tracks are current.

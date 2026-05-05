@@ -15,6 +15,10 @@ $requiredPaths = @(
     "docs/release/release-checklist.md",
     "conductor/package-catalog.md",
     "conductor/package-matrix.md",
+    "conductor/gates/wave-progression-check.yml",
+    "conductor/gates/dependency-closure-check.yml",
+    "conductor/toolchain-matrix.md",
+    "conductor/performance-thresholds.md",
     "Cargo.toml",
     "LICENSE",
     "LICENSE-MIT",
@@ -24,6 +28,8 @@ $requiredPaths = @(
     ".github/CODEOWNERS",
     ".github/workflows/codeql.yml",
     ".github/workflows/secret-scan.yml",
+    ".github/workflows/toolchain-check.yml",
+    ".github/workflows/bench-regression.yml",
     "crates/kairo-ecs-types/Cargo.toml",
     "crates/kairo-ecs-core/Cargo.toml",
     "crates/kairo-ecs-state/Cargo.toml",
@@ -141,7 +147,10 @@ foreach ($row in @(
     "Starter-kit and model-zoo guidance from Track 23 is green.",
     "Playground and demo guidance from Track 24 is green.",
     "API design review and compatibility governance guidance from Track 25 is green.",
-    "Interoperability standards review guidance from Track 26 is green."
+    "Interoperability standards review guidance from Track 26 is green.",
+    "Wave manager controls from Track 29 are green.",
+    "Toolchain matrix and version-drop policy from Track 30 are green.",
+    "Performance regression guard from Track 31 is green or explicitly marked advisory."
 )) {
     Assert-Contains -Content $deliveryChecklist -Needle $row -Label "delivery-readiness-checklist.md"
 }
@@ -208,9 +217,40 @@ foreach ($row in @(
     "Starter-kit and model-zoo guidance (Track 23)",
     "Playground and demo guidance (Track 24)",
     "API design review and compatibility governance guidance (Track 25)",
-    "Interoperability standards review guidance (Track 26)"
+    "Interoperability standards review guidance (Track 26)",
+    "Wave manager and execution gatekeeper guidance (Track 29)",
+    "Toolchain and version support matrix guidance (Track 30)",
+    "Performance regression guard guidance (Track 31)"
 )) {
     Assert-Contains -Content $qualityGates -Needle $row -Label "quality-gates.md"
+}
+
+$wavePolicy = Get-Content -LiteralPath "conductor/wave-policy.md" -Raw
+foreach ($row in @(
+    "Wave 5",
+    "29 Wave Manager & Execution Gatekeeper",
+    "30 Toolchain & Version Support Matrix",
+    "31 Performance Regression Guard"
+)) {
+    Assert-Contains -Content $wavePolicy -Needle $row -Label "wave-policy.md"
+}
+
+$toolchainMatrix = Get-Content -LiteralPath "conductor/toolchain-matrix.md" -Raw
+foreach ($row in @(
+    "## Rust",
+    "## Python",
+    "## C#",
+    "## Go"
+)) {
+    Assert-Contains -Content $toolchainMatrix -Needle $row -Label "conductor/toolchain-matrix.md"
+}
+
+$perfThresholds = Get-Content -LiteralPath "conductor/performance-thresholds.md" -Raw
+foreach ($row in @(
+    "schedule_1m_events_preview",
+    "hybrid_des_abm_smoke_preview"
+)) {
+    Assert-Contains -Content $perfThresholds -Needle $row -Label "conductor/performance-thresholds.md"
 }
 
 if (-not $SkipCargo) {

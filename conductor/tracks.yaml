@@ -376,7 +376,7 @@ tracks:
       - no-critical-release-blockers
   - id: 29
     name: Wave Manager & Execution Gatekeeper
-    status: Planned
+    status: In Progress
     owner: wave-manager-agent
     depends_on: ["00"]
     owned_paths:
@@ -386,7 +386,7 @@ tracks:
       - dependency-closure-check
   - id: 30
     name: Toolchain & Version Support Matrix
-    status: Planned
+    status: In Progress
     owner: toolchain-agent
     depends_on: ["00", "13"]
     owned_paths:
@@ -397,9 +397,9 @@ tracks:
       - version-drop-policy-check
   - id: 31
     name: Performance Regression Guard
-    status: Planned
+    status: In Progress
     owner: perf-regression-agent
-    depends_on: ["01", "12", "18"]
+    depends_on: ["12", "18"]
     owned_paths:
       - conductor/performance-thresholds.md
       - benches/regression/

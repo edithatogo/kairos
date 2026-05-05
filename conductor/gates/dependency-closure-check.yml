@@ -1,0 +1,9 @@
+name: dependency-closure-check
+description: Ensure each track only starts when its declared dependencies are resolved.
+inputs:
+  - conductor/tracks.yaml
+  - conductor/tracks.md
+checks:
+  - Every dependency id exists in the canonical track inventory.
+  - No track is marked In Progress while a required dependency is still Planned.
+  - Track 29-31 control surfaces remain visible in the release gate model.

@@ -76,6 +76,18 @@ Requirement:
 
 - Wave 4 may only move when the release-gating tracks 20, 25, and 28 are current and no earlier-wave track is missing required artifacts.
 
+## Wave 5
+
+Tracks:
+
+- 29 Wave Manager & Execution Gatekeeper
+- 30 Toolchain & Version Support Matrix
+- 31 Performance Regression Guard
+
+Requirement:
+
+- Wave 5 tracks are always-on control tracks. They may start immediately, but their required artifacts and validation paths must exist before the repo can claim release-readiness for governance, toolchain, or performance guarantees.
+
 ## No-skip controls
 
 1. Every track must have `spec.md`, `plan.md`, `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
@@ -84,4 +96,3 @@ Requirement:
 4. A track may not be marked `In Progress` unless its readiness level is documented.
 5. A later wave may not start if an earlier wave has an unresolved required artifact.
 6. Release tracks must treat missing evidence as a blocker rather than as a future enhancement.
-

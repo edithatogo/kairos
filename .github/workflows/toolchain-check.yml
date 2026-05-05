@@ -1,0 +1,23 @@
+name: Toolchain Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  matrix-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate toolchain matrix
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path("conductor/toolchain-matrix.md").read_text(encoding="utf-8")
+          required = ["## Rust", "## Python", "## R", "## Julia", "## TypeScript", "## C#", "## Go"]
+          missing = [item for item in required if item not in text]
+          if missing:
+              raise SystemExit(f"missing sections: {', '.join(missing)}")
+          PY

@@ -57,6 +57,12 @@ The first release wave should stay narrow and non-destructive:
 5. C# preview package with native runtime assets.
 6. Go preview module over the stable C ABI.
 
+The governance/control wave follows the package wave:
+
+1. Wave Manager & Execution Gatekeeper keeps release ordering honest.
+2. Toolchain & Version Support Matrix keeps the supported-version floor explicit.
+3. Performance Regression Guard keeps benchmark drift visible before release claims are made.
+
 ## Ecosystem action map
 
 | Ecosystem | First artifact | First validation | First registry target |
@@ -136,6 +142,7 @@ Release using semantic Git tags. Keep cgo instructions explicit.
 - Record minimum runtime versions in the package catalog.
 - Keep GitHub Releases draft-only until the release gates are satisfied.
 - Record the release artifact tree for each ecosystem before a public write.
+- Keep the control-track documents current before release claims are made.
 
 ## Detailed dependency/tooling inventory
 

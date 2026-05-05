@@ -1,0 +1,9 @@
+name: wave-progression-check
+description: Ensure later waves do not skip unresolved earlier-wave dependencies.
+inputs:
+  - conductor/tracks.yaml
+  - conductor/wave-policy.md
+checks:
+  - Every track has a declared owner and required gates.
+  - Every track appears exactly once in the human and machine track indexes.
+  - A later wave cannot start if an earlier wave is missing required artifacts.

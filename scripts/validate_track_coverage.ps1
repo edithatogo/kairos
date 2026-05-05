@@ -63,9 +63,40 @@ foreach ($row in @(
     "Verification, validation, and uncertainty guidance (Track 21)",
     "Scenario runner and replay guidance (Track 22)",
     "Starter-kit and model-zoo guidance (Track 23)",
-    "Playground and demo guidance (Track 24)"
+    "Playground and demo guidance (Track 24)",
+    "Wave manager and execution gatekeeper guidance (Track 29)",
+    "Toolchain and version support matrix guidance (Track 30)",
+    "Performance regression guard guidance (Track 31)"
 )) {
     Assert-Contains -Content $qualityGates -Needle $row -Label "quality-gates.md"
+}
+
+$wavePolicy = Get-Content -LiteralPath "conductor/wave-policy.md" -Raw
+foreach ($row in @(
+    "Wave 5",
+    "29 Wave Manager & Execution Gatekeeper",
+    "30 Toolchain & Version Support Matrix",
+    "31 Performance Regression Guard"
+)) {
+    Assert-Contains -Content $wavePolicy -Needle $row -Label "wave-policy.md"
+}
+
+$toolchainMatrix = Get-Content -LiteralPath "conductor/toolchain-matrix.md" -Raw
+foreach ($row in @(
+    "## Rust",
+    "## Python",
+    "## C#",
+    "## Go"
+)) {
+    Assert-Contains -Content $toolchainMatrix -Needle $row -Label "conductor/toolchain-matrix.md"
+}
+
+$perfThresholds = Get-Content -LiteralPath "conductor/performance-thresholds.md" -Raw
+foreach ($row in @(
+    "schedule_1m_events_preview",
+    "hybrid_des_abm_smoke_preview"
+)) {
+    Assert-Contains -Content $perfThresholds -Needle $row -Label "conductor/performance-thresholds.md"
 }
 
 $releaseChecklist = Get-Content -LiteralPath "docs/release/release-checklist.md" -Raw
@@ -221,6 +252,56 @@ $trackChecks = @(
             'Captured the interoperability mapping story so downstream tracks can rely on a named set of supported, partial, deferred, and unsupported translations.',
             'Interoperability review now names the release-impacting assertions that need review before an external-compatibility claim is made.',
             'supported, partial, deferred, and unsupported translations'
+        )
+    },
+    @{
+        Path = "conductor/tracks/29-wave-manager-execution-gatekeeper/test-matrix.md"
+        Needles = @(
+            'Wave assignment is derivable from the dependency graph',
+            '`wave-progression-check` gate exists and is documented in `conductor/quality-gates.md`',
+            '`dependency-closure-check` gate exists and is documented in `conductor/quality-gates.md`'
+        )
+    },
+    @{
+        Path = "conductor/tracks/29-wave-manager-execution-gatekeeper/handoff.md"
+        Needles = @(
+            "wave policy",
+            "dependency-closure-check",
+            "wave-progression-check"
+        )
+    },
+    @{
+        Path = "conductor/tracks/30-toolchain-version-support-matrix/test-matrix.md"
+        Needles = @(
+            'conductor/toolchain-matrix.md` exists and contains rows for Rust, Python, .NET, Julia, R, Go, Node/Wasm',
+            'Version-drop policy is documented with notice period and removal criteria',
+            'conductor/quality-gates.md` includes `toolchain-matrix-current` and `version-drop-policy-check`',
+            '.github/workflows/toolchain-check.yml` exists and is referenced in CI'
+        )
+    },
+    @{
+        Path = "conductor/tracks/30-toolchain-version-support-matrix/handoff.md"
+        Needles = @(
+            'Defined the cross-language toolchain version support matrix',
+            'toolchain-check.yml',
+            'version-drop policy'
+        )
+    },
+    @{
+        Path = "conductor/tracks/31-performance-regression-guard/test-matrix.md"
+        Needles = @(
+            'conductor/performance-thresholds.md` exists and lists every active benchmark',
+            'Each benchmark row includes baseline value, acceptable regression %, and measurement methodology',
+            'conductor/quality-gates.md` includes `benchmark-regression-check` and `threshold-definition-exists`',
+            '.github/workflows/bench-regression.yml` exists and is referenced in CI'
+        )
+    },
+    @{
+        Path = "conductor/tracks/31-performance-regression-guard/handoff.md"
+        Needles = @(
+            'Defined the performance regression detection framework for KairoECS',
+            'bench-regression.yml',
+            'benchmark-regression-check'
         )
     },
     @{

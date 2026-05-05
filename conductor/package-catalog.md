@@ -43,6 +43,16 @@ This catalog records likely dependencies, tools, package surfaces, and release t
 
 The checked-in workspace currently contains `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, and `kairo-ecs-rng`. The root meta crate and the FFI/Arrow/viz/experiment/conformance crates are still planned and should stay out of release promises until they exist. Release promises should only mention the checked-in Rust workspace crates plus any binding package skeletons that already exist under `bindings/`.
 
+## Control tracks
+
+| Track | Purpose | Notes |
+|---|---|---|
+| 29 | Wave Manager & Execution Gatekeeper | Owns release-order enforcement, dependency closure checks, and wave policy. |
+| 30 | Toolchain & Version Support Matrix | Owns the supported-version matrix and toolchain validation policy. |
+| 31 | Performance Regression Guard | Owns benchmark thresholds and regression detection for CI. |
+
+These tracks do not introduce package surfaces, but they do affect release readiness, CI policy, and developer expectations. Keep their owned docs current before making release claims.
+
 ## Rust dependency candidates
 
 | Category | Candidate packages/tools | Notes |

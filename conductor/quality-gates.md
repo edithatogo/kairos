@@ -102,6 +102,8 @@ test -f CODEOWNERS
 # any waiver or exception must be recorded in conductor/release-engineering.md before release
 # `.github/CODEOWNERS` must exist and cover the maintained paths
 # `.github/workflows/secret-scan.yml` must exist and fail on findings
+# `.github/workflows/toolchain-check.yml` must exist when Track 30 is In Progress
+# `.github/workflows/bench-regression.yml` must exist when Track 31 is In Progress
 ```
 
 ### API compatibility
@@ -124,6 +126,11 @@ test -f CODEOWNERS
 # every critical finding has an owner and follow-up path
 # unresolved critical findings block beta, RC, and 1.0
 # Track 28 must reference the current package and compatibility claims
+# Track 29 must reference the current wave policy and dependency closure claims
+# Track 30 must reference the live toolchain matrix and version-drop policy
+# Track 31 must reference the current benchmark thresholds and regression workflow
+# wave-progression-check and dependency-closure-check gate files must exist
+# benchmark-regression-check and threshold-definition-exists must be named for Track 31
 ```
 
 ## Community/SOTA gates
@@ -142,6 +149,9 @@ test -f CODEOWNERS
 | Playground and demo guidance (Track 24) | yes | yes | yes | yes |
 | API design review and compatibility governance guidance (Track 25) | yes | yes | yes | yes |
 | Interoperability standards review guidance (Track 26) | yes | yes | yes | yes |
+| Wave manager and execution gatekeeper guidance (Track 29) | yes | yes | yes | yes |
+| Toolchain and version support matrix guidance (Track 30) | yes | yes | yes | yes |
+| Performance regression guard guidance (Track 31) | partial | yes | yes | yes |
 | Benchmark harness public | partial | yes | yes | yes |
 | OpenSSF Scorecard workflow | scaffold | active | active | active |
 | SBOM attached | optional | dry-run | yes | yes |

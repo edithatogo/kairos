@@ -33,12 +33,9 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 26 | Interoperability Standards Review | Spec Approved | `interop-agent` | See `conductor/tracks/26-*/spec.md` |
 | 27 | Developer Experience & Reproducible Environments | In Progress | `dx-agent` | See `conductor/tracks/27-*/spec.md` |
 | 28 | Red Team & Devil's Advocate Review | In Progress | `redteam-agent` | See `conductor/tracks/28-*/spec.md` |
-| 29 | Wave Manager & Execution Gatekeeper | Planned | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |
-| 30 | Toolchain & Version Support Matrix | Planned | `toolchain-agent` | See `conductor/tracks/30-*/spec.md` |
-| 31 | Performance Regression Guard | Planned | `perf-regression-agent` | See `conductor/tracks/31-*/spec.md` |
-| 29 | Wave Manager & Execution Gatekeeper | Planned | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |
-| 30 | Toolchain & Version Support Matrix | Planned | `toolchain-agent` | See `conductor/tracks/30-*/spec.md` |
-| 31 | Performance Regression Guard | Planned | `perf-regression-agent` | See `conductor/tracks/31-*/spec.md` |
+| 29 | Wave Manager & Execution Gatekeeper | In Progress | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |
+| 30 | Toolchain & Version Support Matrix | In Progress | `toolchain-agent` | See `conductor/tracks/30-*/spec.md` |
+| 31 | Performance Regression Guard | In Progress | `perf-regression-agent` | See `conductor/tracks/31-*/spec.md` |
 
 ## Track status vocabulary
 
