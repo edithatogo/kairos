@@ -37,6 +37,12 @@ The Conductor setup is complete, but implementation should move through explicit
 | TypeScript/Wasm binding (Track 09) | R2 | `bindings/typescript` and `crates/kairo-ecs-wasm` expose scheduler, event-log, and browser-safe wasm loading contracts with npm and cargo checks. |
 | C# binding (Track 10) | R2 | `bindings/csharp` exposes deterministic scheduler/event and native status facades with .NET 10 test/build/pack validation. |
 | Go binding (Track 11) | R2 | `bindings/go` exposes deterministic scheduler/event and explicit cgo/native not-configured behavior with `go test` and `go vet` validation. |
+| Conformance, testing, and benchmarks (Track 12) | R3 | Reusable conformance runner, ready-fixture validation, and metadata-only benchmark smoke harness exist under `tests/conformance` and `benches`. |
+| CI/CD, code quality, and supply chain (Track 13) | R2 | Workflow policy checks, CI skip guard, dependency update policy, and supply-chain workflow gates exist under `.github` and `deny.toml`. |
+| Documentation site and education (Track 14) | R2 | `website` builds source-backed docs and runs a local link-check manifest across implemented tracks and binding surfaces. |
+| Packaging, publishing, and delivery (Track 15) | R2 | `packaging/release-package-manifest.json` and its builder validate dry-run package inventory and checksum manifest generation. |
+| Release governance and maintenance (Track 16) | R2 | Changelog, compatibility, release governance, and maintenance handoff docs exist under `docs/release` and `conductor/maintenance-governance.md`. |
+| Community adoption, education, and ecosystem (Track 17) | R2 | Community onboarding, adoption, governance, roadmap, and model-zoo docs exist with a concrete onboarding-docs gate. |
 | Verification, validation, and uncertainty (Track 21) | R2 | `docs/trustworthy-simulation` and conformance fixtures include replay, seed, and VVUQ evidence boundaries. |
 | Experiment runner and scenario management (Track 22) | R2 | `crates/kairo-ecs-cli` and `examples/experiments` exist with scenario manifest and replay validation smoke coverage. |
 | GPU Compute (Track 32) | R2 | `crates/kairo-ecs-gpu` exists, is wired into the root workspace, and has explicit unavailable-backend contracts plus feature compile gates. |

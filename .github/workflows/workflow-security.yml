@@ -3,10 +3,12 @@ name: Workflow Security
 on:
   pull_request:
     paths:
+      - '.github/dependabot.yml'
       - '.github/workflows/**'
   push:
     branches: [main]
     paths:
+      - '.github/dependabot.yml'
       - '.github/workflows/**'
 
 permissions:
@@ -25,6 +27,8 @@ jobs:
           test -f .github/workflows/release-attestations.yml
           test -f .github/workflows/workflow-security.yml
           test -f .github/workflows/actions-security.yml
+          test -f .github/workflows/ci-policy.yml
+          test -f .github/workflows/ci-skip-guard.yml
           test -f .github/workflows/ci-core.yml
           test -f .github/workflows/ci-bindings.yml
           test -f .github/workflows/benchmark-smoke.yml
@@ -52,6 +56,8 @@ jobs:
           test -f .github/workflows/release-attestations.yml
           test -f .github/workflows/workflow-security.yml
           test -f .github/workflows/actions-security.yml
+          test -f .github/workflows/ci-policy.yml
+          test -f .github/workflows/ci-skip-guard.yml
           test -f .github/workflows/ci-core.yml
           test -f .github/workflows/ci-bindings.yml
           test -f .github/workflows/benchmark-smoke.yml

@@ -3,6 +3,7 @@ name: GitHub Actions Security Lint
 on:
   pull_request:
     paths:
+      - '.github/dependabot.yml'
       - '.github/workflows/**'
   workflow_dispatch:
 
@@ -22,6 +23,8 @@ jobs:
           test -f .github/workflows/release-attestations.yml
           test -f .github/workflows/workflow-security.yml
           test -f .github/workflows/actions-security.yml
+          test -f .github/workflows/ci-policy.yml
+          test -f .github/workflows/ci-skip-guard.yml
           test -f .github/workflows/ci-core.yml
           test -f .github/workflows/ci-bindings.yml
           test -f .github/workflows/benchmark-smoke.yml

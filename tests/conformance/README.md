@@ -15,4 +15,8 @@ Language bindings should execute the JSON fixtures under `conformance/fixtures` 
 - Track 02 should reuse the same manifest when the stable facade is available.
 - Tracks 06-11 should treat the manifest as the authority for shared fixture IDs and assertions.
 
-Track 12 owns the shared runner once the public CLI/API surface exists.
+Track 12 owns the shared runner once the public CLI/API surface exists. Until then,
+`tests/conformance/runner.mjs` is the reusable bootstrap runner: it validates the
+manifest schema, checks each ready fixture payload, and executes the deterministic
+ordering, cancellation, RNG, and VVUQ smoke assertions without requiring native
+binding link tests.

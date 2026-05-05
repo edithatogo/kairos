@@ -239,7 +239,7 @@ tracks:
       - changelog-check
   - id: 17
     name: Community Adoption, Education & Ecosystem
-    status: Planned
+    status: In Progress
     owner: community-agent
     depends_on: ["14"]
     owned_paths:

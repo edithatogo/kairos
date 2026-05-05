@@ -14,7 +14,9 @@ function escapeHtml(text) {
 }
 
 function renderInline(text) {
-  return escapeHtml(text).replace(/`([^`]+)`/g, "<code>$1</code>");
+  return escapeHtml(text)
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
 }
 
 function renderMarkdown(source) {
@@ -155,6 +157,11 @@ function build() {
       color: #312e81;
       padding: 0.1rem 0.35rem;
       border-radius: 4px;
+    }
+    a {
+      color: #0f766e;
+      text-decoration-thickness: 0.08em;
+      text-underline-offset: 0.18em;
     }
     pre {
       overflow-x: auto;

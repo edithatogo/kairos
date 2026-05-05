@@ -16,3 +16,4 @@ before production publishing is enabled.
 - Name any breaking API, ABI, schema, or package changes explicitly.
 - Link the relevant ADRs and conformance fixtures.
 - Record any registry reservations, dry-runs, or archive metadata changes.
+- Match compatibility and deprecation claims to `docs/release/compatibility.md`.

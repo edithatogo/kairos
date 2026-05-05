@@ -21,7 +21,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 14 | Documentation Site & Education | In Progress | `docs-agent` | See `conductor/tracks/14-*/spec.md` |
 | 15 | Packaging, Publishing & Delivery | In Progress | `release-agent` | See `conductor/tracks/15-*/spec.md` |
 | 16 | Release Governance & Maintenance | In Progress | `release-agent + governance-agent` | See `conductor/tracks/16-*/spec.md` |
-| 17 | Community Adoption, Education & Ecosystem | Planned | `community-agent` | See `conductor/tracks/17-*/spec.md` |
+| 17 | Community Adoption, Education & Ecosystem | In Progress | `community-agent` | See `conductor/tracks/17-*/spec.md` |
 | 18 | Comparative Benchmarks & Reproducibility | In Progress | `benchmark-agent` | See `conductor/tracks/18-*/spec.md` |
 | 19 | Research Software, Citation & Archival | In Progress | `research-agent` | See `conductor/tracks/19-*/spec.md` |
 | 20 | OpenSSF, Supply Chain Trust & Institutional Readiness | In Progress | `security-agent` | See `conductor/tracks/20-*/spec.md` |

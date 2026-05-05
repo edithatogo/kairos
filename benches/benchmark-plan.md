@@ -30,8 +30,16 @@ This plan defines the benchmark scenario names and measurement contract for Trac
 - Allocation count or peak memory where the benchmark harness can observe it
 - Baseline comparison against the previous accepted run
 
+## Smoke metadata
+
+`benches/benchmark-smoke.json` records a metadata-only smoke harness for the
+canonical scenarios. It intentionally sets `requires_native_link_tests` to
+`false` so Track 12 can validate scenario names, ownership, and smoke scales
+before the native benchmark binaries are integrated.
+
 ## Acceptance criteria
 
 - All canonical scenario names appear in `conductor/tracks/12-conformance-testing-benchmarks/spec.md`.
 - The benchmark plan is present in the repo and referenced by `test-matrix.md`.
+- `python benches/benchmark_smoke.py` validates metadata against `conformance/fixtures/manifest.json`.
 - No binding track redefines the scenario names without a manifest update.

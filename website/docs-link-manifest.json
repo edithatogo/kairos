@@ -1,0 +1,27 @@
+{
+  "requiredPaths": [
+    "docs/adr/",
+    "docs/api/api-review-template.md",
+    "docs/benchmarks/benchmark-policy.md",
+    "docs/community/",
+    "docs/design/api-review.md",
+    "docs/interoperability/standards-review.md",
+    "docs/release/",
+    "docs/research/citation.md",
+    "docs/trustworthy-simulation/",
+    "crates/README.md",
+    "bindings/README.md",
+    "bindings/python/README.md",
+    "bindings/r/README.md",
+    "bindings/julia/README.md",
+    "bindings/typescript/README.md",
+    "bindings/csharp/README.md",
+    "bindings/go/README.md",
+    "examples/docs/README.md",
+    "conductor/tracks/14-docs-site-education/test-matrix.md"
+  ],
+  "siteSources": [
+    "website/src/index.md",
+    "examples/docs/README.md"
+  ]
+}

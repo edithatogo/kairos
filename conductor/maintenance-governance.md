@@ -146,6 +146,12 @@ Maintenance and deprecation decisions must preserve compatibility expectations f
 
 Breaking changes should be called out in the changelog and release notes together.
 
+Release governance for R2 is recorded in `docs/release/release-governance.md`.
+Release-specific compatibility notes are recorded in
+`docs/release/compatibility.md`. Those documents do not replace
+`conductor/contracts/versioning-compatibility.md`; they are the release-manager
+evidence that the contract was checked.
+
 ## Maintenance automation
 
 ```text
@@ -185,6 +191,12 @@ For this repo, deprecations should be reflected in:
 - any affected package README or docs page
 - compatibility or release-engineering notes when the change affects package names, archive metadata, or SBOM/provenance outputs
 
+Before removal, the release manager must verify that
+`docs/release/compatibility.md` contains the affected root, replacement path,
+first noticed version, earliest removal version, and evidence link. If any of
+those fields are unknown, the removal is blocked until an ADR records the
+decision.
+
 ## Changelog enforcement
 
 Every PR that changes a public surface MUST update CHANGELOG.md:
@@ -198,3 +210,7 @@ Every PR that changes a public surface MUST update CHANGELOG.md:
 GitHub Actions CI check: if a PR touches any of the above paths and does NOT modify CHANGELOG.md, the check fails with instructions.
 
 Exceptions: typo fixes, CI-only changes, conductor-only changes (tracked by conductor infrastructure, not user-facing).
+
+The R2 local check is documented in `docs/release/changelog-policy.md`. The
+release manager should run the check before handoff until the same rule is
+implemented as a PR workflow.

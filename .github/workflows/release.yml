@@ -49,37 +49,7 @@ jobs:
           cargo test --workspace --all-features --no-run
           cargo publish --dry-run --workspace
       - name: Build release manifest
-        run: |
-          mkdir -p dist
-          python - <<'PY'
-          import hashlib, json, pathlib
-          root = pathlib.Path('.')
-          manifest = {
-              'version': '${{ github.event.inputs.version }}',
-              'dry_run': '${{ github.event.inputs.dry_run }}',
-              'artifacts': [
-                  {'kind': 'rust', 'path': 'Cargo.toml'},
-                  {'kind': 'python', 'path': 'bindings/python/pyproject.toml'},
-                  {'kind': 'r', 'path': 'bindings/r/DESCRIPTION'},
-                  {'kind': 'julia', 'path': 'bindings/julia/Project.toml'},
-                  {'kind': 'npm', 'path': 'bindings/typescript/package.json'},
-                  {'kind': 'nuget', 'path': 'bindings/csharp/Kairo.ECS.sln'},
-                  {'kind': 'go', 'path': 'bindings/go/go.mod'},
-              ],
-          }
-          required = manifest['artifacts']
-          resolved = []
-          for item in required:
-              rel = item['path']
-              path = root / rel
-              if not path.exists() or not path.is_file():
-                  raise SystemExit(f'missing release artifact: {rel}')
-              digest = hashlib.sha256(path.read_bytes()).hexdigest()
-              resolved.append({'path': rel, 'sha256': digest, 'kind': item.get('kind', 'unknown')})
-          out = {'version': manifest['version'], 'dry_run': manifest['dry_run'], 'artifacts': resolved}
-          (root / 'dist' / 'release-artifact-manifest.json').write_text(json.dumps(out, indent=2) + '\n', encoding='utf-8')
-          (root / 'dist' / 'SHA256SUMS').write_text('\n'.join(f"{entry['sha256']}  {entry['path']}" for entry in resolved) + '\n', encoding='utf-8')
-          PY
+        run: python packaging/scripts/build_release_manifest.py --version "${{ github.event.inputs.version }}" --dry-run "${{ github.event.inputs.dry_run }}"
       - name: Validate release manifest
         run: |
           test -f dist/release-artifact-manifest.json
@@ -88,11 +58,14 @@ jobs:
           import json, pathlib
           data = json.loads(pathlib.Path('dist/release-artifact-manifest.json').read_text(encoding='utf-8'))
           artifacts = data.get('artifacts', [])
-          if len(artifacts) != 7:
+          if len(artifacts) < 7:
               raise SystemExit(f'unexpected artifact count: {len(artifacts)}')
-          kinds = {entry.get('kind') for entry in artifacts}
-          if kinds != {'rust', 'python', 'r', 'julia', 'npm', 'nuget', 'go'}:
-              raise SystemExit(f'unexpected artifact kinds: {sorted(kinds)}')
+          ecosystems = {entry.get('ecosystem') for entry in artifacts}
+          expected = {'rust', 'python', 'r', 'julia', 'typescript', 'csharp', 'go'}
+          if ecosystems != expected:
+              raise SystemExit(f'unexpected artifact ecosystems: {sorted(ecosystems)}')
+          if data.get('production_publish_enabled') is not False:
+              raise SystemExit('release manifest must remain dry-run only')
           PY
       - name: Upload artifacts
         uses: actions/upload-artifact@v7

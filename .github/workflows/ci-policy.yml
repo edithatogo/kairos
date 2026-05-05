@@ -1,0 +1,66 @@
+name: CI Policy
+
+on:
+  pull_request:
+    paths:
+      - ".github/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "deny.toml"
+      - "rust-toolchain.toml"
+  push:
+    branches: [main]
+    paths:
+      - ".github/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "deny.toml"
+      - "rust-toolchain.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    name: Workflow and supply-chain policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Required CI files are present
+        run: |
+          test -f Cargo.toml
+          test -f Cargo.lock
+          test -f deny.toml
+          test -f rust-toolchain.toml
+          test -f .github/dependabot.yml
+          test -f .github/workflows/ci-core.yml
+          test -f .github/workflows/ci-policy.yml
+          test -f .github/workflows/ci-skip-guard.yml
+          test -f .github/workflows/dependency-review.yml
+          test -f .github/workflows/workflow-security.yml
+      - name: Workflow consistency policy
+        run: |
+          for f in .github/workflows/*.yml; do
+            test -s "$f"
+          done
+          if rg -n "uses:\s+[^@[:space:]]+@(main|master|latest|HEAD)\b" .github/workflows; then
+            exit 1
+          fi
+          if rg -n "if-no-files-found:\s*ignore|--if-present|\|\| true" .github/workflows -g '!ci-policy.yml'; then
+            exit 1
+          fi
+      - name: Rust metadata and policy files
+        run: |
+          cargo metadata --no-deps --format-version 1 >/dev/null
+          rg -n 'rust-version = "1\.76"' Cargo.toml
+          rg -n 'channel = "stable"' rust-toolchain.toml
+          rg -n 'wildcards = "deny"' deny.toml
+          rg -n 'unknown-registry = "deny"' deny.toml
+          rg -n 'unknown-git = "deny"' deny.toml
+          rg -n 'allow-registry = \["https://github\.com/rust-lang/crates\.io-index"\]' deny.toml
+      - name: Cargo supply-chain checks
+        run: |
+          cargo install cargo-deny cargo-audit --locked
+          cargo deny check
+          cargo audit

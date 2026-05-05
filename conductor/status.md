@@ -54,6 +54,7 @@ The repo now has a first executable implementation skeleton:
 - binding and packaging root directories with README guardrails
 - FFI, DES/ABM, Arrow telemetry, headless visualization, VVUQ, and experiment-runner implementation slices with smoke validators
 - Python, R, Julia, TypeScript/Wasm, C#, and Go binding slices with deterministic facade APIs and explicit native-FFI status boundaries
+- conformance runner, CI policy, docs link-check, package dry-run, release governance, and community onboarding slices with local validators
 - GPU, WebGPU, PDES, MPI/gRPC, streaming, ML, FMI, cloud/HPC, and time-travel debug implementation slices with smoke validators
 - GitHub workflow scaffolding under `.github/`
 

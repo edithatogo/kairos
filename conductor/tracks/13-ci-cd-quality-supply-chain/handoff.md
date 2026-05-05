@@ -6,6 +6,20 @@ CI and supply-chain gates now cover `cargo fmt`, `cargo clippy`, `cargo test`, d
 
 ## Files changed
 
+Current R2 slice:
+
+`.github/dependabot.yml`
+`.github/workflows/actions-security.yml`
+`.github/workflows/ci-policy.yml`
+`.github/workflows/ci-skip-guard.yml`
+`.github/workflows/workflow-security.yml`
+`deny.toml`
+`rust-toolchain.toml`
+`conductor/tracks/13-ci-cd-quality-supply-chain/test-matrix.md`
+`conductor/tracks/13-ci-cd-quality-supply-chain/handoff.md`
+
+Earlier Track 13 pass:
+
 `.github/workflows/ci-core.yml`
 `.github/workflows/conformance.yml`
 `.github/workflows/docs.yml`
@@ -34,7 +48,7 @@ None.
 
 ## Tests added
 
-Workflow existence checks and real Rust command gates are documented in `test-matrix.md`.
+Workflow existence checks, Rust metadata checks, cargo-deny/audit gates, Dependabot coverage, and CI skip guard checks are documented in `test-matrix.md`.
 
 ## Known risks
 

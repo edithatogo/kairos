@@ -5,6 +5,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "node scripts/build.js",
+    "check:links": "node scripts/check-links.js",
     "dev": "node scripts/dev.js",
     "start": "node scripts/dev.js",
     "serve": "node scripts/dev.js"

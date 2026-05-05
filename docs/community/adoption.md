@@ -2,6 +2,17 @@
 
 KairoECS adoption should read like a product path, not an internal note dump.
 
+## First-user path
+
+| Step | Action | Checked-in target |
+|---|---|---|
+| Discover | Read the docs home page and this adoption page. | `website/src/index.md`, `docs/community/README.md` |
+| Choose an example | Pick a model by paradigm and maturity. | `docs/community/model-zoo.md` |
+| Inspect the entry point | Open the example README before running anything. | `examples/model-zoo/README.md` |
+| Run or review | Follow the example README command or smoke-check note. | `examples/des/`, `examples/abm/`, `examples/hybrid/` |
+| Trust the result | Read replay, seed, uncertainty, and citation guidance. | `docs/trustworthy-simulation/`, `docs/research/citation.md` |
+| Contribute | Follow the contributor onboarding path. | `docs/community/contributor-onboarding.md` |
+
 ## What a new user should find first
 
 - A clear landing page with maturity labels.
@@ -12,6 +23,7 @@ KairoECS adoption should read like a product path, not an internal note dump.
 
 ## Discovery points
 
+- `docs/community/README.md`
 - `website/src/index.md`
 - `docs/community/model-zoo.md`
 - `docs/community/playground.md`
@@ -43,3 +55,7 @@ No public beta should ship unless the following are true:
 - at least one conformance fixture can be run locally
 
 See `conductor/community-adoption.md` and Track 17 for the operational gate.
+
+## Claim boundary
+
+This page is an onboarding and discovery guide. It does not claim registry availability, production support, benchmark superiority, or stable APIs. Those claims remain gated by release, packaging, benchmark, conformance, and compatibility evidence in the relevant tracks.

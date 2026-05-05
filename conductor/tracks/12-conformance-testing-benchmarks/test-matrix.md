@@ -8,6 +8,9 @@
 - Manifest validation for `conformance/fixtures/manifest.json`
 - JSON syntax check for each ready fixture under `conformance/fixtures`
 - Benchmark plan presence and scenario-name check under `benches`
+- `node tests/conformance/conformance-check.mjs`
+- `python benches/benchmark_smoke.py`
+- `cargo check -p kairo-ecs-bench`
 
 ## CI commands
 
@@ -19,6 +22,9 @@ node -e "const fs=require('fs'); const manifest=JSON.parse(fs.readFileSync('conf
 node -e "const fs=require('fs'); const manifest=JSON.parse(fs.readFileSync('conformance/fixtures/manifest.json','utf8')); const scenarios=['schedule_1m_events','pop_1m_events','schedule_cancel_1m_mixed','create_1m_entities','component_insert_1m','hybrid_des_abm_smoke_100k']; for (const scenario of scenarios) { const b=manifest.benchmarks.find(x => x.id === scenario); if (!b || b.status !== 'canonical') throw new Error('Missing canonical benchmark: ' + scenario); }"
 node -e "const fs=require('fs'); const plan=fs.readFileSync('benches/benchmark-plan.md','utf8'); for (const scenario of ['schedule_1m_events','pop_1m_events','schedule_cancel_1m_mixed','create_1m_entities','component_insert_1m','hybrid_des_abm_smoke_100k']) { if (!plan.includes(scenario)) throw new Error('Missing benchmark scenario: ' + scenario); }"
 just validate-conformance
+node tests/conformance/conformance-check.mjs
+python benches/benchmark_smoke.py
+cargo check -p kairo-ecs-bench
 test -f benches/benchmark-plan.md
 test -f conformance/fixtures/README.md
 ```

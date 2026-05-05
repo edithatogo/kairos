@@ -150,6 +150,42 @@ $trackChecks = @(
         Concrete = @("bindings/go", "packaging/go")
     },
     @{
+        Id = "12"
+        Path = "conductor/tracks/12-conformance-testing-benchmarks"
+        Crates = @("crates/kairo-ecs-bench")
+        Concrete = @("conformance", "tests/conformance", "benches", "crates/kairo-ecs-bench")
+    },
+    @{
+        Id = "13"
+        Path = "conductor/tracks/13-ci-cd-quality-supply-chain"
+        Crates = @()
+        Concrete = @(".github", "deny.toml", "rust-toolchain.toml")
+    },
+    @{
+        Id = "14"
+        Path = "conductor/tracks/14-docs-site-education"
+        Crates = @()
+        Concrete = @("docs", "website", "examples/docs")
+    },
+    @{
+        Id = "15"
+        Path = "conductor/tracks/15-packaging-publishing-delivery"
+        Crates = @()
+        Concrete = @("packaging", ".github/workflows/release.yml", "docs/release")
+    },
+    @{
+        Id = "16"
+        Path = "conductor/tracks/16-release-governance-maintenance"
+        Crates = @()
+        Concrete = @("conductor/maintenance-governance.md", "docs/release", "CHANGELOG.md")
+    },
+    @{
+        Id = "17"
+        Path = "conductor/tracks/17-community-adoption-education-ecosystem"
+        Crates = @()
+        Concrete = @("docs/community", "examples")
+    },
+    @{
         Id = "21"
         Path = "conductor/tracks/21-verification-validation-uncertainty"
         Crates = @()

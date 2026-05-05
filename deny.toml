@@ -5,9 +5,16 @@ confidence-threshold = 0.8
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+highlight = "all"
 
 [advisories]
 vulnerability = "deny"
 yanked = "deny"
 notice = "warn"
+unmaintained = "warn"
+unsound = "warn"
 
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

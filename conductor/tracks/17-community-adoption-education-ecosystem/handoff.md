@@ -2,20 +2,41 @@
 
 ## Summary
 
-Anchored the community adoption surface to a concrete discovery and onboarding path: landing page, install guidance, quickstarts, example gallery, contribution entry points, and maturity labels all point at the same published docs and repo surfaces.
+Anchored the community adoption surface to a concrete R2 onboarding slice: community index, contributor path, first-user adoption path, model-zoo inventory bridge, governance map, maturity roadmap, and explicit `onboarding-docs` gate evidence.
 
 ## Files changed
 
-`conductor/tracks/17-community-adoption-education-ecosystem/plan.md`, `conductor/tracks/17-community-adoption-education-ecosystem/test-matrix.md`, `conductor/tracks/17-community-adoption-education-ecosystem/handoff.md`
+- `docs/community/README.md`
+- `docs/community/adoption.md`
+- `docs/community/contributor-onboarding.md`
+- `docs/community/governance.md`
+- `docs/community/model-zoo.md`
+- `docs/community/roadmap.md`
+- `examples/model-zoo/README.md`
+- `conductor/tracks/17-community-adoption-education-ecosystem/test-matrix.md`
+- `conductor/tracks/17-community-adoption-education-ecosystem/handoff.md`
 
 ## Contracts consumed
 
-`conductor/workflow.md`, `conductor/package-catalog.md`, `conductor/delivery-readiness-checklist.md`, `website/src/index.md`, `website/package.json`
+`conductor/workflow.md`, `conductor/package-catalog.md`, `conductor/delivery-readiness-checklist.md`, `website/src/index.md`, `website/package.json`, `examples/model-zoo/model-zoo.yaml`
 
 ## Release gates affected
 
-Community docs, link integrity, maturity labels, and `just docs-build` now gate the adoption path before release notes or contributor guidance point at it. Public beta should not ship unless the landing page, contributor guide, issue templates, and at least one runnable example for DES, ABM, and hybrid flows are visible.
+Community docs, link integrity, maturity labels, and `just docs-build` gate the adoption path before release notes or contributor guidance point at it. The Track 17 `onboarding-docs` gate now has an explicit file-existence and content check covering:
+
+- community index
+- contributor onboarding
+- adoption path
+- model-zoo docs and YAML inventory bridge
+- Track 17 gate evidence
 
 ## Risks and unresolved questions
 
 The concrete risk is drift between the discovery page, the package catalog, and the contributor entry points. Rerun `just docs-build` and `just check-docs` after any docs-tree move or maturity-label update.
+
+## Validation commands
+
+- `rg -n "onboarding-docs|First contribution path|First-user path|Inventory update rule" docs/community examples/model-zoo conductor/tracks/17-community-adoption-education-ecosystem`
+- `rg -n "mm1_queue|factory_bottleneck|flocking|emergency_department_flow" docs/community/model-zoo.md examples/model-zoo/README.md examples/model-zoo/model-zoo.yaml`
+- `pwsh -NoProfile -Command '$required = @("docs/community/README.md","docs/community/adoption.md","docs/community/contributor-onboarding.md","docs/community/model-zoo.md","examples/model-zoo/README.md","examples/model-zoo/model-zoo.yaml","conductor/tracks/17-community-adoption-education-ecosystem/test-matrix.md"); $missing = foreach ($p in $required) { if (-not (Test-Path -LiteralPath $p)) { $p } }; if ($missing) { $missing; exit 1 }; "onboarding-docs required files present"'`
+- `just check-docs`
