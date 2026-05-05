@@ -93,6 +93,11 @@ markdownlint "**/*.md"
 check-links conductor/delivery-readiness-checklist.md
 test -f SECURITY.md
 test -f CODEOWNERS
+test -f .github/CODEOWNERS
+test -f .github/dependabot.yml || test -f renovate.json
+test -f .github/workflows/actions-security.yml
+test -f .github/workflows/workflow-security.yml
+test -f .github/workflows/secret-scan.yml
 # .github/workflows/scorecard.yml must exist and run on main
 # .github/workflows/dependency-review.yml must exist and fail on high severity
 # .github/workflows/sbom-attestations.yml must exist for published release SBOMs
@@ -105,6 +110,28 @@ test -f CODEOWNERS
 # `.github/workflows/toolchain-check.yml` must exist when Track 30 is In Progress
 # `.github/workflows/bench-regression.yml` must exist when Track 31 is In Progress
 ```
+
+Machine-checkable release-trust references:
+
+```bash
+test -f .github/workflows/scorecard.yml
+test -f .github/workflows/dependency-review.yml
+test -f .github/workflows/sbom-attestations.yml
+test -f .github/workflows/release-attestations.yml
+rg -n "fail-on-severity:\s*high" .github/workflows/dependency-review.yml
+rg -n "attestations:\s*write|actions/attest|sbom.spdx.json|SHA256SUMS" .github/workflows/sbom-attestations.yml .github/workflows/release-attestations.yml
+rg -n "OpenSSF and supply-chain readiness|scorecard.yml|dependency-review.yml|sbom-attestations.yml|release-attestations.yml|allowed-failure|exception|waiver" conductor/delivery-readiness-checklist.md conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md
+```
+
+Release artifact tree checks, required for RC and 1.0:
+
+```bash
+test -f dist/RELEASE.txt
+test -f dist/SHA256SUMS
+test -f dist/sbom.spdx.json
+```
+
+Exception review is intentionally human-gated. Any exception must be recorded with the failing control, affected stage, compensating control, approvers, expiry, and issue or ADR reference before release signoff.
 
 ### API compatibility
 

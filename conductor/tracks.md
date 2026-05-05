@@ -27,7 +27,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 20 | OpenSSF, Supply Chain Trust & Institutional Readiness | In Progress | `security-agent` | See `conductor/tracks/20-*/spec.md` |
 | 21 | Verification, Validation & Uncertainty | In Progress | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |
 | 22 | Experiment Runner & Scenario Management | In Progress | `experiment-agent` | See `conductor/tracks/22-*/spec.md` |
-| 23 | Domain Starter Kits & Model Zoo | Planned | `model-zoo-agent` | See `conductor/tracks/23-*/spec.md` |
+| 23 | Domain Starter Kits & Model Zoo | In Progress | `model-zoo-agent` | See `conductor/tracks/23-*/spec.md` |
 | 24 | Playground, Demos & Visualization UX | Planned | `playground-agent` | See `conductor/tracks/24-*/spec.md` |
 | 25 | API Design Review & Compatibility Governance | Spec Approved | `api-governance-agent` | See `conductor/tracks/25-*/spec.md` |
 | 26 | Interoperability Standards Review | Spec Approved | `interop-agent` | See `conductor/tracks/26-*/spec.md` |

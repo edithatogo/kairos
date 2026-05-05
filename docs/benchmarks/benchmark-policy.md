@@ -51,6 +51,21 @@ caveats and fairness notes
 
 Raw benchmark results are kept as emitted by the harness. The documented summary may be rendered into JSON, Arrow, or markdown for the docs site, but the captured raw criterion output and environment/command files remain the evidence of record for comparison claims.
 
+## Reproduction gate
+
+Use `docs/benchmarks/reproduce-comparison.md` for the current replay path. The
+metadata gate is:
+
+```powershell
+python benches/benchmark_smoke.py
+python benches/benchmark_reproducibility.py
+```
+
+Passing these commands means fixture IDs, fixture source files, canonical
+scenario names, owners, and smoke scales are aligned. It does not mean a
+performance result is publishable; native timings still require raw benchmark
+output, command capture, environment metadata, and host-variance notes.
+
 ```mermaid
 flowchart TD
     Fixture[Shared benchmark fixture]

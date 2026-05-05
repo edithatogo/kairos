@@ -53,3 +53,11 @@
 ### Task 4.2 - Update the risk register
 - Mark resolved risks as mitigated.
 - Escalate unresolved supply-chain risks to release blockers.
+
+## Current implementation notes
+
+- Task 1.1 evidence is implemented in `supply-chain-plan.md` as a staged release trust checklist with machine-checkable references.
+- Task 1.2 exception handling is implemented in `supply-chain-plan.md` with temporary operational exceptions, release-stage exceptions, and permanent policy waivers.
+- Task 2.1 readiness wiring is implemented in `conductor/delivery-readiness-checklist.md`.
+- Task 2.2 machine-readable gate references are implemented in `conductor/quality-gates.md` and mirrored in `test-matrix.md`.
+- Task 3.1/3.2 handoff evidence is updated in `handoff.md`, with residual risks recorded in `risk-register.md`.

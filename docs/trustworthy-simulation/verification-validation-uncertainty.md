@@ -71,6 +71,10 @@ the replay comparison verifies deterministic event ordering for that fixture,
 while validation and uncertainty claims remain limited to the written
 interpretation note.
 
+The artifact-backed VVUQ interpretation for that scenario is maintained in
+`docs/validation/factory-bottleneck-v1-vvuq-note.md` and can be checked locally
+with `node scripts/validation/validate-vvuq-note.mjs`.
+
 ## Reading a claim
 
 When a release note, docs page, or example says a result is verified,

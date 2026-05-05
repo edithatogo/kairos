@@ -54,6 +54,21 @@ Use this before every alpha, beta, release candidate, and stable release.
 - [ ] Toolchain matrix and version-drop policy from Track 30 are green.
 - [ ] Performance regression guard from Track 31 is green or explicitly marked advisory.
 
+### OpenSSF and supply-chain readiness
+
+- [ ] `SECURITY.md`, `CODEOWNERS`, and `.github/CODEOWNERS` exist.
+- [ ] Dependency automation exists through `.github/dependabot.yml` or `renovate.json`.
+- [ ] `.github/workflows/scorecard.yml` exists and runs OpenSSF Scorecard on `main`.
+- [ ] `.github/workflows/dependency-review.yml` exists and includes `fail-on-severity: high`.
+- [ ] `.github/workflows/actions-security.yml` and `.github/workflows/workflow-security.yml` exist for workflow hardening.
+- [ ] `.github/workflows/secret-scan.yml` exists and fails on findings.
+- [ ] `.github/workflows/sbom-attestations.yml` exists and can emit `sbom.spdx.json`.
+- [ ] `.github/workflows/release-attestations.yml` exists and can attest the release artifact tree.
+- [ ] Release artifact tree includes `RELEASE.txt`, `SHA256SUMS`, and `sbom.spdx.json` before RC or 1.0.
+- [ ] Release notes name SBOM, checksum, provenance/attestation evidence, and any approved exception.
+- [ ] Exceptions follow `conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md`.
+- [ ] Temporary allowed-failure lanes are stage-limited and do not carry into RC or 1.0 without explicit approval.
+
 ## Publishing readiness
 
 - [ ] crates.io dry-run.

@@ -5,20 +5,54 @@
 The reproducibility surface now points at the real benchmark plan, the real
 fixture manifest, and the actual smoke workflow path. The page is anchored to
 the ready fixture IDs `scheduler_ordering_v1`, `scheduler_cancellation_v1`,
-and `rng_reproducibility_v1`.
+and `rng_reproducibility_v1`. Track 18 now has a public reproduction page and
+a lightweight metadata validator that can be run without native benchmark
+link tests.
 
 ## Files changed
 
-`conductor/tracks/18-comparative-benchmarks-reproducibility/plan.md`
 `conductor/tracks/18-comparative-benchmarks-reproducibility/test-matrix.md`
 `conductor/tracks/18-comparative-benchmarks-reproducibility/handoff.md`
-`conductor/benchmarks-reproducibility.md`
+`conductor/tracks/18-comparative-benchmarks-reproducibility/risk-register.md`
+`benches/README.md`
+`benches/benchmark_reproducibility.py`
+`docs/benchmarks/benchmark-policy.md`
+`docs/benchmarks/reproduce-comparison.md`
+`website/docs-link-manifest.json`
+`website/src/index.md`
 
 ## Contracts consumed
 
 `benches/benchmark-plan.md`
 `conformance/fixtures/manifest.json`
 `.github/workflows/benchmark-smoke.yml`
+
+## Evidence commands
+
+`python benches/benchmark_smoke.py`
+
+Validates the smoke metadata against `conformance/fixtures/manifest.json` for
+canonical scenario names, owners, canonical status, and smoke scales.
+
+`python benches/benchmark_reproducibility.py`
+
+Validates the Track 18 evidence boundary: ready fixture IDs, expected fixture
+source files, fixture assertions, canonical benchmark scenarios, smoke scales,
+and required docs artifacts.
+
+`npm --prefix website run check:links`
+
+Validates that the new reproduction page is reachable through the docs link
+manifest and that local Markdown links remain valid.
+
+## Local validation on 2026-05-06
+
+| Command | Result | Evidence |
+|---|---|---|
+| `python benches/benchmark_smoke.py` | pass | Reported `status: ok` for six canonical scenarios and `requires_native_link_tests: false`. |
+| `python benches/benchmark_reproducibility.py` | pass | Reported `status: ok` for ready fixtures `scheduler_ordering_v1`, `scheduler_cancellation_v1`, `rng_reproducibility_v1` and six canonical scenarios. |
+| `npm --prefix website run check:links` | pass | Checked 20 required paths and 2 markdown sources. |
+| `cargo bench --workspace --no-run` | blocked | Windows resolved `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`; linker exited with `0xc0000142` and Win32 error 5 while creating mappings/pipes. |
 
 ## Evidence boundary
 
@@ -37,4 +71,8 @@ existing smoke workflow and fixture manifest support a reproducible claim.
 
 The concrete risk is benchmark drift if fixture IDs, seed notes, or comparison
 baselines change after publication. Keep `benches/benchmark-plan.md` and
-`conformance/fixtures/manifest.json` versioned together.
+`conformance/fixtures/manifest.json` versioned together. Also keep
+`benches/benchmark-smoke.json` aligned with those contracts. Native performance
+claims remain blocked until raw benchmark output, command capture, host
+metadata, baseline versions are archived, and the Windows linker path is using
+the expected MSVC build-tools linker rather than Git's Unix `link.exe`.

@@ -11,6 +11,7 @@ This directory contains code examples and tutorial entry points referenced by th
 - [Supply-chain hybrid example](../hybrid/supply_chain_disruption/README.md)
 - [Emergency department hybrid example](../hybrid/emergency_department_flow/README.md)
 - [Model zoo index](../model-zoo/README.md)
+- [Starter kits inventory](../starter-kits/starter-kits.yaml)
 - [Telemetry example](../telemetry/README.md)
 - [Visualization snapshot example](../viz/headless-snapshot/Cargo.toml)
 

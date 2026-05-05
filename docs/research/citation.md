@@ -55,6 +55,17 @@ The required fields are:
 
 ## DOI and Zenodo path
 
+The first concrete archive target is the `0.4.0-alpha.1` pre-release. It is
+not yet DOI-minted; until a Zenodo sandbox or draft deposition exists, release
+notes must use this exact status instead of a placeholder DOI:
+
+```text
+Archive status: pre-release metadata seed, not yet DOI-minted
+Release target: 0.4.0-alpha.1
+Repository code: https://github.com/edithatogo/kairos
+DOI/Zenodo link: none yet; add the Zenodo draft or minted DOI URL before any public release write
+```
+
 The DOI path is:
 
 1. Keep `.zenodo.json` checked in as the release metadata seed.
@@ -62,7 +73,21 @@ The DOI path is:
 3. Promote the first archived release, expected to be `0.4.0-alpha.1`, to a Zenodo DOI only after the release notes and archive record are complete.
 4. Record the minted DOI in the release notes and in the archive record.
 
-The current archive path is therefore `CITATION.cff` -> `.zenodo.json` -> Zenodo draft/deposition -> DOI release.
+The current archive path is therefore `CITATION.cff` -> `.zenodo.json` ->
+Zenodo draft/deposition -> DOI release. The repository does not currently carry
+a minted DOI; do not add a fake DOI, `TBD` DOI, or generic `10.xxxx` placeholder.
+
+## Local validation
+
+Run the Track 19 validator before editing release notes or archive metadata:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1
+```
+
+The validator checks that `CITATION.cff`, `codemeta.json`, `.zenodo.json`,
+`paper/paper.md`, `paper/paper.bib`, and this guide agree on version, date,
+repository URL, title, license, and the current non-minted archive status.
 
 ## Archive notes
 

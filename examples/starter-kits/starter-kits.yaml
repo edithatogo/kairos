@@ -1,0 +1,14 @@
+kits:
+  - id: manufacturing-bottleneck
+    title: Manufacturing bottleneck starter kit
+    domain: manufacturing
+    maturity: domain-preview
+    kit_path: examples/starter-kits/manufacturing
+    docs: examples/starter-kits/manufacturing/README.md
+    model_zoo_ids: [factory_bottleneck]
+    example_paths:
+      - examples/des/factory_bottleneck
+    required_dependencies:
+      - Rust workspace checkout
+      - KairoECS DES API once Track 03 stabilizes
+    release_gate: alpha-discovery

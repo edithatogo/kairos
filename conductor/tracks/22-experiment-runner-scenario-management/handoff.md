@@ -6,11 +6,11 @@ Captured the scenario-management story so other tracks can assume named runs, re
 
 ## Files changed
 
-`conductor/experiment-runner.md`, `docs/trustworthy-simulation/replay-and-seeds.md`, `conductor/tracks/22-experiment-runner-scenario-management/experiment-runner-plan.md`, `conductor/tracks/22-experiment-runner-scenario-management/test-matrix.md`, `conductor/tracks/22-experiment-runner-scenario-management/handoff.md`
+`scenarios/manifest-index.json`, `docs/scenarios/factory-bottleneck-run-replay.md`, `scripts/scenarios/validate-track22-smoke.ps1`, `conductor/tracks/22-experiment-runner-scenario-management/test-matrix.md`, `conductor/tracks/22-experiment-runner-scenario-management/risk-register.md`, `conductor/tracks/22-experiment-runner-scenario-management/handoff.md`
 
 ## Contracts consumed
 
-`conformance/fixtures/manifest.json`, `benches/benchmark-plan.md`, `conductor/workflow.md`, `website/`
+`conformance/fixtures/manifest.json`, `conformance/fixtures/vvuq_scenario_replay.json`, `conformance/fixtures/deterministic_ordering.json`, `examples/experiments/factory_bottleneck_v1.scenario.toml`, `examples/experiments/factory_bottleneck_v1.seeds.toml`, `conductor/workflow.md`
 
 ## Release gates affected
 
@@ -18,11 +18,27 @@ Scenario replay and determinism checks now feed the reproducibility and release 
 
 ## Concrete runner note
 
-- Scenario manifest shape: `schema_version`, `scenario_id`, `model.id`, `parameters`, `runs.replications`, `seed_policy.base_seed`, `replay.fixture_id`, `outputs.format`, `outputs.artifact_root`.
-- Replay command: `kairoecs-experiment replay --scenario scenarios/factory_bottleneck_v1.yaml --seed-manifest scenarios/seeds.yaml --fixture scheduler_ordering_v1 --output runs/factory_bottleneck_v1`.
-- Output shape: `manifest.json`, `replications.parquet`, `summary.json`, `replay-comparison.json`.
+- Scenario index: `scenarios/manifest-index.json`.
+- Scenario manifest: `examples/experiments/factory_bottleneck_v1.scenario.toml`.
+- Seed manifest: `examples/experiments/factory_bottleneck_v1.seeds.toml`.
+- Replay command: `cargo run -p kairo-ecs-cli -- replay --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1`.
+- Output shape: `manifest.json`, `summary.json`, `replay-comparison.json`, `resumability-plan.json`.
 - Comparison flow: load manifest and seeds, replay the fixture, compare emitted trace and summary metrics, emit a drift report.
-- Real fixture reference: `scheduler_ordering_v1` from `conformance/fixtures/manifest.json`.
+- Real fixture references: `vvuq_scenario_replay_v1` and `scheduler_ordering_v1` from `conformance/fixtures/manifest.json`.
+
+## Scenario manifest/run/replay note
+
+`docs/scenarios/factory-bottleneck-run-replay.md` now records the first usable
+Track 22 scenario smoke target:
+
+- Scenario ID: `factory_bottleneck_v1`.
+- Replay fixture: `vvuq_scenario_replay_v1`.
+- Execution fixture: `scheduler_ordering_v1`.
+- Comparison basis: `expected_kind_order`.
+- Expected event kind order: `1,2,4,3`.
+- Expected summary hash: `1d53b73b244a84de`.
+- Claim boundary: verification smoke only; not a real-world validation or
+  uncertainty claim.
 
 ## R2 local implementation slice
 
@@ -44,15 +60,25 @@ fixture. It writes the expected local output shape:
 Validation evidence:
 
 ```bash
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scenarios/validate-track22-smoke.ps1
 cargo check -p kairo-ecs-cli
 node tests/conformance/conformance-check.mjs
+cargo run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml
 ```
 
-On this Windows session, `cargo run` reached linking but failed because PATH
-resolved `link.exe` to Git for Windows instead of the MSVC linker. A fallback
-`rust-lld` attempt also failed because the Windows SDK import libraries were
-not discoverable. The runner commands above should execute once the MSVC linker
-and Windows SDK libraries are available on PATH/LIB.
+- PASS: `validate-track22-smoke.ps1` returned `status: ok` for
+  `factory_bottleneck_v1`, `vvuq_scenario_replay_v1`, `scheduler_ordering_v1`,
+  expected kind order `1,2,4,3`, and expected summary hash
+  `1d53b73b244a84de`.
+- PASS: `cargo check -p kairo-ecs-cli` completed in the dev profile.
+- PASS: `node tests/conformance/conformance-check.mjs` validated four ready
+  fixtures, including `vvuq_scenario_replay_v1`.
+- FAIL/BLOCKED: `cargo run -p kairo-ecs-cli -- validate-scenario ...` reached
+  link and failed because `link.exe` resolved to
+  `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`, which returned
+  `fatal error - couldn't create signal pipe, Win32 error 5`. The CLI replay
+  and resume commands remain blocked until the MSVC linker/Windows SDK path is
+  corrected for this shell.
 
 ## Risks and unresolved questions
 

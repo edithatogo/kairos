@@ -267,6 +267,7 @@ tracks:
       - CITATION.cff
       - codemeta.json
       - .zenodo.json
+      - docs/research/
       - paper/
     required_gates:
       - citation-metadata
@@ -280,6 +281,8 @@ tracks:
       - SECURITY.md
       - .github/workflows/scorecard.yml
       - .github/workflows/sbom-attestations.yml
+      - conductor/delivery-readiness-checklist.md
+      - conductor/quality-gates.md
     required_gates:
       - scorecard
       - sbom-plan
@@ -291,6 +294,8 @@ tracks:
     depends_on: ["01", "04", "12"]
     owned_paths:
       - docs/trustworthy-simulation/
+      - docs/validation/
+      - scripts/validation/
       - conformance/
     required_gates:
       - replay-fixture
@@ -303,16 +308,22 @@ tracks:
     owned_paths:
       - crates/kairo-ecs-cli/
       - examples/experiments/
+      - scenarios/
+      - docs/scenarios/
+      - scripts/scenarios/
     required_gates:
       - scenario-manifest
       - resumability-plan
   - id: 23
     name: Domain Starter Kits & Model Zoo
-    status: Planned
+    status: In Progress
     owner: model-zoo-agent
     depends_on: ["03", "14"]
     owned_paths:
       - examples/model-zoo/
+      - examples/starter-kits/
+      - docs/model-zoo/
+      - docs/starter-kits/
       - docs/community/
     required_gates:
       - example-maturity-labels

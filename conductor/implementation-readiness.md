@@ -43,8 +43,12 @@ The Conductor setup is complete, but implementation should move through explicit
 | Packaging, publishing, and delivery (Track 15) | R2 | `packaging/release-package-manifest.json` and its builder validate dry-run package inventory and checksum manifest generation. |
 | Release governance and maintenance (Track 16) | R2 | Changelog, compatibility, release governance, and maintenance handoff docs exist under `docs/release` and `conductor/maintenance-governance.md`. |
 | Community adoption, education, and ecosystem (Track 17) | R2 | Community onboarding, adoption, governance, roadmap, and model-zoo docs exist with a concrete onboarding-docs gate. |
-| Verification, validation, and uncertainty (Track 21) | R2 | `docs/trustworthy-simulation` and conformance fixtures include replay, seed, and VVUQ evidence boundaries. |
-| Experiment runner and scenario management (Track 22) | R2 | `crates/kairo-ecs-cli` and `examples/experiments` exist with scenario manifest and replay validation smoke coverage. |
+| Comparative benchmarks and reproducibility (Track 18) | R2 | `docs/benchmarks/reproduce-comparison.md` and `benches/benchmark_reproducibility.py` tie comparison claims to ready fixtures and metadata smoke checks. |
+| Research software, citation, and archival (Track 19) | R2 | `.zenodo.json`, `docs/research/citation.md`, paper metadata, and a Track 19 validator enforce repository, version, and no-fake-DOI boundaries. |
+| OpenSSF, supply-chain trust, and institutional readiness (Track 20) | R2 | `conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md`, delivery readiness, and quality gates define staged trust evidence and exceptions. |
+| Verification, validation, and uncertainty (Track 21) | R2 | `docs/validation/factory-bottleneck-v1-vvuq-note.md` and `scripts/validation/validate-vvuq-note.mjs` validate fixture-backed VVUQ claims for `factory_bottleneck_v1`. |
+| Experiment runner and scenario management (Track 22) | R2 | `crates/kairo-ecs-cli`, `examples/experiments`, `scenarios/manifest-index.json`, and `scripts/scenarios/validate-track22-smoke.ps1` exist with scenario manifest and replay validation smoke coverage. |
+| Domain starter kits and model zoo (Track 23) | R2 | `examples/starter-kits/starter-kits.yaml`, `docs/model-zoo/inventory.md`, and `examples/model-zoo/validate-inventory.ps1` define and validate the first starter-kit inventory. |
 | GPU Compute (Track 32) | R2 | `crates/kairo-ecs-gpu` exists, is wired into the root workspace, and has explicit unavailable-backend contracts plus feature compile gates. |
 | WebGPU Compute (Track 33) | R2 | `crates/kairo-ecs-webgpu` and `website/webgpu-demo` exist with browser dispatch capability checks and demo smoke tests. |
 | PDES & Parallel Execution (Track 34) | R2 | `crates/kairo-ecs-pdes` exists with parity and deadlock-stress report fixtures. |

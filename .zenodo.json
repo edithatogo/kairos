@@ -17,5 +17,13 @@
     "ABM",
     "Rust",
     "Apache Arrow"
-  ]
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/edithatogo/kairos",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ],
+  "notes": "Pre-release metadata seed for 0.4.0-alpha.1; archive status is not yet DOI-minted."
 }

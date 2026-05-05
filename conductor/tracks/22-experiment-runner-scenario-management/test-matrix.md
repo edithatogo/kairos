@@ -14,12 +14,25 @@
 | CLI scenario validation compiles | yes | yes | yes |
 | Replay output shape smoke exists | yes | yes | yes |
 | Resumability plan smoke exists | yes | yes | yes |
+| Scenario index references real manifests and fixtures | yes | yes | yes |
+| Read-only local scenario smoke validator passes | yes | yes | yes |
 
 ## Local validation commands
 
 ```bash
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scenarios/validate-track22-smoke.ps1
 cargo check -p kairo-ecs-cli
 cargo run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml
 cargo run -p kairo-ecs-cli -- replay --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1
 cargo run -p kairo-ecs-cli -- resume-plan --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1
+node tests/conformance/conformance-check.mjs
 ```
+
+## Latest focused validation evidence
+
+| Command | Result | Evidence |
+|---|---|---|
+| `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scenarios/validate-track22-smoke.ps1` | PASS | Returned `status: ok` for `factory_bottleneck_v1`, replay fixture `vvuq_scenario_replay_v1`, execution fixture `scheduler_ordering_v1`, kind order `1,2,4,3`, hash `1d53b73b244a84de`. |
+| `cargo check -p kairo-ecs-cli` | PASS | Finished dev-profile check successfully. |
+| `node tests/conformance/conformance-check.mjs` | PASS | Validated four ready fixtures: `scheduler_ordering_v1`, `scheduler_cancellation_v1`, `rng_reproducibility_v1`, `vvuq_scenario_replay_v1`. |
+| `cargo run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml` | FAIL/BLOCKED | Link step used Git for Windows `link.exe` at `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe` and failed with `fatal error - couldn't create signal pipe, Win32 error 5`. |

@@ -1,0 +1,29 @@
+{
+  "schema_version": "kairoecs.scenario-index.v1",
+  "scenarios": [
+    {
+      "scenario_id": "factory_bottleneck_v1",
+      "status": "local-smoke",
+      "scenario_manifest": "examples/experiments/factory_bottleneck_v1.scenario.toml",
+      "seed_manifest": "examples/experiments/factory_bottleneck_v1.seeds.toml",
+      "conformance_manifest": "conformance/fixtures/manifest.json",
+      "replay_fixture_id": "vvuq_scenario_replay_v1",
+      "execution_fixture_id": "scheduler_ordering_v1",
+      "comparison_basis": "expected_kind_order",
+      "expected_kind_order": [1, 2, 4, 3],
+      "expected_summary_hash": "1d53b73b244a84de",
+      "expected_outputs": [
+        "manifest.json",
+        "summary.json",
+        "replay-comparison.json",
+        "resumability-plan.json"
+      ],
+      "claim_boundary": "verification smoke only; not a real-world validation or uncertainty claim",
+      "commands": {
+        "validate": "cargo run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml",
+        "replay": "cargo run -p kairo-ecs-cli -- replay --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1",
+        "resume": "cargo run -p kairo-ecs-cli -- resume-plan --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1"
+      }
+    }
+  ]
+}

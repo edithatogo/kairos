@@ -2,6 +2,7 @@
 
 | Check | Validation command | Required by alpha | Required by beta | Required by 1.0 |
 |---|---|---:|---:|---:|
+| Citation/archive metadata is internally consistent | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1` | yes | yes | yes |
 | Citation metadata file exists and validates | `Test-Path CITATION.cff; rg -n "^cff-version:|^message:|^title:|^version:|^date-released:|^type:|^authors:|^abstract:|^keywords:|^license:|^repository-code:" CITATION.cff` | yes | yes | yes |
 | Archive metadata seed exists | `Test-Path .zenodo.json; rg -n '"title"|"upload_type"|"version"|"publication_date"|"access_right"|"description"|"creators"|"license"|"keywords"' .zenodo.json` | yes | yes | yes |
 | CodeMeta file exists and validates | `Test-Path codemeta.json; rg -n '"@context"|"@type"|"name"|"description"|"version"|"datePublished"|"programmingLanguage"|"license"|"codeRepository"|"developmentStatus"' codemeta.json` | yes | yes | yes |
@@ -13,3 +14,9 @@
 | Release gate integration | `rg -n "citation|archiv|release|Zenodo|DOI|0.4.0-alpha.1" conductor/release-engineering.md conductor/tracks/19-research-software-citation-archival/handoff.md` | no | yes | yes |
 | Citation guidance is explicit enough for reuse | `rg -n "CITATION.cff|codemeta|Zenodo|release notes|DOI|version" docs/research/citation.md conductor/tracks/19-research-software-citation-archival/handoff.md` | yes | yes | yes |
 | Red-team objections about archival durability are answered | `rg -n "durability|archive|metadata|DOI|release note|repository URL" conductor/tracks/19-research-software-citation-archival/handoff.md docs/research/citation.md` | yes | yes | yes |
+
+## Latest focused validation
+
+Last local evidence recorded by Worker 2:
+
+- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1` -> pass; reported `version=0.4.0-alpha.1`, `repository=https://github.com/edithatogo/kairos`, and `archive_status=pre-release metadata seed, not yet DOI-minted`.

@@ -186,16 +186,40 @@ $trackChecks = @(
         Concrete = @("docs/community", "examples")
     },
     @{
+        Id = "18"
+        Path = "conductor/tracks/18-comparative-benchmarks-reproducibility"
+        Crates = @()
+        Concrete = @("docs/benchmarks", "benches/benchmark_reproducibility.py", "benches/benchmark-smoke.json")
+    },
+    @{
+        Id = "19"
+        Path = "conductor/tracks/19-research-software-citation-archival"
+        Crates = @()
+        Concrete = @("CITATION.cff", "codemeta.json", ".zenodo.json", "docs/research", "paper", "conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1")
+    },
+    @{
+        Id = "20"
+        Path = "conductor/tracks/20-openssf-supply-chain-institutional-trust"
+        Crates = @()
+        Concrete = @("SECURITY.md", "CODEOWNERS", ".github/workflows/scorecard.yml", ".github/workflows/sbom-attestations.yml", "conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md")
+    },
+    @{
         Id = "21"
         Path = "conductor/tracks/21-verification-validation-uncertainty"
         Crates = @()
-        Concrete = @("docs/trustworthy-simulation", "conformance")
+        Concrete = @("docs/trustworthy-simulation", "docs/validation", "scripts/validation", "conformance")
     },
     @{
         Id = "22"
         Path = "conductor/tracks/22-experiment-runner-scenario-management"
         Crates = @("crates/kairo-ecs-cli")
-        Concrete = @("crates/kairo-ecs-cli", "examples/experiments")
+        Concrete = @("crates/kairo-ecs-cli", "examples/experiments", "scenarios", "docs/scenarios", "scripts/scenarios")
+    },
+    @{
+        Id = "23"
+        Path = "conductor/tracks/23-domain-starter-kits-model-zoo"
+        Crates = @()
+        Concrete = @("examples/model-zoo", "examples/starter-kits", "docs/model-zoo", "docs/starter-kits")
     },
     @{
         Id = "32"

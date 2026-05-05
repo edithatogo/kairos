@@ -60,6 +60,35 @@ node tests/conformance/conformance-check.mjs
 cargo check -p kairo-ecs-cli
 ```
 
+## Current Worker 4 slice - 2026-05-06
+
+Added an artifact-backed validation and uncertainty note:
+
+- `docs/validation/factory-bottleneck-v1-vvuq-note.md`
+- `scripts/validation/validate-vvuq-note.mjs`
+
+The note is anchored to `conformance/fixtures/vvuq_scenario_replay.json`,
+`examples/experiments/factory_bottleneck_v1.scenario.toml`,
+`examples/experiments/factory_bottleneck_v1.seeds.toml`, and
+`conformance/fixtures/deterministic_ordering.json`. It records the narrow
+verified behavior, states that real-world validation is not yet supported, and
+limits uncertainty claims to explicit unknowns until repeated-run artifacts
+exist.
+
+Validation evidence:
+
+```bash
+node scripts/validation/validate-vvuq-note.mjs
+node tests/conformance/conformance-check.mjs
+```
+
+Integration note for the main thread: do not mark the Track 21 delivery
+readiness checkbox complete from this slice alone. The safe integration wording
+is: "Track 21 has a fixture-backed VVUQ note and local note/fixture checks for
+`factory_bottleneck_v1`; release-readiness still needs reference-data
+validation evidence and quantitative uncertainty artifacts before broader
+model-credibility claims are allowed."
+
 ## Risks and unresolved questions
 
 The main risk is overstating confidence when the evidence only supports a

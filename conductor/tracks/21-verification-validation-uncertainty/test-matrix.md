@@ -12,6 +12,7 @@
 | Artifact existence check | The referenced docs and track files exist. | yes | yes | yes |
 | Red-team limit check | The page explains what the evidence does not prove. | yes | yes | yes |
 | VVUQ scenario fixture check | The conformance runner validates the scenario/seed replay evidence fixture. | yes | yes | yes |
+| VVUQ note fixture check | The validation note names the committed scenario, seed, replay fixture, comparison basis, required outputs, and uncertainty limits. | yes | yes | yes |
 
 ## Local validation commands
 
@@ -21,5 +22,13 @@ test -f conductor/tracks/21-verification-validation-uncertainty/handoff.md
 test -f conductor/tracks/21-verification-validation-uncertainty/test-matrix.md
 test -f conductor/tracks/21-verification-validation-uncertainty/risk-register.md
 rg -n "verification|validation|uncertainty|scenario|seed|replay|trace|evidence boundary" docs/trustworthy-simulation/verification-validation-uncertainty.md conductor/tracks/21-verification-validation-uncertainty
+node scripts/validation/validate-vvuq-note.mjs
 node tests/conformance/conformance-check.mjs
 ```
+
+## Current evidence - 2026-05-06
+
+| Command | Result | Evidence |
+|---|---|---|
+| `node scripts/validation/validate-vvuq-note.mjs` | pass | Cross-checked `docs/validation/factory-bottleneck-v1-vvuq-note.md` against `conformance/fixtures/vvuq_scenario_replay.json`, the scenario manifest, the seed manifest, and `expected_kind_order`. |
+| `node tests/conformance/conformance-check.mjs` | pass | Revalidated the ready conformance fixture set, including `vvuq_scenario_replay_v1`. |
