@@ -29,9 +29,6 @@ impl PartialOrd for QueueEntry {
     }
 }
 
-/// Default seed for Scheduler when created via Default trait
-const DEFAULT_SEED: u64 = 0;
-
 /// Deterministic single-threaded scheduler.
 #[derive(Debug, Default)]
 pub struct Scheduler {

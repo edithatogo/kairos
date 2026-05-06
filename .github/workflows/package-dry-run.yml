@@ -18,7 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
       - name: Cargo package dry run
         run: |
           test -f Cargo.toml

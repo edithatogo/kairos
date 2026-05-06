@@ -117,6 +117,39 @@ function assertMultiPageRender(failures) {
   if (dirs.length < 5) {
     fail(`multi-page render: expected at least 5 page directories under website/build/docs/, found ${dirs.length}`, failures);
   }
+
+  const installIndexPath = path.join(docsBuildDir, "install", "index.html");
+  if (!fs.existsSync(installIndexPath)) {
+    fail("multi-page render: docs/install/index.html is missing", failures);
+  } else {
+    const installHtml = fs.readFileSync(installIndexPath, "utf8");
+    if (!installHtml.includes("<html")) {
+      fail("multi-page render: docs/install/index.html does not contain valid HTML", failures);
+    }
+  }
+}
+
+function assertRenderedDocExists(failures) {
+  const docsBuildDir = path.join(buildDir, "docs");
+  if (!fs.existsSync(docsBuildDir)) {
+    fail("docs build directory missing: website/build/docs/", failures);
+    return;
+  }
+  function findHtml(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        const found = findHtml(full);
+        if (found) return found;
+      } else if (entry.name.endsWith(".html")) {
+        return full;
+      }
+    }
+    return null;
+  }
+  if (!findHtml(docsBuildDir)) {
+    fail("no rendered doc pages found under website/build/docs/", failures);
+  }
 }
 
 function assertDocsIndex(failures, manifest) {
@@ -169,6 +202,7 @@ function main() {
   assertDarkModeCSS(failures);
   assertSEOMetadata(failures);
   assertMultiPageRender(failures);
+  assertRenderedDocExists(failures);
 
   if (failures.length > 0) {
     process.stderr.write(`${failures.join("\n")}\n`);

@@ -124,6 +124,60 @@ function renderMarkdown(source) {
   return { body: html.join("\n"), headings };
 }
 
+function renderDocPages(manifest) {
+  const navigation = renderNavigation(manifest);
+  const allEntries = [];
+  let rendered = 0;
+
+  for (const section of manifest.navigationSections || []) {
+    for (const link of section.links || []) {
+      if (!link.path || !link.path.endsWith(".md")) continue;
+
+      const absoluteSource = path.join(repoRoot, link.path);
+      if (!fs.existsSync(absoluteSource)) {
+        console.warn(`  WARN: page source not found: ${absoluteSource}`);
+        continue;
+      }
+
+      const source = fs.readFileSync(absoluteSource, "utf8");
+      const renderedMd = renderMarkdown(source);
+
+      const dirPart = link.path.replace(/\.md$/, "");
+      const outputRelative = `${dirPart}/index.html`;
+      const outputPath = path.join(outDir, outputRelative);
+      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+
+      fs.writeFileSync(
+        outputPath,
+        htmlShell({
+          manifest,
+          body: renderedMd.body,
+          navigation,
+          toc: renderToc(renderedMd.headings),
+          pageTitle: firstHeading(source, link.label),
+          sourceFile: link.path,
+        })
+      );
+
+      allEntries.push({
+        section: section.title,
+        label: link.label,
+        path: link.path,
+        href: `/${dirPart}/`,
+      });
+      rendered++;
+    }
+  }
+
+  fs.writeFileSync(
+    path.join(outDir, "docs-index.json"),
+    JSON.stringify({ generatedAt: new Date().toISOString(), entries: allEntries }, null, 2) + "\n"
+  );
+
+  console.log(`Rendered ${rendered} doc pages`);
+  return allEntries;
+}
+
 function renderPages(manifest, templateHtml) {
     const fs = require('fs');
     const path = require('path');
@@ -302,15 +356,15 @@ function stylesheet() {
       color: var(--muted);
       font-size: 0.9rem;
     }
-    .search-container { position: relative; max-width: 400px; margin: 12px 0; }
-    #search-input { width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; background: var(--surface); color: var(--text); }
-    #search-input:focus { outline: none; border-color: var(--accent); }
-    .search-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 0 0 6px 6px; max-height: 300px; overflow-y: auto; z-index: 100; }
-    .search-result { padding: 8px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
-    .search-result:hover { background: var(--panel); }
-    .search-result-title { font-weight: 600; }
-    .search-result-excerpt { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .search-result-heading { font-size: 11px; color: var(--accent); }
+    .search-box { max-width: 400px; margin: 1rem 0; position: relative; }
+    .search-box input { width: 100%; padding: 8px 14px; border: 1px solid var(--border, #ddd); border-radius: 6px; font-size: 14px; background: var(--bg, #fff); color: var(--text, #333); }
+    .search-box input:focus { outline: none; border-color: var(--accent, #0366d6); }
+    .search-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card, #fff); border: 1px solid var(--border, #ddd); border-radius: 0 0 6px 6px; max-height: 300px; overflow-y: auto; z-index: 100; }
+    .search-dropdown a { display: block; padding: 8px 14px; text-decoration: none; color: var(--text, #333); border-bottom: 1px solid var(--border, #eee); }
+    .search-dropdown a:hover { background: var(--bg-secondary, #f5f5f5); }
+    .search-dropdown .result-title { font-weight: 600; font-size: 13px; }
+    .search-dropdown .result-excerpt { font-size: 11px; color: var(--text-secondary, #666); margin-top: 2px; }
+    .search-dropdown .no-results { padding: 12px 14px; color: var(--text-secondary, #999); font-style: italic; }
     @media (max-width: 820px) {
       .hero, main, footer { width: min(100% - 28px, 1120px); }
       h1 { font-size: 2rem; }
@@ -373,9 +427,9 @@ function htmlShell({ manifest, body, navigation, toc, pageTitle, sourceFile }) {
 <p class="eyebrow">KairoECS Docs</p>
 <h1>${escapeHtml(title)}</h1>
 <p>${escapeHtml(description)}</p>
-<div class="search-container">
-    <input type="search" id="search-input" placeholder="Search docs..." aria-label="Search documentation">
-    <div id="search-results" class="search-results" style="display:none"></div>
+<div class="search-box">
+  <input type="text" id="search" placeholder="Search docs..." autocomplete="off">
+  <div id="search-results" class="search-dropdown" hidden></div>
 </div>
 <div class="doc-nav" aria-label="Documentation navigation">${navigation}</div>
 </div>
@@ -385,50 +439,31 @@ function htmlShell({ manifest, body, navigation, toc, pageTitle, sourceFile }) {
 ${toc}
 </main>
 <footer>${sourceNote} Offline build, no runtime dependencies.</footer>
+<script src="../../search-index.json"></script>
 <script>
 (function() {
-    const input = document.getElementById('search-input');
-    const results = document.getElementById('search-results');
-    let index = [];
-
-    fetch('../../search-index.json')
-        .then(r => r.json())
-        .then(data => { index = data; })
-        .catch(() => {});
-
-    input.addEventListener('input', function() {
-        const q = this.value.toLowerCase().trim();
-        if (q.length < 2) { results.style.display = 'none'; return; }
-
-        const matches = [];
-        for (const doc of index) {
-            const text = (doc.title + ' ' + doc.excerpt + ' ' + doc.headings.join(' ')).toLowerCase();
-            if (text.includes(q)) {
-                matches.push(doc);
-            }
-            if (matches.length >= 20) break;
-        }
-
-        if (matches.length === 0) {
-            results.innerHTML = '<div class="search-result"><span class="search-result-excerpt">No results found</span></div>';
-        } else {
-            results.innerHTML = matches.slice(0, 15).map(doc => {
-                const heading = doc.headings.find(h => h.toLowerCase().includes(q)) || '';
-                return '<div class="search-result" onclick="location.href=\\'../../' + doc.path + '\\'">' +
-                    '<div class="search-result-title">' + doc.title + '</div>' +
-                    (heading ? '<div class="search-result-heading">\u2192 ' + heading + '</div>' : '') +
-                    '<div class="search-result-excerpt">' + doc.excerpt.slice(0, 120) + '...</div>' +
-                    '</div>';
-            }).join('');
-        }
-        results.style.display = 'block';
-    });
-
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.search-container')) {
-            results.style.display = 'none';
-        }
-    });
+  var idx = window.searchIndex || [];
+  var inp = document.getElementById('search');
+  var res = document.getElementById('search-results');
+  if (!inp || !res) return;
+  inp.addEventListener('input', function() {
+    var q = this.value.toLowerCase().trim();
+    if (q.length < 2) { res.hidden = true; return; }
+    var matches = idx.filter(function(d) {
+      return (d.title + ' ' + d.headings.join(' ') + ' ' + d.excerpt).toLowerCase().indexOf(q) >= 0;
+    }).slice(0, 12);
+    if (!matches.length) {
+      res.innerHTML = '<div class="no-results">No results</div>';
+    } else {
+      res.innerHTML = matches.map(function(d) {
+        return '<a href="../../' + d.path + '"><div class="result-title">' + d.title + '</div><div class="result-excerpt">' + (d.excerpt || '').slice(0, 120) + '</div></a>';
+      }).join('');
+    }
+    res.hidden = false;
+  });
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-box')) res.hidden = true;
+  });
 })();
 </script>
 </body>
@@ -497,21 +532,11 @@ function build() {
       sourceFile: "website/src/index.md",
     })
   );
-  const generatedPages = [];
-  for (const section of manifest.navigationSections || []) {
-    for (const link of section.links || []) {
-      const generated = writeGeneratedPage({ manifest, link, navigation });
-      if (generated) {
-        generatedPages.push(generated);
-      }
-    }
-  }
-  fs.writeFileSync(
-    path.join(outDir, "docs-index.json"),
-    `${JSON.stringify({ generatedAt: new Date().toISOString(), entries: docsIndex, generatedPages }, null, 2)}\n`
-  );
+
+  const docEntries = renderDocPages(manifest);
+
   fs.writeFileSync(path.join(outDir, "robots.txt"), "User-agent: *\nAllow: /\nSitemap: /sitemap.xml\n");
-  writeSitemap(docsIndex);
+  writeSitemap(docEntries);
 
   // Generate search index
   require('./search-index.js');

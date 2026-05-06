@@ -34,5 +34,6 @@ const docsDir = path.join(__dirname, '..', '..', 'docs');
 const index = walkDir(docsDir, 'docs');
 
 const outputPath = path.join(__dirname, '..', 'build', 'search-index.json');
-fs.writeFileSync(outputPath, JSON.stringify(index, null, 2));
+const json = 'window.searchIndex = ' + JSON.stringify(index) + ';';
+fs.writeFileSync(outputPath, json);
 console.log(`Search index: ${index.length} entries written to ${outputPath}`);
