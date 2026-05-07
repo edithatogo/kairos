@@ -1,13 +1,19 @@
 [package]
 name = "kairo-ecs-wasm"
-version = "0.0.0"
-edition.workspace = true
+version = "0.1.0"
+edition = "2021"
 license.workspace = true
-repository.workspace = true
-rust-version.workspace = true
+repository = "https://github.com/edithatogo/kairos"
+description = "WASM bindings for KairoECS"
+
+[dependencies]
+kairo-ecs-ffi = { path = "../kairo-ecs-ffi" }
+wasm-bindgen = { version = "0.2", optional = true }
+
+[features]
+default = []
+wasm-export = ["dep:wasm-bindgen"]
 
 [lib]
 path = "src/lib.rs"
-
-[lints.rust]
-unsafe_code = "forbid"
+crate-type = ["cdylib", "rlib"]

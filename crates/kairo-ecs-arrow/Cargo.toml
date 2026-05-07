@@ -1,17 +1,14 @@
 [package]
 name = "kairo-ecs-arrow"
 version = "0.1.0"
-edition.workspace = true
+edition = "2021"
 license.workspace = true
-repository.workspace = true
-rust-version.workspace = true
+repository = "https://github.com/edithatogo/kairos"
+description = "Arrow telemetry and event log serialization for KairoECS"
 
-[lib]
-path = "src/lib.rs"
+[dependencies]
+kairo-ecs-types = { path = "../kairo-ecs-types" }
 
 [[example]]
 name = "telemetry_event_log_roundtrip"
 path = "../../examples/telemetry/event_log_roundtrip.rs"
-
-[dependencies]
-kairo-ecs-types = { path = "../kairo-ecs-types" }

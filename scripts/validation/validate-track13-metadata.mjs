@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = process.cwd();
@@ -128,6 +128,20 @@ function requirePattern(relativePath, pattern, label) {
   return text;
 }
 
+const workflowFiles = readdirSync(pathOf('.github/workflows'))
+  .filter((file) => file.endsWith('.yml'))
+  .sort();
+
+assert(workflowFiles.length > 0, 'Track 13 must have workflow files under .github/workflows');
+
+for (const workflow of workflowFiles) {
+  const relativePath = `.github/workflows/${workflow}`;
+  const text = read(relativePath);
+  assert(/^name:\s*\S/m.test(text), `${relativePath} missing workflow name`);
+  assert(/^on:\s*/m.test(text), `${relativePath} missing event trigger block`);
+  assert(/^permissions:\s*/m.test(text), `${relativePath} missing explicit permissions block`);
+}
+
 const tracksYaml = read('conductor/tracks.yaml');
 const parsed = parseTracksYaml(tracksYaml);
 
@@ -189,21 +203,44 @@ for (const file of ['agent-contract.md', 'handoff.md', 'plan.md', 'risk-register
 for (const workflow of [
   'actions-security.yml',
   'benchmark-smoke.yml',
+  'bench-regression.yml',
+  'benchmarks.yml',
   'ci-bindings.yml',
   'ci-core.yml',
   'ci-policy.yml',
   'ci-skip-guard.yml',
+  'codeql.yml',
   'conformance.yml',
   'dependency-review.yml',
+  'docs-link-check.yml',
+  'docs-quality.yml',
+  'docs.yml',
+  'fuzzing.yml',
+  'nightly.yml',
   'package-dry-run.yml',
   'release-attestations.yml',
+  'release-drafter.yml',
+  'release-plz.yml',
   'release.yml',
   'sbom-attestations.yml',
   'scorecard.yml',
+  'secret-scan.yml',
+  'toolchain-check.yml',
   'validate-conductor.yml',
   'workflow-security.yml',
 ]) {
   assert(exists(`.github/workflows/${workflow}`), `Track 13 workflow evidence missing: ${workflow}`);
+}
+
+const ciPolicyText = read('.github/workflows/ci-policy.yml');
+const workflowSecurityText = read('.github/workflows/workflow-security.yml');
+for (const workflow of workflowFiles) {
+  const workflowPath = `.github/workflows/${workflow}`;
+  assert(ciPolicyText.includes(workflowPath), `.github/workflows/ci-policy.yml inventory missing ${workflowPath}`);
+  assert(
+    workflowSecurityText.includes(workflowPath),
+    `.github/workflows/workflow-security.yml inventory missing ${workflowPath}`,
+  );
 }
 
 requireTerms('.github/workflows/ci-core.yml', [
@@ -221,6 +258,11 @@ requireTerms('.github/workflows/ci-policy.yml', [
   'cargo metadata --no-deps --format-version 1',
   'cargo deny check',
   'cargo audit',
+  '.github/workflows/validate-conductor.yml',
+  '.github/workflows/scorecard.yml',
+  '.github/workflows/secret-scan.yml',
+  '.github/workflows/codeql.yml',
+  '.github/workflows/sbom-attestations.yml',
 ]);
 
 requirePattern('.github/workflows/dependency-review.yml', /fail-on-severity:\s*high/, 'high-severity dependency review gate');
@@ -232,6 +274,26 @@ requireTerms('.github/workflows/conformance.yml', [
   'node tests/conformance/track07_13_hardening_check.mjs',
   'node tests/conformance/track12_20_evidence_check.mjs',
   'conductor/tracks/13-ci-cd-quality-supply-chain/**',
+]);
+
+requireTerms('.github/workflows/secret-scan.yml', [
+  'gitleaks/gitleaks-action@v2',
+]);
+
+requireTerms('.github/workflows/codeql.yml', [
+  'github/codeql-action/init@v4',
+  'github/codeql-action/analyze@v4',
+]);
+
+requireTerms('.github/workflows/scorecard.yml', [
+  'actions/checkout@v6',
+  'ossf/scorecard-action@v2.4.3',
+  'github/codeql-action/upload-sarif@v4',
+]);
+
+requireTerms('.github/workflows/sbom-attestations.yml', [
+  'attestations: write',
+  'sbom.spdx.json',
 ]);
 
 requireTerms('.github/workflows/validate-conductor.yml', [

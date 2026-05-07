@@ -38,8 +38,8 @@ pub fn run_reference_step(agents: &mut [AgentSnapshot], dt: f32, seed: u32) -> D
     DispatchStats {
         workgroups: ((agents.len() as u32).saturating_add(WEBGPU_WORKGROUP_SIZE - 1))
             / WEBGPU_WORKGROUP_SIZE,
-        uploaded_bytes: agents.len() * core::mem::size_of::<AgentSnapshot>(),
-        downloaded_bytes: agents.len() * core::mem::size_of::<AgentSnapshot>(),
+        uploaded_bytes: core::mem::size_of_val(agents),
+        downloaded_bytes: core::mem::size_of_val(agents),
     }
 }
 

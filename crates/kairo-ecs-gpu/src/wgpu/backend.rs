@@ -12,7 +12,7 @@ pub struct WgpuBackend;
 
 impl WgpuBackend {
     pub fn new_without_device_for_tests() -> Self {
-        Self::default()
+        Self
     }
 
     pub fn availability(&self) -> GpuBackendAvailability {

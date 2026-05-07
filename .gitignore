@@ -1,7 +1,10 @@
 target/
 dist/
 **/obj/
+**/bin/
 website/build/
+bindings/python/.tmp/
 bindings/python/pytest-cache-files-*/
+.cargo/config.toml
 __pycache__/
 .pytest_cache/

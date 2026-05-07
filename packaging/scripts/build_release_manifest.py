@@ -15,6 +15,10 @@ except ModuleNotFoundError:  # Python 3.10 local developer fallback.
     tomllib = None
 
 
+EXPECTED_ECOSYSTEMS = ("rust", "python", "r", "julia", "typescript", "csharp", "go")
+FORBIDDEN_DRY_RUN_TEXT = re.compile(r"\b(publish|upload|login|token|credential|api[-_]?key)\b", re.IGNORECASE)
+
+
 def sha256(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as handle:
@@ -23,13 +27,67 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def require_string(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise SystemExit(f"{label} must be a non-empty string")
+    return value
+
+
+def require_bool(value: object, label: str) -> bool:
+    if not isinstance(value, bool):
+        raise SystemExit(f"{label} must be a boolean")
+    return value
+
+
+def require_list(value: object, label: str) -> list:
+    if not isinstance(value, list):
+        raise SystemExit(f"{label} must be a list")
+    return value
+
+
+def resolve_repo_output(root: Path, relative_path: object, label: str) -> Path:
+    path = require_string(relative_path, label)
+    if Path(path).is_absolute():
+        raise SystemExit(f"{label} output path must be repo-relative: {path}")
+    normalized = Path(path)
+    if ".." in normalized.parts:
+        raise SystemExit(f"{label} output path must stay inside the repository: {path}")
+    if normalized.parts[:1] != ("dist",):
+        raise SystemExit(f"{label} output path must stay under ignored dist/: {path}")
+    resolved = (root / normalized).resolve()
+    try:
+        resolved.relative_to(root.resolve())
+    except ValueError as exc:
+        raise SystemExit(f"{label} output path must stay inside the repository: {path}") from exc
+    return resolved
+
+
 def load_inventory(path: Path) -> dict:
     data = json.loads(path.read_text(encoding="utf-8"))
+    if data.get("schema_version") != 1:
+        raise SystemExit("release package inventory schema_version must be 1")
+    if data.get("release_stage") != "r2-dry-run":
+        raise SystemExit("release package inventory release_stage must be r2-dry-run")
     if data.get("production_publish_enabled") is not False:
         raise SystemExit("production_publish_enabled must remain false for dry-run packaging")
+    output = data.get("output")
+    if not isinstance(output, dict):
+        raise SystemExit("release package inventory has no output contract")
+    if set(output) != {"artifact_manifest", "checksum_manifest"}:
+        raise SystemExit(
+            "release package inventory output contract must only define artifact_manifest and checksum_manifest"
+        )
+    if output.get("artifact_manifest") != "dist/release-artifact-manifest.json":
+        raise SystemExit("artifact_manifest output path must remain dist/release-artifact-manifest.json")
+    if output.get("checksum_manifest") != "dist/SHA256SUMS":
+        raise SystemExit("checksum_manifest output path must remain dist/SHA256SUMS")
     sequence = data.get("local_dry_run_sequence")
     if not isinstance(sequence, dict):
         raise SystemExit("release package inventory has no local_dry_run_sequence")
+    if sequence.get("sequence_id") != "track15-r2-local-registry-package-dry-run":
+        raise SystemExit("unexpected local_dry_run_sequence.sequence_id")
+    if sequence.get("scope") != "offline inventory of the Rust workspace and binding package surfaces, plus local evidence generation only":
+        raise SystemExit("unexpected local_dry_run_sequence.scope")
     if sequence.get("publish_manifests_allowed") is not False:
         raise SystemExit("publish manifests must remain disabled for the local dry-run sequence")
     steps = sequence.get("steps")
@@ -39,18 +97,52 @@ def load_inventory(path: Path) -> dict:
     actual_order = [step.get("order") for step in steps]
     if actual_order != expected_order:
         raise SystemExit("local_dry_run_sequence steps must be ordered from 1 without gaps")
-    forbidden = re.compile(r"\b(publish|upload|login|token|credential|api[-_]?key)\b", re.IGNORECASE)
     for step in steps:
-        command = step.get("command", "")
-        if not isinstance(command, str) or not command:
-            raise SystemExit("local_dry_run_sequence step has no command")
-        if forbidden.search(command):
+        if not isinstance(step, dict):
+            raise SystemExit("local_dry_run_sequence step must be an object")
+        require_string(step.get("name"), "local_dry_run_sequence.step.name")
+        command = require_string(step.get("command"), "local_dry_run_sequence.step.command")
+        if FORBIDDEN_DRY_RUN_TEXT.search(command):
             raise SystemExit(f"local dry-run step is not offline/non-publishing: {command}")
+        require_bool(step.get("network_required"), "local_dry_run_sequence.step.network_required")
         if step.get("network_required") is not False:
             raise SystemExit(f"local dry-run step must not require network: {command}")
+        writes = require_list(step.get("writes"), "local_dry_run_sequence.step.writes")
+        for write in writes:
+            require_string(write, "local_dry_run_sequence.step.write")
     surfaces = data.get("surfaces")
     if not isinstance(surfaces, list) or not surfaces:
         raise SystemExit("release package inventory has no surfaces")
+    seen_ecosystems = set()
+    for surface in surfaces:
+        if not isinstance(surface, dict):
+            raise SystemExit("surface entry must be an object")
+        ecosystem = require_string(surface.get("ecosystem"), "surface.ecosystem")
+        if ecosystem in seen_ecosystems:
+            raise SystemExit(f"duplicate surface ecosystem: {ecosystem}")
+        seen_ecosystems.add(ecosystem)
+        require_string(surface.get("surface"), f"{ecosystem}.surface")
+        require_string(surface.get("registry"), f"{ecosystem}.registry")
+        require_string(surface.get("registry_mode"), f"{ecosystem}.registry_mode")
+        require_string(surface.get("fallback"), f"{ecosystem}.fallback")
+        commands = require_list(surface.get("dry_run_commands"), f"{ecosystem}.dry_run_commands")
+        if not commands:
+            raise SystemExit(f"{ecosystem} has no dry-run commands")
+        for command in commands:
+            command_text = require_string(command, f"{ecosystem}.dry_run_commands[]")
+            if FORBIDDEN_DRY_RUN_TEXT.search(command_text):
+                raise SystemExit(f"{ecosystem} dry-run commands must stay offline/non-publishing: {command_text}")
+        manifests = require_list(surface.get("manifests"), f"{ecosystem}.manifests")
+        if not manifests:
+            raise SystemExit(f"{ecosystem} has no manifests")
+        for manifest in manifests:
+            if not isinstance(manifest, dict):
+                raise SystemExit(f"{ecosystem} manifest entry must be an object")
+            require_string(manifest.get("package"), f"{ecosystem}.manifests[].package")
+            require_string(manifest.get("path"), f"{ecosystem}.manifests[].path")
+    missing_ecosystems = set(EXPECTED_ECOSYSTEMS) - seen_ecosystems
+    if missing_ecosystems:
+        raise SystemExit(f"missing package ecosystems: {', '.join(sorted(missing_ecosystems))}")
     return data
 
 
@@ -66,43 +158,18 @@ def workspace_members(root: Path) -> set[str]:
     return {f"{member}/Cargo.toml" for member in re.findall(r'"([^"]+)"', match.group(1))}
 
 
-def resolve_repo_output(root: Path, relative_path: str, label: str) -> Path:
-    if not isinstance(relative_path, str) or not relative_path:
-        raise SystemExit(f"{label} output path is empty")
-    if Path(relative_path).is_absolute():
-        raise SystemExit(f"{label} output path must be repo-relative: {relative_path}")
-    normalized = Path(relative_path)
-    if ".." in normalized.parts:
-        raise SystemExit(f"{label} output path must stay inside the repository: {relative_path}")
-    if normalized.parts[:1] != ("dist",):
-        raise SystemExit(f"{label} output path must stay under ignored dist/: {relative_path}")
-    resolved = (root / normalized).resolve()
-    try:
-        resolved.relative_to(root.resolve())
-    except ValueError as exc:
-        raise SystemExit(f"{label} output path must stay inside the repository: {relative_path}") from exc
-    return resolved
-
-
 def build(root: Path, inventory_path: Path, version: str, dry_run: str, check_only: bool) -> dict:
     inventory = load_inventory(inventory_path)
-    output = inventory.get("output", {})
-    artifact_manifest = resolve_repo_output(
-        root, output.get("artifact_manifest", "dist/release-artifact-manifest.json"), "artifact_manifest"
-    )
-    checksum_manifest = resolve_repo_output(
-        root, output.get("checksum_manifest", "dist/SHA256SUMS"), "checksum_manifest"
-    )
+    output = inventory["output"]
+    artifact_manifest = resolve_repo_output(root, output["artifact_manifest"], "artifact_manifest")
+    checksum_manifest = resolve_repo_output(root, output["checksum_manifest"], "checksum_manifest")
     artifacts = []
     seen_paths = set()
 
     for surface in inventory["surfaces"]:
         ecosystem = surface["ecosystem"]
-        commands = surface.get("dry_run_commands", [])
-        if not commands:
-            raise SystemExit(f"{ecosystem} has no dry-run commands")
-        for manifest in surface.get("manifests", []):
-            rel = manifest["path"]
+        for manifest in surface["manifests"]:
+            rel = require_string(manifest["path"], f"{ecosystem}.manifests[].path")
             if rel in seen_paths:
                 raise SystemExit(f"duplicate manifest path: {rel}")
             seen_paths.add(rel)
@@ -140,10 +207,11 @@ def build(root: Path, inventory_path: Path, version: str, dry_run: str, check_on
         raise SystemExit("; ".join(details))
 
     ecosystems = {entry["ecosystem"] for entry in artifacts}
-    required = {"rust", "python", "r", "julia", "typescript", "csharp", "go"}
-    missing = required - ecosystems
+    missing = set(EXPECTED_ECOSYSTEMS) - ecosystems
     if missing:
         raise SystemExit(f"missing package ecosystems: {', '.join(sorted(missing))}")
+    if len(artifacts) != len({(entry["ecosystem"], entry["path"]) for entry in artifacts}):
+        raise SystemExit("artifact manifest must not contain duplicate ecosystem/path pairs")
 
     result = {
         "schema_version": 1,
@@ -156,14 +224,12 @@ def build(root: Path, inventory_path: Path, version: str, dry_run: str, check_on
         "artifact_count": len(artifacts),
         "artifacts": artifacts,
     }
+    checksum_lines = "".join(f"{entry['sha256']}  {entry['path']}\n" for entry in artifacts)
 
     if not check_only:
         artifact_manifest.parent.mkdir(parents=True, exist_ok=True)
         artifact_manifest.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-        checksum_manifest.write_text(
-            "".join(f"{entry['sha256']}  {entry['path']}\n" for entry in artifacts),
-            encoding="utf-8",
-        )
+        checksum_manifest.write_text(checksum_lines, encoding="utf-8")
     return result
 
 

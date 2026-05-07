@@ -77,6 +77,8 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **dotnet-test-net10**: runs .NET 10 tests for the C# binding surface.
 
+**dotnet-build-net10**: runs the .NET 10 build for the C# binding surface without publishing artifacts.
+
 **dotnet-test-net11-preview**: validates the .NET 11 preview lane only as experimental until GA support is documented.
 
 **nuget-pack**: validates NuGet package packing without publishing.
@@ -188,6 +190,16 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 **grpc-smoke**: `cargo check --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc --tests` - validates the gRPC protocol emulator, peer/config checks, migration envelope, telemetry envelope, and heartbeat classification. Real `tonic` service wiring remains future work.
 
 **entity-migration-check**: `cargo check --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi --tests` and `cargo check --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc --tests` - validates the dependency-free migration envelope contracts for both distributed transport scaffolds.
+
+### Track 35 distributed simulation gates
+
+**distributed-state-parity**: `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1` - validates the dependency-free MPI/gRPC protocol emulators and track docs boundary while keeping real two-node parity as future work.
+
+**entity-migration-integrity**: `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1` - validates the entity-migration protocol scaffold, envelope checks, and placeholder transport boundaries; real byte-level runtime migration remains future work.
+
+**grpc-fault-tolerance**: `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1` - validates the gRPC failure-classification scaffold and keeps the non-leader worker failure story explicit until real transport wiring exists.
+
+**distributed-telemetry-merge**: `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1` - validates the distributed telemetry protocol scaffold and keeps Arrow batch merge claims limited to the documented transport emulator.
 
 ### Tracks 36-40 streaming, ML, FMI, cloud/HPC, and debugging gates
 

@@ -1,5 +1,7 @@
 # Benchmarks and Reproducibility Plan
 
+Benchmark readers should start at [`docs/benchmarks/README.md`](README.md).
+
 ## Benchmark principles
 
 - Benchmark whole workflows and micro-operations.

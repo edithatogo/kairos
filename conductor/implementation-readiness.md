@@ -1,6 +1,6 @@
 # KairoECS Implementation Readiness
 
-Last verified: 2026-05-06
+Last verified: 2026-05-07
 
 ## Purpose
 
@@ -75,9 +75,10 @@ Tracks cannot move to `In Review` or `Done` from planning text alone. A closeout
 
 ## Immediate critical path
 
-1. Track 00: finish naming/legal metadata and mark foundation done.
-2. Track 01: complete `lanes.md` milestones for types, scheduler, state, RNG, and facade readiness.
-3. Track 12: turn JSON fixtures into a shared runner.
-4. Track 13: add a metadata validator for `conductor/tracks.yaml` and keep the existing GitHub workflows aligned with track metadata.
-5. Track 14: replace the placeholder static docs build with the final docs stack.
-6. Track 15: define the first registry/package dry-run sequence before any publish manifests are added.
+1. Track 01: complete `lanes.md` milestones for types, scheduler, state, RNG, and facade readiness.
+2. Track 12: turn JSON fixtures into a shared runner.
+3. Track 13: add a metadata validator for `conductor/tracks.yaml` and keep the existing GitHub workflows aligned with track metadata.
+4. Track 14: replace the placeholder static docs build with the final docs stack.
+5. Track 15: define the first registry/package dry-run sequence before any publish manifests are added.
+
+Track 00 is closed as `Done` after maintainer approval of the foundation naming evidence on 2026-05-07. Later release tracks still own production publishing, package dry-runs, SBOM, provenance, and registry-specific publish gates.

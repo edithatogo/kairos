@@ -19,12 +19,13 @@ function walkDir(dir, base = '') {
                 const m = line.match(/^#{1,3}\s+(.+)/);
                 if (m) headings.push(m[1]);
             }
-            results.push({
-                path: relPath.replace(/\\/g, '/'),
-                title: headings[0] || entry.name.replace('.md', ''),
-                headings: headings,
-                excerpt: content.slice(0, 200).replace(/\n/g, ' ')
-            });
+        results.push({
+            path: relPath.replace(/\\/g, '/'),
+            title: headings[0] || entry.name.replace('.md', ''),
+            headings: headings,
+            excerpt: content.slice(0, 200).replace(/\n/g, ' '),
+            href: '/' + relPath.replace(/\\/g, '/').replace(/\.md$/, '.html')
+        });
         }
     }
     return results;

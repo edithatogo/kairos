@@ -10,13 +10,33 @@ The bootstrap contract is:
 
 The longer-form directory-backed shape described in `conductor/contracts/conformance-contract.md` remains the target runner contract. These bootstrap files are the concrete inputs for the current implementation wave.
 
-Initial fixture priorities:
+Current ready fixture IDs:
 
-1. Deterministic event ordering by `(time, priority, sequence)`.
-2. Cancellation without reordering remaining events.
-3. Reproducible entity-derived RNG streams.
-4. Scenario/seed replay evidence boundaries for VVUQ and experiment-runner smoke checks.
-5. Arrow event-log schema compatibility.
-6. FFI lifecycle parity once Track 02 is ready.
+1. `scheduler_ordering_v1`
+2. `scheduler_cancellation_v1`
+3. `rng_reproducibility_v1`
+4. `vvuq_scenario_replay_v1`
+5. `zero_delay_guard_v1`
 
-Downstream tracks should treat these fixtures as the source of truth for core behavior. Track 01 consumes scheduler and RNG fixtures, Track 02 consumes the FFI fixture, and Tracks 06-11 consume the same manifest without redefining the semantics locally.
+Current planned fixture families that are still future scope:
+
+1. `des_resource_queue_v1`
+2. `abm_behavior_update_v1`
+3. `hybrid_des_abm_v1`
+4. `arrow_event_log_v1`
+5. `ffi_lifecycle_v1`
+
+The fixture family semantics are:
+
+- `scheduler_ordering_v1` covers deterministic event ordering by `(time, priority, sequence)`.
+- `scheduler_cancellation_v1` covers cancellation without reordering remaining events.
+- `rng_reproducibility_v1` covers reproducible entity-derived RNG streams.
+- `vvuq_scenario_replay_v1` covers scenario/seed replay evidence boundaries for VVUQ and experiment-runner smoke checks.
+- `zero_delay_guard_v1` covers zero-delay event ordering guardrails without claiming a native livelock harness.
+
+The metadata-only chaos manifest lives at `conformance/chaos/manifest.json` and
+is validated by `tests/conformance/chaos-check.mjs`. It covers event
+corruption, entity exhaustion, telemetry loss, and ordering inversion without
+requiring native link tests.
+
+Downstream tracks should treat these fixtures as the source of truth for core behavior. Track 01 consumes scheduler ordering, scheduler cancellation, and RNG fixtures; Track 02 consumes the planned FFI lifecycle fixture once it is ready; and Tracks 06-11 consume the same manifest without redefining the semantics locally.

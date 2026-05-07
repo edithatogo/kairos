@@ -23,7 +23,7 @@ Wave numbers are topological depths:
 - If `conductor/tracks.yaml` changes, rerun the validator and update this
   section from the report.
 
-Current snapshot generated on 2026-05-06 from `conductor/tracks.yaml`:
+Current snapshot generated on 2026-05-07 from `conductor/tracks.yaml`:
 
 | Wave | Tracks |
 |---:|---|

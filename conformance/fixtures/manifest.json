@@ -49,9 +49,9 @@
     },
     {
       "id": "zero_delay_guard_v1",
-      "status": "planned",
+      "status": "ready",
       "kind": "scheduler",
-      "source": null,
+      "source": "zero_delay_guard.json",
       "consumers": ["01", "02", "06", "07", "08", "09", "10", "11"],
       "assertions": [
         "zero-delay loops are rejected or guarded consistently",

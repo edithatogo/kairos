@@ -1,7 +1,21 @@
 export const PACKAGE_NAME = "@kairo-ecs/typescript" as const;
 export const BINDING_KIND = "typescript-wasm" as const;
 export const EVENT_LOG_SCHEMA_NAME = "kairo_ecs.event_log.v1" as const;
+export const EVENT_LOG_SCHEMA_VERSION = 1 as const;
 export const NOT_CONFIGURED_STATUS = "not-configured" as const;
+export const EVENT_LOG_FIELDS = [
+  ["schema_version", "UInt16", false],
+  ["run_id", "Utf8", false],
+  ["event_id", "FixedSizeBinary(12)", false],
+  ["entity_id", "FixedSizeBinary(12)", true],
+  ["time_ticks", "FixedSizeBinary(16)", false],
+  ["time_scale", "Utf8", false],
+  ["priority", "Int32", false],
+  ["sequence", "UInt64", false],
+  ["event_kind", "Utf8", false],
+  ["status", "Utf8", false],
+  ["payload_ref", "Utf8", true],
+] as const;
 
 export interface BindingSurfaceInfo {
   readonly packageName: typeof PACKAGE_NAME;
@@ -53,20 +67,26 @@ export interface SchedulerSnapshot {
 }
 
 export interface ArrowEventLogRow {
+  readonly schemaVersion: typeof EVENT_LOG_SCHEMA_VERSION;
   readonly runId: string;
   readonly eventId: string;
+  readonly eventIdHex: string;
   readonly entityId: string | null;
+  readonly entityIdHex: string | null;
   readonly timeTicks: string;
+  readonly timeTicksLeHex: string;
   readonly timeScale: "ticks";
   readonly priority: number;
   readonly sequence: string;
   readonly eventKind: string;
-  readonly status: "scheduled" | "dispatched" | "cancelled" | "skipped" | "error";
+  readonly status: "dispatched" | "cancelled" | "skipped" | "error";
   readonly payloadRef: string | null;
 }
 
 export interface ArrowEventLogPayload {
   readonly schema: typeof EVENT_LOG_SCHEMA_NAME;
+  readonly schemaVersion: typeof EVENT_LOG_SCHEMA_VERSION;
+  readonly fields: typeof EVENT_LOG_FIELDS;
   readonly rows: readonly ArrowEventLogRow[];
 }
 
@@ -245,12 +265,14 @@ export class SchedulerFacade {
   }
 
   eventLog(runId: string): ArrowEventLogPayload {
-    const rows = [...this.#queue, ...this.#dispatched, ...this.#cancelled]
+    const rows = [...this.#dispatched, ...this.#cancelled]
       .sort(compareScheduledEvents)
       .map((event) => toArrowEventLogRow(runId, event));
 
     return {
       schema: EVENT_LOG_SCHEMA_NAME,
+      schemaVersion: EVENT_LOG_SCHEMA_VERSION,
+      fields: EVENT_LOG_FIELDS,
       rows,
     };
   }
@@ -263,6 +285,9 @@ export function createSchedulerFacade(): SchedulerFacade {
 export function roundTripArrowEventLog(payload: ArrowEventLogPayload): ArrowEventLogPayload {
   if (payload.schema !== EVENT_LOG_SCHEMA_NAME) {
     throw new Error(`unsupported Arrow event log schema: ${String(payload.schema)}`);
+  }
+  if (payload.schemaVersion !== EVENT_LOG_SCHEMA_VERSION) {
+    throw new Error(`unsupported Arrow event log schema version: ${String(payload.schemaVersion)}`);
   }
 
   return JSON.parse(JSON.stringify(payload)) as ArrowEventLogPayload;
@@ -281,10 +306,14 @@ function toArrowEventLogRow(runId: string, event: SchedulerEvent): ArrowEventLog
   }
 
   return {
+    schemaVersion: EVENT_LOG_SCHEMA_VERSION,
     runId: normalizedRunId,
     eventId: event.eventId.toString(),
+    eventIdHex: fixedSizeHandleHex(event.eventId),
     entityId: event.entityId?.toString() ?? null,
+    entityIdHex: event.entityId === null ? null : fixedSizeHandleHex(event.entityId),
     timeTicks: event.timeTicks.toString(),
+    timeTicksLeHex: fixedSizeU128Hex(event.timeTicks),
     timeScale: event.timeScale,
     priority: event.priority,
     sequence: event.sequence.toString(),
@@ -298,6 +327,19 @@ function normalizeUnsignedBigInt(value: bigint | number | string, fieldName: str
   const normalized = BigInt(value);
   if (normalized < 0n) {
     throw new Error(`${fieldName} must be non-negative`);
+  }
+
+  return normalized;
+}
+
+function normalizeBoundedUnsignedBigInt(
+  value: bigint | number | string,
+  fieldName: string,
+  max: bigint,
+): bigint {
+  const normalized = normalizeUnsignedBigInt(value, fieldName);
+  if (normalized > max) {
+    throw new Error(`${fieldName} exceeds ${max.toString()}`);
   }
 
   return normalized;
@@ -338,4 +380,25 @@ function compareBigInt(left: bigint, right: bigint): number {
   }
 
   return 0;
+}
+
+function fixedSizeHandleHex(value: bigint): string {
+  return littleEndianHex(normalizeBoundedUnsignedBigInt(value, "event/entity handle", 2n ** 64n - 1n), 8)
+    + littleEndianHex(0n, 4);
+}
+
+function fixedSizeU128Hex(value: bigint): string {
+  return littleEndianHex(normalizeBoundedUnsignedBigInt(value, "timeTicks", 2n ** 128n - 1n), 16);
+}
+
+function littleEndianHex(value: bigint, byteCount: number): string {
+  let remaining = value;
+  const bytes: string[] = [];
+
+  for (let index = 0; index < byteCount; index += 1) {
+    bytes.push(Number(remaining & 0xffn).toString(16).padStart(2, "0"));
+    remaining >>= 8n;
+  }
+
+  return bytes.join("");
 }

@@ -4,6 +4,7 @@ const path = require("path");
 const siteRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(siteRoot, "..");
 const manifestPath = path.join(siteRoot, "docs-link-manifest.json");
+const docsRoots = ["docs", "bindings", "examples/docs", "website/src"];
 
 function existsRelative(relativePath) {
   return fs.existsSync(path.join(repoRoot, relativePath));
@@ -20,6 +21,41 @@ function isExternal(link) {
 function isWithinRepo(target) {
   const relative = path.relative(repoRoot, target);
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+function collectMarkdownSources(relativeRoot) {
+  const absoluteRoot = path.join(repoRoot, relativeRoot);
+  const entries = [];
+
+  if (!fs.existsSync(absoluteRoot)) {
+    return entries;
+  }
+
+  const stack = [absoluteRoot];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    let dirEntries;
+    try {
+      dirEntries = fs.readdirSync(current, { withFileTypes: true });
+    } catch (error) {
+      if (error && (error.code === "EPERM" || error.code === "ENOENT")) {
+        continue;
+      }
+      throw error;
+    }
+    for (const entry of dirEntries) {
+      const absoluteEntry = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(absoluteEntry);
+        continue;
+      }
+      if (entry.isFile() && entry.name.toLowerCase().endsWith(".md")) {
+        entries.push(path.relative(repoRoot, absoluteEntry));
+      }
+    }
+  }
+
+  return entries;
 }
 
 function checkMarkdownLinks(sourceFile) {
@@ -66,6 +102,29 @@ function checkNavigationLinks(manifest) {
   return failures;
 }
 
+function checkDocsTreeCoverage(manifest) {
+  const failures = [];
+  const seen = new Set();
+
+  for (const root of docsRoots) {
+    for (const sourceFile of collectMarkdownSources(root)) {
+      if (seen.has(sourceFile)) {
+        continue;
+      }
+      seen.add(sourceFile);
+      failures.push(...checkMarkdownLinks(sourceFile));
+    }
+  }
+
+  for (const sourceFile of manifest.siteSources || []) {
+    if (!existsRelative(sourceFile)) {
+      failures.push(`manifest: missing source ${sourceFile}`);
+    }
+  }
+
+  return failures;
+}
+
 function main() {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   const failures = [];
@@ -92,14 +151,7 @@ function main() {
     }
   }
 
-  for (const sourceFile of manifest.siteSources) {
-    if (!existsRelative(sourceFile)) {
-      failures.push(`manifest: missing source ${sourceFile}`);
-      continue;
-    }
-    failures.push(...checkMarkdownLinks(sourceFile));
-  }
-
+  failures.push(...checkDocsTreeCoverage(manifest));
   failures.push(...checkNavigationLinks(manifest));
 
   if (failures.length > 0) {

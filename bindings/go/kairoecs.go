@@ -24,13 +24,24 @@ type Event struct {
 	Kind      string
 }
 
+type Stats struct {
+	Now        int64
+	Scheduled  uint64
+	Pending    uint64
+	Dispatched uint64
+	Cancelled  uint64
+}
+
 type Engine struct {
-	now       int64
-	nextID    EventID
-	nextSeq   uint64
-	closed    bool
-	cancelled map[EventID]struct{}
-	events    eventHeap
+	now        int64
+	nextID     EventID
+	nextSeq    uint64
+	closed     bool
+	cancelled  map[EventID]struct{}
+	events     eventHeap
+	scheduled  uint64
+	dispatched uint64
+	cancelledN uint64
 }
 
 func NewEngine() *Engine {
@@ -97,6 +108,7 @@ func (e *Engine) ScheduleAt(timeTicks int64, priority int32, kind string) (Event
 		Kind:      kind,
 	}
 	e.nextSeq++
+	e.scheduled++
 	heap.Push(&e.events, evt)
 	return id, nil
 }
@@ -132,6 +144,7 @@ func (e *Engine) CancelEvent(id EventID) error {
 		return ErrEventNotFound
 	}
 	e.cancelled[id] = struct{}{}
+	e.cancelledN++
 	return nil
 }
 
@@ -146,6 +159,7 @@ func (e *Engine) Step() (Event, bool, error) {
 			continue
 		}
 		e.now = evt.TimeTicks
+		e.dispatched++
 		return evt, true, nil
 	}
 	return Event{}, false, nil
@@ -173,11 +187,34 @@ func (e *Engine) RunFor(maxEvents int) ([]Event, error) {
 	return events, nil
 }
 
+func (e *Engine) Stats() (Stats, error) {
+	if err := e.ensureOpen(); err != nil {
+		return Stats{}, err
+	}
+	return Stats{
+		Now:        e.now,
+		Scheduled:  e.scheduled,
+		Pending:    uint64(e.pendingEvents()),
+		Dispatched: e.dispatched,
+		Cancelled:  e.cancelledN,
+	}, nil
+}
+
 func (e *Engine) ensureOpen() error {
 	if e == nil || e.closed {
 		return ErrClosed
 	}
 	return nil
+}
+
+func (e *Engine) pendingEvents() int {
+	pending := 0
+	for _, evt := range e.events {
+		if _, ok := e.cancelled[evt.ID]; !ok {
+			pending++
+		}
+	}
+	return pending
 }
 
 type eventHeap []Event

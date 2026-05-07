@@ -82,3 +82,68 @@ end
     @test occursin("not configured", status.reason)
     @test !is_ffi_configured()
 end
+
+@testset "conformance fixture bridge" begin
+    fixtures = [
+        ConformanceFixture(
+            id = "scheduler_ordering_v1",
+            status = "ready",
+            kind = "ordering",
+            source = "deterministic_ordering.json",
+            consumers = ["01", "08"],
+            assertions = ["order by time, priority, sequence"],
+        ),
+        ConformanceFixture(
+            id = "des_resource_queue_v1",
+            status = "planned",
+            kind = "des",
+            consumers = ["01", "08"],
+            assertions = ["resource queue behavior is stable"],
+        ),
+        ConformanceFixture(
+            id = "vvuq_scenario_replay_v1",
+            status = "ready",
+            kind = "vvuq",
+            consumers = ["21", "22"],
+            assertions = ["scenario manifest and seed manifest exist"],
+        ),
+    ]
+
+    @test binding_fixture_ids(fixtures) == ["scheduler_ordering_v1", "des_resource_queue_v1"]
+    @test ready_fixture_ids(fixtures) == ["scheduler_ordering_v1"]
+    @test fixture_status(fixtures, "des_resource_queue_v1") == "planned"
+    @test fixture_status(fixtures, "missing_fixture") === nothing
+
+    report = conformance_report(fixtures)
+    @test report.track_id == "08"
+    @test report.ready == ["scheduler_ordering_v1"]
+    @test report.planned == ["des_resource_queue_v1"]
+    @test report.ready_count == 1
+    @test report.planned_count == 1
+
+    dict_fixtures = [
+        Dict(
+            "id" => "rng_reproducibility_v1",
+            "status" => "ready",
+            "kind" => "rng",
+            "source" => "rng_replay.json",
+            "consumers" => ["01", "08"],
+            "assertions" => ["entity-derived RNG stays deterministic across bindings"],
+        ),
+    ]
+
+    @test ready_fixture_ids(dict_fixtures) == ["rng_reproducibility_v1"]
+
+    tuple_fixtures = [
+        (
+            id = "zero_delay_guard_v1",
+            status = "ready",
+            kind = "scheduler",
+            source = "zero_delay_guard.json",
+            consumers = ["01", "08"],
+            assertions = ["zero-delay loops are rejected or guarded consistently"],
+        ),
+    ]
+
+    @test binding_fixture_ids(tuple_fixtures) == ["zero_delay_guard_v1"]
+end

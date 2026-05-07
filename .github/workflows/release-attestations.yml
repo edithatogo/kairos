@@ -23,7 +23,7 @@ jobs:
       - name: Verify release artifacts exist
         run: |
           test -d "${ARTIFACT_PATH}"
-          test -f "${ARTIFACT_PATH}/RELEASE.txt"
+          test -f "${ARTIFACT_PATH}/release-artifact-manifest.json"
           test -f "${ARTIFACT_PATH}/SHA256SUMS"
       - name: Install Syft
         uses: anchore/sbom-action/download-syft@v0

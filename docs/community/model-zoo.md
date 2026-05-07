@@ -6,6 +6,7 @@ The model zoo is the discovery layer for KairoECS examples. It should help a new
 
 - `examples/model-zoo/model-zoo.yaml`
 - `examples/model-zoo/README.md`
+- `docs/starter-kits/README.md`
 
 ## Maturity labels
 
@@ -39,6 +40,9 @@ The model zoo is the discovery layer for KairoECS examples. It should help a new
 2. Pick a model by paradigm and maturity.
 3. Open the example README at the listed entry point.
 4. Use the example README to locate the runnable command or local smoke check.
+
+If you already know the domain, start with `docs/starter-kits/README.md` and
+follow the domain-specific kit to the example path it references.
 
 ## Claim boundary
 

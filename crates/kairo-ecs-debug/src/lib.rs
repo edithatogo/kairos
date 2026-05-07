@@ -3,7 +3,10 @@
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 
-use kairo_ecs_types::{DispatchedEvent, EntityId, EventId, EventKind, SimTime};
+use kairo_ecs_core::{RecordedEvent, RecordingScheduler, Scheduler};
+use kairo_ecs_types::{
+    DispatchedEvent, EntityId, EventId, EventKind, ScheduleRequest, SimTime, StepOutcome,
+};
 
 pub const TRACE_SCHEMA: &str = "kairo.ecs.trace.v1";
 
@@ -323,6 +326,213 @@ impl Debugger {
             .map(|(index, _)| index)?;
         self.cursor = Some(index);
         self.trace.deltas.get(index)
+    }
+}
+
+/// Standalone recorder that wraps `&mut Scheduler` and records events identically
+/// to `RecordingScheduler` for use cases where ownership of the scheduler must remain elsewhere.
+#[derive(Debug)]
+pub struct TraceRecorder<'a> {
+    pub scheduler: &'a mut Scheduler,
+    pub recorded: Vec<RecordedEvent>,
+}
+
+impl<'a> TraceRecorder<'a> {
+    pub fn new(scheduler: &'a mut Scheduler) -> Self {
+        Self {
+            scheduler,
+            recorded: Vec::new(),
+        }
+    }
+
+    pub fn schedule(&mut self, req: ScheduleRequest) -> EventId {
+        self.scheduler.schedule(req)
+    }
+
+    pub fn cancel(&mut self, id: EventId) -> bool {
+        self.scheduler.cancel(id)
+    }
+
+    pub fn step(&mut self) -> StepOutcome {
+        let outcome = self.scheduler.step();
+        if let StepOutcome::Dispatched(ref ev) = outcome {
+            self.recorded.push(RecordedEvent {
+                tick: ev.at.ticks() as u64,
+                event_id: ev.id.index,
+                entity_id: ev.entity.map(|e| e.index),
+                priority: ev.priority,
+                sequence: ev.sequence,
+                kind: match ev.kind {
+                    EventKind::Custom(v) => v,
+                },
+            });
+        }
+        outcome
+    }
+
+    pub fn run_for(&mut self, max_events: u64) -> u64 {
+        let mut count = 0;
+        while count < max_events {
+            match self.step() {
+                StepOutcome::Dispatched(_) => count += 1,
+                _ => break,
+            }
+        }
+        count
+    }
+
+    pub fn run_until(&mut self, time_limit: SimTime) -> u64 {
+        let mut count = 0;
+        while let StepOutcome::Dispatched(ref ev) = self.step() {
+            if ev.at >= time_limit {
+                break;
+            }
+            count += 1;
+        }
+        count
+    }
+
+    pub fn pending_events(&self) -> usize {
+        self.scheduler.pending_events()
+    }
+
+    pub fn now(&self) -> SimTime {
+        self.scheduler.now()
+    }
+}
+
+/// Replays recorded events with step-by-step assertions for deterministic testing.
+#[derive(Clone, Debug)]
+pub struct TraceReplay {
+    events: Vec<RecordedEvent>,
+    cursor: usize,
+}
+
+impl TraceReplay {
+    pub fn new(events: Vec<RecordedEvent>) -> Self {
+        Self { events, cursor: 0 }
+    }
+
+    pub fn from_recorder(recorder: &TraceRecorder) -> Self {
+        Self::new(recorder.recorded.clone())
+    }
+
+    pub fn from_recording(recording: &RecordingScheduler) -> Self {
+        Self::new(recording.recorded.clone())
+    }
+
+    pub fn len(&self) -> usize {
+        self.events.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.events.is_empty()
+    }
+
+    pub fn cursor(&self) -> usize {
+        self.cursor
+    }
+
+    pub fn remaining(&self) -> usize {
+        self.events.len().saturating_sub(self.cursor)
+    }
+
+    pub fn reset(&mut self) {
+        self.cursor = 0;
+    }
+
+    pub fn step(&mut self) -> Option<&RecordedEvent> {
+        let event = self.events.get(self.cursor)?;
+        self.cursor += 1;
+        Some(event)
+    }
+
+    pub fn peek(&self) -> Option<&RecordedEvent> {
+        self.events.get(self.cursor)
+    }
+
+    pub fn peek_at(&self, index: usize) -> Option<&RecordedEvent> {
+        self.events.get(index)
+    }
+
+    pub fn assert_count(&self, expected: usize) -> &Self {
+        assert_eq!(
+            self.events.len(),
+            expected,
+            "expected {expected} recorded events, got {}",
+            self.events.len()
+        );
+        self
+    }
+
+    pub fn assert_tick(&self, index: usize, expected: u64) -> &Self {
+        let event = self
+            .events
+            .get(index)
+            .unwrap_or_else(|| panic!("no event at index {index}"));
+        assert_eq!(
+            event.tick, expected,
+            "event[{index}] tick mismatch: expected {expected}, got {}",
+            event.tick
+        );
+        self
+    }
+
+    pub fn assert_kind(&self, index: usize, expected: u32) -> &Self {
+        let event = self
+            .events
+            .get(index)
+            .unwrap_or_else(|| panic!("no event at index {index}"));
+        assert_eq!(
+            event.kind, expected,
+            "event[{index}] kind mismatch: expected {expected}, got {}",
+            event.kind
+        );
+        self
+    }
+
+    pub fn assert_entity(&self, index: usize, expected: Option<u64>) -> &Self {
+        let event = self
+            .events
+            .get(index)
+            .unwrap_or_else(|| panic!("no event at index {index}"));
+        assert_eq!(
+            event.entity_id, expected,
+            "event[{index}] entity mismatch: expected {:?}, got {:?}",
+            expected, event.entity_id
+        );
+        self
+    }
+
+    pub fn assert_sequence(&self, index: usize, expected: u64) -> &Self {
+        let event = self
+            .events
+            .get(index)
+            .unwrap_or_else(|| panic!("no event at index {index}"));
+        assert_eq!(
+            event.sequence, expected,
+            "event[{index}] sequence mismatch: expected {expected}, got {}",
+            event.sequence
+        );
+        self
+    }
+
+    pub fn assert_all_dispatched(&mut self) -> &Self {
+        while self.step().is_some() {}
+        assert!(
+            self.cursor == self.events.len(),
+            "did not step through all events"
+        );
+        self
+    }
+}
+
+impl IntoIterator for TraceReplay {
+    type Item = RecordedEvent;
+    type IntoIter = std::vec::IntoIter<RecordedEvent>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.events.into_iter()
     }
 }
 

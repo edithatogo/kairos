@@ -2,6 +2,8 @@
 
 The playground is the browser-first entry point for understanding KairoECS before you install a toolchain or run the full workspace. It is not a separate product line. It is a docs-led demo surface that explains the current state of the repo with small, inspectable examples.
 
+The first committed playground page is [the headless snapshot slice](../playground/headless-snapshot.md), which anchors the browser demo and smoke test.
+
 ## What the user should see
 
 The playground page should present:
@@ -71,6 +73,7 @@ node docs/assets/validate-playground-figures.mjs
 ## How the docs site links to it
 
 The docs home page should link to this page from the community section so users can reach it from the first docs screen.
+It should also link the headless snapshot slice so readers can move from the overview to the concrete fixture-backed demo in one step.
 
 ## What this page is for
 

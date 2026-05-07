@@ -1,53 +1,44 @@
 #![forbid(unsafe_code)]
 
+use kairo_ecs_types::{DispatchedEvent, EntityId, EventId};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-
-use kairo_ecs_types::{DispatchedEvent, EntityId, EventId, EventKind};
 
 pub const SCHEMA_VERSION: u16 = 1;
 pub const EVENT_LOG_STREAM: &str = "kairo_ecs.event_log.v1";
 pub const TIME_SCALE_TICKS: &str = "ticks";
 
-pub const EVENT_LOG_FIELDS: &[Field] = &[
-    Field::new("schema_version", ArrowType::UInt16, false),
-    Field::new("run_id", ArrowType::Utf8, false),
-    Field::new("event_id", ArrowType::FixedSizeBinary(12), false),
-    Field::new("entity_id", ArrowType::FixedSizeBinary(12), true),
-    Field::new("time_ticks", ArrowType::FixedSizeBinary(16), false),
-    Field::new("time_scale", ArrowType::Utf8, false),
-    Field::new("priority", ArrowType::Int32, false),
-    Field::new("sequence", ArrowType::UInt64, false),
-    Field::new("event_kind", ArrowType::Utf8, false),
-    Field::new("status", ArrowType::Utf8, false),
-    Field::new("payload_ref", ArrowType::Utf8, true),
+const SMOKE_HEADER: &str = "schema_version\trun_id\tevent_id_hex\tentity_id_hex\ttime_ticks_le_hex\ttime_scale\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref";
+
+pub const EVENT_LOG_FIELDS: &[EventLogField] = &[
+    EventLogField::new("schema_version", "UInt16", false),
+    EventLogField::new("run_id", "Utf8", false),
+    EventLogField::new("event_id", "FixedSizeBinary(12)", false),
+    EventLogField::new("entity_id", "FixedSizeBinary(12)", true),
+    EventLogField::new("time_ticks", "FixedSizeBinary(16)", false),
+    EventLogField::new("time_scale", "Utf8", false),
+    EventLogField::new("priority", "Int32", false),
+    EventLogField::new("sequence", "UInt64", false),
+    EventLogField::new("event_kind", "Utf8", false),
+    EventLogField::new("status", "Utf8", false),
+    EventLogField::new("payload_ref", "Utf8", true),
 ];
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Field {
+pub struct EventLogField {
     pub name: &'static str,
-    pub data_type: ArrowType,
+    pub data_type: &'static str,
     pub nullable: bool,
 }
 
-impl Field {
-    pub const fn new(name: &'static str, data_type: ArrowType, nullable: bool) -> Self {
+impl EventLogField {
+    pub const fn new(name: &'static str, data_type: &'static str, nullable: bool) -> Self {
         Self {
             name,
             data_type,
             nullable,
         }
     }
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ArrowType {
-    Utf8,
-    UInt16,
-    UInt32,
-    UInt64,
-    Int32,
-    FixedSizeBinary(u8),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -67,16 +58,24 @@ impl EventStatus {
             Self::Error => "error",
         }
     }
+}
 
-    fn parse(value: &str) -> Result<Self, ArrowTelemetryError> {
+impl Display for EventStatus {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl TryFrom<&str> for EventStatus {
+    type Error = ArrowError;
+
+    fn try_from(value: &str) -> Result<Self, ArrowError> {
         match value {
             "dispatched" => Ok(Self::Dispatched),
             "cancelled" => Ok(Self::Cancelled),
             "skipped" => Ok(Self::Skipped),
             "error" => Ok(Self::Error),
-            _ => Err(ArrowTelemetryError::new(format!(
-                "unknown event status: {value}"
-            ))),
+            other => Err(ArrowError::InvalidStatus(other.to_string())),
         }
     }
 }
@@ -97,64 +96,43 @@ pub struct EventLogRecord {
 }
 
 impl EventLogRecord {
-    pub fn dispatched(run_id: impl Into<String>, event: DispatchedEvent) -> Self {
+    pub fn dispatched(run_id: &str, event: DispatchedEvent) -> Self {
         Self {
             schema_version: SCHEMA_VERSION,
-            run_id: run_id.into(),
+            run_id: run_id.to_string(),
             event_id: event.id,
             entity_id: event.entity,
             time_ticks: event.at.ticks(),
             time_scale: TIME_SCALE_TICKS.to_string(),
             priority: event.priority,
             sequence: event.sequence,
-            event_kind: format_event_kind(&event.kind),
+            event_kind: format!("custom:{}", event.kind.code()),
             status: EventStatus::Dispatched,
             payload_ref: None,
         }
     }
 
-    pub fn validate(&self) -> Result<(), ArrowTelemetryError> {
+    pub fn validate(&self) -> Result<(), ArrowError> {
         if self.schema_version != SCHEMA_VERSION {
-            return Err(ArrowTelemetryError::new(format!(
-                "schema_version must be {SCHEMA_VERSION}, got {}",
-                self.schema_version
-            )));
+            return Err(ArrowError::UnsupportedSchemaVersion(self.schema_version));
         }
         if self.run_id.trim().is_empty() {
-            return Err(ArrowTelemetryError::new("run_id must not be empty"));
+            return Err(ArrowError::EmptyField("run_id"));
         }
         if self.time_scale != TIME_SCALE_TICKS {
-            return Err(ArrowTelemetryError::new(format!(
-                "time_scale must be {TIME_SCALE_TICKS}, got {}",
-                self.time_scale
-            )));
+            return Err(ArrowError::InvalidTimeScale(self.time_scale.clone()));
         }
         if self.event_kind.trim().is_empty() {
-            return Err(ArrowTelemetryError::new("event_kind must not be empty"));
+            return Err(ArrowError::EmptyField("event_kind"));
         }
         if self
             .payload_ref
             .as_ref()
             .is_some_and(|payload_ref| payload_ref.trim().is_empty())
         {
-            return Err(ArrowTelemetryError::new(
-                "payload_ref must not be empty when present",
-            ));
+            return Err(ArrowError::EmptyField("payload_ref"));
         }
-
         Ok(())
-    }
-
-    pub fn time_ticks_le_bytes(&self) -> [u8; 16] {
-        self.time_ticks.to_le_bytes()
-    }
-
-    pub fn event_id_bytes(&self) -> [u8; 12] {
-        event_id_bytes(self.event_id)
-    }
-
-    pub fn entity_id_bytes(&self) -> Option<[u8; 12]> {
-        self.entity_id.map(entity_id_bytes)
     }
 }
 
@@ -164,7 +142,7 @@ pub struct EventLogBatch {
 }
 
 impl EventLogBatch {
-    pub fn new(records: Vec<EventLogRecord>) -> Result<Self, ArrowTelemetryError> {
+    pub fn new(records: Vec<EventLogRecord>) -> Result<Self, ArrowError> {
         for record in &records {
             record.validate()?;
         }
@@ -175,88 +153,95 @@ impl EventLogBatch {
         &self.records
     }
 
-    pub fn schema(&self) -> &'static [Field] {
+    pub fn schema(&self) -> &'static [EventLogField] {
         EVENT_LOG_FIELDS
     }
 
     pub fn to_smoke_bytes(&self) -> Vec<u8> {
-        let mut output = format!("stream={EVENT_LOG_STREAM};schema_version={SCHEMA_VERSION}\n");
-        output.push_str(
-            "schema_version\trun_id\tevent_id_hex\tentity_id_hex\ttime_ticks_le_hex\ttime_scale\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref\n",
-        );
+        let mut lines = vec![
+            format!("stream={EVENT_LOG_STREAM};schema_version={SCHEMA_VERSION}"),
+            SMOKE_HEADER.to_string(),
+        ];
 
         for record in &self.records {
-            let entity_id = record
-                .entity_id_bytes()
-                .map(|bytes| hex_bytes(&bytes))
-                .unwrap_or_default();
-            output.push_str(&format!(
-                "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
-                record.schema_version,
-                escape_cell(&record.run_id),
-                hex_bytes(&record.event_id_bytes()),
-                entity_id,
-                hex_bytes(&record.time_ticks_le_bytes()),
-                escape_cell(&record.time_scale),
-                record.priority,
-                record.sequence,
-                escape_cell(&record.event_kind),
-                record.status.as_str(),
-                escape_cell(record.payload_ref.as_deref().unwrap_or_default())
-            ));
+            lines.push(
+                [
+                    record.schema_version.to_string(),
+                    escape_cell(&record.run_id),
+                    handle_hex(record.event_id.index, record.event_id.generation),
+                    record
+                        .entity_id
+                        .map(|entity_id| handle_hex(entity_id.index, entity_id.generation))
+                        .unwrap_or_default(),
+                    record.time_ticks.to_le_bytes().encode_hex(),
+                    escape_cell(&record.time_scale),
+                    record.priority.to_string(),
+                    record.sequence.to_string(),
+                    escape_cell(&record.event_kind),
+                    record.status.to_string(),
+                    escape_cell(record.payload_ref.as_deref().unwrap_or_default()),
+                ]
+                .join("\t"),
+            );
         }
 
-        output.into_bytes()
+        lines.push(String::new());
+        lines.join("\n").into_bytes()
     }
 
-    pub fn from_smoke_bytes(bytes: &[u8]) -> Result<Self, ArrowTelemetryError> {
-        let text = std::str::from_utf8(bytes)
-            .map_err(|error| ArrowTelemetryError::new(format!("invalid utf8 payload: {error}")))?;
+    pub fn from_smoke_bytes(payload: &[u8]) -> Result<Self, ArrowError> {
+        let text = std::str::from_utf8(payload).map_err(|_| ArrowError::InvalidUtf8)?;
         let mut lines = text.lines();
-        let header = lines
-            .next()
-            .ok_or_else(|| ArrowTelemetryError::new("missing stream header"))?;
-        if header != format!("stream={EVENT_LOG_STREAM};schema_version={SCHEMA_VERSION}") {
-            return Err(ArrowTelemetryError::new(format!(
-                "unexpected stream header: {header}"
-            )));
+        let expected_stream = format!("stream={EVENT_LOG_STREAM};schema_version={SCHEMA_VERSION}");
+
+        if lines.next() != Some(expected_stream.as_str()) {
+            return Err(ArrowError::UnexpectedStreamHeader);
         }
-        let fields = lines
-            .next()
-            .ok_or_else(|| ArrowTelemetryError::new("missing field header"))?;
-        let expected_fields = "schema_version\trun_id\tevent_id_hex\tentity_id_hex\ttime_ticks_le_hex\ttime_scale\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref";
-        if fields != expected_fields {
-            return Err(ArrowTelemetryError::new("unexpected field header"));
+        if lines.next() != Some(SMOKE_HEADER) {
+            return Err(ArrowError::UnexpectedFieldHeader);
         }
 
         let mut records = Vec::new();
         for line in lines {
-            let cells: Vec<&str> = line.split('\t').collect();
-            if cells.len() != 11 {
-                return Err(ArrowTelemetryError::new(format!(
-                    "expected 11 cells, got {}",
-                    cells.len()
-                )));
+            if line.is_empty() {
+                continue;
             }
-            let entity_id = match cells[3] {
-                "" => None,
-                value => Some(parse_entity_id(value)?),
-            };
+            let cells: Vec<_> = line.split('\t').collect();
+            if cells.len() != 11 {
+                return Err(ArrowError::WrongCellCount {
+                    expected: 11,
+                    actual: cells.len(),
+                });
+            }
 
             records.push(EventLogRecord {
-                schema_version: parse_cell(cells[0], "schema_version")?,
+                schema_version: cells[0]
+                    .parse()
+                    .map_err(|_| ArrowError::InvalidNumber("schema_version"))?,
                 run_id: unescape_cell(cells[1]),
-                event_id: parse_event_id(cells[2])?,
-                entity_id,
+                event_id: parse_event_handle(cells[2])?,
+                entity_id: if cells[3].is_empty() {
+                    None
+                } else {
+                    Some(parse_entity_handle(cells[3])?)
+                },
                 time_ticks: parse_time_ticks(cells[4])?,
                 time_scale: unescape_cell(cells[5]),
-                priority: parse_cell(cells[6], "priority")?,
-                sequence: parse_cell(cells[7], "sequence")?,
+                priority: cells[6]
+                    .parse()
+                    .map_err(|_| ArrowError::InvalidNumber("priority"))?,
+                sequence: cells[7]
+                    .parse()
+                    .map_err(|_| ArrowError::InvalidNumber("sequence"))?,
                 event_kind: unescape_cell(cells[8]),
-                status: EventStatus::parse(cells[9])?,
-                payload_ref: match unescape_cell(cells[10]) {
-                    value if value.is_empty() => None,
-                    value => Some(value),
+                status: EventStatus::try_from(cells[9])?,
+                payload_ref: {
+                    let payload_ref = unescape_cell(cells[10]);
+                    if payload_ref.is_empty() {
+                        None
+                    } else {
+                        Some(payload_ref)
+                    }
                 },
             });
         }
@@ -265,111 +250,224 @@ impl EventLogBatch {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ArrowTelemetryError {
-    message: String,
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum ArrowError {
+    EmptyField(&'static str),
+    InvalidHexLength { expected: usize, actual: usize },
+    InvalidHexDigit,
+    InvalidNumber(&'static str),
+    InvalidStatus(String),
+    InvalidTimeScale(String),
+    InvalidUtf8,
+    UnexpectedFieldHeader,
+    UnexpectedStreamHeader,
+    UnsupportedSchemaVersion(u16),
+    WrongCellCount { expected: usize, actual: usize },
 }
 
-impl ArrowTelemetryError {
-    pub fn new(message: impl Into<String>) -> Self {
-        Self {
-            message: message.into(),
+impl Display for ArrowError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::EmptyField(field) => write!(f, "{field} must not be empty"),
+            Self::InvalidHexLength { expected, actual } => {
+                write!(f, "expected {expected} hex characters, got {actual}")
+            }
+            Self::InvalidHexDigit => f.write_str("invalid hex digit"),
+            Self::InvalidNumber(field) => write!(f, "{field} is not a valid number"),
+            Self::InvalidStatus(status) => write!(f, "invalid event status: {status}"),
+            Self::InvalidTimeScale(time_scale) => write!(f, "invalid time scale: {time_scale}"),
+            Self::InvalidUtf8 => f.write_str("payload is not valid UTF-8"),
+            Self::UnexpectedFieldHeader => f.write_str("unexpected event-log field header"),
+            Self::UnexpectedStreamHeader => f.write_str("unexpected event-log stream header"),
+            Self::UnsupportedSchemaVersion(version) => {
+                write!(f, "unsupported event-log schema version: {version}")
+            }
+            Self::WrongCellCount { expected, actual } => {
+                write!(f, "expected {expected} cells, got {actual}")
+            }
         }
     }
 }
 
-impl Display for ArrowTelemetryError {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.message)
+impl Error for ArrowError {}
+
+pub struct ArrowEventLog {
+    run_id: String,
+    records: Vec<EventLogRecord>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ArrowEventLogEntry<'a> {
+    pub event_id: &'a str,
+    pub entity_id: Option<&'a str>,
+    pub time_ticks: u128,
+    pub priority: i32,
+    pub sequence: u64,
+    pub kind: u32,
+    pub status: &'a str,
+}
+
+impl ArrowEventLog {
+    pub fn new(run_id: &str) -> Self {
+        Self {
+            run_id: run_id.to_string(),
+            records: Vec::new(),
+        }
+    }
+
+    pub fn record_event(&mut self, event: ArrowEventLogEntry<'_>) {
+        self.records.push(EventLogRecord {
+            schema_version: SCHEMA_VERSION,
+            run_id: self.run_id.clone(),
+            event_id: synthetic_handle(event.event_id),
+            entity_id: event.entity_id.map(synthetic_handle_entity),
+            time_ticks: event.time_ticks,
+            time_scale: TIME_SCALE_TICKS.to_string(),
+            priority: event.priority,
+            sequence: event.sequence,
+            event_kind: format!("custom:{}", event.kind),
+            status: EventStatus::try_from(event.status).unwrap_or(EventStatus::Error),
+            payload_ref: None,
+        });
+    }
+
+    pub fn flush_json(&self) -> String {
+        let events = self
+            .records
+            .iter()
+            .map(record_json)
+            .collect::<Vec<_>>()
+            .join(",\n    ");
+
+        format!(
+            "{{\n  \"stream\": {},\n  \"schema_version\": {},\n  \"run_id\": {},\n  \"event_count\": {},\n  \"events\": [\n    {}\n  ]\n}}",
+            json_string(EVENT_LOG_STREAM),
+            SCHEMA_VERSION,
+            json_string(&self.run_id),
+            self.records.len(),
+            events
+        )
+    }
+
+    pub fn flush_ndjson(&self) -> String {
+        self.records
+            .iter()
+            .map(record_json)
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    pub fn len(&self) -> usize {
+        self.records.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.records.is_empty()
     }
 }
 
-impl Error for ArrowTelemetryError {}
-
-pub fn format_event_kind(kind: &EventKind) -> String {
-    match kind {
-        EventKind::Custom(value) => format!("custom:{value}"),
-    }
+fn synthetic_handle(value: &str) -> EventId {
+    EventId::new(stable_hash(value), 0)
 }
 
-fn parse_cell<T>(cell: &str, field: &str) -> Result<T, ArrowTelemetryError>
-where
-    T: std::str::FromStr,
-    T::Err: Display,
-{
-    cell.parse::<T>()
-        .map_err(|error| ArrowTelemetryError::new(format!("invalid {field}: {error}")))
+fn synthetic_handle_entity(value: &str) -> EntityId {
+    EntityId::new(stable_hash(value), 0)
 }
 
-fn parse_time_ticks(hex: &str) -> Result<u128, ArrowTelemetryError> {
-    let mut bytes = [0_u8; 16];
-    if hex.len() != 32 {
-        return Err(ArrowTelemetryError::new("time_ticks must be 16 bytes"));
-    }
+fn stable_hash(value: &str) -> u64 {
+    value.bytes().fold(0xcbf29ce484222325, |hash, byte| {
+        (hash ^ u64::from(byte)).wrapping_mul(0x100000001b3)
+    })
+}
 
-    for index in 0..16 {
-        let offset = index * 2;
-        bytes[index] = u8::from_str_radix(&hex[offset..offset + 2], 16)
-            .map_err(|error| ArrowTelemetryError::new(format!("invalid time_ticks: {error}")))?;
-    }
+fn parse_event_handle(hex_value: &str) -> Result<EventId, ArrowError> {
+    let bytes = parse_fixed_hex::<12>(hex_value)?;
+    Ok(EventId::new(
+        u64::from_le_bytes(bytes[..8].try_into().expect("slice length checked")),
+        u32::from_le_bytes(bytes[8..].try_into().expect("slice length checked")),
+    ))
+}
 
+fn parse_entity_handle(hex_value: &str) -> Result<EntityId, ArrowError> {
+    let bytes = parse_fixed_hex::<12>(hex_value)?;
+    Ok(EntityId::new(
+        u64::from_le_bytes(bytes[..8].try_into().expect("slice length checked")),
+        u32::from_le_bytes(bytes[8..].try_into().expect("slice length checked")),
+    ))
+}
+
+fn parse_time_ticks(hex_value: &str) -> Result<u128, ArrowError> {
+    let bytes = parse_fixed_hex::<16>(hex_value)?;
     Ok(u128::from_le_bytes(bytes))
 }
 
-fn parse_event_id(hex: &str) -> Result<EventId, ArrowTelemetryError> {
-    let bytes = parse_handle_bytes(hex, "event_id")?;
-    Ok(EventId {
-        index: u64::from_le_bytes(bytes[0..8].try_into().expect("slice length")),
-        generation: u32::from_le_bytes(bytes[8..12].try_into().expect("slice length")),
-    })
-}
-
-fn parse_entity_id(hex: &str) -> Result<EntityId, ArrowTelemetryError> {
-    let bytes = parse_handle_bytes(hex, "entity_id")?;
-    Ok(EntityId {
-        index: u64::from_le_bytes(bytes[0..8].try_into().expect("slice length")),
-        generation: u32::from_le_bytes(bytes[8..12].try_into().expect("slice length")),
-    })
-}
-
-fn parse_handle_bytes(hex: &str, field: &str) -> Result<[u8; 12], ArrowTelemetryError> {
-    let mut bytes = [0_u8; 12];
-    if hex.len() != 24 {
-        return Err(ArrowTelemetryError::new(format!(
-            "{field} must be 12 bytes"
-        )));
+fn parse_fixed_hex<const N: usize>(hex_value: &str) -> Result<[u8; N], ArrowError> {
+    if hex_value.len() != N * 2 {
+        return Err(ArrowError::InvalidHexLength {
+            expected: N * 2,
+            actual: hex_value.len(),
+        });
     }
 
-    for index in 0..12 {
-        let offset = index * 2;
-        bytes[index] = u8::from_str_radix(&hex[offset..offset + 2], 16)
-            .map_err(|error| ArrowTelemetryError::new(format!("invalid {field}: {error}")))?;
+    let mut bytes = [0u8; N];
+    for index in 0..N {
+        bytes[index] = u8::from_str_radix(&hex_value[index * 2..index * 2 + 2], 16)
+            .map_err(|_| ArrowError::InvalidHexDigit)?;
     }
-
     Ok(bytes)
 }
 
-fn event_id_bytes(event_id: EventId) -> [u8; 12] {
-    let mut bytes = [0_u8; 12];
-    bytes[0..8].copy_from_slice(&event_id.index.to_le_bytes());
-    bytes[8..12].copy_from_slice(&event_id.generation.to_le_bytes());
-    bytes
+fn handle_hex(index: u64, generation: u32) -> String {
+    [
+        index.to_le_bytes().as_slice(),
+        generation.to_le_bytes().as_slice(),
+    ]
+    .concat()
+    .encode_hex()
 }
 
-fn entity_id_bytes(entity_id: EntityId) -> [u8; 12] {
-    let mut bytes = [0_u8; 12];
-    bytes[0..8].copy_from_slice(&entity_id.index.to_le_bytes());
-    bytes[8..12].copy_from_slice(&entity_id.generation.to_le_bytes());
-    bytes
+fn record_json(record: &EventLogRecord) -> String {
+    let entity_id = record
+        .entity_id
+        .map(|entity_id| json_string(&handle_hex(entity_id.index, entity_id.generation)))
+        .unwrap_or_else(|| "null".to_string());
+    let payload_ref = record
+        .payload_ref
+        .as_ref()
+        .map(|payload_ref| json_string(payload_ref))
+        .unwrap_or_else(|| "null".to_string());
+
+    format!(
+        "{{\"schema_version\":{},\"run_id\":{},\"event_id\":{},\"entity_id\":{},\"time_ticks\":{},\"time_scale\":{},\"priority\":{},\"sequence\":{},\"event_kind\":{},\"status\":{},\"payload_ref\":{}}}",
+        record.schema_version,
+        json_string(&record.run_id),
+        json_string(&handle_hex(record.event_id.index, record.event_id.generation)),
+        entity_id,
+        json_string(&record.time_ticks.to_string()),
+        json_string(&record.time_scale),
+        record.priority,
+        record.sequence,
+        json_string(&record.event_kind),
+        json_string(record.status.as_str()),
+        payload_ref
+    )
 }
 
-fn hex_bytes(bytes: &[u8]) -> String {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-    let mut output = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        output.push(HEX[(byte >> 4) as usize] as char);
-        output.push(HEX[(byte & 0x0f) as usize] as char);
+fn json_string(value: &str) -> String {
+    let mut output = String::with_capacity(value.len() + 2);
+    output.push('"');
+    for char in value.chars() {
+        match char {
+            '"' => output.push_str("\\\""),
+            '\\' => output.push_str("\\\\"),
+            '\n' => output.push_str("\\n"),
+            '\r' => output.push_str("\\r"),
+            '\t' => output.push_str("\\t"),
+            other if other.is_control() => output.push_str(&format!("\\u{:04x}", other as u32)),
+            other => output.push(other),
+        }
     }
+    output.push('"');
     output
 }
 
@@ -381,7 +479,7 @@ fn escape_cell(value: &str) -> String {
 }
 
 fn unescape_cell(value: &str) -> String {
-    let mut output = String::with_capacity(value.len());
+    let mut output = String::new();
     let mut chars = value.chars();
     while let Some(char) = chars.next() {
         if char == '\\' {
@@ -402,75 +500,130 @@ fn unescape_cell(value: &str) -> String {
     output
 }
 
+trait EncodeHex {
+    fn encode_hex(&self) -> String;
+}
+
+impl<T: AsRef<[u8]>> EncodeHex for T {
+    fn encode_hex(&self) -> String {
+        const HEX: &[u8; 16] = b"0123456789abcdef";
+        let bytes = self.as_ref();
+        let mut output = String::with_capacity(bytes.len() * 2);
+        for byte in bytes {
+            output.push(HEX[(byte >> 4) as usize] as char);
+            output.push(HEX[(byte & 0x0f) as usize] as char);
+        }
+        output
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use kairo_ecs_types::{DispatchedEvent, EventId, SimTime};
-
     use super::*;
+    use kairo_ecs_types::{DispatchedEvent, EventKind, SimTime};
 
-    fn dispatched_event() -> DispatchedEvent {
-        DispatchedEvent {
-            id: EventId {
-                index: 7,
-                generation: 1,
-            },
-            at: SimTime::from_ticks(42),
-            priority: -3,
-            sequence: 9,
-            entity: Some(EntityId {
-                index: 11,
-                generation: 2,
-            }),
-            kind: EventKind::Custom(5),
-        }
+    fn sample_event() -> DispatchedEvent {
+        DispatchedEvent::new(
+            EventId::new(1, 2),
+            SimTime::from_ticks(10),
+            -3,
+            4,
+            Some(EntityId::new(5, 6)),
+            EventKind::custom(7),
+        )
     }
 
     #[test]
-    fn schema_exposes_versioned_event_log_fields() {
-        let names: Vec<&str> = EVENT_LOG_FIELDS.iter().map(|field| field.name).collect();
+    fn event_log_schema_matches_track_04_order() {
+        let fields: Vec<_> = EVENT_LOG_FIELDS
+            .iter()
+            .map(|field| (field.name, field.data_type, field.nullable))
+            .collect();
 
-        assert_eq!(EVENT_LOG_STREAM, "kairo_ecs.event_log.v1");
-        assert_eq!(SCHEMA_VERSION, 1);
-        assert_eq!(names.first(), Some(&"schema_version"));
-        assert!(names.contains(&"time_ticks"));
-        assert!(EVENT_LOG_FIELDS.iter().any(|field| {
-            field.name == "time_ticks" && field.data_type == ArrowType::FixedSizeBinary(16)
-        }));
+        assert_eq!(
+            fields,
+            vec![
+                ("schema_version", "UInt16", false),
+                ("run_id", "Utf8", false),
+                ("event_id", "FixedSizeBinary(12)", false),
+                ("entity_id", "FixedSizeBinary(12)", true),
+                ("time_ticks", "FixedSizeBinary(16)", false),
+                ("time_scale", "Utf8", false),
+                ("priority", "Int32", false),
+                ("sequence", "UInt64", false),
+                ("event_kind", "Utf8", false),
+                ("status", "Utf8", false),
+                ("payload_ref", "Utf8", true),
+            ]
+        );
     }
 
     #[test]
-    fn dispatched_event_maps_to_event_log_record() {
-        let record = EventLogRecord::dispatched("run-1", dispatched_event());
+    fn dispatched_record_maps_core_event_fields() {
+        let record = EventLogRecord::dispatched("run-1", sample_event());
 
+        assert_eq!(record.schema_version, SCHEMA_VERSION);
         assert_eq!(record.run_id, "run-1");
-        assert_eq!(record.time_ticks, 42);
-        assert_eq!(record.time_ticks_le_bytes(), 42_u128.to_le_bytes());
-        assert_eq!(record.event_kind, "custom:5");
+        assert_eq!(record.event_id, EventId::new(1, 2));
+        assert_eq!(record.entity_id, Some(EntityId::new(5, 6)));
+        assert_eq!(record.time_ticks, 10);
+        assert_eq!(record.priority, -3);
+        assert_eq!(record.sequence, 4);
+        assert_eq!(record.event_kind, "custom:7");
         assert_eq!(record.status, EventStatus::Dispatched);
-        assert!(record.validate().is_ok());
     }
 
     #[test]
     fn event_log_batch_round_trips_smoke_bytes() {
-        let record = EventLogRecord::dispatched("run-1", dispatched_event());
-        let batch = EventLogBatch::new(vec![record]).expect("valid batch");
+        let batch = EventLogBatch::new(vec![EventLogRecord::dispatched("run-1", sample_event())])
+            .expect("valid batch");
 
-        let decoded = EventLogBatch::from_smoke_bytes(&batch.to_smoke_bytes()).expect("decode");
+        let decoded = EventLogBatch::from_smoke_bytes(&batch.to_smoke_bytes()).expect("roundtrip");
 
         assert_eq!(decoded, batch);
         assert_eq!(decoded.schema(), EVENT_LOG_FIELDS);
     }
 
     #[test]
-    fn validation_rejects_blank_payload_ref() {
-        let mut record = EventLogRecord::dispatched("run-1", dispatched_event());
-        record.payload_ref = Some(" ".to_string());
+    fn smoke_bytes_preserve_escaped_strings_and_payload_ref() {
+        let mut record = EventLogRecord::dispatched("run\t1", sample_event());
+        record.event_kind = "custom:\n7".to_string();
+        record.payload_ref = Some("payload\\ref".to_string());
+        let batch = EventLogBatch::new(vec![record]).expect("valid batch");
 
-        let error = record.validate().expect_err("blank payload_ref");
+        let decoded = EventLogBatch::from_smoke_bytes(&batch.to_smoke_bytes()).expect("roundtrip");
+
+        assert_eq!(decoded, batch);
+    }
+
+    #[test]
+    fn validation_rejects_incompatible_schema_version() {
+        let mut record = EventLogRecord::dispatched("run-1", sample_event());
+        record.schema_version = 2;
 
         assert_eq!(
-            error.to_string(),
-            "payload_ref must not be empty when present"
+            EventLogBatch::new(vec![record]),
+            Err(ArrowError::UnsupportedSchemaVersion(2))
         );
+    }
+
+    #[test]
+    fn previous_facade_still_flushes_records() {
+        let mut log = ArrowEventLog::new("test-1");
+        log.record_event(ArrowEventLogEntry {
+            event_id: "ev1",
+            entity_id: Some("ent42"),
+            time_ticks: 100,
+            priority: 0,
+            sequence: 1,
+            kind: 5,
+            status: "dispatched",
+        });
+
+        let json = log.flush_json();
+
+        assert!(json.contains("kairo_ecs.event_log.v1"));
+        assert!(json.contains(r#""event_count": 1"#));
+        assert_eq!(log.flush_ndjson().lines().count(), 1);
     }
 }

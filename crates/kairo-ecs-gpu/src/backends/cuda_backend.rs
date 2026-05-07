@@ -12,7 +12,7 @@ pub struct CudaBackend;
 
 impl CudaBackend {
     pub fn new_without_context_for_tests() -> Self {
-        Self::default()
+        Self
     }
 
     pub fn availability(&self) -> GpuBackendAvailability {

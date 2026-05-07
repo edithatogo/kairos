@@ -9,7 +9,8 @@ future KairoECS Wasm artifact. Native Wasm loading is an explicit
 Current facade:
 
 - scheduler ordering by `(timeTicks, priority, sequence)`;
-- event-log rows shaped to `kairo_ecs.event_log.v1`;
+- event-log rows shaped to `kairo_ecs.event_log.v1`, including schema version,
+  field metadata, fixed-width little-endian handle hex, and `u128` tick hex;
 - JSON roundtrip guard for the Arrow event-log boundary;
 - `nativeWasmStatus()` / `loadNativeWasm()` contracts for native loading.
 

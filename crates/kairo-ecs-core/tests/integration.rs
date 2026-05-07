@@ -1,7 +1,5 @@
 use kairo_ecs_core::Scheduler;
-use kairo_ecs_types::{
-    DispatchedEvent, EventKind, ScheduleRequest, SimTime, StepOutcome,
-};
+use kairo_ecs_types::{DispatchedEvent, EventKind, ScheduleRequest, SimTime, StepOutcome};
 use std::collections::HashSet;
 
 fn request(at: u128, priority: i32, kind: u32) -> ScheduleRequest {
@@ -53,7 +51,10 @@ fn test_deterministic_replay() {
     let order_a = collect(&mut a);
     let order_b = collect(&mut b);
 
-    assert_eq!(order_a, order_b, "same events must dispatch in identical order");
+    assert_eq!(
+        order_a, order_b,
+        "same events must dispatch in identical order"
+    );
     assert!(!order_a.is_empty());
 }
 
@@ -197,41 +198,26 @@ fn test_empty_scheduler() {
 }
 
 // ---------------------------------------------------------------------------
-// 7. trace recorder
-//
-// NOTE: Requires a `RecordingScheduler` type to exist in kairo-ecs-core.
-// Expected API:
-//   - has a field `.recorder` with `.events: Vec<RecordedEvent>`
-//   - each `RecordedEvent` has `wall_clock_ns: u64` in increasing order
+// 7. trace recorder facade
 // ---------------------------------------------------------------------------
 #[test]
-#[ignore = "RecordingScheduler not yet implemented in kairo-ecs-core"]
 fn test_trace_recorder() {
-    // Once RecordingScheduler exists, the test would look like:
-    //
-    // let mut s = RecordingScheduler::new(Scheduler::new());
-    // s.schedule(request(1, 0, 10));
-    // s.schedule(request(2, 1, 20));
-    // s.schedule(request(3, 0, 30));
-    //
-    // s.run_for(3);
-    //
-    // let events = &s.recorder.events;
-    // assert_eq!(events.len(), 3);
-    //
-    // // Verify increasing wall_clock_ns
-    // for w in events.windows(2) {
-    //     assert!(w[0].wall_clock_ns <= w[1].wall_clock_ns);
-    // }
-    //
-    // // Verify event kinds match
-    // let kinds: Vec<u32> = events
-    //     .iter()
-    //     .map(|e| match e.event.kind {
-    //         EventKind::Custom(k) => k,
-    //     })
-    //     .collect();
-    // assert_eq!(kinds, vec![10, 20, 30]);
+    let mut s = kairo_ecs_core::RecordingScheduler::new(0);
+    s.schedule(request(1, 0, 10));
+    s.schedule(request(2, 1, 20));
+    s.schedule(request(3, 0, 30));
+
+    assert_eq!(s.run_for(3), 3);
+
+    let events = &s.recorded;
+    assert_eq!(events.len(), 3);
+
+    for w in events.windows(2) {
+        assert!(w[0].tick <= w[1].tick);
+    }
+
+    let kinds: Vec<u32> = events.iter().map(|e| e.kind).collect();
+    assert_eq!(kinds, vec![10, 20, 30]);
 }
 
 // ---------------------------------------------------------------------------
@@ -274,9 +260,7 @@ fn test_large_event_count() {
         dispatched += 1;
 
         // Verify no duplicate event kinds
-        let kind = match event.kind {
-            EventKind::Custom(k) => k,
-        };
+        let EventKind::Custom(kind) = event.kind;
         assert!(
             seen.insert(kind),
             "duplicate event kind {} dispatched",
@@ -289,7 +273,8 @@ fn test_large_event_count() {
             assert!(
                 prev_tuple <= current,
                 "ordering violation: {:?} > {:?}",
-                prev_tuple, current
+                prev_tuple,
+                current
             );
         }
         prev = Some(current);

@@ -9,6 +9,7 @@ This directory is the public community entry point for KairoECS. It is intention
 | Decide whether KairoECS fits your use case | [Adoption path](adoption.md) | The project has a clear first-user path and honest maturity labels. |
 | Follow a tutorial | [Tutorial learning paths](../tutorials/index.md) | Rust, Python, Wasm/TypeScript, and model-building paths are source-backed and claim-bounded. |
 | Find a concrete example | [Model zoo](model-zoo.md) | Examples are listed with paradigm, maturity, and checked-in README paths. |
+| Start from a domain | [Starter kits](../starter-kits/README.md) | Domain-oriented entry points point at real example paths and expected outputs. |
 | Make a first contribution | [Contributor onboarding](contributor-onboarding.md) | A contributor can find setup, issue, branch, check, and PR expectations. |
 | Understand project governance | [Governance](governance.md) | Decision-making, conduct, security, and maintainer paths are discoverable. |
 | Track staged maturity | [Roadmap](roadmap.md) | Alpha, beta, and stable claims remain behind explicit gates. |

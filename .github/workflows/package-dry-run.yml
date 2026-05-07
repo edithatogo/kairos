@@ -30,6 +30,7 @@ jobs:
           test -f crates/kairo-ecs-types/Cargo.toml
           cargo metadata --no-deps --format-version 1 >/dev/null
           cargo test --workspace --all-features --no-run
+          cargo package --allow-dirty --workspace
           cargo publish --dry-run --workspace
   python-package:
     runs-on: ubuntu-latest
@@ -90,6 +91,7 @@ jobs:
           test -f bindings/go/kairoecs_test.go
           cd bindings/go
           go test ./...
+          go vet ./...
   npm-package:
     runs-on: ubuntu-latest
     steps:

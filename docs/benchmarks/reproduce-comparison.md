@@ -3,6 +3,9 @@
 This page defines the minimum replayable evidence for a KairoECS benchmark
 comparison before native benchmark binaries are available.
 
+Start from [`docs/benchmarks/README.md`](README.md) for the benchmark
+overview and then use this page for the comparison replay path.
+
 ## Source Of Truth
 
 The committed benchmark inventory is the source of truth:

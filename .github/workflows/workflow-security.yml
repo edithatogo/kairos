@@ -21,22 +21,37 @@ jobs:
       - uses: actions/checkout@v6
       - name: Inventory workflow files
         run: |
-          test -f .github/workflows/scorecard.yml
-          test -f .github/workflows/dependency-review.yml
-          test -f .github/workflows/sbom-attestations.yml
-          test -f .github/workflows/release-attestations.yml
-          test -f .github/workflows/workflow-security.yml
           test -f .github/workflows/actions-security.yml
+          test -f .github/workflows/bench-regression.yml
+          test -f .github/workflows/benchmark-smoke.yml
+          test -f .github/workflows/benchmarks.yml
+          test -f .github/workflows/changelog-policy.yml
+          test -f .github/workflows/ci-bindings.yml
+          test -f .github/workflows/ci-core.yml
           test -f .github/workflows/ci-policy.yml
           test -f .github/workflows/ci-skip-guard.yml
-          test -f .github/workflows/ci-core.yml
-          test -f .github/workflows/ci-bindings.yml
-          test -f .github/workflows/benchmark-smoke.yml
-          test -f .github/workflows/docs.yml
-          test -f .github/workflows/docs-quality.yml
+          test -f .github/workflows/cloud-smoke.yml
+          test -f .github/workflows/codeql.yml
+          test -f .github/workflows/conductor-assessment-reminder.yml
+          test -f .github/workflows/conformance.yml
+          test -f .github/workflows/dependency-review.yml
           test -f .github/workflows/docs-link-check.yml
+          test -f .github/workflows/docs-quality.yml
+          test -f .github/workflows/docs.yml
+          test -f .github/workflows/fuzzing.yml
+          test -f .github/workflows/nightly.yml
           test -f .github/workflows/package-dry-run.yml
+          test -f .github/workflows/release-attestations.yml
+          test -f .github/workflows/release-drafter.yml
+          test -f .github/workflows/release-plz.yml
           test -f .github/workflows/release.yml
+          test -f .github/workflows/sbom-attestations.yml
+          test -f .github/workflows/scorecard.yml
+          test -f .github/workflows/secret-scan.yml
+          test -f .github/workflows/stale.yml
+          test -f .github/workflows/toolchain-check.yml
+          test -f .github/workflows/validate-conductor.yml
+          test -f .github/workflows/workflow-security.yml
       - name: Detect floating action refs
         run: |
           if rg -n "uses:\s+[^@[:space:]]+@(main|master|latest|HEAD)\b" .github/workflows; then
@@ -50,22 +65,37 @@ jobs:
       - uses: actions/checkout@v6
       - name: Inventory workflow files
         run: |
-          test -f .github/workflows/scorecard.yml
-          test -f .github/workflows/dependency-review.yml
-          test -f .github/workflows/sbom-attestations.yml
-          test -f .github/workflows/release-attestations.yml
-          test -f .github/workflows/workflow-security.yml
           test -f .github/workflows/actions-security.yml
+          test -f .github/workflows/bench-regression.yml
+          test -f .github/workflows/benchmark-smoke.yml
+          test -f .github/workflows/benchmarks.yml
+          test -f .github/workflows/changelog-policy.yml
+          test -f .github/workflows/ci-bindings.yml
+          test -f .github/workflows/ci-core.yml
           test -f .github/workflows/ci-policy.yml
           test -f .github/workflows/ci-skip-guard.yml
-          test -f .github/workflows/ci-core.yml
-          test -f .github/workflows/ci-bindings.yml
-          test -f .github/workflows/benchmark-smoke.yml
-          test -f .github/workflows/docs.yml
-          test -f .github/workflows/docs-quality.yml
+          test -f .github/workflows/cloud-smoke.yml
+          test -f .github/workflows/codeql.yml
+          test -f .github/workflows/conductor-assessment-reminder.yml
+          test -f .github/workflows/conformance.yml
+          test -f .github/workflows/dependency-review.yml
           test -f .github/workflows/docs-link-check.yml
+          test -f .github/workflows/docs-quality.yml
+          test -f .github/workflows/docs.yml
+          test -f .github/workflows/fuzzing.yml
+          test -f .github/workflows/nightly.yml
           test -f .github/workflows/package-dry-run.yml
+          test -f .github/workflows/release-attestations.yml
+          test -f .github/workflows/release-drafter.yml
+          test -f .github/workflows/release-plz.yml
           test -f .github/workflows/release.yml
+          test -f .github/workflows/sbom-attestations.yml
+          test -f .github/workflows/scorecard.yml
+          test -f .github/workflows/secret-scan.yml
+          test -f .github/workflows/stale.yml
+          test -f .github/workflows/toolchain-check.yml
+          test -f .github/workflows/validate-conductor.yml
+          test -f .github/workflows/workflow-security.yml
       - name: Run zizmor
         uses: zizmorcore/zizmor-action@v0.5.3
         with:

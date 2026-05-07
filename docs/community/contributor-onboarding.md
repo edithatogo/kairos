@@ -19,6 +19,7 @@ Use the narrowest check that covers your change:
 
 | Change | Minimum check |
 |---|---|
+| Local contributor setup | `just dev-validate` |
 | Community docs only | `rg -n "onboarding-docs|Contributor Onboarding|Model Zoo|Community Adoption" docs/community conductor/tracks/17-community-adoption-education-ecosystem` |
 | Docs site entry point | `just check-docs` |
 | Website build or navigation | `just docs-build` |

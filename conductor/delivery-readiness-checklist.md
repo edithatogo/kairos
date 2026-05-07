@@ -115,6 +115,11 @@ Use this before every alpha, beta, release candidate, and stable release.
 - [ ] Playground and demo guidance from Track 24 is green.
 - [ ] API design review and compatibility governance guidance from Track 25 is green.
 - [ ] Interoperability standards review guidance from Track 26 is green.
+- [ ] Streaming and real-time guidance from Track 36 is green.
+- [ ] ML/AI integration guidance from Track 37 is green.
+- [ ] FMI/FMU digital twin guidance from Track 38 is green.
+- [ ] Cloud/HPC batch runner guidance from Track 39 is green.
+- [ ] Time-travel debugging guidance from Track 40 is green.
 - [ ] Benchmark scripts are public before benchmark claims appear in docs.
 - [ ] Reproducibility command is documented for every flagship example.
 

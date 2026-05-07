@@ -18,3 +18,8 @@ Format:
 
 - Conductor setup for KairoECS tracks, subagents, release engineering, community adoption, and red-team review.
 - Release governance slice covering changelog enforcement, compatibility/deprecation rules, release evidence, and maintenance handoff.
+- Changelog-policy workflow for pull requests that touch public release surfaces.
+
+### Changed
+
+- Release-governance wording now records the maintenance handoff and blocker state alongside the release policy docs, with Track 15 publication still gated behind dry-run evidence and registry/toolchain verification.

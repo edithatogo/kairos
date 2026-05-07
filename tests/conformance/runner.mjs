@@ -9,6 +9,15 @@ export const REQUIRED_READY_FIXTURE_IDS = Object.freeze([
   'vvuq_scenario_replay_v1',
 ]);
 
+export const OPTIONAL_READY_FIXTURE_IDS = Object.freeze([
+  'zero_delay_guard_v1',
+]);
+
+const KNOWN_READY_FIXTURE_IDS = Object.freeze([
+  ...REQUIRED_READY_FIXTURE_IDS,
+  ...OPTIONAL_READY_FIXTURE_IDS,
+]);
+
 export const REQUIRED_BENCHMARK_IDS = Object.freeze([
   'schedule_1m_events',
   'pop_1m_events',
@@ -129,6 +138,20 @@ function assertVvuqPayload(payload, fixture, root) {
   }
 }
 
+function assertZeroDelayGuardPayload(payload, fixture) {
+  assertBaseFixture(payload, fixture);
+  assert(Array.isArray(payload.events) && payload.events.length > 0, `${fixture.id}.events must be non-empty`);
+  payload.events.forEach((event, index) => assertEvent(event, `${fixture.id}.events[${index}]`));
+  assert(
+    payload.events.some((event) => event.at_ticks === 0),
+    `${fixture.id} must include at least one zero-delay event`
+  );
+  assert(
+    Array.isArray(payload.expected_kind_order) && payload.expected_kind_order.every(Number.isInteger),
+    `${fixture.id}.expected_kind_order must be an integer array`
+  );
+}
+
 export function sortEvents(events) {
   return [...events].sort((left, right) => {
     const leftTicks = left.at_ticks ?? 0;
@@ -188,10 +211,12 @@ export function validateManifest(manifest, root = process.cwd()) {
   }
 
   const readyIds = manifest.fixtures.filter((fixture) => fixture.status === 'ready').map((fixture) => fixture.id);
-  assert(
-    JSON.stringify(readyIds) === JSON.stringify(REQUIRED_READY_FIXTURE_IDS),
-    `unexpected ready fixture set: ${readyIds.join(',')}`
-  );
+  for (const id of REQUIRED_READY_FIXTURE_IDS) {
+    assert(readyIds.includes(id), `missing ready fixture: ${id}`);
+  }
+  for (const id of readyIds) {
+    assert(KNOWN_READY_FIXTURE_IDS.includes(id), `unexpected ready fixture: ${id}`);
+  }
 
   const seenBenchmarkIds = new Set();
   for (const benchmark of manifest.benchmarks) {
@@ -216,6 +241,7 @@ export function validateFixturePayload(fixture, root = process.cwd()) {
 
   if (fixture.id === 'scheduler_ordering_v1') assertOrderingPayload(payload, fixture);
   else if (fixture.id === 'scheduler_cancellation_v1') assertCancellationPayload(payload, fixture);
+  else if (fixture.id === 'zero_delay_guard_v1') assertZeroDelayGuardPayload(payload, fixture);
   else if (fixture.id === 'rng_reproducibility_v1') assertRngPayload(payload, fixture);
   else if (fixture.id === 'vvuq_scenario_replay_v1') assertVvuqPayload(payload, fixture, root);
   else assertBaseFixture(payload, fixture);
@@ -251,6 +277,19 @@ export function runFixture(fixture, payload) {
       'rng reproducibility fixture did not match expected_stream'
     );
     return { observed_stream: observedStream };
+  }
+
+  if (fixture.id === 'zero_delay_guard_v1') {
+    const ordered = sortEvents(payload.events);
+    const observedKinds = ordered.map((event) => event.kind);
+    assert(
+      JSON.stringify(observedKinds) === JSON.stringify(payload.expected_kind_order),
+      'zero-delay guard fixture did not match expected_kind_order'
+    );
+    return {
+      observed_kind_order: observedKinds,
+      zero_delay_event_count: payload.events.filter((event) => event.at_ticks === 0).length,
+    };
   }
 
   if (fixture.id === 'vvuq_scenario_replay_v1') {

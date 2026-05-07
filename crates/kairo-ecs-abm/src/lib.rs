@@ -1,143 +1,35 @@
 #![forbid(unsafe_code)]
 
 use kairo_ecs_core::Scheduler;
-use kairo_ecs_rng::{derive_entity_seed, DeterministicStream};
-use kairo_ecs_state::World;
-use kairo_ecs_types::{
-    DispatchedEvent, EntityId, EventKind, ScheduleRequest, SimTime, StepOutcome,
-};
+use kairo_ecs_rng::DeterministicStream;
+use kairo_ecs_state::{ComponentRegistry, World};
+use kairo_ecs_types::*;
+use std::collections::HashMap;
 
-pub const BEHAVIOR_UPDATE_KIND: u32 = 30_300;
+pub const BEHAVIOR_UPDATE_EVENT_KIND: u32 = 3_001;
 
-/// Inputs exposed to one deterministic ABM behavior update.
-#[derive(Debug)]
 pub struct BehaviorContext<'a> {
-    pub entity: EntityId,
+    pub agent: EntityId,
     pub event: &'a DispatchedEvent,
     pub rng: &'a mut DeterministicStream,
+    pub world: &'a mut World,
 }
 
-/// Result requested by an agent behavior after an update event.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BehaviorDecision {
     Continue,
     Despawn,
 }
 
-/// Minimal ABM behavior contract over the shared event kernel.
-pub trait AgentBehavior {
-    fn update(&mut self, context: BehaviorContext<'_>) -> BehaviorDecision;
-}
-
-#[derive(Debug)]
-struct AgentSlot<B> {
-    entity: EntityId,
-    behavior: B,
-    rng: DeterministicStream,
-    alive: bool,
-}
-
-/// Deterministic ABM behavior runner using the shared scheduler and entity store.
-#[derive(Debug)]
-pub struct BehaviorSimulation<B> {
-    scheduler: Scheduler,
-    world: World,
-    agents: Vec<AgentSlot<B>>,
-    run_seed: u64,
-}
-
-impl<B> BehaviorSimulation<B> {
-    pub fn new(run_seed: u64) -> Self {
-        Self {
-            scheduler: Scheduler::new(),
-            world: World::new(),
-            agents: Vec::new(),
-            run_seed,
-        }
-    }
-
-    pub fn spawn_agent(&mut self, behavior: B) -> EntityId {
-        let entity = self.world.spawn();
-        let rng = DeterministicStream::new(derive_entity_seed(self.run_seed, entity));
-        self.agents.push(AgentSlot {
-            entity,
-            behavior,
-            rng,
-            alive: true,
-        });
-        entity
-    }
-
-    pub fn schedule_update(&mut self, entity: EntityId, at: SimTime, priority: i32) {
-        self.scheduler.schedule(ScheduleRequest {
-            at,
-            priority,
-            entity: Some(entity),
-            kind: EventKind::Custom(BEHAVIOR_UPDATE_KIND),
-        });
-    }
-
-    pub fn alive_agents(&self) -> usize {
-        self.world.len()
-    }
-}
-
-impl<B: AgentBehavior> BehaviorSimulation<B> {
-    pub fn run_for(&mut self, max_events: u64) -> BehaviorTrace {
-        let mut updates = Vec::new();
-
-        for _ in 0..max_events {
-            let event = match self.scheduler.step() {
-                StepOutcome::Dispatched(event) => event,
-                StepOutcome::Empty | StepOutcome::LimitReached => break,
-            };
-
-            if event.kind != EventKind::Custom(BEHAVIOR_UPDATE_KIND) {
-                continue;
-            }
-
-            let Some(entity) = event.entity else {
-                continue;
-            };
-
-            let Some(slot) = self
-                .agents
-                .iter_mut()
-                .find(|slot| slot.entity == entity && slot.alive)
-            else {
-                continue;
-            };
-
-            let decision = slot.behavior.update(BehaviorContext {
-                entity,
-                event: &event,
-                rng: &mut slot.rng,
-            });
-
-            if decision == BehaviorDecision::Despawn {
-                slot.alive = false;
-                self.world.despawn(entity);
-            }
-
-            updates.push(BehaviorUpdate {
-                entity,
-                at: event.at,
-                decision,
-            });
-        }
-
-        BehaviorTrace { updates }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct BehaviorUpdate {
-    pub entity: EntityId,
+    pub agent: EntityId,
     pub at: SimTime,
+    pub event: DispatchedEvent,
     pub decision: BehaviorDecision,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct BehaviorTrace {
     updates: Vec<BehaviorUpdate>,
 }
@@ -146,22 +38,176 @@ impl BehaviorTrace {
     pub fn updates(&self) -> &[BehaviorUpdate] {
         &self.updates
     }
+
+    pub fn len(&self) -> usize {
+        self.updates.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.updates.is_empty()
+    }
+}
+
+pub trait AgentBehavior {
+    fn update(&mut self, context: BehaviorContext<'_>) -> BehaviorDecision;
+}
+
+pub struct ABMContext {
+    pub scheduler: Scheduler,
+    pub world: World,
+    pub components: ComponentRegistry,
+}
+
+impl ABMContext {
+    pub fn new(_seed: u64) -> Self {
+        Self {
+            scheduler: Scheduler::new(),
+            world: World::new(),
+            components: ComponentRegistry::new(),
+        }
+    }
+
+    pub fn spawn_agent(&mut self) -> EntityId {
+        self.world.spawn()
+    }
+
+    pub fn attach<T: 'static>(&mut self, entity: EntityId, component: T) -> bool {
+        self.components.insert(entity, component)
+    }
+
+    pub fn get<T: 'static>(&self, entity: EntityId) -> Option<&T> {
+        self.components.get(entity)
+    }
+
+    pub fn schedule_behaviour(&mut self, agent: EntityId, kind: u32, at: SimTime) -> EventId {
+        self.scheduler.schedule(ScheduleRequest {
+            at,
+            priority: 0,
+            entity: Some(agent),
+            kind: EventKind::Custom(kind),
+        })
+    }
+
+    pub fn schedule_behavior_update(&mut self, agent: EntityId, at: SimTime) -> EventId {
+        self.schedule_behaviour(agent, BEHAVIOR_UPDATE_EVENT_KIND, at)
+    }
+
+    pub fn step(&mut self) -> StepOutcome {
+        self.scheduler.step()
+    }
+
+    pub fn run_for(&mut self, max: u64) -> u64 {
+        let mut count = 0;
+        while count < max {
+            match self.scheduler.step() {
+                StepOutcome::Dispatched(_) => count += 1,
+                _ => break,
+            }
+        }
+        count
+    }
+}
+
+pub struct BehaviorSimulation<B> {
+    context: ABMContext,
+    behavior: B,
+    run_seed: u64,
+    streams: HashMap<EntityId, DeterministicStream>,
+}
+
+impl<B: AgentBehavior> BehaviorSimulation<B> {
+    pub fn new(seed: u64, behavior: B) -> Self {
+        Self {
+            context: ABMContext::new(seed),
+            behavior,
+            run_seed: seed,
+            streams: HashMap::new(),
+        }
+    }
+
+    pub fn context(&self) -> &ABMContext {
+        &self.context
+    }
+
+    pub fn context_mut(&mut self) -> &mut ABMContext {
+        &mut self.context
+    }
+
+    pub fn spawn_agent(&mut self) -> EntityId {
+        let agent = self.context.spawn_agent();
+        self.streams.insert(
+            agent,
+            DeterministicStream::from_entity(self.run_seed, agent),
+        );
+        agent
+    }
+
+    pub fn schedule_update(&mut self, agent: EntityId, at: SimTime) -> EventId {
+        self.context.schedule_behavior_update(agent, at)
+    }
+
+    pub fn run_for(&mut self, max_events: u64) -> BehaviorTrace {
+        let mut trace = BehaviorTrace::default();
+
+        for _ in 0..max_events {
+            match self.context.scheduler.step() {
+                StepOutcome::Dispatched(event) => {
+                    if let Some(agent) = event.entity {
+                        let stream = self.streams.entry(agent).or_insert_with(|| {
+                            DeterministicStream::from_entity(self.run_seed, agent)
+                        });
+                        let decision = self.behavior.update(BehaviorContext {
+                            agent,
+                            event: &event,
+                            rng: stream,
+                            world: &mut self.context.world,
+                        });
+                        if decision == BehaviorDecision::Despawn {
+                            self.context.world.despawn(agent);
+                            self.streams.remove(&agent);
+                        }
+                        trace.updates.push(BehaviorUpdate {
+                            agent,
+                            at: event.at,
+                            event,
+                            decision,
+                        });
+                    }
+                }
+                StepOutcome::Empty | StepOutcome::LimitReached => break,
+            }
+        }
+
+        trace
+    }
+
+    pub fn into_parts(self) -> (ABMContext, B) {
+        (self.context, self.behavior)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[derive(Debug, Default)]
-    struct CounterBehavior {
-        seen: Vec<u64>,
-        stop_after: usize,
+    #[derive(Default)]
+    struct CountingBehavior {
+        seen: Vec<(EntityId, u128, u32, u64)>,
+        despawn_after: Option<usize>,
     }
 
-    impl AgentBehavior for CounterBehavior {
+    impl AgentBehavior for CountingBehavior {
         fn update(&mut self, context: BehaviorContext<'_>) -> BehaviorDecision {
-            self.seen.push(context.rng.next_u64());
-            if self.seen.len() >= self.stop_after {
+            self.seen.push((
+                context.agent,
+                context.event.at.ticks(),
+                context.event.kind.code(),
+                context.rng.next_u64(),
+            ));
+            if self
+                .despawn_after
+                .is_some_and(|limit| self.seen.len() >= limit)
+            {
                 BehaviorDecision::Despawn
             } else {
                 BehaviorDecision::Continue
@@ -170,57 +216,97 @@ mod tests {
     }
 
     #[test]
-    fn behavior_updates_follow_scheduler_order() {
-        let mut sim = BehaviorSimulation::new(42);
-        let first = sim.spawn_agent(CounterBehavior {
-            seen: Vec::new(),
-            stop_after: 2,
-        });
-        let second = sim.spawn_agent(CounterBehavior {
-            seen: Vec::new(),
-            stop_after: 2,
-        });
-
-        sim.schedule_update(first, SimTime::from_ticks(10), 1);
-        sim.schedule_update(second, SimTime::from_ticks(5), 1);
-        sim.schedule_update(first, SimTime::from_ticks(10), 0);
-
-        let trace = sim.run_for(3);
-
-        assert_eq!(trace.updates().len(), 3);
-        assert_eq!(trace.updates()[0].entity, second);
-        assert_eq!(trace.updates()[1].entity, first);
-        assert_eq!(trace.updates()[2].entity, first);
-        assert_eq!(sim.alive_agents(), 1);
+    fn spawn_and_attach() {
+        let mut ctx = ABMContext::new(42);
+        let a = ctx.spawn_agent();
+        assert!(ctx.attach::<u32>(a, 100u32));
+        assert_eq!(ctx.get::<u32>(a), Some(&100));
     }
 
     #[test]
-    fn behavior_rng_replays_from_run_seed_and_entity() {
-        #[derive(Debug)]
-        struct ExpectedFirstRandom {
-            expected: u64,
-        }
+    fn schedule_and_step() {
+        let mut ctx = ABMContext::new(7);
+        let a = ctx.spawn_agent();
+        ctx.schedule_behaviour(a, 1, SimTime::from_ticks(10));
+        assert!(matches!(ctx.step(), StepOutcome::Dispatched(_)));
+    }
 
-        impl AgentBehavior for ExpectedFirstRandom {
-            fn update(&mut self, context: BehaviorContext<'_>) -> BehaviorDecision {
-                if context.rng.next_u64() == self.expected {
-                    BehaviorDecision::Despawn
-                } else {
-                    BehaviorDecision::Continue
-                }
-            }
-        }
+    #[test]
+    fn behavior_simulation_updates_in_scheduler_order() {
+        let mut sim = BehaviorSimulation::new(0, CountingBehavior::default());
+        let first = sim.spawn_agent();
+        let second = sim.spawn_agent();
+        sim.schedule_update(first, SimTime::from_ticks(10));
+        sim.schedule_update(second, SimTime::from_ticks(5));
 
-        let mut sim = BehaviorSimulation::new(7);
-        let entity = sim.spawn_agent(ExpectedFirstRandom { expected: 0 });
-        let mut replay = DeterministicStream::new(derive_entity_seed(7, entity));
-        let expected = replay.next_u64();
-        sim.agents[0].behavior.expected = expected;
+        let trace = sim.run_for(2);
+        let (_context, behavior) = sim.into_parts();
 
-        sim.schedule_update(entity, SimTime::from_ticks(1), 0);
+        assert_eq!(trace.len(), 2);
+        assert_eq!(trace.updates()[0].agent, second);
+        assert_eq!(trace.updates()[1].agent, first);
+        assert_eq!(
+            behavior
+                .seen
+                .iter()
+                .map(|(agent, ticks, kind, _random)| (*agent, *ticks, *kind))
+                .collect::<Vec<_>>(),
+            vec![
+                (second, 5, BEHAVIOR_UPDATE_EVENT_KIND),
+                (first, 10, BEHAVIOR_UPDATE_EVENT_KIND)
+            ]
+        );
+    }
+
+    #[test]
+    fn behavior_simulation_respects_event_budget() {
+        let mut sim = BehaviorSimulation::new(0, CountingBehavior::default());
+        let agent = sim.spawn_agent();
+        sim.schedule_update(agent, SimTime::from_ticks(1));
+        sim.schedule_update(agent, SimTime::from_ticks(2));
+
         let trace = sim.run_for(1);
+        let (context, behavior) = sim.into_parts();
+
+        assert_eq!(trace.len(), 1);
+        assert_eq!(behavior.seen.len(), 1);
+        assert_eq!(context.scheduler.pending_events(), 1);
+    }
+
+    #[test]
+    fn behavior_simulation_replays_entity_rng() {
+        let mut first = BehaviorSimulation::new(7, CountingBehavior::default());
+        let first_agent = first.spawn_agent();
+        first.schedule_update(first_agent, SimTime::from_ticks(1));
+        let _ = first.run_for(1);
+        let (_first_context, first_behavior) = first.into_parts();
+
+        let mut second = BehaviorSimulation::new(7, CountingBehavior::default());
+        let second_agent = second.spawn_agent();
+        second.schedule_update(second_agent, SimTime::from_ticks(1));
+        let _ = second.run_for(1);
+        let (_second_context, second_behavior) = second.into_parts();
+
+        assert_eq!(first_agent, second_agent);
+        assert_eq!(first_behavior.seen[0].3, second_behavior.seen[0].3);
+    }
+
+    #[test]
+    fn behavior_decision_can_despawn_agent() {
+        let mut sim = BehaviorSimulation::new(
+            0,
+            CountingBehavior {
+                seen: Vec::new(),
+                despawn_after: Some(1),
+            },
+        );
+        let agent = sim.spawn_agent();
+        sim.schedule_update(agent, SimTime::from_ticks(1));
+
+        let trace = sim.run_for(1);
+        let (context, _behavior) = sim.into_parts();
 
         assert_eq!(trace.updates()[0].decision, BehaviorDecision::Despawn);
-        assert_eq!(sim.alive_agents(), 0);
+        assert!(!context.world.is_alive(agent));
     }
 }

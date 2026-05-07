@@ -19,6 +19,10 @@ the runner can load a committed scenario, bind it to a committed seed manifest,
 execute the deterministic scheduler ordering smoke, compare the observed event
 order to the fixture expectation, and write replay evidence.
 
+The artifact-backed interpretation note for this smoke path is
+[`docs/validation/factory-bottleneck-v1-vvuq-note.md`](../validation/factory-bottleneck-v1-vvuq-note.md),
+and the local checker is `node scripts/validation/validate-vvuq-note.mjs`.
+
 It does not prove real-world model validity, queueing-theory accuracy, or
 platform-scale resumability. Those claims need reference data, larger
 replications, and interruption/restart evidence.

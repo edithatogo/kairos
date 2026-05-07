@@ -2,9 +2,10 @@
 
 Maturity: experimental.
 
-Track 05 provides the optional `kairo-ecs-viz` crate. The current R2 slice is
-headless-safe: it defines the visualization frame contract and smoke-testable
-summary rendering without linking GUI, windowing, WGPU, or Bevy dependencies.
+Track 05 provides the optional `kairo-ecs-viz` crate. The current review slice
+is headless-safe: it defines the visualization frame contract, formal fixture
+output, deterministic SVG previews, and smoke-testable summary rendering
+without linking GUI, windowing, WGPU, or Bevy dependencies.
 
 ## Headless contract
 
@@ -13,6 +14,15 @@ summary rendering without linking GUI, windowing, WGPU, or Bevy dependencies.
   positions so docs and tests can compare deterministic values.
 - `render_headless` validates the frame and returns a `FrameSummary` with entity
   count, event count, and bounds.
+- `render_headless_text` emits a deterministic line-oriented frame dump for
+  docs, smoke examples, and CI hosts without graphics hardware.
+- `render_fixture_json` emits the formal `kairo_ecs.visualization.frame.v1`
+  fixture envelope for conformance and documentation examples.
+- `render_headless_svg` emits a deterministic no-GUI SVG preview suitable for
+  static docs and CI artifacts.
+- `RenderFrame::from_world_snapshot_and_events` joins the deterministic
+  `WorldSnapshot` entity list with scheduler `DispatchedEvent` markers without
+  taking a dependency on the headless core runtime.
 - Default features are empty. `wgpu-renderer` and `bevy-renderer` are explicit
   opt-in feature names and currently report not-configured status instead of
   opening a window or requiring graphics hardware.

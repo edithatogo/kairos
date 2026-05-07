@@ -8,10 +8,12 @@ Before the first public release, re-check every registry manually and reserve na
 
 ## Preferred package names
 
+Validator compatibility note: The checked-in workspace currently ships `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, and `kairo-ecs-rng`.
+
 | Ecosystem | Preferred name | Notes / fallbacks |
 |---|---|---|
 | Rust root crate | `kairo-ecs` | Thin meta crate that re-exports stable user-facing Rust APIs. |
-| Rust internal crates | `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-rng`, `kairo-ecs-ffi`, `kairo-ecs-arrow`, `kairo-ecs-viz`, `kairo-ecs-experiment`, `kairo-ecs-conformance` | The checked-in workspace currently ships `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, and `kairo-ecs-rng`; the root meta crate remains reserved. |
+| Rust workspace crates | `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-rng`, `kairo-ecs-bench`, `kairo-ecs-des`, `kairo-ecs-abm`, `kairo-ecs-arrow`, `kairo-ecs-ffi`, `kairo-ecs-uniffi`, `kairo-ecs-diplomat`, `kairo-ecs-cli`, `kairo-ecs-gpu`, `kairo-ecs-webgpu`, `kairo-ecs-pdes`, `kairo-ecs-mpi`, `kairo-ecs-grpc`, `kairo-ecs-streaming`, `kairo-ecs-ml`, `kairo-ecs-fmi`, `kairo-ecs-debug`, `kairo-ecs-viz`, `kairo-ecs-wasm`, `kairo-ecs-cs-bridge` | The checked-in workspace currently ships the full Rust package inventory listed in `packaging/release-package-manifest.json`. `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, and `kairo-ecs-rng` are the release-relevant core quartet; `kairo-ecs-bench` is a release-supporting package; `kairo-ecs-pyo3` is a checked-in draft-only satellite outside the release-manifest inventory; the remaining Rust crates are draft-only until their own packaging gates exist. |
 | Python distribution | `kairo-ecs` | Import as `kairo_ecs`. |
 | Python import | `kairo_ecs` | Never require `import kairo` or `import kairoecs`. |
 | R package | `kairoECS` | Use camel-case R package name if accepted by the release channel. |
@@ -27,7 +29,7 @@ Before the first public release, re-check every registry manually and reserve na
 
 | Ecosystem | Manifest path | Declared package name | Current release posture |
 |---|---|---|---|
-| Rust | `Cargo.toml` + `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-state`, `crates/kairo-ecs-rng` | `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-rng` | Workspace crates are checked in; the root meta crate and FFI/Arrow layers remain planned. |
+| Rust | `Cargo.toml` + `crates/*/Cargo.toml` (inventory mirrored in `packaging/release-package-manifest.json`) | `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-rng`, `kairo-ecs-bench`, `kairo-ecs-des`, `kairo-ecs-abm`, `kairo-ecs-arrow`, `kairo-ecs-ffi`, `kairo-ecs-uniffi`, `kairo-ecs-diplomat`, `kairo-ecs-cli`, `kairo-ecs-gpu`, `kairo-ecs-webgpu`, `kairo-ecs-pdes`, `kairo-ecs-mpi`, `kairo-ecs-grpc`, `kairo-ecs-streaming`, `kairo-ecs-ml`, `kairo-ecs-fmi`, `kairo-ecs-debug`, `kairo-ecs-viz`, `kairo-ecs-wasm`, `kairo-ecs-cs-bridge` | Workspace crates are checked in; the core quartet remains the first release-relevant wave, `kairo-ecs-bench` is release-supporting, and `kairo-ecs-pyo3` remains a draft-only checked-in satellite outside the release-manifest inventory. |
 | Python | `bindings/python/pyproject.toml` | `kairo-ecs` / `kairo_ecs` | Package skeleton is checked in and ready for wheel/sdist dry-runs. |
 | R | `bindings/r/DESCRIPTION` | `kairoECS` | Package skeleton is checked in and ready for `R CMD build` / `R CMD check`. |
 | Julia | `bindings/julia/Project.toml` | `KairoECS` | Package skeleton is checked in and ready for `Pkg.test`. |
@@ -50,7 +52,7 @@ Before the first public release, re-check every registry manually and reserve na
 
 The first release wave should stay narrow and non-destructive:
 
-1. Rust root crate plus C ABI preview.
+1. Rust workspace dry-run on the checked-in package inventory, starting with the core quartet and then the remaining workspace crates in manifest order.
 2. Python preview against the Rust/C ABI layer.
 3. TypeScript/Wasm preview if the C ABI and artifact layout are stable enough.
 4. R and Julia preview packages using the shared artifact and conformance story.
@@ -67,7 +69,7 @@ The governance/control wave follows the package wave:
 
 | Ecosystem | First artifact | First validation | First registry target |
 |---|---|---|---|
-| Rust | checked-in workspace crates (`kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-rng`) | `cargo check --workspace`, `cargo test --workspace`, `cargo package --allow-dirty --manifest-path crates/kairo-ecs-core/Cargo.toml`, `cargo publish --dry-run` | crates.io draft readiness, then GitHub Releases |
+| Rust | checked-in workspace crates (`kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-rng`, `kairo-ecs-bench`, `kairo-ecs-des`, `kairo-ecs-abm`, `kairo-ecs-arrow`, `kairo-ecs-ffi`, `kairo-ecs-uniffi`, `kairo-ecs-diplomat`, `kairo-ecs-cli`, `kairo-ecs-gpu`, `kairo-ecs-webgpu`, `kairo-ecs-pdes`, `kairo-ecs-mpi`, `kairo-ecs-grpc`, `kairo-ecs-streaming`, `kairo-ecs-ml`, `kairo-ecs-fmi`, `kairo-ecs-debug`, `kairo-ecs-viz`, `kairo-ecs-wasm`, `kairo-ecs-cs-bridge`) plus draft-only checked-in satellites such as `kairo-ecs-pyo3` | `cargo metadata --no-deps --format-version 1`; `cargo package --allow-dirty --workspace`; `cargo publish --dry-run --workspace` | crates.io draft readiness, then GitHub Releases |
 | Python | `kairo-ecs` wheel/sdist | `python -m build`, `twine check dist/*`, `pytest`, `python -c "import kairo_ecs; print(kairo_ecs.self_check())"` | TestPyPI first, PyPI later |
 | R | `kairoECS` package skeleton | `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"`, `R CMD build .`, `R CMD check --no-manual .` | GitHub release or R-universe first |
 | Julia | `KairoECS.jl` package skeleton | `julia --project -e "using Pkg; Pkg.test()"`, `julia --project -e "using Pkg; Pkg.build()"` | GitHub/dev registry first |
@@ -138,6 +140,7 @@ Release using semantic Git tags. Keep cgo instructions explicit.
 
 - Reserve names before the first production publish.
 - Record the first registry target and the fallback target for each ecosystem.
+- Keep the release-package-manifest inventory and the package matrix in sync before any dry-run or public-write claim.
 - Keep dry-run commands in the release notes and CI plan.
 - Record minimum runtime versions in the package catalog.
 - Keep GitHub Releases draft-only until the release gates are satisfied.

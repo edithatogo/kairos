@@ -12,7 +12,7 @@ on:
         default: 'true'
 
 permissions:
-  contents: write
+  contents: read
   id-token: write
 
 jobs:
@@ -37,7 +37,13 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - name: Validate release checklist
+        env:
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: |
+          if [ "${DRY_RUN}" != "true" ]; then
+            echo "release workflow is dry-run only"
+            exit 1
+          fi
           test -f Cargo.toml
           test -f docs/release/release-checklist.md
           test -f docs/release/supply-chain-verification.md
@@ -48,7 +54,9 @@ jobs:
           test -f bindings/csharp/Kairo.ECS.sln
           test -f bindings/go/go.mod
           cargo metadata --no-deps --format-version 1 >/dev/null
+          python packaging/scripts/build_release_manifest.py --check
           cargo test --workspace --all-features --no-run
+          cargo package --allow-dirty --workspace
           cargo publish --dry-run --workspace
       - name: Build release manifest
         env:

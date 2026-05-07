@@ -1,5 +1,5 @@
 schema_version: 1
-last_verified: 2026-05-05
+last_verified: 2026-05-07
 status_vocabulary:
   - Planned
   - Spec Approved
@@ -14,17 +14,17 @@ composite_gates:
     description: "FFI Release Candidate ready — all binding tracks (06-11) can begin implementation"
     required:
       - id: "02"
-        status: "Spec Approved"
+        status: Spec Approved
       - id: "04"
-        status: "Spec Approved"
+        status: Spec Approved
       - id: "12"
-        status: "In Progress"
+        status: In Progress
       - id: "25"
-        status: "Spec Approved"
+        status: Spec Approved
 tracks:
   - id: 00
     name: Project Foundation, Governance & Naming
-    status: Spec Approved
+    status: Done
     owner: foundation-agent
     depends_on: []
     owned_paths:
@@ -53,7 +53,7 @@ tracks:
       - deterministic-ordering-fixture
   - id: 02
     name: The Bridge - kairo-ecs-ffi, UniFFI and Diplomat
-    status: Planned
+    status: In Progress
     owner: ffi-agent + uniffi-agent + diplomat-agent
     depends_on: ["01", "12"]
     owned_paths:
@@ -67,7 +67,7 @@ tracks:
       - header-diff
   - id: 03
     name: The Flow - DES Trajectory API and ABM Behavior API
-    status: Planned
+    status: In Progress
     owner: des-api-agent + abm-api-agent
     depends_on: ["01", "26"]
     owned_paths:
@@ -91,7 +91,7 @@ tracks:
       - arrow-roundtrip
   - id: 05
     name: The Window - kairo-ecs-viz
-    status: Planned
+    status: In Review
     owner: viz-agent
     depends_on: ["01"]
     owned_paths:
@@ -103,7 +103,7 @@ tracks:
       - headless-core-check
   - id: 06
     name: Python Binding 3.10-3.14
-    status: Planned
+    status: In Progress
     owner: python-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -116,7 +116,7 @@ tracks:
       - arrow-roundtrip
   - id: 07
     name: R Binding
-    status: Planned
+    status: In Progress
     owner: r-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -138,7 +138,7 @@ tracks:
       - arrow-roundtrip
   - id: 09
     name: TypeScript/Wasm Binding
-    status: Planned
+    status: In Progress
     owner: typescript-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -151,19 +151,19 @@ tracks:
       - browser-smoke
   - id: 10
     name: C# Binding .NET 10-11
-    status: Planned
+    status: In Review
     owner: csharp-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
       - bindings/csharp/
-      - packaging/nuget/
     required_gates:
       - dotnet-test-net10
+      - dotnet-build-net10
       - dotnet-test-net11-preview
       - nuget-pack
   - id: 11
     name: Go Binding
-    status: Planned
+    status: In Progress
     owner: go-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:

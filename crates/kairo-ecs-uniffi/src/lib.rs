@@ -88,7 +88,7 @@ pub fn status_to_result(status: KairoEcsStatusCode) -> Result<(), String> {
 }
 
 pub fn last_error() -> String {
-    "kairo ecs ffi operation failed".to_string()
+    kairo_ecs_last_error_string()
 }
 
 #[cfg(test)]

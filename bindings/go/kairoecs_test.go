@@ -23,18 +23,10 @@ func TestSchedulerOrderingIsDeterministic(t *testing.T) {
 	engine := NewEngine()
 	defer engine.Close()
 
-	if _, err := engine.ScheduleAt(10, 0, "late"); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := engine.ScheduleAt(5, 10, "same-time-lower-priority"); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := engine.ScheduleAt(5, -1, "same-time-higher-priority"); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := engine.ScheduleAt(5, 10, "same-time-lower-priority-sequence"); err != nil {
-		t.Fatal(err)
-	}
+	mustSchedule(t, engine, 10, 0, "late")
+	mustSchedule(t, engine, 5, 10, "same-time-lower-priority")
+	mustSchedule(t, engine, 5, -1, "same-time-higher-priority")
+	mustSchedule(t, engine, 5, 10, "same-time-lower-priority-sequence")
 
 	got, err := engine.RunFor(4)
 	if err != nil {
@@ -56,13 +48,8 @@ func TestCancellationSkipsEvent(t *testing.T) {
 	engine := NewEngine()
 	defer engine.Close()
 
-	cancelled, err := engine.ScheduleAt(1, 0, "cancelled")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := engine.ScheduleAt(2, 0, "kept"); err != nil {
-		t.Fatal(err)
-	}
+	cancelled := mustSchedule(t, engine, 1, 0, "cancelled")
+	mustSchedule(t, engine, 2, 0, "kept")
 	if err := engine.CancelEvent(cancelled); err != nil {
 		t.Fatal(err)
 	}
@@ -80,14 +67,8 @@ func TestCancellationRejectsUnknownDuplicateAndDispatchedEvent(t *testing.T) {
 	engine := NewEngine()
 	defer engine.Close()
 
-	dispatched, err := engine.ScheduleAt(1, 0, "dispatched")
-	if err != nil {
-		t.Fatal(err)
-	}
-	cancelled, err := engine.ScheduleAt(2, 0, "cancelled")
-	if err != nil {
-		t.Fatal(err)
-	}
+	dispatched := mustSchedule(t, engine, 1, 0, "dispatched")
+	cancelled := mustSchedule(t, engine, 2, 0, "cancelled")
 
 	if err := engine.CancelEvent(EventID(999)); !errors.Is(err, ErrEventNotFound) {
 		t.Fatalf("unexpected unknown cancellation error: %v", err)
@@ -98,11 +79,42 @@ func TestCancellationRejectsUnknownDuplicateAndDispatchedEvent(t *testing.T) {
 	if err := engine.CancelEvent(cancelled); !errors.Is(err, ErrEventNotFound) {
 		t.Fatalf("unexpected duplicate cancellation error: %v", err)
 	}
-	if _, ok, err := engine.Step(); err != nil || !ok {
-		t.Fatalf("expected dispatched event, ok=%v err=%v", ok, err)
+	if evt, ok, err := engine.Step(); err != nil || !ok || evt.ID != dispatched {
+		t.Fatalf("expected dispatched event %d, got evt=%+v ok=%v err=%v", dispatched, evt, ok, err)
 	}
 	if err := engine.CancelEvent(dispatched); !errors.Is(err, ErrEventNotFound) {
 		t.Fatalf("unexpected dispatched cancellation error: %v", err)
+	}
+}
+
+func TestStatsTrackScheduledCancelledDispatchedAndPending(t *testing.T) {
+	engine := NewEngine()
+	defer engine.Close()
+
+	mustSchedule(t, engine, 1, 0, "first")
+	cancelled := mustSchedule(t, engine, 2, 0, "cancelled")
+
+	stats, err := engine.Stats()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.Scheduled != 2 || stats.Pending != 2 || stats.Dispatched != 0 || stats.Cancelled != 0 || stats.Now != 0 {
+		t.Fatalf("unexpected initial stats: %+v", stats)
+	}
+
+	if err := engine.CancelEvent(cancelled); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok, err := engine.Step(); err != nil || !ok {
+		t.Fatalf("expected dispatched event, ok=%v err=%v", ok, err)
+	}
+
+	stats, err = engine.Stats()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.Scheduled != 2 || stats.Pending != 0 || stats.Dispatched != 1 || stats.Cancelled != 1 || stats.Now != 1 {
+		t.Fatalf("unexpected final stats: %+v", stats)
 	}
 }
 
@@ -126,6 +138,15 @@ func TestCloseIsExplicitAndIdempotent(t *testing.T) {
 	if _, err := engine.ScheduleAt(1, 0, "closed"); !errors.Is(err, ErrClosed) {
 		t.Fatalf("unexpected closed engine error: %v", err)
 	}
+}
+
+func mustSchedule(t *testing.T, engine *Engine, timeTicks int64, priority int32, kind string) EventID {
+	t.Helper()
+	id, err := engine.ScheduleAt(timeTicks, priority, kind)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return id
 }
 
 func eventKinds(events []Event) []string {

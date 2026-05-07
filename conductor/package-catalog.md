@@ -13,9 +13,11 @@ This catalog records likely dependencies, tools, package surfaces, and release t
 
 ## Current checked-in package surfaces
 
+Validator compatibility note: The workspace is real; the root meta crate and bridge crates remain future track outputs.
+
 | Ecosystem | Current manifest | Current package name | Notes |
 |---|---|---|---|
-| Rust | `Cargo.toml` + `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-state`, `crates/kairo-ecs-rng` | `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-rng` | The workspace is real; the root meta crate and bridge crates remain future track outputs. |
+| Rust | `Cargo.toml` + `crates/*/Cargo.toml` (inventory mirrored in `packaging/release-package-manifest.json`) | `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-rng`, `kairo-ecs-bench`, `kairo-ecs-des`, `kairo-ecs-abm`, `kairo-ecs-arrow`, `kairo-ecs-ffi`, `kairo-ecs-uniffi`, `kairo-ecs-diplomat`, `kairo-ecs-cli`, `kairo-ecs-gpu`, `kairo-ecs-webgpu`, `kairo-ecs-pdes`, `kairo-ecs-mpi`, `kairo-ecs-grpc`, `kairo-ecs-streaming`, `kairo-ecs-ml`, `kairo-ecs-fmi`, `kairo-ecs-debug`, `kairo-ecs-viz`, `kairo-ecs-wasm`, `kairo-ecs-cs-bridge` | The workspace is real; the core quartet is the release-relevant first wave, `kairo-ecs-bench` is release-supporting, and draft-only checked-in satellites such as `kairo-ecs-pyo3` stay outside the manifest-backed release inventory until their own packaging gates exist. |
 | Python | `bindings/python/pyproject.toml` | `kairo-ecs` / `kairo_ecs` | setuptools-backed package skeleton with `pytest` support and import smoke tests. |
 | R | `bindings/r/DESCRIPTION` | `kairoECS` | CRAN-style package skeleton with `testthat`, `NAMESPACE`, and package smoke tests. |
 | Julia | `bindings/julia/Project.toml` | `KairoECS` | Package skeleton with `Arrow` and `JSON3` dependencies declared. |
@@ -27,21 +29,14 @@ This catalog records likely dependencies, tools, package surfaces, and release t
 
 | Crate | Purpose | Dependency posture |
 |---|---|---|
-| `kairo-ecs-types` | Shared identifiers, time, errors, DTOs | Minimal, no host-language dependencies |
-| `kairo-ecs-core` | Scheduler, virtual time, event queue, run loop | Minimal, deterministic, no FFI |
-| `kairo-ecs-state` | Entity/component storage | Minimal SoA/sparse-set design; avoid game-engine dependency in core |
-| `kairo-ecs-rng` | Deterministic RNG streams and seed manifests | `rand`, `rand_chacha` or PCG-compatible generator, `rand_distr` |
-| `kairo-ecs-des` | Resources, queues, trajectories | Depends on core/types/ecs |
-| `kairo-ecs-abm` | Agent behavior semantics | Depends on core/types/ecs/rng |
-| `kairo-ecs-arrow` | Arrow telemetry, IPC, Parquet optional | `arrow-*`, `parquet` optional |
-| `kairo-ecs-ffi` | Stable C ABI, handles, panic containment | `libc`, `cbindgen`, custom ownership rules |
-| `kairo-ecs-uniffi` | UniFFI facade where viable | `uniffi`, generated bindings |
-| `kairo-ecs-diplomat` | Diplomat facade where viable | `diplomat` tooling |
-| `kairo-ecs-experiment` | Scenario sweeps, replications, manifests | `serde`, `toml`, `rayon` optional, Arrow output |
-| `kairo-ecs-viz` | Optional WGPU/Bevy visualization | optional; never a dependency of core |
-| `kairo-ecs-cli` | Developer CLI and examples | `clap`, `tracing-subscriber`, `serde_json` acceptable |
+| `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-rng` | Shared identifiers, time, errors, DTOs | Minimal, no host-language dependencies |
+| `kairo-ecs-bench` | Canonical benchmark metadata and smoke helpers | Release-supporting only; keep dependency-light |
+| `kairo-ecs-des`, `kairo-ecs-abm`, `kairo-ecs-pdes`, `kairo-ecs-streaming`, `kairo-ecs-ml`, `kairo-ecs-fmi` | Simulation extensions and scenario runners | `serde`, `toml`, `rayon` optional, `indicatif`, Arrow output where relevant | Avoid hidden global state; keep release promises staged |
+| `kairo-ecs-arrow`, `kairo-ecs-grpc`, `kairo-ecs-mpi` | Telemetry and transport surfaces | `arrow-*`, `parquet` optional, transport-specific runtime crates | Version schemas explicitly; keep transport claims separate from core |
+| `kairo-ecs-ffi`, `kairo-ecs-uniffi`, `kairo-ecs-diplomat`, `kairo-ecs-pyo3`, `kairo-ecs-wasm`, `kairo-ecs-cs-bridge` | Stable ABI and language bridge surfaces | `libc`, `cbindgen`, `uniffi`, `diplomat`, `wasm-bindgen`, native interop helpers | Panic containment mandatory; `kairo-ecs-pyo3` is a draft-only satellite until its release-manifest slot is approved; isolate bridge-only dependencies |
+| `kairo-ecs-cli`, `kairo-ecs-debug`, `kairo-ecs-viz`, `kairo-ecs-gpu`, `kairo-ecs-webgpu` | CLI, diagnostics, and optional visualization surfaces | `clap`, `tracing-subscriber`, `serde_json`, `wgpu`, `bevy` or a lightweight renderer | Useful for tests and demos; optional and never required by headless core |
 
-The checked-in workspace currently contains `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, and `kairo-ecs-rng`. The root meta crate and the FFI/Arrow/viz/experiment/conformance crates are still planned and should stay out of release promises until they exist. Release promises should only mention the checked-in Rust workspace crates plus any binding package skeletons that already exist under `bindings/`.
+The checked-in workspace currently contains the 25 Rust crates enumerated in `packaging/release-package-manifest.json`. The root meta crate remains reserved, but `kairo-ecs-cs-bridge` and the other checked-in satellites are real package surfaces and should be treated as such in the dry-run inventory. Release promises should only mention the checked-in Rust workspace crates plus any binding package skeletons that already exist under `bindings/`.
 
 ## Control tracks
 
@@ -206,7 +201,7 @@ The following are the first non-destructive steps each ecosystem should support 
 
 | Ecosystem | Starter work | Dry-run or local check | Notes |
 |---|---|---|---|
-| Rust | Keep the workspace crates checked in and gate any new root/bridge crate on naming approval | `cargo check --workspace`, `cargo test --workspace`, `cargo package --allow-dirty --manifest-path crates/kairo-ecs-core/Cargo.toml` | Keep `unsafe` isolated and verify crate naming early. |
+| Rust | Keep the workspace crates checked in and gate any new root/bridge crate on naming approval | `cargo metadata --no-deps --format-version 1`, `cargo package --allow-dirty --workspace`, `cargo publish --dry-run --workspace` | Keep `unsafe` isolated, verify crate naming early, and follow the manifest-backed dry-run order. |
 | Python | Package the checked-in `bindings/python/pyproject.toml` surface | `python -m build`, `twine check dist/*`, `pytest`, `python -c "import kairo_ecs; print(kairo_ecs.self_check())"` | Prefer a single backend path and keep Python 3.10-3.14 visible. |
 | R | Package the checked-in `bindings/r` surface | `R CMD build .`, `R CMD check --no-manual .`, `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"` | Start with GitHub/R-universe style distribution and a CRAN-style package check. |
 | Julia | Package the checked-in `bindings/julia` surface | `julia --project -e "using Pkg; Pkg.test()"`, `julia --project -e "using Pkg; Pkg.build()"` | Keep General Registry and JLL as later-stage work. |

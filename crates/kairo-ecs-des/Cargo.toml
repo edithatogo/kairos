@@ -1,14 +1,13 @@
 [package]
 name = "kairo-ecs-des"
-version = "0.0.0"
-edition.workspace = true
+version = "0.1.0"
+edition = "2021"
 license.workspace = true
-repository.workspace = true
-rust-version.workspace = true
+repository = "https://github.com/edithatogo/kairos"
+description = "Discrete Event Simulation trajectory API for KairoECS"
 
 [dependencies]
-kairo-ecs-core = { path = "../kairo-ecs-core" }
 kairo-ecs-types = { path = "../kairo-ecs-types" }
-
-[lib]
-path = "src/lib.rs"
+kairo-ecs-core = { path = "../kairo-ecs-core" }
+kairo-ecs-state = { path = "../kairo-ecs-state" }
+kairo-ecs-rng = { path = "../kairo-ecs-rng" }

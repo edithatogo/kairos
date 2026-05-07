@@ -2,15 +2,21 @@ module KairoECS
 
 export EventLogRecord,
     arrow_event_log_schema,
+    binding_fixture_ids,
+    conformance_report,
+    ConformanceFixture,
+    fixture_status,
     ffi_status,
     is_ffi_configured,
     ordered_events,
+    ready_fixture_ids,
     self_check,
     version_string
 
 const VERSION_STRING = "0.1.0"
 const EVENT_LOG_STREAM = "kairo_ecs.event_log.v1"
 const EVENT_LOG_SCHEMA_VERSION = UInt16(1)
+const JULIA_BINDING_TRACK_ID = "08"
 
 version_string() = VERSION_STRING
 
@@ -31,6 +37,21 @@ Base.@kwdef struct EventLogRecord
     event_kind::String
     status::String = "dispatched"
     payload_ref::Union{Nothing,String} = nothing
+end
+
+"""
+    ConformanceFixture(; id, status, kind, consumers, source = nothing, assertions = String[])
+
+Pure-Julia representation of a Track 12 fixture manifest entry. The binding
+uses this as a fixture bridge until Track 12 wires a shared runner.
+"""
+Base.@kwdef struct ConformanceFixture
+    id::String
+    status::String
+    kind::String
+    consumers::Vector{String}
+    source::Union{Nothing,String} = nothing
+    assertions::Vector{String} = String[]
 end
 
 const _EVENT_LOG_FIELDS = (
@@ -74,6 +95,100 @@ function arrow_event_log_schema()
         stream = EVENT_LOG_STREAM,
         schema_version = EVENT_LOG_SCHEMA_VERSION,
         fields = collect(_EVENT_LOG_FIELDS),
+    )
+end
+
+function _string_vector(values)
+    return String[string(value) for value in values]
+end
+
+function _fixture_from_record(record::ConformanceFixture)
+    return record
+end
+
+function _fixture_from_record(record)
+    source = getproperty(record, :source)
+    return ConformanceFixture(
+        id = string(getproperty(record, :id)),
+        status = string(getproperty(record, :status)),
+        kind = string(getproperty(record, :kind)),
+        consumers = _string_vector(getproperty(record, :consumers)),
+        source = source === nothing ? nothing : string(source),
+        assertions = _string_vector(getproperty(record, :assertions)),
+    )
+end
+
+function _fixture_from_record(record::AbstractDict)
+    source = get(record, "source", get(record, :source, nothing))
+    return ConformanceFixture(
+        id = string(get(record, "id", get(record, :id, ""))),
+        status = string(get(record, "status", get(record, :status, ""))),
+        kind = string(get(record, "kind", get(record, :kind, ""))),
+        consumers = _string_vector(get(record, "consumers", get(record, :consumers, String[]))),
+        source = source === nothing ? nothing : string(source),
+        assertions = _string_vector(get(record, "assertions", get(record, :assertions, String[]))),
+    )
+end
+
+function _fixtures(records)
+    return [_fixture_from_record(record) for record in records]
+end
+
+"""
+    binding_fixture_ids(records; track_id = "08")
+
+Return fixture ids that list the Julia binding track as a consumer.
+"""
+function binding_fixture_ids(records; track_id = JULIA_BINDING_TRACK_ID)
+    return [
+        fixture.id for fixture in _fixtures(records) if string(track_id) in fixture.consumers
+    ]
+end
+
+"""
+    ready_fixture_ids(records; track_id = "08")
+
+Return ready fixture ids consumed by the Julia binding track.
+"""
+function ready_fixture_ids(records; track_id = JULIA_BINDING_TRACK_ID)
+    return [
+        fixture.id for fixture in _fixtures(records) if
+        string(track_id) in fixture.consumers && fixture.status == "ready"
+    ]
+end
+
+"""
+    fixture_status(records, fixture_id)
+
+Return the status for one fixture id, or `nothing` when the id is absent.
+"""
+function fixture_status(records, fixture_id)
+    wanted = string(fixture_id)
+    for fixture in _fixtures(records)
+        fixture.id == wanted && return fixture.status
+    end
+    return nothing
+end
+
+"""
+    conformance_report(records; track_id = "08")
+
+Summarise fixture readiness for the Julia binding without running native FFI or
+claiming planned fixtures are implemented.
+"""
+function conformance_report(records; track_id = JULIA_BINDING_TRACK_ID)
+    consumed = [
+        fixture for fixture in _fixtures(records) if string(track_id) in fixture.consumers
+    ]
+    ready = [fixture.id for fixture in consumed if fixture.status == "ready"]
+    planned = [fixture.id for fixture in consumed if fixture.status != "ready"]
+    return (
+        track_id = string(track_id),
+        consumed = [fixture.id for fixture in consumed],
+        ready = ready,
+        planned = planned,
+        ready_count = length(ready),
+        planned_count = length(planned),
     )
 end
 

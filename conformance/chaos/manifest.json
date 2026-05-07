@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "harness": "metadata-only",
+  "requires_native_link_tests": false,
+  "experiments": [
+    {
+      "id": "event_corruption_negative_ticks_v1",
+      "fault_type": "event_corruption",
+      "input": {
+        "event": { "at_ticks": -1, "priority": 0, "kind": 1 }
+      },
+      "expected_error": "KAIRO_ECS_ERR_INVALID_ARGUMENT",
+      "resilience": "reject_without_panic"
+    },
+    {
+      "id": "entity_exhaustion_handle_space_v1",
+      "fault_type": "entity_exhaustion",
+      "input": {
+        "max_entity_index": 4294967295,
+        "requested_entities": 4294967296
+      },
+      "expected_error": "KAIRO_ECS_ERR_ENTITY_EXHAUSTED",
+      "resilience": "clear_error_no_wraparound"
+    },
+    {
+      "id": "telemetry_loss_arrow_truncation_v1",
+      "fault_type": "telemetry_loss",
+      "input": {
+        "stream": "arrow_event_log_v1",
+        "truncate_after_bytes": 32
+      },
+      "expected_error": "KAIRO_ECS_ERR_TELEMETRY_TRUNCATED",
+      "resilience": "partial_output_has_error_marker"
+    },
+    {
+      "id": "ordering_inversion_reverse_time_v1",
+      "fault_type": "ordering_inversion",
+      "input": {
+        "events": [
+          { "at_ticks": 10, "priority": 0, "sequence": 2, "kind": 3 },
+          { "at_ticks": 5, "priority": 0, "sequence": 1, "kind": 2 },
+          { "at_ticks": 1, "priority": 0, "sequence": 0, "kind": 1 }
+        ]
+      },
+      "expected_kind_order": [1, 2, 3],
+      "resilience": "stable_sort_no_ordering_panic"
+    }
+  ]
+}

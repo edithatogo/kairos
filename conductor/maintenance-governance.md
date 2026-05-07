@@ -207,7 +207,7 @@ Every PR that changes a public surface MUST update CHANGELOG.md:
 - `schemas/arrow/` — Arrow schema changes
 - `conformance/fixtures/` — fixture changes that affect cross-language parity
 
-GitHub Actions CI check: if a PR touches any of the above paths and does NOT modify CHANGELOG.md, the check fails with instructions.
+GitHub Actions CI check in `.github/workflows/changelog-policy.yml`: if a PR touches any of the above paths and does NOT modify CHANGELOG.md, the check fails with instructions.
 
 Exceptions: typo fixes, CI-only changes, conductor-only changes (tracked by conductor infrastructure, not user-facing).
 

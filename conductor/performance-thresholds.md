@@ -9,6 +9,10 @@ aliases. Baseline values remain relative until Track 12 publishes native
 Criterion outputs; the local regression validator still checks that every
 canonical benchmark has exactly one threshold row.
 
+Energy-efficiency reporting is not yet part of the threshold set. Track 31
+currently governs wall-clock regression thresholds only; joules-per-benchmark
+and SCI-style metrics remain future metadata work.
+
 ## Benchmarks
 
 | Benchmark | Measure | Owner | Baseline | Regression threshold | Method | Gate | Metadata source |

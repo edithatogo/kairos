@@ -10,6 +10,7 @@
 - [ ] Deprecation register reviewed; removals have prior notice or ADR.
 - [ ] Migration guide written if needed.
 - [ ] R2 package inventory reviewed: `packaging/release-package-manifest.json`.
+- [ ] Dry-run path confirmed: `python packaging/scripts/build_release_manifest.py --check` then `python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run`.
 - [ ] Release artifact manifest path agreed: `dist/release-artifact-manifest.json`.
 - [ ] Checksum manifest path agreed: `dist/SHA256SUMS`.
 
@@ -43,6 +44,7 @@
 - [ ] Local manifest/checksum builder passed: `python packaging/scripts/build_release_manifest.py --check`.
 - [ ] `dist/release-artifact-manifest.json` generated and reviewed.
 - [ ] `dist/SHA256SUMS` generated and reviewed.
+- [ ] Dry-run output reviewed for package inventory, registry modes, and checksum coverage.
 - [ ] SBOM generated.
 - [ ] Provenance or attestation generated.
 - [ ] GitHub Release draft reviewed.
@@ -52,6 +54,7 @@
 - [ ] Any registry that remains dry-run-only has an explicit blocker note.
 - [ ] Release artifacts match the manifest and checksum entries.
 - [ ] Release evidence copied into `docs/release/maintenance-handoff.md` or linked from it.
+- [ ] Any remaining publish blockers are recorded in the maintenance handoff before leaving dry-run mode.
 
 ## Publish
 

@@ -21,8 +21,10 @@ def test_scheduler_dispatches_by_time_priority_then_sequence() -> None:
     assert kinds == [1, 2, 4, 3]
     assert scheduler.stats() == {
         "current_time_ticks": 10,
+        "scheduled_events": 4,
         "pending_events": 0,
         "dispatched_events": 4,
+        "cancelled_events": 0,
     }
 
 
@@ -66,7 +68,36 @@ def test_run_until_reports_limit_when_future_event_remains() -> None:
 
     outcome, event = scheduler.run_until(1)
 
-    assert outcome is kairo_ecs.StepOutcome.LIMIT_REACHED
+    assert outcome is kairo_ecs.StepOutcome.DISPATCHED
     assert event is not None
     assert event.kind == 1
     assert scheduler.pending_events == 1
+
+
+def test_scheduler_stats_track_scheduled_cancelled_and_dispatched() -> None:
+    scheduler = kairo_ecs.Scheduler()
+    first = scheduler.schedule_at(1, kind=1)
+    second = scheduler.schedule_at(2, kind=2)
+
+    assert scheduler.stats() == {
+        "current_time_ticks": 0,
+        "scheduled_events": 2,
+        "pending_events": 2,
+        "dispatched_events": 0,
+        "cancelled_events": 0,
+    }
+
+    assert scheduler.cancel(second) is True
+    assert scheduler.cancel(second) is False
+    outcome, event = scheduler.step()
+
+    assert outcome is kairo_ecs.StepOutcome.DISPATCHED
+    assert event is not None
+    assert event.id == first
+    assert scheduler.stats() == {
+        "current_time_ticks": 1,
+        "scheduled_events": 2,
+        "pending_events": 0,
+        "dispatched_events": 1,
+        "cancelled_events": 1,
+    }

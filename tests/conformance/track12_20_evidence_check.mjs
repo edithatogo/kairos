@@ -10,8 +10,10 @@ const tracks = [
     path: 'conductor/tracks/12-conformance-testing-benchmarks',
     evidence: [
       'conformance/fixtures/manifest.json',
+      'conformance/chaos/manifest.json',
       'tests/conformance/conformance-check.mjs',
       'tests/conformance/runner.mjs',
+      'tests/conformance/chaos-check.mjs',
       'benches/benchmark-plan.md',
       'benches/benchmark_smoke.py',
       'benches/benchmark_reproducibility.py',

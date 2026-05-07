@@ -61,8 +61,14 @@ struct EngineState {
     stats: KairoEcsStats,
     _run_seed: u64,
     next_event_handle: u64,
-    event_handles: HashMap<u64, EventId>,
+    event_handles: HashMap<u64, ScheduledEventHandle>,
     event_handles_by_id: HashMap<EventId, u64>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct ScheduledEventHandle {
+    id: EventId,
+    at_ticks: u64,
 }
 
 impl EngineState {
@@ -70,13 +76,19 @@ impl EngineState {
         *self = Self::default();
     }
 
-    fn record_event(&mut self, event_id: EventId) -> u64 {
+    fn record_event(&mut self, event_id: EventId, at_ticks: u64) -> u64 {
         let handle = self
             .next_event_handle
             .checked_add(1)
             .unwrap_or(self.next_event_handle.wrapping_add(1));
         self.next_event_handle = handle;
-        self.event_handles.insert(handle, event_id);
+        self.event_handles.insert(
+            handle,
+            ScheduledEventHandle {
+                id: event_id,
+                at_ticks,
+            },
+        );
         self.event_handles_by_id.insert(event_id, handle);
         handle
     }
@@ -96,7 +108,7 @@ impl EngineState {
         });
         self.stats.scheduled_events += 1;
         self.stats.pending_events = self.scheduler.pending_events() as u64;
-        self.record_event(event_id)
+        self.record_event(event_id, at_ticks)
     }
 
     fn schedule_after(&mut self, after_ticks: u64, priority: i32, kind: u32) -> Option<u64> {
@@ -126,43 +138,68 @@ impl EngineState {
     }
 
     fn cancel(&mut self, event_handle: u64) -> Result<bool, KairoEcsStatusCode> {
-        let event = match self.event_handles.remove(&event_handle) {
-            Some(event) => event,
+        let scheduled = match self.event_handles.remove(&event_handle) {
+            Some(scheduled) => scheduled,
             None => {
                 set_last_error("event handle not found");
                 return Err(KairoEcsStatusCode::KAIRO_ECS_ERR_NOT_FOUND);
             }
         };
 
-        self.event_handles_by_id.remove(&event);
-        let cancelled = self.scheduler.cancel(event);
+        self.event_handles_by_id.remove(&scheduled.id);
+        let cancelled = self.scheduler.cancel(scheduled.id);
         if cancelled {
             self.stats.cancelled_events += 1;
+        } else {
+            set_last_error("event handle not found");
         }
         self.stats.pending_events = self.scheduler.pending_events() as u64;
         Ok(cancelled)
     }
 
-    fn run_for(&mut self, max_events: u64) -> StepOutcome {
-        let outcome = self.scheduler.run_for(max_events);
-        self.apply_outcome(outcome.clone());
-        outcome
+    fn next_event_handle_at_or_before(&self, time_limit: u64) -> Option<u64> {
+        self.event_handles
+            .values()
+            .filter(|scheduled| scheduled.at_ticks <= time_limit)
+            .map(|scheduled| scheduled.at_ticks)
+            .min()
     }
 
-    fn run_until(&mut self, time_limit: u64) -> StepOutcome {
-        let outcome = self
-            .scheduler
-            .run_until(SimTime::from_ticks(time_limit as u128));
-        self.apply_outcome(outcome.clone());
-        outcome
+    fn run_for(&mut self, max_events: u64) {
+        for _ in 0..max_events {
+            let outcome = self.scheduler.step();
+            let dispatched = matches!(outcome, StepOutcome::Dispatched(_));
+            self.apply_outcome(outcome);
+            if !dispatched {
+                break;
+            }
+        }
     }
 
-    fn run_until_or_for(&mut self, time_limit: u64, max_events: u64) -> StepOutcome {
-        let outcome = self
-            .scheduler
-            .run_until_or_for(SimTime::from_ticks(time_limit as u128), max_events);
-        self.apply_outcome(outcome.clone());
-        outcome
+    fn run_until(&mut self, time_limit: u64) {
+        while self.next_event_handle_at_or_before(time_limit).is_some() {
+            let outcome = self.scheduler.step();
+            let dispatched = matches!(outcome, StepOutcome::Dispatched(_));
+            self.apply_outcome(outcome);
+            if !dispatched {
+                break;
+            }
+        }
+    }
+
+    fn run_until_or_for(&mut self, time_limit: u64, max_events: u64) {
+        for _ in 0..max_events {
+            if self.next_event_handle_at_or_before(time_limit).is_none() {
+                break;
+            }
+
+            let outcome = self.scheduler.step();
+            let dispatched = matches!(outcome, StepOutcome::Dispatched(_));
+            self.apply_outcome(outcome);
+            if !dispatched {
+                break;
+            }
+        }
     }
 }
 
@@ -260,8 +297,10 @@ pub extern "C" fn kairo_ecs_ffi_version() -> u32 {
 pub extern "C" fn kairo_ecs_engine_new() -> u64 {
     ffi_boundary(0, || match registry().lock() {
         Ok(mut registry) => {
-            let mut engine = EngineState::default();
-            engine._run_seed = FFI_DEFAULT_SEED;
+            let engine = EngineState {
+                _run_seed: FFI_DEFAULT_SEED,
+                ..EngineState::default()
+            };
             registry.insert(engine)
         }
         Err(_) => {
@@ -375,7 +414,7 @@ pub extern "C" fn kairo_ecs_step(handle: u64) -> KairoEcsStatusCode {
 pub extern "C" fn kairo_ecs_run_for(handle: u64, max_events: u64) -> KairoEcsStatusCode {
     ffi_boundary_status(
         || match with_engine_mut(handle, |engine| engine.run_for(max_events)) {
-            Ok(_) => KairoEcsStatusCode::KAIRO_ECS_OK,
+            Ok(()) => KairoEcsStatusCode::KAIRO_ECS_OK,
             Err(code) => code,
         },
     )
@@ -385,7 +424,7 @@ pub extern "C" fn kairo_ecs_run_for(handle: u64, max_events: u64) -> KairoEcsSta
 pub extern "C" fn kairo_ecs_run_until(handle: u64, time_limit_ticks: u64) -> KairoEcsStatusCode {
     ffi_boundary_status(|| {
         match with_engine_mut(handle, |engine| engine.run_until(time_limit_ticks)) {
-            Ok(_) => KairoEcsStatusCode::KAIRO_ECS_OK,
+            Ok(()) => KairoEcsStatusCode::KAIRO_ECS_OK,
             Err(code) => code,
         }
     })
@@ -401,7 +440,7 @@ pub extern "C" fn kairo_ecs_run_until_or_for(
         match with_engine_mut(handle, |engine| {
             engine.run_until_or_for(time_limit_ticks, max_events)
         }) {
-            Ok(_) => KairoEcsStatusCode::KAIRO_ECS_OK,
+            Ok(()) => KairoEcsStatusCode::KAIRO_ECS_OK,
             Err(code) => code,
         }
     })
@@ -430,6 +469,10 @@ pub extern "C" fn kairo_ecs_stats(handle: u64) -> KairoEcsStats {
 #[no_mangle]
 pub extern "C" fn kairo_ecs_last_error_message() -> *const c_char {
     LAST_ERROR.with(|slot| slot.borrow().as_ptr())
+}
+
+pub fn kairo_ecs_last_error_string() -> String {
+    LAST_ERROR.with(|slot| slot.borrow().to_string_lossy().into_owned())
 }
 
 #[no_mangle]

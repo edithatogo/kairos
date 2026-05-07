@@ -2,6 +2,8 @@ Package: kairoECS
 Title: Event-Component Simulation Bindings
 Version: 0.1.0
 Authors@R: c(person("KairoECS", "Maintainers", role = c("aut", "cre"), email = "maintainers@example.com"))
+Author: KairoECS Maintainers
+Maintainer: KairoECS Maintainers <maintainers@example.com>
 Description: R bindings for the KairoECS Rust simulation engine, currently
     exposing a deterministic scheduler and event-log facade while native FFI is
     intentionally not configured.
@@ -9,5 +11,5 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Type: Package
 Depends: R (>= 4.2)
-Suggests: arrow, devtools, lintr, pkgdown, testthat (>= 3.0.0)
+Suggests: arrow, devtools, jsonlite, lintr, pkgdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3

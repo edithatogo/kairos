@@ -1,10 +1,10 @@
 candidate_roots <- c(getwd(), normalizePath(file.path(getwd(), ".."), mustWork = FALSE))
 pkg_root <- candidate_roots[file.exists(file.path(candidate_roots, "R", "kairoecs.R"))][1]
 if (is.na(pkg_root)) {
-  stop("Could not locate the bindings/r package root.", call. = FALSE)
+  library(kairoECS)
+} else {
+  source(file.path(pkg_root, "R", "kairoecs.R"), local = TRUE)
 }
-
-source(file.path(pkg_root, "R", "kairoecs.R"), local = TRUE)
 
 status <- kairoecs_ffi_status()
 stopifnot(identical(status$configured, FALSE))

@@ -18,3 +18,19 @@
 - `domain-preview`: realistic domain shape but not production guidance.
 
 No community page should imply `stable` maturity unless the relevant release and compatibility gates have passed.
+
+## Documentation system
+
+The documentation system roadmap should use Astro Starlight as the docs
+framework, with versioned docs handled by `starlight-versions`.
+
+Recommended plugins:
+
+- `starlight-links-validator` for docs link hygiene and broken-link checks.
+- `starlight-versions` for versioned documentation releases and release-line navigation.
+- `starlight-typedoc` if TypeScript API documentation is generated from source.
+- `starlight-openapi` if API references are published from OpenAPI or Swagger definitions.
+- `Algolia DocSearch` only if the built-in Pagefind search becomes insufficient for scale or discovery.
+
+The site can keep using Starlight defaults for the rest of the baseline behavior:
+navigation, code highlighting, dark mode, frontmatter validation, and markdown/MDX content.

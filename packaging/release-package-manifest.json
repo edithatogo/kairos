@@ -8,19 +8,19 @@
   },
   "local_dry_run_sequence": {
     "sequence_id": "track15-r2-local-registry-package-dry-run",
-    "scope": "offline package inventory and local evidence generation only",
+    "scope": "offline inventory of the Rust workspace and binding package surfaces, plus local evidence generation only",
     "publish_manifests_allowed": false,
     "steps": [
       {
         "order": 1,
-        "name": "validate package inventory",
+        "name": "validate workspace and binding package inventory",
         "command": "python packaging/scripts/build_release_manifest.py --check",
         "network_required": false,
         "writes": []
       },
       {
         "order": 2,
-        "name": "generate local release evidence",
+        "name": "generate local release evidence in dist/release-artifact-manifest.json and dist/SHA256SUMS",
         "command": "python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run",
         "network_required": false,
         "writes": [
@@ -54,6 +54,7 @@
         { "package": "kairo-ecs-arrow", "path": "crates/kairo-ecs-arrow/Cargo.toml" },
         { "package": "kairo-ecs-bench", "path": "crates/kairo-ecs-bench/Cargo.toml" },
         { "package": "kairo-ecs-cli", "path": "crates/kairo-ecs-cli/Cargo.toml" },
+        { "package": "kairo-ecs-cs-bridge", "path": "crates/kairo-ecs-cs-bridge/Cargo.toml" },
         { "package": "kairo-ecs-core", "path": "crates/kairo-ecs-core/Cargo.toml" },
         { "package": "kairo-ecs-debug", "path": "crates/kairo-ecs-debug/Cargo.toml" },
         { "package": "kairo-ecs-des", "path": "crates/kairo-ecs-des/Cargo.toml" },

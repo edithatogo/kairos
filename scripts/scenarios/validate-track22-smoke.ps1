@@ -43,12 +43,27 @@ function Require-Equal($Name, $Actual, $Expected) {
     }
 }
 
+function Assert-Contains([string]$Path, [string]$Pattern, [string]$Description) {
+    if (-not (Select-String -LiteralPath $Path -Pattern $Pattern -Quiet)) {
+        throw "Missing $Description in $Path"
+    }
+}
+
 function Join-Order($Values) {
     ($Values | ForEach-Object { [string]$_ }) -join ","
 }
 
 $index = Read-Json $IndexPath
 Require-Equal "index schema_version" $index.schema_version "kairoecs.scenario-index.v1"
+
+if (-not (Test-Path -LiteralPath 'docs/cli/kairo-ecs-cli.md')) {
+    throw "Missing required file: docs/cli/kairo-ecs-cli.md"
+}
+Assert-Contains 'docs/cli/kairo-ecs-cli.md' 'validate-scenario' 'validate-scenario docs'
+Assert-Contains 'docs/cli/kairo-ecs-cli.md' 'replay --scenario' 'replay docs'
+Assert-Contains 'docs/cli/kairo-ecs-cli.md' 'resume-plan' 'resume-plan docs'
+Assert-Contains 'website/docs-link-manifest.json' 'docs/cli/kairo-ecs-cli.md' 'docs site CLI nav link'
+Assert-Contains 'website/src/index.md' 'docs/cli/kairo-ecs-cli.md' 'docs home CLI link'
 
 if (-not $index.scenarios -or $index.scenarios.Count -eq 0) {
     throw "Scenario index contains no scenarios"
@@ -124,4 +139,5 @@ foreach ($scenarioRef in $index.scenarios) {
 @{
     status = "ok"
     checked = $checked
+    cli_docs = "docs/cli/kairo-ecs-cli.md"
 } | ConvertTo-Json -Depth 5

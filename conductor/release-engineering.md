@@ -13,7 +13,7 @@ KairoECS has four compatibility surfaces:
 
 A release is only stable if all four surfaces have documented compatibility expectations.
 
-The current checked-in package surfaces are the Rust workspace crates in `crates/`, the Python package in `bindings/python/`, the R package in `bindings/r/`, the Julia package in `bindings/julia/`, the TypeScript package in `bindings/typescript/`, the C# package in `bindings/csharp/`, and the Go module in `bindings/go/`.
+The current checked-in package surfaces are the Rust crates in `crates/` that participate in the manifest-backed release inventory (`kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-rng`, `kairo-ecs-bench`, `kairo-ecs-des`, `kairo-ecs-abm`, `kairo-ecs-arrow`, `kairo-ecs-ffi`, `kairo-ecs-uniffi`, `kairo-ecs-diplomat`, `kairo-ecs-cli`, `kairo-ecs-gpu`, `kairo-ecs-webgpu`, `kairo-ecs-pdes`, `kairo-ecs-mpi`, `kairo-ecs-grpc`, `kairo-ecs-streaming`, `kairo-ecs-ml`, `kairo-ecs-fmi`, `kairo-ecs-debug`, `kairo-ecs-viz`, `kairo-ecs-wasm`, `kairo-ecs-cs-bridge`), plus draft-only checked-in satellites such as `kairo-ecs-pyo3`, the Python package in `bindings/python/`, the R package in `bindings/r/`, the Julia package in `bindings/julia/`, the TypeScript package in `bindings/typescript/`, the C# package in `bindings/csharp/`, and the Go module in `bindings/go/`.
 
 ## Early-stage policy
 
@@ -21,6 +21,16 @@ The current checked-in package surfaces are the Rust workspace crates in `crates
 - Draft releases and dry-runs are the default.
 - Production registry writes wait until registry names, toolchains, and package metadata are verified.
 - Any public API or schema change that affects downstream packages must be recorded in the packaging docs first.
+
+## Offline dry-run order
+
+Track 15 uses the manifest-backed local dry-run sequence in `packaging/release-package-manifest.json`:
+
+1. Validate the workspace and binding package inventory.
+2. Generate local release evidence in `dist/release-artifact-manifest.json` and `dist/SHA256SUMS`.
+3. Validate the offline dry-run gate.
+
+The Rust inventory in that manifest includes `kairo-ecs-cs-bridge` alongside the other manifest-backed workspace crates, while `kairo-ecs-pyo3` remains a checked-in satellite outside the release-manifest inventory until its own packaging gate is approved.
 
 ## Versioning
 
@@ -73,6 +83,8 @@ flowchart LR
 ```
 
 ## Required release artifacts
+
+For RC and 1.0, the artifact tree must include `RELEASE.txt`, `SHA256SUMS`, `sbom.spdx.json`, and the ecosystem artifacts below.
 
 ```text
 source tarball

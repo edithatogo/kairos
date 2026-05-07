@@ -2,10 +2,10 @@ use std::ffi::CStr;
 
 use kairo_ecs_ffi::{
     kairo_ecs_buffer_free, kairo_ecs_cancel_event, kairo_ecs_engine_current_time,
-    kairo_ecs_engine_free, kairo_ecs_engine_new, kairo_ecs_engine_reset,
-    kairo_ecs_ffi_version, kairo_ecs_last_error_message, kairo_ecs_run_for,
-    kairo_ecs_run_until, kairo_ecs_schedule_at, kairo_ecs_stats, kairo_ecs_step,
-    kairo_ecs_telemetry_flush_ipc, KairoEcsStatusCode,
+    kairo_ecs_engine_free, kairo_ecs_engine_new, kairo_ecs_engine_reset, kairo_ecs_ffi_version,
+    kairo_ecs_last_error_message, kairo_ecs_run_for, kairo_ecs_run_until,
+    kairo_ecs_run_until_or_for, kairo_ecs_schedule_after, kairo_ecs_schedule_at, kairo_ecs_stats,
+    kairo_ecs_step, kairo_ecs_telemetry_flush_ipc, KairoEcsStatusCode,
 };
 
 fn free_engine(handle: u64) {
@@ -161,6 +161,47 @@ fn test_run_until_limit() {
     assert_eq!(stats.scheduled_events, 3);
     assert_eq!(stats.dispatched_events, 1);
     assert_eq!(stats.pending_events, 2);
+
+    free_engine(handle);
+}
+
+#[test]
+fn test_schedule_after_uses_current_time() {
+    let handle = kairo_ecs_engine_new();
+    assert_ne!(handle, 0);
+
+    kairo_ecs_schedule_at(handle, 10, 0, 1);
+    assert_eq!(kairo_ecs_step(handle), KairoEcsStatusCode::KAIRO_ECS_OK);
+    assert_eq!(kairo_ecs_engine_current_time(handle), 10);
+
+    let event = kairo_ecs_schedule_after(handle, 5, 0, 2);
+    assert_ne!(event, 0);
+
+    assert_eq!(kairo_ecs_step(handle), KairoEcsStatusCode::KAIRO_ECS_OK);
+    assert_eq!(kairo_ecs_engine_current_time(handle), 15);
+
+    free_engine(handle);
+}
+
+#[test]
+fn test_run_until_or_for_applies_both_bounds() {
+    let handle = kairo_ecs_engine_new();
+    assert_ne!(handle, 0);
+
+    kairo_ecs_schedule_at(handle, 10, 0, 1);
+    kairo_ecs_schedule_at(handle, 20, 0, 2);
+    kairo_ecs_schedule_at(handle, 30, 0, 3);
+
+    assert_eq!(
+        kairo_ecs_run_until_or_for(handle, 25, 2),
+        KairoEcsStatusCode::KAIRO_ECS_OK
+    );
+
+    let stats = kairo_ecs_stats(handle);
+    assert_eq!(stats.scheduled_events, 3);
+    assert_eq!(stats.dispatched_events, 2);
+    assert_eq!(stats.pending_events, 1);
+    assert_eq!(kairo_ecs_engine_current_time(handle), 20);
 
     free_engine(handle);
 }

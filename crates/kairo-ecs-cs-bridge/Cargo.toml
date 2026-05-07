@@ -1,0 +1,9 @@
+[package]
+name = "kairo-ecs-cs-bridge"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "C# P/Invoke bridge for KairoECS"
+
+[dependencies]
+kairo-ecs-ffi = { path = "../kairo-ecs-ffi" }

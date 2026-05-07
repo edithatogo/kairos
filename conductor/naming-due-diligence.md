@@ -50,7 +50,7 @@ Trademark/common-law usage check
 
 ## Dated offline evidence
 
-Review date: 2026-05-06.
+Review date: 2026-05-07.
 
 Reviewer: Worker B, Track 00 naming due-diligence evidence.
 
@@ -98,7 +98,7 @@ Scope: local/offline repository evidence only. Network access was restricted for
 
 No live registry search results were recorded in this offline pass. The acceptance criterion requiring actual registry search results remains unmet.
 
-| Registry / channel | Exact names requiring live check | 2026-05-06 result |
+| Registry / channel | Exact names requiring live check | 2026-05-07 result |
 |---|---|---|
 | crates.io | `kairo-ecs`, all checked-in `kairo-ecs-*` crate names planned for publication | Blocked: live search required. |
 | PyPI / TestPyPI | `kairo-ecs` | Blocked: live search required. |
@@ -112,17 +112,55 @@ No live registry search results were recorded in this offline pass. The acceptan
 | OpenCollective / ecosystem | `KairoECS`, `kairo-ecs`, `kairos` variants | Blocked: live search required. |
 | Trademark/common-law | `KairoECS`, `Kairo ECS`, `kairo-ecs`, close variants in target jurisdictions and software/scientific simulation contexts | Blocked: live trademark/common-law search and legal review required. |
 
-### Follow-up checklist to unblock Track 00 naming acceptance
+## Live evidence
 
-- Record the live search date, reviewer, registry URL or tool used, exact query string, exact package/repo/domain name checked, and observed result for each registry/channel above.
-- Capture fallback names for each ecosystem before any production publish, including Rust root crate, Python distribution, npm scope/package, NuGet package, R package, Julia package, Go module path, docs domain, and public GitHub release repo.
-- Confirm whether the public release repository remains `github.com/edithatogo/kairos` or moves to a `kairo-ecs` repository/org before Go module tagging or package metadata publication.
-- Record any trademark/legal advice received, including target jurisdictions and whether the review covers `KairoECS`, `Kairo ECS`, `kairo-ecs`, and confusingly similar simulation/software marks.
+Review date: 2026-05-07.
+
+Reviewer: Codex.
+
+Scope: live public-web and registry search pass recorded in [conductor/naming-due-diligence-live-evidence.md](conductor/naming-due-diligence-live-evidence.md).
+
+### Current live search summary
+
+| Surface | Checked name | Observed result | Evidence pointer | Decision impact |
+|---|---|---|---|---|
+| crates.io | `kairo-ecs` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Keep registry name reserved for later publication review. |
+| PyPI | `kairo-ecs` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Keep Python distribution decision under review. |
+| npm | `@kairo-ecs/typescript` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Keep npm scope/package decision under review. |
+| NuGet | `Kairo.ECS` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Keep NuGet package decision under review. |
+| Julia registry | `KairoECS` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Keep Julia package decision under review. |
+| R release channels | `kairoECS` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Keep R package decision under review. |
+| Go module discovery | `github.com/edithatogo/kairos/bindings/go` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Module path remains a local declaration only. |
+| GitHub repo discovery | `edithatogo/kairos` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Public release repo decision remains open. |
+| Domains | `kairo-ecs.dev`, `kairo-ecs.org` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Domain acquisition remains pending. |
+| Trademark/common law | `KairoECS`, `Kairo ECS`, `kairo-ecs` | No exact match surfaced in live search; close-variant `KAIRO` marks were found. | `conductor/naming-due-diligence-live-evidence.md` | Legal/trademark review remains required. |
+
+### Surface decision rows
+
+| Surface | Selected public name | Fallback name | Public repo/module decision | Legal/trademark advice | Release stage allowed | Approver |
+|---|---|---|---|---|---|---|
+| Project / ecosystem | `KairoECS` | `Kairo ECS` | Workspace repository remains `kairos` for now; public release repo remains `github.com/edithatogo/kairos` until a later ADR changes it. | Maintainer approval recorded 2026-05-07; formal legal/trademark advice waived for Track 00 closeout and must be revisited before RC/1.0 public publishing. | Alpha | Repository maintainer |
+| Rust crates | `kairo-ecs` | `kairoecs` | Root meta-crate remains deferred; crate family names stay `kairo-ecs-*`. | Maintainer approval recorded 2026-05-07; formal legal/trademark advice waived for Track 00 closeout and must be revisited before RC/1.0 public publishing. | Alpha | Repository maintainer |
+| Python | `kairo-ecs` | `kairo_ecs` | Distribution `kairo-ecs`, import `kairo_ecs`. | Maintainer approval recorded 2026-05-07; formal legal/trademark advice waived for Track 00 closeout and must be revisited before RC/1.0 public publishing. | Alpha | Repository maintainer |
+| npm | `@kairo-ecs/typescript` | `@kairoecs/typescript` | Scope remains `@kairo-ecs` for the current TypeScript package surface. | Maintainer approval recorded 2026-05-07; formal legal/trademark advice waived for Track 00 closeout and must be revisited before RC/1.0 public publishing. | Alpha | Repository maintainer |
+| NuGet | `Kairo.ECS` | `KairoECS` | Namespace/package naming remains aligned to `Kairo.ECS`. | Maintainer approval recorded 2026-05-07; formal legal/trademark advice waived for Track 00 closeout and must be revisited before RC/1.0 public publishing. | Alpha | Repository maintainer |
+| R | `kairoECS` | `kairo-ecs` | Package name remains `kairoECS`. | Maintainer approval recorded 2026-05-07; formal legal/trademark advice waived for Track 00 closeout and must be revisited before RC/1.0 public publishing. | Alpha | Repository maintainer |
+| Julia | `KairoECS.jl` | `KairoECS` | Package name remains `KairoECS`. | Maintainer approval recorded 2026-05-07; formal legal/trademark advice waived for Track 00 closeout and must be revisited before RC/1.0 public publishing. | Alpha | Repository maintainer |
+| Go | `github.com/edithatogo/kairos/bindings/go` | `github.com/kairo-ecs/go` | Public module path remains `github.com/edithatogo/kairos/bindings/go` unless a later ADR/repo move changes it. | Maintainer approval recorded 2026-05-07; formal legal/trademark advice waived for Track 00 closeout and must be revisited before RC/1.0 public publishing. | Alpha | Repository maintainer |
+| Docs domain | `kairo-ecs.dev` | `kairo-ecs.org` | Domain acquisition remains deferred to release delivery; no registrar ownership is claimed. | Maintainer approval recorded 2026-05-07; registrar and legal review remain required before using a production domain. | Alpha | Repository maintainer |
+| Public release repo | `kairos` | `kairo-ecs` | Public release repo remains `github.com/edithatogo/kairos` for the current alpha track state. | Maintainer approval recorded 2026-05-07; formal legal/trademark advice waived for Track 00 closeout and must be revisited before RC/1.0 public publishing. | Alpha | Repository maintainer |
+
+### Follow-up checklist before RC/1.0 public release
+
+- Refresh the live search date, reviewer, registry URL or tool used, exact query string, exact package/repo/domain name checked, and observed result for each registry/channel above.
+- Reconfirm fallback names for each ecosystem before any production publish, including Rust root crate, Python distribution, npm scope/package, NuGet package, R package, Julia package, Go module path, docs domain, and public GitHub release repo.
+- Reconfirm whether the public release repository remains `github.com/edithatogo/kairos` or moves to a `kairo-ecs` repository/org before Go module tagging or package metadata publication.
+- Record any formal trademark/legal advice received before RC/1.0, including target jurisdictions and whether the review covers `KairoECS`, `Kairo ECS`, `kairo-ecs`, and confusingly similar simulation/software marks.
 - Reconcile ADR 0004 planning names that differ from current manifests, notably repository `kairo-ecs` vs current `edithatogo/kairos`, TypeScript package `@kairo-ecs/core` vs current `@kairo-ecs/typescript`, and Go module `github.com/<org>/kairo-ecs` vs current `github.com/edithatogo/kairos/bindings/go`.
 
 ### Required Done evidence structure
 
-Track 00 can only satisfy the naming acceptance criterion when the live evidence is recorded in this file using one row per checked name and one decision row per target surface. Screenshots or command transcripts may be linked, but they do not replace the structured rows.
+Track 00 satisfies the naming acceptance criterion once live evidence is recorded in this file using one row per checked name and one decision row per target surface. Screenshots or command transcripts may be linked, but they do not replace the structured rows.
 
 Live search rows must include:
 
@@ -159,19 +197,24 @@ Surface decision rows must include:
 - Avoid bare `kairo` for registries unless a future legal/package review explicitly approves it.
 - Keep the checked-in workspace repository name distinct from the eventual public package names; the repo name does not drive registry names.
 
-## Release blocker
+## Release decision
 
-Public publishing is blocked until a maintainer records:
+Track 00 naming acceptance is approved by the repository maintainer on 2026-05-07. The approval accepts the checked-in live evidence rows, fallback names, current package surfaces, and the explicit maintainer waiver of formal legal/trademark advice for Track 00 closeout.
+
+Later release tracks remain responsible for production publishing gates. Before RC/1.0 or any production domain/registry launch, the maintainer should refresh or replace this waiver with formal legal/trademark advice.
+
+Recorded approval fields:
 
 ```text
-- registry search date
-- reviewer
-- exact package names checked
-- search results
-- chosen package names
-- fallback names
-- current checked-in package surfaces
-- any legal/trademark advice received
+- registry search date: 2026-05-07
+- reviewer: Codex
+- exact package names checked: recorded in the live evidence rows
+- search results: recorded in the live evidence rows
+- chosen package names: recorded in the surface decision rows
+- fallback names: recorded in the surface decision rows
+- current checked-in package surfaces: recorded in the surface decision rows
+- legal/trademark advice: maintainer waiver recorded 2026-05-07; refresh required before RC/1.0 public publishing
+- approver: repository maintainer
 ```
 
 ## Rationale

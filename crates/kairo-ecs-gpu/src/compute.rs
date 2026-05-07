@@ -241,7 +241,7 @@ impl GpuCompute for CpuFallbackCompute {
         }
 
         Ok(GpuStepStats {
-            uploaded_bytes: events.len() * core::mem::size_of::<DesEvent>(),
+            uploaded_bytes: core::mem::size_of_val(events),
             downloaded_bytes: 0,
             dispatched_workgroups: DispatchShape::for_items(events.len())?.workgroup_count,
         })

@@ -39,6 +39,9 @@ function parseFlatToml(text) {
 
 const notePath = 'docs/validation/factory-bottleneck-v1-vvuq-note.md';
 const note = readText(notePath);
+const scenarioEvidence = readText('docs/trustworthy-simulation/scenario-evidence.md');
+const websiteNav = readText('website/docs-link-manifest.json');
+const websiteHome = readText('website/src/index.md');
 const vvuq = readJson('conformance/fixtures/vvuq_scenario_replay.json');
 const scenarioText = readText(vvuq.scenario_manifest);
 const seedText = readText(vvuq.seed_manifest);
@@ -76,6 +79,17 @@ for (const requiredTerm of [
   'uncertainty',
 ]) {
   assert(note.includes(requiredTerm), `Validation note missing required term: ${requiredTerm}`);
+}
+
+for (const [surface, text] of [
+  ['scenario evidence page', scenarioEvidence],
+  ['website docs manifest', websiteNav],
+  ['website home page', websiteHome],
+]) {
+  assert(
+    text.includes('docs/validation/factory-bottleneck-v1-vvuq-note.md'),
+    `Missing VVUQ note link in ${surface}`
+  );
 }
 
 console.log(JSON.stringify({

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import {
   BINDING_KIND,
+  EVENT_LOG_FIELDS,
   EVENT_LOG_SCHEMA_NAME,
+  EVENT_LOG_SCHEMA_VERSION,
   NativeWasmNotConfiguredError,
   PACKAGE_NAME,
   createBindingSurfaceInfo,
@@ -18,6 +20,23 @@ const info = createBindingSurfaceInfo();
 
 assert.equal(PACKAGE_NAME, "@kairo-ecs/typescript");
 assert.equal(BINDING_KIND, "typescript-wasm");
+assert.equal(EVENT_LOG_SCHEMA_VERSION, 1);
+assert.deepEqual(
+  EVENT_LOG_FIELDS.map(([name, dataType, nullable]) => [name, dataType, nullable]),
+  [
+    ["schema_version", "UInt16", false],
+    ["run_id", "Utf8", false],
+    ["event_id", "FixedSizeBinary(12)", false],
+    ["entity_id", "FixedSizeBinary(12)", true],
+    ["time_ticks", "FixedSizeBinary(16)", false],
+    ["time_scale", "Utf8", false],
+    ["priority", "Int32", false],
+    ["sequence", "UInt64", false],
+    ["event_kind", "Utf8", false],
+    ["status", "Utf8", false],
+    ["payload_ref", "Utf8", true],
+  ],
+);
 assert.equal(info.packageName, PACKAGE_NAME);
 assert.equal(info.bindingKind, BINDING_KIND);
 assert.equal(info.version, "0.1.0");
@@ -55,21 +74,46 @@ assert.equal(scheduler.currentTimeTicks, 10n);
 
 const eventLog = scheduler.eventLog("run-1");
 assert.equal(eventLog.schema, EVENT_LOG_SCHEMA_NAME);
+assert.equal(eventLog.schemaVersion, EVENT_LOG_SCHEMA_VERSION);
+assert.deepEqual(eventLog.fields, EVENT_LOG_FIELDS);
 assert.deepEqual(
-  eventLog.rows.map((row) => [row.eventKind, row.timeTicks, row.status]),
+  eventLog.rows.map((row) => [
+    row.schemaVersion,
+    row.eventKind,
+    row.timeTicks,
+    row.timeTicksLeHex,
+    row.status,
+  ]),
   [
-    ["first", "5", "dispatched"],
-    ["cancelled", "7", "cancelled"],
-    ["priority", "10", "dispatched"],
-    ["late", "10", "dispatched"],
-    ["sequence", "10", "dispatched"],
+    [1, "first", "5", "05000000000000000000000000000000", "dispatched"],
+    [1, "cancelled", "7", "07000000000000000000000000000000", "cancelled"],
+    [1, "priority", "10", "0a000000000000000000000000000000", "dispatched"],
+    [1, "late", "10", "0a000000000000000000000000000000", "dispatched"],
+    [1, "sequence", "10", "0a000000000000000000000000000000", "dispatched"],
   ],
 );
+assert.equal(eventLog.rows[0].eventIdHex.length, 24);
 assert.equal(scheduler.cancel(dispatched[0].eventId), false);
 assert.deepEqual(roundTripArrowEventLog(eventLog), eventLog);
 assert.throws(
-  () => roundTripArrowEventLog({ schema: "other" as typeof EVENT_LOG_SCHEMA_NAME, rows: [] }),
+  () =>
+    roundTripArrowEventLog({
+      schema: "other" as typeof EVENT_LOG_SCHEMA_NAME,
+      schemaVersion: EVENT_LOG_SCHEMA_VERSION,
+      fields: EVENT_LOG_FIELDS,
+      rows: [],
+    }),
   /unsupported Arrow event log schema/,
+);
+assert.throws(
+  () =>
+    roundTripArrowEventLog({
+      schema: EVENT_LOG_SCHEMA_NAME,
+      schemaVersion: 2 as typeof EVENT_LOG_SCHEMA_VERSION,
+      fields: EVENT_LOG_FIELDS,
+      rows: [],
+    }),
+  /unsupported Arrow event log schema version/,
 );
 
 assert.equal(nativeWasmStatus().status, "not-configured");

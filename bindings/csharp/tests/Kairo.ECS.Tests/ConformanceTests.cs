@@ -6,11 +6,7 @@ namespace Kairo.ECS.Tests;
 [TestClass]
 public sealed class ConformanceTests
 {
-    private static readonly string FixtureRoot = Path.Combine(
-        AppContext.BaseDirectory,
-        "..", "..", "..", "..", "..", "..",
-        "conformance", "fixtures"
-    );
+    private static readonly string FixtureRoot = FindFixtureRoot();
 
     [TestMethod]
     public void DeterministicOrdering_Fixture_IsValid()
@@ -44,5 +40,22 @@ public sealed class ConformanceTests
         Assert.AreEqual(7, root.GetProperty("run_seed").GetInt32());
         var stream = root.GetProperty("expected_stream").EnumerateArray().ToArray();
         Assert.AreEqual(4, stream.Length);
+    }
+
+    private static string FindFixtureRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            var candidate = Path.Combine(directory.FullName, "conformance", "fixtures");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate conformance/fixtures from the test output directory.");
     }
 }

@@ -2,6 +2,7 @@
   "version": 1,
   "harness": "metadata-only",
   "requires_native_link_tests": false,
+  "benchmark_plan": "benches/benchmark-plan.md",
   "source_manifest": "conformance/fixtures/manifest.json",
   "scenarios": [
     {

@@ -37,4 +37,14 @@ public sealed class NativeBindingTests
             libraryName is "kairo_ecs.dll" or "libkairo_ecs.dylib" or "libkairo_ecs.so",
             $"Unexpected native library name: {libraryName}");
     }
+
+    [TestMethod]
+    [TestCategory("Smoke")]
+    public void Safe_handle_wraps_raw_engine_handle_value()
+    {
+        using var handle = KairoEcsEngineHandle.FromRawHandle(42, ownsHandle: false);
+
+        Assert.IsFalse(handle.IsInvalid);
+        Assert.AreEqual(42ul, handle.RawHandle);
+    }
 }

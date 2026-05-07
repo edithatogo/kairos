@@ -43,6 +43,71 @@ function generatedHref(repoRelativePath) {
   return `/${generatedPath(repoRelativePath)}`;
 }
 
+function collectMarkdownPages(manifest) {
+  const sources = new Map();
+
+  for (const section of manifest.navigationSections || []) {
+    for (const link of section.links || []) {
+      if (!link.path || !link.path.endsWith(".md")) {
+        continue;
+      }
+
+      const normalizedPath = link.path.replace(/\\/g, "/");
+      sources.set(normalizedPath, {
+        path: normalizedPath,
+        label: link.label || null,
+        section: section.title || "Docs",
+      });
+    }
+  }
+
+  const docsRoot = path.join(repoRoot, "docs");
+  const stack = [docsRoot];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!fs.existsSync(current)) {
+      continue;
+    }
+
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      if (entry.name === ".git") {
+        continue;
+      }
+
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+        continue;
+      }
+
+      if (!entry.isFile() || !entry.name.endsWith(".md")) {
+        continue;
+      }
+
+      const normalizedPath = path.relative(repoRoot, fullPath).replace(/\\/g, "/");
+      if (sources.has(normalizedPath)) {
+        continue;
+      }
+      const pathParts = normalizedPath.split("/");
+      const sectionName = pathParts.length > 2 ? pathParts[1] : "docs";
+      sources.set(normalizedPath, {
+        path: normalizedPath,
+        label: null,
+        section: sectionName.charAt(0).toUpperCase() + sectionName.slice(1),
+      });
+    }
+  }
+
+  return Array.from(sources.values()).sort((left, right) =>
+    left.path.localeCompare(right.path)
+  );
+}
+
+function aliasPath(repoRelativePath) {
+  const normalized = repoRelativePath.replace(/\\/g, "/");
+  return `${normalized.replace(/\.md$/, "")}/index.html`;
+}
+
 function renderInline(text) {
   return escapeHtml(text)
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
@@ -127,51 +192,75 @@ function renderMarkdown(source) {
 function renderDocPages(manifest) {
   const navigation = renderNavigation(manifest);
   const allEntries = [];
+  const generatedPages = [];
   let rendered = 0;
+  const manifestTargets = new Map();
 
   for (const section of manifest.navigationSections || []) {
     for (const link of section.links || []) {
-      if (!link.path || !link.path.endsWith(".md")) continue;
-
-      const absoluteSource = path.join(repoRoot, link.path);
-      if (!fs.existsSync(absoluteSource)) {
-        console.warn(`  WARN: page source not found: ${absoluteSource}`);
+      if (!link.path || !link.path.endsWith(".md")) {
         continue;
       }
-
-      const source = fs.readFileSync(absoluteSource, "utf8");
-      const renderedMd = renderMarkdown(source);
-
-      const dirPart = link.path.replace(/\.md$/, "");
-      const outputRelative = `${dirPart}/index.html`;
-      const outputPath = path.join(outDir, outputRelative);
-      fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-
-      fs.writeFileSync(
-        outputPath,
-        htmlShell({
-          manifest,
-          body: renderedMd.body,
-          navigation,
-          toc: renderToc(renderedMd.headings),
-          pageTitle: firstHeading(source, link.label),
-          sourceFile: link.path,
-        })
-      );
-
-      allEntries.push({
-        section: section.title,
-        label: link.label,
-        path: link.path,
-        href: `/${dirPart}/`,
+      manifestTargets.set(link.path.replace(/\\/g, "/"), {
+        section: section.title || "Docs",
+        label: link.label || null,
       });
-      rendered++;
     }
+  }
+
+  for (const page of collectMarkdownPages(manifest)) {
+    const absoluteSource = path.join(repoRoot, page.path);
+    if (!fs.existsSync(absoluteSource)) {
+      console.warn(`  WARN: page source not found: ${absoluteSource}`);
+      continue;
+    }
+
+    const source = fs.readFileSync(absoluteSource, "utf8");
+    const renderedMd = renderMarkdown(source);
+    const pageLabel = page.label || firstHeading(source, path.basename(page.path, ".md"));
+    const outputRelative = generatedPath(page.path);
+    const outputPath = path.join(outDir, outputRelative);
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+
+    const pageHtml = htmlShell({
+      manifest,
+      body: renderedMd.body,
+      navigation,
+      toc: renderToc(renderedMd.headings),
+      pageTitle: pageLabel,
+      sourceFile: page.path,
+    });
+    fs.writeFileSync(outputPath, pageHtml);
+
+    const aliasRelative = aliasPath(page.path);
+    const aliasOutputPath = path.join(outDir, aliasRelative);
+    fs.mkdirSync(path.dirname(aliasOutputPath), { recursive: true });
+    fs.writeFileSync(aliasOutputPath, pageHtml);
+
+    if (manifestTargets.has(page.path)) {
+      const manifestTarget = manifestTargets.get(page.path);
+      generatedPages.push(outputRelative);
+      allEntries.push({
+        section: manifestTarget.section,
+        label: manifestTarget.label || pageLabel,
+        path: page.path,
+        href: `/${page.path.replace(/\.md$/, "/")}`,
+      });
+    }
+    rendered++;
   }
 
   fs.writeFileSync(
     path.join(outDir, "docs-index.json"),
-    JSON.stringify({ generatedAt: new Date().toISOString(), entries: allEntries }, null, 2) + "\n"
+    JSON.stringify(
+      {
+        generatedAt: new Date().toISOString(),
+        entries: allEntries,
+        generatedPages,
+      },
+      null,
+      2
+    ) + "\n"
   );
 
   console.log(`Rendered ${rendered} doc pages`);
@@ -237,12 +326,14 @@ function renderNavigation(manifest) {
 
 function buildDocsIndex(manifest) {
   return (manifest.navigationSections || []).flatMap((section) =>
-    section.links.map((link) => ({
-      section: section.title,
-      label: link.label,
-      path: link.path,
-      href: generatedHref(link.path),
-    }))
+    (section.links || [])
+      .filter((link) => link.path && link.path.endsWith(".md"))
+      .map((link) => ({
+        section: section.title,
+        label: link.label,
+        path: link.path,
+        href: `/${link.path.replace(/\.md$/, "/")}`,
+      }))
   );
 }
 
@@ -456,7 +547,7 @@ ${toc}
       res.innerHTML = '<div class="no-results">No results</div>';
     } else {
       res.innerHTML = matches.map(function(d) {
-        return '<a href="../../' + d.path + '"><div class="result-title">' + d.title + '</div><div class="result-excerpt">' + (d.excerpt || '').slice(0, 120) + '</div></a>';
+        return '<a href="' + (d.href || ('../../' + d.path.replace(/\\.md$/, '.html'))) + '"><div class="result-title">' + d.title + '</div><div class="result-excerpt">' + (d.excerpt || '').slice(0, 120) + '</div></a>';
       }).join('');
     }
     res.hidden = false;
@@ -513,7 +604,12 @@ function writeGeneratedPage({ manifest, link, navigation }) {
 }
 
 function build() {
-  fs.rmSync(outDir, { recursive: true, force: true });
+  fs.rmSync(outDir, {
+    recursive: true,
+    force: true,
+    maxRetries: 5,
+    retryDelay: 100,
+  });
   fs.mkdirSync(outDir, { recursive: true });
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
@@ -540,6 +636,9 @@ function build() {
 
   // Generate search index
   require('./search-index.js');
+
+  // Generate API documentation from Rust source annotations
+  require('./api-docs.js').generateApiDocs();
 }
 
 if (require.main === module) {

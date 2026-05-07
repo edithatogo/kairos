@@ -26,6 +26,7 @@ Current package files:
 - `tests/smoke-base.R`
 - `tests/testthat/helper-load.R`
 - `tests/testthat/test-smoke.R`
+- `tests/testthat/test-conformance.R`
 
 Local validation from `bindings/r/`:
 
@@ -33,3 +34,7 @@ Local validation from `bindings/r/`:
 - `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"`
 - `R CMD check --no-manual .`
 - `Rscript -e "devtools::check(document = FALSE)"`
+
+The testthat conformance tests use `jsonlite` to load the ready shared
+fixtures and then drive the exported pure-R scheduler facade. The base smoke
+script remains available for environments without optional R test packages.

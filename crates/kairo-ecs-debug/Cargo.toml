@@ -7,7 +7,9 @@ repository = "https://github.com/edithatogo/kairos"
 rust-version = "1.76"
 
 [dependencies]
+kairo-ecs-core = { path = "../kairo-ecs-core" }
 kairo-ecs-types = { path = "../kairo-ecs-types" }
+clap = { version = "4", features = ["derive"] }
 
 [lib]
 path = "src/lib.rs"

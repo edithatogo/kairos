@@ -1,6 +1,6 @@
 # Toolchain & Version Support Matrix
 
-Last refreshed: 2026-05-06.
+Last refreshed: 2026-05-07.
 
 This document is the single source of truth for KairoECS language and runner version support. Binding tracks may support a narrower feature surface while they are still scaffolding, but they must not raise a minimum version or drop a supported version without following the version-drop policy below.
 
@@ -42,6 +42,8 @@ Support labels:
 
 The Rust support row is the source of truth for the core workspace MSRV, stable CI lane, and beta advisory lane.
 
+On Windows developer hosts, `scripts/validate_conductor_setup.ps1` prefers the installed `stable-x86_64-pc-windows-gnu` Rust toolchain for local workspace tests when it is available. This avoids accidental resolution of Git's `link.exe` on hosts without a working MSVC linker while keeping Windows runner coverage `best-effort` until Track 13 provisions hosted or self-hosted Windows lanes.
+
 ## Python
 
 The Python support row is the source of truth for the CPython binding floor, active CI versions, and free-threaded smoke posture.
@@ -61,6 +63,10 @@ The TypeScript/Wasm support row is the source of truth for Node/Wasm binding CI 
 ## C#
 
 The C# support row is the source of truth for .NET SDK lanes, target frameworks, and preview handling.
+
+Local Windows validation must not set `MSBuildSDKsPath` to the .NET 11 preview SDK when running the Track 10 net10 lane. The repository `global.json` selects SDK `10.0.202`; a stale preview `MSBuildSDKsPath` causes MSBuild task-host resolution failures before project compilation. The local net10 lane passed after clearing `MSBuildSDKsPath`, setting `DOTNET_CLI_TELEMETRY_OPTOUT=1`, disabling shared compilation, and using single-node MSBuild with node reuse disabled.
+
+The experimental net11 lane requires invoking the preview SDK outside the `bindings/csharp` `global.json` scope. Local restore passes with `C:\Users\60217257\scoop\apps\dotnet-sdk-preview\current\dotnet.exe` from the repository root, but the preview build is blocked in this shell by Roslyn named-pipe access denial under `\\.\pipe\LOCAL\dotnet_*`.
 
 ## Go
 

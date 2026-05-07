@@ -140,12 +140,22 @@ function Assert-ModelReadme {
 
 $modelZooPath = Join-Path $RepoRoot 'examples/model-zoo/model-zoo.yaml'
 $starterKitPath = Join-Path $RepoRoot 'examples/starter-kits/starter-kits.yaml'
+$communityReadmePath = Join-Path $RepoRoot 'docs/community/README.md'
 
 Assert-RelativePath 'examples/model-zoo/model-zoo.yaml' 'model-zoo inventory'
 Assert-RelativePath 'examples/starter-kits/starter-kits.yaml' 'starter-kit inventory'
+Assert-RelativePath 'docs/community/README.md' 'community landing page'
 
 $models = @(Get-InventoryItems -Path $modelZooPath -RootKey 'models')
 $kits = @(Get-InventoryItems -Path $starterKitPath -RootKey 'kits')
+$communityReadme = Get-Content -LiteralPath $communityReadmePath -Raw
+
+if ($communityReadme -notmatch '(?im)^\| Find a concrete example \| \[Model zoo\]\(model-zoo\.md\) \|') {
+    throw 'community landing page is missing the model-zoo entry point'
+}
+if ($communityReadme -notmatch '(?im)^\| Start from a domain \| \[Starter kits\]\(\.\./starter-kits/README\.md\) \|') {
+    throw 'community landing page is missing the starter-kit entry point'
+}
 
 if ($models.Count -eq 0) {
     throw 'model-zoo inventory has no models'
