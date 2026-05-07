@@ -32,9 +32,9 @@ Python distribution: kairo-ecs
 Python import: kairo_ecs
 R package: kairoECS
 Julia package: KairoECS.jl
-npm scope: @kairo-ecs/core
+npm package: @kairo-ecs/typescript
 NuGet: Kairo.ECS
-Go module: github.com/<org>/kairo-ecs
+Go module: github.com/edithatogo/kairos/bindings/go
 C ABI: libkairo_ecs / kairo_ecs.h / kairo_ecs_*
 CLI: kairoecs
 ```
