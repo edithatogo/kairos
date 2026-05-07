@@ -1,0 +1,62 @@
+schema_version: 1
+last_verified: 2026-05-08
+states:
+  allowed:
+    - pending
+    - closed
+    - blocked
+    - legacy_review_status
+required_fields:
+  - track_id
+  - phase
+  - state
+  - review_command
+  - review_result
+  - fixes_applied
+  - validation_commands
+  - git_status
+  - commit_sha
+  - pushed_ref
+  - next_phase_decision
+entries:
+  - track_id: "01"
+    phase: "track-closeout"
+    state: closed
+    review_command: "$conductor-review"
+    review_result: "Track 01 advanced to In Review after closeout evidence, conformance fixture tests, benchmark harness cleanup, and local validation."
+    fixes_applied: true
+    validation_commands:
+      - "cargo +stable-x86_64-pc-windows-gnu fmt --all --check"
+      - "cargo +stable-x86_64-pc-windows-gnu clippy -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-rng -p kairo-ecs-bench --all-targets -- -D warnings"
+      - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-rng -p kairo-ecs-bench"
+      - "cargo +stable-x86_64-pc-windows-gnu check --benches -p kairo-ecs-bench"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+    git_status: clean
+    commit_sha: "b3ae7b364261127bedac6f1cac2d9d1e9f102762"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 01 is In Review; further advancement requires reviewer approval and fresh closeout evidence."
+  - track_id: "05"
+    phase: "policy-adoption"
+    state: legacy_review_status
+    review_command: "$conductor-review"
+    review_result: "Track was already In Review when phase-closeout policy was adopted; next advancement requires a fresh closed entry."
+    fixes_applied: false
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+    git_status: clean
+    commit_sha: "ec566774cc8d3436d1ca043bcc0b9bf553cdd719"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Do not advance until a track-specific closeout entry replaces this legacy adoption record."
+  - track_id: "10"
+    phase: "policy-adoption"
+    state: legacy_review_status
+    review_command: "$conductor-review"
+    review_result: "Track was already In Review when phase-closeout policy was adopted; next advancement requires a fresh closed entry."
+    fixes_applied: false
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+    git_status: clean
+    commit_sha: "ec566774cc8d3436d1ca043bcc0b9bf553cdd719"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Do not advance until a track-specific closeout entry replaces this legacy adoption record."

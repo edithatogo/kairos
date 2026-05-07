@@ -37,6 +37,7 @@ $requiredPaths = @(
     "conductor/tech-stack.md",
     "conductor/workflow.md",
     "conductor/phase-gate-policy.md",
+    "conductor/phase-closeout.yaml",
     "conductor/tracks.md",
     "conductor/tracks.yaml",
     "conductor/implementation-readiness.md",
