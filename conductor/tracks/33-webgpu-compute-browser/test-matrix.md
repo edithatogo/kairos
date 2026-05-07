@@ -24,3 +24,6 @@ Rule: a check is marked complete only when an artifact exists and the validation
 | Browser WebGPU device initialization | blocked | no browser binding dependency yet | blocked until wasm-bindgen/web-sys dependency wiring and headless Chrome WebGPU validation are available |
 | 100K-agent >=30 FPS claim | blocked | no hardware/browser run yet | blocked until real WebGPU backend and reference GPU/browser results are available |
 | Cross-browser smoke test | blocked | no Playwright/Puppeteer setup in owned scope yet | blocked until browser test harness and installed target browsers are available |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

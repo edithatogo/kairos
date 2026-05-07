@@ -159,6 +159,8 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **dependency-closure-check**: `pwsh -NoProfile -File conductor/tracks/29-wave-manager-execution-gatekeeper/validate-wave-gates.ps1` and `conductor/gates/dependency-closure-check.yml` must block review/done claims when dependencies are not sufficiently mature or explicitly waived.
 
+**phase-closeout-check**: `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any non-terminal track phase advances. It requires the `$conductor-review` closeout loop, auto-apply of accepted review fixes, blocker recording, cleanup evidence, and cleaned commit/push handoff language to be present in the track plan, handoff, and test matrix.
+
 ### Track 30 toolchain and version support gates
 
 **toolchain-matrix-current**: `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` plus `.github/workflows/toolchain-check.yml` live setup lanes - the support matrix must name Rust, Python, R, Julia, TypeScript/Wasm, C#, and Go, must include min/latest/deprecation/OS-arch coverage columns, and every `CI-covered` selector must install and report the declared major/minor version.

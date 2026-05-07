@@ -25,3 +25,6 @@
 | 2026-05-06 | `npm --prefix website run check:links` | pass | Output: `Checked 25 required paths and 2 markdown sources.` Confirms docs link manifest and Markdown links still resolve after adding playground docs. |
 | 2026-05-06 | `npm --prefix website run build` | pass | Output: `Built C:\Users\60217257\repos\kairos\website\build\index.html`. Confirms the docs home build still renders. |
 | 2026-05-06 | `node scripts/validation/validate-tracks21-27.mjs` | pass | Ran the playground smoke with the adjacent Track 21-27 local validators; all seven track checks passed. |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

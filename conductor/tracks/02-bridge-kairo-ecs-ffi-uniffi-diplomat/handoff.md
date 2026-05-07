@@ -60,3 +60,6 @@ cargo fmt --all --check
 - Replace placeholder telemetry JSON with the Track 04 Arrow IPC bridge output.
 - Add generated UniFFI/Diplomat golden output once those generators are pinned in CI.
 - Promote Track 02 toward `In Review` only after affected binding tracks confirm the ABI shape is sufficient.
+## Phase closeout evidence
+
+Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, and next-phase decision here.

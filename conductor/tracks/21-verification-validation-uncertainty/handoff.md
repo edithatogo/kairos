@@ -116,3 +116,6 @@ The current evidence supports deterministic replay smoke only; real-world valida
 ## Follow-up issues
 
 Add reference-data validation evidence and quantitative uncertainty artifacts before broad model-credibility claims are made.
+## Phase closeout evidence
+
+Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, and next-phase decision here.

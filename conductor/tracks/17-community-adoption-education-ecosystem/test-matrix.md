@@ -15,3 +15,6 @@
 | Release-gate adoption criteria are explicit for public beta | `rg -n "public beta|runnable examples|contribution guide|security policy|benchmark harness|conformance fixture" conductor/tracks/17-community-adoption-education-ecosystem/handoff.md conductor/tracks/17-community-adoption-education-ecosystem/community-plan.md` | no | yes | yes |
 | Community claims match tracked repo artifacts | `rg -n "community|adoption|education|package catalog|maturity labels" conductor/package-catalog.md conductor/tracks/17-community-adoption-education-ecosystem/spec.md website/src/index.md` | yes | yes | yes |
 | Aggregate Track 12-20 evidence gate stays wired | `node tests/conformance/track12_20_evidence_check.mjs` | yes | yes | yes |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

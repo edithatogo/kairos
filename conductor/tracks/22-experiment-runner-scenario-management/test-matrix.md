@@ -40,3 +40,6 @@ node scripts/validation/validate-tracks21-27.mjs
 | `cargo check -p kairo-ecs-cli` | PASS | Finished dev-profile check successfully. |
 | `node tests/conformance/conformance-check.mjs` | PASS | Validated four ready fixtures: `scheduler_ordering_v1`, `scheduler_cancellation_v1`, `rng_reproducibility_v1`, `vvuq_scenario_replay_v1`. |
 | `cargo run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml` | FAIL/BLOCKED | Link step used Git for Windows `link.exe` at `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe` and failed with `fatal error - couldn't create signal pipe, Win32 error 5`. |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

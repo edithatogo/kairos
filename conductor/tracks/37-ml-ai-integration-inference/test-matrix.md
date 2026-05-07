@@ -35,3 +35,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streamin
 
 This validator checks the dependency-free ML crate, the `kairo_gym` contract
 tests with `PYTHONPATH` set to the package source tree, and bounded-claim docs.
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

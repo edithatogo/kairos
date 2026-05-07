@@ -55,3 +55,6 @@ test -f conductor/tracks.yaml
 - Passed: `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo`.
 - Passed: `git diff --check -- .github/workflows/ci-policy.yml .github/workflows/workflow-security.yml .github/workflows/codeql.yml scripts/validation/validate-track13-metadata.mjs conductor/tracks/13-ci-cd-quality-supply-chain` with only line-ending normalization warnings.
 - Added coverage: `validate-track13-metadata.mjs` now catches missing top-level workflow permissions and workflow inventory drift for every checked-in workflow file.
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

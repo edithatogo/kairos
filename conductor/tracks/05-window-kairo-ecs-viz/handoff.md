@@ -69,3 +69,6 @@ The core workspace remains headless-safe: no core crate depends on `kairo-ecs-vi
 - Add real renderer backends only after renderer dependencies and display-free CI gates are explicit.
 - Align the current `kairo_ecs.visualization.frame.v1` fixture with Track 12 if a wider conformance fixture registry later changes field naming.
 - Extend frame entities beyond stable labels and milli-unit positions when Track 01 exposes component payload snapshots.
+## Phase closeout evidence
+
+Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, and next-phase decision here.

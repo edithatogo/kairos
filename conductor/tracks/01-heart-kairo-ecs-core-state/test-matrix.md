@@ -50,3 +50,6 @@ The Track 01 state tests must keep coverage for:
 - 01C State: `cargo test -p kairo-ecs-state`
 - 01D RNG: `cargo test -p kairo-ecs-rng`
 - 01E Facade readiness: `cargo test -p kairo-ecs-core`
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

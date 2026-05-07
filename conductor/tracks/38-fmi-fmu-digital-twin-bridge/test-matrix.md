@@ -49,3 +49,6 @@
 - Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features` currently reaches Rust code generation but fails at Windows link time because `link.exe` resolves to Git's `usr/bin/link.exe` and exits with `couldn't create signal pipe, Win32 error 5`.
 - Blocked: `RUSTFLAGS=-Clinker=rust-lld cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features` bypasses Git's `link.exe` but fails because the Windows SDK import libraries (`kernel32.lib`, `ntdll.lib`, `userenv.lib`, `ws2_32.lib`, `dbghelp.lib`) are not visible to `rust-lld`.
 - Passing: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests` covers FMI all-feature compile checks and bounded offline-claim documentation.
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

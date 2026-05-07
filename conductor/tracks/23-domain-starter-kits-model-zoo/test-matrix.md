@@ -23,3 +23,6 @@
 | Concrete starter-kit path | `examples/starter-kits/starter-kits.yaml` | Pass | `manufacturing-bottleneck` maps to `examples/des/factory_bottleneck` and model-zoo id `factory_bottleneck`. |
 | Tracks 21-27 aggregate smoke | `node scripts/validation/validate-tracks21-27.mjs` | Pass | Ran this inventory validator with the adjacent Track 21-27 local validators; all seven track checks passed. |
 | Tutorial-ready model-zoo docs | `pwsh -NoProfile -File examples/model-zoo/validate-inventory.ps1` | Pass | Validator now requires model READMEs to include maturity, tutorial path, expected outputs, validation commands, and shared notebook/figure paths. |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

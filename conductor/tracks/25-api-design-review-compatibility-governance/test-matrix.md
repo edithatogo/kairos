@@ -43,3 +43,6 @@ rg -n "validate-compatibility-pack|protected-surface-inventory|Breaking-change r
 | `rg -n "validate-compatibility-pack|protected-surface-inventory|Breaking-change rules|Release hold criteria" conductor/contracts/versioning-compatibility.md conductor/quality-gates.md conductor/delivery-readiness-checklist.md docs/design` | pass | Found policy, readiness, quality-gate, design-index, and validator references |
 | `cargo fmt --all --check` | pass | Rust formatting gate passed; no formatting changes needed |
 | `node scripts/validation/validate-tracks21-27.mjs` | pass | Ran the non-release compatibility policy pack check with adjacent Track 21-27 local validators; all seven track checks passed. |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

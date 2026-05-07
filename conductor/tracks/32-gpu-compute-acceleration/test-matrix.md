@@ -30,3 +30,6 @@ Rule: a check is marked complete only when an artifact exists and the validation
 | GPU feature build with real backend dependencies | blocked | none yet | blocked until `wgpu`/`cudarc` dependencies are introduced and registry/network access is approved |
 | Hardware parity on CUDA or wgpu | blocked | none yet | blocked until a GPU runner or local GPU validation environment is available |
 | 10x speedup benchmark | blocked | none yet | blocked until hardware parity and Track 12 benchmark integration are available |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

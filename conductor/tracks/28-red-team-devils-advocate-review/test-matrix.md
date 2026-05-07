@@ -32,3 +32,6 @@ Run these from the repository root before release planning uses Track 28 output.
 - A missing `dist/release-artifact-manifest.json` is acceptable before dry-run artifact generation, but it blocks RC or 1.0 claims that release artifacts, checksums, SBOM, or provenance are attached.
 - Planned conformance fixtures do not support release claims until their fixture rows become `ready` and the conformance workflow validates them.
 - A red-team report older than 14 days is stale even if the file exists.
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

@@ -144,6 +144,18 @@ docs updated
 release notes updated
 quality gates pass
 handoff file written
+```
+
+## Automatic phase closeout gate
+
+Every non-terminal track must close each phase through the same review-fix-cleanup loop before the next phase starts:
+
+1. Run `$conductor-review` against the track and current diff.
+2. Auto-apply accepted review fixes inside the track's owned paths.
+3. Record rejected, cross-track, or blocked-path fixes in `handoff.md`.
+4. Run `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` plus the gates listed in `test-matrix.md`.
+5. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
+6. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
 
 ## Handoff timing rule
 
@@ -154,4 +166,3 @@ Handoff.md must follow this lifecycle:
 3. **Phase 5 (Closeout)**: handoff.md is finalised with resolved risks, follow-up issues, and integration notes.
 
 CI lint rule: If a track is `In Progress` or higher and its handoff.md contains the phrase "No code files were changed", CI emits a warning — the handoff may be stale.
-```

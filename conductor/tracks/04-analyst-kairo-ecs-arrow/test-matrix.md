@@ -29,3 +29,6 @@ cargo test -p kairo-ecs-state
 pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo
 pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo
 ```
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

@@ -53,6 +53,7 @@ bindings-smoke:
 
 validate-conductor:
     pwsh -NoProfile -File scripts/validate_conductor_setup.ps1
+    pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1
 
 validate-tracks:
     pwsh -NoProfile -File scripts/validate_track_coverage.ps1

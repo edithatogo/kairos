@@ -30,3 +30,6 @@
 - `python cloud\validate_cloud_hpc.py` remains the detailed Track 39 offline validator.
 - `python k8s\operator\kairoecs_operator.py --experiment k8s\samples\experiment.json` renders the sample `batch/v1` indexed Job.
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1 -SkipCargoTests` runs the aggregate Track 36-40 offline gate and verifies the Kubernetes operator rejects invalid local experiment specs before rendering.
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

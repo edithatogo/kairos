@@ -37,3 +37,6 @@
 |---|---|---|
 | `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1` | Local offline gate | Checks MPI/gRPC emulator compilation and verifies docs/code still label real transport networking as future work. |
 | `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1 -RunTests` | Optional runtime gate | Runs MPI/gRPC unit tests when the local linker/toolchain can execute Rust test binaries. |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

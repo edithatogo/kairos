@@ -114,3 +114,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-man
   track count.
 - Use `-ReportOnly` for planning dashboards and handoff evidence; use default
   blocking mode for merge/release gates.
+## Phase closeout evidence
+
+Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, and next-phase decision here.

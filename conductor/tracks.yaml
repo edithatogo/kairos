@@ -47,6 +47,7 @@ tracks:
       - crates/kairo-ecs-state/
       - crates/kairo-ecs-rng/
     required_gates:
+      - phase-closeout-check
       - cargo-fmt
       - cargo-clippy
       - cargo-test
@@ -62,6 +63,7 @@ tracks:
       - crates/kairo-ecs-diplomat/
       - include/
     required_gates:
+      - phase-closeout-check
       - ffi-lifecycle-tests
       - panic-boundary-tests
       - header-diff
@@ -75,6 +77,7 @@ tracks:
       - crates/kairo-ecs-abm/
       - examples/flow/
     required_gates:
+      - phase-closeout-check
       - des-fixture
       - abm-fixture
   - id: 04
@@ -87,6 +90,7 @@ tracks:
       - schemas/arrow/
       - examples/telemetry/
     required_gates:
+      - phase-closeout-check
       - arrow-schema-versioning
       - arrow-roundtrip
   - id: 05
@@ -99,6 +103,7 @@ tracks:
       - examples/viz/
       - website/docs/visualization/
     required_gates:
+      - phase-closeout-check
       - optional-feature-check
       - headless-core-check
   - id: 06
@@ -110,6 +115,7 @@ tracks:
       - bindings/python/
       - packaging/python/
     required_gates:
+      - phase-closeout-check
       - pytest
       - ruff
       - wheel-build
@@ -123,6 +129,7 @@ tracks:
       - bindings/r/
       - packaging/r/
     required_gates:
+      - phase-closeout-check
       - r-cmd-check
       - arrow-roundtrip
   - id: 08
@@ -134,6 +141,7 @@ tracks:
       - bindings/julia/
       - packaging/julia/
     required_gates:
+      - phase-closeout-check
       - julia-pkg-test
       - arrow-roundtrip
   - id: 09
@@ -146,6 +154,7 @@ tracks:
       - crates/kairo-ecs-wasm/
       - packaging/npm/
     required_gates:
+      - phase-closeout-check
       - tsc
       - vitest
       - browser-smoke
@@ -157,6 +166,7 @@ tracks:
     owned_paths:
       - bindings/csharp/
     required_gates:
+      - phase-closeout-check
       - dotnet-test-net10
       - dotnet-build-net10
       - dotnet-test-net11-preview
@@ -170,6 +180,7 @@ tracks:
       - bindings/go/
       - packaging/go/
     required_gates:
+      - phase-closeout-check
       - go-test
       - go-vet
       - cgo-smoke
@@ -184,6 +195,7 @@ tracks:
       - benches/
       - crates/kairo-ecs-bench/
     required_gates:
+      - phase-closeout-check
       - fixture-schema-check
       - cargo-test
       - benchmark-smoke
@@ -197,6 +209,7 @@ tracks:
       - deny.toml
       - rust-toolchain.toml
     required_gates:
+      - phase-closeout-check
       - workflow-presence
       - cargo-metadata
       - dependency-policy
@@ -210,6 +223,7 @@ tracks:
       - website/
       - examples/docs/
     required_gates:
+      - phase-closeout-check
       - docs-build
       - link-check-plan
   - id: 15
@@ -222,6 +236,7 @@ tracks:
       - .github/workflows/release.yml
       - docs/release/
     required_gates:
+      - phase-closeout-check
       - package-dry-run
       - checksums
       - release-checklist
@@ -235,6 +250,7 @@ tracks:
       - docs/release/
       - CHANGELOG.md
     required_gates:
+      - phase-closeout-check
       - compatibility-policy
       - changelog-check
   - id: 17
@@ -246,6 +262,7 @@ tracks:
       - docs/community/
       - examples/
     required_gates:
+      - phase-closeout-check
       - onboarding-docs
   - id: 18
     name: Comparative Benchmarks & Reproducibility
@@ -256,6 +273,7 @@ tracks:
       - docs/benchmarks/
       - benches/
     required_gates:
+      - phase-closeout-check
       - benchmark-metadata
       - raw-results-policy
   - id: 19
@@ -270,6 +288,7 @@ tracks:
       - docs/research/
       - paper/
     required_gates:
+      - phase-closeout-check
       - citation-metadata
       - archival-plan
   - id: 20
@@ -284,6 +303,7 @@ tracks:
       - conductor/delivery-readiness-checklist.md
       - conductor/quality-gates.md
     required_gates:
+      - phase-closeout-check
       - scorecard
       - sbom-plan
       - vulnerability-policy
@@ -298,6 +318,7 @@ tracks:
       - scripts/validation/
       - conformance/
     required_gates:
+      - phase-closeout-check
       - replay-fixture
       - seed-manifest
   - id: 22
@@ -312,6 +333,7 @@ tracks:
       - docs/scenarios/
       - scripts/scenarios/
     required_gates:
+      - phase-closeout-check
       - scenario-manifest
       - resumability-plan
   - id: 23
@@ -326,6 +348,7 @@ tracks:
       - docs/starter-kits/
       - docs/community/
     required_gates:
+      - phase-closeout-check
       - example-maturity-labels
   - id: 24
     name: Playground, Demos & Visualization UX
@@ -336,6 +359,7 @@ tracks:
       - website/
       - examples/viz/
     required_gates:
+      - phase-closeout-check
       - browser-smoke
       - non-core-dependency-check
   - id: 25
@@ -347,6 +371,7 @@ tracks:
       - conductor/api-design-review.md
       - docs/design/
     required_gates:
+      - phase-closeout-check
       - api-review-template
       - compatibility-matrix
   - id: 26
@@ -358,6 +383,7 @@ tracks:
       - docs/interoperability/
       - conductor/interoperability-standards.md
     required_gates:
+      - phase-closeout-check
       - standards-mapping
       - adr-recommendations
   - id: 27
@@ -372,6 +398,7 @@ tracks:
       - scripts/
       - justfile
     required_gates:
+      - phase-closeout-check
       - bootstrap-smoke
       - toolchain-docs
   - id: 28
@@ -384,6 +411,7 @@ tracks:
       - conductor/red-team-review.md
       - conductor/devils-advocate-review.md
     required_gates:
+      - phase-closeout-check
       - no-critical-release-blockers
   - id: 29
     name: Wave Manager & Execution Gatekeeper
@@ -393,6 +421,7 @@ tracks:
     owned_paths:
       - conductor/wave-policy.md
     required_gates:
+      - phase-closeout-check
       - wave-progression-check
       - dependency-closure-check
   - id: 30
@@ -404,6 +433,7 @@ tracks:
       - conductor/toolchain-matrix.md
       - .github/workflows/toolchain-check.yml
     required_gates:
+      - phase-closeout-check
       - toolchain-matrix-current
       - version-drop-policy-check
   - id: 31
@@ -416,6 +446,7 @@ tracks:
       - benches/regression/
       - .github/workflows/bench-regression.yml
     required_gates:
+      - phase-closeout-check
       - benchmark-regression-check
       - threshold-definition-exists
   - id: 32
@@ -427,6 +458,7 @@ tracks:
       - crates/kairo-ecs-gpu/
       - docs/gpu-compute/
     required_gates:
+      - phase-closeout-check
       - gpu-parity-check
       - gpu-benchmark-threshold
   - id: 33
@@ -438,6 +470,7 @@ tracks:
       - crates/kairo-ecs-webgpu/
       - website/webgpu-demo/
     required_gates:
+      - phase-closeout-check
       - browser-webgpu-smoke
       - wasm-gpu-parity
   - id: 34
@@ -449,6 +482,7 @@ tracks:
       - crates/kairo-ecs-pdes/
       - docs/pdes/
     required_gates:
+      - phase-closeout-check
       - pdes-sequential-parity
       - gvt-progression-check
   - id: 35
@@ -461,6 +495,7 @@ tracks:
       - crates/kairo-ecs-grpc/
       - docs/distributed/
     required_gates:
+      - phase-closeout-check
       - mpi-smoke
       - grpc-smoke
       - entity-migration-check
@@ -473,6 +508,7 @@ tracks:
       - crates/kairo-ecs-streaming/
       - docs/streaming/
     required_gates:
+      - phase-closeout-check
       - kafka-smoke
       - arrow-flight-smoke
       - realtime-wallclock-check
@@ -486,6 +522,7 @@ tracks:
       - docs/ml/
       - examples/ml-surrogate/
     required_gates:
+      - phase-closeout-check
       - onnx-inference-smoke
       - gymnasium-env-smoke
   - id: 38
@@ -498,6 +535,7 @@ tracks:
       - docs/fmi-digital-twin/
       - examples/fmi-co-simulation/
     required_gates:
+      - phase-closeout-check
       - fmi-import-smoke
       - fmi-export-smoke
       - aas-validate
@@ -511,6 +549,7 @@ tracks:
       - k8s/
       - docs/cloud-hpc/
     required_gates:
+      - phase-closeout-check
       - docker-build
       - kubernetes-smoke
       - spot-checkpoint-test
@@ -524,6 +563,7 @@ tracks:
       - docs/debugging/
       - website/time-travel-demo/
     required_gates:
+      - phase-closeout-check
       - trace-record-replay
       - fwd-back-parity
       - breakpoint-smoke

@@ -17,3 +17,6 @@
 | Track 18 reproducibility evidence validates against manifest | `python benches/benchmark_reproducibility.py` | yes | yes | yes |
 | Public reproduction page is linked into docs manifest | `npm --prefix website run check:links` | yes | yes | yes |
 | Aggregate Track 12-20 evidence gate keeps benchmark evidence wired | `node tests/conformance/track12_20_evidence_check.mjs` | yes | yes | yes |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

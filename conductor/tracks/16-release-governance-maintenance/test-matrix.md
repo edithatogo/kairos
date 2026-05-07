@@ -63,4 +63,6 @@ The release workflow should block publish when:
   `docs/release/compatibility.md`;
 - Track 15 package evidence is missing or still marked blocked while a publish
   job is requested.
+## Phase closeout gate
 
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

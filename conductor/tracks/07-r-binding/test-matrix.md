@@ -55,4 +55,6 @@ Rscript -e "testthat::test_dir('tests', reporter = 'summary')" && R CMD check --
 R 4.6.0 and `Rscript` are now available locally through Scoop. Optional
 packages `arrow`, `devtools`, `lintr`, and `pkgdown` are still not installed,
 so local package checking used `_R_CHECK_FORCE_SUGGESTS_=false`.
+## Phase closeout gate
 
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

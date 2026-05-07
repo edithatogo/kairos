@@ -69,3 +69,6 @@ Add conformance assertions before upgrading any partial or deferred standard to 
 ## Integration notes
 
 Downstream docs should reuse the exact Track 26 labels for Arrow, FMI/FMU, OpenTelemetry, SBML, CellML, and ecosystem comparison claims.
+## Phase closeout evidence
+
+Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, and next-phase decision here.

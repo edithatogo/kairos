@@ -91,3 +91,13 @@ Blocked validation:
 
 - `cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` still fails before test execution because `link.exe` resolves to Git's `usr\bin\link.exe` and exits with Win32 error 5 while creating a signal pipe.
 - `$env:RUSTFLAGS='-C linker=rust-lld'; cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` still fails before test execution because `rust-lld` cannot find `kernel32.lib`, `ntdll.lib`, `userenv.lib`, `ws2_32.lib`, and `dbghelp.lib`.
+## Phase closeout gate
+
+Before any task or phase in this track is marked complete, and before the next phase begins:
+
+1. Run `$conductor-review` against this track and the current diff.
+2. Auto-apply accepted review fixes inside this track's owned paths.
+3. Record rejected, cross-track, or blocked-path fixes in `handoff.md`.
+4. Run `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` plus the gates listed in `test-matrix.md`.
+5. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
+6. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.

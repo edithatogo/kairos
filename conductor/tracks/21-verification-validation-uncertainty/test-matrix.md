@@ -36,3 +36,6 @@ node scripts/validation/validate-tracks21-27.mjs
 |---|---|---|
 | `node scripts/validation/validate-vvuq-note.mjs` | pass | Cross-checked `docs/validation/factory-bottleneck-v1-vvuq-note.md` against `conformance/fixtures/vvuq_scenario_replay.json`, the scenario manifest, the seed manifest, and `expected_kind_order`. |
 | `node tests/conformance/conformance-check.mjs` | pass | Revalidated the ready conformance fixture set, including `vvuq_scenario_replay_v1`. |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

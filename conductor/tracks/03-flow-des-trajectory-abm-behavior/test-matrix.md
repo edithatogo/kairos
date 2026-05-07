@@ -30,3 +30,6 @@ pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo
 - Passed: `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo`.
 - Passed: `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo`.
 - Blocked outside Track 03: `cargo fmt --all --check` reports unrelated formatting diffs in `crates/kairo-ecs-arrow`, `crates/kairo-ecs-debug`, `crates/kairo-ecs-rng`, `crates/kairo-ecs-types`, and `crates/kairo-ecs-wasm`.
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

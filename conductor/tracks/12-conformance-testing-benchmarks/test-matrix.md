@@ -45,3 +45,6 @@ test -f conformance/fixtures/README.md
 | Chaos experiment manifest validates required fault types | required for this slice | target | target | target |
 | Canonical benchmark metadata matches the smoke file | required for this slice | target | target | target |
 | Planned fixture families remain documented but not ready | required for this slice | target | target | target |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

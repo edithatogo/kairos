@@ -69,4 +69,6 @@ Run from `bindings/python/` unless otherwise stated:
 ```bash
 python -m pytest -q && python -m compileall kairo_ecs tests && python -c "import kairo_ecs; print(kairo_ecs.self_check())"
 ```
+## Phase closeout gate
 
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

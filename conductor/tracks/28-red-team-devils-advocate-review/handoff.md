@@ -67,3 +67,6 @@ Run the release dry-run that produces the artifact manifest, checksums, SBOM, an
 ## Integration notes
 
 Release notes must keep artifact, checksum, SBOM, provenance, and production-readiness claims blocked until the evidence paths in this track exist for the target release train.
+## Phase closeout evidence
+
+Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, and next-phase decision here.

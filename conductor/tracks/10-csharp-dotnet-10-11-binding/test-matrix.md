@@ -66,4 +66,6 @@ Blocked validation:
 ```bash
 dotnet test bindings/csharp/Kairo.ECS.sln && dotnet build bindings/csharp/Kairo.ECS.sln -c Release && dotnet pack bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -c Release
 ```
+## Phase closeout gate
 
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

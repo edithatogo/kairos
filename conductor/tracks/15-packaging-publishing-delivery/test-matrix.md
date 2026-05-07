@@ -68,3 +68,6 @@ publish manifests.
 - `R CMD build`
 - `julia --project -e "using Pkg; Pkg.test()"`
 - `go test ./...`
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

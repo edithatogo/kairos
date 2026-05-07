@@ -56,3 +56,6 @@ Current validation date: 2026-05-07.
 | Unknown dependencies are blocking errors | yes | yes | yes | yes |
 | Gate passes only when advancing tracks have all direct and transitive dependencies `Done` | yes | yes | yes | yes |
 | Maintainer override requires an ADR | yes | yes | yes | yes |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

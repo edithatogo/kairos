@@ -8,3 +8,4 @@ bindings/python/pytest-cache-files-*/
 .cargo/config.toml
 __pycache__/
 .pytest_cache/
+crates/kairo-ecs-pyo3/

@@ -55,3 +55,6 @@ Reserve or record the DOI before public release and rerun the citation/archive v
 ## Integration notes
 
 Do not use Track 19 metadata as release authorization by itself; it supports release evidence once packaging, governance, and trust gates also pass.
+## Phase closeout evidence
+
+Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, and next-phase decision here.

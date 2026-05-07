@@ -41,3 +41,6 @@
 | `just check-docs` | Fail | `just` is not recognized on PATH in this PowerShell session. |
 | `node scripts/dx/validate-docs-workflow.mjs` | Pass | Link check passed with 29 required paths and 2 Markdown sources, `website/build/index.html` was built, and preview smoke passed at `http://127.0.0.1:41727/`. |
 | `node scripts/validation/validate-tracks21-27.mjs` | Pass | Ran the Track 26 standards validator with the adjacent Track 21-27 local validators; all seven track checks passed. |
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.

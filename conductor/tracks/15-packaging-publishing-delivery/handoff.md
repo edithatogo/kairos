@@ -78,3 +78,6 @@ to fail if publish/publication manifest files appear under `packaging/` or
 ## Follow-up issues
 
 Keep public publishing blocked until registry names, legal metadata, compatibility gates, and dry-run package evidence are complete across the package matrix.
+## Phase closeout evidence
+
+Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, and next-phase decision here.

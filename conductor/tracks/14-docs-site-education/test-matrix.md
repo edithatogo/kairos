@@ -66,3 +66,6 @@ python notebooks\validate_notebooks.py
 - 2026-05-07: `python notebooks\validate_notebooks.py` passed for 2 notebooks after updating `notebooks/python_scheduler_tutorial.ipynb` to match the current Python scheduler stats contract.
 - 2026-05-07: build output checks passed for `website/build/index.html`, `website/build/docs-index.json`, `website/build/sitemap.xml`, and `website/build/robots.txt`.
 - 2026-05-07: `website/build/docs-index.json` reported 79 entries and 79 generated manifest-backed pages.
+## Phase closeout gate
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.
