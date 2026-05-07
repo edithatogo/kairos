@@ -17,6 +17,6 @@ Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Cr
 
 | Finding | Class | Owner | Stage impact | Evidence |
 |---|---|---|---|---|
-| Release artifact manifest absent in focused check | Blocker for RC/1.0 artifact claims | release-agent | Blocks RC/1.0 claims about attached release artifacts, checksums, SBOM, or provenance | `Test-Path -LiteralPath 'dist/release-artifact-manifest.json'` returned `False` on 2026-05-06 |
+| SBOM/provenance evidence absent in focused check | Blocker for RC/1.0 artifact trust claims | release-agent | Blocks RC/1.0 claims about SBOM, provenance, or attestations | `Test-Path -LiteralPath 'dist/sbom.spdx.json'` returned `False` on 2026-05-08; `syft` is not installed locally and hosted attestation jobs fail before steps start |
 | DES/ABM/hybrid/Arrow/FFI conformance fixtures are still planned | Warning for alpha; blocker for beta+ claims outside ready fixtures | conformance-agent | Blocks beta+ claims that these surfaces are conformance-proven | `conformance/fixtures/manifest.json` shows these IDs as `planned` |
 | Six binding roots are not production-ready merely because roots exist | Warning for alpha; blocker for RC/1.0 stable binding claims | binding owners, release-agent | Blocks stable multi-binding release language until per-binding checks and package dry-runs are green | `packaging/release-package-manifest.json` is dry-run only and `production_publish_enabled` is `false` |

@@ -1,12 +1,14 @@
 # Handoff: Track 20 OpenSSF, Supply Chain Trust & Institutional Readiness
 
-Last updated: 2026-05-07
+Last updated: 2026-05-08
 
 ## Summary
 
 Captured the supply-chain and institutional-readiness checks that should sit alongside the release evidence pack, with the release gate tied to `SECURITY.md`, `CODEOWNERS`, `.github/CODEOWNERS`, `.github/dependabot.yml` or `renovate.json`, `.github/workflows/scorecard.yml`, `.github/workflows/dependency-review.yml`, `.github/workflows/actions-security.yml`, `.github/workflows/workflow-security.yml`, `.github/workflows/secret-scan.yml`, `.github/workflows/sbom-attestations.yml`, `.github/workflows/release-attestations.yml`, and the OpenSSF rows in the readiness and release-gate docs.
 
 This pass added the concrete Track 20 trust checklist, exception categories, machine-check references, and RC artifact-tree requirements for `RELEASE.txt`, `SHA256SUMS`, and `sbom.spdx.json`.
+
+The 2026-05-08 local R2 evidence pass generated `dist/release-artifact-manifest.json` and `dist/SHA256SUMS` through the Track 15 dry-run builder. SBOM and provenance evidence remain blocked locally because `syft` is not installed in this shell and the GitHub hosted attestation workflows are failing before job steps start. Do not claim SBOM, provenance, or attestation evidence until either the GitHub workflows run successfully or a local SBOM tool is installed and the generated `dist/sbom.spdx.json` is validated.
 
 ## Files changed
 
@@ -24,6 +26,8 @@ OpenSSF Scorecard, dependency-review, SBOM, provenance, and waiver handling now 
 
 The concrete risk is a missing or incomplete GitHub Actions workflow for Scorecard, dependency review, SBOM, provenance, or secret scanning, or an exception record that lacks approvers, expiry, or stage impact. Keep the release gate blocked until the artifact-tree checks pass or an approved exception is recorded under `supply-chain-plan.md`.
 
+Current blocker: artifact manifest and checksum evidence exist locally for R2 dry-run, but SBOM/provenance evidence does not. Hosted GitHub Actions jobs currently fail with no executed steps, so the trust evidence cannot be promoted beyond offline dry-run documentation.
+
 ## Validation evidence
 
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/20-openssf-supply-chain-institutional-trust/validate-supply-chain-trust.ps1`
@@ -34,6 +38,7 @@ The concrete risk is a missing or incomplete GitHub Actions workflow for Scoreca
 - `pwsh -NoProfile -File scripts/validate_track_docs_clean.ps1`
 - `npm run build` from `website/`
 - `git diff --check -- conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md conductor/tracks/20-openssf-supply-chain-institutional-trust/plan.md conductor/tracks/20-openssf-supply-chain-institutional-trust/test-matrix.md conductor/tracks/20-openssf-supply-chain-institutional-trust/risk-register.md conductor/tracks/20-openssf-supply-chain-institutional-trust/handoff.md conductor/delivery-readiness-checklist.md conductor/quality-gates.md`
+- `Get-Command syft -ErrorAction SilentlyContinue` returned no command in this shell on 2026-05-08.
 
 ## Review-hardening update
 
