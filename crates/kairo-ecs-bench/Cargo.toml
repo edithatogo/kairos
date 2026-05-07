@@ -16,3 +16,20 @@ kairo-ecs-core = { path = "../kairo-ecs-core" }
 kairo-ecs-rng = { path = "../kairo-ecs-rng" }
 kairo-ecs-state = { path = "../kairo-ecs-state" }
 kairo-ecs-types = { path = "../kairo-ecs-types" }
+
+[dev-dependencies]
+criterion = "0.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[[bench]]
+name = "scheduler"
+harness = false
+
+[[bench]]
+name = "state"
+harness = false
+
+[[bench]]
+name = "hybrid"
+harness = false
