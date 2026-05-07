@@ -8,7 +8,7 @@
 - Survey each binding track (06-11) for declared or implied version requirements.
 - Document gaps where a binding has no explicit minimum version.
 
-Evidence 2026-05-06: read `rust-toolchain.toml`, `Cargo.toml`, `mise.toml`, `.github/workflows/ci-bindings.yml`, `.github/workflows/package-dry-run.yml`, and binding manifests for Tracks 06-11. Gaps documented in `conductor/toolchain-matrix.md`: TypeScript has no `engines.node`; cross-OS/arch coverage is not provisioned yet; Track 15 package dry-run still references Go 1.24.
+Evidence 2026-05-06: read `rust-toolchain.toml`, `Cargo.toml`, `mise.toml`, `.github/workflows/ci-bindings.yml`, `.github/workflows/package-dry-run.yml`, and binding manifests for Tracks 06-11. Gaps documented in `conductor/toolchain-matrix.md`: TypeScript has no `engines.node`; cross-OS/arch coverage is not provisioned yet. The package dry-run Go lane now uses supported floor `1.25.x`.
 
 ### Task 0.2 - Lock the owned surface [x]
 - Keep new work to `conductor/tracks/30-toolchain-version-support-matrix/`.

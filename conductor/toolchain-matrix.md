@@ -102,7 +102,7 @@ The `version-drop-policy-check` gate fails if a version disappears from the matr
 | Ecosystem | Version or lane | Notice started | Earliest removal | Reason | Status |
 |---|---|---|---|---|---|
 | Node.js | `20.x` | 2026-05-06 | 2026-11-06 | Node 20 reached EOL on 2026-04-30; KairoECS CI now prefers Node 22 and 24. | Deprecated; no new CI lanes should be added. |
-| Go | `1.24.x` package dry-run lane | 2026-05-06 | 2026-11-06 | Go supports the two most recent releases; Track 30 CI now covers 1.25 and 1.26. | Deprecated; Track 13/15 should update package dry-run when in scope. |
+| Go | `1.24.x` package dry-run lane | 2026-05-06 | 2026-11-06 | Go supports the two most recent releases; Track 30 CI now covers 1.25 and 1.26. | Deprecated; package dry-run now uses the supported Go 1.25 floor. |
 
 ## Maintainer Update Procedure
 

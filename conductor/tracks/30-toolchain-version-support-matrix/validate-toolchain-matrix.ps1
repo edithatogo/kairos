@@ -81,6 +81,8 @@ function Get-InstalledVersion {
 $matrix = Get-Content -LiteralPath $matrixPath -Raw
 $gates = Get-Content -LiteralPath $gatesPath -Raw
 $workflow = Get-Content -LiteralPath $workflowPath -Raw
+$packageDryRunPath = Join-Path $repoRoot ".github\workflows\package-dry-run.yml"
+$packageDryRun = Get-Content -LiteralPath $packageDryRunPath -Raw
 
 $requiredRows = @(
     "| Rust core |",
@@ -139,6 +141,11 @@ $laneExpectations = @(
 foreach ($expectation in $laneExpectations) {
     Assert-Contains -Text $matrix -Needle $expectation.Matrix -Label "matrix lane"
     Assert-Contains -Text $workflow -Needle $expectation.Workflow -Label "workflow lane matching matrix"
+}
+
+Assert-Contains -Text $packageDryRun -Needle "go-version: '1.25.x'" -Label "package dry-run Go support floor"
+if ($packageDryRun.Contains("go-version: '1.24'") -or $packageDryRun.Contains('go-version: "1.24"')) {
+    throw "Package dry-run must not reintroduce deprecated Go 1.24."
 }
 
 if ($CheckInstalled) {
