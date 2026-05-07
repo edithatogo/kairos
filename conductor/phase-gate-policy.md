@@ -10,7 +10,8 @@ Every non-terminal track must close each phase through the same review-fix-clean
 4. Update `conductor/phase-closeout.yaml` with review outcome, accepted fixes, validation commands, cleanup state, commit SHA or blocker, pushed ref, and next-phase decision.
 5. Run `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` plus the track gates listed in `test-matrix.md`.
 6. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
-7. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
+7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` to verify recorded commits, pushed refs, and cleanup state.
+8. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
 
 ## Auto-apply boundary
 

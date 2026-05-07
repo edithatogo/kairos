@@ -135,6 +135,7 @@ foreach ($track in $trackDirs) {
 
 & (Join-Path $PSScriptRoot "validate_track_no_skip_claims.ps1")
 & (Join-Path $PSScriptRoot "validate_conductor_phase_gates.ps1")
+& (Join-Path $PSScriptRoot "validate_conductor_git_closeout.ps1")
 
 $workflowFiles = @(Get-ChildItem -LiteralPath ".github/workflows" -Filter "*.yml")
 $bootstrapAllowed = @(
