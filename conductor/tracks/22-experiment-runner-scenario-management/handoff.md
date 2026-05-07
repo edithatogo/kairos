@@ -112,4 +112,4 @@ Fix the local Windows linker path, then rerun the `validate-scenario`, `replay`,
 Tracks 21, 28, and release planning may consume only the smoke evidence named here; they should not treat it as quantified uncertainty evidence or production experiment-runner readiness.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, and next-phase decision here.
+Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.

@@ -85,11 +85,14 @@ Assert-Contains -Path "conductor/phase-closeout.yaml" -Needle "schema_version: 1
 Assert-Contains -Path "conductor/phase-closeout.yaml" -Needle "required_fields:" -Label "phase closeout ledger"
 Assert-Contains -Path "conductor/workflow.md" -Needle "Automatic phase closeout gate" -Label "workflow"
 Assert-Contains -Path "conductor/workflow.md" -Needle "auto-apply accepted review fixes" -Label "workflow"
+Assert-Contains -Path "conductor/workflow.md" -Needle "validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree" -Label "workflow"
 Assert-Contains -Path ".github/workflows/validate-conductor.yml" -Needle "Validate conductor phase gates" -Label "validate conductor workflow"
 Assert-Contains -Path ".github/workflows/validate-conductor.yml" -Needle "scripts/validate_conductor*.ps1" -Label "validate conductor workflow paths"
 Assert-Contains -Path "scripts/validate_conductor_setup.ps1" -Needle "validate_conductor_phase_gates.ps1" -Label "setup validator"
+Assert-Contains -Path "scripts/validate_conductor_setup.ps1" -Needle "validate_conductor_git_closeout.ps1" -Label "setup validator"
 Assert-Contains -Path "conductor/quality-gates.md" -Needle "**phase-closeout-check**" -Label "quality gate catalogue"
 Assert-Contains -Path "conductor/quality-gates.md" -Needle "conductor/phase-closeout.yaml" -Label "quality gate catalogue"
+Assert-Contains -Path "conductor/quality-gates.md" -Needle "validate_conductor_git_closeout.ps1" -Label "quality gate catalogue"
 
 $terminalStatuses = @("Done", "Deferred", "Cancelled")
 $records = @(Get-TrackRecords -Path $TracksYamlPath)
@@ -170,7 +173,9 @@ foreach ($record in $records) {
         '$conductor-review',
         "Auto-apply accepted review fixes",
         "validate_conductor_phase_gates.ps1",
-        "Commit and push the cleaned slice"
+        "conductor/phase-closeout.yaml",
+        "Commit and push the cleaned slice",
+        "validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
     )) {
         if ($plan -notmatch [regex]::Escape($needle)) {
             Add-Issue -Severity "ERROR" -Message "$($trackDir.Name)/plan.md missing phase gate marker: $needle"
@@ -183,10 +188,28 @@ foreach ($record in $records) {
             Add-Issue -Severity "ERROR" -Message "$($trackDir.Name)/handoff.md missing required closeout section: $needle"
         }
     }
+    foreach ($needle in @(
+        '$conductor-review',
+        "accepted fixes",
+        "commit SHA",
+        "pushed ref",
+        "validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree",
+        "next-phase decision"
+    )) {
+        if ($handoff -notmatch [regex]::Escape($needle)) {
+            Add-Issue -Severity "ERROR" -Message "$($trackDir.Name)/handoff.md missing phase closeout evidence marker: $needle"
+        }
+    }
 
     $matrix = Read-Text -Path $matrixPath
     if ($matrix -notmatch "validate_conductor_phase_gates\.ps1") {
         Add-Issue -Severity "ERROR" -Message "$($trackDir.Name)/test-matrix.md does not name the phase gate validator"
+    }
+    if ($matrix -notmatch "validate_conductor_git_closeout\.ps1") {
+        Add-Issue -Severity "ERROR" -Message "$($trackDir.Name)/test-matrix.md does not name the git closeout validator"
+    }
+    if ($matrix -notmatch "RequireCleanWorkingTree") {
+        Add-Issue -Severity "ERROR" -Message "$($trackDir.Name)/test-matrix.md does not require strict clean-tree closeout"
     }
 }
 

@@ -36,4 +36,4 @@
 | `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1 -RunTests` | Optional runtime gate | Runs PDES unit tests when the local linker/toolchain can execute Rust test binaries. |
 ## Phase closeout gate
 
-- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, cleaned commit/push, and blocker recording.
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
