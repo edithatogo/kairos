@@ -14,7 +14,7 @@ This document is the single source of truth for KairoECS language and runner ver
 | `bindings/python/pyproject.toml` | Python binding declares `requires-python = ">=3.10"`. |
 | `bindings/r/DESCRIPTION` | R binding declares `Depends: R (>= 4.2)`. |
 | `bindings/julia/Project.toml` | Julia binding declares `[compat] julia = "1.10"`. |
-| `bindings/typescript/package.json` | TypeScript binding has no `engines.node`; CI matrix owns the Node floor until Track 09 adds one. |
+| `bindings/typescript/package.json` | TypeScript binding declares `engines.node = ">=22 <25"` for the production Node support floor. |
 | `bindings/csharp/global.json` | C# SDK default is `10.0.202` with `latestFeature` roll-forward. |
 | `bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj` | C# binding targets `net10.0;net11.0`. |
 | `bindings/go/go.mod` | Go binding declares `go 1.23`. |

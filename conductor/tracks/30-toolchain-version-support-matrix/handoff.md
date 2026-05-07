@@ -23,7 +23,7 @@ Current slice completed on 2026-05-07. Defined the cross-language toolchain vers
 - `bindings/python/pyproject.toml`: Python floor is `>=3.10`.
 - `bindings/r/DESCRIPTION`: R floor is `R (>= 4.2)`.
 - `bindings/julia/Project.toml`: Julia compat floor is `1.10`.
-- `bindings/typescript/package.json`: no `engines.node` declaration.
+- `bindings/typescript/package.json`: declares `engines.node = ">=22 <25"`.
 - `bindings/csharp/global.json`: SDK default is `10.0.202`.
 - `bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj`: target frameworks are `net10.0;net11.0`.
 - `bindings/go/go.mod`: module floor is `go 1.23`.
@@ -62,7 +62,7 @@ Current slice completed on 2026-05-07. Defined the cross-language toolchain vers
 - Track 06: Python support remains 3.10-3.14; free-threaded Python 3.14 is advisory until a runner can prove it.
 - Track 07: R package floor remains 4.2, but Track 30 CI covers oldrel-1/current release.
 - Track 08: Julia support remains 1.10 LTS-compatible through 1.12 current stable.
-- Track 09: Add `engines.node` when binding manifest edits are in scope; Track 30 currently owns Node 22/24 as CI support floors.
+- Track 09: Keep `engines.node` aligned with Node 22/24 production CI support floors and the version-drop policy.
 - Track 10: .NET 10 is stable; .NET 11 remains preview/experimental until GA.
 - Track 11: Go module floor remains 1.23; CI support floor is 1.25/1.26.
 - Track 13: Provision non-Ubuntu and aarch64 runner coverage before RC if those cells should become release-supported.

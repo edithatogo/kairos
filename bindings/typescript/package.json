@@ -15,6 +15,9 @@
     "dist",
     "README.md"
   ],
+  "engines": {
+    "node": ">=22 <25"
+  },
   "scripts": {
     "build": "node scripts/build.mjs",
     "prepare": "npm run build",

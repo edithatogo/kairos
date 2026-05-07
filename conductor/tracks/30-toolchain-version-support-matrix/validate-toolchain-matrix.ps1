@@ -83,6 +83,8 @@ $gates = Get-Content -LiteralPath $gatesPath -Raw
 $workflow = Get-Content -LiteralPath $workflowPath -Raw
 $packageDryRunPath = Join-Path $repoRoot ".github\workflows\package-dry-run.yml"
 $packageDryRun = Get-Content -LiteralPath $packageDryRunPath -Raw
+$typescriptPackagePath = Join-Path $repoRoot "bindings\typescript\package.json"
+$typescriptPackage = Get-Content -LiteralPath $typescriptPackagePath -Raw | ConvertFrom-Json
 
 $requiredRows = @(
     "| Rust core |",
@@ -146,6 +148,10 @@ foreach ($expectation in $laneExpectations) {
 Assert-Contains -Text $packageDryRun -Needle "go-version: '1.25.x'" -Label "package dry-run Go support floor"
 if ($packageDryRun.Contains("go-version: '1.24'") -or $packageDryRun.Contains('go-version: "1.24"')) {
     throw "Package dry-run must not reintroduce deprecated Go 1.24."
+}
+
+if ($typescriptPackage.engines.node -ne ">=22 <25") {
+    throw "TypeScript package engines.node must stay aligned with the Node 22/24 production support floor."
 }
 
 if ($CheckInstalled) {
