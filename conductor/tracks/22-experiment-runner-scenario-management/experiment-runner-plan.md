@@ -37,7 +37,7 @@ path = "runs/factory_bottleneck"
 ## Replay command
 
 ```bash
-kairoecs-experiment replay --scenario scenarios/factory_bottleneck.toml --seed-manifest scenarios/seeds.toml --fixture scheduler_ordering_v1 --output runs/factory_bottleneck
+cargo run -p kairo-ecs-cli -- replay --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1
 ```
 
 ## Output shape

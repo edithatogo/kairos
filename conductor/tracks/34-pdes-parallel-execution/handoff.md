@@ -70,11 +70,52 @@ path.
   issue above.
 - Scaling benchmarks are not implemented or run yet.
 - Time Warp research spike is not implemented.
-- Quality gates under global conductor files are not added because they are
-  deferred to the next control-gate pass.
+- Quality gates under global conductor files are now present for
+  `pdes-sequential-parity`, `gvt-progression-check`, and `pdes-deadlock-free`;
+  remaining work is to keep the track-local evidence aligned with those central
+  definitions.
 
 ## Downstream contract for Track 35
 
 Track 35 should consume `PdesTransport`, `RemoteEvent`, `NullMessage`, and the
 GVT reduction boundary from `crates/kairo-ecs-pdes/`. MPI and gRPC transports
 must preserve the Track 34 event and null-message semantics.
+
+## Summary
+
+No additional handoff summary was recorded by this Conductor hygiene update.
+
+
+## Files changed
+
+No additional file list was recorded by this Conductor hygiene update. Use the track plan, spec, and git history for implementation-specific file evidence.
+
+
+## Contracts consumed
+
+No additional consumed contracts were recorded by this Conductor hygiene update.
+
+
+## Contracts changed
+
+No contract changes were recorded by this Conductor hygiene update.
+
+
+## Tests added
+
+No tests were added by this Conductor hygiene update.
+
+
+## Known risks
+
+No new risks were introduced by this Conductor hygiene update.
+
+
+## Follow-up issues
+
+No additional follow-up issues were recorded by this Conductor hygiene update.
+
+
+## Integration notes
+
+No additional integration notes were recorded by this Conductor hygiene update.

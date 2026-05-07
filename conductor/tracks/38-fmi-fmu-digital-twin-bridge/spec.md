@@ -57,7 +57,7 @@ crates/kairo-ecs-streaming/ — owned by Track 36 (data pipeline)
 - FMU export: KairoECS model is packaged as an FMU; the FMU loads in OpenModelica OMEdit and produces trajectory output matching the native KairoECS run within numerical tolerance (1e-6 for deterministic models).
 - AAS descriptor JSON validates against the AASX Package Explorer schema (AAS Specification Part 1 v3.0).
 - Live data bridge publishes FMU output variable changes to the streaming pipeline at the configured sample rate.
-- All FMI functionality is gated behind a `fmi` Cargo feature flag.
+- FMI functionality is gated behind the `fmi2` and `fmi3` Cargo feature flags; `aas` and `digital-twin` remain separately gated.
 
 ## Non-goals
 
@@ -70,7 +70,7 @@ crates/kairo-ecs-streaming/ — owned by Track 36 (data pipeline)
 ## Release implications
 
 - Release-critical for industrial and digital-twin users. Blocks v1.0 if industrial adoption is a stated goal.
-- Gated behind `fmi` feature flag; headless/scientific users are not affected.
+- Gated behind the `fmi2` and `fmi3` feature flags; headless/scientific users are not affected.
 - FMU export build pipeline must be reproducible: identical KairoECS model → identical FMU binary.
 - AAS descriptor is published alongside release artifacts for digital twin consumers.
 

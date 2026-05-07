@@ -1,6 +1,8 @@
 # Risk Register — 14 Documentation Site & Education
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Docs become stale as implementation changes | 4 | 3 | 12 | Add link-check and content-grep CI; flag stale tutorial references before release | docs-agent | Link-check CI fails |
 | Missing API docs for new features | 4 | 3 | 12 | Require docs update in the same PR as new public API | docs-agent | Public API merges without doc update |

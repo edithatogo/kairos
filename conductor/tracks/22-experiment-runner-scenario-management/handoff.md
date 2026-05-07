@@ -1,12 +1,14 @@
 # Handoff: Track 22 Experiment Runner & Scenario Management
 
+Last updated: 2026-05-07
+
 ## Summary
 
 Captured the scenario-management story so other tracks can assume named runs, replay inputs, documented output shape, and a concrete replay comparison flow.
 
 ## Files changed
 
-`scenarios/manifest-index.json`, `docs/scenarios/factory-bottleneck-run-replay.md`, `scripts/scenarios/validate-track22-smoke.ps1`, `conductor/tracks/22-experiment-runner-scenario-management/test-matrix.md`, `conductor/tracks/22-experiment-runner-scenario-management/risk-register.md`, `conductor/tracks/22-experiment-runner-scenario-management/handoff.md`
+`scenarios/manifest-index.json`, `docs/scenarios/factory-bottleneck-run-replay.md`, `docs/cli/kairo-ecs-cli.md`, `scripts/scenarios/validate-track22-smoke.ps1`, `conductor/tracks/22-experiment-runner-scenario-management/test-matrix.md`, `conductor/tracks/22-experiment-runner-scenario-management/risk-register.md`, `conductor/tracks/22-experiment-runner-scenario-management/handoff.md`
 
 ## Contracts consumed
 
@@ -29,7 +31,8 @@ Scenario replay and determinism checks now feed the reproducibility and release 
 ## Scenario manifest/run/replay note
 
 `docs/scenarios/factory-bottleneck-run-replay.md` now records the first usable
-Track 22 scenario smoke target:
+Track 22 scenario smoke target, while `docs/cli/kairo-ecs-cli.md` provides the
+matching command reference and quickstart:
 
 - Scenario ID: `factory_bottleneck_v1`.
 - Replay fixture: `vvuq_scenario_replay_v1`.
@@ -80,6 +83,30 @@ cargo run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/
   and resume commands remain blocked until the MSVC linker/Windows SDK path is
   corrected for this shell.
 
+The new CLI docs page stays intentionally narrow: it documents the implemented
+smoke commands, reserves `run`/`collect`/`analyze` for the fuller runner
+surface, and points readers at the local smoke validator.
+
 ## Risks and unresolved questions
 
 The main risk is that a runner can look deterministic in one environment and drift in another if the scenario inputs are not pinned.
+
+## Contracts changed
+
+Track 22 now documents the implemented smoke-command surface for `validate-scenario`, `replay`, and `resume-plan`, with `factory_bottleneck_v1` as the only claimed scenario target.
+
+## Tests added
+
+The current evidence is `scripts/scenarios/validate-track22-smoke.ps1`, `cargo check -p kairo-ecs-cli`, and `node tests/conformance/conformance-check.mjs`. Local `cargo run` validation remains blocked by the Windows linker path issue recorded above.
+
+## Known risks
+
+Scenario replay drift remains the main track risk. The local shell also cannot yet provide executable CLI replay evidence until `link.exe` resolves to the MSVC linker/Windows SDK toolchain.
+
+## Follow-up issues
+
+Fix the local Windows linker path, then rerun the `validate-scenario`, `replay`, and `resume-plan` commands. Broaden the runner beyond the committed smoke scenario only after the parser and resumability tests have real coverage.
+
+## Integration notes
+
+Tracks 21, 28, and release planning may consume only the smoke evidence named here; they should not treat it as quantified uncertainty evidence or production experiment-runner readiness.

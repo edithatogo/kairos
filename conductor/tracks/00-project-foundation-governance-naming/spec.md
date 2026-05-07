@@ -61,6 +61,11 @@ Tracks 13, 14, 16, 19, 20, 25, 26, 27, 28 — all start immediately
 - Track CI gate is defined in `test-matrix.md`.
 
 
+## Release implications
+
+Track 00 establishes the repository foundation and governance surface required before any public release. It does not authorize registry publication, package signing, or production release claims; those remain gated by the later packaging, supply-chain, release-governance, and red-team tracks.
+
+
 ## Quality gates
 
 Use the gates in `conductor/quality-gates.md`. Track-specific gates must be listed in `test-matrix.md`.

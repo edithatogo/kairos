@@ -1,6 +1,8 @@
 # Risk Register — 13 CI/CD, Code Quality & Supply Chain
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Workflow brittleness from matrix expansion | 3 | 3 | 9 | Pin workflow versions; test matrix changes on a branch before merging to main | ci-agent | Workflow matrix change breaks without branch test |
 | Secret exposure in CI logs or artifacts | 2 | 5 | 10 | Use GitHub secrets + OpenID Connect; audit workflow logs for accidental env exposure | ci-agent | Any secret detected in CI log or artifact |

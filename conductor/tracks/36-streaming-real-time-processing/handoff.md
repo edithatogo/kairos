@@ -56,3 +56,12 @@ The streaming adapters must remain strictly additive and feature-gated. Any leak
 - Added per-run `time_ticks` monotonicity enforcement to the in-memory stream sink; this complements the existing per-run sequence guard and catches local replay-order regressions before broker adapters land.
 - Added `conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1`, an aggregate offline validator for Tracks 36-40.
 - Updated `docs/streaming/stream-schema.md` and this track's test matrix to document the bounded local ordering check.
+
+## Contracts consumed
+
+No additional consumed contracts were recorded by this Conductor hygiene update.
+
+
+## Follow-up issues
+
+No additional follow-up issues were recorded by this Conductor hygiene update.

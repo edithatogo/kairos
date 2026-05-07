@@ -1,6 +1,8 @@
 # Risk Register: Track 21 Verification, Validation & Uncertainty
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | A docs claim overstates what replay actually proves | 3 | 4 | 12 | Require the page to name the scenario, seed, trace, and comparison basis | docs-agent | Claim published without scenario/seed/trace reference |
 | Validation is confused with verification | 3 | 4 | 12 | Keep the term definitions and evidence boundary on the page | track subagent | Page conflates validation and verification terms |

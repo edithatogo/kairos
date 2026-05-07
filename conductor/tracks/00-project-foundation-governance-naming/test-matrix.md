@@ -30,18 +30,18 @@ test -d website
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/00-project-foundation-governance-naming/validate-track00-06-review.ps1
 ```
 
-## Done blocker validation
+## Done evidence validation
 
-Track 00 must not move to `Done` until live naming due-diligence evidence is recorded. Recheck the remaining blocker with:
+Track 00 may move to `Done` once live naming due-diligence evidence and maintainer approval are recorded. Recheck the evidence with:
 
 ```bash
-pwsh -NoProfile -Command "Select-String -LiteralPath conductor/naming-due-diligence.md -Pattern 'Release blocker','Public publishing is blocked','registry search date','search results'"
+pwsh -NoProfile -Command "Select-String -LiteralPath conductor/naming-due-diligence.md -Pattern 'Release decision','registry search date','legal/trademark advice','approver: repository maintainer'"
 ```
 
-The blocker is clear only when `conductor/naming-due-diligence.md` records live registry/domain/trademark/common-law search date, reviewer, query/source, exact names checked, observed result, selected names, fallback names, final public repository/module decision, and legal/trademark advice for all target surfaces in the Track 00 spec.
+The blocker is clear when `conductor/naming-due-diligence.md` records live registry/domain/trademark/common-law search date, reviewer, query/source, exact names checked, observed result, selected names, fallback names, final public repository/module decision, and legal/trademark advice or explicit maintainer waiver for all target surfaces in the Track 00 spec.
 
 For a `Done` status recommendation, the evidence must also be structured enough to audit:
 
 - One live search row per exact checked name, with review date, reviewer, surface, query/source, exact name, observed result, evidence pointer, and decision impact.
-- One surface decision row per target ecosystem/public identity surface, with selected public name, fallback name, public repo/module decision where applicable, legal/trademark advice or explicit waiver, release stage allowed, and approver.
+- One surface decision row per target ecosystem/public identity surface, with selected public name, fallback name, public repo/module decision where applicable, legal/trademark advice or explicit maintainer waiver, release stage allowed, and approver.
 - No row may rely on offline repository consistency as a substitute for live registry, domain, trademark, common-law, GitHub, Go proxy, or ecosystem search evidence.

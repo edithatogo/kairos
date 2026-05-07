@@ -37,7 +37,7 @@ Track 34: PDES & Parallel Execution
 - **Output**: Pass if PDES final state (component data, entity graph) is identical to sequential final state for the same initial conditions. Fail with the specific component/entity that diverges.
 - **Blocking**: Yes for PDES feature flag — blocks enabling `pdes` by default. Not release-gating for sequential mode.
 
-### pdes-gvt-progression
+### gvt-progression-check
 - **Input**: PDES run with GVT logging enabled, minimum tick count.
 - **Output**: Pass if GVT increases monotonically and advances at least every N ticks (where N is configurable per LP count). Fail with the tick range where GVT stalled.
 - **Blocking**: Yes for PDES feature flag. Not release-gating for sequential mode.

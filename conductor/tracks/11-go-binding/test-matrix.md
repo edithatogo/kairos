@@ -7,7 +7,7 @@
 | Unit/smoke | `go test ./...` | Passing | Covers version smoke, deterministic scheduler ordering, cancellation rejection for unknown/duplicate/dispatched IDs, explicit close lifecycle, and native-not-configured behavior. |
 | Static analysis | `go vet ./...` | Passing | Run inside `bindings/go`. |
 | Module metadata | `go mod tidy` | Passing | No external dependencies after tidy. |
-| Conformance fixtures | `go test -run TestConformance ./...` | Deferred | Track 12 fixtures are not wired into the Go binding yet. |
+| Conformance fixtures | `go test -run TestConformance ./...` | Passing | Deterministic ordering, cancellation, zero-delay guard, and RNG replay metadata fixtures are covered from `bindings/go`. |
 | Race tests | `go test -race ./...` | Not required for this slice | The preview scheduler is single-engine/single-goroutine and introduces no shared concurrent access API. |
 
 ## Future-surface controls
@@ -36,4 +36,5 @@ go mod tidy
 - Go toolchain observed locally: `go1.26.2 windows/amd64`.
 - `go version` emitted a telemetry token permission warning under `%APPDATA%\go\telemetry`, but `go test`, `go vet`, and `go mod tidy` completed successfully from `bindings/go`.
 - The sandboxed Go cache paths under `%LOCALAPPDATA%`, `C:\tmp`, and repo-local `target\go-cache` were denied in this run; `go test ./...` and `go vet ./...` passed after rerunning with approved normal Windows cache access.
+- 2026-05-07 Track 11 pass: `go test ./...`, `go vet ./...`, `go mod tidy`, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` passed after restoring the pure-Go preview facade and executable fixture bridge.
 

@@ -1,5 +1,7 @@
 # Handoff: Track 27 Developer Experience & Reproducible Environments
 
+Last updated: 2026-05-07
+
 ## Summary
 
 Documented the contributor workflow commands for bootstrapping, building, and previewing the docs site from the repo layout that already exists.
@@ -21,6 +23,7 @@ Docs build and preview commands are now explicit contributors to the developer-e
 - `just docs-bootstrap` runs `npm --prefix website ci`.
 - `just docs-build` runs `npm --prefix website ci` and `npm --prefix website run build`.
 - `just docs-dev` runs `npm --prefix website ci` and `npm --prefix website start`, which serves `http://localhost:3000` by default.
+- `just dev-setup` runs `rustup component add clippy rustfmt` plus the optional `cargo install cargo-nextest --locked` and `cargo install cargo-vet --locked` bootstrap steps.
 - `just docs-smoke` and `just check-docs` run `node scripts/dx/validate-docs-workflow.mjs`.
 - The smoke validator runs `npm --prefix website run check:links`, `npm --prefix website run build`, verifies `website/build/index.html`, then starts the preview on `http://127.0.0.1:41727/` unless `DOCS_SMOKE_PORT` is set.
 
@@ -36,3 +39,23 @@ Docs build and preview commands are now explicit contributors to the developer-e
 ## Risks and unresolved questions
 
 The site preview is intentionally simple and does not yet serve a richer docs framework.
+
+## Contracts changed
+
+The root `justfile` command contract now includes `just dev-setup` alongside the docs bootstrap, build, dev, smoke, and check-docs recipes.
+
+## Tests added
+
+The current validation evidence is `npm --prefix website ci`, `npm --prefix website run check:links`, `npm --prefix website run build`, a local preview HTTP 200 check, and `node scripts/dx/validate-docs-workflow.mjs`.
+
+## Known risks
+
+`just` is not on PATH in this shell, so the recipes are documented and validator-mapped but not directly executable here.
+
+## Follow-up issues
+
+Install or provision `just` in the developer environment/devcontainer path, then rerun `just dev-setup`, `just docs-bootstrap`, `just docs-build`, and `just docs-smoke` directly.
+
+## Integration notes
+
+Use the underlying npm and node commands as the current fallback gate until `just` availability is part of the reproducible environment.

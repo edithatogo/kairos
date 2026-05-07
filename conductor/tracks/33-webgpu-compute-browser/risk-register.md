@@ -1,6 +1,8 @@
 # Risk Register: Track 33 WebGPU Compute for Browser
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Browser WebGPU availability — WebGPU is not yet enabled by default in all target browsers (Firefox, Safari); demo unreachable for most users | 5 | 4 | 20 | Build feature detection and graceful fallback to CPU Wasm into the demo page; target Chrome stable (has WebGPU) as primary, Edge and Firefox Nightly as secondary; document browser requirements prominently | webgpu-agent | WebGPU unavailable on Chrome stable for Windows/macOS/Linux |
 | WGSL shader incompatibility — WebGPU WGSL subset differs from native WGSL; shaders that compile on wgpu fail in browser | 4 | 4 | 16 | Maintain a separate WebGPU WGSL shader directory; run the browser-GPU-free subset validator in `website/webgpu-demo`; add `naga` or headless Chrome shader compilation once dependencies/runners are available | webgpu-agent | WGSL shader fails the static validator or later fails to compile in Chrome with `--enable-unsafe-webgpu` |

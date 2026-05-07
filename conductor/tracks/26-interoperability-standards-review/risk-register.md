@@ -1,6 +1,8 @@
 # Risk Register: Track 26 Interoperability Standards Review
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Interoperability standard chosen without binding conformance requirement | 3 | 4 | 12 | Every adopted standard must map to a CI-checked conformance assertion | interop-agent | Standard referenced in spec without CI conformance check |
 | Cross-binding data format drift | 3 | 4 | 12 | Contract-first workflow; shared Arrow schema and C header as single source of truth | contracts-agent | Any binding diverges from canonical schema |

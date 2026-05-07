@@ -18,7 +18,7 @@
 ### Task 1.1 — Create the first usable version
 - Produce the smallest contributor-facing note that makes `just docs-bootstrap`, `just docs-build`, and `just docs-dev` discoverable.
 - Use the existing `website/` and `justfile` commands rather than a generic example.
-- Make `just docs-bootstrap`, `just docs-build`, and `just docs-dev` runnable against the current repository layout.
+- Make `just dev-setup`, `just docs-bootstrap`, `just docs-build`, and `just docs-dev` runnable against the current repository layout.
 
 ### Task 1.2 — Add review criteria
 - Add red-team prompts for broken local setup, hidden prerequisites, and docs-preview drift.

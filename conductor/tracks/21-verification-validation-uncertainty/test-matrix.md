@@ -8,6 +8,7 @@
 | Evidence boundary is explicit | Only committed replayable artifacts count as evidence. | yes | yes | yes |
 | Accepted artifacts are listed | Readers can see which artifacts support a claim. | yes | yes | yes |
 | Replay/scenario fixture tie-in exists | The page links credibility claims to scenario and seed fixtures. | yes | yes | yes |
+| VVUQ note is surfaced in public docs | The site navigation and scenario evidence page link the artifact-backed VVUQ note. | yes | yes | yes |
 | Markdown link and lint check | The page renders and links cleanly. | yes | yes | yes |
 | Artifact existence check | The referenced docs and track files exist. | yes | yes | yes |
 | Red-team limit check | The page explains what the evidence does not prove. | yes | yes | yes |

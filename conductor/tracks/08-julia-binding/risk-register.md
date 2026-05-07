@@ -1,6 +1,8 @@
 # Risk Register — 08 Julia Binding
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | `ccall` type marshalling bugs | 3 | 5 | 15 | Autogenerate `ccall` signatures from Track 02 header via `Clang.jl`; add fuzz harness with `@ccall` roundtrip for every FFI handle type | julia-agent | Fuzz harness detects any type mismatch |
 | Julia LTS vs rolling version skew | 3 | 3 | 9 | CI matrix: julia-1.10 (LTS), julia-1 (latest stable), julia-nightly (allowed failure); gate release on LTS + stable green | julia-agent | LTS or stable lane fails |

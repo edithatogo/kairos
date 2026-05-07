@@ -1,6 +1,8 @@
 # Risk Register: Track 35 Distributed Simulation (MPI/gRPC)
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Network latency causes GVT stall — conservative PDES performance collapses when message round-trip exceeds lookahead window | 4 | 4 | 16 | gRPC mode with configurable timeouts and adaptive batching; MPI mode for low-latency networks; document latency budget per LP count | distributed-agent | GVT fails to advance for > 100 consecutive ticks under representative load |
 | Node failure causes partial simulation state corruption — entities on failed node are lost without recovery | 3 | 5 | 15 | gRPC fault tolerance: coordinator heartbeat, worker removal, entity reassignment or scope reduction; local heartbeat classifier now distinguishes healthy/suspect/failed workers; at-most-once migration with idempotent apply | distributed-agent | Fault tolerance test fails — simulation crashes on worker failure |

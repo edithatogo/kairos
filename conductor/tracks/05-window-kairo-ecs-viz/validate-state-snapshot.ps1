@@ -14,7 +14,7 @@ $checks = @(
             'pub struct EntitySnapshot',
             'pub struct WorldSnapshot',
             'pub fn snapshot(&self) -> WorldSnapshot',
-            'entities.sort_by_key'
+            'sort_unstable_by_key'
         )
     },
     @{
@@ -22,6 +22,11 @@ $checks = @(
         Needles = @(
             'use kairo_ecs_state::WorldSnapshot;',
             'pub fn from_world_snapshot',
+            'pub fn from_world_snapshot_and_events',
+            'pub fn render_headless_text',
+            'pub fn render_fixture_json',
+            'pub fn render_headless_svg',
+            'kairo_ecs.visualization.frame.v1',
             'converts_world_snapshot_to_deterministic_headless_frame'
         )
     },
@@ -29,7 +34,9 @@ $checks = @(
         Path = 'examples/viz/headless-snapshot/src/main.rs'
         Needles = @(
             'use kairo_ecs_state::World;',
-            'RenderFrame::from_world_snapshot'
+            'RenderFrame::from_world_snapshot',
+            'render_fixture_json',
+            'render_headless_svg'
         )
     }
 )

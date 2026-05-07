@@ -4,6 +4,7 @@
 |---|---:|---:|---:|
 | Starter-kit inventory exists | yes | yes | yes |
 | Model-zoo entry points are linked | yes | yes | yes |
+| Community landing page links model zoo and starter kits | yes | yes | yes |
 | Starter-kit README maturity and dependency sections are present | yes | yes | yes |
 | Markdown lint/link check | yes | yes | yes |
 | Artifact existence check | yes | yes | yes |

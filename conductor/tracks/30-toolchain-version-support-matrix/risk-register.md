@@ -1,8 +1,10 @@
 # Risk Register: Track 30 Toolchain & Version Support Matrix
 
-Last updated: 2026-05-06.
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger | Current status |
+Last updated: 2026-05-07.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger | Current status |
 |---|---:|---:|---:|---|---|---|---|
 | A binding track ships with an undocumented minimum version | 2 | 4 | 8 | Matrix now records each Track 06-11 manifest floor or explicit gap; `toolchain-check.yml` triggers on manifest changes. | toolchain-agent | Any binding enters beta without min-version declaration in `conductor/toolchain-matrix.md`. | Mitigated for current manifests; TypeScript still lacks `engines.node`, so Track 09 should add it when source scope opens. |
 | CI runner drops a version without updating the matrix | 2 | 4 | 8 | `toolchain-check.yml` sets up every declared CI-covered selector and calls `validate-toolchain-matrix.ps1 -CheckInstalled`. | toolchain-agent | A setup action cannot install a declared selector or the installed version prefix differs. | Mitigated for Track 30 workflow; full confidence requires a live GitHub Actions run. |

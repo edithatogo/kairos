@@ -42,7 +42,7 @@ bindings/ — owned by Tracks 06-11 (language bindings)
 
 ## Acceptance criteria
 
-- New contributor can run `just dev-validate` and see all toolchain versions green.
+- New contributor can run `just dev-setup` and `just dev-validate` and see all toolchain versions green.
 - `just docs-build` produces a working website.
 - `.devcontainer/` opens and builds without manual steps.
 - Bootstrap script completes without errors on a clean machine.
@@ -54,5 +54,6 @@ bindings/ — owned by Tracks 06-11 (language bindings)
 - Adding domain-specific complexity to `kairo-ecs-core`.
 - Turning the docs site into a full docs framework when the repository already has a working local build path.
 
+## Release implications
 
-
+This track contributes to release readiness only through the acceptance criteria and quality gates listed here and in conductor/quality-gates.md. It does not independently authorize public release, registry publication, or production-readiness claims without the dependent packaging, supply-chain, compatibility, red-team, and wave-management gates.

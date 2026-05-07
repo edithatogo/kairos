@@ -9,6 +9,10 @@ scenario fixtures.
 ## Files changed
 
 `docs/trustworthy-simulation/verification-validation-uncertainty.md`
+`docs/trustworthy-simulation/scenario-evidence.md`
+`docs/validation/factory-bottleneck-v1-vvuq-note.md`
+`website/docs-link-manifest.json`
+`website/src/index.md`
 `conductor/tracks/21-verification-validation-uncertainty/handoff.md`
 `conductor/tracks/21-verification-validation-uncertainty/test-matrix.md`
 `conductor/tracks/21-verification-validation-uncertainty/risk-register.md`
@@ -39,6 +43,8 @@ as the accepted evidence set. Prose by itself is not enough.
 
 The docs page should stay aligned with replay/scenario fixtures so a reader can
 move from a claim to a reproducible run without guessing at hidden inputs.
+The public docs surface now also links the artifact-backed VVUQ note from the
+site navigation and the scenario-evidence page.
 
 ## R2 local evidence slice
 
@@ -94,3 +100,19 @@ model-credibility claims are allowed."
 The main risk is overstating confidence when the evidence only supports a
 narrower claim, especially if a scenario is reproducible but not yet validated
 against reference data.
+
+## Contracts changed
+
+No VVUQ contracts changed in this scoped cleanup. The accepted evidence remains the replay fixture, scenario and seed files, deterministic ordering fixture, and artifact-backed VVUQ note.
+
+## Tests added
+
+No executable tests were added in this scoped cleanup. Existing evidence remains `node scripts/validation/validate-vvuq-note.mjs` plus the conformance checks listed above.
+
+## Known risks
+
+The current evidence supports deterministic replay smoke only; real-world validation and quantified uncertainty remain unsupported until reference-data and repeated-run artifacts exist.
+
+## Follow-up issues
+
+Add reference-data validation evidence and quantitative uncertainty artifacts before broad model-credibility claims are made.

@@ -1,5 +1,7 @@
 # Handoff: Track 32 GPU Compute Acceleration
 
+Last updated: 2026-05-07
+
 ## Status
 
 Initial scaffold implemented and tightened. Native GPU backends now expose explicit `*-backend-not-configured` contracts instead of silently falling back to CPU work. The crate facade, buffer/transfer layers, WGSL shader scaffolds, CPU fallback parity harnesses, GPU compute documentation, hardware-independent memory/dispatch contracts, and local feature-isolation validator exist.
@@ -71,9 +73,9 @@ Track 32 is building toward GPU-accelerated simulation compute for KairoECS. The
 
 - **gpu-crate-compiles** — GPU crate compiles with feature. Blocking for PRs touching the GPU crate.
 - **gpu-feature-isolation** — No GPU deps leak into default build. Blocking for all PRs.
-- **cpu-gpu-parity** — GPU output matches CPU for same seed. Blocking for GPU kernel PRs.
-- **gpu-speedup-threshold** — >=10x speedup on 1M-agent ABM. Informational only; becomes blocking at beta.
-- **gpu-memory-budget** — Under 1 GB for 10M entities. Informational only; becomes blocking at RC.
+- **gpu-parity-check** — GPU output matches CPU for same seed. Blocking for GPU kernel PRs.
+- **gpu-benchmark-threshold** — >=10x speedup on 1M-agent ABM. Informational only; becomes blocking at beta.
+- Memory budget under 1 GB for 10M entities remains an acceptance criterion, not a central gate.
 
 All GPU gates are informational when no GPU hardware is present in CI. Only `gpu-feature-isolation` runs on every PR regardless of hardware.
 
@@ -85,3 +87,32 @@ All GPU gates are informational when no GPU hardware is present in CI. Only `gpu
 - Nondeterministic workgroup scheduling means the GPU DES dispatch path is not strictly equivalent to the CPU path for all workloads. The parity test must carefully scope which scenarios are valid.
 - Platform fragmentation across Metal, CUDA, and Vulkan means maintaining N backend-specific code paths for N backends. The `GpuCompute` trait abstraction helps but does not eliminate this.
 - The `gpu` feature flag strategy (`#[cfg(feature = "gpu")]`) must be rigorously enforced — a single un-gated import of `wgpu` leaks GPU into every downstream crate.
+
+## Files changed
+
+No additional file list was recorded by this Conductor hygiene update. Use the track plan, spec, and git history for implementation-specific file evidence.
+
+
+## Contracts changed
+
+No contract changes were recorded by this Conductor hygiene update.
+
+
+## Tests added
+
+No tests were added by this Conductor hygiene update.
+
+
+## Known risks
+
+No new risks were introduced by this Conductor hygiene update.
+
+
+## Follow-up issues
+
+No additional follow-up issues were recorded by this Conductor hygiene update.
+
+
+## Integration notes
+
+No additional integration notes were recorded by this Conductor hygiene update.

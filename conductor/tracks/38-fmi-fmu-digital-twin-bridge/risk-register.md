@@ -1,6 +1,8 @@
 # Risk Register: Track 38 FMI/FMU & Digital Twin Bridge
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | FMI standard version fragmentation: tools support different FMI versions (2.0 vs 3.0) | 4 | 4 | 16 | Support both FMI 2.0 and FMI 3.0 import; document per-tool compatibility matrix; provide FMU version detection at load time | fmi-agent | Tool vendor drops FMI 2.0 support without migration path |
 | FMU binary incompatibility across operating systems | 4 | 4 | 16 | CI matrix tests FMU import on Linux (glibc/musl), macOS (x86_64/arm64), Windows (MSVC); document platform-specific FMU requirements; provide cross-compilation guide for FMU export | fmi-agent | FMU fails to load on a supported target platform |

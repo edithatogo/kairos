@@ -41,6 +41,12 @@ Most tracks are parallel-safe after their contract inputs are accepted. See `con
 
 - `crates/kairo-ecs-core/` — owned by Track 01.
 
+## Release implications
+
+- Visualization remains optional and must not become a dependency of the headless core.
+- The default `kairo-ecs-viz` build is headless-only; renderer backends must stay behind explicit opt-in features.
+- The current release slice exposes deterministic frame contracts, summaries, and text rendering only. Native WGPU/Bevy rendering is not yet release-ready.
+- Downstream docs and demos can depend on the headless frame contract without requiring graphics hardware in CI.
 
 ## Acceptance criteria
 
@@ -56,5 +62,4 @@ Most tracks are parallel-safe after their contract inputs are accepted. See `con
 ## Quality gates
 
 Use the gates in `conductor/quality-gates.md`. Track-specific gates must be listed in `test-matrix.md`.
-
 

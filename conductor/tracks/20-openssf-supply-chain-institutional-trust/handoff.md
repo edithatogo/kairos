@@ -1,5 +1,7 @@
 # Handoff: Track 20 OpenSSF, Supply Chain Trust & Institutional Readiness
 
+Last updated: 2026-05-07
+
 ## Summary
 
 Captured the supply-chain and institutional-readiness checks that should sit alongside the release evidence pack, with the release gate tied to `SECURITY.md`, `CODEOWNERS`, `.github/CODEOWNERS`, `.github/dependabot.yml` or `renovate.json`, `.github/workflows/scorecard.yml`, `.github/workflows/dependency-review.yml`, `.github/workflows/actions-security.yml`, `.github/workflows/workflow-security.yml`, `.github/workflows/secret-scan.yml`, `.github/workflows/sbom-attestations.yml`, `.github/workflows/release-attestations.yml`, and the OpenSSF rows in the readiness and release-gate docs.
@@ -38,3 +40,23 @@ The concrete risk is a missing or incomplete GitHub Actions workflow for Scoreca
 Added a track-local offline validator for release-trust evidence and softened
 the audit language in `spec.md` so Track 20 does not imply an audit report
 exists before it is checked in.
+
+## Contracts changed
+
+No supply-chain contracts changed in this scoped cleanup; trust evidence remains tied to checked-in security docs, ownership files, and workflow definitions.
+
+## Tests added
+
+No executable tests were added in this scoped cleanup. Existing evidence remains `validate-supply-chain-trust.ps1`.
+
+## Known risks
+
+Supply-chain trust claims can drift if workflow behavior changes without matching readiness and release-gate documentation updates.
+
+## Follow-up issues
+
+Keep Scorecard, dependency review, secret scanning, workflow security, SBOM, and attestation evidence aligned before any release-trust claim is promoted.
+
+## Integration notes
+
+Treat Track 20 as a trust gate and evidence map, not as proof of an external security audit unless a real audit artifact is checked in.

@@ -19,6 +19,8 @@ function Assert-Contains {
 
 foreach ($path in @(
     'CHANGELOG.md',
+    '.github/workflows/changelog-policy.yml',
+    '.github/workflows/release.yml',
     'docs/release/release-governance.md',
     'docs/release/changelog-policy.md',
     'docs/release/compatibility.md',
@@ -30,6 +32,13 @@ foreach ($path in @(
 }
 
 Assert-Contains 'CHANGELOG.md' 'Release governance slice' 'R2 changelog entry'
+Assert-Contains '.github/workflows/changelog-policy.yml' 'Public release surface changed without CHANGELOG.md' 'changelog-policy workflow gate'
+Assert-Contains '.github/workflows/changelog-policy.yml' 'changelog_policy=ok' 'changelog-policy workflow success marker'
+Assert-Contains '.github/workflows/release.yml' 'Validate release checklist' 'release workflow checklist step'
+Assert-Contains '.github/workflows/release.yml' 'Build release manifest' 'release manifest build step'
+Assert-Contains '.github/workflows/release.yml' 'Validate release manifest' 'release manifest validation step'
+Assert-Contains '.github/workflows/release.yml' 'cargo publish --dry-run --workspace' 'release dry-run publish gate'
+Assert-Contains '.github/workflows/release.yml' 'release workflow is dry-run only' 'release dry-run posture'
 Assert-Contains 'docs/release/release-governance.md' 'Compatibility gate' 'compatibility gate'
 Assert-Contains 'docs/release/release-governance.md' 'dry-run' 'dry-run release posture'
 Assert-Contains 'docs/release/changelog-policy.md' 'Public release surface changed without CHANGELOG.md' 'changelog enforcement wording'

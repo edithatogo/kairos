@@ -1,48 +1,88 @@
 # Handoff — 01 The Heart: kairo-ecs-core & kairo-ecs-state
 
+Cleanup date: 2026-05-08
+
 ## Summary
 
-Track 01 now has a minimal implemented core slice anchored by `lanes.md`, the shared conformance fixtures, and package-focused cargo gates. The current implementation surface is `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-state`, and `crates/kairo-ecs-rng`.
+Track 01 currently contains the deterministic heart slice that is already implemented in the workspace:
+
+- `kairo-ecs-types` provides the time, ID, request, and outcome types.
+- `kairo-ecs-core` provides the deterministic scheduler with ordering, cancellation, bounded runs, scheduler stats, and replay recording.
+- `kairo-ecs-core` now provides a pure Rust `SchedulerFacade` plus stable status/result wrappers for Track 01E facade readiness.
+- `kairo-ecs-state` provides the entity world, deterministic snapshot ordering, and generational component storage.
+- `kairo-ecs-rng` provides run-seed derivation and deterministic entity streams.
+
+The checked-in implementation also includes the Track 01E pure Rust facade slice and core-owned scheduler stats collection. This cleanup keeps the Track 01 docs aligned with that implementation state and lane ownership.
 
 ## Files changed
 
-- `crates/kairo-ecs-types/src/lib.rs`
-- `crates/kairo-ecs-core/src/lib.rs`
-- `crates/kairo-ecs-state/src/lib.rs`
-- `crates/kairo-ecs-rng/src/lib.rs`
-- `conductor/tracks/01-heart-kairo-ecs-core-state/handoff.md`
+- `conductor/tracks/01-heart-kairo-ecs-core-state/agent-contract.md`
+- `conductor/tracks/01-heart-kairo-ecs-core-state/risk-register.md`
 - `conductor/tracks/01-heart-kairo-ecs-core-state/test-matrix.md`
+- `conductor/tracks/01-heart-kairo-ecs-core-state/handoff.md`
+- `crates/kairo-ecs-core/src/lib.rs`
+- `crates/kairo-ecs-core/tests/integration.rs`
+- `crates/kairo-ecs-state/src/lib.rs`
 
-## Contracts consumed
+## Lane ownership
 
-The track consumes the scheduler, state, types, and RNG contracts that are staged through `lanes.md` and the conformance fixture set.
+The lane map in `lanes.md` remains the execution boundary:
 
-## Contracts changed
-
-The next contract surface is the deterministic ordering and replay behavior in `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-state`, and `crates/kairo-ecs-rng`.
-
-## Tests added
-
-- Unit tests cover fixed-tick time overflow, scheduler ordering, cancellation, bounded runs, state lifecycle, and deterministic RNG replay.
-- This review pass added regression coverage that cancellation rejects unknown or already-dispatched IDs and does not let cancelled future events force a false limit outcome.
-- The state crate now exposes a deterministic `WorldSnapshot` over live entities. Snapshot entities are sorted by `(index, generation)` so downstream Track 04/05 consumers do not inherit nondeterministic `HashSet` iteration order.
-- This pass hardened `ComponentStore` for generational handles: duplicate inserts replace the existing row, stale generations cannot read or remove a component at the same index, and a newer generation supersedes the stale indexed row deterministically.
+- 01A Types and time: `contracts-agent`
+- 01B Scheduler: `core-scheduler-agent`
+- 01C State: `ecs-agent`
+- 01D RNG: `rng-agent`
+- 01E Facade readiness: `core-scheduler-agent` + `ffi-agent`
 
 ## Validation run
 
-- `cargo fmt --package kairo-ecs-state`
-- `cargo fmt --package kairo-ecs-types --package kairo-ecs-core --package kairo-ecs-state --package kairo-ecs-rng --check`
-- `cargo check --tests -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-rng`
-- `cargo check -p kairo-ecs-state --tests` covers the deterministic `WorldSnapshot` API without linking a Windows test executable.
-- `cargo clippy -p kairo-ecs-state --all-targets -- -D warnings`
-- `cargo test -p kairo-ecs-state` was attempted but blocked by the local Windows linker resolving `link.exe` to Git for Windows (`C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`), which failed with `couldn't create signal pipe, Win32 error 5`.
-- 2026-05-06 linker follow-up: `rustc -Vv` reports host `x86_64-pc-windows-msvc`, `where link` resolves only Git for Windows `link.exe`, `where cl` finds no MSVC compiler on PATH, and `vswhere -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64` returned no installation path. `cargo test -p kairo-ecs-state` still fails before running tests because Rust invokes the Git `link.exe`; this run returned exit code `0xc0000142` with the same Git `link.exe` signal-pipe failure. `cargo check --tests -p kairo-ecs-state` remains the local validation gate until an MSVC linker environment is available.
-- Prior validation also recorded the same local linker blocker for `cargo test -p kairo-ecs-core`.
+Use the local gates in `test-matrix.md` for this track. The reliable local fallback on this machine is:
 
-## Known risks
+- `cargo check --tests -p kairo-ecs-state`
 
-The main risk is drifting out of sync with `lanes.md` if the implementation slices change without updating the fixture and validation docs.
+Full executable tests remain the expected gate when a working MSVC linker environment is available. On this machine, prior full-test attempts have been sensitive to `link.exe` resolution, so `cargo check --tests` remains the documented local fallback until the shell/toolchain is verified.
+
+The Track 01E facade validation surface is:
+
+- `cargo test -p kairo-ecs-core`
+- `cargo test -p kairo-ecs-types`
+- `cargo test -p kairo-ecs-state`
+- `cargo test -p kairo-ecs-rng`
+- `cargo check --tests -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-types -p kairo-ecs-rng`
+- `cargo clippy -p kairo-ecs-types -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-rng --all-targets -- -D warnings`
+- `cargo fmt --package kairo-ecs-core --package kairo-ecs-state --check`
+
+## Known blockers
+
+- Track 01E must remain a Rust facade-readiness lane until the Track 02 FFI contract and Track 12 fixture runner are accepted.
+- Any future performance gate should be added as a real runnable benchmark check rather than a placeholder.
 
 ## Integration notes
 
-Next implementation step: bind the implemented scheduler/state/RNG slice to shared conformance fixtures and keep the fixture manifest aligned as each lane closes.
+- Keep the docs in sync if lane ownership or owned paths change.
+- Keep test coverage aligned with the current deterministic scheduler, state, and RNG behavior.
+- Do not widen this track into binding-path work from `Track 02` or fixture-runner work from `Track 12`.
+
+## Contracts consumed
+
+No additional consumed contracts were recorded by this Conductor hygiene update.
+
+
+## Contracts changed
+
+No contract changes were recorded by this Conductor hygiene update.
+
+
+## Tests added
+
+No tests were added by this Conductor hygiene update.
+
+
+## Known risks
+
+No new risks were introduced by this Conductor hygiene update.
+
+
+## Follow-up issues
+
+No additional follow-up issues were recorded by this Conductor hygiene update.

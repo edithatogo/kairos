@@ -94,5 +94,6 @@ python -c "import kairo_ecs; kairo_ecs.self_check()"
 
 Use the gates in `conductor/quality-gates.md`. Track-specific gates must be listed in `test-matrix.md`.
 
+## Release implications
 
-
+This track contributes to release readiness only through the acceptance criteria and quality gates listed here and in conductor/quality-gates.md. It does not independently authorize public release, registry publication, or production-readiness claims without the dependent packaging, supply-chain, compatibility, red-team, and wave-management gates.

@@ -1,6 +1,8 @@
 # Risk Register — 00 Project Foundation, Governance & Naming
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Naming conflict on registries (crates.io/PyPI/npm/NuGet) | 3 | 5 | 15 | Comprehensive naming due-diligence across all target registries before first release | foundation-agent | Any unresolved conflict blocks Spec Approved→In Progress |
 | Trademark/common-law conflict | 2 | 5 | 10 | Trademark clearance search and common-law availability assessment before name lock-in | foundation-agent | Any competing mark or cease-and-desist received |

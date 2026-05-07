@@ -1,5 +1,7 @@
 # Handoff: Track 19 Research Software, Citation & Archival
 
+Last updated: 2026-05-07
+
 ## Summary
 
 Documented the citation and archival metadata that should accompany a release or published package, with the release-engineering checks tied back to `CITATION.cff`, `codemeta.json`, `.zenodo.json`, `paper/paper.md`, `paper/paper.bib`, the DOI path, release-note links, and the Track 19 validator.
@@ -33,3 +35,23 @@ Citation metadata, archive notes, DOI/Zenodo path, and `just docs-build` now sit
 ## Risks and unresolved questions
 
 The concrete risk is stale author, version, or DOI metadata leaking into a release artifact before the archive record is finalized; rerun `validate-citation-archive.ps1` and keep release metadata in sync with the catalog and DOI path.
+
+## Contracts changed
+
+No citation or archive contracts changed in this scoped cleanup; the authoritative metadata remains `CITATION.cff`, `codemeta.json`, `.zenodo.json`, and paper metadata.
+
+## Tests added
+
+No executable tests were added in this scoped cleanup. Existing evidence remains `validate-citation-archive.ps1`.
+
+## Known risks
+
+The release is still pre-DOI; metadata must remain marked as not DOI-minted until a Zenodo draft or DOI exists.
+
+## Follow-up issues
+
+Reserve or record the DOI before public release and rerun the citation/archive validator after any version, author, repository, title, license, or archive metadata change.
+
+## Integration notes
+
+Do not use Track 19 metadata as release authorization by itself; it supports release evidence once packaging, governance, and trust gates also pass.

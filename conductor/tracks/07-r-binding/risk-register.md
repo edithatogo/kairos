@@ -1,6 +1,8 @@
 # Risk Register — 07 R Binding
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | CRAN submission latency | 4 | 3 | 12 | Maintain GitHub R-universe binary repo as fast release channel; queue CRAN submission on tag but do not block downstream on CRAN acceptance | r-agent | CRAN submission pending >2 weeks after release |
 | R C ABI fragility (R CMD check NOTE/WARNING) | 3 | 5 | 15 | Run `R CMD check --as-cran` in CI on all platforms; fuzz C call interfaces with sanitizers on Linux | r-agent | Sanitizer flags any C call interface |

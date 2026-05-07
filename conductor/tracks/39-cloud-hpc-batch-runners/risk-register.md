@@ -1,6 +1,8 @@
 # Risk Register: Track 39 Cloud / HPC Batch Runners
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Container image size exceeds reasonable pull/transfer limits (>2 GB) | 4 | 3 | 12 | Use multi-stage Docker builds, distroless or Alpine base image, strip debug symbols, exclude build toolchain from final layer; measure image size in cloud-smoke CI | cloud-agent | Docker image exceeds 1.5 GB in CI build |
 | Spot instance interruption causes data loss (checkpoint not written before termination) | 3 | 5 | 15 | Trap SIGTERM in entrypoint with 90-second checkpoint window; write checkpoint atomically (write to temp file, then rename); validate checkpoint integrity with checksum before resuming; test spot interruption locally with simulated SIGTERM | cloud-agent | Checkpoint integrity test fails or checkpoint file is truncated |

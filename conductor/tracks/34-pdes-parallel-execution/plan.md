@@ -112,9 +112,9 @@ Not marked complete:
 - Do not productionize; file follow-up track if promising.
 
 ### Task 4.3 — Update quality gates
-- Add `pdes-sequential-parity` gate (final state must match sequential for partitioned worlds).
-- Add `pdes-gvt-progression` gate (GVT must advance every N ticks).
-- Add `pdes-deadlock-free` gate (stress test passes).
+- Confirm the central `pdes-sequential-parity` gate is present and documented (final state must match sequential for partitioned worlds).
+- Confirm the central `gvt-progression-check` gate is present and documented (GVT must advance every N ticks).
+- Confirm the central `pdes-deadlock-free` gate is present and documented (stress test passes).
 
 ## Phase 5 — Handoff and closeout
 

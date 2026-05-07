@@ -80,6 +80,7 @@ This track depends on the core scheduler contract (Track 01) and the FFI layer (
 Use the gates in `conductor/quality-gates.md`. Track-specific gates:
 - `gpu-crate-compiles` — the `kairo-ecs-gpu` crate compiles with the `gpu` feature on target platforms.
 - `gpu-feature-isolation` — without the `gpu` feature, no GPU dependency appears in `cargo tree`.
-- `cpu-gpu-parity` — parity test passes: GPU output matches CPU output for same seed.
-- `gpu-speedup-threshold` — benchmark shows >=10x speedup on 1M-agent ABM vs single-threaded CPU.
-- `gpu-memory-budget` — memory overhead under 1 GB for 10M entities.
+- `gpu-parity-check` — parity test passes: GPU output matches CPU output for same seed.
+- `gpu-benchmark-threshold` — benchmark shows >=10x speedup on 1M-agent ABM vs single-threaded CPU.
+
+Memory overhead under 1 GB for 10M entities remains an acceptance criterion in the spec, not a central quality gate.

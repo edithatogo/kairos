@@ -20,3 +20,13 @@ cargo test -p kairo-ecs-des -p kairo-ecs-abm
 pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo
 pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo
 ```
+
+## 2026-05-07 validation notes
+
+- Passed: `cargo fmt -p kairo-ecs-des -p kairo-ecs-abm --check`.
+- Passed: `cargo test -p kairo-ecs-des -p kairo-ecs-abm`.
+- Passed: `cargo test -p kairo-ecs-core`.
+- Passed: `cargo test -p kairo-ecs-state`.
+- Passed: `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo`.
+- Passed: `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo`.
+- Blocked outside Track 03: `cargo fmt --all --check` reports unrelated formatting diffs in `crates/kairo-ecs-arrow`, `crates/kairo-ecs-debug`, `crates/kairo-ecs-rng`, `crates/kairo-ecs-types`, and `crates/kairo-ecs-wasm`.

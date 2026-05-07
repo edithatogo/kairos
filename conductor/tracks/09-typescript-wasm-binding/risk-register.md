@@ -1,6 +1,8 @@
 # Risk Register — 09 TypeScript/Wasm Binding
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Wasm binary size bloat | 4 | 4 | 16 | Enforce bundle budget: Wasm < 500 KB gzipped, JS glue < 50 KB gzipped; run `twiggy` or `wasm-opt -Oz` in CI | typescript-agent | Bundle exceeds budget by >10% |
 | Cross-origin isolation for SharedArrayBuffer | 3 | 4 | 12 | Default to non-threaded Wasm; detect `crossOriginIsolated` at runtime; document required headers for threaded mode | typescript-agent | Threaded mode fails on any supported browser without documented workaround |

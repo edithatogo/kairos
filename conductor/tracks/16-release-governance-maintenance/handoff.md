@@ -1,5 +1,7 @@
 # Handoff — 16 Release Governance & Maintenance
 
+Last updated: 2026-05-07
+
 ## Summary
 
 Implemented the minimal R2 release-governance slice: changelog policy/check,
@@ -14,6 +16,7 @@ posture and Track 25's compatibility boundary.
 `conductor/tracks/16-release-governance-maintenance/handoff.md`
 `conductor/maintenance-governance.md`
 `CHANGELOG.md`
+`.github/workflows/changelog-policy.yml`
 `docs/release/release-governance.md`
 `docs/release/changelog-policy.md`
 `docs/release/compatibility.md`
@@ -48,8 +51,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/16-release-
 
 ## Known risks
 
-The changelog policy is documented and locally checkable, but still needs a PR
-workflow implementation before it becomes an automatic merge gate.
+The changelog policy is now enforced by `.github/workflows/changelog-policy.yml`,
+but the PR diff matcher should be expanded if new public release surfaces are
+added.
 Release process changes still depend on the GitHub workflow files and registry
 conventions staying consistent with the release-engineering notes.
 Package publication remains blocked until Track 15 clears naming, registry, and
@@ -67,3 +71,7 @@ source of release-governance expectations.
 Added a track-local release-governance validator that checks the changelog,
 compatibility, deprecation, release-note, and maintenance handoff claims
 against checked-in docs.
+
+## Follow-up issues
+
+Expand the changelog-policy workflow matcher when new public release surfaces are added, and keep release workflow dry-run posture aligned with Track 15 packaging gates.

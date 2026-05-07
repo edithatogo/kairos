@@ -1,6 +1,8 @@
 # Risk Register — 04 The Analyst: kairo-ecs-arrow Telemetry
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Arrow schema evolution breaking IPC compatibility | 3 | 5 | 15 | Schema versioning with backward-compatibility policy; IPC round-trip tests in CI | analyst-agent | IPC round-trip test fails after schema change |
 | Zero-copy claims without lifetime documentation | 3 | 4 | 12 | Explicit lifetime contracts in docs; Miri validation on all zero-copy paths | analyst-agent | Use-after-free or dangling pointer reported in consumer code |

@@ -1,6 +1,8 @@
 # Risk Register — 05 The Window: kairo-ecs-viz Visualization
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Viz feature flag leaking into headless build | 3 | 4 | 12 | Strict feature-gate discipline; CI builds headless variant and verifies no viz deps linked | viz-agent | Headless binary links any viz dependency |
 | Rendering dependency bloat | 4 | 3 | 12 | Optional feature behind `viz` flag; tree-shake dependencies; track binary size in CI | viz-agent | Binary size exceeds budget by >10% |

@@ -1,6 +1,6 @@
 # Test Matrix: Track 30 Toolchain & Version Support Matrix
 
-Last updated: 2026-05-06.
+Last updated: 2026-05-07.
 
 | Check | Alpha | Beta | RC | 1.0 | Current evidence |
 |---|---:|---:|---:|---:|---|
@@ -25,7 +25,7 @@ Last updated: 2026-05-06.
 
 | Command | Result | Evidence |
 |---|---|---|
-| `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` | Pass | Static matrix, workflow trigger, and gate checks passed locally on 2026-05-06. |
+| `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` | Pass | Static matrix, workflow trigger, and gate checks passed locally on 2026-05-07. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedPrefix 1.94` | Pass | Local Rust reports 1.94; the local toolchain is behind the matrix's current stable CI lane. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedPrefix 1.95` | Expected fail | Local Rust reports 1.94; GitHub Actions is expected to install stable 1.95 for the matrix lane. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedPrefix 3.13` | Pass | Local `python --version` reports Python 3.13.x and matches the expected prefix. |

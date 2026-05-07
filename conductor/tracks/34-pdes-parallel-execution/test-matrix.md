@@ -21,7 +21,7 @@
 | Deadlock-stress fixture compiles under `cargo check --tests` | yes | yes | yes | yes |
 | Runtime PDES unit tests execute on this Windows workstation | blocked | yes | yes | yes |
 | `pdes-sequential-parity` gate exists in `conductor/quality-gates.md` | no | yes | yes | yes |
-| `pdes-gvt-progression` gate exists in `conductor/quality-gates.md` | no | yes | yes | yes |
+| `gvt-progression-check` gate exists in `conductor/quality-gates.md` | no | yes | yes | yes |
 | `pdes-deadlock-free` gate exists in `conductor/quality-gates.md` | no | yes | yes | yes |
 | All PDES gates pass on CI with `--features pdes` | no | no | yes | yes |
 | Time Warp research spike findings documented in `docs/pdes/time-warp-spike.md` | no | no | yes | yes |

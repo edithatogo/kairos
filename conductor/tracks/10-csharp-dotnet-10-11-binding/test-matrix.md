@@ -24,28 +24,35 @@
 - Native load validation is blocked until Track 02 provides the stable native runtime artifact.
 - The C# package currently reports native FFI as not configured unless `KAIRO_ECS_NATIVE_LIB_DIR` or `runtimes/{rid}/native/{library}` resolves a real platform library.
 
-## Local validation result — 2026-05-06
+## Local validation result — 2026-05-07
 
-Stable .NET 10 lane passed with the local SDK environment forced away from the machine-level .NET 11 preview `MSBuildSDKsPath`:
+Stable .NET 10 lane passed after adding the low-level FFI declarations, `SafeHandle` wrapper, native smoke-test skip gate, and robust repo-level fixture discovery:
 
 ```powershell
-$env:MSBuildSDKsPath='C:\Users\60217257\AppData\Local\Microsoft\dotnet\sdk\10.0.202\Sdks'; dotnet test Kairo.ECS.sln -m:1 -nr:false -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false
-$env:MSBuildSDKsPath='C:\Users\60217257\AppData\Local\Microsoft\dotnet\sdk\10.0.202\Sdks'; dotnet test Kairo.ECS.sln --filter TestCategory=Conformance -m:1 -nr:false -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false
-$env:MSBuildSDKsPath='C:\Users\60217257\AppData\Local\Microsoft\dotnet\sdk\10.0.202\Sdks'; dotnet build Kairo.ECS.sln -c Release -m:1 -nr:false -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false
-$env:MSBuildSDKsPath='C:\Users\60217257\AppData\Local\Microsoft\dotnet\sdk\10.0.202\Sdks'; dotnet pack src\Kairo.ECS\Kairo.ECS.csproj -c Release -m:1 -nr:false -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false
+$env:MSBuildSDKsPath='C:\Users\60217257\AppData\Local\Microsoft\dotnet\sdk\10.0.202\Sdks'; dotnet test bindings\csharp\Kairo.ECS.sln -m:1 -nr:false -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false
+$env:MSBuildSDKsPath='C:\Users\60217257\AppData\Local\Microsoft\dotnet\sdk\10.0.202\Sdks'; dotnet build bindings\csharp\Kairo.ECS.sln -c Release -m:1 -nr:false -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false
+$env:MSBuildSDKsPath='C:\Users\60217257\AppData\Local\Microsoft\dotnet\sdk\10.0.202\Sdks'; dotnet pack bindings\csharp\src\Kairo.ECS\Kairo.ECS.csproj -c Release -m:1 -nr:false -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false
 ```
 
 Results:
 
-- `dotnet test`: passed 7/7 on `net10.0`.
-- `dotnet test --filter TestCategory=Conformance`: passed 3/3 on `net10.0`.
+- `dotnet test`: passed 11/11 with 3 native smoke tests skipped as inconclusive because no native runtime library is configured.
 - `dotnet build -c Release`: succeeded with 0 warnings and 0 errors on `net10.0`.
-- `dotnet pack`: created `Kairo.ECS.0.1.0-preview.1.nupkg` for the `net10.0` validation slice.
+- `dotnet pack`: created `bindings/csharp/src/Kairo.ECS/bin/Release/Kairo.ECS.0.1.0-preview.1.nupkg`.
+
+Additional isolated local validation on 2026-05-07:
+
+- `$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet build tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj -f net10.0 --no-restore -v normal -p:UseSharedCompilation=false -m:1 -nr:false`: passed with 0 warnings and 0 errors.
+- `$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet test tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj -f net10.0 --no-restore -v normal -p:UseSharedCompilation=false -m:1 -nr:false`: passed with 11 passed, 3 skipped, and 0 failed.
+- `$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet build tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj -f net10.0 -c Release --no-restore -v minimal -p:UseSharedCompilation=false -m:1 -nr:false`: passed with 0 warnings and 0 errors after a focused net10 restore.
+- `$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet pack src\Kairo.ECS\Kairo.ECS.csproj -c Release -v normal -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false -m:1 -nr:false`: passed with the existing `Kairo.ECS.0.1.0-preview.1.nupkg` already up to date.
+- `C:\Users\60217257\scoop\apps\dotnet-sdk-preview\current\dotnet.exe restore bindings\csharp\tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj -p:TargetFramework=net11.0 -v minimal`: passed for the experimental net11 preview lane.
 
 Blocked validation:
 
-- Full `net10.0;net11.0` validation is blocked locally because the machine-level `MSBuildSDKsPath` points at .NET SDK `11.0.100-preview.3.26207.106`, and that preview SDK fails compiler-server startup with `Access to the path '\\.\pipe\LOCAL\dotnet_...' is denied`.
-- Running the stable SDK without narrowing `TargetFrameworks` also fails expectedly with `NETSDK1045` for `net11.0`; this is why the local green lane is recorded as `net10.0` only.
+- Full `net11.0` build/test validation is experimental until stable SDK tooling is available in this environment or CI.
+- The installed Scoop .NET 11 preview SDK restores `net11.0` assets but fails Roslyn compiler startup with `Access to the path '\\.\pipe\LOCAL\dotnet_...' is denied`.
+- Live native FFI execution is blocked until Track 02 supplies a stable `kairo_ecs` runtime library.
 
 ## Future-surface controls
 

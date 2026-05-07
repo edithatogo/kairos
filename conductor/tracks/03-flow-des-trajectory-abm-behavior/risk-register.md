@@ -1,6 +1,8 @@
 # Risk Register — 03 The Flow: DES Trajectory API & ABM Behavior API
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | DES/ABM ownership split unresolved | 3 | 4 | 12 | Explicit ownership documented in ADR; shared kernel types from Track 01 | flow-agent | Duplicated APIs appear across DES and ABM without coordination |
 | API design without conformance fixture coverage | 3 | 4 | 12 | Conformance fixtures in CI compare DES and ABM outputs against shared contracts | flow-agent | Conformance suite not passing before API freeze |

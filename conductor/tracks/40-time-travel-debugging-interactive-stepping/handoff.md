@@ -46,3 +46,9 @@ Next step: integrate the trace recorder with scheduler observer hook points and 
 - Tightened line-trace validation so delta event kinds must use the supported `custom:<u32>` encoding.
 - Added a malformed event-kind rejection test and updated `docs/debugging/trace-format.md`.
 - Added Track 40 coverage to the Track 36-40 aggregate offline validator alongside the static timeline demo validator.
+
+## Follow-up issues
+
+- Replace the line-oriented scaffold encoding with Track 04 Arrow IPC trace serialization once the schema is available in this worker's scope.
+- Integrate trace recording with Track 01 scheduler observer hook points and compare recorded snapshots against Track 12 conformance fixtures.
+- Add large-trace timeline validation after the browser demo supports aggregation or virtualization for 100K+ visible events.

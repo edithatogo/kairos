@@ -1,5 +1,7 @@
 # Handoff: Track 26 Interoperability Standards Review
 
+Last updated: 2026-05-07
+
 ## Summary
 
 Captured the interoperability mapping story so downstream tracks can rely on a named set of supported, partial, deferred, and unsupported translations.
@@ -47,3 +49,23 @@ Run these focused checks after Track 26 edits:
 
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/26-interoperability-standards-review/validate-standards-review.ps1`
 - `rg -n "DEVS|FMI/FMU|SBML|CellML|OpenTelemetry|Arrow C Data Interface|Arrow IPC|Parquet|Supported|Partial|Deferred|Unsupported" docs/interoperability/standards-review.md conductor/interoperability-standards.md conductor/tracks/26-interoperability-standards-review`
+
+## Contracts changed
+
+The interoperability contract now classifies named standards as partial, deferred, or unsupported instead of allowing broad external-compatibility claims.
+
+## Tests added
+
+`conductor/tracks/26-interoperability-standards-review/validate-standards-review.ps1` validates the standards review, labels, and exact claim-boundary language.
+
+## Known risks
+
+The main risk remains overstating runtime interoperability where only terminology, field-level, or scaffold alignment exists.
+
+## Follow-up issues
+
+Add conformance assertions before upgrading any partial or deferred standard to a stronger support label.
+
+## Integration notes
+
+Downstream docs should reuse the exact Track 26 labels for Arrow, FMI/FMU, OpenTelemetry, SBML, CellML, and ecosystem comparison claims.

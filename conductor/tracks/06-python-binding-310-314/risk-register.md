@@ -1,6 +1,8 @@
 # Risk Register — 06 Python Binding 3.10-3.14
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Free-threaded/no-GIL Python 3.14 ABI break | 4 | 5 | 20 | Gate 3.14 CI on free-threaded builds; add `@gil_disabled` test suite; pin PyO3 version with known free-threaded support | python-agent | Free-threaded CI lane fails |
 | PyO3 version lockstep with upstream Rust | 3 | 4 | 12 | Track PyO3 minimum-supported-Rust-version (MSRV) in CI matrix; use `[patch.crates-io]` override only during upstream gap windows | python-agent | PyO3 MSRV exceeds project MSRV for >1 week |

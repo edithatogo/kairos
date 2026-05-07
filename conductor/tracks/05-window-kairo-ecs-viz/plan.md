@@ -5,7 +5,7 @@
 - Read `conductor/workflow.md`, `conductor/contracts/core-contract.md`, and `conductor/contracts/conformance-contract.md`.
 - Read the current `website` scaffold in `website/package.json`, `website/scripts/build.js`, `website/scripts/dev.js`, and `website/src/index.md`.
 - Confirm the intended owned paths remain `crates/kairo-ecs-viz`, `examples/viz`, and `website/docs/visualization/`; the headless viz crate, example package, and visualization docs now exist as a minimal implementation slice.
-- Create `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
+- Keep `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md` current as the track evolves.
 
 ## Phase 1 — Contract alignment
 

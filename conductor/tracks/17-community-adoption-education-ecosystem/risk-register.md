@@ -1,6 +1,8 @@
 # Risk Register: Track 17 Community Adoption, Education & Ecosystem
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Contributor onboarding friction | 4 | 4 | 16 | Good-first-issue labels, CONTRIBUTING.md with step-by-step setup, local-dev quickstart | community-agent | >50% of first-time contributors abandon PR within 24hr |
 | Discussion/spam moderation burden | 4 | 4 | 16 | Define moderation guidelines, auto-close stale issues, designate moderator rotation | community-agent | Unmoderated spam persists >48hr on any channel |

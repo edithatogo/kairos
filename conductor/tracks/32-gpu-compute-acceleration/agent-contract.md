@@ -42,12 +42,12 @@ Track 32: GPU Compute Acceleration
 - **Output**: Pass if no GPU dependency (`wgpu`, `cudarc`, `naga`, GPU-related sys crates) appears in the dependency tree. Fail with the offending dependency path.
 - **Blocking**: Yes for PR merge — prevents accidental GPU dependency leakage into default builds.
 
-### cpu-gpu-parity
+### gpu-parity-check
 - **Input**: Fixed random seed, ABM scenario definition, `GpuCompute` implementation.
 - **Output**: Pass if running the same scenario through CPU and GPU paths produces identical world state. Fail with the first differing entity/component/value.
 - **Blocking**: Yes for PRs that touch GPU kernel code. Informational on CPU-only CI (runs only when GPU hardware is available).
 
-### gpu-speedup-threshold
+### gpu-benchmark-threshold
 - **Input**: 1M-agent ABM benchmark, CPU baseline, GPU timing.
 - **Output**: Pass if GPU wall-clock time achieves >=10x speedup over single-threaded CPU. Fail with actual speedup ratio.
 - **Blocking**: No for PR merge (informational gate). Becomes blocking at beta when GPU hardware is provisioned.

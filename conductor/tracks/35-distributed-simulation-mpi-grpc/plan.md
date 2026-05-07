@@ -135,11 +135,14 @@ Not marked complete:
 - Aggregate telemetry batches.
 - Compare aggregated Arrow record batches against single-node collection.
 
-### Task 4.5 — Update quality gates
-- Add `distributed-state-parity` gate (2-node matches single-node).
-- Add `entity-migration-integrity` gate (component state preserved after migration).
-- Add `grpc-fault-tolerance` gate (worker failure does not crash simulation).
-- Add `distributed-telemetry-merge` gate (aggregated batches match single-node).
+### Task 4.5 — Update quality gates [x]
+- `distributed-state-parity` gate is present in `conductor/quality-gates.md`.
+- `entity-migration-integrity` gate is present in `conductor/quality-gates.md`.
+- `grpc-fault-tolerance` gate is present in `conductor/quality-gates.md`.
+- `distributed-telemetry-merge` gate is present in `conductor/quality-gates.md`.
+
+Evidence 2026-05-06: the central gate catalogue now includes scaffold-level
+definitions for all four distributed gates, tied to `validate-track35.ps1`.
 
 ## Phase 5 — Handoff and closeout
 

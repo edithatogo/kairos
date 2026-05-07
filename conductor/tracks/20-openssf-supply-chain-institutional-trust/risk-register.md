@@ -1,6 +1,8 @@
 # Risk Register: Track 20 OpenSSF, Supply Chain Trust & Institutional Readiness
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | The track stays descriptive and never blocks a release | 3 | 4 | 12 | Every trust claim must map to a checklist row or gate command | security-agent | Release proceeds with unchecked trust claim |
 | The readiness docs drift away from actual CI behavior | 3 | 4 | 12 | Update checklist and gates together in the same change | ci-agent | CI gate passes but readiness doc contradicts result |

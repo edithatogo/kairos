@@ -9,6 +9,7 @@
 - Conformance runs the checked-in Node validators, including the Track 07-13 hardening check, without depending on central script edits.
 - Conformance runs the Track 12-20 evidence check so release, citation, benchmark, and supply-chain evidence cannot be skipped silently.
 - Track 13 metadata alignment validates `conductor/tracks.yaml` without changing track statuses and maps `workflow-presence`, `cargo-metadata`, and `dependency-policy` to checked-in workflow evidence.
+- Track 13 metadata alignment dynamically inventories every checked-in `.github/workflows/*.yml` file, requires an explicit workflow `name`, `on`, and top-level `permissions` block, and verifies both `ci-policy.yml` and `workflow-security.yml` list every workflow.
 - Validate Conductor runs on both `ubuntu-latest` and `windows-latest` so PowerShell and Node validators are exercised cross-platform.
 - Package dry-runs and binding CI fail when their own manifests are missing instead of skipping quietly.
 - TypeScript binding smoke runs its declared scripts instead of treating them as optional.
@@ -45,3 +46,12 @@ rg -n -- "--if-present|if-no-files-found:\s*ignore" .github/workflows/ci-binding
 rg -n "skip ci|ci skip|no ci|skip-checks:\s*true" .github/workflows/ci-skip-guard.yml
 test -f conductor/tracks.yaml
 ```
+
+## 2026-05-07 validation notes
+
+- Passed: `node scripts/validation/validate-track13-metadata.mjs`.
+- Passed: `node tests/conformance/track07_13_hardening_check.mjs`.
+- Passed: `node tests/conformance/track12_20_evidence_check.mjs`.
+- Passed: `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo`.
+- Passed: `git diff --check -- .github/workflows/ci-policy.yml .github/workflows/workflow-security.yml .github/workflows/codeql.yml scripts/validation/validate-track13-metadata.mjs conductor/tracks/13-ci-cd-quality-supply-chain` with only line-ending normalization warnings.
+- Added coverage: `validate-track13-metadata.mjs` now catches missing top-level workflow permissions and workflow inventory drift for every checked-in workflow file.

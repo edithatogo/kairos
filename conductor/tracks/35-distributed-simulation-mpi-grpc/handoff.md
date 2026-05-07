@@ -1,5 +1,7 @@
 # Handoff: Track 35 Distributed Simulation (MPI/gRPC)
 
+Last updated: 2026-05-07
+
 ## Current status
 
 Phase 0 and Phase 1 design artifacts now exist. The Track 35 implementation is a
@@ -79,5 +81,47 @@ failed with the same Git MSYS `link.exe` collision and exit code `0xc0000142`.
 - Local validators now cover protocol envelope shape and heartbeat
   classification, but they are not a substitute for real multi-node runtime
   tests.
-- Quality gates under global conductor files are not added because they are
-  deferred to the next control-gate pass.
+- Global quality gates now exist for `distributed-state-parity`,
+  `entity-migration-integrity`, `grpc-fault-tolerance`, and
+  `distributed-telemetry-merge`; they remain scaffold-level checks that validate
+  the dependency-free transport emulators and keep real multi-node runtime
+  claims explicit.
+
+## Summary
+
+No additional handoff summary was recorded by this Conductor hygiene update.
+
+
+## Files changed
+
+No additional file list was recorded by this Conductor hygiene update. Use the track plan, spec, and git history for implementation-specific file evidence.
+
+
+## Contracts consumed
+
+No additional consumed contracts were recorded by this Conductor hygiene update.
+
+
+## Contracts changed
+
+No contract changes were recorded by this Conductor hygiene update.
+
+
+## Tests added
+
+No tests were added by this Conductor hygiene update.
+
+
+## Known risks
+
+No new risks were introduced by this Conductor hygiene update.
+
+
+## Follow-up issues
+
+No additional follow-up issues were recorded by this Conductor hygiene update.
+
+
+## Integration notes
+
+No additional integration notes were recorded by this Conductor hygiene update.

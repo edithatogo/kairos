@@ -11,12 +11,17 @@
 - `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo` to confirm Track 04 is still represented in the registry and wave policy.
 - `cargo test --workspace` once a real `kairo-ecs-arrow` crate exists and starts exporting Arrow payloads.
 
-| OTel export smoke test (OTLP collector receives spans) | no | yes | yes | yes |
+## Deferred tests
+
+- OTel export smoke test with an OTLP collector receiving spans. Deferred until the `otel-export` feature is implemented behind dependency policy review.
+- Full Arrow IPC/Parquet reader roundtrip. Deferred until native Arrow dependency policy and cross-language reader fixtures are accepted.
 
 ## Current CI commands
 
 ```bash
 cargo fmt --all --check
+cargo fmt --package kairo-ecs-arrow --check
+cargo check -p kairo-ecs-arrow --examples
 cargo test -p kairo-ecs-arrow
 cargo run -p kairo-ecs-arrow --example telemetry_event_log_roundtrip
 cargo test -p kairo-ecs-core

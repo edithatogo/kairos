@@ -1,6 +1,8 @@
 # Risk Register — 36 Streaming & Real-Time Processing
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Message ordering violations in distributed streams across multiple broker partitions | 3 | 5 | 15 | Include monotonic sequence numbers in every stream message; consumer validates ordering and reports gaps; deterministic replay from recorded trace bypasses broker ordering concerns | streaming-agent | Any conformance fixture run via stream produces non-deterministic output |
 | Backpressure on fast simulation when consumer cannot drain broker fast enough | 4 | 4 | 16 | Configurable buffer limits with bounded channels; producer blocks or drops with warning when buffer exceeds threshold; benchmark throughput with consumer lag simulation | streaming-agent | Backpressure causes >5% tick-rate degradation in benchmark suite |

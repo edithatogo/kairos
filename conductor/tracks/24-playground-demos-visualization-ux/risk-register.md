@@ -1,6 +1,8 @@
 # Risk Register: Track 24 Playground, Demos & Visualization UX
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Wasm binary size balloons beyond acceptable page load budget | 3 | 4 | 12 | Add bundle-size budget to quality gates; lazy-load non-critical assets | playground-agent | Bundle exceeds budget by >10% |
 | Screenshot-driven docs become stale as visualization changes | 4 | 3 | 12 | Regenerate screenshots in CI on viz crate changes; fail build if PNGs are missing | ci-agent | Screenshot regeneration fails or produces missing PNGs |

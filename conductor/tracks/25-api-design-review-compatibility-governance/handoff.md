@@ -1,5 +1,7 @@
 # Handoff: Track 25 API Design Review & Compatibility Governance
 
+Last updated: 2026-05-07
+
 ## Summary
 
 Captured the compatibility policy surface so release planning can distinguish stable, experimental, and migration-only APIs across the current Rust crates and binding package roots.
@@ -79,11 +81,30 @@ and forcing a release hold. The policy should be consulted before any crate,
 binding, ABI, Arrow schema, or conformance fixture root changes.
 
 Another failure mode is a release note claiming compatibility while the package
-catalog or matrix still points at an old root. The validator now checks the
-release compatibility note in `-ReleaseGate` mode, but package catalog and
-matrix drift still requires human review unless those files gain a structured
-manifest in a later track.
+catalog or matrix still points at an old root. The validator checks the release
+compatibility note in `-ReleaseGate` mode, but package catalog and matrix drift
+still requires human review unless those files gain a structured manifest in a
+later track.
 
-Current blocker outside this worker's owned write scope: `docs/release/compatibility.md`
-does not yet name `include/kairo_ecs.h` or `schemas/arrow/event_log_v1.schema.json`.
-Release-agent follow-up is required before beta, RC, or 1.0 signoff.
+Current release-gate state: `docs/release/compatibility.md` names all 13
+protected roots required by `docs/design/protected-surface-inventory.json`.
+
+## Contracts changed
+
+`conductor/contracts/versioning-compatibility.md`, `docs/design/protected-surface-inventory.json`, and `docs/design/validate-compatibility-pack.ps1` now define the protected-surface review and release-gate contract.
+
+## Tests added
+
+The compatibility pack is checked with `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1` and `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate`.
+
+## Known risks
+
+Package catalog and matrix drift can still escape the release-gate validator until those files gain structured manifest coverage.
+
+## Follow-up issues
+
+Add a structured package-catalog or compatibility-matrix manifest so the validator can compare package roots as well as the release compatibility note.
+
+## Integration notes
+
+Any protected-root rename, split, merge, removal, signature change, schema change, fixture output drift, or host API behavior change needs ADR/versioning review before release signoff.

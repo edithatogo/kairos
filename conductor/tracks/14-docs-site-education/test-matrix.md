@@ -22,6 +22,8 @@
 - Playground figures include committed SVG assets, non-empty alt text, and explicit source notes.
 - Docs source files remain under `docs/` and `website/`.
 
+The aggregate website validation flow is `npm run check:all`; the track-local validator (`validate-docs-site.ps1`) checks the same script and manifest contract surfaces without editing website scripts or manifests.
+
 ## CI commands
 
 ```bash
@@ -56,3 +58,11 @@ python notebooks\validate_notebooks.py
 - 2026-05-06: `Test-Path -LiteralPath 'website/build/index.html'`
 - 2026-05-06: `node tests\conformance\track12_20_evidence_check.mjs`
 - 2026-05-06: `python notebooks\validate_notebooks.py`
+- 2026-05-07: `npm --prefix website ci` passed.
+- 2026-05-07: `npm --prefix website run check:all` passed; build rendered 105 doc pages, wrote 95 search-index entries, and indexed 23 crates / 457 public API items.
+- 2026-05-07: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\14-docs-site-education\validate-docs-site.ps1` passed with 100 required paths, 3 site sources, 6 navigation sections, and a 20-page minimum gate.
+- 2026-05-07: `node docs\assets\validate-playground-figures.mjs` passed for 5 playground figure assets.
+- 2026-05-07: `node tests\conformance\track12_20_evidence_check.mjs` passed.
+- 2026-05-07: `python notebooks\validate_notebooks.py` passed for 2 notebooks after updating `notebooks/python_scheduler_tutorial.ipynb` to match the current Python scheduler stats contract.
+- 2026-05-07: build output checks passed for `website/build/index.html`, `website/build/docs-index.json`, `website/build/sitemap.xml`, and `website/build/robots.txt`.
+- 2026-05-07: `website/build/docs-index.json` reported 79 entries and 79 generated manifest-backed pages.

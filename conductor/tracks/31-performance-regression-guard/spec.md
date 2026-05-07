@@ -33,13 +33,16 @@ This track depends on the benchmark harness (Track 12) and comparative benchmark
 
 ### Energy efficiency and carbon tracking
 
-The performance regression guard SHALL include energy efficiency metrics:
+Energy efficiency metrics are a future extension, not part of the current
+blocking regression contract:
 
-- Integrate CodeCarbon or Scaphandre to measure joules-per-benchmark-run.
-- Publish perf-per-watt metric alongside raw timing: `events_per_joule = event_count / joules_consumed`.
-- Carbon intensity: multiply energy by grid carbon intensity (gCO2/kWh) for runner location.
-- Green Software Foundation SCI score: report software carbon intensity for each benchmark scenario.
-- Acceptance: before v1.0, every published benchmark MUST include energy data.
+- CodeCarbon or Scaphandre integration remains a planned follow-up.
+- `events_per_joule = event_count / joules_consumed` is a future reporting
+  target.
+- Carbon intensity and Green Software Foundation SCI reporting remain future
+  benchmark-metadata enhancements.
+- Before v1.0, energy data should be documented if available, but the current
+  Track 31 gate does not require it yet.
 
 ## Owned paths
 

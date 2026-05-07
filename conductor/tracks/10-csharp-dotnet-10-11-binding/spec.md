@@ -51,6 +51,11 @@ NativeLibrary path resolution must be tested on the following OS targets due to 
 - Docs updates.
 - Release notes or compatibility notes when public surfaces change.
 
+## Blocked paths
+
+- Full `net11.0` validation remains experimental until stable .NET 11 SDK tooling is available in the target CI/local environment.
+- Live native FFI smoke tests remain blocked until Track 02 supplies a stable native runtime artifact discoverable through `KAIRO_ECS_NATIVE_LIB_DIR` or `runtimes/{rid}/native/`.
+- NuGet publishing, signing, registry credentials, and release dry-runs are out of scope for this binding track and remain owned by release-engineering tracks.
 
 ## C#/.NET version matrix
 
@@ -90,5 +95,8 @@ If .NET 11 is preview in the active CI environment, mark that matrix lane experi
 
 Use the gates in `conductor/quality-gates.md`. Track-specific gates must be listed in `test-matrix.md`.
 
+## Release implications
 
-
+- Adds a public C# package surface for `Kairo.ECS` targeting `net10.0;net11.0`, including managed scheduler types, package metadata, native binding status reporting, and low-level FFI declarations.
+- Local package validation creates `Kairo.ECS.0.1.0-preview.1.nupkg`, but this track does not publish, sign, or push that package to any registry.
+- The `net11.0` lane and live native FFI execution must remain explicitly marked experimental/blocked until their upstream tooling/runtime artifacts are available.

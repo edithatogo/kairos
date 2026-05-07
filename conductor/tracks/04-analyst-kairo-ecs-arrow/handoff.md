@@ -1,8 +1,10 @@
 # Handoff — 04 The Analyst: kairo-ecs-arrow Telemetry
 
+Last updated: 2026-05-07
+
 ## Summary
 
-Track 04 now has a minimal R2 event-log slice. The new `kairo-ecs-arrow` crate defines the `kairo_ecs.event_log.v1` schema, maps `kairo-ecs-types::DispatchedEvent` into versioned event-log records, validates schema fields, and round-trips deterministic smoke bytes without adding native Arrow library requirements.
+Track 04 now has a minimal R2 event-log slice. The `kairo-ecs-arrow` crate defines the `kairo_ecs.event_log.v1` schema, maps `kairo-ecs-types::DispatchedEvent` into versioned event-log records, validates schema fields, and round-trips deterministic smoke bytes without adding native Arrow library requirements.
 
 ## Files changed
 
@@ -28,19 +30,28 @@ No shared conductor contract files were changed. The Track 04 schema artifact ad
 
 - `cargo test -p kairo-ecs-arrow`
 - `crates/kairo-ecs-arrow/tests/schema_compatibility.rs` checks field order, schema versioning, and event-log roundtrip preservation of time/priority/sequence.
+- Crate unit tests check event mapping, smoke-byte decoding, escaped string preservation, validation errors, and the prior `ArrowEventLog` facade.
 
 ## Validation run
 
 - `cargo fmt --package kairo-ecs-arrow --check` passed.
-- `cargo fmt --all --check` passed after concurrent workspace formatting settled.
-- `cargo check -p kairo-ecs-arrow --tests` passed.
 - `cargo check -p kairo-ecs-arrow --examples` passed.
-- `cargo test -p kairo-ecs-arrow` reached compilation but could not link on this Windows host because `link.exe` resolves to `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`; MSVC link libraries were not available on `PATH`.
+- `cargo test -p kairo-ecs-arrow` passed: 6 unit tests, 2 schema compatibility tests, 0 doctests.
+- `cargo run -p kairo-ecs-arrow --example telemetry_event_log_roundtrip` passed and printed `round-tripped 1 event-log record(s) for kairo_ecs.event_log.v1`.
+- `cargo test -p kairo-ecs-core` passed: 14 unit tests, 8 integration tests, 0 doctests.
+- `cargo test -p kairo-ecs-state` passed: 6 integration tests, 0 doctests.
+- `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo` passed.
+- `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo` passed.
+- `cargo fmt --all --check` did not pass because existing modified files outside Track 04 need formatting, including `crates/kairo-ecs-debug/src/main.rs`, `crates/kairo-ecs-rng/src/lib.rs`, `crates/kairo-ecs-types/src/lib.rs`, and `crates/kairo-ecs-wasm/src/lib.rs`. Those files are outside this Track 04 ownership slice and were not reformatted in this pass.
 
 ## Known risks
 
-The current roundtrip payload is a dependency-light smoke format, not full Arrow IPC. Full Arrow IPC/Parquet export remains a later Track 04 step once dependency policy and cross-language consumer expectations are settled.
+The current roundtrip payload is a dependency-light smoke format, not full Arrow IPC. Full Arrow IPC/Parquet export and the OpenTelemetry exporter remain later Track 04 steps once dependency policy and cross-language consumer expectations are settled.
 
 ## Integration notes
 
-The crate depends only on `kairo-ecs-types`. The root workspace manifest was updated only to register `crates/kairo-ecs-arrow` so package-scoped cargo checks can compile.
+The crate depends only on `kairo-ecs-types`. The root workspace manifest was updated only to register `crates/kairo-ecs-arrow` so package-scoped cargo checks can compile. The package manifest wires the repo-level telemetry roundtrip example as `telemetry_event_log_roundtrip`.
+
+## Follow-up issues
+
+No additional follow-up issues were recorded by this Conductor hygiene update.

@@ -27,7 +27,8 @@
   - Component iteration: 5% regression allowed.
   - Event dispatch: 5% regression allowed.
   - Serialization/Arrow: 10% regression allowed.
-- Measure using the same statistical method (mean comparison with t-test threshold or percentage of baseline).
+- Measure using mean-based comparison against the percentage-of-baseline thresholds
+  used by `benches/regression/compare.py`.
 
 ### Task 1.3 - Publish thresholds
 - Write `conductor/performance-thresholds.md` as a markdown table.

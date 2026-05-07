@@ -1,6 +1,8 @@
 # Risk Register: Track 23 Domain Starter Kits & Model Zoo
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Starter kit examples drift from actual crate APIs as kernel evolves | 4 | 4 | 16 | Pin example code versions in CI; run `cargo check` on every kit README before release | model-zoo-agent | Any kit example fails `cargo check` |
 | Model zoo inventory becomes stale or unmaintained | 3 | 4 | 12 | Add CI inventory check that warns on missing example paths; require inventory update per release cycle | ci-agent | Inventory check finds missing or broken paths |

@@ -41,7 +41,7 @@
 
 ### Task 3.2 — Add community-facing documentation
 - Ensure the docs site has a page explaining how to run and replay scenarios.
-- Link from the docs index or contributor guide where the runner is discoverable.
+- Link the CLI reference from the docs index or contributor guide where the runner is discoverable.
 
 ## Phase 4 — Closeout
 

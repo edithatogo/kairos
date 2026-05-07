@@ -6,8 +6,11 @@
 - `Test-Path .github/workflows/conformance.yml`
 - Manifest validation for `conformance/fixtures/manifest.json`
 - JSON syntax check for each ready fixture under `conformance/fixtures`
-- Benchmark plan presence and scenario-name check under `benches`
+- Ready fixture IDs: `scheduler_ordering_v1`, `scheduler_cancellation_v1`, `rng_reproducibility_v1`, and `vvuq_scenario_replay_v1`
+- Benchmark scenario names: `schedule_1m_events`, `pop_1m_events`, `schedule_cancel_1m_mixed`, `create_1m_entities`, `component_insert_1m`, and `hybrid_des_abm_smoke_100k`
 - `node tests/conformance/conformance-check.mjs`
+- `node tests/conformance/runner.mjs`
+- `node tests/conformance/runner.mjs --list`
 - `node tests/conformance/runner-self-test.mjs`
 - `node tests/conformance/track07_13_hardening_check.mjs`
 - `node tests/conformance/track12_20_evidence_check.mjs`
@@ -20,6 +23,8 @@
 cargo test --workspace
 test -f .github/workflows/conformance.yml
 node tests/conformance/conformance-check.mjs
+node tests/conformance/runner.mjs
+node tests/conformance/runner.mjs --list
 node tests/conformance/runner-self-test.mjs
 node tests/conformance/track07_13_hardening_check.mjs
 node tests/conformance/track12_20_evidence_check.mjs
@@ -36,5 +41,7 @@ test -f conformance/fixtures/README.md
 
 | Test | Status | Rust (Track 01) | FFI (Track 02) | Bindings (Track 06-11) |
 |---|---|---|---|---|
-| Chaos experiments pass (no panic, correct error codes) | planned, not release-gating in this slice | target | target | target |
-| OSS-Fuzz integration active with >=2 fuzz targets | planned, no checked-in OSS-Fuzz integration yet | target | target | target |
+| Ready conformance fixtures pass in the local runner | required for this slice | target | target | target |
+| Chaos experiment manifest validates required fault types | required for this slice | target | target | target |
+| Canonical benchmark metadata matches the smoke file | required for this slice | target | target | target |
+| Planned fixture families remain documented but not ready | required for this slice | target | target | target |

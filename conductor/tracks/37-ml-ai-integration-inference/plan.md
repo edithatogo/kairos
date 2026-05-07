@@ -24,7 +24,7 @@
 ### Task 1.2 — Proof-of-concept surrogate
 - Create `examples/ml-surrogate/de-surrogate/` demonstrating a neural network replacing a simple ODE solver.
 - Measure and document the speedup and accuracy trade-off.
-- Ensure the example builds and runs with `cargo run --example de-surrogate --features onnx`.
+- Ensure the example builds and runs with `cargo run --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx`.
 
 ### Task 1.3 — Add review criteria
 - Add red-team prompts for deadlocks under concurrent inference, tensor shape mismatches, and model staleness.

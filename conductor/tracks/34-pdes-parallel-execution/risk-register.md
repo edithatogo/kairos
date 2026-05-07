@@ -1,6 +1,8 @@
 # Risk Register: Track 34 PDES & Parallel Execution
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | PDES determinism loss — final state differs from sequential scheduler | 3 | 5 | 15 | Sequential parity test in CI gates; compare component state and entity graph after every PDES run; run Track 12 conformance suite under PDES mode | pdes-agent | Sequential parity test fails on any accepted workload |
 | Rollback overhead for Time Warp — optimistic PDES underperforms conservative | 4 | 3 | 12 | Keep Time Warp as research spike only; do not productionize without measurement; compare rollback rate against event density | pdes-agent | Time Warp spike shows rollback rate > 20% for representative workloads |

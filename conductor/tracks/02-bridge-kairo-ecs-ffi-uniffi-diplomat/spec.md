@@ -44,6 +44,12 @@ Most tracks are parallel-safe after their contract inputs are accepted. See `con
 - `crates/kairo-ecs-core/` — owned by Track 01.
 - `bindings/` — owned by Tracks 06–11.
 
+## Release implications
+
+- The stable C ABI is now an early release-gating surface for downstream language bindings.
+- `include/kairo_ecs.h` is treated as the canonical public header for ABI v1 and must remain in sync with Rust bridge exports.
+- UniFFI and Diplomat crates are convenience wrapper anchors only; they do not replace the stable C ABI contract for v0.1 release readiness.
+- Registry publishing remains blocked until Tracks 15 and 20 complete package manifests, provenance, and supply-chain checks.
 
 ## Acceptance criteria
 

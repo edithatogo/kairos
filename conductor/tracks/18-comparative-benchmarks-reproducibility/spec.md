@@ -58,5 +58,11 @@ In addition to SimPy, simmer, Mesa, Agents.jl, MASON, and NetLogo, the benchmark
 - Publishing packages before naming, legal, security, and compatibility gates pass.
 - Adding domain-specific complexity to `kairo-ecs-core`.
 
+## Blocked paths
+
+No additional blocked paths are declared for this track beyond the ownership and dependency boundaries in conductor/tracks.yaml. Public release, packaging, or production-readiness claims remain blocked until the relevant downstream release gates pass or are explicitly waived.
 
 
+## Release implications
+
+This track contributes to release readiness only through the acceptance criteria and quality gates listed here and in conductor/quality-gates.md. It does not independently authorize public release, registry publication, or production-readiness claims without the dependent packaging, supply-chain, compatibility, red-team, and wave-management gates.

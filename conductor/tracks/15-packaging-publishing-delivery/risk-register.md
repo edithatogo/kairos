@@ -1,6 +1,8 @@
 # Risk Register — 15 Packaging, Publishing & Delivery
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Contract drift | 3 | 4 | 12 | Use `conductor/contracts`, the package matrix, and conformance fixtures | packaging-agent | Conformance fixture fails on any package surface |
 | Registry name collision | 3 | 5 | 15 | Check names early and record fallbacks for every ecosystem | packaging-agent | Name unavailable in any target registry |

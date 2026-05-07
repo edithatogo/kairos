@@ -1,5 +1,7 @@
 # Test Matrix — 05 The Window: kairo-ecs-viz Visualization
 
+Last verified: 2026-05-07
+
 ## Required tests
 
 - `cargo check --manifest-path crates/kairo-ecs-viz/Cargo.toml --no-default-features` to prove the visualization crate compiles without renderer features or GUI dependencies.
@@ -15,6 +17,26 @@
 - `cargo fmt --all --check` before any Rust-facing handoff.
 - `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo` to keep the conductor setup synchronized.
 - `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo` to confirm Track 05 is still covered by the wave policy and registry.
+
+## Current Track 05 validation — 2026-05-07
+
+- `cargo fmt -p kairo-ecs-viz --check` — pass.
+- `cargo test -p kairo-ecs-viz` — pass, 10 tests.
+- `cargo check --manifest-path crates\kairo-ecs-viz\Cargo.toml --no-default-features` — pass.
+- `cargo check --manifest-path crates\kairo-ecs-viz\Cargo.toml --no-default-features --tests` — pass.
+- `cargo check --manifest-path crates\kairo-ecs-viz\Cargo.toml --all-features --tests` — pass.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\05-window-kairo-ecs-viz\validate-state-snapshot.ps1` — pass.
+- `cargo check --manifest-path examples\viz\headless-snapshot\Cargo.toml` — pass.
+- `cargo check -p kairo-ecs-core --no-default-features` — pass.
+- `cargo tree -p kairo-ecs-core --no-default-features` — pass; tree contains only `kairo-ecs-core` and `kairo-ecs-types`.
+- `cargo test -p kairo-ecs-core` — pass, 22 tests.
+- `cargo test -p kairo-ecs-state` — pass, 6 tests.
+- `npm --prefix website run build` — pass, 105 pages rendered.
+- `cargo fmt --all --check` — blocked by unrelated pre-existing formatting drift outside Track 05-owned paths.
+
+The Track 05 review slice includes the formal `kairo_ecs.visualization.frame.v1`
+fixture JSON output and deterministic no-GUI SVG rendering. Native WGPU/Bevy
+runtime backends remain explicit post-review feature work.
 
 ## Current CI commands
 

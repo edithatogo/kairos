@@ -5,7 +5,7 @@
 - Read `conductor/workflow.md`, `conductor/contracts/conformance-contract.md`, and the Track 01 and Track 12 handoff notes.
 - Confirm owned paths: `crates/kairo-ecs-debug/`, `docs/debugging/`, `website/time-travel-demo/`.
 - Review the deterministic scheduler's event dispatch hook points for trace recording.
-- Create `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
+- Keep `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md` current as the track evolves.
 
 ## Phase 1 — Contract alignment
 
@@ -18,10 +18,10 @@
 
 ## Phase 2 — Scaffold
 
-- Create the `crates/kairo-ecs-debug/` crate.
-- Add `docs/debugging/` with trace format specification and CLI reference.
-- Add a smoke test that records and replays a trivial trace.
-- Wire the crate into the workspace `Cargo.toml`.
+- Extend the `crates/kairo-ecs-debug/` crate with the trace recorder, replay engine, and debugger helpers.
+- Keep `docs/debugging/` current with the trace format specification and CLI reference.
+- Keep the smoke test that records and replays a trivial trace current.
+- Keep the crate wired into the workspace `Cargo.toml`.
 
 ## Phase 3 — Implementation
 

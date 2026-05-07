@@ -9,6 +9,7 @@
 | Docs build smoke test passes | yes | yes | yes |
 | Release gate integration | no | yes | yes |
 | Scenario output shape is documented | yes | yes | yes |
+| CLI docs page exists and is linked from the site | yes | yes | yes |
 | Red-team objections about replay drift are answered | yes | yes | yes |
 | Real fixture reference included (`scheduler_ordering_v1`) | yes | yes | yes |
 | CLI scenario validation compiles | yes | yes | yes |

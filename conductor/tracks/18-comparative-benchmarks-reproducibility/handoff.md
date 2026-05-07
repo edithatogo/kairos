@@ -14,6 +14,7 @@ link tests.
 `conductor/tracks/18-comparative-benchmarks-reproducibility/test-matrix.md`
 `conductor/tracks/18-comparative-benchmarks-reproducibility/handoff.md`
 `conductor/tracks/18-comparative-benchmarks-reproducibility/risk-register.md`
+`docs/benchmarks/README.md`
 `benches/README.md`
 `benches/benchmark_reproducibility.py`
 `docs/benchmarks/benchmark-policy.md`
@@ -87,3 +88,23 @@ the expected MSVC build-tools linker rather than Git's Unix `link.exe`.
 
 Added a track-local offline validator so the Track 18 evidence boundary can be
 checked even when native benchmark linking is unavailable.
+
+## Contracts changed
+
+No benchmark contracts changed in this scoped cleanup. The evidence boundary still depends on `benches/benchmark-plan.md`, `conformance/fixtures/manifest.json`, and `.github/workflows/benchmark-smoke.yml`.
+
+## Tests added
+
+No executable benchmark tests were added in this scoped cleanup. The track-local validator now also checks the public benchmark landing page.
+
+## Known risks
+
+Native performance claims remain blocked until raw benchmark output, command capture, host metadata, and baseline versions are archived with the expected MSVC linker path.
+
+## Follow-up issues
+
+Keep `benches/benchmark-plan.md`, `benches/benchmark-smoke.json`, and `conformance/fixtures/manifest.json` versioned together when benchmark IDs or fixture IDs change.
+
+## Integration notes
+
+Treat the current benchmark evidence as reproducibility and metadata-gate evidence, not as a native performance comparison.

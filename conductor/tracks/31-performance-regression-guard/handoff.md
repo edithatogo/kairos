@@ -1,5 +1,7 @@
 # Handoff: Track 31 Performance Regression Guard
 
+Last updated: 2026-05-07
+
 ## Summary
 
 Defined the performance regression detection framework for KairoECS. Worker 2
@@ -37,6 +39,8 @@ native benchmark outputs are promoted.
   validates threshold coverage and compiles benchmark targets. It does not yet
   run a native base-branch versus PR-branch benchmark pair until Track 12 emits
   stable benchmark artifacts with runner metadata.
+- Energy-efficiency reporting is not yet part of the blocking regression gate;
+  the current track covers timing thresholds and comparator behavior only.
 
 ## Worker 2 validation
 
@@ -72,3 +76,27 @@ native benchmark outputs are promoted.
 - Local Windows benchmark compilation currently needs the MSVC linker path
   resolved before `cargo bench --workspace --no-run` can be used as a local
   pass/fail signal.
+
+## Contracts changed
+
+No contract changes were recorded by this Conductor hygiene update.
+
+
+## Tests added
+
+No tests were added by this Conductor hygiene update.
+
+
+## Known risks
+
+No new risks were introduced by this Conductor hygiene update.
+
+
+## Follow-up issues
+
+No additional follow-up issues were recorded by this Conductor hygiene update.
+
+
+## Integration notes
+
+No additional integration notes were recorded by this Conductor hygiene update.

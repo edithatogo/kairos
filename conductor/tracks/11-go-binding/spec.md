@@ -64,5 +64,6 @@ Most tracks are parallel-safe after their contract inputs are accepted. See `con
 
 Use the gates in `conductor/quality-gates.md`. Track-specific gates must be listed in `test-matrix.md`.
 
+## Release implications
 
-
+This track contributes to release readiness only through the acceptance criteria and quality gates listed here and in conductor/quality-gates.md. It does not independently authorize public release, registry publication, or production-readiness claims without the dependent packaging, supply-chain, compatibility, red-team, and wave-management gates.

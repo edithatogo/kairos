@@ -5,7 +5,7 @@
 - Read `conductor/workflow.md`, `conductor/contracts/arrow-schema-contract.md`, and the Track 04 handoff notes.
 - Confirm owned paths: `crates/kairo-ecs-streaming/`, `docs/streaming/`.
 - Review the Arrow telemetry schema and experiment runner CLI interface for stream hook points.
-- Create `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
+- Keep `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md` current as implementation lands.
 
 ## Phase 1 — Contract alignment
 
@@ -17,10 +17,10 @@
 
 ## Phase 2 — Scaffold
 
-- Create the `crates/kairo-ecs-streaming/` crate with feature-flag gates.
-- Add `docs/streaming/` with architecture overview and broker setup guides.
+- Keep the `crates/kairo-ecs-streaming/` crate feature-flag gated.
+- Maintain `docs/streaming/` with architecture overview and broker setup guides.
 - Add a smoke test that verifies the feature-flag matrix compiles cleanly.
-- Wire the crate into the workspace `Cargo.toml`.
+- Keep the crate wired into the workspace `Cargo.toml`.
 
 ## Phase 3 — Implementation
 

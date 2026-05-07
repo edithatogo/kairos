@@ -1,6 +1,8 @@
 # Risk Register: Track 27 Developer Experience & Reproducible Environments
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Dev environment not reproducible across operating systems | 4 | 4 | 16 | Nix flake or devcontainer definition with locked inputs; CI validates fresh checkout builds on all platforms | devx-agent | Fresh checkout fails `cargo build` on any supported OS |
 | Container/devcontainer drift from CI environment | 3 | 4 | 12 | Use same base image in devcontainer and CI; scheduled rebuild to detect drift | ci-agent | Devcontainer and CI diverge by >1 dependency version |

@@ -1,6 +1,8 @@
 # Risk Register: Track 37 ML/AI Integration & Inference
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | ML model staleness: trained model diverges from evolving simulation semantics | 4 | 4 | 16 | Version models alongside simulation schemas; require model hash in scenario manifest; fail CI if model version does not match domain version | ml-integration-agent | Model hash mismatch detected during simulation init |
 | Inference latency spikes cause tick deadline misses | 3 | 5 | 15 | Enforce per-tick inference timeout; provide async inference mode for non-blocking models; benchmark latency under varying batch sizes | ml-integration-agent | Any tick exceeds latency budget by >2x in benchmark |

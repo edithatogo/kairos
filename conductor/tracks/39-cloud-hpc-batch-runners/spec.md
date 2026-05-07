@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Production-scale simulation execution. Docker images, Kubernetes operator, AWS Batch / GCP Cloud Run / Azure Batch integration, Slurm job scripts for HPC clusters, containerized experiment orchestration with spot/preemptible instance resilience, S3/GCS/Blob telemetry output.
+Production-scale simulation execution. Docker images, Kubernetes operator, AWS Batch / GCP Batch / Azure Batch integration, Slurm job scripts for HPC clusters, containerized experiment orchestration with spot/preemptible instance resilience, S3/GCS/Blob telemetry output.
 
 ## Why this track exists
 

@@ -2,7 +2,7 @@
 
 ## Summary
 
-Track 03 now has a minimal R2 implementation slice for the DES trajectory API and ABM behavior API. The DES crate wraps the shared deterministic scheduler with a fixed-tick `Trajectory` request/trace surface. The ABM crate wraps the shared scheduler, entity store, and deterministic RNG with a `BehaviorSimulation` and `AgentBehavior` update contract.
+Track 03 now has a minimal R2 implementation slice for the DES trajectory API and ABM behavior API. The DES crate wraps the shared deterministic scheduler with a fixed-tick `TrajectoryRequest`/`Trajectory` request and trace surface. The ABM crate keeps the lightweight `ABMContext` component/scheduler facade and adds a deterministic `BehaviorSimulation`, `AgentBehavior`, `BehaviorContext`, and behavior-decision loop backed by per-agent RNG streams.
 
 ## Files changed
 
@@ -10,8 +10,10 @@ Track 03 now has a minimal R2 implementation slice for the DES trajectory API an
 - `Cargo.lock`
 - `crates/kairo-ecs-des/Cargo.toml`
 - `crates/kairo-ecs-des/src/lib.rs`
+- `crates/kairo-ecs-des/tests/des_integration.rs`
 - `crates/kairo-ecs-abm/Cargo.toml`
 - `crates/kairo-ecs-abm/src/lib.rs`
+- `crates/kairo-ecs-abm/tests/abm_integration.rs`
 - `examples/flow/README.md`
 - `conductor/tracks/03-flow-des-trajectory-abm-behavior/test-matrix.md`
 - `conductor/tracks/03-flow-des-trajectory-abm-behavior/handoff.md`
@@ -27,14 +29,19 @@ No shared contracts were changed for this track.
 ## Tests added
 
 - `crates/kairo-ecs-des/src/lib.rs`: scheduler-order replay and bounded trajectory smoke tests.
-- `crates/kairo-ecs-abm/src/lib.rs`: scheduler-ordered behavior updates and deterministic run-seed replay smoke tests.
+- `crates/kairo-ecs-des/tests/des_integration.rs`: FIFO resource queue and fixed-tick scheduling smoke coverage.
+- `crates/kairo-ecs-abm/src/lib.rs`: scheduler-ordered behavior updates, event-budget behavior, deterministic entity-RNG replay, and despawn decisions.
+- `crates/kairo-ecs-abm/tests/abm_integration.rs`: component attachment and multi-agent scheduling smoke coverage.
 
 ## Validation run
 
-- `cargo fmt -p kairo-ecs-abm -p kairo-ecs-des --check` passed.
-- `cargo check -p kairo-ecs-des -p kairo-ecs-abm` passed.
-- `cargo check --tests -p kairo-ecs-des -p kairo-ecs-abm` passed.
-- `cargo test -p kairo-ecs-des -p kairo-ecs-abm` reached the linker step but did not run because this shell resolves `link.exe` to `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`, which fails before producing Windows test binaries.
+- `cargo fmt -p kairo-ecs-abm -p kairo-ecs-des --check` passed on 2026-05-07.
+- `cargo test -p kairo-ecs-des -p kairo-ecs-abm` passed on 2026-05-07.
+- `cargo test -p kairo-ecs-core` passed on 2026-05-07.
+- `cargo test -p kairo-ecs-state` passed on 2026-05-07.
+- `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo` passed on 2026-05-07.
+- `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo` passed on 2026-05-07.
+- `cargo fmt --all --check` is still blocked by unrelated in-flight formatting diffs outside Track 03, including `crates/kairo-ecs-arrow`, `crates/kairo-ecs-debug`, `crates/kairo-ecs-rng`, `crates/kairo-ecs-types`, and `crates/kairo-ecs-wasm`.
 
 ## Known risks
 
@@ -43,3 +50,7 @@ The current APIs are intentionally minimal. They do not yet export shared confor
 ## Integration notes
 
 Next step: bind the DES and ABM smoke paths to shared conformance fixtures, then add richer resource/queue and agent-decision examples under `examples/flow/`.
+
+## Follow-up issues
+
+No additional follow-up issues were recorded by this Conductor hygiene update.

@@ -1,8 +1,10 @@
 # Risk Register: Track 29 Wave Manager & Execution Gatekeeper
 
-Current validation date: 2026-05-06.
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
 
-| Risk | L | I | Sev | Mitigation | Owner | Current evidence | Escalation trigger |
+Current validation date: 2026-05-07.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Current evidence | Escalation trigger |
 |---|---:|---:|---:|---|---|---|---|
 | Track statuses are ahead of their dependency evidence | 5 | 5 | 25 | Keep the new gate blocking until dependencies are marked `Done` or an ADR documents a maintainer override. | wave-manager-agent | Blocking validation reports 89 direct dependency blockers and 181 transitive dependency blockers. | Any release-readiness claim while these blockers remain. |
 | Previous fixed 0-5 wave assumption hides the actual dependency depth | 4 | 4 | 16 | Derive waves from `conductor/tracks.yaml`; document current Waves 0-6. | wave-manager-agent | Report-only validation assigns Track 39 to Wave 6 because it depends on Wave-5 Track 15. | Any document or gate that assumes a fixed maximum wave. |

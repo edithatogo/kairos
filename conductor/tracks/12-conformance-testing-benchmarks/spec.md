@@ -80,6 +80,7 @@ conformance/fixtures/deterministic_ordering.json
 conformance/fixtures/cancellation.json
 conformance/fixtures/rng_replay.json
 conformance/fixtures/vvuq_scenario_replay.json
+conformance/fixtures/zero_delay_guard.json
 ```
 
 Each ready fixture must define:
@@ -145,6 +146,15 @@ Beyond the single `cargo-fuzz` target, structure-aware fuzzing MUST cover:
 
 Chaos and fuzzing checks are release-gating for beta and beyond.
 
+The current checked-in chaos slice is metadata-only:
+
+```text
+conformance/chaos/manifest.json
+```
+
+It records the required fault-family contract without native link tests,
+nightly scheduling, a checked-in chaos runner, or runtime fault injection claims.
+
 ## Acceptance criteria
 
 - Owned paths are created and documented.
@@ -159,5 +169,6 @@ Chaos and fuzzing checks are release-gating for beta and beyond.
 
 Use the gates in `conductor/quality-gates.md`. Track-specific gates must be listed in `test-matrix.md`.
 
+## Release implications
 
-
+This track contributes to release readiness only through the acceptance criteria and quality gates listed here and in conductor/quality-gates.md. It does not independently authorize public release, registry publication, or production-readiness claims without the dependent packaging, supply-chain, compatibility, red-team, and wave-management gates.

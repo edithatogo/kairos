@@ -1,5 +1,7 @@
 # Handoff: Track 24 Playground, Demos & Visualization UX
 
+Last updated: 2026-05-07
+
 ## Summary
 
 Captured the demo and visualization requirements so the docs surface can stay honest about what the repo currently shows.
@@ -35,3 +37,23 @@ The current screenshot paths are targets, so a later worker still needs to check
 The implemented slice is intentionally fixture-backed. It should not be described as live Wasm execution until the TypeScript/Wasm track hands over that contract.
 
 Local executable verification remains blocked until the Windows MSVC linker is available on PATH. Use `cargo check --manifest-path examples/viz/headless-snapshot/Cargo.toml` as the current non-linking Rust gate.
+
+## Contracts changed
+
+The playground contract is a static, fixture-backed headless snapshot page. It is not a live Wasm runtime or product demo contract.
+
+## Tests added
+
+The current checks are `node website/scripts/smoke-playground.mjs`, `cargo check --manifest-path examples/viz/headless-snapshot/Cargo.toml`, `npm --prefix website run check:links`, and `npm --prefix website run build`.
+
+## Known risks
+
+Screenshot paths are still targets rather than checked-in visual assets, and local executable verification is blocked by the Windows linker setup.
+
+## Follow-up issues
+
+Add the actual screenshot assets and rerun the cargo example after MSVC linker discovery is fixed. Do not claim live Wasm execution until the TypeScript/Wasm track hands over that surface.
+
+## Integration notes
+
+Docs and release notes should describe this track as a fixture-backed learning surface until screenshot and Wasm evidence exists.

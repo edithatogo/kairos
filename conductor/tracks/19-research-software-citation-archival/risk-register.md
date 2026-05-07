@@ -1,6 +1,8 @@
 # Risk Register: Track 19 Research Software, Citation & Archival
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | CITATION.cff metadata stale | 3 | 4 | 12 | Local validator checks required fields and cross-file version/date/repository/title/license consistency before release-note edits | research-software-agent | `validate-citation-archive.ps1` fails |
 | Zenodo DOI not reserved | 3 | 5 | 15 | Keep `0.4.0-alpha.1` explicitly marked as not yet DOI-minted until a Zenodo draft or DOI exists; reserve DOI at first public release | release-agent | Publication approaches without reserved DOI or draft link |

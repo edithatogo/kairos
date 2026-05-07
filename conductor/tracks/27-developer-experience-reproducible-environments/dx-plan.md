@@ -39,4 +39,5 @@ flowchart TD
 - `just docs-bootstrap` installs the site dependencies.
 - `just docs-build` generates `website/build/index.html`.
 - `just docs-dev` starts a local preview on port 3000.
+- `just dev-setup` installs the Rust-side developer prerequisites from the root `justfile`.
 - `just validate-conductor` checks the conductor setup wiring.

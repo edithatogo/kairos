@@ -15,18 +15,18 @@ Central conductor scripts and core/state workspace tests are still required befo
 
 ## Track-specific gates
 
-- **trace-validation-smoke**: Validate the line-oriented scaffold encoding accepts encoded traces and rejects missing schema, unsupported schema, malformed delta fields, and out-of-order ticks.
-- **trace-roundtrip**: Current R2 alias for `trace-validation-smoke` plus `replay-smoke`; Arrow IPC roundtrip is deferred below.
+- **trace-record-replay**: Validate the line-oriented scaffold encoding accepts encoded traces and rejects missing schema, unsupported schema, malformed delta fields, and out-of-order ticks.
+- **trace-roundtrip**: Legacy coverage-check alias for `trace-record-replay`; keep central gate naming on `trace-record-replay`.
 - **replay-smoke**: Reconstruct state from the nearest snapshot plus deltas and assert expected state at tick boundaries.
-- **forward-backward-parity-smoke**: Step from the initial snapshot to the first delta, step forward, step back, and assert reconstructed state matches the expected forward state for each cursor tick.
-- **forward-backward-parity**: Current R2 alias for `forward-backward-parity-smoke` over the offline trace model.
+- **fwd-back-parity**: Step from the initial snapshot to the first delta, step forward, step back, and assert reconstructed state matches the expected forward state for each cursor tick over the offline trace model.
+- **forward-backward-parity**: Legacy coverage-check alias for `fwd-back-parity`; keep central gate naming on `fwd-back-parity`.
 - **breakpoint-smoke**: Set a breakpoint on a specific event kind, run to the matching delta, and assert the cursor and reconstructed state are correct.
 - **goto-tick-accuracy-smoke**: Seek to tick N and assert the debugger lands on the first delta at or after N.
 - **timeline-render-smoke**: Load the fixture into the static timeline scrubber validator and verify initial render, step/back controls, event-dot selection, active marker, and state inspector refresh.
 
 ## Deferred integration gates
 
-- **trace-roundtrip-arrow**: Record a benchmark run, serialize trace to Arrow IPC, deserialize, replay, and assert final state hash matches original. Deferred until Track 04 Arrow IPC schema is available in this worker's scope.
+- **trace-record-replay-arrow**: Record a benchmark run, serialize trace to Arrow IPC, deserialize, replay, and assert final state hash matches original. Deferred until Track 04 Arrow IPC schema is available in this worker's scope.
 - **scheduler-hook-parity**: Record a deterministic core scheduler run and compare trace snapshots against Track 12 conformance fixtures. Deferred until Track 01/12 integration can be changed and tested outside the Track 40-only write boundary.
 - **large-trace-timeline**: Validate browser timeline behavior with aggregated or virtualized traces at 100K+ visible events. Deferred until the demo has virtualization rather than static fixture rendering.
 

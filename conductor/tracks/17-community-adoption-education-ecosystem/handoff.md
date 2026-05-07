@@ -1,5 +1,7 @@
 # Handoff: Track 17 Community Adoption, Education & Ecosystem
 
+Last updated: 2026-05-07
+
 ## Summary
 
 Anchored the community adoption surface to a concrete R2 onboarding slice: community index, contributor path, first-user adoption path, model-zoo inventory bridge, governance map, maturity roadmap, and explicit `onboarding-docs` gate evidence.
@@ -61,3 +63,23 @@ The concrete risk is drift between the discovery page, the package catalog, and 
 Added a track-local onboarding validator that checks the community docs slice,
 model-zoo inventory bridge, maturity labels, and first-user/contributor entry
 points without requiring network or registry access.
+
+## Contracts changed
+
+No contract files changed in this scoped cleanup; Track 17 continues to consume the package catalog, delivery-readiness checklist, website index, and model-zoo inventory.
+
+## Tests added
+
+No executable tests were added in this scoped cleanup. Existing evidence remains the track-local onboarding validator and tutorial validation commands listed above.
+
+## Known risks
+
+The current risk remains drift between community docs, tutorial paths, package maturity labels, and the model-zoo inventory bridge.
+
+## Follow-up issues
+
+Rerun the onboarding and tutorial validators after any docs-tree move, maturity-label update, or model-zoo inventory change.
+
+## Integration notes
+
+Do not treat Track 17 as a package-publication gate; it documents adoption readiness and must stay aligned with the separate packaging and release-governance tracks.

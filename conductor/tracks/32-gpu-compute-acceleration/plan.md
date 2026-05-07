@@ -79,8 +79,8 @@
 - Publish results in `docs/gpu-compute/benchmark-results.md`.
 
 ### Task 4.2 — CI integration
-- Add `gpu-crate-compiles` gate to `conductor/quality-gates.md`.
-- Add `gpu-feature-isolation` gate checking `cargo tree` for unintended GPU dependencies.
+- Keep the central `gpu-parity-check` and `gpu-benchmark-threshold` gates aligned with the validator output.
+- Keep `gpu-crate-compiles` and `gpu-feature-isolation` as track-local preflight checks in `validate-track32.ps1`.
 - GPU benchmarks run only on self-hosted runners with GPU hardware; CI gates are informational on CPU-only runners.
 
 ### Task 4.3 — Documentation

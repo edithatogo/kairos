@@ -1,5 +1,7 @@
 # Handoff: Track 33 WebGPU Compute for Browser
 
+Last updated: 2026-05-07
+
 ## Status
 
 Initial scaffold implemented and tightened. Browser-native WebGPU device wiring is still blocked, and the crate now reports that explicitly through `BrowserBindingsNotConfigured` / `BrowserBackendNotConfigured` contracts. The crate facade, adapter/bridge/reference-dispatch scaffolds, fallback/parity capability metadata, WebGPU WGSL shader, static demo, smoke test, GPU-free WGSL subset validator, and comparison/subset docs exist.
@@ -75,3 +77,32 @@ All WebGPU gates require headless Chrome with `--enable-unsafe-webgpu` flag. Gat
 - Headless CI testing for WebGPU requires Chrome flags that may break between Chrome versions. The CI setup needs ongoing maintenance.
 - Firefox and Safari WebGPU timelines are uncertain. The track ships as Chrome-primary, with Edge and Firefox Nightly as secondary targets. Full cross-browser support may not be achievable by 1.0.
 - Browser GPU resource constraints are more severe than native — shared VRAM with the compositor, tab-level memory limits, and thermal throttling. The demo must be conservative with agent counts and buffer sizes.
+
+## Files changed
+
+No additional file list was recorded by this Conductor hygiene update. Use the track plan, spec, and git history for implementation-specific file evidence.
+
+
+## Contracts changed
+
+No contract changes were recorded by this Conductor hygiene update.
+
+
+## Tests added
+
+No tests were added by this Conductor hygiene update.
+
+
+## Known risks
+
+No new risks were introduced by this Conductor hygiene update.
+
+
+## Follow-up issues
+
+No additional follow-up issues were recorded by this Conductor hygiene update.
+
+
+## Integration notes
+
+No additional integration notes were recorded by this Conductor hygiene update.

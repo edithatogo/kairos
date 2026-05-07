@@ -26,11 +26,12 @@ This track is designed to run in parallel with core implementation. The subagent
 
 ## Outputs
 
-- `crates/kairo-ecs-cli/`: binary crate with `run`, `collect`, and `analyze` subcommands.
+- `crates/kairo-ecs-cli/`: binary crate with smoke commands for `validate-scenario`, `replay`, and `resume-plan`.
 - `crates/kairo-ecs-cli/src/scenario.rs`: scenario manifest parser with versioned schema support (v1).
-- `docs/cli/kairo-ecs-cli.md`: user documentation with `--help` output, quickstart, and subcommand examples.
-- `fixtures/scenarios/`: example scenario manifests exercising single-run, sweep, and resume modes.
-- `conductor/tracks/22-experiment-runner-scenario-management/test-matrix.md`: CI gate (manifest validation, resumability integration test, CLI argument parsing smoke test).
+- `docs/cli/kairo-ecs-cli.md`: user documentation with the implemented smoke commands, quickstart, and local validation notes.
+- `docs/scenarios/factory-bottleneck-run-replay.md`: the first committed scenario/replay note for `factory_bottleneck_v1`.
+- `examples/experiments/`: example scenario manifests exercising the committed smoke scenario and seed manifest.
+- `conductor/tracks/22-experiment-runner-scenario-management/test-matrix.md`: CI gate (manifest validation, resumability integration test, CLI smoke validation).
 
 ## Acceptance criteria
 
@@ -46,5 +47,11 @@ This track is designed to run in parallel with core implementation. The subagent
 - Publishing packages before naming, legal, security, and compatibility gates pass.
 - Adding domain-specific complexity to `kairo-ecs-core`.
 
+## Blocked paths
+
+No additional blocked paths are declared for this track beyond the ownership and dependency boundaries in conductor/tracks.yaml. Public release, packaging, or production-readiness claims remain blocked until the relevant downstream release gates pass or are explicitly waived.
 
 
+## Release implications
+
+This track contributes to release readiness only through the acceptance criteria and quality gates listed here and in conductor/quality-gates.md. It does not independently authorize public release, registry publication, or production-readiness claims without the dependent packaging, supply-chain, compatibility, red-team, and wave-management gates.

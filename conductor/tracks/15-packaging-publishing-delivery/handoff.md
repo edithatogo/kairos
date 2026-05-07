@@ -1,5 +1,7 @@
 # Handoff — 15 Packaging, Publishing & Delivery
 
+Last updated: 2026-05-07
+
 ## Summary
 
 Early-stage registry and packaging plan updated for Rust, Python, R, Julia, TypeScript, C#, and Go.
@@ -72,3 +74,7 @@ the release gates are met.
 Worker 6 extended the validator to cover the ordered local dry-run sequence and
 to fail if publish/publication manifest files appear under `packaging/` or
 `dist/`.
+
+## Follow-up issues
+
+Keep public publishing blocked until registry names, legal metadata, compatibility gates, and dry-run package evidence are complete across the package matrix.

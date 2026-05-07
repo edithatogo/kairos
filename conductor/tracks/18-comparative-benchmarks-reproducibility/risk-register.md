@@ -1,6 +1,8 @@
 # Risk Register: Track 18 Comparative Benchmarks & Reproducibility
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Benchmark methodology not comparable to ecosystem baselines | 4 | 4 | 16 | Baseline against published DES benchmarks (PHOLD, DEVStone) with identical model configuration | benchmark-agent | Any published benchmark uses non-comparable methodology |
 | Hardware variance obscures results | 4 | 4 | 16 | Pin runner class in CI; record CPU model, frequency, and memory in result metadata | ci-agent | Same benchmark varies >10% across runs on pinned runner |

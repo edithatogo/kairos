@@ -1,6 +1,8 @@
 # Risk Register — 16 Release Governance & Maintenance
 
-| Risk | L | I | Sev | Mitigation | Owner | Escalation trigger |
+Severity scale: Likelihood 1-5 x Impact 1-5. Low 1-4, Medium 5-9, High 10-16, Critical 17-25.
+
+| Risk | Likelihood | Impact | Severity | Mitigation | Owner | Escalation trigger |
 |---|---|---|---|---|---|---|
 | Compatibility promise broken by oversight | 3 | 5 | 15 | Enforce semver check in CI; require ADR before any public-API change | release-agent | Semver check fails on release candidate |
 | Changelog/CHANGELOG.md stale | 4 | 3 | 12 | Require changelog entry as merge gate; validate in release CI | release-agent | PR merges without changelog entry |

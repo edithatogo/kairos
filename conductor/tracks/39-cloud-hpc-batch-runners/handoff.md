@@ -44,3 +44,27 @@ This track is explicitly non-blocking for library release. Container images are 
 - Added pre-render validation to `k8s/operator/kairoecs_operator.py` for experiment kind, spec shape, non-empty image, positive parallelism, valid storage backend, and non-empty storage path.
 - Added aggregate Track 36-40 validator coverage that renders the sample Kubernetes Job and verifies invalid local experiment specs fail before rendering.
 - No live Docker, Kubernetes, Slurm, AWS, GCP, or Azure runtime claim was added; current evidence remains offline manifest/policy validation only.
+
+## Contracts changed
+
+No contract changes were recorded by this Conductor hygiene update.
+
+
+## Tests added
+
+No tests were added by this Conductor hygiene update.
+
+
+## Known risks
+
+No new risks were introduced by this Conductor hygiene update.
+
+
+## Follow-up issues
+
+No additional follow-up issues were recorded by this Conductor hygiene update.
+
+
+## Integration notes
+
+No additional integration notes were recorded by this Conductor hygiene update.

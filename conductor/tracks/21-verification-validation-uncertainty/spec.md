@@ -27,9 +27,10 @@ This track is designed to run in parallel with core implementation. The subagent
 ## Outputs
 
 - `conductor/contracts/vvuq-contract.md`: seed-manifest schema v1, replay invariants, validation criteria, and uncertainty-report format.
-- `fixtures/vvuq/`: replay fixtures (seed + scenario + expected-output-hash) and sensitivity-analysis input sets.
-- `docs/vvuq/replay-guide.md`: how to run a replay, interpret output, and compare across versions/platforms.
-- `docs/vvuq/uncertainty-guide.md`: UQ methodology selection guide with worked sensitivity-analysis examples.
+- `conformance/fixtures/vvuq_scenario_replay.json`: replay fixture for the current Track 21 scenario/seed evidence slice.
+- `docs/trustworthy-simulation/verification-validation-uncertainty.md`: the public explanation of verification, validation, and uncertainty terms.
+- `docs/trustworthy-simulation/scenario-evidence.md`: the scenario and seed evidence page that anchors the replay smoke.
+- `docs/validation/factory-bottleneck-v1-vvuq-note.md`: the artifact-backed interpretation note for the VVUQ slice.
 - `conductor/tracks/21-verification-validation-uncertainty/test-matrix.md`: CI gate (replay fixture checks, seed-manifest validation, cross-platform replay comparison).
 
 ## Acceptance criteria
@@ -46,5 +47,11 @@ This track is designed to run in parallel with core implementation. The subagent
 - Publishing packages before naming, legal, security, and compatibility gates pass.
 - Adding domain-specific complexity to `kairo-ecs-core`.
 
+## Blocked paths
+
+No additional blocked paths are declared for this track beyond the ownership and dependency boundaries in conductor/tracks.yaml. Public release, packaging, or production-readiness claims remain blocked until the relevant downstream release gates pass or are explicitly waived.
 
 
+## Release implications
+
+This track contributes to release readiness only through the acceptance criteria and quality gates listed here and in conductor/quality-gates.md. It does not independently authorize public release, registry publication, or production-readiness claims without the dependent packaging, supply-chain, compatibility, red-team, and wave-management gates.

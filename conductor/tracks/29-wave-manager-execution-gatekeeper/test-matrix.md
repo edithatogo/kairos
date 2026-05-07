@@ -1,6 +1,6 @@
 # Test Matrix: Track 29 Wave Manager & Execution Gatekeeper
 
-Current validation date: 2026-05-06.
+Current validation date: 2026-05-07.
 
 | Check | Local command | Expected result | Current evidence |
 |---|---|---|---|

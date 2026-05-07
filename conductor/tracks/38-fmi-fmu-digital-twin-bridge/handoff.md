@@ -37,7 +37,7 @@ Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. 
 ## Release gates affected
 
 - FMI features are release-critical if industrial adoption is a v1.0 goal.
-- Gated behind `fmi` Cargo feature flag; default build excludes FMI dependencies.
+- Gated behind the `fmi2` and `fmi3` Cargo feature flags; default build excludes FMI dependencies.
 - FMU export binary reproducibility is a release gate (identical model → identical FMU).
 - AAS descriptor is published alongside release artifacts.
 
@@ -76,3 +76,32 @@ Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. 
 - Added checked digital-twin snapshot construction and diff application via `TwinStateSnapshot::try_new()` and `try_apply()`.
 - Checked synchronization now rejects empty keys, duplicate keys, removed empty keys, and diffs whose `from_tick` does not match the base snapshot tick.
 - Updated `docs/fmi-digital-twin/deployment-model.md` and the test matrix to keep the current evidence bounded to local/offline validation.
+
+## Files changed
+
+No additional file list was recorded by this Conductor hygiene update. Use the track plan, spec, and git history for implementation-specific file evidence.
+
+
+## Contracts changed
+
+No contract changes were recorded by this Conductor hygiene update.
+
+
+## Tests added
+
+No tests were added by this Conductor hygiene update.
+
+
+## Known risks
+
+No new risks were introduced by this Conductor hygiene update.
+
+
+## Follow-up issues
+
+No additional follow-up issues were recorded by this Conductor hygiene update.
+
+
+## Integration notes
+
+No additional integration notes were recorded by this Conductor hygiene update.
