@@ -56,6 +56,12 @@
 - [ ] Release evidence copied into `docs/release/maintenance-handoff.md` or linked from it.
 - [ ] Any remaining publish blockers are recorded in the maintenance handoff before leaving dry-run mode.
 
+R2 local dry-run evidence note, 2026-05-08:
+
+- `python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run` generated `dist/release-artifact-manifest.json` and `dist/SHA256SUMS`.
+- Track 15 dry-run validation reported `track15_status=ok`.
+- This is local reproducible dry-run evidence only; public publishing remains blocked until registry/name/toolchain checks are complete.
+
 ## Publish
 
 - [ ] crates.io.

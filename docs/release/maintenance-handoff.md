@@ -7,6 +7,14 @@ Current status: release governance is documented and locally checkable, but
 publication remains blocked while Track 15 stays in dry-run mode and registry
 name/toolchain verification remains unverified on the target machines.
 
+Latest local dry-run evidence, generated on 2026-05-08:
+
+- `dist/release-artifact-manifest.json` was generated with version `0.0.0-r2-dry-run`.
+- `dist/SHA256SUMS` was generated for the same package-manifest inventory.
+- The generated manifest reports 32 package manifests across Rust, Python, R, Julia, TypeScript, C#, and Go.
+- `dist/` is ignored and remains a reproducible local evidence output, not a tracked release artifact.
+- Production publishing remains disabled and blocked pending registry/name/toolchain verification.
+
 ## Release manager checklist
 
 - Confirm `CHANGELOG.md` contains the release entry and any deprecations.
@@ -31,7 +39,7 @@ name/toolchain verification remains unverified on the target machines.
 | Changelog policy workflow | Implemented | `.github/workflows/changelog-policy.yml`, `docs/release/changelog-policy.md` |
 | Compatibility/deprecation policy | Ready for release-manager review | `docs/release/release-governance.md`, `docs/release/compatibility.md` |
 | Package publication | Blocked; dry-run only until Track 15 clears registry/name/toolchain evidence | Track 15 handoff |
-| Release evidence | Required before publish | `docs/release/release-checklist.md`, `docs/release/supply-chain-verification.md` |
+| Release evidence | Local R2 dry-run evidence generated; publish evidence still blocked | `dist/release-artifact-manifest.json`, `dist/SHA256SUMS`, Track 15 handoff |
 | Registry/toolchain verification | Blocked pending target-machine checks and registry name verification | Track 15 handoff |
 | Maintenance owner | Release manager plus affected surface owner | `CODEOWNERS`, `MAINTAINERS.md` |
 

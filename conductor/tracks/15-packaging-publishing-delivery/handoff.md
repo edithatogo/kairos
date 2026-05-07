@@ -1,6 +1,6 @@
 # Handoff — 15 Packaging, Publishing & Delivery
 
-Last updated: 2026-05-07
+Last updated: 2026-05-08
 
 ## Summary
 
@@ -15,6 +15,13 @@ Worker 6 defined the first local registry/package dry-run sequence in
 `packaging/release-package-manifest.json`. The sequence is offline-only:
 inventory check, local evidence generation, and the Track 15 validator. It
 explicitly disallows publish manifests before later release gates enable them.
+
+The local R2 dry-run evidence set was generated on 2026-05-08:
+
+- `dist/release-artifact-manifest.json` generated with version `0.0.0-r2-dry-run`.
+- `dist/SHA256SUMS` generated for the same package-manifest inventory.
+- The generated manifest covers 32 package manifests across Rust, Python, R, Julia, TypeScript, C#, and Go.
+- `dist/` remains ignored; this handoff records the durable evidence state while generated artifacts stay local/reproducible.
 
 ## Files changed
 
@@ -51,6 +58,15 @@ python packaging/scripts/build_release_manifest.py --check
 python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1
 ```
+
+2026-05-08 local evidence validation:
+
+```text
+python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1
+```
+
+Result: `validated 32 package manifests across 7 ecosystems`; `track15_status=ok`.
 
 ## Known risks
 
