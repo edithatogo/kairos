@@ -11,14 +11,18 @@ use serde::Deserialize;
 struct OrderingEvent {
     at_ticks: u64,
     priority: i32,
+    #[allow(dead_code)]
     sequence: u64,
     kind: u32,
 }
 
 #[derive(Deserialize)]
 struct DeterministicOrderingFixture {
+    #[allow(dead_code)]
     fixture: String,
+    #[allow(dead_code)]
     version: u32,
+    #[allow(dead_code)]
     ordering: Vec<String>,
     events: Vec<OrderingEvent>,
     expected_kind_order: Vec<u32>,
@@ -34,7 +38,9 @@ struct CancellationEvent {
 
 #[derive(Deserialize)]
 struct CancellationFixture {
+    #[allow(dead_code)]
     fixture: String,
+    #[allow(dead_code)]
     version: u32,
     events: Vec<CancellationEvent>,
     expected_kind_order: Vec<u32>,
@@ -48,7 +54,9 @@ struct RngEntity {
 
 #[derive(Deserialize)]
 struct RngReplayFixture {
+    #[allow(dead_code)]
     fixture: String,
+    #[allow(dead_code)]
     version: u32,
     run_seed: u64,
     entity: RngEntity,
@@ -57,8 +65,11 @@ struct RngReplayFixture {
 
 #[derive(Deserialize)]
 struct ZeroDelayGuardFixture {
+    #[allow(dead_code)]
     fixture: String,
+    #[allow(dead_code)]
     version: u32,
+    #[allow(dead_code)]
     ordering: Vec<String>,
     events: Vec<OrderingEvent>,
     expected_kind_order: Vec<u32>,

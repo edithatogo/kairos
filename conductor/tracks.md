@@ -5,7 +5,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | Track | Name | Status | Primary subagent | Artifact |
 |---:|---|---|---|---|
 | 00 | Project Foundation, Governance & Naming | Done | `foundation-agent` | See `conductor/tracks/00-*/spec.md` |
-| 01 | The Heart: kairo-ecs-core & kairo-ecs-state | In Progress | `core-scheduler-agent + ecs-agent + contracts-agent` | See `conductor/tracks/01-*/spec.md` |
+| 01 | The Heart: kairo-ecs-core & kairo-ecs-state | In Review | `core-scheduler-agent + ecs-agent + contracts-agent` | See `conductor/tracks/01-*/spec.md` |
 | 02 | The Bridge: kairo-ecs-ffi, UniFFI & Diplomat | In Progress | `ffi-agent + uniffi-agent + diplomat-agent` | See `conductor/tracks/02-*/spec.md` |
 | 03 | The Flow: DES Trajectory API & ABM Behavior API | In Progress | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
 | 04 | The Analyst: kairo-ecs-arrow | Spec Approved | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |

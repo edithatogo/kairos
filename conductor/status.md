@@ -1,6 +1,6 @@
 # KairoECS Conductor Status
 
-Last verified: 2026-05-07
+Last verified: 2026-05-08
 
 ## Setup state
 
@@ -65,6 +65,16 @@ Latest local validation on 2026-05-07:
 - `$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet build tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj -f net10.0 -c Release --no-restore -v minimal -p:UseSharedCompilation=false -m:1 -nr:false` from `bindings\csharp` passed with 0 warnings and 0 errors after a focused net10 restore.
 - `$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet pack src\Kairo.ECS\Kairo.ECS.csproj -c Release -v normal -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false -m:1 -nr:false` from `bindings\csharp` passed with the existing `Kairo.ECS.0.1.0-preview.1.nupkg` already up to date.
 - `C:\Users\60217257\scoop\apps\dotnet-sdk-preview\current\dotnet.exe restore bindings\csharp\tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj -p:TargetFramework=net11.0 -v minimal` passed for the experimental net11 lane. The subsequent net11 preview build remains locally blocked by Roslyn named-pipe access denial under the Scoop preview SDK, before project compilation.
+
+## Track 01 closeout (2026-05-08)
+
+Track 01 advanced from In Progress to In Review:
+
+- All 8 hard spec requirements are satisfied in `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, and `kairo-ecs-rng`.
+- 6 criterion benchmark targets added in `kairo-ecs-bench/benches/` for all canonical scenarios.
+- 4 conformance fixture consumer tests added in `kairo-ecs-core/tests/conformance_fixtures.rs`.
+- 45 tests pass across all 5 crates. Clippy, fmt, and bench-check all clean.
+- SIMD acceleration and formal verification deferred to post-ADR follow-up passes.
 
 ## Implementation readiness
 

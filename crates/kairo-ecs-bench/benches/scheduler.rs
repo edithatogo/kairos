@@ -12,7 +12,6 @@ fn bench_schedule_1m(c: &mut Criterion) {
     group.bench_function("schedule", |b| {
         b.iter_batched(
             || {
-                let mut scheduler = Scheduler::new();
                 let mut world = World::new();
                 let mut rng = DeterministicStream::new(42);
                 let mut requests = Vec::with_capacity(scale as usize);
@@ -26,9 +25,9 @@ fn bench_schedule_1m(c: &mut Criterion) {
                         kind: EventKind::Custom(index as u32),
                     });
                 }
-                (scheduler, requests)
+                (requests, Scheduler::new())
             },
-            |(mut scheduler, requests)| {
+            |(requests, mut scheduler)| {
                 for req in requests {
                     black_box(scheduler.schedule(req));
                 }

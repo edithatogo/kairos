@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion, Throughput};
 use kairo_ecs_bench::BENCH_SCALE;
-use kairo_ecs_state::World;
+use kairo_ecs_state::{ComponentRegistry, World};
 
 fn bench_create_1m_entities(c: &mut Criterion) {
     let scale = BENCH_SCALE;
@@ -8,7 +8,7 @@ fn bench_create_1m_entities(c: &mut Criterion) {
     group.throughput(Throughput::Elements(scale));
     group.bench_function("spawn", |b| {
         b.iter_batched(
-            || World::new(),
+            World::new,
             |mut world| {
                 for _ in 0..scale {
                     black_box(world.spawn());
@@ -27,16 +27,15 @@ fn bench_component_insert_1m(c: &mut Criterion) {
     group.bench_function("insert", |b| {
         b.iter_batched(
             || {
-                let mut world = World::new();
                 let mut entities = Vec::with_capacity(scale);
-                for _ in 0..scale {
-                    entities.push(world.spawn());
+                for i in 0..scale {
+                    entities.push(kairo_ecs_types::EntityId::new(i as u64, 0));
                 }
-                (world, entities)
+                (ComponentRegistry::new(), entities)
             },
-            |(mut world, entities)| {
-                for entity in entities {
-                    black_box(world.insert(entity, 0u64));
+            |(mut registry, entities)| {
+                for entity in &entities {
+                    black_box(registry.insert(*entity, 0u64));
                 }
             },
             BatchSize::LargeInput,

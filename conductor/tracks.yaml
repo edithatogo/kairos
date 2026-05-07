@@ -38,7 +38,7 @@ tracks:
       - naming-due-diligence
   - id: 01
     name: The Heart - kairo-ecs-core and kairo-ecs-state
-    status: In Progress
+    status: In Review
     owner: core-scheduler-agent + ecs-agent + contracts-agent
     depends_on: ["00"]
     owned_paths:
