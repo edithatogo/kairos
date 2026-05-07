@@ -9,6 +9,7 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "..", "..");
 const websiteRoot = path.join(repoRoot, "website");
 const justfilePath = path.join(repoRoot, "justfile");
+const windowsBootstrapPath = path.join(repoRoot, "scripts", "bootstrap.ps1");
 const packageJsonPath = path.join(websiteRoot, "package.json");
 const buildIndexPath = path.join(websiteRoot, "build", "index.html");
 const port = Number(process.env.DOCS_SMOKE_PORT || 41727);
@@ -123,6 +124,10 @@ async function main() {
   for (const recipe of ["docs-bootstrap:", "docs-build:", "docs-dev:", "docs-smoke:", "check-docs:"]) {
     assert(justfile.includes(recipe), `missing ${recipe} recipe in justfile`);
   }
+  assert(fs.existsSync(windowsBootstrapPath), "missing Windows bootstrap script");
+  const windowsBootstrap = readText(windowsBootstrapPath);
+  assert(windowsBootstrap.includes("CheckOnly"), "Windows bootstrap script is missing CheckOnly mode");
+  assert(windowsBootstrap.includes("cargo install just --locked"), "Windows bootstrap script does not document just installation");
 
   const packageJson = JSON.parse(readText(packageJsonPath));
   assert(packageJson.scripts?.build === "node scripts/build.js", "website build script is not wired to scripts/build.js");

@@ -8,7 +8,7 @@ Documented the contributor workflow commands for bootstrapping, building, and pr
 
 ## Files changed
 
-`justfile`, `scripts/dx/validate-docs-workflow.mjs`, `docs/developer-experience/docs-workflow.md`, `conductor/tracks/27-developer-experience-reproducible-environments/test-matrix.md`, `conductor/tracks/27-developer-experience-reproducible-environments/risk-register.md`, `conductor/tracks/27-developer-experience-reproducible-environments/handoff.md`
+`justfile`, `scripts/bootstrap.ps1`, `scripts/dx/validate-docs-workflow.mjs`, `docs/developer-experience/docs-workflow.md`, `conductor/tracks/27-developer-experience-reproducible-environments/test-matrix.md`, `conductor/tracks/27-developer-experience-reproducible-environments/risk-register.md`, `conductor/tracks/27-developer-experience-reproducible-environments/handoff.md`
 
 ## Contracts consumed
 
@@ -24,6 +24,7 @@ Docs build and preview commands are now explicit contributors to the developer-e
 - `just docs-build` runs `npm --prefix website ci` and `npm --prefix website run build`.
 - `just docs-dev` runs `npm --prefix website ci` and `npm --prefix website start`, which serves `http://localhost:3000` by default.
 - `just dev-setup` runs `rustup component add clippy rustfmt` plus the optional `cargo install cargo-nextest --locked` and `cargo install cargo-vet --locked` bootstrap steps.
+- `pwsh -NoProfile -File scripts/bootstrap.ps1 -CheckOnly` verifies the Windows/PowerShell bootstrap prerequisites without installing anything.
 - `just docs-smoke` and `just check-docs` run `node scripts/dx/validate-docs-workflow.mjs`.
 - The smoke validator runs `npm --prefix website run check:links`, `npm --prefix website run build`, verifies `website/build/index.html`, then starts the preview on `http://127.0.0.1:41727/` unless `DOCS_SMOKE_PORT` is set.
 
@@ -35,6 +36,7 @@ Docs build and preview commands are now explicit contributors to the developer-e
 - `npm --prefix website run build` passed: built `website/build/index.html`.
 - `$env:PORT='41727'; node website\scripts\dev.js` started the docs dev server at `http://localhost:41727`; `Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:41727/` returned HTTP 200.
 - `node scripts/dx/validate-docs-workflow.mjs` passed: link check, build check, built HTML assertions, and local preview smoke at `http://127.0.0.1:41727/`.
+- `pwsh -NoProfile -File scripts/bootstrap.ps1 -CheckOnly` passed and reported `just` absence as a warning.
 
 ## Risks and unresolved questions
 
@@ -54,7 +56,7 @@ The current validation evidence is `npm --prefix website ci`, `npm --prefix webs
 
 ## Follow-up issues
 
-Install or provision `just` in the developer environment/devcontainer path, then rerun `just dev-setup`, `just docs-bootstrap`, `just docs-build`, and `just docs-smoke` directly.
+Install or provision `just` in the developer environment/devcontainer path, then rerun `just dev-setup`, `just docs-bootstrap`, `just docs-build`, and `just docs-smoke` directly. The Windows fallback is now `pwsh -NoProfile -File scripts/bootstrap.ps1`.
 
 ## Integration notes
 

@@ -5,6 +5,7 @@ The repository docs site lives in `website/` and renders `website/src/index.md` 
 ## Commands
 
 - `just dev-validate` checks the toolchain versions that a fresh contributor needs before building.
+- `pwsh -NoProfile -File scripts/bootstrap.ps1` bootstraps the Windows/PowerShell developer path; use `-CheckOnly` for a no-install prerequisite check.
 - `just docs-bootstrap` installs the docs site dependencies with `npm --prefix website ci`.
 - `just docs-build` installs dependencies and runs `npm --prefix website run build`.
 - `just docs-dev` installs dependencies and starts the local preview with `npm --prefix website start`.
@@ -14,6 +15,7 @@ The repository docs site lives in `website/` and renders `website/src/index.md` 
 ## Expected Output
 
 - `just dev-validate` prints the installed toolchain versions and confirms the expected commands are on `PATH`.
+- `scripts/bootstrap.ps1 -CheckOnly` confirms the required Windows bootstrap commands are available and warns when `just` is not on `PATH`.
 - `just docs-build` must produce `website/build/index.html`.
 - `just docs-dev` must serve the generated site at `http://localhost:3000` unless `PORT` is set.
 - `just docs-smoke` starts the preview on `http://127.0.0.1:41727/` by default and verifies the rendered page includes the docs title and contributor commands.

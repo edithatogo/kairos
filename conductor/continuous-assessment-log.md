@@ -48,7 +48,7 @@ v1.0: stable C ABI, stable Arrow schemas, public compatibility promise
 5. Benchmarks: Fairness criteria defined in benchmark-policy.md. No comparative results yet.
 6. Docs: Ahead of implementation. Specs exist for all tracks. Core implementation catching up.
 7. Visualization: Not over-invested. Track 05 is Planned and non-blocking.
-8. Setup complexity: devbox.json + justfile + devcontainer working. Windows bootstrap missing.
+8. Setup complexity: devbox.json + justfile + devcontainer working. Windows bootstrap now has `scripts/bootstrap.ps1` with a no-install `-CheckOnly` path.
 9. Security workflows: Scorecard + SBOM workflows present. Secret scanning not yet added.
 10. Package maintenance: No packages published. Package dry-run scaffolding exists.
 

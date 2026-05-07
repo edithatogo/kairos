@@ -7,6 +7,7 @@
 - `just docs-smoke`
 - `just check-docs`
 - `just dev-setup`
+- `pwsh -NoProfile -File scripts/bootstrap.ps1 -CheckOnly`
 - `test -f website/build/index.html`
 - `just validate-conductor`
 - `just validate-tracks21-27`
@@ -22,6 +23,7 @@
 | Docs link/build/dev smoke | `just docs-smoke` | Link manifest passes, built HTML contains contributor commands, preview responds on `http://127.0.0.1:41727/` | Blocked in this shell because `just` is not on `PATH`; underlying `node scripts/dx/validate-docs-workflow.mjs` passed |
 | Docs quality gate alias | `just check-docs` | Runs `scripts/dx/validate-docs-workflow.mjs` | Blocked in this shell because `just` is not on `PATH`; recipe is wired to `node scripts/dx/validate-docs-workflow.mjs` |
 | Developer setup bootstrap | `just dev-setup` | Rust-side developer prerequisites are installed from the root `justfile` | Blocked in this shell because `just` is not on `PATH`; recipe maps to `rustup component add clippy rustfmt` plus optional `cargo install` bootstrap steps |
+| Windows bootstrap check | `pwsh -NoProfile -File scripts/bootstrap.ps1 -CheckOnly` | Required Windows/PowerShell bootstrap commands are present and `just` absence is reported as a warning, not hidden | Pass |
 | Cross-track evidence-boundary guard | `node scripts/validation/validate-track21-27-evidence-boundaries.mjs` | Checks Track 21-27 files, docs workflow fallback wording, and claim boundaries without depending on `just` | Pass |
 | Tracks 21-27 aggregate smoke | `node scripts/validation/validate-tracks21-27.mjs` | Runs the focused local validators for Tracks 21-27 without claiming release-gate coverage | Pass; all seven track checks passed, including docs workflow smoke at `http://127.0.0.1:41727/` |
 
