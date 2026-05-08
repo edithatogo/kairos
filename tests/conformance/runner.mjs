@@ -169,17 +169,44 @@ export function sortEvents(events) {
 }
 
 export function deterministicStream(seed, entity, count = 4) {
-  let state =
-    ((seed >>> 0) ^ ((entity.index >>> 0) << 16) ^ ((entity.generation >>> 0) << 1)) >>> 0;
+  const mask = 0xffff_ffff_ffff_ffffn;
+  const gamma = 0x9e37_79b9_7f4a_7c15n;
+
+  function u64(value) {
+    return BigInt(value) & mask;
+  }
+
+  function splitmix64(value) {
+    let x = (u64(value) + gamma) & mask;
+    let z = x;
+    z = ((z ^ (z >> 30n)) * 0xbf58_476d_1ce4_e5b9n) & mask;
+    z = ((z ^ (z >> 27n)) * 0x94d0_49bb_1331_11ebn) & mask;
+    return (z ^ (z >> 31n)) & mask;
+  }
+
+  function rotateLeft64(value, shift) {
+    const x = u64(value);
+    const width = 64n;
+    const amount = BigInt(shift);
+    return ((x << amount) | (x >> (width - amount))) & mask;
+  }
+
+  let derivedSeed = (u64(seed) + 0xa8e5_1b2c_4d6f_9013n) & mask;
+  derivedSeed ^= splitmix64(u64(entity.index) + 0x9e37_79b9_7f4a_7c15n);
+  derivedSeed = rotateLeft64(derivedSeed, 17);
+  derivedSeed =
+    (derivedSeed +
+      ((splitmix64(u64(entity.generation) + 0xbf58_476d_1ce4_e5b9n) *
+        0x94d0_49bb_1331_11ebn) &
+        mask)) &
+    mask;
+
+  let state = splitmix64(derivedSeed ^ 0xd6e8_feb8_6659_fd93n);
   const stream = [];
 
   for (let i = 0; i < count; i += 1) {
-    state = (state + 0x9e3779b9) >>> 0;
-    let value = state;
-    value ^= value >>> 15;
-    value = Math.imul(value, 1 | value);
-    value ^= value + Math.imul(value ^ (value >>> 7), 61 | value);
-    stream.push((value ^ (value >>> 14)) >>> 0);
+    state = splitmix64(state);
+    stream.push(Number(state & 0xffff_ffffn));
   }
 
   return stream;

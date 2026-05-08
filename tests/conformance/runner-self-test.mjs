@@ -32,10 +32,10 @@ const filteredReport = runConformance(ROOT, { fixtureIds: ['rng_reproducibility_
 assert.equal(filteredReport.validated_fixtures, 1);
 assert.equal(filteredReport.results[0].id, 'rng_reproducibility_v1');
 assert.deepEqual(filteredReport.results[0].observed.observed_stream, [
-  517508663,
-  1063389290,
-  3847412614,
-  3225602592,
+  58032735,
+  2654218578,
+  73301494,
+  760398727,
 ]);
 
 const listed = listConformance(ROOT, { kinds: ['vvuq'] });
