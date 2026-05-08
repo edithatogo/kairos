@@ -71,24 +71,24 @@ jobs:
           npm test
 
   csharp:
-    name: C# .NET ${{ matrix.dotnet-version }}
+    name: C# ${{ matrix.target-framework }}
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - dotnet-version: '10.0.x'
-            target-framework: 'net10.0'
+          - target-framework: 'net10.0'
             experimental: false
-          - dotnet-version: '11.0.x'
-            target-framework: 'net11.0'
+          - target-framework: 'net11.0'
             experimental: true
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: ${{ matrix.dotnet-version }}
+          dotnet-version: |
+            10.0.x
+            11.0.x
       - name: C# smoke
         run: |
           test -f bindings/csharp/Kairo.ECS.sln
