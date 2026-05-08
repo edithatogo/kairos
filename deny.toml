@@ -8,9 +8,7 @@ wildcards = "deny"
 highlight = "all"
 
 [advisories]
-vulnerability = "deny"
 yanked = "deny"
-notice = "warn"
 unmaintained = "workspace"
 unsound = "workspace"
 
