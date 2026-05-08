@@ -10,6 +10,8 @@ Added a metadata-only chaos experiment manifest covering the first required faul
 
 2026-05-08 stabilization update: fixed the JavaScript conformance runner's RNG replay path to mirror the Rust `kairo-ecs-rng` SplitMix64/domain-separated entity seed algorithm. The previous JS runner used an older 32-bit approximation, which made `rng_reproducibility_v1` fail even though the Rust fixture consumer passed. The runner self-test now asserts the same stream as `conformance/fixtures/rng_replay.json`.
 
+2026-05-08 PR review update: accepted the Qodo review finding that JavaScript `Number` parsing can silently lose precision for Rust-side `u64` fixture inputs. The runner now rejects unsafe integer RNG seeds and entity IDs before converting them to BigInt, and the self-test covers both direct caller and fixture-runner rejection paths.
+
 ## Files changed
 
 `conductor/tracks/12-conformance-testing-benchmarks/spec.md`
@@ -99,6 +101,7 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 - `$conductor-review` scope: current Track 12 diff in `tests/conformance/runner.mjs`, `tests/conformance/runner-self-test.mjs`, and this handoff.
 - Findings: no correctness, regression, ownership, or test-coverage findings after the RNG runner fix.
 - Accepted fixes: replaced the stale JavaScript 32-bit RNG approximation with the Rust-compatible SplitMix64/domain-separated entity-seed derivation and updated the runner self-test expected stream.
+- PR review fixes: added safe-integer validation for RNG fixture fields and direct `deterministicStream` inputs so JavaScript precision loss cannot silently change `u64` replay semantics.
 - Deferred or blocked fixes: none for this stabilization slice.
 - Validation commands: recorded in `Current local checks` above, including `cargo +stable-x86_64-pc-windows-gnu test --workspace`.
 - Cleanup state: local working tree was clean after the Track 12 stabilization commit.
