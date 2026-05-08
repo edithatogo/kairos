@@ -6,18 +6,18 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 |---:|---|---|---|---|
 | 00 | Project Foundation, Governance & Naming | Done | `foundation-agent` | See `conductor/tracks/00-*/spec.md` |
 | 01 | The Heart: kairo-ecs-core & kairo-ecs-state | Done | `core-scheduler-agent + ecs-agent + contracts-agent` | See `conductor/tracks/01-*/spec.md` |
-| 02 | The Bridge: kairo-ecs-ffi, UniFFI & Diplomat | In Review | `ffi-agent + uniffi-agent + diplomat-agent` | See `conductor/tracks/02-*/spec.md` |
-| 03 | The Flow: DES Trajectory API & ABM Behavior API | In Review | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
-| 04 | The Analyst: kairo-ecs-arrow | Spec Approved | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
+| 02 | The Bridge: kairo-ecs-ffi, UniFFI & Diplomat | Done | `ffi-agent + uniffi-agent + diplomat-agent` | See `conductor/tracks/02-*/spec.md` |
+| 03 | The Flow: DES Trajectory API & ABM Behavior API | Done | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
+| 04 | The Analyst: kairo-ecs-arrow | Done | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
 | 05 | The Window: kairo-ecs-viz | Done | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
 | 06 | Python Binding 3.10-3.14 | In Progress | `python-agent` | See `conductor/tracks/06-*/spec.md` |
-| 07 | R Binding | In Progress | `r-agent` | See `conductor/tracks/07-*/spec.md` |
-| 08 | Julia Binding | Planned | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
+| 07 | R Binding | In Review | `r-agent` | See `conductor/tracks/07-*/spec.md` |
+| 08 | Julia Binding | In Review | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
 | 09 | TypeScript/Wasm Binding | In Progress | `typescript-agent` | See `conductor/tracks/09-*/spec.md` |
 | 10 | C# Binding .NET 10-11 | Done | `csharp-agent` | See `conductor/tracks/10-*/spec.md` |
-| 11 | Go Binding | In Progress | `go-agent` | See `conductor/tracks/11-*/spec.md` |
+| 11 | Go Binding | In Review | `go-agent` | See `conductor/tracks/11-*/spec.md` |
 | 12 | Conformance, Testing & Benchmarks | Done | `conformance-agent + performance-agent` | See `conductor/tracks/12-*/spec.md` |
-| 13 | CI/CD, Code Quality & Supply Chain | In Progress | `ci-agent + security-agent` | See `conductor/tracks/13-*/spec.md` |
+| 13 | CI/CD, Code Quality & Supply Chain | Done | `ci-agent + security-agent` | See `conductor/tracks/13-*/spec.md` |
 | 14 | Documentation Site & Education | In Progress | `docs-agent` | See `conductor/tracks/14-*/spec.md` |
 | 15 | Packaging, Publishing & Delivery | In Progress | `release-agent` | See `conductor/tracks/15-*/spec.md` |
 | 16 | Release Governance & Maintenance | In Progress | `release-agent + governance-agent` | See `conductor/tracks/16-*/spec.md` |
@@ -29,8 +29,8 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 22 | Experiment Runner & Scenario Management | Planned | `experiment-agent` | See `conductor/tracks/22-*/spec.md` |
 | 23 | Domain Starter Kits & Model Zoo | Planned | `model-zoo-agent` | See `conductor/tracks/23-*/spec.md` |
 | 24 | Playground, Demos & Visualization UX | Planned | `playground-agent` | See `conductor/tracks/24-*/spec.md` |
-| 25 | API Design Review & Compatibility Governance | Spec Approved | `api-governance-agent` | See `conductor/tracks/25-*/spec.md` |
-| 26 | Interoperability Standards Review | Spec Approved | `interop-agent` | See `conductor/tracks/26-*/spec.md` |
+| 25 | API Design Review & Compatibility Governance | In Review | `api-governance-agent` | See `conductor/tracks/25-*/spec.md` |
+| 26 | Interoperability Standards Review | In Review | `interop-agent` | See `conductor/tracks/26-*/spec.md` |
 | 27 | Developer Experience & Reproducible Environments | In Progress | `dx-agent` | See `conductor/tracks/27-*/spec.md` |
 | 28 | Red Team & Devil's Advocate Review | In Progress | `redteam-agent` | See `conductor/tracks/28-*/spec.md` |
 | 29 | Wave Manager & Execution Gatekeeper | In Progress | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |

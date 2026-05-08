@@ -1,10 +1,12 @@
 # Handoff — 04 The Analyst: kairo-ecs-arrow Telemetry
 
-Last updated: 2026-05-07
+Last updated: 2026-05-08
 
 ## Summary
 
 Track 04 now has a minimal R2 event-log slice. The `kairo-ecs-arrow` crate defines the `kairo_ecs.event_log.v1` schema, maps `kairo-ecs-types::DispatchedEvent` into versioned event-log records, validates schema fields, and round-trips deterministic smoke bytes without adding native Arrow library requirements.
+
+Closeout review on 2026-05-08 found no in-scope correctness findings. The track is Done for the dependency-light R2 Arrow schema/versioning and roundtrip gate; full Arrow IPC/Parquet and OpenTelemetry export remain explicitly deferred future work.
 
 ## Files changed
 
@@ -29,19 +31,22 @@ No shared conductor contract files were changed. The Track 04 schema artifact ad
 ## Tests added
 
 - `cargo test -p kairo-ecs-arrow`
-- `crates/kairo-ecs-arrow/tests/schema_compatibility.rs` checks field order, schema versioning, and event-log roundtrip preservation of time/priority/sequence.
+- `crates/kairo-ecs-arrow/tests/schema_compatibility.rs` checks field order, schema versioning, runtime schema fingerprint stability, checked-in JSON schema alignment, and event-log roundtrip preservation of time/priority/sequence.
 - Crate unit tests check event mapping, smoke-byte decoding, escaped string preservation, validation errors, and the prior `ArrowEventLog` facade.
 
 ## Validation run
 
-- `cargo fmt --package kairo-ecs-arrow --check` passed.
-- `cargo check -p kairo-ecs-arrow --examples` passed.
-- `cargo test -p kairo-ecs-arrow` passed: 6 unit tests, 2 schema compatibility tests, 0 doctests.
-- `cargo run -p kairo-ecs-arrow --example telemetry_event_log_roundtrip` passed and printed `round-tripped 1 event-log record(s) for kairo_ecs.event_log.v1`.
+- `cargo +stable-x86_64-pc-windows-gnu fmt --package kairo-ecs-arrow --check` passed.
+- `cargo +stable-x86_64-pc-windows-gnu check -p kairo-ecs-arrow --examples` passed.
+- `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-arrow --test schema_compatibility` passed: 4 schema compatibility tests.
+- `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-arrow` passed: 6 unit tests, 4 schema compatibility tests, 0 doctests.
+- `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-arrow --example telemetry_event_log_roundtrip` passed and printed `round-tripped 1 event-log record(s) for kairo_ecs.event_log.v1`.
 - `cargo test -p kairo-ecs-core` passed: 14 unit tests, 8 integration tests, 0 doctests.
 - `cargo test -p kairo-ecs-state` passed: 6 integration tests, 0 doctests.
 - `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo` passed.
 - `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo` passed.
+- `$conductor-review` passed with no in-scope findings after the schema fingerprint and JSON-alignment checks were added.
+- `cargo test -p kairo-ecs-arrow --test schema_compatibility` on the default MSVC target was blocked before test execution by the local Git `usr\bin\link.exe` shim (`couldn't create signal pipe, Win32 error 5`); the equivalent GNU toolchain command passed.
 - `cargo fmt --all --check` did not pass because existing modified files outside Track 04 need formatting, including `crates/kairo-ecs-debug/src/main.rs`, `crates/kairo-ecs-rng/src/lib.rs`, `crates/kairo-ecs-types/src/lib.rs`, and `crates/kairo-ecs-wasm/src/lib.rs`. Those files are outside this Track 04 ownership slice and were not reformatted in this pass.
 
 ## Known risks
@@ -57,4 +62,11 @@ The crate depends only on `kairo-ecs-types`. The root workspace manifest was upd
 No additional follow-up issues were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+2026-05-08 closeout review:
+
+- Review command: `$conductor-review`.
+- Review findings: no in-scope correctness, regression, or missing-test findings.
+- Accepted fixes applied: added runtime schema fingerprint exposure and checked-in JSON schema alignment coverage inside Track 04 owned paths.
+- Deferred or blocked fixes: full Arrow IPC/Parquet and `otel-export` remain deferred by dependency policy and collector/back-end availability; default MSVC target validation remains locally blocked by the `link.exe` shim before test execution.
+- Cleanup state: no commit or push was performed in this worker pass because the repository has unrelated in-flight edits outside Track 04.
+- Next-phase decision: Track 04 is Done for the R2 schema-versioning and roundtrip surface.

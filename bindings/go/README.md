@@ -5,7 +5,8 @@ Track 11 owns this binding. The current module is a preview facade that gives Go
 ## Supported toolchain
 
 - Go 1.23 or newer for the current scaffold.
-- cgo/native FFI is deliberately not enabled by default.
+- cgo is used for a header compatibility smoke test when `CGO_ENABLED=1`.
+- Native FFI runtime calls are deliberately not enabled by default because no linkable local `kairo-ecs-ffi` library artifact is packaged for this module yet.
 
 ## Current API slice
 
@@ -18,11 +19,13 @@ Track 11 owns this binding. The current module is a preview facade that gives Go
 
 ## Native FFI status
 
-`NativeAvailable()` returns `false` and `NewNativeEngine()` returns `ErrNativeNotConfigured` until Track 02 provides a stable, locally discoverable `kairo-ecs-ffi` library and header. This prevents accidental claims that cgo is active when the native dependency is absent.
+`NativeHeaderSmoke()` compiles the stable C ABI header through cgo and checks the status-code and struct declarations. `NativeAvailable()` still returns `false` and `NewNativeEngine()` returns `ErrNativeNotConfigured` until a stable, locally discoverable `kairo-ecs-ffi` library is packaged for Go. This prevents accidental claims that native calls are active when the runtime dependency is absent.
 
 ## Local validation
 
 ```bash
 go test ./...
 go vet ./...
+CGO_ENABLED=1 go test -run TestNativeHeaderSmokeCompilesStableCABI ./...
+CGO_ENABLED=0 go test ./...
 ```

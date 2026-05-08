@@ -6,6 +6,9 @@ This package currently provides a pure-Julia preview slice:
 
 - deterministic event ordering by `(time_ticks, priority, sequence)`;
 - a facade for the `kairo_ecs.event_log.v1` Arrow schema fields;
+- an event-log smoke-byte roundtrip gate that preserves the Track 04 field
+  order and 128-bit tick encoding without requiring Arrow.jl at package load
+  time;
 - conformance fixture bridge helpers that distinguish Track 08 ready and
   planned fixture coverage without running native FFI;
 - explicit native FFI status reporting.
@@ -17,6 +20,7 @@ Local validation from this directory:
 
 ```bash
 julia --project=. -e 'using Pkg; Pkg.test()'
+julia --project=. -e 'include("test/test_arrow.jl")'
 ```
 
 The fixture bridge accepts `ConformanceFixture` values, named tuples, or

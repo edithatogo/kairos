@@ -57,7 +57,7 @@ Latest local validation on 2026-05-07:
 - `npm --prefix website run check:all` passed: link check, docs build, and quality check completed.
 - `npm --prefix bindings\typescript test` and `npm --prefix bindings\typescript run typecheck` passed.
 - `node tests\conformance\conformance-check.mjs`, `node tests\conformance\runner.mjs`, `node tests\conformance\runner-self-test.mjs`, `node tests\conformance\chaos-check.mjs`, `node tests\conformance\track07_13_hardening_check.mjs`, and `node tests\conformance\track12_20_evidence_check.mjs` passed.
-- `python -m pytest -q` from `bindings\python` passed with 15 tests and the known local pytest cache permission warning.
+- `python -m pytest -q` from `bindings\python` passed with 15 tests, 1 optional pyarrow roundtrip skip, and the known local pytest cache permission warning; `python -m ruff check .`, compileall, import smoke, and `pip check` also passed for Track 06 on 2026-05-08. Wheel build remains blocked by local temp-directory ACL failures, and the real pyarrow table gate remains dependency-blocked because `pyarrow` is not installed.
 - `go test ./...`, `go vet ./...`, and `gofmt -w -l .` from `bindings\go` passed with no formatting output.
 - `Rscript -e "sessionInfo(); source('tests/testthat.R')"` from `bindings\r` passed after R startup locale warnings.
 - `$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet build tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj -f net10.0 --no-restore -v normal -p:UseSharedCompilation=false -m:1 -nr:false` from `bindings\csharp` passed with 0 warnings and 0 errors.
@@ -76,13 +76,14 @@ Track 01 is closed as `Done` after Worker A review closeout confirmed the existi
 - 45 tests pass across all 5 crates. Clippy, fmt, bench-check, phase-gate validation, DAG validation, and strict git closeout validation all pass.
 - SIMD acceleration and formal verification deferred to post-ADR follow-up passes.
 
-## Track 02 implementation closeout (2026-05-08)
+## Track 02 closeout (2026-05-08)
 
-Track 02 advanced from `In Progress` to `In Review` after focused bridge validation confirmed the implementation slice:
+Track 02 is closed as `Done` after review confirmed the focused bridge implementation slice:
 
 - `kairo-ecs-ffi` owns the stable handle-based C ABI with lifecycle, double-free, schedule/step/run, stats, last-error, telemetry-buffer, panic-boundary, and canonical header-diff coverage.
 - `kairo-ecs-uniffi` and `kairo-ecs-diplomat` expose dependency-light wrapper-anchor facades over the same FFI lifecycle and status-code surface.
 - Focused validation passed: `cargo +stable-x86_64-pc-windows-gnu check --tests -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat`, `cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat`, and `cargo +stable-x86_64-pc-windows-gnu metadata --no-deps --format-version 1`.
+- Closeout validation passed: `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`.
 - Generated UniFFI/Diplomat golden outputs, Track 04 Arrow IPC telemetry, and package publication remain later-track work, not blockers for this implementation closeout.
 
 ## Track 03 implementation closeout (2026-05-08)
@@ -94,6 +95,21 @@ Track 03 advanced from `In Progress` to `In Review` after adding named DES and A
 - Focused validation passed for Track 03 formatting, DES/ABM crate tests, both named fixture tests, core tests, state tests, Conductor setup, and track coverage.
 - Shared JSON fixture exports under `conformance/fixtures/` and a hybrid DES/ABM fixture remain follow-up work, not blockers for this implementation closeout.
 
+Track 03 advanced from `In Review` to `Done` after review closeout on 2026-05-08:
+
+- Review finding fixed: `examples/flow/README.md` now has a preview maturity label, reproducibility commands, and expected output for the named DES/ABM fixture gates.
+- Fresh focused validation passed: `cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-des -p kairo-ecs-abm`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des --test des_resource_queue_v1`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm --test abm_behavior_update_v1`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-core`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-state`, `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo`, `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
+- Shared conformance fixture exports and richer model-zoo scenarios remain future Track 12/23 integration work, not blockers for the Track 03 minimal DES/ABM flow API closeout.
+
+## Track 04 closeout (2026-05-08)
+
+Track 04 is closed as `Done` after review confirmed the dependency-light R2 Arrow telemetry slice:
+
+- `kairo-ecs-arrow` exposes the `kairo_ecs.event_log.v1` schema, schema major/version constants, deterministic runtime schema fingerprint, event-log record mapping from `DispatchedEvent`, and smoke-byte roundtrip support.
+- `schemas/arrow/event_log_v1.schema.json` is now covered by the schema compatibility test so the checked-in JSON stream, major version, field order, field types, and nullability stay aligned with the Rust runtime contract.
+- Focused validation passed on `stable-x86_64-pc-windows-gnu`: Arrow package formatting, example compilation, schema compatibility tests, full Arrow crate tests, telemetry roundtrip example, Conductor setup, and track coverage.
+- The default MSVC-target `cargo test -p kairo-ecs-arrow --test schema_compatibility` remains locally blocked before test execution by the Git `usr\bin\link.exe` shim. Full Arrow IPC/Parquet and OpenTelemetry export remain future Track 04 work, not blockers for this R2 closeout.
+
 ## Track 05 closeout (2026-05-08)
 
 Track 05 is closed as `Done` after Worker B review closeout confirmed the headless visualization release slice:
@@ -102,6 +118,16 @@ Track 05 is closed as `Done` after Worker B review closeout confirmed the headle
 - GNU-toolchain gates passed for `kairo-ecs-viz`, no-default-feature checks, all-feature test compilation, the headless snapshot example, headless core independence, `kairo-ecs-core`, `kairo-ecs-state`, website build, conductor setup, and track coverage.
 - The default MSVC-target `cargo test -p kairo-ecs-viz` remains unreliable on this host because `link.exe` resolves to Git's Unix-link shim before code execution; the equivalent Track 05 tests pass on `stable-x86_64-pc-windows-gnu`.
 - Native WGPU/Bevy rendering and browser UX work remain future Track 24 or new-track scope, not blockers for this headless closeout.
+
+## Track 07 implementation closeout (2026-05-08)
+
+Track 07 advanced from `In Progress` to `In Review` after hardening the R package validation slice:
+
+- `bindings/r/tests/testthat/test-smoke.R` now includes an explicit optional Arrow-backed roundtrip gate for `kairo_ecs.event_log.v1`; it skips with a clear testthat reason when the R `arrow` package is unavailable.
+- `packaging/r/README.md` now records the current local R packaging gate instead of the stale no-R-toolchain note.
+- Focused validation passed: `Rscript tests/smoke-base.R`, `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"`, `Rcmd check --no-manual r`, `Rcmd build r`, `Rcmd check --no-manual kairoECS_0.1.0.tar.gz`, `node tests/conformance/track07_13_hardening_check.mjs`, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1`.
+- The built-source `Rcmd check` result was `Status: OK`. The local optional Arrow lane was skipped because the R `arrow` package is not installed and network access to CRAN/Bioconductor indexes is unavailable in this environment.
+- Native runtime loading, CRAN/R-universe publication, and registry automation remain downstream FFI/runtime artifact and packaging-track work.
 
 ## Track 12 closeout (2026-05-08)
 
@@ -117,6 +143,15 @@ Track 12 advanced from In Review to Done after review closeout on 2026-05-08:
 - The bootstrap fixture runner, chaos metadata validator, benchmark smoke metadata, bench crate, and downstream evidence validator all remain wired and passing.
 - Later native chaos execution, nightly chaos scheduling, OSS-Fuzz registration, and expanded planned fixture families remain future beta-and-beyond work, not blockers for the Track 12 bootstrap conformance closeout.
 
+## Track 13 closeout (2026-05-08)
+
+Track 13 is closed as `Done` after local review confirmed the current CI/CD and supply-chain scaffold:
+
+- `node scripts/validation/validate-track13-metadata.mjs` passed, confirming track metadata alignment and required workflow inventory policy.
+- `node tests/conformance/track07_13_hardening_check.mjs` and `node tests/conformance/track12_20_evidence_check.mjs` passed.
+- `pwsh -NoProfile -File scripts\validate_track13_supply_chain.ps1` passed for the Track 13 metadata validator and `cargo metadata --no-deps --format-version 1`.
+- `cargo-deny` and `cargo-audit` were not installed locally; the Track 13 supply-chain script reported those advisory scanner lanes as skipped rather than failed. Making those tools mandatory on every local workstation remains Track 20 or follow-up release hardening scope.
+
 ## Track 10 closeout (2026-05-08)
 
 Track 10 is closed as `Done` after a focused rerun of the .NET 11 preview lane:
@@ -124,7 +159,61 @@ Track 10 is closed as `Done` after a focused rerun of the .NET 11 preview lane:
 - Stable .NET 10 C# gates passed: `dotnet test`, `dotnet build -c Release`, conformance-filter `dotnet test`, and `dotnet pack` with `TargetFrameworks=net10.0`.
 - `node tests/conformance/track07_13_hardening_check.mjs`, `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, and `pwsh -NoProfile -File scripts/validate_track_no_skip_claims.ps1` passed.
 - `net11.0` preview restore passed. The preview test lane failed inside the sandbox with Roslyn named-pipe access denial, then passed outside the sandbox with 11 passed, 3 native FFI tests skipped, and 0 failed.
-- No waiver was applied. Native FFI execution remains deferred until Track 02 supplies stable runtime artifacts, and release dry-runs remain Track 15 scope.
+- No waiver was applied. Native FFI execution remains deferred to downstream runtime artifact/package work, and release dry-runs remain Track 15 scope.
+
+## Track 25 implementation closeout (2026-05-08)
+
+Track 25 advanced from `Spec Approved` to `In Review` after the API governance
+artifacts were made concrete and validator-backed:
+
+- `docs/design/api-review-template.md` now provides the protected-surface API
+  review intake form, compatibility classification questions, required evidence
+  fields, release decision fields, and reviewer signoff fields.
+- `docs/design/compatibility-matrix.md` now names all 13 protected roots from
+  the machine-readable inventory and maps each root to breaking-change triggers,
+  required evidence, and release-hold conditions.
+- `docs/design/validate-compatibility-pack.ps1` now verifies the template and
+  matrix in addition to the policy, readiness, design-index, and release-note
+  checks.
+- Track 25 focused validation passed: `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1`,
+  `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate`,
+  `node scripts/validation/validate-track21-27-evidence-boundaries.mjs`,
+  `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, and
+  `pwsh -NoProfile -File scripts/validate_track_no_skip_claims.ps1`.
+- The earlier adjacent Track 26 `unsupported ecosystem` validator failure is
+  resolved. The broader `node scripts/validation/validate-tracks21-27.mjs`
+  runner now passes Track 26 and fails only in Track 27's docs workflow because
+  the link checker scans `bindings/typescript/node_modules`.
+
+## Track 26 implementation closeout (2026-05-08)
+
+Track 26 advanced from `Spec Approved` to `In Review` after the standards-mapping and ADR recommendation gates were made concrete:
+
+- `docs/interoperability/standards-mapping.md` now records exact claim surfaces, current labels, evidence, missing behavior, release-language rewrites, and unsupported ecosystem boundaries for DEVS, FMI/FMU, SBML, CellML, OpenTelemetry semantic conventions, Arrow C Data Interface, Arrow IPC, and Parquet.
+- `docs/interoperability/adr-recommendations.md` now records ADR thresholds, `ADR-026-001` through `ADR-026-009`, and the triggers that must open an ADR before public compatibility language changes.
+- Focused validation passed for the Track 26 standards validator and the Track 21-27 evidence-boundary guard. The combined Track 21-27 validator passed Track 26 but failed in Track 27's docs workflow because the link checker scanned `bindings/typescript/node_modules`.
+- Track 26 is not `Done`: strict git closeout and push evidence remain blocked by pre-existing unrelated dirty worktree changes outside Track 26 ownership.
+
+## Track 08 implementation review (2026-05-08)
+
+Track 08 advanced from `Planned` to `In Review` after a focused Julia binding implementation/review pass:
+
+- `bindings/julia` now includes `EventLogBatch`, `to_smoke_bytes`, and `from_smoke_bytes` for a dependency-light event-log roundtrip gate aligned to the Track 04 `kairo_ecs.event_log.v1` schema boundary.
+- `bindings/julia/test/test_arrow.jl` covers the advertised Julia Arrow gate path, and `runtests.jl` includes it for package-test execution once Julia is available.
+- `packaging/julia/README.md` records that registry publication, package-server automation, native artifact packaging, and Arrow.jl IPC remain deferred to Track 15 and the Track 02 artifact handoff.
+- Focused static validation passed: `rg -n "EventLogBatch|to_smoke_bytes|from_smoke_bytes|test_arrow" bindings/julia packaging/julia conductor/tracks/08-julia-binding -S` and `git diff --check -- bindings/julia packaging/julia conductor/tracks/08-julia-binding conductor/tracks.yaml conductor/tracks.md conductor/phase-closeout.yaml conductor/status.md conductor/track-map.md`.
+- `node tests/conformance/track07_13_hardening_check.mjs` passed earlier on 2026-05-08, then failed in the final rerun on an unrelated Track 07 `packaging/r` handoff claim outside Track 08 ownership.
+- Executable Julia gates remain locally blocked: `Get-Command julia` failed on 2026-05-08 because Julia is not on PATH, so `julia-pkg-test`, environment resolution, precompile smoke, conformance bridge execution, and `test/test_arrow.jl` execution could not be run.
+
+## Track 11 implementation review (2026-05-08)
+
+Track 11 advanced from `In Progress` to `In Review` after adding the missing cgo header-smoke boundary while preserving the existing pure-Go scheduler facade:
+
+- `bindings/go/native_cgo.go` compiles the canonical `include/kairo_ecs.h` header through cgo and verifies the status-code and ABI struct declarations without linking a native runtime library.
+- `bindings/go/native_nocgo.go` keeps the package usable when `CGO_ENABLED=0`.
+- Focused validation passed from `bindings/go`: `go test ./...`, `go vet ./...`, `CGO_ENABLED=1 go test -run TestNativeHeaderSmokeCompilesStableCABI ./...`, `CGO_ENABLED=0 go test ./...`, and `go mod tidy`.
+- The first sandboxed `go test ./...` hit `%LOCALAPPDATA%\go-build` access denial, then passed with normal Windows Go build-cache access.
+- Native runtime execution remains blocked until a linkable `kairo-ecs-ffi` library is packaged for the Go module; release publication remains Track 15 scope.
 
 ## Implementation readiness
 

@@ -25,7 +25,7 @@
   - FMI/FMU, SBML, and CellML -> future bridge targets that are not yet implemented.
 - Tie each mapping to a comparison target that already exists in the repo, such as `conductor/experiment-runner.md`, `docs/trustworthy-simulation/replay-and-seeds.md`, or the Arrow schema work.
 
-Worker 3 evidence note: `docs/interoperability/standards-review.md` now carries the concrete standards mapping with required labels for DEVS, FMI/FMU, SBML, CellML, OpenTelemetry semantic conventions, Arrow C Data Interface, Arrow IPC, and Parquet. `conductor/interoperability-standards.md` mirrors the current labels for conductor-facing readers.
+Worker 3 evidence note: `docs/interoperability/standards-review.md` now carries the public standards summary with required labels for DEVS, FMI/FMU, SBML, CellML, OpenTelemetry semantic conventions, Arrow C Data Interface, Arrow IPC, and Parquet. `docs/interoperability/standards-mapping.md` is the concrete `standards-mapping` gate artifact with claim surfaces, evidence, missing behavior, and release-language rewrites. `conductor/interoperability-standards.md` mirrors the current labels for conductor-facing readers.
 
 ### Task 1.2 — Add review criteria
 - Add red-team prompts for false interoperability claims, partial mappings, and ambiguous terminology.
@@ -33,7 +33,9 @@ Worker 3 evidence note: `docs/interoperability/standards-review.md` now carries 
 - Add measurable acceptance criteria for supported and unsupported mappings:
   - supported mappings name the exact standard and the exact KairoECS surface;
   - partial mappings state the missing behavior;
-  - unsupported mappings are explicitly labeled as deferred.
+  - unsupported mappings are explicitly labeled as unsupported, not deferred.
+
+Worker 3 evidence note: `docs/interoperability/adr-recommendations.md` satisfies the `adr-recommendations` gate by listing ADR thresholds, recommendation IDs `ADR-026-001` through `ADR-026-009`, and the specific triggers that must open an ADR before compatibility language changes.
 
 ## Phase 2 — Automation and validation
 
@@ -42,7 +44,7 @@ Worker 3 evidence note: `docs/interoperability/standards-review.md` now carries 
 - Use path guards for future interoperability artifacts that are not created yet.
 - Keep the validation local to this track's docs and the docs page it owns.
 
-Worker 3 evidence note: local validation is available at `conductor/tracks/26-interoperability-standards-review/validate-standards-review.ps1`. It checks the eight required standards, the supported/partial/deferred/unsupported vocabulary, evidence citations, release-impacting assertions, and exactly eight primary mapping rows.
+Worker 3 evidence note: local validation is available at `conductor/tracks/26-interoperability-standards-review/validate-standards-review.ps1`. It checks the eight required standards, the supported/partial/deferred/unsupported vocabulary, evidence citations, release-impacting assertions, exactly eight primary mapping rows, the `standards-mapping` gate artifact, and the `adr-recommendations` gate artifact.
 
 ### Task 2.2 — Connect to release gates
 - Define what standards-review evidence is required before alpha, beta, RC, and 1.0 claims.

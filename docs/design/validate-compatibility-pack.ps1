@@ -63,6 +63,8 @@ $policy = Read-TextFile 'conductor/contracts/versioning-compatibility.md'
 $quality = Read-TextFile 'conductor/quality-gates.md'
 $readiness = Read-TextFile 'conductor/delivery-readiness-checklist.md'
 $design = Read-TextFile 'docs/design/api-review.md'
+$template = Read-TextFile 'docs/design/api-review-template.md'
+$matrix = Read-TextFile 'docs/design/compatibility-matrix.md'
 $release = $null
 if ($ReleaseGate) {
     $release = Read-TextFile 'docs/release/compatibility.md'
@@ -88,8 +90,42 @@ foreach ($surface in $inventory.surfaces) {
     if ($policy -notmatch $root) {
         $failures.Add("Policy does not name inventory root: $($surface.root)")
     }
+    if ($template -notmatch $root -and $template -notmatch 'Affected root') {
+        $failures.Add("API review template neither names inventory root nor includes affected-root intake: $($surface.root)")
+    }
+    if ($matrix -notmatch $root) {
+        $failures.Add("Compatibility matrix does not name inventory root: $($surface.root)")
+    }
     if ($ReleaseGate -and $release -notmatch $root) {
         $failures.Add("Release compatibility note does not name inventory root: $($surface.root)")
+    }
+}
+
+foreach ($phrase in @(
+    'Affected root',
+    'Surface family',
+    'Compatibility level',
+    'Release hold',
+    'ADR path',
+    'Migration note path',
+    'Reviewer Signoff'
+)) {
+    if ($template -notmatch [regex]::Escape($phrase)) {
+        $failures.Add("API review template missing required phrase: $phrase")
+    }
+}
+
+foreach ($phrase in @(
+    'Compatibility Matrix',
+    'Protected root',
+    'Breaking-change triggers',
+    'Required evidence',
+    'Release hold when',
+    'Stage Rules',
+    'Drift Checks'
+)) {
+    if ($matrix -notmatch [regex]::Escape($phrase)) {
+        $failures.Add("Compatibility matrix missing required phrase: $phrase")
     }
 }
 

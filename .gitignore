@@ -1,5 +1,8 @@
 target/
 dist/
+**/node_modules/
+*.Rcheck/
+bindings/*.tar.gz
 **/obj/
 **/bin/
 website/build/

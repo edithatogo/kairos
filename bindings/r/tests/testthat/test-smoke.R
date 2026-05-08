@@ -66,3 +66,24 @@ test_that("event log roundtrip preserves the v1 schema facade", {
   expect_identical(log$run_id, "roundtrip")
   expect_identical(log$entity_id, 42)
 })
+
+test_that("optional Arrow roundtrip preserves the v1 schema facade", {
+  testthat::skip_if_not_installed("arrow")
+
+  scheduler <- kairoecs_new_scheduler(run_id = "arrow-roundtrip", time_scale = "ticks")
+  scheduler <- kairoecs_schedule_at(scheduler, 1, "arrive", entity_id = 42)
+
+  log <- kairoecs_arrow_roundtrip(kairoecs_event_log(scheduler), use_arrow = TRUE)
+
+  expect_identical(attr(log, "kairoecs_schema"), "kairo_ecs.event_log.v1")
+  expect_identical(
+    names(log),
+    c(
+      "run_id", "event_id", "entity_id", "time_ticks", "time_scale",
+      "priority", "sequence", "event_kind", "status", "payload_ref"
+    )
+  )
+  expect_identical(log$run_id, "arrow-roundtrip")
+  expect_identical(log$event_kind, "arrive")
+  expect_equal(log$entity_id, 42)
+})

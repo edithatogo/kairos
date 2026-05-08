@@ -54,7 +54,7 @@ tracks:
       - deterministic-ordering-fixture
   - id: 02
     name: The Bridge - kairo-ecs-ffi, UniFFI and Diplomat
-    status: In Review
+    status: Done
     owner: ffi-agent + uniffi-agent + diplomat-agent
     depends_on: ["01", "12"]
     owned_paths:
@@ -69,7 +69,7 @@ tracks:
       - header-diff
   - id: 03
     name: The Flow - DES Trajectory API and ABM Behavior API
-    status: In Review
+    status: Done
     owner: des-api-agent + abm-api-agent
     depends_on: ["01", "26"]
     owned_paths:
@@ -82,7 +82,7 @@ tracks:
       - abm-fixture
   - id: 04
     name: The Analyst - kairo-ecs-arrow
-    status: Spec Approved
+    status: Done
     owner: arrow-agent
     depends_on: ["01", "12", "26"]
     owned_paths:
@@ -122,7 +122,7 @@ tracks:
       - arrow-roundtrip
   - id: 07
     name: R Binding
-    status: In Progress
+    status: In Review
     owner: r-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -134,7 +134,7 @@ tracks:
       - arrow-roundtrip
   - id: 08
     name: Julia Binding
-    status: Planned
+    status: In Review
     owner: julia-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -173,7 +173,7 @@ tracks:
       - nuget-pack
   - id: 11
     name: Go Binding
-    status: In Progress
+    status: In Review
     owner: go-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -201,7 +201,7 @@ tracks:
       - benchmark-smoke
   - id: 13
     name: CI/CD, Code Quality & Supply Chain
-    status: In Progress
+    status: Done
     owner: ci-agent + security-agent
     depends_on: ["00"]
     owned_paths:
@@ -364,7 +364,7 @@ tracks:
       - non-core-dependency-check
   - id: 25
     name: API Design Review & Compatibility Governance
-    status: Spec Approved
+    status: In Review
     owner: api-governance-agent
     depends_on: ["00", "02", "26"]
     owned_paths:
@@ -376,7 +376,7 @@ tracks:
       - compatibility-matrix
   - id: 26
     name: Interoperability Standards Review
-    status: Spec Approved
+    status: In Review
     owner: interop-agent
     depends_on: ["00"]
     owned_paths:

@@ -4,7 +4,7 @@
 
 Julia binding work now has a minimal real package slice and stops before registry publication or native runtime loading.
 
-The package exposes pure-Julia deterministic event ordering, an event-log schema facade aligned with the Track 04 `kairo_ecs.event_log.v1` field order, Track 12 fixture bridge helpers for Track 08 readiness reporting, and explicit FFI status reporting that remains not configured until a safe Track 02 native artifact handoff exists.
+The package exposes pure-Julia deterministic event ordering, an event-log schema facade aligned with the Track 04 `kairo_ecs.event_log.v1` field order, a dependency-light event-log smoke-byte roundtrip gate, Track 12 fixture bridge helpers for Track 08 readiness reporting, and explicit FFI status reporting that remains not configured until a safe Track 02 native artifact handoff exists.
 
 ## Files changed
 
@@ -12,6 +12,11 @@ The package exposes pure-Julia deterministic event ordering, an event-log schema
 `bindings/julia/README.md`
 `bindings/julia/src/KairoECS.jl`
 `bindings/julia/test/runtests.jl`
+`bindings/julia/test/test_arrow.jl`
+`conductor/tracks.yaml`
+`conductor/tracks.md`
+`conductor/phase-closeout.yaml`
+`conductor/status.md`
 `conductor/tracks/08-julia-binding/test-matrix.md`
 `conductor/tracks/08-julia-binding/handoff.md`
 
@@ -31,6 +36,7 @@ The package exposes pure-Julia deterministic event ordering, an event-log schema
 - Package test coverage for exported Julia entrypoints.
 - Deterministic scheduler ordering smoke coverage using `(time_ticks, priority, sequence)`.
 - Event-log schema facade field-order coverage.
+- Event-log smoke-byte roundtrip coverage for the Arrow schema boundary, including nullable fields, deterministic ordering, and 128-bit tick little-endian encoding.
 - Conformance fixture bridge coverage for ready/planned Track 08 fixture reporting using struct, dictionary, and named-tuple records.
 - Native FFI status coverage proving the binding reports not configured rather than attempting an unsafe load.
 
@@ -41,7 +47,12 @@ The package exposes pure-Julia deterministic event ordering, an event-log schema
 - `rg -n "ConformanceFixture|binding_fixture_ids|ready_fixture_ids|conformance_report|fixture_status" bindings/julia -S` confirmed the fixture bridge API and test/docs references on 2026-05-07.
 - `Get-Command julia` failed on 2026-05-06 because Julia is not on PATH.
 - `Get-Command julia` still failed on 2026-05-07 because Julia is not on PATH.
+- `Get-Command julia` still failed on 2026-05-08 because Julia is not on PATH.
+- `rg -n "EventLogBatch|to_smoke_bytes|from_smoke_bytes|test_arrow" bindings/julia conductor/tracks/08-julia-binding -S` passed on 2026-05-08.
+- `git diff --check -- bindings/julia conductor/tracks/08-julia-binding conductor/tracks.yaml conductor/tracks.md conductor/phase-closeout.yaml conductor/status.md conductor/track-map.md` passed on 2026-05-08.
+- `node tests/conformance/track07_13_hardening_check.mjs` passed on 2026-05-08 after removing out-of-scope package-publication path claims from binding-track handoff and matrix files.
 - `julia --project=. -e 'using Pkg; Pkg.test()'` from `bindings/julia/` is blocked locally until Julia is available.
+- `julia --project=. -e 'include("test/test_arrow.jl")'` from `bindings/julia/` is blocked locally until Julia is available.
 
 ## Known risks
 
@@ -61,4 +72,23 @@ The package exposes pure-Julia deterministic event ordering, an event-log schema
 No additional follow-up issues were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+`$conductor-review` was performed on 2026-05-08 for the Track 08-owned diff. No code defects were found in the review pass after adding the event-log smoke-byte roundtrip gate.
+
+Accepted fixes applied in this pass:
+
+- Added `EventLogBatch`, `to_smoke_bytes`, and `from_smoke_bytes` to cover the Arrow event-log boundary without requiring native Arrow.jl IPC while Julia is unavailable locally.
+- Added `bindings/julia/test/test_arrow.jl` and included it in `runtests.jl`.
+- Updated the Julia binding and packaging notes to describe the local-only roundtrip boundary.
+
+Blocked or deferred fixes:
+
+- `julia-pkg-test`, environment resolution, precompile smoke, conformance bridge execution, and Arrow roundtrip execution remain blocked because `Get-Command julia` fails on this host.
+- Native FFI artifact loading remains intentionally deferred until Track 02 provides a safe Julia artifact layout.
+- Arrow.jl IPC remains deferred until Julia tooling is available and the dependency can be resolved in the package lane.
+
+Closeout markers:
+
+- commit SHA: blocked because no Track 08 commit was created in the dirty shared worktree.
+- pushed ref: blocked because no push was performed from the dirty shared worktree.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: not run because the shared worktree contains unrelated worker edits and this pass did not create a commit.
+- next-phase decision: Track 08 is In Review with Julia execution blocked locally; install Julia on PATH and rerun `julia-pkg-test` plus `test/test_arrow.jl` before Done closeout.

@@ -5,6 +5,9 @@ KairoECS should avoid inventing incompatible formats where mature standards or c
 ## Canonical Track 26 status mapping
 
 The public review note lives at `docs/interoperability/standards-review.md`.
+The gate artifacts are `docs/interoperability/standards-mapping.md` for the
+`standards-mapping` gate and `docs/interoperability/adr-recommendations.md` for
+the `adr-recommendations` gate.
 Use the same status vocabulary everywhere:
 
 | Label | Meaning |

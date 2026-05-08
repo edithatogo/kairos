@@ -4,6 +4,13 @@ This page records which interoperability standards KairoECS is aligning with,
 which ones are only partial or deferred, and which ones are intentionally not
 claimed. It is a review artifact, not a compatibility promise.
 
+Concrete gate artifacts:
+
+- `docs/interoperability/standards-mapping.md` satisfies the `standards-mapping`
+  gate with claim-by-claim surfaces, evidence, and release guards.
+- `docs/interoperability/adr-recommendations.md` satisfies the
+  `adr-recommendations` gate with ADR thresholds and recommendation IDs.
+
 ## Status vocabulary
 
 | Label | Meaning for release language |

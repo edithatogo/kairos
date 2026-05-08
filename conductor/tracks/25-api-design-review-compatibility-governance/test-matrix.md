@@ -4,6 +4,8 @@
 |---|---:|---:|---:|---:|
 | Track docs exist and render cleanly | yes | yes | yes | yes |
 | Machine-readable inventory exists at `docs/design/protected-surface-inventory.json` | yes | yes | yes | yes |
+| API review template exists at `docs/design/api-review-template.md` and includes affected-root, compatibility-level, evidence, release-hold, and reviewer-signoff fields | yes | yes | yes | yes |
+| Compatibility matrix exists at `docs/design/compatibility-matrix.md` and names all protected roots from the inventory | yes | yes | yes | yes |
 | Policy-pack validation passes with `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1` | yes | yes | yes | yes |
 | Release-gate validation passes with `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate` | no | yes | yes | yes |
 | Surface inventory exists for `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-state`, `crates/kairo-ecs-rng`, `bindings/python`, `bindings/r`, `bindings/julia`, `bindings/typescript`, `bindings/csharp`, and `bindings/go` | yes | yes | yes | yes |
@@ -31,7 +33,9 @@ pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1
 pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate
 node scripts/validation/validate-track21-27-evidence-boundaries.mjs
 node scripts/validation/validate-tracks21-27.mjs
-rg -n "validate-compatibility-pack|protected-surface-inventory|Breaking-change rules|Release hold criteria" conductor/contracts/versioning-compatibility.md conductor/quality-gates.md conductor/delivery-readiness-checklist.md docs/design
+pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1
+pwsh -NoProfile -File scripts/validate_track_no_skip_claims.ps1
+rg -n "validate-compatibility-pack|api-review-template|compatibility-matrix|protected-surface-inventory|Breaking-change rules|Release hold criteria" conductor/contracts/versioning-compatibility.md conductor/quality-gates.md conductor/delivery-readiness-checklist.md docs/design conductor/api-design-review.md
 ```
 
 ## Current validation evidence
@@ -40,9 +44,12 @@ rg -n "validate-compatibility-pack|protected-surface-inventory|Breaking-change r
 |---|---|---|
 | `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1` | pass | `compatibility pack validation passed: 13 protected surfaces` |
 | `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate` | pass | `compatibility release-gate validation passed: 13 protected surfaces` |
-| `rg -n "validate-compatibility-pack|protected-surface-inventory|Breaking-change rules|Release hold criteria" conductor/contracts/versioning-compatibility.md conductor/quality-gates.md conductor/delivery-readiness-checklist.md docs/design` | pass | Found policy, readiness, quality-gate, design-index, and validator references |
+| `rg -n "validate-compatibility-pack|api-review-template|compatibility-matrix|protected-surface-inventory|Breaking-change rules|Release hold criteria" conductor/contracts/versioning-compatibility.md conductor/quality-gates.md conductor/delivery-readiness-checklist.md docs/design conductor/api-design-review.md` | pass | Found policy, readiness, quality-gate, design-index, template, matrix, and validator references |
 | `cargo fmt --all --check` | pass | Rust formatting gate passed; no formatting changes needed |
-| `node scripts/validation/validate-tracks21-27.mjs` | pass | Ran the non-release compatibility policy pack check with adjacent Track 21-27 local validators; all seven track checks passed. |
+| `node scripts/validation/validate-track21-27-evidence-boundaries.mjs` | pass | Cross-track evidence boundaries passed, including compatibility and standards release boundaries. |
+| `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | pass | `0 error(s), 0 warning(s)`; Conductor phase gate validation passed. |
+| `pwsh -NoProfile -File scripts/validate_track_no_skip_claims.ps1` | pass | Track no-skip claim validation passed. |
+| `node scripts/validation/validate-tracks21-27.mjs` | blocked outside Track 25 | Tracks 21-26 and cross-track evidence boundaries passed; Track 27 failed because docs link-check scans broken links in `bindings/typescript/node_modules`. |
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

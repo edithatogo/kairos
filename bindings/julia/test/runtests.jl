@@ -52,6 +52,38 @@ end
     ])
 end
 
+@testset "arrow smoke roundtrip" begin
+    records = [
+        EventLogRecord(
+            run_id = "run-1",
+            event_id = "event-b",
+            entity_id = "entity-1",
+            time_ticks = UInt128(2)^80 + UInt128(42),
+            priority = Int32(0),
+            sequence = UInt64(2),
+            event_kind = "custom:arrival",
+            payload_ref = "payload://arrival",
+        ),
+        EventLogRecord(
+            run_id = "run-1",
+            event_id = "event-a",
+            time_ticks = UInt128(7),
+            priority = Int32(-1),
+            sequence = UInt64(1),
+            event_kind = "custom:start",
+        ),
+    ]
+
+    batch = EventLogBatch(records)
+    decoded = from_smoke_bytes(to_smoke_bytes(batch))
+
+    @test decoded == EventLogBatch(ordered_events(records))
+    @test [record.event_id for record in decoded.records] == ["event-a", "event-b"]
+    @test decoded.records[2].time_ticks == UInt128(2)^80 + UInt128(42)
+    @test decoded.records[2].payload_ref == "payload://arrival"
+    @test_throws ArgumentError from_smoke_bytes(UInt8[])
+end
+
 @testset "arrow event log schema facade" begin
     schema = arrow_event_log_schema()
 
@@ -147,3 +179,5 @@ end
 
     @test binding_fixture_ids(tuple_fixtures) == ["zero_delay_guard_v1"]
 end
+
+include("test_arrow.jl")

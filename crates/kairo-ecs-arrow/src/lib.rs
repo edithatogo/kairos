@@ -5,6 +5,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 pub const SCHEMA_VERSION: u16 = 1;
+pub const EVENT_LOG_SCHEMA_MAJOR: u16 = 1;
 pub const EVENT_LOG_STREAM: &str = "kairo_ecs.event_log.v1";
 pub const TIME_SCALE_TICKS: &str = "ticks";
 
@@ -23,6 +24,27 @@ pub const EVENT_LOG_FIELDS: &[EventLogField] = &[
     EventLogField::new("status", "Utf8", false),
     EventLogField::new("payload_ref", "Utf8", true),
 ];
+
+pub fn event_log_schema_fingerprint() -> String {
+    let fields = EVENT_LOG_FIELDS
+        .iter()
+        .map(|field| {
+            format!(
+                "{}:{}:{}",
+                field.name,
+                field.data_type,
+                if field.nullable {
+                    "nullable"
+                } else {
+                    "required"
+                }
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("|");
+
+    format!("{EVENT_LOG_STREAM};major={EVENT_LOG_SCHEMA_MAJOR};fields={fields}")
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct EventLogField {

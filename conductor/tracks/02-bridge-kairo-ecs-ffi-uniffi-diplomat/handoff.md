@@ -63,9 +63,9 @@ cargo fmt --all --check
 - Replace the wrapper-anchor facades with generated UniFFI/Diplomat outputs once those generators are pinned.
 ## Phase closeout evidence
 
-Track 02 advanced from `In Progress` to `In Review` on 2026-05-08.
+Track 02 advanced from `In Review` to `Done` on 2026-05-08 after closeout review.
 
-- `$conductor-review` result: the existing Track 02 implementation satisfies the implementation-slice gates for the stable C ABI bridge plus UniFFI and Diplomat wrapper anchors.
+- `$conductor-review` result: the existing Track 02 implementation satisfies the closeout gates for the stable C ABI bridge plus UniFFI and Diplomat wrapper anchors.
 - Accepted fixes: status and evidence closeout only; no additional in-scope bridge code changes were required after focused validation passed.
 - Deferred or blocked fixes: generated UniFFI/Diplomat golden outputs remain deferred until generators are pinned; Track 04 Arrow IPC telemetry remains future integration; native package publication remains Track 15/20 scope.
 - Validation commands:
@@ -73,7 +73,9 @@ Track 02 advanced from `In Progress` to `In Review` on 2026-05-08.
   - `cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat` — passed.
   - `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat` — passed, 23 tests.
   - `cargo +stable-x86_64-pc-windows-gnu metadata --no-deps --format-version 1` — passed.
+  - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` — passed.
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` — passed.
 - Cleanup state: local working tree was already dirty with prior Conductor closeout changes outside Track 02; no unrelated changes were reverted.
-- Commit SHA / pushed ref: `5dd1937566898b2e028ac61dab1e9dd173e6d919` on `origin/main` is the current pushed base for this local closeout pass.
+- Commit SHA / pushed ref: `ee8c123e0a6dddd27986e7e657642190ee4f2560` on `origin/main` is the current pushed base for this local closeout pass.
 - Strict cleanup gate: rerun `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after committing the local closeout batch.
-- Next-phase decision: Track 02 is `In Review`; reviewer signoff is still required before moving the stable C ABI bridge to `Done`.
+- Next-phase decision: Track 02 is `Done`; future generated UniFFI/Diplomat golden outputs, Arrow IPC telemetry integration, native runtime packaging, or ABI expansion require a new scoped follow-up or the owning downstream track.

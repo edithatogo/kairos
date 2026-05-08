@@ -299,7 +299,7 @@ export function compareScheduledEvents(left: SchedulerEvent, right: SchedulerEve
     || compareBigInt(left.sequence, right.sequence);
 }
 
-function toArrowEventLogRow(runId: string, event: SchedulerEvent): ArrowEventLogRow {
+function toArrowEventLogRow(runId: string, event: DispatchedEvent | CancelledEvent): ArrowEventLogRow {
   const normalizedRunId = runId.trim();
   if (normalizedRunId.length === 0) {
     throw new Error("runId must not be empty");

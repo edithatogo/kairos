@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 from ._types import DispatchedEvent, EntityId, EventId
 
@@ -116,6 +117,47 @@ class EventLogBatch:
             )
         return ("\n".join(lines) + "\n").encode("utf-8")
 
+    def to_pyarrow_table(self) -> Any:
+        """Return a pyarrow Table using the Track 04 event-log schema."""
+
+        try:
+            import pyarrow as pa
+        except ModuleNotFoundError as exc:
+            raise RuntimeError("pyarrow is required for Arrow table roundtrips") from exc
+
+        rows = [
+            {
+                "schema_version": record.schema_version,
+                "run_id": record.run_id,
+                "event_id": _handle_bytes(record.event_id),
+                "entity_id": _handle_bytes(record.entity_id) if record.entity_id else None,
+                "time_ticks": record.time_ticks.to_bytes(16, "little"),
+                "time_scale": record.time_scale,
+                "priority": record.priority,
+                "sequence": record.sequence,
+                "event_kind": record.event_kind,
+                "status": record.status.value,
+                "payload_ref": record.payload_ref,
+            }
+            for record in self.records
+        ]
+        schema = pa.schema(
+            [
+                pa.field("schema_version", pa.uint16(), nullable=False),
+                pa.field("run_id", pa.utf8(), nullable=False),
+                pa.field("event_id", pa.binary(12), nullable=False),
+                pa.field("entity_id", pa.binary(12), nullable=True),
+                pa.field("time_ticks", pa.binary(16), nullable=False),
+                pa.field("time_scale", pa.utf8(), nullable=False),
+                pa.field("priority", pa.int32(), nullable=False),
+                pa.field("sequence", pa.uint64(), nullable=False),
+                pa.field("event_kind", pa.utf8(), nullable=False),
+                pa.field("status", pa.utf8(), nullable=False),
+                pa.field("payload_ref", pa.utf8(), nullable=True),
+            ]
+        )
+        return pa.Table.from_pylist(rows, schema=schema)
+
     @classmethod
     def from_smoke_bytes(cls, payload: bytes) -> "EventLogBatch":
         lines = payload.decode("utf-8").splitlines()
@@ -152,15 +194,50 @@ class EventLogBatch:
             )
         return cls(records)
 
+    @classmethod
+    def from_pyarrow_table(cls, table: Any) -> "EventLogBatch":
+        if tuple(table.schema.names) != tuple(field[0] for field in EVENT_LOG_FIELDS):
+            raise ValueError("unexpected Arrow event-log field order")
+
+        records = []
+        for row in table.to_pylist():
+            records.append(
+                EventLogRecord(
+                    schema_version=int(row["schema_version"]),
+                    run_id=str(row["run_id"]),
+                    event_id=_parse_handle_bytes(row["event_id"], EventId),
+                    entity_id=_parse_handle_bytes(row["entity_id"], EntityId)
+                    if row["entity_id"] is not None
+                    else None,
+                    time_ticks=int.from_bytes(row["time_ticks"], "little"),
+                    time_scale=str(row["time_scale"]),
+                    priority=int(row["priority"]),
+                    sequence=int(row["sequence"]),
+                    event_kind=str(row["event_kind"]),
+                    status=EventStatus(row["status"]),
+                    payload_ref=row["payload_ref"],
+                )
+            )
+        return cls(records)
+
 
 def _handle_hex(handle: EventId | EntityId) -> str:
-    return handle.index.to_bytes(8, "little").hex() + handle.generation.to_bytes(4, "little").hex()
+    return _handle_bytes(handle).hex()
+
+
+def _handle_bytes(handle: EventId | EntityId) -> bytes:
+    return handle.index.to_bytes(8, "little") + handle.generation.to_bytes(4, "little")
 
 
 def _parse_handle(hex_value: str, kind: type[EventId] | type[EntityId]) -> EventId | EntityId:
     if len(hex_value) != 24:
         raise ValueError("handle must be 12 bytes")
-    payload = bytes.fromhex(hex_value)
+    return _parse_handle_bytes(bytes.fromhex(hex_value), kind)
+
+
+def _parse_handle_bytes(payload: bytes, kind: type[EventId] | type[EntityId]) -> EventId | EntityId:
+    if len(payload) != 12:
+        raise ValueError("handle must be 12 bytes")
     return kind(int.from_bytes(payload[:8], "little"), int.from_bytes(payload[8:12], "little"))
 
 

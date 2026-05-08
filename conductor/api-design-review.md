@@ -2,6 +2,11 @@
 
 Every public API addition must complete this review before reaching a stable host-language package or a beta-or-later release claim.
 
+Use `docs/design/api-review-template.md` to open a review record and
+`docs/design/compatibility-matrix.md` to classify release-stage consequences.
+The JSON inventory in `docs/design/protected-surface-inventory.json` remains the
+machine-readable root list.
+
 ## Current protected surfaces
 
 | Surface family | Current checked-in roots | Review consequence |
@@ -88,7 +93,7 @@ Any compatibility note, ADR, or release note must name the exact affected root a
 
 ## Review template fields
 
-Every API review must capture:
+Every API review must use `docs/design/api-review-template.md` and capture:
 
 ```text
 affected_root
@@ -124,4 +129,3 @@ conductor/package-matrix.md if package availability changed
 - If the change renames a root, require a release hold until the transition is documented.
 - If the compatibility note cannot name the exact root, it is incomplete.
 - If the package catalog or package matrix is stale, update those before release planning proceeds.
-

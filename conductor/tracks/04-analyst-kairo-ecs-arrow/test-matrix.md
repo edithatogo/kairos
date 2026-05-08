@@ -3,6 +3,7 @@
 ## Required tests
 
 - `cargo test -p kairo-ecs-arrow` for schema versioning and event-log roundtrip smoke checks.
+- `cargo test -p kairo-ecs-arrow --test schema_compatibility` for the `arrow-schema-versioning` gate: stream version, field order, runtime schema fingerprint, checked-in JSON schema alignment, and smoke roundtrip compatibility.
 - `cargo run -p kairo-ecs-arrow --example telemetry_event_log_roundtrip` for the telemetry example.
 - `cargo test -p kairo-ecs-core` to keep the Arrow schema aligned with the event model it reports on.
 - `cargo test -p kairo-ecs-state` to confirm the schema still reflects the current state transitions.
@@ -22,6 +23,7 @@
 cargo fmt --all --check
 cargo fmt --package kairo-ecs-arrow --check
 cargo check -p kairo-ecs-arrow --examples
+cargo test -p kairo-ecs-arrow --test schema_compatibility
 cargo test -p kairo-ecs-arrow
 cargo run -p kairo-ecs-arrow --example telemetry_event_log_roundtrip
 cargo test -p kairo-ecs-core

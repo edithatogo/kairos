@@ -26,6 +26,8 @@ Last verified: 2026-05-08
 - `cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat` — pass.
 - `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat` — pass, 23 tests.
 - `cargo +stable-x86_64-pc-windows-gnu metadata --no-deps --format-version 1` — pass.
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` — pass.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` — pass.
 - `pwsh -NoProfile -File scripts/validate_conductor_setup.ps1 -SkipCargo` — pass.
 - `pwsh -NoProfile -File scripts/validate_track_coverage.ps1 -SkipCargo` — pass.
 - `cargo fmt --all --check` was not rerun for this closeout because the repo already has unrelated local Conductor and non-Track-02 edits in the working tree. The focused Track 02 formatting gate passed.

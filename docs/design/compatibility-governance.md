@@ -2,7 +2,10 @@
 
 Track 25 uses `conductor/contracts/versioning-compatibility.md` as the policy
 source of truth and `docs/design/protected-surface-inventory.json` as the
-machine-readable inventory.
+machine-readable inventory. `docs/design/api-review-template.md` is the intake
+artifact for the `api-review-template` gate, and
+`docs/design/compatibility-matrix.md` is the release-review artifact for the
+`compatibility-matrix` gate.
 
 ## Protected Surface Inventory
 
@@ -36,3 +39,7 @@ Run the local validator after editing compatibility policy or release notes:
 pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1
 pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate
 ```
+
+The non-release validator checks that the template and matrix exist, name every
+protected root, and retain the release-hold and evidence fields needed by
+reviewers.

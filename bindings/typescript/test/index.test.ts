@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import { describe, expect, it } from "vitest";
 import {
   BINDING_KIND,
   EVENT_LOG_FIELDS,
@@ -16,106 +16,95 @@ import {
   roundTripArrowEventLog,
 } from "../src/index.ts";
 
-const info = createBindingSurfaceInfo();
+describe("binding surface", () => {
+  it("describes the package and runtime targets", () => {
+    const info = createBindingSurfaceInfo();
 
-assert.equal(PACKAGE_NAME, "@kairo-ecs/typescript");
-assert.equal(BINDING_KIND, "typescript-wasm");
-assert.equal(EVENT_LOG_SCHEMA_VERSION, 1);
-assert.deepEqual(
-  EVENT_LOG_FIELDS.map(([name, dataType, nullable]) => [name, dataType, nullable]),
-  [
-    ["schema_version", "UInt16", false],
-    ["run_id", "Utf8", false],
-    ["event_id", "FixedSizeBinary(12)", false],
-    ["entity_id", "FixedSizeBinary(12)", true],
-    ["time_ticks", "FixedSizeBinary(16)", false],
-    ["time_scale", "Utf8", false],
-    ["priority", "Int32", false],
-    ["sequence", "UInt64", false],
-    ["event_kind", "Utf8", false],
-    ["status", "Utf8", false],
-    ["payload_ref", "Utf8", true],
-  ],
-);
-assert.equal(info.packageName, PACKAGE_NAME);
-assert.equal(info.bindingKind, BINDING_KIND);
-assert.equal(info.version, "0.1.0");
-assert.deepEqual(info.runtimeTargets, ["node", "browser"]);
+    expect(PACKAGE_NAME).toBe("@kairo-ecs/typescript");
+    expect(BINDING_KIND).toBe("typescript-wasm");
+    expect(EVENT_LOG_SCHEMA_VERSION).toBe(1);
+    expect(EVENT_LOG_FIELDS.map(([name, dataType, nullable]) => [name, dataType, nullable])).toEqual([
+      ["schema_version", "UInt16", false],
+      ["run_id", "Utf8", false],
+      ["event_id", "FixedSizeBinary(12)", false],
+      ["entity_id", "FixedSizeBinary(12)", true],
+      ["time_ticks", "FixedSizeBinary(16)", false],
+      ["time_scale", "Utf8", false],
+      ["priority", "Int32", false],
+      ["sequence", "UInt64", false],
+      ["event_kind", "Utf8", false],
+      ["status", "Utf8", false],
+      ["payload_ref", "Utf8", true],
+    ]);
+    expect(info.packageName).toBe(PACKAGE_NAME);
+    expect(info.bindingKind).toBe(BINDING_KIND);
+    expect(info.version).toBe("0.1.0");
+    expect(info.runtimeTargets).toEqual(["node", "browser"]);
+    expect(normalizeRuntimeTargets(["browser", "node", "browser"])).toEqual(["browser", "node"]);
+    expect(() => normalizeVersion("   ")).toThrow(/version must not be empty/);
+    expect(describeBindingSurface({ version: "0.2.0", runtimeTargets: ["node"] })).toBe(
+      "@kairo-ecs/typescript [typescript-wasm] 0.2.0 => node",
+    );
+  });
+});
 
-assert.deepEqual(normalizeRuntimeTargets(["browser", "node", "browser"]), [
-  "browser",
-  "node",
-]);
+describe("scheduler facade", () => {
+  it("orders, cancels, and exports Track 04-shaped event log rows", () => {
+    const scheduler = createSchedulerFacade();
+    scheduler.scheduleAt({ timeTicks: 10n, priority: 0, eventKind: "late" });
+    const cancelled = scheduler.scheduleAt({ timeTicks: 7n, priority: 0, eventKind: "cancelled" });
+    scheduler.scheduleAt({ timeTicks: 5n, priority: 99, eventKind: "first" });
+    scheduler.scheduleAt({ timeTicks: 10n, priority: -1, eventKind: "priority" });
+    scheduler.scheduleAfter(10n, { priority: 1, eventKind: "sequence" });
 
-assert.throws(() => normalizeVersion("   "), /version must not be empty/);
+    expect(scheduler.cancel(999n)).toBe(false);
+    expect(scheduler.cancel(cancelled.eventId)).toBe(true);
+    expect(scheduler.cancel(cancelled.eventId)).toBe(false);
 
-assert.equal(
-  describeBindingSurface({ version: "0.2.0", runtimeTargets: ["node"] }),
-  "@kairo-ecs/typescript [typescript-wasm] 0.2.0 => node",
-);
+    const dispatched = scheduler.runFor(4);
+    expect(dispatched.map((event) => event.eventKind)).toEqual(["first", "priority", "late", "sequence"]);
+    expect(scheduler.currentTimeTicks).toBe(10n);
 
-const scheduler = createSchedulerFacade();
-scheduler.scheduleAt({ timeTicks: 10n, priority: 0, eventKind: "late" });
-const cancelled = scheduler.scheduleAt({ timeTicks: 7n, priority: 0, eventKind: "cancelled" });
-scheduler.scheduleAt({ timeTicks: 5n, priority: 99, eventKind: "first" });
-scheduler.scheduleAt({ timeTicks: 10n, priority: -1, eventKind: "priority" });
-scheduler.scheduleAfter(10n, { priority: 1, eventKind: "sequence" });
+    const eventLog = scheduler.eventLog("run-1");
+    expect(eventLog.schema).toBe(EVENT_LOG_SCHEMA_NAME);
+    expect(eventLog.schemaVersion).toBe(EVENT_LOG_SCHEMA_VERSION);
+    expect(eventLog.fields).toEqual(EVENT_LOG_FIELDS);
+    expect(eventLog.rows.map((row) => [row.schemaVersion, row.eventKind, row.timeTicks, row.timeTicksLeHex, row.status])).toEqual([
+      [1, "first", "5", "05000000000000000000000000000000", "dispatched"],
+      [1, "cancelled", "7", "07000000000000000000000000000000", "cancelled"],
+      [1, "priority", "10", "0a000000000000000000000000000000", "dispatched"],
+      [1, "late", "10", "0a000000000000000000000000000000", "dispatched"],
+      [1, "sequence", "10", "0a000000000000000000000000000000", "dispatched"],
+    ]);
+    expect(eventLog.rows[0]?.eventIdHex.length).toBe(24);
+    expect(scheduler.cancel(dispatched[0]?.eventId ?? 0n)).toBe(false);
+    expect(roundTripArrowEventLog(eventLog)).toEqual(eventLog);
+  });
 
-assert.equal(scheduler.cancel(999n), false);
-assert.equal(scheduler.cancel(cancelled.eventId), true);
-assert.equal(scheduler.cancel(cancelled.eventId), false);
+  it("rejects incompatible event-log payloads", () => {
+    expect(() =>
+      roundTripArrowEventLog({
+        schema: "other" as typeof EVENT_LOG_SCHEMA_NAME,
+        schemaVersion: EVENT_LOG_SCHEMA_VERSION,
+        fields: EVENT_LOG_FIELDS,
+        rows: [],
+      }),
+    ).toThrow(/unsupported Arrow event log schema/);
+    expect(() =>
+      roundTripArrowEventLog({
+        schema: EVENT_LOG_SCHEMA_NAME,
+        schemaVersion: 2 as typeof EVENT_LOG_SCHEMA_VERSION,
+        fields: EVENT_LOG_FIELDS,
+        rows: [],
+      }),
+    ).toThrow(/unsupported Arrow event log schema version/);
+  });
+});
 
-const dispatched = scheduler.runFor(4);
-assert.deepEqual(
-  dispatched.map((event) => event.eventKind),
-  ["first", "priority", "late", "sequence"],
-);
-assert.equal(scheduler.currentTimeTicks, 10n);
-
-const eventLog = scheduler.eventLog("run-1");
-assert.equal(eventLog.schema, EVENT_LOG_SCHEMA_NAME);
-assert.equal(eventLog.schemaVersion, EVENT_LOG_SCHEMA_VERSION);
-assert.deepEqual(eventLog.fields, EVENT_LOG_FIELDS);
-assert.deepEqual(
-  eventLog.rows.map((row) => [
-    row.schemaVersion,
-    row.eventKind,
-    row.timeTicks,
-    row.timeTicksLeHex,
-    row.status,
-  ]),
-  [
-    [1, "first", "5", "05000000000000000000000000000000", "dispatched"],
-    [1, "cancelled", "7", "07000000000000000000000000000000", "cancelled"],
-    [1, "priority", "10", "0a000000000000000000000000000000", "dispatched"],
-    [1, "late", "10", "0a000000000000000000000000000000", "dispatched"],
-    [1, "sequence", "10", "0a000000000000000000000000000000", "dispatched"],
-  ],
-);
-assert.equal(eventLog.rows[0].eventIdHex.length, 24);
-assert.equal(scheduler.cancel(dispatched[0].eventId), false);
-assert.deepEqual(roundTripArrowEventLog(eventLog), eventLog);
-assert.throws(
-  () =>
-    roundTripArrowEventLog({
-      schema: "other" as typeof EVENT_LOG_SCHEMA_NAME,
-      schemaVersion: EVENT_LOG_SCHEMA_VERSION,
-      fields: EVENT_LOG_FIELDS,
-      rows: [],
-    }),
-  /unsupported Arrow event log schema/,
-);
-assert.throws(
-  () =>
-    roundTripArrowEventLog({
-      schema: EVENT_LOG_SCHEMA_NAME,
-      schemaVersion: 2 as typeof EVENT_LOG_SCHEMA_VERSION,
-      fields: EVENT_LOG_FIELDS,
-      rows: [],
-    }),
-  /unsupported Arrow event log schema version/,
-);
-
-assert.equal(nativeWasmStatus().status, "not-configured");
-await assert.rejects(() => loadNativeWasm(), NativeWasmNotConfiguredError);
-assert.deepEqual(await loadNativeWasm({ load: () => ({ ok: true }) }), { ok: true });
+describe("native wasm loader contract", () => {
+  it("reports not-configured until a generated loader is supplied", async () => {
+    expect(nativeWasmStatus().status).toBe("not-configured");
+    await expect(loadNativeWasm()).rejects.toThrow(NativeWasmNotConfiguredError);
+    await expect(loadNativeWasm({ load: () => ({ ok: true }) })).resolves.toEqual({ ok: true });
+  });
+});

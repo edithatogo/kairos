@@ -49,6 +49,14 @@ rg -n "skip ci|ci skip|no ci|skip-checks:\s*true" .github/workflows/ci-skip-guar
 test -f conductor/tracks.yaml
 ```
 
+## 2026-05-08 validation notes
+
+- Passed: `node scripts/validation/validate-track13-metadata.mjs`.
+- Passed: `node tests/conformance/track07_13_hardening_check.mjs`.
+- Passed: `node tests/conformance/track12_20_evidence_check.mjs`.
+- Passed: `pwsh -NoProfile -File scripts\validate_track13_supply_chain.ps1`.
+- Supply-chain scanner note: `cargo-deny` and `cargo-audit` were not installed locally; `scripts\validate_track13_supply_chain.ps1` reported both advisory scanner lanes as skipped rather than failed, while the Track 13 metadata validator and `cargo metadata --no-deps --format-version 1` passed.
+
 ## 2026-05-07 validation notes
 
 - Passed: `node scripts/validation/validate-track13-metadata.mjs`.

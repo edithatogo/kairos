@@ -22,8 +22,14 @@
     "build": "node scripts/build.mjs",
     "prepare": "npm run build",
     "prepack": "npm run build",
-    "typecheck": "node --experimental-strip-types --check src/index.ts",
-    "test": "node --experimental-strip-types test/index.test.ts"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --pool=threads",
+    "test:browser": "npm run build && node scripts/browser-smoke.mjs"
   },
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "playwright": "^1.59.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
+  }
 }

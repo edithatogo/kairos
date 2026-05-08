@@ -1,16 +1,19 @@
 module KairoECS
 
 export EventLogRecord,
+    EventLogBatch,
     arrow_event_log_schema,
     binding_fixture_ids,
     conformance_report,
     ConformanceFixture,
+    from_smoke_bytes,
     fixture_status,
     ffi_status,
     is_ffi_configured,
     ordered_events,
     ready_fixture_ids,
     self_check,
+    to_smoke_bytes,
     version_string
 
 const VERSION_STRING = "0.1.0"
@@ -69,10 +72,32 @@ const _EVENT_LOG_FIELDS = (
 )
 
 function _validate_event(event::EventLogRecord)
+    !isempty(strip(event.run_id)) || throw(ArgumentError("run_id must not be empty"))
+    !isempty(strip(event.event_id)) || throw(ArgumentError("event_id must not be empty"))
     event.time_scale == "ticks" || throw(ArgumentError("time_scale must be ticks"))
+    !isempty(strip(event.event_kind)) || throw(ArgumentError("event_kind must not be empty"))
     event.status in ("dispatched", "cancelled", "skipped", "error") ||
         throw(ArgumentError("unsupported event status: $(event.status)"))
+    if event.payload_ref !== nothing && isempty(strip(event.payload_ref))
+        throw(ArgumentError("payload_ref must not be empty when present"))
+    end
     return event
+end
+
+"""
+    EventLogBatch(records)
+
+Validated event-log batch for the Track 04 `kairo_ecs.event_log.v1` boundary.
+The smoke-byte codec mirrors the Rust/Python lightweight Arrow gate shape while
+the native Arrow.jl IPC path is deferred until Julia tooling is available.
+"""
+struct EventLogBatch
+    records::Vector{EventLogRecord}
+
+    function EventLogBatch(records)
+        validated = [_validate_event(record) for record in records]
+        return new(collect(validated))
+    end
 end
 
 """
@@ -96,6 +121,134 @@ function arrow_event_log_schema()
         schema_version = EVENT_LOG_SCHEMA_VERSION,
         fields = collect(_EVENT_LOG_FIELDS),
     )
+end
+
+function Base.:(==)(left::EventLogBatch, right::EventLogBatch)
+    return left.records == right.records
+end
+
+function _escape_cell(value)
+    text = string(value)
+    return replace(replace(replace(text, "\\" => "\\\\"), "\t" => "\\t"), "\n" => "\\n")
+end
+
+function _unescape_cell(value::AbstractString)
+    output = IOBuffer()
+    index = firstindex(value)
+    while index <= lastindex(value)
+        char = value[index]
+        if char == '\\' && index < lastindex(value)
+            index = nextind(value, index)
+            escaped = value[index]
+            if escaped == 't'
+                print(output, '\t')
+            elseif escaped == 'n'
+                print(output, '\n')
+            elseif escaped == '\\'
+                print(output, '\\')
+            else
+                print(output, '\\')
+                print(output, escaped)
+            end
+        else
+            print(output, char)
+        end
+        index = nextind(value, index)
+    end
+    return String(take!(output))
+end
+
+function _uint128_le_hex(value::UInt128)
+    bytes = UInt8[(value >> (8 * offset)) & 0xff for offset in 0:15]
+    return bytes2hex(bytes)
+end
+
+function _parse_uint128_le_hex(value::AbstractString)
+    bytes = hex2bytes(value)
+    length(bytes) == 16 || throw(ArgumentError("time_ticks must be 16 little-endian bytes"))
+    result = UInt128(0)
+    for (offset, byte) in enumerate(bytes)
+        result |= UInt128(byte) << (8 * (offset - 1))
+    end
+    return result
+end
+
+"""
+    to_smoke_bytes(batch)
+
+Serialize an event-log batch to the repository's dependency-light Arrow smoke
+payload. This is a deterministic table-shaped gate, not a replacement for
+Arrow.jl IPC once the native Julia package lane is available.
+"""
+function to_smoke_bytes(batch::EventLogBatch)
+    lines = [
+        "stream=$(EVENT_LOG_STREAM);schema_version=$(EVENT_LOG_SCHEMA_VERSION)",
+        "schema_version\trun_id\tevent_id\tentity_id\ttime_ticks_le_hex\ttime_scale\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref",
+    ]
+    for record in ordered_events(batch.records)
+        push!(
+            lines,
+            join(
+                [
+                    string(EVENT_LOG_SCHEMA_VERSION),
+                    _escape_cell(record.run_id),
+                    _escape_cell(record.event_id),
+                    _escape_cell(something(record.entity_id, "")),
+                    _uint128_le_hex(record.time_ticks),
+                    _escape_cell(record.time_scale),
+                    string(record.priority),
+                    string(record.sequence),
+                    _escape_cell(record.event_kind),
+                    _escape_cell(record.status),
+                    _escape_cell(something(record.payload_ref, "")),
+                ],
+                "\t",
+            ),
+        )
+    end
+    return Vector{UInt8}(codeunits(join(lines, "\n") * "\n"))
+end
+
+"""
+    from_smoke_bytes(payload)
+
+Deserialize the dependency-light Arrow smoke payload produced by
+`to_smoke_bytes`.
+"""
+function from_smoke_bytes(payload)
+    lines = split(String(payload), '\n'; keepempty = false)
+    expected_header = "stream=$(EVENT_LOG_STREAM);schema_version=$(EVENT_LOG_SCHEMA_VERSION)"
+    length(lines) >= 2 && lines[1] == expected_header ||
+        throw(ArgumentError("unexpected stream header"))
+    expected_fields =
+        "schema_version\trun_id\tevent_id\tentity_id\ttime_ticks_le_hex\ttime_scale\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref"
+    lines[2] == expected_fields || throw(ArgumentError("unexpected field header"))
+
+    records = EventLogRecord[]
+    for line in lines[3:end]
+        cells = split(line, '\t'; keepempty = true)
+        length(cells) == 11 || throw(ArgumentError("expected 11 cells, got $(length(cells))"))
+        parse(UInt16, cells[1]) == EVENT_LOG_SCHEMA_VERSION ||
+            throw(ArgumentError("unsupported schema_version: $(cells[1])"))
+        entity_id = isempty(cells[4]) ? nothing : _unescape_cell(cells[4])
+        payload_ref = isempty(cells[11]) ? nothing : _unescape_cell(cells[11])
+        push!(
+            records,
+            EventLogRecord(
+                run_id = _unescape_cell(cells[2]),
+                event_id = _unescape_cell(cells[3]),
+                entity_id = entity_id,
+                time_ticks = _parse_uint128_le_hex(cells[5]),
+                time_scale = _unescape_cell(cells[6]),
+                priority = parse(Int32, cells[7]),
+                sequence = parse(UInt64, cells[8]),
+                event_kind = _unescape_cell(cells[9]),
+                status = _unescape_cell(cells[10]),
+                payload_ref = payload_ref,
+            ),
+        )
+    end
+    return EventLogBatch(records)
 end
 
 function _string_vector(values)
