@@ -6,7 +6,7 @@ Documented the docs site as a static `website/` build, aligned the site home wit
 
 This R2 docs slice now reflects the implemented crate and binding surfaces, including the preview/native-not-configured binding status, and adds a manifest-driven docs navigation and quality gate backed by `website/docs-link-manifest.json`.
 
-The dependency-light build now emits `website/build/index.html`, source-backed HTML pages for each Markdown navigation target, `website/build/docs-index.json`, `website/build/sitemap.xml`, and `website/build/robots.txt` using only Node.js standard library modules.
+The dependency-light build now emits `website/build/index.html`, source-backed HTML pages for each Markdown navigation target, `website/build/docs-index.json`, `website/build/sitemap.xml`, and `website/build/robots.txt` using only Node.js standard library modules. The Markdown link checker now also validates same-file and cross-file fragment anchors against the rendered heading-id contract for source Markdown pages.
 
 ## Files changed
 
@@ -22,13 +22,14 @@ None.
 
 ## Tests added
 
-Build, repository-doc-tree, navigation-manifest, generated-index, generated-page-count, size-budget, binding-link, and docs-link-manifest checks are specified in `test-matrix.md`.
+Build, repository-doc-tree, navigation-manifest, generated-index, generated-page-count, size-budget, binding-link, fragment-anchor, and docs-link-manifest checks are specified in `test-matrix.md`.
 
 ## Validation evidence
 
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/14-docs-site-education/validate-docs-site.ps1`
 - `npm --prefix website ci`
 - `npm --prefix website run check:links`
+- `node website/scripts/check-links.js --self-test`
 - `npm --prefix website run build`
 - `npm --prefix website run check:quality`
 - `npm --prefix website run check:all`
@@ -47,7 +48,7 @@ The notebook validator initially found a stale assertion in `notebooks/python_sc
 
 ## Known risks
 
-The site currently renders static HTML pages for the manifest navigation targets, but it does not yet render every Markdown file under `docs/`. The link checker validates source Markdown targets, required paths, and manifest navigation targets; generated HTML anchor validation remains a future enhancement.
+The site currently renders static HTML pages for the manifest navigation targets, but it does not yet render every Markdown file under `docs/`. The link checker validates source Markdown targets, source Markdown fragment anchors, required paths, and manifest navigation targets; full generated HTML fragment crawling remains a future enhancement.
 
 ## Integration notes
 
@@ -60,7 +61,7 @@ link manifest paths, site sources, generated navigation, quality outputs, and cu
 
 ## Follow-up issues
 
-Generated HTML anchor validation remains the main follow-up; current evidence covers source Markdown targets, required paths, manifest navigation targets, and generated docs outputs.
+Full generated HTML fragment crawling remains the main follow-up; current evidence covers source Markdown targets, source Markdown heading anchors, required paths, manifest navigation targets, and generated docs outputs.
 ## Phase closeout evidence
 
 Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.

@@ -10,6 +10,7 @@
 - Conformance runs the Track 12-20 evidence check so release, citation, benchmark, and supply-chain evidence cannot be skipped silently.
 - Track 13 metadata alignment validates `conductor/tracks.yaml` without changing track statuses and maps `workflow-presence`, `cargo-metadata`, and `dependency-policy` to checked-in workflow evidence.
 - Track 13 metadata alignment dynamically inventories every checked-in `.github/workflows/*.yml` file, requires an explicit workflow `name`, `on`, and top-level `permissions` block, and verifies both `ci-policy.yml` and `workflow-security.yml` list every workflow.
+- The offline supply-chain gate runs `scripts/validate_track13_supply_chain.ps1`, which executes the Track 13 metadata validator, `cargo metadata --no-deps --format-version 1`, and the advisory scanners when `cargo-deny` or `cargo-audit` are installed locally.
 - Validate Conductor runs on both `ubuntu-latest` and `windows-latest` so PowerShell and Node validators are exercised cross-platform.
 - Package dry-runs and binding CI fail when their own manifests are missing instead of skipping quietly.
 - TypeScript binding smoke runs its declared scripts instead of treating them as optional.
@@ -29,6 +30,7 @@ cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo nextest run --workspace --all-features
 cargo doc --workspace --all-features --no-deps
+pwsh -NoProfile -File scripts/validate_track13_supply_chain.ps1
 for f in .github/workflows/*.yml; do test -s "$f"; done
 node tests/conformance/conformance-check.mjs
 node tests/conformance/track07_13_hardening_check.mjs

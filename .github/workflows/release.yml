@@ -58,6 +58,8 @@ jobs:
           cargo test --workspace --all-features --no-run
           cargo package --allow-dirty --workspace
           cargo publish --dry-run --workspace
+      - name: Validate release delivery gate
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1
       - name: Build release manifest
         env:
           RELEASE_VERSION: ${{ github.event.inputs.version }}

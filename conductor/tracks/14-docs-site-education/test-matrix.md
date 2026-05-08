@@ -5,6 +5,7 @@
 - `npm ci` in `website`
 - `npm run build` in `website`
 - `npm run check:links` in `website`
+- `node website/scripts/check-links.js --self-test`
 - `npm run check:quality` in `website`
 - `npm run check:all` in `website`
 - `node docs/assets/validate-playground-figures.mjs`
@@ -18,6 +19,7 @@
 - The site home includes tutorial/example, notebook/figure, quickstart, release, compatibility, citation, and quality-gate concepts.
 - The docs link manifest covers implemented crate, binding, docs, and examples entry points.
 - The docs link manifest drives navigation sections and quality expectations without external dependencies.
+- Markdown fragment links resolve to rendered heading anchors for same-file and cross-file source links.
 - The notebook tutorial surface includes runnable Python scheduler and reproducible benchmark/scenario notebooks with local figures only.
 - Playground figures include committed SVG assets, non-empty alt text, and explicit source notes.
 - Docs source files remain under `docs/` and `website/`.
@@ -39,6 +41,7 @@ test -f build/sitemap.xml
 test -f build/robots.txt
 rg -n "docs/README|docs/adr|docs/community|docs/release|docs/research|docs/benchmarks|docs/trustworthy-simulation|docs/design|docs/interoperability|bindings/python|bindings/r|bindings/julia|bindings/typescript|bindings/csharp|bindings/go|Tutorials and Examples|Jupyter notebooks and figures|check:quality" src/index.md
 cd ..
+node website/scripts/check-links.js --self-test
 node docs/assets/validate-playground-figures.mjs
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/14-docs-site-education/validate-docs-site.ps1
 node tests/conformance/track12_20_evidence_check.mjs
@@ -66,6 +69,7 @@ python notebooks\validate_notebooks.py
 - 2026-05-07: `python notebooks\validate_notebooks.py` passed for 2 notebooks after updating `notebooks/python_scheduler_tutorial.ipynb` to match the current Python scheduler stats contract.
 - 2026-05-07: build output checks passed for `website/build/index.html`, `website/build/docs-index.json`, `website/build/sitemap.xml`, and `website/build/robots.txt`.
 - 2026-05-07: `website/build/docs-index.json` reported 79 entries and 79 generated manifest-backed pages.
+- 2026-05-08: `node website/scripts/check-links.js --self-test` passed for same-file and cross-file Markdown fragment anchor validation.
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

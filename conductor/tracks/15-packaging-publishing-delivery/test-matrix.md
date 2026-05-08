@@ -6,6 +6,7 @@
 - Registry plan coverage for each ecosystem's first target and fallback.
 - Dry-run coverage for every ecosystem that supports packaging locally.
 - Docs coverage for any change to package naming, registry order, or release policy.
+- Release-delivery gate coverage for the workflow step that runs before artifact upload.
 - No-production-publish check: the track must not introduce live publish commands.
 - No-publish-manifest check: the first local sequence must not add publish or publication manifest files.
 - Aggregate Track 12-20 evidence check: the package manifest remains dry-run only and wired into conformance CI.
@@ -18,6 +19,7 @@ rg -n "dry-run|draft only|preview|reservation|fallback" conductor/package-matrix
 python packaging/scripts/build_release_manifest.py --check
 python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1
 node tests/conformance/track12_20_evidence_check.mjs
 ```
 
@@ -44,6 +46,11 @@ enabled.
 release stage, disabled production publishing flag, fallback entries, manifest
 paths, expected release evidence output paths, the ordered local dry-run
 sequence, and the absence of publish manifest files.
+
+`scripts/validate_track15_release_delivery.ps1` reuses the packaging dry-run
+validator, checks that the release workflow runs the Track 15 delivery gate
+before `Upload artifacts`, and records the current blocker state when SBOM or
+provenance evidence is not yet present.
 
 ## First local sequence
 
