@@ -439,7 +439,7 @@ entries:
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\06-python-binding-310-314\\validate-bindings06-11.ps1"
     git_status: "clean after commit 171d7c5fa1304b99cdea09d2c7028dc5df755377"
     commit_sha: "171d7c5fa1304b99cdea09d2c7028dc5df755377"
-    pushed_ref: "pending: push to origin/main will be attempted after this final status update"
+    pushed_ref: "origin/main"
     next_phase_decision: "Track 09 is Done for the TypeScript/Wasm package slice. Optional wasm-export/wasm-pack validation remains future toolchain work because the wasm-bindgen feature path still depends on local Windows linker setup."
   - track_id: "16"
     phase: "track-closeout"
