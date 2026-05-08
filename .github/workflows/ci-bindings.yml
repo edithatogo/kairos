@@ -92,7 +92,7 @@ jobs:
       - name: C# smoke
         run: |
           test -f bindings/csharp/Kairo.ECS.sln
-          dotnet test bindings/csharp/Kairo.ECS.sln -c Release -f ${{ matrix.target-framework }}
+          dotnet test bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -c Release -f ${{ matrix.target-framework }}
 
   go:
     name: Go binding
