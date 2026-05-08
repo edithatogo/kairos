@@ -85,6 +85,15 @@ Track 02 advanced from `In Progress` to `In Review` after focused bridge validat
 - Focused validation passed: `cargo +stable-x86_64-pc-windows-gnu check --tests -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat`, `cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat`, and `cargo +stable-x86_64-pc-windows-gnu metadata --no-deps --format-version 1`.
 - Generated UniFFI/Diplomat golden outputs, Track 04 Arrow IPC telemetry, and package publication remain later-track work, not blockers for this implementation closeout.
 
+## Track 03 fixture hardening (2026-05-08)
+
+Track 03 remains `In Progress`, with two named DES/ABM implementation fixtures now linked into the Conductor evidence trail:
+
+- `des_resource_queue_v1` covers FIFO resource admission and fixed-tick trajectory ordering.
+- `abm_behavior_update_v1` covers scheduler-ordered behavior updates and deterministic per-agent RNG replay.
+- Focused validation passed: `cargo +stable-x86_64-pc-windows-gnu fmt -p kairo-ecs-abm -p kairo-ecs-des --check`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
+- Shared fixture files under `conformance/fixtures/` remain future Track 03/12 integration work, not claimed as complete by this hardening pass.
+
 ## Track 05 closeout (2026-05-08)
 
 Track 05 is closed as `Done` after Worker B review closeout confirmed the headless visualization release slice:

@@ -30,6 +30,13 @@ pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo
 - Passed: `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo`.
 - Passed: `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo`.
 - Blocked outside Track 03: `cargo fmt --all --check` reports unrelated formatting diffs in `crates/kairo-ecs-arrow`, `crates/kairo-ecs-debug`, `crates/kairo-ecs-rng`, `crates/kairo-ecs-types`, and `crates/kairo-ecs-wasm`.
+
+## 2026-05-08 fixture-hardening validation
+
+- Passed: `cargo +stable-x86_64-pc-windows-gnu fmt -p kairo-ecs-abm -p kairo-ecs-des --check`.
+- Passed: `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm`, including `des_resource_queue_v1` and `abm_behavior_update_v1`.
+- Passed: `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
+- Not claimed: shared fixture files under `conformance/fixtures/`; those remain follow-up work with Track 12 alignment.
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
