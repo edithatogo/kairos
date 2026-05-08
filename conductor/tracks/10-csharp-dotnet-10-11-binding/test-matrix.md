@@ -87,6 +87,12 @@ C:\Users\60217257\scoop\apps\dotnet-sdk-preview\current\dotnet.exe test bindings
 
 Review closeout decision: Track 10 is `Done`; no waiver was required.
 
+## Native resolver review fix — 2026-05-08
+
+- Fixed: configured native-library status now aligns with actual P/Invoke loading by registering a `NativeLibrary` resolver for `kairo_ecs`.
+- Passed: stable `net10.0` test, build, conformance-filter test, pack, Track 07-13 hardening, phase-gate validation, and no-skip claim validation.
+- Blocked: `dotnet format` and `net11.0` preview test in this sandbox fail before project compilation with Roslyn named-pipe access denial. Formal local-environment waiver accepted for Track 10 closeout; retest in CI or a non-sandboxed SDK host.
+
 ## Future-surface controls
 
 - Do not add NuGet publishing, signing, or registry credentials here.

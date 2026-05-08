@@ -28,27 +28,29 @@ Next integration dependency:
 
 ## 2026-05-08 optional Arrow and package-gate review
 
-Status: In progress, binding slice strengthened but not advanced because required local gates remain blocked.
+Status: Advanced to In Review after implementation closeout. The wheel/sdist gate now passes outside the sandbox; the real pyarrow table gate remains blocked by a local Windows DLL-load failure after workspace-local installation.
 
 Implemented within `bindings/python/` and `packaging/python/`:
 
 - Optional pyarrow table roundtrip facade for the Track 04 `kairo_ecs.event_log.v1` field order.
 - `kairo-ecs[arrow]` optional dependency metadata for installing `pyarrow` without making the default import path heavy.
-- Packaging note documenting the current wheel-build blocker and optional Arrow dependency boundary.
+- Packaging note documenting the successful local package build and optional Arrow runtime boundary.
+- Package metadata now uses the SPDX string license form accepted by current setuptools without the deprecated TOML-table warning.
+- The optional pyarrow test now skips only when `pyarrow` is absent; a broken installed `pyarrow` fails the gate instead of being masked as a skip.
 
 Validation from `bindings/python/`:
 
-- `python -m pytest -q` — pass with `15 passed, 1 skipped`; the skip is the optional pyarrow table roundtrip because `pyarrow` is not installed locally. The known pytest cache warning remains.
+- `python -m pytest -q` — pass with `15 passed, 1 skipped`; the skip is the optional pyarrow table roundtrip because `pyarrow` is not installed on the default interpreter path. The known pytest cache warning remains.
 - `python -m ruff check .` — pass.
 - `python -m compileall kairo_ecs tests` — pass.
 - `python -c "import kairo_ecs; print(kairo_ecs.self_check())"` — pass.
 - `python -m pip check` — pass.
-- `python -c "import pyarrow, sys; print(pyarrow.__version__)"` — blocked by missing dependency: `ModuleNotFoundError: No module named 'pyarrow'`.
-- `python -m build --sdist --wheel` — blocked by local temp venv ACL denial before package build.
-- `python -m build --sdist --wheel --no-isolation` — blocked by local backend hook temp-file ACL denial, including after pointing `TEMP`/`TMP` at package-local `.tmp`.
-- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` — pass.
+- `pwsh -NoProfile -Command '$env:TEMP=(Resolve-Path ''.tmp'').Path; $env:TMP=$env:TEMP; python -m build --sdist --wheel'` — pass outside the sandbox; built `kairo_ecs-0.1.0.tar.gz` and `kairo_ecs-0.1.0-py3-none-any.whl`.
+- `pwsh -NoProfile -Command '$env:TEMP=(Resolve-Path ''.tmp'').Path; $env:TMP=$env:TEMP; python -m pip install pyarrow --target .tmp\pyarrow-site --cache-dir .tmp\pip-cache'` — pass outside the sandbox; installed `pyarrow-24.0.0`.
+- `pwsh -NoProfile -Command '$env:PYTHONPATH=(Resolve-Path ''.tmp\pyarrow-site'').Path; python -m pytest -q tests\test_arrow.py::test_event_log_batch_round_trips_pyarrow_table'` — fail; `pyarrow.lib` cannot load a required DLL on this host.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` — pass after updating the validator for SPDX license metadata.
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` — pass.
 
 Next integration dependency:
 
-- Rerun wheel-build and real pyarrow roundtrip gates in an environment with writable temp hook directories and `pyarrow` installed.
+- Resolve the local `pyarrow.lib` DLL-load failure, then rerun the real pyarrow table roundtrip gate before any Done closeout.

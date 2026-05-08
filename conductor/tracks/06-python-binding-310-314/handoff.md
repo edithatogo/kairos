@@ -54,11 +54,11 @@ Python binding now has a minimal real R2 slice that is importable on the local i
 - Native-extension or wheel build drift if package metadata lands before the API stabilizes.
 - Cross-language expectations creeping in before the shared fixture contract is finished.
 - Current validation ran on the locally available interpreter only; the full 3.10-3.14 matrix remains a CI responsibility.
-- `python -m build --sdist --wheel` could not complete locally because isolated venv creation and build-hook temp-file writes are denied under the available temp paths.
-- `pyarrow` is not installed in the local interpreter, so the real Arrow table roundtrip gate is implemented but locally skipped until `kairo-ecs[arrow]` or `pyarrow` is available.
+- `python -m build --sdist --wheel` passes outside the sandbox with `TEMP`/`TMP` pointed at package-local `.tmp`; sandboxed attempts still hit ACL failures before project code runs.
+- A workspace-local `pyarrow-24.0.0` install succeeds, but importing `pyarrow.lib` fails with a Windows DLL-load error on this host, so the real Arrow table roundtrip gate remains blocked until the missing runtime dependency is resolved.
 - `python -m pip install --dry-run .` was attempted as a metadata fallback and blocked by local temp build-tracker permissions before metadata resolution.
-- The failed build attempts left `bindings/python/.tmp/pybuild` with access-denied subdirectories; remove it from a shell with sufficient permissions if it appears in local cleanup.
-- The cross-binding validator `validate-bindings06-11.ps1` currently fails on Go Track 11 static expectations; this pass did not modify `bindings/go` because Track 06 owns only `bindings/python`.
+- Generated `bindings/python/build`, `bindings/python/kairo_ecs.egg-info`, and `bindings/python/.tmp` artifacts were removed after validation; `.tmp` required an out-of-sandbox cleanup because failed build-env folders inherited denied ACLs.
+- The cross-binding validator `validate-bindings06-11.ps1` passes after the Track 06 metadata expectation was updated for SPDX string license syntax.
 
 ## Integration notes
 
@@ -72,14 +72,14 @@ Python binding now has a minimal real R2 slice that is importable on the local i
 No additional follow-up issues were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-2026-05-08 review pass:
+2026-05-08 implementation closeout rerun:
 
-- `$conductor-review` finding: no in-scope code defect found in the preview scheduler or optional Arrow facade. Track 06 cannot advance because the wheel-build gate is blocked by local temp-directory ACL failures and the real pyarrow roundtrip gate cannot execute until `pyarrow` is installed.
-- Accepted fixes applied inside Track 06 ownership: added optional `EventLogBatch.to_pyarrow_table()` / `from_pyarrow_table()`, an optional pytest roundtrip, `kairo-ecs[arrow]` extra metadata, and packaging notes.
-- Deferred or blocked fixes: native FFI loading remains gated on Track 02/15 artifacts; isolated and non-isolated wheel builds remain locally blocked by filesystem permissions; pyarrow execution remains dependency-blocked.
-- Validation commands: `python -m pytest -q`, `python -m ruff check .`, `python -m compileall kairo_ecs tests`, `python -c "import kairo_ecs; print(kairo_ecs.self_check())"`, `python -m pip check`, `python -c "import pyarrow, sys; print(pyarrow.__version__)"`, `python -m build --sdist --wheel`, `python -m build --sdist --wheel --no-isolation`, a retry with `TEMP`/`TMP` pointed at package-local `.tmp`, `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
-- Phase-gate result: passed after Track 06 closeout markers were made explicit.
+- `$conductor-review` finding: the optional pyarrow test masked broken installed `pyarrow` as a skip, and build emitted a setuptools deprecation warning for TOML-table license metadata. Both were fixed in owned files.
+- Accepted fixes applied inside Track 06 ownership: changed `pyproject.toml` to SPDX string license metadata, tightened `pytest.importorskip` to skip only `ModuleNotFoundError`, updated the cross-binding validator expectation, and refreshed Track 06 packaging/status docs.
+- Deferred or blocked fixes: native FFI loading remains gated on Track 02/15 artifacts; real pyarrow execution remains blocked by a local Windows DLL-load failure after `pyarrow-24.0.0` installs into `.tmp\pyarrow-site`.
+- Validation commands: `python -m pytest -q`, `python -m ruff check .`, `python -m compileall kairo_ecs tests`, `python -c "import kairo_ecs; print(kairo_ecs.self_check())"`, `python -m pip check`, `pwsh -NoProfile -Command '$env:TEMP=(Resolve-Path ''.tmp'').Path; $env:TMP=$env:TEMP; python -m build --sdist --wheel'`, `pwsh -NoProfile -Command '$env:TEMP=(Resolve-Path ''.tmp'').Path; $env:TMP=$env:TEMP; python -m pip install pyarrow --target .tmp\pyarrow-site --cache-dir .tmp\pip-cache'`, `pwsh -NoProfile -Command '$env:PYTHONPATH=(Resolve-Path ''.tmp\pyarrow-site'').Path; python -m pytest -q tests\test_arrow.py::test_event_log_batch_round_trips_pyarrow_table'`, `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
+- Phase-gate result: passed (`pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1`).
 - Commit SHA: blocked; no commit was created in this pass because required gates did not all pass.
 - Pushed ref: blocked; no push was attempted.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: not run because the workspace contains unrelated worker edits and Track 06 remains blocked.
-- Next-phase decision: keep Track 06 `In Progress` until the wheel-build gate and real Arrow table gate can be rerun in an environment with writable temp hooks and `pyarrow`.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: not run because the workspace contains unrelated worker edits and Track 06 still has an external pyarrow runtime blocker.
+- Next-phase decision: Track 06 is `In Review`; do not move to `Done` until the real pyarrow table roundtrip passes or an explicit release-manager waiver records the local DLL-load blocker.

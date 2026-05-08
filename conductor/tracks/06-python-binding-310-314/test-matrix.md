@@ -82,10 +82,31 @@ Run from `bindings/python/` unless otherwise stated:
 | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` | Pass | Cross-binding static facade and metadata guard passed; native runtime loading remains intentionally out of scope. |
 | `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | Pass | Passed after Track 06 closeout markers were made explicit. |
 
+## Validation evidence — 2026-05-08 implementation closeout rerun
+
+Run from `bindings/python/` unless otherwise stated:
+
+| Command | Result | Notes |
+|---|---:|---|
+| `python -m pytest -q` | Pass with skip | `15 passed, 1 skipped`; the skip is the optional pyarrow table roundtrip because `pyarrow` is not installed on the default interpreter path. Pytest still emitted the known cache write warning. |
+| `python -m ruff check .` | Pass | All checks passed. |
+| `python -m compileall kairo_ecs tests` | Pass | Syntax check passed for package and tests. |
+| `python -c "import kairo_ecs; print(kairo_ecs.self_check())"` | Pass | Returned package/version/status and FFI `not_configured`. |
+| `python -m pip check` | Pass | `No broken requirements found.` |
+| `pwsh -NoProfile -Command '$env:TEMP=(Resolve-Path ''.tmp'').Path; $env:TMP=$env:TEMP; python -m build --sdist --wheel'` | Pass outside sandbox | Built `kairo_ecs-0.1.0.tar.gz` and `kairo_ecs-0.1.0-py3-none-any.whl`; using a package-local temp directory removed the previous sandbox ACL blocker. |
+| `pwsh -NoProfile -Command '$env:TEMP=(Resolve-Path ''.tmp'').Path; $env:TMP=$env:TEMP; python -m pip install pyarrow --target .tmp\pyarrow-site --cache-dir .tmp\pip-cache'` | Pass outside sandbox | Installed `pyarrow-24.0.0` into a workspace-local target. |
+| `pwsh -NoProfile -Command '$env:PYTHONPATH=(Resolve-Path ''.tmp\pyarrow-site'').Path; python -m pytest -q tests\test_arrow.py::test_event_log_batch_round_trips_pyarrow_table'` | Blocked | The stricter optional gate now fails because `pyarrow.lib` cannot load a required DLL on this host. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` | Pass | Cross-binding static facade and metadata guard passed after updating the Python license expectation to SPDX string form. |
+| `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` | Pass | Conductor phase gate validation passed with 0 errors and 0 warnings. |
+
+## Remaining Done blocker
+
+- Real pyarrow table roundtrip is implemented and no longer silently skipped when `pyarrow` is broken, but it cannot pass on this host until the missing Windows DLL/runtime dependency for `pyarrow.lib` is resolved.
+
 ## CI command
 
 ```bash
-python -m pytest -q && python -m compileall kairo_ecs tests && python -c "import kairo_ecs; print(kairo_ecs.self_check())"
+python -m pytest -q && python -m compileall kairo_ecs tests && python -c "import kairo_ecs; print(kairo_ecs.self_check())" && python -m build --sdist --wheel
 ```
 ## Phase closeout gate
 

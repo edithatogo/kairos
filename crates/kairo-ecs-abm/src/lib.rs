@@ -153,6 +153,9 @@ impl<B: AgentBehavior> BehaviorSimulation<B> {
             match self.context.scheduler.step() {
                 StepOutcome::Dispatched(event) => {
                     if let Some(agent) = event.entity {
+                        if !self.context.world.is_alive(agent) {
+                            continue;
+                        }
                         let stream = self.streams.entry(agent).or_insert_with(|| {
                             DeterministicStream::from_entity(self.run_seed, agent)
                         });
@@ -307,6 +310,27 @@ mod tests {
         let (context, _behavior) = sim.into_parts();
 
         assert_eq!(trace.updates()[0].decision, BehaviorDecision::Despawn);
+        assert!(!context.world.is_alive(agent));
+    }
+
+    #[test]
+    fn despawned_agent_future_events_do_not_update_behavior() {
+        let mut sim = BehaviorSimulation::new(
+            0,
+            CountingBehavior {
+                seen: Vec::new(),
+                despawn_after: Some(1),
+            },
+        );
+        let agent = sim.spawn_agent();
+        sim.schedule_update(agent, SimTime::from_ticks(1));
+        sim.schedule_update(agent, SimTime::from_ticks(2));
+
+        let trace = sim.run_for(2);
+        let (context, behavior) = sim.into_parts();
+
+        assert_eq!(trace.len(), 1);
+        assert_eq!(behavior.seen.len(), 1);
         assert!(!context.world.is_alive(agent));
     }
 }

@@ -89,3 +89,10 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 - Cleanup state: strict clean-tree closeout was not run because the shared worktree already contains unrelated staged and unstaged edits across other tracks.
 - Commit SHA / pushed ref: `ee8c123e0a6dddd27986e7e657642190ee4f2560` on `origin/main` is the current base for this local review closeout pass.
 - Next-phase decision: Track 03 is `Done`; future shared conformance fixture exports, hybrid scenarios, and model-zoo examples should be handled by Track 12/23 follow-up work.
+
+2026-05-08 ABM despawn regression fix:
+
+- `$conductor-review` result: one high-severity behavioral bug was found in `BehaviorSimulation::run_for`; a future queued update could still invoke behavior for an agent already despawned by an earlier update.
+- Accepted fixes: skip non-live agents before resolving per-agent RNG streams and invoking behavior callbacks, and add a regression test for despawned-agent future events.
+- Validation commands: `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm --test abm_behavior_update_v1` and `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm`.
+- Next-phase decision: Track 03 remains `Done`.

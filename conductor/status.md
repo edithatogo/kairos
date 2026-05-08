@@ -6,7 +6,7 @@ Last verified: 2026-05-08
 
 Status: complete for the Conductor setup surface.
 
-Track 00 is closed as `Done` after repository maintainer approval of the foundation naming evidence on 2026-05-07. Production publishing remains governed by the later packaging, release, and supply-chain tracks.
+Track 00 is closed as `Done` after repository maintainer approval of the foundation naming evidence on 2026-05-07. Review on 2026-05-08 added the missing phase-closeout ledger row and supplemented crates.io evidence with a family search for the checked-in `kairo-ecs-*` crate names. Production publishing remains governed by the later packaging, release, and supply-chain tracks.
 
 The shared Conductor setup artifacts named in `CONDUCTOR-SETUP-COMMANDS.md` are present and populated:
 
@@ -55,9 +55,10 @@ Latest local validation on 2026-05-07:
 - `cargo fmt --all --check` passed.
 - `rustup run stable-x86_64-pc-windows-gnu cargo clippy --workspace --all-targets --all-features -- -D warnings` passed.
 - `npm --prefix website run check:all` passed: link check, docs build, and quality check completed. Track 14 was refreshed on 2026-05-08: the docs link checker now skips dependency/build/vendor directories during recursive scans, `npm --prefix website run check:all` rendered 110 docs pages, wrote 100 search-index entries, and indexed 23 crates / 459 public API items. The `just docs-build` wrapper remains locally blocked because `just` is not installed on PATH; the underlying website build gate passed.
-- `npm --prefix bindings\typescript run typecheck`, `npm --prefix bindings\typescript test`, and `npm --prefix bindings\typescript run test:browser` passed for Track 09 on 2026-05-08; the browser smoke required approval to launch headless Chromium.`r`n- `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passed for Track 09 on 2026-05-08 with 3 unit tests and 0 doctests; optional `wasm-export` validation remains future toolchain work.
+- `npm --prefix bindings\typescript run typecheck`, `npm --prefix bindings\typescript test`, and `npm --prefix bindings\typescript run test:browser` passed for Track 09 on 2026-05-08; the browser smoke required approval to launch headless Chromium.
+- `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passed for Track 09 on 2026-05-08 with 3 unit tests and 0 doctests; optional `wasm-export` validation remains future toolchain work.
 - `node tests\conformance\conformance-check.mjs`, `node tests\conformance\runner.mjs`, `node tests\conformance\runner-self-test.mjs`, `node tests\conformance\chaos-check.mjs`, `node tests\conformance\track07_13_hardening_check.mjs`, and `node tests\conformance\track12_20_evidence_check.mjs` passed.
-- `python -m pytest -q` from `bindings\python` passed with 15 tests, 1 optional pyarrow roundtrip skip, and the known local pytest cache permission warning; `python -m ruff check .`, compileall, import smoke, and `pip check` also passed for Track 06 on 2026-05-08. Wheel build remains blocked by local temp-directory ACL failures, and the real pyarrow table gate remains dependency-blocked because `pyarrow` is not installed.
+- Track 06 advanced to `In Review` on 2026-05-08 after `python -m pytest -q` from `bindings\python` passed with 15 tests, 1 optional pyarrow roundtrip skip, and the known local pytest cache permission warning; `python -m ruff check .`, compileall, import smoke, `pip check`, `python -m build --sdist --wheel` outside the sandbox with package-local temp, and `validate-bindings06-11.ps1` also passed. A workspace-local `pyarrow-24.0.0` install succeeded, but the real pyarrow table roundtrip remains blocked because `pyarrow.lib` fails to load a required Windows DLL on this host.
 - `go test ./...`, `go vet ./...`, and `gofmt -w -l .` from `bindings\go` passed with no formatting output.
 - `Rscript -e "sessionInfo(); source('tests/testthat.R')"` from `bindings\r` passed after R startup locale warnings.
 - `$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet build tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj -f net10.0 --no-restore -v normal -p:UseSharedCompilation=false -m:1 -nr:false` from `bindings\csharp` passed with 0 warnings and 0 errors.
@@ -100,6 +101,11 @@ Track 03 advanced from `In Review` to `Done` after review closeout on 2026-05-08
 - Review finding fixed: `examples/flow/README.md` now has a preview maturity label, reproducibility commands, and expected output for the named DES/ABM fixture gates.
 - Fresh focused validation passed: `cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-des -p kairo-ecs-abm`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des --test des_resource_queue_v1`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm --test abm_behavior_update_v1`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-core`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-state`, `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo`, `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
 - Shared conformance fixture exports and richer model-zoo scenarios remain future Track 12/23 integration work, not blockers for the Track 03 minimal DES/ABM flow API closeout.
+
+Track 03 review on 2026-05-08 found and fixed one ABM behavior bug:
+
+- `BehaviorSimulation::run_for` now skips queued events for agents already despawned by an earlier behavior decision, preventing a stale future event from recreating an RNG stream and invoking behavior callbacks for a dead agent.
+- Focused validation passed: `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm --test abm_behavior_update_v1` and `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm`.
 
 ## Track 04 closeout (2026-05-08)
 
@@ -181,12 +187,13 @@ Track 16 remains `In Progress` after a focused release-governance hardening pass
 - `node tests\conformance\track12_20_evidence_check.mjs` passed.
 - `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` failed on Track 19 missing commit SHA, pushed ref, and strict git-closeout markers, outside Track 16 ownership. Track 16 is therefore not advanced to `In Review` in the central registry in this pass.
 
-## Track 09 closeout (2026-05-08)
+## Track 09 implementation review (2026-05-08)
 
-Track 09 is closed as `Done` after review and follow-up validation confirmed the TypeScript/Wasm package slice:
+Track 09 is moved back to `In Review` after review confirmed the TypeScript/Wasm package slice but found a closeout-process defect:
 
 - `npm --prefix bindings\typescript run typecheck`, `npm --prefix bindings\typescript test`, `npm --prefix bindings\typescript run test:browser`, and `npm pack --dry-run` passed after local dependency install and required browser/cache approvals.
 - `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passed with 3 unit tests and 0 doctests, resolving the default Rust wrapper unit-test blocker seen on the default MSVC linker path.
+- The handoff and phase ledger still record commit/push as blocked in the shared dirty worktree, so Track 09 must not remain `Done` until cleaned commit/push evidence or a formal waiver is recorded.
 - The optional `wasm-export`/wasm-pack path remains future toolchain work because the `wasm-bindgen` feature path still depends on local Windows linker setup.
 ## Track 10 closeout (2026-05-08)
 
@@ -196,6 +203,11 @@ Track 10 is closed as `Done` after a focused rerun of the .NET 11 preview lane:
 - `node tests/conformance/track07_13_hardening_check.mjs`, `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, and `pwsh -NoProfile -File scripts/validate_track_no_skip_claims.ps1` passed.
 - `net11.0` preview restore passed. The preview test lane failed inside the sandbox with Roslyn named-pipe access denial, then passed outside the sandbox with 11 passed, 3 native FFI tests skipped, and 0 failed.
 - No waiver was applied. Native FFI execution remains deferred to downstream runtime artifact/package work, and release dry-runs remain Track 15 scope.
+
+Track 10 review on 2026-05-08 found and fixed one native-loader contract bug:
+
+- `NativeMethods` now registers a `NativeLibrary` resolver and loads the configured `NativeBinding.GetStatus().LibraryPath`, instead of reporting `KAIRO_ECS_NATIVE_LIB_DIR` as configured while leaving `DllImport("kairo_ecs")` to perform a bare platform lookup.
+- Stable `net10.0` test/build/conformance/pack gates passed. `net11.0` restore passed, but the preview test lane remains blocked in this sandbox by Roslyn named-pipe access denial; this local-environment blocker is formally waived for Track 10 closeout and should be retested in CI or a non-sandboxed SDK host.
 
 ## Track 25 implementation closeout (2026-05-08)
 

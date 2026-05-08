@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
@@ -9,6 +10,27 @@ namespace Kairo.ECS;
 public static class NativeMethods
 {
     private const string DllName = "kairo_ecs";
+
+    static NativeMethods()
+    {
+        NativeLibrary.SetDllImportResolver(typeof(NativeMethods).Assembly, ResolveNativeLibrary);
+    }
+
+    private static IntPtr ResolveNativeLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+    {
+        if (!string.Equals(libraryName, DllName, StringComparison.Ordinal))
+        {
+            return IntPtr.Zero;
+        }
+
+        var status = NativeBinding.GetStatus();
+        if (status is { IsConfigured: true, LibraryPath: not null })
+        {
+            return NativeLibrary.Load(status.LibraryPath, assembly, searchPath);
+        }
+
+        return IntPtr.Zero;
+    }
 
     /// <summary>
     /// Gets the native FFI contract version.

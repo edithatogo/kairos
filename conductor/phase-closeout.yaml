@@ -19,6 +19,21 @@ required_fields:
   - pushed_ref
   - next_phase_decision
 entries:
+  - track_id: "00"
+    phase: "track-closeout"
+    state: closed
+    review_command: "$conductor-review"
+    review_result: "Track 00 remains Done after review found two closeout evidence gaps: the phase ledger lacked a Track 00 row and the crates.io live evidence covered only the root name. Both gaps were fixed by adding this ledger entry and recording a 2026-05-08 crates.io family search for the checked-in kairo-ecs crate names."
+    fixes_applied: true
+    validation_commands:
+      - "cargo search kairo-ecs --limit 20"
+      - "cargo metadata --no-deps --format-version 1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "dirty: Track 00 closeout evidence updates plus in-flight Track 03, 06, and 10 review fixes pending commit"
+    commit_sha: "e0a280695f2b185f08601b27f9a0045b0de64d9d"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 00 is Done for foundation naming closeout; refresh exact registry, trademark, domain, and legal evidence before production registry/domain publication."
   - track_id: "01"
     phase: "track-closeout"
     state: closed
@@ -58,20 +73,21 @@ entries:
     phase: "track-closeout"
     state: closed
     review_command: "$conductor-review"
-    review_result: "Track 03 advanced to Done after review closeout confirmed the DES trajectory API, ABM behavior API, named fixture gates, flow example documentation evidence, and focused validation gates."
+    review_result: "Track 03 remains Done after review found and fixed a DES/ABM behavior bug: queued future updates for a despawned agent could still invoke behavior callbacks. The run loop now skips non-live agents before resolving per-agent RNG streams, with regression coverage."
     fixes_applied: true
     validation_commands:
       - "cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-des -p kairo-ecs-abm"
       - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des --test des_resource_queue_v1"
       - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm --test abm_behavior_update_v1"
+      - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm"
       - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm"
       - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-core"
       - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-state"
       - "pwsh -NoProfile -File scripts/validate_conductor_setup.ps1 -SkipCargo"
       - "pwsh -NoProfile -File scripts/validate_track_coverage.ps1 -SkipCargo"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: "dirty: Track 03 review closeout docs plus unrelated local changes from other tracks pending commit"
-    commit_sha: "6808d6c0cc1e669eb83a56fe0a71ccb9b6720452"
+    git_status: "dirty: Track 03 ABM fix plus Track 00, 06, 09, and 10 review/status updates pending commit"
+    commit_sha: "e0a280695f2b185f08601b27f9a0045b0de64d9d"
     pushed_ref: "origin/main"
     next_phase_decision: "Track 03 is Done; future shared conformance fixture exports, hybrid DES/ABM scenarios, and model-zoo examples should be handled by Track 12/23 follow-up work rather than reopening this minimal flow API closeout."
   - track_id: "04"
@@ -120,10 +136,10 @@ entries:
     pushed_ref: "origin/main"
     next_phase_decision: "Track 05 is Done. Future native WGPU/Bevy rendering or browser UX work should be opened as a new track or handled by Track 24 rather than reopening this headless release slice."
   - track_id: "06"
-    phase: "track-closeout"
+    phase: "implementation-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "No in-scope code defect found in the preview scheduler or optional Arrow facade. Track 06 remains In Progress because wheel-build is blocked by local temp-directory ACL failures and the real pyarrow table roundtrip cannot execute until pyarrow is installed."
+    review_result: "Track 06 advanced to In Review after the wheel/sdist build passed outside the sandbox and review fixes tightened package metadata plus the optional pyarrow gate. The real pyarrow table roundtrip remains blocked by a local Windows DLL-load failure after pyarrow-24.0.0 installs successfully."
     fixes_applied: true
     validation_commands:
       - "python -m pytest -q"
@@ -131,15 +147,15 @@ entries:
       - "python -m compileall kairo_ecs tests"
       - "python -c \"import kairo_ecs; print(kairo_ecs.self_check())\""
       - "python -m pip check"
-      - "python -c \"import pyarrow, sys; print(pyarrow.__version__)\""
-      - "python -m build --sdist --wheel"
-      - "python -m build --sdist --wheel --no-isolation"
+      - "pwsh -NoProfile -Command '$env:TEMP=(Resolve-Path ''.tmp'').Path; $env:TMP=$env:TEMP; python -m build --sdist --wheel'"
+      - "pwsh -NoProfile -Command '$env:TEMP=(Resolve-Path ''.tmp'').Path; $env:TMP=$env:TEMP; python -m pip install pyarrow --target .tmp\\pyarrow-site --cache-dir .tmp\\pip-cache'"
+      - "pwsh -NoProfile -Command '$env:PYTHONPATH=(Resolve-Path ''.tmp\\pyarrow-site'').Path; python -m pytest -q tests\\test_arrow.py::test_event_log_batch_round_trips_pyarrow_table'"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\06-python-binding-310-314\\validate-bindings06-11.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: "dirty: Track 06 optional Arrow/package docs plus unrelated worker edits pending commit"
+    git_status: "dirty: Track 06 implementation-closeout/status edits plus unrelated worker edits pending commit"
     commit_sha: "blocked: no commit created in this pass"
     pushed_ref: "blocked: no push attempted"
-    next_phase_decision: "Keep Track 06 In Progress until wheel-build can run in an environment with writable temp hook directories and the pyarrow roundtrip gate can run with pyarrow installed."
+    next_phase_decision: "Track 06 is In Review; do not move to Done until the real pyarrow table roundtrip passes or an explicit release-manager waiver records the local pyarrow.lib DLL-load blocker."
   - track_id: "07"
     phase: "implementation-closeout"
     state: pending
@@ -162,7 +178,7 @@ entries:
     phase: "track-closeout"
     state: closed
     review_command: "$conductor-review"
-    review_result: "Track 10 advanced to Done after the net11 preview lane was rerun outside the sandbox and passed; the earlier Roslyn named-pipe failure was confirmed as an environment/sandbox blocker rather than a C# binding failure."
+    review_result: "Track 10 remains Done after review found and fixed the native library resolver gap: KAIRO_ECS_NATIVE_LIB_DIR could report configured while DllImport still used a bare kairo_ecs lookup. The resolver now loads NativeBinding.GetStatus().LibraryPath when configured. A formal local-environment waiver is recorded for net11.0 preview test execution in this sandbox because Roslyn named-pipe access is denied before project compilation."
     fixes_applied: true
     validation_commands:
       - "dotnet test Kairo.ECS.sln -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false"
@@ -171,13 +187,13 @@ entries:
       - "dotnet pack src/Kairo.ECS/Kairo.ECS.csproj -c Release -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false"
       - "node tests/conformance/track07_13_hardening_check.mjs"
       - "dotnet restore bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -p:TargetFramework=net11.0"
-      - "dotnet test bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -f net11.0 --no-restore -p:UseSharedCompilation=false"
+      - "dotnet test bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -f net11.0 --no-restore -p:UseSharedCompilation=false (blocked by Roslyn named-pipe access denial in this sandbox)"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -File scripts/validate_track_no_skip_claims.ps1"
-    git_status: clean
-    commit_sha: "6808d6c0cc1e669eb83a56fe0a71ccb9b6720452"
+    git_status: "dirty: Track 10 NativeMethods resolver fix plus in-flight Track 00, 03, 06, and 09 review/status updates pending commit"
+    commit_sha: "e0a280695f2b185f08601b27f9a0045b0de64d9d"
     pushed_ref: "origin/main"
-    next_phase_decision: "Track 10 is Done; future native FFI execution, AOT/trimming validation, or NuGet release dry-runs require Track 02 or Track 15 follow-up rather than reopening this C# binding closeout."
+    next_phase_decision: "Track 10 is Done for the managed binding and configured native-loader contract with a formal local-environment waiver for the sandboxed net11.0 Roslyn named-pipe blocker; live native FFI execution, AOT/trimming validation, NuGet release dry-runs, and net11 retest remain downstream environment or release-track work."
   - track_id: "11"
     phase: "track-closeout"
     state: pending
@@ -407,7 +423,7 @@ entries:
     phase: "track-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 09 advanced to Done after adding real tsc, Vitest, headless Chromium browser-smoke, package dry-run, and GNU-toolchain kairo-ecs-wasm unit-test gates for the TypeScript/Wasm package slice. Review found no remaining in-scope TypeScript package correctness findings after the event-log row status type hole was fixed."
+    review_result: "Track 09 review found no in-scope TypeScript/Wasm code defect, but closeout is process-blocked because the handoff and ledger still record commit/push as blocked while the central registry marked the track Done."
     fixes_applied: true
     validation_commands:
       - "npm ci"
@@ -421,10 +437,10 @@ entries:
       - "cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\\kairo-ecs-wasm\\Cargo.toml"
       - "node tests\\conformance\\track07_13_hardening_check.mjs"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\06-python-binding-310-314\\validate-bindings06-11.ps1"
-    git_status: "dirty: Track 09 implementation/status edits plus unrelated worker edits in other Conductor files"
+    git_status: "dirty: Track 09 status reconciliation plus unrelated worker edits in other Conductor files"
     commit_sha: "blocked: no Track 09 commit created because the shared worktree already contains unrelated worker edits"
     pushed_ref: "blocked: no push performed from the dirty shared worktree"
-    next_phase_decision: "Track 09 is Done for the TypeScript/Wasm package slice. Optional wasm-export/wasm-pack validation remains future toolchain work because the wasm-bindgen feature path still depends on local Windows linker setup."
+    next_phase_decision: "Track 09 is In Review until cleaned commit/push evidence or a formal release-manager waiver is recorded. Optional wasm-export/wasm-pack validation remains future toolchain work because the wasm-bindgen feature path still depends on local Windows linker setup."
   - track_id: "16"
     phase: "track-closeout"
     state: pending

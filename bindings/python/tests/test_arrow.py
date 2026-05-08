@@ -23,7 +23,7 @@ def test_event_log_batch_round_trips_smoke_bytes() -> None:
 
 
 def test_event_log_batch_round_trips_pyarrow_table() -> None:
-    pytest.importorskip("pyarrow")
+    pytest.importorskip("pyarrow", exc_type=ModuleNotFoundError)
 
     scheduler = kairo_ecs.Scheduler()
     scheduler.schedule_at(42, priority=-3, kind=5)

@@ -47,7 +47,7 @@ Assert-Contains 'bindings/python/kairo_ecs/_scheduler.py' 'def _is_pending'
 Assert-Contains 'bindings/python/kairo_ecs/_scheduler.py' 'not self._is_pending(event_id)'
 Assert-Contains 'bindings/python/tests/test_scheduler.py' 'test_scheduler_rejects_unknown_duplicate_and_dispatched_cancellation'
 Assert-Contains 'bindings/python/pyproject.toml' 'name = "kairo-ecs"'
-Assert-Contains 'bindings/python/pyproject.toml' 'license = { text = "Apache-2.0" }'
+Assert-Contains 'bindings/python/pyproject.toml' 'license = "Apache-2.0"'
 
 # R: cancellation must fail for non-pending events while staying dependency-light.
 Assert-Contains 'bindings/r/R/kairoecs.R' 'Event is not pending and cannot be cancelled.'

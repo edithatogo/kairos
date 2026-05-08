@@ -99,4 +99,8 @@ Strict cleanup gate `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTre
 
 Additional closeout evidence on 2026-05-08 confirmed `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passes, so the default Rust wrapper unit-test blocker is resolved.
 
-Next-phase decision: Track 09 is `Done`; optional `wasm-export`/wasm-pack validation remains future toolchain work because the `wasm-bindgen` feature path still depends on local Windows linker setup.
+2026-05-08 review reconciliation:
+
+- `$conductor-review` result: no in-scope TypeScript/Wasm code defect was found, but closeout is process-blocked because commit and pushed-ref evidence remain blocked in the shared dirty worktree.
+- Accepted fixes: central tracking was moved back to `In Review` to match the blocked commit/push evidence.
+- Next-phase decision: Track 09 is `In Review` until cleaned commit/push evidence or a formal release-manager waiver is recorded. Optional `wasm-export`/wasm-pack validation remains future toolchain work because the `wasm-bindgen` feature path still depends on local Windows linker setup.

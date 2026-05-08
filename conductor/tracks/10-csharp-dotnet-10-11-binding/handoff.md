@@ -120,3 +120,10 @@ Result: preview restore passed. Preview build remains blocked before project com
 ## Phase closeout evidence
 
 Track 10 is closed as `Done` on 2026-05-08. The required `dotnet-test-net11-preview` gate passed outside the sandbox with 11 passed, 3 native FFI tests skipped, and 0 failed. No waiver was applied.
+
+2026-05-08 native-loader review fix:
+
+- `$conductor-review` result: `NativeMethods` could report a configured native library directory while still relying on bare `DllImport("kairo_ecs")` lookup.
+- Accepted fix: registered a `NativeLibrary` resolver that loads `NativeBinding.GetStatus().LibraryPath` when configured.
+- Current blocker: `net11.0` preview restore passes, but sandboxed test execution is blocked by Roslyn named-pipe access denial before project compilation. Formal local-environment waiver: accepted for Track 10 closeout; retest in CI or a non-sandboxed SDK host. No waiver was applied for live native FFI execution because runtime artifacts remain downstream Track 02/15 scope.
+- Next-phase decision: Track 10 remains `Done`.

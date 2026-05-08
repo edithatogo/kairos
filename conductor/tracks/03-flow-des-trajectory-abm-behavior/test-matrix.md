@@ -54,6 +54,12 @@ pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo
 - Passed: `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo`.
 - Passed: `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
 - Not run: strict clean-tree git closeout, because unrelated staged and unstaged edits from other tracks are present in the shared worktree.
+
+## 2026-05-08 ABM despawn regression validation
+
+- Passed: `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm --test abm_behavior_update_v1`.
+- Passed: `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm`.
+- Coverage added: a despawned agent with queued future updates no longer receives behavior callbacks after removal from world state.
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

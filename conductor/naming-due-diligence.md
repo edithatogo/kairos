@@ -124,7 +124,7 @@ Scope: live public-web and registry search pass recorded in [conductor/naming-du
 
 | Surface | Checked name | Observed result | Evidence pointer | Decision impact |
 |---|---|---|---|---|
-| crates.io | `kairo-ecs` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Keep registry name reserved for later publication review. |
+| crates.io | `kairo-ecs` and checked-in `kairo-ecs-*` crate family | No `kairo-ecs` family result returned by `cargo search kairo-ecs --limit 20` on 2026-05-08; no exact `kairo-ecs` match surfaced in the 2026-05-07 live search. | `conductor/naming-due-diligence-live-evidence.md` | Keep registry names reserved for later publication review; refresh exact per-crate checks before any crates.io publication. |
 | PyPI | `kairo-ecs` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Keep Python distribution decision under review. |
 | npm | `@kairo-ecs/typescript` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Keep npm scope/package decision under review. |
 | NuGet | `Kairo.ECS` | No exact match surfaced in live search. | `conductor/naming-due-diligence-live-evidence.md` | Keep NuGet package decision under review. |
@@ -207,6 +207,7 @@ Recorded approval fields:
 
 ```text
 - registry search date: 2026-05-07
+- supplemental crates.io family search date: 2026-05-08
 - reviewer: Codex
 - exact package names checked: recorded in the live evidence rows
 - search results: recorded in the live evidence rows
