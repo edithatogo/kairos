@@ -146,7 +146,7 @@ tracks:
       - arrow-roundtrip
   - id: 09
     name: TypeScript/Wasm Binding
-    status: Done
+    status: In Review
     owner: typescript-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:

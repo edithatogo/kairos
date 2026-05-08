@@ -187,13 +187,14 @@ Track 16 remains `In Progress` after a focused release-governance hardening pass
 - `node tests\conformance\track12_20_evidence_check.mjs` passed.
 - `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` failed on Track 19 missing commit SHA, pushed ref, and strict git-closeout markers, outside Track 16 ownership. Track 16 is therefore not advanced to `In Review` in the central registry in this pass.
 
-## Track 09 closeout (2026-05-09)
+## Track 09 implementation review (2026-05-09)
 
-Track 09 is closed as `Done` after review confirmed the TypeScript/Wasm package slice and the closeout-process defect was corrected:
+Track 09 is `In Review` after review confirmed the TypeScript/Wasm package slice and the local closeout-process defect was corrected, with remote push still pending explicit approval:
 
 - `npm --prefix bindings\typescript run typecheck`, `npm --prefix bindings\typescript test`, `npm --prefix bindings\typescript run test:browser`, and `npm pack --dry-run` passed after local dependency install and required browser/cache approvals.
 - `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passed with 3 unit tests and 0 doctests, resolving the default Rust wrapper unit-test blocker seen on the default MSVC linker path.
-- The prior handoff/ledger commit-evidence blocker was resolved by commit `171d7c5fa1304b99cdea09d2c7028dc5df755377`.
+- The prior dirty-worktree commit-evidence blocker was resolved locally by commit `171d7c5fa1304b99cdea09d2c7028dc5df755377`.
+- Remote closeout remains blocked until the local commits are pushed to `origin/main` or a formal waiver is recorded.
 - The optional `wasm-export`/wasm-pack path remains future toolchain work because the `wasm-bindgen` feature path still depends on local Windows linker setup.
 ## Track 10 closeout (2026-05-08)
 
