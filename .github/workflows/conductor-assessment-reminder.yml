@@ -24,12 +24,12 @@ jobs:
           YEAR=$(date +%Y)
           SEARCH="Monthly assessment — $MONTH $YEAR"
           EXISTING=$(gh issue list \
-            --repo ${{ github.repository }} \
+            --repo "${{ github.repository }}" \
             --search "$SEARCH in:title" \
             --state open \
             --json number \
             --jq '.[0].number // empty')
-          echo "existing=$EXISTING" >> $GITHUB_OUTPUT
+          echo "existing=$EXISTING" >> "$GITHUB_OUTPUT"
 
       - name: Create assessment issue
         if: steps.check-existing.outputs.existing == ''
@@ -39,7 +39,7 @@ jobs:
           MONTH=$(date +%B)
           YEAR=$(date +%Y)
           gh issue create \
-            --repo ${{ github.repository }} \
+            --repo "${{ github.repository }}" \
             --title "Monthly assessment — $MONTH $YEAR" \
             --label "conductor,assessment,recurring" \
             --body-file .github/ISSUE_TEMPLATE/conductor-assessment.md

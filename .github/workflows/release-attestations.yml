@@ -28,7 +28,7 @@ jobs:
       - name: Install Syft
         uses: anchore/sbom-action/download-syft@v0
       - name: Generate SBOM
-        run: syft dir:${ARTIFACT_PATH} -o spdx-json=${ARTIFACT_PATH}/sbom.spdx.json
+        run: syft "dir:${ARTIFACT_PATH}" -o "spdx-json=${ARTIFACT_PATH}/sbom.spdx.json"
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v7
         with:

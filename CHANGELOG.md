@@ -21,6 +21,7 @@ Format:
 - Changelog-policy workflow for pull requests that touch public release surfaces.
 - Conductor release-gate hardening for Track 13 offline supply-chain validation, Track 14 Markdown fragment-anchor validation, and Track 15 release-delivery dry-run gating before artifact upload.
 - Hosted CI hardening for public-repository Actions runs, including portable policy checks, Mermaid rendering, changelog enforcement, and workflow-security SARIF upload permissions.
+- Workflow shellcheck cleanup for assessment reminders, package dry-runs, and SBOM attestation commands.
 
 ### Changed
 

@@ -49,7 +49,7 @@ jobs:
           python -m pip install -U build twine
           cd bindings/python
           python -m build
-          twine check dist/*
+          twine check ./dist/*
   r-package:
     runs-on: ubuntu-latest
     steps:
@@ -62,7 +62,7 @@ jobs:
           test -d bindings/r/R
           cd bindings/r
           R CMD build .
-          R CMD check --no-manual --as-cran *.tar.gz
+          R CMD check --no-manual --as-cran ./*.tar.gz
   julia-package:
     runs-on: ubuntu-latest
     steps:
