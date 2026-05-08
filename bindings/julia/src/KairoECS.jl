@@ -173,6 +173,14 @@ function _parse_uint128_le_hex(value::AbstractString)
     return result
 end
 
+function _payload_text(payload::AbstractVector{UInt8})
+    return String(copy(payload))
+end
+
+function _payload_text(payload::AbstractString)
+    return String(payload)
+end
+
 """
     to_smoke_bytes(batch)
 
@@ -216,7 +224,7 @@ Deserialize the dependency-light Arrow smoke payload produced by
 `to_smoke_bytes`.
 """
 function from_smoke_bytes(payload)
-    lines = split(String(payload), '\n'; keepempty = false)
+    lines = split(_payload_text(payload), '\n'; keepempty = false)
     expected_header = "stream=$(EVENT_LOG_STREAM);schema_version=$(EVENT_LOG_SCHEMA_VERSION)"
     length(lines) >= 2 && lines[1] == expected_header ||
         throw(ArgumentError("unexpected stream header"))

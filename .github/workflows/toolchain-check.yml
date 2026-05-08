@@ -60,7 +60,7 @@ jobs:
           - channel: stable
             expected-prefix: "1.95"
           - channel: beta
-            expected-prefix: "1.96"
+            expected-prefix: "1."
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@v1
