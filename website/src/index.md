@@ -1,10 +1,25 @@
 # KairoECS Documentation
 
-KairoECS is a Rust-first simulation engine for deterministic event scheduling, ECS-style state, Arrow telemetry, and polyglot bindings.
+KairoECS is a Rust-first simulation engine for deterministic event scheduling,
+ECS-style state, DES, ABM, Arrow telemetry, and polyglot bindings.
+
+Public project links:
+
+- Repository: [github.com/edithatogo/kairos](https://github.com/edithatogo/kairos)
+- CI status: [GitHub Actions](https://github.com/edithatogo/kairos/actions)
+- Conductor status: [track index](../../conductor/tracks.md) and [narrative status](../../conductor/status.md)
+
+Current maturity: pre-release. Core scheduler/state/conformance foundations are
+implemented; DES/ABM flow APIs and the FFI bridge are in review; registry
+publication and stable API promises remain gated by release, compatibility,
+security, and packaging tracks.
 
 ## Start Here
 
 - [Documentation overview](../../docs/README.md)
+- [Install and local workflow](../../docs/install.md)
+- [Conductor track status](../../conductor/tracks.md)
+- [Current narrative status](../../conductor/status.md)
 - [Benchmark overview](../../docs/benchmarks/README.md)
 - [Implemented crate inventory](../../crates/README.md)
 - [Language binding inventory](../../bindings/README.md)

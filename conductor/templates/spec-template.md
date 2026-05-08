@@ -82,7 +82,13 @@ crates/kairo-ecs-ffi/ — owned by Track 02 (FFI bridge)
 - Documentation impact is recorded.
 - Release implications are recorded.
 - handoff.md is completed before merge.
+- `$conductor-review` has run at implementation closeout and accepted in-scope fixes are applied.
+- `conductor/tracks.yaml`, `conductor/tracks.md`, `conductor/phase-closeout.yaml`, and `conductor/status.md` are synchronized before any phase/status advance.
 -->
+
+## Registry/status synchronization
+
+<!-- REQUIRED per track. Any change to status, ownership, dependencies, gates, readiness, or wave/release-criticality must be reflected in `conductor/tracks.yaml` first, then mirrored in `conductor/tracks.md`, `conductor/phase-closeout.yaml`, and `conductor/status.md`. Also update `conductor/implementation-readiness.md` and `conductor/track-map.md` when readiness, dependency, or wave data changes. -->
 
 ## Release implications
 

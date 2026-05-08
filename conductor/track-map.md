@@ -2,6 +2,10 @@
 
 KairoECS uses Conductor tracks as independently reviewable units of work. The roadmap is intentionally contract-first so subagents can work in parallel without corrupting core semantics or fragmenting the cross-language API.
 
+## Registry synchronization
+
+`conductor/tracks.yaml` is the authoritative machine-readable track registry. Any track implementation or review closeout that changes status, ownership, dependencies, gates, readiness, or wave/release-criticality must update `conductor/tracks.yaml` first and keep `conductor/tracks.md`, `conductor/phase-closeout.yaml`, and `conductor/status.md` aligned. Update `conductor/implementation-readiness.md` and this map when readiness, dependency, or wave data changes.
+
 ## Track list
 
 | Track | Name | Purpose | Primary subagent | Parallelism |

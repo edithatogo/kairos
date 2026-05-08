@@ -1,154 +1,108 @@
-# KairoECS Conductor SOTA Parallelized Setup
+# KairoECS
 
-This pack upgrades the earlier Multi-Method Simulation Engine roadmap into a **KairoECS-branded**, release-ready, subagent-parallelizable Conductor setup.
+[![ci-core](https://github.com/edithatogo/kairos/actions/workflows/ci-core.yml/badge.svg)](https://github.com/edithatogo/kairos/actions/workflows/ci-core.yml)
+[![ci-bindings](https://github.com/edithatogo/kairos/actions/workflows/ci-bindings.yml/badge.svg)](https://github.com/edithatogo/kairos/actions/workflows/ci-bindings.yml)
+[![Validate Conductor](https://github.com/edithatogo/kairos/actions/workflows/validate-conductor.yml/badge.svg)](https://github.com/edithatogo/kairos/actions/workflows/validate-conductor.yml)
+[![Docs Quality](https://github.com/edithatogo/kairos/actions/workflows/docs-quality.yml/badge.svg)](https://github.com/edithatogo/kairos/actions/workflows/docs-quality.yml)
 
-KairoECS is planned as a Rust-first, polyglot simulation engine that treats **Discrete Event Simulation (DES)** and **Agent-Based Modeling (ABM)** as equal paradigms. The architecture uses an event-first scheduler, ECS-style state storage, handle-based FFI, Apache Arrow telemetry, and language-specific wrappers for Python, R, Julia, TypeScript, C#, and Go.
+KairoECS is a Rust-first simulation engine for deterministic event scheduling,
+ECS-style state, Discrete Event Simulation (DES), Agent-Based Modeling (ABM),
+Arrow telemetry, and polyglot bindings.
 
-## What changed from the earlier setup
+The repository is now public, CI-backed, and organized with a Conductor track
+system so implementation, validation, documentation, release, and supply-chain
+work stay traceable.
 
-1. The project is now structured around the `kairo-ecs-*` ecosystem:
-   - `kairo-ecs-core`
-   - `kairo-ecs-state`
-   - `kairo-ecs-ffi`
-   - `kairo-ecs-arrow`
-   - `kairo-ecs-viz`
-   - binding packages for Python, R, Julia, TypeScript, C#, and Go
-2. Tracks are explicitly parallelizable using subagents.
-3. A contract-first workflow lets subagents build against stable interfaces before all implementation work is complete.
-4. Release engineering is first-class: docs site, registries, CI/CD, governance, maintenance, security, and automation are included.
-5. Python support is planned for **3.10 through 3.14**.
-6. C# support is planned for **.NET 10 and .NET 11**.
-7. Mermaid diagrams are included as Conductor artifacts and standalone `.mmd` files.
-8. A naming/legal due-diligence track is included because package names, domains, and trademarks must be verified before public publishing.
+- Repository: <https://github.com/edithatogo/kairos>
+- Documentation site: <https://edithatogo.github.io/kairos/>
+- Status index: [conductor/tracks.md](conductor/tracks.md)
+- Narrative status: [conductor/status.md](conductor/status.md)
 
-## Quick use
+## Current Status
 
-Start here:
+This is an active pre-release project. The core scheduler/state/conformance
+foundation is in place, with selected language bindings and docs gates already
+running in CI. Registry publication and stable API promises remain gated by the
+release, compatibility, security, and packaging tracks.
 
-```text
-CONDUCTOR-SETUP-COMMANDS.md
-conductor/status.md
-conductor/implementation-readiness.md
-conductor/tracks.yaml
-conductor/tech-stack.md
-conductor/workflow.md
-conductor/track-map.md
-conductor/subagents.md
-conductor/parallel-execution.md
+Current Conductor highlights:
+
+- Done: Track 00 foundation, Track 01 core/state, Track 05 headless visualization, Track 10 C# binding, Track 12 conformance/testing/benchmarks.
+- In review: Track 02 FFI/UniFFI/Diplomat bridge and Track 03 DES/ABM flow APIs.
+- In progress: Python, R, TypeScript/Wasm, Go, docs, CI/supply chain, packaging, release governance, benchmarks, research/citation, security, DX, and wave management.
+- Planned or spec-approved: Arrow, Julia, community/model-zoo/playground, API compatibility, interoperability, GPU/WebGPU, PDES, distributed simulation, streaming, ML, FMI/digital twin, cloud/HPC, and time-travel debugging.
+
+For the authoritative machine-readable view, use [conductor/tracks.yaml](conductor/tracks.yaml).
+
+## What Is Implemented
+
+Core Rust crates:
+
+- `kairo-ecs-types`: shared identifiers, event kinds, simulation time, and errors.
+- `kairo-ecs-core`: deterministic scheduler and event dispatch.
+- `kairo-ecs-state`: ECS-style world state and component storage.
+- `kairo-ecs-rng`: deterministic random streams.
+- `kairo-ecs-des`: DES trajectory/resource queue API.
+- `kairo-ecs-abm`: ABM behavior update API.
+- `kairo-ecs-viz`: dependency-light headless visualization frames.
+- `kairo-ecs-ffi`, `kairo-ecs-uniffi`, `kairo-ecs-diplomat`: bridge/facade surfaces in review.
+
+Preview binding and package surfaces are tracked under [bindings/](bindings/) and
+[packaging/](packaging/). Some bindings deliberately expose pure-language smoke
+paths while native FFI artifacts are still being stabilized.
+
+## Start Here
+
+- Install and local workflow: [docs/install.md](docs/install.md)
+- Documentation overview: [docs/README.md](docs/README.md)
+- Rust crates: [crates/README.md](crates/README.md)
+- Bindings inventory: [bindings/README.md](bindings/README.md)
+- Conformance fixtures: [conformance/README.md](conformance/README.md)
+- Scenario replay: [docs/scenarios/factory-bottleneck-run-replay.md](docs/scenarios/factory-bottleneck-run-replay.md)
+- Release checklist: [docs/release/release-checklist.md](docs/release/release-checklist.md)
+- Supply-chain verification: [docs/release/supply-chain-verification.md](docs/release/supply-chain-verification.md)
+
+## Quick Validation
+
+```powershell
+cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-core -p kairo-ecs-state
+cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm
+node tests/conformance/conformance-check.mjs
+npm --prefix website run check:all
+pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1
 ```
 
-Then create tracks in Conductor using the contents of:
+CI also runs cross-platform Conductor, docs, core, bindings, security, and
+supply-chain checks on `main`.
 
-```text
-conductor/tracks/*/spec.md
-conductor/tracks/*/plan.md
+## Documentation Site
+
+The static site is built from Markdown sources in [docs/](docs/),
+[bindings/](bindings/), [crates/](crates/), and selected examples. The source
+entry point is [website/src/index.md](website/src/index.md), and the rendered
+GitHub Pages site is published at <https://edithatogo.github.io/kairos/>.
+
+Local site checks:
+
+```powershell
+npm --prefix website run check:links
+npm --prefix website run build
+npm --prefix website run check:quality
 ```
 
-The repo also includes a first executable skeleton:
+## Project Governance
 
-```text
-Cargo.toml
-crates/kairo-ecs-types/
-crates/kairo-ecs-core/
-crates/kairo-ecs-state/
-crates/kairo-ecs-rng/
-conformance/fixtures/
-website/
-```
+Conductor is the source of truth for status and closeout evidence:
 
-Use `conductor/implementation-readiness.md` to decide when CI should skip missing future package manifests and when it must enforce real gates.
+- [conductor/workflow.md](conductor/workflow.md): development and review workflow.
+- [conductor/phase-closeout.yaml](conductor/phase-closeout.yaml): closeout ledger.
+- [conductor/track-map.md](conductor/track-map.md): roadmap map.
+- [conductor/implementation-readiness.md](conductor/implementation-readiness.md): readiness gates.
+- [conductor/quality-gates.md](conductor/quality-gates.md): validation catalogue.
 
-## Important freshness note
+When a track changes status, `conductor/tracks.yaml`, `conductor/tracks.md`,
+`conductor/phase-closeout.yaml`, and `conductor/status.md` must be synchronized.
 
-This setup targets the versions requested in the chat, including Python 3.10-3.14 and .NET 10-11. Before committing the CI configuration, verify the latest GitHub Actions runner/toolchain availability, registry policies, and package-name availability online.
+## License
 
-## Completeness map
-
-See `conductor/coverage-map.md` for the explicit mapping of testing, documentation, governance, delivery, publishing, automation, and maintenance concerns to artifacts and tracks.
-
----
-
-# Community + Trust + Red-Team Expansion
-
-This revision incorporates the SOTA/community layer and patches the roadmap after a red-team and devil's advocate review.
-
-## Added tracks
-
-```text
-17 Community Adoption, Education & Ecosystem
-18 Comparative Benchmarks & Reproducibility
-19 Research Software, Citation & Archival
-20 OpenSSF, Supply Chain Trust & Institutional Readiness
-21 Verification, Validation & Uncertainty
-22 Experiment Runner & Scenario Management
-23 Domain Starter Kits & Model Zoo
-24 Playground, Demos & Visualization UX
-25 API Design Review & Compatibility Governance
-26 Interoperability Standards Review
-```
-
-## Added cross-cutting artifacts
-
-```text
-conductor/red-team-review.md
-conductor/devils-advocate-review.md
-conductor/continuous-assessment-log.md
-conductor/sota-scorecard.md
-conductor/package-catalog.md
-governance/*.md
-docs/community/*.md
-docs/research/*.md
-docs/benchmarks/*.md
-docs/trustworthy-simulation/*.md
-planning/diagrams/*community*.mmd
-.github/workflows/scorecard.yml
-.github/workflows/dependency-review.yml
-.github/workflows/sbom-attestations.yml
-.github/workflows/fuzzing.yml
-.github/workflows/benchmarks.yml
-.github/workflows/docs-link-check.yml
-.github/workflows/actions-security.yml
-```
-
-## Guiding principle
-
-KairoECS should not only be a fast simulation kernel. It should be a trustworthy simulation workflow:
-
-```text
-model code
-+ scenario manifest
-+ seed manifest
-+ deterministic replay
-+ event trace
-+ Arrow/Parquet output
-+ uncertainty summary
-+ reproducibility command
-+ citation metadata
-+ signed release artifacts
-```
-
-
-## Community/SOTA extension
-
-This version also adds Tracks 17-28 for community adoption, reproducible benchmarks, citation/archival, OpenSSF supply-chain trust, V&V/UQ, experiment management, model zoo, playground demos, API compatibility governance, interoperability standards, reproducible contributor environments, and red-team review.
-
-Start with:
-
-```text
-reviews/red-team-report.md
-reviews/devils-advocate-review.md
-conductor/package-ecosystem-plan.md
-conductor/trustworthy-simulation.md
-conductor/community-adoption.md
-conductor/continuous-assessment.md
-```
-
-## Final red-team/community layer
-
-This pack now includes the community/SOTA extension and red-team layer requested after the initial setup:
-
-- Tracks 17-28 for adoption, benchmarks, citation, OpenSSF, V&V/UQ, experiments, model zoo, playgrounds, API governance, interoperability, DX, and red-team review.
-- Expanded package ecosystem plan across Rust, Python 3.10-3.14, R, Julia, TypeScript/Wasm, C# .NET 10-11, Go, docs, and security tooling.
-- Source verification notes for current toolchain and registry assumptions.
-- Naming conflict report and fallback registry naming strategy.
-- Release critical path to prevent SOTA ambition from delaying the first credible release.
+Apache-2.0. See [LICENSE](LICENSE).

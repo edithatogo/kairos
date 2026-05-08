@@ -9,3 +9,4 @@ bindings/python/pytest-cache-files-*/
 __pycache__/
 .pytest_cache/
 crates/kairo-ecs-pyo3/
+.serena/

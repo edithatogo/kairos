@@ -81,10 +81,16 @@ Write-Host "=== Validate Conductor Phase Gates ===" -ForegroundColor Cyan
 Assert-Contains -Path "conductor/phase-gate-policy.md" -Needle "Automatic phase closeout gate" -Label "phase gate policy"
 Assert-Contains -Path "conductor/phase-gate-policy.md" -Needle '$conductor-review' -Label "phase gate policy"
 Assert-Contains -Path "conductor/phase-gate-policy.md" -Needle "conductor/phase-closeout.yaml" -Label "phase gate policy"
+Assert-Contains -Path "conductor/phase-gate-policy.md" -Needle "conductor/tracks.yaml" -Label "phase gate policy"
+Assert-Contains -Path "conductor/phase-gate-policy.md" -Needle "conductor/tracks.md" -Label "phase gate policy"
+Assert-Contains -Path "conductor/phase-gate-policy.md" -Needle "conductor/status.md" -Label "phase gate policy"
 Assert-Contains -Path "conductor/phase-closeout.yaml" -Needle "schema_version: 1" -Label "phase closeout ledger"
 Assert-Contains -Path "conductor/phase-closeout.yaml" -Needle "required_fields:" -Label "phase closeout ledger"
 Assert-Contains -Path "conductor/workflow.md" -Needle "Automatic phase closeout gate" -Label "workflow"
 Assert-Contains -Path "conductor/workflow.md" -Needle "auto-apply accepted review fixes" -Label "workflow"
+Assert-Contains -Path "conductor/workflow.md" -Needle "conductor/tracks.yaml" -Label "workflow"
+Assert-Contains -Path "conductor/workflow.md" -Needle "conductor/tracks.md" -Label "workflow"
+Assert-Contains -Path "conductor/workflow.md" -Needle "conductor/status.md" -Label "workflow"
 Assert-Contains -Path "conductor/workflow.md" -Needle "validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree" -Label "workflow"
 Assert-Contains -Path ".github/workflows/validate-conductor.yml" -Needle "Validate conductor phase gates" -Label "validate conductor workflow"
 Assert-Contains -Path ".github/workflows/validate-conductor.yml" -Needle "scripts/validate_conductor*.ps1" -Label "validate conductor workflow paths"
@@ -92,6 +98,9 @@ Assert-Contains -Path "scripts/validate_conductor_setup.ps1" -Needle "validate_c
 Assert-Contains -Path "scripts/validate_conductor_setup.ps1" -Needle "validate_conductor_git_closeout.ps1" -Label "setup validator"
 Assert-Contains -Path "conductor/quality-gates.md" -Needle "**phase-closeout-check**" -Label "quality gate catalogue"
 Assert-Contains -Path "conductor/quality-gates.md" -Needle "conductor/phase-closeout.yaml" -Label "quality gate catalogue"
+Assert-Contains -Path "conductor/quality-gates.md" -Needle "conductor/tracks.yaml" -Label "quality gate catalogue"
+Assert-Contains -Path "conductor/quality-gates.md" -Needle "conductor/tracks.md" -Label "quality gate catalogue"
+Assert-Contains -Path "conductor/quality-gates.md" -Needle "conductor/status.md" -Label "quality gate catalogue"
 Assert-Contains -Path "conductor/quality-gates.md" -Needle "validate_conductor_git_closeout.ps1" -Label "quality gate catalogue"
 
 $terminalStatuses = @("Done", "Deferred", "Cancelled")
@@ -173,7 +182,10 @@ foreach ($record in $records) {
         '$conductor-review',
         "Auto-apply accepted review fixes",
         "validate_conductor_phase_gates.ps1",
+        "conductor/tracks.yaml",
+        "conductor/tracks.md",
         "conductor/phase-closeout.yaml",
+        "conductor/status.md",
         "Commit and push the cleaned slice",
         "validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
     )) {

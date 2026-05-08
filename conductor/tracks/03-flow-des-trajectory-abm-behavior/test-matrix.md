@@ -4,6 +4,8 @@
 
 - `cargo test -p kairo-ecs-core` to cover the scheduler and shared event model that DES and ABM both depend on.
 - `cargo test -p kairo-ecs-state` to keep the state transition layer deterministic while the trajectory and behavior APIs are being defined.
+- `cargo test -p kairo-ecs-des --test des_resource_queue_v1` for the named DES fixture gate.
+- `cargo test -p kairo-ecs-abm --test abm_behavior_update_v1` for the named ABM fixture gate.
 - `cargo fmt --all --check` before any handoff that touches Rust code.
 - `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo` to keep the conductor setup consistent.
 - `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo` to prove the track is still accounted for in the wave policy and registry.
@@ -21,15 +23,17 @@ pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo
 pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo
 ```
 
-## 2026-05-07 validation notes
+## 2026-05-08 validation notes
 
-- Passed: `cargo fmt -p kairo-ecs-des -p kairo-ecs-abm --check`.
-- Passed: `cargo test -p kairo-ecs-des -p kairo-ecs-abm`.
-- Passed: `cargo test -p kairo-ecs-core`.
-- Passed: `cargo test -p kairo-ecs-state`.
+- Passed: `cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-des -p kairo-ecs-abm`.
+- Passed: `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des --test des_resource_queue_v1`.
+- Passed: `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm --test abm_behavior_update_v1`.
+- Passed: `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm`.
+- Passed: `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-core`.
+- Passed: `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-state`.
 - Passed: `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo`.
 - Passed: `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo`.
-- Blocked outside Track 03: `cargo fmt --all --check` reports unrelated formatting diffs in `crates/kairo-ecs-arrow`, `crates/kairo-ecs-debug`, `crates/kairo-ecs-rng`, `crates/kairo-ecs-types`, and `crates/kairo-ecs-wasm`.
+- Not rerun for this closeout: `cargo fmt --all --check`, because the working tree already contains unrelated local Conductor closeout edits. Focused Track 03 formatting passed.
 
 ## 2026-05-08 fixture-hardening validation
 

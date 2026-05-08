@@ -11,9 +11,11 @@ Track 03 now has a minimal R2 implementation slice for the DES trajectory API an
 - `crates/kairo-ecs-des/Cargo.toml`
 - `crates/kairo-ecs-des/src/lib.rs`
 - `crates/kairo-ecs-des/tests/des_integration.rs`
+- `crates/kairo-ecs-des/tests/des_resource_queue_v1.rs`
 - `crates/kairo-ecs-abm/Cargo.toml`
 - `crates/kairo-ecs-abm/src/lib.rs`
 - `crates/kairo-ecs-abm/tests/abm_integration.rs`
+- `crates/kairo-ecs-abm/tests/abm_behavior_update_v1.rs`
 - `examples/flow/README.md`
 - `conductor/tracks/03-flow-des-trajectory-abm-behavior/test-matrix.md`
 - `conductor/tracks/03-flow-des-trajectory-abm-behavior/handoff.md`
@@ -37,18 +39,20 @@ No shared contracts were changed for this track.
 
 ## Validation run
 
-- `cargo fmt -p kairo-ecs-abm -p kairo-ecs-des --check` passed on 2026-05-07.
-- `cargo test -p kairo-ecs-des -p kairo-ecs-abm` passed on 2026-05-07.
-- `cargo test -p kairo-ecs-core` passed on 2026-05-07.
-- `cargo test -p kairo-ecs-state` passed on 2026-05-07.
-- `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo` passed on 2026-05-07.
-- `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo` passed on 2026-05-07.
-- `cargo fmt --all --check` is still blocked by unrelated in-flight formatting diffs outside Track 03, including `crates/kairo-ecs-arrow`, `crates/kairo-ecs-debug`, `crates/kairo-ecs-rng`, `crates/kairo-ecs-types`, and `crates/kairo-ecs-wasm`.
+- `cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-abm -p kairo-ecs-des` passed on 2026-05-08.
+- `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des --test des_resource_queue_v1` passed on 2026-05-08.
+- `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm --test abm_behavior_update_v1` passed on 2026-05-08.
+- `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm` passed on 2026-05-08.
+- `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-core` passed on 2026-05-08.
+- `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-state` passed on 2026-05-08.
+- `pwsh -NoProfile -File scripts\validate_conductor_setup.ps1 -SkipCargo` passed on 2026-05-08.
+- `pwsh -NoProfile -File scripts\validate_track_coverage.ps1 -SkipCargo` passed on 2026-05-08.
+- `cargo fmt --all --check` was not rerun for this closeout because the working tree already contains unrelated local Conductor closeout edits; focused Track 03 formatting passed.
 
 ## 2026-05-08 fixture hardening
 
 - Added `des_resource_queue_v1` and `abm_behavior_update_v1` named integration fixtures under Track 03-owned crate test paths.
-- `cargo +stable-x86_64-pc-windows-gnu fmt -p kairo-ecs-abm -p kairo-ecs-des --check` passed.
+- `cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-abm -p kairo-ecs-des` passed.
 - `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm` passed with 22 tests across ABM and DES unit, integration, and named fixture tests.
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` passed.
 
@@ -72,6 +76,6 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 - Deferred or blocked fixes: shared fixture files under `conformance/fixtures/des_resource_queue_v1`, `conformance/fixtures/abm_behavior_update_v1`, and `conformance/fixtures/hybrid_des_abm_v1` remain future Track 03/12 integration work.
 - Validation commands: `cargo +stable-x86_64-pc-windows-gnu fmt -p kairo-ecs-abm -p kairo-ecs-des --check`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
 - Cleanup state: the only in-scope dirty files were the two new Track 03 tests and their Conductor evidence updates.
-- Commit SHA / pushed ref: to be recorded in `conductor/phase-closeout.yaml` after the fixture-hardening commit exists.
+- Commit SHA / pushed ref: `5dd1937566898b2e028ac61dab1e9dd173e6d919` on `origin/main` is the current pushed base for this local closeout pass.
 - Strict cleanup gate: run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after the commit and push.
-- Next-phase decision: keep Track 03 `In Progress`; the named fixtures strengthen the implementation slice but do not close the track.
+- Next-phase decision: Track 03 is `In Review`; reviewer signoff is still required before moving the DES/ABM flow APIs to `Done`.
