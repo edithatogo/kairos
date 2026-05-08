@@ -27,6 +27,16 @@ export const REQUIRED_BENCHMARK_IDS = Object.freeze([
   'hybrid_des_abm_smoke_100k',
 ]);
 
+const U64_MASK = 0xffff_ffff_ffff_ffffn;
+const SPLITMIX64_GAMMA = 0x9e37_79b9_7f4a_7c15n;
+const SPLITMIX64_MULT1 = 0xbf58_476d_1ce4_e5b9n;
+const SPLITMIX64_MULT2 = 0x94d0_49bb_1331_11ebn;
+const RUN_SEED_DOMAIN = 0xa8e5_1b2c_4d6f_9013n;
+const ENTITY_INDEX_DOMAIN = 0x9e37_79b9_7f4a_7c15n;
+const ENTITY_GENERATION_DOMAIN = 0xbf58_476d_1ce4_e5b9n;
+const ENTITY_INDEX_MIX = 0xd6e8_feb8_6659_fd93n;
+const ENTITY_GENERATION_MIX = 0x94d0_49bb_1331_11ebn;
+
 export function loadJson(relativePath, root = process.cwd()) {
   const text = readFileSync(join(root, relativePath), 'utf8');
   return JSON.parse(text);
@@ -53,6 +63,11 @@ function assertInteger(value, field) {
 function assertNonNegativeInteger(value, field) {
   assertInteger(value, field);
   assert(value >= 0, `${field} must be non-negative`);
+}
+
+function assertNonNegativeSafeInteger(value, field) {
+  assertNonNegativeInteger(value, field);
+  assert(Number.isSafeInteger(value), `${field} must be a safe integer`);
 }
 
 function assertEvent(event, field) {
@@ -101,10 +116,10 @@ function assertCancellationPayload(payload, fixture) {
 
 function assertRngPayload(payload, fixture) {
   assertBaseFixture(payload, fixture);
-  assertNonNegativeInteger(payload.run_seed, `${fixture.id}.run_seed`);
+  assertNonNegativeSafeInteger(payload.run_seed, `${fixture.id}.run_seed`);
   assert(payload.entity && typeof payload.entity === 'object', `${fixture.id}.entity must be an object`);
-  assertNonNegativeInteger(payload.entity.index, `${fixture.id}.entity.index`);
-  assertNonNegativeInteger(payload.entity.generation, `${fixture.id}.entity.generation`);
+  assertNonNegativeSafeInteger(payload.entity.index, `${fixture.id}.entity.index`);
+  assertNonNegativeSafeInteger(payload.entity.generation, `${fixture.id}.entity.generation`);
   assert(
     Array.isArray(payload.expected_stream) &&
       payload.expected_stream.length > 0 &&
@@ -169,17 +184,47 @@ export function sortEvents(events) {
 }
 
 export function deterministicStream(seed, entity, count = 4) {
-  let state =
-    ((seed >>> 0) ^ ((entity.index >>> 0) << 16) ^ ((entity.generation >>> 0) << 1)) >>> 0;
+  assertNonNegativeSafeInteger(seed, 'rng seed');
+  assert(entity && typeof entity === 'object', 'rng entity must be an object');
+  assertNonNegativeSafeInteger(entity.index, 'rng entity.index');
+  assertNonNegativeSafeInteger(entity.generation, 'rng entity.generation');
+  assertNonNegativeSafeInteger(count, 'rng stream count');
+
+  function u64(value) {
+    return BigInt(value) & U64_MASK;
+  }
+
+  function splitmix64(value) {
+    let x = (u64(value) + SPLITMIX64_GAMMA) & U64_MASK;
+    let z = x;
+    z = ((z ^ (z >> 30n)) * SPLITMIX64_MULT1) & U64_MASK;
+    z = ((z ^ (z >> 27n)) * SPLITMIX64_MULT2) & U64_MASK;
+    return (z ^ (z >> 31n)) & U64_MASK;
+  }
+
+  function rotateLeft64(value, shift) {
+    const x = u64(value);
+    const width = 64n;
+    const amount = BigInt(shift);
+    return ((x << amount) | (x >> (width - amount))) & U64_MASK;
+  }
+
+  let derivedSeed = (u64(seed) + RUN_SEED_DOMAIN) & U64_MASK;
+  derivedSeed ^= splitmix64(u64(entity.index) + ENTITY_INDEX_DOMAIN);
+  derivedSeed = rotateLeft64(derivedSeed, 17);
+  derivedSeed =
+    (derivedSeed +
+      ((splitmix64(u64(entity.generation) + ENTITY_GENERATION_DOMAIN) *
+        ENTITY_GENERATION_MIX) &
+        U64_MASK)) &
+    U64_MASK;
+
+  let state = splitmix64(derivedSeed ^ ENTITY_INDEX_MIX);
   const stream = [];
 
   for (let i = 0; i < count; i += 1) {
-    state = (state + 0x9e3779b9) >>> 0;
-    let value = state;
-    value ^= value >>> 15;
-    value = Math.imul(value, 1 | value);
-    value ^= value + Math.imul(value ^ (value >>> 7), 61 | value);
-    stream.push((value ^ (value >>> 14)) >>> 0);
+    state = splitmix64(state);
+    stream.push(Number(state & 0xffff_ffffn));
   }
 
   return stream;

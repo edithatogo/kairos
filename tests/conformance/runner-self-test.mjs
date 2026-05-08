@@ -3,6 +3,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
+  deterministicStream,
   listConformance,
   parseConformanceArgs,
   runConformanceCli,
@@ -32,11 +33,19 @@ const filteredReport = runConformance(ROOT, { fixtureIds: ['rng_reproducibility_
 assert.equal(filteredReport.validated_fixtures, 1);
 assert.equal(filteredReport.results[0].id, 'rng_reproducibility_v1');
 assert.deepEqual(filteredReport.results[0].observed.observed_stream, [
-  517508663,
-  1063389290,
-  3847412614,
-  3225602592,
+  58032735,
+  2654218578,
+  73301494,
+  760398727,
 ]);
+assert.throws(
+  () => deterministicStream(Number.MAX_SAFE_INTEGER + 1, { index: 42, generation: 0 }, 4),
+  /rng seed must be a safe integer/,
+);
+assert.throws(
+  () => deterministicStream(7, { index: Number.MAX_SAFE_INTEGER + 1, generation: 0 }, 4),
+  /rng entity\.index must be a safe integer/,
+);
 
 const listed = listConformance(ROOT, { kinds: ['vvuq'] });
 assert.equal(listed.selected_fixtures.length, 1);
@@ -182,6 +191,93 @@ try {
   rmSync(zeroDelayRoot, { recursive: true, force: true });
 }
 
+const unsafeRngRoot = mkdtempSync(join(tmpdir(), 'kairo-conformance-unsafe-rng-'));
+try {
+  writeTextFile(
+    unsafeRngRoot,
+    'conformance/fixtures/manifest.json',
+    JSON.stringify(
+      {
+        version: 1,
+        root: 'conformance/fixtures',
+        fixtures: [
+          {
+            id: 'scheduler_ordering_v1',
+            status: 'ready',
+            kind: 'ordering',
+            source: 'deterministic_ordering.json',
+            consumers: ['01', '02', '06', '07', '08', '09', '10', '11'],
+            assertions: ['order by time, priority, sequence', 'expected_kind_order matches the emitted trace'],
+          },
+          {
+            id: 'scheduler_cancellation_v1',
+            status: 'ready',
+            kind: 'cancellation',
+            source: 'cancellation.json',
+            consumers: ['01', '02', '06', '07', '08', '09', '10', '11'],
+            assertions: ['cancelled events do not appear in the remaining dispatch order', 'remaining dispatch order stays stable'],
+          },
+          {
+            id: 'rng_reproducibility_v1',
+            status: 'ready',
+            kind: 'rng',
+            source: 'rng_replay.json',
+            consumers: ['01', '02', '06', '07', '08', '09', '10', '11'],
+            assertions: ['same run seed and entity handle yield the same stream', 'entity-derived RNG stays deterministic across bindings'],
+          },
+          {
+            id: 'vvuq_scenario_replay_v1',
+            status: 'ready',
+            kind: 'vvuq',
+            source: 'vvuq_scenario_replay.json',
+            consumers: ['21', '22'],
+            assertions: ['scenario manifest and seed manifest exist', 'replay comparison is tied to scheduler_ordering_v1', 'summary hash and required output names stay stable'],
+          },
+        ],
+        benchmarks: ROOT_MANIFEST.benchmarks,
+      },
+      null,
+      2
+    ) + '\n'
+  );
+
+  for (const fileName of [
+    'deterministic_ordering.json',
+    'cancellation.json',
+    'vvuq_scenario_replay.json',
+  ]) {
+    writeTextFile(
+      unsafeRngRoot,
+      `conformance/fixtures/${fileName}`,
+      readFileSync(join(ROOT, 'conformance/fixtures', fileName), 'utf8')
+    );
+  }
+
+  writeTextFile(
+    unsafeRngRoot,
+    'conformance/fixtures/rng_replay.json',
+    JSON.stringify(
+      {
+        fixture: 'rng_replay',
+        version: 1,
+        run_seed: Number.MAX_SAFE_INTEGER + 1,
+        entity: { index: 42, generation: 0 },
+        expected_stream: [58032735],
+        requirement: 'unsafe integer fixture values fail fast',
+      },
+      null,
+      2
+    ) + '\n'
+  );
+
+  assert.throws(
+    () => runConformance(unsafeRngRoot, { fixtureIds: ['rng_reproducibility_v1'] }),
+    /rng_reproducibility_v1\.run_seed must be a safe integer/,
+  );
+} finally {
+  rmSync(unsafeRngRoot, { recursive: true, force: true });
+}
+
 console.log(JSON.stringify({
   status: 'ok',
   validator: 'tests/conformance/runner-self-test.mjs',
@@ -193,5 +289,6 @@ console.log(JSON.stringify({
     'runner CLI --list',
     'runner CLI --fixture',
     'zero-delay guard fixture support',
+    'unsafe RNG integer rejection',
   ],
 }, null, 2));
