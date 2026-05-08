@@ -71,8 +71,8 @@ try {
         cargo metadata --no-deps --format-version 1 | Out-Null
     }
 
-    Invoke-OptionalCommand -Name "cargo deny" -Executable "cargo-deny" -Command {
-        cargo deny check
+    Invoke-OptionalCommand -Name "cargo deny advisories and sources" -Executable "cargo-deny" -Command {
+        cargo deny check advisories sources
     }
 
     Invoke-OptionalCommand -Name "cargo audit" -Executable "cargo-audit" -Command {

@@ -6,7 +6,7 @@ CI and supply-chain gates now cover core Rust quality, binding smoke workflows, 
 
 The latest pass tightens Track 13 metadata validation so every checked-in `.github/workflows/*.yml` file must have an explicit workflow name, trigger block, and top-level permissions block. It also checks that both `ci-policy.yml` and `workflow-security.yml` inventory every workflow, closing the gap where newer workflows could exist without being named in the policy gates.
 
-A dedicated offline supply-chain gate now lives at `scripts/validate_track13_supply_chain.ps1`. It runs the existing Track 13 metadata validator, verifies `cargo metadata --no-deps --format-version 1`, and executes `cargo deny check` and `cargo audit` only when those tools are installed locally. Missing advisory tools are reported as skipped instead of failing the local gate.
+A dedicated offline supply-chain gate now lives at `scripts/validate_track13_supply_chain.ps1`. It runs the existing Track 13 metadata validator, verifies `cargo metadata --no-deps --format-version 1`, and executes cargo-deny advisory/source checks plus `cargo audit` only when those tools are installed locally. Missing advisory tools are reported as skipped instead of failing the local gate.
 
 ## Files changed
 

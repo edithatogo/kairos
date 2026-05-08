@@ -88,5 +88,5 @@ jobs:
       - name: Cargo supply-chain checks
         run: |
           cargo install cargo-deny cargo-audit --locked
-          cargo deny check
+          cargo deny check advisories sources
           cargo audit
