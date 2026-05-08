@@ -5,7 +5,7 @@
 | Citation/archive metadata is internally consistent | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1` | yes | yes | yes |
 | Citation metadata file exists and validates | `Test-Path CITATION.cff; rg -n "^cff-version:|^message:|^title:|^version:|^date-released:|^type:|^authors:|^abstract:|^keywords:|^license:|^repository-code:" CITATION.cff` | yes | yes | yes |
 | Archive metadata seed exists | `Test-Path .zenodo.json; rg -n '"title"|"upload_type"|"version"|"publication_date"|"access_right"|"description"|"creators"|"license"|"keywords"' .zenodo.json` | yes | yes | yes |
-| CodeMeta file exists and validates | `Test-Path codemeta.json; rg -n '"@context"|"@type"|"name"|"description"|"version"|"datePublished"|"programmingLanguage"|"license"|"codeRepository"|"developmentStatus"' codemeta.json` | yes | yes | yes |
+| CodeMeta file exists and validates | `Test-Path codemeta.json; rg -n '"@context"|"codemeta-3.0"|"@type"|"name"|"description"|"version"|"datePublished"|"programmingLanguage"|"license"|"codeRepository"|"developmentStatus"' codemeta.json` | yes | yes | yes |
 | Paper metadata matches citation target | `rg -n "^date:|KairoECS contributors|0.4.0-alpha.1|edithatogo/kairos" paper/paper.md paper/paper.bib` | yes | yes | yes |
 | Archive note or release metadata exists | `rg -n "archive|release|citation|doi|Zenodo|0.4.0-alpha.1" docs/research/citation.md conductor/release-engineering.md conductor/package-catalog.md conductor/tracks/19-research-software-citation-archival/plan.md` | yes | yes | yes |
 | Markdown lint/link check | `just check-docs` | yes | yes | yes |
@@ -18,9 +18,15 @@
 
 ## Latest focused validation
 
-Last local evidence recorded by Worker 2:
+Last local evidence recorded on 2026-05-08:
 
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1` -> pass; reported `version=0.4.0-alpha.1`, `repository=https://github.com/edithatogo/kairos`, and `archive_status=pre-release metadata seed, not yet DOI-minted`.
+- `node tests/conformance/track12_20_evidence_check.mjs` -> pass for Track 19 inside the aggregate Track 12-20 evidence gate.
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` -> pass.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` -> pass.
+- Field presence checks for `CITATION.cff`, `.zenodo.json`, `codemeta.json`, and `paper/` metadata passed.
+- `Get-Command cffconvert,codemeta -ErrorAction SilentlyContinue` found no local CFF/CodeMeta CLI validators; external schema certification remains a release-environment follow-up unless those tools are installed.
+- `Get-Command just -ErrorAction SilentlyContinue` found no local `just` runner, so `just check-docs` and `just docs-build` were not run in this pass.
 
 Review-hardening expectation:
 

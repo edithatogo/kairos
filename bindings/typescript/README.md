@@ -21,10 +21,17 @@ Package root:
 - `tsconfig.json`
 - `src/index.ts`
 - `test/index.test.ts`
+- `test/conformance.test.ts`
+- `scripts/browser-smoke.mjs`
 
 Local validation:
 
 - `npm ci`
 - `npm run typecheck`
 - `npm test`
+- `npm run test:browser`
 - `npm run build`
+
+`npm test` runs Vitest over the Node facade and conformance fixture bridge.
+`npm run test:browser` builds the package and launches a headless Chromium smoke
+test against the built ESM bundle over a temporary localhost server.

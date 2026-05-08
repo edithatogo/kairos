@@ -21,6 +21,7 @@ foreach ($path in @(
     'docs/benchmarks/README.md',
     'benches/benchmark-plan.md',
     'benches/benchmark-smoke.json',
+    'benches/raw-results-policy.json',
     'benches/benchmark_smoke.py',
     'benches/benchmark_reproducibility.py',
     'conformance/fixtures/manifest.json',
@@ -49,6 +50,11 @@ foreach ($id in @('schedule_1m_events', 'pop_1m_events', 'schedule_cancel_1m_mix
 }
 
 Assert-Contains 'docs/benchmarks/reproduce-comparison.md' 'metadata gates' 'metadata-gate caveat'
+Assert-Contains 'docs/benchmarks/reproduce-comparison.md' 'benches/raw-results-policy\.json' 'raw-results policy link'
+Assert-Contains 'docs/benchmarks/benchmark-policy.md' 'benches/raw-results-policy\.json' 'raw-results policy gate'
+Assert-Contains 'benches/raw-results-policy.json' 'raw-results-policy' 'raw-results-policy gate'
+Assert-Contains 'benches/raw-results-policy.json' 'raw_output_path' 'raw output result field'
+Assert-Contains 'benches/raw-results-policy.json' 'baseline_version' 'baseline version result field'
 Assert-Contains 'docs/benchmarks/README.md' 'Benchmark readers should start' 'benchmark landing page'
 Assert-Contains '.github/workflows/benchmark-smoke.yml' 'python benches/benchmark_smoke\.py' 'benchmark metadata smoke gate'
 Assert-Contains '.github/workflows/benchmark-smoke.yml' 'cargo check -p kairo-ecs-bench' 'bench crate compile gate'

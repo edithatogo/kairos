@@ -15,6 +15,8 @@
 | Red-team objections about host variance are answered | `rg -n "host variance|unstable host|seed|determin" conductor/tracks/18-comparative-benchmarks-reproducibility/plan.md conductor/tracks/18-comparative-benchmarks-reproducibility/handoff.md` | yes | yes | yes |
 | Benchmark smoke metadata validates against manifest | `python benches/benchmark_smoke.py` | yes | yes | yes |
 | Track 18 reproducibility evidence validates against manifest | `python benches/benchmark_reproducibility.py` | yes | yes | yes |
+| Benchmark metadata gate is machine-checked | `python benches/benchmark_reproducibility.py` | yes | yes | yes |
+| Raw-results policy gate is machine-checked | `rg -n "raw-results-policy|raw_output_path|baseline_version|public-performance-claim" benches/raw-results-policy.json docs/benchmarks/benchmark-policy.md docs/benchmarks/reproduce-comparison.md` | yes | yes | yes |
 | Public reproduction page is linked into docs manifest | `npm --prefix website run check:links` | yes | yes | yes |
 | Aggregate Track 12-20 evidence gate keeps benchmark evidence wired | `node tests/conformance/track12_20_evidence_check.mjs` | yes | yes | yes |
 ## Phase closeout gate

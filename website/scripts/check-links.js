@@ -5,6 +5,19 @@ const siteRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(siteRoot, "..");
 const manifestPath = path.join(siteRoot, "docs-link-manifest.json");
 const docsRoots = ["docs", "bindings", "examples/docs", "website/src"];
+const ignoredDirectoryNames = new Set([
+  ".git",
+  ".next",
+  ".nuxt",
+  ".pytest_cache",
+  ".venv",
+  "__pycache__",
+  "build",
+  "dist",
+  "node_modules",
+  "target",
+  "vendor",
+]);
 
 function existsRelative(relativePath) {
   return fs.existsSync(path.join(repoRoot, relativePath));
@@ -46,8 +59,8 @@ function isWithinRepo(target, root = repoRoot) {
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
-function collectMarkdownSources(relativeRoot) {
-  const absoluteRoot = path.join(repoRoot, relativeRoot);
+function collectMarkdownSources(relativeRoot, root = repoRoot) {
+  const absoluteRoot = path.join(root, relativeRoot);
   const entries = [];
 
   if (!fs.existsSync(absoluteRoot)) {
@@ -69,11 +82,14 @@ function collectMarkdownSources(relativeRoot) {
     for (const entry of dirEntries) {
       const absoluteEntry = path.join(current, entry.name);
       if (entry.isDirectory()) {
+        if (ignoredDirectoryNames.has(entry.name)) {
+          continue;
+        }
         stack.push(absoluteEntry);
         continue;
       }
       if (entry.isFile() && entry.name.toLowerCase().endsWith(".md")) {
-        entries.push(path.relative(repoRoot, absoluteEntry));
+        entries.push(path.relative(root, absoluteEntry));
       }
     }
   }
@@ -184,11 +200,23 @@ function runSelfTest() {
       "[ok](target.md#valid-anchor)\n[bad](target.md#missing-anchor)\n[same](#local-anchor)\n## Local Anchor\n",
       "utf8"
     );
+    fs.mkdirSync(path.join(tempRoot, "bindings", "typescript", "node_modules", "bad-package"), {
+      recursive: true,
+    });
+    fs.writeFileSync(
+      path.join(tempRoot, "bindings", "typescript", "node_modules", "bad-package", "README.md"),
+      "[ignored](missing.md)\n",
+      "utf8"
+    );
 
     const sourceFile = "docs/source.md";
     const failures = checkMarkdownLinks(sourceFile, tempRoot);
     if (failures.length !== 1 || !failures[0].includes("missing-anchor")) {
       throw new Error(`anchor self-test failed: ${JSON.stringify(failures)}`);
+    }
+    const scanned = collectMarkdownSources("bindings", tempRoot);
+    if (scanned.some((entry) => entry.includes("node_modules"))) {
+      throw new Error(`dependency directory self-test failed: ${JSON.stringify(scanned)}`);
     }
     process.stdout.write("Docs link anchor self-test passed.\n");
   } finally {

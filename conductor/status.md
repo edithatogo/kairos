@@ -54,8 +54,8 @@ Latest local validation on 2026-05-07:
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_setup.ps1` passed, including `cargo test --workspace` via the installed `stable-x86_64-pc-windows-gnu` Rust toolchain on Windows.
 - `cargo fmt --all --check` passed.
 - `rustup run stable-x86_64-pc-windows-gnu cargo clippy --workspace --all-targets --all-features -- -D warnings` passed.
-- `npm --prefix website run check:all` passed: link check, docs build, and quality check completed.
-- `npm --prefix bindings\typescript test` and `npm --prefix bindings\typescript run typecheck` passed.
+- `npm --prefix website run check:all` passed: link check, docs build, and quality check completed. Track 14 was refreshed on 2026-05-08: the docs link checker now skips dependency/build/vendor directories during recursive scans, `npm --prefix website run check:all` rendered 110 docs pages, wrote 100 search-index entries, and indexed 23 crates / 459 public API items. The `just docs-build` wrapper remains locally blocked because `just` is not installed on PATH; the underlying website build gate passed.
+- `npm --prefix bindings\typescript run typecheck`, `npm --prefix bindings\typescript test`, and `npm --prefix bindings\typescript run test:browser` passed for Track 09 on 2026-05-08; the browser smoke required approval to launch headless Chromium.`r`n- `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passed for Track 09 on 2026-05-08 with 3 unit tests and 0 doctests; optional `wasm-export` validation remains future toolchain work.
 - `node tests\conformance\conformance-check.mjs`, `node tests\conformance\runner.mjs`, `node tests\conformance\runner-self-test.mjs`, `node tests\conformance\chaos-check.mjs`, `node tests\conformance\track07_13_hardening_check.mjs`, and `node tests\conformance\track12_20_evidence_check.mjs` passed.
 - `python -m pytest -q` from `bindings\python` passed with 15 tests, 1 optional pyarrow roundtrip skip, and the known local pytest cache permission warning; `python -m ruff check .`, compileall, import smoke, and `pip check` also passed for Track 06 on 2026-05-08. Wheel build remains blocked by local temp-directory ACL failures, and the real pyarrow table gate remains dependency-blocked because `pyarrow` is not installed.
 - `go test ./...`, `go vet ./...`, and `gofmt -w -l .` from `bindings\go` passed with no formatting output.
@@ -152,6 +152,42 @@ Track 13 is closed as `Done` after local review confirmed the current CI/CD and 
 - `pwsh -NoProfile -File scripts\validate_track13_supply_chain.ps1` passed for the Track 13 metadata validator and `cargo metadata --no-deps --format-version 1`.
 - `cargo-deny` and `cargo-audit` were not installed locally; the Track 13 supply-chain script reported those advisory scanner lanes as skipped rather than failed. Making those tools mandatory on every local workstation remains Track 20 or follow-up release hardening scope.
 
+## Track 18 implementation review (2026-05-08)
+
+Track 18 advanced from `In Progress` to `In Review` after hardening the benchmark-metadata and raw-results-policy gates:
+
+- `benches/raw-results-policy.json` now records the policy-only raw-results gate for public performance claims.
+- `benches/benchmark_reproducibility.py` now checks ready fixtures, canonical scenarios, benchmark metadata, required docs artifacts, and the raw-results policy fields.
+- `docs/benchmarks/README.md`, `docs/benchmarks/benchmark-policy.md`, and `docs/benchmarks/reproduce-comparison.md` now point readers to the policy manifest and keep metadata gates separate from publishable performance evidence.
+- No Track 12 benchmark harness changes were made; Track 18 continues to consume the existing metadata-only smoke harness.
+
+## Track 19 implementation review (2026-05-08)
+
+Track 19 advanced from `In Progress` to `In Review` after the citation metadata and archival-plan gates passed locally:
+
+- `codemeta.json` now uses the CodeMeta 3.0 context required by `conductor/metadata-check.md`, and the Track 19 citation/archive validator enforces that context.
+- The citation target remains `0.4.0-alpha.1`, repository code remains `https://github.com/edithatogo/kairos`, and the archive status remains explicitly `pre-release metadata seed, not yet DOI-minted`.
+- Focused validation passed: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1`, `node tests/conformance/track12_20_evidence_check.mjs`, `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`, and field-presence checks for `CITATION.cff`, `.zenodo.json`, `codemeta.json`, and `paper/` metadata.
+- Local schema/documentation runner blockers remain: `cffconvert`, `codemeta`, and `just` are not installed, so schema-CLI validation and `just check-docs` / `just docs-build` were not run in this pass.
+- Track 19 is not `Done`: strict git closeout and push evidence remain blocked by unrelated worker edits already present in shared Conductor files and Track 09.
+
+## Track 16 implementation review (2026-05-08)
+
+Track 16 remains `In Progress` after a focused release-governance hardening pass:
+
+- `docs/release/maintainer-rotation.md` now records preview release-manager, compatibility-review, package-evidence, supply-chain, docs-review, and escalation coverage for the R2 release train.
+- `conductor/tracks/16-release-governance-maintenance/validate-release-governance.ps1` now proves the named `compatibility-policy` and `changelog-check` gates are present in both Track 16's registry gate block and the central quality-gate catalogue.
+- The Track 16 validator passed and now emits `track16_status=ok`, `compatibility_policy=ok`, and `changelog_check=ok`.
+- `node tests\conformance\track12_20_evidence_check.mjs` passed.
+- `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` failed on Track 19 missing commit SHA, pushed ref, and strict git-closeout markers, outside Track 16 ownership. Track 16 is therefore not advanced to `In Review` in the central registry in this pass.
+
+## Track 09 closeout (2026-05-08)
+
+Track 09 is closed as `Done` after review and follow-up validation confirmed the TypeScript/Wasm package slice:
+
+- `npm --prefix bindings\typescript run typecheck`, `npm --prefix bindings\typescript test`, `npm --prefix bindings\typescript run test:browser`, and `npm pack --dry-run` passed after local dependency install and required browser/cache approvals.
+- `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passed with 3 unit tests and 0 doctests, resolving the default Rust wrapper unit-test blocker seen on the default MSVC linker path.
+- The optional `wasm-export`/wasm-pack path remains future toolchain work because the `wasm-bindgen` feature path still depends on local Windows linker setup.
 ## Track 10 closeout (2026-05-08)
 
 Track 10 is closed as `Done` after a focused rerun of the .NET 11 preview lane:
@@ -194,6 +230,16 @@ Track 26 advanced from `Spec Approved` to `In Review` after the standards-mappin
 - Focused validation passed for the Track 26 standards validator and the Track 21-27 evidence-boundary guard. The combined Track 21-27 validator passed Track 26 but failed in Track 27's docs workflow because the link checker scanned `bindings/typescript/node_modules`.
 - Track 26 is not `Done`: strict git closeout and push evidence remain blocked by pre-existing unrelated dirty worktree changes outside Track 26 ownership.
 
+## Track 27 implementation review (2026-05-08)
+
+Track 27 advanced to `In Review` after the developer-experience bootstrap and toolchain-docs gates were hardened and reviewed:
+
+- `scripts/bootstrap.sh` now installs `just`, bootstraps docs dependencies with `npm --prefix website ci`, and points contributors to `just dev-validate`, aligning the Unix-like bootstrap path with the Windows fallback contract.
+- `scripts/dx/validate-toolchain-docs.mjs` now checks `.devcontainer/devcontainer.json`, `devbox.json`, `mise.toml`, `justfile`, and bootstrap scripts for the Track 27 toolchain contract.
+- `just toolchain-docs` is wired to the new validator, and `scripts/dx/validate-docs-workflow.mjs` now asserts that recipe exists.
+- Focused validation passed: `pwsh -NoProfile -File scripts/bootstrap.ps1 -CheckOnly`, `node scripts/dx/validate-toolchain-docs.mjs`, `node scripts/dx/validate-docs-workflow.mjs`, `node scripts/validation/validate-track21-27-evidence-boundaries.mjs`, and `node scripts/validation/validate-tracks21-27.mjs`.
+- Direct `just` recipe execution remains blocked in this shell because `just` is not on `PATH`. `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and non-strict `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` passed; strict clean-tree closeout remains blocked by the shared dirty worktree.
+
 ## Track 08 implementation review (2026-05-08)
 
 Track 08 advanced from `Planned` to `In Review` after a focused Julia binding implementation/review pass:
@@ -215,6 +261,34 @@ Track 11 advanced from `In Progress` to `In Review` after adding the missing cgo
 - The first sandboxed `go test ./...` hit `%LOCALAPPDATA%\go-build` access denial, then passed with normal Windows Go build-cache access.
 - Native runtime execution remains blocked until a linkable `kairo-ecs-ffi` library is packaged for the Go module; release publication remains Track 15 scope.
 
+## Track 20 implementation review (2026-05-08)
+
+Track 20 advanced from `In Progress` to `In Review` after the OpenSSF, SBOM-plan, and vulnerability-policy evidence pass:
+
+- `SECURITY.md` now records vulnerability acknowledgement, private disclosure, release-stage exception, and allowed-failure boundaries.
+- `.github/workflows/sbom-attestations.yml` now verifies `RELEASE.txt`, `release-artifact-manifest.json`, and `SHA256SUMS`, disables persisted checkout credentials, and uses `actions/upload-artifact@v4` for SBOM evidence upload.
+- Focused validation passed for `pwsh -NoProfile -File conductor/tracks/20-openssf-supply-chain-institutional-trust/validate-supply-chain-trust.ps1` and `node tests/conformance/track12_20_evidence_check.mjs`.
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` remains blocked by Tracks 15 and 27 lacking phase closeout ledger entries outside Track 20 ownership.
+- RC/1.0 artifact trust claims remain blocked locally because `dist/RELEASE.txt` and `dist/sbom.spdx.json` are absent and `syft` is not installed in this shell.
+
+## Track 29 implementation review (2026-05-08)
+
+Track 29 advanced from `In Progress` to `In Review` after the wave gatekeeper
+gained target-track closeout mode while preserving the default global release
+gate:
+
+- `validate-wave-gates.ps1 -TrackId 29` passes because Track 29 depends only
+  on Track 00, which is `Done`, and has no unresolved transitive dependencies.
+- The default global `validate-wave-gates.ps1` command still fails by design
+  against unrelated status violations: 16 direct dependency blockers and 25
+  transitive dependency blockers remain outside Track 29.
+- `conductor/wave-policy.md`, the Track 29 test matrix, handoff, risk register,
+  and phase-closeout ledger now record the 2026-05-08 wave snapshot and current
+  blocker counts.
+- DAG validation passed with 41 tracks, 47 agents, 0 errors, and 0 warnings.
+  Phase-gate validation remains blocked by unrelated closed ledger entries
+  outside Track 29 that do not record 40-character commit SHAs.
+
 ## Implementation readiness
 
 The repo now has a first executable implementation skeleton:
@@ -228,7 +302,7 @@ The repo now has a first executable implementation skeleton:
 - Python, R, Julia, TypeScript/Wasm, C#, and Go binding slices with deterministic facade APIs and explicit native-FFI status boundaries
 - conformance runner, CI policy, docs link-check, package dry-run, release governance, and community onboarding slices with local validators
 - benchmark reproducibility, citation/archive metadata, OpenSSF trust evidence, VVUQ notes, scenario indexing, and starter-kit/model-zoo inventory slices with local validators
-- playground, compatibility governance, interoperability mapping, docs workflow, red-team ledger, and wave-gate slices with local validators
+- playground, compatibility governance, interoperability mapping, docs workflow, red-team ledger, and wave-gate slices with local validators; Track 28 is in review with no unresolved Critical release blockers and recorded RC/1.0 blockers for SBOM/provenance or overbroad release claims
 - toolchain version matrix and performance regression guard slices with CI workflows and local validators
 - GPU, WebGPU, PDES, MPI/gRPC, streaming, ML, FMI, cloud/HPC, and time-travel debug implementation slices with smoke validators
 - GitHub workflow scaffolding under `.github/`

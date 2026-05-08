@@ -9,6 +9,7 @@
 - [ ] Changelog policy check passed for public release-surface changes.
 - [ ] Deprecation register reviewed; removals have prior notice or ADR.
 - [ ] Migration guide written if needed.
+- [ ] Maintainer rotation assigned in `docs/release/maintainer-rotation.md`.
 - [ ] R2 package inventory reviewed: `packaging/release-package-manifest.json`.
 - [ ] Dry-run path confirmed: `python packaging/scripts/build_release_manifest.py --check` then `python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run`.
 - [ ] Release artifact manifest path agreed: `dist/release-artifact-manifest.json`.
@@ -36,6 +37,7 @@
 - [ ] Quickstarts for all languages updated.
 - [ ] Release notes published.
 - [ ] Maintenance handoff completed.
+- [ ] Maintainer rotation and escalation path reviewed.
 
 ## Artifacts
 

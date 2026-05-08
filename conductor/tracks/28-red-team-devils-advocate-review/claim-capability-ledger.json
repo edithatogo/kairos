@@ -1,9 +1,17 @@
 {
   "schema_version": 1,
-  "freshness_date": "2026-05-06",
+  "freshness_date": "2026-05-08",
   "freshness_window_days": 14,
   "release_stage_scope": ["beta", "rc", "1.0"],
   "owner_required_for": ["blocker", "warning"],
+  "critical_release_blockers": [],
+  "recorded_stage_blockers": [
+    "CVC-02",
+    "CVC-04",
+    "CVC-07",
+    "CVC-08",
+    "CVC-10"
+  ],
   "entries": [
     {
       "id": "CVC-01",
@@ -98,12 +106,12 @@
     {
       "id": "CVC-10",
       "claim": "Release artifact evidence exists for the current release train",
-      "verdict": "not-yet-supported",
+      "verdict": "partial-local-dry-run-only",
       "class": "blocker",
       "owner": "release-agent",
-      "stage_impact": "Blocks RC/1.0 publication claims about artifacts, checksums, SBOM, or provenance",
-      "evidence": ["docs/release/release-checklist.md", "packaging/release-package-manifest.json", "dist/release-artifact-manifest.json"],
-      "counterexample": "Release notes saying artifacts, checksums, and SBOM are attached before the manifest exists"
+      "stage_impact": "Blocks RC/1.0 claims about SBOM, provenance, or attestations; artifact/checksum claims are supported only for the local r2 dry-run evidence",
+      "evidence": ["docs/release/release-checklist.md", "packaging/release-package-manifest.json", "dist/release-artifact-manifest.json", "dist/SHA256SUMS", "dist/sbom.spdx.json"],
+      "counterexample": "Release notes saying SBOM, provenance, or hosted attestations are attached before those outputs exist"
     }
   ]
 }

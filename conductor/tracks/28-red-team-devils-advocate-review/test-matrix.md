@@ -25,12 +25,13 @@ Run these from the repository root before release planning uses Track 28 output.
 | Red-team rows are present in release checklist | `Select-String -LiteralPath 'conductor/delivery-readiness-checklist.md' -Pattern 'Claim-versus-capability ledger','Blocker rubric','Red-team validation commands'` | All three patterns found | Pass on 2026-05-06 |
 | Owner/freshness language is present | `Select-String -LiteralPath 'reviews/red-team-report.md' -Pattern 'Freshness date','Owner','Stage impact','Blocker rubric'` | All four patterns found | Pass on 2026-05-06 |
 | Machine-readable ledger parses and required owners are present | `$ledger = Get-Content -Raw -LiteralPath 'conductor/tracks/28-red-team-devils-advocate-review/claim-capability-ledger.json' | ConvertFrom-Json; if (-not $ledger.freshness_date) { throw 'missing freshness_date' }; $missing = @($ledger.entries | Where-Object { $_.class -in @('blocker','warning') -and [string]::IsNullOrWhiteSpace($_.owner) }); if ($missing.Count) { throw 'ledger entries missing owners' }; $ledger.entries.Count` | Returns `10` and throws no owner/freshness error | Pass on 2026-05-06 |
+| No-critical-release-blockers gate | `pwsh -NoProfile -File conductor/tracks/28-red-team-devils-advocate-review/validate-track28-redteam.ps1` | Ledger is fresh, every blocker/warning has owner and stage impact, evidence paths are present or recorded as a stage-scoped blocker, and unresolved critical blocker count is zero | Pass on 2026-05-08 with warning for missing `dist/sbom.spdx.json` |
 | Write scope stayed in Track 28-owned files | `git status --short -- conductor/tracks/28-red-team-devils-advocate-review reviews conductor/red-team-review.md conductor/devils-advocate-review.md conductor/delivery-readiness-checklist.md` | Only Track 28-owned files for this worker's diff; full repo still has unrelated in-flight edits by others | Pass on 2026-05-06 |
 
 ## Validation interpretation
 
 - A missing `dist/release-artifact-manifest.json` is acceptable before dry-run artifact generation, but it blocks RC or 1.0 claims that release artifacts are attached.
-- A missing `dist/sbom.spdx.json` blocks RC or 1.0 claims that SBOM, provenance, or attestation evidence exists.
+- As of 2026-05-08, `dist/release-artifact-manifest.json` and `dist/SHA256SUMS` exist from the local R2 dry-run; `dist/sbom.spdx.json` is still absent and blocks RC or 1.0 claims that SBOM, provenance, or attestation evidence exists.
 - Planned conformance fixtures do not support release claims until their fixture rows become `ready` and the conformance workflow validates them.
 - A red-team report older than 14 days is stale even if the file exists.
 ## Phase closeout gate

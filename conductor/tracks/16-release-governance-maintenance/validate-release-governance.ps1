@@ -17,6 +17,14 @@ function Assert-Contains {
     }
 }
 
+function Assert-RawContains {
+    param([string]$Path, [string]$Pattern, [string]$Description)
+    $content = Get-Content -LiteralPath $Path -Raw
+    if ($content -notmatch $Pattern) {
+        throw "Missing $Description in $Path"
+    }
+}
+
 foreach ($path in @(
     'CHANGELOG.md',
     '.github/workflows/changelog-policy.yml',
@@ -25,6 +33,7 @@ foreach ($path in @(
     'docs/release/changelog-policy.md',
     'docs/release/compatibility.md',
     'docs/release/maintenance-handoff.md',
+    'docs/release/maintainer-rotation.md',
     'docs/release/release-checklist.md',
     'docs/release/release-notes.md'
 )) {
@@ -32,6 +41,11 @@ foreach ($path in @(
 }
 
 Assert-Contains 'CHANGELOG.md' 'Release governance slice' 'R2 changelog entry'
+Assert-Contains 'CHANGELOG.md' 'maintainer rotation' 'maintainer rotation changelog entry'
+Assert-RawContains 'conductor/tracks.yaml' '(?s)- id: 16.*?required_gates:.*?compatibility-policy' 'Track 16 compatibility-policy gate'
+Assert-RawContains 'conductor/tracks.yaml' '(?s)- id: 16.*?required_gates:.*?changelog-check' 'Track 16 changelog-check gate'
+Assert-Contains 'conductor/quality-gates.md' '\*\*compatibility-policy\*\*' 'central compatibility-policy gate definition'
+Assert-Contains 'conductor/quality-gates.md' '\*\*changelog-check\*\*' 'central changelog-check gate definition'
 Assert-Contains '.github/workflows/changelog-policy.yml' 'Public release surface changed without CHANGELOG.md' 'changelog-policy workflow gate'
 Assert-Contains '.github/workflows/changelog-policy.yml' 'changelog_policy=ok' 'changelog-policy workflow success marker'
 Assert-Contains '.github/workflows/release.yml' 'Validate release checklist' 'release workflow checklist step'
@@ -44,7 +58,12 @@ Assert-Contains 'docs/release/release-governance.md' 'dry-run' 'dry-run release 
 Assert-Contains 'docs/release/changelog-policy.md' 'Public release surface changed without CHANGELOG.md' 'changelog enforcement wording'
 Assert-Contains 'docs/release/compatibility.md' 'Deprecation register' 'deprecation register'
 Assert-Contains 'docs/release/maintenance-handoff.md' 'R2 handoff status' 'maintenance handoff status'
+Assert-Contains 'docs/release/maintainer-rotation.md' 'Maturity: preview' 'maintainer rotation maturity label'
+Assert-Contains 'docs/release/maintainer-rotation.md' 'Release manager' 'release manager rotation role'
+Assert-Contains 'docs/release/maintainer-rotation.md' 'Escalation path' 'maintainer escalation path'
 Assert-Contains 'docs/release/release-notes.md' 'production publishing' 'publish-block wording'
 
 Write-Host "track16_status=ok"
 Write-Host 'release_governance=offline-doc-gate'
+Write-Host 'compatibility_policy=ok'
+Write-Host 'changelog_check=ok'

@@ -121,7 +121,7 @@ async function smokeDevServer() {
 
 async function main() {
   const justfile = readText(justfilePath);
-  for (const recipe of ["docs-bootstrap:", "docs-build:", "docs-dev:", "docs-smoke:", "check-docs:"]) {
+  for (const recipe of ["docs-bootstrap:", "docs-build:", "docs-dev:", "docs-smoke:", "check-docs:", "toolchain-docs:"]) {
     assert(justfile.includes(recipe), `missing ${recipe} recipe in justfile`);
   }
   assert(fs.existsSync(windowsBootstrapPath), "missing Windows bootstrap script");

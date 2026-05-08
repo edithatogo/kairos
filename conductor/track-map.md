@@ -39,7 +39,7 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 26 | Interoperability Standards Review | DEVS/FMI/SBML/OpenTelemetry/Arrow mappings | standards-agent | Starts during architecture review |
 | 27 | Developer Experience & Reproducible Environments | Devcontainer, devbox/mise, bootstrap scripts, task runner | dx-agent | Starts immediately; supports all subagents |
 | 28 | Red Team & Devil's Advocate Review | Continuous adversarial review of roadmap, architecture, governance, release | redteam-agent | Starts immediately and recurs before releases |
-| 29 | Wave Manager & Execution Gatekeeper | Enforce wave policy (waves 0-5), validate dependency closure, own critical path gates | wave-manager-agent | Starts immediately alongside all tracks |
+| 29 | Wave Manager & Execution Gatekeeper | Enforce graph-derived wave policy (currently waves 0-6), validate dependency closure, own critical path gates | wave-manager-agent | Starts immediately alongside all tracks |
 | 30 | Toolchain & Version Support Matrix | Own cross-language toolchain version matrix, version-drop policy, CI coverage | toolchain-agent | Starts immediately |
 | 31 | Performance Regression Guard | Automated performance regression detection, threshold-based CI comparison gates | perf-regression-agent | Starts after benchmark harness and comparative benchmarks scaffold |
 | 32 | GPU Compute Acceleration | GPU-accelerated ECS operations, CUDA/Vulkan/OpenCL backends | gpu-compute-agent | After core scheduler |

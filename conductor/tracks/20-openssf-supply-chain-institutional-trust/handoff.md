@@ -46,6 +46,23 @@ Added a track-local offline validator for release-trust evidence and softened
 the audit language in `spec.md` so Track 20 does not imply an audit report
 exists before it is checked in.
 
+## Implementation-review update
+
+`$conductor-implement` and `$conductor-review` were run for the Track 20-owned surface on 2026-05-08. The implementation pass hardened `SECURITY.md` with vulnerability response and exception expectations, tightened `.github/workflows/sbom-attestations.yml` so SBOM attestation verifies `RELEASE.txt`, `release-artifact-manifest.json`, and `SHA256SUMS`, and updated the Track 20 validator/test matrix plus global readiness gate references.
+
+Accepted fixes: SBOM attestation checkout now disables persisted credentials, the SBOM artifact upload uses `actions/upload-artifact@v4`, and the local Track 20 gate asserts the vulnerability-policy text and full artifact-tree checks.
+
+Review findings: no blocking defect remains inside the Track 20-owned files after the accepted fixes.
+
+Recorded blockers:
+
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` fails because Tracks 15 and 27 are `In Review` without phase closeout ledger entries, outside Track 20 ownership.
+- `dist/RELEASE.txt` and `dist/sbom.spdx.json` are absent in the local artifact tree, so RC/1.0 SBOM/provenance claims remain blocked until the release tree is regenerated with those files.
+- `syft`, `actionlint`, and `zizmor` are not installed in this shell, so local SBOM generation and local workflow-security lint execution were not available.
+- `.github/workflows/release-attestations.yml` is outside this Track 20 ownership pass and still needs release/CI owner review before release-stage attestation claims are promoted.
+
+Track status: In Review. The scorecard, sbom-plan, and vulnerability-policy gates are satisfied for repository evidence and beta-stage planning; RC/1.0 artifact evidence remains blocked as listed above.
+
 ## Contracts changed
 
 No supply-chain contracts changed in this scoped cleanup; trust evidence remains tied to checked-in security docs, ownership files, and workflow definitions.
@@ -67,4 +84,4 @@ Keep Scorecard, dependency review, secret scanning, workflow security, SBOM, and
 Treat Track 20 as a trust gate and evidence map, not as proof of an external security audit unless a real audit artifact is checked in.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+`$conductor-review` completed for the Track 20-owned surface on 2026-05-08. Accepted fixes are listed above. Deferred or blocked fixes are limited to Track 15/27 phase-gate ledger cleanup, RC/1.0 artifact generation, missing local workflow/SBOM tools, and non-owned release attestation review. Commit SHA: blocked because this pass has not been committed or pushed. Pushed ref: blocked because no push was attempted. `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` was not run because the worktree intentionally contains uncommitted Track 20 closeout edits. Next-phase decision: Track 20 is In Review; do not advance to Done until RC/1.0 artifact evidence or explicit release-stage exceptions are available and shared phase-gate blockers are cleared.

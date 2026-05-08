@@ -51,7 +51,12 @@ plots for docs site
 caveats and fairness notes
 ```
 
-Raw benchmark results are kept as emitted by the harness. The documented summary may be rendered into JSON, Arrow, or markdown for the docs site, but the captured raw criterion output and environment/command files remain the evidence of record for comparison claims.
+Raw benchmark results are kept as emitted by the harness. The documented summary may be rendered into JSON, Arrow, or markdown for the docs site, but the captured raw criterion output, raw output path, and environment/command files remain the evidence of record for comparison claims.
+
+The machine-readable raw-results policy is `benches/raw-results-policy.json`.
+It is checked by `python benches/benchmark_reproducibility.py` and must include
+the required artifacts and result fields before any public performance claim is
+treated as publishable.
 
 ## Reproduction gate
 

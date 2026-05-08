@@ -44,6 +44,9 @@ docs-smoke:
 check-docs:
     node scripts/dx/validate-docs-workflow.mjs
 
+toolchain-docs:
+    node scripts/dx/validate-toolchain-docs.mjs
+
 security:
     cargo deny check
     cargo audit

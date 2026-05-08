@@ -17,10 +17,16 @@ mirrored in `conformance/fixtures/manifest.json`.
 metadata-only smoke harness that verifies those names against the conformance
 manifest without requiring native benchmark link tests.
 
+`benches/raw-results-policy.json` records the raw-results policy gate for
+future native benchmark measurements. It is intentionally policy-only: until a
+run archives command capture, environment metadata, raw output, scenario ID,
+fixture ID, seed, toolchain, feature flags, and baseline version, Track 18
+treats the result as non-publishable.
+
 Track 18 adds `benches/benchmark_reproducibility.py` as a lightweight
 reproducibility evidence check. It verifies that the ready fixture IDs,
-fixture source files, canonical benchmark scenarios, and smoke metadata remain
-aligned with `conformance/fixtures/manifest.json`.
+fixture source files, canonical benchmark scenarios, smoke metadata, and
+raw-results policy remain aligned with `conformance/fixtures/manifest.json`.
 
 Local validation commands:
 

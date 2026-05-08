@@ -1,6 +1,6 @@
 # Handoff — 16 Release Governance & Maintenance
 
-Last updated: 2026-05-07
+Last updated: 2026-05-08
 
 ## Summary
 
@@ -21,6 +21,7 @@ posture and Track 25's compatibility boundary.
 `docs/release/changelog-policy.md`
 `docs/release/compatibility.md`
 `docs/release/maintenance-handoff.md`
+`docs/release/maintainer-rotation.md`
 `docs/release/release-checklist.md`
 `docs/release/release-notes.md`
 
@@ -69,12 +70,25 @@ source of release-governance expectations.
 ## Review-hardening update
 
 Added a track-local release-governance validator that checks the changelog,
-compatibility, deprecation, release-note, and maintenance handoff claims
-against checked-in docs.
+compatibility, deprecation, release-note, maintenance handoff, maintainer
+rotation, `compatibility-policy`, and `changelog-check` claims against
+checked-in docs and the central gate registry.
 
 ## Follow-up issues
 
 Expand the changelog-policy workflow matcher when new public release surfaces are added, and keep release workflow dry-run posture aligned with Track 15 packaging gates.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+Implementation/review pass on 2026-05-08:
+
+- `$conductor-review` findings: no blocking Track 16 findings after the maintainer-rotation output and named gate assertions were added.
+- Accepted fixes: added `docs/release/maintainer-rotation.md` with a preview maturity label, wired it into release governance/checklist/handoff docs, and hardened `validate-release-governance.ps1` to prove `compatibility-policy` and `changelog-check` are present in Track 16's `conductor/tracks.yaml` gate block and `conductor/quality-gates.md`.
+- Deferred or blocked fixes: no Track 16 blocker remains for `compatibility-policy` or `changelog-check`. The shared phase-closeout validator is blocked by Track 19 handoff evidence outside Track 16 ownership.
+- Validation commands:
+  - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\16-release-governance-maintenance\validate-release-governance.ps1`
+  - `node tests\conformance\track12_20_evidence_check.mjs`
+  - `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` (blocked by Track 19 handoff evidence, not Track 16)
+- Commit SHA: blocked; no commit created in the shared worktree.
+- Pushed ref: blocked; no push performed.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: not run because shared phase-closeout is already blocked and the worktree is not clean.
+- Next-phase decision: keep Track 16 `In Progress` until the unrelated Track 19 phase-closeout evidence blocker is resolved or waived; Track 16's compatibility and changelog gates are locally satisfied.

@@ -3,7 +3,7 @@
 ## Release posture
 
 The repository has real package roots, workflows, docs, and readiness gates, but the release narrative must stay narrower than the current surface area. The release-blocking question is not whether the files exist; it is whether the checked-in capabilities match the claims made in release planning.
-The claim-vs-capability boundary now includes concrete conformance validation, package dry-runs, and release attestation workflows, not just placeholder gate language.
+The claim-vs-capability boundary now includes concrete conformance validation, package dry-runs, local artifact/checksum evidence, and release attestation/SBOM expectations, not just placeholder gate language.
 
 ## Current release blockers
 
@@ -13,7 +13,7 @@ The claim-vs-capability boundary now includes concrete conformance validation, p
 - Conformance claims must stay tied to the ready fixture manifest and the conformance workflow that validates those fixture IDs and canonical benchmark names.
 - Supply-chain claims must stay tied to `sbom-attestations.yml`, `release-attestations.yml`, and the release artifact manifest/checksum path, not just to checklist prose.
 - Compatibility and interoperability claims should be treated as release blockers until the relevant checklist rows and track docs are current.
-- Release artifact evidence is not present until `dist/release-artifact-manifest.json`, `dist/SHA256SUMS`, and the SBOM/provenance outputs exist for the target release train.
+- Local R2 artifact/checksum evidence exists in `dist/release-artifact-manifest.json` and `dist/SHA256SUMS`, but SBOM/provenance outputs are still absent. RC/1.0 artifact-trust language remains blocked until SBOM/provenance evidence exists for the target release train.
 
 ## Blocker rubric
 
@@ -26,6 +26,10 @@ The claim-vs-capability boundary now includes concrete conformance validation, p
 ## Freshness rule
 
 `reviews/red-team-report.md` is stale if its freshness date is older than 14 days or if beta, RC, or 1.0 planning has started since the last review. A stale report is treated as missing release evidence until Track 28 re-runs the ledger, confirms owners, and records the validation commands in the track test matrix.
+
+## No-critical-release-blockers gate
+
+The 2026-05-08 ledger records no unresolved Critical release blockers. Stage-scoped blockers remain active for overbroad RC/1.0 claims about stable bindings, conformance beyond ready fixtures, SBOM/provenance/attestations, and unsupported compatibility or supply-chain readiness.
 
 ## Planning rules
 

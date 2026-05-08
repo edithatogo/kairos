@@ -10,7 +10,7 @@ The release posture should stay staged: kernel and conformance first, then bindi
 
 | Field | Value |
 |---|---|
-| Freshness date | 2026-05-06 |
+| Freshness date | 2026-05-08 |
 | Freshness window | Re-run for every beta, RC, or 1.0 release plan; otherwise stale after 14 days |
 | Machine-readable ledger | `conductor/tracks/28-red-team-devils-advocate-review/claim-capability-ledger.json` |
 | Evidence commands | `Test-Path` and `Get-Content` commands recorded in `conductor/tracks/28-red-team-devils-advocate-review/test-matrix.md` |
@@ -29,7 +29,7 @@ The release posture should stay staged: kernel and conformance first, then bindi
 | CVC-07 | OpenSSF and supply-chain readiness are done | `SECURITY.md`; `CODEOWNERS`; `.github/workflows/scorecard.yml`; `.github/workflows/dependency-review.yml`; `.github/workflows/sbom-attestations.yml`; `.github/workflows/release-attestations.yml` | Supported as gate infrastructure; not supported as shipped release evidence | security-agent, release-agent | Blocks RC/1.0 native artifacts without SBOM/checksum/provenance evidence | "SLSA/OpenSSF ready" before generated artifacts are attached |
 | CVC-08 | API compatibility governance is complete | `conductor/contracts/versioning-compatibility.md`; `docs/release/compatibility.md`; `docs/adr/`; `conductor/delivery-readiness-checklist.md` | Supported as policy; enforcement must be proven per release | api-governance-agent, release-agent | Blocks RC/1.0 for renamed or breaking public roots without ADR/migration note | Breaking package root rename presented as a minor release detail |
 | CVC-09 | Interoperability standards review is complete | `docs/interoperability/standards-review.md`; Track 26 references | Supported only as a standards/gap map | interoperability-agent | Blocks interoperability claims beyond documented mappings | Claiming semantic compatibility with Mesa, Agents.jl, MASON, NetLogo, or DEVS tooling |
-| CVC-10 | Release artifact evidence exists for the current release train | `docs/release/release-checklist.md`; `packaging/release-package-manifest.json`; expected `dist/release-artifact-manifest.json` | Not yet supported: `dist/release-artifact-manifest.json` was absent in the focused check | release-agent | Blocks RC/1.0 publication | Release notes saying artifacts, checksums, and SBOM are attached before the manifest exists |
+| CVC-10 | Release artifact evidence exists for the current release train | `docs/release/release-checklist.md`; `packaging/release-package-manifest.json`; `dist/release-artifact-manifest.json`; `dist/SHA256SUMS`; expected `dist/sbom.spdx.json` | Partially supported for the local R2 dry-run: artifact manifest and checksums exist, but SBOM/provenance evidence is absent | release-agent | Blocks RC/1.0 SBOM, provenance, attestation, and artifact-trust claims until those outputs exist | Release notes saying SBOM, provenance, or hosted attestations are attached before those outputs exist |
 
 ## Blocker rubric
 
@@ -58,7 +58,7 @@ The report is current only when all of the following are true:
 | Benchmark overclaim | High | A benchmark smoke job can exist without a defensible comparison harness | Publish benchmark claims only with the benchmark plan, fixture IDs, and outputs | Patched |
 | Fuzzing overclaim | High | A single fuzz target does not justify broad safety claims | Scope safety claims to the current fuzz lane and its limits | Patched |
 | Documentation overclaim | High | Docs can look authoritative while the underlying capability is still partial | Keep docs maturity labels synchronized with the readiness checklist | Patched |
-| Supply-chain overclaim | High | A checklist row is not the same as provenance, SBOM, or scorecard evidence | Require concrete attestation workflows and artifact checks before release claims | Patched |
+| Supply-chain overclaim | High | A checklist row is not the same as provenance, SBOM, or scorecard evidence | Require concrete attestation workflows and artifact checks before release claims | Recorded; RC/1.0 SBOM/provenance blocker remains |
 | Compatibility overclaim | High | Compatibility policy text can drift from real package-root behavior | Require ADRs and migration notes before breaking changes or renames | Patched |
 | Interoperability overclaim | Medium | Mapping review can be mistaken for broad ecosystem support | Keep Track 26 limited to mapped translations and known gaps | Patched |
 
@@ -108,3 +108,5 @@ No release candidate may ship unless:
 - package names and legal/trademark checks are complete
 - checksums/provenance artifacts are attached for native releases
 - red-team issue list has no unresolved Critical or unaccepted High risk
+
+Current gate readout for 2026-05-08: no unresolved Critical release blockers are recorded in the machine-readable ledger. Stage-scoped blockers remain recorded for RC/1.0 SBOM/provenance claims, stable multi-binding claims, out-of-fixture conformance claims, and unsupported compatibility/supply-chain claims.

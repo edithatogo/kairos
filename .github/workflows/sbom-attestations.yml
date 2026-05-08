@@ -23,9 +23,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Verify release artifact tree exists
         run: |
           test -d "${ARTIFACT_PATH}"
+          test -f "${ARTIFACT_PATH}/RELEASE.txt"
           test -f "${ARTIFACT_PATH}/release-artifact-manifest.json"
           test -f "${ARTIFACT_PATH}/SHA256SUMS"
       - name: Install Syft
@@ -33,7 +36,7 @@ jobs:
       - name: Generate SBOM
         run: syft "dir:${ARTIFACT_PATH}" -o "spdx-json=${ARTIFACT_PATH}/sbom.spdx.json"
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: sbom-spdx
           path: ${{ env.ARTIFACT_PATH }}/sbom.spdx.json

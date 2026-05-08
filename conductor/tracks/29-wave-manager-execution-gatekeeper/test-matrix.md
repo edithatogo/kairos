@@ -1,6 +1,6 @@
 # Test Matrix: Track 29 Wave Manager & Execution Gatekeeper
 
-Current validation date: 2026-05-07.
+Current validation date: 2026-05-08.
 
 | Check | Local command | Expected result | Current evidence |
 |---|---|---|---|
@@ -12,8 +12,10 @@ Current validation date: 2026-05-07.
 | Wave assignment is derivable from the dependency graph | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -ReportOnly` | Pass | Pass: wave assignment is computed from `depends_on` closure, not hand-coded track lists. |
 | Wave membership is derived from `conductor/tracks.yaml` | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -ReportOnly` | Pass | Pass: 41 tracks assigned to Waves 0-6. Wave 6 contains Track 39 because it depends on Wave-5 Track 15. |
 | Critical-path heatmap is generated from dependency closure | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -ReportOnly` | Pass | Pass: top heatmap entries are Track 00 (40 transitive dependents), Track 01 (28), Track 12 (21), Track 26 (20), Track 04 (14). |
-| `wave-progression-check` blocks direct dependency violations | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1` | Fail while dependencies are unresolved | Fail as designed: 89 `wave-progression-check/direct-dependency-not-done` blockers. |
-| `dependency-closure-check` blocks transitive dependency violations | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1` | Fail while dependencies are unresolved | Fail as designed: 181 `dependency-closure-check/transitive-dependency-not-done` blockers. |
+| Track 29 satisfies its direct dependency gate | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -TrackId 29` | Pass | Pass: Track 29 targets only dependency 00, which is `Done`; no `wave-progression-check` issues. |
+| Track 29 satisfies its transitive dependency gate | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -TrackId 29` | Pass | Pass: Track 29 has no unresolved transitive dependency blockers. |
+| `wave-progression-check` blocks direct dependency violations globally | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1` | Fail while unrelated dependencies are unresolved | Fail as designed: 16 `wave-progression-check/direct-dependency-not-done` blockers outside Track 29. |
+| `dependency-closure-check` blocks transitive dependency violations globally | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1` | Fail while unrelated dependencies are unresolved | Fail as designed: 25 `dependency-closure-check/transitive-dependency-not-done` blockers outside Track 29. |
 | Missing owner, missing required gate, unknown dependency, missing artifact, and cycle checks are wired | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -ReportOnly` | No structural blockers in current snapshot | Pass for structural checks: no missing-owner, missing-required-gates, unknown-dependency, missing-required-artifact, or dependency-cycle issues were reported. |
 
 ## Current Wave Membership
@@ -32,16 +34,16 @@ Current validation date: 2026-05-07.
 
 | Rank | Track | Wave | Direct dependents | Transitive dependents | Current status |
 |---:|---:|---:|---:|---:|---|
-| 1 | 00 | 0 | 13 | 40 | Spec Approved |
-| 2 | 01 | 1 | 10 | 28 | In Progress |
-| 3 | 12 | 1 | 14 | 21 | In Progress |
-| 4 | 26 | 1 | 4 | 20 | In Progress |
-| 5 | 04 | 2 | 9 | 14 | In Progress |
-| 6 | 02 | 2 | 8 | 13 | In Progress |
-| 7 | 25 | 3 | 7 | 11 | In Progress |
-| 8 | 14 | 1 | 4 | 6 | In Progress |
-| 9 | 09 | 4 | 3 | 4 | In Progress |
-| 10 | 13 | 1 | 3 | 4 | In Progress |
+| 1 | 00 | 0 | 13 | 40 | Done |
+| 2 | 01 | 1 | 10 | 28 | Done |
+| 3 | 12 | 1 | 14 | 21 | Done |
+| 4 | 26 | 1 | 4 | 20 | In Review |
+| 5 | 04 | 2 | 9 | 14 | Done |
+| 6 | 02 | 2 | 8 | 13 | Done |
+| 7 | 25 | 3 | 7 | 11 | In Review |
+| 8 | 14 | 1 | 4 | 6 | In Review |
+| 9 | 09 | 4 | 3 | 4 | Done |
+| 10 | 13 | 1 | 3 | 4 | Done |
 
 ## Release Stages
 

@@ -146,7 +146,7 @@ tracks:
       - arrow-roundtrip
   - id: 09
     name: TypeScript/Wasm Binding
-    status: In Progress
+    status: Done
     owner: typescript-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -215,7 +215,7 @@ tracks:
       - dependency-policy
   - id: 14
     name: Documentation Site & Education
-    status: In Progress
+    status: In Review
     owner: docs-agent
     depends_on: ["00"]
     owned_paths:
@@ -266,7 +266,7 @@ tracks:
       - onboarding-docs
   - id: 18
     name: Comparative Benchmarks & Reproducibility
-    status: In Progress
+    status: In Review
     owner: benchmark-agent
     depends_on: ["01", "12"]
     owned_paths:
@@ -278,7 +278,7 @@ tracks:
       - raw-results-policy
   - id: 19
     name: Research Software, Citation & Archival
-    status: In Progress
+    status: In Review
     owner: research-agent
     depends_on: ["00"]
     owned_paths:
@@ -293,7 +293,7 @@ tracks:
       - archival-plan
   - id: 20
     name: OpenSSF, Supply Chain Trust & Institutional Readiness
-    status: In Progress
+    status: In Review
     owner: security-agent
     depends_on: ["00", "13"]
     owned_paths:
@@ -388,7 +388,7 @@ tracks:
       - adr-recommendations
   - id: 27
     name: Developer Experience & Reproducible Environments
-    status: In Progress
+    status: In Review
     owner: dx-agent
     depends_on: ["00"]
     owned_paths:
@@ -403,7 +403,7 @@ tracks:
       - toolchain-docs
   - id: 28
     name: Red Team & Devil's Advocate Review
-    status: In Progress
+    status: In Review
     owner: redteam-agent
     depends_on: ["00"]
     owned_paths:
@@ -415,7 +415,7 @@ tracks:
       - no-critical-release-blockers
   - id: 29
     name: Wave Manager & Execution Gatekeeper
-    status: In Progress
+    status: In Review
     owner: wave-manager-agent
     depends_on: ["00"]
     owned_paths:

@@ -2,16 +2,17 @@
 
 ## Required tests
 
-- `npm ci` to validate the local package install state. Last run: pass, 2026-05-07.
-- `npm run typecheck` for the TypeScript binding surface. Last run: pass, 2026-05-07.
-- `npm test` for scheduler/event-log/native-loader contracts. Last run: pass, 2026-05-07.
-- `npm run build` to validate generated JS and declarations. Last run: pass, 2026-05-07.
-- `npm pack --dry-run` to validate package contents before any future registry work. Last run: pass with npm cache/log write access, 2026-05-07.
-- `cargo fmt --package kairo-ecs-wasm --check` for the Rust wasm wrapper. Last run: pass, 2026-05-07.
-- `cargo check --manifest-path crates/kairo-ecs-wasm/Cargo.toml` for the default Rust wasm wrapper contract. Last run: pass, 2026-05-07.
-- `cargo test --manifest-path crates/kairo-ecs-wasm/Cargo.toml` for the default Rust wasm wrapper contract. Last run: pass, 2026-05-07.
+- `npm ci` to validate the local package install state. Last run: pass, 2026-05-08.
+- `npm run typecheck` for the TypeScript binding surface using `tsc --noEmit`. Last run: pass, 2026-05-08.
+- `npm test` for scheduler/event-log/native-loader contracts and fixture bridge tests using Vitest. Last run: pass, 2026-05-08.
+- `npm run test:browser` to build the package and smoke the browser ESM bundle in headless Chromium. Last run: pass with browser-launch approval, 2026-05-08.
+- `npm run build` to validate generated JS and declarations. Last run: pass, 2026-05-08.
+- `npm pack --dry-run` to validate package contents before any future registry work. Last run: pass with npm cache/log write access, 2026-05-08.
+- `cargo fmt --package kairo-ecs-wasm --check` for the Rust wasm wrapper. Last run: pass, 2026-05-08.
+- `cargo check --manifest-path crates/kairo-ecs-wasm/Cargo.toml` for the default Rust wasm wrapper contract. Last run: pass, 2026-05-08.
+- `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates/kairo-ecs-wasm/Cargo.toml` for the default Rust wasm wrapper contract. Last run: pass, 2026-05-08, 3 unit tests and 0 doctests.
 - `cargo check --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export` for the generated `wasm-bindgen` export layer. Last run: blocked, 2026-05-07, because build scripts for `wasm-bindgen` dependencies hit Git's `usr\bin\link.exe` and fail with Win32 error 5.
-- `npm run test:conformance` or equivalent when Track 12 fixtures are wired in.
+- Track 12 fixture bridge is covered by `npm test` through `test/conformance.test.ts`.
 - `wasm-pack test --node` only once the `wasm-export` feature can compile on the local runner.
 - `node tests/conformance/track07_13_hardening_check.mjs` verifies this track no longer claims package publishing ownership or unimplemented server runtime support.
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` verifies TypeScript cancellation parity, package metadata, and no native-runtime overclaiming. Last run: pass, 2026-05-08.
@@ -32,12 +33,12 @@
 ## CI command
 
 ```bash
-npm ci && npm run typecheck && npm test && npm run build && npm pack --dry-run
+npm ci && npm run typecheck && npm test && npm run test:browser && npm run build && npm pack --dry-run
 ```
 
 ```bash
 cargo check --manifest-path crates/kairo-ecs-wasm/Cargo.toml
-cargo test --manifest-path crates/kairo-ecs-wasm/Cargo.toml
+cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates/kairo-ecs-wasm/Cargo.toml
 ```
 ## Phase closeout gate
 

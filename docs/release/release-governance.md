@@ -15,6 +15,9 @@ The enforcement path is intentionally simple:
    record.
 4. `docs/release/maintenance-handoff.md` records the evidence and remaining
    blockers before any public write.
+5. `docs/release/maintainer-rotation.md` names the release-manager,
+   compatibility-review, package-evidence, supply-chain, and docs-review
+   coverage expected before RC.
 
 ## Release posture
 
@@ -28,6 +31,9 @@ The enforcement path is intentionally simple:
   checklist of record.
 - Release notes must be updated in `docs/release/release-notes.md` before a
   public tag or archive record is prepared.
+- Maintainer rotation must identify a release manager, backup, compatibility
+  reviewer, package evidence owner, supply-chain reviewer, and docs reviewer
+  before RC.
 - The PR-level changelog gate is implemented in
   `.github/workflows/changelog-policy.yml` and mirrors the local changelog
   policy check.
@@ -89,6 +95,8 @@ The release manager records release evidence before publish:
 - unresolved blockers and the owner for each blocker.
 
 The handoff record belongs in `docs/release/maintenance-handoff.md`.
+The rotation and escalation record belongs in
+`docs/release/maintainer-rotation.md`.
 
 This evidence gate is what the release-governance path uses to prove that the
 changelog check, compatibility review, package dry-run, and attestation status

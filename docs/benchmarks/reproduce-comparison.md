@@ -15,6 +15,7 @@ The committed benchmark inventory is the source of truth:
 | Ready fixture manifest | `conformance/fixtures/manifest.json` | `scheduler_ordering_v1`, `scheduler_cancellation_v1`, `rng_reproducibility_v1` |
 | Benchmark smoke metadata | `benches/benchmark-smoke.json` | `schedule_1m_events`, `pop_1m_events`, `schedule_cancel_1m_mixed`, `create_1m_entities`, `component_insert_1m`, `hybrid_des_abm_smoke_100k` |
 | Benchmark measurement contract | `benches/benchmark-plan.md` | canonical scenario names and output expectations |
+| Raw-results policy | `benches/raw-results-policy.json` | required artifacts and result fields before public performance claims |
 | Smoke workflow | `.github/workflows/benchmark-smoke.yml` | repo shape check and `cargo bench --workspace --no-run` |
 
 Do not publish a comparison claim from a renamed local scenario or from a
@@ -44,6 +45,12 @@ The Python checks are metadata gates. They prove that published scenario names,
 ready fixture IDs, source files, and smoke-scale records are aligned. They do
 not prove runtime performance, statistical stability, or ecosystem fairness.
 
+They also check the raw-results policy gate. That gate does not require raw
+timings during metadata validation; it records the command capture, environment
+metadata, raw output, seed, fixture, scenario, toolchain, feature-flag, and
+baseline-version evidence that must exist before a performance comparison can
+be published.
+
 ## Seed And Fixture Control
 
 The initial reproducibility claim is limited to deterministic fixture replay:
@@ -67,6 +74,7 @@ A result is comparable only when:
 - The deterministic fixture source is committed and named in the result.
 - The seed or replay source is recorded for every stochastic path.
 - The result includes raw output and environment metadata, not only a summary.
+- The result satisfies `benches/raw-results-policy.json`.
 
 Host variance is expected. Treat a single local run as a smoke result unless it
 is repeated on a pinned runner with archived environment metadata.

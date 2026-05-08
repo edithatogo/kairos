@@ -18,6 +18,7 @@ Format:
 
 - Conductor setup for KairoECS tracks, subagents, release engineering, community adoption, and red-team review.
 - Release governance slice covering changelog enforcement, compatibility/deprecation rules, release evidence, and maintenance handoff.
+- Track 16 maintainer rotation and escalation record for release-manager, compatibility-review, package-evidence, supply-chain, and docs-review coverage.
 - Changelog-policy workflow for pull requests that touch public release surfaces.
 - Conductor release-gate hardening for Track 13 offline supply-chain validation, Track 14 Markdown fragment-anchor validation, and Track 15 release-delivery dry-run gating before artifact upload.
 - Hosted CI hardening for public-repository Actions runs, including portable policy checks, Mermaid rendering, changelog enforcement, and workflow-security SARIF upload permissions.

@@ -24,6 +24,29 @@ REQUIRED_SCENARIOS = {
     "hybrid_des_abm_smoke_100k",
 }
 
+REQUIRED_POLICY_ARTIFACTS = {
+    "benchmark-result.json",
+    "benchmark-environment.json",
+    "benchmark-command.sh",
+    "raw criterion output",
+    "caveats and fairness notes",
+}
+
+REQUIRED_RESULT_FIELDS = {
+    "commit_sha",
+    "scenario_id",
+    "fixture_id",
+    "seed",
+    "command",
+    "host",
+    "toolchain",
+    "feature_flags",
+    "raw_output_path",
+    "baseline_name",
+    "baseline_version",
+    "summary",
+}
+
 
 def load_json(relative_path: str) -> dict:
     with (ROOT / relative_path).open("r", encoding="utf-8") as handle:
@@ -36,8 +59,15 @@ def assert_nonempty_text(relative_path: str) -> None:
     assert path.read_text(encoding="utf-8").strip(), f"empty artifact: {relative_path}"
 
 
+def assert_text_contains(relative_path: str, required_phrases: set[str]) -> None:
+    text = (ROOT / relative_path).read_text(encoding="utf-8")
+    for phrase in required_phrases:
+        assert phrase in text, f"{relative_path} must mention {phrase}"
+
+
 def main() -> None:
     smoke = load_json("benches/benchmark-smoke.json")
+    raw_policy = load_json("benches/raw-results-policy.json")
     manifest = load_json(smoke["source_manifest"])
 
     fixture_root = ROOT / manifest["root"]
@@ -67,6 +97,35 @@ def main() -> None:
     assert_nonempty_text("benches/benchmark-plan.md")
     assert_nonempty_text("docs/benchmarks/benchmark-policy.md")
     assert_nonempty_text("docs/benchmarks/reproduce-comparison.md")
+    assert_nonempty_text("benches/raw-results-policy.json")
+
+    assert raw_policy["version"] == 1, "raw results policy version must be 1"
+    assert raw_policy["gate"] == "raw-results-policy", "raw results policy gate mismatch"
+    assert raw_policy["status"] == "policy-only", "raw results policy must stay policy-only"
+    assert raw_policy["applies_before"] == "public-performance-claim", (
+        "raw results policy must block public performance claims"
+    )
+    assert REQUIRED_POLICY_ARTIFACTS <= set(raw_policy["required_artifacts"]), (
+        "raw results policy is missing required artifacts"
+    )
+    assert REQUIRED_RESULT_FIELDS <= set(raw_policy["required_result_fields"]), (
+        "raw results policy is missing required result fields"
+    )
+    assert raw_policy["forbidden_before_native_results"], (
+        "raw results policy must name claim language blocked before native results"
+    )
+    assert "Metadata gates" in raw_policy["evidence_boundary"], (
+        "raw results policy must keep metadata gates separate from performance claims"
+    )
+
+    assert_text_contains(
+        "docs/benchmarks/benchmark-policy.md",
+        REQUIRED_POLICY_ARTIFACTS | {"raw output", "environment metadata"},
+    )
+    assert_text_contains(
+        "docs/benchmarks/reproduce-comparison.md",
+        {"raw output", "environment metadata", "metadata gates"},
+    )
 
     print(
         json.dumps(
@@ -76,6 +135,7 @@ def main() -> None:
                 "canonical_scenarios": sorted(REQUIRED_SCENARIOS),
                 "source_manifest": smoke["source_manifest"],
                 "smoke_metadata": "benches/benchmark-smoke.json",
+                "raw_results_policy": "benches/raw-results-policy.json",
             },
             indent=2,
         )

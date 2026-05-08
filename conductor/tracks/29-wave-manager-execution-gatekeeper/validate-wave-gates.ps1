@@ -1,6 +1,7 @@
 param(
     [string]$TracksYamlPath = "conductor/tracks.yaml",
     [string]$TrackDirsPath = "conductor/tracks",
+    [string]$TrackId = "",
     [switch]$ReportOnly
 )
 
@@ -221,6 +222,17 @@ function Get-TrackDir {
 
 $issues = [System.Collections.Generic.List[object]]::new()
 $tracks = Read-TrackInventory $TracksYamlPath
+$targetTrackIds = @($tracks.Keys)
+
+if (-not [string]::IsNullOrWhiteSpace($TrackId)) {
+    $normalizedTrackId = ConvertTo-TrackId $TrackId
+    if (-not $tracks.Contains($normalizedTrackId)) {
+        Add-Issue $issues "wave-progression-check" "unknown-target-track" "Target track $normalizedTrackId does not exist in $TracksYamlPath."
+        $targetTrackIds = @()
+    } else {
+        $targetTrackIds = @($normalizedTrackId)
+    }
+}
 
 foreach ($id in $tracks.Keys) {
     $track = $tracks[$id]
@@ -251,7 +263,7 @@ foreach ($id in $tracks.Keys) {
         }
     }
 
-    if ($track.status -in $advancingStatuses) {
+    if (($targetTrackIds -contains $id) -and $track.status -in $advancingStatuses) {
         foreach ($dep in $track.depends_on) {
             if ($tracks.Contains($dep) -and $tracks[$dep].status -ne "Done") {
                 Add-Issue $issues "wave-progression-check" "direct-dependency-not-done" "Track $id is $($track.status) but direct dependency $dep is $($tracks[$dep].status), not Done."
@@ -303,6 +315,7 @@ $criticalPath = @(foreach ($id in $tracks.Keys) {
 $report = [PSCustomObject]@{
     generated_at = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssK")
     source = $TracksYamlPath
+    target_track_ids = @($targetTrackIds)
     track_count = $tracks.Count
     wave_membership = [PSCustomObject]$waves
     critical_path_heatmap = @($criticalPath)

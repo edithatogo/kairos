@@ -39,7 +39,7 @@ Most tracks are parallel-safe after their contract inputs are accepted. See `con
 - `CHANGELOG.md`: populated with release entries following Keep a Changelog conventions.
 - `docs/release/release-governance.md`: versioning, compatibility, deprecation, and support-window policy.
 - `docs/release/release-checklist.md`: step-by-step release procedure per ecosystem.
-- `docs/release/maintainer-rotation.md`: polyglot coverage map and escalation path.
+- `docs/release/maintainer-rotation.md`: release-manager, compatibility-review, package-evidence, supply-chain, docs-review, and escalation coverage map.
 - `conductor/tracks/16-release-governance-maintenance/test-matrix.md`: CI gate definitions (changelog lint, semver check, checklist automation).
 
 

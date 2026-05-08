@@ -40,13 +40,18 @@ Test-Path docs/release/release-governance.md
 Test-Path docs/release/changelog-policy.md
 Test-Path docs/release/compatibility.md
 Test-Path docs/release/maintenance-handoff.md
+Test-Path docs/release/maintainer-rotation.md
 Test-Path .github/workflows/changelog-policy.yml
 Test-Path .github/workflows/release.yml
 Select-String -Path CHANGELOG.md -Pattern 'Release governance slice'
+Select-String -Path CHANGELOG.md -Pattern 'maintainer rotation'
+Select-String -Path conductor/tracks.yaml -Pattern 'compatibility-policy|changelog-check'
+Select-String -Path conductor/quality-gates.md -Pattern '\*\*compatibility-policy\*\*|\*\*changelog-check\*\*'
 Select-String -Path docs/release/release-governance.md -Pattern 'Compatibility gate'
 Select-String -Path docs/release/changelog-policy.md -Pattern 'Public release surface changed without CHANGELOG.md'
 Select-String -Path docs/release/compatibility.md -Pattern 'Deprecation register'
 Select-String -Path docs/release/maintenance-handoff.md -Pattern 'R2 handoff status'
+Select-String -Path docs/release/maintainer-rotation.md -Pattern 'Maturity: preview|Release manager|Escalation path'
 Select-String -Path .github/workflows/changelog-policy.yml -Pattern 'Public release surface changed without CHANGELOG.md|changelog_policy=ok'
 Select-String -Path .github/workflows/release.yml -Pattern 'Validate release checklist|Build release manifest|Validate release manifest|cargo publish --dry-run --workspace|release workflow is dry-run only'
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/16-release-governance-maintenance/validate-release-governance.ps1

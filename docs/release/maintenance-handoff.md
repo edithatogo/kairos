@@ -38,6 +38,7 @@ Latest local dry-run evidence, generated on 2026-05-08:
 | Changelog policy | Ready for local static check | `docs/release/changelog-policy.md` |
 | Changelog policy workflow | Implemented | `.github/workflows/changelog-policy.yml`, `docs/release/changelog-policy.md` |
 | Compatibility/deprecation policy | Ready for release-manager review | `docs/release/release-governance.md`, `docs/release/compatibility.md` |
+| Maintainer rotation | Ready for RC assignment; production publish still blocked | `docs/release/maintainer-rotation.md` |
 | Package publication | Blocked; dry-run only until Track 15 clears registry/name/toolchain evidence | Track 15 handoff |
 | Release evidence | Local R2 dry-run evidence generated; publish evidence still blocked | `dist/release-artifact-manifest.json`, `dist/SHA256SUMS`, Track 15 handoff |
 | Registry/toolchain verification | Blocked pending target-machine checks and registry name verification | Track 15 handoff |
@@ -50,3 +51,4 @@ Latest local dry-run evidence, generated on 2026-05-08:
 - Add generated release evidence links after the first dry-run candidate.
 - Record the first successful dry-run candidate with the artifact manifest,
   checksum manifest, and blocker note before any publish gate is cleared.
+- Assign concrete human release-manager and backup names before RC.

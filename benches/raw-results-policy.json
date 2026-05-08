@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "status": "policy-only",
+  "gate": "raw-results-policy",
+  "applies_before": "public-performance-claim",
+  "required_artifacts": [
+    "benchmark-result.json",
+    "benchmark-environment.json",
+    "benchmark-command.sh",
+    "raw criterion output",
+    "caveats and fairness notes"
+  ],
+  "required_result_fields": [
+    "commit_sha",
+    "scenario_id",
+    "fixture_id",
+    "seed",
+    "command",
+    "host",
+    "toolchain",
+    "feature_flags",
+    "raw_output_path",
+    "baseline_name",
+    "baseline_version",
+    "summary"
+  ],
+  "forbidden_before_native_results": [
+    "fastest",
+    "production performance",
+    "outperforms"
+  ],
+  "evidence_boundary": "Metadata gates prove benchmark inventory alignment only; public performance claims require archived raw outputs and environment metadata."
+}

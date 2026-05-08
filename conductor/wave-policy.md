@@ -13,6 +13,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-man
 Use `-ReportOnly` to print the derived wave membership, dependency closure, and
 critical-path heatmap without returning a blocking exit code.
 
+Use `-TrackId <id>` for track-scoped closeout evidence. The default command is
+the global release gate and still checks every advanced track in the current
+status snapshot.
+
 ## Derived Wave Membership
 
 Wave numbers are topological depths:
@@ -23,7 +27,7 @@ Wave numbers are topological depths:
 - If `conductor/tracks.yaml` changes, rerun the validator and update this
   section from the report.
 
-Current snapshot generated on 2026-05-07 from `conductor/tracks.yaml`:
+Current snapshot generated on 2026-05-08 from `conductor/tracks.yaml`:
 
 | Wave | Tracks |
 |---:|---|
@@ -80,7 +84,7 @@ track is beyond `Planned` and any direct dependency is not `Done`.
 Example current blocker:
 
 ```text
-Track 01 is In Progress but direct dependency 00 is Spec Approved, not Done.
+Track 25 is In Review but direct dependency 26 is In Review, not Done.
 ```
 
 ### dependency-closure-check
@@ -102,16 +106,16 @@ the current dependency graph.
 
 | Rank | Track | Wave | Direct dependents | Transitive dependents | Current status |
 |---:|---:|---:|---:|---:|---|
-| 1 | 00 | 0 | 13 | 40 | Spec Approved |
-| 2 | 01 | 1 | 10 | 28 | In Progress |
-| 3 | 12 | 1 | 14 | 21 | In Progress |
-| 4 | 26 | 1 | 4 | 20 | In Progress |
-| 5 | 04 | 2 | 9 | 14 | In Progress |
-| 6 | 02 | 2 | 8 | 13 | In Progress |
-| 7 | 25 | 3 | 7 | 11 | In Progress |
-| 8 | 14 | 1 | 4 | 6 | In Progress |
-| 9 | 09 | 4 | 3 | 4 | In Progress |
-| 10 | 13 | 1 | 3 | 4 | In Progress |
+| 1 | 00 | 0 | 13 | 40 | Done |
+| 2 | 01 | 1 | 10 | 28 | Done |
+| 3 | 12 | 1 | 14 | 21 | Done |
+| 4 | 26 | 1 | 4 | 20 | In Review |
+| 5 | 04 | 2 | 9 | 14 | Done |
+| 6 | 02 | 2 | 8 | 13 | Done |
+| 7 | 25 | 3 | 7 | 11 | In Review |
+| 8 | 14 | 1 | 4 | 6 | In Review |
+| 9 | 09 | 4 | 3 | 4 | Done |
+| 10 | 13 | 1 | 3 | 4 | Done |
 
 ## Exception Path
 

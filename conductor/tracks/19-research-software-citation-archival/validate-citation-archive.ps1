@@ -122,6 +122,9 @@ if ($null -ne $codeMeta) {
     foreach ($field in @('@context', '@type', 'name', 'description', 'version', 'datePublished', 'programmingLanguage', 'license', 'codeRepository', 'developmentStatus')) {
         Require-JsonField $codeMeta $field 'codemeta.json' | Out-Null
     }
+    if ($codeMeta.'@context' -ne 'https://doi.org/10.5063/schema/codemeta-3.0') {
+        Add-Failure "codemeta.json @context must use the CodeMeta 3.0 crosswalk"
+    }
 }
 
 if ($null -ne $zenodo) {

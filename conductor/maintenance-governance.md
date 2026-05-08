@@ -76,6 +76,12 @@ Security responders
 Triage maintainers
 ```
 
+Release-train coverage for R2 is tracked in
+`docs/release/maintainer-rotation.md`. That file is the release-manager
+rotation and escalation record for the current release-governance slice. It
+must name release management, compatibility review, package evidence,
+supply-chain review, and docs review coverage before RC.
+
 ## Issue triage
 
 Labels:

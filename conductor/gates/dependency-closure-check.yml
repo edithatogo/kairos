@@ -4,6 +4,7 @@ inputs:
   - conductor/tracks.yaml
   - conductor/tracks.md
 command: powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1
+targeted_command: powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -TrackId <id>
 checks:
   - Every dependency id exists in the canonical track inventory.
   - Dependency cycles are detected and reported as blocking errors.

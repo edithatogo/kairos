@@ -1,6 +1,6 @@
 # Handoff: Track 29 Wave Manager & Execution Gatekeeper
 
-Handoff date: 2026-05-07.
+Handoff date: 2026-05-08.
 
 ## Summary
 
@@ -13,6 +13,10 @@ and `dependency-closure-check`.
 
 The current dependency graph derives Waves 0-6, not the prior fixed 0-5 model.
 Track 39 is Wave 6 because it depends on Track 15, which is Wave 5.
+
+Track-scoped gate mode was added for implementation closeout evidence:
+`validate-wave-gates.ps1 -TrackId 29` validates Track 29's own direct and
+transitive dependencies while preserving the default global release gate.
 
 ## Files changed
 
@@ -61,7 +65,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-man
 | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_artifacts.ps1` | Pass | Found 41 track directories; 0 errors, 0 warnings, 0 info. |
 | `powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-Content -LiteralPath 'conductor\gates\wave-progression-check.yml','conductor\gates\dependency-closure-check.yml' | Out-Null; Get-Content -LiteralPath 'conductor\wave-policy.md' | Out-Null; 'docs-readable'"` | Pass | Returned `docs-readable`. |
 | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -ReportOnly` | Pass | Reported 41 tracks, Waves 0-6, heatmap led by Tracks 00, 01, 12, 26, 04. |
-| `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1` | Fail as designed | Exit 1 with 89 direct dependency blockers and 181 transitive dependency blockers. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -TrackId 29` | Pass | Track 29 has direct dependency 00 `Done` and no unresolved transitive dependency blockers. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1` | Fail as designed | Exit 1 with 16 direct dependency blockers and 25 transitive dependency blockers outside Track 29. |
 
 ## Current Wave Membership
 
@@ -79,21 +84,23 @@ powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-man
 
 | Rank | Track | Wave | Direct dependents | Transitive dependents | Current status |
 |---:|---:|---:|---:|---:|---|
-| 1 | 00 | 0 | 13 | 40 | Spec Approved |
-| 2 | 01 | 1 | 10 | 28 | In Progress |
-| 3 | 12 | 1 | 14 | 21 | In Progress |
-| 4 | 26 | 1 | 4 | 20 | In Progress |
-| 5 | 04 | 2 | 9 | 14 | In Progress |
-| 6 | 02 | 2 | 8 | 13 | In Progress |
-| 7 | 25 | 3 | 7 | 11 | In Progress |
-| 8 | 14 | 1 | 4 | 6 | In Progress |
-| 9 | 09 | 4 | 3 | 4 | In Progress |
-| 10 | 13 | 1 | 3 | 4 | In Progress |
+| 1 | 00 | 0 | 13 | 40 | Done |
+| 2 | 01 | 1 | 10 | 28 | Done |
+| 3 | 12 | 1 | 14 | 21 | Done |
+| 4 | 26 | 1 | 4 | 20 | In Review |
+| 5 | 04 | 2 | 9 | 14 | Done |
+| 6 | 02 | 2 | 8 | 13 | Done |
+| 7 | 25 | 3 | 7 | 11 | In Review |
+| 8 | 14 | 1 | 4 | 6 | In Review |
+| 9 | 09 | 4 | 3 | 4 | Done |
+| 10 | 13 | 1 | 3 | 4 | Done |
 
 ## Known risks
 
-- The current `tracks.yaml` status snapshot has many tracks marked `In Progress`
-  while dependencies are not `Done`. The new gate treats this as a blocker.
+- The current `tracks.yaml` status snapshot has multiple tracks marked
+  `In Progress`, `In Review`, or `Done` while dependencies are not `Done`.
+  The global gate treats this as a blocker; Track 29 itself passes with
+  `-TrackId 29`.
 - Prior documentation that assumes only Waves 0-5 is stale against the current
   dependency graph.
 - The validator checks dependency status and conductor artifacts; it does not
@@ -116,4 +123,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-man
   blocking mode for merge/release gates.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+`$conductor-review` was run locally against Track 29 and the current diff.
+Accepted fixes: added target-track gate mode, refreshed current wave evidence,
+and documented that the default global gate still blocks unrelated dependency
+status violations. No rejected in-scope fixes.
+
+Commit SHA: pending because this shared worktree may contain unrelated worker
+edits before final integration. Pushed ref: pending for the same reason.
+`validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` is deferred until
+the cleaned slice is committed. Next-phase decision: Track 29 is ready for
+review; do not mark Done until global dependency blockers are either resolved
+by their owners or waived by ADR.

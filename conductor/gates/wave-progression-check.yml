@@ -4,6 +4,7 @@ inputs:
   - conductor/tracks.yaml
   - conductor/wave-policy.md
 command: powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1
+targeted_command: powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\29-wave-manager-execution-gatekeeper\validate-wave-gates.ps1 -TrackId <id>
 checks:
   - Every track has a declared owner and required gates.
   - Every track appears exactly once in the human and machine track indexes.

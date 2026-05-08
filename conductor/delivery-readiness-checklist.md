@@ -69,8 +69,10 @@ Use this before every alpha, beta, release candidate, and stable release.
 - [ ] `.github/workflows/actions-security.yml` and `.github/workflows/workflow-security.yml` exist for workflow hardening.
 - [ ] `.github/workflows/secret-scan.yml` exists and fails on findings.
 - [ ] `.github/workflows/sbom-attestations.yml` exists and can emit `sbom.spdx.json`.
+- [ ] `.github/workflows/sbom-attestations.yml` verifies `RELEASE.txt`, `release-artifact-manifest.json`, and `SHA256SUMS` before attesting SBOM evidence.
 - [ ] `.github/workflows/release-attestations.yml` exists and can attest the release artifact tree.
 - [ ] Release artifact tree includes `RELEASE.txt`, `SHA256SUMS`, and `sbom.spdx.json` before RC or 1.0.
+- [ ] `SECURITY.md` documents vulnerability acknowledgement, private disclosure, and exception recording expectations.
 - [ ] Release notes name SBOM, checksum, provenance/attestation evidence, and any approved exception.
 - [ ] Exceptions follow `conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md`.
 - [ ] Temporary allowed-failure lanes are stage-limited and do not carry into RC or 1.0 without explicit approval.

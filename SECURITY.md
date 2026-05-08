@@ -18,6 +18,16 @@ Please include:
 - expected impact
 - whether the issue is public
 
+## Response expectations
+
+Until a public security contact is permanently listed, the private advisory path is the preferred intake route. Maintainers should acknowledge a complete report within 5 business days, assign an owner, and classify severity before any public release note claims the issue is resolved.
+
+For high or critical impact issues, keep discussion private until a fixed release, mitigation, or explicit disclosure decision is available. If the issue affects a published package, the release manager must record the affected package versions, the fixed version or mitigation, and any temporary exception in the release notes.
+
+## Vulnerability policy gates
+
+Release candidates and 1.0 releases must not rely on an informal waiver. Any unresolved vulnerability-policy exception must name the failing control, affected release stage, compensating control, approvers, expiry, and follow-up issue or ADR. Allowed-failure scanner lanes can unblock alpha or beta only when the Track 20 exception process records them as temporary operational exceptions.
+
 ## Security-sensitive areas
 
 - FFI handle ownership and lifetime

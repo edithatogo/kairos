@@ -10,7 +10,7 @@ The dependency-light build now emits `website/build/index.html`, source-backed H
 
 ## Files changed
 
-`docs/README.md`, `website/package.json`, `website/scripts/build.js`, `website/scripts/check-links.js`, `website/scripts/validate-quality.js`, `website/docs-link-manifest.json`, `website/src/index.md`, `notebooks/python_scheduler_tutorial.ipynb`, `conductor/tracks/14-docs-site-education/test-matrix.md`, `conductor/tracks/14-docs-site-education/validate-docs-site.ps1`, `conductor/tracks/14-docs-site-education/handoff.md`
+`docs/README.md`, `website/package.json`, `website/scripts/build.js`, `website/scripts/check-links.js`, `website/scripts/validate-quality.js`, `website/docs-link-manifest.json`, `website/src/index.md`, `notebooks/python_scheduler_tutorial.ipynb`, `conductor/tracks/14-docs-site-education/test-matrix.md`, `conductor/tracks/14-docs-site-education/validate-docs-site.ps1`, `conductor/tracks/14-docs-site-education/handoff.md`, `conductor/tracks.yaml`, `conductor/tracks.md`, `conductor/status.md`, `conductor/phase-closeout.yaml`
 
 ## Contracts consumed
 
@@ -46,6 +46,8 @@ The 2026-05-07 validation pass also confirmed `npm --prefix website run check:al
 
 The notebook validator initially found a stale assertion in `notebooks/python_scheduler_tutorial.ipynb`; the tutorial now expects `scheduled_events` and `cancelled_events` in the Python scheduler stats contract, matching the current binding tests.
 
+The 2026-05-08 validation pass confirmed `npm --prefix website run check:all` rendered 110 docs pages, wrote 100 search-index entries, indexed 23 crates / 459 public API items, and passed the docs quality gate. `npm --prefix website ci`, `node website/scripts/check-links.js --self-test`, `npm --prefix website run check:links`, `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\14-docs-site-education\validate-docs-site.ps1`, `node docs\assets\validate-playground-figures.mjs`, `node tests\conformance\track12_20_evidence_check.mjs`, and `python notebooks\validate_notebooks.py` also passed. `just docs-build` remains locally blocked because `just` is not installed on PATH; the underlying website build/link/quality gate passed through npm.
+
 ## Known risks
 
 The site currently renders static HTML pages for the manifest navigation targets, but it does not yet render every Markdown file under `docs/`. The link checker validates source Markdown targets, source Markdown fragment anchors, required paths, and manifest navigation targets; full generated HTML fragment crawling remains a future enhancement.
@@ -59,9 +61,18 @@ Use `npm --prefix website run check:all` for CI-style validation and `npm --pref
 Added a track-local offline validator that checks the docs package scripts,
 link manifest paths, site sources, generated navigation, quality outputs, and current binding/docs tree references. This keeps Track 14 evidence executable without changing central quality gates.
 
+The 2026-05-08 implementation review hardened `website/scripts/check-links.js` so recursive docs scans skip dependency, build, cache, target, and vendor directories. This prevents local dependency installs, especially nested `node_modules`, from becoming false docs-link blockers while preserving source Markdown and manifest link validation.
+
 ## Follow-up issues
 
 Full generated HTML fragment crawling remains the main follow-up; current evidence covers source Markdown targets, source Markdown heading anchors, required paths, manifest navigation targets, and generated docs outputs.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+Track 14 advanced to In Review on 2026-05-08 after `$conductor-review` found one in-scope hardening issue: recursive link scans could traverse dependency/build/vendor directories if local installs were present.
+
+- accepted fixes: `website/scripts/check-links.js` now skips dependency, build, cache, target, and vendor directories during recursive Markdown discovery; the self-test covers `node_modules` exclusion.
+- commit SHA: blocked; no Track 14 commit was created in this pass because this is a shared worker tree and final integration/commit ownership was not requested.
+- pushed ref: blocked; no push was performed from the shared worker tree.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: blocked until the Track 14 slice is committed and the shared worktree is clean enough for strict closeout.
+- `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1`: blocked by unrelated Track 19 handoff evidence outside Track 14 ownership: missing `commit SHA`, `pushed ref`, and `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` markers.
+- next-phase decision: Track 14 is In Review with docs-build and link-check-plan gates satisfied through the npm-backed website flow; `just docs-build` remains locally blocked because `just` is not installed on PATH.
