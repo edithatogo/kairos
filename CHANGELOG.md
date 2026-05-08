@@ -20,6 +20,7 @@ Format:
 - Release governance slice covering changelog enforcement, compatibility/deprecation rules, release evidence, and maintenance handoff.
 - Changelog-policy workflow for pull requests that touch public release surfaces.
 - Conductor release-gate hardening for Track 13 offline supply-chain validation, Track 14 Markdown fragment-anchor validation, and Track 15 release-delivery dry-run gating before artifact upload.
+- Hosted CI hardening for public-repository Actions runs, including CI policy portability, Mermaid rendering, and workflow-security SARIF upload permissions.
 
 ### Changed
 

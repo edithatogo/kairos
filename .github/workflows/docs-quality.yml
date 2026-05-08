@@ -24,11 +24,16 @@ jobs:
       - name: Check Mermaid diagrams render
         run: |
           npm install -g @mermaid-js/mermaid-cli
+          cat > .mermaid-puppeteer.json <<'JSON'
+          {
+            "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+          }
+          JSON
           mkdir -p /tmp/mermaid-out
           shopt -s globstar nullglob
           for f in **/*.mmd; do
             echo "Rendering $f"
-            mmdc -i "$f" -o "/tmp/mermaid-out/$(basename "$f").svg"
+            mmdc -p .mermaid-puppeteer.json -i "$f" -o "/tmp/mermaid-out/$(basename "$f").svg"
           done
       - name: Markdown link check
         uses: lycheeverse/lychee-action@v2

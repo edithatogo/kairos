@@ -70,21 +70,21 @@ jobs:
           for f in .github/workflows/*.yml; do
             test -s "$f"
           done
-          if rg -n "uses:\s+[^@[:space:]]+@(main|master|latest|HEAD)\b" .github/workflows; then
+          if grep -R -n -E "uses:[[:space:]]+[^@[:space:]]+@(main|master|latest|HEAD)\b" .github/workflows; then
             exit 1
           fi
-          if rg -n "if-no-files-found:\s*ignore|--if-present|\|\| true" .github/workflows -g '!ci-policy.yml'; then
+          if find .github/workflows -name '*.yml' ! -name 'ci-policy.yml' -print0 | xargs -0 grep -n -E "if-no-files-found:[[:space:]]*ignore|--if-present|\|\| true"; then
             exit 1
           fi
       - name: Rust metadata and policy files
         run: |
           cargo metadata --no-deps --format-version 1 >/dev/null
-          rg -n 'rust-version = "1\.76"' Cargo.toml
-          rg -n 'channel = "stable"' rust-toolchain.toml
-          rg -n 'wildcards = "deny"' deny.toml
-          rg -n 'unknown-registry = "deny"' deny.toml
-          rg -n 'unknown-git = "deny"' deny.toml
-          rg -n 'allow-registry = \["https://github\.com/rust-lang/crates\.io-index"\]' deny.toml
+          grep -n -E 'rust-version = "1\.76"' Cargo.toml
+          grep -n -E 'channel = "stable"' rust-toolchain.toml
+          grep -n -E 'wildcards = "deny"' deny.toml
+          grep -n -E 'unknown-registry = "deny"' deny.toml
+          grep -n -E 'unknown-git = "deny"' deny.toml
+          grep -n -F 'allow-registry = ["https://github.com/rust-lang/crates.io-index"]' deny.toml
       - name: Cargo supply-chain checks
         run: |
           cargo install cargo-deny cargo-audit --locked
