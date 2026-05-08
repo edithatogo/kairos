@@ -34,7 +34,7 @@ jobs:
           fi
           head="${{ github.sha }}"
           changed="$(git diff --name-only "$base" "$head")"
-          public_changed="$(printf '%s\n' "$changed" | rg '^(crates/kairo-ecs-(types|core|state|rng|ffi)|include/|bindings/(python|r|julia|typescript|csharp|go)|schemas/arrow/|conformance/fixtures/|docs/release/|\.github/workflows/)' || true)"
+          public_changed="$(printf '%s\n' "$changed" | awk '/^(crates\/kairo-ecs-(types|core|state|rng|ffi)|include\/|bindings\/(python|r|julia|typescript|csharp|go)|schemas\/arrow\/|conformance\/fixtures\/|docs\/release\/|\.github\/workflows\/)/')"
           if [ -n "$public_changed" ] && ! printf '%s\n' "$changed" | grep -qx 'CHANGELOG.md'; then
             echo "Public release surface changed without CHANGELOG.md"
             exit 1
