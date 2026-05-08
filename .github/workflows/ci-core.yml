@@ -38,5 +38,5 @@ jobs:
       - name: Dependency policy
         run: |
           test -f deny.toml
-          cargo deny check
+          cargo deny check advisories sources
           cargo audit

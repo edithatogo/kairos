@@ -24,6 +24,7 @@ Format:
 - Workflow shellcheck cleanup for assessment reminders, package dry-runs, and SBOM attestation commands.
 - Cargo deny advisory policy updated for the current hosted `cargo-deny` schema.
 - Hosted CI Policy now gates cargo-deny advisories and sources plus cargo-audit while internal workspace bans/license hardening remains a later policy tightening step.
+- Hosted CI Core dependency policy now uses the same cargo-deny advisory/source scope as the release validation gate.
 
 ### Changed
 
