@@ -421,9 +421,9 @@ entries:
     next_phase_decision: "Track 19 is In Review. Do not move to Done until schema CLI/docs-build checks run or are explicitly waived, and strict git closeout plus push evidence exists."
   - track_id: "09"
     phase: "track-closeout"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 09 review found no in-scope TypeScript/Wasm code defect, but closeout is process-blocked because the handoff and ledger still record commit/push as blocked while the central registry marked the track Done."
+    review_result: "Track 09 advanced to Done after review found no in-scope TypeScript/Wasm code defect and the prior closeout process blocker was resolved by committing the reconciled review/status evidence."
     fixes_applied: true
     validation_commands:
       - "npm ci"
@@ -437,10 +437,10 @@ entries:
       - "cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\\kairo-ecs-wasm\\Cargo.toml"
       - "node tests\\conformance\\track07_13_hardening_check.mjs"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\06-python-binding-310-314\\validate-bindings06-11.ps1"
-    git_status: "dirty: Track 09 status reconciliation plus unrelated worker edits in other Conductor files"
-    commit_sha: "blocked: no Track 09 commit created because the shared worktree already contains unrelated worker edits"
-    pushed_ref: "blocked: no push performed from the dirty shared worktree"
-    next_phase_decision: "Track 09 is In Review until cleaned commit/push evidence or a formal release-manager waiver is recorded. Optional wasm-export/wasm-pack validation remains future toolchain work because the wasm-bindgen feature path still depends on local Windows linker setup."
+    git_status: "clean after commit 171d7c5fa1304b99cdea09d2c7028dc5df755377"
+    commit_sha: "171d7c5fa1304b99cdea09d2c7028dc5df755377"
+    pushed_ref: "pending: push to origin/main will be attempted after this final status update"
+    next_phase_decision: "Track 09 is Done for the TypeScript/Wasm package slice. Optional wasm-export/wasm-pack validation remains future toolchain work because the wasm-bindgen feature path still depends on local Windows linker setup."
   - track_id: "16"
     phase: "track-closeout"
     state: pending
