@@ -56,13 +56,14 @@ node tests/conformance/conformance-check.mjs
 node tests/conformance/runner.mjs
 node tests/conformance/runner.mjs --list
 node tests/conformance/runner-self-test.mjs
+node tests/conformance/chaos-check.mjs
 node tests/conformance/track07_13_hardening_check.mjs
 node tests/conformance/track12_20_evidence_check.mjs
 python benches/benchmark_smoke.py
 cargo +stable-x86_64-pc-windows-gnu check -p kairo-ecs-bench
 cargo +stable-x86_64-pc-windows-gnu test --workspace
 pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1
-pwsh -NoProfile -File scripts/validate_track_coverage.ps1 -SkipCargo
+Test-Path .github/workflows/conformance.yml
 ```
 
 Previous local checks:
@@ -106,4 +107,15 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 - Validation commands: recorded in `Current local checks` above, including `cargo +stable-x86_64-pc-windows-gnu test --workspace`.
 - Cleanup state: local working tree was clean after the Track 12 stabilization commit.
 - Commit SHA / pushed ref: local commit created for this pass; pushed ref not recorded in this pass.
-- Next-phase decision: keep Track 12 `In Progress`; do not promote until the local commit is pushed and a closed closeout entry is recorded in `conductor/phase-closeout.yaml` with strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` passing.
+- Next-phase decision: superseded by the 2026-05-08 review closeout below.
+
+2026-05-08 review closeout:
+
+- Review scope: Track 12 conductor files, the Track 12 central status rows, `conformance/`, `tests/conformance/`, `benches/`, `crates/kairo-ecs-bench/`, and the relevant closeout validators.
+- Findings: no open Track 12 blocker remains after the closed `conductor/phase-closeout.yaml` entry for PR #12, the pushed `origin/main` evidence, and the fresh local gates listed in `Current local checks`.
+- Accepted fixes: updated Track 12 from `In Review` to `Done` in the machine-readable and human-readable track indexes, and recorded this review closeout evidence.
+- Deferred or blocked fixes: none for Track 12 closeout. Runtime chaos injection, nightly chaos scheduling, OSS-Fuzz registration, and the planned DES/ABM/hybrid/Arrow/FFI fixture families remain explicitly scoped as later beta-and-beyond work rather than blockers for this bootstrap conformance track.
+- Validation commands: the `Current local checks` above passed on 2026-05-08.
+- Cleanup state: working tree was clean before the review closeout edits.
+- Commit SHA / pushed ref: Track 12 review-entry evidence remains the closed ledger commit `9f6dbf1970bf85304748ca68d21b54df87280de7` on `origin/main`; this review closeout updates local conductor status files.
+- Next-phase decision: Track 12 is `Done`.

@@ -1,6 +1,6 @@
 # Test Matrix — 02 The Bridge: kairo-ecs-ffi, UniFFI & Diplomat
 
-Last verified: 2026-05-07
+Last verified: 2026-05-08
 
 ## Required tests
 
@@ -20,15 +20,15 @@ Last verified: 2026-05-07
 - Docs build if this track changes the bridge docs.
 - Package dry-run if this track changes package metadata.
 
-## Current Track 02 validation — 2026-05-07
+## Current Track 02 validation — 2026-05-08
 
-- `cargo check --tests -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat` — pass.
-- `cargo fmt --check -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat` — pass.
-- `cargo test -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat` — pass, 23 tests.
-- `cargo metadata --no-deps --format-version 1` — pass.
+- `cargo +stable-x86_64-pc-windows-gnu check --tests -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat` — pass.
+- `cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat` — pass.
+- `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat` — pass, 23 tests.
+- `cargo +stable-x86_64-pc-windows-gnu metadata --no-deps --format-version 1` — pass.
 - `pwsh -NoProfile -File scripts/validate_conductor_setup.ps1 -SkipCargo` — pass.
 - `pwsh -NoProfile -File scripts/validate_track_coverage.ps1 -SkipCargo` — pass.
-- `cargo fmt --all --check` — blocked by unrelated pre-existing formatting drift outside Track 02-owned paths, including `crates/kairo-ecs-abm`, `crates/kairo-ecs-des`, `crates/kairo-ecs-arrow`, `crates/kairo-ecs-debug`, `crates/kairo-ecs-rng`, `crates/kairo-ecs-types`, and `crates/kairo-ecs-wasm`.
+- `cargo fmt --all --check` was not rerun for this closeout because the repo already has unrelated local Conductor and non-Track-02 edits in the working tree. The focused Track 02 formatting gate passed.
 
 ## CI commands
 

@@ -5,18 +5,18 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | Track | Name | Status | Primary subagent | Artifact |
 |---:|---|---|---|---|
 | 00 | Project Foundation, Governance & Naming | Done | `foundation-agent` | See `conductor/tracks/00-*/spec.md` |
-| 01 | The Heart: kairo-ecs-core & kairo-ecs-state | In Review | `core-scheduler-agent + ecs-agent + contracts-agent` | See `conductor/tracks/01-*/spec.md` |
-| 02 | The Bridge: kairo-ecs-ffi, UniFFI & Diplomat | In Progress | `ffi-agent + uniffi-agent + diplomat-agent` | See `conductor/tracks/02-*/spec.md` |
+| 01 | The Heart: kairo-ecs-core & kairo-ecs-state | Done | `core-scheduler-agent + ecs-agent + contracts-agent` | See `conductor/tracks/01-*/spec.md` |
+| 02 | The Bridge: kairo-ecs-ffi, UniFFI & Diplomat | In Review | `ffi-agent + uniffi-agent + diplomat-agent` | See `conductor/tracks/02-*/spec.md` |
 | 03 | The Flow: DES Trajectory API & ABM Behavior API | In Progress | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
 | 04 | The Analyst: kairo-ecs-arrow | Spec Approved | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
-| 05 | The Window: kairo-ecs-viz | In Review | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
+| 05 | The Window: kairo-ecs-viz | Done | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
 | 06 | Python Binding 3.10-3.14 | In Progress | `python-agent` | See `conductor/tracks/06-*/spec.md` |
 | 07 | R Binding | In Progress | `r-agent` | See `conductor/tracks/07-*/spec.md` |
 | 08 | Julia Binding | Planned | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
 | 09 | TypeScript/Wasm Binding | In Progress | `typescript-agent` | See `conductor/tracks/09-*/spec.md` |
-| 10 | C# Binding .NET 10-11 | In Review | `csharp-agent` | See `conductor/tracks/10-*/spec.md` |
+| 10 | C# Binding .NET 10-11 | Done | `csharp-agent` | See `conductor/tracks/10-*/spec.md` |
 | 11 | Go Binding | In Progress | `go-agent` | See `conductor/tracks/11-*/spec.md` |
-| 12 | Conformance, Testing & Benchmarks | In Review | `conformance-agent + performance-agent` | See `conductor/tracks/12-*/spec.md` |
+| 12 | Conformance, Testing & Benchmarks | Done | `conformance-agent + performance-agent` | See `conductor/tracks/12-*/spec.md` |
 | 13 | CI/CD, Code Quality & Supply Chain | In Progress | `ci-agent + security-agent` | See `conductor/tracks/13-*/spec.md` |
 | 14 | Documentation Site & Education | In Progress | `docs-agent` | See `conductor/tracks/14-*/spec.md` |
 | 15 | Packaging, Publishing & Delivery | In Progress | `release-agent` | See `conductor/tracks/15-*/spec.md` |

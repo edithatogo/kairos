@@ -68,13 +68,31 @@ Latest local validation on 2026-05-07:
 
 ## Track 01 closeout (2026-05-08)
 
-Track 01 advanced from In Progress to In Review:
+Track 01 is closed as `Done` after Worker A review closeout confirmed the existing implementation evidence, pushed HEAD containment, and focused local validation gates:
 
 - All 8 hard spec requirements are satisfied in `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state`, and `kairo-ecs-rng`.
 - 6 criterion benchmark targets added in `kairo-ecs-bench/benches/` for all canonical scenarios.
 - 4 conformance fixture consumer tests added in `kairo-ecs-core/tests/conformance_fixtures.rs`.
-- 45 tests pass across all 5 crates. Clippy, fmt, and bench-check all clean.
+- 45 tests pass across all 5 crates. Clippy, fmt, bench-check, phase-gate validation, DAG validation, and strict git closeout validation all pass.
 - SIMD acceleration and formal verification deferred to post-ADR follow-up passes.
+
+## Track 02 implementation closeout (2026-05-08)
+
+Track 02 advanced from `In Progress` to `In Review` after focused bridge validation confirmed the implementation slice:
+
+- `kairo-ecs-ffi` owns the stable handle-based C ABI with lifecycle, double-free, schedule/step/run, stats, last-error, telemetry-buffer, panic-boundary, and canonical header-diff coverage.
+- `kairo-ecs-uniffi` and `kairo-ecs-diplomat` expose dependency-light wrapper-anchor facades over the same FFI lifecycle and status-code surface.
+- Focused validation passed: `cargo +stable-x86_64-pc-windows-gnu check --tests -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat`, `cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat`, `cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat`, and `cargo +stable-x86_64-pc-windows-gnu metadata --no-deps --format-version 1`.
+- Generated UniFFI/Diplomat golden outputs, Track 04 Arrow IPC telemetry, and package publication remain later-track work, not blockers for this implementation closeout.
+
+## Track 05 closeout (2026-05-08)
+
+Track 05 is closed as `Done` after Worker B review closeout confirmed the headless visualization release slice:
+
+- `kairo-ecs-viz` validates deterministic headless frames, fixture JSON, text summaries, SVG output, optional renderer feature boundaries, and no-GUI examples.
+- GNU-toolchain gates passed for `kairo-ecs-viz`, no-default-feature checks, all-feature test compilation, the headless snapshot example, headless core independence, `kairo-ecs-core`, `kairo-ecs-state`, website build, conductor setup, and track coverage.
+- The default MSVC-target `cargo test -p kairo-ecs-viz` remains unreliable on this host because `link.exe` resolves to Git's Unix-link shim before code execution; the equivalent Track 05 tests pass on `stable-x86_64-pc-windows-gnu`.
+- Native WGPU/Bevy rendering and browser UX work remain future Track 24 or new-track scope, not blockers for this headless closeout.
 
 ## Track 12 closeout (2026-05-08)
 
@@ -83,6 +101,21 @@ Track 12 advanced from In Progress to In Review after PR #12 (`9f6dbf1970bf85304
 - JavaScript conformance replay now matches the Rust SplitMix64 fixture contract and rejects unsafe integer comparisons.
 - Local conformance and benchmark smoke gates passed for the merged Track 12 surface: `node tests/conformance/conformance-check.mjs`, `node tests/conformance/track12_20_evidence_check.mjs`, `node tests/conformance/runner.mjs --list`, and `python benches/benchmark_smoke.py`.
 - The Track 12 phase-closeout ledger entry is recorded in `conductor/phase-closeout.yaml`.
+
+Track 12 advanced from In Review to Done after review closeout on 2026-05-08:
+
+- Fresh local review gates passed: `node tests/conformance/conformance-check.mjs`, `node tests/conformance/runner.mjs`, `node tests/conformance/runner.mjs --list`, `node tests/conformance/runner-self-test.mjs`, `node tests/conformance/chaos-check.mjs`, `node tests/conformance/track07_13_hardening_check.mjs`, `node tests/conformance/track12_20_evidence_check.mjs`, `python benches/benchmark_smoke.py`, `cargo +stable-x86_64-pc-windows-gnu check -p kairo-ecs-bench`, `cargo +stable-x86_64-pc-windows-gnu test --workspace`, `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, and `Test-Path .github/workflows/conformance.yml`.
+- The bootstrap fixture runner, chaos metadata validator, benchmark smoke metadata, bench crate, and downstream evidence validator all remain wired and passing.
+- Later native chaos execution, nightly chaos scheduling, OSS-Fuzz registration, and expanded planned fixture families remain future beta-and-beyond work, not blockers for the Track 12 bootstrap conformance closeout.
+
+## Track 10 closeout (2026-05-08)
+
+Track 10 is closed as `Done` after a focused rerun of the .NET 11 preview lane:
+
+- Stable .NET 10 C# gates passed: `dotnet test`, `dotnet build -c Release`, conformance-filter `dotnet test`, and `dotnet pack` with `TargetFrameworks=net10.0`.
+- `node tests/conformance/track07_13_hardening_check.mjs`, `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, and `pwsh -NoProfile -File scripts/validate_track_no_skip_claims.ps1` passed.
+- `net11.0` preview restore passed. The preview test lane failed inside the sandbox with Roslyn named-pipe access denial, then passed outside the sandbox with 11 passed, 3 native FFI tests skipped, and 0 failed.
+- No waiver was applied. Native FFI execution remains deferred until Track 02 supplies stable runtime artifacts, and release dry-runs remain Track 15 scope.
 
 ## Implementation readiness
 

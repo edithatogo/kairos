@@ -23,7 +23,7 @@ entries:
     phase: "track-closeout"
     state: closed
     review_command: "$conductor-review"
-    review_result: "Track 01 advanced to In Review after closeout evidence, conformance fixture tests, benchmark harness cleanup, and local validation."
+    review_result: "Track 01 advanced to Done after Worker A review closeout confirmed the existing implementation evidence, phase ledger, pushed HEAD containment, and focused local validation gates."
     fixes_applied: true
     validation_commands:
       - "cargo +stable-x86_64-pc-windows-gnu fmt --all --check"
@@ -32,47 +32,92 @@ entries:
       - "cargo +stable-x86_64-pc-windows-gnu check --benches -p kairo-ecs-bench"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
     git_status: clean
-    commit_sha: "b3ae7b364261127bedac6f1cac2d9d1e9f102762"
+    commit_sha: "27ce9204174275b627198f58a3d14cc1d7e84a4b"
     pushed_ref: "origin/main"
-    next_phase_decision: "Track 01 is In Review; further advancement requires reviewer approval and fresh closeout evidence."
+    next_phase_decision: "Track 01 is Done; future core scheduler/state/RNG changes require a new scoped track or approved follow-up."
+  - track_id: "02"
+    phase: "implementation-closeout"
+    state: closed
+    review_command: "$conductor-review"
+    review_result: "Track 02 advanced to In Review after the existing C ABI bridge, UniFFI facade, Diplomat facade, lifecycle tests, panic-boundary test, header-diff test, and focused bridge validation were confirmed passing."
+    fixes_applied: true
+    validation_commands:
+      - "cargo +stable-x86_64-pc-windows-gnu check --tests -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat"
+      - "cargo +stable-x86_64-pc-windows-gnu fmt --check -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat"
+      - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-ffi -p kairo-ecs-uniffi -p kairo-ecs-diplomat"
+      - "cargo +stable-x86_64-pc-windows-gnu metadata --no-deps --format-version 1"
+    git_status: "dirty: local Conductor closeout/status edits pending commit"
+    commit_sha: "5dd1937566898b2e028ac61dab1e9dd173e6d919"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 02 is In Review; reviewer signoff is still required before moving the stable C ABI bridge to Done."
   - track_id: "05"
-    phase: "policy-adoption"
-    state: legacy_review_status
+    phase: "track-closeout"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track was already In Review when phase-closeout policy was adopted; next advancement requires a fresh closed entry."
-    fixes_applied: false
+    review_result: "Track 05 advanced to Done after fresh closeout review of the headless visualization contract, examples, docs, validators, optional feature checks, headless core independence, and website build evidence."
+    fixes_applied: true
     validation_commands:
-      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: clean
-    commit_sha: "ec566774cc8d3436d1ca043bcc0b9bf553cdd719"
+      - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-viz"
+      - "cargo +stable-x86_64-pc-windows-gnu fmt -p kairo-ecs-viz --check"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/05-window-kairo-ecs-viz/validate-state-snapshot.ps1"
+      - "cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-viz/Cargo.toml --no-default-features"
+      - "cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-viz/Cargo.toml --no-default-features --tests"
+      - "cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-viz/Cargo.toml --all-features --tests"
+      - "cargo +stable-x86_64-pc-windows-gnu check --manifest-path examples/viz/headless-snapshot/Cargo.toml"
+      - "cargo +stable-x86_64-pc-windows-gnu check -p kairo-ecs-core --no-default-features"
+      - "cargo +stable-x86_64-pc-windows-gnu tree -p kairo-ecs-core --no-default-features"
+      - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-core"
+      - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-state"
+      - "npm --prefix website run build"
+      - "cargo +stable-x86_64-pc-windows-gnu fmt --all --check"
+      - "pwsh -NoProfile -File scripts/validate_conductor_setup.ps1 -SkipCargo"
+      - "pwsh -NoProfile -File scripts/validate_track_coverage.ps1 -SkipCargo"
+    git_status: "dirty: Worker B closeout/status edits pending commit"
+    commit_sha: "27ce9204174275b627198f58a3d14cc1d7e84a4b"
     pushed_ref: "origin/main"
-    next_phase_decision: "Do not advance until a track-specific closeout entry replaces this legacy adoption record."
+    next_phase_decision: "Track 05 is Done. Future native WGPU/Bevy rendering or browser UX work should be opened as a new track or handled by Track 24 rather than reopening this headless release slice."
   - track_id: "10"
-    phase: "policy-adoption"
-    state: legacy_review_status
+    phase: "track-closeout"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track was already In Review when phase-closeout policy was adopted; next advancement requires a fresh closed entry."
-    fixes_applied: false
+    review_result: "Track 10 advanced to Done after the net11 preview lane was rerun outside the sandbox and passed; the earlier Roslyn named-pipe failure was confirmed as an environment/sandbox blocker rather than a C# binding failure."
+    fixes_applied: true
     validation_commands:
+      - "dotnet test Kairo.ECS.sln -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false"
+      - "dotnet build Kairo.ECS.sln -c Release -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false"
+      - "dotnet test Kairo.ECS.sln --filter TestCategory=Conformance -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false"
+      - "dotnet pack src/Kairo.ECS/Kairo.ECS.csproj -c Release -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false"
+      - "node tests/conformance/track07_13_hardening_check.mjs"
+      - "dotnet restore bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -p:TargetFramework=net11.0"
+      - "dotnet test bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -f net11.0 --no-restore -p:UseSharedCompilation=false"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_track_no_skip_claims.ps1"
     git_status: clean
-    commit_sha: "ec566774cc8d3436d1ca043bcc0b9bf553cdd719"
+    commit_sha: "5dd1937566898b2e028ac61dab1e9dd173e6d919"
     pushed_ref: "origin/main"
-    next_phase_decision: "Do not advance until a track-specific closeout entry replaces this legacy adoption record."
+    next_phase_decision: "Track 10 is Done; future native FFI execution, AOT/trimming validation, or NuGet release dry-runs require Track 02 or Track 15 follow-up rather than reopening this C# binding closeout."
   - track_id: "12"
     phase: "track-closeout"
     state: closed
     review_command: "$conductor-review"
-    review_result: "Track 12 advanced to In Review after PR #12 fixed cross-runtime RNG conformance replay and local conformance plus benchmark smoke gates passed."
+    review_result: "Track 12 advanced to Done after Worker D review closeout confirmed the conformance runner, chaos checks, benchmark smoke harness, bench crate, and downstream evidence validators remain wired and passing."
     fixes_applied: true
     validation_commands:
       - "node tests/conformance/conformance-check.mjs"
+      - "node tests/conformance/runner.mjs"
       - "node tests/conformance/track12_20_evidence_check.mjs"
       - "node tests/conformance/runner.mjs --list"
+      - "node tests/conformance/runner-self-test.mjs"
+      - "node tests/conformance/chaos-check.mjs"
+      - "node tests/conformance/track07_13_hardening_check.mjs"
       - "python benches/benchmark_smoke.py"
+      - "cargo +stable-x86_64-pc-windows-gnu check -p kairo-ecs-bench"
+      - "cargo +stable-x86_64-pc-windows-gnu test --workspace"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_track_no_skip_claims.ps1"
     git_status: clean
     commit_sha: "9f6dbf1970bf85304748ca68d21b54df87280de7"
     pushed_ref: "origin/main"
-    next_phase_decision: "Track 12 is In Review; further advancement requires reviewer approval and fresh closeout evidence."
+    next_phase_decision: "Track 12 is Done; future native chaos execution, fuzzing, nightly scheduling, or expanded fixture families require new scoped follow-up work."

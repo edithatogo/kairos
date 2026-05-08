@@ -38,7 +38,7 @@ tracks:
       - naming-due-diligence
   - id: 01
     name: The Heart - kairo-ecs-core and kairo-ecs-state
-    status: In Review
+    status: Done
     owner: core-scheduler-agent + ecs-agent + contracts-agent
     depends_on: ["00"]
     owned_paths:
@@ -54,7 +54,7 @@ tracks:
       - deterministic-ordering-fixture
   - id: 02
     name: The Bridge - kairo-ecs-ffi, UniFFI and Diplomat
-    status: In Progress
+    status: In Review
     owner: ffi-agent + uniffi-agent + diplomat-agent
     depends_on: ["01", "12"]
     owned_paths:
@@ -95,7 +95,7 @@ tracks:
       - arrow-roundtrip
   - id: 05
     name: The Window - kairo-ecs-viz
-    status: In Review
+    status: Done
     owner: viz-agent
     depends_on: ["01"]
     owned_paths:
@@ -160,7 +160,7 @@ tracks:
       - browser-smoke
   - id: 10
     name: C# Binding .NET 10-11
-    status: In Review
+    status: Done
     owner: csharp-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -186,7 +186,7 @@ tracks:
       - cgo-smoke
   - id: 12
     name: Conformance, Testing & Benchmarks
-    status: In Review
+    status: Done
     owner: conformance-agent + performance-agent
     depends_on: ["00"]
     owned_paths:

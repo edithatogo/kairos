@@ -54,6 +54,39 @@ Blocked validation:
 - The installed Scoop .NET 11 preview SDK restores `net11.0` assets but fails Roslyn compiler startup with `Access to the path '\\.\pipe\LOCAL\dotnet_...' is denied`.
 - Live native FFI execution is blocked until Track 02 supplies a stable `kairo_ecs` runtime library.
 
+## Review closeout validation — 2026-05-08
+
+Worker C reran the focused Track 10 gates from the shared workspace:
+
+```powershell
+$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet test Kairo.ECS.sln -m:1 -nr:false -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false
+$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet build Kairo.ECS.sln -c Release -m:1 -nr:false -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false
+$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet test Kairo.ECS.sln --filter TestCategory=Conformance -m:1 -nr:false -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false
+$env:MSBuildSDKsPath=$null; $env:DOTNET_CLI_TELEMETRY_OPTOUT='1'; dotnet pack src\Kairo.ECS\Kairo.ECS.csproj -c Release -v minimal -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false -m:1 -nr:false
+node tests\conformance\track07_13_hardening_check.mjs
+C:\Users\60217257\scoop\apps\dotnet-sdk-preview\current\dotnet.exe restore bindings\csharp\tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj -p:TargetFramework=net11.0 -v minimal
+C:\Users\60217257\scoop\apps\dotnet-sdk-preview\current\dotnet.exe test bindings\csharp\tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj -f net11.0 --no-restore -v minimal -p:UseSharedCompilation=false -m:1 -nr:false
+pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1
+pwsh -NoProfile -File scripts\validate_track_no_skip_claims.ps1
+```
+
+Results:
+
+- Stable `net10.0` test passed with 11 passed, 3 skipped native FFI tests, and 0 failed.
+- Stable `net10.0` Release build passed with 0 warnings and 0 errors.
+- Stable `net10.0` conformance-filter test passed with 3 passed and 0 failed.
+- Stable `net10.0` pack passed and created `Kairo.ECS.0.1.0-preview.1.nupkg`.
+- Track 07-13 hardening, Conductor phase-gate validation, and no-skip claim validation passed.
+- `net11.0` preview restore passed inside the sandbox.
+- `net11.0` preview test initially failed inside the sandbox before project compilation with the known Roslyn named-pipe access denial: `Access to the path '\\.\pipe\LOCAL\dotnet_...' is denied`.
+- The same focused `net11.0` preview test passed outside the sandbox on 2026-05-08 with 11 passed, 3 native FFI tests skipped, and 0 failed:
+
+```powershell
+C:\Users\60217257\scoop\apps\dotnet-sdk-preview\current\dotnet.exe test bindings\csharp\tests\Kairo.ECS.Tests\Kairo.ECS.Tests.csproj -f net11.0 --no-restore -v minimal -p:UseSharedCompilation=false -m:1 -nr:false
+```
+
+Review closeout decision: Track 10 is `Done`; no waiver was required.
+
 ## Future-surface controls
 
 - Do not add NuGet publishing, signing, or registry credentials here.
