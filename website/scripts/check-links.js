@@ -10,16 +10,39 @@ function existsRelative(relativePath) {
   return fs.existsSync(path.join(repoRoot, relativePath));
 }
 
-function stripFragment(link) {
-  return link.split("#")[0].split("?")[0];
+function slugify(text) {
+  const slug = text
+    .toLowerCase()
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || "section";
+}
+
+function parseLocalLink(link) {
+  const [rawTargetPath, rawFragment = ""] = link.split("#");
+  const targetPath = rawTargetPath.split("?")[0];
+  const fragment = rawFragment.split("?")[0];
+  return {
+    targetPath,
+    fragment: decodeFragment(fragment),
+  };
 }
 
 function isExternal(link) {
-  return /^[a-z][a-z0-9+.-]*:/i.test(link) || link.startsWith("#");
+  return /^[a-z][a-z0-9+.-]*:/i.test(link);
 }
 
-function isWithinRepo(target) {
-  const relative = path.relative(repoRoot, target);
+function decodeFragment(fragment) {
+  try {
+    return fragment ? decodeURIComponent(fragment) : "";
+  } catch (_) {
+    return fragment;
+  }
+}
+
+function isWithinRepo(target, root = repoRoot) {
+  const relative = path.relative(root, target);
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
@@ -58,8 +81,22 @@ function collectMarkdownSources(relativeRoot) {
   return entries;
 }
 
-function checkMarkdownLinks(sourceFile) {
-  const absoluteSource = path.join(repoRoot, sourceFile);
+function markdownAnchors(absolutePath) {
+  const source = fs.readFileSync(absolutePath, "utf8");
+  const anchors = new Set();
+
+  for (const line of source.split(/\r?\n/)) {
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
+    if (headingMatch) {
+      anchors.add(slugify(headingMatch[2].trim()));
+    }
+  }
+
+  return anchors;
+}
+
+function checkMarkdownLinks(sourceFile, root = repoRoot) {
+  const absoluteSource = path.join(root, sourceFile);
   const source = fs.readFileSync(absoluteSource, "utf8");
   const sourceDir = path.dirname(absoluteSource);
   const failures = [];
@@ -68,14 +105,22 @@ function checkMarkdownLinks(sourceFile) {
 
   while ((match = linkPattern.exec(source)) !== null) {
     const rawLink = match[1].trim();
-    const localLink = stripFragment(rawLink);
-    if (!localLink || isExternal(localLink)) {
+    if (isExternal(rawLink)) {
       continue;
     }
 
-    const target = path.resolve(sourceDir, localLink);
-    if (!isWithinRepo(target) || !fs.existsSync(target)) {
+    const { targetPath, fragment } = parseLocalLink(rawLink);
+    const target = targetPath ? path.resolve(sourceDir, targetPath) : absoluteSource;
+    if (!isWithinRepo(target, root) || !fs.existsSync(target)) {
       failures.push(`${sourceFile}: missing link target ${rawLink}`);
+      continue;
+    }
+
+    if (fragment && target.toLowerCase().endsWith(".md")) {
+      const anchors = markdownAnchors(target);
+      if (!anchors.has(fragment)) {
+        failures.push(`${sourceFile}: missing anchor #${fragment} in ${path.relative(root, target)}`);
+      }
     }
   }
 
@@ -125,6 +170,32 @@ function checkDocsTreeCoverage(manifest) {
   return failures;
 }
 
+function runSelfTest() {
+  const tempRoot = fs.mkdtempSync(path.join(require("os").tmpdir(), "kairo-doc-links-"));
+  try {
+    fs.mkdirSync(path.join(tempRoot, "docs"), { recursive: true });
+    fs.writeFileSync(
+      path.join(tempRoot, "docs", "target.md"),
+      "# Target Page\n\n## Valid Anchor\n",
+      "utf8"
+    );
+    fs.writeFileSync(
+      path.join(tempRoot, "docs", "source.md"),
+      "[ok](target.md#valid-anchor)\n[bad](target.md#missing-anchor)\n[same](#local-anchor)\n## Local Anchor\n",
+      "utf8"
+    );
+
+    const sourceFile = "docs/source.md";
+    const failures = checkMarkdownLinks(sourceFile, tempRoot);
+    if (failures.length !== 1 || !failures[0].includes("missing-anchor")) {
+      throw new Error(`anchor self-test failed: ${JSON.stringify(failures)}`);
+    }
+    process.stdout.write("Docs link anchor self-test passed.\n");
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+}
+
 function main() {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   const failures = [];
@@ -165,5 +236,9 @@ function main() {
 }
 
 if (require.main === module) {
-  main();
+  if (process.argv.includes("--self-test")) {
+    runSelfTest();
+  } else {
+    main();
+  }
 }

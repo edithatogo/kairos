@@ -16,7 +16,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 09 | TypeScript/Wasm Binding | In Progress | `typescript-agent` | See `conductor/tracks/09-*/spec.md` |
 | 10 | C# Binding .NET 10-11 | In Review | `csharp-agent` | See `conductor/tracks/10-*/spec.md` |
 | 11 | Go Binding | In Progress | `go-agent` | See `conductor/tracks/11-*/spec.md` |
-| 12 | Conformance, Testing & Benchmarks | In Progress | `conformance-agent + performance-agent` | See `conductor/tracks/12-*/spec.md` |
+| 12 | Conformance, Testing & Benchmarks | In Review | `conformance-agent + performance-agent` | See `conductor/tracks/12-*/spec.md` |
 | 13 | CI/CD, Code Quality & Supply Chain | In Progress | `ci-agent + security-agent` | See `conductor/tracks/13-*/spec.md` |
 | 14 | Documentation Site & Education | In Progress | `docs-agent` | See `conductor/tracks/14-*/spec.md` |
 | 15 | Packaging, Publishing & Delivery | In Progress | `release-agent` | See `conductor/tracks/15-*/spec.md` |

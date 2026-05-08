@@ -76,6 +76,14 @@ Track 01 advanced from In Progress to In Review:
 - 45 tests pass across all 5 crates. Clippy, fmt, and bench-check all clean.
 - SIMD acceleration and formal verification deferred to post-ADR follow-up passes.
 
+## Track 12 closeout (2026-05-08)
+
+Track 12 advanced from In Progress to In Review after PR #12 (`9f6dbf1970bf85304748ca68d21b54df87280de7`) fixed cross-runtime RNG conformance replay and was merged to `origin/main`.
+
+- JavaScript conformance replay now matches the Rust SplitMix64 fixture contract and rejects unsafe integer comparisons.
+- Local conformance and benchmark smoke gates passed for the merged Track 12 surface: `node tests/conformance/conformance-check.mjs`, `node tests/conformance/track12_20_evidence_check.mjs`, `node tests/conformance/runner.mjs --list`, and `python benches/benchmark_smoke.py`.
+- The Track 12 phase-closeout ledger entry is recorded in `conductor/phase-closeout.yaml`.
+
 ## Implementation readiness
 
 The repo now has a first executable implementation skeleton:

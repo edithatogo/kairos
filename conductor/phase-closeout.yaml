@@ -60,3 +60,19 @@ entries:
     commit_sha: "ec566774cc8d3436d1ca043bcc0b9bf553cdd719"
     pushed_ref: "origin/main"
     next_phase_decision: "Do not advance until a track-specific closeout entry replaces this legacy adoption record."
+  - track_id: "12"
+    phase: "track-closeout"
+    state: closed
+    review_command: "$conductor-review"
+    review_result: "Track 12 advanced to In Review after PR #12 fixed cross-runtime RNG conformance replay and local conformance plus benchmark smoke gates passed."
+    fixes_applied: true
+    validation_commands:
+      - "node tests/conformance/conformance-check.mjs"
+      - "node tests/conformance/track12_20_evidence_check.mjs"
+      - "node tests/conformance/runner.mjs --list"
+      - "python benches/benchmark_smoke.py"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+    git_status: clean
+    commit_sha: "9f6dbf1970bf85304748ca68d21b54df87280de7"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 12 is In Review; further advancement requires reviewer approval and fresh closeout evidence."

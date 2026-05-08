@@ -22,6 +22,7 @@ The local R2 dry-run evidence set was generated on 2026-05-08:
 - `dist/SHA256SUMS` generated for the same package-manifest inventory.
 - The generated manifest covers 32 package manifests across Rust, Python, R, Julia, TypeScript, C#, and Go.
 - `dist/` remains ignored; this handoff records the durable evidence state while generated artifacts stay local/reproducible.
+- The release workflow now has a Track 15 release-delivery gate before artifact upload, and the new validator reports the current blocker state when SBOM/provenance evidence is absent.
 
 ## Files changed
 
@@ -37,6 +38,7 @@ The local R2 dry-run evidence set was generated on 2026-05-08:
 `.github/workflows/release.yml`
 `docs/release/release-checklist.md`
 `docs/release/supply-chain-verification.md`
+`scripts/validate_track15_release_delivery.ps1`
 
 ## Contracts consumed
 
@@ -64,9 +66,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packagin
 ```text
 python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1
 ```
 
-Result: `validated 32 package manifests across 7 ecosystems`; `track15_status=ok`.
+Result: `validated 32 package manifests across 7 ecosystems`; `track15_status=ok`; release-delivery gate reports the current blocker before artifact upload when SBOM/provenance evidence is absent.
 
 ## Known risks
 
