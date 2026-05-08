@@ -38,8 +38,8 @@ jobs:
       - name: R smoke
         run: |
           test -f bindings/r/DESCRIPTION
-          Rscript -e 'install.packages(c("rcmdcheck","testthat","jsonlite"), repos="https://cloud.r-project.org")'
-          Rscript -e 'rcmdcheck::rcmdcheck("bindings/r", args="--no-manual", error_on="warning")'
+          cd bindings/r
+          Rscript tests/smoke-base.R
 
   julia:
     name: Julia binding

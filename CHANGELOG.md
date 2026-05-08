@@ -26,7 +26,7 @@ Format:
 - Hosted CI Policy now gates cargo-deny advisories and sources plus cargo-audit while internal workspace bans/license hardening remains a later policy tightening step.
 - Hosted CI Core dependency policy now uses the same cargo-deny advisory/source scope as the release validation gate.
 - Binding CI smoke gates now use import-safe Python pytest invocation, declared Julia test dependencies, and target-matched .NET test-project checks.
-- R binding CI now installs only required smoke-test packages while leaving Arrow as an optional binding feature.
+- R binding CI now uses the dependency-free base smoke script while leaving full package checks for a dedicated R validation gate.
 
 ### Changed
 
