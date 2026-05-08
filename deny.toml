@@ -11,8 +11,8 @@ highlight = "all"
 vulnerability = "deny"
 yanked = "deny"
 notice = "warn"
-unmaintained = "warn"
-unsound = "warn"
+unmaintained = "workspace"
+unsound = "workspace"
 
 [sources]
 unknown-registry = "deny"
