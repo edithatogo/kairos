@@ -3,5 +3,11 @@ uuid = "51c0f371-4d90-4f3a-9a5e-74d236f58d5f"
 authors = ["KairoECS maintainers"]
 version = "0.1.0"
 
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
+
 [compat]
 julia = "1.10"
