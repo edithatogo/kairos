@@ -4,7 +4,7 @@ Last updated: 2026-05-08
 
 ## Summary
 
-Captured the supply-chain and institutional-readiness checks that should sit alongside the release evidence pack, with the release gate tied to `SECURITY.md`, `CODEOWNERS`, `.github/CODEOWNERS`, `.github/dependabot.yml` or `renovate.json`, `.github/workflows/scorecard.yml`, `.github/workflows/dependency-review.yml`, `.github/workflows/actions-security.yml`, `.github/workflows/workflow-security.yml`, `.github/workflows/secret-scan.yml`, `.github/workflows/sbom-attestations.yml`, `.github/workflows/release-attestations.yml`, and the OpenSSF rows in the readiness and release-gate docs.
+Captured the supply-chain and institutional-readiness checks that should sit alongside the release evidence pack, with the release gate tied to `SECURITY.md`, `CODEOWNERS`, `.github/CODEOWNERS`, `renovate.json`, `.github/workflows/scorecard.yml`, `.github/workflows/dependency-review.yml`, `.github/workflows/actions-security.yml`, `.github/workflows/workflow-security.yml`, `.github/workflows/secret-scan.yml`, `.github/workflows/sbom-attestations.yml`, `.github/workflows/release-attestations.yml`, and the OpenSSF rows in the readiness and release-gate docs.
 
 This pass added the concrete Track 20 trust checklist, exception categories, machine-check references, and RC artifact-tree requirements for `RELEASE.txt`, `SHA256SUMS`, and `sbom.spdx.json`.
 

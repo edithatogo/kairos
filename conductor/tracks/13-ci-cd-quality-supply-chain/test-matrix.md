@@ -38,7 +38,7 @@ node tests/conformance/track12_20_evidence_check.mjs
 node scripts/validation/validate-track13-metadata.mjs
 python benches/benchmark_smoke.py
 cargo check -p kairo-ecs-bench
-test -f .github/dependabot.yml
+test -f renovate.json
 rg -n 'rust-version = "1\.76"' Cargo.toml
 rg -n 'channel = "stable"' rust-toolchain.toml
 rg -n 'unknown-registry = "deny"|unknown-git = "deny"' deny.toml

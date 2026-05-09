@@ -255,6 +255,7 @@ requireTerms('.github/workflows/ci-core.yml', [
 requireTerms('.github/workflows/ci-policy.yml', [
   'Required CI files are present',
   'Workflow consistency policy',
+  'renovate.json',
   'cargo metadata --no-deps --format-version 1',
   'cargo deny check',
   'cargo audit',

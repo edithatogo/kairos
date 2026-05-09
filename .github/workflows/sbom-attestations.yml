@@ -29,7 +29,7 @@ jobs:
       ARTIFACT_PATH: ${{ github.event.inputs.artifact_path || 'dist' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
       - name: Verify release artifact tree exists
@@ -39,16 +39,16 @@ jobs:
           test -f "${ARTIFACT_PATH}/release-artifact-manifest.json"
           test -f "${ARTIFACT_PATH}/SHA256SUMS"
       - name: Install Syft
-        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
       - name: Generate SBOM
         run: syft "dir:${ARTIFACT_PATH}" -o "spdx-json=${ARTIFACT_PATH}/sbom.spdx.json"
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: sbom-spdx
           path: ${{ env.ARTIFACT_PATH }}/sbom.spdx.json
       - name: Attest SBOM
-        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
         with:
           subject-path: ${{ env.ARTIFACT_PATH }}
           sbom-path: ${{ env.ARTIFACT_PATH }}/sbom.spdx.json

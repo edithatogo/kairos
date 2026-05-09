@@ -11,6 +11,7 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "deny.toml"
+      - "renovate.json"
       - "rust-toolchain.toml"
   push:
     branches: [main]
@@ -19,6 +20,7 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "deny.toml"
+      - "renovate.json"
       - "rust-toolchain.toml"
   workflow_dispatch:
 
@@ -30,7 +32,7 @@ jobs:
     name: Workflow and supply-chain policy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
       - name: Required CI files are present
@@ -39,7 +41,7 @@ jobs:
           test -f Cargo.lock
           test -f deny.toml
           test -f rust-toolchain.toml
-          test -f .github/dependabot.yml
+          test -f renovate.json
           test -f .github/workflows/actions-security.yml
           test -f .github/workflows/bench-regression.yml
           test -f .github/workflows/benchmark-smoke.yml

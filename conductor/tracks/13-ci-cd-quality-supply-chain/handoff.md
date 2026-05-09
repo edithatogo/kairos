@@ -14,7 +14,7 @@ Current R2 slice:
 
 `.github/workflows/conformance.yml`
 `.github/workflows/benchmark-smoke.yml`
-`.github/dependabot.yml`
+`renovate.json`
 `.github/workflows/actions-security.yml`
 `.github/workflows/codeql.yml`
 `.github/workflows/ci-policy.yml`

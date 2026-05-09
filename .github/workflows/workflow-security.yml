@@ -7,12 +7,12 @@ concurrency:
 on:
   pull_request:
     paths:
-      - '.github/dependabot.yml'
+      - 'renovate.json'
       - '.github/workflows/**'
   push:
     branches: [main]
     paths:
-      - '.github/dependabot.yml'
+      - 'renovate.json'
       - '.github/workflows/**'
 
 permissions:
@@ -25,7 +25,7 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
       - name: Inventory workflow files
@@ -75,7 +75,7 @@ jobs:
       security-events: write # Needed to upload zizmor SARIF results into code scanning.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
       - name: Inventory workflow files
@@ -112,7 +112,7 @@ jobs:
           test -f .github/workflows/validate-conductor.yml
           test -f .github/workflows/workflow-security.yml
       - name: Run zizmor
-        uses: zizmorcore/zizmor-action@b1d7e1fb5de872772f31590499237e7cce841e8e
+        uses: zizmorcore/zizmor-action@b1d7e1fb5de872772f31590499237e7cce841e8e # v0.5.3
         with:
           persona: pedantic
           online-audits: false

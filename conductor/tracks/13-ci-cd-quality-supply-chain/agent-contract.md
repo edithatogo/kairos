@@ -7,7 +7,7 @@ ci-agent + security-agent
 ## Owned paths
 
 ```text
-github workflows, deny.toml, codeql, dependabot/renovate
+github workflows, deny.toml, codeql, renovate
 ```
 
 ## Handoff rules

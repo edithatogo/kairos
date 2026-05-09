@@ -118,7 +118,7 @@ Review date: 2026-05-07.
 
 Reviewer: Codex.
 
-Scope: live public-web and registry search pass recorded in [conductor/naming-due-diligence-live-evidence.md](conductor/naming-due-diligence-live-evidence.md).
+Scope: live public-web and registry search pass recorded in [conductor/naming-due-diligence-live-evidence.md](naming-due-diligence-live-evidence.md).
 
 ### Current live search summary
 
