@@ -1,6 +1,6 @@
 # KairoECS Conductor Status
 
-Last verified: 2026-05-08
+Last verified: 2026-05-09
 
 ## Setup state
 
@@ -45,6 +45,14 @@ Each track has the required Conductor artifact shape:
 
 Machine-readable status, dependency, owner, path, and gate metadata is now tracked in `conductor/tracks.yaml`, and `conductor/tracks.md` stays aligned as the human-readable index.
 
+Track 17 advanced from `Planned` to `In Progress` on 2026-05-09 after the
+community onboarding implementation slice hardened the `onboarding-docs` gate
+around checked-in first-contribution intake paths. The slice updated
+`CONTRIBUTING.md`, `docs/community/README.md`,
+`docs/community/contributor-onboarding.md`, the Track 17 community plan,
+validator, test matrix, and handoff evidence. No external community posts,
+package publication, or public launch actions were performed.
+
 ## Validation evidence
 
 Latest local validation on 2026-05-07:
@@ -54,10 +62,11 @@ Latest local validation on 2026-05-07:
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_setup.ps1` passed, including `cargo test --workspace` via the installed `stable-x86_64-pc-windows-gnu` Rust toolchain on Windows.
 - `cargo fmt --all --check` passed.
 - `rustup run stable-x86_64-pc-windows-gnu cargo clippy --workspace --all-targets --all-features -- -D warnings` passed.
-- `npm --prefix website run check:all` passed: link check, docs build, and quality check completed. Track 14 was refreshed on 2026-05-08: the docs link checker now skips dependency/build/vendor directories during recursive scans, `npm --prefix website run check:all` rendered 110 docs pages, wrote 100 search-index entries, and indexed 23 crates / 459 public API items. The `just docs-build` wrapper remains locally blocked because `just` is not installed on PATH; the underlying website build gate passed.
+- `npm --prefix website run check:all` passed: link check, docs build, and quality check completed. Track 14 was refreshed on 2026-05-09: the Arrow schema reference now avoids an unproven zero-copy cross-language claim, `npm --prefix website run check:all` rendered 110 docs pages, wrote 100 search-index entries, and indexed 23 crates / 459 public API items. The `just docs-build` wrapper remains locally blocked because `just` is not installed on PATH; the underlying website build gate passed.
 - `npm --prefix bindings\typescript run typecheck`, `npm --prefix bindings\typescript test`, and `npm --prefix bindings\typescript run test:browser` passed for Track 09 on 2026-05-08; the browser smoke required approval to launch headless Chromium.
 - `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passed for Track 09 on 2026-05-08 with 3 unit tests and 0 doctests; optional `wasm-export` validation remains future toolchain work.
 - `node tests\conformance\conformance-check.mjs`, `node tests\conformance\runner.mjs`, `node tests\conformance\runner-self-test.mjs`, `node tests\conformance\chaos-check.mjs`, `node tests\conformance\track07_13_hardening_check.mjs`, and `node tests\conformance\track12_20_evidence_check.mjs` passed.
+- Track 17 focused implementation validators passed on 2026-05-09: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/17-community-adoption-education-ecosystem/validate-community-onboarding.ps1`, `powershell -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1`, and `node tests/conformance/track12_20_evidence_check.mjs`.
 - Track 06 advanced to `In Review` on 2026-05-08 after `python -m pytest -q` from `bindings\python` passed with 15 tests, 1 optional pyarrow roundtrip skip, and the known local pytest cache permission warning; `python -m ruff check .`, compileall, import smoke, `pip check`, `python -m build --sdist --wheel` outside the sandbox with package-local temp, and `validate-bindings06-11.ps1` also passed. A workspace-local `pyarrow-24.0.0` install succeeded, but the real pyarrow table roundtrip remains blocked because `pyarrow.lib` fails to load a required Windows DLL on this host.
 - `go test ./...`, `go vet ./...`, and `gofmt -w -l .` from `bindings\go` passed with no formatting output.
 - `Rscript -e "sessionInfo(); source('tests/testthat.R')"` from `bindings\r` passed after R startup locale warnings.
@@ -177,15 +186,25 @@ Track 19 advanced from `In Progress` to `In Review` after the citation metadata 
 - Local schema/documentation runner blockers remain: `cffconvert`, `codemeta`, and `just` are not installed, so schema-CLI validation and `just check-docs` / `just docs-build` were not run in this pass.
 - Track 19 is not `Done`: strict git closeout and push evidence remain blocked by unrelated worker edits already present in shared Conductor files and Track 09.
 
-## Track 16 implementation review (2026-05-08)
+## Track 15 implementation review (2026-05-09)
 
-Track 16 remains `In Progress` after a focused release-governance hardening pass:
+Track 15 advanced from `In Progress` to `In Review` after the packaging dry-run evidence path was made self-verifying:
+
+- `packaging/scripts/build_release_manifest.py --verify-existing` now verifies generated `dist/release-artifact-manifest.json` and `dist/SHA256SUMS` against `packaging/release-package-manifest.json`.
+- `.github/workflows/release.yml` now uses the shared verifier before artifact upload instead of duplicating release-manifest checks inline.
+- `scripts/validate_track15_release_delivery.ps1`, `docs/release/release-checklist.md`, `docs/release/maintenance-handoff.md`, `packaging/README.md`, and the Track 15 test matrix now require generated-evidence verification.
+- Focused validation passed: `python packaging/scripts/build_release_manifest.py --check`, `python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run`, `python packaging/scripts/build_release_manifest.py --verify-existing`, `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1`, `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1`, and `node tests/conformance/track12_20_evidence_check.mjs`.
+- Track 15 remains dry-run only. Production publishing, registry credentials, and live registry publication remain blocked until registry/name/toolchain evidence and release-manager approval are recorded.
+
+## Track 16 implementation refresh (2026-05-09)
+
+Track 16 advanced from `In Progress` to `In Review` after the release-governance hardening pass was revalidated:
 
 - `docs/release/maintainer-rotation.md` now records preview release-manager, compatibility-review, package-evidence, supply-chain, docs-review, and escalation coverage for the R2 release train.
 - `conductor/tracks/16-release-governance-maintenance/validate-release-governance.ps1` now proves the named `compatibility-policy` and `changelog-check` gates are present in both Track 16's registry gate block and the central quality-gate catalogue.
 - The Track 16 validator passed and now emits `track16_status=ok`, `compatibility_policy=ok`, and `changelog_check=ok`.
 - `node tests\conformance\track12_20_evidence_check.mjs` passed.
-- `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` failed on Track 19 missing commit SHA, pushed ref, and strict git-closeout markers, outside Track 16 ownership. Track 16 is therefore not advanced to `In Review` in the central registry in this pass.
+- `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` now passes with 0 errors and 0 warnings, so Track 16's central registry state is updated to `In Review`.
 
 ## Track 09 closeout (2026-05-09)
 
@@ -193,7 +212,7 @@ Track 09 is closed as `Done` after review confirmed the TypeScript/Wasm package 
 
 - `npm --prefix bindings\typescript run typecheck`, `npm --prefix bindings\typescript test`, `npm --prefix bindings\typescript run test:browser`, and `npm pack --dry-run` passed after local dependency install and required browser/cache approvals.
 - `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passed with 3 unit tests and 0 doctests, resolving the default Rust wrapper unit-test blocker seen on the default MSVC linker path.
-- The prior dirty-worktree commit-evidence blocker was resolved by pushed commit `42f3fd48c97d684e791a24ac39a251d7e730295d` on `origin/main`.
+- The prior dirty-worktree commit-evidence blocker was resolved by pushed commit `42f3fd4c0b802b0c83a8f8e6f38a445a9e00fb1c` on `origin/main`.
 - The optional `wasm-export`/wasm-pack path remains future toolchain work because the `wasm-bindgen` feature path still depends on local Windows linker setup.
 ## Track 10 closeout (2026-05-08)
 

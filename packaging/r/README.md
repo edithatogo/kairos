@@ -1,8 +1,9 @@
 # R Packaging
 
-Track 07 owns only the local R binding/package validation slice. Release
-publication, registry automation, and native runtime artifact packaging remain
-gated on the packaging/release tracks.
+Track 15 owns release packaging policy for this directory. Track 07 owns the
+local R binding validation slice under `bindings/r/` and may consume this note
+as packaging context only. Release publication, registry automation, and native
+runtime artifact packaging remain gated on the packaging/release tracks.
 
 Current local packaging gate:
 

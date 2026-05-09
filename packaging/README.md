@@ -32,6 +32,12 @@ Validate the inventory without writing outputs:
 python packaging/scripts/build_release_manifest.py --check
 ```
 
+Verify generated local evidence after the manifest builder writes `dist/`:
+
+```bash
+python packaging/scripts/build_release_manifest.py --verify-existing
+```
+
 ## First local registry/package dry-run sequence
 
 The first Track 15 sequence is intentionally offline, starts with the workspace
@@ -39,7 +45,8 @@ and binding package inventory check, and does not add publish manifests:
 
 1. `python packaging/scripts/build_release_manifest.py --check`
 2. `python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run`
-3. `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1`
+3. `python packaging/scripts/build_release_manifest.py --verify-existing`
+4. `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1`
 
 The validator rejects sequence steps that require network access, credentials,
 uploads, or publish commands. Publish manifests remain out of scope until the

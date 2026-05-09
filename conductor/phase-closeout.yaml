@@ -1,5 +1,5 @@
 schema_version: 1
-last_verified: 2026-05-08
+last_verified: 2026-05-09
 states:
   allowed:
     - pending
@@ -285,7 +285,7 @@ entries:
     phase: "track-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 14 advanced to In Review after docs-build, link-check-plan, track-local validation, playground figure validation, Track 12-20 evidence validation, and notebook validation passed. Review found one in-scope hardening issue: recursive docs link scans could traverse dependency/build/vendor directories when local installs exist."
+    review_result: "Track 14 remains In Review after docs-build, link-check-plan, track-local validation, playground figure validation, Track 12-20 evidence validation, notebook validation, and DAG validation passed. Review fixes applied: recursive docs link scans skip dependency/build/vendor directories, and the Arrow reference no longer claims zero-copy cross-language telemetry without a matching fixture. Repo-wide phase gates are currently blocked by unrelated Track 15 and Track 17 closeout evidence in the shared worktree."
     fixes_applied: true
     validation_commands:
       - "npm --prefix website ci"
@@ -297,11 +297,12 @@ entries:
       - "node tests\\conformance\\track12_20_evidence_check.mjs"
       - "python notebooks\\validate_notebooks.py"
       - "just docs-build"
-      - "pwsh -NoProfile -File scripts\\validate_conductor_phase_gates.ps1 (blocked by unrelated Track 19 phase-closeout handoff evidence outside Track 14 ownership)"
-    git_status: "dirty: Track 14 docs/link-check hardening and status docs pending commit; shared worktree may include unrelated worker edits"
+      - "pwsh -NoProfile -File scripts\\validate_conductor_phase_gates.ps1 (blocked by unrelated Track 15 and Track 17 closeout evidence outside Track 14 ownership)"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\\validate_conductor_dag.ps1"
+    git_status: "dirty: Track 14 docs wording/status evidence plus unrelated shared worker edits"
     commit_sha: "blocked: no Track 14 commit created in this pass"
     pushed_ref: "blocked: no push performed from shared dirty worktree"
-    next_phase_decision: "Track 14 is In Review. `just docs-build` remains locally blocked because `just` is not installed on PATH; the underlying `npm --prefix website run check:all` docs build/link/quality gate passed."
+    next_phase_decision: "Track 14 remains In Review. The npm-backed docs build/link/quality gate, notebook checks, figure checks, Track 12-20 evidence check, and DAG validation pass; strict git closeout and repo-wide phase-gate closeout are still blocked until unrelated Track 15/17 evidence is reconciled and the Track 14 slice is committed/pushed from a clean integration state or formally waived."
   - track_id: "08"
     phase: "track-closeout"
     state: pending
@@ -438,20 +439,51 @@ entries:
       - "node tests\\conformance\\track07_13_hardening_check.mjs"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\06-python-binding-310-314\\validate-bindings06-11.ps1"
     git_status: "clean after push to origin/main"
-    commit_sha: "42f3fd48c97d684e791a24ac39a251d7e730295d"
+    commit_sha: "42f3fd4c0b802b0c83a8f8e6f38a445a9e00fb1c"
     pushed_ref: "origin/main"
     next_phase_decision: "Track 09 is Done for the TypeScript/Wasm package slice. Optional wasm-export/wasm-pack validation remains future toolchain work because the wasm-bindgen feature path still depends on local Windows linker setup."
+  - track_id: "15"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review (pending separate review agent)"
+    review_result: "Track 15 advanced to In Review after adding generated-evidence verification to the release manifest builder and wiring the release workflow to verify dist/release-artifact-manifest.json plus dist/SHA256SUMS before artifact upload. Formal review and strict git closeout remain pending."
+    fixes_applied: true
+    validation_commands:
+      - "python packaging/scripts/build_release_manifest.py --check"
+      - "python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run"
+      - "python packaging/scripts/build_release_manifest.py --verify-existing"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1"
+      - "node tests/conformance/track12_20_evidence_check.mjs"
+    git_status: "dirty: Track 15 implementation-review edits pending review/commit; dist release evidence regenerated locally but ignored"
+    commit_sha: "pending: no Track 15 commit created in this shared-worker pass"
+    pushed_ref: "pending: no push performed"
+    next_phase_decision: "Track 15 is In Review. Do not move to Done or enable publishing until formal review, registry/name/toolchain evidence, release-manager approval, clean commit/push evidence, and strict git closeout are recorded."
   - track_id: "16"
     phase: "track-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "No blocking Track 16 findings after adding the maintainer-rotation output and hardening the release-governance validator to prove compatibility-policy and changelog-check gate wiring."
+    review_result: "No blocking Track 16 findings from the prior release-governance hardening review; 2026-05-09 implementation refresh revalidated the Track 16 gates and advanced the track to In Review."
     fixes_applied: true
     validation_commands:
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\16-release-governance-maintenance\\validate-release-governance.ps1"
       - "node tests\\conformance\\track12_20_evidence_check.mjs"
-      - "pwsh -NoProfile -File scripts\\validate_conductor_phase_gates.ps1 (blocked by Track 19 handoff evidence outside Track 16 ownership)"
-    git_status: "dirty: Track 16 implementation-review docs and validator edits pending commit"
-    commit_sha: "blocked: no Track 16 commit created in the shared worktree"
-    pushed_ref: "blocked: no push performed"
-    next_phase_decision: "Keep Track 16 In Progress until the unrelated Track 19 phase-closeout evidence blocker is resolved or explicitly waived; Track 16 compatibility-policy and changelog-check gates are locally satisfied."
+      - "pwsh -NoProfile -File scripts\\validate_conductor_phase_gates.ps1"
+    git_status: "dirty: Track 16 registry/status/handoff updates pending coordinator closeout"
+    commit_sha: "pending: no Track 16 commit created in this shared-worker pass"
+    pushed_ref: "pending: no push performed"
+    next_phase_decision: "Track 16 is In Review with compatibility-policy and changelog-check gates locally satisfied; strict commit/push closeout remains pending coordinator review."
+  - track_id: "17"
+    phase: "implementation-slice"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 17 advanced from Planned to In Progress after adding a validator-backed first-contribution intake slice. Review has not yet been run for this new slice."
+    fixes_applied: true
+    validation_commands:
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/17-community-adoption-education-ecosystem/validate-community-onboarding.ps1"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1"
+      - "node tests/conformance/track12_20_evidence_check.mjs"
+    git_status: "dirty: Track 17 implementation-slice edits pending review and commit; other agents may also be editing shared Conductor surfaces"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Keep Track 17 In Progress until conductor-review accepts the onboarding intake gate, accepted fixes are applied, and strict clean-tree commit/push closeout evidence is recorded."

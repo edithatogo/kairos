@@ -80,6 +80,18 @@ python notebooks\validate_notebooks.py
 - 2026-05-08: `python notebooks\validate_notebooks.py` passed for 2 notebooks.
 - 2026-05-08: `just docs-build` blocked locally because `just` is not installed on PATH. The underlying `npm --prefix website run check:all` docs build/link/quality gate passed.
 - 2026-05-08: `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` remained blocked by unrelated Track 19 handoff evidence outside Track 14 ownership: missing `commit SHA`, `pushed ref`, and `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` markers.
+- 2026-05-09: `$conductor-review` fixed the overbroad `docs/arrow/schema-reference.md` zero-copy wording to align with the product-guidelines `Arrow-first telemetry` claim discipline.
+- 2026-05-09: `npm --prefix website ci` passed with 0 vulnerabilities.
+- 2026-05-09: `node website\scripts\check-links.js --self-test` passed.
+- 2026-05-09: `npm --prefix website run check:links` passed with 100 required paths, 3 markdown sources, and 6 navigation sections.
+- 2026-05-09: `npm --prefix website run build` passed, rendering 110 doc pages, writing 100 search-index entries, indexing 23 crates / 459 public API items, and building `website/build/index.html`.
+- 2026-05-09: `npm --prefix website run check:quality` and `npm --prefix website run check:all` passed.
+- 2026-05-09: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\14-docs-site-education\validate-docs-site.ps1` passed with 100 required paths, 3 site sources, 6 navigation sections, and a 20-page minimum gate.
+- 2026-05-09: `node docs\assets\validate-playground-figures.mjs` passed for 5 playground figure assets and docs references.
+- 2026-05-09: `node tests\conformance\track12_20_evidence_check.mjs` passed for Tracks 12-20 evidence coverage.
+- 2026-05-09: `python notebooks\validate_notebooks.py` passed for 2 notebooks.
+- 2026-05-09: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1` passed with 0 errors and 0 warnings.
+- 2026-05-09: `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` is currently blocked by unrelated Track 15 and Track 17 closeout evidence while those shared-worktree tracks are being implemented/reviewed; no Track 14-specific phase-gate error was reported.
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

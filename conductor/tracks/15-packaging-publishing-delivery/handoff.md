@@ -1,6 +1,6 @@
 # Handoff — 15 Packaging, Publishing & Delivery
 
-Last updated: 2026-05-08
+Last updated: 2026-05-09
 
 ## Summary
 
@@ -9,7 +9,8 @@ The track remains in dry-run mode and does not publish packages to any registry.
 
 R2 dry-run evidence now has a reusable package manifest inventory and checksum
 builder under `packaging/`, with the release workflow consuming the same local
-script used by developers.
+script used by developers for both evidence generation and generated-evidence
+verification.
 
 Worker 6 defined the first local registry/package dry-run sequence in
 `packaging/release-package-manifest.json`. The sequence is offline-only:
@@ -21,6 +22,7 @@ The local R2 dry-run evidence set was generated on 2026-05-08:
 - `dist/release-artifact-manifest.json` generated with version `0.0.0-r2-dry-run`.
 - `dist/SHA256SUMS` generated for the same package-manifest inventory.
 - The generated manifest covers 32 package manifests across Rust, Python, R, Julia, TypeScript, C#, and Go.
+- `python packaging/scripts/build_release_manifest.py --verify-existing` now verifies generated `dist/` evidence against the package inventory and checksums.
 - `dist/` remains ignored; this handoff records the durable evidence state while generated artifacts stay local/reproducible.
 - The release workflow now has a Track 15 release-delivery gate before artifact upload, and the new validator reports the current blocker state when SBOM/provenance evidence is absent.
 
@@ -99,4 +101,18 @@ to fail if publish/publication manifest files appear under `packaging/` or
 Keep public publishing blocked until registry names, legal metadata, compatibility gates, and dry-run package evidence are complete across the package matrix.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+2026-05-09 implementation slice:
+
+- Added `python packaging/scripts/build_release_manifest.py --verify-existing` so generated `dist/release-artifact-manifest.json` and `dist/SHA256SUMS` are verified against `packaging/release-package-manifest.json` before release workflow artifact upload.
+- Wired `.github/workflows/release.yml` to use the shared verifier instead of inline manifest logic.
+- Updated the Track 15 release-delivery validator and release docs to require generated-evidence verification.
+- Validation passed:
+  - `python packaging/scripts/build_release_manifest.py --check`
+  - `python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run`
+  - `python packaging/scripts/build_release_manifest.py --verify-existing`
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1`
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1`
+  - `node tests/conformance/track12_20_evidence_check.mjs`
+- Formal `$conductor-review`, commit/push closeout, and strict clean-tree git closeout remain pending coordinator review.
+
+Before the next phase advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.

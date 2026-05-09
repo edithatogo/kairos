@@ -63,6 +63,10 @@ link manifest paths, site sources, generated navigation, quality outputs, and cu
 
 The 2026-05-08 implementation review hardened `website/scripts/check-links.js` so recursive docs scans skip dependency, build, cache, target, and vendor directories. This prevents local dependency installs, especially nested `node_modules`, from becoming false docs-link blockers while preserving source Markdown and manifest link validation.
 
+The 2026-05-09 review fixed an overbroad public docs claim in `docs/arrow/schema-reference.md`: the Arrow reference now says schema-stable telemetry interchange rather than claiming zero-copy transfer across language boundaries without a matching Arrow C Data Interface fixture.
+
+Fresh 2026-05-09 Track 14 validation passed for `npm --prefix website ci`, `node website\scripts\check-links.js --self-test`, `npm --prefix website run check:links`, `npm --prefix website run build`, `npm --prefix website run check:quality`, `npm --prefix website run check:all`, `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\14-docs-site-education\validate-docs-site.ps1`, `node docs\assets\validate-playground-figures.mjs`, `node tests\conformance\track12_20_evidence_check.mjs`, `python notebooks\validate_notebooks.py`, and `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1`. A later repo-wide `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` run is blocked by unrelated Track 15 and Track 17 closeout evidence while those tracks are being implemented/reviewed.
+
 ## Follow-up issues
 
 Full generated HTML fragment crawling remains the main follow-up; current evidence covers source Markdown targets, source Markdown heading anchors, required paths, manifest navigation targets, and generated docs outputs.

@@ -1,5 +1,5 @@
 schema_version: 1
-last_verified: 2026-05-07
+last_verified: 2026-05-09
 status_vocabulary:
   - Planned
   - Spec Approved
@@ -127,7 +127,6 @@ tracks:
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
       - bindings/r/
-      - packaging/r/
     required_gates:
       - phase-closeout-check
       - r-cmd-check
@@ -139,7 +138,6 @@ tracks:
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
       - bindings/julia/
-      - packaging/julia/
     required_gates:
       - phase-closeout-check
       - julia-pkg-test
@@ -228,7 +226,7 @@ tracks:
       - link-check-plan
   - id: 15
     name: Packaging, Publishing & Delivery
-    status: In Progress
+    status: In Review
     owner: release-agent
     depends_on: ["06", "09", "12", "13", "14", "16", "20", "28"]
     owned_paths:
@@ -242,7 +240,7 @@ tracks:
       - release-checklist
   - id: 16
     name: Release Governance & Maintenance
-    status: In Progress
+    status: In Review
     owner: release-agent + governance-agent
     depends_on: ["00", "25"]
     owned_paths:
@@ -255,7 +253,7 @@ tracks:
       - changelog-check
   - id: 17
     name: Community Adoption, Education & Ecosystem
-    status: Planned
+    status: In Progress
     owner: community-agent
     depends_on: ["14"]
     owned_paths:

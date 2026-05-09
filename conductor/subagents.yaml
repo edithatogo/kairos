@@ -88,14 +88,12 @@ agents:
     tracks: ["07"]
     owned_paths:
       - bindings/r/
-      - packaging/r/
     handoff_protocol: FFI internals
 
   - id: julia-agent
     tracks: ["08"]
     owned_paths:
       - bindings/julia/
-      - packaging/julia/
     handoff_protocol: FFI internals
 
   - id: typescript-agent

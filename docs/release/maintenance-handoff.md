@@ -11,6 +11,7 @@ Latest local dry-run evidence, generated on 2026-05-08:
 
 - `dist/release-artifact-manifest.json` was generated with version `0.0.0-r2-dry-run`.
 - `dist/SHA256SUMS` was generated for the same package-manifest inventory.
+- `python packaging/scripts/build_release_manifest.py --verify-existing` verifies that both generated files still match `packaging/release-package-manifest.json`.
 - The generated manifest reports 32 package manifests across Rust, Python, R, Julia, TypeScript, C#, and Go.
 - `dist/` is ignored and remains a reproducible local evidence output, not a tracked release artifact.
 - Production publishing remains disabled and blocked pending registry/name/toolchain verification.

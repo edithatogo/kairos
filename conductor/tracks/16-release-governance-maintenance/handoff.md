@@ -1,6 +1,6 @@
 # Handoff — 16 Release Governance & Maintenance
 
-Last updated: 2026-05-08
+Last updated: 2026-05-09
 
 ## Summary
 
@@ -78,6 +78,20 @@ checked-in docs and the central gate registry.
 
 Expand the changelog-policy workflow matcher when new public release surfaces are added, and keep release workflow dry-run posture aligned with Track 15 packaging gates.
 ## Phase closeout evidence
+
+Implementation refresh on 2026-05-09:
+
+- Track status advanced from `In Progress` to `In Review` after the previously recorded cross-track phase-gate blocker cleared.
+- Accepted fixes: registry/status reconciliation only; the existing release-governance implementation, maintainer-rotation output, and validator hardening remain unchanged.
+- Deferred or blocked fixes: no in-scope Track 16 implementation blocker remains. Commit and push evidence are not recorded by this worker because parallel agents are active in the shared worktree.
+- Validation commands:
+  - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\16-release-governance-maintenance\validate-release-governance.ps1`
+  - `node tests\conformance\track12_20_evidence_check.mjs`
+  - `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1`
+- Commit SHA: pending; no Track 16 commit created in this shared-worker pass.
+- Pushed ref: pending; no push performed.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: not run because this implementation pass intentionally leaves Track 16 registry/handoff updates for the coordinating closeout.
+- Next-phase decision: Track 16 is ready for review.
 
 Implementation/review pass on 2026-05-08:
 

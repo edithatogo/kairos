@@ -66,22 +66,7 @@ jobs:
           DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: python packaging/scripts/build_release_manifest.py --version "${RELEASE_VERSION}" --dry-run "${DRY_RUN}"
       - name: Validate release manifest
-        run: |
-          test -f dist/release-artifact-manifest.json
-          test -f dist/SHA256SUMS
-          python - <<'PY'
-          import json, pathlib
-          data = json.loads(pathlib.Path('dist/release-artifact-manifest.json').read_text(encoding='utf-8'))
-          artifacts = data.get('artifacts', [])
-          if len(artifacts) < 7:
-              raise SystemExit(f'unexpected artifact count: {len(artifacts)}')
-          ecosystems = {entry.get('ecosystem') for entry in artifacts}
-          expected = {'rust', 'python', 'r', 'julia', 'typescript', 'csharp', 'go'}
-          if ecosystems != expected:
-              raise SystemExit(f'unexpected artifact ecosystems: {sorted(ecosystems)}')
-          if data.get('production_publish_enabled') is not False:
-              raise SystemExit('release manifest must remain dry-run only')
-          PY
+        run: python packaging/scripts/build_release_manifest.py --verify-existing
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:

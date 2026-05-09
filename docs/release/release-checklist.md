@@ -46,6 +46,7 @@
 - [ ] Local manifest/checksum builder passed: `python packaging/scripts/build_release_manifest.py --check`.
 - [ ] `dist/release-artifact-manifest.json` generated and reviewed.
 - [ ] `dist/SHA256SUMS` generated and reviewed.
+- [ ] Generated release evidence verified: `python packaging/scripts/build_release_manifest.py --verify-existing`.
 - [ ] Dry-run output reviewed for package inventory, registry modes, and checksum coverage.
 - [ ] SBOM generated.
 - [ ] Provenance or attestation generated.

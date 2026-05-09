@@ -12,6 +12,7 @@ KairoECS will be adopted only if users can solve recognizable simulation problem
 - Discussions categories: ideas, help, show-and-tell, benchmarks, model zoo, governance.
 - Triage labels: `good first issue`, `help wanted`, `track:core`, `track:ffi`, `track:binding-python`, `needs-repro`, `needs-design-review`, `maturity:experimental`, `maturity:preview`, `maturity:stable`.
 - Contributor UX entry points: contribution guide, code of conduct, issue templates, security policy, maintainer contact path, and release-note pointers.
+- Track 17 keeps these entry points local and testable through the `onboarding-docs` gate before any external community launch or publication.
 
 ## Community ladder
 
@@ -48,3 +49,14 @@ Do not label the community surface as beta-ready until these are present and cro
 - maturity labels on examples and docs pages
 - benchmark and reproducibility entry points
 - a public path to security and governance contacts
+
+## Local gate ownership
+
+The first implementable slice is the offline contributor-intake gate. It does
+not publish anything externally; it proves that a newcomer can find:
+
+- root contribution, conduct, and security documents
+- documentation, model-zoo, and track-scoped issue templates
+- discussion categories for help, ideas, model zoo, benchmarks, and governance
+- maturity labels and the community roadmap
+- the Track 17 test matrix and handoff evidence for follow-up review

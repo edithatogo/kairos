@@ -29,6 +29,17 @@ Track 17 treats these files as the minimum real community slice:
 
 The gate passes only when the files exist, relative links resolve, the model-zoo docs agree with the YAML inventory, and the Track 17 test matrix names the `onboarding-docs` gate.
 
+The gate also proves that the root contributor guide, code of conduct,
+security path, issue templates, and discussion categories stay discoverable:
+
+- `CONTRIBUTING.md`
+- `CODE_OF_CONDUCT.md`
+- `SECURITY.md`
+- `.github/DISCUSSION_CATEGORIES.md`
+- `.github/ISSUE_TEMPLATE/docs_issue.yml`
+- `.github/ISSUE_TEMPLATE/model_contribution.yml`
+- `.github/ISSUE_TEMPLATE/track.yml`
+
 ## R2 docs-tutorials gate
 
 The tutorial layer is intentionally checked-in and offline:

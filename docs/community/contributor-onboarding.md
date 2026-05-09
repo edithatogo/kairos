@@ -20,10 +20,22 @@ Use the narrowest check that covers your change:
 | Change | Minimum check |
 |---|---|
 | Local contributor setup | `just dev-validate` |
+| First-contribution, issue, conduct, or discussion entry points | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/17-community-adoption-education-ecosystem/validate-community-onboarding.ps1` |
 | Community docs only | `rg -n "onboarding-docs|Contributor Onboarding|Model Zoo|Community Adoption" docs/community conductor/tracks/17-community-adoption-education-ecosystem` |
 | Docs site entry point | `just check-docs` |
 | Website build or navigation | `just docs-build` |
 | Conductor track evidence | `just validate-track-docs` |
+
+## Issue and discussion entry points
+
+Use the checked-in templates before inventing a new intake path:
+
+- Documentation gaps: `.github/ISSUE_TEMPLATE/docs_issue.yml`
+- Model-zoo examples: `.github/ISSUE_TEMPLATE/model_contribution.yml`
+- Track-scoped implementation or review work: `.github/ISSUE_TEMPLATE/track.yml`
+- Public discussion categories: `.github/DISCUSSION_CATEGORIES.md`
+
+Community claims should stay aligned with `docs/community/roadmap.md`, `docs/community/model-zoo.md`, and the maturity labels on the docs home page.
 
 ## Good first issue shape
 

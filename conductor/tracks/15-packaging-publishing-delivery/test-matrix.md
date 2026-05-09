@@ -18,6 +18,7 @@ rg -n "Rust|Python|R|Julia|TypeScript|C#|Go" conductor/package-matrix.md conduct
 rg -n "dry-run|draft only|preview|reservation|fallback" conductor/package-matrix.md conductor/release-engineering.md
 python packaging/scripts/build_release_manifest.py --check
 python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run
+python packaging/scripts/build_release_manifest.py --verify-existing
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1
 node tests/conformance/track12_20_evidence_check.mjs
@@ -58,7 +59,9 @@ provenance evidence is not yet present.
    `python packaging/scripts/build_release_manifest.py --check`
 2. Generate local release evidence only:
    `python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run`
-3. Re-run the offline gate:
+3. Verify the generated evidence still matches the inventory and checksums:
+   `python packaging/scripts/build_release_manifest.py --verify-existing`
+4. Re-run the offline gate:
    `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1`
 
 This sequence is the first local registry/package dry-run. It does not contact

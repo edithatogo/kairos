@@ -1,6 +1,6 @@
 # Arrow Schema Reference
 
-KairoECS uses Apache Arrow for zero-copy telemetry transfer across language boundaries.
+KairoECS uses Apache Arrow for schema-stable telemetry interchange across language boundaries.
 
 ## Schema versioning
 

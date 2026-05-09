@@ -233,17 +233,64 @@ def build(root: Path, inventory_path: Path, version: str, dry_run: str, check_on
     return result
 
 
+def verify_existing(root: Path, inventory_path: Path) -> dict:
+    expected = build(root, inventory_path, version="0.0.0-verify", dry_run="true", check_only=True)
+    inventory = load_inventory(inventory_path)
+    artifact_manifest = resolve_repo_output(
+        root,
+        inventory["output"]["artifact_manifest"],
+        "artifact_manifest",
+    )
+    checksum_manifest = resolve_repo_output(
+        root,
+        inventory["output"]["checksum_manifest"],
+        "checksum_manifest",
+    )
+    if not artifact_manifest.is_file():
+        raise SystemExit(f"missing generated artifact manifest: {artifact_manifest.relative_to(root)}")
+    if not checksum_manifest.is_file():
+        raise SystemExit(f"missing generated checksum manifest: {checksum_manifest.relative_to(root)}")
+
+    actual = json.loads(artifact_manifest.read_text(encoding="utf-8"))
+    for key in (
+        "schema_version",
+        "release_stage",
+        "production_publish_enabled",
+        "source_inventory",
+        "local_dry_run_sequence",
+        "artifact_count",
+        "artifacts",
+    ):
+        if actual.get(key) != expected.get(key):
+            raise SystemExit(f"generated artifact manifest drifted at {key}")
+    require_string(actual.get("version"), "artifact_manifest.version")
+    require_string(actual.get("dry_run"), "artifact_manifest.dry_run")
+
+    expected_checksums = "".join(f"{entry['sha256']}  {entry['path']}\n" for entry in expected["artifacts"])
+    actual_checksums = checksum_manifest.read_text(encoding="utf-8")
+    if actual_checksums != expected_checksums:
+        raise SystemExit("generated SHA256SUMS drifted from package inventory")
+
+    return actual
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--inventory", default="packaging/release-package-manifest.json")
     parser.add_argument("--version", default="0.0.0-dry-run")
     parser.add_argument("--dry-run", default="true")
     parser.add_argument("--check", action="store_true", help="validate inventory without writing dist files")
+    parser.add_argument("--verify-existing", action="store_true", help="verify generated dist evidence without rewriting it")
     args = parser.parse_args()
 
     root = Path.cwd()
-    result = build(root, root / args.inventory, args.version, args.dry_run, args.check)
-    print(f"validated {result['artifact_count']} package manifests across 7 ecosystems")
+    inventory_path = root / args.inventory
+    if args.verify_existing:
+        result = verify_existing(root, inventory_path)
+        print(f"verified {result['artifact_count']} generated package evidence entries")
+    else:
+        result = build(root, inventory_path, args.version, args.dry_run, args.check)
+        print(f"validated {result['artifact_count']} package manifests across 7 ecosystems")
 
 
 if __name__ == "__main__":

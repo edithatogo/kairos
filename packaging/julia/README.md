@@ -1,6 +1,8 @@
 # Julia Packaging Notes
 
-Track 08 owns this directory.
+Track 15 owns release packaging policy for this directory. Track 08 owns the
+local Julia binding validation slice under `bindings/julia/` and may consume
+this note as packaging context only.
 
 The Julia package is intentionally local-only for this slice. Registry
 publication, package-server automation, and native library artifact packaging

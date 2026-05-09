@@ -24,6 +24,13 @@ foreach ($path in @(
     'docs/community/governance.md',
     'docs/community/model-zoo.md',
     'docs/community/roadmap.md',
+    'CONTRIBUTING.md',
+    'CODE_OF_CONDUCT.md',
+    'SECURITY.md',
+    '.github/DISCUSSION_CATEGORIES.md',
+    '.github/ISSUE_TEMPLATE/docs_issue.yml',
+    '.github/ISSUE_TEMPLATE/model_contribution.yml',
+    '.github/ISSUE_TEMPLATE/track.yml',
     'examples/model-zoo/README.md',
     'examples/model-zoo/model-zoo.yaml',
     'website/src/index.md',
@@ -38,6 +45,17 @@ Assert-Contains 'docs/community/adoption.md' 'First-user path' 'first-user path'
 Assert-Contains 'docs/community/contributor-onboarding.md' 'First contribution path' 'first contribution path'
 Assert-Contains 'docs/community/model-zoo.md' 'Inventory update rule' 'inventory update rule'
 Assert-Contains 'docs/community/roadmap.md' 'stable' 'maturity labels'
+Assert-Contains 'CONTRIBUTING.md' 'Track-aware first contribution path' 'track-aware first contribution path'
+Assert-Contains 'CONTRIBUTING.md' 'good first issue' 'good first issue guidance'
+Assert-Contains 'CONTRIBUTING.md' 'docs/community/contributor-onboarding.md' 'community onboarding link'
+Assert-Contains 'CONTRIBUTING.md' 'onboarding-docs' 'onboarding-docs gate reference'
+Assert-Contains 'CODE_OF_CONDUCT.md' 'governance/code-of-conduct-response.md' 'code of conduct response path'
+Assert-Contains 'SECURITY.md' 'security' 'security contact path'
+Assert-Contains '.github/DISCUSSION_CATEGORIES.md' 'Model zoo' 'model zoo discussion category'
+Assert-Contains '.github/DISCUSSION_CATEGORIES.md' 'Governance' 'governance discussion category'
+Assert-Contains '.github/ISSUE_TEMPLATE/docs_issue.yml' 'kind:docs' 'docs issue label'
+Assert-Contains '.github/ISSUE_TEMPLATE/model_contribution.yml' 'model-zoo' 'model-zoo issue label'
+Assert-Contains '.github/ISSUE_TEMPLATE/track.yml' 'Acceptance criteria' 'track issue acceptance criteria'
 
 foreach ($id in @('mm1_queue', 'factory_bottleneck', 'flocking', 'emergency_department_flow')) {
     Assert-Contains 'docs/community/model-zoo.md' $id "model-zoo docs id $id"

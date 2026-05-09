@@ -64,6 +64,7 @@ if ($releaseWorkflow.Length -gt 0) {
     $workflowLines = @($releaseWorkflow -split "`r?`n")
     $gateIndex = Get-LineIndex -Lines $workflowLines -Pattern 'Validate release delivery gate'
     $gateRunIndex = Get-LineIndex -Lines $workflowLines -Pattern 'scripts/validate_track15_release_delivery\.ps1'
+    $verifyEvidenceIndex = Get-LineIndex -Lines $workflowLines -Pattern 'build_release_manifest\.py --verify-existing'
     $uploadIndex = Get-LineIndex -Lines $workflowLines -Pattern 'Upload artifacts'
     $dryRunIndex = Get-LineIndex -Lines $workflowLines -Pattern 'release workflow is dry-run only'
 
@@ -76,11 +77,17 @@ if ($releaseWorkflow.Length -gt 0) {
     if ($uploadIndex -lt 0) {
         Add-Issue -Message "release.yml is missing the artifact upload step"
     }
+    if ($verifyEvidenceIndex -lt 0) {
+        Add-Issue -Message "release.yml does not verify generated release evidence before artifact upload"
+    }
     if (($gateIndex -ge 0) -and ($uploadIndex -ge 0) -and ($gateIndex -gt $uploadIndex)) {
         Add-Issue -Message "Track 15 release delivery gate must run before artifact upload"
     }
     if (($gateRunIndex -ge 0) -and ($uploadIndex -ge 0) -and ($gateRunIndex -gt $uploadIndex)) {
         Add-Issue -Message "Track 15 validator invocation appears after artifact upload"
+    }
+    if (($verifyEvidenceIndex -ge 0) -and ($uploadIndex -ge 0) -and ($verifyEvidenceIndex -gt $uploadIndex)) {
+        Add-Issue -Message "Generated release evidence verification must run before artifact upload"
     }
     if ($dryRunIndex -lt 0) {
         Add-Issue -Message "release.yml no longer reports its dry-run-only release posture"
@@ -92,6 +99,7 @@ if ($checklist.Length -gt 0) {
     foreach ($needle in @(
         "SBOM generated.",
         "Provenance or attestation generated.",
+        "Generated release evidence verified: ``python packaging/scripts/build_release_manifest.py --verify-existing``.",
         "Any remaining publish blockers are recorded in the maintenance handoff before leaving dry-run mode."
     )) {
         if ($checklist -notmatch [regex]::Escape($needle)) {
