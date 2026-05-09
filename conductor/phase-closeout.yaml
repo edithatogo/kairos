@@ -421,9 +421,9 @@ entries:
     next_phase_decision: "Track 19 is In Review. Do not move to Done until schema CLI/docs-build checks run or are explicitly waived, and strict git closeout plus push evidence exists."
   - track_id: "09"
     phase: "track-closeout"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 09 review found no in-scope TypeScript/Wasm code defect and the prior dirty-worktree process blocker was resolved by local commits. Remote closeout remains pending explicit approval to push to origin/main."
+    review_result: "Track 09 advanced to Done after review found no in-scope TypeScript/Wasm code defect and the prior dirty-worktree process blocker was resolved by pushed closeout commits on origin/main."
     fixes_applied: true
     validation_commands:
       - "npm ci"
@@ -437,10 +437,10 @@ entries:
       - "cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\\kairo-ecs-wasm\\Cargo.toml"
       - "node tests\\conformance\\track07_13_hardening_check.mjs"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\06-python-binding-310-314\\validate-bindings06-11.ps1"
-    git_status: "clean local branch ahead of origin/main; remote push pending explicit approval"
-    commit_sha: "171d7c5fa1304b99cdea09d2c7028dc5df755377"
-    pushed_ref: "blocked: push to origin/main requires explicit user approval"
-    next_phase_decision: "Track 09 is In Review until the local closeout commits are pushed to origin/main or a formal release-manager waiver is recorded. Optional wasm-export/wasm-pack validation remains future toolchain work because the wasm-bindgen feature path still depends on local Windows linker setup."
+    git_status: "clean after push to origin/main"
+    commit_sha: "42f3fd48c97d684e791a24ac39a251d7e730295d"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 09 is Done for the TypeScript/Wasm package slice. Optional wasm-export/wasm-pack validation remains future toolchain work because the wasm-bindgen feature path still depends on local Windows linker setup."
   - track_id: "16"
     phase: "track-closeout"
     state: pending
