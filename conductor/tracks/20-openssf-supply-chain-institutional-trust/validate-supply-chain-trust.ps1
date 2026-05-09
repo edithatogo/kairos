@@ -42,7 +42,7 @@ Assert-Contains '.github/workflows/sbom-attestations.yml' 'attestations:\s*write
 Assert-Contains '.github/workflows/sbom-attestations.yml' 'sbom\.spdx\.json' 'SPDX SBOM output'
 Assert-Contains '.github/workflows/sbom-attestations.yml' 'SHA256SUMS' 'checksum requirement'
 Assert-Contains '.github/workflows/sbom-attestations.yml' 'RELEASE\.txt' 'release notes artifact requirement'
-Assert-Contains '.github/workflows/sbom-attestations.yml' 'actions/upload-artifact@v4' 'stable SBOM artifact upload action'
+Assert-Contains '.github/workflows/sbom-attestations.yml' 'actions/upload-artifact@[a-f0-9]{40}' 'stable SBOM artifact upload action'
 Assert-Contains '.github/workflows/release-attestations.yml' 'actions/attest' 'release attestation action'
 Assert-Contains 'SECURITY.md' 'vulnerabilities|security advisory' 'vulnerability response path'
 Assert-Contains 'SECURITY.md' 'business days|temporary operational exceptions|affected release stage' 'vulnerability triage and exception policy'

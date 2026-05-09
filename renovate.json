@@ -1,15 +1,28 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    ":dependencyDashboard"
   ],
   "dependencyDashboard": true,
-  "labels": [
-    "dependencies"
+  "timezone": "Australia/Sydney",
+  "schedule": [
+    "* 0-8 * * 1"
   ],
   "prConcurrentLimit": 10,
   "prHourlyLimit": 4,
   "rangeStrategy": "bump",
+  "labels": [
+    "dependencies"
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": [
+      "security",
+      "dependencies"
+    ],
+    "schedule": []
+  },
   "packageRules": [
     {
       "matchManagers": [
@@ -31,7 +44,11 @@
       "matchManagers": [
         "cargo"
       ],
-      "groupName": "rust-crates"
+      "matchUpdateTypes": [
+        "patch",
+        "minor"
+      ],
+      "groupName": "Rust patch and minor dependencies"
     },
     {
       "matchManagers": [

@@ -4,7 +4,7 @@
 
 - Read `conductor/workflow.md`.
 - Read relevant contracts under `conductor/contracts/`.
-- Confirm owned paths: `github workflows, deny.toml, codeql, dependabot/renovate`.
+- Confirm owned paths: `github workflows, deny.toml, codeql, renovate`.
 - Create `agent-contract.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md`.
 
 ## Phase 1 — Contract alignment

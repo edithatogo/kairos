@@ -19,7 +19,7 @@ Track 00. Starts immediately.
 ## Owned paths
 
 ```text
-github workflows, deny.toml, codeql, dependabot/renovate
+github workflows, deny.toml, codeql, renovate
 ```
 
 ## Parallel-safe with

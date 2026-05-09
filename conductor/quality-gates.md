@@ -292,7 +292,7 @@ check-links conductor/delivery-readiness-checklist.md
 test -f SECURITY.md
 test -f CODEOWNERS
 test -f .github/CODEOWNERS
-test -f .github/dependabot.yml || test -f renovate.json
+test -f renovate.json
 test -f .github/workflows/actions-security.yml
 test -f .github/workflows/workflow-security.yml
 test -f .github/workflows/secret-scan.yml

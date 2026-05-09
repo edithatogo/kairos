@@ -17,7 +17,7 @@ The release manager should treat this as the Track 20 source of truth. A row is 
 |---|---|---:|---:|---:|---:|
 | Security policy and vulnerability intake | `SECURITY.md` | required | required | required | required |
 | Maintained path ownership | `CODEOWNERS` and `.github/CODEOWNERS` | required | required | required | required |
-| Dependency automation | `.github/dependabot.yml` or `renovate.json` | required | required | required | required |
+| Dependency automation | `renovate.json` | required | required | required | required |
 | Static and advisory scanning plan | `.github/workflows/codeql.yml`, `cargo audit`, `cargo deny check` in `conductor/quality-gates.md` | required | required | required | required |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | scaffold allowed | active | active | active |
 | Dependency Review high-severity block | `.github/workflows/dependency-review.yml` with `fail-on-severity: high` | advisory | required | required | required |
