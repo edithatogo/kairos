@@ -66,7 +66,7 @@ jobs:
             exit 1
           fi
       - name: actionlint
-        uses: raven-actions/actionlint@205b530c5d9fa8f44ae9ed59f341a0db994aa6f8
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7
   zizmor:
     permissions:
       contents: read
@@ -113,3 +113,4 @@ jobs:
         uses: zizmorcore/zizmor-action@b1d7e1fb5de872772f31590499237e7cce841e8e
         with:
           persona: pedantic
+          online-audits: false
