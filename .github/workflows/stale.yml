@@ -1,5 +1,9 @@
 name: Stale Issues and PRs
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   schedule:
     - cron: '0 8 * * 1'

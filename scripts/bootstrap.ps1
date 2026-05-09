@@ -47,13 +47,22 @@ Invoke-Optional "Install Rust formatter and linter components" {
 }
 
 if (-not $SkipCargoInstalls) {
-    foreach ($tool in @("just", "cargo-nextest", "cargo-vet", "cargo-deny", "cargo-audit", "cargo-llvm-cov")) {
-        if (Test-Command $tool) {
-            Write-Host "$tool already on PATH"
+    $cargoTools = @(
+        @{ Name = "just"; Version = "1.42.4" },
+        @{ Name = "cargo-nextest"; Version = "0.9.100" },
+        @{ Name = "cargo-vet"; Version = "0.10.0" },
+        @{ Name = "cargo-deny"; Version = "0.18.5" },
+        @{ Name = "cargo-audit"; Version = "0.21.2" },
+        @{ Name = "cargo-llvm-cov"; Version = "0.6.18" }
+    )
+    foreach ($tool in $cargoTools) {
+        $name = $tool.Name
+        if (Test-Command $name) {
+            Write-Host "$name already on PATH"
             continue
         }
-        Invoke-Optional "Install $tool" {
-            cargo install $tool --locked
+        Invoke-Optional "Install $name" {
+            cargo install $name --version $tool.Version --locked
         }
     }
 }
@@ -63,7 +72,7 @@ if (-not $SkipPython) {
         python -m pip install -U pip
     }
     Invoke-Optional "Install Python development packages" {
-        python -m pip install -U maturin pytest hypothesis ruff pyarrow
+        python -m pip install -U maturin==1.9.6 pytest==8.3.5 hypothesis==6.131.0 ruff==0.11.13 pyarrow==24.0.0
     }
 }
 

@@ -1,5 +1,9 @@
 name: SBOM and Attestations
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   workflow_dispatch:
     inputs:
@@ -12,17 +16,19 @@ on:
 
 permissions:
   contents: read
-  id-token: write
-  attestations: write
 
 jobs:
   sbom:
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     runs-on: ubuntu-latest
     env:
       ARTIFACT_PATH: ${{ github.event.inputs.artifact_path || 'dist' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
       - name: Verify release artifact tree exists
@@ -32,16 +38,16 @@ jobs:
           test -f "${ARTIFACT_PATH}/release-artifact-manifest.json"
           test -f "${ARTIFACT_PATH}/SHA256SUMS"
       - name: Install Syft
-        uses: anchore/sbom-action/download-syft@v0
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610
       - name: Generate SBOM
         run: syft "dir:${ARTIFACT_PATH}" -o "spdx-json=${ARTIFACT_PATH}/sbom.spdx.json"
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: sbom-spdx
           path: ${{ env.ARTIFACT_PATH }}/sbom.spdx.json
       - name: Attest SBOM
-        uses: actions/attest@v4
+        uses: actions/attest@281a49d4cbb0a72c9575a50d18f6deb515a11deb
         with:
           subject-path: ${{ env.ARTIFACT_PATH }}
           sbom-path: ${{ env.ARTIFACT_PATH }}/sbom.spdx.json

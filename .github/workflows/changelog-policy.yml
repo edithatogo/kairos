@@ -1,5 +1,9 @@
 name: Changelog Policy
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   pull_request:
     paths:
@@ -21,18 +25,23 @@ jobs:
     name: Enforce changelog policy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Check that public release surface edits update CHANGELOG.md
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            base="${{ github.event.pull_request.base.sha }}"
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            base="$PR_BASE_SHA"
           else
             base="$(git merge-base HEAD origin/main || git rev-parse HEAD^)"
           fi
-          head="${{ github.sha }}"
+          head="$HEAD_SHA"
           changed="$(git diff --name-only "$base" "$head")"
           public_changed="$(printf '%s\n' "$changed" | awk '/^(crates\/kairo-ecs-(types|core|state|rng|ffi)|include\/|bindings\/(python|r|julia|typescript|csharp|go)|schemas\/arrow\/|conformance\/fixtures\/|docs\/release\/|\.github\/workflows\/)/')"
           if [ -n "$public_changed" ] && ! printf '%s\n' "$changed" | grep -qx 'CHANGELOG.md'; then

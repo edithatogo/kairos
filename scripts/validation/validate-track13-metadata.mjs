@@ -277,18 +277,18 @@ requireTerms('.github/workflows/conformance.yml', [
 ]);
 
 requireTerms('.github/workflows/secret-scan.yml', [
-  'gitleaks/gitleaks-action@v2',
+  'gitleaks/gitleaks-action@',
 ]);
 
 requireTerms('.github/workflows/codeql.yml', [
-  'github/codeql-action/init@v4',
-  'github/codeql-action/analyze@v4',
+  'github/codeql-action/init@',
+  'github/codeql-action/analyze@',
 ]);
 
 requireTerms('.github/workflows/scorecard.yml', [
-  'actions/checkout@v6',
-  'ossf/scorecard-action@v2.4.3',
-  'github/codeql-action/upload-sarif@v4',
+  'actions/checkout@',
+  'ossf/scorecard-action@',
+  'github/codeql-action/upload-sarif@',
 ]);
 
 requireTerms('.github/workflows/sbom-attestations.yml', [

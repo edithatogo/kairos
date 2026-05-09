@@ -1,5 +1,9 @@
 name: Toolchain Check
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   pull_request:
     paths:
@@ -45,7 +49,9 @@ jobs:
     name: Static matrix and gate policy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
       - name: Validate matrix document, gate rows, and workflow triggers
         shell: pwsh
         run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1
@@ -62,14 +68,18 @@ jobs:
           - channel: beta
             expected-prefix: "1."
     steps:
-      - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@v1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: ${{ matrix.channel }}
           components: rustfmt,clippy
       - name: Validate installed Rust channel
         shell: pwsh
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedPrefix '${{ matrix.expected-prefix }}'
+        env:
+          EXPECTED_PREFIX: ${{ matrix.expected-prefix }}
+        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedPrefix $env:EXPECTED_PREFIX
 
   python:
     name: Python ${{ matrix.python-version }}
@@ -79,13 +89,17 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: ${{ matrix.python-version }}
       - name: Validate installed Python
         shell: pwsh
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedPrefix '${{ matrix.python-version }}'
+        env:
+          EXPECTED_PREFIX: ${{ matrix.python-version }}
+        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedPrefix $env:EXPECTED_PREFIX
 
   r:
     name: R ${{ matrix.r-version }}
@@ -99,13 +113,17 @@ jobs:
           - r-version: release
             expected-prefix: "4.6"
     steps:
-      - uses: actions/checkout@v6
-      - uses: r-lib/actions/setup-r@v2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: r-lib/actions/setup-r@a51a8012b0aab7c32ef9d19bf54da93f3254335e
         with:
           r-version: ${{ matrix.r-version }}
       - name: Validate installed R
         shell: pwsh
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem r -ExpectedPrefix '${{ matrix.expected-prefix }}'
+        env:
+          EXPECTED_PREFIX: ${{ matrix.expected-prefix }}
+        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem r -ExpectedPrefix $env:EXPECTED_PREFIX
 
   julia:
     name: Julia ${{ matrix.julia-version }}
@@ -115,13 +133,17 @@ jobs:
       matrix:
         julia-version: ["1.10", "1.12"]
     steps:
-      - uses: actions/checkout@v6
-      - uses: julia-actions/setup-julia@v3
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: julia-actions/setup-julia@f6f565d9f7cf12f53dc8045742460d6260ad3b39
         with:
           version: ${{ matrix.julia-version }}
       - name: Validate installed Julia
         shell: pwsh
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem julia -ExpectedPrefix '${{ matrix.julia-version }}'
+        env:
+          EXPECTED_PREFIX: ${{ matrix.julia-version }}
+        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem julia -ExpectedPrefix $env:EXPECTED_PREFIX
 
   node:
     name: Node ${{ matrix.node-version }}
@@ -131,13 +153,17 @@ jobs:
       matrix:
         node-version: ["22", "24"]
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: ${{ matrix.node-version }}
       - name: Validate installed Node
         shell: pwsh
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem node -ExpectedPrefix '${{ matrix.node-version }}'
+        env:
+          EXPECTED_PREFIX: ${{ matrix.node-version }}
+        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem node -ExpectedPrefix $env:EXPECTED_PREFIX
 
   dotnet:
     name: .NET ${{ matrix.dotnet-version }}
@@ -153,14 +179,18 @@ jobs:
             expected-prefix: "11.0"
             quality: "preview"
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
           dotnet-quality: ${{ matrix.quality }}
       - name: Validate installed .NET
         shell: pwsh
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem dotnet -ExpectedPrefix '${{ matrix.expected-prefix }}'
+        env:
+          EXPECTED_PREFIX: ${{ matrix.expected-prefix }}
+        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem dotnet -ExpectedPrefix $env:EXPECTED_PREFIX
 
   go:
     name: Go ${{ matrix.go-version }}
@@ -174,10 +204,14 @@ jobs:
           - go-version: "1.26.x"
             expected-prefix: "1.26"
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
         with:
           go-version: ${{ matrix.go-version }}
       - name: Validate installed Go
         shell: pwsh
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem go -ExpectedPrefix '${{ matrix.expected-prefix }}'
+        env:
+          EXPECTED_PREFIX: ${{ matrix.expected-prefix }}
+        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem go -ExpectedPrefix $env:EXPECTED_PREFIX

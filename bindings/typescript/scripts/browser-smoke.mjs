@@ -56,8 +56,9 @@ const server = createServer(async (request, response) => {
     response.writeHead(404);
     response.end("not found");
   } catch (error) {
+    console.error("browser smoke server failed", error);
     response.writeHead(500);
-    response.end(error instanceof Error ? error.message : String(error));
+    response.end("internal server error");
   }
 });
 

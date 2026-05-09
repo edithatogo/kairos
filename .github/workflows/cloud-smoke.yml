@@ -1,5 +1,9 @@
 name: Cloud/HPC Smoke
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   pull_request:
     paths:
@@ -28,9 +32,11 @@ jobs:
   offline-cloud-hpc-smoke:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: "3.12"
 
@@ -57,7 +63,7 @@ jobs:
           python docker/telemetry-plugin/cloud-output.py --input /tmp/kairo-input/telemetry.arrow --destination file:///tmp/kairo-output
           sha256sum -c /tmp/kairo-output/telemetry.arrow.sha256
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: "24"
 
