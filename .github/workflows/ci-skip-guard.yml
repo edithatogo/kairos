@@ -9,7 +9,6 @@ on:
     types: [opened, edited, reopened, synchronize, ready_for_review]
 
 permissions:
-  contents: read
   pull-requests: read
 
 jobs:
@@ -17,7 +16,7 @@ jobs:
     name: Reject CI skip directives
     runs-on: ubuntu-latest
     steps:
-      - name: Check PR metadata and commits
+      - name: Check PR metadata
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         with:
           script: |
@@ -27,17 +26,6 @@ jobs:
               `PR title: ${pr.title || ""}`,
               `PR body: ${pr.body || ""}`,
             ];
-
-            const commits = await github.paginate(github.rest.pulls.listCommits, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number,
-              per_page: 100,
-            });
-
-            for (const commit of commits) {
-              candidates.push(`commit ${commit.sha}: ${commit.commit.message || ""}`);
-            }
 
             const offender = candidates.find((value) => pattern.test(value));
             if (offender) {

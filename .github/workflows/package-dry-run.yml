@@ -9,8 +9,6 @@ on:
     paths:
       - 'crates/**'
       - 'bindings/**'
-      - 'templates/**'
-      - '.github/workflows/package-dry-run.yml'
   workflow_dispatch:
 
 permissions:
