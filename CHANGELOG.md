@@ -24,10 +24,12 @@ Format:
 - Hosted CI hardening for public-repository Actions runs, including portable policy checks, Mermaid rendering, changelog enforcement, and workflow-security SARIF upload permissions.
 - Security workflow hardening now pins GitHub Actions to immutable commit SHAs, disables checkout credential persistence, enables branch protection plus repository security scanning, and keeps zizmor audits offline while Dependabot handles advisory alerts.
 - Workflow security hardening now names all Actions jobs, documents elevated permissions, digest-pins Docker base images, and replaces redundant Rust toolchain actions with runner-managed `rustup`.
+- CI core and bootstrap tooling now pin `cargo-deny` to the CVSS 4.0-capable repository policy schema while retaining the newer non-hanging `cargo-nextest` install.
 - Workflow shellcheck cleanup for assessment reminders, package dry-runs, and SBOM attestation commands.
-- Cargo deny advisory policy updated for the current hosted `cargo-deny` schema.
+- Cargo deny advisory policy now relies on current `cargo-deny` default denial for unsound advisories while retaining workspace-scoped unmaintained advisories.
 - Hosted CI Policy now gates cargo-deny advisories and sources plus cargo-audit while internal workspace bans/license hardening remains a later policy tightening step.
 - Hosted CI Core dependency policy now uses the same cargo-deny advisory/source scope as the release validation gate.
+- Cargo audit tooling now pins to a CVSS 4.0-capable release so hosted RustSec advisory checks keep reading the live database.
 - Binding CI smoke gates now use import-safe Python pytest invocation, declared Julia test dependencies, and target-matched .NET test-project checks.
 - R binding CI now uses the dependency-free base smoke script while leaving full package checks for a dedicated R validation gate.
 

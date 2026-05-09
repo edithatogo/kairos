@@ -49,10 +49,10 @@ Invoke-Optional "Install Rust formatter and linter components" {
 if (-not $SkipCargoInstalls) {
     $cargoTools = @(
         @{ Name = "just"; Version = "1.42.4" },
-        @{ Name = "cargo-nextest"; Version = "0.9.100" },
+        @{ Name = "cargo-nextest"; Version = "0.9.133" },
         @{ Name = "cargo-vet"; Version = "0.10.0" },
-        @{ Name = "cargo-deny"; Version = "0.18.5" },
-        @{ Name = "cargo-audit"; Version = "0.21.2" },
+        @{ Name = "cargo-deny"; Version = "0.18.9" },
+        @{ Name = "cargo-audit"; Version = "0.22.1" },
         @{ Name = "cargo-llvm-cov"; Version = "0.6.18" }
     )
     foreach ($tool in $cargoTools) {

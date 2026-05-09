@@ -3,9 +3,9 @@ set -euo pipefail
 rustup component add rustfmt clippy || true
 for spec in \
   "just@1.42.4" \
-  "cargo-nextest@0.9.100" \
-  "cargo-deny@0.18.5" \
-  "cargo-audit@0.21.2" \
+  "cargo-nextest@0.9.133" \
+  "cargo-deny@0.18.9" \
+  "cargo-audit@0.22.1" \
   "cargo-llvm-cov@0.6.18"; do
   cargo install "${spec%@*}" --version "${spec#*@}" --locked || true
 done

@@ -10,7 +10,6 @@ highlight = "all"
 [advisories]
 yanked = "deny"
 unmaintained = "workspace"
-unsound = "workspace"
 
 [sources]
 unknown-registry = "deny"
