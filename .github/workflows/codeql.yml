@@ -13,15 +13,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: read
+  actions: read # Needed by CodeQL to inspect workflow run metadata.
   contents: read
 
 jobs:
   analyze:
+    name: CodeQL
     permissions:
-      actions: read
+      actions: read # Needed by CodeQL to inspect workflow run metadata.
       contents: read
-      security-events: write
+      security-events: write # Needed to upload CodeQL analysis results.
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

@@ -17,10 +17,11 @@ permissions:
 
 jobs:
   attest:
+    name: release-attestation
     permissions:
       contents: read
-      id-token: write
-      attestations: write
+      id-token: write # Needed to sign release attestations with OIDC.
+      attestations: write # Needed to publish artifact attestations.
     runs-on: ubuntu-latest
     env:
       ARTIFACT_PATH: ${{ github.event.inputs.artifact_path || 'dist' }}

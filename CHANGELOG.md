@@ -23,6 +23,7 @@ Format:
 - Conductor release-gate hardening for Track 13 offline supply-chain validation, Track 14 Markdown fragment-anchor validation, and Track 15 release-delivery dry-run gating before artifact upload.
 - Hosted CI hardening for public-repository Actions runs, including portable policy checks, Mermaid rendering, changelog enforcement, and workflow-security SARIF upload permissions.
 - Security workflow hardening now pins GitHub Actions to immutable commit SHAs, disables checkout credential persistence, enables branch protection plus repository security scanning, and keeps zizmor audits offline while Dependabot handles advisory alerts.
+- Workflow security hardening now names all Actions jobs, documents elevated permissions, digest-pins Docker base images, and replaces redundant Rust toolchain actions with runner-managed `rustup`.
 - Workflow shellcheck cleanup for assessment reminders, package dry-runs, and SBOM attestation commands.
 - Cargo deny advisory policy updated for the current hosted `cargo-deny` schema.
 - Hosted CI Policy now gates cargo-deny advisories and sources plus cargo-audit while internal workspace bans/license hardening remains a later policy tightening step.

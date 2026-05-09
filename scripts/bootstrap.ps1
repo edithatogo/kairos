@@ -69,7 +69,7 @@ if (-not $SkipCargoInstalls) {
 
 if (-not $SkipPython) {
     Invoke-Optional "Upgrade pip" {
-        python -m pip install -U pip
+        python -m pip install -U pip==25.0.1
     }
     Invoke-Optional "Install Python development packages" {
         python -m pip install -U maturin==1.9.6 pytest==8.3.5 hypothesis==6.131.0 ruff==0.11.13 pyarrow==24.0.0

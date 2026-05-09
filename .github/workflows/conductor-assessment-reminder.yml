@@ -11,10 +11,13 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   create-assessment-issue:
+    name: Create monthly assessment issue
+    permissions:
+      contents: read
+      issues: write # Needed only to create the scheduled monthly assessment issue.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd

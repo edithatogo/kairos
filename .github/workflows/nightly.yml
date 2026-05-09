@@ -14,15 +14,14 @@ permissions:
 
 jobs:
   heavy-rust-checks:
+    name: heavy-rust-checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
-      - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: nightly
-          components: miri
+      - name: Install Rust nightly
+        run: rustup toolchain install nightly --profile minimal --component miri
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
       - name: Heavy checks
         run: |

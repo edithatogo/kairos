@@ -19,8 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
-      security-events: write
+      id-token: write # Needed by Scorecard publish_results for provenance.
+      security-events: write # Needed to upload Scorecard SARIF into code scanning.
 
     steps:
       - name: Checkout code

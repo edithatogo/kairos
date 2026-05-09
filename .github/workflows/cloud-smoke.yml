@@ -30,6 +30,7 @@ permissions:
 
 jobs:
   offline-cloud-hpc-smoke:
+    name: offline-cloud-hpc-smoke
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -61,7 +62,8 @@ jobs:
           mkdir -p /tmp/kairo-input /tmp/kairo-output
           printf 'arrow-smoke-sample\n' > /tmp/kairo-input/telemetry.arrow
           python docker/telemetry-plugin/cloud-output.py --input /tmp/kairo-input/telemetry.arrow --destination file:///tmp/kairo-output
-          sha256sum -c /tmp/kairo-output/telemetry.arrow.sha256
+          cd /tmp/kairo-output
+          sha256sum -c telemetry.arrow.sha256
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
