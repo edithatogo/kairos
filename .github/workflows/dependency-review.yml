@@ -21,10 +21,11 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: read # Needed to compare dependency manifests in pull requests.
 
 jobs:
   dependency-review:
+    name: dependency-review
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

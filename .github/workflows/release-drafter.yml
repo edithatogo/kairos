@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   draft:
+    name: release-drafter
     runs-on: ubuntu-latest
     steps:
       - run: echo "Release drafter workflow initialized for governance coverage."

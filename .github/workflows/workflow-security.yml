@@ -20,6 +20,7 @@ permissions:
 
 jobs:
   actionlint:
+    name: actionlint
     permissions:
       contents: read
     runs-on: ubuntu-latest
@@ -68,9 +69,10 @@ jobs:
       - name: actionlint
         run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.7
   zizmor:
+    name: zizmor
     permissions:
       contents: read
-      security-events: write
+      security-events: write # Needed to upload zizmor SARIF results into code scanning.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd

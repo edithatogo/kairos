@@ -71,10 +71,12 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
-      - uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: ${{ matrix.channel }}
-          components: rustfmt,clippy
+      - name: Install Rust ${{ matrix.channel }}
+        env:
+          CHANNEL: ${{ matrix.channel }}
+        run: |
+          rustup toolchain install "$CHANNEL" --profile minimal --component rustfmt --component clippy
+          rustup override set "$CHANNEL"
       - name: Validate installed Rust channel
         shell: pwsh
         env:

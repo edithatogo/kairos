@@ -19,10 +19,11 @@ permissions:
 
 jobs:
   sbom:
+    name: sbom-attestation
     permissions:
       contents: read
-      id-token: write
-      attestations: write
+      id-token: write # Needed to sign SBOM attestations with OIDC.
+      attestations: write # Needed to publish SBOM attestations.
     runs-on: ubuntu-latest
     env:
       ARTIFACT_PATH: ${{ github.event.inputs.artifact_path || 'dist' }}

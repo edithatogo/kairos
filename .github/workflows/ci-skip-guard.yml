@@ -9,7 +9,7 @@ on:
     types: [opened, edited, reopened, synchronize, ready_for_review]
 
 permissions:
-  pull-requests: read
+  pull-requests: read # Needed to inspect pull request title and body for skip directives.
 
 jobs:
   reject-skip-directives:

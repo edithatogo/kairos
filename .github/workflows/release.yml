@@ -20,15 +20,16 @@ permissions:
 
 jobs:
   release-dry-run:
+    name: release-dry-run
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: stable
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
       - name: Install Python build tools
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
