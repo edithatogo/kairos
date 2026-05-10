@@ -387,19 +387,19 @@ entries:
     next_phase_decision: "Track 29 is Done for the wave-manager gate implementation; unresolved global dependency blockers remain owned by the tracks the gate reports."
   - track_id: "28"
     phase: "track-closeout"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 28 advanced to In Review after refreshing the claim-capability ledger, distinguishing local R2 artifact/checksum evidence from missing SBOM/provenance evidence, and adding a dedicated no-critical-release-blockers validator. Review found no unresolved Critical release blockers; stage-scoped blockers remain recorded for RC/1.0 release planning."
+    review_result: "Track 28 advanced to Done after the claim-capability ledger was refreshed, the no-critical-release-blockers validator passed, the status surfaces were reconciled, and the closeout commit recorded the promotion. Review found no unresolved Critical release blockers; stage-scoped blockers remain recorded for RC/1.0 release planning."
     fixes_applied: true
     validation_commands:
       - "Test-Path -LiteralPath 'benches/benchmark-plan.md'; Test-Path -LiteralPath 'conformance/fixtures/manifest.json'; Test-Path -LiteralPath 'docs/release/release-checklist.md'; Test-Path -LiteralPath 'docs/release/compatibility.md'; Test-Path -LiteralPath 'packaging/release-package-manifest.json'; Test-Path -LiteralPath 'dist/release-artifact-manifest.json'; Test-Path -LiteralPath 'dist/SHA256SUMS'; Test-Path -LiteralPath 'dist/sbom.spdx.json'"
       - "pwsh -NoProfile -File conductor/tracks/28-red-team-devils-advocate-review/validate-track28-redteam.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "dirty: Track 28 review/status edits pending commit; strict clean-tree closeout not run"
-    commit_sha: "blocked: no Track 28 commit created in this shared worktree pass"
-    pushed_ref: "blocked: no push performed from this shared worktree pass"
-    next_phase_decision: "Track 28 is In Review. Do not move to Done until reviewer signoff, commit/push evidence, strict git closeout, and any release-manager waiver for stage-scoped SBOM/provenance or overclaim blockers are recorded."
+    git_status: "clean after reviewed-track closeout commit"
+    commit_sha: "2e83be121cf9c72b98cbcabc7b6498947a7638ab"
+    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
+    next_phase_decision: "Track 28 is Done for the red-team and devil's advocate review slice; unresolved stage-scoped SBOM/provenance and overclaim blockers remain owned by the release-planning tracks they inform."
   - track_id: "19"
     phase: "track-closeout"
     state: pending
