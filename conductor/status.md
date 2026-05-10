@@ -55,7 +55,7 @@ package publication, or public launch actions were performed.
 
 ## Validation evidence
 
-Latest local validation on 2026-05-07:
+Latest local baseline validation on 2026-05-07; current targeted verification is recorded under the 2026-05-10 track evidence:
 
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_artifacts.ps1` passed with 41 track directories, 0 errors, 0 warnings, and 0 info.
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1` passed with 41 tracks, 47 agents, 0 errors, and 0 warnings.

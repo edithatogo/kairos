@@ -23,8 +23,8 @@ machine-readable root list.
 |---|---|---|---|
 | Rust crate APIs | Checked-in workspace roots; release-gated | Public API, semver, or deterministic behavior changes | Compatibility note naming the exact crate root, plus ADR if public behavior changes |
 | Host-language package APIs | Checked-in package skeletons; release-gated | Root rename, API shape change, ownership change, or behavior drift | Compatibility note naming the exact package root, plus migration note before beta or later |
-| C ABI | Policy surface only until Track 02 lands | Signature, ownership, or symbol changes | ADR, migration note, and ABI review before any release claim |
-| Arrow schemas | Policy surface only until schema release work lands | Field removal, meaning change, or versionless output drift | Schema note, ADR if public, and migration note before beta or later |
+| C ABI | Concrete protected checked-in surface at `include/kairo_ecs.h`; release-gated | Signature, ownership, or symbol changes | ADR, migration note, and ABI review before any release claim |
+| Arrow schemas | Concrete protected checked-in surface at `schemas/arrow/event_log_v1.schema.json`; release-gated | Field removal, meaning change, or versionless output drift | Schema note, ADR if public, and migration note before beta or later |
 | Scenario / conformance surfaces | Checked-in shared contract and fixtures | Fixture output, ordering, or replay contract drift | Fixture/version update plus compatibility note naming the affected fixture or scenario |
 
 ## Breaking changes

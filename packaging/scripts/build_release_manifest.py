@@ -20,6 +20,7 @@ FORBIDDEN_DRY_RUN_TEXT = re.compile(r"\b(publish|upload|login|token|credential|a
 
 
 def sha256(path: Path) -> str:
+    """Return the SHA-256 digest for a package manifest file."""
     h = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
@@ -28,24 +29,28 @@ def sha256(path: Path) -> str:
 
 
 def require_string(value: object, label: str) -> str:
+    """Validate and return a non-empty string value."""
     if not isinstance(value, str) or not value:
         raise SystemExit(f"{label} must be a non-empty string")
     return value
 
 
 def require_bool(value: object, label: str) -> bool:
+    """Validate and return a boolean value."""
     if not isinstance(value, bool):
         raise SystemExit(f"{label} must be a boolean")
     return value
 
 
 def require_list(value: object, label: str) -> list:
+    """Validate and return a list value."""
     if not isinstance(value, list):
         raise SystemExit(f"{label} must be a list")
     return value
 
 
 def resolve_repo_output(root: Path, relative_path: object, label: str) -> Path:
+    """Resolve a generated output path while keeping it inside ignored dist/."""
     path = require_string(relative_path, label)
     if Path(path).is_absolute():
         raise SystemExit(f"{label} output path must be repo-relative: {path}")
@@ -63,6 +68,7 @@ def resolve_repo_output(root: Path, relative_path: object, label: str) -> Path:
 
 
 def load_inventory(path: Path) -> dict:
+    """Load and validate the release package inventory contract."""
     data = json.loads(path.read_text(encoding="utf-8"))
     if data.get("schema_version") != 1:
         raise SystemExit("release package inventory schema_version must be 1")
@@ -151,6 +157,7 @@ def load_inventory(path: Path) -> dict:
 
 
 def workspace_members(root: Path) -> set[str]:
+    """Return Cargo workspace member manifest paths."""
     cargo_toml = (root / "Cargo.toml").read_text(encoding="utf-8")
     if tomllib is not None:
         workspace = tomllib.loads(cargo_toml)
@@ -163,6 +170,7 @@ def workspace_members(root: Path) -> set[str]:
 
 
 def build(root: Path, inventory_path: Path, version: str, dry_run: str, check_only: bool) -> dict:
+    """Build or check the release artifact manifest from package inventory."""
     inventory = load_inventory(inventory_path)
     output = inventory["output"]
     artifact_manifest = resolve_repo_output(root, output["artifact_manifest"], "artifact_manifest")
@@ -238,6 +246,7 @@ def build(root: Path, inventory_path: Path, version: str, dry_run: str, check_on
 
 
 def verify_existing(root: Path, inventory_path: Path) -> dict:
+    """Verify generated release evidence without rewriting dist files."""
     expected = build(root, inventory_path, version="0.0.0-verify", dry_run="true", check_only=True)
     inventory = load_inventory(inventory_path)
     artifact_manifest = resolve_repo_output(
@@ -279,6 +288,7 @@ def verify_existing(root: Path, inventory_path: Path) -> dict:
 
 
 def main() -> None:
+    """Parse CLI arguments and run release manifest validation."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--inventory", default="packaging/release-package-manifest.json")
     parser.add_argument("--version", default="0.0.0-dry-run")
