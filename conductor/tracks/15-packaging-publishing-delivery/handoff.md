@@ -116,6 +116,19 @@ Keep public publishing blocked until registry names, legal metadata, compatibili
   - `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1`
   - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1`
   - `node tests/conformance/track12_20_evidence_check.mjs`
-- Formal `$conductor-review` completed on 2026-05-09 for the explicitly assigned Track 15 scope. The in-scope consistency finding was fixed and the release-delivery gate still passes on 2026-05-10. Commit/push closeout and strict clean-tree git closeout remain blocked until the reconciliation commit lands.
-
-Before the next phase advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+- Formal `$conductor-review` completed on 2026-05-09 for the explicitly assigned Track 15 scope. The in-scope consistency finding was fixed and the release-delivery gate still passes on 2026-05-10.
+- Track status advanced from `In Progress` to `Done`.
+- Review command: `$conductor-review`.
+- Review result: no blocking Track 15 findings remain in the dry-run packaging, generated-evidence verification, or release-delivery workflow.
+- accepted fixes: the release manifest verifier now gates generated evidence before artifact upload, and the local dry-run sequence refuses publish manifest drift.
+- Focused validators passed:
+  - `python packaging/scripts/build_release_manifest.py --check`
+  - `python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run`
+  - `python packaging/scripts/build_release_manifest.py --verify-existing`
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1`
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1`
+  - `node tests/conformance/track12_20_evidence_check.mjs`
+- commit SHA: `a8a83e252e2ecb67acc3802d670f617e7a8a1259`
+- pushed ref: pending until the reconciliation commit is pushed.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until after push.
+- Next-phase decision: Track 15 is Done in the registry and narrative; production publishing remains blocked until registry/name/toolchain evidence and release-manager approval are recorded.

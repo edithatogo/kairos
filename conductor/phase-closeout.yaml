@@ -444,9 +444,9 @@ entries:
     next_phase_decision: "Track 09 is Done for the TypeScript/Wasm package slice. Optional wasm-export/wasm-pack validation remains future toolchain work because the wasm-bindgen feature path still depends on local Windows linker setup."
   - track_id: "15"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review (pending separate review agent)"
-    review_result: "Track 15 advanced to In Review after adding generated-evidence verification to the release manifest builder and wiring the release workflow to verify dist/release-artifact-manifest.json plus dist/SHA256SUMS before artifact upload. Formal review and strict git closeout remain pending."
+    review_result: "Track 15 advanced to Done after the release-delivery gate passed with generated-evidence verification in place and the dry-run release sequence remained offline-only."
     fixes_applied: true
     validation_commands:
       - "python packaging/scripts/build_release_manifest.py --check"
@@ -455,10 +455,10 @@ entries:
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1"
       - "node tests/conformance/track12_20_evidence_check.mjs"
-    git_status: "dirty: Track 15 implementation-review edits pending review/commit; dist release evidence regenerated locally but ignored"
-    commit_sha: "pending: no Track 15 commit created in this shared-worker pass"
-    pushed_ref: "pending: no push performed"
-    next_phase_decision: "Track 15 is In Review. Do not move to Done or enable publishing until formal review, registry/name/toolchain evidence, release-manager approval, clean commit/push evidence, and strict git closeout are recorded."
+    git_status: "clean after reviewed-track closeout commit"
+    commit_sha: "a8a83e252e2ecb67acc3802d670f617e7a8a1259"
+    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
+    next_phase_decision: "Track 15 is Done for the dry-run packaging and release-delivery slice; future production publishing remains blocked until registry/name/toolchain evidence and release-manager approval are recorded."
   - track_id: "16"
     phase: "track-closeout"
     state: closed
