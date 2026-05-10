@@ -532,17 +532,20 @@ entries:
     next_phase_decision: "Track 21 is In Review; keep public VVUQ claims bounded to fixture-backed notes until formal review, commit/push evidence, and strict git closeout are recorded."
   - track_id: "22"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 22 advanced to In Review after the scenario manifest, replay smoke index, CLI docs, and Track 21-27 aggregate validator passed."
-    fixes_applied: false
+    review_result: "Track 22 advanced to Done after GNU-toolchain runtime smoke validated the scenario validation, replay, and resumability commands and the scenario runner evidence was reconciled."
+    fixes_applied: true
     validation_commands:
       - "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scenarios/validate-track22-smoke.ps1"
       - "node scripts/validation/validate-tracks21-27.mjs"
-    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
-    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
+      - "cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml"
+      - "cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- replay --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1"
+      - "cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- resume-plan --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1"
+    git_status: "clean after reviewed-track closeout commit"
+    commit_sha: "e2824b36ff816fca1189ca1846bc28cfe26782db"
     pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
-    next_phase_decision: "Track 22 is In Review; keep resumability and production runner claims bounded until formal review, commit/push evidence, and strict git closeout are recorded."
+    next_phase_decision: "Track 22 is Done; keep resumability and production runner claims bounded to the committed smoke scenario until broader runner coverage exists."
   - track_id: "23"
     phase: "implementation-review"
     state: pending

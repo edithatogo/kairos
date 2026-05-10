@@ -116,4 +116,20 @@ Fix the local Windows linker path, then rerun the `validate-scenario`, `replay`,
 Tracks 21, 28, and release planning may consume only the smoke evidence named here; they should not treat it as quantified uncertainty evidence or production experiment-runner readiness.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+2026-05-11 implementation/review pass:
+
+- `$conductor-review` finding: the implemented scenario smoke slice is now
+  backed by executable GNU-toolchain replay and resumability commands for the
+  committed `factory_bottleneck_v1` / `scheduler_ordering_v1` smoke target.
+- Accepted fixes: retained the narrow smoke-scenario boundary, documented the
+  expected local output shape, and updated the track status mirrors to `Done`.
+- Validation commands passed: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scenarios/validate-track22-smoke.ps1`, `node tests/conformance/conformance-check.mjs`, `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml`, `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- replay --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1`, and `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- resume-plan --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1`.
+- Cleanup state: no generated artifacts were retained beyond the smoke output
+  directory under `target/`.
+- commit SHA: `e2824b36ff816fca1189ca1846bc28cfe26782db`
+- pushed ref: `origin/conductor-close-reviewed-tracks-20260510`
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after
+  the closeout commit was recorded and pushed.
+- next-phase decision: Track 22 is `Done`; keep resumability and production
+  runner claims bounded to the committed smoke scenario until broader runner
+  coverage exists.
