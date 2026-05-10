@@ -8,6 +8,11 @@ Current slice completed on 2026-05-07. Defined the cross-language toolchain vers
 matrix, version-drop policy, workflow trigger, or validator slice. The static
 Track 30 validator passed again, so the track is ready for integration review.
 
+2026-05-10 closeout update: PR #18 merged to `origin/main` as
+`98f04cae89fa434a8dcca05d9022db090561c7c7`, all GitHub Actions checks for that
+merge passed, branch protection was restored, and the post-merge focused
+validator passed again. Track 30 is closed as `Done`.
+
 ## Files changed
 
 - `conductor/toolchain-matrix.md`
@@ -103,9 +108,9 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Implementation-review evidence refreshed on 2026-05-10:
+Track closeout evidence refreshed on 2026-05-10:
 
-- Track status advanced from `In Progress` to `In Review`.
+- Track status advanced from `In Review` to `Done`.
 - Review command: `$conductor-review`.
 - Review result: no blocking Track 30 findings in the toolchain matrix,
   version-drop policy, workflow trigger coverage, package dry-run Go lane, or
@@ -113,12 +118,12 @@ Implementation-review evidence refreshed on 2026-05-10:
 - accepted fixes: none required from the 2026-05-10 focused review.
 - Focused validator passed:
   - `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1`
-- commit SHA: pending until the coordinator commits and pushes the 2026-05-10
-  status reconciliation.
-- pushed ref: pending until the coordinator pushes the 2026-05-10 status
-  reconciliation.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until
-  after commit and push.
-- Next-phase decision: Track 30 is `In Review`; keep it release-gating and do
-  not move it to `Done` until strict git closeout and PR integration evidence
-  exist.
+- PR integration evidence: PR #18 merged to `origin/main` at
+  `98f04cae89fa434a8dcca05d9022db090561c7c7` after all checks passed.
+- commit SHA: `ed40217813f3d0ae8b061f02aa5e9811e1a55634`
+- pushed ref: `origin/main`
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pass after
+  closeout commit and push.
+- Next-phase decision: Track 30 is `Done`. Reopen only for a scoped support
+  matrix change, runner coverage promotion, or version-drop policy update.
+
