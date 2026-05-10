@@ -515,4 +515,166 @@ entries:
     commit_sha: "pending"
     pushed_ref: "pending"
     next_phase_decision: "Track 31 is In Review; do not move to Done until strict git closeout and PR integration evidence exist. It remains quality-improving rather than release-gating."
-
+  - track_id: "21"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 21 advanced to In Review after the VVUQ note, replay fixture boundary, seed/scenario manifest references, and cross-track evidence boundaries passed the focused Track 21-27 validator batch."
+    fixes_applied: false
+    validation_commands:
+      - "node scripts/validation/validate-vvuq-note.mjs"
+      - "node scripts/validation/validate-track21-27-evidence-boundaries.mjs"
+      - "node scripts/validation/validate-tracks21-27.mjs"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 21 is In Review; keep public VVUQ claims bounded to fixture-backed notes until formal review, commit/push evidence, and strict git closeout are recorded."
+  - track_id: "22"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 22 advanced to In Review after the scenario manifest, replay smoke index, CLI docs, and Track 21-27 aggregate validator passed."
+    fixes_applied: false
+    validation_commands:
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scenarios/validate-track22-smoke.ps1"
+      - "node scripts/validation/validate-tracks21-27.mjs"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 22 is In Review; keep resumability and production runner claims bounded until formal review, commit/push evidence, and strict git closeout are recorded."
+  - track_id: "23"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 23 advanced to In Review after the model-zoo and starter-kit inventory validator plus the Track 21-27 aggregate validation passed."
+    fixes_applied: false
+    validation_commands:
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File examples/model-zoo/validate-inventory.ps1"
+      - "node scripts/validation/validate-tracks21-27.mjs"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 23 is In Review; keep runtime/tutorial claims bounded until formal review, commit/push evidence, and strict git closeout are recorded."
+  - track_id: "24"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 24 advanced to In Review after the playground fixture smoke and Track 21-27 aggregate validator passed."
+    fixes_applied: false
+    validation_commands:
+      - "node website/scripts/smoke-playground.mjs"
+      - "node scripts/validation/validate-tracks21-27.mjs"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 24 is In Review; keep browser UX and executable-demo claims bounded until formal review, commit/push evidence, and strict git closeout are recorded."
+  - track_id: "32"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 32 advanced to In Review after the dependency-free GPU facade, feature-gated backend contracts, forbidden-default-dependency tree check, and focused Track 32 validator passed under the GNU Rust toolchain."
+    fixes_applied: false
+    validation_commands:
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTest"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 32 is In Review; real GPU backend, hardware parity, and speedup claims remain blocked until a GPU runner and formal review evidence exist."
+  - track_id: "33"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 33 advanced to In Review after WebGPU crate compile gates, static demo smoke tests, and WGSL subset validation passed under the GNU Rust toolchain."
+    fixes_applied: false
+    validation_commands:
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 33 is In Review; real browser WebGPU device validation remains blocked until the wasm/browser harness and GPU-capable runner are available."
+  - track_id: "34"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 34 advanced to In Review after the PDES scaffold, feature isolation, validation-evidence boundaries, and focused Track 34 validator passed under the GNU Rust toolchain."
+    fixes_applied: false
+    validation_commands:
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 34 is In Review; scheduler integration, scaling benchmarks, and Time Warp work remain blocked until formal review and follow-up implementation evidence exist."
+  - track_id: "35"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 35 advanced to In Review after the MPI/gRPC protocol-emulator compile gates and focused Track 35 validator passed under the GNU Rust toolchain."
+    fixes_applied: false
+    validation_commands:
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 35 is In Review; real rsmpi/tonic transports, two-node tests, migration serialization, telemetry aggregation, and fault tolerance remain follow-up implementation scope."
+  - track_id: "36"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 36 advanced to In Review after the Track 36-40 aggregate offline validator passed under the GNU Rust toolchain, including streaming crate checks and bounded streaming documentation."
+    fixes_applied: false
+    validation_commands:
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 36 is In Review; real broker, Arrow Flight, and realtime wall-clock claims remain blocked until formal review and live-adapter evidence exist."
+  - track_id: "37"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 37 advanced to In Review after the Track 36-40 aggregate offline validator passed under the GNU Rust toolchain, including ML crate checks and kairo_gym unit tests."
+    fixes_applied: false
+    validation_commands:
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 37 is In Review; real ONNX/runtime inference and Gymnasium packaging remain blocked until formal review and dependency acceptance evidence exist."
+  - track_id: "38"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 38 advanced to In Review after the Track 36-40 aggregate offline validator passed under the GNU Rust toolchain, including FMI crate checks and bounded FMI/AAS documentation gates."
+    fixes_applied: false
+    validation_commands:
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 38 is In Review; FMU archive extraction, dynamic symbol loading, and validated digital-twin co-simulation remain blocked until dependency policy and live artifact evidence exist."
+  - track_id: "39"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 39 advanced to In Review after the cloud/HPC offline validator passed as part of the Track 36-40 aggregate validation, including local Kubernetes rejection and telemetry checksum-sidecar checks."
+    fixes_applied: false
+    validation_commands:
+      - "python cloud/validate_cloud_hpc.py"
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 39 is In Review; live Docker, Kubernetes, Slurm, and cloud-provider acceptance remain blocked until formal review and environment-backed validation exist."
+  - track_id: "40"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 40 advanced to In Review after debug crate checks, trace-line validation, and the time-travel demo validator passed through the Track 36-40 aggregate validation under the GNU Rust toolchain."
+    fixes_applied: false
+    validation_commands:
+      - "node website/time-travel-demo/validate-demo.mjs"
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests"
+    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 40 is In Review; scheduler observer integration, Arrow IPC trace serialization, and experiment-runner integration remain follow-up scope."
