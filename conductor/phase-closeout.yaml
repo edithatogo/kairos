@@ -250,7 +250,7 @@ entries:
     next_phase_decision: "Track 13 is Done for the current CI/CD and supply-chain scaffold; cargo-deny and cargo-audit were unavailable locally and reported as skipped by the Track 13 supply-chain gate."
   - track_id: "18"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
     review_result: "Track 18 advanced to Done after the reproducibility validator, docs-link validation, and benchmark smoke remained green, and the closeout record was captured from a clean worktree."
     fixes_applied: true
@@ -260,9 +260,9 @@ entries:
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/18-comparative-benchmarks-reproducibility/validate-benchmark-reproducibility.ps1"
       - "node tests/conformance/track12_20_evidence_check.mjs"
     git_status: "clean after benchmark reproducibility closeout"
-    commit_sha: "pending"
-    pushed_ref: "pending"
-    next_phase_decision: "Track 18 is done in the registry and narrative status, but the closeout ledger still needs a committed SHA and push ref before it can be marked closed."
+    commit_sha: "03fe26b8142c8687dd0417db76c682536664d4bd"
+    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
+    next_phase_decision: "Track 18 is Done for reproducibility and metadata-gate evidence; native benchmark performance claims remain future release-hardening work."
   - track_id: "20"
     phase: "track-closeout"
     state: pending
@@ -283,7 +283,7 @@ entries:
     next_phase_decision: "Track 20 is In Review; beta-stage repository evidence gates pass, while RC/1.0 SBOM/provenance claims remain blocked until release artifacts and SBOM tooling evidence exist or an explicit release-stage exception is approved."
   - track_id: "14"
     phase: "track-closeout"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
     review_result: "Track 14 advanced to Done after the docs validator, npm-backed website build, and Windows-safe `just docs-build` all passed, with the Arrow schema reference wording and recursive link-scan hardening retained."
     fixes_applied: true
@@ -300,9 +300,9 @@ entries:
       - "pwsh -NoProfile -File scripts\\validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\\validate_conductor_dag.ps1"
     git_status: "clean after docs-site closeout"
-    commit_sha: "pending"
-    pushed_ref: "pending"
-    next_phase_decision: "Track 14 is done in the registry and narrative status, but the closeout ledger still needs a committed SHA and push ref before it can be marked closed."
+    commit_sha: "03fe26b8142c8687dd0417db76c682536664d4bd"
+    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
+    next_phase_decision: "Track 14 is Done for docs-site and education validation; future docs build tooling changes should preserve the Windows-safe just shell override."
   - track_id: "08"
     phase: "track-closeout"
     state: pending
