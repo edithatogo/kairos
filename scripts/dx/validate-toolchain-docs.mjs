@@ -24,6 +24,10 @@ function assertIncludes(text, needle, label) {
   assert(text.includes(needle), `${label} is missing ${needle}`);
 }
 
+function assertMatches(text, pattern, label) {
+  assert(pattern.test(text), `${label} does not match ${pattern}`);
+}
+
 function main() {
   const devbox = readJson("devbox.json");
   const devboxPackages = new Set(devbox.packages || []);
@@ -83,7 +87,7 @@ function main() {
 
   const unixBootstrap = readText("scripts/bootstrap.sh");
   assertIncludes(unixBootstrap, "for tool in just", "scripts/bootstrap.sh");
-  assertIncludes(unixBootstrap, "cargo install \"$tool\" --locked", "scripts/bootstrap.sh");
+  assertMatches(unixBootstrap, /cargo install "\$tool"(?: --version "[^"]+")? --locked/, "scripts/bootstrap.sh");
   assertIncludes(unixBootstrap, "npm --prefix website ci", "scripts/bootstrap.sh");
   assertIncludes(unixBootstrap, "just dev-validate", "scripts/bootstrap.sh");
 
