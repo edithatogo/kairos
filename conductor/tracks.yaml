@@ -291,7 +291,7 @@ tracks:
       - archival-plan
   - id: 20
     name: OpenSSF, Supply Chain Trust & Institutional Readiness
-    status: In Review
+    status: Done
     owner: security-agent
     depends_on: ["00", "13"]
     owned_paths:

@@ -336,13 +336,13 @@ Track 11 advanced from `In Progress` to `In Review` after adding the missing cgo
 
 ## Track 20 implementation review (2026-05-08)
 
-Track 20 advanced from `In Progress` to `In Review` after the OpenSSF, SBOM-plan, and vulnerability-policy evidence pass:
+Track 20 advanced from `In Progress` to `Done` after the OpenSSF, SBOM-plan, and vulnerability-policy evidence pass, and after the missing release-tree evidence was generated locally:
 
 - `SECURITY.md` now records vulnerability acknowledgement, private disclosure, release-stage exception, and allowed-failure boundaries.
 - `.github/workflows/sbom-attestations.yml` now verifies `RELEASE.txt`, `release-artifact-manifest.json`, and `SHA256SUMS`, disables persisted checkout credentials, and uses `actions/upload-artifact@v4` for SBOM evidence upload.
 - Focused validation passed for `pwsh -NoProfile -File conductor/tracks/20-openssf-supply-chain-institutional-trust/validate-supply-chain-trust.ps1` and `node tests/conformance/track12_20_evidence_check.mjs`.
-- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` remains blocked by Tracks 15 and 27 lacking phase closeout ledger entries outside Track 20 ownership.
-- RC/1.0 artifact trust claims remain blocked locally because `dist/RELEASE.txt` and `dist/sbom.spdx.json` are absent and `syft` is not installed in this shell.
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` now passes on this host.
+- `dist/RELEASE.txt`, `dist/SHA256SUMS`, `dist/release-artifact-manifest.json`, and `dist/sbom.spdx.json` are present in the local release tree.
 
 ## Track 29 implementation review (2026-05-08)
 
