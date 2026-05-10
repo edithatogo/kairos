@@ -1,6 +1,6 @@
 # Handoff: Track 19 Research Software, Citation & Archival
 
-Last updated: 2026-05-08
+Last updated: 2026-05-09
 
 ## Summary
 
@@ -30,7 +30,7 @@ Citation metadata, archive notes, DOI/Zenodo path, and `just docs-build` now sit
 
 - Command: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1`
 - Result: pass.
-- Evidence: validator reported `version=0.4.0-alpha.1`, `repository=https://github.com/edithatogo/kairos`, and `archive_status=pre-release metadata seed, not yet DOI-minted`.
+- Evidence: validator reported `version=0.4.0-alpha.1`, `repository=https://github.com/edithatogo/kairos`, and `archive_status=pre-release metadata seed, not yet DOI-minted`. The validator now normalizes SPDX license URLs and checks the CodeMeta license against `CITATION.cff`.
 - Command: `node tests/conformance/track12_20_evidence_check.mjs`
 - Result: pass for Track 19 inside the aggregate Track 12-20 evidence gate.
 - Command: `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`

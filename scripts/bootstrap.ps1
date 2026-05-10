@@ -47,8 +47,16 @@ Invoke-Optional "Install Rust formatter and linter components" {
 }
 
 if (-not $SkipCargoInstalls) {
+    $cargoInstall = @("cargo")
+    $gnuToolchain = "stable-x86_64-pc-windows-gnu"
+    $toolchains = @(rustup toolchain list)
+    if ($toolchains -match [regex]::Escape($gnuToolchain)) {
+        $cargoInstall = @("rustup", "run", $gnuToolchain, "cargo")
+        Write-Host "Using $gnuToolchain for optional cargo installs."
+    }
+
     $cargoTools = @(
-        @{ Name = "just"; Version = "1.42.4" },
+        @{ Name = "just"; Version = "1.50.0" },
         @{ Name = "cargo-nextest"; Version = "0.9.133" },
         @{ Name = "cargo-vet"; Version = "0.10.0" },
         @{ Name = "cargo-deny"; Version = "0.18.9" },
@@ -62,7 +70,9 @@ if (-not $SkipCargoInstalls) {
             continue
         }
         Invoke-Optional "Install $name" {
-            cargo install $name --version $tool.Version --locked
+            $cargoExe = $cargoInstall[0]
+            $cargoArgs = if ($cargoInstall.Count -gt 1) { $cargoInstall[1..($cargoInstall.Count - 1)] } else { @() }
+            & $cargoExe @cargoArgs install $name --version $tool.Version --locked
         }
     }
 }

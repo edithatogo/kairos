@@ -45,7 +45,10 @@
 | `node scripts/validation/validate-track21-27-evidence-boundaries.mjs` | Pass | Cross-track evidence-boundary guard passed for Track 21-27, including compatibility and standards release boundaries. |
 | `just check-docs` | Fail | `just` is not recognized on PATH in this PowerShell session. |
 | `node scripts/dx/validate-docs-workflow.mjs` | Pass | Link check passed with 29 required paths and 2 Markdown sources, `website/build/index.html` was built, and preview smoke passed at `http://127.0.0.1:41727/`. |
-| `node scripts/validation/validate-tracks21-27.mjs` | Fail | Track 26's standards validator step passed, but the combined runner failed in Track 27's docs workflow because `website/scripts/check-links.js` scanned `bindings/typescript/node_modules` and found third-party package README link issues. |
+| `node scripts/validation/validate-tracks21-27.mjs` | Pass | 2026-05-09 rerun passed Track 21 through Track 27, including Track 26 standards review, Track 27 docs workflow, and the final cross-track evidence-boundary guard. |
+| `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | Pass | 2026-05-09 rerun reported `0 error(s), 0 warning(s)` and `Conductor phase gate validation passed.` |
+| `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Fail | Closeout gate correctly failed because the working tree has unrelated uncommitted tracked or untracked changes outside Track 26 ownership. |
+
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

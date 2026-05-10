@@ -1,6 +1,6 @@
 # Handoff: Track 25 API Design Review & Compatibility Governance
 
-Last updated: 2026-05-08
+Last updated: 2026-05-09
 
 ## Summary
 
@@ -86,10 +86,8 @@ Observed results:
 - No-skip claim validation: pass.
 - Reference search: pass; policy, readiness, quality-gate, design-index, template, matrix, and validator references were found.
 - Rust formatting check: pass; `cargo fmt --all --check` exited 0.
-- Adjacent runner blocker: `node scripts/validation/validate-tracks21-27.mjs`
-  passed Tracks 21-26 and cross-track evidence boundaries, then failed Track 27
-  because docs link-check scans broken links in `bindings/typescript/node_modules`.
-  This is outside Track 25 ownership.
+- Focused Track 21-27 validation: pass; Track 25 compatibility policy pack
+  and cross-track evidence boundaries passed with the adjacent docs workflow.
 
 ## Risks and unresolved questions
 
@@ -142,8 +140,8 @@ slice did not commit or push.
 - Review result: no Track 25 findings.
 - Accepted fixes applied: template and matrix artifacts added; validator wired to enforce both.
 - Validation passed: `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1`; `pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate`; `node scripts/validation/validate-track21-27-evidence-boundaries.mjs`; `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`; `pwsh -NoProfile -File scripts/validate_track_no_skip_claims.ps1`.
-- Validation blocker outside Track 25: `node scripts/validation/validate-tracks21-27.mjs` fails in Track 27 because docs link-check scans broken links in `bindings/typescript/node_modules`.
-- Commit SHA at validation: `b7428a311f29641ffc61cad9484301e867f32830`.
+- Focused Track 21-27 validation: `node scripts/validation/validate-tracks21-27.mjs` passed, including Track 25 compatibility policy pack and cross-track evidence boundaries.
+- Commit SHA at validation: `7111f227446bbd0c24d24c636c4a052141bcec7f`.
 - Pushed ref: not pushed from this local multi-worker slice.
-- Strict git closeout: `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` not run because this shared worktree already contains unrelated multi-worker edits.
-- Next-phase decision: reviewer signoff, clean git closeout, and resolution or waiver of the Track 27 docs-link blocker are required before moving Track 25 to `Done`.
+- Strict git closeout: `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` failed with `Working tree has uncommitted tracked or untracked changes; closeout requires a clean tree`.
+- Next-phase decision: Track 25 has no compatibility-pack validation blocker. Reviewer signoff, commit/push evidence, and strict clean-worktree closeout are still required before moving Track 25 to `Done`.

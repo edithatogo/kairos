@@ -1,6 +1,6 @@
 # Handoff: Track 20 OpenSSF, Supply Chain Trust & Institutional Readiness
 
-Last updated: 2026-05-08
+Last updated: 2026-05-09
 
 ## Summary
 
@@ -82,6 +82,41 @@ Keep Scorecard, dependency review, secret scanning, workflow security, SBOM, and
 ## Integration notes
 
 Treat Track 20 as a trust gate and evidence map, not as proof of an external security audit unless a real audit artifact is checked in.
+
+## Renovate migration review update
+
+Reviewed Track 20 after the Renovate migration on 2026-05-09. The offline
+trust validator now parses `renovate.json` and requires the recommended preset,
+dependency dashboard preset, explicit dependency dashboard enablement,
+vulnerability alerts, and the `security` label on vulnerability-alert PRs. The
+readiness checklist, quality gates, supply-chain plan, and test matrix now name
+that dependency-policy evidence instead of treating the presence of
+`renovate.json` alone as sufficient.
+
+The SBOM attestation evidence rows were also aligned with the current workflow
+hardening posture: the Track 20 gate now expects a pinned
+`actions/upload-artifact` action hash in `.github/workflows/sbom-attestations.yml`,
+matching the validator and the checked-in workflow.
+
+Validation run on 2026-05-09:
+
+- PASS: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\20-openssf-supply-chain-institutional-trust\validate-supply-chain-trust.ps1`
+- PASS: `rg -n "config:recommended|dependencyDashboard|vulnerabilityAlerts|security" renovate.json`
+- PASS: `rg -n "RELEASE.txt|SHA256SUMS|release-artifact-manifest.json|actions/upload-artifact@[a-f0-9]{40}" .github\workflows\sbom-attestations.yml`
+- PASS: `node tests\conformance\track12_20_evidence_check.mjs`
+- PASS: `pwsh -NoProfile -File scripts\validate_track_docs_clean.ps1`
+- PASS: `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1`
+- PASS: `pwsh -NoProfile -File scripts\validate_conductor_git_closeout.ps1`
+- PASS with Git line-ending warning only: `git diff --check -- SECURITY.md .github\workflows\scorecard.yml .github\workflows\sbom-attestations.yml conductor\delivery-readiness-checklist.md conductor\quality-gates.md conductor\tracks\20-openssf-supply-chain-institutional-trust`
+- FAIL expected until commit/cleanup: `pwsh -NoProfile -File scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` reported uncommitted tracked or untracked changes.
+- BLOCKED locally: `syft`, `actionlint`, and `zizmor` are not installed in this shell.
+- BLOCKED for RC/1.0 artifact evidence: `dist\RELEASE.txt` and `dist\sbom.spdx.json` are absent; `dist\SHA256SUMS` and `dist\release-artifact-manifest.json` are present.
+
+Done eligibility after this review: Track 20 repository-evidence gates are
+green for alpha/beta planning. Track 20 is not Done for RC/1.0 release-trust
+claims until the local worktree is clean or committed, missing release artifact
+evidence is generated or explicitly excepted, and unavailable local SBOM/workflow
+lint tools are either installed or covered by hosted CI evidence.
 ## Phase closeout evidence
 
 `$conductor-review` completed for the Track 20-owned surface on 2026-05-08. Accepted fixes are listed above. Deferred or blocked fixes are limited to Track 15/27 phase-gate ledger cleanup, RC/1.0 artifact generation, missing local workflow/SBOM tools, and non-owned release attestation review. Commit SHA: blocked because this pass has not been committed or pushed. Pushed ref: blocked because no push was attempted. `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` was not run because the worktree intentionally contains uncommitted Track 20 closeout edits. Next-phase decision: Track 20 is In Review; do not advance to Done until RC/1.0 artifact evidence or explicit release-stage exceptions are available and shared phase-gate blockers are cleared.

@@ -30,6 +30,13 @@
       },
       {
         "order": 3,
+        "name": "verify generated release evidence against the package inventory",
+        "command": "python packaging/scripts/build_release_manifest.py --verify-existing",
+        "network_required": false,
+        "writes": []
+      },
+      {
+        "order": 4,
         "name": "validate offline dry-run gate",
         "command": "powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1",
         "network_required": false,

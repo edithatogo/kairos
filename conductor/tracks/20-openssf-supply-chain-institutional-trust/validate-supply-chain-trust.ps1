@@ -17,6 +17,43 @@ function Assert-Contains {
     }
 }
 
+function Assert-RenovatePolicy {
+    $config = Get-Content -LiteralPath 'renovate.json' -Raw | ConvertFrom-Json
+
+    $extendsProperty = $config.PSObject.Properties['extends']
+    if ($null -eq $extendsProperty -or $config.extends -is [string]) {
+        throw 'Renovate extends must be an array containing config:recommended and :dependencyDashboard'
+    }
+    $extends = @($config.extends)
+    if (-not ($extends -contains 'config:recommended')) {
+        throw 'Renovate config must extend config:recommended'
+    }
+    if (-not ($extends -contains ':dependencyDashboard')) {
+        throw 'Renovate config must enable the dependency dashboard preset'
+    }
+    if ($config.dependencyDashboard -ne $true) {
+        throw 'Renovate dependencyDashboard must be enabled'
+    }
+
+    $alertsProperty = $config.PSObject.Properties['vulnerabilityAlerts']
+    if ($null -eq $alertsProperty -or $null -eq $config.vulnerabilityAlerts -or $config.vulnerabilityAlerts -isnot [pscustomobject]) {
+        throw 'Renovate vulnerabilityAlerts must be an object with enabled and labels fields'
+    }
+    $alerts = $config.vulnerabilityAlerts
+    $labelsProperty = $alerts.PSObject.Properties['labels']
+    if ($null -eq $labelsProperty -or $alerts.labels -is [string]) {
+        throw 'Renovate vulnerabilityAlerts.labels must be an array containing security'
+    }
+    $labels = @($alerts.labels)
+
+    if ($alerts.enabled -ne $true) {
+        throw 'Renovate vulnerabilityAlerts.enabled must be true'
+    }
+    if (-not ($labels -contains 'security')) {
+        throw 'Renovate vulnerability alerts must apply the security label'
+    }
+}
+
 foreach ($path in @(
     'SECURITY.md',
     'CODEOWNERS',
@@ -51,6 +88,7 @@ Assert-Contains '.github/CODEOWNERS' '/.github/' 'workflow ownership'
 Assert-Contains 'docs/release/supply-chain-verification.md' 'production_publish_enabled' 'dry-run publish boundary'
 Assert-Contains 'conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md' 'Temporary operational exception' 'exception process'
 Assert-Contains 'conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md' 'Release trust checklist' 'release trust checklist'
+Assert-RenovatePolicy
 
 Write-Host "track20_status=ok"
 Write-Host 'supply_chain_gate=offline-trust-evidence'

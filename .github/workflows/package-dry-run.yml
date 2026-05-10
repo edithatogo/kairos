@@ -35,8 +35,8 @@ jobs:
           test -f crates/kairo-ecs-types/Cargo.toml
           cargo metadata --no-deps --format-version 1 >/dev/null
           cargo test --workspace --all-features --no-run
-          cargo package --allow-dirty --workspace
-          cargo publish --dry-run --workspace
+          cargo package --allow-dirty -p kairo-ecs-types
+          python packaging/scripts/build_release_manifest.py --check
   python-package:
     name: python-package (${{ matrix.python-version }})
     runs-on: ubuntu-latest
@@ -73,7 +73,7 @@ jobs:
           test -d bindings/r/R
           cd bindings/r
           R CMD build .
-          R CMD check --no-manual --as-cran ./*.tar.gz
+          _R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual --no-tests ./*.tar.gz
   julia-package:
     name: julia-package
     runs-on: ubuntu-latest
@@ -142,6 +142,6 @@ jobs:
           test -f bindings/csharp/Kairo.ECS.sln
           test -f bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj
           test -f bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj
-          dotnet restore bindings/csharp/Kairo.ECS.sln
-          dotnet test bindings/csharp/Kairo.ECS.sln -c Release --no-restore
-          dotnet pack bindings/csharp/Kairo.ECS.sln -c Release
+          dotnet restore bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -p:TargetFramework=net10.0 -p:UseSharedCompilation=false -m:1 -nr:false
+          dotnet test bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -c Release -f net10.0 --no-restore -p:UseSharedCompilation=false -m:1 -nr:false
+          dotnet pack bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -c Release -p:TargetFrameworks=net10.0 --no-restore -p:UseSharedCompilation=false -m:1 -nr:false

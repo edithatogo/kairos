@@ -49,23 +49,27 @@ REQUIRED_RESULT_FIELDS = {
 
 
 def load_json(relative_path: str) -> dict:
+    """Load a repository-relative JSON artifact."""
     with (ROOT / relative_path).open("r", encoding="utf-8") as handle:
         return json.load(handle)
 
 
 def assert_nonempty_text(relative_path: str) -> None:
+    """Require a repository-relative text artifact to exist and contain content."""
     path = ROOT / relative_path
     assert path.exists(), f"missing required text artifact: {relative_path}"
     assert path.read_text(encoding="utf-8").strip(), f"empty artifact: {relative_path}"
 
 
 def assert_text_contains(relative_path: str, required_phrases: set[str]) -> None:
+    """Require a text artifact to contain each expected evidence phrase."""
     text = (ROOT / relative_path).read_text(encoding="utf-8")
     for phrase in required_phrases:
         assert phrase in text, f"{relative_path} must mention {phrase}"
 
 
 def main() -> None:
+    """Validate benchmark reproducibility metadata and evidence boundaries."""
     smoke = load_json("benches/benchmark-smoke.json")
     raw_policy = load_json("benches/raw-results-policy.json")
     manifest = load_json(smoke["source_manifest"])
@@ -123,8 +127,19 @@ def main() -> None:
         REQUIRED_POLICY_ARTIFACTS | {"raw output", "environment metadata"},
     )
     assert_text_contains(
+        "docs/benchmarks/README.md",
+        {"Maturity: preview metadata gate", '"status": "ok"', "Expected output"},
+    )
+    assert_text_contains(
         "docs/benchmarks/reproduce-comparison.md",
-        {"raw output", "environment metadata", "metadata gates"},
+        {
+            "Maturity: preview metadata gate",
+            '"status": "ok"',
+            "Expected output",
+            "raw output",
+            "environment metadata",
+            "metadata gates",
+        },
     )
 
     print(

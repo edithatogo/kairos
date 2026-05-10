@@ -1,5 +1,6 @@
 # Auto-detect text files and normalize line endings
 * text=auto
+.gitattributes text eol=lf
 
 # Source code
 *.rs text eol=lf
@@ -33,6 +34,7 @@
 *.bib text eol=lf
 *.ipynb text eol=lf
 *.lock text eol=lf
+justfile text eol=lf
 
 # Binary files
 *.png binary

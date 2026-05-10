@@ -17,7 +17,7 @@ The release manager should treat this as the Track 20 source of truth. A row is 
 |---|---|---:|---:|---:|---:|
 | Security policy and vulnerability intake | `SECURITY.md` | required | required | required | required |
 | Maintained path ownership | `CODEOWNERS` and `.github/CODEOWNERS` | required | required | required | required |
-| Dependency automation | `renovate.json` | required | required | required | required |
+| Dependency automation | `renovate.json` with dependency dashboard and vulnerability alerts enabled | required | required | required | required |
 | Static and advisory scanning plan | `.github/workflows/codeql.yml`, `cargo audit`, `cargo deny check` in `conductor/quality-gates.md` | required | required | required | required |
 | OpenSSF Scorecard | `.github/workflows/scorecard.yml` | scaffold allowed | active | active | active |
 | Dependency Review high-severity block | `.github/workflows/dependency-review.yml` with `fail-on-severity: high` | advisory | required | required | required |
@@ -45,6 +45,7 @@ Test-Path .github/workflows/release-attestations.yml
 Test-Path .github/workflows/actions-security.yml
 Test-Path .github/workflows/workflow-security.yml
 Test-Path .github/workflows/secret-scan.yml
+rg -n "config:recommended|dependencyDashboard|vulnerabilityAlerts|security" renovate.json
 rg -n "fail-on-severity:\s*high" .github/workflows/dependency-review.yml
 rg -n "attestations:\s*write|actions/attest|sbom.spdx.json|SHA256SUMS" .github/workflows/sbom-attestations.yml .github/workflows/release-attestations.yml
 rg -n "OpenSSF and supply-chain|scorecard.yml|dependency-review.yml|sbom-attestations.yml|release-attestations.yml|exception|waiver" conductor/quality-gates.md conductor/delivery-readiness-checklist.md

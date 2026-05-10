@@ -1,5 +1,8 @@
 # Benchmarks
 
+Maturity: preview metadata gate. Native performance comparisons are not yet
+published.
+
 This directory is the benchmark and reproducibility entry point for KairoECS.
 It is intentionally source-backed and offline-first.
 
@@ -27,6 +30,10 @@ pages.
 python benches/benchmark_smoke.py
 python benches/benchmark_reproducibility.py
 ```
+
+Expected output: both commands emit JSON with `"status": "ok"`. These checks
+confirm benchmark metadata and reproducibility evidence alignment only; they do
+not publish or validate native timing results.
 
 ## Related files
 

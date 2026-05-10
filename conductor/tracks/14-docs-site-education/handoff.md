@@ -65,7 +65,7 @@ The 2026-05-08 implementation review hardened `website/scripts/check-links.js` s
 
 The 2026-05-09 review fixed an overbroad public docs claim in `docs/arrow/schema-reference.md`: the Arrow reference now says schema-stable telemetry interchange rather than claiming zero-copy transfer across language boundaries without a matching Arrow C Data Interface fixture.
 
-Fresh 2026-05-09 Track 14 validation passed for `npm --prefix website ci`, `node website\scripts\check-links.js --self-test`, `npm --prefix website run check:links`, `npm --prefix website run build`, `npm --prefix website run check:quality`, `npm --prefix website run check:all`, `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\14-docs-site-education\validate-docs-site.ps1`, `node docs\assets\validate-playground-figures.mjs`, `node tests\conformance\track12_20_evidence_check.mjs`, `python notebooks\validate_notebooks.py`, and `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1`. A later repo-wide `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` run is blocked by unrelated Track 15 and Track 17 closeout evidence while those tracks are being implemented/reviewed.
+Fresh 2026-05-09 Track 14 validation passed for `npm --prefix website ci`, `node website\scripts\check-links.js --self-test`, `npm --prefix website run check:links`, `npm --prefix website run build`, `npm --prefix website run check:quality`, `npm --prefix website run check:all`, `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\14-docs-site-education\validate-docs-site.ps1`, `node docs\assets\validate-playground-figures.mjs`, `node tests\conformance\track12_20_evidence_check.mjs`, `python notebooks\validate_notebooks.py`, `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1`, and `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1`. `just docs-build` remains locally blocked because `just` is not installed on PATH; the underlying npm-backed website build/link/quality gate passed.
 
 ## Follow-up issues
 
@@ -78,5 +78,5 @@ Track 14 advanced to In Review on 2026-05-08 after `$conductor-review` found one
 - commit SHA: blocked; no Track 14 commit was created in this pass because this is a shared worker tree and final integration/commit ownership was not requested.
 - pushed ref: blocked; no push was performed from the shared worker tree.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: blocked until the Track 14 slice is committed and the shared worktree is clean enough for strict closeout.
-- `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1`: blocked by unrelated Track 19 handoff evidence outside Track 14 ownership: missing `commit SHA`, `pushed ref`, and `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` markers.
+- `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1`: passed on 2026-05-09.
 - next-phase decision: Track 14 is In Review with docs-build and link-check-plan gates satisfied through the npm-backed website flow; `just docs-build` remains locally blocked because `just` is not installed on PATH.

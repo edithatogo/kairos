@@ -1,5 +1,5 @@
 schema_version: 1
-last_verified: 2026-05-09
+last_verified: 2026-05-10
 states:
   allowed:
     - pending
@@ -474,16 +474,41 @@ entries:
     pushed_ref: "pending: no push performed"
     next_phase_decision: "Track 16 is In Review with compatibility-policy and changelog-check gates locally satisfied; strict commit/push closeout remains pending coordinator review."
   - track_id: "17"
-    phase: "implementation-slice"
+    phase: "implementation-review"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 17 advanced from Planned to In Progress after adding a validator-backed first-contribution intake slice. Review has not yet been run for this new slice."
+    review_result: "Track 17 advanced to In Review after focused review accepted the validator-backed first-contribution intake slice with no blocking findings."
     fixes_applied: true
     validation_commands:
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/17-community-adoption-education-ecosystem/validate-community-onboarding.ps1"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1"
       - "node tests/conformance/track12_20_evidence_check.mjs"
-    git_status: "dirty: Track 17 implementation-slice edits pending review and commit; other agents may also be editing shared Conductor surfaces"
+    git_status: "dirty: Track 17/30/31 review reconciliation pending commit and push"
     commit_sha: "pending"
     pushed_ref: "pending"
-    next_phase_decision: "Keep Track 17 In Progress until conductor-review accepts the onboarding intake gate, accepted fixes are applied, and strict clean-tree commit/push closeout evidence is recorded."
+    next_phase_decision: "Track 17 is In Review; do not move to Done until strict git closeout and PR integration evidence exist."
+  - track_id: "30"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 30 advanced to In Review after focused review found no blocking defects in the toolchain matrix, version-drop policy, workflow trigger coverage, package dry-run Go lane, or TypeScript engines.node alignment."
+    fixes_applied: true
+    validation_commands:
+      - "pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1"
+    git_status: "dirty: Track 17/30/31 review reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 30 is In Review and remains release-gating; do not move to Done until strict git closeout and PR integration evidence exist."
+  - track_id: "31"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 31 advanced to In Review after focused review found no blocking defects in threshold coverage, comparator output, negative fixtures, unknown-result detection, or benchmark-smoke metadata alignment."
+    fixes_applied: true
+    validation_commands:
+      - "pwsh -NoProfile -File conductor/tracks/31-performance-regression-guard/validate-track31.ps1"
+      - "python benches/benchmark_smoke.py"
+    git_status: "dirty: Track 17/30/31 review reconciliation pending commit and push"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 31 is In Review; do not move to Done until strict git closeout and PR integration evidence exist. It remains quality-improving rather than release-gating."

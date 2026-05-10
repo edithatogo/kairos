@@ -1,6 +1,6 @@
 # KairoECS Conductor Status
 
-Last verified: 2026-05-09
+Last verified: 2026-05-10
 
 ## Setup state
 
@@ -45,17 +45,22 @@ Each track has the required Conductor artifact shape:
 
 Machine-readable status, dependency, owner, path, and gate metadata is now tracked in `conductor/tracks.yaml`, and `conductor/tracks.md` stays aligned as the human-readable index.
 
-Track 17 advanced from `Planned` to `In Progress` on 2026-05-09 after the
-community onboarding implementation slice hardened the `onboarding-docs` gate
-around checked-in first-contribution intake paths. The slice updated
-`CONTRIBUTING.md`, `docs/community/README.md`,
-`docs/community/contributor-onboarding.md`, the Track 17 community plan,
-validator, test matrix, and handoff evidence. No external community posts,
-package publication, or public launch actions were performed.
+Track 17 advanced from `In Progress` to `In Review` on 2026-05-10 after focused
+review accepted the validator-backed first-contribution intake slice with no
+blocking findings. The slice covers `CONTRIBUTING.md`,
+`docs/community/README.md`, `docs/community/contributor-onboarding.md`, the
+Track 17 community plan, validator, test matrix, and handoff evidence. No
+external community posts, package publication, or public launch actions were
+performed.
+
+Tracks 30 and 31 advanced from `In Progress` to `In Review` on 2026-05-10 after
+focused review found no blocking defects in the toolchain matrix/version-drop
+policy or performance regression threshold/comparator slices. Track 30 remains
+release-gating; Track 31 remains quality-improving rather than release-gating.
 
 ## Validation evidence
 
-Latest local validation on 2026-05-07:
+Latest local baseline validation on 2026-05-07; current targeted verification is recorded under the 2026-05-10 track evidence:
 
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_artifacts.ps1` passed with 41 track directories, 0 errors, 0 warnings, and 0 info.
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1` passed with 41 tracks, 47 agents, 0 errors, and 0 warnings.
@@ -66,7 +71,9 @@ Latest local validation on 2026-05-07:
 - `npm --prefix bindings\typescript run typecheck`, `npm --prefix bindings\typescript test`, and `npm --prefix bindings\typescript run test:browser` passed for Track 09 on 2026-05-08; the browser smoke required approval to launch headless Chromium.
 - `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passed for Track 09 on 2026-05-08 with 3 unit tests and 0 doctests; optional `wasm-export` validation remains future toolchain work.
 - `node tests\conformance\conformance-check.mjs`, `node tests\conformance\runner.mjs`, `node tests\conformance\runner-self-test.mjs`, `node tests\conformance\chaos-check.mjs`, `node tests\conformance\track07_13_hardening_check.mjs`, and `node tests\conformance\track12_20_evidence_check.mjs` passed.
-- Track 17 focused implementation validators passed on 2026-05-09: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/17-community-adoption-education-ecosystem/validate-community-onboarding.ps1`, `powershell -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1`, and `node tests/conformance/track12_20_evidence_check.mjs`.
+- Track 17 focused validator passed on 2026-05-10: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/17-community-adoption-education-ecosystem/validate-community-onboarding.ps1`.
+- Track 30 focused validator passed on 2026-05-10: `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1`.
+- Track 31 focused validators passed on 2026-05-10: `pwsh -NoProfile -File conductor/tracks/31-performance-regression-guard/validate-track31.ps1` and `python benches/benchmark_smoke.py`.
 - Track 06 advanced to `In Review` on 2026-05-08 after `python -m pytest -q` from `bindings\python` passed with 15 tests, 1 optional pyarrow roundtrip skip, and the known local pytest cache permission warning; `python -m ruff check .`, compileall, import smoke, `pip check`, `python -m build --sdist --wheel` outside the sandbox with package-local temp, and `validate-bindings06-11.ps1` also passed. A workspace-local `pyarrow-24.0.0` install succeeded, but the real pyarrow table roundtrip remains blocked because `pyarrow.lib` fails to load a required Windows DLL on this host.
 - `go test ./...`, `go vet ./...`, and `gofmt -w -l .` from `bindings\go` passed with no formatting output.
 - `Rscript -e "sessionInfo(); source('tests/testthat.R')"` from `bindings\r` passed after R startup locale warnings.
@@ -261,7 +268,7 @@ Track 26 advanced from `Spec Approved` to `In Review` after the standards-mappin
 - Focused validation passed for the Track 26 standards validator and the Track 21-27 evidence-boundary guard. The combined Track 21-27 validator passed Track 26 but failed in Track 27's docs workflow because the link checker scanned `bindings/typescript/node_modules`.
 - Track 26 is not `Done`: strict git closeout and push evidence remain blocked by pre-existing unrelated dirty worktree changes outside Track 26 ownership.
 
-## Track 27 implementation review (2026-05-08)
+## Track 27 implementation review (2026-05-08, refreshed 2026-05-10)
 
 Track 27 advanced to `In Review` after the developer-experience bootstrap and toolchain-docs gates were hardened and reviewed:
 
@@ -269,7 +276,11 @@ Track 27 advanced to `In Review` after the developer-experience bootstrap and to
 - `scripts/dx/validate-toolchain-docs.mjs` now checks `.devcontainer/devcontainer.json`, `devbox.json`, `mise.toml`, `justfile`, and bootstrap scripts for the Track 27 toolchain contract.
 - `just toolchain-docs` is wired to the new validator, and `scripts/dx/validate-docs-workflow.mjs` now asserts that recipe exists.
 - Focused validation passed: `pwsh -NoProfile -File scripts/bootstrap.ps1 -CheckOnly`, `node scripts/dx/validate-toolchain-docs.mjs`, `node scripts/dx/validate-docs-workflow.mjs`, `node scripts/validation/validate-track21-27-evidence-boundaries.mjs`, and `node scripts/validation/validate-tracks21-27.mjs`.
-- Direct `just` recipe execution remains blocked in this shell because `just` is not on `PATH`. `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and non-strict `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` passed; strict clean-tree closeout remains blocked by the shared dirty worktree.
+- Direct `just` recipe execution was initially blocked in this shell because `just` was not on `PATH`. `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and non-strict `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` passed; strict clean-tree closeout remains blocked by the shared dirty worktree.
+- 2026-05-09 follow-up fixed the Unix bootstrap/toolchain-docs drift: `scripts/bootstrap.sh` now has the explicit `for tool in just` install guard required by `node scripts/dx/validate-toolchain-docs.mjs`. The toolchain-docs validator and `node scripts/dx/validate-docs-workflow.mjs` both passed after the patch.
+- 2026-05-09 follow-up installed `just` 1.50.0 through Scoop. `just --list`, `just toolchain-docs`, and `just docs-smoke` now pass outside the sandbox; sandboxed `just` runs can still fail in Git Bash before invoking the recipe body with Win32 access-denied errors.
+- `just docs-build` and `just validate-conductor` also pass outside the sandbox. `just validate-conductor` reran Conductor setup validation, phase gates, non-strict git closeout, and the Rust workspace tests invoked by the setup validator.
+- 2026-05-10 follow-up proved the remaining direct Track 27 recipes outside the sandbox: `just docs-bootstrap`, `just validate-tracks21-27`, `just dev-setup`, and `just dev-validate` all pass. `just dev-setup` now routes through `scripts/bootstrap.ps1 -SkipPython -SkipNpm`; the Windows bootstrap prefers `rustup run stable-x86_64-pc-windows-gnu cargo install` for optional cargo tools when that toolchain is available, avoiding the Git `usr\bin\link.exe` shadowing issue seen with the default MSVC cargo install path.
 
 ## Track 08 implementation review (2026-05-08)
 
@@ -280,7 +291,7 @@ Track 08 advanced from `Planned` to `In Review` after a focused Julia binding im
 - `packaging/julia/README.md` records that registry publication, package-server automation, native artifact packaging, and Arrow.jl IPC remain deferred to Track 15 and the Track 02 artifact handoff.
 - Focused static validation passed: `rg -n "EventLogBatch|to_smoke_bytes|from_smoke_bytes|test_arrow" bindings/julia packaging/julia conductor/tracks/08-julia-binding -S` and `git diff --check -- bindings/julia packaging/julia conductor/tracks/08-julia-binding conductor/tracks.yaml conductor/tracks.md conductor/phase-closeout.yaml conductor/status.md conductor/track-map.md`.
 - `node tests/conformance/track07_13_hardening_check.mjs` passed earlier on 2026-05-08, then failed in the final rerun on an unrelated Track 07 `packaging/r` handoff claim outside Track 08 ownership.
-- Executable Julia gates remain locally blocked: `Get-Command julia` failed on 2026-05-08 because Julia is not on PATH, so `julia-pkg-test`, environment resolution, precompile smoke, conformance bridge execution, and `test/test_arrow.jl` execution could not be run.
+- 2026-05-09 follow-up installed Julia 1.12.2 through Scoop. `julia --project=. -e 'using Pkg; Pkg.test()'` and `julia --project=. -e 'include("test/test_arrow.jl")'` now pass from `bindings/julia/`. Native FFI artifact loading and Arrow.jl IPC remain deferred to downstream package/artifact work.
 
 ## Track 11 implementation review (2026-05-08)
 

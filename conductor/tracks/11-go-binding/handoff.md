@@ -55,6 +55,7 @@ The Go binding now has a minimal real module slice: a pure-Go deterministic sche
 - The cancellation hardening validation was also covered by `conductor/tracks/06-python-binding-310-314/validate-bindings06-11.ps1`.
 - 2026-05-07 validation reran `go test ./...`, `go vet ./...`, `go mod tidy`, and the cross-binding static validator successfully.
 - 2026-05-08 validation reran the Go gates successfully. The first sandboxed `go test ./...` hit `%LOCALAPPDATA%\go-build` access denial, then passed with normal Windows Go cache access.
+- 2026-05-09 review reran `go test ./...`, `go vet ./...`, `go mod tidy`, `go test -run TestConformance ./...`, `CGO_ENABLED=1 go test -run TestNativeHeaderSmokeCompilesStableCABI ./...`, `CGO_ENABLED=0 go test ./...`, `gofmt`, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` successfully. `staticcheck` and `golangci-lint` were unavailable on PATH. A non-required `go test -race ./...` feasibility check failed in the local Go toolchain with `runtime/race: package testmain: cannot find package`.
 - Local `go version` reported `go1.26.2 windows/amd64` after a telemetry token permission warning.
 - No release, registry, or remote publication side effects were performed.
 

@@ -13,9 +13,9 @@ machine-readable root list.
 |---|---|---|
 | Rust crate APIs | `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-state`, `crates/kairo-ecs-rng` | Name the exact crate root in the compatibility note, ADR, or migration note. |
 | Host-language package APIs | `bindings/python`, `bindings/r`, `bindings/julia`, `bindings/typescript`, `bindings/csharp`, `bindings/go` | Name the exact binding root in the compatibility note, ADR, or migration note. |
-| C ABI surface | `conductor/contracts/ffi-contract.md` and the future `kairo-ecs-ffi` release surface | Treat as release-gated until the ABI contract and package root exist. |
-| Arrow telemetry schemas | `conductor/contracts/arrow-schema-contract.md` and the future Arrow package surface | Treat schema changes as compatibility changes even when the Rust API is unchanged. |
-| Scenario / conformance surfaces | `conductor/contracts/conformance-contract.md` and `conformance/fixtures/manifest.json` | Version fixture outputs and note any change that alters deterministic expectations. |
+| C ABI surface | `include/kairo_ecs.h` | Treat signature, symbol, ownership, allocation, status-code, and error-buffer changes as release-gated. |
+| Arrow telemetry schemas | `schemas/arrow/event_log_v1.schema.json` | Treat field, metadata, nullability, meaning, and schema-version changes as compatibility changes even when the Rust API is unchanged. |
+| Scenario / conformance surfaces | `conformance/fixtures` | Version fixture outputs and note any change that alters deterministic expectations. |
 
 ## Compatibility matrix
 
@@ -23,8 +23,8 @@ machine-readable root list.
 |---|---|---|---|
 | Rust crate APIs | Checked-in workspace roots; release-gated | Public API, semver, or deterministic behavior changes | Compatibility note naming the exact crate root, plus ADR if public behavior changes |
 | Host-language package APIs | Checked-in package skeletons; release-gated | Root rename, API shape change, ownership change, or behavior drift | Compatibility note naming the exact package root, plus migration note before beta or later |
-| C ABI | Policy surface only until Track 02 lands | Signature, ownership, or symbol changes | ADR, migration note, and ABI review before any release claim |
-| Arrow schemas | Policy surface only until schema release work lands | Field removal, meaning change, or versionless output drift | Schema note, ADR if public, and migration note before beta or later |
+| C ABI | Concrete protected checked-in surface at `include/kairo_ecs.h`; release-gated | Signature, ownership, or symbol changes | ADR, migration note, and ABI review before any release claim |
+| Arrow schemas | Concrete protected checked-in surface at `schemas/arrow/event_log_v1.schema.json`; release-gated | Field removal, meaning change, or versionless output drift | Schema note, ADR if public, and migration note before beta or later |
 | Scenario / conformance surfaces | Checked-in shared contract and fixtures | Fixture output, ordering, or replay contract drift | Fixture/version update plus compatibility note naming the affected fixture or scenario |
 
 ## Breaking changes

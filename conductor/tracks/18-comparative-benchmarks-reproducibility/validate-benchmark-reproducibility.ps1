@@ -56,6 +56,10 @@ Assert-Contains 'benches/raw-results-policy.json' 'raw-results-policy' 'raw-resu
 Assert-Contains 'benches/raw-results-policy.json' 'raw_output_path' 'raw output result field'
 Assert-Contains 'benches/raw-results-policy.json' 'baseline_version' 'baseline version result field'
 Assert-Contains 'docs/benchmarks/README.md' 'Benchmark readers should start' 'benchmark landing page'
+Assert-Contains 'docs/benchmarks/README.md' 'Maturity: preview metadata gate' 'benchmark maturity label'
+Assert-Contains 'docs/benchmarks/README.md' '"status": "ok"' 'benchmark expected output'
+Assert-Contains 'docs/benchmarks/reproduce-comparison.md' 'Maturity: preview metadata gate' 'reproduction maturity label'
+Assert-Contains 'docs/benchmarks/reproduce-comparison.md' '"status": "ok"' 'reproduction expected output'
 Assert-Contains '.github/workflows/benchmark-smoke.yml' 'python benches/benchmark_smoke\.py' 'benchmark metadata smoke gate'
 Assert-Contains '.github/workflows/benchmark-smoke.yml' 'cargo check -p kairo-ecs-bench' 'bench crate compile gate'
 

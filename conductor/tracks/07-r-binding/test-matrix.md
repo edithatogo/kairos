@@ -77,6 +77,25 @@ so local package checking used `_R_CHECK_FORCE_SUGGESTS_=false`.
 - Optional R packages `arrow`, `devtools`, `lintr`, and `pkgdown` remain absent
   locally; CRAN/Bioconductor index checks were unreachable in the sandboxed
   environment.
+
+## Current slice validation — 2026-05-09
+
+- `$conductor-review` found no in-scope correctness issues requiring code
+  changes in `bindings/r/`.
+- `Rscript --version` reports `Rscript (R) version 4.6.0 (2026-04-24)`.
+- `Rscript tests/smoke-base.R` passes from `bindings/r/`.
+- `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"` passes
+  from `bindings/r/` with one expected skip for missing optional `arrow`.
+- `Rcmd check --no-manual r` from `bindings/` completes with `Status: 1 NOTE`;
+  the NOTE is the expected source-directory check warning: checking should be
+  performed on sources prepared by `R CMD build`.
+- `Rcmd build r` from `bindings/` builds `kairoECS_0.1.0.tar.gz`.
+- `Rcmd check --no-manual kairoECS_0.1.0.tar.gz` from `bindings/` completes
+  with `Status: OK` when `_R_CHECK_FORCE_SUGGESTS_=false`.
+- Optional R packages `arrow`, `devtools`, `lintr`, and `pkgdown` remain absent
+  locally, so the Arrow-backed runtime lane and `devtools::check(document =
+  FALSE)` remain blocked.
+
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

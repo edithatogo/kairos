@@ -37,6 +37,9 @@ foreach ($step in $manifest.local_dry_run_sequence.steps) {
     }
     $expectedStepOrder += 1
 }
+if (@($manifest.local_dry_run_sequence.steps | Where-Object { $_.command -eq 'python packaging/scripts/build_release_manifest.py --verify-existing' }).Count -ne 1) {
+    throw 'local_dry_run_sequence must include generated release evidence verification'
+}
 
 $expected = @('rust', 'python', 'r', 'julia', 'typescript', 'csharp', 'go')
 $actual = @($manifest.surfaces | ForEach-Object { $_.ecosystem })

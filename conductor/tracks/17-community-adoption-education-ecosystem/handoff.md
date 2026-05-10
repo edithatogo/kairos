@@ -1,6 +1,6 @@
 # Handoff: Track 17 Community Adoption, Education & Ecosystem
 
-Last updated: 2026-05-09
+Last updated: 2026-05-10
 
 ## Summary
 
@@ -17,6 +17,10 @@ security path, discussion categories, docs issue template, model-zoo template,
 and track task template are all present and discoverable from the community
 onboarding docs. No external community posts, registry publication, or public
 launch actions were performed.
+
+2026-05-10 review update: focused review found no blocking defects in the
+first-contribution intake slice. The onboarding validator passed again, so the
+track is ready for integration review rather than further implementation churn.
 
 ## Files changed
 
@@ -103,24 +107,23 @@ Rerun the onboarding and tutorial validators after any docs-tree move, maturity-
 Do not treat Track 17 as a package-publication gate; it documents adoption readiness and must stay aligned with the separate packaging and release-governance tracks.
 ## Phase closeout evidence
 
-Implementation slice evidence recorded on 2026-05-09:
+Implementation slice evidence refreshed on 2026-05-10:
 
-- Track status advanced from `Planned` to `In Progress`.
-- Review command: `$conductor-review` is pending for this implementation slice.
-- accepted fixes: none yet from review; implementation edits were limited to the
-  contributor-intake gate and status surfaces.
+- Track status advanced from `In Progress` to `In Review`.
+- Review command: `$conductor-review`.
+- Review result: no blocking Track 17 findings in the community onboarding,
+  first-user, first-contribution, issue-template, and model-zoo inventory
+  surfaces.
+- accepted fixes: none required from the 2026-05-10 focused review.
 - Focused validators passed:
   - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/17-community-adoption-education-ecosystem/validate-community-onboarding.ps1`
   - `powershell -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1`
   - `node tests/conformance/track12_20_evidence_check.mjs`
-- `$conductor-review` has not yet been run for this new slice.
-- commit SHA: pending because this shared-worktree implementation pass did not
-  perform git closeout.
-- pushed ref: pending because this shared-worktree implementation pass did not
-  perform git closeout.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: not run
-  because review, commit, and push closeout remain pending.
-- Commit and pushed-ref evidence are pending because this shared-worktree
-  implementation pass did not perform git closeout.
-- Next-phase decision: keep Track 17 `In Progress` until the review agent
-  accepts this intake-gate slice and strict closeout evidence is recorded.
+- commit SHA: pending until the coordinator commits and pushes the 2026-05-10
+  status reconciliation.
+- pushed ref: pending until the coordinator pushes the 2026-05-10 status
+  reconciliation.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until
+  after commit and push.
+- Next-phase decision: Track 17 is `In Review`; do not move to `Done` until
+  strict git closeout and PR integration evidence exist.
