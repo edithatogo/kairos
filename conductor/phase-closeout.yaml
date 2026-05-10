@@ -561,17 +561,20 @@ entries:
     next_phase_decision: "Track 23 is Done; keep runtime/tutorial claims bounded to future DES API work and preserve the discoverability bridge."
   - track_id: "24"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 24 advanced to In Review after the playground fixture smoke and Track 21-27 aggregate validator passed."
-    fixes_applied: false
+    review_result: "Track 24 advanced to Done after the playground fixture smoke, committed SVG figure validation, docs build, and link checks passed."
+    fixes_applied: true
     validation_commands:
       - "node website/scripts/smoke-playground.mjs"
       - "node scripts/validation/validate-tracks21-27.mjs"
-    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
-    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
+      - "node docs/assets/validate-playground-figures.mjs"
+      - "npm --prefix website run check:links"
+      - "npm --prefix website run build"
+    git_status: "clean after reviewed-track closeout commit"
+    commit_sha: "1d3df4ce04194f7a1da4ab848a7c6ebec586cd37"
     pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
-    next_phase_decision: "Track 24 is In Review; keep browser UX and executable-demo claims bounded until formal review, commit/push evidence, and strict git closeout are recorded."
+    next_phase_decision: "Track 24 is Done; keep browser UX claims bounded to the current fixture-backed playground and committed SVG visual assets."
   - track_id: "32"
     phase: "implementation-review"
     state: pending
