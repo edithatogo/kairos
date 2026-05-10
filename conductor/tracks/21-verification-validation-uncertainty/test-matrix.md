@@ -36,6 +36,10 @@ node scripts/validation/validate-tracks21-27.mjs
 |---|---|---|
 | `node scripts/validation/validate-vvuq-note.mjs` | pass | Cross-checked `docs/validation/factory-bottleneck-v1-vvuq-note.md` against `conformance/fixtures/vvuq_scenario_replay.json`, the scenario manifest, the seed manifest, and `expected_kind_order`. |
 | `node tests/conformance/conformance-check.mjs` | pass | Revalidated the ready conformance fixture set, including `vvuq_scenario_replay_v1`. |
+| `node scripts/validation/validate-vvuq-note.mjs` | pass | 2026-05-11 rerun confirmed the VVUQ note still names `factory_bottleneck_v1`, `scheduler_ordering_v1`, `expected_kind_order`, and the required outputs. |
+| `node scripts/validation/validate-track21-27-evidence-boundaries.mjs` | pass | 2026-05-11 rerun confirmed the cross-track boundary still rejects broadened claims. |
+| `node tests/conformance/conformance-check.mjs` | pass | 2026-05-11 rerun validated the ready fixture set, including `vvuq_scenario_replay_v1`. |
+| `node scripts/validation/validate-tracks21-27.mjs` | pass | 2026-05-11 rerun passed all Track 21-27 focused checks. |
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

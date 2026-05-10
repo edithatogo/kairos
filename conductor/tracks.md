@@ -25,7 +25,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 18 | Comparative Benchmarks & Reproducibility | Done | `benchmark-agent` | See `conductor/tracks/18-*/spec.md` |
 | 19 | Research Software, Citation & Archival | Done | `research-agent` | See `conductor/tracks/19-*/spec.md` |
 | 20 | OpenSSF, Supply Chain Trust & Institutional Readiness | Done | `security-agent` | See `conductor/tracks/20-*/spec.md` |
-| 21 | Verification, Validation & Uncertainty | In Review | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |
+| 21 | Verification, Validation & Uncertainty | Done | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |
 | 22 | Experiment Runner & Scenario Management | Done | `experiment-agent` | See `conductor/tracks/22-*/spec.md` |
 | 23 | Domain Starter Kits & Model Zoo | Done | `model-zoo-agent` | See `conductor/tracks/23-*/spec.md` |
 | 24 | Playground, Demos & Visualization UX | Done | `playground-agent` | See `conductor/tracks/24-*/spec.md` |

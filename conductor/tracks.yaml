@@ -307,7 +307,7 @@ tracks:
       - vulnerability-policy
   - id: 21
     name: Verification, Validation & Uncertainty
-    status: In Review
+    status: Done
     owner: vv-uq-agent
     depends_on: ["01", "04", "12"]
     owned_paths:
