@@ -1,10 +1,13 @@
 # Handoff: Track 22 Experiment Runner & Scenario Management
 
-Last updated: 2026-05-07
+Last updated: 2026-05-11
 
 ## Summary
 
-Captured the scenario-management story so other tracks can assume named runs, replay inputs, documented output shape, and a concrete replay comparison flow.
+Captured the scenario-management story so other tracks can assume named runs,
+replay inputs, documented output shape, and a concrete replay comparison flow.
+The GNU-toolchain runtime smoke now executes the CLI commands and produces the
+expected local output shape.
 
 ## Files changed
 
@@ -76,12 +79,9 @@ cargo run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/
 - PASS: `cargo check -p kairo-ecs-cli` completed in the dev profile.
 - PASS: `node tests/conformance/conformance-check.mjs` validated four ready
   fixtures, including `vvuq_scenario_replay_v1`.
-- FAIL/BLOCKED: `cargo run -p kairo-ecs-cli -- validate-scenario ...` reached
-  link and failed because `link.exe` resolved to
-  `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`, which returned
-  `fatal error - couldn't create signal pipe, Win32 error 5`. The CLI replay
-  and resume commands remain blocked until the MSVC linker/Windows SDK path is
-  corrected for this shell.
+- PASS: `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml` returned `status: ok` for `factory_bottleneck_v1` and fixture `scheduler_ordering_v1`.
+- PASS: `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- replay --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1` returned `status: ok`, output `target/kairo-ecs-smoke/factory_bottleneck_v1`, and summary hash `1d53b73b244a84de`.
+- PASS: `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- resume-plan --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1` returned `status: ok` and `checkpoint_every_events: 2`.
 
 The new CLI docs page stays intentionally narrow: it documents the implemented
 smoke commands, reserves `run`/`collect`/`analyze` for the fuller runner
@@ -97,11 +97,15 @@ Track 22 now documents the implemented smoke-command surface for `validate-scena
 
 ## Tests added
 
-The current evidence is `scripts/scenarios/validate-track22-smoke.ps1`, `cargo check -p kairo-ecs-cli`, and `node tests/conformance/conformance-check.mjs`. Local `cargo run` validation remains blocked by the Windows linker path issue recorded above.
+The current evidence is `scripts/scenarios/validate-track22-smoke.ps1`,
+`cargo check -p kairo-ecs-cli`, `node tests/conformance/conformance-check.mjs`,
+and the GNU-toolchain runtime smoke commands listed above.
 
 ## Known risks
 
-Scenario replay drift remains the main track risk. The local shell also cannot yet provide executable CLI replay evidence until `link.exe` resolves to the MSVC linker/Windows SDK toolchain.
+Scenario replay drift remains the main track risk. The local shell can now
+provide executable CLI replay evidence through the GNU toolchain, but the MSVC
+path remains unreliable on this host.
 
 ## Follow-up issues
 
