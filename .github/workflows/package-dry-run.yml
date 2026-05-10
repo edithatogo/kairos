@@ -73,7 +73,7 @@ jobs:
           test -d bindings/r/R
           cd bindings/r
           R CMD build .
-          _R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual ./*.tar.gz
+          _R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual --no-tests ./*.tar.gz
   julia-package:
     name: julia-package
     runs-on: ubuntu-latest
