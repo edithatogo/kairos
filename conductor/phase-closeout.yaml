@@ -139,7 +139,7 @@ entries:
     phase: "implementation-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 06 advanced to In Review after the wheel/sdist build passed outside the sandbox and review fixes tightened package metadata plus the optional pyarrow gate. The real pyarrow table roundtrip remains blocked by a local Windows DLL-load failure after pyarrow-24.0.0 installs successfully."
+    review_result: "Track 06 advanced to In Review after the wheel/sdist build passed outside the sandbox and review fixes tightened package metadata plus the optional pyarrow gate. The real pyarrow table roundtrip is now green when the wheel is unpacked into a local path and the bundled runtime files are visible on PYTHONPATH."
     fixes_applied: true
     validation_commands:
       - "python -m pytest -q"
@@ -152,10 +152,10 @@ entries:
       - "pwsh -NoProfile -Command '$env:PYTHONPATH=(Resolve-Path ''.tmp\\pyarrow-site'').Path; python -m pytest -q tests\\test_arrow.py::test_event_log_batch_round_trips_pyarrow_table'"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\06-python-binding-310-314\\validate-bindings06-11.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: "dirty: Track 06 implementation-closeout/status edits plus unrelated worker edits pending commit"
+    git_status: "dirty: Track 06 implementation-closeout/status edits pending commit"
     commit_sha: "blocked: no commit created in this pass"
     pushed_ref: "blocked: no push attempted"
-    next_phase_decision: "Track 06 is In Review; do not move to Done until the real pyarrow table roundtrip passes or an explicit release-manager waiver records the local pyarrow.lib DLL-load blocker."
+    next_phase_decision: "Track 06 is closeout-ready; do not move to Done until the updated evidence is committed, pushed, and validated on a clean integration tree."
   - track_id: "07"
     phase: "implementation-closeout"
     state: pending

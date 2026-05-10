@@ -99,9 +99,23 @@ Run from `bindings/python/` unless otherwise stated:
 | `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` | Pass | Cross-binding static facade and metadata guard passed after updating the Python license expectation to SPDX string form. |
 | `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` | Pass | Conductor phase gate validation passed with 0 errors and 0 warnings. |
 
+## Validation evidence — 2026-05-10 Arrow runtime recovery
+
+Run from `bindings/python/` unless otherwise stated:
+
+| Command | Result | Notes |
+|---|---:|---|
+| `python -m pytest -q tests\test_arrow.py::test_event_log_batch_round_trips_pyarrow_table` with `PYTHONPATH` pointed at an unpacked local `pyarrow` wheel tree | Pass | The roundtrip test now executes successfully when the wheel contents are unpacked into a local path. |
+| `python -m pytest -q` with `PYTHONPATH` pointed at an unpacked local `pyarrow` wheel tree | Pass | `16 passed`; the known cache write warning remains. |
+| `python -m ruff check kairo_ecs tests` | Pass | All repo-owned Python files passed linting. |
+| `python -m compileall kairo_ecs tests` | Pass | Syntax check passed for package and tests. |
+| `python -c "import kairo_ecs; print(kairo_ecs.self_check())"` | Pass | Returned package/version/status and FFI `not_configured`. |
+| `python -m pip check` | Pass | `No broken requirements found.` |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` | Pass | Cross-binding static facade and metadata guard passed. |
+
 ## Remaining Done blocker
 
-- Real pyarrow table roundtrip is implemented and no longer silently skipped when `pyarrow` is broken, but it cannot pass on this host until the missing Windows DLL/runtime dependency for `pyarrow.lib` is resolved.
+- No implementation blocker remains in the Track 06 Python surface. Keep the tree clean, record the phase-closeout ledger, and run the clean-tree closeout validator before promoting the track to `Done`.
 
 ## Validation evidence — 2026-05-09 review pass
 

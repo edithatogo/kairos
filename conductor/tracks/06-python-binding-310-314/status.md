@@ -77,3 +77,21 @@ Validation from `bindings/python/`:
 Next integration dependency:
 
 - Track 06 is not Done-eligible until the real Arrow table gate is either executed successfully with `pyarrow` available or explicitly waived, the build-temp ACL blocker is cleared enough to rerun the build gate, and the closeout validator can run on a clean integration tree.
+
+## 2026-05-10 Arrow roundtrip recovery
+
+Status: Still `In Review`, but the real Arrow roundtrip is now executable on this host when the wheel is unpacked directly into a local path and that unpacked tree is placed on `PYTHONPATH`.
+
+Validation from `bindings/python/`:
+
+- `python -m pytest -q tests\test_arrow.py::test_event_log_batch_round_trips_pyarrow_table` with `PYTHONPATH` pointed at the unpacked wheel tree — pass.
+- `python -m pytest -q` with `PYTHONPATH` pointed at the unpacked wheel tree — pass with `16 passed`; the known pytest cache warning remains.
+- `python -m ruff check kairo_ecs tests` — pass.
+- `python -m compileall kairo_ecs tests` — pass.
+- `python -c "import kairo_ecs; print(kairo_ecs.self_check())"` — pass.
+- `python -m pip check` — pass.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` — pass.
+
+Next integration dependency:
+
+- The remaining local cleanup is closeout hygiene: keep the worktree clean, record the phase-closeout ledger, and push the reconciled Track 06 evidence. The Arrow roundtrip and build gates are no longer blockers.
