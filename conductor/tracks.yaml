@@ -122,7 +122,7 @@ tracks:
       - arrow-roundtrip
   - id: 07
     name: R Binding
-    status: In Review
+    status: Done
     owner: r-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -171,7 +171,7 @@ tracks:
       - nuget-pack
   - id: 11
     name: Go Binding
-    status: In Review
+    status: Done
     owner: go-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -276,7 +276,7 @@ tracks:
       - raw-results-policy
   - id: 19
     name: Research Software, Citation & Archival
-    status: In Review
+    status: Done
     owner: research-agent
     depends_on: ["00"]
     owned_paths:

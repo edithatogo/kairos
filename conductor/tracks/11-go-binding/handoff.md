@@ -69,5 +69,5 @@ Package a linkable native runtime artifact for Go before enabling `NewNativeEngi
 
 - commit SHA: blocked until a Track 11 closeout commit is created.
 - pushed ref: blocked until the closeout commit is pushed.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed for the repository clean tree, but no Track 11 closeout commit was recorded.
-- next-phase decision: Track 11 remains `In Review`; native runtime artifact packaging remains downstream work for the Go packaging and release tracks.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after the closeout commit was recorded and pushed.
+- next-phase decision: Track 11 is `Done`; native runtime artifact packaging remains downstream work for the Go packaging and release tracks.

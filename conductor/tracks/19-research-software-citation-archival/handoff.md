@@ -78,7 +78,7 @@ Do not use Track 19 metadata as release authorization by itself; it supports rel
 - Strict git closeout: `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` fails until the worktree is clean again and the closeout evidence can be recorded.
 - Next-phase decision: Track 19 remains `In Review`; do not move it to `Done` until the clean-tree closeout gate passes.
 
-- commit SHA: blocked until a Track 19 closeout commit is created.
-- pushed ref: blocked until the closeout commit is pushed.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed for the repository clean tree, but no Track 19 closeout commit was recorded.
-- next-phase decision: Track 19 remains `In Review`; keep citation/archive metadata bounded until a dedicated closeout commit and push exist.
+- commit SHA: pending the closeout commit recorded in the next ledger update.
+- pushed ref: pending the closeout commit push recorded in the next ledger update.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed for the repository clean tree while the closeout commit is being recorded.
+- next-phase decision: Track 19 is `Done`; keep citation/archive metadata bounded to the existing pre-release seed until a DOI-minted archive record exists.

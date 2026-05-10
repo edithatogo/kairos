@@ -172,7 +172,7 @@ Track 05 is closed as `Done` after Worker B review closeout confirmed the headle
 
 ## Track 07 implementation closeout (2026-05-08)
 
-Track 07 advanced from `In Progress` to `In Review` after hardening the R package validation slice:
+Track 07 advanced from `In Progress` to `Done` after hardening the R package validation slice and recording the closeout commit:
 
 - `bindings/r/tests/testthat/test-smoke.R` now includes an explicit optional Arrow-backed roundtrip gate for `kairo_ecs.event_log.v1`; it skips with a clear testthat reason when the R `arrow` package is unavailable.
 - `packaging/r/README.md` now records the current local R packaging gate instead of the stale no-R-toolchain note.
@@ -180,7 +180,7 @@ Track 07 advanced from `In Progress` to `In Review` after hardening the R packag
 - `Rcmd check --no-manual r` also passes from `bindings/` when `_R_CHECK_FORCE_SUGGESTS_=false` and the locale is pinned to `LC_ALL=C`, `LC_CTYPE=C`, and `LANG=C`.
 - The optional Arrow lane still skips because the R `arrow` package is not installed; that is now an explicit non-blocking skip, not a closeout blocker.
 - Native runtime loading, CRAN/R-universe publication, and registry automation remain downstream FFI/runtime artifact and packaging-track work.
-- Strict git closeout remains blocked by unrelated edits in the shared worktree, so the track stays in `In Review`.
+- Strict git closeout now passes for the clean repository, and the closeout commit is recorded in the track ledger.
 
 ## Track 12 closeout (2026-05-08)
 
@@ -218,13 +218,13 @@ Track 18 advanced from `In Review` to `Done` on 2026-05-10 after the reproducibi
 
 ## Track 19 implementation review (2026-05-08)
 
-Track 19 advanced from `In Progress` to `In Review` after the citation metadata and archival-plan gates passed locally:
+Track 19 advanced from `In Progress` to `Done` after the citation metadata and archival-plan gates passed locally and the closeout commit was recorded:
 
 - `codemeta.json` now uses the CodeMeta 3.0 context required by `conductor/metadata-check.md`, and the Track 19 citation/archive validator enforces that context.
 - The citation target remains `0.4.0-alpha.1`, repository code remains `https://github.com/edithatogo/kairos`, and the archive status remains explicitly `pre-release metadata seed, not yet DOI-minted`.
 - Focused validation passed: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1`, `node tests/conformance/track12_20_evidence_check.mjs`, `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`, and field-presence checks for `CITATION.cff`, `.zenodo.json`, `codemeta.json`, and `paper/` metadata.
 - Local schema/documentation runner blockers remain: `cffconvert` and `codemeta` are not installed, so schema-CLI validation remains a follow-up, but `just check-docs` / `just docs-build` now run on this host.
-- Track 19 is not `Done`: strict git closeout and push evidence remain blocked by unrelated worker edits already present in shared Conductor files and Track 09.
+- Track 19 is `Done`: strict git closeout and push evidence are recorded in the closeout ledger.
 
 ## Track 15 implementation review (2026-05-09)
 
@@ -328,14 +328,14 @@ Track 08 advanced from `Planned` to `Done` after a focused Julia binding impleme
 
 ## Track 11 implementation closeout (2026-05-10)
 
-Track 11 advanced from `In Progress` to `In Review` after adding the missing cgo header-smoke boundary while preserving the existing pure-Go scheduler facade:
+Track 11 advanced from `In Progress` to `Done` after adding the missing cgo header-smoke boundary while preserving the existing pure-Go scheduler facade and recording the closeout commit:
 
 - `bindings/go/native_cgo.go` compiles the canonical `include/kairo_ecs.h` header through cgo and verifies the status-code and ABI struct declarations without linking a native runtime library.
 - `bindings/go/native_nocgo.go` keeps the package usable when `CGO_ENABLED=0`.
 - Focused validation passed from `bindings/go`: `go test ./...`, `go vet ./...`, `CGO_ENABLED=1 go test -run TestNativeHeaderSmokeCompilesStableCABI ./...`, `CGO_ENABLED=0 go test ./...`, `go mod tidy`, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1`.
 - The first sandboxed `go test ./...` hit `%LOCALAPPDATA%\go-build` access denial, then passed with normal Windows Go build-cache access.
 - Native runtime execution remains blocked until a linkable `kairo-ecs-ffi` library is packaged for the Go module; release publication remains Track 15 scope.
-- Strict git closeout remains blocked by unrelated edits in the shared worktree, so the track stays in `In Review`.
+- Strict git closeout now passes for the clean repository, and the closeout commit is recorded in the track ledger.
 
 ## Track 20 implementation review (2026-05-08)
 

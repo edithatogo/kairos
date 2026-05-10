@@ -11,11 +11,11 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 04 | The Analyst: kairo-ecs-arrow | Done | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
 | 05 | The Window: kairo-ecs-viz | Done | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
 | 06 | Python Binding 3.10-3.14 | Done | `python-agent` | See `conductor/tracks/06-*/spec.md` |
-| 07 | R Binding | In Review | `r-agent` | See `conductor/tracks/07-*/spec.md` |
+| 07 | R Binding | Done | `r-agent` | See `conductor/tracks/07-*/spec.md` |
 | 08 | Julia Binding | Done | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
 | 09 | TypeScript/Wasm Binding | Done | `typescript-agent` | See `conductor/tracks/09-*/spec.md` |
 | 10 | C# Binding .NET 10-11 | Done | `csharp-agent` | See `conductor/tracks/10-*/spec.md` |
-| 11 | Go Binding | In Review | `go-agent` | See `conductor/tracks/11-*/spec.md` |
+| 11 | Go Binding | Done | `go-agent` | See `conductor/tracks/11-*/spec.md` |
 | 12 | Conformance, Testing & Benchmarks | Done | `conformance-agent + performance-agent` | See `conductor/tracks/12-*/spec.md` |
 | 13 | CI/CD, Code Quality & Supply Chain | Done | `ci-agent + security-agent` | See `conductor/tracks/13-*/spec.md` |
 | 14 | Documentation Site & Education | Done | `docs-agent` | See `conductor/tracks/14-*/spec.md` |
@@ -23,7 +23,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 16 | Release Governance & Maintenance | Done | `release-agent + governance-agent` | See `conductor/tracks/16-*/spec.md` |
 | 17 | Community Adoption, Education & Ecosystem | Done | `community-agent` | See `conductor/tracks/17-*/spec.md` |
 | 18 | Comparative Benchmarks & Reproducibility | Done | `benchmark-agent` | See `conductor/tracks/18-*/spec.md` |
-| 19 | Research Software, Citation & Archival | In Review | `research-agent` | See `conductor/tracks/19-*/spec.md` |
+| 19 | Research Software, Citation & Archival | Done | `research-agent` | See `conductor/tracks/19-*/spec.md` |
 | 20 | OpenSSF, Supply Chain Trust & Institutional Readiness | Done | `security-agent` | See `conductor/tracks/20-*/spec.md` |
 | 21 | Verification, Validation & Uncertainty | In Review | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |
 | 22 | Experiment Runner & Scenario Management | In Review | `experiment-agent` | See `conductor/tracks/22-*/spec.md` |
