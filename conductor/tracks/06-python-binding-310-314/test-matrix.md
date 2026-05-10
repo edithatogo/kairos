@@ -137,6 +137,26 @@ Run from `bindings/python/` unless otherwise stated:
 | `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` | Pass | Conductor phase gate validation passed with 0 errors and 0 warnings. |
 | `pwsh -NoProfile -File scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Fail outside Track 06 | Closeout validator failed because the wider working tree has unrelated uncommitted tracked or untracked changes. Track 06 owned paths were clean before this evidence update. |
 
+## Validation evidence — 2026-05-09 review pass
+
+Run from `bindings/python/` unless otherwise stated:
+
+| Command | Result | Notes |
+|---|---:|---|
+| `python --version` | Pass | Python 3.13.12. |
+| `python -m pytest -q` | Pass with skip | `15 passed, 1 skipped`; the skip is the optional pyarrow table roundtrip because `pyarrow` is not installed. Pytest emitted the known local cache ACL warning. |
+| `python -m ruff check .` | Pass | All checks passed. |
+| `python -m compileall kairo_ecs tests` | Pass | Syntax check passed for package and tests. |
+| `python -c "import kairo_ecs; print(kairo_ecs.self_check())"` | Pass | Returned package/version/status and FFI `not_configured`. |
+| `python -m pip check` | Pass | `No broken requirements found.` |
+| `python -c "import pyarrow, sys; print(pyarrow.__version__)"` | Blocked | `ModuleNotFoundError: No module named 'pyarrow'`; no dependency install was attempted in this review pass. |
+| `pwsh -Command '$env:TEMP=(Resolve-Path ''.tmp'').Path; $env:TMP=$env:TEMP; python -m build --sdist --wheel'` | Blocked | Isolated build failed before package code ran: local venv creation could not create `.tmp\build-env-*\Include` due WinError 5. |
+| `pwsh -Command '$env:TEMP=(Resolve-Path ''.tmp'').Path; $env:TMP=$env:TEMP; python -m build --sdist --wheel --no-isolation'` | Blocked | Build backend temp-file creation failed under `.tmp\tmp*` with permission denied. |
+| `New-Item -ItemType Directory -Force -Path C:\tmp\kairos-python-build` | Blocked | `C:\tmp` build-temp fallback was denied on this host. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` | Pass | Cross-binding static facade and metadata guard passed. |
+| `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` | Pass | Conductor phase gate validation passed with 0 errors and 0 warnings. |
+| `pwsh -NoProfile -File scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Fail outside Track 06 | Closeout validator failed because the wider working tree has unrelated uncommitted tracked or untracked changes. Track 06 owned paths were clean before this evidence update. |
+
 ## CI command
 
 ```bash
