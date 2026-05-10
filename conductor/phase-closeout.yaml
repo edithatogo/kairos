@@ -577,9 +577,9 @@ entries:
     fixes_applied: false
     validation_commands:
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTests"
-    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
-    commit_sha: "pending"
-    pushed_ref: "pending"
+    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
+    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
+    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
     next_phase_decision: "Track 32 is In Review; real GPU backend, hardware parity, and speedup claims remain blocked until a GPU runner and formal review evidence exist."
   - track_id: "33"
     phase: "implementation-review"
@@ -589,9 +589,9 @@ entries:
     fixes_applied: false
     validation_commands:
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1"
-    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
-    commit_sha: "pending"
-    pushed_ref: "pending"
+    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
+    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
+    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
     next_phase_decision: "Track 33 is In Review; real browser WebGPU device validation remains blocked until the wasm/browser harness and GPU-capable runner are available."
   - track_id: "34"
     phase: "implementation-review"
@@ -601,9 +601,9 @@ entries:
     fixes_applied: false
     validation_commands:
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1"
-    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
-    commit_sha: "pending"
-    pushed_ref: "pending"
+    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
+    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
+    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
     next_phase_decision: "Track 34 is In Review; scheduler integration, scaling benchmarks, and Time Warp work remain blocked until formal review and follow-up implementation evidence exist."
   - track_id: "35"
     phase: "implementation-review"
@@ -613,9 +613,9 @@ entries:
     fixes_applied: false
     validation_commands:
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1"
-    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
-    commit_sha: "pending"
-    pushed_ref: "pending"
+    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
+    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
+    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
     next_phase_decision: "Track 35 is In Review; real rsmpi/tonic transports, two-node tests, migration serialization, telemetry aggregation, and fault tolerance remain follow-up implementation scope."
   - track_id: "36"
     phase: "implementation-review"
