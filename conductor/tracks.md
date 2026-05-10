@@ -32,7 +32,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 25 | API Design Review & Compatibility Governance | Done | `api-governance-agent` | See `conductor/tracks/25-*/spec.md` |
 | 26 | Interoperability Standards Review | Done | `interop-agent` | See `conductor/tracks/26-*/spec.md` |
 | 27 | Developer Experience & Reproducible Environments | Done | `dx-agent` | See `conductor/tracks/27-*/spec.md` |
-| 28 | Red Team & Devil's Advocate Review | In Review | `redteam-agent` | See `conductor/tracks/28-*/spec.md` |
+| 28 | Red Team & Devil's Advocate Review | Done | `redteam-agent` | See `conductor/tracks/28-*/spec.md` |
 | 29 | Wave Manager & Execution Gatekeeper | Done | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |
 | 30 | Toolchain & Version Support Matrix | Done | `toolchain-agent` | See `conductor/tracks/30-*/spec.md` |
 | 31 | Performance Regression Guard | Done | `perf-regression-agent` | See `conductor/tracks/31-*/spec.md` |

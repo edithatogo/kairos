@@ -401,7 +401,7 @@ tracks:
       - toolchain-docs
   - id: 28
     name: Red Team & Devil's Advocate Review
-    status: In Review
+    status: Done
     owner: redteam-agent
     depends_on: ["00"]
     owned_paths:
