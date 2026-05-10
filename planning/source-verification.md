@@ -112,7 +112,7 @@ Re-run before implementation and release.
 
 - Source: https://openssf.org/projects/best-practices-badge/
 - Source: https://github.com/ossf/scorecard-action
-- Source: https://docs.sigstore.dev/cosign/signing/overview/
+- Source: https://github.com/sigstore/cosign
 - Checked facts:
   - OpenSSF Best Practices Badge is a no-cost FLOSS self-certification process.
   - Scorecard has an official GitHub Action.
