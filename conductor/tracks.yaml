@@ -253,7 +253,7 @@ tracks:
       - changelog-check
   - id: 17
     name: Community Adoption, Education & Ecosystem
-    status: Done
+    status: In Review
     owner: community-agent
     depends_on: ["14"]
     owned_paths:
@@ -436,7 +436,7 @@ tracks:
       - version-drop-policy-check
   - id: 31
     name: Performance Regression Guard
-    status: Done
+    status: In Review
     owner: perf-regression-agent
     depends_on: ["12", "18"]
     owned_paths:

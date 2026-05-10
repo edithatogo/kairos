@@ -58,11 +58,13 @@ and the post-merge closeout confirmed its dependencies, focused validator,
 GitHub Actions evidence, and strict git closeout path. Track 30 remains
 release-gating for future public releases.
 
-Tracks 16, 17, 25, 26, 27, 29, and 31 advanced from `In Review` to `Done` on
+Tracks 16, 25, 26, 27, and 29 advanced from `In Review` to `Done` on
 2026-05-10 after PR #21 merged, all review threads were resolved, and the
 focused closeout gates revalidated on `main`. The closeout pass intentionally
 left tracks with real runtime, release, hardware, publication, linker, or
-provider blockers in `In Review`.
+provider blockers in `In Review`. Tracks 17 and 31 also have focused validator
+evidence, but remain `In Review` until their declared dependencies, Tracks 14
+and 18 respectively, reach `Done`.
 
 Track 27's toolchain-docs validator now accepts the pinned Unix bootstrap form
 `cargo install "$tool" --version "1.50.0" --locked`, matching the current

@@ -475,18 +475,18 @@ entries:
     next_phase_decision: "Track 16 is Done for release governance and maintenance policy; future release-process changes must update the governance validator and changelog policy evidence."
   - track_id: "17"
     phase: "implementation-review"
-    state: closed
+    state: pending
     review_command: "$conductor-review"
-    review_result: "Track 17 advanced to Done after community-onboarding validation passed, review threads were resolved, and the clean closeout commit recorded the status promotion."
+    review_result: "Track 17 remains In Review after community-onboarding validation passed because its declared dependency Track 14 remains In Review."
     fixes_applied: true
     validation_commands:
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/17-community-adoption-education-ecosystem/validate-community-onboarding.ps1"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1"
       - "node tests/conformance/track12_20_evidence_check.mjs"
-    git_status: "clean after reviewed-track closeout commit"
-    commit_sha: "29cf398413d7d46c9a021dc46420cd716c9b8ede"
-    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
-    next_phase_decision: "Track 17 is Done for contributor onboarding and community documentation; future public launch or outreach actions remain separate release/community work."
+    git_status: "clean after dependency-aware closeout correction"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 17 is In Review; do not move to Done until Track 14 is Done and strict git closeout evidence is recorded."
   - track_id: "30"
     phase: "track-closeout"
     state: closed
@@ -504,17 +504,17 @@ entries:
     next_phase_decision: "Track 30 is Done and remains release-gating; future support-matrix changes, runner coverage promotion, or version-drop policy changes require a scoped follow-up."
   - track_id: "31"
     phase: "implementation-review"
-    state: closed
+    state: pending
     review_command: "$conductor-review"
-    review_result: "Track 31 advanced to Done after the regression guard validator and benchmark smoke passed, review threads were resolved, and the clean closeout commit recorded the status promotion."
+    review_result: "Track 31 remains In Review after the regression guard validator and benchmark smoke passed because its declared dependency Track 18 remains In Review."
     fixes_applied: true
     validation_commands:
       - "pwsh -NoProfile -File conductor/tracks/31-performance-regression-guard/validate-track31.ps1"
       - "python benches/benchmark_smoke.py"
-    git_status: "clean after reviewed-track closeout commit"
-    commit_sha: "29cf398413d7d46c9a021dc46420cd716c9b8ede"
-    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
-    next_phase_decision: "Track 31 is Done for threshold and comparator guardrails; live benchmark expansion remains future Track 18 or release-hardening work."
+    git_status: "clean after dependency-aware closeout correction"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 31 is In Review; do not move to Done until Track 18 is Done and strict git closeout evidence is recorded."
   - track_id: "21"
     phase: "implementation-review"
     state: pending
