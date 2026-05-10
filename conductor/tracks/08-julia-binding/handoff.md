@@ -88,7 +88,7 @@ Deferred fixes:
 
 Closeout markers:
 
-- commit SHA: blocked because no Track 08 commit was created in the dirty shared worktree.
-- pushed ref: blocked because no push was performed from the dirty shared worktree.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: not run because the shared worktree contains unrelated worker edits and this pass did not create a commit.
-- next-phase decision: Track 08 is In Review with Julia execution now available through the Scoop shim. Native FFI artifact loading and Arrow.jl IPC remain downstream work; strict commit/push closeout is still required before Done closeout.
+- commit SHA: pending until the coordinator commits and pushes the 2026-05-10 status reconciliation.
+- pushed ref: pending until the coordinator pushes the 2026-05-10 status reconciliation.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until after commit and push.
+- next-phase decision: Track 08 is Done with Julia execution available through the Scoop shim. Native FFI artifact loading and Arrow.jl IPC remain downstream work; strict git closeout will be recorded in the phase ledger.

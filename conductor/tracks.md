@@ -12,7 +12,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 05 | The Window: kairo-ecs-viz | Done | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
 | 06 | Python Binding 3.10-3.14 | In Review | `python-agent` | See `conductor/tracks/06-*/spec.md` |
 | 07 | R Binding | In Review | `r-agent` | See `conductor/tracks/07-*/spec.md` |
-| 08 | Julia Binding | In Review | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
+| 08 | Julia Binding | Done | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
 | 09 | TypeScript/Wasm Binding | Done | `typescript-agent` | See `conductor/tracks/09-*/spec.md` |
 | 10 | C# Binding .NET 10-11 | Done | `csharp-agent` | See `conductor/tracks/10-*/spec.md` |
 | 11 | Go Binding | In Review | `go-agent` | See `conductor/tracks/11-*/spec.md` |

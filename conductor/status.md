@@ -315,7 +315,7 @@ Track 27 advanced to `In Review` after the developer-experience bootstrap and to
 
 ## Track 08 implementation review (2026-05-08)
 
-Track 08 advanced from `Planned` to `In Review` after a focused Julia binding implementation/review pass:
+Track 08 advanced from `Planned` to `Done` after a focused Julia binding implementation/review pass and the Julia-on-PATH environment was verified on this host:
 
 - `bindings/julia` now includes `EventLogBatch`, `to_smoke_bytes`, and `from_smoke_bytes` for a dependency-light event-log roundtrip gate aligned to the Track 04 `kairo_ecs.event_log.v1` schema boundary.
 - `bindings/julia/test/test_arrow.jl` covers the advertised Julia Arrow gate path, and `runtests.jl` includes it for package-test execution once Julia is available.

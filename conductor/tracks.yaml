@@ -133,7 +133,7 @@ tracks:
       - arrow-roundtrip
   - id: 08
     name: Julia Binding
-    status: In Review
+    status: Done
     owner: julia-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
