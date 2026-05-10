@@ -19,7 +19,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 12 | Conformance, Testing & Benchmarks | Done | `conformance-agent + performance-agent` | See `conductor/tracks/12-*/spec.md` |
 | 13 | CI/CD, Code Quality & Supply Chain | Done | `ci-agent + security-agent` | See `conductor/tracks/13-*/spec.md` |
 | 14 | Documentation Site & Education | Done | `docs-agent` | See `conductor/tracks/14-*/spec.md` |
-| 15 | Packaging, Publishing & Delivery | In Review | `release-agent` | See `conductor/tracks/15-*/spec.md` |
+| 15 | Packaging, Publishing & Delivery | Done | `release-agent` | See `conductor/tracks/15-*/spec.md` |
 | 16 | Release Governance & Maintenance | Done | `release-agent + governance-agent` | See `conductor/tracks/16-*/spec.md` |
 | 17 | Community Adoption, Education & Ecosystem | Done | `community-agent` | See `conductor/tracks/17-*/spec.md` |
 | 18 | Comparative Benchmarks & Reproducibility | Done | `benchmark-agent` | See `conductor/tracks/18-*/spec.md` |

@@ -226,7 +226,7 @@ Track 19 advanced from `In Progress` to `In Review` after the citation metadata 
 
 ## Track 15 implementation review (2026-05-09)
 
-Track 15 advanced from `In Progress` to `In Review` after the packaging dry-run evidence path was made self-verifying:
+Track 15 advanced from `In Progress` to `Done` after the packaging dry-run evidence path was made self-verifying:
 
 - `packaging/scripts/build_release_manifest.py --verify-existing` now verifies generated `dist/release-artifact-manifest.json` and `dist/SHA256SUMS` against `packaging/release-package-manifest.json`.
 - `.github/workflows/release.yml` now uses the shared verifier before artifact upload instead of duplicating release-manifest checks inline.

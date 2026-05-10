@@ -116,6 +116,6 @@ Keep public publishing blocked until registry names, legal metadata, compatibili
   - `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1`
   - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1`
   - `node tests/conformance/track12_20_evidence_check.mjs`
-- Formal `$conductor-review` completed on 2026-05-09 for the explicitly assigned Track 15 scope. The in-scope consistency finding was fixed. Commit/push closeout and strict clean-tree git closeout remain blocked by the dirty working tree and by pending coordinator integration.
+- Formal `$conductor-review` completed on 2026-05-09 for the explicitly assigned Track 15 scope. The in-scope consistency finding was fixed and the release-delivery gate still passes on 2026-05-10. Commit/push closeout and strict clean-tree git closeout remain blocked until the reconciliation commit lands.
 
 Before the next phase advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
