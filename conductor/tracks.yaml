@@ -108,7 +108,7 @@ tracks:
       - headless-core-check
   - id: 06
     name: Python Binding 3.10-3.14
-    status: In Review
+    status: Done
     owner: python-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:

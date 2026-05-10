@@ -10,7 +10,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 03 | The Flow: DES Trajectory API & ABM Behavior API | Done | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
 | 04 | The Analyst: kairo-ecs-arrow | Done | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
 | 05 | The Window: kairo-ecs-viz | Done | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
-| 06 | Python Binding 3.10-3.14 | In Review | `python-agent` | See `conductor/tracks/06-*/spec.md` |
+| 06 | Python Binding 3.10-3.14 | Done | `python-agent` | See `conductor/tracks/06-*/spec.md` |
 | 07 | R Binding | In Review | `r-agent` | See `conductor/tracks/07-*/spec.md` |
 | 08 | Julia Binding | Done | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
 | 09 | TypeScript/Wasm Binding | Done | `typescript-agent` | See `conductor/tracks/09-*/spec.md` |

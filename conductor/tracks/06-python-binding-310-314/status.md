@@ -80,7 +80,7 @@ Next integration dependency:
 
 ## 2026-05-10 Arrow roundtrip recovery
 
-Status: Still `In Review`, but the real Arrow roundtrip is now executable on this host when the wheel is unpacked directly into a local path and that unpacked tree is placed on `PYTHONPATH`.
+Status: `Done`. The real Arrow roundtrip is executable on this host when the wheel is unpacked directly into a local path and that unpacked tree is placed on `PYTHONPATH`.
 
 Validation from `bindings/python/`:
 
@@ -94,4 +94,4 @@ Validation from `bindings/python/`:
 
 Next integration dependency:
 
-- The remaining local cleanup is closeout hygiene: keep the worktree clean, record the phase-closeout ledger, and push the reconciled Track 06 evidence. The Arrow roundtrip and build gates are no longer blockers.
+- None for the Track 06 implementation surface. The remaining work is Conductor ledger hygiene and push evidence already in progress.

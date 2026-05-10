@@ -115,7 +115,7 @@ Run from `bindings/python/` unless otherwise stated:
 
 ## Remaining Done blocker
 
-- No implementation blocker remains in the Track 06 Python surface. Keep the tree clean, record the phase-closeout ledger, and run the clean-tree closeout validator before promoting the track to `Done`.
+- None. Track 06 implementation and closeout validation are complete.
 
 ## Validation evidence — 2026-05-09 review pass
 
