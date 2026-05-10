@@ -77,11 +77,10 @@ model-zoo inventory, playground smoke, compatibility policy, standards review,
 and docs workflow evidence. Track 32, 33, 34, and 35 focused validators passed
 under `stable-x86_64-pc-windows-gnu`. The Track 36-40 aggregate offline
 validator also passed under the GNU Rust toolchain, covering streaming, ML,
-FMI, cloud/HPC, and time-travel debug scaffolds. These tracks are implemented
-to their current bounded scaffold contracts, but remain in review because
-formal review, commit/push evidence, strict git closeout, and live
-hardware/provider/runtime evidence are still required before any `Done`
-promotion or public readiness claim.
+FMI, cloud/HPC, and time-travel debug scaffolds. Tracks 36, 37, 38, and 40
+later advanced to `Done` after their owned GNU-toolchain reruns passed; Track
+39 remains `In Review` because live Docker, Kubernetes, Slurm, and
+cloud-provider validation is still environment-backed.
 
 ## Validation evidence
 
@@ -103,6 +102,7 @@ Latest local baseline validation on 2026-05-07; current targeted verification is
 - Track 21-27 focused aggregate validation passed on 2026-05-10: `node scripts/validation/validate-tracks21-27.mjs`.
 - Track 32-35 focused validators passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTests`, `pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1`, `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1`, and `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1`.
 - Track 36-40 aggregate offline validation passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`, `python cloud/validate_cloud_hpc.py`, and `node website/time-travel-demo/validate-demo.mjs`.
+- Track 36, 37, 38, and 40 later advanced to `Done` on 2026-05-10 after GNU-toolchain reruns cleared the Windows linker blocker for their owned compile/test gates.
 - Track 06 advanced to `Done` on 2026-05-10 after `python -m pytest -q` from `bindings\python` passed with 16 tests when the unpacked `pyarrow` wheel was placed on `PYTHONPATH`; `python -m ruff check kairo_ecs tests`, `python -m compileall kairo_ecs tests`, `python -c "import kairo_ecs; print(kairo_ecs.self_check())"`, `python -m pip check`, `python -m build --sdist --wheel`, `validate-bindings06-11.ps1`, `scripts\validate_conductor_phase_gates.ps1`, and `scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` all passed. A workspace-local `pyarrow-24.0.0` install had initially looked blocked by a Windows DLL load failure, but the real pyarrow table roundtrip now passes when the wheel is unpacked directly into a local path and the bundled runtime files are visible on `PYTHONPATH`.
 - `go test ./...`, `go vet ./...`, and `gofmt -w -l .` from `bindings\go` passed with no formatting output.
 - `Rscript -e "sessionInfo(); source('tests/testthat.R')"` from `bindings\r` passed after R startup locale warnings.
@@ -176,9 +176,11 @@ Track 07 advanced from `In Progress` to `In Review` after hardening the R packag
 
 - `bindings/r/tests/testthat/test-smoke.R` now includes an explicit optional Arrow-backed roundtrip gate for `kairo_ecs.event_log.v1`; it skips with a clear testthat reason when the R `arrow` package is unavailable.
 - `packaging/r/README.md` now records the current local R packaging gate instead of the stale no-R-toolchain note.
-- Focused validation passed: `Rscript tests/smoke-base.R`, `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"`, `Rcmd check --no-manual r`, `Rcmd build r`, `Rcmd check --no-manual kairoECS_0.1.0.tar.gz`, `node tests/conformance/track07_13_hardening_check.mjs`, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1`.
-- The built-source `Rcmd check` result was `Status: OK`. The local optional Arrow lane was skipped because the R `arrow` package is not installed and network access to CRAN/Bioconductor indexes is unavailable in this environment.
+- Focused validation passed: `Rscript tests/smoke-base.R`, `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"`, `Rcmd build r`, `Rcmd check --no-manual kairoECS_0.1.0.tar.gz`, `node tests/conformance/track07_13_hardening_check.mjs`, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1`.
+- `Rcmd check --no-manual r` also passes from `bindings/` when `_R_CHECK_FORCE_SUGGESTS_=false` and the locale is pinned to `LC_ALL=C`, `LC_CTYPE=C`, and `LANG=C`.
+- The optional Arrow lane still skips because the R `arrow` package is not installed; that is now an explicit non-blocking skip, not a closeout blocker.
 - Native runtime loading, CRAN/R-universe publication, and registry automation remain downstream FFI/runtime artifact and packaging-track work.
+- Strict git closeout remains blocked by unrelated edits in the shared worktree, so the track stays in `In Review`.
 
 ## Track 12 closeout (2026-05-08)
 
@@ -324,15 +326,16 @@ Track 08 advanced from `Planned` to `Done` after a focused Julia binding impleme
 - `node tests/conformance/track07_13_hardening_check.mjs` passed earlier on 2026-05-08, then failed in the final rerun on an unrelated Track 07 `packaging/r` handoff claim outside Track 08 ownership.
 - 2026-05-09 follow-up installed Julia 1.12.2 through Scoop. `julia --project=. -e 'using Pkg; Pkg.test()'` and `julia --project=. -e 'include("test/test_arrow.jl")'` now pass from `bindings/julia/`. Native FFI artifact loading and Arrow.jl IPC remain deferred to downstream package/artifact work.
 
-## Track 11 implementation review (2026-05-08)
+## Track 11 implementation closeout (2026-05-10)
 
 Track 11 advanced from `In Progress` to `In Review` after adding the missing cgo header-smoke boundary while preserving the existing pure-Go scheduler facade:
 
 - `bindings/go/native_cgo.go` compiles the canonical `include/kairo_ecs.h` header through cgo and verifies the status-code and ABI struct declarations without linking a native runtime library.
 - `bindings/go/native_nocgo.go` keeps the package usable when `CGO_ENABLED=0`.
-- Focused validation passed from `bindings/go`: `go test ./...`, `go vet ./...`, `CGO_ENABLED=1 go test -run TestNativeHeaderSmokeCompilesStableCABI ./...`, `CGO_ENABLED=0 go test ./...`, and `go mod tidy`.
+- Focused validation passed from `bindings/go`: `go test ./...`, `go vet ./...`, `CGO_ENABLED=1 go test -run TestNativeHeaderSmokeCompilesStableCABI ./...`, `CGO_ENABLED=0 go test ./...`, `go mod tidy`, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1`.
 - The first sandboxed `go test ./...` hit `%LOCALAPPDATA%\go-build` access denial, then passed with normal Windows Go build-cache access.
 - Native runtime execution remains blocked until a linkable `kairo-ecs-ffi` library is packaged for the Go module; release publication remains Track 15 scope.
+- Strict git closeout remains blocked by unrelated edits in the shared worktree, so the track stays in `In Review`.
 
 ## Track 20 implementation review (2026-05-08)
 

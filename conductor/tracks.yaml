@@ -499,7 +499,7 @@ tracks:
       - entity-migration-check
   - id: 36
     name: Streaming & Real-Time Processing
-    status: In Review
+    status: Done
     owner: streaming-agent
     depends_on: ["04", "22"]
     owned_paths:
@@ -512,7 +512,7 @@ tracks:
       - realtime-wallclock-check
   - id: 37
     name: ML/AI Integration & Inference
-    status: In Review
+    status: Done
     owner: ml-integration-agent
     depends_on: ["23"]
     owned_paths:
@@ -525,7 +525,7 @@ tracks:
       - gymnasium-env-smoke
   - id: 38
     name: FMI/FMU & Digital Twin Bridge
-    status: In Review
+    status: Done
     owner: fmi-agent
     depends_on: ["26", "36", "02"]
     owned_paths:
@@ -553,7 +553,7 @@ tracks:
       - spot-checkpoint-test
   - id: 40
     name: Time-Travel Debugging & Interactive Stepping
-    status: In Review
+    status: Done
     owner: timetravel-agent
     depends_on: ["01", "12"]
     owned_paths:

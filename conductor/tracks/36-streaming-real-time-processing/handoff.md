@@ -29,19 +29,18 @@ No shared contracts were changed. The crate mirrors the existing `conductor/cont
 - In-memory sink checks now reject duplicate or decreasing `sequence` values for the same `run_id`.
 - Snapshot checks now reject unknown stream names instead of returning an empty snapshot for typos.
 
-Validated:
+Validated under `stable-x86_64-pc-windows-gnu`:
 
+- `cargo build --workspace`
+- `cargo test -p kairo-ecs-streaming --no-default-features`
+- `cargo test -p kairo-ecs-streaming --all-features`
 - `cargo check -p kairo-ecs-streaming --no-default-features`
 - `cargo check -p kairo-ecs-streaming --all-features --tests`
 - `cargo clippy -p kairo-ecs-streaming --all-targets --all-features -- -D warnings`
+- `cargo fmt --all --check`
 - `rustfmt --check crates/kairo-ecs-streaming/src/lib.rs crates/kairo-ecs-streaming/tests/feature_matrix.rs`
 
-Blocked validation:
-
-- `cargo test -p kairo-ecs-streaming --no-default-features`
-- `cargo test -p kairo-ecs-streaming --all-features`
-
-Both test commands compiled the crate but failed at Windows link time because this shell resolves `link.exe` to Git's `usr\bin\link.exe`, which exited with `0xc0000142` and `fatal error - couldn't create signal pipe, Win32 error 5`.
+The GNU toolchain avoids the Windows `usr\bin\link.exe` / signal-pipe failure seen on the default MSVC cargo path.
 
 ## Known risks
 
@@ -67,4 +66,9 @@ No additional consumed contracts were recorded by this Conductor hygiene update.
 No additional follow-up issues were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+2026-05-10 closeout pass:
+
+- The Windows linker blocker was cleared for this track-owned validator by forcing the installed GNU Rust toolchain on Windows before the cargo probes run.
+- `cargo build --workspace`, `cargo test -p kairo-ecs-streaming --no-default-features`, `cargo test -p kairo-ecs-streaming --all-features`, `cargo check -p kairo-ecs-streaming --no-default-features`, `cargo check -p kairo-ecs-streaming --all-features --tests`, `cargo fmt --all --check`, `rustfmt --check crates/kairo-ecs-streaming/src/lib.rs crates/kairo-ecs-streaming/tests/feature_matrix.rs`, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1` all passed under `stable-x86_64-pc-windows-gnu`.
+- The validator no longer trips the Git `usr\bin\link.exe` / Win32 signal-pipe failure that affected the default MSVC cargo path on this host.
+- Track 36-owned evidence is now clean and ready for registry closeout reconciliation.

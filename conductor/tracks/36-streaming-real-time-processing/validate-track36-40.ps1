@@ -5,6 +5,10 @@ param(
 $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $oldPythonPath = $env:PYTHONPATH
+$oldRustupToolchain = $env:RUSTUP_TOOLCHAIN
+$gnuToolchain = "stable-x86_64-pc-windows-gnu"
+$useGnuToolchain = $IsWindows -and (rustup toolchain list | Select-String -SimpleMatch $gnuToolchain)
+$env:RUSTUP_TOOLCHAIN = if ($useGnuToolchain) { $gnuToolchain } else { $oldRustupToolchain }
 $env:PYTHONPATH = (Join-Path $repo "python\kairo_gym\src")
 Push-Location $repo
 try {
@@ -83,4 +87,5 @@ try {
 finally {
     Pop-Location
     $env:PYTHONPATH = $oldPythonPath
+    $env:RUSTUP_TOOLCHAIN = $oldRustupToolchain
 }

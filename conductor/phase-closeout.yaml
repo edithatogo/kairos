@@ -619,40 +619,56 @@ entries:
     next_phase_decision: "Track 35 is In Review; real rsmpi/tonic transports, two-node tests, migration serialization, telemetry aggregation, and fault tolerance remain follow-up implementation scope."
   - track_id: "36"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 36 advanced to In Review after the Track 36-40 aggregate offline validator passed under the GNU Rust toolchain, including streaming crate checks and bounded streaming documentation."
-    fixes_applied: false
+    review_result: "Track 36 advanced to Done after the owned GNU-toolchain rerun passed and the streaming crate checks, broker-free validator, and bounded documentation all validated successfully."
+    fixes_applied: true
     validation_commands:
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests"
+      - "cargo +stable-x86_64-pc-windows-gnu build --workspace"
+      - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-streaming --no-default-features"
+      - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-streaming --all-features"
+      - "cargo +stable-x86_64-pc-windows-gnu check -p kairo-ecs-streaming --no-default-features"
+      - "cargo +stable-x86_64-pc-windows-gnu check -p kairo-ecs-streaming --all-features --tests"
+      - "cargo +stable-x86_64-pc-windows-gnu fmt --all --check"
+      - "cargo +stable-x86_64-pc-windows-gnu clippy -p kairo-ecs-streaming --all-targets --all-features -- -D warnings"
     git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
     commit_sha: "pending"
     pushed_ref: "pending"
-    next_phase_decision: "Track 36 is In Review; real broker, Arrow Flight, and realtime wall-clock claims remain blocked until formal review and live-adapter evidence exist."
+    next_phase_decision: "Track 36 is Done for the broker-free streaming scaffold; real broker, Arrow Flight, and realtime wall-clock claims remain follow-up scope."
   - track_id: "37"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 37 advanced to In Review after the Track 36-40 aggregate offline validator passed under the GNU Rust toolchain, including ML crate checks and kairo_gym unit tests."
-    fixes_applied: false
+    review_result: "Track 37 advanced to Done after the owned GNU-toolchain rerun passed and the ML crate, ONNX-facing example, and kairo_gym contract tests all validated successfully."
+    fixes_applied: true
     validation_commands:
-      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test --manifest-path crates/kairo-ecs-ml/Cargo.toml --no-default-features"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test --manifest-path crates/kairo-ecs-ml/Cargo.toml --all-features"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo check --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx"
+      - "$env:PYTHONPATH='python/kairo_gym/src'; python -m unittest discover -s python/kairo_gym/tests"
     git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
     commit_sha: "pending"
     pushed_ref: "pending"
-    next_phase_decision: "Track 37 is In Review; real ONNX/runtime inference and Gymnasium packaging remain blocked until formal review and dependency acceptance evidence exist."
+    next_phase_decision: "Track 37 is Done for the bounded ML scaffold; real ONNX/runtime inference, TensorRT/Burn adapters, and broader Gymnasium packaging remain follow-up scope."
   - track_id: "38"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 38 advanced to In Review after the Track 36-40 aggregate offline validator passed under the GNU Rust toolchain, including FMI crate checks and bounded FMI/AAS documentation gates."
-    fixes_applied: false
+    review_result: "Track 38 advanced to Done after the owned GNU-toolchain rerun passed and the FMI/FMU crate checks, example import path, and bounded FMI/AAS documentation all validated successfully."
+    fixes_applied: true
     validation_commands:
-      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests"
+      - "cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features"
+      - "cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --no-default-features"
+      - "cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2"
+      - "cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi3"
+      - "cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features"
+      - "cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests"
+      - "cargo +stable-x86_64-pc-windows-gnu check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml"
     git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
     commit_sha: "pending"
     pushed_ref: "pending"
-    next_phase_decision: "Track 38 is In Review; FMU archive extraction, dynamic symbol loading, and validated digital-twin co-simulation remain blocked until dependency policy and live artifact evidence exist."
+    next_phase_decision: "Track 38 is Done for the owned FMI/FMU bridge scaffold; FMU archive extraction, dynamic symbol loading, and live co-simulation remain follow-up scope."
   - track_id: "39"
     phase: "implementation-review"
     state: pending
@@ -668,14 +684,17 @@ entries:
     next_phase_decision: "Track 39 is In Review; live Docker, Kubernetes, Slurm, and cloud-provider acceptance remain blocked until formal review and environment-backed validation exist."
   - track_id: "40"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 40 advanced to In Review after debug crate checks, trace-line validation, and the time-travel demo validator passed through the Track 36-40 aggregate validation under the GNU Rust toolchain."
-    fixes_applied: false
+    review_result: "Track 40 advanced to Done after the owned GNU-toolchain rerun passed and the debug crate checks, trace validation, and time-travel demo validator all validated successfully."
+    fixes_applied: true
     validation_commands:
+      - "cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\\kairo-ecs-debug\\Cargo.toml --target x86_64-pc-windows-gnu"
+      - "cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates\\kairo-ecs-debug\\Cargo.toml --tests --target x86_64-pc-windows-gnu"
+      - "cargo +stable-x86_64-pc-windows-gnu fmt --manifest-path crates\\kairo-ecs-debug\\Cargo.toml --check"
+      - "cargo +stable-x86_64-pc-windows-gnu clippy --manifest-path crates\\kairo-ecs-debug\\Cargo.toml --all-targets --target x86_64-pc-windows-gnu -- -D warnings"
       - "node website/time-travel-demo/validate-demo.mjs"
-      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests"
     git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
     commit_sha: "pending"
     pushed_ref: "pending"
-    next_phase_decision: "Track 40 is In Review; scheduler observer integration, Arrow IPC trace serialization, and experiment-runner integration remain follow-up scope."
+    next_phase_decision: "Track 40 is Done for the offline debugger scaffold; scheduler observer integration, Arrow IPC trace serialization, and experiment-runner integration remain follow-up scope."
