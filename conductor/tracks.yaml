@@ -1,5 +1,5 @@
 schema_version: 1
-last_verified: 2026-05-09
+last_verified: 2026-05-10
 status_vocabulary:
   - Planned
   - Spec Approved
@@ -253,7 +253,7 @@ tracks:
       - changelog-check
   - id: 17
     name: Community Adoption, Education & Ecosystem
-    status: In Progress
+    status: In Review
     owner: community-agent
     depends_on: ["14"]
     owned_paths:
@@ -424,7 +424,7 @@ tracks:
       - dependency-closure-check
   - id: 30
     name: Toolchain & Version Support Matrix
-    status: In Progress
+    status: In Review
     owner: toolchain-agent
     depends_on: ["00", "13"]
     owned_paths:
@@ -436,7 +436,7 @@ tracks:
       - version-drop-policy-check
   - id: 31
     name: Performance Regression Guard
-    status: In Progress
+    status: In Review
     owner: perf-regression-agent
     depends_on: ["12", "18"]
     owned_paths:

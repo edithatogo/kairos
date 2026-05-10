@@ -45,13 +45,18 @@ Each track has the required Conductor artifact shape:
 
 Machine-readable status, dependency, owner, path, and gate metadata is now tracked in `conductor/tracks.yaml`, and `conductor/tracks.md` stays aligned as the human-readable index.
 
-Track 17 advanced from `Planned` to `In Progress` on 2026-05-09 after the
-community onboarding implementation slice hardened the `onboarding-docs` gate
-around checked-in first-contribution intake paths. The slice updated
-`CONTRIBUTING.md`, `docs/community/README.md`,
-`docs/community/contributor-onboarding.md`, the Track 17 community plan,
-validator, test matrix, and handoff evidence. No external community posts,
-package publication, or public launch actions were performed.
+Track 17 advanced from `In Progress` to `In Review` on 2026-05-10 after focused
+review accepted the validator-backed first-contribution intake slice with no
+blocking findings. The slice covers `CONTRIBUTING.md`,
+`docs/community/README.md`, `docs/community/contributor-onboarding.md`, the
+Track 17 community plan, validator, test matrix, and handoff evidence. No
+external community posts, package publication, or public launch actions were
+performed.
+
+Tracks 30 and 31 advanced from `In Progress` to `In Review` on 2026-05-10 after
+focused review found no blocking defects in the toolchain matrix/version-drop
+policy or performance regression threshold/comparator slices. Track 30 remains
+release-gating; Track 31 remains quality-improving rather than release-gating.
 
 ## Validation evidence
 
@@ -66,7 +71,9 @@ Latest local baseline validation on 2026-05-07; current targeted verification is
 - `npm --prefix bindings\typescript run typecheck`, `npm --prefix bindings\typescript test`, and `npm --prefix bindings\typescript run test:browser` passed for Track 09 on 2026-05-08; the browser smoke required approval to launch headless Chromium.
 - `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passed for Track 09 on 2026-05-08 with 3 unit tests and 0 doctests; optional `wasm-export` validation remains future toolchain work.
 - `node tests\conformance\conformance-check.mjs`, `node tests\conformance\runner.mjs`, `node tests\conformance\runner-self-test.mjs`, `node tests\conformance\chaos-check.mjs`, `node tests\conformance\track07_13_hardening_check.mjs`, and `node tests\conformance\track12_20_evidence_check.mjs` passed.
-- Track 17 focused implementation validators passed on 2026-05-09: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/17-community-adoption-education-ecosystem/validate-community-onboarding.ps1`, `powershell -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1`, and `node tests/conformance/track12_20_evidence_check.mjs`.
+- Track 17 focused validator passed on 2026-05-10: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/17-community-adoption-education-ecosystem/validate-community-onboarding.ps1`.
+- Track 30 focused validator passed on 2026-05-10: `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1`.
+- Track 31 focused validators passed on 2026-05-10: `pwsh -NoProfile -File conductor/tracks/31-performance-regression-guard/validate-track31.ps1` and `python benches/benchmark_smoke.py`.
 - Track 06 advanced to `In Review` on 2026-05-08 after `python -m pytest -q` from `bindings\python` passed with 15 tests, 1 optional pyarrow roundtrip skip, and the known local pytest cache permission warning; `python -m ruff check .`, compileall, import smoke, `pip check`, `python -m build --sdist --wheel` outside the sandbox with package-local temp, and `validate-bindings06-11.ps1` also passed. A workspace-local `pyarrow-24.0.0` install succeeded, but the real pyarrow table roundtrip remains blocked because `pyarrow.lib` fails to load a required Windows DLL on this host.
 - `go test ./...`, `go vet ./...`, and `gofmt -w -l .` from `bindings\go` passed with no formatting output.
 - `Rscript -e "sessionInfo(); source('tests/testthat.R')"` from `bindings\r` passed after R startup locale warnings.
