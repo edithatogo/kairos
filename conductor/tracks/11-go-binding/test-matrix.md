@@ -24,6 +24,7 @@
 - `node tests/conformance/track07_13_hardening_check.mjs` verifies this track no longer claims module release ownership and records the no-release boundary.
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` verifies Go cancellation guards and module metadata without native artifacts.
 - `go test ./...`, `go vet ./...`, `CGO_ENABLED=1 go test -run TestNativeHeaderSmokeCompilesStableCABI ./...`, `CGO_ENABLED=0 go test ./...`, and `go mod tidy` remain the offline binding gates from `bindings/go`.
+- 2026-05-10 validation reran the full binding gate set and the shared Track 06/11 validator successfully.
 
 ## CI command
 
@@ -46,4 +47,4 @@ go mod tidy
 - Native runtime calls remain blocked because this repo does not yet package a linkable `kairo-ecs-ffi` library for the Go module; the cgo gate is therefore a header-smoke boundary, not a runtime FFI execution claim.
 ## Phase closeout gate
 
-- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. Validation is green, but strict git closeout still fails because the shared worktree is dirty. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

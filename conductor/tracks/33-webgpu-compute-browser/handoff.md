@@ -1,6 +1,6 @@
 # Handoff: Track 33 WebGPU Compute for Browser
 
-Last updated: 2026-05-07
+Last updated: 2026-05-11
 
 ## Status
 
@@ -108,4 +108,11 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+Track 33 is not cleanly closable yet. The offline validator passed on 2026-05-10 (`pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1`), and the current test matrix shows the crate, demo, WGSL, and no-performance-claim boundaries are complete. The remaining blockers are still live-browser items:
+
+- `wasm-pack build --target web` is blocked until the Track 09 Wasm binding package exists and the `wasm-bindgen` / `web-sys` wiring can be introduced and fetched.
+- Browser WebGPU device initialization is blocked until the browser binding dependency and headless Chrome WebGPU validation are available.
+- The `100K-agent >=30 FPS` claim is blocked until a real WebGPU backend and reference hardware/browser results exist.
+- Cross-browser smoke coverage is blocked until a browser test harness and the installed target browsers are available.
+
+Keep this track `In Review` until those blockers are resolved. Record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here when the track becomes eligible for closeout.

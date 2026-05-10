@@ -35,7 +35,7 @@
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` verifies the R cancellation guard, package metadata, and no-native-runtime boundary without requiring R on PATH.
 - `Rscript tests/smoke-base.R` passes from `bindings/r/`.
 - `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"` passes from `bindings/r/`.
-- `Rcmd check --no-manual r` from `bindings/` completes with one NOTE when `_R_CHECK_FORCE_SUGGESTS_=false`: checking should be performed on sources prepared by `R CMD build`.
+- `Rcmd check --no-manual r` from `bindings/` completes cleanly when `_R_CHECK_FORCE_SUGGESTS_=false` and the locale is pinned to `LC_ALL=C`, `LC_CTYPE=C`, and `LANG=C`.
 
 ## Future-surface controls
 
@@ -56,7 +56,7 @@ R 4.6.0 and `Rscript` are now available locally through Scoop. Optional
 packages `arrow`, `devtools`, `lintr`, and `pkgdown` are still not installed,
 so local package checking used `_R_CHECK_FORCE_SUGGESTS_=false`.
 
-## Current slice validation — 2026-05-08
+## Current slice validation — 2026-05-10
 
 - Added an explicit optional Arrow-backed roundtrip test for
   `kairo_ecs.event_log.v1` via `kairoecs_arrow_roundtrip(..., use_arrow = TRUE)`.
@@ -65,20 +65,21 @@ so local package checking used `_R_CHECK_FORCE_SUGGESTS_=false`.
 - `Rscript tests/smoke-base.R` passes from `bindings/r/`.
 - `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"` passes from
   `bindings/r/` with one expected skip for missing `arrow`.
-- `Rcmd check --no-manual r` from `bindings/` completes with one NOTE that
-  checking should be performed on sources prepared by `R CMD build`.
+- `Rcmd check --no-manual r` from `bindings/` passes when `_R_CHECK_FORCE_SUGGESTS_=false`
+  and the locale is pinned to `LC_ALL=C`, `LC_CTYPE=C`, and `LANG=C`.
 - `Rcmd build r` from `bindings/` builds `kairoECS_0.1.0.tar.gz`.
 - `Rcmd check --no-manual kairoECS_0.1.0.tar.gz` from `bindings/` completes
-  with `Status: OK` when `_R_CHECK_FORCE_SUGGESTS_=false`.
+  with `Status: OK` when `_R_CHECK_FORCE_SUGGESTS_=false` and the locale is
+  pinned to `LC_ALL=C`, `LC_CTYPE=C`, and `LANG=C`.
 - `node tests/conformance/track07_13_hardening_check.mjs` passes.
 - `powershell -NoProfile -ExecutionPolicy Bypass -File
   conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1`
   passes.
 - Optional R packages `arrow`, `devtools`, `lintr`, and `pkgdown` remain absent
-  locally; CRAN/Bioconductor index checks were unreachable in the sandboxed
-  environment.
+  locally, so the Arrow-backed runtime lane and `devtools::check(document =
+  FALSE)` remain future-surface work rather than closeout blockers.
 
-## Current slice validation — 2026-05-09
+## Prior slice validation — 2026-05-09
 
 - `$conductor-review` found no in-scope correctness issues requiring code
   changes in `bindings/r/`.
@@ -86,16 +87,17 @@ so local package checking used `_R_CHECK_FORCE_SUGGESTS_=false`.
 - `Rscript tests/smoke-base.R` passes from `bindings/r/`.
 - `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"` passes
   from `bindings/r/` with one expected skip for missing optional `arrow`.
-- `Rcmd check --no-manual r` from `bindings/` completes with `Status: 1 NOTE`;
-  the NOTE is the expected source-directory check warning: checking should be
-  performed on sources prepared by `R CMD build`.
+- `Rcmd check --no-manual r` from `bindings/` completed with `Status: 1 NOTE`
+  before the locale-pinned rerun; the NOTE was the expected source-directory
+  check warning that checking should be performed on sources prepared by
+  `R CMD build`.
 - `Rcmd build r` from `bindings/` builds `kairoECS_0.1.0.tar.gz`.
-- `Rcmd check --no-manual kairoECS_0.1.0.tar.gz` from `bindings/` completes
+- `Rcmd check --no-manual kairoECS_0.1.0.tar.gz` from `bindings/` completed
   with `Status: OK` when `_R_CHECK_FORCE_SUGGESTS_=false`.
-- Optional R packages `arrow`, `devtools`, `lintr`, and `pkgdown` remain absent
-  locally, so the Arrow-backed runtime lane and `devtools::check(document =
-  FALSE)` remain blocked.
+- Optional R packages `arrow`, `devtools`, `lintr`, and `pkgdown` remained
+  absent locally in the 2026-05-09 pass; the 2026-05-10 locale-pinned rerun
+  still treats them as future-surface work rather than closeout blockers.
 
 ## Phase closeout gate
 
-- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. Validation is green, but strict git closeout still fails because the shared worktree is dirty. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
