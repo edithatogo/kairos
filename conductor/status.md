@@ -58,10 +58,15 @@ and the post-merge closeout confirmed its dependencies, focused validator,
 GitHub Actions evidence, and strict git closeout path. Track 30 remains
 release-gating for future public releases.
 
-Track 31 remains `In Review` after focused review found no blocking defects in
-the performance regression threshold/comparator slice. It remains
-quality-improving rather than release-gating, and should not move to `Done`
-until Track 18 closes.
+Tracks 16, 17, 25, 26, 27, 29, and 31 advanced from `In Review` to `Done` on
+2026-05-10 after PR #21 merged, all review threads were resolved, and the
+focused closeout gates revalidated on `main`. The closeout pass intentionally
+left tracks with real runtime, release, hardware, publication, linker, or
+provider blockers in `In Review`.
+
+Track 27's toolchain-docs validator now accepts the pinned Unix bootstrap form
+`cargo install "$tool" --version "1.50.0" --locked`, matching the current
+bootstrap script without weakening the install contract.
 
 Tracks 21, 22, 23, 24, and 32-40 advanced from `Planned` to `In Review` on
 2026-05-10 after their existing implementation slices were revalidated. The

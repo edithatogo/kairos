@@ -240,7 +240,7 @@ tracks:
       - release-checklist
   - id: 16
     name: Release Governance & Maintenance
-    status: In Review
+    status: Done
     owner: release-agent + governance-agent
     depends_on: ["00", "25"]
     owned_paths:
@@ -253,7 +253,7 @@ tracks:
       - changelog-check
   - id: 17
     name: Community Adoption, Education & Ecosystem
-    status: In Review
+    status: Done
     owner: community-agent
     depends_on: ["14"]
     owned_paths:
@@ -362,7 +362,7 @@ tracks:
       - non-core-dependency-check
   - id: 25
     name: API Design Review & Compatibility Governance
-    status: In Review
+    status: Done
     owner: api-governance-agent
     depends_on: ["00", "02", "26"]
     owned_paths:
@@ -374,7 +374,7 @@ tracks:
       - compatibility-matrix
   - id: 26
     name: Interoperability Standards Review
-    status: In Review
+    status: Done
     owner: interop-agent
     depends_on: ["00"]
     owned_paths:
@@ -386,7 +386,7 @@ tracks:
       - adr-recommendations
   - id: 27
     name: Developer Experience & Reproducible Environments
-    status: In Review
+    status: Done
     owner: dx-agent
     depends_on: ["00"]
     owned_paths:
@@ -413,7 +413,7 @@ tracks:
       - no-critical-release-blockers
   - id: 29
     name: Wave Manager & Execution Gatekeeper
-    status: In Review
+    status: Done
     owner: wave-manager-agent
     depends_on: ["00"]
     owned_paths:
@@ -436,7 +436,7 @@ tracks:
       - version-drop-policy-check
   - id: 31
     name: Performance Regression Guard
-    status: In Review
+    status: Done
     owner: perf-regression-agent
     depends_on: ["12", "18"]
     owned_paths:
