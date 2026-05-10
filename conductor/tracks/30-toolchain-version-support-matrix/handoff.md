@@ -108,7 +108,7 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Track closeout evidence refreshed on 2026-05-10:
+Phase closeout evidence refreshed on 2026-05-10:
 
 - Track status advanced from `In Review` to `Done`.
 - Review command: `$conductor-review`.
@@ -122,7 +122,7 @@ Track closeout evidence refreshed on 2026-05-10:
   `98f04cae89fa434a8dcca05d9022db090561c7c7` after all checks passed.
 - commit SHA: `b6ceba2fa86ed412325764daef29231b7f6df17d`
 - pushed ref: `origin/main`
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pass after
+- `scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pass after
   closeout commit and push.
 - Next-phase decision: Track 30 is `Done`. Reopen only for a scoped support
   matrix change, runner coverage promotion, or version-drop policy update.
