@@ -548,17 +548,17 @@ entries:
     next_phase_decision: "Track 22 is Done; keep resumability and production runner claims bounded to the committed smoke scenario until broader runner coverage exists."
   - track_id: "23"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 23 advanced to In Review after the model-zoo and starter-kit inventory validator plus the Track 21-27 aggregate validation passed."
-    fixes_applied: false
+    review_result: "Track 23 advanced to Done after the model-zoo and starter-kit inventory validator plus the Track 21-27 aggregate validation passed and the discoverability bridge was reconciled."
+    fixes_applied: true
     validation_commands:
       - "powershell -NoProfile -ExecutionPolicy Bypass -File examples/model-zoo/validate-inventory.ps1"
       - "node scripts/validation/validate-tracks21-27.mjs"
-    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
-    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
+    git_status: "clean after reviewed-track closeout commit"
+    commit_sha: "577b52c7ffda39d55faae92c6c6b616205056169"
     pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
-    next_phase_decision: "Track 23 is In Review; keep runtime/tutorial claims bounded until formal review, commit/push evidence, and strict git closeout are recorded."
+    next_phase_decision: "Track 23 is Done; keep runtime/tutorial claims bounded to future DES API work and preserve the discoverability bridge."
   - track_id: "24"
     phase: "implementation-review"
     state: pending
