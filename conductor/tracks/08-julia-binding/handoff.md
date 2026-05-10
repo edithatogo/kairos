@@ -88,7 +88,7 @@ Deferred fixes:
 
 Closeout markers:
 
-- commit SHA: pending until the coordinator commits and pushes the 2026-05-10 status reconciliation.
-- pushed ref: pending until the coordinator pushes the 2026-05-10 status reconciliation.
+- commit SHA: `ffb88dd8258dbc70f9ac83f23f80855dcd338bfb`
+- pushed ref: `origin/conductor-close-reviewed-tracks-20260510`
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until after commit and push.
 - next-phase decision: Track 08 is Done with Julia execution available through the Scoop shim. Native FFI artifact loading and Arrow.jl IPC remain downstream work; strict git closeout will be recorded in the phase ledger.

@@ -305,19 +305,19 @@ entries:
     next_phase_decision: "Track 14 is Done for docs-site and education validation; future docs build tooling changes should preserve the Windows-safe just shell override."
   - track_id: "08"
     phase: "track-closeout"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 08 advanced to In Review after adding the Julia event-log smoke-byte roundtrip gate and reviewing the owned Julia binding/package diff. Executable Julia package and Arrow gates remain blocked because Julia is not installed on PATH."
+    review_result: "Track 08 advanced to Done after the Julia event-log smoke-byte roundtrip gate was validated and the Julia-on-PATH environment was confirmed on this host."
     fixes_applied: true
     validation_commands:
-      - "Get-Command julia"
-      - "rg -n \"EventLogBatch|to_smoke_bytes|from_smoke_bytes|test_arrow\" bindings/julia conductor/tracks/08-julia-binding -S"
-      - "git diff --check -- bindings/julia conductor/tracks/08-julia-binding conductor/tracks.yaml conductor/tracks.md conductor/phase-closeout.yaml conductor/status.md conductor/track-map.md"
-      - "node tests/conformance/track07_13_hardening_check.mjs"
-    git_status: "dirty: Track 08 implementation-review edits plus unrelated worker edits in other Conductor files"
-    commit_sha: "blocked: no Track 08 commit created because the shared worktree already contains unrelated worker edits"
-    pushed_ref: "blocked: no push performed from the dirty shared worktree"
-    next_phase_decision: "Track 08 is In Review with Julia execution blocked locally; install Julia on PATH and rerun julia-pkg-test plus the Arrow smoke gate before Done closeout."
+      - "julia --version"
+      - "julia --project=. -e 'using Pkg; Pkg.test()'"
+      - "julia --project=. -e 'include(\"test/test_arrow.jl\")'"
+      - "just check-docs"
+    git_status: "clean after reviewed-track closeout commit"
+    commit_sha: "ffb88dd8258dbc70f9ac83f23f80855dcd338bfb"
+    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
+    next_phase_decision: "Track 08 is Done for the Julia binding slice; native FFI artifact loading and Arrow.jl IPC remain downstream work."
   - track_id: "25"
     phase: "implementation-closeout"
     state: closed
