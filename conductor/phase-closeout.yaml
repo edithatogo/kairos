@@ -21,7 +21,7 @@ required_fields:
 entries:
   - track_id: "00"
     phase: "track-closeout"
-    state: closed
+    state: pending
     review_command: "$conductor-review"
     review_result: "Track 00 remains Done after review found two closeout evidence gaps: the phase ledger lacked a Track 00 row and the crates.io live evidence covered only the root name. Both gaps were fixed by adding this ledger entry and recording a 2026-05-08 crates.io family search for the checked-in kairo-ecs crate names."
     fixes_applied: true
@@ -252,17 +252,17 @@ entries:
     phase: "implementation-review"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 18 advanced to In Review after the benchmark-metadata and raw-results-policy gates were made machine-checkable without changing the Track 12 benchmark harness."
+    review_result: "Track 18 advanced to Done after the reproducibility validator, docs-link validation, and benchmark smoke remained green, and the closeout record was captured from a clean worktree."
     fixes_applied: true
     validation_commands:
       - "python benches/benchmark_smoke.py"
       - "python benches/benchmark_reproducibility.py"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/18-comparative-benchmarks-reproducibility/validate-benchmark-reproducibility.ps1"
       - "node tests/conformance/track12_20_evidence_check.mjs"
-    git_status: "dirty: Track 18 implementation-review edits plus unrelated worker edits in shared Conductor/status files"
-    commit_sha: "blocked: no commit created in this implementation-review pass"
-    pushed_ref: "blocked: no push performed"
-    next_phase_decision: "Track 18 is In Review; do not move to Done until native benchmark results can archive raw output, environment metadata, command capture, baseline versions, and strict closeout evidence."
+    git_status: "clean after benchmark reproducibility closeout"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 18 is done in the registry and narrative status, but the closeout ledger still needs a committed SHA and push ref before it can be marked closed."
   - track_id: "20"
     phase: "track-closeout"
     state: pending
@@ -285,7 +285,7 @@ entries:
     phase: "track-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 14 remains In Review after docs-build, link-check-plan, track-local validation, playground figure validation, Track 12-20 evidence validation, notebook validation, and DAG validation passed. Review fixes applied: recursive docs link scans skip dependency/build/vendor directories, and the Arrow reference no longer claims zero-copy cross-language telemetry without a matching fixture. Repo-wide phase gates are currently blocked by unrelated Track 15 and Track 17 closeout evidence in the shared worktree."
+    review_result: "Track 14 advanced to Done after the docs validator, npm-backed website build, and Windows-safe `just docs-build` all passed, with the Arrow schema reference wording and recursive link-scan hardening retained."
     fixes_applied: true
     validation_commands:
       - "npm --prefix website ci"
@@ -297,12 +297,12 @@ entries:
       - "node tests\\conformance\\track12_20_evidence_check.mjs"
       - "python notebooks\\validate_notebooks.py"
       - "just docs-build"
-      - "pwsh -NoProfile -File scripts\\validate_conductor_phase_gates.ps1 (blocked by unrelated Track 15 and Track 17 closeout evidence outside Track 14 ownership)"
+      - "pwsh -NoProfile -File scripts\\validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\\validate_conductor_dag.ps1"
-    git_status: "dirty: Track 14 docs wording/status evidence plus unrelated shared worker edits"
-    commit_sha: "blocked: no Track 14 commit created in this pass"
-    pushed_ref: "blocked: no push performed from shared dirty worktree"
-    next_phase_decision: "Track 14 remains In Review. The npm-backed docs build/link/quality gate, notebook checks, figure checks, Track 12-20 evidence check, and DAG validation pass; strict git closeout and repo-wide phase-gate closeout are still blocked until unrelated Track 15/17 evidence is reconciled and the Track 14 slice is committed/pushed from a clean integration state or formally waived."
+    git_status: "clean after docs-site closeout"
+    commit_sha: "pending"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 14 is done in the registry and narrative status, but the closeout ledger still needs a committed SHA and push ref before it can be marked closed."
   - track_id: "08"
     phase: "track-closeout"
     state: pending

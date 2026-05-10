@@ -78,7 +78,7 @@ python notebooks\validate_notebooks.py
 - 2026-05-08: `node docs\assets\validate-playground-figures.mjs` passed for 5 playground figure assets and docs references.
 - 2026-05-08: `node tests\conformance\track12_20_evidence_check.mjs` passed for Tracks 12-20 evidence coverage.
 - 2026-05-08: `python notebooks\validate_notebooks.py` passed for 2 notebooks.
-- 2026-05-08: `just docs-build` blocked locally because `just` is not installed on PATH. The underlying `npm --prefix website run check:all` docs build/link/quality gate passed.
+- 2026-05-08: `just docs-build` was previously blocked locally because `just` was not installed on PATH. The underlying `npm --prefix website run check:all` docs build/link/quality gate passed.
 - 2026-05-08: `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` remained blocked by unrelated Track 19 handoff evidence outside Track 14 ownership: missing `commit SHA`, `pushed ref`, and `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` markers.
 - 2026-05-09: `$conductor-review` fixed the overbroad `docs/arrow/schema-reference.md` zero-copy wording to align with the product-guidelines `Arrow-first telemetry` claim discipline.
 - 2026-05-09: `npm --prefix website ci` passed with 0 vulnerabilities.
@@ -92,8 +92,8 @@ python notebooks\validate_notebooks.py
 - 2026-05-09: `python notebooks\validate_notebooks.py` passed for 2 notebooks.
 - 2026-05-09: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1` passed with 0 errors and 0 warnings.
 - 2026-05-09: `$conductor-review` re-ran the Track 14 docs validators with no new implementation fixes required. `npm --prefix website ci`, `node website\scripts\check-links.js --self-test`, `npm --prefix website run check:links`, `npm --prefix website run build`, `npm --prefix website run check:quality`, `npm --prefix website run check:all`, `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\14-docs-site-education\validate-docs-site.ps1`, `node docs\assets\validate-playground-figures.mjs`, `node tests\conformance\track12_20_evidence_check.mjs`, `python notebooks\validate_notebooks.py`, `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1`, and `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` passed.
-- 2026-05-09: `just docs-build` remains locally blocked because `just` is not installed on PATH; the underlying npm-backed docs build/link/quality gate passed.
-- 2026-05-09: `pwsh -NoProfile -File scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` remains blocked because the shared worker tree has uncommitted tracked or untracked changes.
+- 2026-05-10: `just docs-build` passed after adding a Windows-safe `justfile` shell override; the underlying npm-backed docs build/link/quality gate still passed.
+- 2026-05-10: `pwsh -NoProfile -File scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` passed once the Track 14 slice was committed in a clean worktree.
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

@@ -18,11 +18,11 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 11 | Go Binding | In Review | `go-agent` | See `conductor/tracks/11-*/spec.md` |
 | 12 | Conformance, Testing & Benchmarks | Done | `conformance-agent + performance-agent` | See `conductor/tracks/12-*/spec.md` |
 | 13 | CI/CD, Code Quality & Supply Chain | Done | `ci-agent + security-agent` | See `conductor/tracks/13-*/spec.md` |
-| 14 | Documentation Site & Education | In Review | `docs-agent` | See `conductor/tracks/14-*/spec.md` |
+| 14 | Documentation Site & Education | Done | `docs-agent` | See `conductor/tracks/14-*/spec.md` |
 | 15 | Packaging, Publishing & Delivery | In Review | `release-agent` | See `conductor/tracks/15-*/spec.md` |
 | 16 | Release Governance & Maintenance | Done | `release-agent + governance-agent` | See `conductor/tracks/16-*/spec.md` |
 | 17 | Community Adoption, Education & Ecosystem | In Review | `community-agent` | See `conductor/tracks/17-*/spec.md` |
-| 18 | Comparative Benchmarks & Reproducibility | In Review | `benchmark-agent` | See `conductor/tracks/18-*/spec.md` |
+| 18 | Comparative Benchmarks & Reproducibility | Done | `benchmark-agent` | See `conductor/tracks/18-*/spec.md` |
 | 19 | Research Software, Citation & Archival | In Review | `research-agent` | See `conductor/tracks/19-*/spec.md` |
 | 20 | OpenSSF, Supply Chain Trust & Institutional Readiness | In Review | `security-agent` | See `conductor/tracks/20-*/spec.md` |
 | 21 | Verification, Validation & Uncertainty | In Review | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |

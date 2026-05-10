@@ -1,4 +1,5 @@
 set shell := ["bash", "-cu"]
+set windows-shell := ["pwsh", "-NoProfile", "-Command"]
 
 dev-setup:
     if command -v pwsh >/dev/null 2>&1 && case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) true;; *) false;; esac; then pwsh -NoProfile -File scripts/bootstrap.ps1 -SkipPython -SkipNpm; else bash scripts/bootstrap.sh; fi

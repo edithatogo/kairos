@@ -92,7 +92,8 @@ Latest local baseline validation on 2026-05-07; current targeted verification is
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_setup.ps1` passed, including `cargo test --workspace` via the installed `stable-x86_64-pc-windows-gnu` Rust toolchain on Windows.
 - `cargo fmt --all --check` passed.
 - `rustup run stable-x86_64-pc-windows-gnu cargo clippy --workspace --all-targets --all-features -- -D warnings` passed.
-- `npm --prefix website run check:all` passed: link check, docs build, and quality check completed. Track 14 was refreshed on 2026-05-09: the Arrow schema reference now avoids an unproven zero-copy cross-language claim, `npm --prefix website run check:all` rendered 110 docs pages, wrote 100 search-index entries, and indexed 23 crates / 459 public API items. The `just docs-build` wrapper remains locally blocked because `just` is not installed on PATH; the underlying website build gate passed.
+- `npm --prefix website run check:all` passed: link check, docs build, and quality check completed. Track 14 was refreshed on 2026-05-10: the Arrow schema reference now avoids an unproven zero-copy cross-language claim, `npm --prefix website run check:all` rendered 110 docs pages, wrote 100 search-index entries, and indexed 23 crates / 459 public API items. The `just docs-build` wrapper now passes on Windows after the `justfile` shell override; the underlying website build gate still passes.
+- Track 14 advanced from `In Review` to `Done` on 2026-05-10 after the docs validator, npm-backed website build, and Windows-safe `just docs-build` all passed on this host.
 - `npm --prefix bindings\typescript run typecheck`, `npm --prefix bindings\typescript test`, and `npm --prefix bindings\typescript run test:browser` passed for Track 09 on 2026-05-08; the browser smoke required approval to launch headless Chromium.
 - `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passed for Track 09 on 2026-05-08 with 3 unit tests and 0 doctests; optional `wasm-export` validation remains future toolchain work.
 - `node tests\conformance\conformance-check.mjs`, `node tests\conformance\runner.mjs`, `node tests\conformance\runner-self-test.mjs`, `node tests\conformance\chaos-check.mjs`, `node tests\conformance\track07_13_hardening_check.mjs`, and `node tests\conformance\track12_20_evidence_check.mjs` passed.
@@ -211,6 +212,8 @@ Track 18 advanced from `In Progress` to `In Review` after hardening the benchmar
 - `docs/benchmarks/README.md`, `docs/benchmarks/benchmark-policy.md`, and `docs/benchmarks/reproduce-comparison.md` now point readers to the policy manifest and keep metadata gates separate from publishable performance evidence.
 - No Track 12 benchmark harness changes were made; Track 18 continues to consume the existing metadata-only smoke harness.
 
+Track 18 advanced from `In Review` to `Done` on 2026-05-10 after the reproducibility validator, docs-link validation, and benchmark smoke remained green and the public reproduction page stayed reachable from the docs manifest.
+
 ## Track 19 implementation review (2026-05-08)
 
 Track 19 advanced from `In Progress` to `In Review` after the citation metadata and archival-plan gates passed locally:
@@ -218,7 +221,7 @@ Track 19 advanced from `In Progress` to `In Review` after the citation metadata 
 - `codemeta.json` now uses the CodeMeta 3.0 context required by `conductor/metadata-check.md`, and the Track 19 citation/archive validator enforces that context.
 - The citation target remains `0.4.0-alpha.1`, repository code remains `https://github.com/edithatogo/kairos`, and the archive status remains explicitly `pre-release metadata seed, not yet DOI-minted`.
 - Focused validation passed: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1`, `node tests/conformance/track12_20_evidence_check.mjs`, `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`, and field-presence checks for `CITATION.cff`, `.zenodo.json`, `codemeta.json`, and `paper/` metadata.
-- Local schema/documentation runner blockers remain: `cffconvert`, `codemeta`, and `just` are not installed, so schema-CLI validation and `just check-docs` / `just docs-build` were not run in this pass.
+- Local schema/documentation runner blockers remain: `cffconvert` and `codemeta` are not installed, so schema-CLI validation remains a follow-up, but `just check-docs` / `just docs-build` now run on this host.
 - Track 19 is not `Done`: strict git closeout and push evidence remain blocked by unrelated worker edits already present in shared Conductor files and Track 09.
 
 ## Track 15 implementation review (2026-05-09)
