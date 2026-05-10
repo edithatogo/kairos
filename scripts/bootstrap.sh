@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 rustup component add rustfmt clippy || true
+for tool in just; do
+  cargo install "$tool" --locked || true
+done
 for spec in \
-  "just@1.42.4" \
   "cargo-nextest@0.9.133" \
   "cargo-deny@0.18.9" \
   "cargo-audit@0.22.1" \

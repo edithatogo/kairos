@@ -225,7 +225,9 @@ function validateCompatibilityAndStandardsBoundaries() {
 
 function validateDxBoundary() {
   requireTerms("conductor/tracks/27-developer-experience-reproducible-environments/test-matrix.md", [
-    "`just` is not on `PATH`",
+    "Pass outside sandbox",
+    "Win32 error 5",
+    "just dev-validate",
     "node scripts/dx/validate-docs-workflow.mjs",
     "node scripts/validation/validate-tracks21-27.mjs",
   ]);

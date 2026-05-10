@@ -17,6 +17,26 @@ function Assert-Contains {
     }
 }
 
+function Assert-RenovatePolicy {
+    $config = Get-Content -LiteralPath 'renovate.json' -Raw | ConvertFrom-Json
+
+    if (-not ($config.extends -contains 'config:recommended')) {
+        throw 'Renovate config must extend config:recommended'
+    }
+    if (-not ($config.extends -contains ':dependencyDashboard')) {
+        throw 'Renovate config must enable the dependency dashboard preset'
+    }
+    if ($config.dependencyDashboard -ne $true) {
+        throw 'Renovate dependencyDashboard must be enabled'
+    }
+    if ($config.vulnerabilityAlerts.enabled -ne $true) {
+        throw 'Renovate vulnerabilityAlerts.enabled must be true'
+    }
+    if (-not ($config.vulnerabilityAlerts.labels -contains 'security')) {
+        throw 'Renovate vulnerability alerts must apply the security label'
+    }
+}
+
 foreach ($path in @(
     'SECURITY.md',
     'CODEOWNERS',
@@ -51,6 +71,7 @@ Assert-Contains '.github/CODEOWNERS' '/.github/' 'workflow ownership'
 Assert-Contains 'docs/release/supply-chain-verification.md' 'production_publish_enabled' 'dry-run publish boundary'
 Assert-Contains 'conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md' 'Temporary operational exception' 'exception process'
 Assert-Contains 'conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md' 'Release trust checklist' 'release trust checklist'
+Assert-RenovatePolicy
 
 Write-Host "track20_status=ok"
 Write-Host 'supply_chain_gate=offline-trust-evidence'

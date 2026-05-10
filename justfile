@@ -1,9 +1,7 @@
 set shell := ["bash", "-cu"]
 
 dev-setup:
-    rustup component add clippy rustfmt
-    cargo install cargo-nextest --locked || true
-    cargo install cargo-vet --locked || true
+    pwsh -NoProfile -File scripts/bootstrap.ps1 -SkipPython -SkipNpm
 
 dev-validate:
     rustc --version

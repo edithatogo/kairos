@@ -18,9 +18,9 @@
 
 ## Latest focused validation
 
-Last local evidence recorded on 2026-05-08:
+Last local evidence recorded on 2026-05-09:
 
-- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1` -> pass; reported `version=0.4.0-alpha.1`, `repository=https://github.com/edithatogo/kairos`, and `archive_status=pre-release metadata seed, not yet DOI-minted`.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1` -> pass; reported `version=0.4.0-alpha.1`, `repository=https://github.com/edithatogo/kairos`, and `archive_status=pre-release metadata seed, not yet DOI-minted`. The validator now normalizes SPDX license URLs before checking `codemeta.json` license alignment with `CITATION.cff`.
 - `node tests/conformance/track12_20_evidence_check.mjs` -> pass for Track 19 inside the aggregate Track 12-20 evidence gate.
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` -> pass.
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` -> pass.

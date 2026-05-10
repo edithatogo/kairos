@@ -1,6 +1,6 @@
 # KairoECS Conductor Status
 
-Last verified: 2026-05-09
+Last verified: 2026-05-10
 
 ## Setup state
 
@@ -261,7 +261,7 @@ Track 26 advanced from `Spec Approved` to `In Review` after the standards-mappin
 - Focused validation passed for the Track 26 standards validator and the Track 21-27 evidence-boundary guard. The combined Track 21-27 validator passed Track 26 but failed in Track 27's docs workflow because the link checker scanned `bindings/typescript/node_modules`.
 - Track 26 is not `Done`: strict git closeout and push evidence remain blocked by pre-existing unrelated dirty worktree changes outside Track 26 ownership.
 
-## Track 27 implementation review (2026-05-08)
+## Track 27 implementation review (2026-05-08, refreshed 2026-05-10)
 
 Track 27 advanced to `In Review` after the developer-experience bootstrap and toolchain-docs gates were hardened and reviewed:
 
@@ -269,7 +269,11 @@ Track 27 advanced to `In Review` after the developer-experience bootstrap and to
 - `scripts/dx/validate-toolchain-docs.mjs` now checks `.devcontainer/devcontainer.json`, `devbox.json`, `mise.toml`, `justfile`, and bootstrap scripts for the Track 27 toolchain contract.
 - `just toolchain-docs` is wired to the new validator, and `scripts/dx/validate-docs-workflow.mjs` now asserts that recipe exists.
 - Focused validation passed: `pwsh -NoProfile -File scripts/bootstrap.ps1 -CheckOnly`, `node scripts/dx/validate-toolchain-docs.mjs`, `node scripts/dx/validate-docs-workflow.mjs`, `node scripts/validation/validate-track21-27-evidence-boundaries.mjs`, and `node scripts/validation/validate-tracks21-27.mjs`.
-- Direct `just` recipe execution remains blocked in this shell because `just` is not on `PATH`. `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and non-strict `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` passed; strict clean-tree closeout remains blocked by the shared dirty worktree.
+- Direct `just` recipe execution was initially blocked in this shell because `just` was not on `PATH`. `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and non-strict `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` passed; strict clean-tree closeout remains blocked by the shared dirty worktree.
+- 2026-05-09 follow-up fixed the Unix bootstrap/toolchain-docs drift: `scripts/bootstrap.sh` now has the explicit `for tool in just` install guard required by `node scripts/dx/validate-toolchain-docs.mjs`. The toolchain-docs validator and `node scripts/dx/validate-docs-workflow.mjs` both passed after the patch.
+- 2026-05-09 follow-up installed `just` 1.50.0 through Scoop. `just --list`, `just toolchain-docs`, and `just docs-smoke` now pass outside the sandbox; sandboxed `just` runs can still fail in Git Bash before invoking the recipe body with Win32 access-denied errors.
+- `just docs-build` and `just validate-conductor` also pass outside the sandbox. `just validate-conductor` reran Conductor setup validation, phase gates, non-strict git closeout, and the Rust workspace tests invoked by the setup validator.
+- 2026-05-10 follow-up proved the remaining direct Track 27 recipes outside the sandbox: `just docs-bootstrap`, `just validate-tracks21-27`, `just dev-setup`, and `just dev-validate` all pass. `just dev-setup` now routes through `scripts/bootstrap.ps1 -SkipPython -SkipNpm`; the Windows bootstrap prefers `rustup run stable-x86_64-pc-windows-gnu cargo install` for optional cargo tools when that toolchain is available, avoiding the Git `usr\bin\link.exe` shadowing issue seen with the default MSVC cargo install path.
 
 ## Track 08 implementation review (2026-05-08)
 
@@ -280,7 +284,7 @@ Track 08 advanced from `Planned` to `In Review` after a focused Julia binding im
 - `packaging/julia/README.md` records that registry publication, package-server automation, native artifact packaging, and Arrow.jl IPC remain deferred to Track 15 and the Track 02 artifact handoff.
 - Focused static validation passed: `rg -n "EventLogBatch|to_smoke_bytes|from_smoke_bytes|test_arrow" bindings/julia packaging/julia conductor/tracks/08-julia-binding -S` and `git diff --check -- bindings/julia packaging/julia conductor/tracks/08-julia-binding conductor/tracks.yaml conductor/tracks.md conductor/phase-closeout.yaml conductor/status.md conductor/track-map.md`.
 - `node tests/conformance/track07_13_hardening_check.mjs` passed earlier on 2026-05-08, then failed in the final rerun on an unrelated Track 07 `packaging/r` handoff claim outside Track 08 ownership.
-- Executable Julia gates remain locally blocked: `Get-Command julia` failed on 2026-05-08 because Julia is not on PATH, so `julia-pkg-test`, environment resolution, precompile smoke, conformance bridge execution, and `test/test_arrow.jl` execution could not be run.
+- 2026-05-09 follow-up installed Julia 1.12.2 through Scoop. `julia --project=. -e 'using Pkg; Pkg.test()'` and `julia --project=. -e 'include("test/test_arrow.jl")'` now pass from `bindings/julia/`. Native FFI artifact loading and Arrow.jl IPC remain deferred to downstream package/artifact work.
 
 ## Track 11 implementation review (2026-05-08)
 

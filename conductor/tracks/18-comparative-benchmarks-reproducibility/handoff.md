@@ -91,6 +91,17 @@ the expected MSVC build-tools linker rather than Git's Unix `link.exe`.
 Added a track-local offline validator so the Track 18 evidence boundary can be
 checked even when native benchmark linking is unavailable.
 
+## Review closeout update on 2026-05-09
+
+`$conductor-review` identified one remaining documentation-policy gap inside
+the Track 18 surface: the public benchmark docs had replay commands but did not
+state the maturity label or expected output required by the docs style guide.
+The accepted fix added preview metadata-gate maturity labels and expected JSON
+output notes to `docs/benchmarks/README.md` and
+`docs/benchmarks/reproduce-comparison.md`, then wired those checks into
+`benches/benchmark_reproducibility.py`,
+`validate-benchmark-reproducibility.ps1`, and this track's test matrix.
+
 ## Review update on 2026-05-08
 
 `$conductor-review` found one in-scope gate gap before closeout: the

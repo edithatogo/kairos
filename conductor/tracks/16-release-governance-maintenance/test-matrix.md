@@ -80,6 +80,23 @@ pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1
 The refresh advances Track 16 to `In Review` because the Track 16 validator and
 global phase-gate validator pass locally and the earlier Track 19 phase-gate
 blocker is no longer present.
+
+## 2026-05-09 review evidence
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/16-release-governance-maintenance/validate-release-governance.ps1
+node tests/conformance/track12_20_evidence_check.mjs
+pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1
+```
+
+All three commands passed in the review pass.
+
+The local changelog-policy diff check against the shared worktree currently
+fails because `bindings/julia/src/KairoECS.jl` and
+`bindings/julia/test/runtests.jl` are modified without a matching
+`CHANGELOG.md` diff. That is a cross-track public-surface blocker outside
+Track 16 ownership; the Track 16 release-governance validator itself remains
+green.
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

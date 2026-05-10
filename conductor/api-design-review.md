@@ -13,9 +13,9 @@ machine-readable root list.
 |---|---|---|
 | Rust crate APIs | `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-state`, `crates/kairo-ecs-rng` | Name the exact crate root in the compatibility note, ADR, or migration note. |
 | Host-language package APIs | `bindings/python`, `bindings/r`, `bindings/julia`, `bindings/typescript`, `bindings/csharp`, `bindings/go` | Name the exact binding root in the compatibility note, ADR, or migration note. |
-| C ABI surface | `conductor/contracts/ffi-contract.md` and the future `kairo-ecs-ffi` release surface | Treat as release-gated until the ABI contract and package root exist. |
-| Arrow telemetry schemas | `conductor/contracts/arrow-schema-contract.md` and the future Arrow package surface | Treat schema changes as compatibility changes even when the Rust API is unchanged. |
-| Scenario / conformance surfaces | `conductor/contracts/conformance-contract.md` and `conformance/fixtures/manifest.json` | Version fixture outputs and note any change that alters deterministic expectations. |
+| C ABI surface | `include/kairo_ecs.h` | Treat signature, symbol, ownership, allocation, status-code, and error-buffer changes as release-gated. |
+| Arrow telemetry schemas | `schemas/arrow/event_log_v1.schema.json` | Treat field, metadata, nullability, meaning, and schema-version changes as compatibility changes even when the Rust API is unchanged. |
+| Scenario / conformance surfaces | `conformance/fixtures` | Version fixture outputs and note any change that alters deterministic expectations. |
 
 ## Compatibility matrix
 

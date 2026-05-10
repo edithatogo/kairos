@@ -63,7 +63,7 @@ Use this before every alpha, beta, release candidate, and stable release.
 ### OpenSSF and supply-chain readiness
 
 - [ ] `SECURITY.md`, `CODEOWNERS`, and `.github/CODEOWNERS` exist.
-- [ ] Dependency automation exists through `renovate.json`.
+- [ ] Dependency automation exists through `renovate.json` with the dependency dashboard and vulnerability alerts enabled.
 - [ ] `.github/workflows/scorecard.yml` exists and runs OpenSSF Scorecard on `main`.
 - [ ] `.github/workflows/dependency-review.yml` exists and includes `fail-on-severity: high`.
 - [ ] `.github/workflows/actions-security.yml` and `.github/workflows/workflow-security.yml` exist for workflow hardening.

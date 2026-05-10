@@ -45,14 +45,15 @@ The package exposes pure-Julia deterministic event ordering, an event-log schema
 - `node tests/conformance/track07_13_hardening_check.mjs` passed on 2026-05-07.
 - `git diff --check -- bindings/julia conductor/tracks/08-julia-binding` passed on 2026-05-07.
 - `rg -n "ConformanceFixture|binding_fixture_ids|ready_fixture_ids|conformance_report|fixture_status" bindings/julia -S` confirmed the fixture bridge API and test/docs references on 2026-05-07.
-- `Get-Command julia` failed on 2026-05-06 because Julia is not on PATH.
-- `Get-Command julia` still failed on 2026-05-07 because Julia is not on PATH.
-- `Get-Command julia` still failed on 2026-05-08 because Julia is not on PATH.
+- `Get-Command julia` failed on 2026-05-06 because Julia was not on PATH.
+- `Get-Command julia` still failed on 2026-05-07 because Julia was not on PATH.
+- `Get-Command julia` still failed on 2026-05-08 because Julia was not on PATH.
 - `rg -n "EventLogBatch|to_smoke_bytes|from_smoke_bytes|test_arrow" bindings/julia conductor/tracks/08-julia-binding -S` passed on 2026-05-08.
 - `git diff --check -- bindings/julia conductor/tracks/08-julia-binding conductor/tracks.yaml conductor/tracks.md conductor/phase-closeout.yaml conductor/status.md conductor/track-map.md` passed on 2026-05-08.
 - `node tests/conformance/track07_13_hardening_check.mjs` passed on 2026-05-08 after removing out-of-scope package-publication path claims from binding-track handoff and matrix files.
-- `julia --project=. -e 'using Pkg; Pkg.test()'` from `bindings/julia/` is blocked locally until Julia is available.
-- `julia --project=. -e 'include("test/test_arrow.jl")'` from `bindings/julia/` is blocked locally until Julia is available.
+- `scoop install just julia` installed Julia 1.12.2 on 2026-05-09; `julia --version` returned `julia version 1.12.2`.
+- `julia --project=. -e 'include("test/test_arrow.jl")'` from `bindings/julia/` passed on 2026-05-09 with 3 passing event-log smoke payload roundtrip assertions.
+- `julia --project=. -e 'using Pkg; Pkg.test()'` from `bindings/julia/` passed on 2026-05-09 with package tests, deterministic ordering, Arrow smoke roundtrip, schema facade, native FFI status, conformance fixture bridge, and event-log smoke payload tests all green.
 
 ## Known risks
 
@@ -80,15 +81,14 @@ Accepted fixes applied in this pass:
 - Added `bindings/julia/test/test_arrow.jl` and included it in `runtests.jl`.
 - Updated the Julia binding and packaging notes to describe the local-only roundtrip boundary.
 
-Blocked or deferred fixes:
+Deferred fixes:
 
-- `julia-pkg-test`, environment resolution, precompile smoke, conformance bridge execution, and Arrow roundtrip execution remain blocked because `Get-Command julia` fails on this host.
 - Native FFI artifact loading remains intentionally deferred until Track 02 provides a safe Julia artifact layout.
-- Arrow.jl IPC remains deferred until Julia tooling is available and the dependency can be resolved in the package lane.
+- Arrow.jl IPC remains deferred until the package lane intentionally adds that dependency; the current Track 08 gate is the dependency-light smoke-byte roundtrip.
 
 Closeout markers:
 
 - commit SHA: blocked because no Track 08 commit was created in the dirty shared worktree.
 - pushed ref: blocked because no push was performed from the dirty shared worktree.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: not run because the shared worktree contains unrelated worker edits and this pass did not create a commit.
-- next-phase decision: Track 08 is In Review with Julia execution blocked locally; install Julia on PATH and rerun `julia-pkg-test` plus `test/test_arrow.jl` before Done closeout.
+- next-phase decision: Track 08 is In Review with Julia execution now available through the Scoop shim. Native FFI artifact loading and Arrow.jl IPC remain downstream work; strict commit/push closeout is still required before Done closeout.

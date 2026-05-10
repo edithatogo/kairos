@@ -4,11 +4,11 @@
 
 | Gate | Command | Status | Evidence |
 |---|---|---|---|
-| Package tests | `julia --project=. -e 'using Pkg; Pkg.test()'` from `bindings/julia/` | blocked locally | `Get-Command julia` failed on 2026-05-06 because Julia is not on PATH. Tests are present in `bindings/julia/test/runtests.jl`. |
-| Environment resolution | `julia --project=. -e 'using Pkg; Pkg.instantiate()'` from `bindings/julia/` | blocked locally | `Get-Command julia` failed on 2026-05-06. Package has no registry dependencies in this slice. |
-| Precompile smoke | `julia --project=. -e 'using Pkg; Pkg.precompile()'` from `bindings/julia/` | blocked locally | `Get-Command julia` failed on 2026-05-06. |
-| Conformance bridge | `julia --project=. -e 'include("test/runtests.jl")'` from `bindings/julia/` | blocked locally | Uses local deterministic ordering and schema facade checks until Track 12 fixture runner is wired; local execution requires Julia. |
-| Arrow roundtrip smoke | `julia --project=. -e 'include("test/test_arrow.jl")'` from `bindings/julia/` | blocked locally | `Get-Command julia` failed on 2026-05-08. `test/test_arrow.jl` now covers the dependency-light event-log smoke payload and Track 04 schema facade until Arrow.jl IPC can run locally. |
+| Package tests | `julia --project=. -e 'using Pkg; Pkg.test()'` from `bindings/julia/` | pass | Passed on 2026-05-09 after `scoop install julia`; Julia 1.12.2 ran package tests, deterministic ordering, Arrow smoke roundtrip, schema facade, native FFI status, conformance fixture bridge, and event-log smoke payload tests. |
+| Environment resolution | `julia --project=. -e 'using Pkg; Pkg.instantiate()'` from `bindings/julia/` | pass | `Pkg.test()` instantiated the package test environment on 2026-05-09 using the repo package with stdlib `Test`; no registry package dependencies were added to `Project.toml`. |
+| Precompile smoke | `julia --project=. -e 'using Pkg; Pkg.precompile()'` from `bindings/julia/` | pass | `Pkg.test()` precompiled the package/test dependencies on 2026-05-09 before running tests. |
+| Conformance bridge | `julia --project=. -e 'include("test/runtests.jl")'` from `bindings/julia/` | pass | Covered by `Pkg.test()` on 2026-05-09; conformance fixture bridge reported 12 passing assertions. |
+| Arrow roundtrip smoke | `julia --project=. -e 'include("test/test_arrow.jl")'` from `bindings/julia/` | pass | Passed on 2026-05-09 with 3 passing event-log smoke payload roundtrip assertions. |
 
 ## Implemented coverage
 
@@ -24,7 +24,12 @@
 - `git diff --check -- bindings/julia conductor/tracks/08-julia-binding conductor/tracks.yaml conductor/tracks.md conductor/phase-closeout.yaml conductor/status.md conductor/track-map.md` passed on 2026-05-08 and verifies the owned Julia binding/doc/status diff has no whitespace errors.
 - `rg -n "EventLogBatch|to_smoke_bytes|from_smoke_bytes|test_arrow" bindings/julia conductor/tracks/08-julia-binding -S` passed on 2026-05-08 and verifies the roundtrip bridge is exported and covered.
 - `rg -n "ConformanceFixture|binding_fixture_ids|ready_fixture_ids|conformance_report|fixture_status" bindings/julia -S` verifies the fixture bridge is exported and covered.
-- `julia --project=. -e 'using Pkg; Pkg.test()'` remains the package smoke command once Julia is on `PATH`.
+- `node tests/conformance/track07_13_hardening_check.mjs` passed on 2026-05-09 for binding-track publication-boundary checks.
+- `git diff --check -- bindings/julia conductor/tracks/08-julia-binding` passed on 2026-05-09.
+- `rg -n "EventLogBatch|to_smoke_bytes|from_smoke_bytes|test_arrow|ConformanceFixture|binding_fixture_ids|ready_fixture_ids|conformance_report|fixture_status" bindings/julia conductor/tracks/08-julia-binding -S` passed on 2026-05-09 and verifies the roundtrip and fixture bridge APIs remain exported and covered.
+- `julia --version` returned `julia version 1.12.2` on 2026-05-09 after installing Julia through Scoop.
+- `julia --project=. -e 'using Pkg; Pkg.test()'` passed on 2026-05-09 from `bindings/julia/`.
+- `julia --project=. -e 'include("test/test_arrow.jl")'` passed on 2026-05-09 from `bindings/julia/`.
 
 ## Future-surface controls
 

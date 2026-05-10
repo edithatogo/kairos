@@ -97,11 +97,13 @@ def load_inventory(path: Path) -> dict:
     actual_order = [step.get("order") for step in steps]
     if actual_order != expected_order:
         raise SystemExit("local_dry_run_sequence steps must be ordered from 1 without gaps")
+    step_commands = []
     for step in steps:
         if not isinstance(step, dict):
             raise SystemExit("local_dry_run_sequence step must be an object")
         require_string(step.get("name"), "local_dry_run_sequence.step.name")
         command = require_string(step.get("command"), "local_dry_run_sequence.step.command")
+        step_commands.append(command)
         if FORBIDDEN_DRY_RUN_TEXT.search(command):
             raise SystemExit(f"local dry-run step is not offline/non-publishing: {command}")
         require_bool(step.get("network_required"), "local_dry_run_sequence.step.network_required")
@@ -110,6 +112,8 @@ def load_inventory(path: Path) -> dict:
         writes = require_list(step.get("writes"), "local_dry_run_sequence.step.writes")
         for write in writes:
             require_string(write, "local_dry_run_sequence.step.write")
+    if "python packaging/scripts/build_release_manifest.py --verify-existing" not in step_commands:
+        raise SystemExit("local_dry_run_sequence must verify generated release evidence")
     surfaces = data.get("surfaces")
     if not isinstance(surfaces, list) or not surfaces:
         raise SystemExit("release package inventory has no surfaces")

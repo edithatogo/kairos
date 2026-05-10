@@ -178,6 +178,17 @@ end
     ]
 
     @test binding_fixture_ids(tuple_fixtures) == ["zero_delay_guard_v1"]
+
+    minimal_tuple_fixtures = [
+        (
+            id = "minimal_fixture_v1",
+            status = "ready",
+            kind = "scheduler",
+            consumers = ["08"],
+        ),
+    ]
+
+    @test ready_fixture_ids(minimal_tuple_fixtures) == ["minimal_fixture_v1"]
 end
 
 include("test_arrow.jl")

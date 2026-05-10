@@ -49,7 +49,8 @@ rg -n "validate-compatibility-pack|api-review-template|compatibility-matrix|prot
 | `node scripts/validation/validate-track21-27-evidence-boundaries.mjs` | pass | Cross-track evidence boundaries passed, including compatibility and standards release boundaries. |
 | `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | pass | `0 error(s), 0 warning(s)`; Conductor phase gate validation passed. |
 | `pwsh -NoProfile -File scripts/validate_track_no_skip_claims.ps1` | pass | Track no-skip claim validation passed. |
-| `node scripts/validation/validate-tracks21-27.mjs` | blocked outside Track 25 | Tracks 21-26 and cross-track evidence boundaries passed; Track 27 failed because docs link-check scans broken links in `bindings/typescript/node_modules`. |
+| `node scripts/validation/validate-tracks21-27.mjs` | pass | Tracks 21-27 focused validation passed, including Track 25 compatibility policy pack and cross-track evidence boundaries. |
+| `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | fail | Closeout gate failed with `Working tree has uncommitted tracked or untracked changes; closeout requires a clean tree`. |
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

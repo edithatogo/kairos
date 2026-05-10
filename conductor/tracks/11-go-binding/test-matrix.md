@@ -42,6 +42,7 @@ go mod tidy
 - The sandboxed Go cache paths under `%LOCALAPPDATA%`, `C:\tmp`, and repo-local `target\go-cache` were denied in this run; `go test ./...` and `go vet ./...` passed after rerunning with approved normal Windows cache access.
 - 2026-05-07 Track 11 pass: `go test ./...`, `go vet ./...`, `go mod tidy`, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1` passed after restoring the pure-Go preview facade and executable fixture bridge.
 - 2026-05-08 Track 11 pass: `go test ./...` initially hit the Windows Go build-cache sandbox denial, then passed with normal Windows cache access. `go vet ./...`, `go mod tidy`, `CGO_ENABLED=1 go test -run TestNativeHeaderSmokeCompilesStableCABI ./...`, and `CGO_ENABLED=0 go test ./...` passed.
+- 2026-05-09 Track 11 review: `go test ./...`, `go vet ./...`, `go mod tidy`, `go test -run TestConformance ./...`, `CGO_ENABLED=1 go test -run TestNativeHeaderSmokeCompilesStableCABI ./...`, `CGO_ENABLED=0 go test ./...`, and the cross-binding validator passed from the Track 11 scope. `staticcheck` and `golangci-lint` were not installed on PATH. `go test -race ./...` remains non-required for this preview slice and failed in the local Go toolchain with `runtime/race: package testmain: cannot find package`.
 - Native runtime calls remain blocked because this repo does not yet package a linkable `kairo-ecs-ffi` library for the Go module; the cgo gate is therefore a header-smoke boundary, not a runtime FFI execution claim.
 ## Phase closeout gate
 

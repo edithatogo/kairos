@@ -1,6 +1,6 @@
 # Handoff: Track 26 Interoperability Standards Review
 
-Last updated: 2026-05-08
+Last updated: 2026-05-09
 
 ## Summary
 
@@ -74,6 +74,17 @@ Add conformance assertions before upgrading any partial or deferred standard to 
 
 Downstream docs should reuse the exact Track 26 labels for Arrow, FMI/FMU, OpenTelemetry, SBML, CellML, and ecosystem comparison claims.
 ## Phase closeout evidence
+
+2026-05-09 dependency-blocker review pass:
+
+- `$conductor-review` findings: no blocking Track 26 findings. The standards review pages keep the eight required standards explicit, preserve Partial/Deferred/Unsupported claim boundaries, and name evidence plus missing behavior before stronger release language is allowed.
+- Accepted fixes: refreshed this handoff and `test-matrix.md` evidence after rerunning the focused gates.
+- Deferred or blocked fixes: strict git closeout remains blocked by unrelated dirty worktree changes outside Track 26 ownership; `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` fails until those changes are committed, stashed, or otherwise isolated.
+- Validation commands: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/26-interoperability-standards-review/validate-standards-review.ps1` passed; `node scripts/validation/validate-track21-27-evidence-boundaries.mjs` passed; `node scripts/validation/validate-tracks21-27.mjs` passed for Tracks 21-27, including Track 26 and Track 27 docs workflow; `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` passed; `rg -n "DEVS|FMI/FMU|SBML|CellML|OpenTelemetry|Arrow C Data Interface|Arrow IPC|Parquet|standards-mapping|adr-recommendations|Supported|Partial|Deferred|Unsupported|ADR-026" docs/interoperability conductor/interoperability-standards.md conductor/tracks/26-interoperability-standards-review` passed; `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` failed on dirty working tree.
+- Git cleanup state: dirty before and after this slice due to unrelated worker edits plus this evidence refresh; Track 26-owned diffs are limited to this handoff and `test-matrix.md`.
+- Commit SHA: pending.
+- Pushed ref: pending.
+- Next-phase decision: Track 26 is dependency-review clean and can remain `In Review`; `Done` is blocked until strict git closeout has a clean committed/pushed slice.
 
 2026-05-08 implementation/review pass:
 

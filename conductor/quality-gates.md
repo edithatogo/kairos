@@ -293,6 +293,7 @@ test -f SECURITY.md
 test -f CODEOWNERS
 test -f .github/CODEOWNERS
 test -f renovate.json
+rg -n "config:recommended|dependencyDashboard|vulnerabilityAlerts|security" renovate.json
 test -f .github/workflows/actions-security.yml
 test -f .github/workflows/workflow-security.yml
 test -f .github/workflows/secret-scan.yml
@@ -318,7 +319,7 @@ test -f .github/workflows/sbom-attestations.yml
 test -f .github/workflows/release-attestations.yml
 rg -n "fail-on-severity:\s*high" .github/workflows/dependency-review.yml
 rg -n "attestations:\s*write|actions/attest|sbom.spdx.json|SHA256SUMS" .github/workflows/sbom-attestations.yml .github/workflows/release-attestations.yml
-rg -n "RELEASE.txt|release-artifact-manifest.json|actions/upload-artifact@v4" .github/workflows/sbom-attestations.yml
+rg -n "RELEASE.txt|release-artifact-manifest.json|actions/upload-artifact@[a-f0-9]{40}" .github/workflows/sbom-attestations.yml
 rg -n "business days|temporary operational exceptions|affected release stage" SECURITY.md
 rg -n "OpenSSF and supply-chain readiness|scorecard.yml|dependency-review.yml|sbom-attestations.yml|release-attestations.yml|allowed-failure|exception|waiver" conductor/delivery-readiness-checklist.md conductor/tracks/20-openssf-supply-chain-institutional-trust/supply-chain-plan.md
 ```

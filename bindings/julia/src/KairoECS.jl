@@ -267,15 +267,19 @@ function _fixture_from_record(record::ConformanceFixture)
     return record
 end
 
+function _record_property(record, name::Symbol, default)
+    return hasproperty(record, name) ? getproperty(record, name) : default
+end
+
 function _fixture_from_record(record)
-    source = getproperty(record, :source)
+    source = _record_property(record, :source, nothing)
     return ConformanceFixture(
         id = string(getproperty(record, :id)),
         status = string(getproperty(record, :status)),
         kind = string(getproperty(record, :kind)),
         consumers = _string_vector(getproperty(record, :consumers)),
         source = source === nothing ? nothing : string(source),
-        assertions = _string_vector(getproperty(record, :assertions)),
+        assertions = _string_vector(_record_property(record, :assertions, String[])),
     )
 end
 

@@ -79,6 +79,18 @@ checked-in docs and the central gate registry.
 Expand the changelog-policy workflow matcher when new public release surfaces are added, and keep release workflow dry-run posture aligned with Track 15 packaging gates.
 ## Phase closeout evidence
 
+Review pass on 2026-05-09:
+
+- `$conductor-review` findings: no blocking Track 16 implementation findings in the owned release-governance docs, changelog policy, validator, or maintenance governance surface.
+- Accepted fixes: updated Track 16 evidence to record the current shared-worktree changelog-policy blocker.
+- Deferred or blocked fixes: the local changelog-policy diff check fails because `bindings/julia/src/KairoECS.jl` and `bindings/julia/test/runtests.jl` are modified without a matching `CHANGELOG.md` diff. Those files are outside Track 16 ownership, so the fix is deferred to the Julia-binding owner or coordinating closeout.
+- Validation commands:
+  - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\16-release-governance-maintenance\validate-release-governance.ps1` (passed)
+  - `node tests\conformance\track12_20_evidence_check.mjs` (passed)
+  - `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1` (passed)
+  - local changelog-policy diff check from `docs/release/changelog-policy.md` (failed on the Julia binding public-surface diff)
+- Done eligibility: Track 16 is review-ready on its owned surfaces, but strict shared-worktree release-governance closeout is blocked until the cross-track Julia binding changelog-policy failure is resolved or waived.
+
 Implementation refresh on 2026-05-09:
 
 - Track status advanced from `In Progress` to `In Review` after the previously recorded cross-track phase-gate blocker cleared.

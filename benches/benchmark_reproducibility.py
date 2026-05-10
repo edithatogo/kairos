@@ -123,8 +123,19 @@ def main() -> None:
         REQUIRED_POLICY_ARTIFACTS | {"raw output", "environment metadata"},
     )
     assert_text_contains(
+        "docs/benchmarks/README.md",
+        {"Maturity: preview metadata gate", '"status": "ok"', "Expected output"},
+    )
+    assert_text_contains(
         "docs/benchmarks/reproduce-comparison.md",
-        {"raw output", "environment metadata", "metadata gates"},
+        {
+            "Maturity: preview metadata gate",
+            '"status": "ok"',
+            "Expected output",
+            "raw output",
+            "environment metadata",
+            "metadata gates",
+        },
     )
 
     print(

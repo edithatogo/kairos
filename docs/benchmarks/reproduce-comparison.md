@@ -1,5 +1,8 @@
 # Reproducing Benchmark Comparisons
 
+Maturity: preview metadata gate. This page documents reproducibility evidence,
+not native benchmark performance.
+
 This page defines the minimum replayable evidence for a KairoECS benchmark
 comparison before native benchmark binaries are available.
 
@@ -40,6 +43,11 @@ fixture that is not marked `ready` in the manifest.
    ```powershell
    cargo bench --workspace --no-run
    ```
+
+Expected output: the two Python checks print JSON with `"status": "ok"`. The
+native command should compile the benchmark binaries without running timing
+measurements; on this Windows host it may remain blocked if Git's Unix
+`link.exe` is selected instead of the MSVC linker.
 
 The Python checks are metadata gates. They prove that published scenario names,
 ready fixture IDs, source files, and smoke-scale records are aligned. They do

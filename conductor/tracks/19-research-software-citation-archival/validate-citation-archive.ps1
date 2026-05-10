@@ -73,6 +73,17 @@ function Require-JsonField {
     return $value
 }
 
+function Normalize-License {
+    param([string]$Value)
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return $Value
+    }
+    return $Value.
+        Replace('https://spdx.org/licenses/Apache-2.0.html', 'Apache-2.0').
+        Replace('https://spdx.org/licenses/MIT.html', 'MIT').
+        Trim()
+}
+
 $citationText = Read-Text 'CITATION.cff'
 $codeMetaText = Read-Text 'codemeta.json'
 $zenodoText = Read-Text '.zenodo.json'
@@ -148,6 +159,11 @@ if ($null -ne $codeMeta -and $null -ne $zenodo) {
     }
     if ($cff['license'] -ne $zenodo.license) {
         Add-Failure "License mismatch: CITATION=$($cff['license']), zenodo=$($zenodo.license)"
+    }
+    $citationLicense = Normalize-License $cff['license']
+    $codeMetaLicense = Normalize-License $codeMeta.license
+    if ($citationLicense -ne $codeMetaLicense) {
+        Add-Failure "CodeMeta license mismatch: CITATION=$($cff['license']), codemeta=$($codeMeta.license)"
     }
 }
 
