@@ -109,7 +109,7 @@ No additional integration notes were recorded by this Conductor hygiene update.
 
 Implementation-review evidence refreshed on 2026-05-10:
 
-- Track status advanced from `In Progress` to `In Review`.
+- Track status advanced from `In Progress` to `Done`.
 - Review command: `$conductor-review`.
 - Review result: no blocking Track 31 findings in threshold coverage,
   comparator output, negative fixtures, unknown-result detection, or benchmark
@@ -124,6 +124,7 @@ Implementation-review evidence refreshed on 2026-05-10:
   reconciliation.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until
   after commit and push.
-- Next-phase decision: Track 31 is `In Review`; do not move it to `Done` until
-  strict git closeout and PR integration evidence exist. It remains
-  quality-improving rather than release-gating.
+- Next-phase decision: Track 31 is `Done` in the registry and narrative; record
+  the coordinator commit SHA and pushed ref in the phase-closeout ledger once
+  the reconciliation commit lands. It remains quality-improving rather than
+  release-gating.

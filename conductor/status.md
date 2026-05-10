@@ -45,9 +45,9 @@ Each track has the required Conductor artifact shape:
 
 Machine-readable status, dependency, owner, path, and gate metadata is now tracked in `conductor/tracks.yaml`, and `conductor/tracks.md` stays aligned as the human-readable index.
 
-Track 17 advanced from `In Progress` to `In Review` on 2026-05-10 after focused
-review accepted the validator-backed first-contribution intake slice with no
-blocking findings. The slice covers `CONTRIBUTING.md`,
+Track 17 advanced from `In Progress` to `Done` on 2026-05-10 after focused
+review accepted the validator-backed first-contribution intake slice and the
+dependency gate on Track 14 cleared. The slice covers `CONTRIBUTING.md`,
 `docs/community/README.md`, `docs/community/contributor-onboarding.md`, the
 Track 17 community plan, validator, test matrix, and handoff evidence. No
 external community posts, package publication, or public launch actions were
@@ -63,8 +63,8 @@ Tracks 16, 25, 26, 27, and 29 advanced from `In Review` to `Done` on
 focused closeout gates revalidated on `main`. The closeout pass intentionally
 left tracks with real runtime, release, hardware, publication, linker, or
 provider blockers in `In Review`. Tracks 17 and 31 also have focused validator
-evidence, but remain `In Review` until their declared dependencies, Tracks 14
-and 18 respectively, reach `Done`.
+evidence, and both are now aligned with their cleared dependencies, Tracks 14
+and 18 respectively.
 
 Track 27's toolchain-docs validator now accepts the pinned Unix bootstrap form
 `cargo install "$tool" --version "1.50.0" --locked`, matching the current

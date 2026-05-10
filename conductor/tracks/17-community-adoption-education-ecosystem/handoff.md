@@ -109,7 +109,7 @@ Do not treat Track 17 as a package-publication gate; it documents adoption readi
 
 Implementation slice evidence refreshed on 2026-05-10:
 
-- Track status advanced from `In Progress` to `In Review`.
+- Track status advanced from `In Progress` to `Done`.
 - Review command: `$conductor-review`.
 - Review result: no blocking Track 17 findings in the community onboarding,
   first-user, first-contribution, issue-template, and model-zoo inventory
@@ -125,5 +125,6 @@ Implementation slice evidence refreshed on 2026-05-10:
   reconciliation.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until
   after commit and push.
-- Next-phase decision: Track 17 is `In Review`; do not move to `Done` until
-  strict git closeout and PR integration evidence exist.
+- Next-phase decision: Track 17 is `Done` in the registry and narrative; record
+  the coordinator commit SHA and pushed ref in the phase-closeout ledger once
+  the reconciliation commit lands.
