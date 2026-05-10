@@ -518,18 +518,18 @@ entries:
     next_phase_decision: "Track 31 is Done for performance regression guard evidence; future threshold or comparator changes require a scoped follow-up."
   - track_id: "21"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 21 advanced to In Review after the VVUQ note, replay fixture boundary, seed/scenario manifest references, and cross-track evidence boundaries passed the focused Track 21-27 validator batch."
-    fixes_applied: false
+    review_result: "Track 21 advanced to Done after the VVUQ note, replay fixture boundary, seed/scenario manifest references, and cross-track evidence boundaries passed the focused Track 21-27 validator batch."
+    fixes_applied: true
     validation_commands:
       - "node scripts/validation/validate-vvuq-note.mjs"
       - "node scripts/validation/validate-track21-27-evidence-boundaries.mjs"
       - "node scripts/validation/validate-tracks21-27.mjs"
-    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
-    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
+    git_status: "clean after reviewed-track closeout commit"
+    commit_sha: "f4fe05f483569d3ae46070f2e80bda28930b0d23"
     pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
-    next_phase_decision: "Track 21 is In Review; keep public VVUQ claims bounded to fixture-backed notes until formal review, commit/push evidence, and strict git closeout are recorded."
+    next_phase_decision: "Track 21 is Done; keep public VVUQ claims bounded to the fixture-backed note and its explicit evidence boundary."
   - track_id: "22"
     phase: "implementation-review"
     state: closed
