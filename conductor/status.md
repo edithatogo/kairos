@@ -63,6 +63,19 @@ the performance regression threshold/comparator slice. It remains
 quality-improving rather than release-gating, and should not move to `Done`
 until Track 18 closes.
 
+Tracks 21, 22, 23, 24, and 32-40 advanced from `Planned` to `In Review` on
+2026-05-10 after their existing implementation slices were revalidated. The
+Track 21-27 aggregate validator passed for VVUQ notes, scenario manifests,
+model-zoo inventory, playground smoke, compatibility policy, standards review,
+and docs workflow evidence. Track 32, 33, 34, and 35 focused validators passed
+under `stable-x86_64-pc-windows-gnu`. The Track 36-40 aggregate offline
+validator also passed under the GNU Rust toolchain, covering streaming, ML,
+FMI, cloud/HPC, and time-travel debug scaffolds. These tracks are implemented
+to their current bounded scaffold contracts, but remain in review because
+formal review, commit/push evidence, strict git closeout, and live
+hardware/provider/runtime evidence are still required before any `Done`
+promotion or public readiness claim.
+
 ## Validation evidence
 
 Latest local baseline validation on 2026-05-07; current targeted verification is recorded under the 2026-05-10 track evidence:
@@ -79,6 +92,9 @@ Latest local baseline validation on 2026-05-07; current targeted verification is
 - Track 17 focused validator passed on 2026-05-10: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/17-community-adoption-education-ecosystem/validate-community-onboarding.ps1`.
 - Track 30 focused validator passed on 2026-05-10: `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1`.
 - Track 31 focused validators passed on 2026-05-10: `pwsh -NoProfile -File conductor/tracks/31-performance-regression-guard/validate-track31.ps1` and `python benches/benchmark_smoke.py`.
+- Track 21-27 focused aggregate validation passed on 2026-05-10: `node scripts/validation/validate-tracks21-27.mjs`.
+- Track 32-35 focused validators passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `validate-track32.ps1 -SkipCargoTest`, `validate-track33.ps1`, `validate-track34.ps1`, and `validate-track35.ps1`.
+- Track 36-40 aggregate offline validation passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`.
 - Track 06 advanced to `In Review` on 2026-05-08 after `python -m pytest -q` from `bindings\python` passed with 15 tests, 1 optional pyarrow roundtrip skip, and the known local pytest cache permission warning; `python -m ruff check .`, compileall, import smoke, `pip check`, `python -m build --sdist --wheel` outside the sandbox with package-local temp, and `validate-bindings06-11.ps1` also passed. A workspace-local `pyarrow-24.0.0` install succeeded, but the real pyarrow table roundtrip remains blocked because `pyarrow.lib` fails to load a required Windows DLL on this host.
 - `go test ./...`, `go vet ./...`, and `gofmt -w -l .` from `bindings\go` passed with no formatting output.
 - `Rscript -e "sessionInfo(); source('tests/testthat.R')"` from `bindings\r` passed after R startup locale warnings.

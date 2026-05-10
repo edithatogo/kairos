@@ -307,7 +307,7 @@ tracks:
       - vulnerability-policy
   - id: 21
     name: Verification, Validation & Uncertainty
-    status: Planned
+    status: In Review
     owner: vv-uq-agent
     depends_on: ["01", "04", "12"]
     owned_paths:
@@ -321,7 +321,7 @@ tracks:
       - seed-manifest
   - id: 22
     name: Experiment Runner & Scenario Management
-    status: Planned
+    status: In Review
     owner: experiment-agent
     depends_on: ["01", "04", "12"]
     owned_paths:
@@ -336,7 +336,7 @@ tracks:
       - resumability-plan
   - id: 23
     name: Domain Starter Kits & Model Zoo
-    status: Planned
+    status: In Review
     owner: model-zoo-agent
     depends_on: ["03", "14"]
     owned_paths:
@@ -350,7 +350,7 @@ tracks:
       - example-maturity-labels
   - id: 24
     name: Playground, Demos & Visualization UX
-    status: Planned
+    status: In Review
     owner: playground-agent
     depends_on: ["05", "09", "14"]
     owned_paths:
@@ -449,7 +449,7 @@ tracks:
       - threshold-definition-exists
   - id: 32
     name: GPU Compute Acceleration
-    status: Planned
+    status: In Review
     owner: gpu-compute-agent
     depends_on: ["01"]
     owned_paths:
@@ -461,7 +461,7 @@ tracks:
       - gpu-benchmark-threshold
   - id: 33
     name: WebGPU Compute for Browser
-    status: Planned
+    status: In Review
     owner: webgpu-agent
     depends_on: ["09", "32"]
     owned_paths:
@@ -473,7 +473,7 @@ tracks:
       - wasm-gpu-parity
   - id: 34
     name: PDES & Parallel Execution
-    status: Planned
+    status: In Review
     owner: pdes-agent
     depends_on: ["01"]
     owned_paths:
@@ -485,7 +485,7 @@ tracks:
       - gvt-progression-check
   - id: 35
     name: Distributed Simulation (MPI/gRPC)
-    status: Planned
+    status: In Review
     owner: distributed-agent
     depends_on: ["34"]
     owned_paths:
@@ -499,7 +499,7 @@ tracks:
       - entity-migration-check
   - id: 36
     name: Streaming & Real-Time Processing
-    status: Planned
+    status: In Review
     owner: streaming-agent
     depends_on: ["04", "22"]
     owned_paths:
@@ -512,7 +512,7 @@ tracks:
       - realtime-wallclock-check
   - id: 37
     name: ML/AI Integration & Inference
-    status: Planned
+    status: In Review
     owner: ml-integration-agent
     depends_on: ["23"]
     owned_paths:
@@ -525,7 +525,7 @@ tracks:
       - gymnasium-env-smoke
   - id: 38
     name: FMI/FMU & Digital Twin Bridge
-    status: Planned
+    status: In Review
     owner: fmi-agent
     depends_on: ["26", "36", "02"]
     owned_paths:
@@ -539,7 +539,7 @@ tracks:
       - aas-validate
   - id: 39
     name: Cloud/HPC Batch Runners
-    status: Planned
+    status: In Review
     owner: cloud-agent
     depends_on: ["22", "15"]
     owned_paths:
@@ -553,7 +553,7 @@ tracks:
       - spot-checkpoint-test
   - id: 40
     name: Time-Travel Debugging & Interactive Stepping
-    status: Planned
+    status: In Review
     owner: timetravel-agent
     depends_on: ["01", "12"]
     owned_paths:

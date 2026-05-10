@@ -25,10 +25,10 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 18 | Comparative Benchmarks & Reproducibility | In Review | `benchmark-agent` | See `conductor/tracks/18-*/spec.md` |
 | 19 | Research Software, Citation & Archival | In Review | `research-agent` | See `conductor/tracks/19-*/spec.md` |
 | 20 | OpenSSF, Supply Chain Trust & Institutional Readiness | In Review | `security-agent` | See `conductor/tracks/20-*/spec.md` |
-| 21 | Verification, Validation & Uncertainty | Planned | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |
-| 22 | Experiment Runner & Scenario Management | Planned | `experiment-agent` | See `conductor/tracks/22-*/spec.md` |
-| 23 | Domain Starter Kits & Model Zoo | Planned | `model-zoo-agent` | See `conductor/tracks/23-*/spec.md` |
-| 24 | Playground, Demos & Visualization UX | Planned | `playground-agent` | See `conductor/tracks/24-*/spec.md` |
+| 21 | Verification, Validation & Uncertainty | In Review | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |
+| 22 | Experiment Runner & Scenario Management | In Review | `experiment-agent` | See `conductor/tracks/22-*/spec.md` |
+| 23 | Domain Starter Kits & Model Zoo | In Review | `model-zoo-agent` | See `conductor/tracks/23-*/spec.md` |
+| 24 | Playground, Demos & Visualization UX | In Review | `playground-agent` | See `conductor/tracks/24-*/spec.md` |
 | 25 | API Design Review & Compatibility Governance | In Review | `api-governance-agent` | See `conductor/tracks/25-*/spec.md` |
 | 26 | Interoperability Standards Review | In Review | `interop-agent` | See `conductor/tracks/26-*/spec.md` |
 | 27 | Developer Experience & Reproducible Environments | In Review | `dx-agent` | See `conductor/tracks/27-*/spec.md` |
@@ -36,15 +36,15 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 29 | Wave Manager & Execution Gatekeeper | In Review | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |
 | 30 | Toolchain & Version Support Matrix | Done | `toolchain-agent` | See `conductor/tracks/30-*/spec.md` |
 | 31 | Performance Regression Guard | In Review | `perf-regression-agent` | See `conductor/tracks/31-*/spec.md` |
-| 32 | GPU Compute Acceleration | Planned | `gpu-compute-agent` | See `conductor/tracks/32-*/spec.md` |
-| 33 | WebGPU Compute for Browser | Planned | `webgpu-agent` | See `conductor/tracks/33-*/spec.md` |
-| 34 | PDES & Parallel Execution | Planned | `pdes-agent` | See `conductor/tracks/34-*/spec.md` |
-| 35 | Distributed Simulation (MPI/gRPC) | Planned | `distributed-agent` | See `conductor/tracks/35-*/spec.md` |
-| 36 | Streaming & Real-Time Processing | Planned | `streaming-agent` | See `conductor/tracks/36-*/spec.md` |
-| 37 | ML/AI Integration & Inference | Planned | `ml-integration-agent` | See `conductor/tracks/37-*/spec.md` |
-| 38 | FMI/FMU & Digital Twin Bridge | Planned | `fmi-agent` | See `conductor/tracks/38-*/spec.md` |
-| 39 | Cloud/HPC Batch Runners | Planned | `cloud-agent` | See `conductor/tracks/39-*/spec.md` |
-| 40 | Time-Travel Debugging & Interactive Stepping | Planned | `timetravel-agent` | See `conductor/tracks/40-*/spec.md` |
+| 32 | GPU Compute Acceleration | In Review | `gpu-compute-agent` | See `conductor/tracks/32-*/spec.md` |
+| 33 | WebGPU Compute for Browser | In Review | `webgpu-agent` | See `conductor/tracks/33-*/spec.md` |
+| 34 | PDES & Parallel Execution | In Review | `pdes-agent` | See `conductor/tracks/34-*/spec.md` |
+| 35 | Distributed Simulation (MPI/gRPC) | In Review | `distributed-agent` | See `conductor/tracks/35-*/spec.md` |
+| 36 | Streaming & Real-Time Processing | In Review | `streaming-agent` | See `conductor/tracks/36-*/spec.md` |
+| 37 | ML/AI Integration & Inference | In Review | `ml-integration-agent` | See `conductor/tracks/37-*/spec.md` |
+| 38 | FMI/FMU & Digital Twin Bridge | In Review | `fmi-agent` | See `conductor/tracks/38-*/spec.md` |
+| 39 | Cloud/HPC Batch Runners | In Review | `cloud-agent` | See `conductor/tracks/39-*/spec.md` |
+| 40 | Time-Travel Debugging & Interactive Stepping | In Review | `timetravel-agent` | See `conductor/tracks/40-*/spec.md` |
 
 ## Track status vocabulary
 
