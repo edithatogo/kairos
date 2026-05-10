@@ -499,7 +499,7 @@ entries:
       - "gh api repos/edithatogo/kairos/branches/main/protection --jq '{reviews:.required_pull_request_reviews.required_approving_review_count,enforce_admins:.enforce_admins.enabled,linear:.required_linear_history.enabled}'"
       - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
     git_status: "clean after push to origin/main"
-    commit_sha: "ed40217813f3d0ae8b061f02aa5e9811e1a55634"
+    commit_sha: "b6ceba2fa86ed412325764daef29231b7f6df17d"
     pushed_ref: "origin/main"
     next_phase_decision: "Track 30 is Done and remains release-gating; future support-matrix changes, runner coverage promotion, or version-drop policy changes require a scoped follow-up."
   - track_id: "31"

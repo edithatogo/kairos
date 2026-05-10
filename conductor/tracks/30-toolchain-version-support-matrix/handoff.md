@@ -120,7 +120,7 @@ Track closeout evidence refreshed on 2026-05-10:
   - `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1`
 - PR integration evidence: PR #18 merged to `origin/main` at
   `98f04cae89fa434a8dcca05d9022db090561c7c7` after all checks passed.
-- commit SHA: `ed40217813f3d0ae8b061f02aa5e9811e1a55634`
+- commit SHA: `b6ceba2fa86ed412325764daef29231b7f6df17d`
 - pushed ref: `origin/main`
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pass after
   closeout commit and push.
