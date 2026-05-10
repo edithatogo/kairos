@@ -120,10 +120,9 @@ Phase closeout evidence refreshed on 2026-05-10:
   - `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1`
 - PR integration evidence: PR #18 merged to `origin/main` at
   `98f04cae89fa434a8dcca05d9022db090561c7c7` after all checks passed.
-- commit SHA: `b6ceba2fa86ed412325764daef29231b7f6df17d`
+- commit SHA: `0756174ecde6399d2eff959d3e1262cbbb0991c2`
 - pushed ref: `origin/main`
 - `scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pass after
   closeout commit and push.
 - Next-phase decision: Track 30 is `Done`. Reopen only for a scoped support
   matrix change, runner coverage promotion, or version-drop policy update.
-
