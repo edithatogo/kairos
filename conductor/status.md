@@ -171,7 +171,7 @@ Track 05 is closed as `Done` after Worker B review closeout confirmed the headle
 - `kairo-ecs-viz` validates deterministic headless frames, fixture JSON, text summaries, SVG output, optional renderer feature boundaries, and no-GUI examples.
 - GNU-toolchain gates passed for `kairo-ecs-viz`, no-default-feature checks, all-feature test compilation, the headless snapshot example, headless core independence, `kairo-ecs-core`, `kairo-ecs-state`, website build, conductor setup, and track coverage.
 - The default MSVC-target `cargo test -p kairo-ecs-viz` remains unreliable on this host because `link.exe` resolves to Git's Unix-link shim before code execution; the equivalent Track 05 tests pass on `stable-x86_64-pc-windows-gnu`.
-- Native WGPU/Bevy rendering and browser UX work remain future Track 24 or new-track scope, not blockers for this headless closeout.
+- Native WGPU/Bevy rendering and browser UX work remain future new-track scope, not blockers for this headless closeout.
 
 ## Track 07 implementation closeout (2026-05-08)
 

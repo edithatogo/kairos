@@ -1,13 +1,16 @@
 # Handoff: Track 24 Playground, Demos & Visualization UX
 
-Last updated: 2026-05-07
+Last updated: 2026-05-11
 
 ## Summary
 
 Captured the demo and visualization requirements so the docs surface can stay honest about what the repo currently shows.
-The Track 24 docs now point at a concrete playground page and concrete screenshot targets instead of generic demo language.
+The Track 24 docs now point at a concrete playground page and concrete
+visual assets instead of generic demo language.
 
-Worker 1 added the first concrete local playground slice: a static headless visualization snapshot page backed by a fixture tied to `examples/viz/headless-snapshot/src/main.rs`.
+Worker 1 added the first concrete local playground slice: a static headless
+visualization snapshot page backed by a fixture tied to
+`examples/viz/headless-snapshot/src/main.rs`.
 
 ## Files changed
 
@@ -48,15 +51,23 @@ The current checks are `node website/scripts/smoke-playground.mjs`, `cargo check
 
 ## Known risks
 
-Screenshot paths are still targets rather than checked-in visual assets, and local executable verification is blocked by the Windows linker setup.
+The current visual assets are committed SVG documentation figures rather than
+runtime screenshots, and local executable verification is still blocked by the
+Windows linker setup.
 
 ## Follow-up issues
 
-Add the actual screenshot assets and rerun the cargo example after MSVC linker discovery is fixed. Do not claim live Wasm execution until the TypeScript/Wasm track hands over that surface.
+Keep the docs page honest about the current committed SVG figures, and rerun
+the cargo example after MSVC linker discovery is fixed. Do not claim live Wasm
+execution until the TypeScript/Wasm track hands over that surface.
 
 ## Integration notes
 
 Docs and release notes should describe this track as a fixture-backed learning surface until screenshot and Wasm evidence exists.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+Pending for the next actual phase closeout. Before this track advances, record
+`$conductor-review` findings, accepted fixes, deferred or blocked fixes,
+validation commands, cleanup state, commit SHA or explicit push blocker,
+pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
+result, and next-phase decision here.
