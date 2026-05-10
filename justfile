@@ -1,7 +1,7 @@
 set shell := ["bash", "-cu"]
 
 dev-setup:
-    pwsh -NoProfile -File scripts/bootstrap.ps1 -SkipPython -SkipNpm
+    if command -v pwsh >/dev/null 2>&1 && case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) true;; *) false;; esac; then pwsh -NoProfile -File scripts/bootstrap.ps1 -SkipPython -SkipNpm; else bash scripts/bootstrap.sh; fi
 
 dev-validate:
     rustc --version

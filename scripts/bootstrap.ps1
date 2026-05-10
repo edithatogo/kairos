@@ -56,7 +56,7 @@ if (-not $SkipCargoInstalls) {
     }
 
     $cargoTools = @(
-        @{ Name = "just"; Version = "1.42.4" },
+        @{ Name = "just"; Version = "1.50.0" },
         @{ Name = "cargo-nextest"; Version = "0.9.133" },
         @{ Name = "cargo-vet"; Version = "0.10.0" },
         @{ Name = "cargo-deny"; Version = "0.18.9" },

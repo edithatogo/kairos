@@ -2,7 +2,7 @@
 set -euo pipefail
 rustup component add rustfmt clippy || true
 for tool in just; do
-  cargo install "$tool" --locked || true
+  cargo install "$tool" --version "1.50.0" --locked || true
 done
 for spec in \
   "cargo-nextest@0.9.133" \

@@ -20,19 +20,36 @@ function Assert-Contains {
 function Assert-RenovatePolicy {
     $config = Get-Content -LiteralPath 'renovate.json' -Raw | ConvertFrom-Json
 
-    if (-not ($config.extends -contains 'config:recommended')) {
+    $extendsProperty = $config.PSObject.Properties['extends']
+    if ($null -eq $extendsProperty -or $config.extends -is [string]) {
+        throw 'Renovate extends must be an array containing config:recommended and :dependencyDashboard'
+    }
+    $extends = @($config.extends)
+    if (-not ($extends -contains 'config:recommended')) {
         throw 'Renovate config must extend config:recommended'
     }
-    if (-not ($config.extends -contains ':dependencyDashboard')) {
+    if (-not ($extends -contains ':dependencyDashboard')) {
         throw 'Renovate config must enable the dependency dashboard preset'
     }
     if ($config.dependencyDashboard -ne $true) {
         throw 'Renovate dependencyDashboard must be enabled'
     }
-    if ($config.vulnerabilityAlerts.enabled -ne $true) {
+
+    $alertsProperty = $config.PSObject.Properties['vulnerabilityAlerts']
+    if ($null -eq $alertsProperty -or $null -eq $config.vulnerabilityAlerts -or $config.vulnerabilityAlerts -isnot [pscustomobject]) {
+        throw 'Renovate vulnerabilityAlerts must be an object with enabled and labels fields'
+    }
+    $alerts = $config.vulnerabilityAlerts
+    $labelsProperty = $alerts.PSObject.Properties['labels']
+    if ($null -eq $labelsProperty -or $alerts.labels -is [string]) {
+        throw 'Renovate vulnerabilityAlerts.labels must be an array containing security'
+    }
+    $labels = @($alerts.labels)
+
+    if ($alerts.enabled -ne $true) {
         throw 'Renovate vulnerabilityAlerts.enabled must be true'
     }
-    if (-not ($config.vulnerabilityAlerts.labels -contains 'security')) {
+    if (-not ($labels -contains 'security')) {
         throw 'Renovate vulnerability alerts must apply the security label'
     }
 }
