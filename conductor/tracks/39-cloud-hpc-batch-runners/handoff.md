@@ -2,7 +2,7 @@
 
 ## Summary
 
-Defined the scaffold and offline validation layer for production-scale KairoECS execution. The current verified scope is manifest shape, local rendering, shell syntax, checkpoint/spot policy wiring, and local telemetry checksum behavior. Live Docker builds, Kubernetes cluster reconciliation, Slurm scheduler submission, and AWS/GCP/Azure provider API acceptance still require environment-backed validation before readiness claims.
+Defined the scaffold and offline validation layer for production-scale KairoECS execution. The current verified scope is manifest shape, local rendering, shell syntax, checkpoint/spot policy wiring, and local telemetry checksum behavior. The offline validator passes, but live Docker builds, Kubernetes cluster reconciliation, Slurm scheduler submission, and AWS/GCP/Azure provider API acceptance still require environment-backed validation before any readiness claim.
 
 ## Files changed
 
@@ -30,7 +30,7 @@ This track is explicitly non-blocking for library release. Container images are 
 
 ## Latest validation evidence
 
-- 2026-05-06: `python cloud\validate_cloud_hpc.py` passed after the hardening slice. It covered Docker non-root entrypoint wiring, Kubernetes CRD/sample/operator rendering, AWS/GCP/Azure template shape, Slurm checkpoint/signal wiring, provider docs, local telemetry checksum sidecars, and provider upload manifest generation.
+- 2026-05-11: `python cloud\validate_cloud_hpc.py` passed. It covered Docker non-root entrypoint wiring, Kubernetes CRD/sample/operator rendering, AWS/GCP/Azure template shape, Slurm checkpoint/signal wiring, provider docs, local telemetry checksum sidecars, and provider upload manifest generation.
 
 ## Risks and unresolved questions
 
@@ -70,4 +70,4 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+Pending for the next actual phase closeout. The current blocker is not the offline scaffold; it is the remaining live Docker, Kubernetes, Slurm, and provider-runtime evidence required before readiness claims are defensible. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
