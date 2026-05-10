@@ -336,7 +336,7 @@ tracks:
       - resumability-plan
   - id: 23
     name: Domain Starter Kits & Model Zoo
-    status: In Review
+    status: Done
     owner: model-zoo-agent
     depends_on: ["03", "14"]
     owned_paths:

@@ -70,10 +70,11 @@ Track 27's toolchain-docs validator now accepts the pinned Unix bootstrap form
 `cargo install "$tool" --version "1.50.0" --locked`, matching the current
 bootstrap script without weakening the install contract.
 
-Tracks 21, 23, 24, and 32-40 advanced from `Planned` to `In Review` on
-2026-05-10 after their existing implementation slices were revalidated. Track
-22 advanced to `Done` after GNU-toolchain runtime smoke validated the CLI
-scenario, replay, and resumability commands. The Track 21-27 aggregate
+Tracks 21, 24, and 32-40 advanced from `Planned` to `In Review` on 2026-05-10
+after their existing implementation slices were revalidated. Track 22 advanced
+to `Done` after GNU-toolchain runtime smoke validated the CLI scenario, replay,
+and resumability commands. Track 23 advanced to `Done` after the model-zoo
+inventory validator and community landing-page links remained green. The Track 21-27 aggregate
 validator passed for VVUQ notes, scenario manifests, model-zoo inventory,
 playground smoke, compatibility policy, standards review, and docs workflow
 evidence. Track 32, 33, 34, and 35 focused validators passed
