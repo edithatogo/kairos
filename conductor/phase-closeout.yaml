@@ -575,7 +575,7 @@ entries:
     review_result: "Track 32 advanced to In Review after the dependency-free GPU facade, feature-gated backend contracts, forbidden-default-dependency tree check, and focused Track 32 validator passed under the GNU Rust toolchain."
     fixes_applied: false
     validation_commands:
-      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTest"
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTests"
     git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
     commit_sha: "pending"
     pushed_ref: "pending"
