@@ -488,17 +488,20 @@ entries:
     pushed_ref: "pending"
     next_phase_decision: "Track 17 is In Review; do not move to Done until strict git closeout and PR integration evidence exist."
   - track_id: "30"
-    phase: "implementation-review"
-    state: pending
+    phase: "track-closeout"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 30 advanced to In Review after focused review found no blocking defects in the toolchain matrix, version-drop policy, workflow trigger coverage, package dry-run Go lane, or TypeScript engines.node alignment."
+    review_result: "Track 30 advanced to Done after PR #18 merged, all GitHub checks passed, and post-merge focused validation confirmed no blocking defects in the toolchain matrix, version-drop policy, workflow trigger coverage, package dry-run Go lane, or TypeScript engines.node alignment."
     fixes_applied: true
     validation_commands:
       - "pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1"
-    git_status: "dirty: Track 17/30/31 review reconciliation pending commit and push"
-    commit_sha: "pending"
-    pushed_ref: "pending"
-    next_phase_decision: "Track 30 is In Review and remains release-gating; do not move to Done until strict git closeout and PR integration evidence exist."
+      - "gh pr view 18 --json number,state,mergedAt,mergeCommit,url"
+      - "gh api repos/edithatogo/kairos/branches/main/protection --jq '{reviews:.required_pull_request_reviews.required_approving_review_count,enforce_admins:.enforce_admins.enabled,linear:.required_linear_history.enabled}'"
+      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
+    git_status: "clean after push to origin/main"
+    commit_sha: "ed40217813f3d0ae8b061f02aa5e9811e1a55634"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 30 is Done and remains release-gating; future support-matrix changes, runner coverage promotion, or version-drop policy changes require a scoped follow-up."
   - track_id: "31"
     phase: "implementation-review"
     state: pending
@@ -512,3 +515,4 @@ entries:
     commit_sha: "pending"
     pushed_ref: "pending"
     next_phase_decision: "Track 31 is In Review; do not move to Done until strict git closeout and PR integration evidence exist. It remains quality-improving rather than release-gating."
+

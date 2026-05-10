@@ -53,10 +53,15 @@ Track 17 community plan, validator, test matrix, and handoff evidence. No
 external community posts, package publication, or public launch actions were
 performed.
 
-Tracks 30 and 31 advanced from `In Progress` to `In Review` on 2026-05-10 after
-focused review found no blocking defects in the toolchain matrix/version-drop
-policy or performance regression threshold/comparator slices. Track 30 remains
-release-gating; Track 31 remains quality-improving rather than release-gating.
+Track 30 advanced from `In Review` to `Done` on 2026-05-10 after PR #18 merged
+and the post-merge closeout confirmed its dependencies, focused validator,
+GitHub Actions evidence, and strict git closeout path. Track 30 remains
+release-gating for future public releases.
+
+Track 31 remains `In Review` after focused review found no blocking defects in
+the performance regression threshold/comparator slice. It remains
+quality-improving rather than release-gating, and should not move to `Done`
+until Track 18 closes.
 
 ## Validation evidence
 

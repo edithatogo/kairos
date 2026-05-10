@@ -34,7 +34,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 27 | Developer Experience & Reproducible Environments | In Review | `dx-agent` | See `conductor/tracks/27-*/spec.md` |
 | 28 | Red Team & Devil's Advocate Review | In Review | `redteam-agent` | See `conductor/tracks/28-*/spec.md` |
 | 29 | Wave Manager & Execution Gatekeeper | In Review | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |
-| 30 | Toolchain & Version Support Matrix | In Review | `toolchain-agent` | See `conductor/tracks/30-*/spec.md` |
+| 30 | Toolchain & Version Support Matrix | Done | `toolchain-agent` | See `conductor/tracks/30-*/spec.md` |
 | 31 | Performance Regression Guard | In Review | `perf-regression-agent` | See `conductor/tracks/31-*/spec.md` |
 | 32 | GPU Compute Acceleration | Planned | `gpu-compute-agent` | See `conductor/tracks/32-*/spec.md` |
 | 33 | WebGPU Compute for Browser | Planned | `webgpu-agent` | See `conductor/tracks/33-*/spec.md` |
