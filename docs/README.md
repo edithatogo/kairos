@@ -9,6 +9,8 @@ This directory is the source tree for KairoECS user, contributor, and release do
 - Simulation authors: use `docs/trustworthy-simulation/verification-validation-uncertainty.md`, `docs/trustworthy-simulation/replay-and-seeds.md`, and `docs/validation/factory-bottleneck-v1-vvuq-note.md`.
 - Contributors: use `docs/developer-experience/docs-workflow.md`, `docs/community/contributor-onboarding.md`, and `docs/design/api-review.md`.
 - Release reviewers: use `docs/release/release-checklist.md`, `docs/release/compatibility.md`, and `docs/release/supply-chain-verification.md`.
+- Cloud/HPC users: use `docs/cloud-hpc/specialized-compute-options.md` and the provider-specific batch docs under `docs/cloud-hpc/`.
+- AWS accelerator users: start with `docs/cloud-hpc/aws-trainium-inferentia.md`.
 
 ## Documentation Inventory
 
@@ -20,6 +22,7 @@ This directory is the source tree for KairoECS user, contributor, and release do
 - `interoperability/`: standards review notes.
 - `model-zoo/` and `starter-kits/`: example discovery and starter-kit maturity guidance.
 - `cli/`: experiment runner command reference and scenario smoke quickstart.
+- `cloud-hpc/`: cloud batch, TPU, and accelerator guidance.
 - `playground/` and `scenarios/`: runnable example surfaces and scenario replay notes.
 - `release/`: changelog, compatibility, maintenance, release, and supply-chain guidance.
 - `research/`: citation and archival guidance.

@@ -2,6 +2,8 @@
 
 Last updated: 2026-05-11
 
+Update tag: `host-only-next-harvest-slice`
+
 ## Status
 
 Initial scaffold implemented and tightened. Browser-native WebGPU device wiring is still blocked, and the crate now reports that explicitly through `BrowserBindingsNotConfigured` / `BrowserBackendNotConfigured` contracts. The crate facade, adapter/bridge/reference-dispatch scaffolds, fallback/parity capability metadata, WebGPU WGSL shader, static demo, smoke test, GPU-free WGSL subset validator, and comparison/subset docs exist.
@@ -9,6 +11,12 @@ Initial scaffold implemented and tightened. Browser-native WebGPU device wiring 
 ## Summary
 
 Track 33 is building toward GPU-accelerated simulation in the browser via WebGPU compute shaders, paired with the Track 09 Wasm binding layer. The current `kairo-ecs-webgpu` crate is dependency-free and exposes adapter, bridge, reference dispatch, fallback/parity metadata, and explicit backend-unavailable contracts. The browser demo at `website/webgpu-demo/` runs a CPU fallback animation, detects the WebGPU API, and labels real WebGPU dispatch as `backend-not-configured` until Wasm bindings and device setup land. No browser GPU dispatch or 30fps/100K-agent performance claim is made by the current artifacts.
+
+This slice adds an explicit "host-only next-harvest" control layer:
+
+- The track plan now names host-only maintenance tasks.
+- The track validator (`validate-track33.ps1`) now enforces contract strings that prevent accidental runtime performance claims in offline artifacts.
+- The demo and track matrix now record fallback-boundary status as complete and keep runtime tests and cross-browser checks blocked until host requirements and browser hardware are available.
 
 ## Files created in this track
 
@@ -57,15 +65,15 @@ Track 33 is building toward GPU-accelerated simulation in the browser via WebGPU
 - Passed after formatting: `cargo fmt --manifest-path crates/kairo-ecs-webgpu/Cargo.toml`
 - Passed: `npm test --prefix website/webgpu-demo`
 - Passed: `npm run validate:wgsl --prefix website/webgpu-demo`
-- Blocked: `cargo test --manifest-path crates/kairo-ecs-webgpu/Cargo.toml` because this shell resolves `link.exe` to Git's `usr\bin\link.exe`, which exits before linking (`0xc0000142`) after reporting `couldn't create signal pipe, Win32 error 5`; `rust-lld` also lacks Windows SDK import libraries in this environment.
+- Optional runtime gate: `cargo test --manifest-path crates/kairo-ecs-webgpu/Cargo.toml` remains host-dependent until a working browser/WebGPU runtime and linker path are available; the current slice keeps compile-only validation as the default.
 
 ## Release gates affected
 
-- **webgpu-crate-compiles** — WebGPU crate compiles to Wasm. Blocking for PRs touching the WebGPU crate.
-- **webgpu-demo-loads** — Demo page loads and detects WebGPU. Blocking for PRs touching the demo.
-- **webgpu-cpu-parity** — WebGPU output matches CPU Wasm for same seed. Blocking for WebGPU kernel PRs.
-- **webgpu-framerate** — Demo maintains >=30fps for 100K agents after real browser WebGPU dispatch is configured. Informational only; becomes blocking at RC.
-- **webgpu-cross-browser** — Smoke test passes on Chrome, Edge, Firefox Nightly. Informational only; becomes blocking at RC.
+- **browser-webgpu-smoke** — current central scaffold gate for the static demo and GPU-free WGSL subset. Blocking for PRs touching the demo.
+- **wasm-gpu-parity** — current central compile-time parity boundary for the WebGPU crate's CPU fallback and not-configured dispatch behavior. Blocking for WebGPU kernel PRs.
+- **webgpu-crate-compiles** / **webgpu-demo-loads** / **webgpu-cpu-parity** — staged runtime targets preserved in the track spec for future browser-backed evidence. Not yet available in this workspace.
+- **webgpu-framerate** — demo maintains >=30fps for 100K agents after real browser WebGPU dispatch is configured. Informational only; becomes blocking at RC.
+- **webgpu-cross-browser** — smoke test passes on Chrome, Edge, Firefox Nightly. Informational only; becomes blocking at RC.
 
 All WebGPU gates require headless Chrome with `--enable-unsafe-webgpu` flag. Gates are informational when no GPU is present in CI.
 
@@ -77,6 +85,13 @@ All WebGPU gates require headless Chrome with `--enable-unsafe-webgpu` flag. Gat
 - Headless CI testing for WebGPU requires Chrome flags that may break between Chrome versions. The CI setup needs ongoing maintenance.
 - Firefox and Safari WebGPU timelines are uncertain. The track ships as Chrome-primary, with Edge and Firefox Nightly as secondary targets. Full cross-browser support may not be achievable by 1.0.
 - Browser GPU resource constraints are more severe than native — shared VRAM with the compositor, tab-level memory limits, and thermal throttling. The demo must be conservative with agent counts and buffer sizes.
+- Low-cost smoke routes are documented in `docs/gpu-compute/free-testing-routes.md`: use GitHub-hosted macOS runners or the M1 MacBook Pro for Metal-adjacent browser/device smoke, and Colab TPU only for future TPU-specific prototypes. These routes do not satisfy browser WebGPU parity or frame-rate evidence.
+
+### Host-only evidence gates added in this slice
+
+- Contract-boundary checks in `validate-track33.ps1` now require explicit fallback language in demo/readme and forbid unverified performance wording in the WebGPU comparison doc.
+- `test-matrix.md` now includes host-only contract artifact checks for this track-specific boundary.
+- `plan.md` now contains a dedicated host-only next-harvest stage so process-owned artifacts are aligned with current execution constraints.
 
 ## Files changed
 

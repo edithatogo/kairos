@@ -1,14 +1,14 @@
 # Handoff: Track 32 GPU Compute Acceleration
 
-Last updated: 2026-05-07
+Last updated: 2026-05-11
 
 ## Status
 
-Initial scaffold implemented and tightened. Native GPU backends now expose explicit `*-backend-not-configured` contracts instead of silently falling back to CPU work. The crate facade, buffer/transfer layers, WGSL shader scaffolds, CPU fallback parity harnesses, GPU compute documentation, hardware-independent memory/dispatch contracts, and local feature-isolation validator exist.
+Initial scaffold implemented and tightened. Native GPU backends now expose explicit `*-backend-not-configured` contracts instead of silently falling back to CPU work. The crate facade, buffer/transfer layers, host-side execution plan helpers, WGSL shader scaffolds, CPU fallback parity harnesses, GPU compute documentation, hardware-independent memory/dispatch contracts, and local feature-isolation validator exist.
 
 ## Summary
 
-Track 32 is building toward GPU-accelerated simulation compute for KairoECS. The current `kairo-ecs-gpu` crate provides a dependency-free facade, CPU fallback contract, feature-gated wgpu/CUDA backend types, explicit unavailable responses for real backend dispatch, `GpuBackendCapabilities`, `GpuState::footprint()`, `DispatchShape`, and `TRACK32_TARGET_MEMORY_BUDGET`. GPU acceleration is optional, gated behind cargo feature flags, and non-blocking for headless release. The 10x+ speedup and 10M-entity memory targets remain future hardware-validated goals, not current claims.
+Track 32 is building toward GPU-accelerated simulation compute for KairoECS. The current `kairo-ecs-gpu` crate provides a dependency-free facade, CPU fallback contract, feature-gated wgpu/CUDA backend types, explicit unavailable responses for real backend dispatch, `GpuBackendCapabilities`, `GpuState::footprint()`, host-side `GpuExecutionPlan` helpers for ABM and DES, `DispatchShape`, and `TRACK32_TARGET_MEMORY_BUDGET`. GPU acceleration is optional, gated behind cargo feature flags, and non-blocking for headless release. The 10x+ speedup and 10M-entity memory targets remain future hardware-validated goals, not current claims.
 
 ## Files created in this track
 
@@ -67,7 +67,7 @@ Track 32 is building toward GPU-accelerated simulation compute for KairoECS. The
 - Passed: `cargo tree --manifest-path crates/kairo-ecs-gpu/Cargo.toml --no-default-features` with no forbidden GPU dependency entries.
 - Passed: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\32-gpu-compute-acceleration\validate-track32.ps1 -SkipCargoTest`
 - Passed after formatting: `cargo fmt --manifest-path crates/kairo-ecs-gpu/Cargo.toml`
-- Blocked: `cargo test --manifest-path crates/kairo-ecs-gpu/Cargo.toml` because this shell resolves `link.exe` to Git's `usr\bin\link.exe`, which exits with `0xc0000142` and `couldn't create signal pipe, Win32 error 5`; earlier `rust-lld` attempts also lacked Windows SDK import libraries in this environment.
+- Optional runtime gate: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\32-gpu-compute-acceleration\validate-track32.ps1 -RunRuntimeTests` remains host-dependent and should be used only on a machine with a working linker/runtime path.
 
 ## Release gates affected
 
@@ -87,6 +87,7 @@ All GPU gates are informational when no GPU hardware is present in CI. Only `gpu
 - Nondeterministic workgroup scheduling means the GPU DES dispatch path is not strictly equivalent to the CPU path for all workloads. The parity test must carefully scope which scenarios are valid.
 - Platform fragmentation across Metal, CUDA, and Vulkan means maintaining N backend-specific code paths for N backends. The `GpuCompute` trait abstraction helps but does not eliminate this.
 - The `gpu` feature flag strategy (`#[cfg(feature = "gpu")]`) must be rigorously enforced — a single un-gated import of `wgpu` leaks GPU into every downstream crate.
+- Low-cost smoke routes are documented in `docs/gpu-compute/free-testing-routes.md`: use GitHub macOS or the M1 MacBook Pro for Metal-adjacent checks, and NVIDIA NIM for NVIDIA-GPU-backed library compatibility smoke when an endpoint is available. These routes do not replace parity or benchmark evidence.
 
 ## Files changed
 
@@ -118,4 +119,9 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Clean closeout is still blocked on this host, but the validation record is now narrower and more precise: the crate scaffold, CPU-only feature isolation, documentation, `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --no-default-features`, `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --features wgpu-backend,cuda-backend --tests`, `cargo tree --manifest-path crates/kairo-ecs-gpu/Cargo.toml --no-default-features`, `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\32-gpu-compute-acceleration\validate-track32.ps1 -SkipCargoTest`, and `cargo fmt --manifest-path crates/kairo-ecs-gpu/Cargo.toml` all passed. The remaining blockers are the host toolchain failure that still prevents `cargo test --manifest-path crates/kairo-ecs-gpu/Cargo.toml` (`link.exe` resolves to Git's `usr\bin\link.exe`, returning `0xc0000142` / signal-pipe error) and the missing GPU-capable runner or workstation needed to produce executable parity and benchmark evidence. Before this track can move to `Done`, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+Clean closeout is still blocked on this host, but the validation record is now narrower and more precise: the crate scaffold, CPU-only feature isolation, documentation, `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --no-default-features`, `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --features wgpu-backend,cuda-backend --tests`, `cargo tree --manifest-path crates/kairo-ecs-gpu/Cargo.toml --no-default-features`, `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\32-gpu-compute-acceleration\validate-track32.ps1 -SkipCargoTest`, and `cargo fmt --manifest-path crates/kairo-ecs-gpu/Cargo.toml` all passed. The remaining blockers are the missing GPU-capable runner or workstation needed to produce executable parity and benchmark evidence; runtime parity is intentionally an explicit opt-in gate through `-RunRuntimeTests`. Before this track can move to `Done`, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+
+## Next-phase decision
+
+Remain `In Review`. The host-side planning and compile-only gates are in place,
+but real GPU parity, performance, and benchmark evidence still need hardware.
