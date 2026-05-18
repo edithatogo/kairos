@@ -51,3 +51,4 @@ Format:
 - Track 38 FMI test evidence now records the live shared-library FMU test blocker required by the conductor coverage gate.
 - Docs platform documentation now preserves the existing tutorial-quality sentinel wording while documenting the Astro/Starlight migration.
 - Docs Quality CI now installs `website` dependencies before running the Astro/Starlight docs workflow validator.
+- Docs platform notes now retain the learning-coverage live-site parity language after the Starlight migration.

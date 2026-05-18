@@ -8,6 +8,9 @@ static-site scaffold has been retired; the remaining custom Node scripts are
 validation helpers around the Starlight build, link manifest, and quality
 checks.
 
+The live site parity boundary is now the Starlight output plus the repository
+docs, bindings, examples, and conductor source trees linked from that shell.
+
 ## Active site
 
 - `npm --prefix website run build` runs `astro build`.
