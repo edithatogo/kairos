@@ -98,7 +98,7 @@ Review closeout decision: Track 10 is `Done`; no waiver was required.
 - Do not add NuGet publishing, signing, or registry credentials here.
 - Do not widen into other language bindings or release-engineering surfaces.
 - Do not extend beyond the C# binding and local package validation boundary.
-- Stop at local compile/test/pack validation until Track 12 owns parity and Track 15 owns dry-runs.
+- Stop at local compile/test/pack validation until Track 12 owns parity and Track 15 owns dry-runs, with Track 42 owning publication.
 
 ## CI command
 

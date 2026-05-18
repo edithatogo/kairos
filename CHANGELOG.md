@@ -35,6 +35,7 @@ Format:
 - Julia binding and developer-environment evidence now records executable Julia 1.12 package-test coverage, direct `just` recipe validation, and Windows bootstrap handling for optional Rust tooling.
 - Julia binding fixture conversion now uses defensive `_record_property` access, supports minimal conformance fixture records without `:source` or `:assertions`, and covers that behavior with the `minimal_tuple_fixtures` test.
 - Astro Starlight documentation site under `website/`, including versioned R1 archive pages, `llms.txt` exports, link validation, icon support, and KairoECS polyglot metadata for Rust, Python, R, Julia, TypeScript/WASM, C#, and Go documentation.
+- Protected registry publication workflows for Rust, Python, R, Julia, TypeScript/WASM, C#, Go, and cloud/HPC artifacts, with dry-run helpers, GitHub environments, and a code/repository health floor above 9.5 before production publication.
 
 ### Changed
 

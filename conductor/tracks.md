@@ -46,6 +46,9 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 39 | Cloud/HPC Batch Runners | In Review | `cloud-agent` | See `conductor/tracks/39-*/spec.md` |
 | 40 | Time-Travel Debugging & Interactive Stepping | Done | `timetravel-agent` | See `conductor/tracks/40-*/spec.md` |
 | 41 | Documentation Platform, Quality Gates & Learning Coverage | Done | `docs-agent + ci-agent + community-agent` | See `conductor/tracks/41-*/spec.md` |
+| 42 | Package Registry Publication & Provenance | Spec Approved | `publication-agent + release-agent + binding agents` | See `conductor/tracks/42-*/spec.md` |
+| 43 | Cloud/HPC Registry Publication & Runtime Acceptance | Spec Approved | `hpc-registry-agent + cloud-agent + release-agent` | See `conductor/tracks/43-*/spec.md` |
+| 44 | Code and Repository Health >= 9.5 | Spec Approved | `health-agent + ci-agent + security-agent + release-agent` | See `conductor/tracks/44-*/spec.md` |
 
 ## Track status vocabulary
 
@@ -59,9 +62,10 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 
 - Tracks 00, 01, 02, 12, 13, 14, 15, 16, 20, 25, 28, 29, and 30 are release-gating for any public release.
 - Track 31 is quality-improving but not release-gating.
+- Tracks 42, 43, and 44 are release-gating for any production registry publication.
 - Tracks 06 and 09 are recommended v0.1/v0.2 public binding priorities.
 - Tracks 07, 08, 10, and 11 can remain preview until C ABI and Arrow schema stability are proven.
 - Track 05 must remain optional and non-blocking for headless releases.
-- GitHub automation, dependency review, scorecard, SBOM, and release workflows already exist under `.github/`; registry publication manifests remain planned work under Tracks 15 and 20.
+- GitHub automation, dependency review, scorecard, SBOM, and release workflows already exist under `.github/`; registry publication manifests are now owned by Track 42, cloud/HPC publication manifests by Track 43, and production publication by the Track 44 health gate.
 - Tracks 34, 35, and 38 are release-critical for distributed simulation, FMI digital-twin, and PDES infrastructure.
 - Tracks 32, 33, 36, 37, 39, 40, and 41 are non-release-critical (enhancement only).

@@ -24,7 +24,7 @@ The Conductor setup is complete, but implementation should move through explicit
 | Core scheduler/types/state/RNG | R2 | `crates/kairo-ecs-*` skeleton crates compile as the first Track 01 slice. |
 | Conformance fixtures | R1 | Initial JSON fixtures exist under `conformance/fixtures`. |
 | Binding directories | R1 | Directories exist with README guards; package manifests are intentionally absent. |
-| Docs site | R2 | `website/package.json` builds a static placeholder. |
+| Docs site | R4 | `website` builds the Astro/Starlight docs site with versioning, polyglot plugin, link validation, and desktop/mobile smoke checks. |
 | GitHub automation surface | R2 | `.github/` workflows, CODEOWNERS, dependency review, and release scaffolding exist. |
 | Packaging | R1 | `packaging/README.md` exists; ecosystem package dirs wait for manifests. |
 | FFI bridge (Track 02) | R2 | `crates/kairo-ecs-ffi`, `kairo-ecs-uniffi`, `kairo-ecs-diplomat`, and `include/kairo_ecs.h` exist with lifecycle, panic-boundary, and header-diff compile gates. |
@@ -79,7 +79,7 @@ Tracks cannot move to `In Review` or `Done` from planning text alone. A closeout
 1. Track 01: complete `lanes.md` milestones for types, scheduler, state, RNG, and facade readiness.
 2. Track 12: turn JSON fixtures into a shared runner.
 3. Track 13: add a metadata validator for `conductor/tracks.yaml` and keep the existing GitHub workflows aligned with track metadata.
-4. Track 14: replace the placeholder static docs build with the final docs stack.
-5. Track 15: define the first registry/package dry-run sequence before any publish manifests are added.
+4. Track 14: keep the Astro/Starlight docs stack, versioning, polyglot plugin, and smoke checks aligned with release evidence.
+5. Track 15: keep the first registry/package dry-run sequence aligned with the new Track 42 publication gate before any public write.
 
 Track 00 is closed as `Done` after maintainer approval of the foundation naming evidence on 2026-05-07. Later release tracks still own production publishing, package dry-runs, SBOM, provenance, and registry-specific publish gates.

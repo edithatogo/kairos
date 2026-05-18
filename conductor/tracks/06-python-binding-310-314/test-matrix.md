@@ -48,7 +48,7 @@ Run from `bindings/python/` unless otherwise stated:
 - Do not add PyPI publishing, release automation, or registry credentials here.
 - Do not widen beyond the Python binding surface into core scheduler, conformance, or release-engineering work.
 - Do not add language-bridge APIs for Julia, R, TypeScript, C#, or Go in this track.
-- Stop at binding-level verification until Track 12 owns shared fixture parity and Track 15 owns packaging dry-runs.
+- Stop at binding-level verification until Track 12 owns shared fixture parity and Track 15 owns packaging dry-runs, with Track 42 owning publication.
 
 ## Validation evidence — 2026-05-07 fixture bridge and stats alignment
 

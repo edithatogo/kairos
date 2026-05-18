@@ -210,7 +210,7 @@ entries:
     git_status: "clean after reviewed-track closeout commit"
     commit_sha: "19001a631f4cc7099236670daafd0123d1575a31"
     pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
-    next_phase_decision: "Track 11 is Done; native runtime execution remains blocked until a linkable kairo-ecs-ffi library is packaged for the Go module, while release publication remains Track 15 scope."
+    next_phase_decision: "Track 11 is Done; native runtime execution remains blocked until a linkable kairo-ecs-ffi library is packaged for the Go module, while release publication now sits under Track 42."
   - track_id: "12"
     phase: "track-closeout"
     state: closed

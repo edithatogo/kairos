@@ -17,7 +17,7 @@
 - Do not add module proxy publishing, release tags, or credentials here.
 - Do not expand into other language bindings or release-engineering surfaces.
 - Do not widen beyond the Go binding and local validation boundary.
-- Stop at local test/vet/tidy validation until Track 12 owns parity and Track 15 owns dry-runs.
+- Stop at local test/vet/tidy validation until Track 12 owns parity and Track 15 owns dry-runs, with Track 42 owning module publication.
 
 ## Focused local validation
 

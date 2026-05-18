@@ -42,7 +42,7 @@
 - Do not add CRAN submission automation, registry credentials, or release publication here.
 - Do not pull in Julia, Python, TypeScript, C#, or Go binding concerns.
 - Do not widen to core runtime changes; remain at the R package boundary.
-- Stop after local package validation until Track 12 owns fixture parity and Track 15 owns release dry-runs.
+- Stop after local package validation until Track 12 owns fixture parity and Track 15 owns release dry-runs, with Track 42 owning publication.
 
 ## CI command
 

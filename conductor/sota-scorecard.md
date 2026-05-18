@@ -14,7 +14,7 @@
 | Benchmarks | fair benchmark suite | Published reproducibility instructions |
 | Supply chain | SBOM, attestations, Scorecard, Best Practices | Release checklist gate |
 | Community | model zoo, good-first issues, governance | Contributor onboarding page |
-| Publishing | staged registries | Test registry/dry-run before production publish |
+| Publishing | staged registries with Track 42/43 gates | Trusted publishing or protected publication before production write |
 | Maintenance | deprecation and compatibility policy | Public compatibility table |
 | Interoperability | standards review | mapping docs published |
 

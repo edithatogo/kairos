@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "release_stage": "hpc-publication-implementation",
+  "production_publish_default": false,
+  "health_floor": 9.5,
+  "github_environment": "hpc-publication",
+  "registries": [
+    {
+      "surface": "OCI image",
+      "registry": "ghcr.io/edithatogo/kairo-ecs-cli",
+      "dry_run": "node scripts/release/publish-hpc.mjs --mode dry-run --version 0.0.0-test",
+      "preconditions": ["Add --with-docker on a Docker-capable runner for local container build proof"],
+      "publish": "docker buildx build --push",
+      "evidence_required": ["image digest", "SBOM", "signature or attestation", "CLI smoke output"],
+      "status": "implemented-gated"
+    },
+    {
+      "surface": "Kubernetes bundle",
+      "registry": "GitHub Release artifact or OCI artifact",
+      "dry_run": "python k8s/operator/kairoecs_operator.py --experiment k8s/samples/experiment.json",
+      "publish": "upload signed bundle after cluster smoke",
+      "evidence_required": ["kubectl apply output", "CRD status", "pod/job final state"],
+      "status": "blocked-live-runtime"
+    },
+    {
+      "surface": "Slurm templates",
+      "registry": "GitHub Release artifact",
+      "dry_run": "shell/static validation from python cloud/validate_cloud_hpc.py",
+      "publish": "upload signed template bundle after scheduler canary",
+      "evidence_required": ["sbatch job id", "partition", "node count", "final status", "checkpoint artifacts"],
+      "status": "blocked-live-runtime"
+    },
+    {
+      "surface": "AWS Batch templates",
+      "registry": "GitHub Release artifact plus AWS sandbox canary",
+      "dry_run": "python cloud/validate_cloud_hpc.py",
+      "publish": "upload signed template bundle after AWS Batch canary",
+      "evidence_required": ["account alias or sandbox id", "region", "job id", "final status"],
+      "status": "blocked-provider-runtime"
+    },
+    {
+      "surface": "GCP Batch templates",
+      "registry": "GitHub Release artifact plus GCP sandbox canary",
+      "dry_run": "python cloud/validate_cloud_hpc.py",
+      "publish": "upload signed template bundle after GCP Batch canary",
+      "evidence_required": ["project id", "region", "job id", "final status"],
+      "status": "blocked-provider-runtime"
+    },
+    {
+      "surface": "Azure Batch templates",
+      "registry": "GitHub Release artifact plus Azure sandbox canary",
+      "dry_run": "python cloud/validate_cloud_hpc.py",
+      "publish": "upload signed template bundle after Azure Batch canary",
+      "evidence_required": ["subscription or sandbox id", "region", "job id", "final status"],
+      "status": "blocked-provider-runtime"
+    }
+  ]
+}

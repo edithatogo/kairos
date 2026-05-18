@@ -36,7 +36,7 @@
 - Do not add General registry publishing, package server release automation, or credentials here.
 - Do not expand into Python, R, TypeScript, C#, or Go surfaces.
 - Do not widen beyond the Julia package and its conformance adapters.
-- Stop at local package validation until Track 12 owns fixture parity and Track 15 owns dry-run release planning.
+- Stop at local package validation until Track 12 owns fixture parity and Track 15 owns dry-run release planning, with Track 42 owning publication.
 
 ## CI command
 

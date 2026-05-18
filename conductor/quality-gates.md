@@ -107,11 +107,37 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **docs-platform-parity**: validates the current docs platform note exists and states the relationship between the live custom Node site and the Astro/Starlight roadmap or parity closure plan.
 
+**code-health-floor**: `node scripts/validation/validate-code-health.mjs` must report an overall score of at least 9.5 before any production registry write, beta, RC, or 1.0 claim.
+
+**code-health-score**: validates the weighted code/repo health score in `conductor/code-health.md`, including CI, tests, docs, security, supply chain, release, and maintainability categories.
+
+**repo-hygiene-score**: validates branch, PR, issue, generated-artifact, ownership, and clean-worktree expectations that feed the repo-health portion of the health score.
+
+**security-health-score**: validates the scorecard/dependency-review/secret-scan/SBOM/provenance controls that feed the security-health portion of the health score.
+
+**docs-health-score**: validates Starlight/Astro docs build, links, versioning, llms.txt, learning coverage, and mobile/desktop smoke evidence that feed the docs-health portion of the health score.
+
+**package-sota-score**: validates that every publishable package records SOTA/best-current-practice controls: OIDC or least-privilege credentials, provenance/attestation where supported, SBOM/checksums, conformance evidence, compatibility notes, docs links, and rollback/yank guidance.
+
 **package-dry-run**: validates package inventory/dry-run output without publishing.
 
 **checksums**: validates checksum manifest generation for release artifacts when artifacts exist.
 
 **release-checklist**: validates release checklist coverage and stage-specific blockers.
+
+**registry-publication-plan**: `node scripts/validation/validate-publication-readiness.mjs` validates `packaging/publication-registry-manifest.json`, `.github/workflows/registry-publish.yml`, and release docs for every language registry lane.
+
+**trusted-publisher-oidc**: validates that supported registries prefer trusted publishing or OIDC-backed publication, and that token-only fallback lanes are environment-gated and documented with expiration/rotation requirements.
+
+**provenance-attestation**: validates that registry publication workflows request OIDC where supported and preserve provenance/SBOM/checksum artifact links for each release lane.
+
+**hpc-registry-publication-plan**: `node scripts/validation/validate-hpc-registry-readiness.mjs` validates the OCI/container, Kubernetes, Slurm, AWS Batch, GCP Batch, and Azure Batch publication/acceptance lanes.
+
+**container-registry-provenance**: validates that container publication plans require OCI labels, SBOM, signature or attestation, digest pinning, and rollback guidance before public image promotion.
+
+**scheduler-runtime-evidence**: validates that Slurm and Kubernetes publication claims remain blocked until command, runner/cluster, job ID, final status, and artifact references are recorded.
+
+**provider-batch-canary**: validates that AWS, GCP, and Azure batch lanes require sandbox canary evidence before production-ready cloud/HPC claims.
 
 **compatibility-policy**: validates release compatibility policy and protected-surface references.
 

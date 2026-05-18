@@ -1,6 +1,7 @@
 # Packaging
 
-Track 15 owns release packaging plans and dry-runs.
+Track 15 owns release packaging dry-runs. Track 42 owns production publication
+gates and registry submission workflows.
 
 Create ecosystem-specific subdirectories only when the corresponding binding or native artifact has a real package manifest.
 

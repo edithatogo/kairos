@@ -17,4 +17,4 @@ Native FFI remains not configured unless one of these is present:
 - `KAIRO_ECS_NATIVE_LIB_DIR` points to a directory containing the platform library.
 - The package includes `runtimes/{rid}/native/{library}` for the active runtime identifier.
 
-Track 15 owns future publish automation, signing, registry credentials, and release dry-runs.
+Track 42 owns future publish automation, signing, registry credentials, and release publication.

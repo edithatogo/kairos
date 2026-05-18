@@ -85,7 +85,7 @@ Result: preview restore passed. Preview build remains blocked before project com
 
 - SDK drift between .NET 10 and .NET 11 surfaces.
 - The local .NET 11 preview SDK currently fails in this environment with Roslyn named-pipe access errors; validate `net11.0` in CI or after the preview SDK issue is resolved.
-- NuGet package shape changing before Track 15 owns dry-run release planning.
+- NuGet package shape changing before Track 15 owns dry-run release planning and Track 42 owns publication.
 - Cross-language fixture drift if Track 12 changes after the binding lands.
 - Native FFI load checks remain blocked until Track 02 provides stable runtime artifacts.
 
