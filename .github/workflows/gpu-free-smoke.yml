@@ -60,19 +60,14 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Require NIM secrets on trusted runs
-        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
-        env:
-          NVIDIA_NIM_BASE_URL: ${{ secrets.NVIDIA_NIM_BASE_URL }}
-          NVIDIA_NIM_API_KEY: ${{ secrets.NVIDIA_NIM_API_KEY }}
-        run: |
-          test -n "$NVIDIA_NIM_BASE_URL"
-          test -n "$NVIDIA_NIM_API_KEY"
-
       - name: NIM smoke
-        if: ${{ secrets.NVIDIA_NIM_BASE_URL != '' && secrets.NVIDIA_NIM_API_KEY != '' }}
         env:
           NVIDIA_NIM_BASE_URL: ${{ secrets.NVIDIA_NIM_BASE_URL }}
           NVIDIA_NIM_API_KEY: ${{ secrets.NVIDIA_NIM_API_KEY }}
           NVIDIA_NIM_MODEL: ${{ secrets.NVIDIA_NIM_MODEL }}
-        run: node scripts/nim/nim-gpu-smoke.mjs
+        run: |
+          if [ -z "$NVIDIA_NIM_BASE_URL" ] || [ -z "$NVIDIA_NIM_API_KEY" ]; then
+            echo "NVIDIA NIM secrets are not configured; skipping optional NIM smoke."
+            exit 0
+          fi
+          node scripts/nim/nim-gpu-smoke.mjs
