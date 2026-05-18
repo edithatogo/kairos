@@ -126,7 +126,8 @@ jobs:
       - name: Go smoke
         run: |
           test -f bindings/go/go.mod
-          test -z "$(gofmt -l $(git ls-files 'bindings/go/*.go'))"
+          mapfile -t go_files < <(git ls-files 'bindings/go/*.go')
+          test -z "$(gofmt -l "${go_files[@]}")"
           cd bindings/go
           go vet ./...
           go test ./...

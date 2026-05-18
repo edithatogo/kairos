@@ -43,3 +43,7 @@ Format:
 - Track 12 conformance status now records the merged PR #12 closeout and moves the track to In Review.
 - NuGet package dry-runs now target the stable `net10.0` package lane explicitly so the preview `net11.0` compatibility lane does not require a preview SDK in release packaging CI.
 - Public docs workflow validation now builds the Starlight site and smokes the generated documentation output instead of checking the retired static-site scaffold.
+
+### Fixed
+
+- Go binding CI now runs `gofmt` with shellcheck-safe file argument handling while preserving the existing tracked-file format gate.
