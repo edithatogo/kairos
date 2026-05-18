@@ -3,7 +3,7 @@ const apiKey = process.env.NVIDIA_NIM_API_KEY || process.env.NIM_API_KEY || "";
 const modelHint = process.env.NVIDIA_NIM_MODEL || process.env.NIM_MODEL || "";
 
 function normalizeBaseUrl(value) {
-  return value.replace(/\/+$/, "");
+  return value.trim().replace(/\/+$/, "");
 }
 
 function toJson(value) {
