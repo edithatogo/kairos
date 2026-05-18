@@ -50,3 +50,4 @@ Format:
 - Track 13 workflow inventory gates now include `.github/workflows/gpu-free-smoke.yml` so conductor metadata validation covers the new GPU-free smoke workflow.
 - Track 38 FMI test evidence now records the live shared-library FMU test blocker required by the conductor coverage gate.
 - Docs platform documentation now preserves the existing tutorial-quality sentinel wording while documenting the Astro/Starlight migration.
+- Docs Quality CI now installs `website` dependencies before running the Astro/Starlight docs workflow validator.

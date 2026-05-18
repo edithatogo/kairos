@@ -55,6 +55,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Tutorial validation
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1
+      - name: Install website dependencies
+        run: npm ci --prefix website
       - name: Docs workflow validation
         run: node scripts/dx/validate-docs-workflow.mjs
       - name: Learning coverage matrix
