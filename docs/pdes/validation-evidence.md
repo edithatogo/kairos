@@ -2,6 +2,7 @@
 
 Track 34 keeps PDES validation conservative and local to `kairo-ecs-pdes`.
 The current validator does not claim scheduler integration or real speedup.
+No hardware-speedup or hardware-parity claim is made in this slice.
 
 ## Local Validator
 
@@ -15,6 +16,18 @@ evidence for:
 - non-empty remote-event and null-message traffic;
 - deadlock smoke completion for the full tick count.
 
+Additional transport/lifecycle checks now recorded in this slice:
+
+- LP registration rejects duplicate LP IDs, mismatched segment IDs, self-neighbor
+  declarations, and duplicate neighbor entries at `add_lp` time.
+- transport sends/receives are strict; sending or receiving against unknown LP
+  IDs fails with `TransportError`, and send envelopes with an unknown source or
+  mismatched embedded destination are rejected before queueing.
+- stale null-message safe times never move an LP backwards; the scheduler clamps
+  the safe processing target to at least the LP's current local time.
+- scheduler step advancement is fallible and propagates routing/registration failures
+  to testable local evidence.
+
 The long stress fixture remains `deadlock_stress_report()`: 8 LPs, 10,000
 ticks, and protocol traffic on every tick.
 
@@ -27,11 +40,8 @@ cargo fmt --manifest-path crates/kairo-ecs-pdes/Cargo.toml -- --check
 cargo test --manifest-path crates/kairo-ecs-pdes/Cargo.toml --features pdes
 ```
 
-On the current Windows workstation, the first three checks pass. Runtime test
-execution is blocked before tests start because the MSVC test binary links via
-Git's `usr\bin\link.exe`, which fails with Win32 error 5. The `rust-lld`
-fallback also links far enough to prove compilation but cannot find Windows SDK
-import libraries such as `kernel32.lib`.
+The Track 34 validation wrapper runs the compile checks by default and runs
+runtime tests with `-RunTests` through the GNU stable toolchain where available.
 
 ## Scope Boundary
 

@@ -34,6 +34,8 @@ foreach ($path in @(
     'docs/community/README.md',
     'docs/community/adoption.md',
     'docs/community/model-zoo.md',
+    'docs/tutorials/coverage-matrix.md',
+    'docs/developer-experience/docs-platform.md',
     'bindings/python/README.md',
     'bindings/typescript/README.md',
     'crates/kairo-ecs-core/src/lib.rs'
@@ -51,10 +53,17 @@ Assert-Contains 'docs/tutorials/model-building.md' 'M/M/1 queue' 'DES example li
 Assert-Contains 'docs/tutorials/model-building.md' 'Factory bottleneck' 'factory example link text'
 Assert-Contains 'docs/tutorials/model-building.md' 'Flocking' 'ABM example link text'
 Assert-Contains 'docs/tutorials/model-building.md' 'Emergency department flow' 'hybrid example link text'
+Assert-Contains 'docs/tutorials/index.md' 'coverage-matrix.md' 'tutorial coverage matrix cross-link'
+Assert-Contains 'docs/tutorials/index.md' 'Learning Coverage Matrix' 'tutorial coverage matrix label'
+Assert-Contains 'docs/tutorials/coverage-matrix.md' 'Learning Coverage Matrix' 'coverage matrix title'
+Assert-Contains 'docs/tutorials/coverage-matrix.md' 'Docs platform status' 'docs platform note'
+Assert-Contains 'docs/tutorials/coverage-matrix.md' 'The repository does not require a notebook for every language' 'notebook exclusion note'
 
 Assert-Contains 'examples/docs/README.md' 'docs/tutorials/index.md' 'examples docs tutorial index cross-link'
 Assert-Contains 'docs/community/README.md' 'docs-tutorials' 'community docs-tutorials gate'
 Assert-Contains 'docs/community/adoption.md' 'docs/tutorials/index.md' 'adoption tutorial path cross-link'
+Assert-Contains 'docs/developer-experience/docs-platform.md' 'Astro/Starlight' 'docs platform roadmap target'
+Assert-Contains 'docs/developer-experience/docs-platform.md' 'custom Node' 'docs platform current site'
 
 foreach ($path in $tutorials) {
     $content = Get-Content -LiteralPath $path -Raw

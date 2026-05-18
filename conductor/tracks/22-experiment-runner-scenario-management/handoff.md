@@ -133,3 +133,23 @@ Tracks 21, 28, and release planning may consume only the smoke evidence named he
 - next-phase decision: Track 22 is `Done`; keep resumability and production
   runner claims bounded to the committed smoke scenario until broader runner
   coverage exists.
+
+## Track 39 CLI handoff approval -- 2026-05-18
+
+Track 22 remains the owner of `crates/kairo-ecs-cli/`. The minimal `run`,
+`checkpoint`, and `resume` commands currently present in
+`crates/kairo-ecs-cli/src/main.rs` are accepted as a Track 22 handoff surface for
+Track 39 wrapper compatibility only:
+
+- `run --scenario ... --output ...` may either execute the existing
+  Track 22 smoke replay path when a seed manifest is supplied or capture a
+  runner request when no seed manifest is supplied.
+- `checkpoint --output ...` writes a scaffold checkpoint manifest for
+  interruption-path validation.
+- `resume --checkpoint ... --output ...` validates the checkpoint path and
+  writes a scaffold resume request.
+
+This approval does not promote Track 39 to owner of the experiment-runner CLI,
+does not add production resumability evidence, and does not change the broader
+Track 22 boundary: real experiment execution, checkpoint state semantics,
+resume semantics, `collect`, and `analyze` remain Track 22 follow-up work.

@@ -5,10 +5,11 @@ The GPU path is an accelerator behind a facade rather than a replacement schedul
 ## Flow
 
 1. CPU code builds a flat `GpuState` buffer.
-2. The backend uploads buffers through a `TransferPlan`.
-3. The backend dispatches ABM or DES kernels.
-4. The backend downloads changed buffers.
-5. CPU code remains the source of truth for orchestration and validation.
+2. Host code can precompute a `GpuExecutionPlan` to inspect footprint, dispatch shape, and transfer bytes before any device opens.
+3. The backend uploads buffers through a `TransferPlan`.
+4. The backend dispatches ABM or DES kernels.
+5. The backend downloads changed buffers.
+6. CPU code remains the source of truth for orchestration and validation.
 
 ## Ownership
 

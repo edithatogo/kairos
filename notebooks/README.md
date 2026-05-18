@@ -16,6 +16,12 @@ They are intentionally lightweight:
 - [Reproducible benchmark scenario](reproducible_benchmark_scenario.ipynb)
   reads the committed regression fixtures and threshold table to explain the
   offline performance guard.
+- [Colab GPU smoke route](colab_gpu_smoke.ipynb) documents the hosted GPU
+  smoke route without requiring local GPU hardware.
+- [Colab TPU smoke route](colab_tpu_smoke.ipynb) documents the hosted TPU
+  smoke route at the notebook level.
+- [Colab TPU dedicated smoke route](colab_tpu_dedicated_smoke.ipynb) records
+  the dedicated TPU smoke path used by the learning-coverage matrix.
 
 ## Validation
 

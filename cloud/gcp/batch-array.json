@@ -6,7 +6,7 @@
           {
             "container": {
               "imageUri": "${KAIRO_IMAGE}",
-              "commands": ["run", "--scenario", "${KAIRO_SCENARIO_PREFIX}/variant-${BATCH_TASK_INDEX}.yaml"]
+              "commands": ["run", "--scenario", "${KAIRO_SCENARIO_PREFIX}/variant-${BATCH_TASK_INDEX}.yaml", "--output", "${KAIRO_OUTPUT_URI}/variant-${BATCH_TASK_INDEX}"]
             }
           }
         ],

@@ -1,4 +1,7 @@
+use crate::transfer::{TransferDirection, TransferPlan, TransferStep};
+
 /// Agent particle state used by the first GPU parity harness.
+#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct AgentParticle {
     pub x: f32,
@@ -8,6 +11,7 @@ pub struct AgentParticle {
 }
 
 /// Minimal DES event representation for deterministic dispatch scaffolding.
+#[repr(C)]
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct DesEvent {
     pub timestamp_ns: u64,
@@ -27,6 +31,87 @@ impl GpuState {
         Ok(GpuStateFootprint {
             particles_bytes: checked_slice_bytes::<AgentParticle>(self.particles.len())?,
             entity_values_bytes: checked_slice_bytes::<i32>(self.entity_values.len())?,
+        })
+    }
+
+    pub fn transfer_plan(&self) -> Result<TransferPlan, GpuComputeError> {
+        let footprint = self.footprint()?;
+        let mut plan = TransferPlan::new();
+
+        if footprint.particles_bytes > 0 {
+            plan.push(TransferStep {
+                label: "particles.upload".into(),
+                direction: TransferDirection::HostToGpu,
+                len_bytes: footprint.particles_bytes,
+            });
+            plan.push(TransferStep {
+                label: "particles.download".into(),
+                direction: TransferDirection::GpuToHost,
+                len_bytes: footprint.particles_bytes,
+            });
+        }
+
+        if footprint.entity_values_bytes > 0 {
+            plan.push(TransferStep {
+                label: "entity_values.upload".into(),
+                direction: TransferDirection::HostToGpu,
+                len_bytes: footprint.entity_values_bytes,
+            });
+            plan.push(TransferStep {
+                label: "entity_values.download".into(),
+                direction: TransferDirection::GpuToHost,
+                len_bytes: footprint.entity_values_bytes,
+            });
+        }
+
+        Ok(plan)
+    }
+
+    pub fn abm_execution_plan(
+        &self,
+        dt: f32,
+        seed: u64,
+    ) -> Result<GpuExecutionPlan, GpuComputeError> {
+        let state_footprint = self.footprint()?;
+        Ok(GpuExecutionPlan {
+            workload: GpuWorkloadKind::AbmStep { dt, seed },
+            state_footprint,
+            dispatch_shape: DispatchShape::for_items(self.particles.len())?,
+            transfer_plan: self.transfer_plan()?,
+            memory_budget: TRACK32_TARGET_MEMORY_BUDGET,
+        })
+    }
+
+    pub fn des_execution_plan(
+        &self,
+        events: &[DesEvent],
+    ) -> Result<GpuExecutionPlan, GpuComputeError> {
+        let state_footprint = self.footprint()?;
+        let mut transfer_plan = self.transfer_plan()?;
+
+        if !events.is_empty() {
+            let event_bytes = core::mem::size_of_val(events);
+            transfer_plan.push(TransferStep {
+                label: "events.upload".into(),
+                direction: TransferDirection::HostToGpu,
+                len_bytes: event_bytes,
+            });
+            transfer_plan.push(TransferStep {
+                label: "events.download".into(),
+                direction: TransferDirection::GpuToHost,
+                len_bytes: event_bytes,
+            });
+        }
+
+        Ok(GpuExecutionPlan {
+            workload: GpuWorkloadKind::DesStep {
+                event_count: events.len(),
+                event_bytes: core::mem::size_of_val(events),
+            },
+            state_footprint,
+            dispatch_shape: DispatchShape::for_items(events.len())?,
+            transfer_plan,
+            memory_budget: TRACK32_TARGET_MEMORY_BUDGET,
         })
     }
 }
@@ -57,6 +142,75 @@ impl GpuStateFootprint {
 
         total_bytes <= budget.max_device_bytes
             && total_bytes.saturating_mul(2) <= budget.max_staging_bytes
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum GpuWorkloadKind {
+    AbmStep {
+        dt: f32,
+        seed: u64,
+    },
+    DesStep {
+        event_count: usize,
+        event_bytes: usize,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct GpuExecutionPlan {
+    pub workload: GpuWorkloadKind,
+    pub state_footprint: GpuStateFootprint,
+    pub dispatch_shape: DispatchShape,
+    pub transfer_plan: TransferPlan,
+    pub memory_budget: GpuMemoryBudget,
+}
+
+impl GpuExecutionPlan {
+    pub fn transfer_bytes_to_gpu(&self) -> usize {
+        self.transfer_plan.total_host_to_gpu_bytes()
+    }
+
+    pub fn transfer_bytes_from_gpu(&self) -> usize {
+        self.transfer_plan.total_gpu_to_host_bytes()
+    }
+
+    pub fn roundtrip_transfer_bytes(&self) -> usize {
+        self.transfer_bytes_to_gpu()
+            .saturating_add(self.transfer_bytes_from_gpu())
+    }
+
+    pub fn checked_device_bytes_required(&self) -> Result<usize, GpuComputeError> {
+        let state_bytes = self.state_footprint.checked_total_bytes()?;
+        match self.workload {
+            GpuWorkloadKind::AbmStep { .. } => Ok(state_bytes),
+            GpuWorkloadKind::DesStep { event_bytes, .. } => state_bytes
+                .checked_add(event_bytes)
+                .ok_or(GpuComputeError::MemorySizeOverflow),
+        }
+    }
+
+    pub fn checked_staging_bytes_required(&self) -> Result<usize, GpuComputeError> {
+        self.transfer_plan
+            .checked_total_host_to_gpu_bytes()
+            .and_then(|uploaded| {
+                self.transfer_plan
+                    .checked_total_gpu_to_host_bytes()
+                    .and_then(|downloaded| uploaded.checked_add(downloaded))
+            })
+            .ok_or(GpuComputeError::MemorySizeOverflow)
+    }
+
+    pub fn fits_within_budget(&self) -> bool {
+        let Ok(device_bytes) = self.checked_device_bytes_required() else {
+            return false;
+        };
+        let Ok(staging_bytes) = self.checked_staging_bytes_required() else {
+            return false;
+        };
+
+        device_bytes <= self.memory_budget.max_device_bytes
+            && staging_bytes <= self.memory_budget.max_staging_bytes
     }
 }
 
@@ -180,13 +334,10 @@ impl CpuFallbackCompute {
     }
 
     fn jitter(seed: u64, index: usize) -> f32 {
-        let mut value = seed ^ ((index as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15));
-        value ^= value >> 30;
-        value = value.wrapping_mul(0xBF58_476D_1CE4_E5B9);
-        value ^= value >> 27;
-        value = value.wrapping_mul(0x94D0_49BB_1331_11EB);
-        value ^= value >> 31;
-        ((value & 0xffff) as f32 / 65_535.0) - 0.5
+        let mut state = (seed as u32) ^ ((index as u32).wrapping_mul(747_796_405));
+        state = ((state >> ((state >> 28) + 4)) ^ state).wrapping_mul(277_803_737);
+        state = (state >> 22) ^ state;
+        ((state & 0xffff) as f32 / 65_535.0) - 0.5
     }
 }
 
@@ -285,6 +436,11 @@ mod tests {
 
     #[test]
     fn state_footprint_tracks_flat_buffer_bytes() {
+        assert_eq!(core::mem::size_of::<AgentParticle>(), 16);
+        assert_eq!(core::mem::align_of::<AgentParticle>(), 4);
+        assert_eq!(core::mem::size_of::<DesEvent>(), 24);
+        assert_eq!(core::mem::align_of::<DesEvent>(), 8);
+
         let state = GpuState {
             particles: vec![
                 AgentParticle {
@@ -317,5 +473,123 @@ mod tests {
                 invocation_count: 257,
             }
         );
+    }
+
+    #[test]
+    fn abm_execution_plan_tracks_state_and_transfers() {
+        let state = GpuState {
+            particles: vec![
+                AgentParticle {
+                    x: 1.0,
+                    y: 2.0,
+                    vx: 0.5,
+                    vy: -0.25,
+                };
+                4
+            ],
+            entity_values: vec![7, 11],
+        };
+
+        let plan = state.abm_execution_plan(0.25, 99).unwrap();
+        let footprint = state.footprint().unwrap();
+
+        assert_eq!(
+            plan.workload,
+            GpuWorkloadKind::AbmStep { dt: 0.25, seed: 99 }
+        );
+        assert_eq!(plan.dispatch_shape.invocation_count, 4);
+        assert_eq!(plan.transfer_plan.len(), 4);
+        assert_eq!(plan.transfer_bytes_to_gpu(), footprint.total_bytes());
+        assert_eq!(plan.transfer_bytes_from_gpu(), footprint.total_bytes());
+        assert!(plan.fits_within_budget());
+    }
+
+    #[test]
+    fn des_execution_plan_accounts_for_event_roundtrip() {
+        let state = GpuState {
+            particles: vec![],
+            entity_values: vec![0, 0, 0],
+        };
+        let events = vec![
+            DesEvent {
+                timestamp_ns: 20,
+                entity_id: 1,
+                delta: 7,
+            },
+            DesEvent {
+                timestamp_ns: 10,
+                entity_id: 1,
+                delta: -2,
+            },
+            DesEvent {
+                timestamp_ns: 10,
+                entity_id: 2,
+                delta: 4,
+            },
+        ];
+
+        let plan = state.des_execution_plan(&events).unwrap();
+        let footprint = state.footprint().unwrap();
+        let event_bytes = core::mem::size_of_val(&events[..]);
+
+        assert_eq!(
+            plan.workload,
+            GpuWorkloadKind::DesStep {
+                event_count: events.len(),
+                event_bytes,
+            }
+        );
+        assert_eq!(plan.dispatch_shape.invocation_count, events.len() as u32);
+        assert_eq!(plan.transfer_plan.len(), 4);
+        assert_eq!(
+            plan.checked_device_bytes_required().unwrap(),
+            footprint.total_bytes() + event_bytes
+        );
+        assert_eq!(
+            plan.checked_staging_bytes_required().unwrap(),
+            2 * (footprint.total_bytes() + event_bytes)
+        );
+        assert_eq!(
+            plan.transfer_bytes_to_gpu(),
+            footprint.total_bytes() + event_bytes
+        );
+        assert_eq!(
+            plan.transfer_bytes_from_gpu(),
+            footprint.total_bytes() + event_bytes
+        );
+        assert!(plan.fits_within_budget());
+    }
+
+    #[test]
+    fn des_execution_plan_budget_checks_include_event_transfer_pressure() {
+        let state = GpuState {
+            particles: vec![],
+            entity_values: vec![0],
+        };
+        let events = vec![
+            DesEvent {
+                timestamp_ns: 1,
+                entity_id: 0,
+                delta: 1,
+            },
+            DesEvent {
+                timestamp_ns: 2,
+                entity_id: 0,
+                delta: -1,
+            },
+        ];
+
+        let mut plan = state.des_execution_plan(&events).unwrap();
+        let device_bytes = plan.checked_device_bytes_required().unwrap();
+        let staging_bytes = plan.checked_staging_bytes_required().unwrap();
+
+        plan.memory_budget = GpuMemoryBudget::new(device_bytes, staging_bytes - 1);
+        assert!(!plan.fits_within_budget());
+
+        plan.memory_budget = GpuMemoryBudget::new(device_bytes - 1, staging_bytes);
+        assert!(!plan.fits_within_budget());
+
+        plan.memory_budget = GpuMemoryBudget::new(device_bytes, staging_bytes);
+        assert!(plan.fits_within_budget());
     }
 }

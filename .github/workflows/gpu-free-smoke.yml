@@ -12,7 +12,9 @@ on:
       - "docs/gpu-compute/**"
       - "website/webgpu-demo/**"
       - "scripts/nim/**"
+      - "notebooks/colab_gpu_smoke.ipynb"
       - "notebooks/colab_tpu_smoke.ipynb"
+      - "notebooks/colab_tpu_dedicated_smoke.ipynb"
       - ".github/workflows/gpu-free-smoke.yml"
   workflow_dispatch:
 
@@ -58,7 +60,17 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Require NIM secrets on trusted runs
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          NVIDIA_NIM_BASE_URL: ${{ secrets.NVIDIA_NIM_BASE_URL }}
+          NVIDIA_NIM_API_KEY: ${{ secrets.NVIDIA_NIM_API_KEY }}
+        run: |
+          test -n "$NVIDIA_NIM_BASE_URL"
+          test -n "$NVIDIA_NIM_API_KEY"
+
       - name: NIM smoke
+        if: ${{ secrets.NVIDIA_NIM_BASE_URL != '' && secrets.NVIDIA_NIM_API_KEY != '' }}
         env:
           NVIDIA_NIM_BASE_URL: ${{ secrets.NVIDIA_NIM_BASE_URL }}
           NVIDIA_NIM_API_KEY: ${{ secrets.NVIDIA_NIM_API_KEY }}

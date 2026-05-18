@@ -6,7 +6,7 @@
           {
             "container": {
               "imageUri": "${KAIRO_IMAGE}",
-              "commands": ["run", "--scenario", "${KAIRO_SCENARIO}"]
+              "commands": ["run", "--scenario", "${KAIRO_SCENARIO}", "--output", "${KAIRO_OUTPUT_URI}"]
             }
           }
         ],

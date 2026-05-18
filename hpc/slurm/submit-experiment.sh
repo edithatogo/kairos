@@ -42,9 +42,9 @@ on_term() {
 trap on_term TERM
 
 if command -v apptainer >/dev/null 2>&1; then
-  apptainer exec "docker://${image}" kairo-ecs-cli run --scenario "${scenario}"
+  apptainer exec "docker://${image}" kairo-ecs-cli run --scenario "${scenario}" --output "${output}"
 else
-  kairo-ecs-cli run --scenario "${scenario}"
+  kairo-ecs-cli run --scenario "${scenario}" --output "${output}"
 fi
 SLURM
 

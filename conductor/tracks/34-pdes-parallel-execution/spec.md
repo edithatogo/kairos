@@ -63,11 +63,14 @@ Depends on Track 01 (sequential scheduler — must be proven deterministic first
 - GVT progresses monotonically without deadlock under representative simulation loads.
 - Deadlock-free stress test passes for 10,000+ tick simulations with random event patterns across 8 LPs.
 - `LogicalProcess` trait is documented with usage examples in `docs/pdes/`.
-- Gated behind cargo feature flag `pdes`. Not enabled by default.
+- Current R2 scaffold compiles both with and without the `pdes` feature so
+  downstream tracks can consume the transport contract during validation. The
+  `pdes` feature is retained as the staged runtime/backends gate for future
+  non-scaffold dependencies and remains disabled by default.
 
 ## Release implications
 
-PDES is a performance enhancement — does not affect API compatibility for sequential users. Gated behind cargo feature flag `pdes`. Does not block release if sequential scheduler is correct. Enabling PDES for a given simulation requires explicit world partitioning by the user.
+PDES is a performance enhancement — does not affect API compatibility for sequential users. The current R2 transport/scaffold API is available for downstream validation, while future non-scaffold runtime backends stay behind the `pdes` feature. Does not block release if sequential scheduler is correct. Enabling PDES for a given simulation requires explicit world partitioning by the user.
 
 ## Non-goals
 

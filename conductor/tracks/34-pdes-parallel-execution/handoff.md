@@ -21,6 +21,10 @@ Implemented artifacts:
     workloads.
   - compile-checked long-run stress fixture that verifies one GVT advance per
     tick across an 8-LP, 10,000-tick workload.
+- strict registration and transport error boundaries in `crates/kairo-ecs-pdes/src/lib.rs`:
+  `add_lp(...)` now rejects duplicate LP IDs, mismatched segment IDs, self
+  neighbors, and duplicate neighbors; scheduler and transport operations are now
+  fallible and fail fast on unknown LP IDs.
 - `docs/pdes/sequential-determinism-baseline.md`
 - `docs/pdes/logical-process-trait.md`
 - `docs/pdes/event-exchange-protocol.md`
@@ -51,23 +55,21 @@ Attempted unit-test command:
 cargo test --manifest-path crates/kairo-ecs-pdes/Cargo.toml --features pdes
 ```
 
-The optional runtime gate reached the linker and failed because `link.exe`
-resolves to `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`, which
-failed with Win32 error 5 while creating signal/mapping objects. Retrying with:
+The runtime gate now passes through the GNU Rust toolchain:
 
 ```powershell
-$env:RUSTFLAGS='-C linker=rust-lld'; cargo test --manifest-path crates/kairo-ecs-pdes/Cargo.toml --features pdes
+pwsh -NoProfile -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests
 ```
 
-failed because Windows SDK import libraries such as `kernel32.lib`, `ntdll.lib`,
-`userenv.lib`, `ws2_32.lib`, and `dbghelp.lib` were not on the linker search
-path.
+This proves the local PDES crate tests and regression coverage on this host. It
+does not satisfy the remaining scaling benchmark or Time Warp evidence.
 
 ## Not complete
 
-- Sequential parity, validator, and deadlock-stress fixtures compile under
-  `--tests`, but runtime execution on this host still fails at link time as
-  described above.
+- Sequential parity, validator, and deadlock-stress fixtures now run through the
+  GNU-toolchain runtime gate on this host.
+- `kairo-ecs-pdes` now rejects invalid LP topologies deterministically at crate
+  boundaries; this is validated by local unit tests under `--tests`.
 - Scaling benchmarks are not implemented or run yet.
 - Time Warp research spike is not implemented.
 - Quality gates under global conductor files are now present for
@@ -121,4 +123,47 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Track 34 is not cleanly closable yet. The offline validator passed on 2026-05-11 (`pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1`), but the optional runtime gate still fails on this host because `link.exe` resolves to the Scoop Git linker and test binaries cannot be linked. Scaling benchmarks and the Time Warp follow-up remain outstanding. Keep this track `In Review` until the runtime gate can run and the remaining closeout evidence is recorded. Before the track can move to `Done`, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+Track 34 is not cleanly closable yet. The offline validator passed on
+2026-05-11 (`pwsh -NoProfile -File
+conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1`), and local
+API-contract regression tests were added to close transport/topology validation
+blockers in-scope for this slice. The GNU-toolchain runtime gate now passes on
+this host, but scaling benchmarks and the Time Warp follow-up remain outstanding.
+Keep this track `In Review` until the remaining closeout evidence is recorded.
+Before the track can move to `Done`, record
+`$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation
+commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict
+`validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase
+decision here.
+
+## Next-phase decision
+
+Remain `In Review`. The transport/topology contract is now tighter and the host
+runtime gate passes, but scaling evidence and the Time Warp follow-up still block
+closeout.
+
+## Review remediation -- 2026-05-17
+
+- Accepted fix: `validate-track34.ps1 -RunTests` now fails loudly when `cargo test` fails instead of printing a false success.
+- Accepted fix: the sequential and partitioned parity references now use separate implementations: the partitioned path builds and applies explicit remote-message batches instead of calling the same state update path with different counters.
+- Accepted fix: the scheduler now carries null-message safe-time into the local processing bound instead of discarding null messages while advancing every LP to the requested horizon.
+- Accepted fix: pending-message GVT calculation no longer treats null-message safe-time advertisements as in-flight application event timestamps.
+- Accepted fix: neighbor validation now rejects unknown LP IDs through the transport boundary.
+- Deferred by scope: scaling benchmark evidence and the Time Warp follow-up remain future work.
+- Validation: `pwsh -NoProfile -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1` passed.
+- Runtime validation: `pwsh -NoProfile -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests` now passes by running `cargo test` through `stable-x86_64-pc-windows-gnu`, avoiding the local MSVC/Git `link.exe` collision.
+
+## Review remediation -- 2026-05-18
+
+- Accepted fix: `PdesScheduler::step_until` now clamps stale null-message safe-times so local process time cannot move backwards.
+- Accepted fix: `ThreadChannelTransport::send` now validates the embedded message source is known and the embedded destination matches the send destination, returning `TransportError::MessageDestinationMismatch` for mismatches.
+- Accepted fix: PDES validation evidence and the central quality-gate text now reflect the GNU-toolchain runtime gate instead of the stale Windows-linker blocker.
+- Validation: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests` passed with 11 PDES tests and doc-tests.
+- Next-phase decision: remain `In Review`; this closes the local monotonic-time and transport-envelope findings, but scaling benchmark evidence and Time Warp follow-up remain outside the completed slice.
+
+## Software-only implementation -- 2026-05-18
+
+- Implemented deterministic 4/8/16/32 LP benchmark-smoke evidence through `scaling_smoke_samples`, proving sequential/partitioned final-state parity, remote-event/null-message traffic, and GVT sample coverage without measuring wall-clock speedup.
+- Implemented `time_warp_two_lp_spike` and documented `docs/pdes/time-warp-spike.md`, recording rollback risk and recommending that production Track 34 stay conservative-first until snapshots, anti-messages, and fossil collection are designed.
+- Updated benchmark documentation and the Track 34 validator so local scaling-smoke evidence is accepted while hardware speedup and hardware parity claims remain explicitly prohibited.
+- Next-phase decision: remain `In Review`; local software-only scaling and Time Warp documentation are now addressed, but hardware throughput speedup and cross-platform runtime evidence remain outside the current dependency-free slice.

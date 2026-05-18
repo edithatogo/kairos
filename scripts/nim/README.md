@@ -17,6 +17,12 @@ The smoke script expects an OpenAI-compatible NIM endpoint:
 - If they are present, the script calls `/v1/models` and
   `/v1/chat/completions`, then prints a small JSON receipt.
 
+## CI strictness
+
+Trusted GitHub Actions runs require both `NVIDIA_NIM_BASE_URL` and
+`NVIDIA_NIM_API_KEY`. Forked pull requests can still skip the smoke because
+GitHub withholds secrets there.
+
 ## Intended use
 
 Use this for NVIDIA-GPU-backed client/runtime compatibility smoke, not for

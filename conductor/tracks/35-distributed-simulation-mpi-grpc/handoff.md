@@ -1,6 +1,6 @@
 # Handoff: Track 35 Distributed Simulation (MPI/gRPC)
 
-Last updated: 2026-05-07
+Last updated: 2026-05-11
 
 ## Current status
 
@@ -28,6 +28,11 @@ Implemented artifacts:
   - dependency-free `GrpcTransport` protocol emulator implementing the Track 34
     `PdesTransport` boundary for compile-checked message round-trip and GVT
     reduction tests.
+-  Added compile-time contract envelopes in both crates:
+   `MpiContractEnvelope` / `MpiContractMessage` and
+   `GrpcContractEnvelope` / `GrpcContractMessage` so message-kind IDs, migration
+   envelopes, and telemetry envelope expectations are checked before runtime
+   backends are introduced.
 - `docs/distributed/transport-trait.md`
 - `docs/distributed/entity-migration-protocol.md`
 - `docs/distributed/telemetry-aggregation.md`
@@ -64,10 +69,17 @@ cargo test --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi --lib
 cargo test --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc --lib
 ```
 
-The test builds reached the linker and failed because `link.exe` resolves to
-`C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`, which failed with
-Win32 error 5 while creating signal/mapping objects. The latest `--lib` attempts
-failed with the same Git MSYS `link.exe` collision and exit code `0xc0000142`.
+The test-runtime gate now passes through the GNU Rust toolchain via:
+
+```powershell
+pwsh -NoProfile -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests
+```
+
+This proves the local dependency-free MPI and gRPC protocol-emulator tests. It
+does not prove the future real `rsmpi`, `tonic`/`prost`, or multi-node runtime.
+
+Protocol transport tests also now validate `PdesTransport` error-path behavior
+(unknown LP IDs return `TransportError`) and message-contract envelopes.
 
 ## Not complete
 
@@ -127,4 +139,49 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Track 35 is not ready for closeout yet. The offline validator passed on 2026-05-10 (`pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1`), and that evidence only confirms the dependency-free emulator checks plus the documented placeholder-transport boundaries. The optional runtime gate (`-RunTests`) remains blocked in this environment by the local `link.exe` collision with Git MSYS (`Win32 error 5` / `0xc0000142`). The remaining project blockers are still the real `rsmpi` transport, the real `tonic`/`prost` gRPC transport, 2-node execution checks, migration serialization, distributed telemetry aggregation, and gRPC fault-tolerance behavior. Keep this track `In Review` until those project blockers are resolved and the closeout evidence can be recorded. Before the track can move to `Done`, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+Track 35 is not ready for closeout yet. The offline validator passed on 2026-05-11
+(`pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1`),
+and that evidence now includes transport trait error-path parity plus protocol-envelope
+contract placeholders.
+The optional runtime gate (`-RunTests`) now passes on this host through
+`stable-x86_64-pc-windows-gnu`. The remaining blockers are still the real
+`rsmpi` transport, the real `tonic`/`prost` gRPC transport, 2-node execution checks, migration serialization,
+distributed telemetry aggregation, and gRPC fault-tolerance behavior. Keep this
+track `In Review` until those blockers are resolved and closeout evidence can be
+recorded. Before the track can move to `Done`, record `$conductor-review` findings,
+accepted fixes, deferred or blocked fixes, validation commands, cleanup state,
+commit SHA or explicit push blocker, pushed ref, strict
+`validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase
+decision here.
+
+## Next-phase decision
+
+Remain `In Review`. The validator now fails loudly on runtime errors, but real
+MPI/gRPC transport wiring and multi-node evidence are still missing.
+
+## Review remediation -- 2026-05-17
+
+- Accepted fix: `validate-track35.ps1` now invokes `cargo check` and `cargo test` with the correct Cargo subcommands.
+- Accepted fix: MPI and gRPC placeholder transports now expose `knows_lp` for the Track 34 transport boundary and reject unknown LPs consistently.
+- Accepted fix: MPI and gRPC `all_reduce_min` emulators now model the current reduction round instead of retaining a sticky historical minimum.
+- Accepted fix: the gRPC contract no longer uses `Option::is_none_or`, preserving the crate's declared Rust 1.76 compatibility.
+- Accepted fix: the gRPC Rust service identity now matches the protobuf package/service name.
+- Deferred by scope: real `rsmpi`, `tonic`/`prost`, multi-node execution, migration serialization, telemetry merge, and fault-tolerance evidence remain future runtime work.
+- Validation: `pwsh -NoProfile -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1` passed.
+- Runtime validation: `pwsh -NoProfile -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests` now passes by running MPI and gRPC crate tests through `stable-x86_64-pc-windows-gnu`, avoiding the local MSVC/Git `link.exe` collision.
+
+## Review remediation -- 2026-05-18
+
+- Accepted fix: MPI and gRPC placeholder transports now include pending `PdesMessage::Event` timestamps in `all_reduce_min`, so GVT cannot pass queued remote events in the emulator path.
+- Accepted fix: MPI and gRPC `send` now validate embedded message source and destination consistently with the Track 34 reference transport, including destination-mismatch regression tests.
+- Accepted fix: `handoff-from-track34.md` now reflects the current `PdesTransport` signature with `knows_lp` and `Result`-returning `send` / `recv`.
+- Accepted fix: distributed docs command examples now include expected output and remove duplicate validation command text where it confused the contract boundary.
+- Validation: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests` passed with 14 MPI tests, 15 gRPC tests, and doc-tests.
+- Next-phase decision: remain `In Review`; this closes the local emulator strictness and GVT findings, but real `rsmpi`, `tonic`/`prost`, two-node execution, migration serialization, telemetry aggregation, and fault-tolerance evidence remain future runtime work.
+
+## Software-only implementation -- 2026-05-18
+
+- Implemented `local_two_rank_contract_proof` for the MPI placeholder transport, covering dependency-free event exchange, migration envelope validation, telemetry merge count, GVT floor, and an explicit no-real-MPI-runtime claim.
+- Implemented `local_two_node_contract_proof` for the gRPC placeholder transport, covering dependency-free event exchange, migration envelope validation, telemetry merge count, non-leader failure classification, and an explicit no-real-gRPC-runtime claim.
+- Updated distributed docs, the test matrix, and `validate-track35.ps1` so the software-only local proof is recorded without implying real `rsmpi`, `tonic`, `prost`, multi-node, or network runtime coverage.
+- Next-phase decision: remain `In Review`; the local dependency-free proof is now stronger, but the real runtime dependencies remain blocked by platform/software setup.

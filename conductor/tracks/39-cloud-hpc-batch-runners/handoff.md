@@ -2,7 +2,7 @@
 
 ## Summary
 
-Defined the scaffold and offline validation layer for production-scale KairoECS execution. The current verified scope is manifest shape, local rendering, shell syntax, checkpoint/spot policy wiring, and local telemetry checksum behavior. The offline validator passes, but live Docker builds, Kubernetes cluster reconciliation, Slurm scheduler submission, and AWS/GCP/Azure provider API acceptance still require environment-backed validation before any readiness claim.
+Defined the scaffold and offline validation layer for production-scale KairoECS execution. The current verified scope is the `kairo-ecs-cli` command surface, manifest shape, local rendering, shell syntax, checkpoint/spot policy wiring, and local telemetry checksum behavior. The offline validator passes, but live Docker builds, Kubernetes cluster reconciliation, Slurm scheduler submission, and AWS/GCP/Azure provider API acceptance still require environment-backed validation before any readiness claim.
 
 ## Files changed
 
@@ -22,15 +22,31 @@ This track is explicitly non-blocking for library release. Container images are 
 ## Concrete artifacts
 
 - **Docker**: `docker build -t kairo-ecs-cli:latest . && docker run kairo-ecs-cli:latest run --help`
-- **K8s operator**: `kubectl apply -f k8s/crd/kairoecs-experiment.yaml && kubectl apply -f k8s/operator/ && kubectl create -f k8s/samples/hello-world-experiment.yaml`
-- **Slurm**: `sbatch hpc/slurm/submit-experiment.sh --scenario scenarios/factory_bottleneck_v1.yaml --output s3://my-bucket/runs/ --partition gpu --nodes 1`
+- **K8s operator**: `python k8s\operator\kairoecs_operator.py --experiment k8s\samples\experiment.json` for offline render validation; live `kubectl apply/create/wait` evidence still requires deployable operator manifests and a cluster context.
+- **Slurm**: `hpc/slurm/submit-experiment.sh --scenario scenarios/factory_bottleneck_v1.yaml --output s3://my-bucket/runs/ --partition gpu --nodes 1` on a scheduler where the wrapper can invoke `sbatch`; use site-supported dry-run/test-only routes when available.
 - **Spot resilience scaffold**: Signal handlers trap SIGTERM and write local checkpoint manifests atomically. Full stateful resume depends on Track 22 CLI checkpoint/resume behavior.
 - **Telemetry output scaffold**: local file destinations copy Arrow files and write `.sha256` sidecars; `s3://`, `gs://`, and `az://` destinations currently write provider upload manifests for later provider-specific upload execution.
-- **Offline validation**: `python cloud\validate_cloud_hpc.py` validates Dockerfile/entrypoint policy, JSON/YAML/text manifest invariants, rendered Kubernetes Job shape, Slurm shell syntax where `bash` is available, local telemetry checksum sidecars, and provider upload manifest schema without live credentials.
+- **Offline validation**: `python cloud/validate_cloud_hpc.py` validates Dockerfile/entrypoint policy, JSON/YAML/text manifest invariants, rendered Kubernetes Job shape, Slurm shell syntax where `bash` is available, local telemetry checksum sidecars, and provider upload manifest schema without live credentials.
 
 ## Latest validation evidence
 
-- 2026-05-11: `python cloud\validate_cloud_hpc.py` passed. It covered Docker non-root entrypoint wiring, Kubernetes CRD/sample/operator rendering, AWS/GCP/Azure template shape, Slurm checkpoint/signal wiring, provider docs, local telemetry checksum sidecars, and provider upload manifest generation.
+- 2026-05-11: `python cloud/validate_cloud_hpc.py` passed. It covered Docker non-root entrypoint wiring, Kubernetes CRD/sample/operator rendering, AWS/GCP/Azure template shape, Slurm checkpoint/signal wiring, provider docs, local telemetry checksum sidecars, and provider upload manifest generation.
+
+## Runtime evidence boundary (2026-05-11)
+
+Live runtime claims are still blocked by environment availability. Record evidence under `docs/cloud-hpc/runtime-evidence-boundary.md` and only promote Track 39 claims after the commands below are run and their terminal outputs archived.
+
+- **Docker/K8s runtime**: not run in this workspace (no local Docker daemon or Kubernetes cluster context available).
+- **Docker live proof required**: `docker build -t kairo-ecs-cli:latest -f docker/Dockerfile .` and `docker run ... run --help` plus a minimal `run` smoke experiment.
+- **Kubernetes runtime proof required**: `kubectl apply -f k8s/crd/kairoecs-experiment.yaml`, operator manifest/application, sample CR create, pod completion, and CRD status transition to `Completed` or `Failed`.
+- **Slurm runtime proof required**: wrapper canaries for `hpc/slurm/submit-experiment.sh --scenario scenarios/factory_bottleneck_v1.yaml --output /tmp/kairo-ecs-runs --partition gpu --nodes 1` and `hpc/slurm/submit-sweep.sh` on a scheduler where the wrappers can invoke `sbatch`, plus terminal status and checkpoint path evidence.
+- **Provider runtime proof required (AWS/GCP/Azure)**: provider-authenticated dry-run or small canary submits plus output/checkpoint terminal validation; no such commands were executed in this scope.
+
+Blockers are explicitly constrained to runtime proof capture, not offline validation. Offline validators remain valid and usable for PR smoke checks and schema review.
+
+## Next-phase decision
+
+Remain `In Review`. Offline validation is complete for this slice, but live Docker, Kubernetes, Slurm, and provider evidence still needs to be captured before any readiness claim.
 
 ## Risks and unresolved questions
 
@@ -71,3 +87,21 @@ No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
 Pending for the next actual phase closeout. The current blocker is not the offline scaffold; it is the remaining live Docker, Kubernetes, Slurm, and provider-runtime evidence required before readiness claims are defensible. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+
+## Review remediation -- 2026-05-17
+
+- Accepted fix: `kairo-ecs-cli` now exposes scaffold-safe `run`, `checkpoint`, and `resume` commands so Track 39 runner artifacts no longer call missing CLI commands.
+- Accepted fix: Kubernetes offline rendering now mounts the configured scenario ConfigMap key, passes an explicit output path to the CLI, and can render a status patch for lifecycle proof scaffolding.
+- Accepted fix: AWS, GCP, Azure, and Slurm runner templates now pass an explicit `--output` argument to the CLI; the GCP array template now uses numeric sample `taskCount` and `parallelism` fields rather than unrendered strings in typed fields.
+- Accepted fix: the offline validator now checks the CLI command surface and warns explicitly when Bash syntax checks are skipped because Git Bash cannot start in this Windows session.
+- Deferred by scope: live Docker daemon, Kubernetes controller reconciliation, Slurm `sbatch`, and provider-submitted canary runs remain required before runtime readiness claims.
+- Validation: `python cloud\validate_cloud_hpc.py` passed with an explicit Bash-startup warning in this host.
+
+## Review remediation -- 2026-05-18
+
+- Accepted fix: resolved the Track 39 CLI ownership concern by recording explicit Track 22 handoff approval for the existing scaffold-only `run`, `checkpoint`, and `resume` CLI surface in `conductor/tracks/22-experiment-runner-scenario-management/handoff.md`. Track 39 remains a consumer of that surface and does not own production runner semantics.
+- Accepted fix: `cloud/gcp/submit-experiment.sh` now renders `cloud/gcp/batch-array.json` with `KAIRO_SWEEP_SIZE` and `KAIRO_PARALLELISM` / `KAIRO_SWEEP_PARALLELISM`, clamping parallelism to the sweep size before submitting to GCP Batch.
+- Accepted fix: `cloud/validate_cloud_hpc.py` now writes the inline Kubernetes experiment smoke input under `cloud/validation-work` with explicit cleanup, so it no longer leaves `.tmp/k8s-inline-experiment.json`.
+- Accepted fix: `cloud/validate_cloud_hpc.py` now runs a limited static shell fallback when Bash exists but cannot start. The fallback checks shebangs, line endings, quoting, heredoc closure, and common block balance, and warns that it is not equivalent to `bash -n`.
+- Validation: `python cloud/validate_cloud_hpc.py` passed with the fallback static shell validation path on this Windows host. Git Bash still failed to start with `couldn't create signal pipe, Win32 error 5`; this does not satisfy live Slurm scheduler proof.
+- Cleanup: `cloud/validation-work` was absent after the passing validator run. `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` passed non-strict after rerun outside the sandbox; strict `-RequireCleanWorkingTree` remains inappropriate before commit/push in this shared dirty worktree.

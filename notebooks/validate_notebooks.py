@@ -56,6 +56,7 @@ def validate_notebook(path: Path) -> None:
         raise AssertionError(f"{path}: expected python3 kernelspec")
 
     namespace: dict[str, object] = {"__name__": "__notebook__"}
+    is_colab_smoke = path.name.startswith("colab_")
     code_cells = 0
     markdown_cells = 0
     for index, cell in enumerate(cells, start=1):
@@ -66,8 +67,9 @@ def validate_notebook(path: Path) -> None:
             validate_local_images(path, source)
         elif cell_type == "code":
             code_cells += 1
-            validate_code_source(path, index, source)
-            exec(compile(source, f"{path}:{index}", "exec"), namespace)
+            validate_code_source(path, index, source, allow_notebook_magics=is_colab_smoke)
+            if not is_colab_smoke:
+                exec(compile(source, f"{path}:{index}", "exec"), namespace)
         else:
             raise AssertionError(f"{path}: unsupported cell type {cell_type!r}")
 
@@ -81,9 +83,11 @@ def source_text(source: object) -> str:
     return str(source)
 
 
-def validate_code_source(path: Path, index: int, source: str) -> None:
+def validate_code_source(path: Path, index: int, source: str, *, allow_notebook_magics: bool = False) -> None:
     lowered = source.lower()
     for pattern in FORBIDDEN_CODE_PATTERNS:
+        if allow_notebook_magics and pattern in {"pip install", "%pip", "!pip", "!python", "!powershell", "!pwsh"}:
+            continue
         if pattern in lowered:
             raise AssertionError(f"{path}:{index}: forbidden code pattern {pattern!r}")
 

@@ -23,8 +23,9 @@ Track 35 should implement transport backends against:
 
 ```rust
 pub trait PdesTransport {
-    fn send(&mut self, dest: LpId, message: PdesMessage);
-    fn recv(&mut self, lp_id: LpId) -> Vec<PdesMessage>;
+    fn knows_lp(&self, lp_id: LpId) -> bool;
+    fn send(&mut self, dest: LpId, message: PdesMessage) -> Result<(), TransportError>;
+    fn recv(&mut self, lp_id: LpId) -> Result<Vec<PdesMessage>, TransportError>;
     fn barrier(&mut self);
     fn all_reduce_min(&mut self, timestamp: Tick) -> Tick;
 }
@@ -52,13 +53,16 @@ point for distributed GVT:
 
 - MPI: `MPI_Allreduce(MPI_MIN)`.
 - gRPC: coordinator aggregation over worker proposals.
+- The reduced value must include pending in-flight event timestamps, not just
+  local LP time proposals, so GVT cannot advance past a queued remote event.
 
 ## Current blockers
 
 - Track 34 now has deterministic sequential parity and 8-LP, 10,000-tick stress
-  fixtures that compile under `cargo check --tests`.
-- Runtime execution of those tests remains blocked in the local Windows shell by
-  the `link.exe` issue described in the Track 34 handoff.
+  fixtures covered by the GNU-toolchain runtime gate.
+- Runtime execution of those tests now passes via
+  `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1 -RunTests`
+  under `stable-x86_64-pc-windows-gnu`.
 - Track 35 may use the Track 34 fixtures for protocol-level parity work, but
   should not mark distributed runtime parity complete until real MPI/gRPC
   backends and 2-node execution checks exist.

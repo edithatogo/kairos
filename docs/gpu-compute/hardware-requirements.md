@@ -19,6 +19,7 @@ evidence above, but they are the practical path for early validation:
 
 - GitHub-hosted macOS runners for Metal-adjacent compile and smoke checks.
 - A local Apple Silicon MacBook Pro for repeatable Metal device smoke.
+- Colab free GPU runtimes for the available NVIDIA GPU notebook smoke route.
 - NVIDIA NIM for NVIDIA-GPU-backed library smoke and runtime compatibility
   checks when an endpoint or container is available.
 - Google Colab free TPU runtimes for TPU-specific prototype notebooks.

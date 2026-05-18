@@ -5,7 +5,7 @@ work.
 
 ## Notebook
 
-- [notebooks/colab_tpu_smoke.ipynb](../../notebooks/colab_tpu_smoke.ipynb)
+- [notebooks/colab_tpu_dedicated_smoke.ipynb](../../notebooks/colab_tpu_dedicated_smoke.ipynb)
 
 ## Run
 

@@ -45,6 +45,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 38 | FMI/FMU & Digital Twin Bridge | Done | `fmi-agent` | See `conductor/tracks/38-*/spec.md` |
 | 39 | Cloud/HPC Batch Runners | In Review | `cloud-agent` | See `conductor/tracks/39-*/spec.md` |
 | 40 | Time-Travel Debugging & Interactive Stepping | Done | `timetravel-agent` | See `conductor/tracks/40-*/spec.md` |
+| 41 | Documentation Platform, Quality Gates & Learning Coverage | Done | `docs-agent + ci-agent + community-agent` | See `conductor/tracks/41-*/spec.md` |
 
 ## Track status vocabulary
 
@@ -63,4 +64,4 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 - Track 05 must remain optional and non-blocking for headless releases.
 - GitHub automation, dependency review, scorecard, SBOM, and release workflows already exist under `.github/`; registry publication manifests remain planned work under Tracks 15 and 20.
 - Tracks 34, 35, and 38 are release-critical for distributed simulation, FMI digital-twin, and PDES infrastructure.
-- Tracks 32, 33, 36, 37, 39, and 40 are non-release-critical (enhancement only).
+- Tracks 32, 33, 36, 37, 39, 40, and 41 are non-release-critical (enhancement only).

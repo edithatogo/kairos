@@ -10,13 +10,13 @@ Initial scaffold implemented and tightened. Browser-native WebGPU device wiring 
 
 ## Summary
 
-Track 33 is building toward GPU-accelerated simulation in the browser via WebGPU compute shaders, paired with the Track 09 Wasm binding layer. The current `kairo-ecs-webgpu` crate is dependency-free and exposes adapter, bridge, reference dispatch, fallback/parity metadata, and explicit backend-unavailable contracts. The browser demo at `website/webgpu-demo/` runs a CPU fallback animation, detects the WebGPU API, and labels real WebGPU dispatch as `backend-not-configured` until Wasm bindings and device setup land. No browser GPU dispatch or 30fps/100K-agent performance claim is made by the current artifacts.
+Track 33 is building toward GPU-accelerated simulation in the browser via WebGPU compute shaders, paired with the Track 09 Wasm binding layer. The current `kairo-ecs-webgpu` crate is dependency-free and exposes adapter, bridge, reference dispatch, fallback/parity metadata, and explicit backend-unavailable contracts. The browser demo at `website/webgpu-demo/` runs a CPU fallback animation, detects the WebGPU API, and labels real WebGPU dispatch as `backend-not-configured` until Wasm bindings and device setup land. No browser GPU dispatch or frame-rate performance claim is made by the current artifacts.
 
 This slice adds an explicit "host-only next-harvest" control layer:
 
 - The track plan now names host-only maintenance tasks.
 - The track validator (`validate-track33.ps1`) now enforces contract strings that prevent accidental runtime performance claims in offline artifacts.
-- The demo and track matrix now record fallback-boundary status as complete and keep runtime tests and cross-browser checks blocked until host requirements and browser hardware are available.
+- The demo and track matrix now record fallback-boundary status as complete; host crate runtime tests pass under the GNU toolchain, while browser WebGPU execution and cross-browser checks remain blocked until Wasm/browser wiring and GPU-capable validation are available.
 
 ## Files created in this track
 
@@ -65,14 +65,14 @@ This slice adds an explicit "host-only next-harvest" control layer:
 - Passed after formatting: `cargo fmt --manifest-path crates/kairo-ecs-webgpu/Cargo.toml`
 - Passed: `npm test --prefix website/webgpu-demo`
 - Passed: `npm run validate:wgsl --prefix website/webgpu-demo`
-- Optional runtime gate: `cargo test --manifest-path crates/kairo-ecs-webgpu/Cargo.toml` remains host-dependent until a working browser/WebGPU runtime and linker path are available; the current slice keeps compile-only validation as the default.
+- Optional host runtime gate: `pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1 -RunRuntimeTests` now passes by running crate tests through `stable-x86_64-pc-windows-gnu`; this proves the host fallback and contract tests, not browser WebGPU device execution. Browser/WebGPU runtime proof remains blocked until Wasm binding and headless Chrome WebGPU validation are available.
 
 ## Release gates affected
 
 - **browser-webgpu-smoke** — current central scaffold gate for the static demo and GPU-free WGSL subset. Blocking for PRs touching the demo.
 - **wasm-gpu-parity** — current central compile-time parity boundary for the WebGPU crate's CPU fallback and not-configured dispatch behavior. Blocking for WebGPU kernel PRs.
 - **webgpu-crate-compiles** / **webgpu-demo-loads** / **webgpu-cpu-parity** — staged runtime targets preserved in the track spec for future browser-backed evidence. Not yet available in this workspace.
-- **webgpu-framerate** — demo maintains >=30fps for 100K agents after real browser WebGPU dispatch is configured. Informational only; becomes blocking at RC.
+- **webgpu-framerate** — staged future target for sustained frame-rate evidence on reference browser hardware after real WebGPU dispatch is configured. Informational only; becomes blocking at RC.
 - **webgpu-cross-browser** — smoke test passes on Chrome, Edge, Firefox Nightly. Informational only; becomes blocking at RC.
 
 All WebGPU gates require headless Chrome with `--enable-unsafe-webgpu` flag. Gates are informational when no GPU is present in CI.
@@ -85,7 +85,7 @@ All WebGPU gates require headless Chrome with `--enable-unsafe-webgpu` flag. Gat
 - Headless CI testing for WebGPU requires Chrome flags that may break between Chrome versions. The CI setup needs ongoing maintenance.
 - Firefox and Safari WebGPU timelines are uncertain. The track ships as Chrome-primary, with Edge and Firefox Nightly as secondary targets. Full cross-browser support may not be achievable by 1.0.
 - Browser GPU resource constraints are more severe than native — shared VRAM with the compositor, tab-level memory limits, and thermal throttling. The demo must be conservative with agent counts and buffer sizes.
-- Low-cost smoke routes are documented in `docs/gpu-compute/free-testing-routes.md`: use GitHub-hosted macOS runners or the M1 MacBook Pro for Metal-adjacent browser/device smoke, and Colab TPU only for future TPU-specific prototypes. These routes do not satisfy browser WebGPU parity or frame-rate evidence.
+- Low-cost smoke routes are documented in `docs/gpu-compute/free-testing-routes.md`: use GitHub-hosted macOS runners or the M1 MacBook Pro for Metal-adjacent browser/device smoke, Colab GPU for the available T4-style runtime, and Colab TPU only for future TPU-specific prototypes. These routes do not satisfy browser WebGPU parity or frame-rate evidence.
 
 ### Host-only evidence gates added in this slice
 
@@ -127,7 +127,23 @@ Track 33 is not cleanly closable yet. The offline validator passed on 2026-05-10
 
 - `wasm-pack build --target web` is blocked until the Track 09 Wasm binding package exists and the `wasm-bindgen` / `web-sys` wiring can be introduced and fetched.
 - Browser WebGPU device initialization is blocked until the browser binding dependency and headless Chrome WebGPU validation are available.
-- The `100K-agent >=30 FPS` claim is blocked until a real WebGPU backend and reference hardware/browser results exist.
+- The 100K-agent frame-rate claim is blocked until a real WebGPU backend and reference hardware/browser results exist.
 - Cross-browser smoke coverage is blocked until a browser test harness and the installed target browsers are available.
 
 Keep this track `In Review` until those blockers are resolved. Record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here when the track becomes eligible for closeout.
+
+## Review remediation -- 2026-05-17
+
+- Accepted fix: `BufferBridge` now rejects partial elements where `len_bytes` is smaller than or not divisible by `stride_bytes`.
+- Accepted fix: browser capability metadata now marks browser-GPU validation as required when the effective backend is `BrowserWebGpu`.
+- Accepted fix: the track validator now scans the demo README, track spec, handoff, test matrix, and WebGPU comparison doc for premature runtime/performance wording rather than only one comparison document.
+- Accepted clarification: the central smoke/parity gates are static/scaffold gates only; real browser execution and runtime Wasm/WebGPU parity remain blocked.
+- Validation: `pwsh -NoProfile -File conductor\tracks\33-webgpu-compute-browser\validate-track33.ps1` passed after the fixes.
+- Runtime validation: `pwsh -NoProfile -File conductor\tracks\33-webgpu-compute-browser\validate-track33.ps1 -RunRuntimeTests` now passes by running `cargo test` through `stable-x86_64-pc-windows-gnu`. This proves the dependency-free WebGPU crate tests; it is still not browser WebGPU device proof.
+
+## Review remediation -- 2026-05-18
+
+- Accepted fix: `BufferBridge::new` now rejects `stride_bytes == 0` with a typed `BufferBridgeError::ZeroStride` before modulo validation, so malformed descriptors do not panic.
+- Accepted fix: `validate-track33.ps1` now scans the public demo HTML and JavaScript files for premature WebGPU dispatch or frame-rate claims while allowing explicit `not claimed` / `backend-not-configured` boundary text.
+- Validation: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\33-webgpu-compute-browser\validate-track33.ps1 -RunRuntimeTests` passed with demo smoke, WGSL subset validation, 8 WebGPU unit tests, 3 parity tests, and doc-tests.
+- Next-phase decision: remain `In Review`; this closes the local descriptor and claim-scan findings, but browser WebGPU device execution, Wasm binding proof, frame-rate evidence, and cross-browser smoke are still external follow-up gates.

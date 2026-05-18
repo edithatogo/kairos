@@ -6,6 +6,7 @@
 2. Add WGSL under `crates/kairo-ecs-gpu/src/shaders/`.
 3. Add a WebGPU-safe variant under `crates/kairo-ecs-webgpu/src/shaders/` if browser execution is planned.
 4. Add tests that compare the backend output to the CPU reference with a fixed seed.
+5. Update the host-side execution plan helpers if the kernel changes dispatch or transfer shape.
 
 ## Updating the IR
 

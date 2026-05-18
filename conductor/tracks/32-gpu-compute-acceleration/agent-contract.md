@@ -33,8 +33,8 @@ Track 32: GPU Compute Acceleration
 ## Gate contract
 
 ### gpu-crate-compiles
-- **Input**: `crates/kairo-ecs-gpu/` source, `Cargo.toml` with `gpu` feature enabled.
-- **Output**: Pass if `cargo build --features gpu` succeeds on at least one target platform (Linux w/ CUDA, or any platform w/ wgpu). Fail with compilation errors.
+- **Input**: `crates/kairo-ecs-gpu/` source with `gpu` feature path available.
+- **Output**: Pass if `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --no-default-features` and `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --features wgpu-backend,cuda-backend --tests` pass.
 - **Blocking**: Yes for PRs that touch `crates/kairo-ecs-gpu/`. Informational only for other PRs.
 
 ### gpu-feature-isolation

@@ -2,6 +2,12 @@
 
 Track 33 uses the same kernel IR as Track 32 but restricts shaders to browser-compatible WGSL.
 
+Validation for this slice is host-only and non-runtime:
+
+- `npm run validate:wgsl --prefix website/webgpu-demo`
+- static token checks in `website/webgpu-demo/scripts/validate-wgsl-subset.mjs`
+- no local binary WebGPU compile in this host slice
+
 Avoid:
 
 - 64-bit atomics.

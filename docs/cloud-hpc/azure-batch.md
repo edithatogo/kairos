@@ -1,5 +1,7 @@
 # Azure Batch
 
+See `runtime-evidence-boundary.md` for required live evidence and pending blocker status before any production-readiness claim.
+
 `cloud/azure/batch-job.json` and `cloud/azure/batch-array.json` provide account-neutral job templates. The submit helper expects an existing Batch pool and a container image readable from the pool.
 
 ## Offline validation
@@ -9,6 +11,10 @@ Run `python cloud\validate_cloud_hpc.py` from the repository root. The offline v
 ## Live validation
 
 The offline check is not an Azure Batch API validation. Before marking Azure Batch ready, create a canary job and task in a test Batch account, then record the account, pool, job id, task id, terminal status, and output/checksum evidence.
+
+### Runtime evidence status
+
+- This doc is paired with `runtime-evidence-boundary.md` for pending live proof blockers.
 
 Required permissions:
 

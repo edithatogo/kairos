@@ -1,6 +1,6 @@
 # KairoECS Conductor Status
 
-Last verified: 2026-05-10
+Last verified: 2026-05-18
 
 ## Setup state
 
@@ -87,12 +87,50 @@ later advanced to `Done` after their owned GNU-toolchain reruns passed; Track
 39 remains `In Review` because live Docker, Kubernetes, Slurm, and
 cloud-provider validation is still environment-backed.
 
+Review remediation on 2026-05-17 tightened the Track 32-35 validator and
+runtime gates: the GPU/WebGPU and PDES/distributed `-RunRuntimeTests`/`-RunTests`
+runs now pass under `stable-x86_64-pc-windows-gnu`, but Tracks 32, 33, and 39
+stay `In Review` because real GPU, browser, and cloud runtime proof is still
+missing, and Tracks 34 and 35 stay `In Review` because real scaling, transport,
+and multi-node evidence are still missing.
+
+Follow-up review remediation on 2026-05-18 closed the remaining local review
+findings without advancing the external-proof tracks. Track 32 now includes DES
+event-buffer pressure in host-side GPU budget checks. Track 33 rejects zero
+stride buffer descriptors with a typed error and scans public demo files for
+premature WebGPU/performance claims. Track 34 prevents stale null-message
+safe-times from moving logical processes backwards and validates transport
+message source/destination envelopes. Track 35 applies the same strict
+source/destination checks to the MPI and gRPC protocol emulators and includes
+pending event timestamps in GVT reduction. Track 39 records explicit Track 22
+handoff approval for the scaffold-only CLI surface, renders GCP sweep
+parallelism from inputs, cleans validator scratch files, and runs a labelled
+static shell fallback when Bash cannot start on this Windows host. Tracks 32,
+33, 34, 35, and 39 remain `In Review` pending real GPU, browser, scaling,
+multi-node, Docker, Kubernetes, Slurm, and cloud-provider proof.
+
+Software-only implementation on 2026-05-18 addressed the remaining dependency-free
+Track 34 and Track 35 work. Track 34 now has deterministic 4/8/16/32 LP
+benchmark-smoke samples and a documented Time Warp rollback spike without
+claiming hardware speedup. Track 35 now has dependency-free MPI and gRPC local
+two-node contract proof helpers covering event exchange, migration envelope
+validation, telemetry merge counts, GVT/failure evidence, and explicit no-real
+runtime claims. Tracks 34 and 35 remain `In Review` only for the real scaling,
+multi-node, and transport-runtime evidence that needs unavailable hardware,
+platform, or software dependencies.
+
+Track 41 advanced to `Done` on 2026-05-17 after the docs-quality workflow,
+learning-coverage matrix, notebook inventory, tutorial index, and docs-platform
+parity boundary were validated locally. The custom Node docs site remains the
+active implementation; the Astro/Starlight migration is deliberately deferred
+to a future migration slice rather than treated as hidden Track 41 scope.
+
 ## Validation evidence
 
 Latest local baseline validation on 2026-05-07; current targeted verification is recorded under the 2026-05-10 track evidence:
 
-- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_artifacts.ps1` passed with 41 track directories, 0 errors, 0 warnings, and 0 info.
-- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1` passed with 41 tracks, 47 agents, 0 errors, and 0 warnings.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_artifacts.ps1` passed with 42 track directories, 0 errors, 0 warnings, and 2 info notes limited to Track 41 documentation-shape suggestions.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1` passed with 42 tracks, 47 agents, 0 errors, and 0 warnings.
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_setup.ps1` passed, including `cargo test --workspace` via the installed `stable-x86_64-pc-windows-gnu` Rust toolchain on Windows.
 - `cargo fmt --all --check` passed.
 - `rustup run stable-x86_64-pc-windows-gnu cargo clippy --workspace --all-targets --all-features -- -D warnings` passed.
@@ -105,9 +143,15 @@ Latest local baseline validation on 2026-05-07; current targeted verification is
 - Track 30 focused validator passed on 2026-05-10: `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1`.
 - Track 31 focused validators passed on 2026-05-10: `pwsh -NoProfile -File conductor/tracks/31-performance-regression-guard/validate-track31.ps1` and `python benches/benchmark_smoke.py`.
 - Track 21-27 focused aggregate validation passed on 2026-05-10: `node scripts/validation/validate-tracks21-27.mjs`.
-- Track 32-35 focused validators passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTests`, `pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1`, `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1`, and `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1`.
+- Track 32-35 focused compile-time validators passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTest`, `pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1`, `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1`, and `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1`.
+- Track 32-35 remediation on 2026-05-17 added GNU-toolchain runtime reruns that now pass: `pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -RunRuntimeTests`, `pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1 -RunRuntimeTests`, `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1 -RunTests`, and `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1 -RunTests`. These prove the scaffolded crate tests on this host, not the missing real GPU, browser, scaling, or multi-node acceptance evidence.
+- Track 32-35 follow-up review remediation on 2026-05-18 revalidated the same runtime gates after closing the remaining local findings: Track 32 passed with 10 GPU unit tests, 4 contract tests, ABM parity, and DES parity; Track 33 passed with 8 WebGPU unit tests, 3 parity tests, demo smoke, and WGSL subset validation; Track 34 passed with 11 PDES tests; Track 35 passed with 14 MPI tests and 15 gRPC tests.
+- Track 34-35 software-only implementation on 2026-05-18 revalidated the dependency-free additions: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests` passed with 13 PDES tests, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests` passed with 15 MPI tests and 16 gRPC tests.
 - Track 36-40 aggregate offline validation passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`, `python cloud/validate_cloud_hpc.py`, and `node website/time-travel-demo/validate-demo.mjs`.
 - Track 36, 37, 38, and 40 later advanced to `Done` on 2026-05-10 after GNU-toolchain reruns cleared the Windows linker blocker for their owned compile/test gates.
+- Track 39 remediation on 2026-05-18 fixed the CLI ownership record, GCP sweep rendering, validator cleanup, and shell-validation fallback. `python cloud/validate_cloud_hpc.py` passes and leaves neither `.tmp/k8s-inline-experiment.json` nor `cloud/validation-work`; when Git Bash cannot start, the validator runs a labelled static fallback that is explicitly not equivalent to `bash -n`. Live Docker, Kubernetes, Slurm, and provider runtime proof remains environment-backed and therefore `Track 39` stays `In Review`.
+- The hardened Track 36-40 aggregate passed on 2026-05-18 with `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`; when sandboxed `rustup toolchain list` hit Windows pipe access denial, the script used the installed `stable-x86_64-pc-windows-gnu` directory fallback and completed successfully.
+- Track 41 closeout on 2026-05-17 passed `node scripts/validation/validate-learning-coverage.mjs`, `python notebooks/validate_notebooks.py`, `npm --prefix website run check:all`, `node scripts/dx/validate-docs-workflow.mjs`, `pwsh -NoProfile -File docs/tutorials/validate-tutorials.ps1`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`. The strict clean-tree closeout remains blocked by the repo-local `.git/index.lock` ACL issue, not by Track 41 validation.
 - Track 06 advanced to `Done` on 2026-05-10 after `python -m pytest -q` from `bindings\python` passed with 16 tests when the unpacked `pyarrow` wheel was placed on `PYTHONPATH`; `python -m ruff check kairo_ecs tests`, `python -m compileall kairo_ecs tests`, `python -c "import kairo_ecs; print(kairo_ecs.self_check())"`, `python -m pip check`, `python -m build --sdist --wheel`, `validate-bindings06-11.ps1`, `scripts\validate_conductor_phase_gates.ps1`, and `scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` all passed. A workspace-local `pyarrow-24.0.0` install had initially looked blocked by a Windows DLL load failure, but the real pyarrow table roundtrip now passes when the wheel is unpacked directly into a local path and the bundled runtime files are visible on `PYTHONPATH`.
 - `go test ./...`, `go vet ./...`, and `gofmt -w -l .` from `bindings\go` passed with no formatting output.
 - `Rscript -e "sessionInfo(); source('tests/testthat.R')"` from `bindings\r` passed after R startup locale warnings.

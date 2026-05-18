@@ -34,6 +34,7 @@
     "docs/debugging/cli-reference.md",
     "docs/debugging/trace-format.md",
     "docs/developer-experience/docs-workflow.md",
+    "docs/developer-experience/docs-platform.md",
     "docs/design/api-review.md",
     "docs/design/compatibility-governance.md",
     "docs/distributed/deployment-guide.md",
@@ -84,6 +85,7 @@
     "docs/tutorials/csharp-getting-started.md",
     "docs/tutorials/go-getting-started.md",
     "docs/tutorials/index.md",
+    "docs/tutorials/coverage-matrix.md",
     "docs/tutorials/julia-getting-started.md",
     "docs/tutorials/model-building.md",
     "docs/tutorials/notebooks.md",
@@ -122,6 +124,8 @@
         { "label": "Documentation examples", "path": "examples/docs/README.md" },
         { "label": "Community adoption", "path": "docs/community/adoption.md" },
         { "label": "Community playground", "path": "docs/community/playground.md" },
+        { "label": "Docs platform status", "path": "docs/developer-experience/docs-platform.md" },
+        { "label": "Learning Coverage Matrix", "path": "docs/tutorials/coverage-matrix.md" },
         { "label": "Model zoo inventory", "path": "docs/model-zoo/inventory.md" },
         { "label": "Starter kits", "path": "docs/starter-kits/README.md" },
         { "label": "Scenario run and replay", "path": "docs/scenarios/factory-bottleneck-run-replay.md" },
@@ -137,6 +141,7 @@
       "title": "Tutorials and Examples",
       "links": [
         { "label": "Tutorial index", "path": "docs/tutorials/index.md" },
+        { "label": "Learning coverage matrix", "path": "docs/tutorials/coverage-matrix.md" },
         { "label": "Rust getting started", "path": "docs/tutorials/rust-getting-started.md" },
         { "label": "Python getting started", "path": "docs/tutorials/python-getting-started.md" },
         { "label": "Wasm and TypeScript getting started", "path": "docs/tutorials/wasm-getting-started.md" },
@@ -235,7 +240,7 @@
       "website/build/robots.txt"
     ],
     "minimumGeneratedPages": 20,
-    "requiredHomePhrases": [
+      "requiredHomePhrases": [
       "Start Here",
       "Tutorials and Examples",
       "Language Quickstarts",
@@ -243,6 +248,8 @@
       "Specialized Systems",
       "Trust and Quality",
       "Documentation Quality Gate",
+      "Docs platform status",
+      "Learning Coverage Matrix",
       "Jupyter notebooks and figures"
     ],
     "requiredConcepts": [

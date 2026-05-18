@@ -16,5 +16,5 @@ az batch task create `
   --job-id $JobId `
   --task-id "$JobId-run" `
   --container-settings "imageName=$Image" `
-  --command-line "kairo-ecs-cli run --scenario $Scenario" `
-  --environment-settings "KAIRO_OUTPUT_URI=$OutputUri"
+  --command-line "kairo-ecs-cli run --scenario $Scenario --output $OutputUri" `
+  --environment-settings "KAIRO_OUTPUT_URI=$OutputUri KAIRO_CHECKPOINT_DIR=/tmp/kairo/checkpoints"

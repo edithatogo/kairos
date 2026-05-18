@@ -31,6 +31,22 @@ The 256-thread default matches the WGSL shader scaffolds and remains compatible
 with WebGPU-oriented limits. Backends may choose lower device-specific limits
 only if they still report that choice through `GpuBackendCapabilities`.
 
+## Execution plans
+
+`GpuState::abm_execution_plan()` and `GpuState::des_execution_plan()` combine
+the footprint and dispatch checks into a host-side planning object before any
+backend is opened. The returned `GpuExecutionPlan` records:
+
+- the workload kind and deterministic parameters
+- the state footprint
+- the dispatch shape
+- the transfer plan
+- the memory budget used for the smoke check
+
+The plan is intentionally backend-agnostic. It gives CPU-only validation a
+single place to inspect transfer bytes and dispatch counts while GPU parity and
+benchmark evidence remain hardware-bound.
+
 ## Backend capabilities
 
 Every `GpuCompute` implementation must report:

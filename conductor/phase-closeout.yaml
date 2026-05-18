@@ -1,5 +1,5 @@
 schema_version: 1
-last_verified: 2026-05-10
+last_verified: 2026-05-18
 states:
   allowed:
     - pending
@@ -579,50 +579,58 @@ entries:
     phase: "implementation-review"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 32 advanced to In Review after the dependency-free GPU facade, feature-gated backend contracts, forbidden-default-dependency tree check, and focused Track 32 validator passed under the GNU Rust toolchain."
-    fixes_applied: false
+    review_result: "Track 32 remains In Review after 2026-05-18 follow-up review remediation closed the local DES event-buffer budget finding and Colab GPU smoke documentation gap; the GNU-toolchain runtime gate passes, but real GPU hardware parity and benchmark evidence remain external blockers."
+    fixes_applied: true
     validation_commands:
-      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTests"
-    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
-    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
-    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTest"
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -RunRuntimeTests"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\32-gpu-compute-acceleration\\validate-track32.ps1 -RunRuntimeTests"
+    git_status: "dirty: Track 32 remediation plus unrelated local edits remain in the worktree"
+    commit_sha: "pending-remediation-commit"
+    pushed_ref: "pending-remediation-push"
     next_phase_decision: "Track 32 is In Review; real GPU backend, hardware parity, and speedup claims remain blocked until a GPU runner and formal review evidence exist."
   - track_id: "33"
     phase: "implementation-review"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 33 advanced to In Review after WebGPU crate compile gates, static demo smoke tests, and WGSL subset validation passed under the GNU Rust toolchain."
-    fixes_applied: false
+    review_result: "Track 33 remains In Review after 2026-05-18 follow-up review remediation closed the zero-stride buffer panic and public demo claim-scan findings; the GNU-toolchain runtime gate and demo smoke pass, but real browser WebGPU device and Wasm binding proof remain external blockers."
+    fixes_applied: true
     validation_commands:
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1"
-    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
-    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
-    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1 -RunRuntimeTests"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\33-webgpu-compute-browser\\validate-track33.ps1 -RunRuntimeTests"
+    git_status: "dirty: Track 33 remediation plus unrelated local edits remain in the worktree"
+    commit_sha: "pending-remediation-commit"
+    pushed_ref: "pending-remediation-push"
     next_phase_decision: "Track 33 is In Review; real browser WebGPU device validation remains blocked until the wasm/browser harness and GPU-capable runner are available."
   - track_id: "34"
     phase: "implementation-review"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 34 advanced to In Review after the PDES scaffold, feature isolation, validation-evidence boundaries, and focused Track 34 validator passed under the GNU Rust toolchain."
-    fixes_applied: false
+    review_result: "Track 34 remains In Review after 2026-05-18 follow-up review remediation closed stale null-message monotonicity and strict transport-envelope findings; the GNU-toolchain runtime gate passes, but scaling benchmark evidence and Time Warp work remain external blockers."
+    fixes_applied: true
     validation_commands:
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1"
-    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
-    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
-    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
-    next_phase_decision: "Track 34 is In Review; scheduler integration, scaling benchmarks, and Time Warp work remain blocked until formal review and follow-up implementation evidence exist."
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1 -RunTests"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\34-pdes-parallel-execution\\validate-track34.ps1 -RunTests"
+    git_status: "dirty: Track 34 remediation plus unrelated local edits remain in the worktree"
+    commit_sha: "pending-remediation-commit"
+    pushed_ref: "pending-remediation-push"
+    next_phase_decision: "Track 34 is In Review; the runtime gate now passes, but scheduler integration, scaling benchmarks, and Time Warp work remain blocked until formal review and follow-up implementation evidence exist."
   - track_id: "35"
     phase: "implementation-review"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 35 advanced to In Review after the MPI/gRPC protocol-emulator compile gates and focused Track 35 validator passed under the GNU Rust toolchain."
-    fixes_applied: false
+    review_result: "Track 35 remains In Review after 2026-05-18 follow-up review remediation closed the MPI/gRPC pending-event GVT and embedded source/destination strictness findings; the GNU-toolchain runtime gate passes, but real rsmpi/tonic transports and multi-node proof remain external blockers."
+    fixes_applied: true
     validation_commands:
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1"
-    git_status: "dirty: unrelated local edits outside the Track 36/37/38/40 scope remain in the worktree"
-    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
-    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
-    next_phase_decision: "Track 35 is In Review; real rsmpi/tonic transports, two-node tests, migration serialization, telemetry aggregation, and fault tolerance remain follow-up implementation scope."
+      - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1 -RunTests"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\35-distributed-simulation-mpi-grpc\\validate-track35.ps1 -RunTests"
+    git_status: "dirty: Track 35 remediation plus unrelated local edits remain in the worktree"
+    commit_sha: "pending-remediation-commit"
+    pushed_ref: "pending-remediation-push"
+    next_phase_decision: "Track 35 is In Review; the runtime gate now passes, but real rsmpi/tonic transports, two-node tests, migration serialization, telemetry aggregation, and fault tolerance remain follow-up implementation scope."
   - track_id: "36"
     phase: "implementation-review"
     state: closed
@@ -679,14 +687,15 @@ entries:
     phase: "implementation-review"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 39 advanced to In Review after the cloud/HPC offline validator passed as part of the Track 36-40 aggregate validation, including local Kubernetes rejection and telemetry checksum-sidecar checks."
-    fixes_applied: false
+    review_result: "Track 39 remains In Review after 2026-05-18 follow-up review remediation closed the CLI ownership, GCP sweep rendering, validator cleanup, and Bash-startup skip findings; offline validation and the hardened Track 36-40 aggregate pass, but live Docker, Kubernetes, Slurm, and cloud-provider proof remain environment-backed blockers."
+    fixes_applied: true
     validation_commands:
       - "python cloud/validate_cloud_hpc.py"
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests"
-    git_status: "dirty: all-tracks implementation-state reconciliation pending commit and push"
-    commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
-    pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\36-streaming-real-time-processing\\validate-track36-40.ps1 -SkipCargoTests"
+    git_status: "dirty: Track 39 remediation plus unrelated local edits remain in the worktree"
+    commit_sha: "pending-remediation-commit"
+    pushed_ref: "pending-remediation-push"
     next_phase_decision: "Track 39 is In Review; live Docker, Kubernetes, Slurm, and cloud-provider acceptance remain blocked until formal review and environment-backed validation exist."
   - track_id: "40"
     phase: "implementation-review"
@@ -704,3 +713,21 @@ entries:
     commit_sha: "d7ad25bce8962138a794364c23c95c618803f02e"
     pushed_ref: "origin/conductor-close-reviewed-tracks-20260510"
     next_phase_decision: "Track 40 is Done for the offline debugger scaffold; scheduler observer integration, Arrow IPC trace serialization, and experiment-runner integration remain follow-up scope."
+  - track_id: "41"
+    phase: "implementation-review"
+    state: blocked
+    review_command: "$conductor-review via parallel Track 41 subagent review"
+    review_result: "Track 41 advanced to Done after notebook inventory gaps, docs-workflow notebook-page assertions, learning coverage, docs-platform parity, and closeout surfaces were reconciled."
+    fixes_applied: true
+    validation_commands:
+      - "node scripts/validation/validate-learning-coverage.mjs"
+      - "python notebooks/validate_notebooks.py"
+      - "npm --prefix website run check:all"
+      - "node scripts/dx/validate-docs-workflow.mjs"
+      - "pwsh -NoProfile -File docs/tutorials/validate-tutorials.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "git diff --check"
+    git_status: "dirty: Track 41 closeout plus reviewed-track remediation remain in the source worktree; source .git ACL prevents index.lock creation for commit."
+    commit_sha: "blocked-by-source-git-acl-20260517"
+    pushed_ref: "blocked-by-source-git-acl-20260517"
+    next_phase_decision: "Track 41 is Done for the validated docs-quality, learning-coverage, notebook, and docs-platform parity slice; direct Astro/Starlight migration is deferred to a future migration track."

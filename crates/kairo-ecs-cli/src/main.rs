@@ -61,7 +61,61 @@ fn run(args: Vec<String>) -> Result<(), String> {
                 scenario.scenario_id, scenario.resume_checkpoint_every_events
             );
         }
-        "run" | "collect" | "analyze" => {
+        "run" => {
+            let scenario_path = flag_path(&args, "--scenario")?;
+            let output = flag_path(&args, "--output").unwrap_or_else(|_| {
+                env::var_os("KAIRO_OUTPUT_URI")
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|| PathBuf::from("kairo-run-output"))
+            });
+            if let Some(seed_path) = optional_flag_path(&args, "--seed-manifest") {
+                let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
+                let seed = load_seed_manifest(&seed_path).map_err(|error| error.to_string())?;
+                validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
+                let replay = replay_scheduler_ordering(&scenario)?;
+                write_replay_outputs(&scenario, &replay, &output)?;
+                println!(
+                    "{{\"status\":\"ok\",\"command\":\"run\",\"scenario_id\":\"{}\",\"output\":\"{}\",\"summary_hash\":\"{}\"}}",
+                    scenario.scenario_id,
+                    output.display(),
+                    replay.summary_hash
+                );
+            } else {
+                fs::create_dir_all(&output).map_err(|error| error.to_string())?;
+                fs::write(
+                    output.join("run-request.json"),
+                    format!(
+                        "{{\n  \"schema_version\": \"kairoecs.run-request.v1\",\n  \"scenario\": \"{}\",\n  \"status\": \"accepted-without-seed-manifest\",\n  \"note\": \"Track 39 runner scaffold captured the request; deterministic replay requires --seed-manifest.\"\n}}\n",
+                        scenario_path.display()
+                    ),
+                )
+                .map_err(|error| error.to_string())?;
+                println!(
+                    "{{\"status\":\"ok\",\"command\":\"run\",\"scenario\":\"{}\",\"output\":\"{}\",\"mode\":\"request-captured\"}}",
+                    scenario_path.display(),
+                    output.display()
+                );
+            }
+        }
+        "checkpoint" => {
+            let output = flag_path(&args, "--output")?;
+            write_checkpoint_manifest(&output)?;
+            println!(
+                "{{\"status\":\"ok\",\"command\":\"checkpoint\",\"output\":\"{}\"}}",
+                output.display()
+            );
+        }
+        "resume" => {
+            let checkpoint = flag_path(&args, "--checkpoint")?;
+            let output = flag_path(&args, "--output")?;
+            write_resume_request(&checkpoint, &output)?;
+            println!(
+                "{{\"status\":\"ok\",\"command\":\"resume\",\"checkpoint\":\"{}\",\"output\":\"{}\"}}",
+                checkpoint.display(),
+                output.display()
+            );
+        }
+        "collect" | "analyze" => {
             return Err(format!(
                 "`{command}` is reserved for Track 22; use validate-scenario, replay, or resume-plan in this R2 slice"
             ));
@@ -75,7 +129,7 @@ fn run(args: Vec<String>) -> Result<(), String> {
 
 fn print_help() {
     println!(
-        "kairo-ecs-cli\n\nCommands:\n  validate-scenario --scenario <path> --seed-manifest <path>\n  replay --scenario <path> --seed-manifest <path> --output <dir>\n  resume-plan --scenario <path> --output <dir>"
+        "kairo-ecs-cli\n\nCommands:\n  validate-scenario --scenario <path> --seed-manifest <path>\n  replay --scenario <path> --seed-manifest <path> --output <dir>\n  resume-plan --scenario <path> --output <dir>\n  run --scenario <path> [--seed-manifest <path>] [--output <dir>]\n  checkpoint --output <dir>\n  resume --checkpoint <path> --output <dir>"
     );
 }
 
@@ -84,6 +138,12 @@ fn flag_path(args: &[String], flag: &str) -> Result<PathBuf, String> {
         .find(|pair| pair[0] == flag)
         .map(|pair| PathBuf::from(&pair[1]))
         .ok_or_else(|| format!("missing required flag `{flag}`"))
+}
+
+fn optional_flag_path(args: &[String], flag: &str) -> Option<PathBuf> {
+    args.windows(2)
+        .find(|pair| pair[0] == flag)
+        .map(|pair| PathBuf::from(&pair[1]))
 }
 
 #[derive(Debug)]
@@ -211,6 +271,37 @@ fn write_resume_plan(scenario: &ScenarioManifest, output: &Path) -> Result<(), S
         format!(
             "{{\n  \"schema_version\": \"kairoecs.resumability-plan.v1\",\n  \"scenario_id\": \"{}\",\n  \"checkpoint_every_events\": {},\n  \"resume_requires\": [\"scenario manifest\", \"seed manifest\", \"last completed event index\", \"summary hash comparison\"]\n}}\n",
             scenario.scenario_id, scenario.resume_checkpoint_every_events
+        ),
+    )
+    .map_err(|error| error.to_string())
+}
+
+fn write_checkpoint_manifest(output: &Path) -> Result<(), String> {
+    fs::create_dir_all(output).map_err(|error| error.to_string())?;
+    let tick = env::var("KAIRO_LAST_COMPLETED_TICK").unwrap_or_else(|_| "unknown".to_string());
+    fs::write(
+        output.join("checkpoint-manifest.json"),
+        format!(
+            "{{\n  \"schema_version\": \"kairoecs.checkpoint-manifest.v1\",\n  \"last_completed_tick\": \"{}\",\n  \"state\": \"interrupted\"\n}}\n",
+            tick
+        ),
+    )
+    .map_err(|error| error.to_string())
+}
+
+fn write_resume_request(checkpoint: &Path, output: &Path) -> Result<(), String> {
+    if !checkpoint.exists() {
+        return Err(format!(
+            "checkpoint manifest does not exist: {}",
+            checkpoint.display()
+        ));
+    }
+    fs::create_dir_all(output).map_err(|error| error.to_string())?;
+    fs::write(
+        output.join("resume-request.json"),
+        format!(
+            "{{\n  \"schema_version\": \"kairoecs.resume-request.v1\",\n  \"checkpoint\": \"{}\",\n  \"status\": \"accepted\"\n}}\n",
+            checkpoint.display()
         ),
     )
     .map_err(|error| error.to_string())

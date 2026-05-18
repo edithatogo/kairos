@@ -26,12 +26,12 @@ security, and packaging tracks.
 - [Documentation examples](../../examples/docs/README.md)
 - [Community adoption](../../docs/community/adoption.md)
 - [Community playground](../../docs/community/playground.md)
+- Docs workflow and coverage: [Developer workflow](../../docs/developer-experience/docs-workflow.md), [Docs platform status](../../docs/developer-experience/docs-platform.md), and [Learning Coverage Matrix](../../docs/tutorials/coverage-matrix.md).
 - [Model zoo inventory](../../docs/model-zoo/inventory.md)
 - [Starter kits](../../docs/starter-kits/README.md)
 - [Scenario run and replay](../../docs/scenarios/factory-bottleneck-run-replay.md)
 - [Experiment runner CLI](../../docs/cli/kairo-ecs-cli.md)
 - [Citation and archival](../../docs/research/citation.md)
-- [Developer workflow](../../docs/developer-experience/docs-workflow.md)
 - [Trustworthy simulation](../../docs/trustworthy-simulation/verification-validation-uncertainty.md)
 - [Factory bottleneck VVUQ note](../../docs/validation/factory-bottleneck-v1-vvuq-note.md)
 - [Visualization guide](../docs/visualization/README.md)
@@ -41,7 +41,7 @@ security, and packaging tracks.
 - Tutorial index: [learning paths](../../docs/tutorials/index.md), [Rust getting started](../../docs/tutorials/rust-getting-started.md), [Python getting started](../../docs/tutorials/python-getting-started.md), [Wasm and TypeScript getting started](../../docs/tutorials/wasm-getting-started.md), and [model-building](../../docs/tutorials/model-building.md).
 - Binding quick lessons: [R getting started](../../docs/tutorials/r-getting-started.md), [Julia getting started](../../docs/tutorials/julia-getting-started.md), [C# getting started](../../docs/tutorials/csharp-getting-started.md), and [Go getting started](../../docs/tutorials/go-getting-started.md).
 - Example surfaces: [scenario run and replay](../../docs/scenarios/factory-bottleneck-run-replay.md), [headless snapshot playground](../../docs/playground/headless-snapshot.md), and [documentation examples](../../examples/docs/README.md).
-- Jupyter notebooks and figures: notebook and image assets are tracked by the examples and education tracks; this site manifest keeps those entry points discoverable without vendoring large generated media into the static shell.
+- Jupyter notebooks and figures: notebook and image assets are tracked by the examples and education tracks; the learning coverage matrix keeps those entry points discoverable without vendoring large generated media into the static shell.
 
 ## Language Quickstarts
 
@@ -126,6 +126,7 @@ security, and packaging tracks.
 - `docs/benchmarks/` for benchmark overview, policy, and reproducibility guidance.
 - `docs/cloud-hpc/` for AWS Batch, Azure Batch, GCP Batch, Slurm, and spot-checkpoint policy notes.
 - `docs/community/` for contributor onboarding, governance, adoption, model-zoo guidance, roadmap notes, and the playground.
+- `docs/developer-experience/` for docs-platform status and workflow notes.
 - `docs/debugging/` for trace format and interactive debugging CLI references.
 - `docs/cli/` for the scenario runner CLI quickstart and command reference.
 - `docs/distributed/` for deployment, transport, telemetry aggregation, and entity migration notes.

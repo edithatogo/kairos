@@ -22,6 +22,14 @@ impl TransferPlan {
         Self::default()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.steps.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.steps.len()
+    }
+
     pub fn push(&mut self, step: TransferStep) {
         self.steps.push(step);
     }
@@ -38,12 +46,26 @@ impl TransferPlan {
             .sum()
     }
 
+    pub fn checked_total_host_to_gpu_bytes(&self) -> Option<usize> {
+        self.steps
+            .iter()
+            .filter(|step| step.direction == TransferDirection::HostToGpu)
+            .try_fold(0usize, |total, step| total.checked_add(step.len_bytes))
+    }
+
     pub fn total_gpu_to_host_bytes(&self) -> usize {
         self.steps
             .iter()
             .filter(|step| step.direction == TransferDirection::GpuToHost)
             .map(|step| step.len_bytes)
             .sum()
+    }
+
+    pub fn checked_total_gpu_to_host_bytes(&self) -> Option<usize> {
+        self.steps
+            .iter()
+            .filter(|step| step.direction == TransferDirection::GpuToHost)
+            .try_fold(0usize, |total, step| total.checked_add(step.len_bytes))
     }
 }
 
@@ -67,5 +89,24 @@ mod tests {
 
         assert_eq!(plan.total_host_to_gpu_bytes(), 128);
         assert_eq!(plan.total_gpu_to_host_bytes(), 64);
+        assert_eq!(plan.checked_total_host_to_gpu_bytes(), Some(128));
+        assert_eq!(plan.checked_total_gpu_to_host_bytes(), Some(64));
+    }
+
+    #[test]
+    fn checked_transfer_totals_report_overflow() {
+        let mut plan = TransferPlan::new();
+        plan.push(TransferStep {
+            label: "a".into(),
+            direction: TransferDirection::HostToGpu,
+            len_bytes: usize::MAX,
+        });
+        plan.push(TransferStep {
+            label: "b".into(),
+            direction: TransferDirection::HostToGpu,
+            len_bytes: 1,
+        });
+
+        assert_eq!(plan.checked_total_host_to_gpu_bytes(), None);
     }
 }

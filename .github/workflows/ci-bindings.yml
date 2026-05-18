@@ -91,15 +91,12 @@ jobs:
   csharp:
     name: C# ${{ matrix.target-framework }}
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - target-framework: 'net10.0'
-            experimental: false
           - target-framework: 'net11.0'
-            experimental: true
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -114,7 +111,7 @@ jobs:
           TARGET_FRAMEWORK: ${{ matrix.target-framework }}
         run: |
           test -f bindings/csharp/Kairo.ECS.sln
-          dotnet test bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -c Release -f "$TARGET_FRAMEWORK"
+          dotnet test bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -c Release -f "$TARGET_FRAMEWORK" -p:TreatWarningsAsErrors=true
 
   go:
     name: Go binding
@@ -129,5 +126,7 @@ jobs:
       - name: Go smoke
         run: |
           test -f bindings/go/go.mod
+          test -z "$(gofmt -l $(git ls-files 'bindings/go/*.go'))"
           cd bindings/go
+          go vet ./...
           go test ./...
