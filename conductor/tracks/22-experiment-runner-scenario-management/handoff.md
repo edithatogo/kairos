@@ -1,10 +1,13 @@
 # Handoff: Track 22 Experiment Runner & Scenario Management
 
-Last updated: 2026-05-07
+Last updated: 2026-05-11
 
 ## Summary
 
-Captured the scenario-management story so other tracks can assume named runs, replay inputs, documented output shape, and a concrete replay comparison flow.
+Captured the scenario-management story so other tracks can assume named runs,
+replay inputs, documented output shape, and a concrete replay comparison flow.
+The GNU-toolchain runtime smoke now executes the CLI commands and produces the
+expected local output shape.
 
 ## Files changed
 
@@ -76,12 +79,9 @@ cargo run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/
 - PASS: `cargo check -p kairo-ecs-cli` completed in the dev profile.
 - PASS: `node tests/conformance/conformance-check.mjs` validated four ready
   fixtures, including `vvuq_scenario_replay_v1`.
-- FAIL/BLOCKED: `cargo run -p kairo-ecs-cli -- validate-scenario ...` reached
-  link and failed because `link.exe` resolved to
-  `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe`, which returned
-  `fatal error - couldn't create signal pipe, Win32 error 5`. The CLI replay
-  and resume commands remain blocked until the MSVC linker/Windows SDK path is
-  corrected for this shell.
+- PASS: `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml` returned `status: ok` for `factory_bottleneck_v1` and fixture `scheduler_ordering_v1`.
+- PASS: `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- replay --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1` returned `status: ok`, output `target/kairo-ecs-smoke/factory_bottleneck_v1`, and summary hash `1d53b73b244a84de`.
+- PASS: `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- resume-plan --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1` returned `status: ok` and `checkpoint_every_events: 2`.
 
 The new CLI docs page stays intentionally narrow: it documents the implemented
 smoke commands, reserves `run`/`collect`/`analyze` for the fuller runner
@@ -97,11 +97,15 @@ Track 22 now documents the implemented smoke-command surface for `validate-scena
 
 ## Tests added
 
-The current evidence is `scripts/scenarios/validate-track22-smoke.ps1`, `cargo check -p kairo-ecs-cli`, and `node tests/conformance/conformance-check.mjs`. Local `cargo run` validation remains blocked by the Windows linker path issue recorded above.
+The current evidence is `scripts/scenarios/validate-track22-smoke.ps1`,
+`cargo check -p kairo-ecs-cli`, `node tests/conformance/conformance-check.mjs`,
+and the GNU-toolchain runtime smoke commands listed above.
 
 ## Known risks
 
-Scenario replay drift remains the main track risk. The local shell also cannot yet provide executable CLI replay evidence until `link.exe` resolves to the MSVC linker/Windows SDK toolchain.
+Scenario replay drift remains the main track risk. The local shell can now
+provide executable CLI replay evidence through the GNU toolchain, but the MSVC
+path remains unreliable on this host.
 
 ## Follow-up issues
 
@@ -112,4 +116,40 @@ Fix the local Windows linker path, then rerun the `validate-scenario`, `replay`,
 Tracks 21, 28, and release planning may consume only the smoke evidence named here; they should not treat it as quantified uncertainty evidence or production experiment-runner readiness.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+2026-05-11 implementation/review pass:
+
+- `$conductor-review` finding: the implemented scenario smoke slice is now
+  backed by executable GNU-toolchain replay and resumability commands for the
+  committed `factory_bottleneck_v1` / `scheduler_ordering_v1` smoke target.
+- Accepted fixes: retained the narrow smoke-scenario boundary, documented the
+  expected local output shape, and updated the track status mirrors to `Done`.
+- Validation commands passed: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scenarios/validate-track22-smoke.ps1`, `node tests/conformance/conformance-check.mjs`, `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- validate-scenario --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml`, `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- replay --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --seed-manifest examples/experiments/factory_bottleneck_v1.seeds.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1`, and `cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-cli -- resume-plan --scenario examples/experiments/factory_bottleneck_v1.scenario.toml --output target/kairo-ecs-smoke/factory_bottleneck_v1`.
+- Cleanup state: no generated artifacts were retained beyond the smoke output
+  directory under `target/`.
+- commit SHA: `e2824b36ff816fca1189ca1846bc28cfe26782db`
+- pushed ref: `origin/conductor-close-reviewed-tracks-20260510`
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after
+  the closeout commit was recorded and pushed.
+- next-phase decision: Track 22 is `Done`; keep resumability and production
+  runner claims bounded to the committed smoke scenario until broader runner
+  coverage exists.
+
+## Track 39 CLI handoff approval -- 2026-05-18
+
+Track 22 remains the owner of `crates/kairo-ecs-cli/`. The minimal `run`,
+`checkpoint`, and `resume` commands currently present in
+`crates/kairo-ecs-cli/src/main.rs` are accepted as a Track 22 handoff surface for
+Track 39 wrapper compatibility only:
+
+- `run --scenario ... --output ...` may either execute the existing
+  Track 22 smoke replay path when a seed manifest is supplied or capture a
+  runner request when no seed manifest is supplied.
+- `checkpoint --output ...` writes a scaffold checkpoint manifest for
+  interruption-path validation.
+- `resume --checkpoint ... --output ...` validates the checkpoint path and
+  writes a scaffold resume request.
+
+This approval does not promote Track 39 to owner of the experiment-runner CLI,
+does not add production resumability evidence, and does not change the broader
+Track 22 boundary: real experiment execution, checkpoint state semantics,
+resume semantics, `collect`, and `analyze` remain Track 22 follow-up work.

@@ -27,7 +27,7 @@ on_term() {
 }
 trap on_term TERM
 
-kairo-ecs-cli run --scenario "${scenario_prefix}/variant-\${variant}.yaml"
+kairo-ecs-cli run --scenario "${scenario_prefix}/variant-\${variant}.yaml" --output "\$KAIRO_OUTPUT_URI"
 SLURM
 
 sbatch "$script"

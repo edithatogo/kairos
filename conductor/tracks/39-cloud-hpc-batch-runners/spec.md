@@ -18,7 +18,7 @@ Depends on Track 22 (experiment runner CLI) and Track 15 (packaging). The CLI bi
 
 ## Inputs
 
-- `crates/kairo-ecs-cli/` — experiment runner binary from Track 22 (`run`, `collect`, `analyze` subcommands).
+- `crates/kairo-ecs-cli/` — experiment runner binary from Track 22. Track 22 explicitly handoff-approves the current minimal `run`, `checkpoint`, and `resume` scaffold for Track 39 wrapper compatibility only; production execution, checkpoint state, resume semantics, `collect`, and `analyze` remain Track 22-owned.
 - `conductor/tracks/15-packaging-publishing-delivery/` — package manifests and release artifacts for container image build.
 - `crates/kairo-ecs-arrow/` — Arrow telemetry output format from Track 04 (read-only contract).
 - `conductor/contracts/core-contract.md` — deterministic ordering contract (ensures cloud runs are reproducible).
@@ -41,7 +41,7 @@ Depends on Track 22 (experiment runner CLI) and Track 15 (packaging). The CLI bi
 
 ## Blocked paths
 
-- `crates/kairo-ecs-cli/` — owned by Track 22. This track consumes the binary, does not modify it.
+- `crates/kairo-ecs-cli/` — owned by Track 22. This track consumes the binary, does not modify it except through explicit Track 22 handoff/approval evidence recorded in Track 22 and Track 39 handoff notes.
 - `crates/kairo-ecs-arrow/` — owned by Track 04. Arrow schema changes require ADR from Track 04.
 - `crates/kairo-ecs-core/` — owned by Track 01. Core scheduler must not be altered for cloud execution.
 - `conductor/tracks/15-packaging-publishing-delivery/` — release process owned by Track 15.
@@ -59,9 +59,10 @@ These are release targets, not claims about the current scaffold. Current verifi
 
 ## Current verified scope
 
-- `cloud/validate_cloud_hpc.py` performs offline validation for Dockerfile/entrypoint policy, Kubernetes CRD/sample/operator rendering, AWS/GCP/Azure template shape, Slurm signal/checkpoint wiring, checkpoint/spot policy documentation, and telemetry checksum sidecars/provider upload manifests.
+- `cloud/validate_cloud_hpc.py` performs offline validation for the `kairo-ecs-cli` command surface, Dockerfile/entrypoint policy, Kubernetes CRD/sample/operator rendering, AWS/GCP/Azure template shape, Slurm signal/checkpoint wiring, checkpoint/spot policy documentation, and telemetry checksum sidecars/provider upload manifests.
 - Provider upload is currently represented by local upload manifest generation for `s3://`, `gs://`, and `az://` destinations; live object-store writes require provider-specific implementation and credentials.
 - Slurm and cloud provider acceptance require live scheduler/provider validation before readiness is claimed.
+- Live runtime blocker tracking for all Docker, Kubernetes, Slurm, and provider acceptance paths is now recorded in `docs/cloud-hpc/runtime-evidence-boundary.md`.
 
 ## Release implications
 

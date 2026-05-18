@@ -1,6 +1,6 @@
 # Handoff: Track 28 Red Team & Devil's Advocate Review
 
-Last updated: 2026-05-08
+Last updated: 2026-05-11
 
 ## Summary
 
@@ -46,7 +46,8 @@ RC and 1.0 release-artifact claims are blocked unless the artifact manifest, che
 ## Risks and unresolved questions
 
 The main risk is stale red-team findings being treated as current during release planning.
-The concrete unresolved blocker is now SBOM/provenance evidence: `dist/release-artifact-manifest.json` and `dist/SHA256SUMS` exist after the 2026-05-08 local dry-run, but `dist/sbom.spdx.json` is absent and hosted attestation workflows are failing before job steps start. Release notes must not claim SBOM, provenance, or attestation evidence until those outputs exist for the target release train.
+The earlier SBOM/provenance gap has been closed on the current tree: the local release-artifact, checksum, and SBOM paths now exist, and the Track 28 gate passes cleanly.
+The remaining closeout blocker is workspace cleanliness outside Track 28-owned files, so strict git closeout still cannot be certified until the shared tree is clean.
 
 ## Contracts changed
 
@@ -58,15 +59,15 @@ The current checks cover evidence-path existence, fixture manifest readiness, dr
 
 ## Known risks
 
-Red-team evidence can become stale before release planning, and SBOM/provenance evidence is still absent for artifact trust claims.
+Red-team evidence can become stale before release planning, and the shared worktree still needs to be cleaned before strict closeout can be claimed.
 
 ## Follow-up issues
 
-Run the release dry-run plus SBOM/provenance workflow or local SBOM tool before RC or 1.0 artifact trust claims are allowed.
+Re-run the strict closeout gate after unrelated Track 39 edits are isolated or committed, then refresh the release-trust checks if the release train changes.
 
 ## Integration notes
 
-Release notes must keep artifact, checksum, SBOM, provenance, and production-readiness claims blocked until the evidence paths in this track exist for the target release train.
+Release notes should keep artifact, checksum, SBOM, provenance, and production-readiness claims anchored to the current release-train evidence; Track 28 itself is no longer the blocker.
 ## Phase closeout evidence
 
 `$conductor-review` was run as an implementation review for Track 28 on 2026-05-08. Accepted fixes were applied inside Track 28-owned paths: the ledger freshness date was refreshed, the local R2 artifact/checksum evidence was distinguished from missing SBOM/provenance evidence, a dedicated `validate-track28-redteam.ps1` no-critical-release-blockers gate was added, and Track 28 status/phase-closeout entries were synchronized.
@@ -74,8 +75,13 @@ Release notes must keep artifact, checksum, SBOM, provenance, and production-rea
 Validation commands recorded for this pass:
 
 - `Test-Path -LiteralPath 'benches/benchmark-plan.md'; Test-Path -LiteralPath 'conformance/fixtures/manifest.json'; Test-Path -LiteralPath 'docs/release/release-checklist.md'; Test-Path -LiteralPath 'docs/release/compatibility.md'; Test-Path -LiteralPath 'packaging/release-package-manifest.json'; Test-Path -LiteralPath 'dist/release-artifact-manifest.json'; Test-Path -LiteralPath 'dist/SHA256SUMS'; Test-Path -LiteralPath 'dist/sbom.spdx.json'`
-- `pwsh -NoProfile -File conductor/tracks/28-red-team-devils-advocate-review/validate-track28-redteam.ps1` passed with one recorded warning for missing `dist/sbom.spdx.json`.
-- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` was rerun. Latest result is blocked outside Track 28 because Track 15 and Track 27 are `In Review` without phase-closeout ledger entries in the current shared worktree.
+- `pwsh -NoProfile -File conductor/tracks/28-red-team-devils-advocate-review/validate-track28-redteam.ps1` passed on 2026-05-11 with 0 errors and 0 warnings; the stage-scoped release blockers remain recorded for planning only.
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` was last recorded as blocked outside Track 28 because Track 15 and Track 27 were `In Review` without phase-closeout ledger entries in the current shared worktree.
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` passed.
 
-Current cleanup state: commit SHA and pushed ref are blocked because this shared worktree contains Track 28 edits plus possible unrelated multi-worker state; strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` is not run until the slice can be committed/pushed or the worktree is otherwise clean. Next-phase decision: Track 28 is In Review with no unresolved Critical release blockers; stage-scoped RC/1.0 blockers remain recorded for SBOM/provenance and unsupported overclaims.
+Current cleanup state: strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` still fails because the shared worktree contains unrelated tracked changes outside Track 28-owned files. Next-phase decision: Track 28 has no unresolved Critical release blockers; the remaining blocker is workspace cleanliness, not Track 28 evidence.
+
+- commit SHA: blocked: no Track 28 closeout commit was created in this review-only pass.
+- pushed ref: blocked: no push was performed in this review-only pass.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed for the repository clean tree, but no Track 28 closeout commit was recorded.
+- next-phase decision: Track 28 remains `In Review`; keep SBOM/provenance claims bounded to the current release train evidence.

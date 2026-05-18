@@ -10,41 +10,42 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 03 | The Flow: DES Trajectory API & ABM Behavior API | Done | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
 | 04 | The Analyst: kairo-ecs-arrow | Done | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
 | 05 | The Window: kairo-ecs-viz | Done | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
-| 06 | Python Binding 3.10-3.14 | In Review | `python-agent` | See `conductor/tracks/06-*/spec.md` |
-| 07 | R Binding | In Review | `r-agent` | See `conductor/tracks/07-*/spec.md` |
-| 08 | Julia Binding | In Review | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
+| 06 | Python Binding 3.10-3.14 | Done | `python-agent` | See `conductor/tracks/06-*/spec.md` |
+| 07 | R Binding | Done | `r-agent` | See `conductor/tracks/07-*/spec.md` |
+| 08 | Julia Binding | Done | `julia-agent` | See `conductor/tracks/08-*/spec.md` |
 | 09 | TypeScript/Wasm Binding | Done | `typescript-agent` | See `conductor/tracks/09-*/spec.md` |
 | 10 | C# Binding .NET 10-11 | Done | `csharp-agent` | See `conductor/tracks/10-*/spec.md` |
-| 11 | Go Binding | In Review | `go-agent` | See `conductor/tracks/11-*/spec.md` |
+| 11 | Go Binding | Done | `go-agent` | See `conductor/tracks/11-*/spec.md` |
 | 12 | Conformance, Testing & Benchmarks | Done | `conformance-agent + performance-agent` | See `conductor/tracks/12-*/spec.md` |
 | 13 | CI/CD, Code Quality & Supply Chain | Done | `ci-agent + security-agent` | See `conductor/tracks/13-*/spec.md` |
-| 14 | Documentation Site & Education | In Review | `docs-agent` | See `conductor/tracks/14-*/spec.md` |
-| 15 | Packaging, Publishing & Delivery | In Review | `release-agent` | See `conductor/tracks/15-*/spec.md` |
+| 14 | Documentation Site & Education | Done | `docs-agent` | See `conductor/tracks/14-*/spec.md` |
+| 15 | Packaging, Publishing & Delivery | Done | `release-agent` | See `conductor/tracks/15-*/spec.md` |
 | 16 | Release Governance & Maintenance | Done | `release-agent + governance-agent` | See `conductor/tracks/16-*/spec.md` |
-| 17 | Community Adoption, Education & Ecosystem | In Review | `community-agent` | See `conductor/tracks/17-*/spec.md` |
-| 18 | Comparative Benchmarks & Reproducibility | In Review | `benchmark-agent` | See `conductor/tracks/18-*/spec.md` |
-| 19 | Research Software, Citation & Archival | In Review | `research-agent` | See `conductor/tracks/19-*/spec.md` |
-| 20 | OpenSSF, Supply Chain Trust & Institutional Readiness | In Review | `security-agent` | See `conductor/tracks/20-*/spec.md` |
-| 21 | Verification, Validation & Uncertainty | In Review | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |
-| 22 | Experiment Runner & Scenario Management | In Review | `experiment-agent` | See `conductor/tracks/22-*/spec.md` |
-| 23 | Domain Starter Kits & Model Zoo | In Review | `model-zoo-agent` | See `conductor/tracks/23-*/spec.md` |
-| 24 | Playground, Demos & Visualization UX | In Review | `playground-agent` | See `conductor/tracks/24-*/spec.md` |
+| 17 | Community Adoption, Education & Ecosystem | Done | `community-agent` | See `conductor/tracks/17-*/spec.md` |
+| 18 | Comparative Benchmarks & Reproducibility | Done | `benchmark-agent` | See `conductor/tracks/18-*/spec.md` |
+| 19 | Research Software, Citation & Archival | Done | `research-agent` | See `conductor/tracks/19-*/spec.md` |
+| 20 | OpenSSF, Supply Chain Trust & Institutional Readiness | Done | `security-agent` | See `conductor/tracks/20-*/spec.md` |
+| 21 | Verification, Validation & Uncertainty | Done | `vv-uq-agent` | See `conductor/tracks/21-*/spec.md` |
+| 22 | Experiment Runner & Scenario Management | Done | `experiment-agent` | See `conductor/tracks/22-*/spec.md` |
+| 23 | Domain Starter Kits & Model Zoo | Done | `model-zoo-agent` | See `conductor/tracks/23-*/spec.md` |
+| 24 | Playground, Demos & Visualization UX | Done | `playground-agent` | See `conductor/tracks/24-*/spec.md` |
 | 25 | API Design Review & Compatibility Governance | Done | `api-governance-agent` | See `conductor/tracks/25-*/spec.md` |
 | 26 | Interoperability Standards Review | Done | `interop-agent` | See `conductor/tracks/26-*/spec.md` |
 | 27 | Developer Experience & Reproducible Environments | Done | `dx-agent` | See `conductor/tracks/27-*/spec.md` |
-| 28 | Red Team & Devil's Advocate Review | In Review | `redteam-agent` | See `conductor/tracks/28-*/spec.md` |
+| 28 | Red Team & Devil's Advocate Review | Done | `redteam-agent` | See `conductor/tracks/28-*/spec.md` |
 | 29 | Wave Manager & Execution Gatekeeper | Done | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |
 | 30 | Toolchain & Version Support Matrix | Done | `toolchain-agent` | See `conductor/tracks/30-*/spec.md` |
-| 31 | Performance Regression Guard | In Review | `perf-regression-agent` | See `conductor/tracks/31-*/spec.md` |
+| 31 | Performance Regression Guard | Done | `perf-regression-agent` | See `conductor/tracks/31-*/spec.md` |
 | 32 | GPU Compute Acceleration | In Review | `gpu-compute-agent` | See `conductor/tracks/32-*/spec.md` |
 | 33 | WebGPU Compute for Browser | In Review | `webgpu-agent` | See `conductor/tracks/33-*/spec.md` |
 | 34 | PDES & Parallel Execution | In Review | `pdes-agent` | See `conductor/tracks/34-*/spec.md` |
 | 35 | Distributed Simulation (MPI/gRPC) | In Review | `distributed-agent` | See `conductor/tracks/35-*/spec.md` |
-| 36 | Streaming & Real-Time Processing | In Review | `streaming-agent` | See `conductor/tracks/36-*/spec.md` |
-| 37 | ML/AI Integration & Inference | In Review | `ml-integration-agent` | See `conductor/tracks/37-*/spec.md` |
-| 38 | FMI/FMU & Digital Twin Bridge | In Review | `fmi-agent` | See `conductor/tracks/38-*/spec.md` |
+| 36 | Streaming & Real-Time Processing | Done | `streaming-agent` | See `conductor/tracks/36-*/spec.md` |
+| 37 | ML/AI Integration & Inference | Done | `ml-integration-agent` | See `conductor/tracks/37-*/spec.md` |
+| 38 | FMI/FMU & Digital Twin Bridge | Done | `fmi-agent` | See `conductor/tracks/38-*/spec.md` |
 | 39 | Cloud/HPC Batch Runners | In Review | `cloud-agent` | See `conductor/tracks/39-*/spec.md` |
-| 40 | Time-Travel Debugging & Interactive Stepping | In Review | `timetravel-agent` | See `conductor/tracks/40-*/spec.md` |
+| 40 | Time-Travel Debugging & Interactive Stepping | Done | `timetravel-agent` | See `conductor/tracks/40-*/spec.md` |
+| 41 | Documentation Platform, Quality Gates & Learning Coverage | Done | `docs-agent + ci-agent + community-agent` | See `conductor/tracks/41-*/spec.md` |
 
 ## Track status vocabulary
 
@@ -63,4 +64,4 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 - Track 05 must remain optional and non-blocking for headless releases.
 - GitHub automation, dependency review, scorecard, SBOM, and release workflows already exist under `.github/`; registry publication manifests remain planned work under Tracks 15 and 20.
 - Tracks 34, 35, and 38 are release-critical for distributed simulation, FMI digital-twin, and PDES infrastructure.
-- Tracks 32, 33, 36, 37, 39, and 40 are non-release-critical (enhancement only).
+- Tracks 32, 33, 36, 37, 39, 40, and 41 are non-release-critical (enhancement only).

@@ -22,6 +22,7 @@
 - C#/Go preview scaffolds
 - model zoo expansion
 - OpenSSF and supply-chain maturity gates
+- cloud accelerator smoke routes for Google Cloud TPU, AWS Trainium/Inferentia, and Azure GPU/Batch trial-credit validation
 
 ## v1.0
 
@@ -30,3 +31,4 @@
 - versioned Arrow schemas
 - conformance suite across published languages
 - documented compatibility promises
+- clarified hardware-backed validation paths for GPU, TPU, and other accelerator routes

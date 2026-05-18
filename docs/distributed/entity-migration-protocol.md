@@ -42,10 +42,35 @@ Current local smoke coverage:
   envelope that mirrors `proto/simulation.proto`.
 - Local tests include accepted complete migrations plus rejected self-migration
   and empty-component cases.
+- `local_two_rank_contract_proof` and `local_two_node_contract_proof` now include
+  one validated migration request each, proving the byte-preserving envelope
+  shape is exercised in the local two-node emulator path. This is still not a
+  real MPI or gRPC migration runtime.
 
-Validation command for current Track 35 scaffolding:
+## Protocol contract placeholders
+
+- `MpiProtocol` contract identities are represented in Rust as:
+  - `MpiContractMessage::Event`, `Null`, `Migration`, `Telemetry`
+  - `MpiContractEnvelope` in `crates/kairo-ecs-mpi/src/lib.rs`
+- `GrpcProtocol` contract identities are represented in Rust as:
+  - `GrpcContractMessage::ExchangeEvents`, `MigrationRequest`,
+    `StreamTelemetry`, `GvtProposal`
+  - `GrpcContractEnvelope` in `crates/kairo-ecs-grpc/src/lib.rs`
+- Both are local compile-time proof points only; they do not serialize or transport
+  bytes yet.
+
+## Validation command (scaffold)
 
 ```powershell
-cargo test --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi
-cargo test --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc
+cargo test --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi migration_validator
+cargo test --manifest-path crates/kairo-ecs-grpc/Cargo.toml --features grpc migration_validator
 ```
+
+Expected output:
+
+```text
+test result: ok. ...
+```
+
+`--test`/`--features` execution remains optional runtime-proof status; on hosts with
+linker blockers it is expected to fail before executable runtime validation can run.

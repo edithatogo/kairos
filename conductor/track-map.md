@@ -51,6 +51,7 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 38 | FMI/FMU & Digital Twin Bridge | FMI 3.0 import/export, Asset Administration Shell, digital twin co-simulation | fmi-agent | After standards review, streaming, and FFI |
 | 39 | Cloud/HPC Batch Runners | Docker/Kubernetes runners, spot-instance checkpointing, batch job orchestration | cloud-agent | After experiment runner CLI and packaging |
 | 40 | Time-Travel Debugging & Interactive Stepping | Deterministic trace/record/replay, breakpoints, forward/backward stepping | timetravel-agent | After deterministic core and conformance snapshots |
+| 41 | Documentation Platform, Quality Gates & Learning Coverage | Strict docs workflow, docs-platform parity boundary, and learning coverage matrices | docs-agent + ci-agent + community-agent | Done after Track 41 validators passed |
 
 ## Release-critical path
 
@@ -118,6 +119,7 @@ flowchart TD
     T38[38 FMI/FMU Digital Twin]
     T39[39 Cloud/HPC Batch]
     T40[40 Time-Travel Debug]
+    T41[41 Docs Quality Learning]
 
     T00 --> T01
     T00 --> T13
@@ -419,6 +421,7 @@ flowchart LR
   37 ML/AI Integration & Inference
   39 Cloud/HPC Batch Runners
   40 Time-Travel Debugging & Interactive Stepping
+  41 Documentation Platform, Quality Gates & Learning Coverage
 ```
 
 ### Group F: performance quality assurance

@@ -21,17 +21,17 @@ No upstream scheduler or experiment-runner contracts were changed. The debug cra
 - Unit tests in `crates/kairo-ecs-debug/src/lib.rs` cover replay reconstruction, initial-snapshot-to-first-delta stepping, step/back/goto, run-to-breakpoint, schema encoding, and trace-line validation rejection cases.
 - `website/time-travel-demo/validate-demo.mjs` validates the fixture schema, monotonic ticks, initial render, active event marker, step/back behavior, no duplicate event dots after re-render, event-dot selection, and state inspector refresh with a minimal DOM harness.
 
-## Validation evidence — 2026-05-06
+## Validation evidence — 2026-05-10
 
+- `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-debug\Cargo.toml --target x86_64-pc-windows-gnu` passed with `CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=rust-lld`.
+- `cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests --target x86_64-pc-windows-gnu` passed.
 - `cargo fmt --manifest-path crates\kairo-ecs-debug\Cargo.toml --check` passed.
-- `cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests` passed.
-- `cargo clippy --manifest-path crates\kairo-ecs-debug\Cargo.toml --all-targets -- -D warnings` passed.
+- `cargo clippy --manifest-path crates\kairo-ecs-debug\Cargo.toml --all-targets --target x86_64-pc-windows-gnu -- -D warnings` passed.
 - `node website\time-travel-demo\validate-demo.mjs` passed.
 
-Blocked:
+## Closeout status
 
-- `cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` failed before test execution because `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe` returned Win32 error 5 while creating a signal pipe.
-- `$env:RUSTFLAGS='-C linker=rust-lld'; cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` failed before test execution because the MSVC import libraries `kernel32.lib`, `ntdll.lib`, `userenv.lib`, `ws2_32.lib`, and `dbghelp.lib` are not on the linker search path.
+Track 40's owned paths now validate cleanly on the installed GNU Rust toolchain with `rust-lld`. No owned-path blocker remains.
 
 ## Known risks
 
@@ -54,4 +54,4 @@ Next step: integrate the trace recorder with scheduler observer hook points and 
 - Add large-trace timeline validation after the browser demo supports aggregation or virtualization for 100K+ visible events.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+Ready for the next actual phase closeout once the shared registry surfaces are updated outside this track-only write boundary. Record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.

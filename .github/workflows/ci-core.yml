@@ -41,6 +41,8 @@ jobs:
       - name: Tests
         run: cargo nextest run --workspace --all-features
       - name: Docs
+        env:
+          RUSTDOCFLAGS: -D warnings
         run: cargo doc --workspace --all-features --no-deps
       - name: Dependency policy
         run: |

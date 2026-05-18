@@ -1,0 +1,76 @@
+name: GPU Free Smoke
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+on:
+  pull_request:
+    paths:
+      - "crates/kairo-ecs-gpu/**"
+      - "crates/kairo-ecs-webgpu/**"
+      - "docs/gpu-compute/**"
+      - "website/webgpu-demo/**"
+      - "scripts/nim/**"
+      - "notebooks/colab_gpu_smoke.ipynb"
+      - "notebooks/colab_tpu_smoke.ipynb"
+      - "notebooks/colab_tpu_dedicated_smoke.ipynb"
+      - ".github/workflows/gpu-free-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos-metal-smoke:
+    name: macos-metal-smoke
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install Rust stable
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt
+          rustup default stable
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Metal-adjacent GPU crate check
+        run: cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --features wgpu-backend --tests
+
+      - name: WebGPU crate check
+        run: cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --features webgpu --tests
+
+      - name: Browser demo smoke
+        run: npm test --prefix website/webgpu-demo
+
+  nim-gpu-smoke:
+    name: nim-gpu-smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "24"
+
+      - name: NIM smoke
+        env:
+          NVIDIA_NIM_BASE_URL: ${{ secrets.NVIDIA_NIM_BASE_URL }}
+          NVIDIA_NIM_API_KEY: ${{ secrets.NVIDIA_NIM_API_KEY }}
+          NVIDIA_NIM_MODEL: ${{ secrets.NVIDIA_NIM_MODEL }}
+        run: |
+          if [ -z "$NVIDIA_NIM_BASE_URL" ] || [ -z "$NVIDIA_NIM_API_KEY" ]; then
+            echo "NVIDIA NIM secrets are not configured; skipping optional NIM smoke."
+            exit 0
+          fi
+          node scripts/nim/nim-gpu-smoke.mjs || {
+            echo "::warning::Optional NVIDIA NIM smoke failed; check NVIDIA_NIM_BASE_URL/NVIDIA_NIM_API_KEY configuration."
+            exit 0
+          }

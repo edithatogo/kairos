@@ -103,6 +103,10 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **link-check-plan**: validates docs link-check coverage through `website/docs-link-manifest.json` and local link checks.
 
+**learning-coverage-matrix**: validates the documentation coverage matrix exists, names the supported language/tutorial/example/notebook paths, and records explicit notebook exclusions where notebooks are not the right medium.
+
+**docs-platform-parity**: validates the current docs platform note exists and states the relationship between the live custom Node site and the Astro/Starlight roadmap or parity closure plan.
+
 **package-dry-run**: validates package inventory/dry-run output without publishing.
 
 **checksums**: validates checksum manifest generation for release artifacts when artifacts exist.
@@ -175,17 +179,19 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 ### Tracks 32-35 accelerator, PDES, and distributed gates
 
-**gpu-parity-check**: `pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTest` plus `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --features wgpu-backend,cuda-backend --tests` - validates the GPU crate contract, feature isolation, explicit unavailable-backend errors, and scaffold parity harness compilation. Real hardware CPU-vs-GPU parity remains blocked until backend dependencies and GPU runners are introduced.
+**gpu-parity-check**: `pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTest` plus `cargo check --manifest-path crates/kairo-ecs-gpu/Cargo.toml --features wgpu-backend,cuda-backend --tests` - validates the GPU crate contract, feature isolation, host/device layout checks, shader guard strings, explicit unavailable-backend errors, and scaffold parity harness compilation. Real hardware CPU-vs-GPU parity remains blocked until backend dependencies and GPU runners are introduced.
 
 **gpu-benchmark-threshold**: `rg -n "not yet available|not publish speedup" docs/gpu-compute/benchmark-results.md` - blocks unsupported GPU speedup claims until Track 12 benchmark outputs and hardware runner evidence exist.
 
-**browser-webgpu-smoke**: `npm test --prefix website/webgpu-demo` and `npm run validate:wgsl --prefix website/webgpu-demo` - validates the static browser demo, fallback state, and GPU-free WGSL subset. Real browser WebGPU device initialization remains blocked until Wasm/browser dependency wiring and browser-runner proof exist.
+**browser-webgpu-smoke**: `npm test --prefix website/webgpu-demo` and `npm run validate:wgsl --prefix website/webgpu-demo` - validates the static demo contract, fallback state, broad no-runtime-claim scan, and GPU-free WGSL subset. It is not a browser execution proof. Real browser WebGPU device initialization remains blocked until Wasm/browser dependency wiring and browser-runner proof exist.
 
-**wasm-gpu-parity**: `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --features webgpu --tests` - validates the WebGPU crate's CPU fallback/parity metadata and explicit not-configured dispatch behavior. Real Wasm/WebGPU parity remains blocked until Track 09 and WebGPU runtime bindings are available.
+**wasm-gpu-parity**: `cargo check --manifest-path crates/kairo-ecs-webgpu/Cargo.toml --features webgpu --tests` - validates the WebGPU crate's CPU fallback/reference metadata, buffer descriptor contract, and explicit not-configured dispatch behavior. It is not runtime Wasm/WebGPU parity proof. Real Wasm/WebGPU parity remains blocked until Track 09 and WebGPU runtime bindings are available.
 
-**pdes-sequential-parity**: `cargo check --manifest-path crates/kairo-ecs-pdes/Cargo.toml --features pdes --tests` - validates that PDES parity fixtures compile. Runtime parity execution is blocked in this Windows shell by linker resolution and production parallel scheduling remains future work.
+**pdes-sequential-parity**: `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1 -RunTests` - validates that PDES parity fixtures compile and run when the local GNU Rust toolchain is available. Production parallel scheduling remains future work.
 
-**gvt-progression-check**: `cargo check --manifest-path crates/kairo-ecs-pdes/Cargo.toml --features pdes --tests` - validates that GVT progression evidence and deadlock-smoke fixture code compile. Production GVT stress execution remains a beta/RC gate.
+**gvt-progression-check**: `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1 -RunTests` - validates monotonic GVT fixture evidence, non-regressive stale/null safe-time handling, and strict transport source/destination envelope checks in the local Track 34 crate. Production GVT stress execution remains a beta/RC gate.
+
+**pdes-deadlock-free**: `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1 -RunTests` - validates that the deadlock-stress fixture and its documented evidence path run in the Track 34 local test suite. Runtime deadlock-freedom outside the scaffold remains a gated track-local proof requirement.
 
 **mpi-smoke**: `cargo check --manifest-path crates/kairo-ecs-mpi/Cargo.toml --features mpi --tests` - validates the MPI transport protocol emulator, rank/tag checks, migration envelope, and telemetry envelope. Real `rsmpi` transport remains future work.
 
@@ -381,6 +387,7 @@ pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate
 | Wave manager and execution gatekeeper guidance (Track 29) | yes | yes | yes | yes |
 | Toolchain and version support matrix guidance (Track 30) | yes | yes | yes | yes |
 | Performance regression guard guidance (Track 31) | partial | yes | yes | yes |
+| Docs-platform parity and learning coverage guidance (Track 41) | yes | yes | yes | yes |
 | Benchmark harness public | partial | yes | yes | yes |
 | OpenSSF Scorecard workflow | scaffold | active | active | active |
 | SBOM attached | optional | dry-run | yes | yes |

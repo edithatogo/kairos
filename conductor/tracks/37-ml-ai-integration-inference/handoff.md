@@ -100,3 +100,16 @@ No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
 Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+
+## GNU toolchain rerun
+
+The Windows `link.exe` failure is not a Track 37 implementation defect. The same owned surface passes under the installed GNU Rust toolchain on this host:
+
+- `rustup run stable-x86_64-pc-windows-gnu cargo test --manifest-path crates/kairo-ecs-ml/Cargo.toml --no-default-features`
+- `rustup run stable-x86_64-pc-windows-gnu cargo test --manifest-path crates/kairo-ecs-ml/Cargo.toml --all-features`
+- `rustup run stable-x86_64-pc-windows-gnu cargo check --manifest-path examples/ml-surrogate/de-surrogate/Cargo.toml --features onnx`
+- `$env:PYTHONPATH='python/kairo_gym/src'; python -m unittest discover -s python/kairo_gym/tests`
+
+Result: 11 crate tests passed with `--no-default-features`, 8 feature-matrix tests passed with `--all-features`, the ONNX example checked successfully, and all 6 Python contract tests passed.
+
+Current Track 37 status for the owned surface: implementation scaffold is validated and the remaining blocker is only the shared Conductor closeout surfaces, which are out of scope for this turn.

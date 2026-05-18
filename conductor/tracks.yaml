@@ -108,7 +108,7 @@ tracks:
       - headless-core-check
   - id: 06
     name: Python Binding 3.10-3.14
-    status: In Review
+    status: Done
     owner: python-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -122,7 +122,7 @@ tracks:
       - arrow-roundtrip
   - id: 07
     name: R Binding
-    status: In Review
+    status: Done
     owner: r-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -133,7 +133,7 @@ tracks:
       - arrow-roundtrip
   - id: 08
     name: Julia Binding
-    status: In Review
+    status: Done
     owner: julia-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -171,7 +171,7 @@ tracks:
       - nuget-pack
   - id: 11
     name: Go Binding
-    status: In Review
+    status: Done
     owner: go-agent
     depends_on: ["02", "04", "12", "25"]
     owned_paths:
@@ -213,7 +213,7 @@ tracks:
       - dependency-policy
   - id: 14
     name: Documentation Site & Education
-    status: In Review
+    status: Done
     owner: docs-agent
     depends_on: ["00"]
     owned_paths:
@@ -226,7 +226,7 @@ tracks:
       - link-check-plan
   - id: 15
     name: Packaging, Publishing & Delivery
-    status: In Review
+    status: Done
     owner: release-agent
     depends_on: ["06", "09", "12", "13", "14", "16", "20", "28"]
     owned_paths:
@@ -253,7 +253,7 @@ tracks:
       - changelog-check
   - id: 17
     name: Community Adoption, Education & Ecosystem
-    status: In Review
+    status: Done
     owner: community-agent
     depends_on: ["14"]
     owned_paths:
@@ -264,7 +264,7 @@ tracks:
       - onboarding-docs
   - id: 18
     name: Comparative Benchmarks & Reproducibility
-    status: In Review
+    status: Done
     owner: benchmark-agent
     depends_on: ["01", "12"]
     owned_paths:
@@ -276,7 +276,7 @@ tracks:
       - raw-results-policy
   - id: 19
     name: Research Software, Citation & Archival
-    status: In Review
+    status: Done
     owner: research-agent
     depends_on: ["00"]
     owned_paths:
@@ -291,7 +291,7 @@ tracks:
       - archival-plan
   - id: 20
     name: OpenSSF, Supply Chain Trust & Institutional Readiness
-    status: In Review
+    status: Done
     owner: security-agent
     depends_on: ["00", "13"]
     owned_paths:
@@ -307,7 +307,7 @@ tracks:
       - vulnerability-policy
   - id: 21
     name: Verification, Validation & Uncertainty
-    status: In Review
+    status: Done
     owner: vv-uq-agent
     depends_on: ["01", "04", "12"]
     owned_paths:
@@ -321,7 +321,7 @@ tracks:
       - seed-manifest
   - id: 22
     name: Experiment Runner & Scenario Management
-    status: In Review
+    status: Done
     owner: experiment-agent
     depends_on: ["01", "04", "12"]
     owned_paths:
@@ -336,7 +336,7 @@ tracks:
       - resumability-plan
   - id: 23
     name: Domain Starter Kits & Model Zoo
-    status: In Review
+    status: Done
     owner: model-zoo-agent
     depends_on: ["03", "14"]
     owned_paths:
@@ -350,7 +350,7 @@ tracks:
       - example-maturity-labels
   - id: 24
     name: Playground, Demos & Visualization UX
-    status: In Review
+    status: Done
     owner: playground-agent
     depends_on: ["05", "09", "14"]
     owned_paths:
@@ -401,7 +401,7 @@ tracks:
       - toolchain-docs
   - id: 28
     name: Red Team & Devil's Advocate Review
-    status: In Review
+    status: Done
     owner: redteam-agent
     depends_on: ["00"]
     owned_paths:
@@ -436,7 +436,7 @@ tracks:
       - version-drop-policy-check
   - id: 31
     name: Performance Regression Guard
-    status: In Review
+    status: Done
     owner: perf-regression-agent
     depends_on: ["12", "18"]
     owned_paths:
@@ -477,12 +477,15 @@ tracks:
     owner: pdes-agent
     depends_on: ["01"]
     owned_paths:
+      - conductor/tracks/34-pdes-parallel-execution/
       - crates/kairo-ecs-pdes/
+      - benches/pdes/
       - docs/pdes/
     required_gates:
       - phase-closeout-check
       - pdes-sequential-parity
       - gvt-progression-check
+      - pdes-deadlock-free
   - id: 35
     name: Distributed Simulation (MPI/gRPC)
     status: In Review
@@ -499,7 +502,7 @@ tracks:
       - entity-migration-check
   - id: 36
     name: Streaming & Real-Time Processing
-    status: In Review
+    status: Done
     owner: streaming-agent
     depends_on: ["04", "22"]
     owned_paths:
@@ -512,7 +515,7 @@ tracks:
       - realtime-wallclock-check
   - id: 37
     name: ML/AI Integration & Inference
-    status: In Review
+    status: Done
     owner: ml-integration-agent
     depends_on: ["23"]
     owned_paths:
@@ -525,7 +528,7 @@ tracks:
       - gymnasium-env-smoke
   - id: 38
     name: FMI/FMU & Digital Twin Bridge
-    status: In Review
+    status: Done
     owner: fmi-agent
     depends_on: ["26", "36", "02"]
     owned_paths:
@@ -553,7 +556,7 @@ tracks:
       - spot-checkpoint-test
   - id: 40
     name: Time-Travel Debugging & Interactive Stepping
-    status: In Review
+    status: Done
     owner: timetravel-agent
     depends_on: ["01", "12"]
     owned_paths:
@@ -565,3 +568,29 @@ tracks:
       - trace-record-replay
       - fwd-back-parity
       - breakpoint-smoke
+  - id: 41
+    name: Documentation Platform, Quality Gates & Learning Coverage
+    status: Done
+    owner: docs-agent + ci-agent + community-agent
+    depends_on: ["06", "07", "08", "09", "10", "11", "12", "13", "14", "17", "23", "24", "27", "30"]
+    owned_paths:
+      - .github/workflows/
+      - docs/
+      - examples/
+      - notebooks/
+      - templates/website/
+      - website/
+      - scripts/validation/
+    required_gates:
+      - phase-closeout-check
+      - workflow-presence
+      - dependency-policy
+      - docs-build
+      - link-check-plan
+      - bootstrap-smoke
+      - toolchain-docs
+      - onboarding-docs
+      - example-maturity-labels
+      - non-core-dependency-check
+      - learning-coverage-matrix
+      - docs-platform-parity

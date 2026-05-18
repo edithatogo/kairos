@@ -43,7 +43,7 @@ pub fn browser_capability(requested_backend: ComputeBackend) -> BrowserCapabilit
         effective_backend,
         parity_status,
         workgroup_size: WEBGPU_WORKGROUP_SIZE,
-        browser_gpu_required_for_validation: false,
+        browser_gpu_required_for_validation: effective_backend == ComputeBackend::BrowserWebGpu,
     }
 }
 

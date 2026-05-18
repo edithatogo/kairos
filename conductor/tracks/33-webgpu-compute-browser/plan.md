@@ -17,6 +17,18 @@
 - Do not modify `crates/kairo-ecs-wasm/`, `crates/kairo-ecs-gpu/`, or any core/state crates.
 - WebGPU features gated behind browser detection — no server-side dependency on GPU hardware.
 
+## Next-harvest host-only slice (current)
+
+### Slice 33.H1 — Host-side clarity and truthfulness
+
+- Record and keep explicit host-only claims in track artifacts.
+- Add contract checks in `validate-track33.ps1` so this track cannot pass while any file reintroduces runtime-only language (for example unverified FPS, parity, or browser-complete performance wording).
+- Keep demo and crate behavior dependency-free for CPU-only environments:
+  - `backend-not-configured` contract is active by design,
+  - `backend` label and dispatch label remain dependency-free by default,
+  - all WebGPU validation commands remain static until host binding and runtime tests are available.
+- Closeout evidence stays in `handoff.md`; track remains `In Review` until live GPU/browser gates and strict conductor closeout constraints are recorded.
+
 ## Phase 1 — Scaffold kairo-ecs-webgpu crate
 
 ### Task 1.1 — Crate skeleton
@@ -68,10 +80,10 @@
 ## Phase 4 — Cross-track integration
 
 ### Task 4.1 — CI gate setup
-- Add `webgpu-crate-compiles` gate to `conductor/quality-gates.md`.
-- Add `webgpu-demo-loads` gate (uses headless Chrome with WebGPU flag).
-- Add `webgpu-cpu-parity` gate (runs parity test in headless Chrome).
-- Add `webgpu-cross-browser` gate (runs smoke test across browsers via Playwright or Puppeteer).
+- Keep the track-local `webgpu-crate-compiles` scaffold check and the central `browser-webgpu-smoke` / `wasm-gpu-parity` gates aligned with the host-only slice.
+- Keep `webgpu-demo-loads` as the runtime-target name for the future headless-Chrome smoke path, while the current central smoke gate remains `browser-webgpu-smoke`.
+- Keep `webgpu-cpu-parity` as the runtime-target name for the future browser parity path, while the current central parity gate remains `wasm-gpu-parity`.
+- Keep `webgpu-cross-browser` as a staged runtime target for Playwright/Puppeteer coverage once browser runners are available.
 
 ### Task 4.2 — Documentation
 - `website/webgpu-demo/README.md` — how to run, browser requirements, interpretation of results.

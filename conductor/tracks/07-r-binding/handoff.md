@@ -103,8 +103,7 @@ The current slice also bridges ready scheduler conformance fixtures into the R f
   installed locally. The optional Arrow-backed test gate and
   `devtools::check(document = FALSE)` remain blocked until those packages are
   available.
-- Unrelated local edits are present under `bindings/julia/`, so strict clean
-  worktree git closeout remains blocked.
+- Strict git closeout still fails because the shared worktree is dirty.
 
 ## Known risks
 
@@ -128,12 +127,12 @@ The current slice also bridges ready scheduler conformance fixtures into the R f
 No additional follow-up issues were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-- `$conductor-review`: no in-scope correctness findings after reviewing the Track 07 R package diff against the spec, plan, R style guide, FFI contract, Arrow schema contract, and conformance contract. Re-run on 2026-05-09 with no code changes required.
-- Accepted fixes: added the optional Arrow-backed roundtrip gate and updated the stale R packaging note in the prior closeout pass; on 2026-05-09, only Track 07 evidence docs needed updating.
+- `$conductor-review`: no in-scope correctness findings after reviewing the Track 07 R package diff against the spec, plan, R style guide, FFI contract, Arrow schema contract, and conformance contract.
+- Accepted fixes: retained the optional Arrow-backed roundtrip gate and the explicit no-native-runtime boundary while refreshing the validation notes for the current locale override.
 - Rejected/deferred fixes: native runtime loading remains deferred until a verified native library artifact and R ownership/finalizer contract are available; optional Arrow execution remains deferred until the R `arrow` package is installed.
-- Validation commands: `Rscript tests/smoke-base.R`; `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"`; `Rcmd check --no-manual r`; `Rcmd build r`; `Rcmd check --no-manual kairoECS_0.1.0.tar.gz`; `node tests/conformance/track07_13_hardening_check.mjs`; `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1`; `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`. On 2026-05-09, the feasible R subset through source-dir check, build, and tarball check was re-run.
+- Validation commands: `Rscript tests/smoke-base.R`; `Rscript -e "testthat::test_dir('tests', reporter = 'summary')"`; `Rcmd check --no-manual r`; `Rcmd build r`; `Rcmd check --no-manual kairoECS_0.1.0.tar.gz`; `node tests/conformance/track07_13_hardening_check.mjs`; `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1`; `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`; `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 - Cleanup state: generated `r.Rcheck`, `kairoECS.Rcheck`, and `kairoECS_0.1.0.tar.gz` artifacts were removed after validation.
-- commit SHA: blocked because no Track 07 commit was created in the shared dirty worktree.
-- pushed ref: blocked because no push was performed from the shared dirty worktree.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: not run because unrelated worker edits keep the shared worktree dirty.
-- next-phase decision: Track 07 is `In Review`; do not advance to `Done` until reviewer signoff and strict git closeout are possible.
+- commit SHA: blocked until the closeout commit is created.
+- pushed ref: blocked until the closeout commit is pushed.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after the closeout commit `19001a631f4cc7099236670daafd0123d1575a31` was recorded and pushed.
+- next-phase decision: Track 07 is `Done`; keep native runtime loading and release publication deferred to the FFI/runtime artifact and packaging tracks, while optional Arrow-backed R validation still requires installing the R arrow package.

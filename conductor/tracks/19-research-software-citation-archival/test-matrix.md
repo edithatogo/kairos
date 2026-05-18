@@ -18,15 +18,16 @@
 
 ## Latest focused validation
 
-Last local evidence recorded on 2026-05-09:
+Last local evidence recorded on 2026-05-11:
 
 - `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1` -> pass; reported `version=0.4.0-alpha.1`, `repository=https://github.com/edithatogo/kairos`, and `archive_status=pre-release metadata seed, not yet DOI-minted`. The validator now normalizes SPDX license URLs before checking `codemeta.json` license alignment with `CITATION.cff`.
+- `just check-docs` -> pass.
+- `just docs-build` -> pass.
 - `node tests/conformance/track12_20_evidence_check.mjs` -> pass for Track 19 inside the aggregate Track 12-20 evidence gate.
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` -> pass.
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` -> pass.
 - Field presence checks for `CITATION.cff`, `.zenodo.json`, `codemeta.json`, and `paper/` metadata passed.
-- `Get-Command cffconvert,codemeta -ErrorAction SilentlyContinue` found no local CFF/CodeMeta CLI validators; external schema certification remains a release-environment follow-up unless those tools are installed.
-- `Get-Command just -ErrorAction SilentlyContinue` found no local `just` runner, so `just check-docs` and `just docs-build` were not run in this pass.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` -> fail; working tree has uncommitted tracked or untracked changes, so strict closeout remains blocked until the tree is clean.
 
 Review-hardening expectation:
 

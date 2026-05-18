@@ -25,6 +25,12 @@ as release evidence.
 - [Flocking example](../../examples/abm/flocking/README.md)
 - [Emergency department flow example](../../examples/hybrid/emergency_department_flow/README.md)
 
+## Coverage matrix
+
+- [Learning Coverage Matrix](coverage-matrix.md) records which languages use a
+  tutorial, example, or notebook artifact and which languages intentionally do
+  not use notebooks.
+
 ## Claim boundary
 
 These tutorials are offline learning paths. They do not claim that published

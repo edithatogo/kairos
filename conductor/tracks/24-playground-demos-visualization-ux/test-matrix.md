@@ -25,6 +25,10 @@
 | 2026-05-06 | `npm --prefix website run check:links` | pass | Output: `Checked 25 required paths and 2 markdown sources.` Confirms docs link manifest and Markdown links still resolve after adding playground docs. |
 | 2026-05-06 | `npm --prefix website run build` | pass | Output: `Built C:\Users\60217257\repos\kairos\website\build\index.html`. Confirms the docs home build still renders. |
 | 2026-05-06 | `node scripts/validation/validate-tracks21-27.mjs` | pass | Ran the playground smoke with the adjacent Track 21-27 local validators; all seven track checks passed. |
+| 2026-05-11 | `node docs/assets/validate-playground-figures.mjs` | pass | Checked 5 playground figure assets and docs references. Confirms the committed SVG figure set is present and linked. |
+| 2026-05-11 | `node website/scripts/smoke-playground.mjs` | pass | Output: `Playground smoke passed for examples/viz/headless-snapshot with 2 entities at tick 12.` |
+| 2026-05-11 | `npm --prefix website run check:links` | pass | Output: `Checked 100 required paths, 3 markdown sources, and 6 navigation sections.` |
+| 2026-05-11 | `npm --prefix website run build` | pass | Output: `Rendered 110 doc pages`, `Search index: 100 entries`, `API docs: 23 crates indexed, 459 public items`. |
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

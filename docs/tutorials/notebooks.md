@@ -14,11 +14,22 @@ installation, or native FFI wheels.
 - [Reproducible benchmark scenario](../../notebooks/reproducible_benchmark_scenario.ipynb)
   reads committed regression fixtures and the performance threshold table to
   explain the offline regression guard.
+- [Colab GPU smoke route](../../notebooks/colab_gpu_smoke.ipynb) documents
+  the hosted GPU smoke route without requiring local GPU hardware.
+- [Colab TPU smoke route](../../notebooks/colab_tpu_smoke.ipynb) documents
+  the hosted TPU smoke route at the notebook level.
+- [Colab TPU dedicated smoke route](../../notebooks/colab_tpu_dedicated_smoke.ipynb)
+  records the dedicated TPU smoke path used by the learning-coverage matrix.
 
 ## Figures
 
 - [Scheduler timeline](../../notebooks/figures/scheduler-timeline.svg) is a
   checked-in SVG used by the Python scheduler notebook.
+
+## Coverage matrix
+
+- [Learning Coverage Matrix](coverage-matrix.md) explains which languages use
+  notebook walkthroughs and which ones intentionally do not.
 
 ## Local validation
 

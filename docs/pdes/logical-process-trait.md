@@ -22,6 +22,20 @@ Contract:
 - `advance_to(tick)` is called only after GVT or a transport-safe lower bound has
   been computed.
 
+The current scheduler contract is intentionally strict at the boundary:
+
+- `PdesScheduler::add_lp(...)` returns `Result` and rejects duplicate LP IDs,
+  mismatched `WorldSegment::id`, self-neighboring LP declarations, and duplicate
+  neighbor entries.
+- `PdesScheduler::step_until(...)` returns `Result` and fails if transport
+  routing receives or sends to a logical-process ID not registered in the
+  scheduler transport.
+- `PdesTransport` implementers must return `TransportError::UnknownLogicalProcess`
+  for any destination/source outside the known transport participants.
+
+The intent is to make topology and routing failures deterministic, local, and
+easier to test before any MPI or runtime backend is introduced.
+
 Validation command:
 
 ```powershell

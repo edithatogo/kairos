@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package kairo.ecs.simulation.v1;
 
+// Runtime transport contract (placeholder): see track 35 migration/telemetry docs.
 message RemoteEvent {
   uint32 source_lp = 1;
   uint32 dest_lp = 2;
@@ -9,6 +10,7 @@ message RemoteEvent {
   bytes event_payload = 4;
 }
 
+// Runtime transport contract placeholder for ownership transfer in one migration envelope.
 message MigrationRequest {
   uint64 entity_index = 1;
   uint32 entity_generation = 2;
@@ -45,6 +47,8 @@ message GvtDecision {
   uint64 gvt_tick = 1;
 }
 
+// Runtime transport contract placeholder for service discovery: this is not wired to
+// transport runtime in the current track slice.
 service SimulationTransport {
   rpc ExchangeEvents(stream RemoteEvent) returns (stream RemoteEvent);
   rpc MigrateEntity(MigrationRequest) returns (MigrationAck);

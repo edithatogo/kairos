@@ -1,6 +1,6 @@
 # Docs Workflow
 
-The repository docs site lives in `website/` and renders `website/src/index.md` into `website/build/index.html`. Contributor-facing commands are exposed through `justfile` so the same commands work from the repo root.
+The repository docs site lives in `website/` and renders `website/src/index.md` into `website/build/index.html`. The site home should keep the docs-platform status note in `docs/developer-experience/docs-platform.md` and the learning-coverage inventory in `docs/tutorials/coverage-matrix.md` easy to reach, while contributor-facing commands stay exposed through `justfile` so the same commands work from the repo root.
 
 ## Commands
 
@@ -11,6 +11,7 @@ The repository docs site lives in `website/` and renders `website/src/index.md` 
 - `just docs-dev` installs dependencies and starts the local preview with `npm --prefix website start`.
 - `just docs-smoke` runs the local smoke validator for the docs command surface, link manifest, build output, and preview server.
 - `just check-docs` is the same validator used as the focused docs quality gate.
+- `node scripts/validation/validate-learning-coverage.mjs` validates the tutorial/example/notebook coverage matrix and docs-platform status note.
 
 ## Expected Output
 
@@ -26,4 +27,7 @@ The repository docs site lives in `website/` and renders `website/src/index.md` 
 - `website/scripts/build.js` owns the static HTML generation.
 - `website/scripts/dev.js` owns the local preview server.
 - `website/docs-link-manifest.json` lists required repo paths and Markdown sources checked by `npm --prefix website run check:links`.
+- `website/src/index.md` is the site home and should surface the docs-platform and learning-coverage entry points near the top of the page.
 - `scripts/dx/validate-docs-workflow.mjs` owns the repo-root smoke validation used by `just docs-smoke` and `just check-docs`.
+- `docs/tutorials/coverage-matrix.md` records the supported language coverage inventory.
+- `docs/developer-experience/docs-platform.md` records the current Node site versus Astro/Starlight boundary.

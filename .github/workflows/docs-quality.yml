@@ -10,6 +10,11 @@ on:
       - '**/*.md'
       - '**/*.mmd'
       - 'docs/**'
+      - 'website/**'
+      - 'bindings/**'
+      - 'examples/**'
+      - 'notebooks/**'
+      - 'crates/kairo-ecs-core/**'
       - 'planning/diagrams/**'
   push:
     branches: [main]
@@ -48,3 +53,13 @@ jobs:
           args: --verbose --no-progress './README.md' './docs/**/*.md'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tutorial validation
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1
+      - name: Install website dependencies
+        run: npm ci --prefix website
+      - name: Docs workflow validation
+        run: node scripts/dx/validate-docs-workflow.mjs
+      - name: Learning coverage matrix
+        run: node scripts/validation/validate-learning-coverage.mjs
+      - name: Notebook validation
+        run: python notebooks/validate_notebooks.py

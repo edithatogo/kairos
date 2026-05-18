@@ -8,6 +8,8 @@ containerProperties:
     - run
     - --scenario
     - Ref::scenario
+    - --output
+    - Ref::output_uri
   resourceRequirements:
     - type: VCPU
       value: "2"

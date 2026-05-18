@@ -45,9 +45,14 @@
 - Passing: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`
 - Passing: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests`
 - Passing: `cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml`
-- Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2` reaches Rust code generation but fails at Windows link time because `link.exe` resolves to Git's `usr/bin/link.exe` and exits with `couldn't create signal pipe, Win32 error 5`.
-- Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features` currently reaches Rust code generation but fails at Windows link time because `link.exe` resolves to Git's `usr/bin/link.exe` and exits with `couldn't create signal pipe, Win32 error 5`.
-- Blocked: `RUSTFLAGS=-Clinker=rust-lld cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features` bypasses Git's `link.exe` but fails because the Windows SDK import libraries (`kernel32.lib`, `ntdll.lib`, `userenv.lib`, `ws2_32.lib`, `dbghelp.lib`) are not visible to `rust-lld`.
+- Passing: `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`; the GNU toolchain avoids Git's `link.exe` shadowing on this host and executes the owned test suite successfully.
+- Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --no-default-features`
+- Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2`
+- Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi3`
+- Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`
+- Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests`
+- Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml`
+- Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2` remains gated until live shared-library FMU execution is available on a runner with FMI-compatible binaries.
 - Passing: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests` covers FMI all-feature compile checks and bounded offline-claim documentation.
 ## Phase closeout gate
 

@@ -1,9 +1,12 @@
 # Checkpoint and Spot Interruption Policy
 
+See `runtime-evidence-boundary.md` for required live execution evidence and blocked runtime commands.
+
 ## Offline validator scope
 
 `python cloud\validate_cloud_hpc.py` checks that the Track 39 artifacts expose the expected checkpoint and interruption wiring without requiring Docker, Kubernetes, Slurm, or cloud credentials. It validates:
 
+- the `kairo-ecs-cli` command surface used by the runner scaffolds (`run`, `checkpoint`, `resume`);
 - the Docker entrypoint traps `TERM`/`INT`, writes checkpoint manifests atomically, and attempts resume when a checkpoint manifest exists;
 - Slurm generated scripts request `--signal=B:SIGTERM@120`, create a local checkpoint directory, and call `kairo-ecs-cli checkpoint` from the signal trap;
 - Kubernetes rendered Jobs carry storage and checkpoint environment variables;

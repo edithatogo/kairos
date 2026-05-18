@@ -143,4 +143,10 @@ Keep `benches/benchmark-plan.md`, `benches/benchmark-smoke.json`, and `conforman
 Treat the current benchmark evidence as reproducibility and metadata-gate evidence, not as a native performance comparison.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+Track 18 advanced to Done on 2026-05-10 after `$conductor-review` findings were resolved, the reproducibility validator stayed green, docs-link validation remained green, and the closeout record was captured from a clean worktree.
+
+- accepted fixes: benchmark metadata, raw-results policy, and public reproduction page wiring remain as recorded in the review update.
+- commit SHA: pending; recorded in the closeout ledger for the committed Track 18 slice.
+- pushed ref: pending; recorded in the closeout ledger for the committed Track 18 slice.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed on 2026-05-10 after the closeout slice was committed.
+- next-phase decision: Track 18 is Done for reproducibility and metadata-gate evidence; native benchmark performance claims remain future release-hardening work.

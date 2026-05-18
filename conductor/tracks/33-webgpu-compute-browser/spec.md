@@ -49,7 +49,7 @@ This track depends on Track 09 (TypeScript/Wasm binding) for the Wasm module sca
 
 ## Acceptance criteria
 
-1. Browser demo runs 100K-agent ABM simulation at >=30 frames per second on a consumer GPU (RTX 3060-class or equivalent).
+1. Future runtime target: browser demo sustains the reference 100K-agent ABM frame-rate threshold on a consumer GPU (RTX 3060-class or equivalent). This is not claimed by the current scaffold.
 2. WebGPU compute path produces simulation output identical to the CPU Wasm path for the same random seed.
 3. Cross-browser smoke test passes: simulation launches and runs for 30 seconds without crash on Chrome (stable), Edge (stable), and Firefox Nightly.
 4. Performance comparison table published in `website/webgpu-demo/` showing WebGPU speedup vs CPU Wasm.
@@ -72,8 +72,8 @@ This track depends on Track 09 (TypeScript/Wasm binding) for the Wasm module sca
 ## Quality gates
 
 Use the gates in `conductor/quality-gates.md`. Track-specific gates:
-- `webgpu-crate-compiles` — `kairo-ecs-webgpu` compiles to Wasm via `wasm-pack`.
-- `webgpu-demo-loads` — the demo page loads in a browser and detects WebGPU availability.
-- `webgpu-cpu-parity` — WebGPU compute output matches CPU Wasm output for same seed.
-- `webgpu-framerate` — demo maintains >=30fps for 100K-agent ABM on reference hardware after real WebGPU dispatch is configured.
+- `webgpu-crate-compiles` — staged runtime target for `kairo-ecs-webgpu` compiling to Wasm via `wasm-pack`; the current central scaffold gate remains `browser-webgpu-smoke`.
+- `webgpu-demo-loads` — staged runtime target for the demo page loading in a browser and detecting WebGPU availability; the current central scaffold gate remains `browser-webgpu-smoke`.
+- `webgpu-cpu-parity` — staged runtime target for WebGPU compute output matching CPU Wasm output for the same seed; the current central parity gate remains `wasm-gpu-parity`.
+- `webgpu-framerate` — staged future target for 100K-agent ABM frame-rate evidence on reference hardware after real WebGPU dispatch is configured.
 - `webgpu-cross-browser` — smoke test passes on Chrome, Edge, Firefox Nightly.

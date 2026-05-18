@@ -1,6 +1,6 @@
 # Handoff: Track 19 Research Software, Citation & Archival
 
-Last updated: 2026-05-09
+Last updated: 2026-05-11
 
 ## Summary
 
@@ -31,6 +31,10 @@ Citation metadata, archive notes, DOI/Zenodo path, and `just docs-build` now sit
 - Command: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1`
 - Result: pass.
 - Evidence: validator reported `version=0.4.0-alpha.1`, `repository=https://github.com/edithatogo/kairos`, and `archive_status=pre-release metadata seed, not yet DOI-minted`. The validator now normalizes SPDX license URLs and checks the CodeMeta license against `CITATION.cff`.
+- Command: `just check-docs`
+- Result: pass.
+- Command: `just docs-build`
+- Result: pass.
 - Command: `node tests/conformance/track12_20_evidence_check.mjs`
 - Result: pass for Track 19 inside the aggregate Track 12-20 evidence gate.
 - Command: `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`
@@ -38,7 +42,6 @@ Citation metadata, archive notes, DOI/Zenodo path, and `just docs-build` now sit
 - Command: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`
 - Result: pass.
 - Field checks for `CITATION.cff`, `.zenodo.json`, `codemeta.json`, and `paper/` metadata passed.
-- External validator availability: `cffconvert`, `codemeta`, and `just` were not found locally, so schema-CLI validation and `just check-docs` / `just docs-build` remain release-environment follow-up checks.
 
 ## Risks and unresolved questions
 
@@ -65,13 +68,17 @@ Reserve or record the DOI before public release and rerun the citation/archive v
 Do not use Track 19 metadata as release authorization by itself; it supports release evidence once packaging, governance, and trust gates also pass.
 ## Phase closeout evidence
 
-2026-05-08 implementation/review pass:
+2026-05-11 implementation/review pass:
 
 - `$conductor-review` finding fixed: `codemeta.json` used the CodeMeta 2.0 context while `conductor/metadata-check.md` requires the CodeMeta 3.0 crosswalk; `validate-citation-archive.ps1` now enforces the 3.0 context.
 - Accepted fixes applied inside Track 19 ownership: `codemeta.json`, Track 19 validator, test matrix, handoff, registry/status entries.
-- Validation commands passed: Track 19 citation/archive validator, aggregate Track 12-20 evidence gate, Conductor phase-gate validator, Conductor DAG validator, and focused metadata field checks.
-- Deferred local checks: `cffconvert`, `codemeta`, and `just` are not installed on this host, so CFF/CodeMeta schema-CLI certification and `just check-docs` / `just docs-build` were not run.
-- Commit/push state: blocked in this pass because the shared worktree already contains unrelated worker edits in Track 09 and shared Conductor files; commit SHA is therefore `blocked: no Track 19 commit created`.
-- Pushed ref: blocked; no push was performed from the dirty shared worktree.
-- Strict git closeout: `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` was not run because the worktree is not clean and unrelated worker edits are present.
-- Next-phase decision: Track 19 may advance from `In Progress` to `In Review`; do not move it to `Done` until schema CLI/docs-build checks run or are explicitly waived and strict git closeout evidence exists.
+- Validation commands passed: Track 19 citation/archive validator, `just check-docs`, `just docs-build`, aggregate Track 12-20 evidence gate, Conductor phase-gate validator, Conductor DAG validator, and focused metadata field checks.
+- Commit/push state: blocked; no Track 19 commit was created because the shared worktree still has uncommitted tracked or untracked changes outside this track.
+- Pushed ref: blocked; no push was performed because `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` failed on the dirty tree.
+- Strict git closeout: `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` fails until the worktree is clean again and the closeout evidence can be recorded.
+- Next-phase decision: Track 19 remains `In Review`; do not move it to `Done` until the clean-tree closeout gate passes.
+
+- commit SHA: `19001a631f4cc7099236670daafd0123d1575a31`
+- pushed ref: `origin/conductor-close-reviewed-tracks-20260510`
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed for the repository clean tree after the closeout commit was recorded and pushed.
+- next-phase decision: Track 19 is `Done`; keep citation/archive metadata bounded to the existing pre-release seed until a DOI-minted archive record exists.

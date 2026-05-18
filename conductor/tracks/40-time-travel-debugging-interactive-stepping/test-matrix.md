@@ -2,9 +2,9 @@
 
 ## Focused Track 40 tests
 
-- `cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` for debug crate unit tests.
+- `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-debug\Cargo.toml --target x86_64-pc-windows-gnu` for debug crate unit tests on this Windows host.
 - `cargo test -p kairo-ecs-debug` remains the workspace-package equivalent used by central coverage checks.
-- `cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests` for a compile-only fallback when the local Windows linker is unavailable.
+- `cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests --target x86_64-pc-windows-gnu` for a compile-only fallback when the local Windows linker is unavailable.
 - `cargo fmt --manifest-path crates\kairo-ecs-debug\Cargo.toml --check` before crate handoff.
 - `cargo clippy --manifest-path crates\kairo-ecs-debug\Cargo.toml --all-targets -- -D warnings`.
 - `node website\time-travel-demo\validate-demo.mjs` for the static timeline scrubber smoke.
@@ -34,9 +34,10 @@ Central conductor scripts and core/state workspace tests are still required befo
 
 ```bash
 cargo fmt --manifest-path crates\kairo-ecs-debug\Cargo.toml --check
-cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests
-cargo clippy --manifest-path crates\kairo-ecs-debug\Cargo.toml --all-targets -- -D warnings
-cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml
+cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests --target x86_64-pc-windows-gnu
+cargo clippy --manifest-path crates\kairo-ecs-debug\Cargo.toml --all-targets --target x86_64-pc-windows-gnu -- -D warnings
+set CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=rust-lld
+cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-debug\Cargo.toml --target x86_64-pc-windows-gnu
 node website\time-travel-demo\validate-demo.mjs
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1 -SkipCargoTests
 ```

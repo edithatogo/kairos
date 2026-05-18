@@ -1,6 +1,6 @@
 # KairoECS Implementation Readiness
 
-Last verified: 2026-05-07
+Last verified: 2026-05-17
 
 ## Purpose
 
@@ -57,15 +57,16 @@ The Conductor setup is complete, but implementation should move through explicit
 | Wave manager and execution gatekeeper (Track 29) | R2 | `conductor/wave-policy.md`, `conductor/gates`, and `validate-wave-gates.ps1` derive waves, dependency closure, and critical-path blockers from `tracks.yaml`. |
 | Toolchain and version support matrix (Track 30) | R2 | `conductor/toolchain-matrix.md`, `.github/workflows/toolchain-check.yml`, and `validate-toolchain-matrix.ps1` define supported ecosystems, version-drop policy, and CI install checks. |
 | Performance regression guard (Track 31) | R2 | `conductor/performance-thresholds.md`, `benches/regression/compare.py`, and `.github/workflows/bench-regression.yml` define benchmark thresholds and regression comparison gates. |
-| GPU Compute (Track 32) | R2 | `crates/kairo-ecs-gpu` exists, is wired into the root workspace, and has explicit unavailable-backend contracts plus feature compile gates. |
-| WebGPU Compute (Track 33) | R2 | `crates/kairo-ecs-webgpu` and `website/webgpu-demo` exist with browser dispatch capability checks and demo smoke tests. |
-| PDES & Parallel Execution (Track 34) | R2 | `crates/kairo-ecs-pdes` exists with parity and deadlock-stress report fixtures. |
-| Distributed Simulation (Track 35) | R2 | `crates/kairo-ecs-mpi` and `crates/kairo-ecs-grpc` exist with dependency-free transport protocol emulators and compile gates. |
+| GPU Compute (Track 32) | R2 | `crates/kairo-ecs-gpu` exists, is wired into the root workspace, and has explicit unavailable-backend contracts plus feature compile gates; the GNU-toolchain runtime rerun now passes, but real GPU parity and benchmark evidence still need hardware. |
+| WebGPU Compute (Track 33) | R2 | `crates/kairo-ecs-webgpu` and `website/webgpu-demo` exist with browser dispatch capability checks and demo smoke tests; the GNU-toolchain runtime rerun now passes, but browser WebGPU device proof still needs a browser-capable runtime. |
+| PDES & Parallel Execution (Track 34) | R2 | `crates/kairo-ecs-pdes` exists with parity and deadlock-stress report fixtures; the GNU-toolchain runtime rerun now passes, but scaling benchmarks and Time Warp evidence remain pending. |
+| Distributed Simulation (Track 35) | R2 | `crates/kairo-ecs-mpi` and `crates/kairo-ecs-grpc` exist with dependency-free transport protocol emulators and compile gates; the GNU-toolchain runtime rerun now passes, but real `rsmpi`/`tonic` and multi-node evidence remain pending. |
 | Streaming & Real-Time (Track 36) | R2 | `crates/kairo-ecs-streaming` exists with event-log contract validation and feature compile gates. |
 | ML/AI Integration (Track 37) | R2 | `crates/kairo-ecs-ml`, `examples/ml-surrogate`, and `python/kairo_gym` exist with metadata, shape, and action validation. |
 | FMI/FMU Digital Twin (Track 38) | R2 | `crates/kairo-ecs-fmi` and `examples/fmi-co-simulation` exist with unpacked FMU, modelDescription, and AAS validation. |
-| Cloud/HPC Batch Runners (Track 39) | R2 | `cloud`, `docker`, `k8s`, `hpc/slurm`, and `docs/cloud-hpc` exist with offline cloud/HPC manifest validation. |
+| Cloud/HPC Batch Runners (Track 39) | R2 | `cloud`, `docker`, `k8s`, `hpc/slurm`, and `docs/cloud-hpc` exist with offline cloud/HPC validation plus a runtime evidence boundary; live Docker, Kubernetes, Slurm, and provider acceptance still need environment-backed proof. |
 | Time-Travel Debugging (Track 40) | R2 | `crates/kairo-ecs-debug` and `website/time-travel-demo` exist with trace-line validation and a Node demo smoke harness. |
+| Documentation Platform, Quality Gates, and Learning Coverage (Track 41) | R2 | Current docs, CI, example, and notebook surfaces are validated with a learning-coverage matrix, notebook inventory checks, docs workflow smoke, and an explicit docs-platform parity boundary for the live custom Node site versus any future Astro/Starlight migration. |
 
 ## Enforcement rule
 

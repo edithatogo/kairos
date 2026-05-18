@@ -62,12 +62,14 @@ Completed with artifact evidence:
 
 Validation evidence:
 
-- `cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests` passed.
+- `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-debug\Cargo.toml --target x86_64-pc-windows-gnu` passed with `CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=rust-lld`.
+- `cargo check --manifest-path crates\kairo-ecs-debug\Cargo.toml --tests --target x86_64-pc-windows-gnu` passed.
+- `cargo fmt --manifest-path crates\kairo-ecs-debug\Cargo.toml --check` passed.
+- `cargo clippy --manifest-path crates\kairo-ecs-debug\Cargo.toml --all-targets --target x86_64-pc-windows-gnu -- -D warnings` passed.
 - `node website\time-travel-demo\validate-demo.mjs` passed.
 
 Not marked complete:
 
-- `cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` did not execute because the local Windows linker setup is broken: `where link` resolves to Git's `usr\bin\link.exe`, which failed with Win32 error 5; retrying with `RUSTFLAGS='-C linker=rust-lld'` failed because `kernel32.lib`, `ntdll.lib`, `userenv.lib`, `ws2_32.lib`, and `dbghelp.lib` are not on `LIB`.
 - Arrow IPC serialization and experiment-runner integration remain future work because they require Track 04/22 integration outside this worker's write paths.
 
 ## Hardening slice evidence — 2026-05-06
@@ -87,10 +89,9 @@ Validation evidence:
 - `cargo clippy --manifest-path crates\kairo-ecs-debug\Cargo.toml --all-targets -- -D warnings` passed.
 - `node website\time-travel-demo\validate-demo.mjs` passed.
 
-Blocked validation:
+Validation cleared:
 
-- `cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` still fails before test execution because `link.exe` resolves to Git's `usr\bin\link.exe` and exits with Win32 error 5 while creating a signal pipe.
-- `$env:RUSTFLAGS='-C linker=rust-lld'; cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml` still fails before test execution because `rust-lld` cannot find `kernel32.lib`, `ntdll.lib`, `userenv.lib`, `ws2_32.lib`, and `dbghelp.lib`.
+- `cargo test --manifest-path crates\kairo-ecs-debug\Cargo.toml --target x86_64-pc-windows-gnu` now passes with the GNU toolchain and `rust-lld`; the earlier MSVC link path failure remains documented above only as historical evidence.
 ## Phase closeout gate
 
 Before any task or phase in this track is marked complete, and before the next phase begins:

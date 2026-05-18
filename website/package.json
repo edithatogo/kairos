@@ -4,12 +4,20 @@
   "private": true,
   "license": "Apache-2.0",
   "scripts": {
-    "build": "node scripts/build.js",
+    "build": "astro build",
     "check:links": "node scripts/check-links.js",
     "check:quality": "node scripts/validate-quality.js",
     "check:all": "npm run check:links && npm run build && npm run check:quality",
-    "dev": "node scripts/dev.js",
-    "start": "node scripts/dev.js",
-    "serve": "node scripts/dev.js"
+    "dev": "astro dev",
+    "start": "astro dev",
+    "serve": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.39.2",
+    "astro": "^6.3.3",
+    "starlight-links-validator": "^0.24.0",
+    "starlight-llms-txt": "^0.10.0",
+    "starlight-plugin-icons": "^1.1.6",
+    "starlight-versions": "^0.9.0"
   }
 }

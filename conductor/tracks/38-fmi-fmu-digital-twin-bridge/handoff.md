@@ -24,8 +24,13 @@ Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. 
 - Passed: `cargo check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests`
 - Passed: `cargo check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml`
 - Passed: `cargo fmt --manifest-path crates/kairo-ecs-fmi/Cargo.toml`
-- Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`; the Rust crate compiles, then Windows linking fails because `link.exe` resolves to `C:\Users\60217257\scoop\apps\git\current\usr\bin\link.exe` and reports `couldn't create signal pipe, Win32 error 5`.
-- Blocked: `$env:RUSTFLAGS='-Clinker=rust-lld'; cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`; the override bypasses Git's `link.exe` but `rust-lld` cannot find Windows SDK import libraries including `kernel32.lib`, `ntdll.lib`, `userenv.lib`, `ws2_32.lib`, and `dbghelp.lib`.
+- Passed: `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`; the GNU toolchain avoids Git's `link.exe` shadowing and the crate's full test suite passed on this host.
+- Passed: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --no-default-features`
+- Passed: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2`
+- Passed: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi3`
+- Passed: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`
+- Passed: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests`
+- Passed: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml`
 
 ## Contracts consumed
 
@@ -55,7 +60,7 @@ Established the first artifact-backed FMI/FMU and digital-twin bridge scaffold. 
 
 | Platform | Current status |
 |---|---|
-| Windows x86_64 | Layout detection maps to `binaries/win64`; cargo check passes; cargo test blocked by local linker resolution |
+| Windows x86_64 | Layout detection maps to `binaries/win64`; cargo check and cargo test pass under `stable-x86_64-pc-windows-gnu`; the default MSVC host still requires linker-path hygiene if used for test execution |
 | Linux x86_64 | Layout detection maps to `binaries/linux64`; CI validation still required |
 | macOS x86_64 | Layout detection maps to `binaries/darwin64`; CI validation still required |
 | macOS arm64 | Layout detection maps to `binaries/darwinaarch64`; CI validation still required |
@@ -107,4 +112,4 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+The Windows linker blocker is cleared for the owned compile/test gates when the GNU Rust toolchain is used on this host. Remaining Track 38 closure work is still the broader acceptance surface: `.fmu` archive loading, 1000-step reference FMU smoke execution, OpenModelica round-trip validation, AAS schema validation, and cross-platform CI coverage. Record the final review/fix/commit/push evidence here only when those gates are actually added or an explicit blocker note is needed for the owned slice.
