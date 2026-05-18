@@ -60,6 +60,7 @@ jobs:
           test -f .github/workflows/docs-quality.yml
           test -f .github/workflows/docs.yml
           test -f .github/workflows/fuzzing.yml
+          test -f .github/workflows/gpu-free-smoke.yml
           test -f .github/workflows/nightly.yml
           test -f .github/workflows/package-dry-run.yml
           test -f .github/workflows/release-attestations.yml
