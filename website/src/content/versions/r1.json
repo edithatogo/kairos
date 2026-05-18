@@ -1,0 +1,13 @@
+{
+  "sidebar": [
+    {
+      "label": "R1 Archive",
+      "items": [
+        {
+          "label": "Archive Home",
+          "slug": "index"
+        }
+      ]
+    }
+  ]
+}

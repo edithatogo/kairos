@@ -6,6 +6,7 @@ bindings/*.tar.gz
 **/obj/
 **/bin/
 website/build/
+website/.astro/
 bindings/python/.tmp/
 bindings/python/pytest-cache-files-*/
 .cargo/config.toml

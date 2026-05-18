@@ -1,63 +1,54 @@
-# Docs Platform Parity Note
+# Docs Platform
 
-KairoECS currently uses a dependency-light custom Node docs site under
-`website/`. That site builds from the checked-in `docs/` tree and the
-`website/docs-link-manifest.json` manifest, so the repository has one
-consistent source of truth for navigation, quality checks, and generated
-docs-index output.
+KairoECS now uses Astro and Starlight as the active documentation shell under
+`website/`.
 
-## Current site
+## Active site
 
-- The live site is the custom Node-based implementation, not Astro/Starlight.
-- `npm --prefix website run check:links` validates the manifest and source
-  docs tree.
-- `npm --prefix website run check:quality` validates build outputs, home-page
-  coverage, generated pages, and the size budget.
-- `npm --prefix website run check:all` wraps the link, build, and quality
-  checks.
+- `npm --prefix website run build` runs `astro build`.
+- `npm --prefix website run dev` runs `astro dev`.
+- `npm --prefix website run check:links` still validates the repository docs
+  tree and `website/docs-link-manifest.json`.
+- `npm --prefix website run check:quality` verifies the Starlight build output,
+  configured plugin stack, versioned route, and polyglot content entry points.
+- `npm --prefix website run check:all` wraps link validation, Starlight build,
+  and quality validation.
 
-## Roadmap target
+## Plugin stack
 
-The public roadmap still names Astro/Starlight as the target documentation
-framework. That target is the intended replacement for the custom Node site,
-but the repo should not treat the migration as complete until the same docs
-surface behavior is proven in the new stack.
+The Starlight configuration uses:
 
-## Explicit parity gaps
+- `starlight-versions` for the `R2 Preview` / `R1 Archive` version switcher.
+- `starlight-links-validator` for Starlight-aware internal link validation.
+- `starlight-llms-txt` for `llms.txt`, `llms-full.txt`, and
+  `llms-small.txt`.
+- `starlight-plugin-icons` for richer Starlight icon affordances.
+- `kairoecs-starlight-polyglot`, the local polyglot plugin that marks the
+  supported binding languages in the generated site metadata.
 
-These are the current gaps that keep the custom Node site and the Astro/
-Starlight roadmap distinct:
+## Source of truth
 
-- The current site is still responsible for the checked-in docs tree, link
-  manifest, generated docs-index output, and the docs quality gates.
-- Route and navigation parity must be preserved for the required docs paths
-  listed in `website/docs-link-manifest.json`.
-- The generated home page and docs index must continue to surface the same
-  contributor, learning, release, and examples entry points.
-- The migration must not regress the offline-first, dependency-light local
-  workflow that the current site supports.
+The Starlight content collection provides the public website shell and primary
+entry points. The canonical detailed documentation remains in the repository
+trees:
 
-## Track 41 closure decision
+- `docs/`
+- `bindings/`
+- `examples/`
+- `conductor/`
 
-Track 41 closes on a parity-boundary decision, not on a framework migration.
-The current custom Node site remains the active implementation because it
-already preserves the docs tree, route manifest, generated docs index, and local
-quality gates. A future Astro/Starlight migration must replace those behaviors
-before it can claim to supersede the current site.
+The website links back to those sources where the detailed page is still owned
+outside the Starlight content collection.
 
-The parity boundary is complete for this track when:
+## Versioning
 
-- `website/docs-link-manifest.json` names the required docs routes.
-- `npm --prefix website run check:all` validates links, build output, and
-  docs-quality checks.
-- `node scripts/dx/validate-docs-workflow.mjs` proves the local docs workflow
-  and dev-server smoke path.
-- `node scripts/validation/validate-learning-coverage.mjs` and
-  `python notebooks/validate_notebooks.py` keep the learning inventory and
-  notebook assets synchronized.
+The current docs line is `R2 Preview`. The committed `r1/` content route and
+`website/src/content/versions/r1.json` archive config exercise the versioning
+plugin in the normal build.
 
-## What this page is for
+## Local validation
 
-This is a current-state parity note, not a design proposal. It keeps the repo
-honest until the docs-stack migration is explicitly executed and verified in a
-future migration slice.
+```powershell
+npm --prefix website run check:all
+node scripts/dx/validate-docs-workflow.mjs
+```

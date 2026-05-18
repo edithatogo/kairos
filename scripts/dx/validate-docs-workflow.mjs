@@ -130,15 +130,16 @@ async function main() {
   assert(windowsBootstrap.includes("cargo install just --locked"), "Windows bootstrap script does not document just installation");
 
   const packageJson = JSON.parse(readText(packageJsonPath));
-  assert(packageJson.scripts?.build === "node scripts/build.js", "website build script is not wired to scripts/build.js");
-  assert(packageJson.scripts?.start === "node scripts/dev.js", "website start script is not wired to scripts/dev.js");
-
-  const devScript = readText(path.join(websiteRoot, "scripts", "dev.js"));
-  assert(devScript.includes("server.listen(port"), "website dev script does not listen on the configured port");
+  assert(packageJson.scripts?.build === "astro build", "website build script is not wired to astro build");
+  assert(packageJson.scripts?.start === "astro dev", "website start script is not wired to astro dev");
+  for (const dependency of ["astro", "@astrojs/starlight", "starlight-versions", "starlight-links-validator", "starlight-llms-txt"]) {
+    assert(packageJson.dependencies?.[dependency], `website package is missing ${dependency}`);
+  }
 
   const docsPlatform = readText(path.join(repoRoot, "docs", "developer-experience", "docs-platform.md"));
-  assert(docsPlatform.includes("Astro/Starlight"), "docs-platform note does not mention the roadmap target");
-  assert(docsPlatform.includes("custom Node"), "docs-platform note does not mention the current site");
+  assert(docsPlatform.includes("Astro and Starlight"), "docs-platform note does not mention the active Astro/Starlight stack");
+  assert(docsPlatform.includes("starlight-versions"), "docs-platform note does not mention the versioning plugin");
+  assert(docsPlatform.includes("kairoecs-starlight-polyglot"), "docs-platform note does not mention the polyglot plugin");
 
   const coverageMatrix = readText(path.join(repoRoot, "docs", "tutorials", "coverage-matrix.md"));
   assert(coverageMatrix.includes("Learning Coverage Matrix"), "coverage matrix is missing its title");
@@ -162,9 +163,9 @@ async function main() {
   assert(notebookTutorials.includes("colab_tpu_smoke.ipynb"), "notebook tutorials page is missing the Colab TPU notebook");
   assert(notebookTutorials.includes("colab_tpu_dedicated_smoke.ipynb"), "notebook tutorials page is missing the dedicated Colab TPU notebook");
 
-  const websiteIndex = readText(path.join(websiteRoot, "src", "index.md"));
-  assert(websiteIndex.includes("../../docs/developer-experience/docs-platform.md"), "website index does not link the docs-platform note");
-  assert(websiteIndex.includes("../../docs/tutorials/coverage-matrix.md"), "website index does not link the learning-coverage matrix");
+  const websiteIndex = readText(path.join(websiteRoot, "src", "content", "docs", "index.md"));
+  assert(websiteIndex.includes("Docs platform"), "website index does not link the docs-platform page");
+  assert(websiteIndex.includes("PDES and distributed evidence"), "website index does not link the PDES evidence page");
 
   await runNpm(["--prefix", "website", "run", "check:links"]);
   await runNpm(["--prefix", "website", "run", "build"]);
@@ -173,6 +174,7 @@ async function main() {
   const built = readText(buildIndexPath);
   assert(built.includes("KairoECS Documentation"), "built docs HTML is missing the docs title");
   assert(built.includes("just docs-dev"), "built docs HTML is missing the docs-dev command");
+  assert(built.includes("kairoecs-polyglot-languages"), "built docs HTML is missing the polyglot metadata");
 
   await smokeDevServer();
   process.stdout.write("Docs workflow validation passed.\n");
