@@ -3,6 +3,11 @@
 KairoECS now uses Astro and Starlight as the active documentation shell under
 `website/`.
 
+The roadmap target is the Astro/Starlight site. The previous custom Node
+static-site scaffold has been retired; the remaining custom Node scripts are
+validation helpers around the Starlight build, link manifest, and quality
+checks.
+
 ## Active site
 
 - `npm --prefix website run build` runs `astro build`.
