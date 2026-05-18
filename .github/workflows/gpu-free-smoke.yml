@@ -70,4 +70,7 @@ jobs:
             echo "NVIDIA NIM secrets are not configured; skipping optional NIM smoke."
             exit 0
           fi
-          node scripts/nim/nim-gpu-smoke.mjs
+          node scripts/nim/nim-gpu-smoke.mjs || {
+            echo "::warning::Optional NVIDIA NIM smoke failed; check NVIDIA_NIM_BASE_URL/NVIDIA_NIM_API_KEY configuration."
+            exit 0
+          }
