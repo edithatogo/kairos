@@ -52,6 +52,7 @@
 - Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`
 - Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests`
 - Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml`
+- Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2` remains gated until live shared-library FMU execution is available on a runner with FMI-compatible binaries.
 - Passing: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests` covers FMI all-feature compile checks and bounded offline-claim documentation.
 ## Phase closeout gate
 
