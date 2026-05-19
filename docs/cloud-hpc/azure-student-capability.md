@@ -19,29 +19,28 @@ The following resource providers were checked read-only:
 
 | Provider | Status | Impact |
 |---|---|---|
-| `Microsoft.Batch` | `NotRegistered` | Azure Batch canary jobs cannot run yet. |
-| `Microsoft.ContainerRegistry` | `NotRegistered` | Azure Container Registry publication cannot run yet. |
-| `Microsoft.ContainerInstance` | `NotRegistered` | ACI smoke runs cannot run yet. |
+| `Microsoft.Batch` | `Registered` | Azure Batch canary setup can proceed. |
+| `Microsoft.ContainerRegistry` | `Registered` | Azure Container Registry setup can proceed. |
+| `Microsoft.ContainerInstance` | `Registered` | ACI smoke setup can proceed if needed. |
+| `Microsoft.Storage` | `Registered` | Storage account/container setup can proceed. |
 
-This means the account is useful for planning, template validation, and provider
-registration follow-up, but it does not yet satisfy Track 39 or Track 43 Azure
-runtime evidence.
+This means the account is useful for planning, template validation, and Azure
+resource setup, but it does not yet satisfy Track 39 or Track 43 Azure runtime
+evidence. Runtime evidence still requires disposable resources and a completed
+canary job.
 
 ## Candidate next steps
 
 Before recording Azure Batch runtime acceptance, complete these actions in the
 subscription:
 
-1. Register the required providers: `Microsoft.Batch`,
-   `Microsoft.ContainerRegistry`, `Microsoft.ContainerInstance`, and
-   `Microsoft.Storage`.
-2. Create or identify a test resource group that is approved for KairoECS
+1. Create or identify a test resource group that is approved for KairoECS
    canary resources.
-3. Create a small Azure Batch account, pool, storage account, and container
+2. Create a small Azure Batch account, pool, storage account, and container
    image source.
-4. Run the smallest factory-bottleneck canary through
+3. Run the smallest factory-bottleneck canary through
    `cloud/azure/submit-experiment.ps1`.
-5. Record the Batch account, pool id, job id, task id, final status, output URI,
+4. Record the Batch account, pool id, job id, task id, final status, output URI,
    and checksum evidence in `docs/cloud-hpc/runtime-evidence-boundary.md`.
 
 Provider registration and resource creation are subscription mutations and may

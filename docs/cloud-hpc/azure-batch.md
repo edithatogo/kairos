@@ -6,10 +6,11 @@ See `runtime-evidence-boundary.md` for required live evidence and pending blocke
 
 The current student-account capability check is recorded in
 `azure-student-capability.md`. As of 2026-05-20, the signed-in Azure for
-Students subscription is enabled, but `Microsoft.Batch`,
-`Microsoft.ContainerRegistry`, and `Microsoft.ContainerInstance` are not yet
-registered. That account can support the next Azure canary after provider
-registration and a disposable test resource group are approved.
+Students subscription is enabled, and the required `Microsoft.Batch`,
+`Microsoft.ContainerRegistry`, `Microsoft.ContainerInstance`, and
+`Microsoft.Storage` providers are registered. That account can support the next
+Azure canary after a disposable test resource group and canary resources are
+approved.
 
 ## Offline validation
 
