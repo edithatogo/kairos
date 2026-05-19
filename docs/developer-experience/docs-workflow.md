@@ -1,6 +1,6 @@
 # Docs Workflow
 
-The repository docs site lives in `website/` and renders `website/src/index.md` into `website/build/index.html`. The site home should keep the docs-platform status note in `docs/developer-experience/docs-platform.md` and the learning-coverage inventory in `docs/tutorials/coverage-matrix.md` easy to reach, while contributor-facing commands stay exposed through `justfile` so the same commands work from the repo root.
+The repository docs site lives in `website/` and renders the Astro/Starlight content collection into `website/build/`. The site home should keep the docs-platform status note in `docs/developer-experience/docs-platform.md` and the learning-coverage inventory in `docs/tutorials/coverage-matrix.md` easy to reach, while contributor-facing commands stay exposed through `justfile` so the same commands work from the repo root.
 
 ## Commands
 
@@ -12,6 +12,7 @@ The repository docs site lives in `website/` and renders `website/src/index.md` 
 - `just docs-smoke` runs the local smoke validator for the docs command surface, link manifest, build output, and preview server.
 - `just check-docs` is the same validator used as the focused docs quality gate.
 - `node scripts/validation/validate-learning-coverage.mjs` validates the tutorial/example/notebook coverage matrix and docs-platform status note.
+- `node scripts/validation/validate-docs-platform-sota.mjs` validates the Starlight versioning, polyglot, llms.txt, icon, generated-search, and archive-route contract.
 
 ## Expected Output
 
@@ -24,10 +25,9 @@ The repository docs site lives in `website/` and renders `website/src/index.md` 
 ## Layout Contract
 
 - `website/package.json` owns the docs npm scripts.
-- `website/scripts/build.js` owns the static HTML generation.
-- `website/scripts/dev.js` owns the local preview server.
+- `website/astro.config.mjs` owns the Starlight integration and plugin stack.
 - `website/docs-link-manifest.json` lists required repo paths and Markdown sources checked by `npm --prefix website run check:links`.
-- `website/src/index.md` is the site home and should surface the docs-platform and learning-coverage entry points near the top of the page.
+- `website/src/content/docs/index.md` is the site home and should surface the docs-platform and learning-coverage entry points near the top of the page.
 - `scripts/dx/validate-docs-workflow.mjs` owns the repo-root smoke validation used by `just docs-smoke` and `just check-docs`.
 - `docs/tutorials/coverage-matrix.md` records the supported language coverage inventory.
-- `docs/developer-experience/docs-platform.md` records the current Node site versus Astro/Starlight boundary.
+- `docs/developer-experience/docs-platform.md` records the active Astro/Starlight platform and SOTA plugin boundary.

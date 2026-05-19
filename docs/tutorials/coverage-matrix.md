@@ -35,11 +35,10 @@ language notebook.
 
 ## Docs platform status
 
-The live docs site is still the custom Node-based site under `website/`. Track
-41 closes the docs-platform requirement by documenting and validating the
-current parity boundary: the custom site, docs tree, link manifest, generated
-index, and quality gates remain the active implementation until a separate
-Astro/Starlight migration slice replaces them with equivalent coverage.
+The live docs site is the Astro/Starlight site under `website/`. Track 41 keeps
+this matrix as checked-in source-of-truth learning coverage, and Track 45
+validates that the active Starlight platform continues to expose versioned,
+polyglot-aware entry points.
 
 ## Validation
 
@@ -52,4 +51,4 @@ python notebooks\validate_notebooks.py
 
 The validator checks that the matrix names the supported language surfaces,
 the referenced tutorial/example/notebook paths exist, and the docs platform
-note still describes the current site vs roadmap boundary.
+note still describes the active Starlight platform boundary.

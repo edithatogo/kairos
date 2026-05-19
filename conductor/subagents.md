@@ -139,6 +139,7 @@ flowchart TD
 | publication-agent | Multi-registry package publication with OIDC/provenance | registry publish workflow, publication manifest, per-ecosystem release evidence | package code or registry writes without release-agent approval |
 | hpc-registry-agent | Container, scheduler, and provider registry release lanes | OCI image plan, Slurm/Kubernetes/provider canary evidence, HPC registry manifest | cloud/HPC runtime claims without cloud-agent evidence |
 | health-agent | Code/repo health score above 9.5 | health scorecard, validator, remediation queue | waiver of release/security blockers |
+| docs-platform-agent | Astro/Starlight docs platform, versioning, and polyglot UX | Starlight config, version archive, polyglot plugin, SOTA docs validator | release docs claims without docs-agent and ci-agent evidence |
 
 ```
 

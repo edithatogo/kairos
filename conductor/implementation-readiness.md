@@ -66,7 +66,8 @@ The Conductor setup is complete, but implementation should move through explicit
 | FMI/FMU Digital Twin (Track 38) | R2 | `crates/kairo-ecs-fmi` and `examples/fmi-co-simulation` exist with unpacked FMU, modelDescription, and AAS validation. |
 | Cloud/HPC Batch Runners (Track 39) | R2 | `cloud`, `docker`, `k8s`, `hpc/slurm`, and `docs/cloud-hpc` exist with offline cloud/HPC validation plus a runtime evidence boundary; live Docker, Kubernetes, Slurm, and provider acceptance still need environment-backed proof. |
 | Time-Travel Debugging (Track 40) | R2 | `crates/kairo-ecs-debug` and `website/time-travel-demo` exist with trace-line validation and a Node demo smoke harness. |
-| Documentation Platform, Quality Gates, and Learning Coverage (Track 41) | R2 | Current docs, CI, example, and notebook surfaces are validated with a learning-coverage matrix, notebook inventory checks, docs workflow smoke, and an explicit docs-platform parity boundary for the live custom Node site versus any future Astro/Starlight migration. |
+| Documentation Platform, Quality Gates, and Learning Coverage (Track 41) | R2 | Current docs, CI, example, and notebook surfaces are validated with a learning-coverage matrix, notebook inventory checks, docs workflow smoke, and an explicit docs-platform parity boundary for the active Astro/Starlight site. |
+| Astro/Starlight Docs Platform and Polyglot Experience (Track 45) | R2 | The active docs platform uses Astro/Starlight with versioning, local polyglot metadata, link validation, llms.txt, icons, Pagefind output, and a dedicated SOTA validator. |
 
 ## Enforcement rule
 

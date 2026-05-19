@@ -1,25 +1,24 @@
-# 44 Code and Repository Health >= 9.5 - plan.md
+# 45 Astro/Starlight Docs Platform and Polyglot Experience - plan.md
 
 ## Phase 0 - Track startup
 
-- [x] Add code health scorecard.
-- [x] Add code health validator.
-- [x] Add CI workflow.
+- [x] Add Track 45 to the Conductor registry.
+- [x] Record docs-platform ownership and dependencies.
+- [x] Fix Track 44 `>= 9.5` metadata drift while touching the registry.
 
-## Phase 1 - Score categories
+## Phase 1 - Active platform contract
 
-- [x] CI and tests.
-- [x] Security and supply chain.
-- [x] Docs and learning coverage.
-- [x] Release and registry readiness.
-- [x] API compatibility and conformance.
-- [x] Repo hygiene and maintainability.
+- [x] Confirm Astro/Starlight is the active docs shell.
+- [x] Confirm `starlight-versions` is wired with the `R2 Preview` and `R1 Archive` route.
+- [x] Confirm the local `kairoecs-starlight-polyglot` plugin is wired.
+- [x] Confirm SOTA helper plugins: link validation, llms.txt, icons, and generated Pagefind search output.
 
-## Phase 2 - Release integration
+## Phase 2 - Validation and CI
 
-- [x] Add `code-health-floor` gate.
-- [x] Make Track 42 depend on Track 44.
-- [x] Make Track 43 depend on Track 44.
+- [x] Add `scripts/validation/validate-docs-platform-sota.mjs`.
+- [x] Add `npm --prefix website run check:sota`.
+- [x] Wire the SOTA validator into `.github/workflows/docs-quality.yml`.
+- [x] Update docs-platform status and deferred-plugin guidance.
 
 ## Phase closeout gate
 

@@ -422,6 +422,7 @@ flowchart LR
   39 Cloud/HPC Batch Runners
   40 Time-Travel Debugging & Interactive Stepping
   41 Documentation Platform, Quality Gates & Learning Coverage
+  45 Astro/Starlight Docs Platform and Polyglot Experience
 ```
 
 ### Group F: performance quality assurance

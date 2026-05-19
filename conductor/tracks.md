@@ -49,6 +49,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 42 | Package Registry Publication & Provenance | Spec Approved | `publication-agent + release-agent + binding agents` | See `conductor/tracks/42-*/spec.md` |
 | 43 | Cloud/HPC Registry Publication & Runtime Acceptance | Spec Approved | `hpc-registry-agent + cloud-agent + release-agent` | See `conductor/tracks/43-*/spec.md` |
 | 44 | Code and Repository Health >= 9.5 | Spec Approved | `health-agent + ci-agent + security-agent + release-agent` | See `conductor/tracks/44-*/spec.md` |
+| 45 | Astro/Starlight Docs Platform and Polyglot Experience | In Review | `docs-platform-agent + docs-agent + ci-agent` | See `conductor/tracks/45-*/spec.md` |
 
 ## Track status vocabulary
 
@@ -63,6 +64,7 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 - Tracks 00, 01, 02, 12, 13, 14, 15, 16, 20, 25, 28, 29, and 30 are release-gating for any public release.
 - Track 31 is quality-improving but not release-gating.
 - Tracks 42, 43, and 44 are release-gating for any production registry publication.
+- Track 45 is release-gating for docs-platform publication claims and public docs release notes.
 - Tracks 06 and 09 are recommended v0.1/v0.2 public binding priorities.
 - Tracks 07, 08, 10, and 11 can remain preview until C ABI and Arrow schema stability are proven.
 - Track 05 must remain optional and non-blocking for headless releases.

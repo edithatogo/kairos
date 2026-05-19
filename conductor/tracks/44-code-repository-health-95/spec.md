@@ -1,4 +1,4 @@
-# 44 Code and Repository Health >9.5 - spec.md
+# 44 Code and Repository Health >= 9.5 - spec.md
 
 ## Mission
 
