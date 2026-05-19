@@ -37,6 +37,26 @@ track:
 `conductor/status.md`,
 `conductor/quality-gates.md`
 
+## Files changed
+
+`conductor/tracks/41-docs-quality-learning-coverage/*`,
+`docs/developer-experience/docs-platform.md`,
+`docs/tutorials/coverage-matrix.md`,
+`scripts/validation/validate-learning-coverage.mjs`,
+`.github/workflows/docs-quality.yml`,
+`website/docs-link-manifest.json`,
+`website/src/index.md`,
+`docs/README.md`,
+`docs/community/README.md`,
+`docs/tutorials/index.md`,
+`docs/tutorials/notebooks.md`,
+`conductor/tracks.yaml`,
+`conductor/tracks.md`,
+`conductor/track-map.md`,
+`conductor/implementation-readiness.md`,
+`conductor/status.md`,
+`conductor/quality-gates.md`
+
 ## Contracts consumed
 
 `conductor/workflow.md`, `conductor/quality-gates.md`, `conductor/track-map.md`,

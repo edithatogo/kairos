@@ -55,6 +55,23 @@ Conformance suite: kairoecs.conformance.v1
 | C# | `dotnet pack` and local package inspection | NuGet prerelease validation | NuGet publish |
 | Go | `github.com/edithatogo/kairos/bindings/go` module path and version plan | semantic tag rehearsal | semantic tag and module release |
 
+## Production registry publication model
+
+Production registry publication is owned by Track 42 for language/package registries and Track 43 for cloud/HPC registries. Track 15 remains the offline dry-run and artifact-inventory base; it does not authorize public writes by itself.
+
+Publication workflows must use the strongest current registry mechanism available:
+
+- PyPI/TestPyPI: trusted publishing from GitHub Actions with `id-token: write` and a protected environment.
+- npm: trusted publishing or `npm publish --provenance` from GitHub Actions with OIDC/provenance enabled.
+- NuGet: trusted publishing where available; token fallback must be environment-gated and short-lived.
+- crates.io: trusted publishing when generally available for the crate owner; otherwise use the narrowest scoped token in a protected environment and keep dry-run as the default.
+- R-universe/CRAN: source package checks and release-manager approval before publication.
+- Julia registry: registry PR/dev-registry path first, General Registry only after API/native-artifact maturity.
+- Go module proxy: semantic tags only after release-manager approval and compatibility gate signoff.
+- OCI/container registries: digest-pinned image publication with SBOM, signature/attestation, and rollback record.
+
+Every public write requires a code/repo health score of at least `9.5/10`, recorded by Track 44, plus release-manager approval in the target GitHub environment.
+
 ## Release train
 
 ```mermaid
@@ -153,6 +170,8 @@ The citation metadata path is:
 4. Keep GitHub Releases draft-only until all package checks pass.
 5. Keep registry credentials out of the repo and use the least-privileged release mechanism available.
 6. Add release notes, citation metadata references, and compatibility notes before any public package write.
+7. Run Track 42 and Track 44 validators before any language registry write.
+8. Run Track 43 and Track 44 validators before any cloud/HPC registry write or production-ready cloud/HPC claim.
 
 ## Pre-release policy
 

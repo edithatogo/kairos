@@ -109,7 +109,7 @@ The current slice also bridges ready scheduler conformance fixtures into the R f
 
 - Package metadata drift between local validation and future registry-ready packaging.
 - Cross-language fixture mismatches if the shared contract changes after the R wrapper lands.
-- Overreach into publishing or registry automation before Track 15 owns it.
+- Overreach into publishing or registry automation before Track 42 owns it.
 - Optional packages `arrow`, `devtools`, `lintr`, and `pkgdown` are not installed locally; complete force-suggests checking remains future validation.
 - Network access to CRAN/Bioconductor package indexes is unavailable in the
   current sandboxed environment, so missing optional R packages could not be

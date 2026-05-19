@@ -42,7 +42,7 @@ This file expands the package/tooling plan beyond the earlier registry matrix. T
 | Quality | `ruff`, `pyright` or `mypy`, `pre-commit` |
 | Data | `pyarrow`, `numpy`, `pandas`, `polars` |
 | Docs | `mkdocs-material` or `sphinx`, `pdoc` |
-| Release | PyPI Trusted Publishing, TestPyPI dry runs |
+| Release | PyPI Trusted Publishing, TestPyPI dry runs, Track 42 publication gate |
 
 ## R package plan
 
@@ -53,7 +53,7 @@ This file expands the package/tooling plan beyond the earlier registry matrix. T
 | Test | `testthat`, `covr` |
 | Data | `arrow`, `data.table`, `vctrs`, `tibble` |
 | Native bridge | `.Call` over C ABI; evaluate `rextendr` only if it does not compromise universal ABI |
-| Release | R-universe first; CRAN only after API/ABI maturity |
+| Release | R-universe first; CRAN only after API/ABI maturity and Track 42 publication gate |
 
 ## Julia package plan
 
@@ -65,7 +65,7 @@ This file expands the package/tooling plan beyond the earlier registry matrix. T
 | Quality | `JuliaFormatter.jl` |
 | Data | `Arrow.jl`, `DataFrames.jl`, `Tables.jl` |
 | Docs | `Documenter.jl` |
-| Release | Registrator.jl + TagBot after package stabilizes |
+| Release | Registrator.jl + TagBot after package stabilizes and Track 42 publication gate |
 
 ## TypeScript/Wasm package plan
 
@@ -89,7 +89,7 @@ This file expands the package/tooling plan beyond the earlier registry matrix. T
 | Coverage | `coverlet.collector` |
 | Quality | .NET analyzers, `dotnet format` |
 | Docs | XML docs, DocFX |
-| Release | `dotnet pack`, `dotnet nuget push`, NuGet API key or future trusted publishing if available |
+| Release | `dotnet pack`, `dotnet nuget push`, NuGet trusted publishing or a protected scoped fallback recorded by Track 42 |
 
 ## Go package plan
 
@@ -99,7 +99,7 @@ This file expands the package/tooling plan beyond the earlier registry matrix. T
 | Test | `testing`, `testify` if useful |
 | Benchmark | `go test -bench`, `benchstat` |
 | Quality | `gofmt`, `go vet`, `staticcheck`, `golangci-lint` |
-| Release | semantic Git tags, `goreleaser` only if distributing binaries |
+| Release | semantic Git tags under Track 42, `goreleaser` only if distributing binaries |
 
 ## Docs/site plan
 

@@ -146,6 +146,9 @@ Release using semantic Git tags. Keep cgo instructions explicit.
 - Keep GitHub Releases draft-only until the release gates are satisfied.
 - Record the release artifact tree for each ecosystem before a public write.
 - Keep the control-track documents current before release claims are made.
+- Pass Track 42's registry publication validator before any language registry write.
+- Pass Track 43's cloud/HPC registry validator before publishing containers, Kubernetes bundles, scheduler templates, or provider batch templates as release artifacts.
+- Pass Track 44's code/repo health gate with an overall score of at least 9.5 before any production registry write.
 
 ## Detailed dependency/tooling inventory
 

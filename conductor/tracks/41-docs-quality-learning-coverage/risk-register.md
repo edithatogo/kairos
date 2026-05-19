@@ -1,5 +1,7 @@
 # 41 Documentation Platform, Quality Gates & Learning Coverage -- risk-register.md
 
+Severity scale: Low (1-2), Medium (3-4), High (5-6), Critical (7-10), with residual gating status tracked in the track plan.
+
 | Risk | Likelihood | Impact | Mitigation | Owner | Evidence | Trigger |
 |---|---:|---:|---|---|---|---|
 | Strict CI changes turn intended skip cases into noisy failures | 3 | 4 | Keep fork/no-secret and environment-gated exceptions explicit in the workflow and docs. | ci-agent | Trusted runs stay strict; forked PRs are documented exceptions. | Jobs begin failing only on missing secrets or unavailable hardware. |

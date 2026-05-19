@@ -52,6 +52,7 @@ jobs:
           test -f .github/workflows/ci-policy.yml
           test -f .github/workflows/ci-skip-guard.yml
           test -f .github/workflows/cloud-smoke.yml
+          test -f .github/workflows/code-health.yml
           test -f .github/workflows/codeql.yml
           test -f .github/workflows/conductor-assessment-reminder.yml
           test -f .github/workflows/conformance.yml
@@ -61,12 +62,14 @@ jobs:
           test -f .github/workflows/docs.yml
           test -f .github/workflows/fuzzing.yml
           test -f .github/workflows/gpu-free-smoke.yml
+          test -f .github/workflows/hpc-registry-publish.yml
           test -f .github/workflows/nightly.yml
           test -f .github/workflows/package-dry-run.yml
           test -f .github/workflows/release-attestations.yml
           test -f .github/workflows/release-drafter.yml
           test -f .github/workflows/release-plz.yml
           test -f .github/workflows/release.yml
+          test -f .github/workflows/registry-publish.yml
           test -f .github/workflows/scorecard.yml
           test -f .github/workflows/secret-scan.yml
           test -f .github/workflows/sbom-attestations.yml

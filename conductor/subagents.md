@@ -135,6 +135,11 @@ flowchart TD
 | fmi-agent | FMI/FMU and digital twin co-simulation | `kairo-ecs-fmi`, FMI import/export, AAS | FFI C ABI contract |
 | cloud-agent | Docker/Kubernetes batch runners | `docker/`, `k8s/`, spot checkpointing | release packaging pipeline |
 | timetravel-agent | Deterministic trace/replay debugging | `kairo-ecs-debug`, breakpoints, time-travel demos | deterministic core semantics |
+
+| publication-agent | Multi-registry package publication with OIDC/provenance | registry publish workflow, publication manifest, per-ecosystem release evidence | package code or registry writes without release-agent approval |
+| hpc-registry-agent | Container, scheduler, and provider registry release lanes | OCI image plan, Slurm/Kubernetes/provider canary evidence, HPC registry manifest | cloud/HPC runtime claims without cloud-agent evidence |
+| health-agent | Code/repo health score above 9.5 | health scorecard, validator, remediation queue | waiver of release/security blockers |
+
 ```
 
 ---

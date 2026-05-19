@@ -1,6 +1,6 @@
 # KairoECS Conductor Status
 
-Last verified: 2026-05-18
+Last verified: 2026-05-19
 
 ## Setup state
 
@@ -125,6 +125,18 @@ parity boundary were validated locally. The custom Node docs site remains the
 active implementation; the Astro/Starlight migration is deliberately deferred
 to a future migration slice rather than treated as hidden Track 41 scope.
 
+Tracks 42, 43, and 44 were added on 2026-05-19 as release-gating follow-on
+tracks for the publication phase. Track 42 owns language/package registry
+publication with trusted-publisher/OIDC, provenance, SBOM/checksum, rollback,
+and protected-environment controls for Rust, Python, R, Julia, TypeScript, C#,
+and Go. Track 43 owns cloud/HPC registry publication and runtime acceptance for
+OCI images, Kubernetes bundles, Slurm templates, and AWS/GCP/Azure Batch assets.
+Track 44 makes code and repository health `>= 9.5/10` a hard gate before any
+production registry write, beta, RC, 1.0, or production-ready cloud/HPC claim.
+These tracks implement workflows and validators, but they do not by themselves
+complete external registry account setup, live cloud/HPC runtime proof, or
+release-manager approval.
+
 ## Validation evidence
 
 Latest local baseline validation on 2026-05-07; current targeted verification is recorded under the 2026-05-10 track evidence:
@@ -152,6 +164,7 @@ Latest local baseline validation on 2026-05-07; current targeted verification is
 - Track 39 remediation on 2026-05-18 fixed the CLI ownership record, GCP sweep rendering, validator cleanup, and shell-validation fallback. `python cloud/validate_cloud_hpc.py` passes and leaves neither `.tmp/k8s-inline-experiment.json` nor `cloud/validation-work`; when Git Bash cannot start, the validator runs a labelled static fallback that is explicitly not equivalent to `bash -n`. Live Docker, Kubernetes, Slurm, and provider runtime proof remains environment-backed and therefore `Track 39` stays `In Review`.
 - The hardened Track 36-40 aggregate passed on 2026-05-18 with `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`; when sandboxed `rustup toolchain list` hit Windows pipe access denial, the script used the installed `stable-x86_64-pc-windows-gnu` directory fallback and completed successfully.
 - Track 41 closeout on 2026-05-17 passed `node scripts/validation/validate-learning-coverage.mjs`, `python notebooks/validate_notebooks.py`, `npm --prefix website run check:all`, `node scripts/dx/validate-docs-workflow.mjs`, `pwsh -NoProfile -File docs/tutorials/validate-tutorials.ps1`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`. The strict clean-tree closeout remains blocked by the repo-local `.git/index.lock` ACL issue, not by Track 41 validation.
+- Track 42-44 setup validation on 2026-05-19 passed `node scripts/validation/validate-code-health.mjs`, `node scripts/validation/validate-publication-readiness.mjs`, `node scripts/validation/validate-hpc-registry-readiness.mjs`, `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_artifacts.ps1`, and `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1`. The new validators prove publication workflow structure and gating, not external registry submissions.
 - Track 06 advanced to `Done` on 2026-05-10 after `python -m pytest -q` from `bindings\python` passed with 16 tests when the unpacked `pyarrow` wheel was placed on `PYTHONPATH`; `python -m ruff check kairo_ecs tests`, `python -m compileall kairo_ecs tests`, `python -c "import kairo_ecs; print(kairo_ecs.self_check())"`, `python -m pip check`, `python -m build --sdist --wheel`, `validate-bindings06-11.ps1`, `scripts\validate_conductor_phase_gates.ps1`, and `scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` all passed. A workspace-local `pyarrow-24.0.0` install had initially looked blocked by a Windows DLL load failure, but the real pyarrow table roundtrip now passes when the wheel is unpacked directly into a local path and the bundled runtime files are visible on `PYTHONPATH`.
 - `go test ./...`, `go vet ./...`, and `gofmt -w -l .` from `bindings\go` passed with no formatting output.
 - `Rscript -e "sessionInfo(); source('tests/testthat.R')"` from `bindings\r` passed after R startup locale warnings.
@@ -383,7 +396,7 @@ Track 11 advanced from `In Progress` to `Done` after adding the missing cgo head
 - `bindings/go/native_nocgo.go` keeps the package usable when `CGO_ENABLED=0`.
 - Focused validation passed from `bindings/go`: `go test ./...`, `go vet ./...`, `CGO_ENABLED=1 go test -run TestNativeHeaderSmokeCompilesStableCABI ./...`, `CGO_ENABLED=0 go test ./...`, `go mod tidy`, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\06-python-binding-310-314\validate-bindings06-11.ps1`.
 - The first sandboxed `go test ./...` hit `%LOCALAPPDATA%\go-build` access denial, then passed with normal Windows Go build-cache access.
-- Native runtime execution remains blocked until a linkable `kairo-ecs-ffi` library is packaged for the Go module; release publication remains Track 15 scope.
+- Native runtime execution remains blocked until a linkable `kairo-ecs-ffi` library is packaged for the Go module; release publication now sits under Track 42.
 - Strict git closeout now passes for the clean repository, and the closeout commit is recorded in the track ledger.
 
 ## Track 20 implementation review (2026-05-08)

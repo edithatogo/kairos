@@ -69,7 +69,7 @@ browser-smoke gates. The generated `wasm-bindgen` export layer is behind the
 ## Known risks
 
 - Wasm toolchain drift across Node and package-manager environments.
-- Package layout drift before Track 15 owns dry-run release validation.
+- Package layout drift before Track 15 owns dry-run release validation and Track 42 owns publication.
 - Cross-language fixture mismatch if Track 12 changes after bundle code is written.
 - The current Arrow roundtrip is a schema-shaped JSON boundary, not Apache Arrow IPC.
 - The default Rust wrapper unit tests pass on the GNU toolchain. The optional `wasm-export` feature still depends on fixing the Windows linker path / SDK library search path.

@@ -22,7 +22,7 @@
 - Do not add npm publishing, provenance signing, or registry credentials here.
 - Do not expand into other language bindings or release-engineering surfaces.
 - Do not widen the track beyond TypeScript/Wasm adapter validation.
-- Stop at local bundle and fixture validation until Track 12 owns parity and Track 15 owns package dry-runs.
+- Stop at local bundle and fixture validation until Track 12 owns parity and Track 15 owns package dry-runs, with Track 42 owning publication.
 
 ## Focused local validation
 

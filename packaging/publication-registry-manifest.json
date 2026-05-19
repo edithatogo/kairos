@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "release_stage": "publication-implementation",
+  "production_publish_default": false,
+  "health_floor": 9.5,
+  "github_environment": "release-publication",
+  "policy": {
+    "default_mode": "dry-run",
+    "public_write_requires": [
+      "release-manager approval",
+      "protected GitHub environment",
+      "code health score >= 9.5",
+      "registry owner or trusted publisher configured",
+      "SBOM/checksum/provenance artifacts",
+      "rollback or yank plan"
+    ],
+    "preferred_authentication": "trusted-publisher-or-oidc"
+  },
+  "registries": [
+    {
+      "ecosystem": "rust",
+      "registry": "crates.io",
+      "packages": ["workspace"],
+      "dry_run": "cargo publish --dry-run --workspace",
+      "publish": "cargo publish --workspace",
+      "auth": "trusted-publishing-when-available-or-scoped-token",
+      "provenance": "GitHub release attestations plus registry metadata",
+      "status": "implemented-gated"
+    },
+    {
+      "ecosystem": "python",
+      "registry": "TestPyPI then PyPI",
+      "packages": ["kairo-ecs"],
+      "dry_run": "python -m build && twine check dist/*",
+      "publish": "pypa/gh-action-pypi-publish with trusted publishing",
+      "auth": "oidc-trusted-publisher",
+      "provenance": "PyPI trusted publisher attestation",
+      "status": "implemented-gated"
+    },
+    {
+      "ecosystem": "r",
+      "registry": "R-universe then CRAN",
+      "packages": ["kairoECS"],
+      "dry_run": "R CMD build bindings/r && R CMD check --no-manual --as-cran kairoECS_*.tar.gz",
+      "publish": "R CMD build/check plus R-universe source sync or CRAN submission after approval",
+      "auth": "registry-maintainer-approval",
+      "provenance": "GitHub release artifact, checksums, SBOM",
+      "status": "implemented-gated"
+    },
+    {
+      "ecosystem": "julia",
+      "registry": "Julia dev registry then General Registry",
+      "packages": ["KairoECS"],
+      "dry_run": "julia --project=bindings/julia -e \"using Pkg; Pkg.instantiate(); Pkg.test()\"",
+      "publish": "julia --project=bindings/julia -e \"using Pkg; Pkg.instantiate(); Pkg.test()\" plus registry PR after release approval",
+      "auth": "registry-pr-review",
+      "provenance": "GitHub release artifact, checksums, SBOM",
+      "status": "implemented-gated"
+    },
+    {
+      "ecosystem": "typescript",
+      "registry": "npm",
+      "packages": ["@kairo-ecs/typescript"],
+      "dry_run": "npm ci && npm run typecheck && npm test && npm pack --dry-run",
+      "publish": "npm publish --access public --provenance",
+      "auth": "npm-trusted-publisher-or-automation-token",
+      "provenance": "npm provenance",
+      "status": "implemented-gated"
+    },
+    {
+      "ecosystem": "csharp",
+      "registry": "NuGet",
+      "packages": ["Kairo.ECS"],
+      "dry_run": "dotnet test && dotnet pack",
+      "publish": "dotnet nuget push",
+      "auth": "nuget-trusted-publishing-or-scoped-api-key",
+      "provenance": "NuGet trusted publishing plus GitHub release attestations where available",
+      "status": "implemented-gated"
+    },
+    {
+      "ecosystem": "go",
+      "registry": "Go module proxy",
+      "packages": ["github.com/edithatogo/kairos/bindings/go"],
+      "dry_run": "go test ./... && go vet ./...",
+      "publish": "git tag -a bindings/go/v<version> && git push origin bindings/go/v<version>",
+      "auth": "protected tag release approval",
+      "provenance": "GitHub release attestation and signed tag when available",
+      "status": "implemented-gated"
+    }
+  ]
+}
