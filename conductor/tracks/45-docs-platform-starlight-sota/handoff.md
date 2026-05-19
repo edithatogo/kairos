@@ -1,0 +1,56 @@
+# 45 Astro/Starlight Docs Platform and Polyglot Experience - handoff.md
+
+## Summary
+
+2026-05-19: Track 45 formalizes the active Astro/Starlight docs platform and adds a dedicated SOTA validator for versioning, the local polyglot plugin, llms.txt, icons, generated search, and archive-route evidence.
+
+## Files changed
+
+- `.github/workflows/docs-quality.yml`
+- `docs/developer-experience/docs-platform.md`
+- `website/package.json`
+- `scripts/validation/validate-docs-platform-sota.mjs`
+- `conductor/tracks/45-docs-platform-starlight-sota/*`
+- Conductor registry/status surfaces for Track 45 ownership.
+
+## Contracts consumed
+
+- Track 14 docs build contract.
+- Track 27 developer workflow and bootstrap contract.
+- Track 41 docs workflow, learning coverage, and platform parity contract.
+- Track 44 `>= 9.5` docs-health gate.
+
+## Contracts changed
+
+- Docs platform claims now require `docs-platform-sota`.
+- The docs-quality workflow now validates the SOTA plugin stack.
+- Deferred docs plugins are documented with activation conditions.
+
+## Tests added
+
+- `node scripts/validation/validate-docs-platform-sota.mjs`
+- `npm --prefix website run check:sota`
+
+## Known risks
+
+- TypeDoc, OpenAPI, and hosted DocSearch remain deferred until source artifacts and operational decisions exist.
+- The validator checks generated docs output, so `npm --prefix website run build` must run before standalone SOTA validation if build artifacts are stale.
+
+## Follow-up issues
+
+- Consider `starlight-typedoc` after TypeScript API reference generation is authoritative.
+- Consider `starlight-openapi` after an OpenAPI contract exists.
+- Consider hosted DocSearch only if Pagefind is insufficient for the public docs scale.
+
+## Integration notes
+
+Run `$conductor-review` before advancing this track. Apply accepted fixes in owned paths, record rejected fixes here, then run the test matrix.
+
+## Phase closeout evidence
+
+- `$conductor-review`: pending for PR review.
+- accepted fixes: none yet.
+- commit SHA: pending.
+- pushed ref: pending.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending after commit and push.
+- next-phase decision: keep Track 45 `In Review` until CI and review closeout complete.

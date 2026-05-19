@@ -3,10 +3,10 @@
 KairoECS now uses Astro and Starlight as the active documentation shell under
 `website/`.
 
-The roadmap target is the Astro/Starlight site. The previous custom Node
+The Astro/Starlight site is the current docs platform. The previous custom Node
 static-site scaffold has been retired; the remaining custom Node scripts are
-validation helpers around the Starlight build, link manifest, and quality
-checks.
+validation helpers around the Starlight build, link manifest, SOTA plugin stack,
+and quality checks.
 
 The live site parity boundary is now the Starlight output plus the repository
 docs, bindings, examples, and conductor source trees linked from that shell.
@@ -19,6 +19,8 @@ docs, bindings, examples, and conductor source trees linked from that shell.
   tree and `website/docs-link-manifest.json`.
 - `npm --prefix website run check:quality` verifies the Starlight build output,
   configured plugin stack, versioned route, and polyglot content entry points.
+- `npm --prefix website run check:sota` verifies the versioning, polyglot,
+  llms.txt, icon, generated-search, and archive-route contract.
 - `npm --prefix website run check:all` wraps link validation, Starlight build,
   and quality validation.
 
@@ -33,6 +35,11 @@ The Starlight configuration uses:
 - `starlight-plugin-icons` for richer Starlight icon affordances.
 - `kairoecs-starlight-polyglot`, the local polyglot plugin that marks the
   supported binding languages in the generated site metadata.
+
+Deferred plugins are explicit: `starlight-typedoc` waits until generated
+TypeScript API reference is source-of-truth, `starlight-openapi` waits until an
+OpenAPI contract exists, and hosted Algolia DocSearch waits until Pagefind is
+insufficient for the public docs scale.
 
 ## Source of truth
 
@@ -58,5 +65,6 @@ plugin in the normal build.
 
 ```powershell
 npm --prefix website run check:all
+npm --prefix website run check:sota
 node scripts/dx/validate-docs-workflow.mjs
 ```

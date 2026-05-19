@@ -730,4 +730,22 @@ entries:
     git_status: "dirty: Track 41 closeout plus reviewed-track remediation remain in the source worktree; source .git ACL prevents index.lock creation for commit."
     commit_sha: "blocked-by-source-git-acl-20260517"
     pushed_ref: "blocked-by-source-git-acl-20260517"
-    next_phase_decision: "Track 41 is Done for the validated docs-quality, learning-coverage, notebook, and docs-platform parity slice; direct Astro/Starlight migration is deferred to a future migration track."
+    next_phase_decision: "Track 41 is Done for the validated docs-quality, learning-coverage, notebook, and docs-platform parity slice; active Astro/Starlight platform hardening is now owned by Track 45."
+  - track_id: "45"
+    phase: "implementation-review"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 45 is In Review after adding the Astro/Starlight docs-platform SOTA validator, CI wiring, versioning/polyglot plugin evidence, and stale docs-platform status cleanup."
+    fixes_applied: true
+    validation_commands:
+      - "node scripts/validation/validate-docs-platform-sota.mjs"
+      - "npm --prefix website run check:sota"
+      - "npm --prefix website run check:all"
+      - "node scripts/dx/validate-docs-workflow.mjs"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\\validate_conductor_artifacts.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
+    git_status: "dirty: Track 45 docs-platform SOTA implementation pending commit, PR, and push"
+    commit_sha: "pending-track45-commit"
+    pushed_ref: "pending-track45-push"
+    next_phase_decision: "Track 45 remains In Review until review, CI, and strict git closeout complete."

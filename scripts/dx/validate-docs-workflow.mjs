@@ -132,14 +132,16 @@ async function main() {
   const packageJson = JSON.parse(readText(packageJsonPath));
   assert(packageJson.scripts?.build === "astro build", "website build script is not wired to astro build");
   assert(packageJson.scripts?.start === "astro dev", "website start script is not wired to astro dev");
-  for (const dependency of ["astro", "@astrojs/starlight", "starlight-versions", "starlight-links-validator", "starlight-llms-txt"]) {
+  for (const dependency of ["astro", "@astrojs/starlight", "starlight-versions", "starlight-links-validator", "starlight-llms-txt", "starlight-plugin-icons"]) {
     assert(packageJson.dependencies?.[dependency], `website package is missing ${dependency}`);
   }
+  assert(packageJson.scripts?.["check:sota"] === "node ../scripts/validation/validate-docs-platform-sota.mjs", "website check:sota script is not wired to docs platform SOTA validation");
 
   const docsPlatform = readText(path.join(repoRoot, "docs", "developer-experience", "docs-platform.md"));
   assert(docsPlatform.includes("Astro and Starlight"), "docs-platform note does not mention the active Astro/Starlight stack");
   assert(docsPlatform.includes("starlight-versions"), "docs-platform note does not mention the versioning plugin");
   assert(docsPlatform.includes("kairoecs-starlight-polyglot"), "docs-platform note does not mention the polyglot plugin");
+  assert(docsPlatform.includes("starlight-llms-txt"), "docs-platform note does not mention the llms.txt plugin");
 
   const coverageMatrix = readText(path.join(repoRoot, "docs", "tutorials", "coverage-matrix.md"));
   assert(coverageMatrix.includes("Learning Coverage Matrix"), "coverage matrix is missing its title");

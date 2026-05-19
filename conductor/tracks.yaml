@@ -1,5 +1,5 @@
 schema_version: 1
-last_verified: 2026-05-10
+last_verified: 2026-05-19
 status_vocabulary:
   - Planned
   - Spec Approved
@@ -631,7 +631,7 @@ tracks:
       - provider-batch-canary
       - code-health-floor
   - id: 44
-    name: Code and Repository Health >9.5
+    name: Code and Repository Health >= 9.5
     status: Spec Approved
     owner: health-agent + ci-agent + security-agent + release-agent
     depends_on: ["13", "20", "25", "28", "30", "31", "41"]
@@ -647,3 +647,21 @@ tracks:
       - security-health-score
       - docs-health-score
       - package-sota-score
+  - id: 45
+    name: Astro/Starlight Docs Platform and Polyglot Experience
+    status: In Review
+    owner: docs-platform-agent + docs-agent + ci-agent
+    depends_on: ["14", "17", "27", "41", "44"]
+    owned_paths:
+      - .github/workflows/docs-quality.yml
+      - docs/developer-experience/docs-platform.md
+      - website/
+      - scripts/validation/validate-docs-platform-sota.mjs
+      - conductor/tracks/45-docs-platform-starlight-sota/
+    required_gates:
+      - phase-closeout-check
+      - docs-build
+      - starlight-versioning
+      - polyglot-docs-plugin
+      - llms-txt
+      - docs-platform-sota

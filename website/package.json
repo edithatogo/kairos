@@ -7,6 +7,7 @@
     "build": "astro build",
     "check:links": "node scripts/check-links.js",
     "check:quality": "node scripts/validate-quality.js",
+    "check:sota": "node ../scripts/validation/validate-docs-platform-sota.mjs",
     "check:all": "npm run check:links && npm run build && npm run check:quality",
     "dev": "astro dev",
     "start": "astro dev",

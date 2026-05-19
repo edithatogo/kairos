@@ -8,7 +8,8 @@ track:
 - CI policy hardening for warnings-as-errors, linting, formatting, validation,
   typing, and docstring surfaces where the repo already has concrete tools.
 - Astro/Starlight documentation migration planning via a validated parity
-  boundary for the live custom Node docs site.
+  boundary. This was superseded on 2026-05-19 by Track 45, which treats the
+  Astro/Starlight site as the active docs shell.
 - Tutorial, example, and notebook coverage inventory across the supported
   languages and example families.
 
@@ -87,8 +88,8 @@ CRLF normalization warnings in older files outside this slice.
 
 ## Known risks
 
-- The direct Astro/Starlight migration is deferred to a future migration slice;
-  Track 41 closes on the validated custom-Node parity boundary.
+- The direct Astro/Starlight migration was deferred at Track 41 closeout and is
+  now superseded by Track 45's active-platform SOTA gate.
 - Notebook coverage is not one-per-language by default; the matrix must
   distinguish useful learning artifacts from unnecessary duplication.
 - Strict CI must preserve documented skip cases for forked PRs and missing
@@ -96,8 +97,8 @@ CRLF normalization warnings in older files outside this slice.
 
 ## Follow-up issues
 
-- Open a separate migration track if the public docs site should move from the
-  current custom Node implementation to Astro/Starlight.
+- Use Track 45 for active Astro/Starlight platform hardening and plugin-stack
+  evidence.
 - Extend the strictness policy further only where the repository has concrete
   tooling and a clear failure mode.
 - Add more learning artifacts only when they add real coverage rather than
@@ -107,8 +108,8 @@ CRLF normalization warnings in older files outside this slice.
 
 - `docs/tutorials/coverage-matrix.md` is now the source of truth for the
   learning-coverage inventory.
-- `docs/developer-experience/docs-platform.md` records the current Node site
-  versus Astro/Starlight parity boundary and the Track 41 closure decision.
+- `docs/developer-experience/docs-platform.md` records the active
+  Astro/Starlight platform boundary and the Track 45 SOTA contract.
 - `.github/workflows/docs-quality.yml` now runs the coverage validator and
   notebook validator alongside the existing docs-quality checks.
 
@@ -128,14 +129,14 @@ CRLF normalization warnings in older files outside this slice.
   unrelated in-flight work plus the Git ACL issue; Track 41's functional
   validators passed.
 - next-phase decision: Track 41 is `Done` for the validated docs-quality,
-  learning-coverage, notebook, and docs-platform parity slice. Future direct
-  Astro/Starlight migration remains separate scope.
+  learning-coverage, notebook, and docs-platform parity slice. Track 45 now
+  owns the active Astro/Starlight docs-platform SOTA gate.
 
 ## Next steps
 
 1. Repair the source repo `.git` ACL so commits and clean-tree closeout can run
    normally again.
-2. Open a separate docs-stack migration track if Astro/Starlight replacement is
-   still desired after this parity closeout.
+2. Use Track 45 for active Astro/Starlight platform hardening and plugin-stack
+   evidence.
 3. Extend strictness policy further only where the repository has concrete
    tooling and a clear failure mode.

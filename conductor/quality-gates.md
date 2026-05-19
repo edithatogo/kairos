@@ -105,7 +105,15 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **learning-coverage-matrix**: validates the documentation coverage matrix exists, names the supported language/tutorial/example/notebook paths, and records explicit notebook exclusions where notebooks are not the right medium.
 
-**docs-platform-parity**: validates the current docs platform note exists and states the relationship between the live custom Node site and the Astro/Starlight roadmap or parity closure plan.
+**docs-platform-parity**: validates the current docs platform note exists and states the relationship between the active Astro/Starlight site, checked-in source docs, and parity closure plan.
+
+**docs-platform-sota**: validates the Astro/Starlight SOTA stack, including `starlight-versions`, `starlight-links-validator`, `starlight-llms-txt`, `starlight-plugin-icons`, the local `kairoecs-starlight-polyglot` plugin, generated Pagefind output, and the versioned archive route.
+
+**starlight-versioning**: validates that `starlight-versions` is configured for the current docs line and at least one archived release route, and that the generated archive output exists.
+
+**polyglot-docs-plugin**: validates that the local `kairoecs-starlight-polyglot` plugin is wired into Starlight and that every supported binding language has a public docs entry point.
+
+**llms-txt**: validates that `starlight-llms-txt` is configured and the generated `llms.txt`, `llms-full.txt`, and `llms-small.txt` files are present after the docs build.
 
 **code-health-floor**: `node scripts/validation/validate-code-health.mjs` must report an overall score of at least 9.5 before any production registry write, beta, RC, or 1.0 claim.
 

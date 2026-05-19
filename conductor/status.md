@@ -121,9 +121,10 @@ platform, or software dependencies.
 
 Track 41 advanced to `Done` on 2026-05-17 after the docs-quality workflow,
 learning-coverage matrix, notebook inventory, tutorial index, and docs-platform
-parity boundary were validated locally. The custom Node docs site remains the
-active implementation; the Astro/Starlight migration is deliberately deferred
-to a future migration slice rather than treated as hidden Track 41 scope.
+parity boundary were validated locally. Follow-up work later promoted the
+Astro/Starlight site under `website/` to the active documentation shell; Track
+45 now owns the docs-platform SOTA gate for versioning, the local polyglot
+plugin, llms.txt, icons, generated search, and archive-route evidence.
 
 Tracks 42, 43, and 44 were added on 2026-05-19 as release-gating follow-on
 tracks for the publication phase. Track 42 owns language/package registry
@@ -136,6 +137,12 @@ production registry write, beta, RC, 1.0, or production-ready cloud/HPC claim.
 These tracks implement workflows and validators, but they do not by themselves
 complete external registry account setup, live cloud/HPC runtime proof, or
 release-manager approval.
+
+Track 45 was added on 2026-05-19 to formalize the active Astro/Starlight docs
+platform and polyglot experience as an `In Review` release-quality surface. It
+adds a dedicated docs-platform SOTA validator, wires that validator into
+docs-quality CI, and records deferred activation conditions for TypeDoc,
+OpenAPI, and hosted DocSearch plugins.
 
 ## Validation evidence
 

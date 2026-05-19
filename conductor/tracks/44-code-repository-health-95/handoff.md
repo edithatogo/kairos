@@ -1,4 +1,4 @@
-# 44 Code and Repository Health >9.5 - handoff.md
+# 44 Code and Repository Health >= 9.5 - handoff.md
 
 Last updated: 2026-05-19
 

@@ -14,7 +14,7 @@ This directory is the public community entry point for KairoECS. It is intention
 | Understand project governance | [Governance](governance.md) | Decision-making, conduct, security, and maintainer paths are discoverable. |
 | Track staged maturity | [Roadmap](roadmap.md) | Alpha, beta, and stable claims remain behind explicit gates. |
 | Inspect demo intent | [Playground](playground.md) | Browser demos are described without implying unavailable assets exist. |
-| Review docs platform status | [Docs platform status](../developer-experience/docs-platform.md) | The current Node docs site and the Astro/Starlight roadmap remain explicit. |
+| Review docs platform status | [Docs platform status](../developer-experience/docs-platform.md) | The active Astro/Starlight docs shell, versioning, and polyglot plugin contract remain explicit. |
 | Review learning coverage | [Learning Coverage Matrix](../tutorials/coverage-matrix.md) | Tutorials, examples, and notebooks are inventoried by language instead of by assumption. |
 
 ## R2 onboarding-docs gate

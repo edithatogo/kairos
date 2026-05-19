@@ -150,10 +150,10 @@ function validateCoverageMatrix() {
 function validatePlatformNote() {
   const markdown = readText(platformPath);
   for (const phrase of [
-    "custom Node",
-    "Astro/Starlight",
-    "live site",
-    "parity",
+    "Astro and Starlight as the active documentation shell",
+    "starlight-versions",
+    "kairoecs-starlight-polyglot",
+    "check:sota",
   ]) {
     if (!markdown.includes(phrase)) {
       fail(`docs platform note missing phrase: ${phrase}`);

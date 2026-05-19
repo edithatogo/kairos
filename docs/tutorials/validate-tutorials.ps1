@@ -62,8 +62,8 @@ Assert-Contains 'docs/tutorials/coverage-matrix.md' 'The repository does not req
 Assert-Contains 'examples/docs/README.md' 'docs/tutorials/index.md' 'examples docs tutorial index cross-link'
 Assert-Contains 'docs/community/README.md' 'docs-tutorials' 'community docs-tutorials gate'
 Assert-Contains 'docs/community/adoption.md' 'docs/tutorials/index.md' 'adoption tutorial path cross-link'
-Assert-Contains 'docs/developer-experience/docs-platform.md' 'Astro/Starlight' 'docs platform roadmap target'
-Assert-Contains 'docs/developer-experience/docs-platform.md' 'custom Node' 'docs platform current site'
+Assert-Contains 'docs/developer-experience/docs-platform.md' 'Astro and Starlight as the active documentation shell' 'docs platform active site'
+Assert-Contains 'docs/developer-experience/docs-platform.md' 'kairoecs-starlight-polyglot' 'docs platform polyglot plugin'
 
 foreach ($path in $tutorials) {
     $content = Get-Content -LiteralPath $path -Raw

@@ -1,4 +1,4 @@
-# 44 Code and Repository Health >9.5 - test-matrix.md
+# 44 Code and Repository Health >= 9.5 - test-matrix.md
 
 | Gate | Command | Required for |
 |---|---|---|

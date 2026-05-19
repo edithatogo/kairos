@@ -1,4 +1,4 @@
-# 44 Code and Repository Health >9.5 - risk-register.md
+# 44 Code and Repository Health >= 9.5 - risk-register.md
 
 Severity scale: Low (1-2), Medium (3-4), High (5-6), Critical (7-10), with residual gating status tracked in the track plan.
 

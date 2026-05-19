@@ -59,6 +59,8 @@ jobs:
         run: npm ci --prefix website
       - name: Docs workflow validation
         run: node scripts/dx/validate-docs-workflow.mjs
+      - name: Docs platform SOTA gate
+        run: node scripts/validation/validate-docs-platform-sota.mjs
       - name: Learning coverage matrix
         run: node scripts/validation/validate-learning-coverage.mjs
       - name: Notebook validation
