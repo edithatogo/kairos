@@ -67,16 +67,17 @@ The locally signed-in Azure for Students subscription is enabled and has visible
 `australiaeast` access. Account-specific identifiers are intentionally redacted
 from public documentation. The subscription can be used for the next Azure
 exploration step, but it does not yet satisfy Track 39 or Track 43 Azure runtime
-proof because required providers are not registered:
+proof. Disposable canary resources and a completed Batch job are still pending.
+The required Azure providers are now registered:
 
-- `Microsoft.Batch`: `NotRegistered`
-- `Microsoft.ContainerRegistry`: `NotRegistered`
-- `Microsoft.ContainerInstance`: `NotRegistered`
+- `Microsoft.Batch`: `Registered`
+- `Microsoft.ContainerRegistry`: `Registered`
+- `Microsoft.ContainerInstance`: `Registered`
+- `Microsoft.Storage`: `Registered`
 
-The next Azure completion step is provider registration followed by a disposable
-canary resource group, a minimal Azure Batch account/pool, a readable container
-image, and a single factory-bottleneck canary run with recorded job/task/output
-evidence.
+The next Azure completion step is a disposable canary resource group, a minimal
+Azure Batch account/pool, a readable container image, and a single
+factory-bottleneck canary run with recorded job/task/output evidence.
 
 ## Validation from this audit pass
 
