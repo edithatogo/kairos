@@ -1,6 +1,6 @@
 # KairoECS Docs Overview
 
-This directory is the source tree for KairoECS user, contributor, and release documentation. The static website in `website/` builds from this tree and the link manifest at `website/docs-link-manifest.json`, including generated HTML pages for the manifest navigation targets and the generated docs index used by the quality gate.
+This directory is the source tree for KairoECS user, contributor, and release documentation. The active public website in `website/` is the Astro/Starlight shell; `website/docs-link-manifest.json` keeps this source tree reachable and drives compatibility HTML pages for legacy GitHub Pages links such as `/kairos/docs/README.html`.
 
 ## Reading Paths
 
@@ -10,7 +10,7 @@ This directory is the source tree for KairoECS user, contributor, and release do
 - Contributors: use `docs/developer-experience/docs-workflow.md`, `docs/community/contributor-onboarding.md`, and `docs/design/api-review.md`.
 - Documentation platform: use `docs/developer-experience/docs-platform.md` for the current site vs Astro/Starlight boundary.
 - Release reviewers: use `docs/release/release-checklist.md`, `docs/release/compatibility.md`, and `docs/release/supply-chain-verification.md`.
-- Cloud/HPC users: use `docs/cloud-hpc/specialized-compute-options.md` and the provider-specific batch docs under `docs/cloud-hpc/`.
+- Cloud/HPC users: use the provider-specific batch docs under `docs/cloud-hpc/`, including the Azure student-account capability note.
 - AWS accelerator users: start with `docs/cloud-hpc/aws-trainium-inferentia.md`.
 - Learning coverage: use `docs/tutorials/coverage-matrix.md` to see which languages have tutorials, examples, and notebook coverage.
 
@@ -45,4 +45,4 @@ npm --prefix website run build
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\14-docs-site-education\validate-docs-site.ps1
 ```
 
-The docs system is dependency-light by design: the site generator uses Node.js standard library modules only, so it can run offline after checkout. `website/build/docs-index.json` records both the navigation entries and generated source-backed pages, and `npm --prefix website run check:all` wraps the link, build, and quality checks into the same CI-style flow the track documents.
+The Starlight build owns the public docs shell. A dependency-light post-build step writes `website/build/docs-index.json`, `website/build/robots.txt`, `website/build/sitemap.xml`, and compatibility HTML pages for manifest-backed source documents so old GitHub Pages URLs do not become dead pages. `npm --prefix website run check:all` wraps the link, build, post-build, and quality checks into the same CI-style flow the track documents.

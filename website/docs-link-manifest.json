@@ -2,7 +2,9 @@
   "site": {
     "title": "KairoECS Documentation",
     "description": "Dependency-light static documentation for KairoECS users and contributors.",
-    "canonicalRoot": "/"
+    "canonicalRoot": "/kairos/",
+    "publicBase": "https://edithatogo.github.io/kairos",
+    "sourceBase": "https://github.com/edithatogo/kairos/blob/main"
   },
   "requiredPaths": [
     "docs/README.md",
@@ -19,6 +21,7 @@
     "docs/benchmarks/reproduce-comparison.md",
     "docs/cloud-hpc/aws-batch.md",
     "docs/cloud-hpc/azure-batch.md",
+    "docs/cloud-hpc/azure-student-capability.md",
     "docs/cloud-hpc/checkpoint-spot-policy.md",
     "docs/cloud-hpc/gcp-batch.md",
     "docs/cloud-hpc/slurm.md",
@@ -188,6 +191,7 @@
         { "label": "Cloud HPC overview", "path": "docs/cloud-hpc/checkpoint-spot-policy.md" },
         { "label": "AWS Batch", "path": "docs/cloud-hpc/aws-batch.md" },
         { "label": "Azure Batch", "path": "docs/cloud-hpc/azure-batch.md" },
+        { "label": "Azure student capability", "path": "docs/cloud-hpc/azure-student-capability.md" },
         { "label": "GCP Batch", "path": "docs/cloud-hpc/gcp-batch.md" },
         { "label": "Slurm", "path": "docs/cloud-hpc/slurm.md" },
         { "label": "Distributed deployment", "path": "docs/distributed/deployment-guide.md" },

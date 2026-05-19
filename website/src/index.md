@@ -70,6 +70,7 @@ security, and packaging tracks.
 - [Cloud HPC policy](../../docs/cloud-hpc/checkpoint-spot-policy.md)
 - [AWS Batch](../../docs/cloud-hpc/aws-batch.md)
 - [Azure Batch](../../docs/cloud-hpc/azure-batch.md)
+- [Azure student capability](../../docs/cloud-hpc/azure-student-capability.md)
 - [GCP Batch](../../docs/cloud-hpc/gcp-batch.md)
 - [Slurm](../../docs/cloud-hpc/slurm.md)
 - [Distributed deployment](../../docs/distributed/deployment-guide.md)
@@ -148,8 +149,8 @@ security, and packaging tracks.
 
 - `website/docs-link-manifest.json` lists the source docs and binding pages the site must keep reachable.
 - `npm --prefix website run check:links` verifies required paths, navigation targets, and local Markdown links without writing generated output.
-- `npm --prefix website run build` renders `website/build/index.html`, source-backed HTML pages for each Markdown navigation target, `website/build/docs-index.json`, `website/build/sitemap.xml`, and `website/build/robots.txt`; the build output is ignored by git.
-- `npm --prefix website run check:quality` verifies build artifacts, docs concepts, navigation coverage, generated source pages, and the static output size budget.
+- `npm --prefix website run build` renders the Astro/Starlight site and then runs the post-build compatibility generator for legacy source-backed GitHub Pages URLs.
+- `npm --prefix website run check:quality` verifies Starlight build artifacts, plugin coverage, docs concepts, legacy compatibility pages, and the static output size budget.
 - The generated docs index is intentionally offline-first and dependency-light, so CI and local contributors do not need network access after checkout.
 
 ## Contributor commands

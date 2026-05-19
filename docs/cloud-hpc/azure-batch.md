@@ -4,6 +4,13 @@ See `runtime-evidence-boundary.md` for required live evidence and pending blocke
 
 `cloud/azure/batch-job.json` and `cloud/azure/batch-array.json` provide account-neutral job templates. The submit helper expects an existing Batch pool and a container image readable from the pool.
 
+The current student-account capability check is recorded in
+`azure-student-capability.md`. As of 2026-05-20, the signed-in Azure for
+Students subscription is enabled, but `Microsoft.Batch`,
+`Microsoft.ContainerRegistry`, and `Microsoft.ContainerInstance` are not yet
+registered. That account can support the next Azure canary after provider
+registration and a disposable test resource group are approved.
+
 ## Offline validation
 
 Run `python cloud\validate_cloud_hpc.py` from the repository root. The offline validator parses the Azure JSON templates and checks job termination policy, sweep metadata, submit-helper use of `az batch job create`, task creation, container image wiring, and `KAIRO_OUTPUT_URI` environment propagation.
