@@ -10,7 +10,7 @@ const coveragePath = path.join(repoRoot, "docs", "tutorials", "coverage-matrix.m
 const platformPath = path.join(repoRoot, "docs", "developer-experience", "docs-platform.md");
 const tutorialIndexPath = path.join(repoRoot, "docs", "tutorials", "index.md");
 const docsOverviewPath = path.join(repoRoot, "docs", "README.md");
-const websiteIndexPath = path.join(repoRoot, "website", "src", "index.md");
+const websiteIndexPath = path.join(repoRoot, "website", "src", "content", "docs", "index.md");
 const notebooksReadmePath = path.join(repoRoot, "notebooks", "README.md");
 const notebooksTutorialPath = path.join(repoRoot, "docs", "tutorials", "notebooks.md");
 const notebooksDir = path.join(repoRoot, "notebooks");
@@ -179,8 +179,8 @@ function validatePlatformNote() {
 
   const websiteIndex = readText(websiteIndexPath);
   for (const phrase of [
-    "../../docs/developer-experience/docs-platform.md",
-    "../../docs/tutorials/coverage-matrix.md",
+    "Docs platform",
+    "PDES and distributed evidence",
   ]) {
     if (!websiteIndex.includes(phrase)) {
       fail(`website index missing sync link: ${phrase}`);

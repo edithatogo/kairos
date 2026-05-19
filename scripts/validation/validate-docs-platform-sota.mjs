@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,11 +30,6 @@ function readJson(relativePath) {
     fail(`invalid JSON in ${relativePath}: ${error.message}`);
     return {};
   }
-}
-
-function requireText(relativePath, marker) {
-  const text = readText(relativePath);
-  if (!text.includes(marker)) fail(`${relativePath} missing marker: ${marker}`);
 }
 
 const packageJson = readJson("website/package.json");
@@ -91,6 +87,23 @@ if (!fs.existsSync(path.join(repoRoot, "website/src/content/docs/r1/index.md")))
   fail("missing versioned R1 archive route");
 }
 
+try {
+  fs.rmSync(path.join(repoRoot, "website", "build"), { recursive: true, force: true });
+  if (process.platform === "win32") {
+    execFileSync("cmd.exe", ["/d", "/s", "/c", "npm --prefix website run build"], {
+      cwd: repoRoot,
+      stdio: "inherit",
+    });
+  } else {
+    execFileSync("npm", ["--prefix", "website", "run", "build"], {
+      cwd: repoRoot,
+      stdio: "inherit",
+    });
+  }
+} catch (error) {
+  fail(`docs build failed before SOTA artifact validation: ${error.message}`);
+}
+
 for (const generated of [
   "website/build/index.html",
   "website/build/r1/index.html",
@@ -105,17 +118,31 @@ const builtIndex = readText("website/build/index.html");
 for (const marker of [
   "KairoECS Documentation",
   "kairoecs-polyglot-languages",
-  "Starlight v",
+  "R2 Preview",
+  "R1 Archive",
 ]) {
   if (!builtIndex.includes(marker)) fail(`built docs index missing marker: ${marker}`);
 }
 
-requireText("docs/developer-experience/docs-platform.md", "Astro and Starlight as the active documentation shell");
-requireText("docs/developer-experience/docs-platform.md", "starlight-versions");
-requireText("docs/developer-experience/docs-platform.md", "kairoecs-starlight-polyglot");
-requireText("docs/developer-experience/docs-platform.md", "starlight-llms-txt");
-requireText("conductor/tracks/45-docs-platform-starlight-sota/spec.md", "Astro/Starlight");
-requireText("conductor/tracks/45-docs-platform-starlight-sota/test-matrix.md", "validate-docs-platform-sota.mjs");
+const docsPlatformMd = readText("docs/developer-experience/docs-platform.md");
+for (const marker of [
+  "Astro and Starlight as the active documentation shell",
+  "starlight-versions",
+  "kairoecs-starlight-polyglot",
+  "starlight-llms-txt",
+]) {
+  if (!docsPlatformMd.includes(marker)) fail(`docs/developer-experience/docs-platform.md missing marker: ${marker}`);
+}
+
+const track45Spec = readText("conductor/tracks/45-docs-platform-starlight-sota/spec.md");
+if (!track45Spec.includes("Astro/Starlight")) {
+  fail("conductor/tracks/45-docs-platform-starlight-sota/spec.md missing marker: Astro/Starlight");
+}
+
+const track45TestMatrix = readText("conductor/tracks/45-docs-platform-starlight-sota/test-matrix.md");
+if (!track45TestMatrix.includes("validate-docs-platform-sota.mjs")) {
+  fail("conductor/tracks/45-docs-platform-starlight-sota/test-matrix.md missing marker: validate-docs-platform-sota.mjs");
+}
 
 if (issues.length > 0) {
   console.error(JSON.stringify({ status: "failed", issues }, null, 2));

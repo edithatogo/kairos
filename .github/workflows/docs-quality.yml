@@ -16,6 +16,7 @@ on:
       - 'notebooks/**'
       - 'crates/kairo-ecs-core/**'
       - 'planning/diagrams/**'
+      - 'scripts/validation/**'
   push:
     branches: [main]
 
@@ -59,6 +60,8 @@ jobs:
         run: npm ci --prefix website
       - name: Docs workflow validation
         run: node scripts/dx/validate-docs-workflow.mjs
+      - name: Build docs site
+        run: npm --prefix website run build
       - name: Docs platform SOTA gate
         run: node scripts/validation/validate-docs-platform-sota.mjs
       - name: Learning coverage matrix

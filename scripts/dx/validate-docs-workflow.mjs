@@ -150,6 +150,7 @@ async function main() {
 
   const docsWorkflow = readText(path.join(repoRoot, "docs", "developer-experience", "docs-workflow.md"));
   assert(docsWorkflow.includes("validate-learning-coverage.mjs"), "docs workflow does not mention the coverage validator");
+  assert(docsWorkflow.includes("validate-docs-platform-sota.mjs"), "docs workflow does not mention the SOTA validator");
 
   const docsReadme = readText(path.join(repoRoot, "docs", "README.md"));
   assert(docsReadme.includes("docs/developer-experience/docs-platform.md"), "docs overview does not link the docs-platform note");
