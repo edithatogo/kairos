@@ -14,6 +14,8 @@ docs, bindings, examples, and conductor source trees linked from that shell.
 ## Active site
 
 - `npm --prefix website run build` runs `astro build`.
+- `npm --prefix website run postbuild` generates legacy compatibility routes,
+  `docs-index.json`, `robots.txt`, and `sitemap.xml` after the Starlight build.
 - `npm --prefix website run dev` runs `astro dev`.
 - `npm --prefix website run check:links` still validates the repository docs
   tree and `website/docs-link-manifest.json`.
@@ -53,13 +55,23 @@ trees:
 - `conductor/`
 
 The website links back to those sources where the detailed page is still owned
-outside the Starlight content collection.
+outside the Starlight content collection. The post-build compatibility layer
+also writes legacy `/kairos/docs/*.html`, `/kairos/bindings/*.html`, and related
+manifest-backed pages that redirect readers to the canonical source documents.
 
 ## Versioning
 
 The current docs line is `R2 Preview`. The committed `r1/` content route and
 `website/src/content/versions/r1.json` archive config exercise the versioning
 plugin in the normal build.
+
+## GitHub Pages Base
+
+The project is published as a GitHub Pages project site under `/kairos/`.
+`website/astro.config.mjs`, `website/docs-link-manifest.json`, and the
+post-build compatibility generator all use that project-site base. Redirecting
+traffic from the user-site root `/` is outside this repository's Pages build
+scope; compatibility routes are generated under the project base.
 
 ## Local validation
 

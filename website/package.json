@@ -5,6 +5,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "astro build",
+    "postbuild": "node scripts/build-compat-routes.js",
     "check:links": "node scripts/check-links.js",
     "check:quality": "node scripts/validate-quality.js",
     "check:sota": "node ../scripts/validation/validate-docs-platform-sota.mjs",

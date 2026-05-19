@@ -6,6 +6,7 @@ const repoRoot = path.resolve(siteRoot, "..");
 const buildDir = path.join(siteRoot, "build");
 const packageJsonPath = path.join(siteRoot, "package.json");
 const astroConfigPath = path.join(siteRoot, "astro.config.mjs");
+const manifestPath = path.join(siteRoot, "docs-link-manifest.json");
 
 function fail(message, failures) {
   failures.push(message);
@@ -32,6 +33,11 @@ function assertBuildOutput(failures) {
     "website/build/llms-full.txt",
     "website/build/llms-small.txt",
     "website/build/r1/index.html",
+    "website/build/docs-index.json",
+    "website/build/docs/README.html",
+    "website/build/examples/docs/README.html",
+    "website/build/robots.txt",
+    "website/build/sitemap.xml",
   ]) {
     if (!exists(output)) {
       fail(`build output missing: ${output}`, failures);
@@ -43,6 +49,9 @@ function assertPackageScripts(failures) {
   const pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
   if (pkg.scripts?.build !== "astro build") {
     fail("website package build script must use astro build", failures);
+  }
+  if (pkg.scripts?.postbuild !== "node scripts/build-compat-routes.js") {
+    fail("website package postbuild script must generate compatibility routes", failures);
   }
   if (pkg.scripts?.dev !== "astro dev") {
     fail("website package dev script must use astro dev", failures);
@@ -127,6 +136,41 @@ function assertBuiltHtml(failures) {
   }
 }
 
+function assertCompatibilityIndex(failures) {
+  const indexPath = path.join(buildDir, "docs-index.json");
+  if (!fs.existsSync(indexPath)) {
+    return;
+  }
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const expectedEntries = (manifest.navigationSections || [])
+    .flatMap((section) => section.links || [])
+    .length;
+  const expectedGeneratedPages = Array.from(new Set(manifest.requiredPaths || []))
+    .filter((requiredPath) => exists(requiredPath))
+    .filter((requiredPath) => {
+      const normalized = requiredPath.replace(/\\/g, "/").replace(/^\/+/, "");
+      if (normalized.endsWith(".md")) {
+        return normalized.replace(/\.md$/, ".html") !== "website/playground/index.html";
+      }
+      return normalized !== "website/playground/index.html";
+    })
+    .length;
+  const docsIndex = JSON.parse(fs.readFileSync(indexPath, "utf8"));
+  if (!Array.isArray(docsIndex.entries) || docsIndex.entries.length < expectedEntries) {
+    fail(`docs-index.json must include ${expectedEntries} manifest navigation entries`, failures);
+  }
+  if (!Array.isArray(docsIndex.generatedPages) || docsIndex.generatedPages.length < expectedGeneratedPages) {
+    fail(`docs-index.json must include ${expectedGeneratedPages} manifest compatibility pages`, failures);
+  }
+
+  for (const required of ["docs/README.md", "docs/cloud-hpc/azure-batch.md", "bindings/python/README.md"]) {
+    if (!docsIndex.generatedPages.some((page) => page.sourcePath === required)) {
+      fail(`docs-index.json missing compatibility page for ${required}`, failures);
+    }
+  }
+}
+
 function main() {
   const failures = [];
   assertPackageScripts(failures);
@@ -134,6 +178,7 @@ function main() {
   assertContent(failures);
   assertBuildOutput(failures);
   assertBuiltHtml(failures);
+  assertCompatibilityIndex(failures);
 
   if (failures.length > 0) {
     process.stderr.write(`${failures.join("\n")}\n`);
