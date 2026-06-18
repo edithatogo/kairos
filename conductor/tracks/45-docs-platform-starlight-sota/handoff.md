@@ -53,5 +53,5 @@ Run `$conductor-review` before advancing this track. Apply accepted fixes in own
 - validation: `node scripts/dx/validate-docs-workflow.mjs` passed with link validation, Astro build, generated compatibility routes, and docs dev smoke; `node scripts/validation/validate-docs-platform-sota.mjs` passed with Starlight versioning, link validator, llms.txt, icons, and local polyglot plugin evidence.
 - commit SHA: `0749d4139fff6a86cdf623c336541cd461055a9b`.
 - pushed ref: `origin/codex/kairos-conductor-closeout` after branch push.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: current branch worktree is clean after commit, but strict global closeout remains blocked by historical closed ledger entries that reference deleted `origin/conductor-close-reviewed-tracks-20260510` refs whose commits are not contained in `origin/main`.
-- next-phase decision: keep Track 45 `In Review` until CI and the historical closeout-ref drift are resolved or explicitly waived under release governance.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed on 2026-06-18 after restoring `origin/conductor-close-reviewed-tracks-20260510` to historical tip `a7e6f4a68bad9aa9483997d3a0207031066929a1`.
+- next-phase decision: keep Track 45 `In Review` until pull-request CI confirms the branch.

@@ -48,5 +48,5 @@ The score threshold is intentionally high and release-gating.
 - validation: `node scripts/validation/validate-code-health.mjs` passed with `status=ok`, `total_current=10`, and `total_minimum=9.5`; `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` passed.
 - commit SHA: `0749d4139fff6a86cdf623c336541cd461055a9b`.
 - pushed ref: `origin/codex/kairos-conductor-closeout` after branch push.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: current branch worktree is clean after commit, but strict global closeout remains blocked by historical closed ledger entries that reference deleted `origin/conductor-close-reviewed-tracks-20260510` refs whose commits are not contained in `origin/main`.
-- next-phase decision: Track 44 remains `In Review`; do not mark `Done` until historical closeout-ref drift is resolved or explicitly waived under release governance.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed on 2026-06-18 after restoring `origin/conductor-close-reviewed-tracks-20260510` to historical tip `a7e6f4a68bad9aa9483997d3a0207031066929a1`.
+- next-phase decision: Track 44 is locally closeout-ready; keep it `In Review` until pull-request CI confirms the branch.
