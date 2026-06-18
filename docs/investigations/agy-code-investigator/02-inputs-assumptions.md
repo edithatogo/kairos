@@ -87,11 +87,11 @@ Calibration status: not ready for real-world calibration claims.
 
 Current gaps:
 
-- No fitting algorithms are connected.
-- No parameter-estimation workflow is recorded.
-- No reference data, acceptance thresholds, or comparison statistics are
-  attached.
-- No real-world queueing, throughput, or bottleneck claim is validated.
+- Fitting algorithms and a parameter-estimation workflow are not yet connected.
+- Reference data, acceptance thresholds, and comparison statistics remain
+  unattached.
+- Real-world queueing, throughput, and bottleneck claims have not been
+  validated.
 
 The VVUQ boundary is documented in
 [`docs/validation/factory-bottleneck-v1-vvuq-note.md`](../../validation/factory-bottleneck-v1-vvuq-note.md).

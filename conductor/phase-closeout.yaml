@@ -736,16 +736,16 @@ entries:
     state: pending
     review_command: "$conductor-review"
     review_result: "Focused local review on 2026-06-18 found no Track 45 plan/spec defects; docs workflow and docs-platform SOTA validators passed on the current tree."
-    fixes_applied: true
+    fixes_applied: false
     validation_commands:
       - "node scripts/validation/validate-docs-platform-sota.mjs"
       - "npm --prefix website run check:sota"
       - "npm --prefix website run check:all"
       - "node scripts/dx/validate-docs-workflow.mjs"
-      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_artifacts.ps1"
-      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
     git_status: "clean after commit 0749d4139fff6a86cdf623c336541cd461055a9b; strict global closeout passed after restoring origin/conductor-close-reviewed-tracks-20260510 to a7e6f4a68bad9aa9483997d3a0207031066929a1"
     commit_sha: "0749d4139fff6a86cdf623c336541cd461055a9b"
     pushed_ref: "origin/codex/kairos-conductor-closeout"
@@ -758,7 +758,7 @@ entries:
     fixes_applied: false
     validation_commands:
       - "node scripts/validation/validate-code-health.mjs"
-      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_phase_gates.ps1"
     git_status: "clean after commit 0749d4139fff6a86cdf623c336541cd461055a9b; strict global closeout passed after restoring origin/conductor-close-reviewed-tracks-20260510 to a7e6f4a68bad9aa9483997d3a0207031066929a1"
     commit_sha: "0749d4139fff6a86cdf623c336541cd461055a9b"
     pushed_ref: "origin/codex/kairos-conductor-closeout"

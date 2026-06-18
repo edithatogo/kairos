@@ -79,10 +79,11 @@ Stderr was empty.
 - KairoECS CLI/container execution was not run because the local Docker CLI
   could not connect to a Docker daemon, so the repo image could not be built and
   pushed from this host.
-- No `cloud/azure/submit-experiment.ps1` run has executed against a readable
-  `kairo-ecs-cli` container image.
-- No factory-bottleneck scenario output/checksum was produced from KairoECS.
-- No GPU or HPC hardware run was possible in this subscription because the
+- The `cloud/azure/submit-experiment.ps1` path has not yet executed against a
+  readable `kairo-ecs-cli` container image.
+- Factory-bottleneck scenario output/checksum evidence was not produced from
+  KairoECS.
+- GPU or HPC hardware execution was blocked in this subscription because the
   Batch quota report showed zero GPU/HPC-family quota.
 
 ## Cleanup
