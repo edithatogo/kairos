@@ -146,14 +146,17 @@ OpenAPI, and hosted DocSearch plugins.
 
 Track 44 advanced from `Spec Approved` to `In Review` on 2026-06-18 after the
 local health validator reported `10/10` against the `9.5` floor and phase-gate
-validation remained clean. It is not `Done` until the closeout commit, push, and
-strict clean-tree validation are recorded.
+validation remained clean. Commit `0749d4139fff6a86cdf623c336541cd461055a9b`
+records the local evidence update. It is not `Done` because strict global
+closeout is still blocked by historical closed ledger entries that reference the
+deleted `origin/conductor-close-reviewed-tracks-20260510` ref.
 
 Track 45 local closeout review on 2026-06-18 found no current Astro/Starlight
 docs-platform gate defects. `node scripts/dx/validate-docs-workflow.mjs` and
-`node scripts/validation/validate-docs-platform-sota.mjs` both passed, but the
-track remains `In Review` until commit, push, CI, and strict clean-tree closeout
-complete.
+`node scripts/validation/validate-docs-platform-sota.mjs` both passed, and
+commit `0749d4139fff6a86cdf623c336541cd461055a9b` records the evidence update.
+The track remains `In Review` until CI and the historical closeout-ref drift are
+resolved or explicitly waived under release governance.
 
 Track 39 and Track 43 now record partial Azure evidence from 2026-05-20: a live
 CPU Azure Batch substrate canary succeeded in the Azure for Students subscription.

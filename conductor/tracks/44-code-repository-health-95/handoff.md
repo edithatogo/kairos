@@ -46,7 +46,7 @@ The score threshold is intentionally high and release-gating.
 - `$conductor-review`: focused local review on 2026-06-18 found no plan/spec defects in the Track 44 scorecard gate. Residual risk is limited to future live GitHub API score ingestion and trend history, already recorded as follow-up work.
 - accepted fixes: none required for the Track 44 owned surface.
 - validation: `node scripts/validation/validate-code-health.mjs` passed with `status=ok`, `total_current=10`, and `total_minimum=9.5`; `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` passed.
-- commit SHA: pending because this working tree still contains uncommitted Track 39/43 Azure evidence updates and ignored local scratch cleanup.
-- pushed ref: pending.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending after commit and push.
-- next-phase decision: Track 44 advances from `Spec Approved` to `In Review`; keep it out of `Done` until strict git closeout and pushed evidence are recorded.
+- commit SHA: `0749d4139fff6a86cdf623c336541cd461055a9b`.
+- pushed ref: `origin/codex/kairos-conductor-closeout` after branch push.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: current branch worktree is clean after commit, but strict global closeout remains blocked by historical closed ledger entries that reference deleted `origin/conductor-close-reviewed-tracks-20260510` refs whose commits are not contained in `origin/main`.
+- next-phase decision: Track 44 remains `In Review`; do not mark `Done` until historical closeout-ref drift is resolved or explicitly waived under release governance.
