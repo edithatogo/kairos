@@ -37,7 +37,14 @@ jobs:
       - name: Check Mermaid diagrams render
         run: |
           npm install -g @mermaid-js/mermaid-cli
-          chrome_path="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          chrome_path=""
+          if command -v google-chrome >/dev/null 2>&1; then
+            chrome_path="$(command -v google-chrome)"
+          elif command -v chromium >/dev/null 2>&1; then
+            chrome_path="$(command -v chromium)"
+          elif command -v chromium-browser >/dev/null 2>&1; then
+            chrome_path="$(command -v chromium-browser)"
+          fi
           if [ -n "$chrome_path" ]; then
             cat > .mermaid-puppeteer.json <<JSON
           {
