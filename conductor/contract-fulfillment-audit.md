@@ -38,7 +38,7 @@ and final release-health approval.
 | Track 33 WebGPU browser compute | Not fully fulfilled | Browser/device runtime evidence remains pending. |
 | Track 34 PDES | Not fully fulfilled | Dependency-free local proof exists; real scaling and Time Warp evidence remain pending. |
 | Track 35 distributed MPI/gRPC | Not fully fulfilled | Local protocol proof exists; real transport and multi-node proof remain pending. |
-| Track 39 cloud/HPC batch runners | Not fully fulfilled | Offline validation passes; Docker, Kubernetes, Slurm, and provider canaries remain pending. |
+| Track 39 cloud/HPC batch runners | Not fully fulfilled | Offline validation passes; Azure CPU Batch substrate canary passed; Docker, Kubernetes, Slurm, AWS/GCP canaries, KairoECS container execution, and GPU/HPC proof remain pending. |
 | Track 42 package registry publication | Not fulfilled | Publication workflows and validators exist; live registry submissions are still gated. |
 | Track 43 cloud/HPC registry publication | Not fulfilled | Registry scaffolding exists; runtime acceptance and protected publication remain pending. |
 | Track 44 code/repository health >= 9.5 | Structurally fulfilled, release-gating | Validator reports 10/10 against a 9.5 floor, but it remains a gate before production publication. |
@@ -65,19 +65,22 @@ documents and link back to the Starlight documentation home.
 
 The locally signed-in Azure for Students subscription is enabled and has visible
 `australiaeast` access. Account-specific identifiers are intentionally redacted
-from public documentation. The subscription can be used for the next Azure
-exploration step, but it does not yet satisfy Track 39 or Track 43 Azure runtime
-proof. Disposable canary resources and a completed Batch job are still pending.
-The required Azure providers are now registered:
+from public documentation. The subscription now has live CPU Azure Batch
+substrate evidence: resource group `rg-kairos-batch-canary-20260520`, Batch
+account `kairobatch0520damo`, pool `kairoscanarypool`, job
+`kairos-canary-20260520`, task `kairos-canary-task-001`, and task exit code `0`.
+The required Azure providers are registered:
 
 - `Microsoft.Batch`: `Registered`
 - `Microsoft.ContainerRegistry`: `Registered`
 - `Microsoft.ContainerInstance`: `Registered`
 - `Microsoft.Storage`: `Registered`
 
-The next Azure completion step is a disposable canary resource group, a minimal
-Azure Batch account/pool, a readable container image, and a single
-factory-bottleneck canary run with recorded job/task/output evidence.
+The next Azure completion step is a readable `kairo-ecs-cli` container image and
+a factory-bottleneck canary run through `cloud/azure/submit-experiment.ps1` with
+recorded output/checksum evidence. GPU/HPC hardware proof remains blocked in
+this subscription because the Batch quota report showed zero GPU/HPC-family
+quota.
 
 ## Validation from this audit pass
 

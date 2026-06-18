@@ -7,6 +7,9 @@ bindings/*.tar.gz
 **/bin/
 website/build/
 website/.astro/
+.tmp/
+.gemini/
+.azure/
 bindings/python/.tmp/
 bindings/python/pytest-cache-files-*/
 .cargo/config.toml

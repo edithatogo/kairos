@@ -8,9 +8,8 @@ The current student-account capability check is recorded in
 `azure-student-capability.md`. As of 2026-05-20, the signed-in Azure for
 Students subscription is enabled, and the required `Microsoft.Batch`,
 `Microsoft.ContainerRegistry`, `Microsoft.ContainerInstance`, and
-`Microsoft.Storage` providers are registered. That account can support the next
-Azure canary after a disposable test resource group and canary resources are
-approved.
+`Microsoft.Storage` providers are registered. A live CPU Batch substrate canary
+was completed on 2026-05-20; see `azure-batch-canary-2026-05-20.md`.
 
 ## Offline validation
 
@@ -18,11 +17,19 @@ Run `python cloud\validate_cloud_hpc.py` from the repository root. The offline v
 
 ## Live validation
 
-The offline check is not an Azure Batch API validation. Before marking Azure Batch ready, create a canary job and task in a test Batch account, then record the account, pool, job id, task id, terminal status, and output/checksum evidence.
+The offline check is not an Azure Batch API validation. A CPU substrate canary
+now proves that the student subscription can create a Batch account, allocate a
+low-priority Ubuntu node, run a task, and return stdout/stderr. Before marking
+Azure Batch ready for KairoECS, run `cloud/azure/submit-experiment.ps1` against
+a readable `kairo-ecs-cli` container image and record the account, pool, job id,
+task id, terminal status, output URI, and checksum evidence.
 
 ### Runtime evidence status
 
-- This doc is paired with `runtime-evidence-boundary.md` for pending live proof blockers.
+- CPU Batch substrate canary: pass, 2026-05-20.
+- KairoECS container/scenario execution: pending.
+- GPU/HPC hardware proof: blocked in the student subscription by zero GPU/HPC
+  Batch quota.
 
 Required permissions:
 

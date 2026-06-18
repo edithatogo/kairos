@@ -1,10 +1,10 @@
 # 44 Code and Repository Health >= 9.5 - handoff.md
 
-Last updated: 2026-05-19
+Last updated: 2026-06-18
 
 ## Summary
 
-Track 44 adds the code/repo health scorecard and makes `>= 9.5` a publication gate.
+Track 44 adds the code/repo health scorecard and makes `>= 9.5` a publication gate. The current local validator reports `10/10` against the `9.5` floor.
 
 ## Files changed
 
@@ -43,4 +43,10 @@ The score threshold is intentionally high and release-gating.
 
 ## Phase closeout evidence
 
-`$conductor-review` must be run before promotion. Record accepted fixes, commit SHA, pushed ref, `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`, and next-phase decision here during closeout.
+- `$conductor-review`: focused local review on 2026-06-18 found no plan/spec defects in the Track 44 scorecard gate. Residual risk is limited to future live GitHub API score ingestion and trend history, already recorded as follow-up work.
+- accepted fixes: none required for the Track 44 owned surface.
+- validation: `node scripts/validation/validate-code-health.mjs` passed with `status=ok`, `total_current=10`, and `total_minimum=9.5`; `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` passed.
+- commit SHA: pending because this working tree still contains uncommitted Track 39/43 Azure evidence updates and ignored local scratch cleanup.
+- pushed ref: pending.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending after commit and push.
+- next-phase decision: Track 44 advances from `Spec Approved` to `In Review`; keep it out of `Done` until strict git closeout and pushed evidence are recorded.

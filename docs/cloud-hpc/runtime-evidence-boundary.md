@@ -3,7 +3,7 @@
 Use this file as the single source for live runtime expectations before any "ready" claim for
 Docker, Kubernetes, Slurm, and cloud-batch execution.
 
-Last updated: 2026-05-17 (Australia/Sydney)
+Last updated: 2026-05-20 (Australia/Sydney)
 
 ## Runtime state
 
@@ -16,14 +16,27 @@ Last updated: 2026-05-17 (Australia/Sydney)
 | Slurm sweep/job-array behavior | Slurm wrapper and generated-array script syntax checks in validator | `KAIRO_SCENARIO_PREFIX=scenarios/factory_bottleneck_v1 KAIRO_OUTPUT_URI=s3://example/runs KAIRO_SWEEP_SIZE=8 hpc/slurm/submit-sweep.sh` on a scheduler where the wrapper can invoke `sbatch` (or equivalent canary array submit) | pending | No live scheduler context in this workspace. |
 | AWS Batch acceptance | `python cloud\validate_cloud_hpc.py` | rendered template render + canary in AWS sandbox/test account | pending | No AWS credentials/CLI run in this workspace. |
 | GCP Batch acceptance | `python cloud\validate_cloud_hpc.py` | rendered template render + canary in GCP test project | pending | No GCP credentials/CLI run in this workspace. |
-| Azure Batch acceptance | `python cloud\validate_cloud_hpc.py` | rendered template render + canary job/task in Azure Batch | pending | No Azure credentials/CLI run in this workspace. |
+| Azure Batch acceptance | `python cloud\validate_cloud_hpc.py` | rendered template render + canary job/task in Azure Batch | partial | Live Azure Batch CPU substrate canary succeeded on 2026-05-20; see `azure-batch-canary-2026-05-20.md`. KairoECS container/scenario execution and GPU/HPC hardware proof remain pending. |
 
 ## Closeout blockers (current)
 
 - Live Docker proof is missing from this slice.
 - Live Kubernetes operator proof is missing from this slice.
 - Live Slurm submission proof is missing from this slice.
-- Live provider acceptance proof is missing for AWS/GCP/Azure from this slice.
+- Live provider acceptance proof is missing for AWS/GCP from this slice.
+- Azure has CPU Batch substrate evidence only; KairoECS container/scenario
+  execution and GPU/HPC hardware proof remain missing.
+
+## Latest local environment probe
+
+Read-only probe on 2026-06-18:
+
+- `docker`: not found on `PATH`; no local Docker canary can be run from this shell.
+- `kubectl`: not found on `PATH`; no Kubernetes context can be checked from this shell.
+- `sbatch`: not found on `PATH`; no Slurm scheduler canary can be submitted from this shell.
+- `aws`: not found on `PATH`; no AWS Batch identity or canary can be checked from this shell.
+- `gcloud`: CLI has a configured project, but no GCP Batch mutation was run.
+- `az`: Azure for Students subscription is enabled; no Azure mutation was run in this probe.
 
 ## Evidence format policy
 
