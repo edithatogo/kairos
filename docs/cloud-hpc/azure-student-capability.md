@@ -3,7 +3,7 @@
 Last checked: 2026-05-20.
 
 This note records what can and cannot be completed with the locally signed-in
-Azure for Students account without making a live provider claim.
+Azure for Students account.
 
 ## Account
 
@@ -11,7 +11,7 @@ Azure for Students account without making a live provider claim.
 - Subscription: `Azure for Students`.
 - Subscription state: enabled.
 - Visible region: `australiaeast`.
-- Resource group details: redacted from public documentation.
+- Disposable canary resource group: `rg-kairos-batch-canary-20260520`.
 
 ## Provider readiness
 
@@ -25,24 +25,26 @@ The following resource providers were checked read-only:
 | `Microsoft.Storage` | `Registered` | Storage account/container setup can proceed. |
 
 This means the account is useful for planning, template validation, and Azure
-resource setup, but it does not yet satisfy Track 39 or Track 43 Azure runtime
-evidence. Runtime evidence still requires disposable resources and a completed
-canary job.
+resource setup. A live CPU Azure Batch substrate canary was completed on
+2026-05-20 and is recorded in `azure-batch-canary-2026-05-20.md`.
 
-## Candidate next steps
+## Current runtime boundary
 
-Before recording Azure Batch runtime acceptance, complete these actions in the
-subscription:
+The completed canary proves that the subscription can create a disposable Batch
+account, allocate a low-priority CPU node, run a task, and return output.
 
-1. Create or identify a test resource group that is approved for KairoECS
-   canary resources.
-2. Create a small Azure Batch account, pool, storage account, and container
-   image source.
-3. Run the smallest factory-bottleneck canary through
-   `cloud/azure/submit-experiment.ps1`.
-4. Record the Batch account, pool id, job id, task id, final status, output URI,
-   and checksum evidence in `docs/cloud-hpc/runtime-evidence-boundary.md`.
+It does not yet prove KairoECS container/scenario execution, GPU parity, HPC
+scaling, or production registry acceptance. The Batch account quota report
+showed zero quota for GPU/HPC VM families, so GPU/HPC hardware testing remains
+blocked in this subscription unless quota is granted or another runner is used.
 
-Provider registration and resource creation are subscription mutations and may
-incur quota or cost consequences. They should only be performed intentionally
-against a disposable canary resource group.
+The next Azure step is to make a readable `kairo-ecs-cli` image available to
+the Batch pool, then run the smallest factory-bottleneck canary through
+`cloud/azure/submit-experiment.ps1` and record output/checksum evidence.
+
+The canary pool was resized back to zero nodes after the run. To remove all
+disposable resources after evidence review:
+
+```powershell
+az group delete --name rg-kairos-batch-canary-20260520 --yes --no-wait
+```

@@ -55,3 +55,4 @@ Format:
 - Docs platform documentation now preserves the existing tutorial-quality sentinel wording while documenting the Astro/Starlight migration.
 - Docs Quality CI now installs `website` dependencies before running the Astro/Starlight docs workflow validator.
 - Docs platform notes now retain the learning-coverage live-site parity language after the Starlight migration.
+- Docs Quality CI now avoids policy-banned shell fallbacks when configuring Mermaid Chrome rendering.

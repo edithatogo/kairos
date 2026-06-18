@@ -144,6 +144,28 @@ adds a dedicated docs-platform SOTA validator, wires that validator into
 docs-quality CI, and records deferred activation conditions for TypeDoc,
 OpenAPI, and hosted DocSearch plugins.
 
+Track 44 advanced from `Spec Approved` to `In Review` on 2026-06-18 after the
+local health validator reported `10/10` against the `9.5` floor and phase-gate
+validation remained clean. Commit `0749d4139fff6a86cdf623c336541cd461055a9b`
+records the local evidence update. Strict global git closeout now passes after
+restoring `origin/conductor-close-reviewed-tracks-20260510` to historical tip
+`a7e6f4a68bad9aa9483997d3a0207031066929a1`; Track 44 remains `In Review`
+pending pull-request CI.
+
+Track 45 local closeout review on 2026-06-18 found no current Astro/Starlight
+docs-platform gate defects. `node scripts/dx/validate-docs-workflow.mjs` and
+`node scripts/validation/validate-docs-platform-sota.mjs` both passed, and
+commit `0749d4139fff6a86cdf623c336541cd461055a9b` records the evidence update.
+Strict global git closeout now passes after restoring the historical closeout
+ref. The track remains `In Review` until pull-request CI confirms the branch.
+
+Track 39 and Track 43 now record partial Azure evidence from 2026-05-20: a live
+CPU Azure Batch substrate canary succeeded in the Azure for Students subscription.
+This narrows the Azure blocker but does not close Track 39 or Track 43 because
+KairoECS container/scenario execution, output/checksum evidence, GPU/HPC proof,
+AWS/GCP canaries, Docker, Kubernetes, Slurm, protected publication, and
+release-manager approval remain unproven.
+
 ## Validation evidence
 
 Latest local baseline validation on 2026-05-07; current targeted verification is recorded under the 2026-05-10 track evidence:
@@ -172,6 +194,10 @@ Latest local baseline validation on 2026-05-07; current targeted verification is
 - The hardened Track 36-40 aggregate passed on 2026-05-18 with `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`; when sandboxed `rustup toolchain list` hit Windows pipe access denial, the script used the installed `stable-x86_64-pc-windows-gnu` directory fallback and completed successfully.
 - Track 41 closeout on 2026-05-17 passed `node scripts/validation/validate-learning-coverage.mjs`, `python notebooks/validate_notebooks.py`, `npm --prefix website run check:all`, `node scripts/dx/validate-docs-workflow.mjs`, `pwsh -NoProfile -File docs/tutorials/validate-tutorials.ps1`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`. The strict clean-tree closeout remains blocked by the repo-local `.git/index.lock` ACL issue, not by Track 41 validation.
 - Track 42-44 setup validation on 2026-05-19 passed `node scripts/validation/validate-code-health.mjs`, `node scripts/validation/validate-publication-readiness.mjs`, `node scripts/validation/validate-hpc-registry-readiness.mjs`, `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_artifacts.ps1`, and `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1`. The new validators prove publication workflow structure and gating, not external registry submissions.
+- Track 39/43 Azure substrate validation on 2026-05-20 completed a live CPU Batch canary with job `kairos-canary-20260520`, task `kairos-canary-task-001`, and exit code `0`; sanitized evidence is recorded in `docs/cloud-hpc/azure-batch-canary-2026-05-20.md`. This is not KairoECS container/scenario runtime acceptance.
+- Track 44 closeout validation on 2026-06-18 passed `node scripts/validation/validate-code-health.mjs` with `total_current=10` and `total_minimum=9.5`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
+- Track 45 closeout validation on 2026-06-18 passed `node scripts/dx/validate-docs-workflow.mjs` and `node scripts/validation/validate-docs-platform-sota.mjs`, including Astro/Starlight build, internal link validation, generated compatibility routes, Pagefind output, llms.txt, Starlight versioning, icons, and local polyglot plugin checks.
+- Strict git closeout validation on 2026-06-18 passed after restoring `origin/conductor-close-reviewed-tracks-20260510` to historical tip `a7e6f4a68bad9aa9483997d3a0207031066929a1`.
 - Track 06 advanced to `Done` on 2026-05-10 after `python -m pytest -q` from `bindings\python` passed with 16 tests when the unpacked `pyarrow` wheel was placed on `PYTHONPATH`; `python -m ruff check kairo_ecs tests`, `python -m compileall kairo_ecs tests`, `python -c "import kairo_ecs; print(kairo_ecs.self_check())"`, `python -m pip check`, `python -m build --sdist --wheel`, `validate-bindings06-11.ps1`, `scripts\validate_conductor_phase_gates.ps1`, and `scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` all passed. A workspace-local `pyarrow-24.0.0` install had initially looked blocked by a Windows DLL load failure, but the real pyarrow table roundtrip now passes when the wheel is unpacked directly into a local path and the bundled runtime files are visible on `PYTHONPATH`.
 - `go test ./...`, `go vet ./...`, and `gofmt -w -l .` from `bindings\go` passed with no formatting output.
 - `Rscript -e "sessionInfo(); source('tests/testthat.R')"` from `bindings\r` passed after R startup locale warnings.
