@@ -79,9 +79,17 @@ Passing implementation gates:
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_phase_gates.ps1`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1`
 
-Run `$conductor-review`, record accepted fixes, commit SHA, pushed ref,
-`validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`, and the
-next-phase decision before advancing beyond this contract-baseline slice.
+Strict closeout and remote checks:
+
+- `$conductor-review`: deferred to the next explicit review pass for this
+  first Track 49 contract-baseline slice.
+- accepted fixes: none applied in this closeout note.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
+- `gh pr checks 29`
 
 Implementation commit SHA: `83c1261cd3b3a1f1ed0a7da683c69f6960db1c35`
 pushed ref: `origin/codex/kairos-hpc-parity-wave`
+
+Next-phase decision: Track 49 stays In Progress. Continue with real `rsmpi`,
+`tonic`/`prost`, spawned process tests, byte-level migration restore, and live
+MPI/gRPC evidence before In Review.
