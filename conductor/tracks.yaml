@@ -754,7 +754,7 @@ tracks:
       - allocator-contention-budget
   - id: 51
     name: Parallel I/O, Arrow Record Batches & Checkpoint Export
-    status: Spec Approved
+    status: In Progress
     owner: arrow-agent + cloud-agent + performance-agent
     depends_on: ["04", "39", "46"]
     owned_paths:

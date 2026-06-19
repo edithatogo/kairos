@@ -9,6 +9,12 @@ description = "Arrow telemetry and event log serialization for KairoECS"
 [dependencies]
 kairo-ecs-types = { path = "../kairo-ecs-types" }
 
+[features]
+default = []
+parallel-io = []
+hdf5 = ["parallel-io"]
+adios2 = ["parallel-io"]
+
 [[example]]
 name = "telemetry_event_log_roundtrip"
 path = "../../examples/telemetry/event_log_roundtrip.rs"

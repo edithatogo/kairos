@@ -55,7 +55,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 48 | Time Warp Optimistic Rollback Runtime | In Progress | `pdes-agent + timetravel-agent + ecs-agent` | See `conductor/tracks/48-*/spec.md` |
 | 49 | Distributed MPI/gRPC State Synchronization | In Progress | `distributed-agent + pdes-agent` | See `conductor/tracks/49-*/spec.md` |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | In Progress | `core-scheduler-agent + ecs-agent + ffi-agent` | See `conductor/tracks/50-*/spec.md` |
-| 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | Spec Approved | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
+| 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | In Progress | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
 | 52 | Native GPU Acceleration with Persistent Device Memory | Spec Approved | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
 | 53 | FMI 2/3 Co-Simulation Master Runtime | Spec Approved | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Spec Approved | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |

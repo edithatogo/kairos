@@ -313,6 +313,382 @@ impl Display for ArrowError {
 
 impl Error for ArrowError {}
 
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ContiguousBlock {
+    pub offset_bytes: u64,
+    pub byte_len: u64,
+    pub row_count: usize,
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ParallelIoRecordBatch {
+    records: Vec<EventLogRecord>,
+    blocks: Vec<ContiguousBlock>,
+    encoded_len: usize,
+}
+
+#[cfg(feature = "parallel-io")]
+impl ParallelIoRecordBatch {
+    pub fn from_dispatched<I>(run_id: &str, events: I) -> Result<Self, ArrowError>
+    where
+        I: IntoIterator<Item = DispatchedEvent>,
+    {
+        let records = events
+            .into_iter()
+            .map(|event| EventLogRecord::dispatched(run_id, event))
+            .collect::<Vec<_>>();
+        Self::from_records(records)
+    }
+
+    pub fn from_records(records: Vec<EventLogRecord>) -> Result<Self, ArrowError> {
+        let batch = EventLogBatch::new(records.clone())?;
+        let encoded_len = batch.to_smoke_bytes().len();
+        let blocks = if records.is_empty() {
+            Vec::new()
+        } else {
+            vec![ContiguousBlock {
+                offset_bytes: 0,
+                byte_len: encoded_len as u64,
+                row_count: records.len(),
+            }]
+        };
+
+        Ok(Self {
+            records,
+            blocks,
+            encoded_len,
+        })
+    }
+
+    pub fn row_count(&self) -> usize {
+        self.records.len()
+    }
+
+    pub fn records(&self) -> &[EventLogRecord] {
+        &self.records
+    }
+
+    pub fn schema_fingerprint(&self) -> String {
+        event_log_schema_fingerprint()
+    }
+
+    pub fn contiguous_blocks(&self) -> &[ContiguousBlock] {
+        &self.blocks
+    }
+
+    pub fn encoded_len(&self) -> usize {
+        self.encoded_len
+    }
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CheckpointFormat {
+    LocalContract,
+    Hdf5,
+    Adios2,
+}
+
+#[cfg(feature = "parallel-io")]
+impl CheckpointFormat {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::LocalContract => "local-contract",
+            Self::Hdf5 => "hdf5",
+            Self::Adios2 => "adios2",
+        }
+    }
+}
+
+#[cfg(feature = "parallel-io")]
+impl TryFrom<&str> for CheckpointFormat {
+    type Error = ArrowError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "local-contract" => Ok(Self::LocalContract),
+            "hdf5" => Ok(Self::Hdf5),
+            "adios2" => Ok(Self::Adios2),
+            _ => Err(ArrowError::UnexpectedStreamHeader),
+        }
+    }
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CheckpointRecord {
+    pub event_id: EventId,
+    pub entity_id: Option<EntityId>,
+    pub time_ticks: u128,
+    pub priority: i32,
+    pub sequence: u64,
+    pub event_kind: String,
+    pub status: EventStatus,
+    pub payload_ref: Option<String>,
+}
+
+#[cfg(feature = "parallel-io")]
+impl From<&EventLogRecord> for CheckpointRecord {
+    fn from(record: &EventLogRecord) -> Self {
+        Self {
+            event_id: record.event_id,
+            entity_id: record.entity_id,
+            time_ticks: record.time_ticks,
+            priority: record.priority,
+            sequence: record.sequence,
+            event_kind: record.event_kind.clone(),
+            status: record.status,
+            payload_ref: record.payload_ref.clone(),
+        }
+    }
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CheckpointManifest {
+    pub checkpoint_id: String,
+    pub format: CheckpointFormat,
+    pub run_id: String,
+    pub schema_fingerprint: String,
+    pub row_count: usize,
+    pub blocks: Vec<ContiguousBlock>,
+    pub records: Vec<CheckpointRecord>,
+    pub checksum: u64,
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RestoredCheckpoint {
+    pub run_id: String,
+    pub final_tick: u128,
+    pub records: Vec<CheckpointRecord>,
+}
+
+#[cfg(feature = "parallel-io")]
+impl CheckpointManifest {
+    pub fn from_batch(
+        checkpoint_id: &str,
+        format: CheckpointFormat,
+        batch: &ParallelIoRecordBatch,
+    ) -> Result<Self, ArrowError> {
+        if checkpoint_id.trim().is_empty() {
+            return Err(ArrowError::EmptyField("checkpoint_id"));
+        }
+        let Some(first) = batch.records().first() else {
+            return Err(ArrowError::WrongCellCount {
+                expected: 1,
+                actual: 0,
+            });
+        };
+        let run_id = first.run_id.clone();
+        if batch.records().iter().any(|record| record.run_id != run_id) {
+            return Err(ArrowError::UnexpectedStreamHeader);
+        }
+        let records = batch.records().iter().map(CheckpointRecord::from).collect();
+        let mut manifest = Self {
+            checkpoint_id: checkpoint_id.to_string(),
+            format,
+            run_id,
+            schema_fingerprint: batch.schema_fingerprint(),
+            row_count: batch.row_count(),
+            blocks: batch.contiguous_blocks().to_vec(),
+            records,
+            checksum: 0,
+        };
+        manifest.checksum = manifest.calculate_checksum();
+        Ok(manifest)
+    }
+
+    pub fn to_contract_bytes(&self) -> Vec<u8> {
+        let mut lines = vec![
+            "kairo-ecs-checkpoint-v1".to_string(),
+            [
+                escape_cell(&self.checkpoint_id),
+                escape_cell(self.format.as_str()),
+                escape_cell(&self.run_id),
+                escape_cell(&self.schema_fingerprint),
+                self.row_count.to_string(),
+                self.checksum.to_string(),
+                self.blocks
+                    .first()
+                    .map(|block| block.byte_len)
+                    .unwrap_or_default()
+                    .to_string(),
+            ]
+            .join("\t"),
+            "event_id\tentity_id\ttime_ticks\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref"
+                .to_string(),
+        ];
+
+        for record in &self.records {
+            lines.push(
+                [
+                    handle_hex(record.event_id.index, record.event_id.generation),
+                    record
+                        .entity_id
+                        .map(|entity_id| handle_hex(entity_id.index, entity_id.generation))
+                        .unwrap_or_default(),
+                    record.time_ticks.to_string(),
+                    record.priority.to_string(),
+                    record.sequence.to_string(),
+                    escape_cell(&record.event_kind),
+                    escape_cell(record.status.as_str()),
+                    escape_cell(record.payload_ref.as_deref().unwrap_or_default()),
+                ]
+                .join("\t"),
+            );
+        }
+        lines.push(String::new());
+        lines.join("\n").into_bytes()
+    }
+
+    pub fn from_contract_bytes(payload: &[u8]) -> Result<Self, ArrowError> {
+        let text = std::str::from_utf8(payload).map_err(|_| ArrowError::InvalidUtf8)?;
+        let mut lines = text.lines();
+        if lines.next() != Some("kairo-ecs-checkpoint-v1") {
+            return Err(ArrowError::UnexpectedStreamHeader);
+        }
+        let header = lines.next().ok_or(ArrowError::UnexpectedStreamHeader)?;
+        let header_cells = header.split('\t').collect::<Vec<_>>();
+        if header_cells.len() != 7 {
+            return Err(ArrowError::WrongCellCount {
+                expected: 7,
+                actual: header_cells.len(),
+            });
+        }
+        if lines.next()
+            != Some("event_id\tentity_id\ttime_ticks\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref")
+        {
+            return Err(ArrowError::UnexpectedFieldHeader);
+        }
+
+        let mut records = Vec::new();
+        for line in lines {
+            if line.is_empty() {
+                continue;
+            }
+            let cells = line.split('\t').collect::<Vec<_>>();
+            if cells.len() != 8 {
+                return Err(ArrowError::WrongCellCount {
+                    expected: 8,
+                    actual: cells.len(),
+                });
+            }
+            records.push(CheckpointRecord {
+                event_id: parse_event_handle(cells[0])?,
+                entity_id: if cells[1].is_empty() {
+                    None
+                } else {
+                    Some(parse_entity_handle(cells[1])?)
+                },
+                time_ticks: cells[2]
+                    .parse()
+                    .map_err(|_| ArrowError::InvalidNumber("time_ticks"))?,
+                priority: cells[3]
+                    .parse()
+                    .map_err(|_| ArrowError::InvalidNumber("priority"))?,
+                sequence: cells[4]
+                    .parse()
+                    .map_err(|_| ArrowError::InvalidNumber("sequence"))?,
+                event_kind: unescape_cell(cells[5]),
+                status: EventStatus::try_from(cells[6])?,
+                payload_ref: {
+                    let payload_ref = unescape_cell(cells[7]);
+                    if payload_ref.is_empty() {
+                        None
+                    } else {
+                        Some(payload_ref)
+                    }
+                },
+            });
+        }
+
+        let checksum = header_cells[5]
+            .parse()
+            .map_err(|_| ArrowError::InvalidNumber("checksum"))?;
+        let block_byte_len = header_cells[6]
+            .parse()
+            .map_err(|_| ArrowError::InvalidNumber("block_byte_len"))?;
+        let manifest = Self {
+            checkpoint_id: unescape_cell(header_cells[0]),
+            format: CheckpointFormat::try_from(unescape_cell(header_cells[1]).as_str())?,
+            run_id: unescape_cell(header_cells[2]),
+            schema_fingerprint: unescape_cell(header_cells[3]),
+            row_count: header_cells[4]
+                .parse()
+                .map_err(|_| ArrowError::InvalidNumber("row_count"))?,
+            blocks: if records.is_empty() {
+                Vec::new()
+            } else {
+                vec![ContiguousBlock {
+                    offset_bytes: 0,
+                    byte_len: block_byte_len,
+                    row_count: records.len(),
+                }]
+            },
+            records,
+            checksum,
+        };
+        if manifest.calculate_checksum() != manifest.checksum {
+            return Err(ArrowError::InvalidNumber("checksum"));
+        }
+        Ok(manifest)
+    }
+
+    pub fn restore(&self) -> Result<RestoredCheckpoint, ArrowError> {
+        if self.row_count != self.records.len() {
+            return Err(ArrowError::WrongCellCount {
+                expected: self.row_count,
+                actual: self.records.len(),
+            });
+        }
+        if self.schema_fingerprint != event_log_schema_fingerprint() {
+            return Err(ArrowError::UnexpectedStreamHeader);
+        }
+        if self.calculate_checksum() != self.checksum {
+            return Err(ArrowError::InvalidNumber("checksum"));
+        }
+        let final_tick = self
+            .records
+            .iter()
+            .map(|record| record.time_ticks)
+            .max()
+            .unwrap_or(0);
+        Ok(RestoredCheckpoint {
+            run_id: self.run_id.clone(),
+            final_tick,
+            records: self.records.clone(),
+        })
+    }
+
+    fn calculate_checksum(&self) -> u64 {
+        let mut checksum = stable_hash(&self.checkpoint_id)
+            ^ stable_hash(self.format.as_str())
+            ^ stable_hash(&self.run_id)
+            ^ stable_hash(&self.schema_fingerprint)
+            ^ self.row_count as u64;
+        for record in &self.records {
+            checksum ^= record.event_id.index.rotate_left(7);
+            checksum ^= u64::from(record.event_id.generation).rotate_left(13);
+            if let Some(entity_id) = record.entity_id {
+                checksum ^= entity_id.index.rotate_left(29);
+                checksum ^= u64::from(entity_id.generation).rotate_left(31);
+            }
+            checksum ^= (record.time_ticks as u64).rotate_left(17);
+            checksum ^= (record.priority as i64 as u64).rotate_left(19);
+            checksum ^= record.sequence.rotate_left(23);
+            checksum ^= stable_hash(&record.event_kind);
+            checksum ^= stable_hash(record.status.as_str());
+            if let Some(payload_ref) = &record.payload_ref {
+                checksum ^= stable_hash(payload_ref).rotate_left(37);
+            }
+        }
+        checksum
+    }
+}
+
 pub struct ArrowEventLog {
     run_id: String,
     records: Vec<EventLogRecord>,

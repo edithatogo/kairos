@@ -2,15 +2,15 @@
 
 ## Phase 0 - TDD baseline
 
-- Task 0.1: Add failing Arrow record batch schema tests.
-- Task 0.2: Add failing HDF5 and ADIOS2 checkpoint roundtrip tests.
-- Task 0.3: Add failing restart parity tests from checkpoint artifacts.
+- [x] Task 0.1: Add failing Arrow record batch schema tests.
+- [x] Task 0.2: Add failing HDF5 and ADIOS2 checkpoint roundtrip tests.
+- [x] Task 0.3: Add failing restart parity tests from checkpoint artifacts.
 
 ## Phase 1 - Arrow implementation
 
 - Task 1.1: Add real Arrow dependencies behind a `parallel-io` or Arrow
   runtime feature boundary.
-- Task 1.2: Build typed arrays and record batches for event logs, snapshots,
+- [x] Task 1.2: Build typed arrays and record batches for event logs, snapshots,
   and checkpoint metadata.
 - Task 1.3: Preserve existing lightweight schema tests as compatibility guards.
 
@@ -18,7 +18,7 @@
 
 - Task 2.1: Add HDF5 writer behind `hdf5`.
 - Task 2.2: Add ADIOS2 writer behind `adios2`.
-- Task 2.3: Add restart readers and checksum validation.
+- [x] Task 2.3: Add restart readers and checksum validation.
 
 ## Phase 3 - Parallel filesystem behavior
 
