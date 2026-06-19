@@ -825,18 +825,21 @@ entries:
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 49 is In Progress after the launch-contract and migration-metadata baseline; PR checks passed after push, but real rsmpi, tonic/prost, spawned process tests, and live evidence remain required before In Review."
   - track_id: "50"
-    phase: "track-creation"
+    phase: "contract-baseline"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 50 was created as the NUMA topology, affinity, allocator lifecycle, and zero-copy FFI layout follow-up. Runtime implementation is not part of this creation slice."
+    review_result: "Track 50 has its first implementation slice: feature-gated NUMA topology fallback contracts, reversible affinity plans, event-pool reuse metrics, component locality metadata, and FFI zero-copy layout validation. Live hwloc, OS affinity, production arenas, and hardware proof remain pending."
     fixes_applied: false
     validation_commands:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "pending track-creation commit"
-    commit_sha: "pending-track-creation-commit"
-    pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 50 remains Spec Approved until hwloc, affinity, allocator, and FFI layout tests are implemented."
+      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-core -p kairo-ecs-state --features numa"
+      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-ffi --features numa"
+      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-core -p kairo-ecs-state -p kairo-ecs-ffi --all-targets --all-features -- -D warnings"
+    git_status: "pending contract-baseline commit"
+    commit_sha: "pending-contract-baseline-commit"
+    pushed_ref: "pending-contract-baseline-push"
+    next_phase_decision: "Track 50 is In Progress after the feature-gated topology, affinity, allocator, and FFI layout contract baseline; continue with real hwloc, OS affinity, production arenas, Miri/concurrency stress, and live NUMA evidence before In Review."
   - track_id: "51"
     phase: "track-creation"
     state: pending

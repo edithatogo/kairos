@@ -736,7 +736,7 @@ tracks:
       - hpc-evidence-manifest
   - id: 50
     name: NUMA Topology, Affinity & HPC Memory Lifecycle
-    status: Spec Approved
+    status: In Progress
     owner: core-scheduler-agent + ecs-agent + ffi-agent
     depends_on: ["01", "02", "46"]
     owned_paths:

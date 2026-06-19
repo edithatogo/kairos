@@ -43,6 +43,72 @@ pub struct KairoEcsStats {
     pub pending_events: u64,
 }
 
+#[cfg(feature = "numa")]
+#[repr(u32)]
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum KairoEcsOwnership {
+    Unspecified = 0,
+    Borrowed = 1,
+    OwnedByRust = 2,
+    OwnedByCaller = 3,
+}
+
+#[cfg(feature = "numa")]
+#[repr(u32)]
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum KairoEcsLayoutStatus {
+    KAIRO_ECS_LAYOUT_OK = 0,
+    KAIRO_ECS_LAYOUT_ERR_NULL = 1,
+    KAIRO_ECS_LAYOUT_ERR_EMPTY = 2,
+    KAIRO_ECS_LAYOUT_ERR_MISALIGNED = 3,
+    KAIRO_ECS_LAYOUT_ERR_OWNERSHIP = 4,
+}
+
+#[cfg(feature = "numa")]
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct KairoEcsZeroCopyLayout {
+    pub data_addr: usize,
+    pub len: usize,
+    pub alignment: usize,
+    pub ownership: KairoEcsOwnership,
+}
+
+#[cfg(feature = "numa")]
+impl KairoEcsZeroCopyLayout {
+    pub const fn new(
+        data_addr: usize,
+        len: usize,
+        alignment: usize,
+        ownership: KairoEcsOwnership,
+    ) -> Self {
+        Self {
+            data_addr,
+            len,
+            alignment,
+            ownership,
+        }
+    }
+
+    pub fn validate(&self) -> KairoEcsLayoutStatus {
+        if self.data_addr == 0 {
+            return KairoEcsLayoutStatus::KAIRO_ECS_LAYOUT_ERR_NULL;
+        }
+        if self.len == 0 || self.alignment == 0 {
+            return KairoEcsLayoutStatus::KAIRO_ECS_LAYOUT_ERR_EMPTY;
+        }
+        if self.data_addr % self.alignment != 0 {
+            return KairoEcsLayoutStatus::KAIRO_ECS_LAYOUT_ERR_MISALIGNED;
+        }
+        if self.ownership == KairoEcsOwnership::Unspecified {
+            return KairoEcsLayoutStatus::KAIRO_ECS_LAYOUT_ERR_OWNERSHIP;
+        }
+        KairoEcsLayoutStatus::KAIRO_ECS_LAYOUT_OK
+    }
+}
+
 #[repr(C)]
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -634,5 +700,27 @@ void kairo_ecs_buffer_free(KairoEcsBuffer buffer);
     fn canonical_header_matches_generated_surface() {
         let canonical = include_str!("../../../include/kairo_ecs.h");
         assert_eq!(canonical.replace("\r\n", "\n"), GENERATED_HEADER);
+    }
+
+    #[cfg(feature = "numa")]
+    #[test]
+    fn zero_copy_layout_validation_rejects_misaligned_or_unowned_buffers() {
+        let aligned = KairoEcsZeroCopyLayout::new(0x1000, 128, 64, KairoEcsOwnership::Borrowed);
+        assert_eq!(
+            aligned.validate(),
+            KairoEcsLayoutStatus::KAIRO_ECS_LAYOUT_OK
+        );
+
+        let misaligned = KairoEcsZeroCopyLayout::new(0x1001, 128, 64, KairoEcsOwnership::Borrowed);
+        assert_eq!(
+            misaligned.validate(),
+            KairoEcsLayoutStatus::KAIRO_ECS_LAYOUT_ERR_MISALIGNED
+        );
+
+        let unowned = KairoEcsZeroCopyLayout::new(0x1000, 128, 64, KairoEcsOwnership::Unspecified);
+        assert_eq!(
+            unowned.validate(),
+            KairoEcsLayoutStatus::KAIRO_ECS_LAYOUT_ERR_OWNERSHIP
+        );
     }
 }

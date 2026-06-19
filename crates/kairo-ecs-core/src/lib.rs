@@ -402,6 +402,160 @@ pub struct RecordedEvent {
     pub kind: u32,
 }
 
+#[cfg(feature = "numa")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum NumaSupport {
+    Supported,
+    Unsupported,
+}
+
+#[cfg(feature = "numa")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum NumaError {
+    UnsupportedHost,
+    EmptyTopology,
+    InvalidAffinity,
+}
+
+#[cfg(feature = "numa")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct NumaNode {
+    pub id: u32,
+    pub cores: Vec<u32>,
+    pub memory_bytes: Option<u64>,
+}
+
+#[cfg(feature = "numa")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct NumaTopology {
+    pub support: NumaSupport,
+    pub nodes: Vec<NumaNode>,
+    pub source: String,
+}
+
+#[cfg(feature = "numa")]
+impl NumaTopology {
+    pub fn unsupported(reason: impl Into<String>) -> Self {
+        Self {
+            support: NumaSupport::Unsupported,
+            nodes: Vec::new(),
+            source: reason.into(),
+        }
+    }
+
+    pub fn synthetic_single_node(core_count: u32, memory_bytes: Option<u64>) -> Self {
+        Self {
+            support: NumaSupport::Supported,
+            nodes: vec![NumaNode {
+                id: 0,
+                cores: (0..core_count).collect(),
+                memory_bytes,
+            }],
+            source: "synthetic".to_string(),
+        }
+    }
+
+    pub fn validate(&self) -> Result<(), NumaError> {
+        match self.support {
+            NumaSupport::Unsupported => Err(NumaError::UnsupportedHost),
+            NumaSupport::Supported if self.nodes.is_empty() => Err(NumaError::EmptyTopology),
+            NumaSupport::Supported => Ok(()),
+        }
+    }
+}
+
+#[cfg(feature = "numa")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AffinityAction {
+    Bind,
+    RestorePrevious,
+}
+
+#[cfg(feature = "numa")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AffinityBindingPlan {
+    pub thread_id: u64,
+    pub core_id: u32,
+    pub opt_in: bool,
+    pub action: AffinityAction,
+}
+
+#[cfg(feature = "numa")]
+impl AffinityBindingPlan {
+    pub fn new(thread_id: u64, core_id: u32, opt_in: bool) -> Result<Self, NumaError> {
+        if !opt_in {
+            return Err(NumaError::InvalidAffinity);
+        }
+        Ok(Self {
+            thread_id,
+            core_id,
+            opt_in,
+            action: AffinityAction::Bind,
+        })
+    }
+
+    pub fn reversal(&self) -> Self {
+        Self {
+            thread_id: self.thread_id,
+            core_id: self.core_id,
+            opt_in: self.opt_in,
+            action: AffinityAction::RestorePrevious,
+        }
+    }
+}
+
+#[cfg(feature = "numa")]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct EventPoolMetrics {
+    pub created: u64,
+    pub reused: u64,
+    pub recycled: u64,
+    pub uses_global_lock: bool,
+}
+
+#[cfg(feature = "numa")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PooledEvent<T> {
+    pub value: T,
+}
+
+#[cfg(feature = "numa")]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct EventPool<T> {
+    free: Vec<PooledEvent<T>>,
+    metrics: EventPoolMetrics,
+}
+
+#[cfg(feature = "numa")]
+impl<T> EventPool<T> {
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            free: Vec::with_capacity(capacity),
+            metrics: EventPoolMetrics::default(),
+        }
+    }
+
+    pub fn checkout(&mut self, value: T) -> PooledEvent<T> {
+        if let Some(mut event) = self.free.pop() {
+            event.value = value;
+            self.metrics.reused += 1;
+            event
+        } else {
+            self.metrics.created += 1;
+            PooledEvent { value }
+        }
+    }
+
+    pub fn recycle(&mut self, event: PooledEvent<T>) {
+        self.metrics.recycled += 1;
+        self.free.push(event);
+    }
+
+    pub fn metrics(&self) -> EventPoolMetrics {
+        self.metrics
+    }
+}
+
 /// A scheduler wrapper that records all dispatched events.
 pub struct RecordingScheduler {
     pub inner: Scheduler,
@@ -698,5 +852,43 @@ mod tests {
         assert_eq!(facade.stats().now, SimTime::from_ticks(4));
         assert_eq!(facade.stats().dispatched_events, 1);
         assert_eq!(facade.stats().pending_events, 0);
+    }
+
+    #[cfg(feature = "numa")]
+    #[test]
+    fn numa_topology_reports_typed_unsupported_fallback() {
+        let topology = NumaTopology::unsupported("hwloc unavailable in local test");
+
+        assert_eq!(topology.support, NumaSupport::Unsupported);
+        assert_eq!(topology.nodes.len(), 0);
+        assert_eq!(topology.validate(), Err(NumaError::UnsupportedHost));
+    }
+
+    #[cfg(feature = "numa")]
+    #[test]
+    fn affinity_plan_is_opt_in_and_reversible_without_binding() {
+        let plan = AffinityBindingPlan::new(0, 3, true).unwrap();
+        let reversal = plan.reversal();
+
+        assert!(plan.opt_in);
+        assert_eq!(plan.core_id, 3);
+        assert_eq!(reversal.thread_id, 0);
+        assert_eq!(reversal.action, AffinityAction::RestorePrevious);
+    }
+
+    #[cfg(feature = "numa")]
+    #[test]
+    fn event_pool_reuses_slots_without_global_lock_contract() {
+        let mut pool = EventPool::with_capacity(2);
+
+        let first = pool.checkout("first");
+        assert_eq!(pool.metrics().created, 1);
+        pool.recycle(first);
+        let second = pool.checkout("second");
+
+        assert_eq!(second.value, "second");
+        assert_eq!(pool.metrics().created, 1);
+        assert_eq!(pool.metrics().reused, 1);
+        assert!(!pool.metrics().uses_global_lock);
     }
 }

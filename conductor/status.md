@@ -174,11 +174,13 @@ Track 47 is `In Progress` with the first conservative lookahead enforcement
 slice in `kairo-ecs-pdes`. Track 48 is `In Progress` with a first `time-warp`
 feature-gated rollback/anti-message/generation guard slice in `kairo-ecs-pdes`.
 Track 49 is `In Progress` with a first MPI/gRPC launch-contract and migration
-metadata baseline in `kairo-ecs-mpi` and `kairo-ecs-grpc`. Tracks 50-55 remain
-`Spec Approved` and cover NUMA and memory lifecycle, Arrow/HDF5/ADIOS2 checkpoint I/O, native GPU execution, FMI
+metadata baseline in `kairo-ecs-mpi` and `kairo-ecs-grpc`. Track 50 is `In
+Progress` with a first `numa` feature-gated topology, affinity, event-pool,
+component-locality, and FFI zero-copy layout contract baseline. Tracks 51-55
+remain `Spec Approved` and cover Arrow/HDF5/ADIOS2 checkpoint I/O, native GPU execution, FMI
 co-simulation master runtime, Slurm/container/cloud runtime acceptance, and
 final weak/strong scaling certification. None of these tracks is `Done`; live
-MPI, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains required
+MPI, NUMA/hwloc, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains required
 before production-grade HPC parity can be claimed.
 
 ## Validation evidence

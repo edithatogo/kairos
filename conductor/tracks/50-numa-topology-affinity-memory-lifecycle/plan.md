@@ -2,20 +2,20 @@
 
 ## Phase 0 - TDD baseline
 
-- Task 0.1: Add failing topology detection tests with supported and unsupported
+- [x] Task 0.1: Add failing topology detection tests with supported and unsupported
   host expectations.
-- Task 0.2: Add failing event allocator reuse and contention tests.
-- Task 0.3: Add failing FFI layout alignment and lifetime tests.
+- [x] Task 0.2: Add failing event allocator reuse and contention tests.
+- [x] Task 0.3: Add failing FFI layout alignment and lifetime tests.
 
 ## Phase 1 - Topology and affinity
 
 - Task 1.1: Add `hwloc` integration behind `numa`.
-- Task 1.2: Model NUMA nodes, cores, caches, and memory domains.
+- [x] Task 1.2: Model NUMA nodes, cores, caches, and memory domains.
 - Task 1.3: Implement opt-in affinity binding with typed unsupported errors.
 
 ## Phase 2 - Allocators
 
-- Task 2.1: Add event arenas and pools for event lifecycle reuse.
+- [x] Task 2.1: Add event arenas and pools for event lifecycle reuse.
 - Task 2.2: Remove global lock contention from hot allocation paths.
 - Task 2.3: Add allocator metrics for Track 55 scaling evidence.
 
