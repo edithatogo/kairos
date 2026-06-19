@@ -3,7 +3,7 @@
 ## Phase 0: Subrepo Skeleton
 
 - [x] Task 0.1: Create `open-game-theory-ontology/` with README, schema directories, provenance policy, and fixture manifest. Commit as `track 57 task 0.1: initialize ontology subrepo`.
-- [ ] Task 0.2: Add Turtle and JSON-LD minimal schemas for normal-form and extensive-form concepts. Commit as `track 57 task 0.2: add ontology ingestion fixtures`.
+- [x] Task 0.2: Add Turtle and JSON-LD minimal schemas for normal-form and extensive-form concepts. Commit as `track 57 task 0.2: add ontology ingestion fixtures`.
 
 Phase closeout: run validators, `$conductor-review 57`, apply fixes, update handoff, push, and review GitHub Actions.
 

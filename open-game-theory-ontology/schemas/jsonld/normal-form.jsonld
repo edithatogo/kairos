@@ -1,0 +1,36 @@
+{
+  "@context": {
+    "gt": "https://kairos.dev/ontology/game-theory#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "type": "@type",
+    "id": "@id"
+  },
+  "@graph": [
+    {
+      "id": "gt:Game",
+      "type": "rdfs:Class"
+    },
+    {
+      "id": "gt:Player",
+      "type": "rdfs:Class"
+    },
+    {
+      "id": "gt:Strategy",
+      "type": "rdfs:Class"
+    },
+    {
+      "id": "gt:PayoffMatrix",
+      "type": "rdfs:Class"
+    },
+    {
+      "id": "gt:Utility",
+      "type": "rdfs:Class"
+    },
+    {
+      "id": "gt:hasPlayer",
+      "type": "rdfs:Property",
+      "rdfs:domain": "gt:Game",
+      "rdfs:range": "gt:Player"
+    }
+  ]
+}
