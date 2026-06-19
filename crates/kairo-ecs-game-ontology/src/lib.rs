@@ -89,7 +89,6 @@ fn object_after(line: &str, predicate: &[u8], line_number: usize) -> Result<Stri
     let start = find(bytes, predicate).ok_or(ParseError { line: line_number })? + predicate.len();
     let tail = &line[start..];
     let token = tail
-        .trim_start()
         .split_whitespace()
         .next()
         .ok_or(ParseError { line: line_number })?;
