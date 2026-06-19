@@ -319,6 +319,42 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **hpc-release-certification**: validates Track 55 has reviewed weak/strong scaling evidence before any production-grade HPC parity claim is made.
 
+### Tracks 56-61 open game theory ontology and multi-game runtime gates
+
+**game-theory-charter**: validates that `conductor/game-theory-ontology-wave.md` defines ontology, codegen, Graph-ECS, normal-form, extensive-form, commit-cadence, phase-review, push, and GitHub Actions evidence rules for Tracks 56-61.
+
+**ontology-evidence-manifest**: validates that game-theory track evidence records track ID, task ID, commit SHA, pushed ref, ontology source, parser/generator version, test command, raw fixture path, reviewer, GitHub Actions result, and waiver status.
+
+**github-actions-review**: validates that a pushed track phase records `gh pr checks --watch` or an equivalent GitHub Actions review result before the track moves past `In Review`.
+
+**task-level-commits**: validates that every completed plan task records a corresponding commit using the `track NN task X.Y: <short outcome>` message format, and that the handoff maps commits to tasks.
+
+**turtle-jsonld-ingestion**: validates Turtle and JSON-LD ontology fixtures parse into the canonical ontology IR with typed errors for malformed schemas.
+
+**ontology-roundtrip-fixtures**: validates ontology fixture normalization is deterministic and preserves class IDs, labels, properties, relationships, datatypes, source provenance, and version metadata.
+
+**deterministic-codegen**: validates ontology-to-Rust generation is stable across repeated runs and produces no unreviewed diff.
+
+**generated-component-api-review**: validates generated game-theory components have compatibility review evidence before solver tracks depend on them.
+
+**graph-relations-feature-boundary**: validates graph-relations APIs are unavailable in default builds and available only behind the explicit `graph-relations` feature.
+
+**entity-id-edge-components**: validates Graph-ECS relationship components such as `ChildOf(Entity)` and `TransitionTo(Entity)` store Entity IDs as data rather than pointer topology.
+
+**no-pointer-topology-scan**: validates Graph-ECS and generated game-theory topology code does not use raw pointers, self-referential structs, or boxed graph node ownership.
+
+**payoff-matrix-components**: validates normal-form payoff matrix components enforce player, action, shape, ordering, and utility-domain invariants.
+
+**strategy-space-components**: validates strategy-space components encode player/action availability and deterministic iteration over flat ECS data.
+
+**normal-form-solver-parity**: validates normal-form solver systems match golden fixtures for best response, pure Nash equilibrium, and dominated-strategy elimination.
+
+**graph-traversal-solver-parity**: validates extensive-form solvers traverse Graph-ECS relations deterministically and match golden sequential-game fixtures.
+
+**sequential-game-fixtures**: validates extensive-form fixture coverage for decision nodes, chance nodes, information sets, terminal utility, malformed topology, and cycle rejection.
+
+**end-to-end-multigame-certification**: validates Track 61 evidence spans ontology ingestion, codegen, graph relations, normal-form solvers, extensive-form solvers, benchmarks, review outcomes, pushed refs, and GitHub Actions review.
+
 ### Tracks 36-40 streaming, ML, FMI, cloud/HPC, and debugging gates
 
 **kafka-smoke**: `cargo test -p kairo-ecs-streaming --features kafka` - validates the dependency-free Kafka feature surface and adapter type alias exposed by the Track 36 R2 scaffold. It does not prove a live Kafka broker connection until a broker-backed integration harness is added.
