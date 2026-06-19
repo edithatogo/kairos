@@ -77,8 +77,8 @@ Initial full-workspace attempts without `--jobs 1` failed with OS error 112,
 "There is not enough space on the disk." Removing generated build output and
 rerunning with `CARGO_INCREMENTAL=0` and serialized jobs completed cleanly.
 
-Commit SHA and pushed ref will be recorded after this implementation slice is
-committed and pushed.
+Implementation commit: `35f93a4344615e2f8a4e5ca8a61ad7a483e87106`
+Pushed ref: `origin/codex/kairos-hpc-parity-wave`
 
 `$conductor-review` implementation pass found no in-scope Track 48 defects in
 the rollback/anti-message/generation slice; accepted fixes: none. Strict closeout will run
