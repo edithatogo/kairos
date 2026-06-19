@@ -20,7 +20,10 @@ const allowedFiles = new Set([
 ]);
 const roots = ["README.md", "docs", "website", "conductor", "open-game-theory-ontology", "crates", "examples"];
 const extensions = new Set([".md", ".mdx", ".txt", ".json", ".yaml", ".yml", ".toml", ".rs"]);
+const checkNegativeFixtures = process.argv.includes("--check-negative-fixtures");
+const negativeClaimFixture = path.normalize("conductor/game-theory-evidence/negative/overclaim.md");
 const issues = [];
+const negativeHits = [];
 
 function walk(target) {
   if (!fs.existsSync(target)) return [];
@@ -42,10 +45,18 @@ for (const rootEntry of roots) {
     const text = fs.readFileSync(file, "utf8").toLowerCase();
     for (const rule of disallowed) {
       if (text.includes(rule.phrase.toLowerCase())) {
-        issues.push(`${rel}: disallowed ${rule.area} claim: ${rule.phrase}`);
+        if (checkNegativeFixtures && rel === negativeClaimFixture) {
+          negativeHits.push(rule.phrase);
+        } else {
+          issues.push(`${rel}: disallowed ${rule.area} claim: ${rule.phrase}`);
+        }
       }
     }
   }
+}
+
+if (checkNegativeFixtures && negativeHits.length === 0) {
+  issues.push(`${negativeClaimFixture}: negative overclaim fixture unexpectedly passed claim scan`);
 }
 
 if (issues.length > 0) {

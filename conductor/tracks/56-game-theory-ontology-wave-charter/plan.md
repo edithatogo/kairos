@@ -11,7 +11,7 @@ Phase closeout: run Conductor validators, `$conductor-review 56`, apply accepted
 ## Phase 1: Claim Boundary Enforcement
 
 - [x] Task 1.1: Add claim-boundary scan rules for ontology, graph relations, normal-form games, and extensive-form games. Commit as `track 56 task 1.1: add game theory claim boundary scan`.
-- [ ] Task 1.2: Add negative fixtures proving scaffold-only evidence cannot satisfy production claims. Commit as `track 56 task 1.2: add negative evidence fixtures`.
+- [x] Task 1.2: Add negative fixtures proving scaffold-only evidence cannot satisfy production claims. Commit as `track 56 task 1.2: add negative evidence fixtures`.
 
 Phase closeout repeats review, push, and GitHub Actions review.
 

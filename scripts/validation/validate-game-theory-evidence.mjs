@@ -7,6 +7,8 @@ const evidenceDir = path.join(root, "conductor", "game-theory-evidence");
 const schemaPath = path.join(evidenceDir, "schema.json");
 const templateDir = path.join(evidenceDir, "templates");
 const manifestDir = path.join(evidenceDir, "manifests");
+const negativeDir = path.join(evidenceDir, "negative");
+const checkNegativeFixtures = process.argv.includes("--check-negative-fixtures");
 const issues = [];
 
 function issue(message) {
@@ -110,6 +112,26 @@ if (fs.existsSync(manifestDir)) {
     const manifest = readJson(file);
     if (manifest) {
       validateConcreteEvidence(manifest, file);
+    }
+  }
+}
+
+if (checkNegativeFixtures) {
+  if (!fs.existsSync(negativeDir)) {
+    issue(`missing negative fixture directory: ${negativeDir}`);
+  } else {
+    for (const entry of fs.readdirSync(negativeDir).filter((name) => name.endsWith(".json")).sort()) {
+      const file = path.join(negativeDir, entry);
+      const before = issues.length;
+      const manifest = readJson(file);
+      if (manifest) {
+        validateConcreteEvidence(manifest, file);
+      }
+      if (issues.length === before) {
+        issue(`${file}: negative fixture unexpectedly passed concrete evidence validation`);
+      } else {
+        issues.length = before;
+      }
     }
   }
 }
