@@ -113,6 +113,10 @@
           "path": "crates/kairo-ecs-game-ontology/Cargo.toml"
         },
         {
+          "package": "kairo-ecs-game-theory",
+          "path": "crates/kairo-ecs-game-theory/Cargo.toml"
+        },
+        {
           "package": "kairo-ecs-grpc",
           "path": "crates/kairo-ecs-grpc/Cargo.toml"
         },
