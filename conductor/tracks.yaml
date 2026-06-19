@@ -826,7 +826,7 @@ tracks:
       - scheduler-runtime-evidence
   - id: 55
     name: End-to-End Weak/Strong Scaling Certification
-    status: Spec Approved
+    status: In Progress
     owner: performance-agent + benchmark-agent + cloud-agent + release-agent
     depends_on: ["47", "48", "49", "50", "51", "52", "53", "54"]
     owned_paths:

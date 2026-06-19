@@ -187,11 +187,12 @@ evidence remain incomplete. Track 53 is `In Progress` with a first
 `fmi-runtime` archive-handling slice in `kairo-ecs-fmi` for stored-entry `.fmu`
 extraction, traversal rejection, and reuse of the unpacked-layout validator;
 dynamic loading, FMI 2/3 lifecycle stepping, OpenModelica roundtrip, and live
-FMU evidence remain incomplete. Tracks 54-55 remain `Spec Approved` and cover
-Slurm/container/cloud runtime acceptance and final weak/strong scaling
-certification. None of these tracks is `Done`; live MPI, NUMA/hwloc, GPU,
-Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains required before
-production-grade HPC parity can be claimed.
+FMU evidence remain incomplete. Track 54 remains `Spec Approved` for
+Slurm/container/cloud runtime acceptance. Track 55 is `In Progress` with a
+draft scenario/evidence contract for final weak/strong scaling certification;
+no live scaling proof is claimed. None of these tracks is `Done`; live MPI,
+NUMA/hwloc, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains
+required before production-grade HPC parity can be claimed.
 
 ## Validation evidence
 

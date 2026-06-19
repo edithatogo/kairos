@@ -2,10 +2,21 @@
 
 ## Phase 0 - Scenario design
 
-- Task 0.1: Define representative DES, ABM, hybrid, distributed, GPU, I/O, and
-  FMI scenarios.
-- Task 0.2: Add failing result-manifest validation for weak and strong scaling.
-- Task 0.3: Add raw-result and checksum policy checks.
+- [x] Task 0.1: Define representative DES, ABM, hybrid, distributed, GPU, I/O,
+  and FMI scenarios.
+  - Added `scenarios.json` with DES, ABM, hybrid, distributed, MPI/gRPC,
+    NUMA/I/O, FMI, and scheduler coverage mapped to Tracks 47-54.
+- [x] Task 0.2: Add failing result-manifest validation for weak and strong
+  scaling.
+  - Red: `node scripts/validation/validate-hpc-scaling-certification.mjs`
+    failed because the validator did not exist.
+  - Green: `node scripts/validation/validate-hpc-scaling-certification.mjs
+    --self-test` passed with draft weak/strong profiles and malformed-evidence
+    negative checks.
+- [x] Task 0.3: Add raw-result and checksum policy checks.
+  - `evidence.json` records accepted artifact reference schemes,
+    `sha256:<64 lowercase hex>` checksum policy, and active blockers while
+    upstream live evidence is incomplete.
 
 ## Phase 1 - Weak scaling
 

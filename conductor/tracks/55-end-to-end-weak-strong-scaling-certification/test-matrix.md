@@ -4,6 +4,7 @@
 |---|---|---|
 | Benchmark smoke | `python benches/benchmark_smoke.py` | Review |
 | Regression threshold coverage | `python benches/regression/compare.py` | Review |
+| Scaling certification contract | `node scripts/validation/validate-hpc-scaling-certification.mjs --self-test` | Review |
 | Weak scaling run | `python benches/hpc/run_scaling.py --mode weak --manifest conductor/tracks/55-end-to-end-weak-strong-scaling-certification/evidence.json` | Done |
 | Strong scaling run | `python benches/hpc/run_scaling.py --mode strong --manifest conductor/tracks/55-end-to-end-weak-strong-scaling-certification/evidence.json` | Done |
 | Full workspace | `rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features` | Phase closeout |

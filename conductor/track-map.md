@@ -65,7 +65,7 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 52 | Native GPU Acceleration with Persistent Device Memory | Persistent-memory contract baseline first; real wgpu/CUDA execution still required | gpu-compute-agent + performance-agent | After GPU scaffolds, Track 46, and Track 50 |
 | 53 | FMI 2/3 Co-Simulation Master Runtime | FMU archive contract baseline first; dynamic loading and 1,000-step co-sim still required | fmi-agent + ffi-agent + interop-agent | After Track 38, Track 46, and FFI |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Live Slurm, container, Kubernetes, and provider proof | cloud-agent + distributed-agent + gpu-compute-agent + release-agent | After Tracks 39, 43, 49, and 52 |
-| 55 | End-to-End Weak/Strong Scaling Certification | Final integrated HPC parity certification | performance-agent + benchmark-agent + cloud-agent + release-agent | After Tracks 47-54 |
+| 55 | End-to-End Weak/Strong Scaling Certification | Scaling certification manifest and scenario contract first; live weak/strong profiles still required | performance-agent + benchmark-agent + cloud-agent + release-agent | After Tracks 47-54 |
 
 ## Release-critical path
 

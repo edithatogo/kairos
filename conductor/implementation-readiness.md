@@ -77,7 +77,7 @@ The Conductor setup is complete, but implementation should move through explicit
 | Native GPU Persistent Device Runtime (Track 52) | R1 | First GPU-contract slice adds a persistent device-memory session surface, resident-buffer lifecycle counters, copy-boundary accounting, and deterministic ABM/DES CPU parity tests in `kairo-ecs-gpu`. Real `wgpu`/CUDA device initialization, shader/kernel dispatch, hardware benchmarks, and live GPU evidence remain incomplete. |
 | FMI Co-Simulation Master Runtime (Track 53) | R1 | First `fmi-runtime` contract slice adds dependency-free stored-entry `.fmu` archive extraction, path traversal rejection, malformed archive validation, and layout reuse through `FmuArchive::extract_to` in `kairo-ecs-fmi`. Dynamic library loading, FMI 2/3 lifecycle binding, 1,000-step co-simulation, OpenModelica roundtrip, and live FMU evidence remain incomplete. |
 | Slurm/Container/Cloud Runtime Acceptance (Track 54) | R0 | Spec-approved live runtime acceptance follow-up; Track 39/43 offline and partial Azure evidence remains the current implementation. |
-| Weak/Strong Scaling Certification (Track 55) | R0 | Spec-approved final certification follow-up; no integrated scaling evidence yet. |
+| Weak/Strong Scaling Certification (Track 55) | R1 | First certification-contract slice defines representative scenario coverage, draft weak/strong evidence profiles, raw-result checksum policy, and `validate-hpc-scaling-certification.mjs`; live scaling proof remains blocked on Tracks 47-54. |
 
 ## Enforcement rule
 
