@@ -103,7 +103,10 @@ fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
     if needle.is_empty() {
         return Some(0);
     }
-    let limit = haystack.len().saturating_sub(needle.len());
+    if haystack.len() < needle.len() {
+        return None;
+    }
+    let limit = haystack.len() - needle.len();
     for start in 0..=limit {
         if &haystack[start..start + needle.len()] == needle {
             return Some(start);
