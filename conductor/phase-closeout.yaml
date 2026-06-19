@@ -923,3 +923,81 @@ entries:
     commit_sha: "c99b154748b68f7146fecd8ab7d5106a46a34ae4"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 55 is In Progress after the first scenario/evidence contract slice; live weak/strong scaling profiles, raw artifacts, plots, checksums, and upstream Track 47-54 evidence remain required before In Review."
+  - track_id: "56"
+    phase: "track-creation"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 56 defines the game theory ontology wave charter, evidence manifest, and lifecycle gates. Every downstream track must commit after each task, run review and push after each phase, and review GitHub Actions after every pushed track."
+    fixes_applied: false
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "pending track-creation commit"
+    commit_sha: "pending-track-creation-commit"
+    pushed_ref: "pending-track-creation-push"
+    next_phase_decision: "Track 56 remains Spec Approved until the wave charter, evidence manifest validator, and lifecycle-gate checks are implemented."
+  - track_id: "57"
+    phase: "track-creation"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 57 scopes the standalone open-game-theory ontology subrepo and Turtle/JSON-LD ingestion pipeline with fixture-backed parser gates."
+    fixes_applied: false
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "pending track-creation commit"
+    commit_sha: "pending-track-creation-commit"
+    pushed_ref: "pending-track-creation-push"
+    next_phase_decision: "Track 57 remains Spec Approved until the subrepo, ingestion crate, parser fixtures, and schema evidence are implemented."
+  - track_id: "58"
+    phase: "track-creation"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 58 scopes deterministic ontology-to-Rust component generation and generated API review gates."
+    fixes_applied: false
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "pending track-creation commit"
+    commit_sha: "pending-track-creation-commit"
+    pushed_ref: "pending-track-creation-push"
+    next_phase_decision: "Track 58 remains Spec Approved until codegen fixtures, generated component API, and deterministic regeneration checks are implemented."
+  - track_id: "59"
+    phase: "track-creation"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 59 scopes the feature-gated Graph-ECS relation module using Entity IDs only, with explicit no-pointer topology checks."
+    fixes_applied: false
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "pending track-creation commit"
+    commit_sha: "pending-track-creation-commit"
+    pushed_ref: "pending-track-creation-push"
+    next_phase_decision: "Track 59 remains Spec Approved until the graph-relations feature, components, traversal APIs, compile-boundary tests, and pointer scans are implemented."
+  - track_id: "60"
+    phase: "track-creation"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 60 scopes normal-form game components and flat ECS solver systems, with parity fixtures and performance gates."
+    fixes_applied: false
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "pending track-creation commit"
+    commit_sha: "pending-track-creation-commit"
+    pushed_ref: "pending-track-creation-push"
+    next_phase_decision: "Track 60 remains Spec Approved until payoff matrix, strategy space, utility, and normal-form solver parity implementation lands."
+  - track_id: "61"
+    phase: "track-creation"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 61 scopes extensive-form sequential games over Graph-ECS relations and final end-to-end multi-game certification."
+    fixes_applied: false
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "pending track-creation commit"
+    commit_sha: "pending-track-creation-commit"
+    pushed_ref: "pending-track-creation-push"
+    next_phase_decision: "Track 61 remains Spec Approved until extensive-form traversal, sequential fixtures, certification evidence, and GitHub Actions review are complete."

@@ -60,6 +60,12 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 53 | FMI 2/3 Co-Simulation Master Runtime | In Progress | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Spec Approved | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |
 | 55 | End-to-End Weak/Strong Scaling Certification | In Progress | `performance-agent + benchmark-agent + cloud-agent + release-agent` | See `conductor/tracks/55-*/spec.md` |
+| 56 | Game Theory Ontology Wave Charter and Evidence Gates | Spec Approved | `ontology-agent + game-theory-agent + wave-manager-agent` | See `conductor/tracks/56-*/spec.md` |
+| 57 | Open Game Theory Ontology Subrepo and Schema Ingestion | Spec Approved | `ontology-agent + rust-agent` | See `conductor/tracks/57-*/spec.md` |
+| 58 | Ontology-to-Rust Component Code Generation | Spec Approved | `ontology-agent + ecs-agent + api-governance-agent` | See `conductor/tracks/58-*/spec.md` |
+| 59 | Feature-Gated Graph Relations ECS Module | Spec Approved | `ecs-agent + core-scheduler-agent + conformance-agent` | See `conductor/tracks/59-*/spec.md` |
+| 60 | Normal-Form Multi-Game Runtime and Solvers | Spec Approved | `game-theory-agent + ecs-agent + performance-agent` | See `conductor/tracks/60-*/spec.md` |
+| 61 | Extensive-Form Graph-ECS Runtime and Certification | Spec Approved | `game-theory-agent + ecs-agent + benchmark-agent + redteam-agent` | See `conductor/tracks/61-*/spec.md` |
 
 ## Track status vocabulary
 
@@ -82,3 +88,4 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 - Tracks 34, 35, and 38 are release-critical for distributed simulation, FMI digital-twin, and PDES infrastructure.
 - Tracks 32, 33, 36, 37, 39, 40, and 41 are non-release-critical (enhancement only).
 - Tracks 46-55 are release-gating for any production HPC parity claim. They do not mark existing scaffold tracks complete; they define the live-proof layer for PDES, Time Warp, MPI/gRPC, NUMA, parallel I/O, GPU, FMI, Slurm/cloud runtime acceptance, and weak/strong scaling certification.
+- Tracks 56-61 are release-gating for any public open-game-theory ontology, graph-relational ECS, or multi-game solver claim. They require task-level commits, phase review/push closeouts, and GitHub Actions review before any track can move beyond `In Review`.

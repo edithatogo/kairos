@@ -66,6 +66,12 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 53 | FMI 2/3 Co-Simulation Master Runtime | FMU archive contract baseline first; dynamic loading and 1,000-step co-sim still required | fmi-agent + ffi-agent + interop-agent | After Track 38, Track 46, and FFI |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Live Slurm, container, Kubernetes, and provider proof | cloud-agent + distributed-agent + gpu-compute-agent + release-agent | After Tracks 39, 43, 49, and 52 |
 | 55 | End-to-End Weak/Strong Scaling Certification | Scaling certification manifest and scenario contract first; live weak/strong profiles still required | performance-agent + benchmark-agent + cloud-agent + release-agent | After Tracks 47-54 |
+| 56 | Game Theory Ontology Wave Charter and Evidence Gates | Shared contract, evidence, commit cadence, phase review, push, and GitHub Actions rules for Tracks 57-61 | ontology-agent + game-theory-agent + wave-manager-agent | Starts the game theory ontology wave |
+| 57 | Open Game Theory Ontology Subrepo and Schema Ingestion | Standalone ontology subrepo plus Turtle/JSON-LD ingestion pipeline | ontology-agent + rust-agent | After Track 56 charter |
+| 58 | Ontology-to-Rust Component Code Generation | Deterministic generated Rust component schemas from ontology classes | ontology-agent + ecs-agent + api-governance-agent | After ontology ingestion fixtures |
+| 59 | Feature-Gated Graph Relations ECS Module | Entity-ID graph edge components and traversal over flat ECS storage | ecs-agent + core-scheduler-agent + conformance-agent | After codegen and core/state contracts |
+| 60 | Normal-Form Multi-Game Runtime and Solvers | Payoff, strategy, and utility components plus flat-array normal-form solvers | game-theory-agent + ecs-agent + performance-agent | After generated game components and graph feature boundary |
+| 61 | Extensive-Form Graph-ECS Runtime and Certification | Sequential game traversal, parity fixtures, and end-to-end multi-game certification | game-theory-agent + ecs-agent + benchmark-agent + redteam-agent | After graph relations and normal-form runtime |
 
 ## Release-critical path
 
@@ -460,4 +466,15 @@ flowchart LR
   53 FMI 2/3 Co-Simulation Master Runtime
   54 Slurm, Container & Cloud HPC Runtime Acceptance
   55 End-to-End Weak/Strong Scaling Certification
+```
+
+### Group H: open game theory ontology and multi-game runtime
+
+```text
+  56 Game Theory Ontology Wave Charter and Evidence Gates
+  57 Open Game Theory Ontology Subrepo and Schema Ingestion
+  58 Ontology-to-Rust Component Code Generation
+  59 Feature-Gated Graph Relations ECS Module
+  60 Normal-Form Multi-Game Runtime and Solvers
+  61 Extensive-Form Graph-ECS Runtime and Certification
 ```

@@ -841,3 +841,101 @@ tracks:
       - end-to-end-hpc-scenario
       - scaling-raw-results-policy
       - hpc-release-certification
+  - id: 56
+    name: Game Theory Ontology Wave Charter and Evidence Gates
+    status: Spec Approved
+    owner: ontology-agent + game-theory-agent + wave-manager-agent
+    depends_on: ["25", "26", "29"]
+    owned_paths:
+      - conductor/game-theory-ontology-wave.md
+      - conductor/game-theory-evidence/
+      - conductor/tracks/56-game-theory-ontology-wave-charter/
+    required_gates:
+      - phase-closeout-check
+      - game-theory-charter
+      - ontology-evidence-manifest
+      - github-actions-review
+  - id: 57
+    name: Open Game Theory Ontology Subrepo and Schema Ingestion
+    status: Spec Approved
+    owner: ontology-agent + rust-agent
+    depends_on: ["56"]
+    owned_paths:
+      - open-game-theory-ontology/
+      - crates/kairo-ecs-game-ontology/
+      - docs/game-theory/ontology-ingestion.md
+      - conductor/tracks/57-open-game-theory-ontology-schema-ingestion/
+    required_gates:
+      - phase-closeout-check
+      - turtle-jsonld-ingestion
+      - ontology-roundtrip-fixtures
+      - task-level-commits
+      - github-actions-review
+  - id: 58
+    name: Ontology-to-Rust Component Code Generation
+    status: Spec Approved
+    owner: ontology-agent + ecs-agent + api-governance-agent
+    depends_on: ["57"]
+    owned_paths:
+      - crates/kairo-ecs-game-ontology/
+      - crates/kairo-ecs-game-theory/
+      - generated/game-theory/
+      - docs/game-theory/codegen.md
+      - conductor/tracks/58-ontology-rust-component-codegen/
+    required_gates:
+      - phase-closeout-check
+      - deterministic-codegen
+      - generated-component-api-review
+      - task-level-commits
+      - github-actions-review
+  - id: 59
+    name: Feature-Gated Graph Relations ECS Module
+    status: Spec Approved
+    owner: ecs-agent + core-scheduler-agent + conformance-agent
+    depends_on: ["01", "56", "58"]
+    owned_paths:
+      - crates/kairo-ecs-state/
+      - crates/kairo-ecs-core/
+      - docs/game-theory/graph-relations.md
+      - conductor/tracks/59-feature-gated-graph-relations-ecs/
+    required_gates:
+      - phase-closeout-check
+      - graph-relations-feature-boundary
+      - entity-id-edge-components
+      - no-pointer-topology-scan
+      - task-level-commits
+      - github-actions-review
+  - id: 60
+    name: Normal-Form Multi-Game Runtime and Solvers
+    status: Spec Approved
+    owner: game-theory-agent + ecs-agent + performance-agent
+    depends_on: ["58", "59"]
+    owned_paths:
+      - crates/kairo-ecs-game-theory/
+      - examples/game-theory/normal-form/
+      - docs/game-theory/normal-form.md
+      - conductor/tracks/60-normal-form-multigame-runtime-solvers/
+    required_gates:
+      - phase-closeout-check
+      - payoff-matrix-components
+      - strategy-space-components
+      - normal-form-solver-parity
+      - task-level-commits
+      - github-actions-review
+  - id: 61
+    name: Extensive-Form Graph-ECS Runtime and Certification
+    status: Spec Approved
+    owner: game-theory-agent + ecs-agent + benchmark-agent + redteam-agent
+    depends_on: ["59", "60"]
+    owned_paths:
+      - crates/kairo-ecs-game-theory/
+      - examples/game-theory/extensive-form/
+      - docs/game-theory/extensive-form.md
+      - conductor/tracks/61-extensive-form-graph-ecs-runtime-certification/
+    required_gates:
+      - phase-closeout-check
+      - graph-traversal-solver-parity
+      - sequential-game-fixtures
+      - end-to-end-multigame-certification
+      - task-level-commits
+      - github-actions-review

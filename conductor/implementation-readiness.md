@@ -78,6 +78,12 @@ The Conductor setup is complete, but implementation should move through explicit
 | FMI Co-Simulation Master Runtime (Track 53) | R1 | First `fmi-runtime` contract slice adds dependency-free stored-entry `.fmu` archive extraction, path traversal rejection, malformed archive validation, and layout reuse through `FmuArchive::extract_to` in `kairo-ecs-fmi`. Dynamic library loading, FMI 2/3 lifecycle binding, 1,000-step co-simulation, OpenModelica roundtrip, and live FMU evidence remain incomplete. |
 | Slurm/Container/Cloud Runtime Acceptance (Track 54) | R0 | Spec-approved live runtime acceptance follow-up; Track 39/43 offline and partial Azure evidence remains the current implementation. |
 | Weak/Strong Scaling Certification (Track 55) | R1 | First certification-contract slice defines representative scenario coverage, draft weak/strong evidence profiles, raw-result checksum policy, and `validate-hpc-scaling-certification.mjs`; live scaling proof remains blocked on Tracks 47-54. |
+| Game Theory Ontology Wave Charter (Track 56) | R0 | Spec-approved governance track for the ontology and multi-game wave; implementation cannot begin until task-level commit, phase review/push, and GitHub Actions review evidence rules are checked in. |
+| Open Game Theory Ontology Ingestion (Track 57) | R0 | Spec-approved follow-up for `open-game-theory-ontology/` and Turtle/JSON-LD ingestion; no source surface exists yet. |
+| Ontology-to-Rust Code Generation (Track 58) | R0 | Spec-approved follow-up for deterministic generated Rust component schemas; no generator or generated component crate exists yet. |
+| Graph Relations ECS Module (Track 59) | R0 | Spec-approved follow-up for feature-gated entity-ID graph relations; no `graph-relations` feature or graph traversal module exists yet. |
+| Normal-Form Multi-Game Runtime (Track 60) | R0 | Spec-approved follow-up for payoff matrix, strategy space, utility, and flat ECS solver systems; no runtime crate exists yet. |
+| Extensive-Form Graph-ECS Runtime (Track 61) | R0 | Spec-approved follow-up for sequential game traversal and end-to-end multi-game certification; no extensive-form runtime exists yet. |
 
 ## Enforcement rule
 

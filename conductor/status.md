@@ -194,6 +194,16 @@ no live scaling proof is claimed. None of these tracks is `Done`; live MPI,
 NUMA/hwloc, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains
 required before production-grade HPC parity can be claimed.
 
+Tracks 56-61 were added on 2026-06-19 as the open game theory ontology and
+multi-game runtime wave. They split the earlier monolithic Track 56 concept into
+granular reviewable tracks: wave charter and evidence gates, ontology subrepo
+and Turtle/JSON-LD ingestion, ontology-to-Rust code generation, feature-gated
+Graph-ECS relations, normal-form multi-game solvers, and extensive-form
+Graph-ECS certification. Each track plan requires a commit after every task, a
+review and push after every phase, and GitHub Actions review after the track is
+pushed. All six tracks remain `Spec Approved`; no implementation or public
+game-theory capability is claimed yet.
+
 ## Validation evidence
 
 Latest local baseline validation on 2026-05-07; current targeted verification is recorded under the 2026-05-10 track evidence:
