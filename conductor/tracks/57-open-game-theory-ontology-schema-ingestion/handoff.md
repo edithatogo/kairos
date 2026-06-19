@@ -26,7 +26,7 @@ Status: In Progress
 
 ## Phase closeout evidence
 
-- conductor-review: no in-scope code findings after reviewing Track 57 Phase 1 against spec and workflow; local linker limitation recorded as environment blocker rather than source defect.
+- $conductor-review: no in-scope code findings after reviewing Track 57 Phase 1 against spec and workflow; local linker limitation recorded as environment blocker rather than source defect.
 - accepted fixes: ownership move in parse_jsonld finalization fixed before task 1.2 commit.
 - commit SHA: pending for this closeout metadata commit.
 - pushed ref: pending.
