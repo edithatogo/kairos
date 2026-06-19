@@ -857,7 +857,7 @@ tracks:
       - github-actions-review
   - id: 57
     name: Open Game Theory Ontology Subrepo and Schema Ingestion
-    status: Spec Approved
+    status: In Progress
     owner: ontology-agent + rust-agent
     depends_on: ["56"]
     owned_paths:

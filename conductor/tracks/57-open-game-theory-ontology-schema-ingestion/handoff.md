@@ -1,6 +1,6 @@
 # Track 57 Handoff
 
-Status: Spec Approved
+Status: In Progress
 
 Implementation has not started. Handoff must eventually include parser fixture paths, task commits, review fixes, pushed ref, GitHub Actions result, and any schema-source waivers.
 

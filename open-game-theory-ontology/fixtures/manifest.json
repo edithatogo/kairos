@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "fixtures": [],
+  "required_formats": [
+    "turtle",
+    "jsonld"
+  ],
+  "normal_form_concepts": [
+    "Game",
+    "Player",
+    "Strategy",
+    "PayoffMatrix",
+    "Utility"
+  ],
+  "extensive_form_concepts": [
+    "DecisionNode",
+    "ChanceNode",
+    "TerminalNode",
+    "InformationSet",
+    "Action",
+    "Transition"
+  ]
+}
