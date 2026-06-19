@@ -2,10 +2,19 @@
 
 ## Phase 0 - TDD baseline
 
-- Task 0.1: Add failing backend initialization tests for real device paths and
-  explicit unavailable-device errors.
-- Task 0.2: Add failing CPU/GPU parity tests for DES, ABM, and mixed batches.
-- Task 0.3: Add failing persistent buffer lifecycle tests.
+- [ ] Task 0.1: Add failing backend initialization tests for real device paths
+  and explicit unavailable-device errors.
+- [x] Task 0.2: Add failing CPU/GPU parity tests for DES, ABM, and mixed
+  batches.
+  - Red: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu
+    --features wgpu-backend,cuda-backend` failed because
+    `PersistentGpuSession` and `ResidentBufferKind` were absent.
+  - Green: same command passed after adding the backend-independent persistent
+    session contract and mixed ABM/DES parity test.
+- [x] Task 0.3: Add failing persistent buffer lifecycle tests.
+  - Red: same failing test covered resident particle/entity buffers,
+    copy-boundary counters, and no host state download before explicit readback.
+  - Green: same command passed with resident-buffer lifecycle counters.
 
 ## Phase 1 - wgpu backend
 
@@ -21,9 +30,15 @@
 
 ## Phase 3 - Persistent memory and parity
 
-- Task 3.1: Keep agent/component buffers resident across ticks.
-- Task 3.2: Minimize host/device copies and record copy boundaries.
-- Task 3.3: Run CPU parity for deterministic workloads.
+- [x] Task 3.1: Keep agent/component buffers resident across ticks.
+  - Contract baseline only: `PersistentGpuSession` keeps flat particle and
+    entity-value buffers resident across ABM and DES ticks.
+- [x] Task 3.2: Minimize host/device copies and record copy boundaries.
+  - Contract baseline only: state upload/download counters distinguish resident
+    state from per-tick DES event uploads.
+- [x] Task 3.3: Run CPU parity for deterministic workloads.
+  - Contract baseline only: mixed ABM/DES persistent-session output matches
+    `CpuFallbackCompute` for a fixed seed and timestamp-ordered DES events.
 
 ## Phase 4 - Hardware benchmarking
 

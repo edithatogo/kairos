@@ -860,18 +860,19 @@ entries:
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 51 is In Progress after the first checkpoint/restart contract baseline; native Arrow, HDF5, ADIOS2, parallel filesystem evidence, and throughput benchmark work remain required before In Review."
   - track_id: "52"
-    phase: "track-creation"
+    phase: "persistent-memory-contract-baseline"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 52 was created as the real wgpu/CUDA persistent-device-memory follow-up. Runtime implementation is not part of this creation slice."
+    review_result: "Track 52 has its first implementation slice: a backend-independent persistent device-memory session contract with resident-buffer lifecycle counters, copy-boundary accounting, and deterministic mixed ABM/DES CPU parity. Real wgpu/CUDA initialization, shader/kernel dispatch, hardware benchmarks, and live GPU proof remain pending."
     fixes_applied: false
     validation_commands:
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features wgpu-backend,cuda-backend"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "pending track-creation commit"
-    commit_sha: "pending-track-creation-commit"
-    pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 52 remains Spec Approved until real GPU backend, parity, and hardware benchmark tests are implemented."
+    git_status: "pending persistent-memory contract commit"
+    commit_sha: "pending-track-52-contract-commit"
+    pushed_ref: "pending-track-52-contract-push"
+    next_phase_decision: "Track 52 is In Progress after the first persistent-memory contract baseline; real GPU backend, hardware parity, and benchmark evidence remain required before In Review."
   - track_id: "53"
     phase: "track-creation"
     state: pending

@@ -263,6 +263,21 @@ pub struct GpuStepStats {
     pub dispatched_workgroups: u32,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ResidentBufferKind {
+    Particles,
+    EntityValues,
+}
+
+/// Host-observable residency counters for a persistent device-memory session.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct GpuResidencySnapshot {
+    pub state_bytes_resident: usize,
+    pub resident_ticks: u64,
+    pub host_state_uploads: u64,
+    pub host_state_downloads: u64,
+}
+
 #[derive(Debug, Eq, PartialEq)]
 pub enum GpuComputeError {
     UnsupportedBackend(&'static str),
@@ -270,6 +285,7 @@ pub enum GpuComputeError {
     EntityOutOfRange { entity_id: u64, entity_count: usize },
     MemorySizeOverflow,
     DispatchSizeOverflow,
+    StateNotResident,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -332,13 +348,13 @@ impl CpuFallbackCompute {
     pub fn new() -> Self {
         Self::default()
     }
+}
 
-    fn jitter(seed: u64, index: usize) -> f32 {
-        let mut state = (seed as u32) ^ ((index as u32).wrapping_mul(747_796_405));
-        state = ((state >> ((state >> 28) + 4)) ^ state).wrapping_mul(277_803_737);
-        state = (state >> 22) ^ state;
-        ((state & 0xffff) as f32 / 65_535.0) - 0.5
-    }
+fn deterministic_jitter(seed: u64, index: usize) -> f32 {
+    let mut state = (seed as u32) ^ ((index as u32).wrapping_mul(747_796_405));
+    state = ((state >> ((state >> 28) + 4)) ^ state).wrapping_mul(277_803_737);
+    state = (state >> 22) ^ state;
+    ((state & 0xffff) as f32 / 65_535.0) - 0.5
 }
 
 impl GpuCompute for CpuFallbackCompute {
@@ -362,7 +378,7 @@ impl GpuCompute for CpuFallbackCompute {
 
     fn run_abm_step(&mut self, dt: f32, seed: u64) -> Result<GpuStepStats, GpuComputeError> {
         for (index, particle) in self.state.particles.iter_mut().enumerate() {
-            let jitter = Self::jitter(seed, index) * 0.001;
+            let jitter = deterministic_jitter(seed, index) * 0.001;
             particle.x += (particle.vx + jitter) * dt;
             particle.y += (particle.vy - jitter) * dt;
         }
@@ -400,6 +416,127 @@ impl GpuCompute for CpuFallbackCompute {
 
     fn download_state(&self) -> Result<GpuState, GpuComputeError> {
         Ok(self.state.clone())
+    }
+}
+
+/// Backend-independent contract for keeping state buffers resident across ticks.
+///
+/// This is intentionally a deterministic contract implementation rather than a
+/// native hardware backend. The wgpu/CUDA backends must satisfy this residency
+/// surface before Track 52 can claim hardware execution.
+#[derive(Clone, Debug)]
+pub struct PersistentGpuSession {
+    backend_name: &'static str,
+    state: Option<GpuState>,
+    footprint: GpuStateFootprint,
+    resident_ticks: u64,
+    host_state_uploads: u64,
+    host_state_downloads: u64,
+}
+
+impl PersistentGpuSession {
+    pub fn new(backend_name: &'static str) -> Self {
+        Self {
+            backend_name,
+            state: None,
+            footprint: GpuStateFootprint::default(),
+            resident_ticks: 0,
+            host_state_uploads: 0,
+            host_state_downloads: 0,
+        }
+    }
+
+    pub fn backend_name(&self) -> &'static str {
+        self.backend_name
+    }
+
+    pub fn upload_once(&mut self, state: &GpuState) -> Result<GpuStepStats, GpuComputeError> {
+        let footprint = state.footprint()?;
+        if self.state.is_none() {
+            self.host_state_uploads += 1;
+        }
+        self.footprint = footprint;
+        self.state = Some(state.clone());
+        Ok(GpuStepStats {
+            uploaded_bytes: footprint.checked_total_bytes()?,
+            downloaded_bytes: 0,
+            dispatched_workgroups: 0,
+        })
+    }
+
+    pub fn is_resident(&self, kind: ResidentBufferKind) -> bool {
+        let Some(state) = &self.state else {
+            return false;
+        };
+        match kind {
+            ResidentBufferKind::Particles => !state.particles.is_empty(),
+            ResidentBufferKind::EntityValues => !state.entity_values.is_empty(),
+        }
+    }
+
+    pub fn run_abm_tick(&mut self, dt: f32, seed: u64) -> Result<GpuStepStats, GpuComputeError> {
+        let state = self
+            .state
+            .as_mut()
+            .ok_or(GpuComputeError::StateNotResident)?;
+        for (index, particle) in state.particles.iter_mut().enumerate() {
+            let jitter = deterministic_jitter(seed, index) * 0.001;
+            particle.x += (particle.vx + jitter) * dt;
+            particle.y += (particle.vy - jitter) * dt;
+        }
+        self.resident_ticks += 1;
+
+        Ok(GpuStepStats {
+            uploaded_bytes: 0,
+            downloaded_bytes: 0,
+            dispatched_workgroups: DispatchShape::for_items(state.particles.len())?.workgroup_count,
+        })
+    }
+
+    pub fn run_des_tick(&mut self, events: &[DesEvent]) -> Result<GpuStepStats, GpuComputeError> {
+        let state = self
+            .state
+            .as_mut()
+            .ok_or(GpuComputeError::StateNotResident)?;
+        let mut ordered = events.to_vec();
+        ordered.sort();
+        let entity_count = state.entity_values.len();
+
+        for event in ordered {
+            let index = event.entity_id as usize;
+            let Some(value) = state.entity_values.get_mut(index) else {
+                return Err(GpuComputeError::EntityOutOfRange {
+                    entity_id: event.entity_id,
+                    entity_count,
+                });
+            };
+            *value += event.delta;
+        }
+        self.resident_ticks += 1;
+
+        Ok(GpuStepStats {
+            uploaded_bytes: core::mem::size_of_val(events),
+            downloaded_bytes: 0,
+            dispatched_workgroups: DispatchShape::for_items(events.len())?.workgroup_count,
+        })
+    }
+
+    pub fn download_state(&mut self) -> Result<GpuState, GpuComputeError> {
+        let state = self
+            .state
+            .as_ref()
+            .ok_or(GpuComputeError::StateNotResident)?;
+        self.host_state_downloads += 1;
+        Ok(state.clone())
+    }
+
+    pub fn residency_snapshot(&self) -> GpuResidencySnapshot {
+        GpuResidencySnapshot {
+            state_bytes_resident: self.footprint.total_bytes(),
+            resident_ticks: self.resident_ticks,
+            host_state_uploads: self.host_state_uploads,
+            host_state_downloads: self.host_state_downloads,
+        }
     }
 }
 

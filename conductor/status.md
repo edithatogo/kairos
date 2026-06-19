@@ -179,12 +179,15 @@ Progress` with a first `numa` feature-gated topology, affinity, event-pool,
 component-locality, and FFI zero-copy layout contract baseline. Track 51 is
 `In Progress` with a first `parallel-io` feature-gated checkpoint/restart and
 contiguous-block contract baseline in `kairo-ecs-arrow`; native Arrow arrays,
-HDF5/ADIOS2 writers, and parallel filesystem evidence remain incomplete. Tracks
-52-55 remain `Spec Approved` and cover native GPU execution, FMI
+HDF5/ADIOS2 writers, and parallel filesystem evidence remain incomplete. Track
+52 is `In Progress` with a first persistent device-memory contract slice in
+`kairo-ecs-gpu` that records resident buffers, copy boundaries, and deterministic
+ABM/DES CPU parity; real wgpu/CUDA device execution and hardware benchmark
+evidence remain incomplete. Tracks 53-55 remain `Spec Approved` and cover FMI
 co-simulation master runtime, Slurm/container/cloud runtime acceptance, and
 final weak/strong scaling certification. None of these tracks is `Done`; live
-MPI, NUMA/hwloc, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains required
-before production-grade HPC parity can be claimed.
+MPI, NUMA/hwloc, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence
+remains required before production-grade HPC parity can be claimed.
 
 ## Validation evidence
 

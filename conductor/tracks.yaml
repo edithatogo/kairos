@@ -772,7 +772,7 @@ tracks:
       - checkpoint-restart-parity
   - id: 52
     name: Native GPU Acceleration with Persistent Device Memory
-    status: Spec Approved
+    status: In Progress
     owner: gpu-compute-agent + performance-agent
     depends_on: ["32", "33", "46", "50"]
     owned_paths:

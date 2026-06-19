@@ -62,7 +62,7 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 49 | Distributed MPI/gRPC State Synchronization | Real MPI/gRPC transports and distributed state sync | distributed-agent + pdes-agent | After Tracks 35, 47, and 48 |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | hwloc, affinity, arenas, zero-copy FFI layout | core-scheduler-agent + ecs-agent + ffi-agent | After Tracks 01, 02, and 46 |
 | 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | Real Arrow/HDF5/ADIOS2 checkpoint and restart | arrow-agent + cloud-agent + performance-agent | After Tracks 04, 39, and 46 |
-| 52 | Native GPU Acceleration with Persistent Device Memory | Real wgpu/CUDA persistent device execution | gpu-compute-agent + performance-agent | After GPU scaffolds, Track 46, and Track 50 |
+| 52 | Native GPU Acceleration with Persistent Device Memory | Persistent-memory contract baseline first; real wgpu/CUDA execution still required | gpu-compute-agent + performance-agent | After GPU scaffolds, Track 46, and Track 50 |
 | 53 | FMI 2/3 Co-Simulation Master Runtime | FMU archive, dynamic loading, 1,000-step co-sim | fmi-agent + ffi-agent + interop-agent | After Track 38, Track 46, and FFI |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Live Slurm, container, Kubernetes, and provider proof | cloud-agent + distributed-agent + gpu-compute-agent + release-agent | After Tracks 39, 43, 49, and 52 |
 | 55 | End-to-End Weak/Strong Scaling Certification | Final integrated HPC parity certification | performance-agent + benchmark-agent + cloud-agent + release-agent | After Tracks 47-54 |
