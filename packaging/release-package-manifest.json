@@ -56,31 +56,110 @@
         "cargo package --allow-dirty --workspace"
       ],
       "manifests": [
-        { "package": "workspace", "path": "Cargo.toml" },
-        { "package": "kairo-ecs-abm", "path": "crates/kairo-ecs-abm/Cargo.toml" },
-        { "package": "kairo-ecs-arrow", "path": "crates/kairo-ecs-arrow/Cargo.toml" },
-        { "package": "kairo-ecs-bench", "path": "crates/kairo-ecs-bench/Cargo.toml" },
-        { "package": "kairo-ecs-cli", "path": "crates/kairo-ecs-cli/Cargo.toml" },
-        { "package": "kairo-ecs-cs-bridge", "path": "crates/kairo-ecs-cs-bridge/Cargo.toml" },
-        { "package": "kairo-ecs-core", "path": "crates/kairo-ecs-core/Cargo.toml" },
-        { "package": "kairo-ecs-debug", "path": "crates/kairo-ecs-debug/Cargo.toml" },
-        { "package": "kairo-ecs-des", "path": "crates/kairo-ecs-des/Cargo.toml" },
-        { "package": "kairo-ecs-diplomat", "path": "crates/kairo-ecs-diplomat/Cargo.toml" },
-        { "package": "kairo-ecs-ffi", "path": "crates/kairo-ecs-ffi/Cargo.toml" },
-        { "package": "kairo-ecs-fmi", "path": "crates/kairo-ecs-fmi/Cargo.toml" },
-        { "package": "kairo-ecs-gpu", "path": "crates/kairo-ecs-gpu/Cargo.toml" },
-        { "package": "kairo-ecs-grpc", "path": "crates/kairo-ecs-grpc/Cargo.toml" },
-        { "package": "kairo-ecs-ml", "path": "crates/kairo-ecs-ml/Cargo.toml" },
-        { "package": "kairo-ecs-mpi", "path": "crates/kairo-ecs-mpi/Cargo.toml" },
-        { "package": "kairo-ecs-pdes", "path": "crates/kairo-ecs-pdes/Cargo.toml" },
-        { "package": "kairo-ecs-rng", "path": "crates/kairo-ecs-rng/Cargo.toml" },
-        { "package": "kairo-ecs-state", "path": "crates/kairo-ecs-state/Cargo.toml" },
-        { "package": "kairo-ecs-streaming", "path": "crates/kairo-ecs-streaming/Cargo.toml" },
-        { "package": "kairo-ecs-types", "path": "crates/kairo-ecs-types/Cargo.toml" },
-        { "package": "kairo-ecs-uniffi", "path": "crates/kairo-ecs-uniffi/Cargo.toml" },
-        { "package": "kairo-ecs-viz", "path": "crates/kairo-ecs-viz/Cargo.toml" },
-        { "package": "kairo-ecs-wasm", "path": "crates/kairo-ecs-wasm/Cargo.toml" },
-        { "package": "kairo-ecs-webgpu", "path": "crates/kairo-ecs-webgpu/Cargo.toml" }
+        {
+          "package": "workspace",
+          "path": "Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-abm",
+          "path": "crates/kairo-ecs-abm/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-arrow",
+          "path": "crates/kairo-ecs-arrow/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-bench",
+          "path": "crates/kairo-ecs-bench/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-cli",
+          "path": "crates/kairo-ecs-cli/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-cs-bridge",
+          "path": "crates/kairo-ecs-cs-bridge/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-core",
+          "path": "crates/kairo-ecs-core/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-debug",
+          "path": "crates/kairo-ecs-debug/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-des",
+          "path": "crates/kairo-ecs-des/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-diplomat",
+          "path": "crates/kairo-ecs-diplomat/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-ffi",
+          "path": "crates/kairo-ecs-ffi/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-fmi",
+          "path": "crates/kairo-ecs-fmi/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-gpu",
+          "path": "crates/kairo-ecs-gpu/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-game-ontology",
+          "path": "crates/kairo-ecs-game-ontology/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-grpc",
+          "path": "crates/kairo-ecs-grpc/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-ml",
+          "path": "crates/kairo-ecs-ml/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-mpi",
+          "path": "crates/kairo-ecs-mpi/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-pdes",
+          "path": "crates/kairo-ecs-pdes/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-rng",
+          "path": "crates/kairo-ecs-rng/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-state",
+          "path": "crates/kairo-ecs-state/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-streaming",
+          "path": "crates/kairo-ecs-streaming/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-types",
+          "path": "crates/kairo-ecs-types/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-uniffi",
+          "path": "crates/kairo-ecs-uniffi/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-viz",
+          "path": "crates/kairo-ecs-viz/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-wasm",
+          "path": "crates/kairo-ecs-wasm/Cargo.toml"
+        },
+        {
+          "package": "kairo-ecs-webgpu",
+          "path": "crates/kairo-ecs-webgpu/Cargo.toml"
+        }
       ]
     },
     {
@@ -94,7 +173,10 @@
         "twine check dist/*"
       ],
       "manifests": [
-        { "package": "kairo-ecs", "path": "bindings/python/pyproject.toml" }
+        {
+          "package": "kairo-ecs",
+          "path": "bindings/python/pyproject.toml"
+        }
       ]
     },
     {
@@ -108,7 +190,10 @@
         "R CMD check --no-manual --as-cran *.tar.gz"
       ],
       "manifests": [
-        { "package": "kairoECS", "path": "bindings/r/DESCRIPTION" }
+        {
+          "package": "kairoECS",
+          "path": "bindings/r/DESCRIPTION"
+        }
       ]
     },
     {
@@ -121,7 +206,10 @@
         "julia --project=. -e \"using Pkg; Pkg.instantiate(); Pkg.test()\""
       ],
       "manifests": [
-        { "package": "KairoECS", "path": "bindings/julia/Project.toml" }
+        {
+          "package": "KairoECS",
+          "path": "bindings/julia/Project.toml"
+        }
       ]
     },
     {
@@ -137,7 +225,10 @@
         "npm pack --dry-run"
       ],
       "manifests": [
-        { "package": "@kairo-ecs/typescript", "path": "bindings/typescript/package.json" }
+        {
+          "package": "@kairo-ecs/typescript",
+          "path": "bindings/typescript/package.json"
+        }
       ]
     },
     {
@@ -152,8 +243,14 @@
         "dotnet pack bindings/csharp/Kairo.ECS.sln -c Release"
       ],
       "manifests": [
-        { "package": "Kairo.ECS", "path": "bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj" },
-        { "package": "Kairo.ECS.sln", "path": "bindings/csharp/Kairo.ECS.sln" }
+        {
+          "package": "Kairo.ECS",
+          "path": "bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj"
+        },
+        {
+          "package": "Kairo.ECS.sln",
+          "path": "bindings/csharp/Kairo.ECS.sln"
+        }
       ]
     },
     {
@@ -167,7 +264,10 @@
         "go vet ./..."
       ],
       "manifests": [
-        { "package": "github.com/edithatogo/kairos/bindings/go", "path": "bindings/go/go.mod" }
+        {
+          "package": "github.com/edithatogo/kairos/bindings/go",
+          "path": "bindings/go/go.mod"
+        }
       ]
     }
   ]
