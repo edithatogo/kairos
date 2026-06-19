@@ -1,6 +1,6 @@
 # Track 58 Handoff
 
-Status: In Progress
+Status: In Review
 
 ## Current implementation evidence
 
@@ -32,7 +32,7 @@ Status: In Progress
 
 ## Follow-up issues
 
-- Phase 1 closeout: run conductor review, push, git closeout validation, and GitHub Actions review.
+- Phase 2: continue generated-code API integration tasks; do not move Track 58 to Done until remaining plan tasks, local gates, GitHub Actions, and handoff evidence are complete.
 
 ## Phase closeout evidence
 
@@ -41,5 +41,7 @@ Status: In Progress
 - commit SHA: 14f3f4d, 2d49b07, 8486d90, 25201c5, 9a3e714d4890841573c11f18aa96dbdcb554c055, 643a29b52e73460b648aad6e26cc1890c51db3f5, 5bd5b34bd6d5232caaee7a2ca02207c315515e34, 7b2dca2a2380aedac731cb4d70285b948745fee5; phase closeout metadata commit e39c3d8ad1984cb4be9057103e92a2afd53cc308.
 - Pushed ref: origin/codex/kairos-hpc-parity-wave.
 - validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree: passed after Phase 0 push.
-- GitHub Actions review: Phase 0 PR #29 checks passed after rerunning a transient Ubuntu crates.io download failure; Phase 1 push completed; check watch pending.
-- Next-phase decision: Track 58 remains In Progress; continue Phase 1 implementation.
+- GitHub Actions review: Phase 0 PR #29 checks passed after rerunning a transient Ubuntu crates.io download failure; Phase 1 PR checks passed from head 287e8d6e2249368179e91d75501a544772ef78c4.
+- Pushed closeout commits: 4f9864b5b625d0469f9bfaf21659598dd6779022 fixed generated trailing newline parity caught by GitHub Actions; 287e8d6e2249368179e91d75501a544772ef78c4 registered crates/kairo-ecs-game-theory/Cargo.toml in the release package manifest.
+- GitHub Actions review: PR checks passed from head 287e8d6e2249368179e91d75501a544772ef78c4; deploy-pages was skipped by workflow policy.
+- Next-phase decision: Track 58 is In Review for Phase 1; continue Phase 2 generated-code API integration tasks.

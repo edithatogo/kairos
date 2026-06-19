@@ -953,7 +953,7 @@ entries:
     phase: "phase-0-1-codegen-contract-and-generator"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 58 Phase 0 review found and fixed invalid escaped JSON in the generated manifest. Phase 1 review found and fixed a JSON-LD parser defect where context aliases such as id: @id were treated as ontology IDs. Deterministic codegen, generated component compile checks, API review, and codegen validation are in place."
+    review_result: "Track 58 Phase 0 review found and fixed invalid escaped JSON in the generated manifest. Phase 1 review found and fixed a JSON-LD parser defect where context aliases such as id: @id were treated as ontology IDs. GitHub Actions review then found and fixed deterministic generated trailing newline drift and release-package manifest omission for the generated component crate. Deterministic codegen, generated component compile checks, API review, codegen validation, push, strict closeout, and GitHub Actions review are in place."
     fixes_applied: true
     validation_commands:
       - "rustfmt --check open-game-theory-ontology/fixtures/generated/rust/game_components.rs"
@@ -964,10 +964,10 @@ entries:
       - "node scripts/validation/validate-game-theory-codegen.mjs"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "phase 1 commits pushed; strict git closeout pending"
-    commit_sha: "14f3f4d, 2d49b07, 8486d90, 25201c5, 9a3e714d4890841573c11f18aa96dbdcb554c055, 643a29b52e73460b648aad6e26cc1890c51db3f5, 5bd5b34bd6d5232caaee7a2ca02207c315515e34, 7b2dca2a2380aedac731cb4d70285b948745fee5"
+    git_status: "phase 1 implementation and CI review commits pushed; strict git closeout rerun pending for this evidence update"
+    commit_sha: "14f3f4d, 2d49b07, 8486d90, 25201c5, 9a3e714d4890841573c11f18aa96dbdcb554c055, 643a29b52e73460b648aad6e26cc1890c51db3f5, 5bd5b34bd6d5232caaee7a2ca02207c315515e34, 7b2dca2a2380aedac731cb4d70285b948745fee5, e39c3d8ad1984cb4be9057103e92a2afd53cc308, dbaf8bb, 4f9864b5b625d0469f9bfaf21659598dd6779022, 287e8d6e2249368179e91d75501a544772ef78c4"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
-    next_phase_decision: "Track 58 is locally Phase 1 complete and remains In Progress until push, strict git closeout, and GitHub Actions review pass."
+    next_phase_decision: "Track 58 Phase 1 is In Review after push and GitHub Actions review. Continue with Phase 2 generated-code API integration tasks; Track 58 cannot move Done until all planned codegen tasks, API review, local gates, GitHub Actions, and handoff evidence are complete."
   - track_id: "59"
     phase: "track-creation"
     state: pending

@@ -535,3 +535,5 @@ Track 58 advanced from Spec Approved to In Progress after deterministic ontology
 - Local gates passed: cargo check for kairo-ecs-game-ontology with codegen tests, cargo check for kairo-ecs-game-theory with generated-components tests, node scripts/validation/validate-game-theory-codegen.mjs, Conductor phase gates, and DAG validation.
 - Review fix: JSON-LD context alias lines are no longer treated as ontology IDs.
 - Local cargo test executable runs remain blocked on this Windows host by Git link.exe shadowing MSVC link.exe; CI must execute the real test binaries before Track 58 can move beyond In Review.
+
+Track 58 Phase 1 reached In Review after the branch was pushed and GitHub Actions passed from head 287e8d6e2249368179e91d75501a544772ef78c4. CI review fixes were committed in 4f9864b5b625d0469f9bfaf21659598dd6779022 for deterministic generated trailing newlines and 287e8d6e2249368179e91d75501a544772ef78c4 for release-package manifest coverage of crates/kairo-ecs-game-theory/Cargo.toml.
