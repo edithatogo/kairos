@@ -10,7 +10,7 @@ Phase closeout: review, push, and GitHub Actions review.
 ## Phase 1: Generator
 
 - [x] Task 1.1: Add failing deterministic regeneration tests. Commit after passing as `track 58 task 1.1: implement deterministic codegen`.
-- [ ] Task 1.2: Compile generated components in `kairo-ecs-game-theory`. Commit as `track 58 task 1.2: compile generated game components`.
+- [x] Task 1.2: Compile generated components in `kairo-ecs-game-theory`. Commit as `track 58 task 1.2: compile generated game components`.
 - [ ] Task 1.3: Add API governance review artifact. Commit as `track 58 task 1.3: record generated api review`.
 
 Phase closeout repeats review, push, and GitHub Actions review.

@@ -26,6 +26,7 @@ members = [
   "crates/kairo-ecs-wasm",
   "crates/kairo-ecs-cs-bridge",
   "crates/kairo-ecs-game-ontology",
+  "crates/kairo-ecs-game-theory",
 ]
 exclude = [
   "crates/kairo-ecs-pyo3",

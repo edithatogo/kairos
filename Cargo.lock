@@ -428,6 +428,10 @@ name = "kairo-ecs-game-ontology"
 version = "0.1.0"
 
 [[package]]
+name = "kairo-ecs-game-theory"
+version = "0.1.0"
+
+[[package]]
 name = "kairo-ecs-gpu"
 version = "0.1.0"
 
