@@ -855,7 +855,7 @@ entries:
       - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --test checkpoint_restart --features parallel-io,hdf5,adios2"
       - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-arrow --all-targets --all-features -- -D warnings"
       - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features --jobs 1"
-    git_status: "contract-baseline implementation commit pushed; strict git closeout pending"
+    git_status: "contract-baseline implementation and evidence commits pushed; strict git closeout passed"
     commit_sha: "245a5ccaed7ae9a522e1fb887511232f6bed73d2"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 51 is In Progress after the first checkpoint/restart contract baseline; native Arrow, HDF5, ADIOS2, parallel filesystem evidence, and throughput benchmark work remain required before In Review."

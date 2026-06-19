@@ -98,3 +98,8 @@ next-phase decision before advancing beyond this contract-baseline slice.
 
 Implementation commit SHA: `245a5ccaed7ae9a522e1fb887511232f6bed73d2`
 pushed ref: `origin/codex/kairos-hpc-parity-wave`
+
+Strict closeout:
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
+- result: passed after evidence commit `b5df195`.
