@@ -37,6 +37,7 @@ Format:
 - Astro Starlight documentation site under `website/`, including versioned R1 archive pages, `llms.txt` exports, link validation, icon support, and KairoECS polyglot metadata for Rust, Python, R, Julia, TypeScript/WASM, C#, and Go documentation.
 - Protected registry publication workflows for Rust, Python, R, Julia, TypeScript/WASM, C#, Go, and cloud/HPC artifacts, with dry-run helpers, GitHub environments, and a code/repository health floor above 9.5 before production publication.
 - Track 45 docs-platform SOTA gate for the active Astro/Starlight site, covering versioning, the local polyglot plugin, llms.txt output, icons, generated search, and archived release-route evidence.
+- Conductor HPC Parity Wave tracks 46-55, covering production parity gates for PDES, Time Warp, MPI/gRPC synchronization, NUMA memory lifecycle, parallel I/O checkpoints, GPU acceleration, FMI co-simulation, Slurm/cloud runtime acceptance, and weak/strong scaling certification.
 
 ### Changed
 
@@ -46,6 +47,7 @@ Format:
 - NuGet package dry-runs now target the stable `net10.0` package lane explicitly so the preview `net11.0` compatibility lane does not require a preview SDK in release packaging CI.
 - Public docs workflow validation now builds the Starlight site and smokes the generated documentation output instead of checking the retired static-site scaffold.
 - Docs Quality CI now runs the dedicated docs-platform SOTA validator after the Starlight workflow smoke.
+- Toolchain check CI now tracks the hosted Rust stable lane at Rust 1.96.x while preserving the Rust MSRV policy.
 
 ### Fixed
 
