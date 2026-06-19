@@ -4,8 +4,10 @@ Status: In Progress
 
 ## Current implementation evidence
 
-- Task 0.1 artifact: conductor/tracks/58-ontology-rust-component-codegen/codegen-contract.md defines normalized IR input, Rust name mapping, reserved-name policy, generated component shape, determinism requirements, and feature boundaries.
-- Task 0.1 local gate: validate_conductor_phase_gates.ps1 pending before commit.
+- Task 0.1 commit: 14f3f4d, added codegen contract for normalized ontology IR, Rust naming, reserved names, deterministic output, and feature boundaries.
+- Task 0.2 artifact: open-game-theory-ontology/fixtures/generated/rust/game_components.rs is the rustfmt-compatible golden generated output fixture.
+- Task 0.2 artifact: open-game-theory-ontology/fixtures/generated/rust/manifest.json records source fixtures and determinism contract.
+- Task 0.2 local gate: rustfmt --check open-game-theory-ontology/fixtures/generated/rust/game_components.rs pending after formatting.
 
 ## Integration notes
 
@@ -15,10 +17,9 @@ Status: In Progress
 
 ## Follow-up issues
 
-- Task 0.2: Add golden generated output fixtures.
+- Phase 0 closeout: run review, apply accepted fixes, push, and watch GitHub Actions.
 - Phase 1: Implement deterministic codegen and compile generated components.
 - Add generated API review evidence.
-- Record GitHub Actions review after pushed phase.
 
 ## Phase closeout evidence
 

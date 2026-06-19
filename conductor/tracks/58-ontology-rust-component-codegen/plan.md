@@ -3,7 +3,7 @@
 ## Phase 0: Codegen Contract
 
 - [x] Task 0.1: Define IR-to-Rust mapping rules and reserved-name policy. Commit as `track 58 task 0.1: define ontology codegen contract`.
-- [ ] Task 0.2: Add golden generated output fixtures. Commit as `track 58 task 0.2: add codegen golden fixtures`.
+- [x] Task 0.2: Add golden generated output fixtures. Commit as `track 58 task 0.2: add codegen golden fixtures`.
 
 Phase closeout: review, push, and GitHub Actions review.
 
