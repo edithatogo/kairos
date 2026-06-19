@@ -26,6 +26,9 @@
 | FMI co-simulation | FMI 2/3 master runtime | FMU archive, dynamic loading, 1,000-step, and OpenModelica proof |
 | HPC runtime acceptance | Slurm, containers, Kubernetes, cloud batch | Live scheduler and provider canary evidence |
 | Scaling certification | Weak and strong scaling profiles | Raw result manifests and release certification |
+| Game theory ontology | Open Turtle/JSON-LD ontology with Rust component generation | Subrepo provenance, ingestion equivalence, and deterministic codegen |
+| Graph-relational ECS | EntityId relationship components behind `graph-relations` | Feature isolation and pointer-free topology checks |
+| Multi-game execution | Normal-form arrays plus extensive-form graph traversal | Solver parity fixtures and traversal conformance |
 
 ## Scoring rubric
 

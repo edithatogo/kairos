@@ -839,3 +839,28 @@ tracks:
       - end-to-end-hpc-scenario
       - scaling-raw-results-policy
       - hpc-release-certification
+  - id: 56
+    name: Open Game Theory Ontology and Multi-Game Framework
+    status: Spec Approved
+    owner: interop-agent + ecs-agent + core-scheduler-agent + model-zoo-agent + api-governance-agent
+    depends_on: ["01", "03", "12", "23", "25", "26", "29", "30"]
+    owned_paths:
+      - open-game-theory-ontology/
+      - crates/kairo-ecs-game-theory/
+      - crates/kairo-ecs-core/
+      - crates/kairo-ecs-state/
+      - schemas/game-theory/
+      - scripts/ontology/
+      - docs/game-theory/
+      - Cargo.toml
+      - conductor/tracks/56-open-game-theory-ontology-multigame-framework/
+    required_gates:
+      - phase-closeout-check
+      - ontology-subrepo-boundary
+      - turtle-jsonld-ingestion
+      - ontology-codegen-determinism
+      - graph-relations-feature-isolation
+      - graph-relations-entity-id-topology
+      - no-pointer-graph-topology
+      - normal-form-solver-parity
+      - extensive-form-tree-traversal

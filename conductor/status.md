@@ -177,6 +177,13 @@ final weak/strong scaling certification. None of these tracks is `Done`; live
 MPI, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains required
 before production-grade HPC parity can be claimed.
 
+Track 56 was added on 2026-06-19 as a `Spec Approved` planning track for an
+open game theory ontology subrepository, Turtle/JSON-LD ingestion, deterministic
+Rust component generation, a feature-gated graph-relational ECS module, and
+normal-form plus extensive-form game solver systems. It does not create the
+subrepository or runtime code yet. Public game-theory ontology, graph-relational
+ECS, or multi-game solver claims remain blocked until the Track 56 gates pass.
+
 ## Validation evidence
 
 Latest local baseline validation on 2026-05-07; current targeted verification is recorded under the 2026-05-10 track evidence:

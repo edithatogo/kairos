@@ -60,6 +60,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 53 | FMI 2/3 Co-Simulation Master Runtime | Spec Approved | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Spec Approved | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |
 | 55 | End-to-End Weak/Strong Scaling Certification | Spec Approved | `performance-agent + benchmark-agent + cloud-agent + release-agent` | See `conductor/tracks/55-*/spec.md` |
+| 56 | Open Game Theory Ontology and Multi-Game Framework | Spec Approved | `interop-agent + ecs-agent + core-scheduler-agent + model-zoo-agent + api-governance-agent` | See `conductor/tracks/56-*/spec.md` |
 
 ## Track status vocabulary
 
@@ -82,3 +83,4 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 - Tracks 34, 35, and 38 are release-critical for distributed simulation, FMI digital-twin, and PDES infrastructure.
 - Tracks 32, 33, 36, 37, 39, 40, and 41 are non-release-critical (enhancement only).
 - Tracks 46-55 are release-gating for any production HPC parity claim. They do not mark existing scaffold tracks complete; they define the live-proof layer for PDES, Time Warp, MPI/gRPC, NUMA, parallel I/O, GPU, FMI, Slurm/cloud runtime acceptance, and weak/strong scaling certification.
+- Track 56 is release-gating for any game-theory ontology, graph-relational ECS, normal-form solver, or extensive-form solver claim. It is not release-gating for core ECS, binding, or HPC claims unless those claims depend on game-theory functionality.
