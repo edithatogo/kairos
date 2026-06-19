@@ -2,9 +2,9 @@
 
 ## Phase 0 - TDD baseline
 
-- Task 0.1: Add failing MPI multi-rank smoke tests.
-- Task 0.2: Add failing gRPC two-process smoke tests.
-- Task 0.3: Add failing entity migration and distributed parity tests.
+- [x] Task 0.1: Add failing MPI multi-rank smoke tests.
+- [x] Task 0.2: Add failing gRPC two-process smoke tests.
+- [x] Task 0.3: Add failing entity migration and distributed parity tests.
 
 ## Phase 1 - MPI transport
 

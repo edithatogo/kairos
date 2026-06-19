@@ -308,11 +308,123 @@ pub fn local_two_node_contract_proof() -> Result<GrpcLocalTwoNodeProof, Protocol
     })
 }
 
+/// Command contract for a real two-process gRPC launch.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcProcessLaunchPlan {
+    pub process_count: u32,
+    pub server_endpoint: String,
+    pub client_endpoint: String,
+    pub service: String,
+}
+
+impl GrpcProcessLaunchPlan {
+    pub fn validate(&self) -> Result<(), ProtocolValidationError> {
+        if self.process_count < 2 {
+            return Err(ProtocolValidationError::InvalidProcessCount);
+        }
+        if self.service != GRPC_SERVICE_NAME {
+            return Err(ProtocolValidationError::InvalidService);
+        }
+        if !is_supported_endpoint(&self.server_endpoint) {
+            return Err(ProtocolValidationError::InvalidEndpoint(
+                self.server_endpoint.clone(),
+            ));
+        }
+        if !is_supported_endpoint(&self.client_endpoint)
+            || self.client_endpoint == self.server_endpoint
+        {
+            return Err(ProtocolValidationError::InvalidEndpoint(
+                self.client_endpoint.clone(),
+            ));
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcTwoProcessSmokeContract {
+    pub process_count: u32,
+    pub server_endpoint: String,
+    pub client_endpoint: String,
+    pub service: String,
+    pub real_grpc_runtime_claimed: bool,
+}
+
+pub fn grpc_two_process_smoke_contract(
+    launch: &GrpcProcessLaunchPlan,
+) -> Result<GrpcTwoProcessSmokeContract, ProtocolValidationError> {
+    launch.validate()?;
+    Ok(GrpcTwoProcessSmokeContract {
+        process_count: launch.process_count,
+        server_endpoint: launch.server_endpoint.clone(),
+        client_endpoint: launch.client_endpoint.clone(),
+        service: launch.service.clone(),
+        real_grpc_runtime_claimed: false,
+    })
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcVersionedComponentBlob {
+    pub component_type_id: String,
+    pub generation: u64,
+    pub payload: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcPendingEventMetadata {
+    pub source_lp: LpId,
+    pub dest_lp: LpId,
+    pub tick: Tick,
+    pub sequence: u64,
+    pub payload_bytes: usize,
+    pub anti_message: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcEntityMigrationSnapshot {
+    pub entity: EntityId,
+    pub source_lp: LpId,
+    pub dest_lp: LpId,
+    pub migration_id: String,
+    pub components: Vec<GrpcVersionedComponentBlob>,
+    pub pending_events: Vec<GrpcPendingEventMetadata>,
+}
+
+impl GrpcEntityMigrationSnapshot {
+    pub fn validate(&self) -> Result<(), ProtocolValidationError> {
+        validate_migration_envelope(
+            self.source_lp,
+            self.dest_lp,
+            &self.migration_id,
+            self.components.iter().map(|component| {
+                (
+                    component.component_type_id.as_str(),
+                    component.payload.as_slice(),
+                )
+            }),
+        )?;
+
+        for event in &self.pending_events {
+            if event.source_lp == event.dest_lp {
+                return Err(ProtocolValidationError::SelfMigration(event.source_lp));
+            }
+            if event.payload_bytes == 0 && !event.anti_message {
+                return Err(ProtocolValidationError::EmptyComponentPayload(
+                    "pending-event".to_string(),
+                ));
+            }
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ProtocolValidationError {
     ProtocolMismatch,
     ProtocolVersionMismatch { expected: u16, got: u16 },
     InvalidService,
+    InvalidProcessCount,
     DuplicatePeer(LpId),
     SelfPeer(LpId),
     InvalidEndpoint(String),
@@ -842,5 +954,56 @@ mod tests {
         assert!(proof.simulation_continues_after_non_leader_failure);
         assert!(proof.final_state_parity);
         assert!(!proof.real_grpc_runtime_claimed);
+    }
+
+    #[test]
+    fn grpc_two_process_launch_contract_requires_distinct_real_socket_endpoints() {
+        let launch = GrpcProcessLaunchPlan {
+            process_count: 2,
+            server_endpoint: "http://127.0.0.1:50051".to_string(),
+            client_endpoint: "http://127.0.0.1:50052".to_string(),
+            service: GRPC_SERVICE_NAME.to_string(),
+        };
+
+        let smoke = grpc_two_process_smoke_contract(&launch).unwrap();
+
+        assert_eq!(smoke.process_count, 2);
+        assert_eq!(smoke.service, GRPC_SERVICE_NAME);
+        assert!(!smoke.real_grpc_runtime_claimed);
+        assert_eq!(
+            grpc_two_process_smoke_contract(&GrpcProcessLaunchPlan {
+                process_count: 1,
+                ..launch
+            }),
+            Err(ProtocolValidationError::InvalidProcessCount)
+        );
+    }
+
+    #[test]
+    fn grpc_entity_migration_snapshot_preserves_generation_and_pending_events() {
+        let snapshot = GrpcEntityMigrationSnapshot {
+            entity: EntityId::new(77, 5),
+            source_lp: LpId(2),
+            dest_lp: LpId(3),
+            migration_id: "grpc-migrate-77".to_string(),
+            components: vec![GrpcVersionedComponentBlob {
+                component_type_id: "utility".to_string(),
+                generation: 9,
+                payload: vec![4, 5, 6],
+            }],
+            pending_events: vec![GrpcPendingEventMetadata {
+                source_lp: LpId(2),
+                dest_lp: LpId(3),
+                tick: Tick::from_ticks(13),
+                sequence: 21,
+                payload_bytes: 16,
+                anti_message: false,
+            }],
+        };
+
+        assert_eq!(snapshot.validate(), Ok(()));
+        assert_eq!(snapshot.entity.generation, 5);
+        assert_eq!(snapshot.components[0].generation, 9);
+        assert_eq!(snapshot.pending_events[0].tick, Tick::from_ticks(13));
     }
 }

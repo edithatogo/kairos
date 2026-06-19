@@ -375,11 +375,127 @@ pub fn local_two_rank_contract_proof() -> Result<MpiLocalTwoRankProof, ProtocolV
     })
 }
 
+/// Command contract for a real multi-rank MPI launch.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MpiLaunchPlan {
+    pub mpi_implementation: String,
+    pub launcher: String,
+    pub ranks: u32,
+    pub executable: String,
+    pub args: Vec<String>,
+}
+
+impl MpiLaunchPlan {
+    pub fn validate(&self) -> Result<(), ProtocolValidationError> {
+        if self.ranks < 2 {
+            return Err(ProtocolValidationError::InvalidRankCount);
+        }
+        if self.mpi_implementation.trim().is_empty()
+            || self.executable.trim().is_empty()
+            || !matches!(self.launcher.as_str(), "mpiexec" | "mpirun" | "srun")
+        {
+            return Err(ProtocolValidationError::InvalidLaunchCommand);
+        }
+        Ok(())
+    }
+
+    pub fn command_line(&self) -> Vec<String> {
+        let mut command = vec![
+            self.launcher.clone(),
+            "-n".to_string(),
+            self.ranks.to_string(),
+            self.executable.clone(),
+        ];
+        command.extend(self.args.clone());
+        command
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MpiMultiRankSmokeContract {
+    pub mpi_implementation: String,
+    pub launcher: String,
+    pub rank_count: u32,
+    pub command_line: Vec<String>,
+    pub real_mpi_runtime_claimed: bool,
+}
+
+pub fn mpi_multirank_smoke_contract(
+    launch: &MpiLaunchPlan,
+) -> Result<MpiMultiRankSmokeContract, ProtocolValidationError> {
+    launch.validate()?;
+    Ok(MpiMultiRankSmokeContract {
+        mpi_implementation: launch.mpi_implementation.clone(),
+        launcher: launch.launcher.clone(),
+        rank_count: launch.ranks,
+        command_line: launch.command_line(),
+        real_mpi_runtime_claimed: false,
+    })
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MpiVersionedComponentBlob {
+    pub component_type_id: String,
+    pub generation: u64,
+    pub payload: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MpiPendingEventMetadata {
+    pub source_lp: LpId,
+    pub dest_lp: LpId,
+    pub tick: Tick,
+    pub sequence: u64,
+    pub payload_bytes: usize,
+    pub anti_message: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MpiEntityMigrationSnapshot {
+    pub entity: EntityId,
+    pub source_lp: LpId,
+    pub dest_lp: LpId,
+    pub migration_id: String,
+    pub components: Vec<MpiVersionedComponentBlob>,
+    pub pending_events: Vec<MpiPendingEventMetadata>,
+}
+
+impl MpiEntityMigrationSnapshot {
+    pub fn validate(&self) -> Result<(), ProtocolValidationError> {
+        validate_migration_envelope(
+            self.source_lp,
+            self.dest_lp,
+            &self.migration_id,
+            self.components.iter().map(|component| {
+                (
+                    component.component_type_id.as_str(),
+                    component.payload.as_slice(),
+                )
+            }),
+        )?;
+
+        for event in &self.pending_events {
+            if event.source_lp == event.dest_lp {
+                return Err(ProtocolValidationError::SelfMigration(event.source_lp));
+            }
+            if event.payload_bytes == 0 && !event.anti_message {
+                return Err(ProtocolValidationError::EmptyComponentPayload(
+                    "pending-event".to_string(),
+                ));
+            }
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ProtocolValidationError {
     DuplicateRank(i32),
     DuplicateLp(LpId),
     InvalidLocalRank(i32),
+    InvalidRankCount,
+    InvalidLaunchCommand,
     ProtocolMismatch,
     ProtocolVersionMismatch { expected: u16, got: u16 },
     InvalidMigrationId,
@@ -909,5 +1025,60 @@ mod tests {
         assert_eq!(proof.gvt_floor, Tick::from_ticks(3));
         assert!(proof.final_state_parity);
         assert!(!proof.real_mpi_runtime_claimed);
+    }
+
+    #[test]
+    fn mpi_multirank_launch_contract_requires_real_rank_count() {
+        let launch = MpiLaunchPlan {
+            mpi_implementation: "Open MPI 5".to_string(),
+            launcher: "mpiexec".to_string(),
+            ranks: 4,
+            executable: "cargo".to_string(),
+            args: vec![
+                "test".to_string(),
+                "-p".to_string(),
+                "kairo-ecs-mpi".to_string(),
+                "--features".to_string(),
+                "mpi".to_string(),
+            ],
+        };
+
+        let smoke = mpi_multirank_smoke_contract(&launch).unwrap();
+
+        assert_eq!(smoke.rank_count, 4);
+        assert_eq!(smoke.launcher, "mpiexec");
+        assert!(!smoke.real_mpi_runtime_claimed);
+        assert_eq!(
+            mpi_multirank_smoke_contract(&MpiLaunchPlan { ranks: 1, ..launch }),
+            Err(ProtocolValidationError::InvalidRankCount)
+        );
+    }
+
+    #[test]
+    fn entity_migration_snapshot_preserves_generation_and_pending_events() {
+        let snapshot = MpiEntityMigrationSnapshot {
+            entity: EntityId::new(42, 7),
+            source_lp: LpId(0),
+            dest_lp: LpId(1),
+            migration_id: "mpi-migrate-42".to_string(),
+            components: vec![MpiVersionedComponentBlob {
+                component_type_id: "position".to_string(),
+                generation: 3,
+                payload: vec![1, 2, 3],
+            }],
+            pending_events: vec![MpiPendingEventMetadata {
+                source_lp: LpId(0),
+                dest_lp: LpId(1),
+                tick: Tick::from_ticks(9),
+                sequence: 11,
+                payload_bytes: 8,
+                anti_message: false,
+            }],
+        };
+
+        assert_eq!(snapshot.validate(), Ok(()));
+        assert_eq!(snapshot.entity.generation, 7);
+        assert_eq!(snapshot.components[0].generation, 3);
+        assert_eq!(snapshot.pending_events[0].sequence, 11);
     }
 }

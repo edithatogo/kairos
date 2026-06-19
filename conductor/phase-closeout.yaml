@@ -810,18 +810,20 @@ entries:
     pushed_ref: "pending-track-creation-push"
     next_phase_decision: "Track 48 is In Progress after the first rollback/anti-message/generation TDD slice; continue with fossil collection, rollback pressure stress, overhead metrics, benchmark, and live evidence work before In Review."
   - track_id: "49"
-    phase: "track-creation"
+    phase: "contract-baseline"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 49 was created as the real MPI/gRPC distributed synchronization follow-up. Runtime implementation is not part of this creation slice."
+    review_result: "Track 49 has its first implementation slice: MPI multi-rank launch contracts, gRPC two-process launch contracts, and generation-preserving migration snapshots. Live MPI/gRPC runtime proof remains pending."
     fixes_applied: false
     validation_commands:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "pending track-creation commit"
-    commit_sha: "pending-track-creation-commit"
-    pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 49 remains Spec Approved until real MPI rank and gRPC process tests are implemented."
+      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-mpi --features mpi"
+      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-grpc --features grpc"
+    git_status: "pending contract-baseline commit"
+    commit_sha: "pending-contract-baseline-commit"
+    pushed_ref: "pending-contract-baseline-push"
+    next_phase_decision: "Track 49 is In Progress after the launch-contract and migration-metadata baseline; continue with real rsmpi, tonic/prost, spawned process tests, and live evidence before In Review."
   - track_id: "50"
     phase: "track-creation"
     state: pending

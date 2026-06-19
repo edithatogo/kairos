@@ -173,8 +173,9 @@ scaffold/live-HPC template manifests, and an executable claim-boundary validator
 Track 47 is `In Progress` with the first conservative lookahead enforcement
 slice in `kairo-ecs-pdes`. Track 48 is `In Progress` with a first `time-warp`
 feature-gated rollback/anti-message/generation guard slice in `kairo-ecs-pdes`.
-Tracks 49-55 remain `Spec Approved` and cover real MPI/gRPC synchronization, NUMA and
-memory lifecycle, Arrow/HDF5/ADIOS2 checkpoint I/O, native GPU execution, FMI
+Track 49 is `In Progress` with a first MPI/gRPC launch-contract and migration
+metadata baseline in `kairo-ecs-mpi` and `kairo-ecs-grpc`. Tracks 50-55 remain
+`Spec Approved` and cover NUMA and memory lifecycle, Arrow/HDF5/ADIOS2 checkpoint I/O, native GPU execution, FMI
 co-simulation master runtime, Slurm/container/cloud runtime acceptance, and
 final weak/strong scaling certification. None of these tracks is `Done`; live
 MPI, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains required

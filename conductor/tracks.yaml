@@ -718,7 +718,7 @@ tracks:
       - hpc-evidence-manifest
   - id: 49
     name: Distributed MPI/gRPC State Synchronization
-    status: Spec Approved
+    status: In Progress
     owner: distributed-agent + pdes-agent
     depends_on: ["35", "47", "48"]
     owned_paths:
