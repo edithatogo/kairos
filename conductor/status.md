@@ -183,11 +183,15 @@ HDF5/ADIOS2 writers, and parallel filesystem evidence remain incomplete. Track
 52 is `In Progress` with a first persistent device-memory contract slice in
 `kairo-ecs-gpu` that records resident buffers, copy boundaries, and deterministic
 ABM/DES CPU parity; real wgpu/CUDA device execution and hardware benchmark
-evidence remain incomplete. Tracks 53-55 remain `Spec Approved` and cover FMI
-co-simulation master runtime, Slurm/container/cloud runtime acceptance, and
-final weak/strong scaling certification. None of these tracks is `Done`; live
-MPI, NUMA/hwloc, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence
-remains required before production-grade HPC parity can be claimed.
+evidence remain incomplete. Track 53 is `In Progress` with a first
+`fmi-runtime` archive-handling slice in `kairo-ecs-fmi` for stored-entry `.fmu`
+extraction, traversal rejection, and reuse of the unpacked-layout validator;
+dynamic loading, FMI 2/3 lifecycle stepping, OpenModelica roundtrip, and live
+FMU evidence remain incomplete. Tracks 54-55 remain `Spec Approved` and cover
+Slurm/container/cloud runtime acceptance and final weak/strong scaling
+certification. None of these tracks is `Done`; live MPI, NUMA/hwloc, GPU,
+Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains required before
+production-grade HPC parity can be claimed.
 
 ## Validation evidence
 

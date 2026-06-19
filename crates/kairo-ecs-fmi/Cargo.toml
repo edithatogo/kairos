@@ -8,6 +8,7 @@ rust-version = "1.76"
 
 [features]
 default = []
+fmi-runtime = []
 fmi2 = []
 fmi3 = []
 aas = []

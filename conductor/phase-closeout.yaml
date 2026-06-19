@@ -877,18 +877,19 @@ entries:
     pushed_ref: "pending-track-52-contract-push"
     next_phase_decision: "Track 52 is In Progress after the first persistent-memory contract baseline; real GPU backend, hardware parity, and benchmark evidence remain required before In Review."
   - track_id: "53"
-    phase: "track-creation"
+    phase: "fmu-archive-contract-baseline"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 53 was created as the production FMI 2/3 co-simulation master runtime follow-up. Runtime implementation is not part of this creation slice."
+    review_result: "Track 53 has its first implementation slice: dependency-free stored-entry .fmu archive extraction, unsafe path rejection, and extracted-layout validation through FmuArchive::extract_to. Dynamic loading, FMI 2/3 lifecycle calls, 1,000-step co-simulation, OpenModelica roundtrip, and live FMU evidence remain pending."
     fixes_applied: false
     validation_commands:
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-fmi --features fmi-runtime,fmi2,fmi3"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "pending track-creation commit"
-    commit_sha: "pending-track-creation-commit"
-    pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 53 remains Spec Approved until FMU archive, dynamic loading, 1,000-step, and OpenModelica tests are implemented."
+    git_status: "pending FMU archive contract commit"
+    commit_sha: "pending-track-53-archive-commit"
+    pushed_ref: "pending-track-53-archive-push"
+    next_phase_decision: "Track 53 is In Progress after the first FMU archive contract baseline; dynamic loading, lifecycle stepping, 1,000-step co-simulation, and OpenModelica evidence remain required before In Review."
   - track_id: "54"
     phase: "track-creation"
     state: pending

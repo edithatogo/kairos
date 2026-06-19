@@ -2,7 +2,7 @@
 
 pub mod error;
 
-#[cfg(any(feature = "fmi2", feature = "fmi3"))]
+#[cfg(any(feature = "fmi-runtime", feature = "fmi2", feature = "fmi3"))]
 pub mod import;
 
 #[cfg(feature = "fmi2")]

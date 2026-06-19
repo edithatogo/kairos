@@ -2,15 +2,29 @@
 
 ## Phase 0 - TDD baseline
 
-- Task 0.1: Add failing `.fmu` archive extraction and malformed archive tests.
+- [x] Task 0.1: Add failing `.fmu` archive extraction and malformed archive
+  tests.
+  - Red: `rustup run stable-x86_64-pc-windows-gnu cargo test -p
+    kairo-ecs-fmi --features fmi-runtime,fmi2,fmi3` failed because the
+    `fmi-runtime` feature did not exist.
+  - Green: same command passed after adding `fmi-runtime`,
+    `FmuArchive::extract_to`, stored-entry archive extraction, traversal
+    rejection, and archive layout validation tests.
 - Task 0.2: Add failing dynamic symbol binding tests with fixture FMUs.
 - Task 0.3: Add failing FMI 2 and FMI 3 1,000-step co-simulation tests.
 
 ## Phase 1 - FMU archive handling
 
-- Task 1.1: Add zip extraction with path traversal protections.
-- Task 1.2: Validate `modelDescription.xml` and platform binary layout.
-- Task 1.3: Preserve unpacked-directory import for local fixtures.
+- [x] Task 1.1: Add zip extraction with path traversal protections.
+  - Contract baseline supports dependency-free stored ZIP entries and rejects
+    absolute paths, parent traversal, data descriptors, and unsupported
+    compression methods.
+- [x] Task 1.2: Validate `modelDescription.xml` and platform binary layout.
+  - Extracted archives are immediately passed through the existing
+    `FmuLayout::from_unpacked_dir` validator.
+- [x] Task 1.3: Preserve unpacked-directory import for local fixtures.
+  - `FmuArchive::open_unpacked` remains unchanged and covered by existing unit
+    tests.
 
 ## Phase 2 - Dynamic loading
 

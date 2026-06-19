@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use crate::{
     error::{io_error, validation_error},
@@ -80,10 +80,9 @@ impl FmuArchive {
         FmuLayout::from_unpacked_dir(root)
     }
 
-    pub fn extract_to(&self, _destination: impl AsRef<Path>) -> FmiResult<FmuLayout> {
-        Err(FmiError::UnsupportedArchiveExtraction {
-            path: self.path.clone(),
-        })
+    pub fn extract_to(&self, destination: impl AsRef<Path>) -> FmiResult<FmuLayout> {
+        extract_stored_zip_entries(&self.path, destination.as_ref())?;
+        FmuLayout::from_unpacked_dir(destination.as_ref())
     }
 }
 
@@ -221,6 +220,179 @@ fn shared_library_extension() -> &'static str {
     } else {
         "so"
     }
+}
+
+fn extract_stored_zip_entries(path: &Path, destination: &Path) -> FmiResult<()> {
+    let bytes =
+        fs::read(path).map_err(|error| io_error("read FMU archive", path.to_path_buf(), error))?;
+    fs::create_dir_all(destination)
+        .map_err(|error| io_error("create FMU extraction directory", destination.into(), error))?;
+
+    let mut offset = 0usize;
+    let mut extracted_entries = 0usize;
+    while offset < bytes.len() {
+        let signature = read_u32(&bytes, offset).ok_or_else(|| {
+            validation_error(
+                "FMU archive",
+                format!("truncated header in {}", path.display()),
+            )
+        })?;
+        if signature == 0x0201_4b50 || signature == 0x0605_4b50 {
+            break;
+        }
+        if signature != 0x0403_4b50 {
+            return Err(validation_error(
+                "FMU archive",
+                format!("unexpected ZIP signature 0x{signature:08x} at byte {offset}"),
+            ));
+        }
+
+        let flags = read_u16(&bytes, offset + 6).ok_or_else(|| {
+            validation_error(
+                "FMU archive",
+                format!("truncated flags in {}", path.display()),
+            )
+        })?;
+        if flags & 0x0008 != 0 {
+            return Err(FmiError::UnsupportedArchiveExtraction {
+                path: path.to_path_buf(),
+            });
+        }
+
+        let method = read_u16(&bytes, offset + 8).ok_or_else(|| {
+            validation_error(
+                "FMU archive",
+                format!("truncated method in {}", path.display()),
+            )
+        })?;
+        if method != 0 {
+            return Err(FmiError::UnsupportedArchiveCompression {
+                path: path.to_path_buf(),
+                method,
+            });
+        }
+
+        let compressed_len = read_u32(&bytes, offset + 18).ok_or_else(|| {
+            validation_error(
+                "FMU archive",
+                format!("truncated size in {}", path.display()),
+            )
+        })? as usize;
+        let uncompressed_len = read_u32(&bytes, offset + 22).ok_or_else(|| {
+            validation_error(
+                "FMU archive",
+                format!("truncated size in {}", path.display()),
+            )
+        })? as usize;
+        if compressed_len != uncompressed_len {
+            return Err(validation_error(
+                "FMU archive",
+                "stored entry has mismatched compressed and uncompressed sizes",
+            ));
+        }
+
+        let name_len = read_u16(&bytes, offset + 26).ok_or_else(|| {
+            validation_error(
+                "FMU archive",
+                format!("truncated name length in {}", path.display()),
+            )
+        })? as usize;
+        let extra_len = read_u16(&bytes, offset + 28).ok_or_else(|| {
+            validation_error(
+                "FMU archive",
+                format!("truncated extra length in {}", path.display()),
+            )
+        })? as usize;
+        let name_start = offset + 30;
+        let name_end = name_start
+            .checked_add(name_len)
+            .ok_or_else(|| validation_error("FMU archive", "archive entry name length overflow"))?;
+        let data_start = name_end
+            .checked_add(extra_len)
+            .ok_or_else(|| validation_error("FMU archive", "archive extra length overflow"))?;
+        let data_end = data_start
+            .checked_add(compressed_len)
+            .ok_or_else(|| validation_error("FMU archive", "archive entry size overflow"))?;
+        if data_end > bytes.len() {
+            return Err(validation_error(
+                "FMU archive",
+                format!("truncated entry data in {}", path.display()),
+            ));
+        }
+
+        let entry = std::str::from_utf8(&bytes[name_start..name_end])
+            .map_err(|error| validation_error("FMU archive", error.to_string()))?;
+        let relative_path = safe_archive_entry(path, entry)?;
+        let target = destination.join(relative_path);
+        if entry.ends_with('/') {
+            fs::create_dir_all(&target)
+                .map_err(|error| io_error("create FMU archive directory", target, error))?;
+        } else {
+            if let Some(parent) = target.parent() {
+                fs::create_dir_all(parent).map_err(|error| {
+                    io_error(
+                        "create FMU archive parent directory",
+                        parent.to_path_buf(),
+                        error,
+                    )
+                })?;
+            }
+            fs::write(&target, &bytes[data_start..data_end])
+                .map_err(|error| io_error("write FMU archive entry", target, error))?;
+        }
+        extracted_entries += 1;
+        offset = data_end;
+    }
+
+    if extracted_entries == 0 {
+        return Err(validation_error(
+            "FMU archive",
+            "archive contains no local entries",
+        ));
+    }
+    Ok(())
+}
+
+fn safe_archive_entry(archive: &Path, entry: &str) -> FmiResult<PathBuf> {
+    let path = Path::new(entry);
+    if path.is_absolute() {
+        return Err(FmiError::UnsafeArchiveEntry {
+            path: archive.to_path_buf(),
+            entry: entry.to_string(),
+        });
+    }
+
+    let mut safe = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::Normal(part) => safe.push(part),
+            Component::CurDir => {}
+            _ => {
+                return Err(FmiError::UnsafeArchiveEntry {
+                    path: archive.to_path_buf(),
+                    entry: entry.to_string(),
+                });
+            }
+        }
+    }
+
+    if safe.as_os_str().is_empty() {
+        return Err(FmiError::UnsafeArchiveEntry {
+            path: archive.to_path_buf(),
+            entry: entry.to_string(),
+        });
+    }
+    Ok(safe)
+}
+
+fn read_u16(bytes: &[u8], offset: usize) -> Option<u16> {
+    let slice = bytes.get(offset..offset.checked_add(2)?)?;
+    Some(u16::from_le_bytes([slice[0], slice[1]]))
+}
+
+fn read_u32(bytes: &[u8], offset: usize) -> Option<u32> {
+    let slice = bytes.get(offset..offset.checked_add(4)?)?;
+    Some(u32::from_le_bytes([slice[0], slice[1], slice[2], slice[3]]))
 }
 
 #[cfg(test)]
