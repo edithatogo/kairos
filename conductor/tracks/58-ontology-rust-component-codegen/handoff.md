@@ -5,9 +5,9 @@ Status: In Progress
 ## Current implementation evidence
 
 - Task 0.1 commit: 14f3f4d, added codegen contract for normalized ontology IR, Rust naming, reserved names, deterministic output, and feature boundaries.
-- Task 0.2 artifact: open-game-theory-ontology/fixtures/generated/rust/game_components.rs is the rustfmt-compatible golden generated output fixture.
-- Task 0.2 artifact: open-game-theory-ontology/fixtures/generated/rust/manifest.json records source fixtures and determinism contract.
-- Task 0.2 local gate: rustfmt --check open-game-theory-ontology/fixtures/generated/rust/game_components.rs pending after formatting.
+- Task 0.2 commit: 2d49b07, added rustfmt-compatible golden generated Rust fixture and manifest.
+- Review fix commit: 8486d90, fixed the golden manifest so it is valid JSON.
+- Local gates: rustfmt --check for the golden Rust fixture passed; manifest JSON parse passed; validate_conductor_phase_gates.ps1 passed.
 
 ## Integration notes
 
@@ -17,15 +17,14 @@ Status: In Progress
 
 ## Follow-up issues
 
-- Phase 0 closeout: run review, apply accepted fixes, push, and watch GitHub Actions.
 - Phase 1: Implement deterministic codegen and compile generated components.
 - Add generated API review evidence.
 
 ## Phase closeout evidence
 
-- `$conductor-review`: pending.
-- accepted fixes: pending.
-- commit SHA: pending.
-- pushed ref: pending.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending.
-- next-phase decision: remain In Progress until Phase 0 closeout.
+- `$conductor-review`: Phase 0 review found one in-scope fixture defect, invalid escaped JSON in the generated manifest.
+- accepted fixes: fixed generated manifest JSON in commit 8486d90.
+- commit SHA: 14f3f4d, 2d49b07, 8486d90; phase closeout metadata commit pending.
+- pushed ref: pending-phase-0-push.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending after push.
+- next-phase decision: Track 58 remains In Progress; proceed to Phase 1 deterministic generator implementation after push, GitHub Actions review, and strict git closeout.

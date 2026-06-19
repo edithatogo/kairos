@@ -950,18 +950,20 @@ entries:
     pushed_ref: "pending-track-creation-push"
     next_phase_decision: "Track 57 remains Spec Approved until the subrepo, ingestion crate, parser fixtures, and schema evidence are implemented."
   - track_id: "58"
-    phase: "track-creation"
+    phase: "phase-0-codegen-contract"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 58 scopes deterministic ontology-to-Rust component generation and generated API review gates."
-    fixes_applied: false
+    review_result: "Track 58 Phase 0 review found one fixture defect: the generated Rust manifest had literal escaped quotes instead of valid JSON. The fix rewrote the manifest through object-based JSON generation and re-ran rustfmt, JSON parse, and Conductor phase gates."
+    fixes_applied: true
     validation_commands:
+      - "rustfmt --check open-game-theory-ontology/fixtures/generated/rust/game_components.rs"
+      - "node -e JSON.parse manifest smoke"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "pending track-creation commit"
-    commit_sha: "pending-track-creation-commit"
-    pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 58 remains Spec Approved until codegen fixtures, generated component API, and deterministic regeneration checks are implemented."
+    git_status: "phase 0 commits local; push and strict git closeout pending"
+    commit_sha: "14f3f4d, 2d49b07, 8486d90"
+    pushed_ref: "pending-phase-0-push"
+    next_phase_decision: "Track 58 is In Progress after Phase 0 contract and golden fixture setup; Phase 1 deterministic generator implementation remains next."
   - track_id: "59"
     phase: "track-creation"
     state: pending
