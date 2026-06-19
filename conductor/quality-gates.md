@@ -199,6 +199,24 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **phase-closeout-check**: `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any non-terminal track phase advances. It requires the `$conductor-review` closeout loop, auto-apply of accepted review fixes, blocker recording, machine-readable `conductor/phase-closeout.yaml` evidence, registry/status synchronization across `conductor/tracks.yaml`, `conductor/tracks.md`, and `conductor/status.md`, cleanup evidence, and cleaned commit/push handoff language to be present in the track plan, handoff, and test matrix. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` before advancing the next phase.
 
+### Track 56 game theory ontology and graph ECS gates
+
+**ontology-subrepo-boundary**: validates that `open-game-theory-ontology/` is a standalone tracked ontology source with schema provenance, license, README, and explicit handoff policy before generated Rust components consume it.
+
+**turtle-jsonld-ingestion**: validates that Turtle and JSON-LD fixtures ingest into the same normalized ontology model when their semantic content is equivalent, and that malformed contexts, triples, and version mismatches produce deterministic errors.
+
+**ontology-codegen-determinism**: validates that ontology classes and relationships generate stable Rust component output with golden tests, checksums, and no hand-edited generated artifacts.
+
+**graph-relations-feature-isolation**: validates that graph-relational ECS APIs are absent from default and `--no-default-features` builds, and compile only when the explicit `graph-relations` feature is selected.
+
+**graph-relations-entity-id-topology**: validates that `ChildOf`, `TransitionTo`, and other graph edge components store `EntityId` values and traverse dense component arrays rather than object references.
+
+**no-pointer-graph-topology**: validates that graph topology implementation does not use raw pointers, self-referential structures, boxed node graphs, `Rc`, or `Arc` for parent/child/transition ownership.
+
+**normal-form-solver-parity**: validates normal-form game solver behavior over flat ECS component arrays, including payoff matrix and strategy-space fixtures with deterministic expected outcomes.
+
+**extensive-form-tree-traversal**: validates extensive-form traversal and solver behavior over graph-relational components, including terminal nodes, missing transitions, cycle/depth guards, and reviewed expected outcomes.
+
 ### Track 30 toolchain and version support gates
 
 **toolchain-matrix-current**: `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` plus `.github/workflows/toolchain-check.yml` live setup lanes - the support matrix must name Rust, Python, R, Julia, TypeScript/Wasm, C#, and Go, must include min/latest/deprecation/OS-arch coverage columns, and every `CI-covered` selector must install and report the declared major/minor version.

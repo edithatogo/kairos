@@ -78,6 +78,7 @@ The Conductor setup is complete, but implementation should move through explicit
 | FMI Co-Simulation Master Runtime (Track 53) | R0 | Spec-approved real FMU runtime follow-up; Track 38 scaffold remains the current implementation. |
 | Slurm/Container/Cloud Runtime Acceptance (Track 54) | R0 | Spec-approved live runtime acceptance follow-up; Track 39/43 offline and partial Azure evidence remains the current implementation. |
 | Weak/Strong Scaling Certification (Track 55) | R0 | Spec-approved final certification follow-up; no integrated scaling evidence yet. |
+| Open Game Theory Ontology and Multi-Game Framework (Track 56) | R0 | Spec-approved ontology, graph-relations, and game solver follow-up; no subrepository, parser, feature-gated graph module, or solver implementation yet. |
 
 ## Enforcement rule
 

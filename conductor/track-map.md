@@ -66,6 +66,7 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 53 | FMI 2/3 Co-Simulation Master Runtime | FMU archive, dynamic loading, 1,000-step co-sim | fmi-agent + ffi-agent + interop-agent | After Track 38, Track 46, and FFI |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Live Slurm, container, Kubernetes, and provider proof | cloud-agent + distributed-agent + gpu-compute-agent + release-agent | After Tracks 39, 43, 49, and 52 |
 | 55 | End-to-End Weak/Strong Scaling Certification | Final integrated HPC parity certification | performance-agent + benchmark-agent + cloud-agent + release-agent | After Tracks 47-54 |
+| 56 | Open Game Theory Ontology and Multi-Game Framework | Ontology ingestion, graph-relational ECS, normal/extensive-form solvers | interop-agent + ecs-agent + core-scheduler-agent + model-zoo-agent + api-governance-agent | After Tracks 01, 03, 12, 23, 25, 26, 29, and 30 |
 
 ## Release-critical path
 
@@ -460,4 +461,10 @@ flowchart LR
   53 FMI 2/3 Co-Simulation Master Runtime
   54 Slurm, Container & Cloud HPC Runtime Acceptance
   55 End-to-End Weak/Strong Scaling Certification
+```
+
+### Group H: game theory ontology and graph ECS
+
+```text
+  56 Open Game Theory Ontology and Multi-Game Framework
 ```
