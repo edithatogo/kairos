@@ -867,10 +867,13 @@ entries:
     fixes_applied: false
     validation_commands:
       - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features wgpu-backend,cuda-backend"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-webgpu --features webgpu"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-gpu -p kairo-ecs-webgpu --all-targets --all-features -- -D warnings"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features --jobs 1"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "pending persistent-memory contract commit"
-    commit_sha: "pending-track-52-contract-commit"
+    git_status: "implementation commit created; strict git closeout pending after evidence metadata commit"
+    commit_sha: "1abcfe29c89660b534f18b456f4fb02148a8b4c8"
     pushed_ref: "pending-track-52-contract-push"
     next_phase_decision: "Track 52 is In Progress after the first persistent-memory contract baseline; real GPU backend, hardware parity, and benchmark evidence remain required before In Review."
   - track_id: "53"
