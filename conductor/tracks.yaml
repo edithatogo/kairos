@@ -873,7 +873,7 @@ tracks:
       - github-actions-review
   - id: 58
     name: Ontology-to-Rust Component Code Generation
-    status: Spec Approved
+    status: In Progress
     owner: ontology-agent + ecs-agent + api-governance-agent
     depends_on: ["57"]
     owned_paths:

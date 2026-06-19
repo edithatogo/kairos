@@ -10,7 +10,7 @@ Status: In Progress
 - Phase 0 closeout commit: 25201c5, closed the codegen contract phase after push and GitHub Actions review.
 - Task 1.1 commit: 9a3e714, added the codegen feature, deterministic Rust generator, golden-regeneration tests, JSON-LD/Turtle equivalence tests, and invalid ontology contract tests.
 - Task 1.2 commit: 643a29b, added kairo-ecs-game-theory, included the generated component fixture behind generated-components, and added construction coverage for Entity-ID relationship fields.
-- Task 1.3 pending commit: added generated API review and codegen validation script.
+- Task 1.3 commit: 5bd5b34bd6d5232caaee7a2ca02207c315515e34, added generated API review and codegen validation script.
 
 ## Local gate evidence
 
@@ -38,8 +38,8 @@ Status: In Progress
 
 - $conductor-review: Phase 0 review found one in-scope fixture defect, invalid escaped JSON in the generated manifest.
 - Accepted fixes: fixed generated manifest JSON in commit 8486d90.
-- commit SHA: 14f3f4d, 2d49b07, 8486d90, 25201c5, 9a3e714, 643a29b; Task 1.3 commit pending.
+- commit SHA: 14f3f4d, 2d49b07, 8486d90, 25201c5, 9a3e714d4890841573c11f18aa96dbdcb554c055, 643a29b52e73460b648aad6e26cc1890c51db3f5, 5bd5b34bd6d5232caaee7a2ca02207c315515e34, 7b2dca2a2380aedac731cb4d70285b948745fee5; phase closeout metadata commit pending.
 - Pushed ref: origin/codex/kairos-hpc-parity-wave.
 - validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree: passed after Phase 0 push.
-- GitHub Actions review: PR #29 checks passed after rerunning a transient Ubuntu crates.io download failure.
+- GitHub Actions review: Phase 0 PR #29 checks passed after rerunning a transient Ubuntu crates.io download failure; Phase 1 push and check watch pending.
 - Next-phase decision: Track 58 remains In Progress; continue Phase 1 implementation.
