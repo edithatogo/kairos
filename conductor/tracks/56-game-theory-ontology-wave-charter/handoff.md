@@ -13,11 +13,11 @@ Implementation has started. Future handoffs must record:
 
 ## Integration notes
 
-Track 56 now owns `conductor/game-theory-evidence/schema.json`, manifest templates for Tracks 57-61, and `scripts/validation/validate-game-theory-evidence.mjs`. Track 56 now owns the wave-level charter in `conductor/game-theory-ontology-wave.md`. No runtime integration exists yet. Downstream tracks must not claim implementation until their owned source paths and tests exist.
+Track 56 now owns `conductor/game-theory-evidence/schema.json`, manifest templates for Tracks 57-61, `scripts/validation/validate-game-theory-evidence.mjs`, and `scripts/validation/validate-game-theory-claims.mjs`. Track 56 now owns the wave-level charter in `conductor/game-theory-ontology-wave.md`. No runtime integration exists yet. Downstream tracks must not claim implementation until their owned source paths and tests exist.
 
 ## Follow-up issues
 
-- Add claim-boundary scan rules and negative evidence fixtures.
+- Add negative evidence fixtures.
 - Add GitHub Actions review evidence after the first pushed phase.
 
 ## Phase closeout evidence
