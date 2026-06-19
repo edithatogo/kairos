@@ -335,6 +335,7 @@ mod codegen {
                 other => emit_struct(&mut out, other, &[], fields_by_domain.get(other)),
             }
         }
+        out.pop();
         Ok(out)
     }
 
