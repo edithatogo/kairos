@@ -31,10 +31,22 @@
       "type": "rdfs:Class"
     },
     {
+      "id": "gt:hasAction",
+      "type": "rdfs:Property",
+      "rdfs:domain": "gt:DecisionNode",
+      "rdfs:range": "gt:Action"
+    },
+    {
       "id": "gt:transitionTo",
       "type": "rdfs:Property",
       "rdfs:domain": "gt:Action",
       "rdfs:range": "gt:Transition"
+    },
+    {
+      "id": "gt:inInformationSet",
+      "type": "rdfs:Property",
+      "rdfs:domain": "gt:DecisionNode",
+      "rdfs:range": "gt:InformationSet"
     }
   ]
 }

@@ -31,6 +31,24 @@
       "type": "rdfs:Property",
       "rdfs:domain": "gt:Game",
       "rdfs:range": "gt:Player"
+    },
+    {
+      "id": "gt:hasStrategy",
+      "type": "rdfs:Property",
+      "rdfs:domain": "gt:Player",
+      "rdfs:range": "gt:Strategy"
+    },
+    {
+      "id": "gt:hasPayoffMatrix",
+      "type": "rdfs:Property",
+      "rdfs:domain": "gt:Game",
+      "rdfs:range": "gt:PayoffMatrix"
+    },
+    {
+      "id": "gt:hasUtility",
+      "type": "rdfs:Property",
+      "rdfs:domain": "gt:PayoffMatrix",
+      "rdfs:range": "gt:Utility"
     }
   ]
 }
