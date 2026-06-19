@@ -171,8 +171,9 @@ make the live-proof gap explicit rather than marking the current scaffolds
 complete. Track 46 is now `In Progress` with a machine-readable evidence schema,
 scaffold/live-HPC template manifests, and an executable claim-boundary validator.
 Track 47 is `In Progress` with the first conservative lookahead enforcement
-slice in `kairo-ecs-pdes`. Tracks 48-55 remain `Spec Approved` and cover Time
-Warp rollback, real MPI/gRPC synchronization, NUMA and
+slice in `kairo-ecs-pdes`. Track 48 is `In Progress` with a first `time-warp`
+feature-gated rollback/anti-message/generation guard slice in `kairo-ecs-pdes`.
+Tracks 49-55 remain `Spec Approved` and cover real MPI/gRPC synchronization, NUMA and
 memory lifecycle, Arrow/HDF5/ADIOS2 checkpoint I/O, native GPU execution, FMI
 co-simulation master runtime, Slurm/container/cloud runtime acceptance, and
 final weak/strong scaling certification. None of these tracks is `Done`; live

@@ -12,6 +12,7 @@ kairo-ecs-types = { path = "../kairo-ecs-types" }
 [features]
 default = []
 pdes = []
+time-warp = []
 
 [lib]
 path = "src/lib.rs"

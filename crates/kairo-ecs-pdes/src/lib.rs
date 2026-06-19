@@ -1,5 +1,7 @@
 #![forbid(unsafe_code)]
 
+#[cfg(feature = "time-warp")]
+use std::collections::BTreeSet;
 use std::collections::{BTreeMap, VecDeque};
 
 use kairo_ecs_types::{EntityId, SimDuration, SimTime};
@@ -414,6 +416,310 @@ pub struct PdesScalingSample {
     pub gvt_samples: usize,
     pub final_state_parity: bool,
     pub hardware_speedup_claimed: bool,
+}
+
+/// Stable identity for a Time Warp message.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct TimeWarpEventId {
+    pub source_lp: LpId,
+    pub dest_lp: LpId,
+    pub tick: Tick,
+    pub sequence: u64,
+}
+
+/// Positive events apply work; anti-messages cancel matching positives.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TimeWarpMessageKind {
+    Positive,
+    Anti,
+}
+
+/// Component delta carried by a Time Warp event.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct TimeWarpDelta {
+    pub entity: EntityId,
+    pub component_slot: u32,
+    pub amount: i128,
+}
+
+/// Dependency-free Time Warp event contract for local rollback tests.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TimeWarpEvent {
+    pub id: TimeWarpEventId,
+    pub kind: TimeWarpMessageKind,
+    pub deltas: Vec<TimeWarpDelta>,
+}
+
+/// Flat component key used by the generation-aware rollback guard.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct TimeWarpComponentKey {
+    pub lp_id: LpId,
+    pub entity: EntityId,
+    pub component_slot: u32,
+}
+
+/// Read token bound to a specific component generation.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct TimeWarpComponentToken {
+    key: TimeWarpComponentKey,
+    generation: u64,
+}
+
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum TimeWarpError {
+    StaleGeneration,
+}
+
+/// Result from one optimistic Time Warp event-processing step.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TimeWarpStepReport {
+    pub rollback_to: Option<Tick>,
+    pub rolled_back_events: Vec<TimeWarpEventId>,
+    pub anti_messages: Vec<TimeWarpEvent>,
+    pub canceled_events: Vec<TimeWarpEventId>,
+}
+
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct TimeWarpComponentCell {
+    value: i128,
+    generation: u64,
+}
+
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct ExecutedTimeWarpEvent {
+    event: TimeWarpEvent,
+}
+
+/// Minimal optimistic rollback runtime used by the Track 48 TDD slice.
+#[cfg(feature = "time-warp")]
+#[derive(Debug, Default)]
+pub struct TimeWarpRuntime {
+    local_times: BTreeMap<LpId, Tick>,
+    components: BTreeMap<TimeWarpComponentKey, TimeWarpComponentCell>,
+    executed: Vec<ExecutedTimeWarpEvent>,
+    canceled: BTreeSet<TimeWarpEventId>,
+}
+
+#[cfg(feature = "time-warp")]
+impl TimeWarpRuntime {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn process_event(
+        &mut self,
+        event: TimeWarpEvent,
+    ) -> Result<TimeWarpStepReport, TimeWarpError> {
+        match event.kind {
+            TimeWarpMessageKind::Anti => Ok(self.cancel_event(event.id)),
+            TimeWarpMessageKind::Positive => Ok(self.process_positive_event(event)),
+        }
+    }
+
+    pub fn local_time(&self, lp_id: LpId) -> Tick {
+        self.local_times
+            .get(&lp_id)
+            .copied()
+            .unwrap_or(SimTime::ZERO)
+    }
+
+    pub fn component_value(
+        &self,
+        lp_id: LpId,
+        entity: EntityId,
+        component_slot: u32,
+    ) -> Option<i128> {
+        self.components
+            .get(&TimeWarpComponentKey {
+                lp_id,
+                entity,
+                component_slot,
+            })
+            .map(|cell| cell.value)
+    }
+
+    pub fn is_canceled(&self, event_id: TimeWarpEventId) -> bool {
+        self.canceled.contains(&event_id)
+    }
+
+    pub fn write_component(
+        &mut self,
+        key: TimeWarpComponentKey,
+        value: i128,
+    ) -> TimeWarpComponentToken {
+        let next_generation = self
+            .components
+            .get(&key)
+            .map_or(1, |cell| cell.generation.saturating_add(1));
+        self.components.insert(
+            key,
+            TimeWarpComponentCell {
+                value,
+                generation: next_generation,
+            },
+        );
+        TimeWarpComponentToken {
+            key,
+            generation: next_generation,
+        }
+    }
+
+    pub fn read_component(&self, token: TimeWarpComponentToken) -> Result<i128, TimeWarpError> {
+        let cell = self
+            .components
+            .get(&token.key)
+            .ok_or(TimeWarpError::StaleGeneration)?;
+        if cell.generation == token.generation {
+            Ok(cell.value)
+        } else {
+            Err(TimeWarpError::StaleGeneration)
+        }
+    }
+
+    fn process_positive_event(&mut self, event: TimeWarpEvent) -> TimeWarpStepReport {
+        if self.canceled.contains(&event.id) {
+            return TimeWarpStepReport {
+                rollback_to: None,
+                rolled_back_events: Vec::new(),
+                anti_messages: Vec::new(),
+                canceled_events: vec![event.id],
+            };
+        }
+
+        let current_time = self.local_time(event.id.dest_lp);
+        let rollback_to = (event.id.tick < current_time).then_some(event.id.tick);
+        let mut rolled_back_events = Vec::new();
+        let mut anti_messages = Vec::new();
+        if rollback_to.is_some() {
+            let rollback = self.rollback_after(event.id.dest_lp, event.id.tick);
+            rolled_back_events = rollback.rolled_back_events;
+            anti_messages = rollback.anti_messages;
+        }
+
+        self.apply_event(&event);
+        self.executed.push(ExecutedTimeWarpEvent {
+            event: event.clone(),
+        });
+        self.local_times.insert(
+            event.id.dest_lp,
+            self.local_time(event.id.dest_lp).max(event.id.tick),
+        );
+
+        TimeWarpStepReport {
+            rollback_to,
+            rolled_back_events,
+            anti_messages,
+            canceled_events: Vec::new(),
+        }
+    }
+
+    fn cancel_event(&mut self, event_id: TimeWarpEventId) -> TimeWarpStepReport {
+        self.canceled.insert(event_id);
+        let mut canceled_events = Vec::new();
+        if let Some(index) = self
+            .executed
+            .iter()
+            .position(|entry| entry.event.id == event_id)
+        {
+            let entry = self.executed.remove(index);
+            self.undo_event(&entry.event);
+            canceled_events.push(event_id);
+            self.recompute_local_time(event_id.dest_lp);
+        }
+
+        TimeWarpStepReport {
+            rollback_to: canceled_events.first().map(|_| event_id.tick),
+            rolled_back_events: canceled_events.clone(),
+            anti_messages: Vec::new(),
+            canceled_events,
+        }
+    }
+
+    fn rollback_after(&mut self, lp_id: LpId, tick: Tick) -> TimeWarpStepReport {
+        let mut retained = Vec::with_capacity(self.executed.len());
+        let mut rolled_back = Vec::new();
+        let mut anti_messages = Vec::new();
+
+        for entry in std::mem::take(&mut self.executed) {
+            if entry.event.id.dest_lp == lp_id && entry.event.id.tick > tick {
+                self.undo_event(&entry.event);
+                rolled_back.push(entry.event.id);
+                anti_messages.push(TimeWarpEvent {
+                    id: entry.event.id,
+                    kind: TimeWarpMessageKind::Anti,
+                    deltas: Vec::new(),
+                });
+            } else {
+                retained.push(entry);
+            }
+        }
+
+        self.executed = retained;
+        self.local_times.insert(lp_id, tick);
+
+        TimeWarpStepReport {
+            rollback_to: Some(tick),
+            rolled_back_events: rolled_back,
+            anti_messages,
+            canceled_events: Vec::new(),
+        }
+    }
+
+    fn apply_event(&mut self, event: &TimeWarpEvent) {
+        for delta in &event.deltas {
+            self.apply_delta(event.id.dest_lp, *delta, delta.amount);
+        }
+    }
+
+    fn undo_event(&mut self, event: &TimeWarpEvent) {
+        for delta in event.deltas.iter().rev() {
+            self.apply_delta(event.id.dest_lp, *delta, -delta.amount);
+        }
+    }
+
+    fn apply_delta(&mut self, lp_id: LpId, delta: TimeWarpDelta, amount: i128) {
+        let key = TimeWarpComponentKey {
+            lp_id,
+            entity: delta.entity,
+            component_slot: delta.component_slot,
+        };
+        let current = self
+            .components
+            .get(&key)
+            .copied()
+            .unwrap_or(TimeWarpComponentCell {
+                value: 0,
+                generation: 0,
+            });
+        self.components.insert(
+            key,
+            TimeWarpComponentCell {
+                value: current.value + amount,
+                generation: current.generation.saturating_add(1),
+            },
+        );
+    }
+
+    fn recompute_local_time(&mut self, lp_id: LpId) {
+        let next_time = self
+            .executed
+            .iter()
+            .filter(|entry| entry.event.id.dest_lp == lp_id)
+            .map(|entry| entry.event.id.tick)
+            .max()
+            .unwrap_or(SimTime::ZERO);
+        self.local_times.insert(lp_id, next_time);
+    }
 }
 
 /// Research-spike result for optimistic Time Warp rollback behaviour.
@@ -1195,5 +1501,106 @@ mod tests {
             }),
             Err("PDES workload must include at least one LP".to_string())
         );
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_straggler_rolls_back_to_prior_checkpoint() {
+        let mut engine = TimeWarpRuntime::new();
+        let late = TimeWarpEvent {
+            id: TimeWarpEventId {
+                source_lp: LpId(0),
+                dest_lp: LpId(1),
+                tick: SimTime::from_ticks(10),
+                sequence: 1,
+            },
+            kind: TimeWarpMessageKind::Positive,
+            deltas: vec![TimeWarpDelta {
+                entity: EntityId::new(7, 0),
+                component_slot: 0,
+                amount: 11,
+            }],
+        };
+        let straggler = TimeWarpEvent {
+            id: TimeWarpEventId {
+                source_lp: LpId(0),
+                dest_lp: LpId(1),
+                tick: SimTime::from_ticks(4),
+                sequence: 2,
+            },
+            kind: TimeWarpMessageKind::Positive,
+            deltas: vec![TimeWarpDelta {
+                entity: EntityId::new(7, 0),
+                component_slot: 0,
+                amount: 3,
+            }],
+        };
+
+        assert_eq!(engine.process_event(late).unwrap().rollback_to, None);
+        let report = engine.process_event(straggler).unwrap();
+
+        assert_eq!(report.rollback_to, Some(SimTime::from_ticks(4)));
+        assert_eq!(report.rolled_back_events.len(), 1);
+        assert_eq!(
+            engine.component_value(LpId(1), EntityId::new(7, 0), 0),
+            Some(3)
+        );
+        assert_eq!(engine.local_time(LpId(1)), SimTime::from_ticks(4));
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_antimessage_cancels_matching_positive_event() {
+        let mut engine = TimeWarpRuntime::new();
+        let event_id = TimeWarpEventId {
+            source_lp: LpId(0),
+            dest_lp: LpId(1),
+            tick: SimTime::from_ticks(6),
+            sequence: 10,
+        };
+        let positive = TimeWarpEvent {
+            id: event_id,
+            kind: TimeWarpMessageKind::Positive,
+            deltas: vec![TimeWarpDelta {
+                entity: EntityId::new(9, 0),
+                component_slot: 1,
+                amount: 13,
+            }],
+        };
+        let anti = TimeWarpEvent {
+            id: event_id,
+            kind: TimeWarpMessageKind::Anti,
+            deltas: Vec::new(),
+        };
+
+        engine.process_event(positive).unwrap();
+        let report = engine.process_event(anti).unwrap();
+
+        assert_eq!(report.canceled_events, vec![event_id]);
+        assert_eq!(
+            engine.component_value(LpId(1), EntityId::new(9, 0), 1),
+            Some(0)
+        );
+        assert!(engine.is_canceled(event_id));
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_generation_token_rejects_stale_component_access() {
+        let mut engine = TimeWarpRuntime::new();
+        let key = TimeWarpComponentKey {
+            lp_id: LpId(0),
+            entity: EntityId::new(12, 0),
+            component_slot: 2,
+        };
+
+        let first = engine.write_component(key, 42);
+        let second = engine.write_component(key, 43);
+
+        assert_eq!(
+            engine.read_component(first),
+            Err(TimeWarpError::StaleGeneration)
+        );
+        assert_eq!(engine.read_component(second), Ok(43));
     }
 }

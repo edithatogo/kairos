@@ -70,7 +70,7 @@ The Conductor setup is complete, but implementation should move through explicit
 | Astro/Starlight Docs Platform and Polyglot Experience (Track 45) | R2 | The active docs platform uses Astro/Starlight with versioning, local polyglot metadata, link validation, llms.txt, icons, Pagefind output, and a dedicated SOTA validator. |
 | HPC Parity Charter (Track 46) | R2 | Evidence contract schema, scaffold/live-HPC template manifests, and executable claim-boundary validator exist. This is governance evidence only; no runtime HPC capability is claimed. |
 | PDES Conservative Production Runtime (Track 47) | R1 | First production-runtime slice enforces conservative lookahead with a typed `LookaheadViolation` error in `kairo-ecs-pdes`; sequential parity, full LP partitioning, deadlock stress, and scaling evidence remain incomplete. |
-| Time Warp Optimistic Runtime (Track 48) | R0 | Spec-approved optimistic rollback follow-up; no production rollback runtime yet. |
+| Time Warp Optimistic Runtime (Track 48) | R1 | First `time-warp` feature-gated runtime slice adds local straggler rollback, anti-message cancellation, and generation-stale component access guards in `kairo-ecs-pdes`; fossil collection, rollback pressure stress, overhead metrics, and live evidence remain incomplete. |
 | Distributed MPI/gRPC State Sync (Track 49) | R0 | Spec-approved real transport follow-up; Track 35 protocol emulators remain the current implementation. |
 | NUMA and Memory Lifecycle (Track 50) | R0 | Spec-approved NUMA/affinity/allocator follow-up; no hwloc or production arena allocator implementation yet. |
 | Parallel I/O and Checkpoint Export (Track 51) | R0 | Spec-approved Arrow/HDF5/ADIOS2 follow-up; Track 04 smoke schema remains the current implementation. |

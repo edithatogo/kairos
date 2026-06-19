@@ -2,21 +2,21 @@
 
 ## Phase 0 - TDD baseline
 
-- Task 0.1: Add failing two-LP causality violation tests.
-- Task 0.2: Add failing anti-message cancellation tests.
-- Task 0.3: Add failing generation-stale component access tests.
+- [x] Task 0.1: Add failing two-LP causality violation tests.
+- [x] Task 0.2: Add failing anti-message cancellation tests.
+- [x] Task 0.3: Add failing generation-stale component access tests.
 
 ## Phase 1 - State saving
 
-- Task 1.1: Define rollback checkpoints and event-history ownership.
-- Task 1.2: Add generational component bitset snapshots.
+- [x] Task 1.1: Define rollback checkpoints and event-history ownership.
+- [x] Task 1.2: Add generational component bitset snapshots.
 - Task 1.3: Measure memory overhead per LP and event density.
 
 ## Phase 2 - Optimistic execution
 
 - Task 2.1: Execute beyond safe time when optimistic mode is enabled.
-- Task 2.2: Detect straggler messages and roll back affected LPs.
-- Task 2.3: Re-emit anti-messages for invalidated sends.
+- [x] Task 2.2: Detect straggler messages and roll back affected LPs.
+- [x] Task 2.3: Re-emit anti-messages for invalidated sends.
 
 ## Phase 3 - Fossil collection
 

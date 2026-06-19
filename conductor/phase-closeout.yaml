@@ -795,15 +795,20 @@ entries:
     phase: "track-creation"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 48 was created as the Time Warp optimistic rollback follow-up. Runtime implementation is not part of this creation slice."
+    review_result: "Track 48 was created as the Time Warp optimistic rollback follow-up. The first implementation slice adds a `time-warp` feature-gated local rollback runtime with straggler rollback, anti-message cancellation, invalidated-send anti-message output, and generation-stale component access tests."
     fixes_applied: false
     validation_commands:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-pdes --features time-warp"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-pdes --features pdes"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo check --benches -p kairo-ecs-pdes --features time-warp"
+      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features --jobs 1"
+      - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo clippy --workspace --all-targets --all-features --jobs 1 -- -D warnings"
     git_status: "pending track-creation commit"
     commit_sha: "pending-track-creation-commit"
     pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 48 remains Spec Approved until rollback, anti-message, generation, and fossil-collection tests are implemented."
+    next_phase_decision: "Track 48 is In Progress after the first rollback/anti-message/generation TDD slice; continue with fossil collection, rollback pressure stress, overhead metrics, benchmark, and live evidence work before In Review."
   - track_id: "49"
     phase: "track-creation"
     state: pending
