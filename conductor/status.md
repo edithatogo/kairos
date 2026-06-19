@@ -1,6 +1,6 @@
 # KairoECS Conductor Status
 
-Last verified: 2026-05-19
+Last verified: 2026-06-19
 
 ## Setup state
 
@@ -165,6 +165,17 @@ This narrows the Azure blocker but does not close Track 39 or Track 43 because
 KairoECS container/scenario execution, output/checksum evidence, GPU/HPC proof,
 AWS/GCP canaries, Docker, Kubernetes, Slurm, protected publication, and
 release-manager approval remain unproven.
+
+Tracks 46-55 were added on 2026-06-19 as the production HPC parity wave. They
+are `Spec Approved` planning tracks that make the live-proof gap explicit
+rather than marking the current scaffolds complete. Track 46 defines the shared
+HPC parity charter and evidence fields. Tracks 47-55 cover production
+conservative PDES, Time Warp rollback, real MPI/gRPC synchronization, NUMA and
+memory lifecycle, Arrow/HDF5/ADIOS2 checkpoint I/O, native GPU execution, FMI
+co-simulation master runtime, Slurm/container/cloud runtime acceptance, and
+final weak/strong scaling certification. None of these tracks is `Done`; live
+MPI, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains required
+before production-grade HPC parity can be claimed.
 
 ## Validation evidence
 

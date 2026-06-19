@@ -52,6 +52,20 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 39 | Cloud/HPC Batch Runners | Docker/Kubernetes runners, spot-instance checkpointing, batch job orchestration | cloud-agent | After experiment runner CLI and packaging |
 | 40 | Time-Travel Debugging & Interactive Stepping | Deterministic trace/record/replay, breakpoints, forward/backward stepping | timetravel-agent | After deterministic core and conformance snapshots |
 | 41 | Documentation Platform, Quality Gates & Learning Coverage | Strict docs workflow, docs-platform parity boundary, and learning coverage matrices | docs-agent + ci-agent + community-agent | Done after Track 41 validators passed |
+| 42 | Package Registry Publication & Provenance | Language/package registry publication controls | publication-agent + release-agent + binding agents | After binding, release, trust, governance, health gates |
+| 43 | Cloud/HPC Registry Publication & Runtime Acceptance | OCI, Kubernetes, Slurm, and batch publication controls | hpc-registry-agent + cloud-agent + release-agent | After cloud/HPC and publication gates |
+| 44 | Code and Repository Health >= 9.5 | Hard production health floor | health-agent + ci-agent + security-agent + release-agent | Before production registry or parity claims |
+| 45 | Astro/Starlight Docs Platform and Polyglot Experience | Active docs platform SOTA gate | docs-platform-agent + docs-agent + ci-agent | After docs quality and code health |
+| 46 | HPC Parity Charter, Baselines & Evidence Gates | Shared live-proof charter for Tracks 47-55 | benchmark-agent + interop-agent + redteam-agent + wave-manager-agent | Starts the HPC parity wave |
+| 47 | PDES Conservative Lookahead Production Runtime | Production conservative PDES scheduler | pdes-agent + performance-agent | After Track 34 scaffold and Track 46 charter |
+| 48 | Time Warp Optimistic Rollback Runtime | Optimistic rollback, anti-messages, fossil collection | pdes-agent + timetravel-agent + ecs-agent | After Track 47 LP contract |
+| 49 | Distributed MPI/gRPC State Synchronization | Real MPI/gRPC transports and distributed state sync | distributed-agent + pdes-agent | After Tracks 35, 47, and 48 |
+| 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | hwloc, affinity, arenas, zero-copy FFI layout | core-scheduler-agent + ecs-agent + ffi-agent | After Tracks 01, 02, and 46 |
+| 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | Real Arrow/HDF5/ADIOS2 checkpoint and restart | arrow-agent + cloud-agent + performance-agent | After Tracks 04, 39, and 46 |
+| 52 | Native GPU Acceleration with Persistent Device Memory | Real wgpu/CUDA persistent device execution | gpu-compute-agent + performance-agent | After GPU scaffolds, Track 46, and Track 50 |
+| 53 | FMI 2/3 Co-Simulation Master Runtime | FMU archive, dynamic loading, 1,000-step co-sim | fmi-agent + ffi-agent + interop-agent | After Track 38, Track 46, and FFI |
+| 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Live Slurm, container, Kubernetes, and provider proof | cloud-agent + distributed-agent + gpu-compute-agent + release-agent | After Tracks 39, 43, 49, and 52 |
+| 55 | End-to-End Weak/Strong Scaling Certification | Final integrated HPC parity certification | performance-agent + benchmark-agent + cloud-agent + release-agent | After Tracks 47-54 |
 
 ## Release-critical path
 
@@ -72,6 +86,8 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
   -> 34 PDES & Parallel Execution (release-critical)
   -> 35 Distributed Simulation MPI/gRPC (release-critical)
   -> 38 FMI/FMU Digital Twin Bridge (release-critical)
+  -> 46 HPC Parity Charter
+  -> 47-55 Production HPC parity evidence wave
 ```
 
 ## Expanded dependency DAG
@@ -429,4 +445,19 @@ flowchart LR
 
 ```text
   31 Performance regression guard
+```
+
+### Group G: production HPC parity wave
+
+```text
+  46 HPC Parity Charter, Baselines & Evidence Gates
+  47 PDES Conservative Lookahead Production Runtime
+  48 Time Warp Optimistic Rollback Runtime
+  49 Distributed MPI/gRPC State Synchronization
+  50 NUMA Topology, Affinity & HPC Memory Lifecycle
+  51 Parallel I/O, Arrow Record Batches & Checkpoint Export
+  52 Native GPU Acceleration with Persistent Device Memory
+  53 FMI 2/3 Co-Simulation Master Runtime
+  54 Slurm, Container & Cloud HPC Runtime Acceptance
+  55 End-to-End Weak/Strong Scaling Certification
 ```

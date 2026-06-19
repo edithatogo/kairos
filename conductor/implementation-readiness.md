@@ -1,6 +1,6 @@
 # KairoECS Implementation Readiness
 
-Last verified: 2026-05-17
+Last verified: 2026-06-19
 
 ## Purpose
 
@@ -68,6 +68,16 @@ The Conductor setup is complete, but implementation should move through explicit
 | Time-Travel Debugging (Track 40) | R2 | `crates/kairo-ecs-debug` and `website/time-travel-demo` exist with trace-line validation and a Node demo smoke harness. |
 | Documentation Platform, Quality Gates, and Learning Coverage (Track 41) | R2 | Current docs, CI, example, and notebook surfaces are validated with a learning-coverage matrix, notebook inventory checks, docs workflow smoke, and an explicit docs-platform parity boundary for the active Astro/Starlight site. |
 | Astro/Starlight Docs Platform and Polyglot Experience (Track 45) | R2 | The active docs platform uses Astro/Starlight with versioning, local polyglot metadata, link validation, llms.txt, icons, Pagefind output, and a dedicated SOTA validator. |
+| HPC Parity Charter (Track 46) | R0 | Spec-approved planning track defining live-proof evidence gates for Tracks 47-55; no runtime implementation yet. |
+| PDES Conservative Production Runtime (Track 47) | R0 | Spec-approved production PDES follow-up; Track 34 scaffold remains the current implementation. |
+| Time Warp Optimistic Runtime (Track 48) | R0 | Spec-approved optimistic rollback follow-up; no production rollback runtime yet. |
+| Distributed MPI/gRPC State Sync (Track 49) | R0 | Spec-approved real transport follow-up; Track 35 protocol emulators remain the current implementation. |
+| NUMA and Memory Lifecycle (Track 50) | R0 | Spec-approved NUMA/affinity/allocator follow-up; no hwloc or production arena allocator implementation yet. |
+| Parallel I/O and Checkpoint Export (Track 51) | R0 | Spec-approved Arrow/HDF5/ADIOS2 follow-up; Track 04 smoke schema remains the current implementation. |
+| Native GPU Persistent Device Runtime (Track 52) | R0 | Spec-approved real wgpu/CUDA follow-up; Tracks 32/33 placeholders remain the current implementation. |
+| FMI Co-Simulation Master Runtime (Track 53) | R0 | Spec-approved real FMU runtime follow-up; Track 38 scaffold remains the current implementation. |
+| Slurm/Container/Cloud Runtime Acceptance (Track 54) | R0 | Spec-approved live runtime acceptance follow-up; Track 39/43 offline and partial Azure evidence remains the current implementation. |
+| Weak/Strong Scaling Certification (Track 55) | R0 | Spec-approved final certification follow-up; no integrated scaling evidence yet. |
 
 ## Enforcement rule
 

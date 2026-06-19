@@ -665,3 +665,177 @@ tracks:
       - polyglot-docs-plugin
       - llms-txt
       - docs-platform-sota
+  - id: 46
+    name: HPC Parity Charter, Baselines & Evidence Gates
+    status: Spec Approved
+    owner: benchmark-agent + interop-agent + redteam-agent + wave-manager-agent
+    depends_on: ["18", "26", "28", "29", "31", "44"]
+    owned_paths:
+      - conductor/hpc-parity-wave.md
+      - conductor/sota-scorecard.md
+      - conductor/quality-gates.md
+      - conductor/tracks/46-hpc-parity-charter-baselines-evidence-gates/
+    required_gates:
+      - phase-closeout-check
+      - hpc-parity-charter
+      - hpc-evidence-manifest
+      - hpc-claim-boundary
+  - id: 47
+    name: PDES Conservative Lookahead Production Runtime
+    status: Spec Approved
+    owner: pdes-agent + performance-agent
+    depends_on: ["34", "46"]
+    owned_paths:
+      - crates/kairo-ecs-pdes/
+      - benches/pdes/
+      - docs/pdes/
+      - conductor/tracks/47-pdes-conservative-lookahead-production-runtime/
+    required_gates:
+      - phase-closeout-check
+      - pdes-production-lookahead
+      - pdes-sequential-parity
+      - gvt-progression-check
+      - pdes-deadlock-free
+      - hpc-evidence-manifest
+  - id: 48
+    name: Time Warp Optimistic Rollback Runtime
+    status: Spec Approved
+    owner: pdes-agent + timetravel-agent + ecs-agent
+    depends_on: ["47"]
+    owned_paths:
+      - crates/kairo-ecs-pdes/
+      - docs/pdes/
+      - benches/pdes/
+      - conductor/tracks/48-time-warp-optimistic-rollback-runtime/
+    required_gates:
+      - phase-closeout-check
+      - time-warp-rollback-parity
+      - time-warp-antimessage-integrity
+      - generational-bitset-rollback
+      - fossil-collection-safety
+      - hpc-evidence-manifest
+  - id: 49
+    name: Distributed MPI/gRPC State Synchronization
+    status: Spec Approved
+    owner: distributed-agent + pdes-agent
+    depends_on: ["35", "47", "48"]
+    owned_paths:
+      - crates/kairo-ecs-mpi/
+      - crates/kairo-ecs-grpc/
+      - docs/distributed/
+      - conductor/tracks/49-distributed-mpi-grpc-state-synchronization/
+    required_gates:
+      - phase-closeout-check
+      - real-mpi-multirank
+      - real-grpc-node-smoke
+      - distributed-state-parity
+      - entity-migration-integrity
+      - distributed-telemetry-merge
+      - hpc-evidence-manifest
+  - id: 50
+    name: NUMA Topology, Affinity & HPC Memory Lifecycle
+    status: Spec Approved
+    owner: core-scheduler-agent + ecs-agent + ffi-agent
+    depends_on: ["01", "02", "46"]
+    owned_paths:
+      - crates/kairo-ecs-core/
+      - crates/kairo-ecs-state/
+      - crates/kairo-ecs-ffi/
+      - docs/performance/
+      - conductor/tracks/50-numa-topology-affinity-memory-lifecycle/
+    required_gates:
+      - phase-closeout-check
+      - numa-topology-discovery
+      - core-affinity-binding
+      - event-arena-lifecycle
+      - zero-copy-ffi-layout
+      - allocator-contention-budget
+  - id: 51
+    name: Parallel I/O, Arrow Record Batches & Checkpoint Export
+    status: Spec Approved
+    owner: arrow-agent + cloud-agent + performance-agent
+    depends_on: ["04", "39", "46"]
+    owned_paths:
+      - crates/kairo-ecs-arrow/
+      - schemas/arrow/
+      - examples/telemetry/
+      - docs/parallel-io/
+      - conductor/tracks/51-parallel-io-arrow-checkpoint-export/
+    required_gates:
+      - phase-closeout-check
+      - arrow-recordbatch-real
+      - hdf5-checkpoint-roundtrip
+      - adios2-checkpoint-roundtrip
+      - parallel-filesystem-evidence
+      - checkpoint-restart-parity
+  - id: 52
+    name: Native GPU Acceleration with Persistent Device Memory
+    status: Spec Approved
+    owner: gpu-compute-agent + performance-agent
+    depends_on: ["32", "33", "46", "50"]
+    owned_paths:
+      - crates/kairo-ecs-gpu/
+      - crates/kairo-ecs-webgpu/
+      - docs/gpu-compute/
+      - website/webgpu-demo/
+      - conductor/tracks/52-native-gpu-acceleration-persistent-device-memory/
+    required_gates:
+      - phase-closeout-check
+      - real-wgpu-device-dispatch
+      - real-cuda-kernel-dispatch
+      - persistent-device-memory
+      - gpu-cpu-parity
+      - gpu-benchmark-threshold
+  - id: 53
+    name: FMI 2/3 Co-Simulation Master Runtime
+    status: Spec Approved
+    owner: fmi-agent + ffi-agent + interop-agent
+    depends_on: ["38", "46", "02"]
+    owned_paths:
+      - crates/kairo-ecs-fmi/
+      - examples/fmi-co-simulation/
+      - docs/fmi-digital-twin/
+      - conductor/tracks/53-fmi-cosimulation-master-runtime/
+    required_gates:
+      - phase-closeout-check
+      - fmu-archive-roundtrip
+      - fmi-dynamic-loading
+      - fmi2-cosim-1000-step
+      - fmi3-cosim-1000-step
+      - openmodelica-roundtrip
+  - id: 54
+    name: Slurm, Container & Cloud HPC Runtime Acceptance
+    status: Spec Approved
+    owner: cloud-agent + distributed-agent + gpu-compute-agent + release-agent
+    depends_on: ["39", "43", "49", "52"]
+    owned_paths:
+      - docker/
+      - k8s/
+      - hpc/slurm/
+      - cloud/
+      - docs/cloud-hpc/
+      - conductor/tracks/54-slurm-container-cloud-hpc-runtime-acceptance/
+    required_gates:
+      - phase-closeout-check
+      - container-runtime-kairos
+      - kubernetes-runtime-kairos
+      - slurm-runtime-kairos
+      - provider-batch-canary
+      - scheduler-runtime-evidence
+  - id: 55
+    name: End-to-End Weak/Strong Scaling Certification
+    status: Spec Approved
+    owner: performance-agent + benchmark-agent + cloud-agent + release-agent
+    depends_on: ["47", "48", "49", "50", "51", "52", "53", "54"]
+    owned_paths:
+      - benches/
+      - docs/benchmarks/
+      - docs/cloud-hpc/
+      - conductor/tracks/55-end-to-end-weak-strong-scaling-certification/
+    required_gates:
+      - phase-closeout-check
+      - weak-scaling-profile
+      - strong-scaling-profile
+      - end-to-end-hpc-scenario
+      - scaling-raw-results-policy
+      - hpc-release-certification

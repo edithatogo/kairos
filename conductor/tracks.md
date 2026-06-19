@@ -50,6 +50,16 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 43 | Cloud/HPC Registry Publication & Runtime Acceptance | Spec Approved | `hpc-registry-agent + cloud-agent + release-agent` | See `conductor/tracks/43-*/spec.md` |
 | 44 | Code and Repository Health >= 9.5 | In Review | `health-agent + ci-agent + security-agent + release-agent` | See `conductor/tracks/44-*/spec.md` |
 | 45 | Astro/Starlight Docs Platform and Polyglot Experience | In Review | `docs-platform-agent + docs-agent + ci-agent` | See `conductor/tracks/45-*/spec.md` |
+| 46 | HPC Parity Charter, Baselines & Evidence Gates | Spec Approved | `benchmark-agent + interop-agent + redteam-agent + wave-manager-agent` | See `conductor/tracks/46-*/spec.md` |
+| 47 | PDES Conservative Lookahead Production Runtime | Spec Approved | `pdes-agent + performance-agent` | See `conductor/tracks/47-*/spec.md` |
+| 48 | Time Warp Optimistic Rollback Runtime | Spec Approved | `pdes-agent + timetravel-agent + ecs-agent` | See `conductor/tracks/48-*/spec.md` |
+| 49 | Distributed MPI/gRPC State Synchronization | Spec Approved | `distributed-agent + pdes-agent` | See `conductor/tracks/49-*/spec.md` |
+| 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | Spec Approved | `core-scheduler-agent + ecs-agent + ffi-agent` | See `conductor/tracks/50-*/spec.md` |
+| 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | Spec Approved | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
+| 52 | Native GPU Acceleration with Persistent Device Memory | Spec Approved | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
+| 53 | FMI 2/3 Co-Simulation Master Runtime | Spec Approved | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
+| 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Spec Approved | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |
+| 55 | End-to-End Weak/Strong Scaling Certification | Spec Approved | `performance-agent + benchmark-agent + cloud-agent + release-agent` | See `conductor/tracks/55-*/spec.md` |
 
 ## Track status vocabulary
 
@@ -71,3 +81,4 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 - GitHub automation, dependency review, scorecard, SBOM, and release workflows already exist under `.github/`; registry publication manifests are now owned by Track 42, cloud/HPC publication manifests by Track 43, and production publication by the Track 44 health gate.
 - Tracks 34, 35, and 38 are release-critical for distributed simulation, FMI digital-twin, and PDES infrastructure.
 - Tracks 32, 33, 36, 37, 39, 40, and 41 are non-release-critical (enhancement only).
+- Tracks 46-55 are release-gating for any production HPC parity claim. They do not mark existing scaffold tracks complete; they define the live-proof layer for PDES, Time Warp, MPI/gRPC, NUMA, parallel I/O, GPU, FMI, Slurm/cloud runtime acceptance, and weak/strong scaling certification.

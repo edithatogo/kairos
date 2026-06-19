@@ -1,0 +1,12 @@
+# Track 48 Test Matrix
+
+| Gate | Command | Required for |
+|---|---|---|
+| Time Warp tests | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-pdes --features time-warp` | Implementation |
+| Conservative regression | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-pdes --features pdes` | Review |
+| Benchmark compile | `rustup run stable-x86_64-pc-windows-gnu cargo check --benches -p kairo-ecs-pdes --features time-warp` | Review |
+| Full workspace | `rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features` | Phase closeout |
+| Phase gates | `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | Phase movement |
+| Git closeout | `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Closeout |
+
+Strict closeout requires `RequireCleanWorkingTree` after each task commit.
