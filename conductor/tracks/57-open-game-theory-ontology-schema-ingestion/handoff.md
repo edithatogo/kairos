@@ -19,8 +19,8 @@ Status: In Progress
 ## Follow-up issues
 
 - Task 1.2 pending commit: added parse_jsonld and JSON-LD ingestion tests.
-- Task 1.3: add deterministic IR normalization and malformed-input tests.
-- Phase 1 closeout still requires review, push, GitHub Actions review, and strict clean-tree closeout.
+- Task 1.3 pending commit: added normalize_ontology plus malformed Turtle and JSON-LD tests.
+- Phase 1 implementation tasks are complete locally; closeout still requires review, push, GitHub Actions review, and strict clean-tree closeout.
 
 ## Phase closeout evidence
 

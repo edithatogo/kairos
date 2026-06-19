@@ -11,7 +11,7 @@ Phase closeout: run validators, `$conductor-review 57`, apply fixes, update hand
 
 - [x] Task 1.1: Add parser crate and failing tests for Turtle ingestion. Commit only after implementation passes as `track 57 task 1.1: parse turtle ontology fixtures`.
 - [x] Task 1.2: Add failing tests and implementation for JSON-LD ingestion. Commit as `track 57 task 1.2: parse jsonld ontology fixtures`.
-- [ ] Task 1.3: Add deterministic IR normalization and malformed-input tests. Commit as `track 57 task 1.3: normalize ontology ir`.
+- [x] Task 1.3: Add deterministic IR normalization and malformed-input tests. Commit as `track 57 task 1.3: normalize ontology ir`.
 
 Phase closeout repeats review, push, and GitHub Actions review.
 

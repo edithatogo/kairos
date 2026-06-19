@@ -140,3 +140,17 @@ fn extract_gt_token(line: &str, line_number: usize) -> Result<String, ParseError
     } 
     Ok(line[start..end].to_owned()) 
 }
+ 
+pub fn normalize_ontology(mut document: OntologyDocument) -> OntologyDocument { 
+    document.classes.sort_by(|left, right| left.id.cmp(&right.id)); 
+    document.classes.dedup_by(|left, right| left.id == right.id); 
+    document.properties.sort_by(|left, right| { 
+        left.id.cmp(&right.id) 
+            .then(left.domain.cmp(&right.domain)) 
+            .then(left.range.cmp(&right.range)) 
+    }); 
+    document.properties.dedup_by(|left, right| { 
+        left.id == right.id && left.domain == right.domain && left.range == right.range 
+    }); 
+    document 
+}
