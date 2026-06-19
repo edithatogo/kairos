@@ -82,3 +82,6 @@ Passing implementation gates:
 Run `$conductor-review`, record accepted fixes, commit SHA, pushed ref,
 `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`, and the
 next-phase decision before advancing beyond this contract-baseline slice.
+
+Implementation commit SHA: `83c1261cd3b3a1f1ed0a7da683c69f6960db1c35`
+pushed ref: pending push
