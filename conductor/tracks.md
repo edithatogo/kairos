@@ -51,7 +51,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 44 | Code and Repository Health >= 9.5 | In Review | `health-agent + ci-agent + security-agent + release-agent` | See `conductor/tracks/44-*/spec.md` |
 | 45 | Astro/Starlight Docs Platform and Polyglot Experience | In Review | `docs-platform-agent + docs-agent + ci-agent` | See `conductor/tracks/45-*/spec.md` |
 | 46 | HPC Parity Charter, Baselines & Evidence Gates | In Progress | `benchmark-agent + interop-agent + redteam-agent + wave-manager-agent` | See `conductor/tracks/46-*/spec.md` |
-| 47 | PDES Conservative Lookahead Production Runtime | Spec Approved | `pdes-agent + performance-agent` | See `conductor/tracks/47-*/spec.md` |
+| 47 | PDES Conservative Lookahead Production Runtime | In Progress | `pdes-agent + performance-agent` | See `conductor/tracks/47-*/spec.md` |
 | 48 | Time Warp Optimistic Rollback Runtime | Spec Approved | `pdes-agent + timetravel-agent + ecs-agent` | See `conductor/tracks/48-*/spec.md` |
 | 49 | Distributed MPI/gRPC State Synchronization | Spec Approved | `distributed-agent + pdes-agent` | See `conductor/tracks/49-*/spec.md` |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | Spec Approved | `core-scheduler-agent + ecs-agent + ffi-agent` | See `conductor/tracks/50-*/spec.md` |

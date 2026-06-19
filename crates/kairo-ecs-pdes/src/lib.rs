@@ -74,9 +74,25 @@ impl TransportError {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PdesError {
     DuplicateLogicalProcess(LpId),
-    MismatchedWorldSegment { lp_id: LpId, segment_id: LpId },
+    MismatchedWorldSegment {
+        lp_id: LpId,
+        segment_id: LpId,
+    },
     SelfLoopNeighbor(LpId),
-    DuplicateNeighbor { lp_id: LpId, neighbor: LpId },
+    DuplicateNeighbor {
+        lp_id: LpId,
+        neighbor: LpId,
+    },
+    LookaheadViolation {
+        lp_id: LpId,
+        event_tick: Tick,
+        minimum_tick: Tick,
+    },
+    LookaheadOverflow {
+        lp_id: LpId,
+        local_time: Tick,
+        lookahead: SimDuration,
+    },
     Transport(TransportError),
 }
 
@@ -291,16 +307,27 @@ impl<T: PdesTransport> PdesScheduler<T> {
 
         for lp_id in &lp_ids {
             if let Some(lp) = self.lps.get_mut(lp_id) {
+                let minimum_remote_tick = lp.local_time().checked_add(lp.lookahead()).ok_or(
+                    PdesError::LookaheadOverflow {
+                        lp_id: *lp_id,
+                        local_time: lp.local_time(),
+                        lookahead: lp.lookahead(),
+                    },
+                )?;
                 for event in lp.schedule_remote_event() {
+                    if event.tick < minimum_remote_tick {
+                        return Err(PdesError::LookaheadViolation {
+                            lp_id: *lp_id,
+                            event_tick: event.tick,
+                            minimum_tick: minimum_remote_tick,
+                        });
+                    }
                     self.transport
                         .send(event.dest_lp, PdesMessage::Event(event))
                         .map_err(PdesError::Transport)?;
                 }
 
-                let safe_time = lp
-                    .local_time()
-                    .checked_add(lp.lookahead())
-                    .unwrap_or(lp.local_time());
+                let safe_time = minimum_remote_tick;
                 if let Some(neighbors) = self.neighbors.get(lp_id) {
                     for neighbor in neighbors {
                         self.transport
@@ -840,11 +867,92 @@ mod tests {
     }
 
     #[test]
+    fn scheduler_rejects_remote_events_before_declared_lookahead() {
+        let event = RemoteEvent {
+            source_lp: LpId(0),
+            dest_lp: LpId(1),
+            tick: SimTime::from_ticks(4),
+            event_payload: b"too-early".to_vec(),
+        };
+        let transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
+        let mut scheduler = PdesScheduler::new(transport);
+
+        scheduler
+            .add_lp(
+                LpId(0),
+                segment(LpId(0)),
+                vec![LpId(1)],
+                Box::new(TestLp::new(2, vec![event])),
+            )
+            .unwrap();
+        scheduler
+            .add_lp(
+                LpId(1),
+                segment(LpId(1)),
+                vec![LpId(0)],
+                Box::new(TestLp::new(2, Vec::new())),
+            )
+            .unwrap();
+
+        assert_eq!(
+            scheduler.step_until(SimTime::from_ticks(3)),
+            Err(PdesError::LookaheadViolation {
+                lp_id: LpId(0),
+                event_tick: SimTime::from_ticks(4),
+                minimum_tick: SimTime::from_ticks(5),
+            })
+        );
+    }
+
+    #[test]
+    fn scheduler_rejects_overflowing_lookahead_before_remote_send() {
+        let event = RemoteEvent {
+            source_lp: LpId(0),
+            dest_lp: LpId(1),
+            tick: SimTime::from_ticks(u128::MAX),
+            event_payload: b"overflow".to_vec(),
+        };
+        let transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
+        let mut scheduler = PdesScheduler::new(transport);
+
+        scheduler
+            .add_lp(
+                LpId(0),
+                segment(LpId(0)),
+                vec![LpId(1)],
+                Box::new(TestLp {
+                    local_time: SimTime::from_ticks(u128::MAX),
+                    lookahead: SimDuration::from_ticks(1),
+                    outbound: vec![event],
+                    received: Vec::new(),
+                }),
+            )
+            .unwrap();
+        scheduler
+            .add_lp(
+                LpId(1),
+                segment(LpId(1)),
+                vec![LpId(0)],
+                Box::new(TestLp::new(1, Vec::new())),
+            )
+            .unwrap();
+
+        assert_eq!(
+            scheduler.step_until(SimTime::from_ticks(u128::MAX)),
+            Err(PdesError::LookaheadOverflow {
+                lp_id: LpId(0),
+                local_time: SimTime::from_ticks(u128::MAX),
+                lookahead: SimDuration::from_ticks(1),
+            })
+        );
+    }
+
+    #[test]
     fn in_memory_gvt_includes_inflight_message_timestamps() {
         let event = RemoteEvent {
             source_lp: LpId(0),
             dest_lp: LpId(1),
-            tick: SimTime::from_ticks(1),
+            tick: SimTime::from_ticks(3),
             event_payload: b"early".to_vec(),
         };
         let transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
@@ -869,7 +977,7 @@ mod tests {
 
         scheduler.step_until(SimTime::from_ticks(3)).unwrap();
 
-        assert_eq!(scheduler.gvt(), SimTime::from_ticks(1));
+        assert_eq!(scheduler.gvt(), SimTime::from_ticks(3));
     }
 
     #[test]

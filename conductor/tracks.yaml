@@ -684,7 +684,7 @@ tracks:
       - hpc-claim-boundary
   - id: 47
     name: PDES Conservative Lookahead Production Runtime
-    status: Spec Approved
+    status: In Progress
     owner: pdes-agent + performance-agent
     depends_on: ["34", "46"]
     owned_paths:

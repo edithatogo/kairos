@@ -4,7 +4,7 @@
 
 - Task 0.1: Add failing sequential-parity tests for deterministic DES, ABM,
   and mixed workloads.
-- Task 0.2: Add failing lookahead-violation tests with expected typed errors.
+- [x] Task 0.2: Add failing lookahead-violation tests with expected typed errors.
 - Task 0.3: Add failing GVT monotonicity and deadlock-stress tests.
 
 ## Phase 1 - Runtime architecture
@@ -17,7 +17,7 @@
 
 ## Phase 2 - Correctness implementation
 
-- Task 2.1: Enforce lookahead before remote scheduling.
+- [x] Task 2.1: Enforce lookahead before remote scheduling.
 - Task 2.2: Compute GVT from LP local time and in-flight message timestamps.
 - Task 2.3: Add shutdown, drain, and no-deadlock behavior for stalled LPs.
 

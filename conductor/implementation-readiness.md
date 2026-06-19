@@ -69,7 +69,7 @@ The Conductor setup is complete, but implementation should move through explicit
 | Documentation Platform, Quality Gates, and Learning Coverage (Track 41) | R2 | Current docs, CI, example, and notebook surfaces are validated with a learning-coverage matrix, notebook inventory checks, docs workflow smoke, and an explicit docs-platform parity boundary for the active Astro/Starlight site. |
 | Astro/Starlight Docs Platform and Polyglot Experience (Track 45) | R2 | The active docs platform uses Astro/Starlight with versioning, local polyglot metadata, link validation, llms.txt, icons, Pagefind output, and a dedicated SOTA validator. |
 | HPC Parity Charter (Track 46) | R2 | Evidence contract schema, scaffold/live-HPC template manifests, and executable claim-boundary validator exist. This is governance evidence only; no runtime HPC capability is claimed. |
-| PDES Conservative Production Runtime (Track 47) | R0 | Spec-approved production PDES follow-up; Track 34 scaffold remains the current implementation. |
+| PDES Conservative Production Runtime (Track 47) | R1 | First production-runtime slice enforces conservative lookahead with a typed `LookaheadViolation` error in `kairo-ecs-pdes`; sequential parity, full LP partitioning, deadlock stress, and scaling evidence remain incomplete. |
 | Time Warp Optimistic Runtime (Track 48) | R0 | Spec-approved optimistic rollback follow-up; no production rollback runtime yet. |
 | Distributed MPI/gRPC State Sync (Track 49) | R0 | Spec-approved real transport follow-up; Track 35 protocol emulators remain the current implementation. |
 | NUMA and Memory Lifecycle (Track 50) | R0 | Spec-approved NUMA/affinity/allocator follow-up; no hwloc or production arena allocator implementation yet. |

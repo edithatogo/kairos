@@ -781,15 +781,16 @@ entries:
     phase: "track-creation"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 47 was created as the production conservative PDES runtime follow-up. Runtime implementation is not part of this creation slice."
+    review_result: "Track 47 was created as the production conservative PDES runtime follow-up. The first implementation slice adds typed conservative lookahead enforcement in the local PDES scheduler; full parity, partitioning, deadlock, benchmark, and live evidence work remains open."
     fixes_applied: false
     validation_commands:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-pdes --features pdes"
     git_status: "pending track-creation commit"
     commit_sha: "pending-track-creation-commit"
     pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 47 remains Spec Approved until TDD parity, lookahead, GVT, deadlock, and scaling implementation begins."
+    next_phase_decision: "Track 47 is In Progress after the lookahead TDD slice; continue with sequential parity, LP partitioning, GVT/deadlock stress, benchmark, and evidence-manifest tasks before In Review."
   - track_id: "48"
     phase: "track-creation"
     state: pending
