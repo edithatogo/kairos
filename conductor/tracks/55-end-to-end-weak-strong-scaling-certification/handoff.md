@@ -72,7 +72,7 @@ making production HPC parity claims.
 - accepted fixes: none applied yet for this slice.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending
   until after this task commit.
-- commit SHA: pending until after this task commit.
+- commit SHA: `dcefb0fb2b83c9ac496b37e550f1be8d3073f811`.
 - pushed ref: pending until after this task push.
 - next-phase decision: remain In Progress until live weak/strong scaling
   profiles and upstream Tracks 47-54 evidence close.
