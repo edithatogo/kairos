@@ -89,5 +89,10 @@ Run `$conductor-review`, record accepted fixes, commit SHA, pushed ref,
 `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`, and the
 next-phase decision before advancing beyond this contract-baseline slice.
 
+Strict closeout:
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
+- accepted fixes: none applied in this closeout note.
+
 Implementation commit SHA: `5c99cdd3b5626063812f40050fd9da3fccbc2375`
 pushed ref: `origin/codex/kairos-hpc-parity-wave`
