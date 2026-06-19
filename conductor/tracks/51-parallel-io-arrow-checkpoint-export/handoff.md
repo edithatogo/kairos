@@ -95,3 +95,6 @@ Review fix:
 Run `$conductor-review`, record accepted fixes, commit SHA, pushed ref,
 `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`, and the
 next-phase decision before advancing beyond this contract-baseline slice.
+
+Implementation commit SHA: `245a5ccaed7ae9a522e1fb887511232f6bed73d2`
+pushed ref: `origin/codex/kairos-hpc-parity-wave`
