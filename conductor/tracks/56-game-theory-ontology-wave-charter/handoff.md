@@ -1,8 +1,8 @@
 # Track 56 Handoff
 
-Status: Spec Approved
+Status: In Progress
 
-No implementation has started. Future handoffs must record:
+Implementation has started. Future handoffs must record:
 
 - Task commit SHAs.
 - Phase review command and accepted fixes.
@@ -13,11 +13,11 @@ No implementation has started. Future handoffs must record:
 
 ## Integration notes
 
-No runtime integration exists yet. Downstream tracks must not claim implementation until their owned source paths and tests exist.
+Track 56 now owns the wave-level charter in `conductor/game-theory-ontology-wave.md`. No runtime integration exists yet. Downstream tracks must not claim implementation until their owned source paths and tests exist.
 
 ## Follow-up issues
 
-- Implement charter and evidence validator.
+- Add evidence schema and evidence validator.
 - Add GitHub Actions review evidence after the first pushed phase.
 
 ## Phase closeout evidence

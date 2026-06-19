@@ -843,7 +843,7 @@ tracks:
       - hpc-release-certification
   - id: 56
     name: Game Theory Ontology Wave Charter and Evidence Gates
-    status: Spec Approved
+    status: In Progress
     owner: ontology-agent + game-theory-agent + wave-manager-agent
     depends_on: ["25", "26", "29"]
     owned_paths:

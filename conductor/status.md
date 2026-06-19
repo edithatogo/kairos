@@ -196,6 +196,9 @@ required before production-grade HPC parity can be claimed.
 
 Tracks 56-61 were added on 2026-06-19 as the open game theory ontology and
 multi-game runtime wave. They split the earlier monolithic Track 56 concept into
+granular implementation tracks. Track 56 is now `In Progress` with the wave
+charter recorded in `conductor/game-theory-ontology-wave.md`, defining parity
+targets, evidence policy, release wording rules, and dependency order.
 granular reviewable tracks: wave charter and evidence gates, ontology subrepo
 and Turtle/JSON-LD ingestion, ontology-to-Rust code generation, feature-gated
 Graph-ECS relations, normal-form multi-game solvers, and extensive-form
