@@ -1,0 +1,41 @@
+{
+  "track_id": 58,
+  "track_name": "Ontology-to-Rust Component Code Generation",
+  "phase": "template",
+  "status": "planned",
+  "task_commits": [
+    {
+      "task": "TEMPLATE",
+      "commit_sha": "0000000000000000000000000000000000000000",
+      "message": "replace with task commit",
+      "local_gates": [
+        "replace with local gate command"
+      ]
+    }
+  ],
+  "review": {
+    "command": "$conductor-review 58",
+    "result": "pending",
+    "accepted_fixes": []
+  },
+  "push": {
+    "ref": "pending",
+    "pushed_sha": "0000000000000000000000000000000000000000"
+  },
+  "github_actions": {
+    "command": "gh pr checks --watch",
+    "result": "pending",
+    "run_url": "pending"
+  },
+  "validation": [
+    {
+      "command": "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1",
+      "result": "pending",
+      "notes": "template"
+    }
+  ],
+  "evidence_paths": [
+    "conductor/game-theory-evidence/templates/track-58-template.json"
+  ],
+  "waivers": []
+}

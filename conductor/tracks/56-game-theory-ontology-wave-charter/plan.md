@@ -3,7 +3,7 @@
 ## Phase 0: Charter and Evidence Contract
 
 - [x] Task 0.1: Add `conductor/game-theory-ontology-wave.md` with parity targets, evidence policy, release wording rules, and dependency order. Commit as `track 56 task 0.1: add game theory wave charter`.
-- [ ] Task 0.2: Add `conductor/game-theory-evidence/schema.json` and template manifests for Tracks 57-61. Commit as `track 56 task 0.2: add ontology evidence schema`.
+- [x] Task 0.2: Add `conductor/game-theory-evidence/schema.json` and template manifests for Tracks 57-61. Commit as `track 56 task 0.2: add ontology evidence schema`.
 - [ ] Task 0.3: Add a validator that rejects missing task commits, missing phase review/push records, and missing GitHub Actions review evidence. Commit as `track 56 task 0.3: validate game theory evidence gates`.
 
 Phase closeout: run Conductor validators, `$conductor-review 56`, apply accepted fixes, update this plan and `handoff.md`, push, then run `gh pr checks --watch` or record why no PR/check surface exists.
