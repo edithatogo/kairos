@@ -17,17 +17,17 @@
 
 ## Phase 2 - Evidence manifest
 
-- Task 2.1: Create a machine-readable evidence manifest schema.
-- Task 2.2: Add sample manifests for local scaffold proof and live-HPC proof.
-- Task 2.3: Add validation that prevents live-proof fields from being omitted.
+- [x] Task 2.1: Create a machine-readable evidence manifest schema.
+- [x] Task 2.2: Add sample manifests for local scaffold proof and live-HPC proof.
+- [x] Task 2.3: Add validation that prevents live-proof fields from being omitted.
 
 ## Phase 3 - Release claim controls
 
-- Task 3.1: Add a no-overclaim scan for HPC docs, README, packaging, and
+- [x] Task 3.1: Add a no-overclaim scan for HPC docs, README, packaging, and
   release-note surfaces.
-- Task 3.2: Require every production HPC claim to name a closed evidence
+- [x] Task 3.2: Require every production HPC claim to name a closed evidence
   manifest and commit SHA.
-- Task 3.3: Add waiver language for unavailable external hardware or accounts.
+- [x] Task 3.3: Add waiver language for unavailable external hardware or accounts.
 
 ## Phase 4 - Cross-track handoff
 

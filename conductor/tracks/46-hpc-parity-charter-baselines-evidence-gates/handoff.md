@@ -4,14 +4,19 @@ Last updated: 2026-06-19
 
 ## Summary
 
-Track 46 creates the shared HPC parity charter and evidence contract. It does
+Track 46 creates the shared HPC parity charter and evidence contract. It now
+includes an executable evidence-manifest and claim-boundary validator. It does
 not implement runtime behavior.
 
 ## Files changed
 
 - `conductor/hpc-parity-wave.md`
+- `conductor/hpc-evidence/schema.json`
+- `conductor/hpc-evidence/manifests/track46-local-scaffold.json`
+- `conductor/hpc-evidence/manifests/track46-live-hpc-template.json`
 - `conductor/quality-gates.md`
 - `conductor/sota-scorecard.md`
+- `scripts/validation/validate-hpc-parity-evidence.mjs`
 - `conductor/tracks/46-hpc-parity-charter-baselines-evidence-gates/*`
 
 ## Contracts consumed
@@ -24,21 +29,21 @@ not implement runtime behavior.
 ## Contracts changed
 
 Tracks 47-55 must use the live evidence manifest fields before claiming `Done`.
+Any real `live-hpc` manifest must record a pushed 40-character commit SHA,
+immutable raw artifact path, sha256 checksum, hardware/scheduler/toolchain
+metadata, reviewer, date, and `waiver.status: none`.
 
 ## Tests added
 
-No executable validator is added in the track-creation slice. The initial gate
-is text and registry validation through the test matrix.
+- `node scripts/validation/validate-hpc-parity-evidence.mjs`
 
 ## Known risks
 
-Live hardware, scheduler, and provider evidence is intentionally absent at
-track creation.
+Live hardware, scheduler, and provider evidence is intentionally absent for
+Track 46. The `track46-live-hpc-template.json` file is a template, not proof.
 
 ## Follow-up issues
 
-- Add a machine-readable evidence manifest schema.
-- Add no-overclaim scans for HPC docs and package surfaces.
 - Backfill SOTA baseline source citations in the charter.
 
 ## Integration notes

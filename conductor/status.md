@@ -167,9 +167,10 @@ AWS/GCP canaries, Docker, Kubernetes, Slurm, protected publication, and
 release-manager approval remain unproven.
 
 Tracks 46-55 were added on 2026-06-19 as the production HPC parity wave. They
-are `Spec Approved` planning tracks that make the live-proof gap explicit
-rather than marking the current scaffolds complete. Track 46 defines the shared
-HPC parity charter and evidence fields. Tracks 47-55 cover production
+make the live-proof gap explicit rather than marking the current scaffolds
+complete. Track 46 is now `In Progress` with a machine-readable evidence schema,
+scaffold/live-HPC template manifests, and an executable claim-boundary validator.
+Tracks 47-55 remain `Spec Approved` and cover production
 conservative PDES, Time Warp rollback, real MPI/gRPC synchronization, NUMA and
 memory lifecycle, Arrow/HDF5/ADIOS2 checkpoint I/O, native GPU execution, FMI
 co-simulation master runtime, Slurm/container/cloud runtime acceptance, and

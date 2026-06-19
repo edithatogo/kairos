@@ -1,0 +1,51 @@
+{
+  "schema_version": "kairoecs.hpc.evidence.v1",
+  "track_id": "46",
+  "task_id": "2.2",
+  "commit_sha": "local-scaffold-no-live-commit",
+  "pushed_ref": "local-only",
+  "evidence_class": "scaffold",
+  "capability": "HPC parity evidence manifest validator smoke",
+  "hardware": {
+    "cpu_model": "local development workstation",
+    "cpu_topology": "not collected for scaffold evidence",
+    "memory_topology": "not collected for scaffold evidence",
+    "accelerator_model": "unavailable for scaffold evidence",
+    "driver": "unavailable for scaffold evidence"
+  },
+  "system": {
+    "operating_system": "Windows local development environment"
+  },
+  "toolchain": {
+    "rust_toolchain": "not required for documentation validator scaffold",
+    "compiler": "not required for documentation validator scaffold",
+    "mpi_implementation": "unavailable for scaffold evidence",
+    "scheduler": "unavailable for scaffold evidence"
+  },
+  "runtime": {
+    "command": "node scripts/validation/validate-hpc-parity-evidence.mjs",
+    "environment": {
+      "mode": "local scaffold validation"
+    },
+    "feature_flags": [],
+    "input_scenario": "Track 46 evidence contract files"
+  },
+  "storage": {
+    "filesystem_or_object_store": "local repository filesystem"
+  },
+  "result": {
+    "expected": "Validator accepts the schema, scaffold manifest, live-HPC template manifest, charter vocabulary, and claim-boundary scan.",
+    "observed": "Scaffold proof records manifest shape only; it is not live HPC runtime evidence.",
+    "raw_artifact_path": "conductor/hpc-evidence/manifests/track46-local-scaffold.json",
+    "checksum": "not-live"
+  },
+  "review": {
+    "reviewer": "Codex local implementation pass",
+    "evidence_date": "2026-06-19"
+  },
+  "waiver": {
+    "status": "not-live",
+    "owner": "Track 46",
+    "expires": "When Track 55 closes with live weak/strong scaling evidence."
+  }
+}

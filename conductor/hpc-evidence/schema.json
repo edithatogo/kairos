@@ -1,0 +1,58 @@
+{
+  "schema_version": "kairoecs.hpc.evidence.schema.v1",
+  "description": "Machine-readable evidence contract for KairoECS HPC parity Tracks 46-55.",
+  "evidence_classes": [
+    "scaffold",
+    "live-hpc-template",
+    "live-hpc"
+  ],
+  "release_claim_terms": [
+    "planned",
+    "scaffolded",
+    "fallback-only",
+    "evidence-backed"
+  ],
+  "required_fields": [
+    "schema_version",
+    "track_id",
+    "task_id",
+    "commit_sha",
+    "pushed_ref",
+    "evidence_class",
+    "capability",
+    "hardware.cpu_model",
+    "hardware.cpu_topology",
+    "hardware.memory_topology",
+    "hardware.accelerator_model",
+    "hardware.driver",
+    "system.operating_system",
+    "toolchain.rust_toolchain",
+    "toolchain.compiler",
+    "toolchain.mpi_implementation",
+    "toolchain.scheduler",
+    "runtime.command",
+    "runtime.environment",
+    "runtime.feature_flags",
+    "runtime.input_scenario",
+    "storage.filesystem_or_object_store",
+    "result.expected",
+    "result.observed",
+    "result.raw_artifact_path",
+    "result.checksum",
+    "review.reviewer",
+    "review.evidence_date",
+    "waiver.status",
+    "waiver.owner",
+    "waiver.expires"
+  ],
+  "live_hpc_rules": {
+    "commit_sha": "40 lowercase hexadecimal characters from the pushed commit under test.",
+    "checksum": "sha256:<64 lowercase hexadecimal characters> for the raw immutable artifact.",
+    "waiver_status": "none",
+    "placeholder_policy": "live-hpc manifests must not contain TBD, unknown, unavailable, or placeholder values."
+  },
+  "template_rules": {
+    "live_hpc_template_waiver_status": "template-required",
+    "scaffold_waiver_status": "not-live"
+  }
+}

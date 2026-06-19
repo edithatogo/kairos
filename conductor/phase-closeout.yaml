@@ -767,15 +767,16 @@ entries:
     phase: "track-creation"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 46 was created as the HPC parity charter and live-evidence gate for Tracks 47-55. Runtime implementation is not part of this creation slice."
+    review_result: "Track 46 was created as the HPC parity charter and live-evidence gate for Tracks 47-55. The first implementation slice now adds the evidence schema, sample manifests, and claim-boundary validator; runtime implementation is not part of this track."
     fixes_applied: false
     validation_commands:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "node scripts/validation/validate-hpc-parity-evidence.mjs"
     git_status: "pending track-creation commit"
     commit_sha: "pending-track-creation-commit"
     pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 46 remains Spec Approved until evidence-manifest validators and claim-boundary scans are implemented."
+    next_phase_decision: "Track 46 is In Progress; evidence-manifest validators and claim-boundary scans are implemented locally, with review, commit, push, and strict git closeout still pending before In Review."
   - track_id: "47"
     phase: "track-creation"
     state: pending

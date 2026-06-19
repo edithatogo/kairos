@@ -667,13 +667,15 @@ tracks:
       - docs-platform-sota
   - id: 46
     name: HPC Parity Charter, Baselines & Evidence Gates
-    status: Spec Approved
+    status: In Progress
     owner: benchmark-agent + interop-agent + redteam-agent + wave-manager-agent
     depends_on: ["18", "26", "28", "29", "31", "44"]
     owned_paths:
       - conductor/hpc-parity-wave.md
+      - conductor/hpc-evidence/
       - conductor/sota-scorecard.md
       - conductor/quality-gates.md
+      - scripts/validation/validate-hpc-parity-evidence.mjs
       - conductor/tracks/46-hpc-parity-charter-baselines-evidence-gates/
     required_gates:
       - phase-closeout-check
