@@ -125,7 +125,7 @@ pub fn parse_jsonld(input: &str) -> Result<OntologyDocument, ParseError> {
     for (index, raw_line) in input.lines().enumerate() {
         let line = raw_line.trim();
         let bytes = line.as_bytes();
-        if contains(bytes, &[34, 105, 100, 34]) {
+        if contains(bytes, &[34, 105, 100, 34]) && contains(bytes, &[103, 116, 58]) {
             current_id = Some(extract_gt_token(line, index + 1)?);
         }
         if contains(bytes, &[114, 100, 102, 115, 58, 67, 108, 97, 115, 115]) {
