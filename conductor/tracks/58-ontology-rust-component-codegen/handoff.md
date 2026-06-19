@@ -9,7 +9,8 @@ Status: In Progress
 - Review fix commit: 8486d90, fixed the golden manifest so it is valid JSON.
 - Phase 0 closeout commit: 25201c5, closed the codegen contract phase after push and GitHub Actions review.
 - Task 1.1 commit: 9a3e714, added the codegen feature, deterministic Rust generator, golden-regeneration tests, JSON-LD/Turtle equivalence tests, and invalid ontology contract tests.
-- Task 1.2 pending commit: added kairo-ecs-game-theory, included the generated component fixture behind generated-components, and added construction coverage for Entity-ID relationship fields.
+- Task 1.2 commit: 643a29b, added kairo-ecs-game-theory, included the generated component fixture behind generated-components, and added construction coverage for Entity-ID relationship fields.
+- Task 1.3 pending commit: added generated API review and codegen validation script.
 
 ## Local gate evidence
 
@@ -21,6 +22,7 @@ Status: In Progress
 - cargo check -p kairo-ecs-game-theory --features generated-components --tests: passed.
 - cargo test -p kairo-ecs-game-ontology --features codegen: blocked on this Windows host by Git link.exe shadowing the MSVC linker; rerun outside sandbox changed the failure to link: extra operand, confirming a local linker toolchain issue rather than a Rust compile failure.
 - cargo test -p kairo-ecs-game-theory --features generated-components: blocked by the same local Git link.exe signal-pipe failure after successful compile checking.
+- node scripts/validation/validate-game-theory-codegen.mjs: passed.
 
 ## Integration notes
 
@@ -30,13 +32,13 @@ Status: In Progress
 
 ## Follow-up issues
 
-- Phase 1 Task 1.3: Add generated API governance review evidence.
+- Phase 1 closeout: run conductor review, push, git closeout validation, and GitHub Actions review.
 
 ## Phase closeout evidence
 
 - $conductor-review: Phase 0 review found one in-scope fixture defect, invalid escaped JSON in the generated manifest.
 - Accepted fixes: fixed generated manifest JSON in commit 8486d90.
-- commit SHA: 14f3f4d, 2d49b07, 8486d90, 25201c5, 9a3e714; Task 1.2 commit pending.
+- commit SHA: 14f3f4d, 2d49b07, 8486d90, 25201c5, 9a3e714, 643a29b; Task 1.3 commit pending.
 - Pushed ref: origin/codex/kairos-hpc-parity-wave.
 - validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree: passed after Phase 0 push.
 - GitHub Actions review: PR #29 checks passed after rerunning a transient Ubuntu crates.io download failure.
