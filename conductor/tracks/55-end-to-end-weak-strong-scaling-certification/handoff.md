@@ -72,7 +72,8 @@ making production HPC parity claims.
 - accepted fixes: none applied yet for this slice.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending
   until after this task commit.
-- commit SHA: `dcefb0fb2b83c9ac496b37e550f1be8d3073f811`.
-- pushed ref: pending until after this task push.
+- implementation commit SHA: `dcefb0feea897688d13cd8905c157a4759246015`.
+- evidence commit SHA: `c99b154748b68f7146fecd8ab7d5106a46a34ae4`.
+- pushed ref: `origin/codex/kairos-hpc-parity-wave`.
 - next-phase decision: remain In Progress until live weak/strong scaling
   profiles and upstream Tracks 47-54 evidence close.
