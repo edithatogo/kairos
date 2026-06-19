@@ -884,10 +884,13 @@ entries:
     fixes_applied: false
     validation_commands:
       - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-fmi --features fmi-runtime,fmi2,fmi3"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-fmi --test fmu_archive --features fmi-runtime"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-fmi --all-targets --all-features -- -D warnings"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features --jobs 1"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "pending FMU archive contract commit"
-    commit_sha: "pending-track-53-archive-commit"
+    git_status: "implementation commit created; strict git closeout pending after evidence metadata commit"
+    commit_sha: "f85c9cf0cd644101a1f061a8c162f1d237dcfd2e"
     pushed_ref: "pending-track-53-archive-push"
     next_phase_decision: "Track 53 is In Progress after the first FMU archive contract baseline; dynamic loading, lifecycle stepping, 1,000-step co-simulation, and OpenModelica evidence remain required before In Review."
   - track_id: "54"

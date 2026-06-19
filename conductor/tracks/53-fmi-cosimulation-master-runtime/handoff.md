@@ -77,7 +77,7 @@ Track 55 consumes integrated FMI scenario evidence after this track closes.
   passed.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending
   until after this task commit.
-- commit SHA: pending until after this task commit.
+- commit SHA: `f85c9cf0cd644101a1f061a8c162f1d237dcfd2e`.
 - pushed ref: pending until after this task push.
 - next-phase decision: remain In Progress and continue to dynamic loading tests
   before any In Review move.
