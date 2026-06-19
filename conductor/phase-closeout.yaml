@@ -883,6 +883,7 @@ entries:
     review_result: "Track 53 has its first implementation slice: dependency-free stored-entry .fmu archive extraction, unsafe path rejection, and extracted-layout validation through FmuArchive::extract_to. Dynamic loading, FMI 2/3 lifecycle calls, 1,000-step co-simulation, OpenModelica roundtrip, and live FMU evidence remain pending."
     fixes_applied: false
     validation_commands:
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-fmi"
       - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-fmi --features fmi-runtime,fmi2,fmi3"
       - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-fmi --test fmu_archive --features fmi-runtime"
       - "rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-fmi --all-targets --all-features -- -D warnings"
