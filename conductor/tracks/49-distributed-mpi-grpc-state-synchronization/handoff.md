@@ -84,4 +84,4 @@ Run `$conductor-review`, record accepted fixes, commit SHA, pushed ref,
 next-phase decision before advancing beyond this contract-baseline slice.
 
 Implementation commit SHA: `83c1261cd3b3a1f1ed0a7da683c69f6960db1c35`
-pushed ref: pending push
+pushed ref: `origin/codex/kairos-hpc-parity-wave`
