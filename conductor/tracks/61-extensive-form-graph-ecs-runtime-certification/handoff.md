@@ -2,11 +2,11 @@
 
 Status: In Progress
 
-Phase 1 is implemented locally. The `kairo-ecs-game-theory` crate now exposes a feature-gated `extensive_form` module behind `graph-relations` with sequential decision nodes, chance nodes, terminal nodes, information sets, action edges, chance outcomes, terminal utilities, malformed-topology validation, deterministic traversal over edge entities, backward induction, and imperfect-information fixture validation over flat ECS component stores.
+Phase 2 is implemented locally. The `kairo-ecs-game-theory` crate now exposes normal-form flat-array solvers plus a feature-gated `extensive_form` module behind `graph-relations` with sequential decision nodes, chance nodes, terminal nodes, information sets, action edges, chance outcomes, terminal utilities, malformed-topology validation, deterministic traversal over edge entities, backward induction, imperfect-information fixture validation, and multi-game certification evidence over flat ECS component stores.
 
 ## Summary
 
-Track 61 has the component, topology, traversal, deterministic solver, and information-set fixture guardrails needed for Phase 2 certification work. End-to-end certification is not implemented yet.
+Track 61 has local multi-game certification evidence spanning normal-form flat arrays and extensive-form Graph-ECS stores. Remote push, strict closeout, and GitHub Actions review remain required before promotion beyond In Progress.
 
 ## Files changed
 
@@ -17,6 +17,11 @@ Track 61 has the component, topology, traversal, deterministic solver, and infor
 - `crates/kairo-ecs-game-theory/tests/extensive_form_solver.rs`
 - `crates/kairo-ecs-game-theory/tests/extensive_form_topology.rs`
 - `crates/kairo-ecs-game-theory/tests/extensive_form_traversal.rs`
+- `conductor/game-theory-evidence/multigame-certification/track-61-scenarios.json`
+- `conductor/game-theory-evidence/multigame-certification/track-61-benchmark-evidence.json`
+- `conductor/game-theory-evidence/multigame-certification/negative/missing-extensive-form.json`
+- `conductor/game-theory-evidence/multigame-certification/negative/pointer-topology-overclaim.json`
+- `scripts/validation/validate-multigame-certification.mjs`
 - `conductor/tracks/61-extensive-form-graph-ecs-runtime-certification/plan.md`
 - `conductor/tracks/61-extensive-form-graph-ecs-runtime-certification/handoff.md`
 
@@ -53,7 +58,8 @@ Track 61 has the component, topology, traversal, deterministic solver, and infor
 ## Known risks
 
 - Phase 1 supports deterministic decision-node traversal and backward induction only.
-- Chance-weighted expected utilities and end-to-end multi-game certification evidence remain Phase 2/follow-up scope.
+- Chance-weighted expected utilities remain follow-up scope before any stochastic extensive-form parity claim.
+- Live HPC, distributed, GPU, or Slurm scaling proof remains outside this game-theory runtime track.
 
 ## Integration notes
 
@@ -61,7 +67,6 @@ Track 61 has the component, topology, traversal, deterministic solver, and infor
 
 ## Follow-up issues
 
-- Implement end-to-end multi-game certification evidence.
 - Add chance-weighted expected-utility support before claiming full stochastic extensive-form parity.
 - Add release documentation and benchmark evidence for extensive-form execution.
 
@@ -104,3 +109,25 @@ Track 61 has the component, topology, traversal, deterministic solver, and infor
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after the Phase 1 push.
 - GitHub Actions review: `gh pr checks --watch` passed after the Phase 1 push with 63 successful checks and `deploy-pages` skipped.
 - next-phase decision: Track 61 remains In Progress after Phase 1 implementation, review, push, strict closeout, and GitHub Actions review passed; proceed to Phase 2 certification work.
+
+## Phase 2 closeout evidence
+
+- Task 2.1 red state: `node scripts\validation\validate-multigame-certification.mjs --self-test` failed with `MODULE_NOT_FOUND` before the validator existed.
+- Task 2.1 commit: `baf1103 track 61 task 2.1: add multigame certification scenarios`.
+- Task 2.2 red state: the same validator command was absent before implementation; negative fixtures were added with the validator to prove malformed certification evidence is rejected.
+- Task 2.2 commit: `a091615 track 61 task 2.2: validate multigame certification evidence`.
+- Task 2.3 local evidence:
+  - `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory` passed.
+  - `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --features graph-relations` passed.
+  - `node scripts\validation\validate-multigame-certification.mjs --self-test` passed.
+  - `rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-game-theory --features graph-relations --all-targets -- -D warnings` passed.
+  - `rustup run stable-x86_64-pc-windows-gnu cargo bench -p kairo-ecs-game-theory --bench normal_form -- --quick` passed with `normal_form_solver_quick`, 64 iterations, and 406000 elapsed nanoseconds.
+  - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` passed.
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` passed.
+- `$conductor-review`: Phase 2 review completed locally; no in-scope correctness fixes required before push.
+- accepted fixes: none.
+- commit SHA: pending Phase 2 closeout commit.
+- pushed ref: pending Phase 2 push.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending after Phase 2 push.
+- GitHub Actions review: pending after Phase 2 push.
+- next-phase decision: Track 61 remains In Progress locally; promote to In Review only after Phase 2 push, strict closeout, and GitHub Actions review pass.

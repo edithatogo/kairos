@@ -31,6 +31,6 @@ Before any phase is accepted:
 
 - [x] Task 2.1: Add end-to-end multi-game scenario manifest spanning normal-form and extensive-form games. Commit as `track 61 task 2.1: add multigame certification scenarios`.
 - [x] Task 2.2: Add certification validator and negative fixtures. Commit as `track 61 task 2.2: validate multigame certification evidence`.
-- [ ] Task 2.3: Record benchmark, review, push, and GitHub Actions evidence. Commit as `track 61 task 2.3: record multigame certification closeout`.
+- [x] Task 2.3: Record benchmark, review, push, and GitHub Actions evidence. Commit as `track 61 task 2.3: record multigame certification closeout`.
 
 Phase closeout repeats review, push, and GitHub Actions review.
