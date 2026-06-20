@@ -807,7 +807,7 @@ tracks:
       - openmodelica-roundtrip
   - id: 54
     name: Slurm, Container & Cloud HPC Runtime Acceptance
-    status: Spec Approved
+    status: In Review
     owner: cloud-agent + distributed-agent + gpu-compute-agent + release-agent
     depends_on: ["39", "43", "49", "52"]
     owned_paths:

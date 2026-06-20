@@ -1,12 +1,12 @@
 # Track 61 Handoff
 
-Status: In Progress
+Status: In Review
 
 Phase 2 is implemented locally. The `kairo-ecs-game-theory` crate now exposes normal-form flat-array solvers plus a feature-gated `extensive_form` module behind `graph-relations` with sequential decision nodes, chance nodes, terminal nodes, information sets, action edges, chance outcomes, terminal utilities, malformed-topology validation, deterministic traversal over edge entities, backward induction, imperfect-information fixture validation, and multi-game certification evidence over flat ECS component stores.
 
 ## Summary
 
-Track 61 has local multi-game certification evidence spanning normal-form flat arrays and extensive-form Graph-ECS stores. Remote push, strict closeout, and GitHub Actions review remain required before promotion beyond In Progress.
+Track 61 has local multi-game certification evidence spanning normal-form flat arrays and extensive-form Graph-ECS stores. The Phase 2 push, strict closeout, and GitHub Actions review have passed; the track remains In Review rather than Done because stochastic chance-weighted extensive-form solving and broader release-parity proof remain bounded follow-up scope.
 
 ## Files changed
 
@@ -126,8 +126,8 @@ Track 61 has local multi-game certification evidence spanning normal-form flat a
   - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1` passed.
 - `$conductor-review`: Phase 2 review completed locally; no in-scope correctness fixes required before push.
 - accepted fixes: none.
-- commit SHA: pending Phase 2 closeout commit.
-- pushed ref: pending Phase 2 push.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending after Phase 2 push.
-- GitHub Actions review: pending after Phase 2 push.
-- next-phase decision: Track 61 remains In Progress locally; promote to In Review only after Phase 2 push, strict closeout, and GitHub Actions review pass.
+- commit SHA: `baf1103` (`track 61 task 2.1: add multigame certification scenarios`), `a091615` (`track 61 task 2.2: validate multigame certification evidence`), `f3a6506` (`track 61 task 2.3: record multigame certification closeout`), `fb6000f` (`track 61 phase 2: trigger github actions review`).
+- pushed ref: `origin/codex/kairos-hpc-parity-wave`.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after the Phase 2 push.
+- GitHub Actions review: `gh pr checks --watch` passed after the Phase 2 trigger push with 63 successful checks and `deploy-pages` skipped.
+- next-phase decision: Track 61 is In Review after Phase 2 implementation, review, push, strict closeout, and GitHub Actions review passed. Do not move to Done until chance-weighted stochastic extensive-form parity and any release-governed downstream evidence are explicitly accepted.

@@ -65,7 +65,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 58 | Ontology-to-Rust Component Code Generation | In Review | `ontology-agent + ecs-agent + api-governance-agent` | See `conductor/tracks/58-*/spec.md` |
 | 59 | Feature-Gated Graph Relations ECS Module | In Review | `ecs-agent + core-scheduler-agent + conformance-agent` | See `conductor/tracks/59-*/spec.md` |
 | 60 | Normal-Form Multi-Game Runtime and Solvers | In Review | `game-theory-agent + ecs-agent + performance-agent` | See `conductor/tracks/60-*/spec.md` |
-| 61 | Extensive-Form Graph-ECS Runtime and Certification | In Progress | `game-theory-agent + ecs-agent + benchmark-agent + redteam-agent` | See `conductor/tracks/61-*/spec.md` |
+| 61 | Extensive-Form Graph-ECS Runtime and Certification | In Review | `game-theory-agent + ecs-agent + benchmark-agent + redteam-agent` | See `conductor/tracks/61-*/spec.md` |
 
 ## Track status vocabulary
 
