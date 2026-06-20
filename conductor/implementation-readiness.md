@@ -81,7 +81,7 @@ The Conductor setup is complete, but implementation should move through explicit
 | Game Theory Ontology Wave Charter (Track 56) | R0 | Spec-approved governance track for the ontology and multi-game wave; implementation cannot begin until task-level commit, phase review/push, and GitHub Actions review evidence rules are checked in. |
 | Open Game Theory Ontology Ingestion (Track 57) | R0 | Spec-approved follow-up for `open-game-theory-ontology/` and Turtle/JSON-LD ingestion; no source surface exists yet. |
 | Ontology-to-Rust Code Generation (Track 58) | R0 | Spec-approved follow-up for deterministic generated Rust component schemas; no generator or generated component crate exists yet. |
-| Graph Relations ECS Module (Track 59) | R0 | Spec-approved follow-up for feature-gated entity-ID graph relations; no `graph-relations` feature or graph traversal module exists yet. |
+| Graph Relations ECS Module (Track 59) | R1 | Phase 0 feature boundary is implemented: `graph-relations` is default-off with a compile-fail boundary test and gated module export. Entity-ID edge components, traversal APIs, pointer topology scan, push, and GitHub Actions review remain pending. |
 | Normal-Form Multi-Game Runtime (Track 60) | R0 | Spec-approved follow-up for payoff matrix, strategy space, utility, and flat ECS solver systems; no runtime crate exists yet. |
 | Extensive-Form Graph-ECS Runtime (Track 61) | R0 | Spec-approved follow-up for sequential game traversal and end-to-end multi-game certification; no extensive-form runtime exists yet. |
 

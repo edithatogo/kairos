@@ -969,18 +969,21 @@ entries:
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 58 Phase 1 is In Review after push and GitHub Actions review. Continue with Phase 2 generated-code API integration tasks; Track 58 cannot move Done until all planned codegen tasks, API review, local gates, GitHub Actions, and handoff evidence are complete."
   - track_id: "59"
-    phase: "track-creation"
+    phase: "phase-0-feature-boundary"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 59 scopes the feature-gated Graph-ECS relation module using Entity IDs only, with explicit no-pointer topology checks."
+    review_result: "Track 59 Phase 0 review found no in-scope findings. The default build has a compile-fail doctest proving the graph_relations module is absent, and the graph-relations feature now exports a gated module with optional ECS dependencies only when explicitly enabled."
     fixes_applied: false
     validation_commands:
+      - "cargo test -p kairo-ecs-game-theory --doc --no-default-features"
+      - "cargo check -p kairo-ecs-game-theory --no-default-features --tests"
+      - "cargo check -p kairo-ecs-game-theory --features graph-relations --tests"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "pending track-creation commit"
-    commit_sha: "pending-track-creation-commit"
-    pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 59 remains Spec Approved until the graph-relations feature, components, traversal APIs, compile-boundary tests, and pointer scans are implemented."
+    git_status: "phase 0 task commits exist locally; closeout evidence commit, push, strict git closeout, and GitHub Actions review pending"
+    commit_sha: "9c8a42c0f02efe5f33fc21df5531ea5145a638ae, a2b4227a893ad7db52b45435ad2ce292f6fb5480"
+    pushed_ref: "pending-track-59-phase-0-push"
+    next_phase_decision: "Proceed to Phase 1 only after the Phase 0 closeout evidence commit is pushed, strict git closeout passes, and GitHub Actions review passes."
   - track_id: "60"
     phase: "track-creation"
     state: pending

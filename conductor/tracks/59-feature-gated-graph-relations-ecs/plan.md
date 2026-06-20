@@ -2,8 +2,12 @@
 
 ## Phase 0: Feature Boundary
 
-- [ ] Task 0.1: Add failing compile tests proving `graph-relations` APIs are unavailable by default. Commit after passing as `track 59 task 0.1: enforce graph feature boundary`.
-- [ ] Task 0.2: Add the Cargo feature and module export behind `cfg(feature = "graph-relations")`. Commit as `track 59 task 0.2: add graph relations feature`.
+- [x] Task 0.1: Add failing compile tests proving `graph-relations` APIs are unavailable by default. Commit after passing as `track 59 task 0.1: enforce graph feature boundary`.
+  - Commit: `9c8a42c`.
+  - Evidence: `cargo test -p kairo-ecs-game-theory --doc --no-default-features` passed with the `compile_fail` doctest proving `kairo_ecs_game_theory::graph_relations` is absent by default.
+- [x] Task 0.2: Add the Cargo feature and module export behind `cfg(feature = "graph-relations")`. Commit as `track 59 task 0.2: add graph relations feature`.
+  - Commit: `a2b4227`.
+  - Evidence: `cargo check -p kairo-ecs-game-theory --no-default-features --tests` and `cargo check -p kairo-ecs-game-theory --features graph-relations --tests` passed.
 
 Phase closeout: review, push, and GitHub Actions review.
 
