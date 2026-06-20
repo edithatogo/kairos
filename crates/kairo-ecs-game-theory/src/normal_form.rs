@@ -68,6 +68,10 @@ impl StrategySpace {
             .collect::<Vec<_>>()
     }
 
+    pub fn strategy_count(&self, player: usize) -> Option<usize> {
+        self.strategies_by_player.get(player).map(Vec::len)
+    }
+
     pub fn strategy_name(&self, player: usize, strategy: usize) -> Option<&str> {
         self.strategies_by_player
             .get(player)
@@ -160,6 +164,94 @@ impl PayoffMatrix {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct BestResponse {
+    pub strategy: usize,
+    pub utility: Utility,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+pub struct BestResponseSolver;
+
+impl BestResponseSolver {
+    pub fn best_responses(
+        matrix: &PayoffMatrix,
+        player: usize,
+        opponent_profile: &[usize],
+    ) -> Result<Vec<BestResponse>, NormalFormError> {
+        let strategies = matrix.strategies();
+        let player_count = strategies.player_count();
+        if player >= player_count {
+            return Err(NormalFormError::InvalidPlayer {
+                player,
+                player_count,
+            });
+        }
+
+        let required_opponents = player_count - 1;
+        if opponent_profile.len() != required_opponents {
+            return Err(NormalFormError::OpponentProfileCount {
+                actual: opponent_profile.len(),
+                expected: required_opponents,
+                player,
+            });
+        }
+
+        let target_strategy_count = strategies
+            .strategy_count(player)
+            .expect("validated player has strategies");
+        let mut profile = vec![0usize; player_count];
+        let mut opponent_cursor = 0usize;
+        for (opponent_player, choice) in profile.iter_mut().enumerate() {
+            if opponent_player == player {
+                continue;
+            }
+
+            let strategy = opponent_profile[opponent_cursor];
+            let opponent_strategy_count = strategies
+                .strategy_count(opponent_player)
+                .expect("valid strategy space has strategies for every player");
+            if strategy >= opponent_strategy_count {
+                return Err(NormalFormError::InvalidOpponentStrategy {
+                    opponent_player,
+                    strategy,
+                    strategy_count: opponent_strategy_count,
+                });
+            }
+
+            *choice = strategy;
+            opponent_cursor += 1;
+        }
+
+        let mut responses = Vec::new();
+        let mut best_utility = None;
+        for strategy in 0..target_strategy_count {
+            profile[player] = strategy;
+            let utility = matrix
+                .payoff(&profile, player)
+                .expect("validated profile must resolve to a payoff");
+
+            match best_utility {
+                None => {
+                    best_utility = Some(utility);
+                    responses.push(BestResponse { strategy, utility });
+                }
+                Some(best) if utility.value() > best.value() => {
+                    best_utility = Some(utility);
+                    responses.clear();
+                    responses.push(BestResponse { strategy, utility });
+                }
+                Some(best) if utility == best => {
+                    responses.push(BestResponse { strategy, utility });
+                }
+                Some(_) => {}
+            }
+        }
+
+        Ok(responses)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NormalFormError {
     NoPlayers,
@@ -179,6 +271,20 @@ pub enum NormalFormError {
         expected: usize,
         profiles: usize,
         players: usize,
+    },
+    InvalidPlayer {
+        player: usize,
+        player_count: usize,
+    },
+    OpponentProfileCount {
+        actual: usize,
+        expected: usize,
+        player: usize,
+    },
+    InvalidOpponentStrategy {
+        opponent_player: usize,
+        strategy: usize,
+        strategy_count: usize,
     },
 }
 
@@ -207,6 +313,29 @@ impl Display for NormalFormError {
             } => write!(
                 formatter,
                 "payoff count {actual} does not match expected {expected} for {profiles} profiles and {players} players"
+            ),
+            Self::InvalidPlayer {
+                player,
+                player_count,
+            } => write!(
+                formatter,
+                "player {player} is outside a {player_count} player strategy space"
+            ),
+            Self::OpponentProfileCount {
+                actual,
+                expected,
+                player,
+            } => write!(
+                formatter,
+                "opponent profile has {actual} entries but player {player} requires {expected}"
+            ),
+            Self::InvalidOpponentStrategy {
+                opponent_player,
+                strategy,
+                strategy_count,
+            } => write!(
+                formatter,
+                "opponent player {opponent_player} strategy {strategy} is outside {strategy_count} strategies"
             ),
         }
     }

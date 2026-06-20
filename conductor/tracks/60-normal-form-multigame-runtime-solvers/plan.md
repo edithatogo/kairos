@@ -9,7 +9,7 @@ Phase closeout: run validators, `$conductor-review 60`, apply fixes, update hand
 
 ## Phase 1: Solver Systems
 
-- [ ] Task 1.1: Add best-response solver tests and implementation. Commit as `track 60 task 1.1: implement best response solver`.
+- [x] Task 1.1: Add best-response solver tests and implementation. Commit `track 60 task 1.1: implement best response solver`.
 - [ ] Task 1.2: Add pure Nash equilibrium fixture tests and implementation. Commit as `track 60 task 1.2: implement pure nash solver`.
 - [ ] Task 1.3: Add dominated-strategy elimination tests and implementation. Commit as `track 60 task 1.3: implement dominated strategy elimination`.
 
