@@ -614,7 +614,7 @@ tracks:
       - code-health-floor
   - id: 43
     name: Cloud/HPC Registry Publication & Runtime Acceptance
-    status: Spec Approved
+    status: In Progress
     owner: hpc-registry-agent + cloud-agent + release-agent
     depends_on: ["22", "35", "39", "42", "44"]
     owned_paths:
@@ -930,8 +930,9 @@ tracks:
     depends_on: ["59", "60"]
     owned_paths:
       - crates/kairo-ecs-game-theory/
-      - examples/game-theory/extensive-form/
-      - docs/game-theory/extensive-form.md
+      - crates/kairo-ecs-game-theory/src/extensive_form.rs
+      - crates/kairo-ecs-game-theory/tests/extensive_form_components.rs
+      - crates/kairo-ecs-game-theory/tests/extensive_form_topology.rs
       - conductor/tracks/61-extensive-form-graph-ecs-runtime-certification/
     required_gates:
       - phase-closeout-check

@@ -2,8 +2,8 @@
 
 ## Phase 0: Sequential Components
 
-- [ ] Task 0.1: Add failing tests for sequential node, information set, action edge, chance, and terminal utility components. Commit after passing as `track 61 task 0.1: add extensive form components`.
-- [ ] Task 0.2: Add malformed tree and cycle-detection tests. Commit as `track 61 task 0.2: validate extensive form topology`.
+- [x] Task 0.1: Add failing tests for sequential node, information set, action edge, chance, and terminal utility components. Commit after passing as `track 61 task 0.1: add extensive form components`.
+- [x] Task 0.2: Add malformed tree and cycle-detection tests. Commit as `track 61 task 0.2: validate extensive form topology`.
 
 Phase closeout: review, push, and GitHub Actions review.
 

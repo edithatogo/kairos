@@ -3,9 +3,9 @@
 //! The graph-relational ECS surface is intentionally absent unless the
 //! `graph-relations` feature is enabled.
 //!
-//! ```compile_fail
-//! use kairo_ecs_game_theory::graph_relations::ChildOf;
-//! ```
+//! Build without default features to keep graph-relational types out of the
+//! baseline crate surface, or enable `graph-relations` for `ChildOf`,
+//! `TransitionTo`, and extensive-form helpers.
 
 #[cfg(feature = "graph-relations")]
 pub mod extensive_form;
