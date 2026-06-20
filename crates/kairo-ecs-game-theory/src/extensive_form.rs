@@ -3,7 +3,7 @@
 //! Topology is represented by entity IDs and relationship components rather
 //! than pointer-owned graph nodes.
 
-use crate::graph_relations::{children_of, ChildOf};
+use crate::graph_relations::{children_of, transition_target, ChildOf, TransitionTo};
 use crate::normal_form::Utility;
 use kairo_ecs_state::ComponentStore;
 use kairo_ecs_types::EntityId;
@@ -156,6 +156,118 @@ pub struct ExtensiveFormTopology<'a> {
     pub terminals: &'a ComponentStore<TerminalUtility>,
 }
 
+#[derive(Clone, Copy)]
+pub struct ExtensiveTraversalStores<'a> {
+    pub child_of: &'a ComponentStore<ChildOf>,
+    pub actions: &'a ComponentStore<ActionEdge>,
+    pub transitions: &'a ComponentStore<TransitionTo>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TraversedActionEdge {
+    pub source: EntityId,
+    pub edge: EntityId,
+    pub target: EntityId,
+    pub label: String,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ExtensivePath {
+    pub terminal: EntityId,
+    pub actions: Vec<String>,
+    pub payoffs: Vec<Utility>,
+}
+
+pub fn outgoing_action_edges(
+    source: EntityId,
+    stores: ExtensiveTraversalStores<'_>,
+) -> Result<Vec<TraversedActionEdge>, ExtensiveFormError> {
+    let mut edges = Vec::new();
+
+    for edge in children_of(source, stores.child_of) {
+        let Some(action) = stores.actions.get(edge) else {
+            continue;
+        };
+        let Some(transition_target) = transition_target(edge, stores.transitions) else {
+            return Err(ExtensiveFormError::MissingTransition { edge });
+        };
+        let action_target = action.target();
+        if action_target != transition_target {
+            return Err(ExtensiveFormError::TransitionTargetMismatch {
+                edge,
+                action_target,
+                transition_target,
+            });
+        }
+
+        edges.push(TraversedActionEdge {
+            source,
+            edge,
+            target: transition_target,
+            label: action.label().to_string(),
+        });
+    }
+
+    Ok(edges)
+}
+
+pub fn extensive_form_paths(
+    root: EntityId,
+    nodes: &ComponentStore<ExtensiveNode>,
+    terminals: &ComponentStore<TerminalUtility>,
+    stores: ExtensiveTraversalStores<'_>,
+) -> Result<Vec<ExtensivePath>, ExtensiveFormError> {
+    let mut paths = Vec::new();
+    let mut action_stack = Vec::new();
+    collect_paths(
+        root,
+        nodes,
+        terminals,
+        stores,
+        &mut action_stack,
+        &mut paths,
+    )?;
+    Ok(paths)
+}
+
+fn collect_paths(
+    entity: EntityId,
+    nodes: &ComponentStore<ExtensiveNode>,
+    terminals: &ComponentStore<TerminalUtility>,
+    stores: ExtensiveTraversalStores<'_>,
+    action_stack: &mut Vec<String>,
+    paths: &mut Vec<ExtensivePath>,
+) -> Result<(), ExtensiveFormError> {
+    let Some(node) = nodes.get(entity) else {
+        return Err(ExtensiveFormError::MissingNode { entity });
+    };
+
+    if matches!(node, ExtensiveNode::Terminal) {
+        let Some(terminal) = terminals.get(entity) else {
+            return Err(ExtensiveFormError::MissingTerminalUtility { entity });
+        };
+        paths.push(ExtensivePath {
+            terminal: entity,
+            actions: action_stack.clone(),
+            payoffs: terminal.payoffs().to_vec(),
+        });
+        return Ok(());
+    }
+
+    let edges = outgoing_action_edges(entity, stores)?;
+    if edges.is_empty() {
+        return Err(ExtensiveFormError::NoOutgoingActions { entity });
+    }
+
+    for edge in edges {
+        action_stack.push(edge.label);
+        collect_paths(edge.target, nodes, terminals, stores, action_stack, paths)?;
+        action_stack.pop();
+    }
+
+    Ok(())
+}
+
 pub fn validate_extensive_form_topology(
     topology: ExtensiveFormTopology<'_>,
 ) -> Result<(), ExtensiveFormError> {
@@ -229,13 +341,34 @@ fn validate_player(player: usize) -> Result<(), ExtensiveFormError> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ExtensiveFormError {
-    InvalidPlayer { player: usize },
+    InvalidPlayer {
+        player: usize,
+    },
     EmptyActionLabel,
-    InvalidChanceProbability { probability: f64 },
+    InvalidChanceProbability {
+        probability: f64,
+    },
     NoTerminalPayoffs,
-    MissingNode { entity: EntityId },
-    CycleDetected { entity: EntityId },
-    MissingTerminalUtility { entity: EntityId },
+    MissingNode {
+        entity: EntityId,
+    },
+    CycleDetected {
+        entity: EntityId,
+    },
+    MissingTerminalUtility {
+        entity: EntityId,
+    },
+    MissingTransition {
+        edge: EntityId,
+    },
+    TransitionTargetMismatch {
+        edge: EntityId,
+        action_target: EntityId,
+        transition_target: EntityId,
+    },
+    NoOutgoingActions {
+        entity: EntityId,
+    },
 }
 
 impl Display for ExtensiveFormError {
@@ -268,6 +401,27 @@ impl Display for ExtensiveFormError {
             Self::MissingTerminalUtility { entity } => write!(
                 formatter,
                 "terminal node {:?} must have terminal utility payoffs",
+                entity
+            ),
+            Self::MissingTransition { edge } => {
+                write!(
+                    formatter,
+                    "action edge {:?} must have a TransitionTo target",
+                    edge
+                )
+            }
+            Self::TransitionTargetMismatch {
+                edge,
+                action_target,
+                transition_target,
+            } => write!(
+                formatter,
+                "action edge {:?} target {:?} does not match TransitionTo target {:?}",
+                edge, action_target, transition_target
+            ),
+            Self::NoOutgoingActions { entity } => write!(
+                formatter,
+                "non-terminal node {:?} must have at least one outgoing action",
                 entity
             ),
         }
