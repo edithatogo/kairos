@@ -3,8 +3,11 @@
 //! Topology is represented by entity IDs and relationship components rather
 //! than pointer-owned graph nodes.
 
+use crate::graph_relations::{children_of, ChildOf};
 use crate::normal_form::Utility;
+use kairo_ecs_state::ComponentStore;
 use kairo_ecs_types::EntityId;
+use std::collections::HashSet;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
@@ -143,6 +146,79 @@ impl TerminalUtility {
     }
 }
 
+#[derive(Clone, Copy)]
+pub struct ExtensiveFormTopology<'a> {
+    pub root: EntityId,
+    pub nodes: &'a ComponentStore<ExtensiveNode>,
+    pub child_of: &'a ComponentStore<ChildOf>,
+    pub actions: &'a ComponentStore<ActionEdge>,
+    pub chance_outcomes: &'a ComponentStore<ChanceOutcome>,
+    pub terminals: &'a ComponentStore<TerminalUtility>,
+}
+
+pub fn validate_extensive_form_topology(
+    topology: ExtensiveFormTopology<'_>,
+) -> Result<(), ExtensiveFormError> {
+    if !topology.nodes.contains(topology.root) {
+        return Err(ExtensiveFormError::MissingNode {
+            entity: topology.root,
+        });
+    }
+
+    for (_, action) in topology.actions.iter() {
+        if !topology.nodes.contains(action.target()) {
+            return Err(ExtensiveFormError::MissingNode {
+                entity: action.target(),
+            });
+        }
+    }
+
+    for (_, outcome) in topology.chance_outcomes.iter() {
+        if !topology.nodes.contains(outcome.target()) {
+            return Err(ExtensiveFormError::MissingNode {
+                entity: outcome.target(),
+            });
+        }
+    }
+
+    let mut visiting = HashSet::new();
+    let mut visited = HashSet::new();
+    validate_reachable_node(topology.root, topology, &mut visiting, &mut visited)
+}
+
+fn validate_reachable_node(
+    entity: EntityId,
+    topology: ExtensiveFormTopology<'_>,
+    visiting: &mut HashSet<EntityId>,
+    visited: &mut HashSet<EntityId>,
+) -> Result<(), ExtensiveFormError> {
+    if !visiting.insert(entity) {
+        return Err(ExtensiveFormError::CycleDetected { entity });
+    }
+    if !topology.nodes.contains(entity) {
+        return Err(ExtensiveFormError::MissingNode { entity });
+    }
+
+    if visited.contains(&entity) {
+        visiting.remove(&entity);
+        return Ok(());
+    }
+
+    if matches!(topology.nodes.get(entity), Some(ExtensiveNode::Terminal))
+        && !topology.terminals.contains(entity)
+    {
+        return Err(ExtensiveFormError::MissingTerminalUtility { entity });
+    }
+
+    for child in children_of(entity, topology.child_of) {
+        validate_reachable_node(child, topology, visiting, visited)?;
+    }
+
+    visiting.remove(&entity);
+    visited.insert(entity);
+    Ok(())
+}
+
 fn validate_player(player: usize) -> Result<(), ExtensiveFormError> {
     if player == usize::MAX {
         return Err(ExtensiveFormError::InvalidPlayer { player });
@@ -157,6 +233,9 @@ pub enum ExtensiveFormError {
     EmptyActionLabel,
     InvalidChanceProbability { probability: f64 },
     NoTerminalPayoffs,
+    MissingNode { entity: EntityId },
+    CycleDetected { entity: EntityId },
+    MissingTerminalUtility { entity: EntityId },
 }
 
 impl Display for ExtensiveFormError {
@@ -176,6 +255,21 @@ impl Display for ExtensiveFormError {
             Self::NoTerminalPayoffs => {
                 formatter.write_str("terminal utility must include at least one payoff")
             }
+            Self::MissingNode { entity } => write!(
+                formatter,
+                "entity {:?} is referenced by the extensive-form topology but has no node",
+                entity
+            ),
+            Self::CycleDetected { entity } => write!(
+                formatter,
+                "cycle detected while traversing extensive-form topology at entity {:?}",
+                entity
+            ),
+            Self::MissingTerminalUtility { entity } => write!(
+                formatter,
+                "terminal node {:?} must have terminal utility payoffs",
+                entity
+            ),
         }
     }
 }
