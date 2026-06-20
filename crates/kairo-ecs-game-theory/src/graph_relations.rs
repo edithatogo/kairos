@@ -5,6 +5,7 @@
 
 use kairo_ecs_state::ComponentStore;
 use kairo_ecs_types::EntityId;
+use std::collections::HashSet;
 
 /// Relationship component whose owning entity is a child of the target entity.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -50,10 +51,15 @@ pub fn depth_first_descendants(
     child_of: &ComponentStore<ChildOf>,
 ) -> Vec<EntityId> {
     let mut descendants = Vec::new();
+    let mut visited = HashSet::new();
+    visited.insert(root);
     let mut stack = children_of(root, child_of).collect::<Vec<_>>();
     stack.reverse();
 
     while let Some(entity) = stack.pop() {
+        if !visited.insert(entity) {
+            continue;
+        }
         descendants.push(entity);
         let mut children = children_of(entity, child_of).collect::<Vec<_>>();
         children.reverse();

@@ -96,3 +96,19 @@ fn descendant_traversal_walks_entity_id_edges_without_recursion() {
 
     assert_eq!(descendants, vec![left, grandchild, right]);
 }
+
+#[test]
+fn descendant_traversal_stops_at_seen_entities() {
+    let root = entity(60);
+    let child = entity(61);
+    let cycle = entity(62);
+
+    let mut child_of = ComponentStore::new();
+    assert!(child_of.insert(child, ChildOf(root)));
+    assert!(child_of.insert(cycle, ChildOf(child)));
+    assert!(child_of.insert(root, ChildOf(cycle)));
+
+    let descendants = depth_first_descendants(root, &child_of);
+
+    assert_eq!(descendants, vec![child, cycle]);
+}
