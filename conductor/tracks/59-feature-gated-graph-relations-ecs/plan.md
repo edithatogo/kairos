@@ -22,7 +22,10 @@ Phase closeout: review, push, and GitHub Actions review.
   - Red evidence: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test graph_relations --features graph-relations` failed before implementation because `children_of`, `transition_target`, and `depth_first_descendants` were unresolved.
   - Green evidence: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test graph_relations --features graph-relations` passed with 5 tests.
   - Boundary evidence: `rustup run stable-x86_64-pc-windows-gnu cargo check -p kairo-ecs-game-theory --no-default-features --tests` passed.
-- [ ] Task 1.3: Add no raw pointer, no self-reference, and no `Box` topology scan. Commit as `track 59 task 1.3: enforce no pointer graph topology`.
+- [x] Task 1.3: Add no raw pointer, no self-reference, and no `Box` topology scan. Commit as `track 59 task 1.3: enforce no pointer graph topology`.
+  - Evidence: `node scripts/validation/validate-graph-relations-no-pointer-topology.mjs --self-test` passed, including negative self-test coverage for raw pointer and `Box` patterns.
+  - Regression evidence: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test graph_relations --features graph-relations` passed with 5 tests.
+  - Boundary evidence: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --doc --no-default-features` passed.
 
 Phase closeout repeats review, push, and GitHub Actions review.
 
