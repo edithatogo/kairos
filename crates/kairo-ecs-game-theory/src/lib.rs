@@ -8,6 +8,9 @@
 //! ```
 
 #[cfg(feature = "graph-relations")]
+pub mod extensive_form;
+
+#[cfg(feature = "graph-relations")]
 pub mod graph_relations;
 
 pub mod normal_form;
