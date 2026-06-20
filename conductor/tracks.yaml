@@ -667,7 +667,7 @@ tracks:
       - docs-platform-sota
   - id: 46
     name: HPC Parity Charter, Baselines & Evidence Gates
-    status: In Progress
+    status: In Review
     owner: benchmark-agent + interop-agent + redteam-agent + wave-manager-agent
     depends_on: ["18", "26", "28", "29", "31", "44"]
     owned_paths:
@@ -913,8 +913,8 @@ tracks:
     depends_on: ["58", "59"]
     owned_paths:
       - crates/kairo-ecs-game-theory/
-      - examples/game-theory/normal-form/
-      - docs/game-theory/normal-form.md
+      - crates/kairo-ecs-game-theory/examples/normal_form_runtime.rs
+      - docs/game-theory/normal-form-runtime.md
       - conductor/tracks/60-normal-form-multigame-runtime-solvers/
     required_gates:
       - phase-closeout-check

@@ -82,7 +82,7 @@ The Conductor setup is complete, but implementation should move through explicit
 | Open Game Theory Ontology Ingestion (Track 57) | R0 | Spec-approved follow-up for `open-game-theory-ontology/` and Turtle/JSON-LD ingestion; no source surface exists yet. |
 | Ontology-to-Rust Code Generation (Track 58) | R0 | Spec-approved follow-up for deterministic generated Rust component schemas; no generator or generated component crate exists yet. |
 | Graph Relations ECS Module (Track 59) | R2 | Phase 1 is In Review: `graph-relations` is default-off, Entity-ID `ChildOf`/`TransitionTo` components and flat-store traversal helpers are implemented, pointer-topology scan passes, and GitHub Actions passed after rerunning a transient crates.io fetch failure. |
-| Normal-Form Multi-Game Runtime (Track 60) | R2 | Phase 1 is implemented locally and adds `BestResponseSolver`, `PureNashSolver`, and `StrictDominanceSolver` over the flat normal-form payoff matrix with fixture-backed tests. Benchmark evidence, examples, push, GitHub Actions review for Phase 1, and full runtime parity remain pending. |
+| Normal-Form Multi-Game Runtime (Track 60) | R2 | Phase 2 is implemented locally: normal-form components, best-response, pure Nash, strict dominance, a quick benchmark smoke target, runnable example, and bounded docs exist. Phase 2 push, GitHub Actions review, broader benchmark evidence, mixed-strategy solving, generated-ontology integration, and extensive-form runtime parity remain pending. |
 | Extensive-Form Graph-ECS Runtime (Track 61) | R0 | Spec-approved follow-up for sequential game traversal and end-to-end multi-game certification; no extensive-form runtime exists yet. |
 
 ## Enforcement rule
