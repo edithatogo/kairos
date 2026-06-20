@@ -777,6 +777,20 @@ entries:
     commit_sha: "35f93a4344615e2f8a4e5ca8a61ad7a483e87106"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 46 is In Progress; evidence-manifest validators and claim-boundary scans are implemented locally, with review, commit, push, and strict git closeout still pending before In Review."
+  - track_id: "42"
+    phase: "registry-publication-readiness"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 42 is already recorded as In Review for guarded package registry publication and provenance. This ledger backfill records the existing registry state so phase-gate validation can reason about it; production publication remains blocked on registry-side trusted publisher/account setup and protected-environment dry-run evidence."
+    fixes_applied: false
+    validation_commands:
+      - "node scripts/validation/validate-publication-readiness.mjs"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "ledger backfill only; no Track 42 code changes"
+    commit_sha: "48fb609"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 42 remains In Review; production publication remains blocked until registry-side trusted publishers/accounts and protected-environment dry-run evidence are attached."
   - track_id: "47"
     phase: "track-creation"
     state: pending
@@ -982,10 +996,10 @@ entries:
       - "node scripts/validation/validate-graph-relations-no-pointer-topology.mjs --self-test"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "Phase 1 implementation and review fix commits exist locally; closeout evidence commit, push, strict git closeout, and GitHub Actions review pending"
-    commit_sha: "db0338ae04eece9927c00bc6254d278e1643be73, ca54eb377ef3b40585714af35c37d16e2e6b261c, ce6d79803d7b80997e5f2bf0e40982a7e9a49518, 930f3d9a10f35146d33995e55c03f5c841a4be0d"
-    pushed_ref: "pending-track-59-phase-1-push"
-    next_phase_decision: "Track 59 moves to In Review only after Phase 1 closeout evidence is committed, pushed, strict git closeout passes, and GitHub Actions review passes."
+    git_status: "clean after pushed Phase 1 closeout; strict git closeout passed"
+    commit_sha: "db0338ae04eece9927c00bc6254d278e1643be73, ca54eb377ef3b40585714af35c37d16e2e6b261c, ce6d79803d7b80997e5f2bf0e40982a7e9a49518, 930f3d9a10f35146d33995e55c03f5c841a4be0d, 6fb9dfcb7276a0d0e27d54093b3df86799c2b98f"
+    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
+    next_phase_decision: "Track 59 is In Review after Phase 1 push, strict git closeout, and GitHub Actions review passed; downstream solver integration proceeds in Tracks 60 and 61."
   - track_id: "60"
     phase: "track-creation"
     state: pending

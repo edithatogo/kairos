@@ -63,7 +63,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 56 | Game Theory Ontology Wave Charter and Evidence Gates | Spec Approved | `ontology-agent + game-theory-agent + wave-manager-agent` | See `conductor/tracks/56-*/spec.md` |
 | 57 | Open Game Theory Ontology Subrepo and Schema Ingestion | Spec Approved | `ontology-agent + rust-agent` | See `conductor/tracks/57-*/spec.md` |
 | 58 | Ontology-to-Rust Component Code Generation | In Review | `ontology-agent + ecs-agent + api-governance-agent` | See `conductor/tracks/58-*/spec.md` |
-| 59 | Feature-Gated Graph Relations ECS Module | In Progress | `ecs-agent + core-scheduler-agent + conformance-agent` | See `conductor/tracks/59-*/spec.md` |
+| 59 | Feature-Gated Graph Relations ECS Module | In Review | `ecs-agent + core-scheduler-agent + conformance-agent` | See `conductor/tracks/59-*/spec.md` |
 | 60 | Normal-Form Multi-Game Runtime and Solvers | Spec Approved | `game-theory-agent + ecs-agent + performance-agent` | See `conductor/tracks/60-*/spec.md` |
 | 61 | Extensive-Form Graph-ECS Runtime and Certification | Spec Approved | `game-theory-agent + ecs-agent + benchmark-agent + redteam-agent` | See `conductor/tracks/61-*/spec.md` |
 
