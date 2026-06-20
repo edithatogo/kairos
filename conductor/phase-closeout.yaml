@@ -938,31 +938,37 @@ entries:
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 55 is In Progress after the first scenario/evidence contract slice; live weak/strong scaling profiles, raw artifacts, plots, checksums, and upstream Track 47-54 evidence remain required before In Review."
   - track_id: "56"
-    phase: "track-creation"
+    phase: "phase-1-charter-and-claim-boundary-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 56 defines the game theory ontology wave charter, evidence manifest, and lifecycle gates. Every downstream track must commit after each task, run review and push after each phase, and review GitHub Actions after every pushed track."
-    fixes_applied: false
+    review_result: "Track 56 completed the wave charter and evidence-gate implementation slice: game-theory ontology wave charter, evidence schema/templates, evidence validator, claim-boundary scanner, and negative fixtures. Closeout review found no runtime-code defect because this track is governance-only; the required fixes were release-boundary spec sections and evidence/status reconciliation."
+    fixes_applied: true
     validation_commands:
+      - "node scripts/validation/validate-game-theory-evidence.mjs --check-negative-fixtures"
+      - "node scripts/validation/validate-game-theory-claims.mjs --check-negative-fixtures"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "pending track-creation commit"
-    commit_sha: "pending-track-creation-commit"
-    pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 56 is In Progress after wave charter, evidence manifest validator, claim-boundary scan, and negative-fixture gates were implemented; final phase-closeout push, strict git closeout, and GitHub Actions evidence reconciliation remain before In Review."
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "pending closeout metadata commit"
+    commit_sha: "234ba2b, ba18cdc, 75c7b8f, 59d1ce1, 6d85555; closeout metadata commit pending"
+    pushed_ref: "pending closeout metadata push"
+    next_phase_decision: "Track 56 is In Review after the wave charter, evidence manifest validator, claim-boundary scanner, negative fixtures, release-boundary spec sections, and handoff reconciliation. Keep it out of Done until downstream Tracks 57-61 are complete or release claims explicitly exclude incomplete downstream capability."
   - track_id: "57"
-    phase: "track-creation"
+    phase: "phase-1-parser-ingestion-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 57 scopes the standalone open-game-theory ontology subrepo and Turtle/JSON-LD ingestion pipeline with fixture-backed parser gates."
-    fixes_applied: false
+    review_result: "Track 57 completed the ontology subrepo and parser ingestion slice: subrepo skeleton, Turtle/JSON-LD fixtures, parser crate, deterministic IR normalization, malformed-input tests, and review fixes. Closeout review found no remaining in-scope parser defect; the required fixes were release-boundary spec sections and evidence/status reconciliation."
+    fixes_applied: true
     validation_commands:
+      - "rustup run stable-x86_64-pc-windows-gnu cargo check -p kairo-ecs-game-ontology --tests"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-ontology"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "pending track-creation commit"
-    commit_sha: "pending-track-creation-commit"
-    pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 57 is In Progress after the ontology subrepo, Turtle/JSON-LD fixtures, parser crate, canonical IR normalization, and review fixes were implemented; final phase-closeout push, strict git closeout, and GitHub Actions evidence reconciliation remain before In Review."
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "pending closeout metadata commit"
+    commit_sha: "4e72c6f, cbf9be3, 7802e84, 32100c3, f86e718, 4ff503c, ef9e15d, 8e8e25a, efc69a3; closeout metadata commit pending"
+    pushed_ref: "pending closeout metadata push"
+    next_phase_decision: "Track 57 is In Review after the ontology subrepo, Turtle/JSON-LD fixtures, parser crate, canonical IR normalization, review fixes, release-boundary spec sections, and handoff reconciliation. Keep release claims limited to checked-in fixtures until broader external ontology compatibility is validated."
   - track_id: "58"
     phase: "phase-0-1-codegen-contract-and-generator"
     state: pending

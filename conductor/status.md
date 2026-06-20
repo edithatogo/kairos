@@ -196,16 +196,19 @@ required before production-grade HPC parity can be claimed.
 
 Tracks 56-61 were added on 2026-06-19 as the open game theory ontology and
 multi-game runtime wave. They split the earlier monolithic Track 56 concept into
-granular implementation tracks. Track 56 is now `In Progress` with the wave
-charter recorded in `conductor/game-theory-ontology-wave.md`, defining parity
-targets, evidence policy, release wording rules, and dependency order.
-granular reviewable tracks: wave charter and evidence gates, ontology subrepo
-and Turtle/JSON-LD ingestion, ontology-to-Rust code generation, feature-gated
-Graph-ECS relations, normal-form multi-game solvers, and extensive-form
-Graph-ECS certification. Each track plan requires a commit after every task, a
-review and push after every phase, and GitHub Actions review after the track is
-pushed. All six tracks remain `Spec Approved`; no implementation or public
-game-theory capability is claimed yet.
+granular implementation tracks. Track 56 is now `In Review` with the wave
+charter, evidence schema/templates, evidence validator, claim-boundary scanner,
+negative fixtures, and release-boundary closeout recorded. Track 57 is now
+`In Review` with the `open-game-theory-ontology/` subrepo, Turtle and JSON-LD
+fixtures, `kairo-ecs-game-ontology` parser crate, deterministic normalized IR,
+malformed-input tests, and review fixes. Track 58 is `In Review` for
+deterministic ontology-to-Rust generation and generated component compile
+gates. Track 59 is `In Review` for default-off Graph-ECS relations using
+Entity-ID `ChildOf` and `TransitionTo` components. Track 60 is `In Review` for
+normal-form flat-array components and solvers. Track 61 is `In Review` for
+extensive-form Graph-ECS traversal, backward induction, and local multi-game
+certification. None of Tracks 56-61 is `Done`; public release claims remain
+bounded to the checked-in evidence and each track's blocked paths.
 
 ## Validation evidence
 
