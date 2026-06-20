@@ -7,7 +7,7 @@ use crate::graph_relations::{children_of, transition_target, ChildOf, Transition
 use crate::normal_form::Utility;
 use kairo_ecs_state::ComponentStore;
 use kairo_ecs_types::EntityId;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
@@ -176,6 +176,68 @@ pub struct ExtensivePath {
     pub terminal: EntityId,
     pub actions: Vec<String>,
     pub payoffs: Vec<Utility>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct InformationSetFixture {
+    pub id: u64,
+    pub player: usize,
+    pub nodes: Vec<EntityId>,
+    pub actions: Vec<String>,
+}
+
+pub fn information_set_fixtures(
+    nodes: &ComponentStore<ExtensiveNode>,
+    information_sets: &ComponentStore<InformationSet>,
+    stores: ExtensiveTraversalStores<'_>,
+) -> Result<Vec<InformationSetFixture>, ExtensiveFormError> {
+    let mut fixtures = BTreeMap::<u64, InformationSetFixture>::new();
+
+    for (entity, information_set) in information_sets.iter() {
+        let Some(node) = nodes.get(entity) else {
+            return Err(ExtensiveFormError::MissingNode { entity });
+        };
+        let ExtensiveNode::Decision { player } = node else {
+            return Err(ExtensiveFormError::InformationSetRequiresDecisionNode {
+                information_set: information_set.id(),
+                entity,
+            });
+        };
+        if *player != information_set.player() {
+            return Err(ExtensiveFormError::InformationSetPlayerMismatch {
+                information_set: information_set.id(),
+                entity,
+                expected_player: information_set.player(),
+                actual_player: *player,
+            });
+        }
+
+        let action_labels = outgoing_action_edges(entity, stores)?
+            .into_iter()
+            .map(|edge| edge.label)
+            .collect::<Vec<_>>();
+
+        if let Some(fixture) = fixtures.get_mut(&information_set.id()) {
+            if fixture.player != information_set.player() || fixture.actions != action_labels {
+                return Err(ExtensiveFormError::InconsistentInformationSetActions {
+                    information_set: information_set.id(),
+                });
+            }
+            fixture.nodes.push(entity);
+        } else {
+            fixtures.insert(
+                information_set.id(),
+                InformationSetFixture {
+                    id: information_set.id(),
+                    player: information_set.player(),
+                    nodes: vec![entity],
+                    actions: action_labels,
+                },
+            );
+        }
+    }
+
+    Ok(fixtures.into_values().collect())
 }
 
 pub fn outgoing_action_edges(
@@ -444,6 +506,19 @@ pub enum ExtensiveFormError {
     UnsupportedChanceNode {
         entity: EntityId,
     },
+    InformationSetRequiresDecisionNode {
+        information_set: u64,
+        entity: EntityId,
+    },
+    InformationSetPlayerMismatch {
+        information_set: u64,
+        entity: EntityId,
+        expected_player: usize,
+        actual_player: usize,
+    },
+    InconsistentInformationSetActions {
+        information_set: u64,
+    },
 }
 
 impl Display for ExtensiveFormError {
@@ -508,6 +583,28 @@ impl Display for ExtensiveFormError {
                 formatter,
                 "chance node {:?} is not supported by deterministic backward induction yet",
                 entity
+            ),
+            Self::InformationSetRequiresDecisionNode {
+                information_set,
+                entity,
+            } => write!(
+                formatter,
+                "information set {information_set} references non-decision node {:?}",
+                entity
+            ),
+            Self::InformationSetPlayerMismatch {
+                information_set,
+                entity,
+                expected_player,
+                actual_player,
+            } => write!(
+                formatter,
+                "information set {information_set} expected player {expected_player} but node {:?} belongs to player {actual_player}",
+                entity
+            ),
+            Self::InconsistentInformationSetActions { information_set } => write!(
+                formatter,
+                "information set {information_set} contains nodes with inconsistent action labels"
             ),
         }
     }
