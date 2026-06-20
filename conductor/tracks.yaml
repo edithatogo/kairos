@@ -908,7 +908,7 @@ tracks:
       - github-actions-review
   - id: 60
     name: Normal-Form Multi-Game Runtime and Solvers
-    status: In Progress
+    status: In Review
     owner: game-theory-agent + ecs-agent + performance-agent
     depends_on: ["58", "59"]
     owned_paths:
@@ -925,7 +925,7 @@ tracks:
       - github-actions-review
   - id: 61
     name: Extensive-Form Graph-ECS Runtime and Certification
-    status: Spec Approved
+    status: In Review
     owner: game-theory-agent + ecs-agent + benchmark-agent + redteam-agent
     depends_on: ["59", "60"]
     owned_paths:

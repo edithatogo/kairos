@@ -949,7 +949,7 @@ entries:
     git_status: "pending track-creation commit"
     commit_sha: "pending-track-creation-commit"
     pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 56 remains Spec Approved until the wave charter, evidence manifest validator, and lifecycle-gate checks are implemented."
+    next_phase_decision: "Track 56 is In Progress after wave charter, evidence manifest validator, claim-boundary scan, and negative-fixture gates were implemented; final phase-closeout push, strict git closeout, and GitHub Actions evidence reconciliation remain before In Review."
   - track_id: "57"
     phase: "track-creation"
     state: pending
@@ -962,7 +962,7 @@ entries:
     git_status: "pending track-creation commit"
     commit_sha: "pending-track-creation-commit"
     pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 57 remains Spec Approved until the subrepo, ingestion crate, parser fixtures, and schema evidence are implemented."
+    next_phase_decision: "Track 57 is In Progress after the ontology subrepo, Turtle/JSON-LD fixtures, parser crate, canonical IR normalization, and review fixes were implemented; final phase-closeout push, strict git closeout, and GitHub Actions evidence reconciliation remain before In Review."
   - track_id: "58"
     phase: "phase-0-1-codegen-contract-and-generator"
     state: pending

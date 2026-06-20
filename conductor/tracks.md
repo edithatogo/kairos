@@ -60,8 +60,8 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 53 | FMI 2/3 Co-Simulation Master Runtime | In Progress | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Spec Approved | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |
 | 55 | End-to-End Weak/Strong Scaling Certification | In Progress | `performance-agent + benchmark-agent + cloud-agent + release-agent` | See `conductor/tracks/55-*/spec.md` |
-| 56 | Game Theory Ontology Wave Charter and Evidence Gates | Spec Approved | `ontology-agent + game-theory-agent + wave-manager-agent` | See `conductor/tracks/56-*/spec.md` |
-| 57 | Open Game Theory Ontology Subrepo and Schema Ingestion | Spec Approved | `ontology-agent + rust-agent` | See `conductor/tracks/57-*/spec.md` |
+| 56 | Game Theory Ontology Wave Charter and Evidence Gates | In Progress | `ontology-agent + game-theory-agent + wave-manager-agent` | See `conductor/tracks/56-*/spec.md` |
+| 57 | Open Game Theory Ontology Subrepo and Schema Ingestion | In Progress | `ontology-agent + rust-agent` | See `conductor/tracks/57-*/spec.md` |
 | 58 | Ontology-to-Rust Component Code Generation | In Review | `ontology-agent + ecs-agent + api-governance-agent` | See `conductor/tracks/58-*/spec.md` |
 | 59 | Feature-Gated Graph Relations ECS Module | In Review | `ecs-agent + core-scheduler-agent + conformance-agent` | See `conductor/tracks/59-*/spec.md` |
 | 60 | Normal-Form Multi-Game Runtime and Solvers | In Review | `game-theory-agent + ecs-agent + performance-agent` | See `conductor/tracks/60-*/spec.md` |
