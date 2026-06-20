@@ -93,8 +93,8 @@ Track 60 has the normal-form component and solver foundation needed by later ben
   - `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1` passed.
 - `$conductor-review`: Phase 1 review completed; no in-scope correctness fixes required.
 - accepted fixes: none.
-- commit SHA: pending Phase 1 closeout commit.
-- pushed ref: pending Phase 1 push.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending after Phase 1 push.
-- GitHub Actions review: pending after Phase 1 push.
-- next-phase decision: Track 60 is In Progress; proceed to Phase 2 only after Phase 1 review, push, strict closeout, and GitHub Actions review.
+- commit SHA: `1cceebe track 60 phase 1: close solver systems phase`.
+- pushed ref: `origin/codex/kairos-hpc-parity-wave`.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after Phase 1 push.
+- GitHub Actions review: `gh pr checks --watch` passed after the Phase 1 push with 63 successful checks and `deploy-pages` skipped.
+- next-phase decision: Track 60 is In Progress; proceed to Phase 2 benchmark and docs evidence.
