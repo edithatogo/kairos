@@ -268,6 +268,74 @@ fn collect_paths(
     Ok(())
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
+pub struct BackwardInductionSolver;
+
+impl BackwardInductionSolver {
+    pub fn solve(
+        root: EntityId,
+        nodes: &ComponentStore<ExtensiveNode>,
+        terminals: &ComponentStore<TerminalUtility>,
+        stores: ExtensiveTraversalStores<'_>,
+    ) -> Result<ExtensivePath, ExtensiveFormError> {
+        solve_backward(root, nodes, terminals, stores)
+    }
+}
+
+fn solve_backward(
+    entity: EntityId,
+    nodes: &ComponentStore<ExtensiveNode>,
+    terminals: &ComponentStore<TerminalUtility>,
+    stores: ExtensiveTraversalStores<'_>,
+) -> Result<ExtensivePath, ExtensiveFormError> {
+    let Some(node) = nodes.get(entity) else {
+        return Err(ExtensiveFormError::MissingNode { entity });
+    };
+
+    match node {
+        ExtensiveNode::Terminal => {
+            let Some(terminal) = terminals.get(entity) else {
+                return Err(ExtensiveFormError::MissingTerminalUtility { entity });
+            };
+            Ok(ExtensivePath {
+                terminal: entity,
+                actions: Vec::new(),
+                payoffs: terminal.payoffs().to_vec(),
+            })
+        }
+        ExtensiveNode::Decision { player } => {
+            let edges = outgoing_action_edges(entity, stores)?;
+            if edges.is_empty() {
+                return Err(ExtensiveFormError::NoOutgoingActions { entity });
+            }
+
+            let mut best = None;
+            let mut best_utility = None;
+            for edge in edges {
+                let mut candidate = solve_backward(edge.target, nodes, terminals, stores)?;
+                let utility = candidate.payoffs.get(*player).copied().ok_or(
+                    ExtensiveFormError::MissingPlayerPayoff {
+                        entity: candidate.terminal,
+                        player: *player,
+                    },
+                )?;
+                candidate.actions.insert(0, edge.label);
+
+                if best_utility
+                    .map(|current: Utility| utility.value() > current.value())
+                    .unwrap_or(true)
+                {
+                    best_utility = Some(utility);
+                    best = Some(candidate);
+                }
+            }
+
+            best.ok_or(ExtensiveFormError::NoOutgoingActions { entity })
+        }
+        ExtensiveNode::Chance => Err(ExtensiveFormError::UnsupportedChanceNode { entity }),
+    }
+}
+
 pub fn validate_extensive_form_topology(
     topology: ExtensiveFormTopology<'_>,
 ) -> Result<(), ExtensiveFormError> {
@@ -369,6 +437,13 @@ pub enum ExtensiveFormError {
     NoOutgoingActions {
         entity: EntityId,
     },
+    MissingPlayerPayoff {
+        entity: EntityId,
+        player: usize,
+    },
+    UnsupportedChanceNode {
+        entity: EntityId,
+    },
 }
 
 impl Display for ExtensiveFormError {
@@ -422,6 +497,16 @@ impl Display for ExtensiveFormError {
             Self::NoOutgoingActions { entity } => write!(
                 formatter,
                 "non-terminal node {:?} must have at least one outgoing action",
+                entity
+            ),
+            Self::MissingPlayerPayoff { entity, player } => write!(
+                formatter,
+                "terminal node {:?} does not include a payoff for player {player}",
+                entity
+            ),
+            Self::UnsupportedChanceNode { entity } => write!(
+                formatter,
+                "chance node {:?} is not supported by deterministic backward induction yet",
                 entity
             ),
         }
