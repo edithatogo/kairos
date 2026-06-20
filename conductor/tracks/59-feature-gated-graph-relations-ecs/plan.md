@@ -13,7 +13,11 @@ Phase closeout: review, push, and GitHub Actions review.
 
 ## Phase 1: Components and Traversal
 
-- [ ] Task 1.1: Add `ChildOf` and `TransitionTo` component tests. Commit as `track 59 task 1.1: add graph edge components`.
+- [x] Task 1.1: Add `ChildOf` and `TransitionTo` component tests. Commit as `track 59 task 1.1: add graph edge components`.
+  - Red evidence: `cargo test -p kairo-ecs-game-theory --test graph_relations --features graph-relations` failed before implementation because `ChildOf` and `TransitionTo` were unresolved.
+  - Green evidence: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test graph_relations --features graph-relations` passed with 2 tests.
+  - Boundary evidence: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --doc --no-default-features` passed.
+  - Local note: the default active MSVC toolchain can type-check the tests, but test linking is blocked because Git's `link.exe` shadows the Visual Studio linker on this machine.
 - [ ] Task 1.2: Add traversal over flat arrays using Entity IDs only. Commit as `track 59 task 1.2: traverse graph relations over ecs arrays`.
 - [ ] Task 1.3: Add no raw pointer, no self-reference, and no `Box` topology scan. Commit as `track 59 task 1.3: enforce no pointer graph topology`.
 
