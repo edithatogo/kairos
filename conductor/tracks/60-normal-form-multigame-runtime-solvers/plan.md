@@ -30,6 +30,6 @@ Before any phase is accepted:
 ## Phase 2: Performance and Evidence
 
 - [x] Task 2.1: Add flat-array benchmark fixtures and evidence manifest entries. Commit `track 60 task 2.1: record normal form solver benchmarks`.
-- [ ] Task 2.2: Add docs and examples for normal-form execution. Commit as `track 60 task 2.2: document normal form runtime`.
+- [x] Task 2.2: Add docs and examples for normal-form execution. Commit `track 60 task 2.2: document normal form runtime`.
 
 Phase closeout repeats review, push, and GitHub Actions review.
