@@ -9,9 +9,9 @@ Phase closeout: review, push, and GitHub Actions review.
 
 ## Phase 1: Traversal and Solvers
 
-- [ ] Task 1.1: Add traversal tests using `ChildOf` and `TransitionTo` relations. Commit as `track 61 task 1.1: traverse extensive form graph ecs`.
-- [ ] Task 1.2: Add backward-induction tests and implementation. Commit as `track 61 task 1.2: implement backward induction solver`.
-- [ ] Task 1.3: Add imperfect-information fixture tests. Commit as `track 61 task 1.3: support information set fixtures`.
+- [x] Task 1.1: Add traversal tests using `ChildOf` and `TransitionTo` relations. Commit as `track 61 task 1.1: traverse extensive form graph ecs`.
+- [x] Task 1.2: Add backward-induction tests and implementation. Commit as `track 61 task 1.2: implement backward induction solver`.
+- [x] Task 1.3: Add imperfect-information fixture tests. Commit as `track 61 task 1.3: support information set fixtures`.
 
 Phase closeout repeats review, push, and GitHub Actions review.
 

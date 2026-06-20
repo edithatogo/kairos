@@ -83,7 +83,7 @@ The Conductor setup is complete, but implementation should move through explicit
 | Ontology-to-Rust Code Generation (Track 58) | R0 | Spec-approved follow-up for deterministic generated Rust component schemas; no generator or generated component crate exists yet. |
 | Graph Relations ECS Module (Track 59) | R2 | Phase 1 is In Review: `graph-relations` is default-off, Entity-ID `ChildOf`/`TransitionTo` components and flat-store traversal helpers are implemented, pointer-topology scan passes, and GitHub Actions passed after rerunning a transient crates.io fetch failure. |
 | Normal-Form Multi-Game Runtime (Track 60) | R2 | Phase 2 is implemented locally: normal-form components, best-response, pure Nash, strict dominance, a quick benchmark smoke target, runnable example, and bounded docs exist. Phase 2 push, GitHub Actions review, broader benchmark evidence, mixed-strategy solving, generated-ontology integration, and extensive-form runtime parity remain pending. |
-| Extensive-Form Graph-ECS Runtime (Track 61) | R1 | Phase 0 sequential components and topology validation are implemented locally behind `graph-relations`; traversal, backward induction, information-set fixtures, certification evidence, push, and GitHub Actions review remain pending. |
+| Extensive-Form Graph-ECS Runtime (Track 61) | R2 | Phase 1 traversal, deterministic backward induction, and information-set fixture validation are implemented locally behind `graph-relations`; certification evidence, push, strict closeout, and GitHub Actions review remain pending for Phase 1. |
 
 ## Enforcement rule
 
