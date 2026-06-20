@@ -239,7 +239,7 @@ entries:
     state: closed
     review_command: "$conductor-review"
     review_result: "Track 13 advanced to Done after review confirmed workflow inventory, metadata alignment, conformance hardening, downstream evidence checks, and the offline supply-chain gate pass locally."
-    fixes_applied: false
+    fixes_applied: true
     validation_commands:
       - "node scripts/validation/validate-track13-metadata.mjs"
       - "node tests/conformance/track07_13_hardening_check.mjs"
@@ -980,10 +980,10 @@ entries:
       - "cargo check -p kairo-ecs-game-theory --features graph-relations --tests"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "phase 0 task commits exist locally; closeout evidence commit, push, strict git closeout, and GitHub Actions review pending"
-    commit_sha: "9c8a42c0f02efe5f33fc21df5531ea5145a638ae, a2b4227a893ad7db52b45435ad2ce292f6fb5480"
-    pushed_ref: "pending-track-59-phase-0-push"
-    next_phase_decision: "Proceed to Phase 1 only after the Phase 0 closeout evidence commit is pushed, strict git closeout passes, and GitHub Actions review passes."
+    git_status: "clean after pushed Phase 0 commits; strict git closeout passed"
+    commit_sha: "9c8a42c0f02efe5f33fc21df5531ea5145a638ae, a2b4227a893ad7db52b45435ad2ce292f6fb5480, ca136a516562849442767a77ac0715c506730aff, 4340a27227f3b595fb9e0f0aa0f2f333dba85d0d"
+    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
+    next_phase_decision: "Phase 0 is closed after review, push, strict git closeout, and GitHub Actions review. Proceed to Phase 1 component and traversal tasks."
   - track_id: "60"
     phase: "track-creation"
     state: pending
