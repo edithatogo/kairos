@@ -575,4 +575,4 @@ Track 61 completed its planned sequential component and topology-validation phas
 - Red states captured the missing `extensive_form` module, then the missing topology validator and error variants.
 - Added `kairo_ecs_game_theory::extensive_form` behind `graph-relations` with decision/chance/terminal nodes, information sets, action edges, chance outcomes, terminal utilities, and flat-store topology validation through `ChildOf`.
 - Local gates passed: extensive-form component tests, topology validation tests, and `kairo-ecs-game-theory` clippy with `graph-relations`.
-- Track 61 is now In Progress locally. Phase 0 push, strict git closeout, and GitHub Actions review remain required before Phase 1 traversal and solver work begins.
+- Track 61 is now In Progress after the Phase 0 push, strict git closeout, and GitHub Actions review passed with 63 successful checks and `deploy-pages` skipped. Phase 1 traversal and solver work is next.
