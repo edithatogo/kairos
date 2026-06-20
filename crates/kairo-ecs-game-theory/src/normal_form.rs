@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
@@ -17,6 +18,16 @@ impl StrategySpace {
             }
             if strategies.iter().any(|strategy| strategy.is_empty()) {
                 return Err(NormalFormError::EmptyStrategyName { player });
+            }
+
+            let mut seen = HashSet::with_capacity(strategies.len());
+            for strategy in strategies {
+                if !seen.insert(strategy.as_str()) {
+                    return Err(NormalFormError::DuplicateStrategyName {
+                        player,
+                        strategy: strategy.clone(),
+                    });
+                }
             }
         }
 
@@ -158,6 +169,10 @@ pub enum NormalFormError {
     EmptyStrategyName {
         player: usize,
     },
+    DuplicateStrategyName {
+        player: usize,
+        strategy: String,
+    },
     NonFiniteUtility,
     PayoffCount {
         actual: usize,
@@ -176,6 +191,12 @@ impl Display for NormalFormError {
             }
             Self::EmptyStrategyName { player } => {
                 write!(formatter, "player {player} has an empty strategy name")
+            }
+            Self::DuplicateStrategyName { player, strategy } => {
+                write!(
+                    formatter,
+                    "player {player} has duplicate strategy name {strategy}"
+                )
             }
             Self::NonFiniteUtility => formatter.write_str("utility values must be finite"),
             Self::PayoffCount {

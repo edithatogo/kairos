@@ -38,3 +38,51 @@ fn payoff_matrix_rejects_wrong_payoff_count() {
         "payoff count 7 does not match expected 8 for 4 profiles and 2 players"
     );
 }
+
+#[test]
+fn strategy_space_rejects_invalid_cardinality_and_names() {
+    assert_eq!(
+        StrategySpace::new(Vec::new()).unwrap_err().to_string(),
+        "strategy space must include at least one player"
+    );
+    assert_eq!(
+        StrategySpace::new(vec![Vec::new()])
+            .unwrap_err()
+            .to_string(),
+        "player 0 must include at least one strategy"
+    );
+    assert_eq!(
+        StrategySpace::new(vec![vec!["".to_owned()]])
+            .unwrap_err()
+            .to_string(),
+        "player 0 has an empty strategy name"
+    );
+    assert_eq!(
+        StrategySpace::new(vec![vec!["left".to_owned(), "left".to_owned()]])
+            .unwrap_err()
+            .to_string(),
+        "player 0 has duplicate strategy name left"
+    );
+}
+
+#[test]
+fn utility_rejects_non_finite_values() {
+    assert_eq!(
+        Utility::new(f64::NAN).unwrap_err().to_string(),
+        "utility values must be finite"
+    );
+    assert_eq!(
+        Utility::new(f64::INFINITY).unwrap_err().to_string(),
+        "utility values must be finite"
+    );
+}
+
+#[test]
+fn payoff_lookup_rejects_invalid_profile_or_player() {
+    let strategies = StrategySpace::from_counts(vec![2, 2]).expect("valid strategy space");
+    let matrix = PayoffMatrix::new(strategies, vec![Utility::new(0.0).unwrap(); 8]).unwrap();
+
+    assert_eq!(matrix.payoff(&[0], 0), None);
+    assert_eq!(matrix.payoff(&[2, 0], 0), None);
+    assert_eq!(matrix.payoff(&[0, 0], 2), None);
+}
