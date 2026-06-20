@@ -1,5 +1,5 @@
 use kairo_ecs_game_theory::normal_form::{
-    BestResponseSolver, PayoffMatrix, StrategySpace, Utility,
+    BestResponseSolver, PayoffMatrix, PureNashSolver, StrategySpace, Utility,
 };
 
 fn utility(value: f64) -> Utility {
@@ -92,4 +92,47 @@ fn best_response_solver_rejects_invalid_player_or_opponent_profile() {
             .to_string(),
         "opponent player 1 strategy 2 is outside 2 strategies"
     );
+}
+
+#[test]
+fn pure_nash_solver_finds_prisoners_dilemma_equilibrium() {
+    let equilibria = PureNashSolver::equilibria(&prisoners_dilemma());
+
+    assert_eq!(equilibria.len(), 1);
+    assert_eq!(equilibria[0].profile, vec![1, 1]);
+    assert_eq!(equilibria[0].payoffs, vec![utility(1.0), utility(1.0)]);
+}
+
+#[test]
+fn pure_nash_solver_preserves_multiple_equilibria_in_profile_order() {
+    let strategies = StrategySpace::new(vec![
+        vec!["hunt".to_owned(), "forage".to_owned()],
+        vec!["hunt".to_owned(), "forage".to_owned()],
+    ])
+    .expect("valid strategy space");
+    let matrix = PayoffMatrix::new(
+        strategies,
+        vec![
+            utility(4.0),
+            utility(4.0),
+            utility(0.0),
+            utility(3.0),
+            utility(3.0),
+            utility(0.0),
+            utility(2.0),
+            utility(2.0),
+        ],
+    )
+    .expect("valid payoff matrix");
+
+    let equilibria = PureNashSolver::equilibria(&matrix);
+    assert_eq!(
+        equilibria
+            .iter()
+            .map(|equilibrium| equilibrium.profile.clone())
+            .collect::<Vec<_>>(),
+        vec![vec![0, 0], vec![1, 1]]
+    );
+    assert_eq!(equilibria[0].payoffs, vec![utility(4.0), utility(4.0)]);
+    assert_eq!(equilibria[1].payoffs, vec![utility(2.0), utility(2.0)]);
 }

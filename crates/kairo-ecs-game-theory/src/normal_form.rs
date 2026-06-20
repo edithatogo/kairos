@@ -252,6 +252,90 @@ impl BestResponseSolver {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct PureNashEquilibrium {
+    pub profile: Vec<usize>,
+    pub payoffs: Vec<Utility>,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+pub struct PureNashSolver;
+
+impl PureNashSolver {
+    pub fn equilibria(matrix: &PayoffMatrix) -> Vec<PureNashEquilibrium> {
+        let strategies = matrix.strategies();
+        let mut equilibria = Vec::new();
+        let mut profile = vec![0usize; strategies.player_count()];
+
+        loop {
+            if Self::is_equilibrium(matrix, &profile) {
+                let payoffs = (0..strategies.player_count())
+                    .map(|player| {
+                        matrix
+                            .payoff(&profile, player)
+                            .expect("validated profile must resolve to payoff")
+                    })
+                    .collect();
+                equilibria.push(PureNashEquilibrium {
+                    profile: profile.clone(),
+                    payoffs,
+                });
+            }
+
+            if !advance_profile(&mut profile, strategies) {
+                break;
+            }
+        }
+
+        equilibria
+    }
+
+    fn is_equilibrium(matrix: &PayoffMatrix, profile: &[usize]) -> bool {
+        let strategies = matrix.strategies();
+
+        for player in 0..strategies.player_count() {
+            let current = matrix
+                .payoff(profile, player)
+                .expect("validated profile must resolve to payoff");
+            let strategy_count = strategies
+                .strategy_count(player)
+                .expect("valid strategy space has strategies for every player");
+            let mut deviated_profile = profile.to_vec();
+
+            for strategy in 0..strategy_count {
+                if strategy == profile[player] {
+                    continue;
+                }
+
+                deviated_profile[player] = strategy;
+                let deviated = matrix
+                    .payoff(&deviated_profile, player)
+                    .expect("validated deviated profile must resolve to payoff");
+                if deviated.value() > current.value() {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
+}
+
+fn advance_profile(profile: &mut [usize], strategies: &StrategySpace) -> bool {
+    for player in (0..profile.len()).rev() {
+        let strategy_count = strategies
+            .strategy_count(player)
+            .expect("valid strategy space has strategies for every player");
+        profile[player] += 1;
+        if profile[player] < strategy_count {
+            return true;
+        }
+        profile[player] = 0;
+    }
+
+    false
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NormalFormError {
     NoPlayers,
