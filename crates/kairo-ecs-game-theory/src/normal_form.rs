@@ -336,6 +336,95 @@ fn advance_profile(profile: &mut [usize], strategies: &StrategySpace) -> bool {
     false
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct DominatedStrategy {
+    pub strategy: usize,
+    pub dominated_by: usize,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+pub struct StrictDominanceSolver;
+
+impl StrictDominanceSolver {
+    pub fn strictly_dominated_strategies(
+        matrix: &PayoffMatrix,
+        player: usize,
+    ) -> Result<Vec<DominatedStrategy>, NormalFormError> {
+        let strategies = matrix.strategies();
+        let player_count = strategies.player_count();
+        if player >= player_count {
+            return Err(NormalFormError::InvalidPlayer {
+                player,
+                player_count,
+            });
+        }
+
+        let strategy_count = strategies
+            .strategy_count(player)
+            .expect("validated player has strategies");
+        let mut dominated = Vec::new();
+
+        for strategy in 0..strategy_count {
+            if let Some(dominated_by) =
+                Self::strictly_dominating_strategy(matrix, player, strategy, strategy_count)
+            {
+                dominated.push(DominatedStrategy {
+                    strategy,
+                    dominated_by,
+                });
+            }
+        }
+
+        Ok(dominated)
+    }
+
+    fn strictly_dominating_strategy(
+        matrix: &PayoffMatrix,
+        player: usize,
+        dominated_strategy: usize,
+        strategy_count: usize,
+    ) -> Option<usize> {
+        (0..strategy_count)
+            .filter(|candidate| *candidate != dominated_strategy)
+            .find(|candidate| {
+                Self::strictly_dominates(matrix, player, dominated_strategy, *candidate)
+            })
+    }
+
+    fn strictly_dominates(
+        matrix: &PayoffMatrix,
+        player: usize,
+        dominated_strategy: usize,
+        candidate_strategy: usize,
+    ) -> bool {
+        let strategies = matrix.strategies();
+        let mut profile = vec![0usize; strategies.player_count()];
+
+        loop {
+            if profile[player] == dominated_strategy {
+                let dominated = matrix
+                    .payoff(&profile, player)
+                    .expect("validated profile must resolve to payoff");
+                profile[player] = candidate_strategy;
+                let candidate = matrix
+                    .payoff(&profile, player)
+                    .expect("validated candidate profile must resolve to payoff");
+                profile[player] = dominated_strategy;
+
+                if candidate.value() <= dominated.value() {
+                    return false;
+                }
+            }
+
+            if !advance_profile(&mut profile, strategies) {
+                break;
+            }
+        }
+
+        true
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NormalFormError {
     NoPlayers,

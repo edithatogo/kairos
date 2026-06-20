@@ -1,5 +1,5 @@
 use kairo_ecs_game_theory::normal_form::{
-    BestResponseSolver, PayoffMatrix, PureNashSolver, StrategySpace, Utility,
+    BestResponseSolver, PayoffMatrix, PureNashSolver, StrategySpace, StrictDominanceSolver, Utility,
 };
 
 fn utility(value: f64) -> Utility {
@@ -135,4 +135,45 @@ fn pure_nash_solver_preserves_multiple_equilibria_in_profile_order() {
     );
     assert_eq!(equilibria[0].payoffs, vec![utility(4.0), utility(4.0)]);
     assert_eq!(equilibria[1].payoffs, vec![utility(2.0), utility(2.0)]);
+}
+
+#[test]
+fn strict_dominance_solver_finds_dominated_prisoners_dilemma_strategies() {
+    let matrix = prisoners_dilemma();
+
+    let player_zero = StrictDominanceSolver::strictly_dominated_strategies(&matrix, 0).unwrap();
+    assert_eq!(player_zero.len(), 1);
+    assert_eq!(player_zero[0].strategy, 0);
+    assert_eq!(player_zero[0].dominated_by, 1);
+
+    let player_one = StrictDominanceSolver::strictly_dominated_strategies(&matrix, 1).unwrap();
+    assert_eq!(player_one.len(), 1);
+    assert_eq!(player_one[0].strategy, 0);
+    assert_eq!(player_one[0].dominated_by, 1);
+}
+
+#[test]
+fn strict_dominance_solver_ignores_ties_and_rejects_invalid_player() {
+    let strategies = StrategySpace::new(vec![
+        vec!["left".to_owned(), "right".to_owned()],
+        vec!["hold".to_owned()],
+    ])
+    .expect("valid strategy space");
+    let matrix = PayoffMatrix::new(
+        strategies,
+        vec![utility(2.0), utility(0.0), utility(2.0), utility(0.0)],
+    )
+    .expect("valid payoff matrix");
+
+    assert!(
+        StrictDominanceSolver::strictly_dominated_strategies(&matrix, 0)
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(
+        StrictDominanceSolver::strictly_dominated_strategies(&matrix, 2)
+            .unwrap_err()
+            .to_string(),
+        "player 2 is outside a 2 player strategy space"
+    );
 }
