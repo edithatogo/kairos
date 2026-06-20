@@ -15,5 +15,9 @@ graph-relations = ["dep:kairo-ecs-state", "dep:kairo-ecs-types"]
 kairo-ecs-state = { path = "../kairo-ecs-state", optional = true }
 kairo-ecs-types = { path = "../kairo-ecs-types", optional = true }
 
+[[bench]]
+name = "normal_form"
+harness = false
+
 [lints]
 workspace = true
