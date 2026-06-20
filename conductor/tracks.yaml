@@ -908,7 +908,7 @@ tracks:
       - github-actions-review
   - id: 60
     name: Normal-Form Multi-Game Runtime and Solvers
-    status: Spec Approved
+    status: In Progress
     owner: game-theory-agent + ecs-agent + performance-agent
     depends_on: ["58", "59"]
     owned_paths:

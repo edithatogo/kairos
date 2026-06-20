@@ -2,8 +2,8 @@
 
 ## Phase 0: Component Model
 
-- [ ] Task 0.1: Add failing tests for `PayoffMatrix`, `StrategySpace`, and `Utility` invariants. Commit after passing as `track 60 task 0.1: add normal form components`.
-- [ ] Task 0.2: Add invalid-shape and invalid-utility negative tests. Commit as `track 60 task 0.2: validate normal form component invariants`.
+- [x] Task 0.1: Add failing tests for `PayoffMatrix`, `StrategySpace`, and `Utility` invariants. Commit `8fd3e87 track 60 task 0.1: add normal form components`.
+- [x] Task 0.2: Add invalid-shape and invalid-utility negative tests. Commit `c97c7d7 track 60 task 0.2: validate normal form component invariants`.
 
 Phase closeout: run validators, `$conductor-review 60`, apply fixes, update handoff, push, and review GitHub Actions.
 
