@@ -99,8 +99,8 @@ Track 61 has the component, topology, traversal, deterministic solver, and infor
   - `rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-game-theory --features graph-relations --all-targets -- -D warnings` passed.
 - `$conductor-review`: Phase 1 review completed locally; no in-scope correctness fixes required before push.
 - accepted fixes: none.
-- commit SHA: pending Phase 1 closeout commit.
-- pushed ref: pending Phase 1 push.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending after Phase 1 push.
-- GitHub Actions review: pending after Phase 1 push.
-- next-phase decision: Track 61 remains In Progress locally; proceed to Phase 2 only after Phase 1 push, strict closeout, and GitHub Actions review pass.
+- commit SHA: `2a95d95` (`track 61 task 1.1: traverse extensive form graph ecs`), `8aa7656` (`track 61 task 1.2: implement backward induction solver`), `4a5a07b` (`track 61 task 1.3: support information set fixtures`), `27b7302` (`track 61 phase 1: close traversal and solver phase`).
+- pushed ref: `origin/codex/kairos-hpc-parity-wave`.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after the Phase 1 push.
+- GitHub Actions review: `gh pr checks --watch` passed after the Phase 1 push with 63 successful checks and `deploy-pages` skipped.
+- next-phase decision: Track 61 remains In Progress after Phase 1 implementation, review, push, strict closeout, and GitHub Actions review passed; proceed to Phase 2 certification work.
