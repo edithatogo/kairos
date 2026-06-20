@@ -18,7 +18,10 @@ Phase closeout: review, push, and GitHub Actions review.
   - Green evidence: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test graph_relations --features graph-relations` passed with 2 tests.
   - Boundary evidence: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --doc --no-default-features` passed.
   - Local note: the default active MSVC toolchain can type-check the tests, but test linking is blocked because Git's `link.exe` shadows the Visual Studio linker on this machine.
-- [ ] Task 1.2: Add traversal over flat arrays using Entity IDs only. Commit as `track 59 task 1.2: traverse graph relations over ecs arrays`.
+- [x] Task 1.2: Add traversal over flat arrays using Entity IDs only. Commit as `track 59 task 1.2: traverse graph relations over ecs arrays`.
+  - Red evidence: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test graph_relations --features graph-relations` failed before implementation because `children_of`, `transition_target`, and `depth_first_descendants` were unresolved.
+  - Green evidence: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test graph_relations --features graph-relations` passed with 5 tests.
+  - Boundary evidence: `rustup run stable-x86_64-pc-windows-gnu cargo check -p kairo-ecs-game-theory --no-default-features --tests` passed.
 - [ ] Task 1.3: Add no raw pointer, no self-reference, and no `Box` topology scan. Commit as `track 59 task 1.3: enforce no pointer graph topology`.
 
 Phase closeout repeats review, push, and GitHub Actions review.
