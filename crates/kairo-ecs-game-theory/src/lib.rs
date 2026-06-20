@@ -7,6 +7,9 @@
 //! use kairo_ecs_game_theory::graph_relations::ChildOf;
 //! ```
 
+#[cfg(feature = "graph-relations")]
+pub mod graph_relations;
+
 #[cfg(feature = "generated-components")]
 pub mod generated_components {
     include!("../../../open-game-theory-ontology/fixtures/generated/rust/game_components.rs");

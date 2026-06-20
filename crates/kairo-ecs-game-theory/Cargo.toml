@@ -9,6 +9,11 @@ rust-version.workspace = true
 [features]
 default = []
 generated-components = []
+graph-relations = ["dep:kairo-ecs-state", "dep:kairo-ecs-types"]
+
+[dependencies]
+kairo-ecs-state = { path = "../kairo-ecs-state", optional = true }
+kairo-ecs-types = { path = "../kairo-ecs-types", optional = true }
 
 [lints]
 workspace = true
