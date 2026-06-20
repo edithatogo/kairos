@@ -2,7 +2,7 @@
 
 Status: In Progress
 
-Phase 0 implementation is complete locally. The `kairo-ecs-game-theory` crate now exposes a dependency-light `normal_form` module with `StrategySpace`, `Utility`, `PayoffMatrix`, typed `NormalFormError` failures, deterministic flattened profile indexing, finite-utility validation, shape validation, and duplicate strategy-name rejection.
+Phase 0 implementation is complete and pushed. The `kairo-ecs-game-theory` crate now exposes a dependency-light `normal_form` module with `StrategySpace`, `Utility`, `PayoffMatrix`, typed `NormalFormError` failures, deterministic flattened profile indexing, finite-utility validation, shape validation, and duplicate strategy-name rejection.
 
 ## Summary
 
@@ -63,8 +63,8 @@ Track 60 has the normal-form component foundation needed by later solver phases.
   - `rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-game-theory --all-targets -- -D warnings` passed.
 - `$conductor-review`: Phase 0 review completed; no in-scope correctness fixes required.
 - accepted fixes: none.
-- commit SHA: pending Phase 0 closeout commit.
-- pushed ref: pending Phase 0 push.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending after Phase 0 push.
-- GitHub Actions review: pending after Phase 0 push.
-- next-phase decision: Track 60 is In Progress; proceed to Phase 1 only after Phase 0 review, push, strict closeout, and GitHub Actions review.
+- commit SHA: `cfd7f01 track 60 phase 0: close component model phase`.
+- pushed ref: `origin/codex/kairos-hpc-parity-wave`.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after Phase 0 push.
+- GitHub Actions review: `gh pr checks --watch` passed after the Phase 0 push; `deploy-pages` skipped.
+- next-phase decision: Track 60 is In Progress; proceed to Phase 1 best-response solver systems.
