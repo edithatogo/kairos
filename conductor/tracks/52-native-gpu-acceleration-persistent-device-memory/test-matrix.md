@@ -2,6 +2,7 @@
 
 | Gate | Command | Required for |
 |---|---|---|
+| Backend initialization contract | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features wgpu-backend,cuda-backend --test backend_initialization` | Implementation |
 | GPU crate tests | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features wgpu-backend,cuda-backend` | Implementation |
 | WebGPU crate tests | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-webgpu --features webgpu` | Review |
 | Real wgpu dispatch | `cargo test -p kairo-ecs-gpu --features wgpu-backend --test real_wgpu_device` | Done |

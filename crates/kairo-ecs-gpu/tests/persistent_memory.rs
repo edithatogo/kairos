@@ -80,3 +80,46 @@ fn persistent_session_keeps_state_buffers_resident_across_mixed_ticks() {
     );
     assert_eq!(session.residency_snapshot().host_state_downloads, 1);
 }
+
+#[test]
+fn upload_once_reupload_is_counted_as_host_upload() {
+    let state = mixed_state();
+    let mut session = PersistentGpuSession::new("contract-gpu");
+
+    session.upload_once(&state).unwrap();
+    session.upload_once(&state).unwrap();
+
+    let snapshot = session.residency_snapshot();
+    assert_eq!(snapshot.host_state_uploads, 2);
+}
+
+#[test]
+fn persistent_des_error_does_not_partially_apply_events() {
+    let state = GpuState {
+        particles: vec![],
+        entity_values: vec![10, 20],
+    };
+    let events = vec![
+        DesEvent {
+            timestamp_ns: 10,
+            entity_id: 0,
+            delta: 5,
+        },
+        DesEvent {
+            timestamp_ns: 20,
+            entity_id: 99,
+            delta: 1,
+        },
+    ];
+    let mut session = PersistentGpuSession::new("contract-gpu");
+    session.upload_once(&state).unwrap();
+
+    assert_eq!(
+        session.run_des_tick(&events),
+        Err(kairo_ecs_gpu::GpuComputeError::EntityOutOfRange {
+            entity_id: 99,
+            entity_count: 2
+        })
+    );
+    assert_eq!(session.download_state().unwrap(), state);
+}

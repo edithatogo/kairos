@@ -1,16 +1,33 @@
 use crate::compute::{
     DesEvent, GpuBackendAvailability, GpuCompute, GpuComputeError, GpuState, GpuStepStats,
-    WGPU_BACKEND_NOT_CONFIGURED,
+    NativeGpuBackendKind, NativeGpuInitializationReport, WGPU_BACKEND_NOT_CONFIGURED,
 };
+
+pub const WGPU_DEVICE_UNAVAILABLE_REASON: &str =
+    "real wgpu adapter/device initialization is not linked in this build";
 
 /// Feature-gated wgpu backend contract.
 ///
 /// The crate does not include the real `wgpu` dependency yet, so this type
 /// reports an explicit unavailable status instead of falling back to CPU work.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct WgpuBackend;
 
 impl WgpuBackend {
+    pub fn initialize_required_device() -> Result<Self, GpuComputeError> {
+        Err(GpuComputeError::DeviceUnavailable {
+            backend: WGPU_BACKEND_NOT_CONFIGURED,
+            reason: WGPU_DEVICE_UNAVAILABLE_REASON,
+        })
+    }
+
+    pub const fn initialization_report() -> NativeGpuInitializationReport {
+        NativeGpuInitializationReport::unavailable(
+            NativeGpuBackendKind::Wgpu,
+            WGPU_DEVICE_UNAVAILABLE_REASON,
+        )
+    }
+
     pub fn new_without_device_for_tests() -> Self {
         Self
     }

@@ -281,8 +281,18 @@ pub struct GpuResidencySnapshot {
 #[derive(Debug, Eq, PartialEq)]
 pub enum GpuComputeError {
     UnsupportedBackend(&'static str),
-    BufferShapeMismatch { expected: usize, actual: usize },
-    EntityOutOfRange { entity_id: u64, entity_count: usize },
+    DeviceUnavailable {
+        backend: &'static str,
+        reason: &'static str,
+    },
+    BufferShapeMismatch {
+        expected: usize,
+        actual: usize,
+    },
+    EntityOutOfRange {
+        entity_id: u64,
+        entity_count: usize,
+    },
     MemorySizeOverflow,
     DispatchSizeOverflow,
     StateNotResident,
@@ -292,6 +302,40 @@ pub enum GpuComputeError {
 pub enum GpuBackendAvailability {
     CpuFallback,
     BackendNotConfigured(&'static str),
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum NativeGpuBackendKind {
+    Wgpu,
+    Cuda,
+}
+
+impl NativeGpuBackendKind {
+    pub const fn backend_name(self) -> &'static str {
+        match self {
+            Self::Wgpu => WGPU_BACKEND_NOT_CONFIGURED,
+            Self::Cuda => CUDA_BACKEND_NOT_CONFIGURED,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct NativeGpuInitializationReport {
+    pub backend: NativeGpuBackendKind,
+    pub attempted_real_device: bool,
+    pub available: bool,
+    pub reason: &'static str,
+}
+
+impl NativeGpuInitializationReport {
+    pub const fn unavailable(backend: NativeGpuBackendKind, reason: &'static str) -> Self {
+        Self {
+            backend,
+            attempted_real_device: true,
+            available: false,
+            reason,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -357,6 +401,18 @@ fn deterministic_jitter(seed: u64, index: usize) -> f32 {
     ((state & 0xffff) as f32 / 65_535.0) - 0.5
 }
 
+fn validate_des_events(events: &[DesEvent], entity_count: usize) -> Result<(), GpuComputeError> {
+    for event in events {
+        if event.entity_id as usize >= entity_count {
+            return Err(GpuComputeError::EntityOutOfRange {
+                entity_id: event.entity_id,
+                entity_count,
+            });
+        }
+    }
+    Ok(())
+}
+
 impl GpuCompute for CpuFallbackCompute {
     fn backend_name(&self) -> &'static str {
         "cpu-fallback"
@@ -395,6 +451,7 @@ impl GpuCompute for CpuFallbackCompute {
         let mut ordered = events.to_vec();
         ordered.sort();
         let entity_count = self.state.entity_values.len();
+        validate_des_events(&ordered, entity_count)?;
 
         for event in ordered {
             let index = event.entity_id as usize;
@@ -452,9 +509,7 @@ impl PersistentGpuSession {
 
     pub fn upload_once(&mut self, state: &GpuState) -> Result<GpuStepStats, GpuComputeError> {
         let footprint = state.footprint()?;
-        if self.state.is_none() {
-            self.host_state_uploads += 1;
-        }
+        self.host_state_uploads += 1;
         self.footprint = footprint;
         self.state = Some(state.clone());
         Ok(GpuStepStats {
@@ -501,6 +556,7 @@ impl PersistentGpuSession {
         let mut ordered = events.to_vec();
         ordered.sort();
         let entity_count = state.entity_values.len();
+        validate_des_events(&ordered, entity_count)?;
 
         for event in ordered {
             let index = event.entity_id as usize;

@@ -22,7 +22,8 @@ pub use compute::{
     AgentParticle, CpuFallbackCompute, DesEvent, DispatchShape, GpuBackendAvailability,
     GpuBackendCapabilities, GpuCompute, GpuComputeError, GpuExecutionPlan, GpuMemoryBudget,
     GpuResidencySnapshot, GpuState, GpuStateFootprint, GpuStepStats, GpuWorkloadKind,
-    PersistentGpuSession, ResidentBufferKind, CUDA_BACKEND_NOT_CONFIGURED, DEFAULT_WORKGROUP_SIZE,
-    TRACK32_TARGET_MEMORY_BUDGET, WGPU_BACKEND_NOT_CONFIGURED,
+    NativeGpuBackendKind, NativeGpuInitializationReport, PersistentGpuSession, ResidentBufferKind,
+    CUDA_BACKEND_NOT_CONFIGURED, DEFAULT_WORKGROUP_SIZE, TRACK32_TARGET_MEMORY_BUDGET,
+    WGPU_BACKEND_NOT_CONFIGURED,
 };
 pub use transfer::{TransferDirection, TransferPlan, TransferStep};

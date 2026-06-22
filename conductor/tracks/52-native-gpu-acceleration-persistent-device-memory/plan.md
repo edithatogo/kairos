@@ -2,8 +2,10 @@
 
 ## Phase 0 - TDD baseline
 
-- [ ] Task 0.1: Add failing backend initialization tests for real device paths
+- [x] Task 0.1: Add failing backend initialization tests for real device paths
   and explicit unavailable-device errors.
+  - Red: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features wgpu-backend,cuda-backend --test backend_initialization` failed with missing native initialization constants, public backend kind re-export, and required-device/context methods.
+  - Green: same command passed after adding typed unavailable-device initialization reports for feature-gated wgpu and CUDA stubs, with no silent CPU fallback.
 - [x] Task 0.2: Add failing CPU/GPU parity tests for DES, ABM, and mixed
   batches.
   - Red: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu
