@@ -171,8 +171,13 @@ make the live-proof gap explicit rather than marking the current scaffolds
 complete. Track 46 is now `In Progress` with a machine-readable evidence schema,
 scaffold/live-HPC template manifests, and an executable claim-boundary validator.
 Track 47 is `In Progress` with the first conservative lookahead enforcement
-slice in `kairo-ecs-pdes`. Track 48 is `In Progress` with a first `time-warp`
-feature-gated rollback/anti-message/generation guard slice in `kairo-ecs-pdes`.
+slice in `kairo-ecs-pdes`. Track 48 is `In Progress` with a `time-warp`
+feature-gated local rollback, anti-message, generation guard, monotonic-GVT
+fossil collection, pre-GVT rejection, duplicate-positive rejection, and
+overhead/rollback-pressure counter slice in `kairo-ecs-pdes`; production
+optimistic scheduling, replay/redelivery semantics, downstream-output
+anti-messages, benchmarks, distributed transport, and live evidence remain
+incomplete.
 Track 49 is `In Progress` with a first MPI/gRPC launch-contract and migration
 metadata baseline in `kairo-ecs-mpi` and `kairo-ecs-grpc`. Track 50 is `In
 Progress` with a first `numa` feature-gated topology, affinity, event-pool,

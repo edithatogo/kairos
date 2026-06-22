@@ -10,7 +10,9 @@
 
 - [x] Task 1.1: Define rollback checkpoints and event-history ownership.
 - [x] Task 1.2: Add generational component bitset snapshots.
-- Task 1.3: Measure memory overhead per LP and event density.
+- [x] Task 1.3: Measure local runtime overhead counters for component cells,
+  generations, executed log length, canceled IDs, rollback counts, and fossil
+  collection counts.
 
 ## Phase 2 - Optimistic execution
 
@@ -20,9 +22,11 @@
 
 ## Phase 3 - Fossil collection
 
-- Task 3.1: Tie fossil collection to GVT.
-- Task 3.2: Prove collection does not delete rollback-needed history.
-- Task 3.3: Add high-rollback pressure stress tests.
+- [x] Task 3.1: Tie local fossil collection to a monotonic GVT floor.
+- [x] Task 3.2: Prove collection does not delete rollback-needed history at or
+  after GVT and rejects pre-GVT positive or anti-message stragglers.
+- [x] Task 3.3: Add local rollback-pressure counter tests for rollback depth,
+  rollback distance, anti-message emission, and duplicate-positive rejection.
 
 ## Phase 4 - Benchmarks and docs
 

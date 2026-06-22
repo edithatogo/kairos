@@ -827,12 +827,13 @@ entries:
     phase: "track-creation"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 48 was created as the Time Warp optimistic rollback follow-up. The first implementation slice adds a `time-warp` feature-gated local rollback runtime with straggler rollback, anti-message cancellation, invalidated-send anti-message output, and generation-stale component access tests."
-    fixes_applied: false
+    review_result: "Track 48 has a local Time Warp fossil/GVT implementation slice: the `time-warp` runtime now rejects pre-GVT positive and anti-message arrivals, rejects GVT regression, prunes only executed positive history strictly older than GVT, rejects duplicate positives, and reports local rollback/overhead counters. Review records replay/redelivery semantics and downstream-output anti-messages as follow-up risks before any production Time Warp claim."
+    fixes_applied: true
     validation_commands:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-pdes --features time-warp"
+      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-pdes --features time-warp time_warp"
       - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-pdes --features pdes"
       - "rustup run stable-x86_64-pc-windows-gnu cargo check --benches -p kairo-ecs-pdes --features time-warp"
       - "CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features --jobs 1"
@@ -840,7 +841,7 @@ entries:
     git_status: "pending track-creation commit"
     commit_sha: "pending-track-creation-commit"
     pushed_ref: "pending-track-creation-push"
-    next_phase_decision: "Track 48 is In Progress after the first rollback/anti-message/generation TDD slice; continue with fossil collection, rollback pressure stress, overhead metrics, benchmark, and live evidence work before In Review."
+    next_phase_decision: "Track 48 is In Progress after the local fossil/GVT and rollback-pressure counter slice; continue with optimistic safe-time execution, replay/redelivery semantics, downstream-output anti-message modeling, benchmarks, distributed transport, and live evidence before In Review."
   - track_id: "49"
     phase: "contract-baseline"
     state: pending
