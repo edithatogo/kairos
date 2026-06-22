@@ -614,13 +614,15 @@ tracks:
       - code-health-floor
   - id: 43
     name: Cloud/HPC Registry Publication & Runtime Acceptance
-    status: In Progress
+    status: In Review
     owner: hpc-registry-agent + cloud-agent + release-agent
     depends_on: ["22", "35", "39", "42", "44"]
     owned_paths:
       - .github/workflows/hpc-registry-publish.yml
       - conductor/tracks/43-cloud-hpc-registry-publication-runtime-acceptance/
       - packaging/hpc-registry-manifest.json
+      - packaging/hpc-runtime-acceptance-evidence.json
+      - packaging/negative/hpc-runtime-evidence-production-without-proof.json
       - scripts/release/publish-hpc.mjs
       - scripts/validation/validate-hpc-registry-readiness.mjs
     required_gates:

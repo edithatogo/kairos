@@ -791,6 +791,24 @@ entries:
     commit_sha: "48fb609"
     pushed_ref: "origin/main"
     next_phase_decision: "Track 42 remains In Review; production publication remains blocked until registry-side trusted publishers/accounts and protected-environment dry-run evidence are attached."
+  - track_id: "43"
+    phase: "runtime-acceptance-evidence-gate"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 43 has a guarded runtime acceptance evidence slice: the HPC registry manifest points at a machine-readable runtime evidence manifest, required Docker/Kubernetes/Slurm/AWS/GCP/Azure KairoECS live scopes are explicit, Azure substrate proof remains partial, and a negative fixture proves unsupported production-ready evidence is rejected. Live runtime canaries remain blocked by unavailable local Docker, Kubernetes, Slurm, AWS, and non-mutating cloud contexts."
+    fixes_applied: false
+    validation_commands:
+      - "node scripts/validation/validate-hpc-registry-readiness.mjs --check-negative-fixtures"
+      - "node scripts/release/publish-hpc.mjs --mode dry-run --version 0.0.0-test"
+      - "node scripts/release/publish-hpc.mjs --mode publish --version 0.0.0-test (expected failure until live evidence is complete)"
+      - "python cloud/validate_cloud_hpc.py"
+      - "node scripts/validation/validate-code-health.mjs"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "pending runtime evidence gate commit"
+    commit_sha: "pending-runtime-evidence-gate-commit"
+    pushed_ref: "pending-runtime-evidence-gate-push"
+    next_phase_decision: "Track 43 is In Review for guarded publication and runtime evidence gating. Keep it out of Done until live Docker, Kubernetes, Slurm, AWS/GCP Batch, Azure KairoECS container/scenario evidence, protected publication, and release-manager approval are attached."
   - track_id: "47"
     phase: "track-creation"
     state: pending
