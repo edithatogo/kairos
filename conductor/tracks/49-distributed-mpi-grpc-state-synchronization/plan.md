@@ -16,15 +16,16 @@
 ## Phase 2 - gRPC transport
 
 - Task 2.1: Add `tonic` and `prost` behind `grpc`.
-- Task 2.2: Define protobuf messages for events, migrations, GVT, telemetry,
-  heartbeats, and anti-messages.
+- [x] Task 2.2: Define protobuf contract messages for events, generation-aware
+  migrations, pending events, GVT, telemetry, heartbeats, retry policy, and
+  anti-messages.
 - Task 2.3: Add process-spawned service/client tests.
 
 ## Phase 3 - State synchronization
 
 - Task 3.1: Serialize entity migration without losing component generation.
 - Task 3.2: Merge distributed telemetry into Arrow-compatible batches.
-- Task 3.3: Add failure classification and retry policy tests.
+- [x] Task 3.3: Add local failure classification and retry policy tests.
 
 ## Phase 4 - Runtime handoff
 

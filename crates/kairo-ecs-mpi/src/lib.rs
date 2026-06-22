@@ -23,6 +23,7 @@ pub enum MpiContractMessage {
     Null,
     Migration,
     Telemetry,
+    AntiMessage,
 }
 
 impl MpiContractMessage {
@@ -32,6 +33,7 @@ impl MpiContractMessage {
             Self::Null => MpiMessageTag::Null,
             Self::Migration => MpiMessageTag::Migration,
             Self::Telemetry => MpiMessageTag::Telemetry,
+            Self::AntiMessage => MpiMessageTag::AntiMessage,
         }
     }
 
@@ -41,6 +43,7 @@ impl MpiContractMessage {
             x if x == MpiMessageTag::Null as i32 => Some(Self::Null),
             x if x == MpiMessageTag::Migration as i32 => Some(Self::Migration),
             x if x == MpiMessageTag::Telemetry as i32 => Some(Self::Telemetry),
+            x if x == MpiMessageTag::AntiMessage as i32 => Some(Self::AntiMessage),
             _ => None,
         }
     }
@@ -58,6 +61,7 @@ pub struct MpiContractEnvelope {
     pub destination_lp: LpId,
     pub tick: Tick,
     pub tick_end: Option<Tick>,
+    pub sequence: Option<u64>,
     pub migration_id: Option<String>,
     pub payload_bytes: usize,
 }
@@ -81,6 +85,7 @@ impl MpiContractEnvelope {
             destination_lp,
             tick,
             tick_end: None,
+            sequence: None,
             migration_id: None,
             payload_bytes: payload_len,
         }
@@ -104,6 +109,7 @@ impl MpiContractEnvelope {
             tick: safe_time,
             migration_id: None,
             tick_end: None,
+            sequence: None,
             payload_bytes: 0,
         }
     }
@@ -126,6 +132,7 @@ impl MpiContractEnvelope {
             destination_lp,
             tick: Tick::from_ticks(0),
             tick_end: None,
+            sequence: None,
             migration_id: Some(migration_id),
             payload_bytes: payload_len,
         }
@@ -150,8 +157,33 @@ impl MpiContractEnvelope {
             destination_lp,
             tick: tick_start,
             tick_end: Some(tick_end),
+            sequence: None,
             migration_id: None,
             payload_bytes: payload_len,
+        }
+    }
+
+    pub fn anti_message(
+        source_rank: i32,
+        destination_rank: i32,
+        source_lp: LpId,
+        destination_lp: LpId,
+        tick: Tick,
+        sequence: u64,
+    ) -> Self {
+        Self {
+            protocol_id: MPI_PROTOCOL_ID,
+            protocol_version: MPI_PROTOCOL_VERSION,
+            kind: MpiContractMessage::AntiMessage,
+            source_rank,
+            destination_rank,
+            source_lp,
+            destination_lp,
+            tick,
+            tick_end: None,
+            sequence: Some(sequence),
+            migration_id: None,
+            payload_bytes: 0,
         }
     }
 
@@ -192,6 +224,11 @@ impl MpiContractEnvelope {
                     return Err(ProtocolValidationError::EmptyTelemetryPayload);
                 }
             }
+            MpiContractMessage::AntiMessage => {
+                if self.sequence.is_none() {
+                    return Err(ProtocolValidationError::MissingSequence);
+                }
+            }
             MpiContractMessage::Event | MpiContractMessage::Null => {}
         }
 
@@ -210,6 +247,7 @@ pub enum MpiMessageTag {
     Null = 101,
     Migration = 102,
     Telemetry = 103,
+    AntiMessage = 104,
 }
 
 impl MpiMessageTag {
@@ -219,6 +257,7 @@ impl MpiMessageTag {
             (Self::Null, 101),
             (Self::Migration, 102),
             (Self::Telemetry, 103),
+            (Self::AntiMessage, 104),
         ];
 
         for (tag, value) in expected {
@@ -499,6 +538,7 @@ pub enum ProtocolValidationError {
     ProtocolMismatch,
     ProtocolVersionMismatch { expected: u16, got: u16 },
     InvalidMigrationId,
+    MissingSequence,
     SelfMigration(LpId),
     EmptyComponentSet,
     InvalidComponentTypeId,
@@ -1080,5 +1120,21 @@ mod tests {
         assert_eq!(snapshot.entity.generation, 7);
         assert_eq!(snapshot.components[0].generation, 3);
         assert_eq!(snapshot.pending_events[0].sequence, 11);
+    }
+
+    #[test]
+    fn mpi_contract_reserves_antimessage_tag_for_time_warp_rollbacks() {
+        assert_eq!(MpiContractMessage::AntiMessage.as_tag() as i32, 104);
+        assert_eq!(
+            MpiContractMessage::from_tag(104),
+            Some(MpiContractMessage::AntiMessage)
+        );
+        assert_eq!(MpiMessageTag::validate_stable_values(), Ok(()));
+
+        let envelope =
+            MpiContractEnvelope::anti_message(0, 1, LpId(0), LpId(1), Tick::from_ticks(9), 11);
+        assert_eq!(envelope.kind, MpiContractMessage::AntiMessage);
+        assert_eq!(envelope.sequence, Some(11));
+        assert_eq!(envelope.validate(), Ok(()));
     }
 }

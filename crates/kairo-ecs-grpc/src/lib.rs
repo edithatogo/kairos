@@ -16,11 +16,13 @@ pub const GRPC_SERVICE_NAME: &str = "kairo.ecs.simulation.v1.SimulationTransport
 pub enum GrpcContractMessage {
     ExchangeEvents,
     ExchangeEventsReturn,
+    ExchangeAntiMessages,
     MigrationRequest,
     MigrationAck,
     StreamTelemetry,
     GvtProposal,
     GvtDecision,
+    Heartbeat,
 }
 
 /// Dependency-free envelope used by transport contract tests.
@@ -89,6 +91,32 @@ impl GrpcContractEnvelope {
         }
     }
 
+    pub fn anti_message(source_lp: LpId, destination_lp: LpId) -> Self {
+        Self {
+            protocol_id: GRPC_PROTOCOL_ID,
+            protocol_version: GRPC_PROTOCOL_VERSION,
+            service: GRPC_SERVICE_NAME,
+            kind: GrpcContractMessage::ExchangeAntiMessages,
+            source_lp,
+            destination_lp: Some(destination_lp),
+            migration_id: None,
+            payload_bytes: 0,
+        }
+    }
+
+    pub fn heartbeat(source_lp: LpId) -> Self {
+        Self {
+            protocol_id: GRPC_PROTOCOL_ID,
+            protocol_version: GRPC_PROTOCOL_VERSION,
+            service: GRPC_SERVICE_NAME,
+            kind: GrpcContractMessage::Heartbeat,
+            source_lp,
+            destination_lp: None,
+            migration_id: None,
+            payload_bytes: 0,
+        }
+    }
+
     pub fn validate(&self) -> Result<(), ProtocolValidationError> {
         if self.protocol_id != GRPC_PROTOCOL_ID {
             return Err(ProtocolValidationError::ProtocolMismatch);
@@ -137,6 +165,27 @@ impl Default for GrpcTransportConfig {
             heartbeat_interval: Duration::from_secs(1),
             heartbeat_timeout: Duration::from_secs(10),
         }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcRetryPolicy {
+    pub max_attempts: u32,
+    pub base_delay: Duration,
+    pub max_delay: Duration,
+    pub retry_on_unavailable: bool,
+}
+
+impl GrpcRetryPolicy {
+    pub fn validate(&self) -> Result<(), ProtocolValidationError> {
+        if self.max_attempts == 0
+            || self.base_delay.is_zero()
+            || self.max_delay.is_zero()
+            || self.base_delay > self.max_delay
+        {
+            return Err(ProtocolValidationError::InvalidRetryPolicy);
+        }
+        Ok(())
     }
 }
 
@@ -429,6 +478,7 @@ pub enum ProtocolValidationError {
     SelfPeer(LpId),
     InvalidEndpoint(String),
     InvalidTimeouts,
+    InvalidRetryPolicy,
     InvalidMigrationId,
     SelfMigration(LpId),
     EmptyComponentSet,
@@ -756,12 +806,18 @@ mod tests {
     fn grpc_contract_envelopes_track_protocol_identity() {
         let exchange = GrpcContractEnvelope::exchange_events(LpId(1), LpId(2), 4);
         let gvt = GrpcContractEnvelope::gvt(LpId(0));
+        let anti = GrpcContractEnvelope::anti_message(LpId(1), LpId(2));
+        let heartbeat = GrpcContractEnvelope::heartbeat(LpId(1));
 
         assert_eq!(exchange.validate(), Ok(()));
         assert_eq!(gvt.validate(), Ok(()));
+        assert_eq!(anti.validate(), Ok(()));
+        assert_eq!(heartbeat.validate(), Ok(()));
         assert_eq!(exchange.protocol_id, GRPC_PROTOCOL_ID);
         assert_eq!(exchange.protocol_version, GRPC_PROTOCOL_VERSION);
         assert_eq!(exchange.destination_lp, Some(LpId(2)));
+        assert_eq!(anti.kind, GrpcContractMessage::ExchangeAntiMessages);
+        assert_eq!(heartbeat.kind, GrpcContractMessage::Heartbeat);
     }
 
     #[test]
@@ -944,6 +1000,35 @@ mod tests {
     }
 
     #[test]
+    fn retry_policy_rejects_zero_attempts_and_inverted_backoff() {
+        let policy = GrpcRetryPolicy {
+            max_attempts: 3,
+            base_delay: Duration::from_millis(10),
+            max_delay: Duration::from_millis(250),
+            retry_on_unavailable: true,
+        };
+
+        assert_eq!(policy.validate(), Ok(()));
+        assert_eq!(
+            GrpcRetryPolicy {
+                max_attempts: 0,
+                ..policy.clone()
+            }
+            .validate(),
+            Err(ProtocolValidationError::InvalidRetryPolicy)
+        );
+        assert_eq!(
+            GrpcRetryPolicy {
+                base_delay: Duration::from_millis(500),
+                max_delay: Duration::from_millis(100),
+                ..policy
+            }
+            .validate(),
+            Err(ProtocolValidationError::InvalidRetryPolicy)
+        );
+    }
+
+    #[test]
     fn local_two_node_contract_proof_covers_event_migration_telemetry_and_failure() {
         let proof = local_two_node_contract_proof().unwrap();
 
@@ -1005,5 +1090,27 @@ mod tests {
         assert_eq!(snapshot.entity.generation, 5);
         assert_eq!(snapshot.components[0].generation, 9);
         assert_eq!(snapshot.pending_events[0].tick, Tick::from_ticks(13));
+    }
+
+    #[test]
+    fn grpc_proto_contract_covers_generation_pending_events_heartbeats_and_antimessages() {
+        let proto = include_str!("../proto/simulation.proto");
+
+        for required in [
+            "uint64 generation",
+            "repeated PendingEvent pending_events",
+            "message PendingEvent",
+            "bool anti_message",
+            "message Heartbeat",
+            "message RetryPolicy",
+            "message AntiMessage",
+            "rpc ExchangeAntiMessages",
+            "rpc Heartbeat",
+        ] {
+            assert!(
+                proto.contains(required),
+                "simulation.proto missing required Track 49 contract token: {required}"
+            );
+        }
     }
 }
