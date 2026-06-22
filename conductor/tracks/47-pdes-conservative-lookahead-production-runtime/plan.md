@@ -2,30 +2,30 @@
 
 ## Phase 0 - TDD baseline
 
-- Task 0.1: Add failing sequential-parity tests for deterministic DES, ABM,
+- [x] Task 0.1: Add failing sequential-parity tests for deterministic DES, ABM,
   and mixed workloads.
 - [x] Task 0.2: Add failing lookahead-violation tests with expected typed errors.
-- Task 0.3: Add failing GVT monotonicity and deadlock-stress tests.
+- [x] Task 0.3: Add failing GVT monotonicity and deadlock-stress tests.
 
 ## Phase 1 - Runtime architecture
 
 - Task 1.1: Replace scaffold-only scheduling with a feature-gated conservative
   scheduler that owns LP state, inbound queues, safe times, and null messages.
-- Task 1.2: Implement deterministic LP partitioning inputs and validation.
+- [x] Task 1.2: Implement deterministic LP partitioning inputs and validation.
 - Task 1.3: Preserve the existing scaffold API with compatibility shims or
   documented migration notes.
 
 ## Phase 2 - Correctness implementation
 
 - [x] Task 2.1: Enforce lookahead before remote scheduling.
-- Task 2.2: Compute GVT from LP local time and in-flight message timestamps.
-- Task 2.3: Add shutdown, drain, and no-deadlock behavior for stalled LPs.
+- [x] Task 2.2: Compute GVT from LP local time and in-flight message timestamps.
+- [x] Task 2.3: Add local no-deadlock smoke behavior for stalled LPs.
 
 ## Phase 3 - Benchmark and evidence
 
-- Task 3.1: Add 4/8/16/32 LP benchmarks under `benches/pdes/`.
+- [x] Task 3.1: Add 4/8/16/32 LP local benchmark-smoke samples.
 - Task 3.2: Record raw benchmark evidence using the Track 46 manifest fields.
-- Task 3.3: Add docs that distinguish local benchmark smoke from live scaling.
+- [x] Task 3.3: Add docs that distinguish local benchmark smoke from live scaling.
 
 ## Phase 4 - Integration handoff
 

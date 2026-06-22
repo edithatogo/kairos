@@ -9,8 +9,10 @@ GVT = min(local_time_of_all_LPs, min_timestamp_of_all_inflight_messages)
 Track 34 starts with a conservative scaffold:
 
 - each LP reports its local time;
-- the in-memory transport folds pending remote-event ticks and null-message
-  safe times into its local reduction;
+- the in-memory transport folds pending remote-event ticks into its local
+  reduction;
+- null-message safe times constrain each LP's local processing horizon before
+  the reduction, but are not counted as in-flight event timestamps;
 - the transport provides `all_reduce_min(timestamp)`;
 - the scheduler advances every LP to the computed minimum.
 

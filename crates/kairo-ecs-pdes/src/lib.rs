@@ -95,6 +95,10 @@ pub enum PdesError {
         local_time: Tick,
         lookahead: SimDuration,
     },
+    InvalidPartitionCount,
+    InvalidPartitionLookahead,
+    EmptyPartitionEntities,
+    DuplicatePartitionEntity(EntityId),
     Transport(TransportError),
 }
 
@@ -366,6 +370,78 @@ impl<T: PdesTransport> PdesScheduler<T> {
             .min()
             .unwrap_or(SimTime::ZERO);
         self.transport.all_reduce_min(local_min)
+    }
+}
+
+/// Deterministic logical-process partition plan for conservative PDES startup.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PartitionPlan {
+    lp_count: u32,
+    lookahead: SimDuration,
+    segments: Vec<WorldSegment>,
+    owners: BTreeMap<EntityId, LpId>,
+}
+
+impl PartitionPlan {
+    pub fn from_entities(
+        lp_count: u32,
+        lookahead: SimDuration,
+        mut entities: Vec<EntityId>,
+    ) -> Result<Self, PdesError> {
+        if lp_count == 0 {
+            return Err(PdesError::InvalidPartitionCount);
+        }
+        if lookahead == SimDuration::ZERO {
+            return Err(PdesError::InvalidPartitionLookahead);
+        }
+        if entities.is_empty() {
+            return Err(PdesError::EmptyPartitionEntities);
+        }
+
+        entities.sort();
+        for pair in entities.windows(2) {
+            if pair[0] == pair[1] {
+                return Err(PdesError::DuplicatePartitionEntity(pair[0]));
+            }
+        }
+
+        let mut segments = (0..lp_count)
+            .map(|index| WorldSegment {
+                id: LpId(index),
+                lp_count,
+                entities: Vec::new(),
+            })
+            .collect::<Vec<_>>();
+        let mut owners = BTreeMap::new();
+
+        for (index, entity) in entities.into_iter().enumerate() {
+            let lp_id = LpId((index as u32) % lp_count);
+            segments[lp_id.0 as usize].entities.push(entity);
+            owners.insert(entity, lp_id);
+        }
+
+        Ok(Self {
+            lp_count,
+            lookahead,
+            segments,
+            owners,
+        })
+    }
+
+    pub fn lp_count(&self) -> u32 {
+        self.lp_count
+    }
+
+    pub fn lookahead(&self) -> SimDuration {
+        self.lookahead
+    }
+
+    pub fn segments(&self) -> &[WorldSegment] {
+        &self.segments
+    }
+
+    pub fn owner_of(&self, entity: EntityId) -> Option<LpId> {
+        self.owners.get(&entity).copied()
     }
 }
 
@@ -1500,6 +1576,72 @@ mod tests {
                 entities_per_lp: 1,
             }),
             Err("PDES workload must include at least one LP".to_string())
+        );
+    }
+
+    #[test]
+    fn partition_plan_assigns_entities_deterministically_by_entity_id() {
+        let plan = PartitionPlan::from_entities(
+            3,
+            SimDuration::from_ticks(2),
+            vec![
+                EntityId::new(8, 0),
+                EntityId::new(2, 0),
+                EntityId::new(5, 0),
+                EntityId::new(3, 1),
+                EntityId::new(2, 1),
+            ],
+        )
+        .unwrap();
+
+        assert_eq!(plan.lp_count(), 3);
+        assert_eq!(plan.lookahead(), SimDuration::from_ticks(2));
+        assert_eq!(
+            plan.segments(),
+            &[
+                WorldSegment {
+                    id: LpId(0),
+                    lp_count: 3,
+                    entities: vec![EntityId::new(2, 0), EntityId::new(5, 0)],
+                },
+                WorldSegment {
+                    id: LpId(1),
+                    lp_count: 3,
+                    entities: vec![EntityId::new(2, 1), EntityId::new(8, 0)],
+                },
+                WorldSegment {
+                    id: LpId(2),
+                    lp_count: 3,
+                    entities: vec![EntityId::new(3, 1)],
+                },
+            ]
+        );
+        assert_eq!(plan.owner_of(EntityId::new(8, 0)), Some(LpId(1)));
+        assert_eq!(plan.owner_of(EntityId::new(3, 1)), Some(LpId(2)));
+        assert_eq!(plan.owner_of(EntityId::new(99, 0)), None);
+    }
+
+    #[test]
+    fn partition_plan_rejects_invalid_inputs() {
+        assert_eq!(
+            PartitionPlan::from_entities(0, SimDuration::from_ticks(1), vec![EntityId::new(1, 0)]),
+            Err(PdesError::InvalidPartitionCount)
+        );
+        assert_eq!(
+            PartitionPlan::from_entities(2, SimDuration::ZERO, vec![EntityId::new(1, 0)]),
+            Err(PdesError::InvalidPartitionLookahead)
+        );
+        assert_eq!(
+            PartitionPlan::from_entities(2, SimDuration::from_ticks(1), Vec::new()),
+            Err(PdesError::EmptyPartitionEntities)
+        );
+        assert_eq!(
+            PartitionPlan::from_entities(
+                2,
+                SimDuration::from_ticks(1),
+                vec![EntityId::new(1, 0), EntityId::new(1, 0)],
+            ),
+            Err(PdesError::DuplicatePartitionEntity(EntityId::new(1, 0)))
         );
     }
 
