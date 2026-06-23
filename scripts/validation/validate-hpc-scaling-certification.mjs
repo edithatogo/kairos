@@ -67,12 +67,14 @@ function validateScenarios(payload) {
   const scenarios = Array.isArray(payload.scenarios) ? payload.scenarios : [];
   const ids = new Set();
   const categories = new Set();
+  const categoriesById = new Map();
   for (const scenario of scenarios) {
     if (!scenario.id || ids.has(scenario.id)) {
       fail(`scenario has missing or duplicate id: ${scenario.id ?? "<missing>"}`);
     }
     ids.add(scenario.id);
     categories.add(scenario.category);
+    categoriesById.set(scenario.id, scenario.category);
     for (const field of ["category", "description", "upstream_track", "required_runtime"]) {
       if (!scenario[field]) {
         fail(`scenario ${scenario.id ?? "<missing>"} missing ${field}`);
@@ -84,10 +86,12 @@ function validateScenarios(payload) {
       fail(`scenarios.json missing required category ${category}`);
     }
   }
-  return ids;
+  return { ids, categoriesById };
 }
 
-function validateEvidence(payload, scenarioIds) {
+function validateEvidence(payload, scenarioContext) {
+  const scenarioIds = scenarioContext.ids;
+  const categoriesById = scenarioContext.categoriesById;
   if (payload.schema_version !== "kairoecs.hpc.scaling.evidence.v1") {
     fail("evidence.json must use schema_version kairoecs.hpc.scaling.evidence.v1");
   }
@@ -105,7 +109,7 @@ function validateEvidence(payload, scenarioIds) {
     }
   }
   for (const profile of profiles) {
-    validateProfile(profile, scenarioIds);
+    validateProfile(profile, scenarioIds, categoriesById, acceptedReferenceSchemes(payload));
   }
   const upstream = payload.upstream_tracks && typeof payload.upstream_tracks === "object"
     ? payload.upstream_tracks
@@ -117,7 +121,28 @@ function validateEvidence(payload, scenarioIds) {
   }
 }
 
-function validateProfile(profile, scenarioIds) {
+function acceptedReferenceSchemes(payload) {
+  const policy = payload.raw_result_policy;
+  let schemes = [];
+  if (policy) {
+    if (Array.isArray(policy.accepted_reference_schemes)) {
+      schemes = policy.accepted_reference_schemes;
+    }
+  }
+  if (schemes.length === 0) {
+    fail("raw_result_policy.accepted_reference_schemes must be a non-empty array");
+    return [];
+  }
+  for (const scheme of schemes) {
+    if (typeof scheme !== "string") {
+      fail(`unsupported raw result reference scheme declaration ${scheme}`);
+    } else if (!scheme.endsWith("://")) {
+      fail(`unsupported raw result reference scheme declaration ${scheme}`);
+    }
+  }
+  return schemes;
+}
+function validateProfile(profile, scenarioIds, categoriesById, acceptedSchemes = []) {
   if (!requiredModes.includes(profile.mode)) {
     fail(`unsupported scaling mode ${profile.mode}`);
     return;
@@ -126,6 +151,14 @@ function validateProfile(profile, scenarioIds) {
   for (const scenarioId of scenarioList) {
     if (!scenarioIds.has(scenarioId)) {
       fail(`${profile.mode} profile references unknown scenario ${scenarioId}`);
+    }
+  }
+  if (profile.status === "certified") {
+    const coveredCategories = new Set(scenarioList.map(function (scenarioId) { return categoriesById.get(scenarioId); }).filter(Boolean));
+    for (const category of requiredCategories) {
+      if (!coveredCategories.has(category)) {
+        fail(`${profile.mode} certified profile missing scenario category ${category}`);
+      }
     }
   }
   const metrics = new Set(Array.isArray(profile.required_metrics) ? profile.required_metrics : []);
@@ -152,6 +185,12 @@ function validateProfile(profile, scenarioIds) {
     }
     if (result.checksum && !checksumPattern.test(result.checksum)) {
       fail(`${profile.mode} raw result checksum must be sha256:<64 lowercase hex>`);
+    }
+    if (result.artifact) {
+      const accepted = acceptedSchemes.some(function (scheme) { return String(result.artifact).startsWith(scheme); });
+      if (!accepted) {
+        fail(`${profile.mode} raw result artifact must use an accepted reference scheme`);
+      }
     }
   }
 }
@@ -192,20 +231,40 @@ function runSelfTest() {
     fs.writeFileSync(path.join(tmp, "scenarios.json"), JSON.stringify(badScenario));
     fs.writeFileSync(path.join(tmp, "evidence.json"), JSON.stringify(badEvidence));
     const previousIssues = issues.splice(0, issues.length);
-    const ids = validateScenarios(readJson(path.join(tmp, "scenarios.json")));
-    validateEvidence(readJson(path.join(tmp, "evidence.json")), ids);
+    const scenarioContext = validateScenarios(readJson(path.join(tmp, "scenarios.json")));
+    validateEvidence(readJson(path.join(tmp, "evidence.json")), scenarioContext);
     const failedAsExpected = issues.length >= 8;
     issues.splice(0, issues.length, ...previousIssues);
     if (!failedAsExpected) {
       fail("negative self-test did not reject malformed scaling evidence");
+    }
+
+    const goodChecksum = "sha256:" + "a".repeat(64);
+    const schemeEvidence = {
+      schema_version: "kairoecs.hpc.scaling.evidence.v1",
+      track_id: "55",
+      claim_boundary: "No production HPC parity claim is approved by this fixture.",
+      profiles: [
+        { mode: "weak", status: "certified", scenario_ids: ["only_des"], required_metrics: requiredWeakMetrics, raw_results: [{ artifact: "ftp://bad/result.json", checksum: goodChecksum, hardware: "fixture", scheduler: "fixture", toolchain: "fixture" }] },
+        { mode: "strong", status: "blocked", scenario_ids: ["only_des"], required_metrics: requiredStrongMetrics, raw_results: [], blocker: { status: "active" } },
+      ],
+      upstream_tracks: { "47": "x", "48": "x", "49": "x", "50": "x", "51": "x", "52": "x", "53": "x", "54": "x" },
+      raw_result_policy: { accepted_reference_schemes: ["artifact://"], checksum_format: "sha256:<64 lowercase hex characters>", certification_requires_profiles: ["weak", "strong"] },
+    };
+    const schemeIssues = issues.splice(0, issues.length);
+    validateEvidence(schemeEvidence, { ids: new Set(["only_des"]), categoriesById: new Map([["only_des", "des"]]) });
+    const rejectedScheme = issues.some((issue) => issue.includes("accepted reference scheme"));
+    issues.splice(0, issues.length, ...schemeIssues);
+    if (!rejectedScheme) {
+      fail("negative self-test did not reject unsupported raw result artifact scheme");
     }
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
 }
 
-const scenarioIds = validateScenarios(readJson(scenarioPath));
-validateEvidence(readJson(evidencePath), scenarioIds);
+const scenarioContext = validateScenarios(readJson(scenarioPath));
+validateEvidence(readJson(evidencePath), scenarioContext);
 validateDocs();
 if (process.argv.includes("--self-test")) {
   runSelfTest();

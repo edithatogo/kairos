@@ -1,6 +1,6 @@
 # Track 55 Handoff
 
-Last updated: 2026-06-19
+Last updated: 2026-06-23
 
 ## Summary
 
@@ -32,10 +32,12 @@ Added the Track 55 certification-contract shape:
   reference schemes, checksum requirements, and active blockers.
 - `validate-hpc-scaling-certification.mjs` rejects malformed scenario
   coverage, missing weak/strong profiles, certified profiles without raw
-  results, bad checksums, and unsupported claim language.
+  results, bad checksums, unsupported raw-result artifact schemes, incomplete
+  certified-profile category coverage, and unsupported claim language.
 
 ## Tests added
 
+- `node --check scripts/validation/validate-hpc-scaling-certification.mjs`
 - `node scripts/validation/validate-hpc-scaling-certification.mjs --self-test`
 
 ## Known risks
@@ -61,19 +63,24 @@ making production HPC parity claims.
 - Red TDD command:
   `node scripts/validation/validate-hpc-scaling-certification.mjs` failed
   because the validator did not exist.
-- Green contract command:
+- Green contract commands:
+  `node --check scripts/validation/validate-hpc-scaling-certification.mjs`
+  passed.
   `node scripts/validation/validate-hpc-scaling-certification.mjs --self-test`
   passed.
 - Benchmark smoke:
   `python benches/benchmark_smoke.py` passed.
 - Regression threshold coverage:
   `python benches/regression/compare.py` passed.
-- `$conductor-review`: pending for this implementation slice.
-- accepted fixes: none applied yet for this slice.
+- `$conductor-review`: read-only review completed for this slice.
+- accepted fixes: repaired the scaling validator syntax, enforced accepted
+  raw-result artifact schemes, and required certified weak/strong profiles to
+  cover every required scenario category.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending
   until after this task commit.
 - implementation commit SHA: `dcefb0feea897688d13cd8905c157a4759246015`.
 - evidence commit SHA: `c99b154748b68f7146fecd8ab7d5106a46a34ae4`.
+- validator repair commit SHA: pending.
 - pushed ref: `origin/codex/kairos-hpc-parity-wave`.
 - next-phase decision: remain In Progress until live weak/strong scaling
   profiles and upstream Tracks 47-54 evidence close.
