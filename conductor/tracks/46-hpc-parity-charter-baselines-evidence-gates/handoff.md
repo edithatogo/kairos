@@ -63,3 +63,6 @@ next-phase decision before advancing this track.
 - validation: charter phrase checks passed for `Tracks 46-55`, `Proof standard`, and `Evidence manifest fields`; quality-gate catalogue checks passed for `hpc-parity-charter`, `hpc-evidence-manifest`, and `hpc-claim-boundary`; `node scripts/validation/validate-hpc-parity-evidence.mjs`, Conductor phase-gate, DAG, artifact validators, and `git diff --check` passed locally.
 - residual scope: live runtime evidence remains downstream scope for Tracks 47-55. This archive does not claim runtime HPC capability or production parity.
 - archive decision: Track 46 is `Done` for the repo-side governance and evidence-gate charter.
+
+- archive commit SHA: `1c26a05af951ba8492a059aecb7e40fcdeb9bd6a`.
+- pushed ref: `origin/codex/kairos-hpc-parity-wave`.
