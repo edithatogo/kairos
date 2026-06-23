@@ -72,3 +72,6 @@ Residual release gates not claimed by this archive:
 - Historical trend storage over releases.
 - Package-specific health sub-scores.
 - Any release waiver still requires explicit, time-bound release-manager approval.
+
+Archive commit: 75e87778db67918ad50d3812c15fc7aecf591be3
+Pushed ref: origin/codex/kairos-hpc-parity-wave
