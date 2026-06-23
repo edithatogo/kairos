@@ -83,9 +83,9 @@ evidence. Track 32, 33, 34, and 35 focused validators passed
 under `stable-x86_64-pc-windows-gnu`. The Track 36-40 aggregate offline
 validator also passed under the GNU Rust toolchain, covering streaming, ML,
 FMI, cloud/HPC, and time-travel debug scaffolds. Tracks 36, 37, 38, and 40
-later advanced to `Done` after their owned GNU-toolchain reruns passed; Track
-39 remains `In Review` because live Docker, Kubernetes, Slurm, and
-cloud-provider validation is still environment-backed.
+later advanced to `Done` after their owned GNU-toolchain reruns passed. Track
+39 later archived as `Done` for the offline cloud/HPC scaffold; live Docker,
+Kubernetes, Slurm, and cloud-provider validation remains environment-backed and release-gated by Tracks 43/54/55.
 
 Review remediation on 2026-05-17 tightened the Track 32-35 validator and
 runtime gates: the GPU/WebGPU and PDES/distributed `-RunRuntimeTests`/`-RunTests`
@@ -106,8 +106,8 @@ pending event timestamps in GVT reduction. Track 39 records explicit Track 22
 handoff approval for the scaffold-only CLI surface, renders GCP sweep
 parallelism from inputs, cleans validator scratch files, and runs a labelled
 static shell fallback when Bash cannot start on this Windows host. Tracks 32,
-33, 34, 35, and 39 remain `In Review` pending real GPU, browser, scaling,
-multi-node, Docker, Kubernetes, Slurm, and cloud-provider proof.
+33, 34, 35, and 39 have now been archived as legacy scaffold tracks; real GPU,
+browser, scaling, multi-node, Docker, Kubernetes, Slurm, and cloud-provider proof remains owned by the production parity and release-gating tracks.
 
 Track 32 was archived as `Done` on 2026-06-23 after a focused `$conductor-review`
 found no remaining in-scope local scaffold defects and the Track 32 runtime
@@ -187,12 +187,17 @@ commit `0749d4139fff6a86cdf623c336541cd461055a9b` records the evidence update.
 Strict global git closeout now passes after restoring the historical closeout
 ref. The track remains `In Review` until pull-request CI confirms the branch.
 
-Track 39 and Track 43 now record partial Azure evidence from 2026-05-20: a live
-CPU Azure Batch substrate canary succeeded in the Azure for Students subscription.
-This narrows the Azure blocker but does not close Track 39 or Track 43 because
-KairoECS container/scenario execution, output/checksum evidence, GPU/HPC proof,
-AWS/GCP canaries, Docker, Kubernetes, Slurm, protected publication, and
-release-manager approval remain unproven.
+Track 39 was archived as `Done` on 2026-06-23 after focused `$conductor-review`
+found no remaining in-scope local scaffold defects and the offline Track 39
+validator plus hardened Track 36-40 aggregate passed on this host. The archive
+closes the legacy offline cloud/HPC runner scaffold only: manifest/template
+validation, local Kubernetes render checks, Slurm/static shell policy checks,
+telemetry checksum sidecars, runtime evidence boundaries, and the partial Azure
+Batch CPU substrate canary from 2026-05-20 are recorded. No Docker image
+execution, Kubernetes reconciliation, Slurm scheduler execution, KairoECS cloud
+batch scenario run, output/checksum proof, GPU/HPC proof, AWS/GCP canary, or
+production Azure KairoECS runtime claim is made here. Those live production
+requirements remain owned by Tracks 43, 54, and 55.
 
 Tracks 46-55 were added on 2026-06-19 as the production HPC parity wave. They
 make the live-proof gap explicit rather than marking the current scaffolds
@@ -272,7 +277,7 @@ Latest local baseline validation on 2026-05-07; current targeted verification is
 - Track 35 archive review on 2026-06-23 revalidated the dependency-free MPI/gRPC emulator scaffold with `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests`, passing 18 MPI tests, 20 gRPC tests, and doc-tests. This proves local emulator contracts, not real `rsmpi`, `tonic`/`prost`, or multi-node runtime proof.
 - Track 36-40 aggregate offline validation passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`, `python cloud/validate_cloud_hpc.py`, and `node website/time-travel-demo/validate-demo.mjs`.
 - Track 36, 37, 38, and 40 later advanced to `Done` on 2026-05-10 after GNU-toolchain reruns cleared the Windows linker blocker for their owned compile/test gates.
-- Track 39 remediation on 2026-05-18 fixed the CLI ownership record, GCP sweep rendering, validator cleanup, and shell-validation fallback. `python cloud/validate_cloud_hpc.py` passes and leaves neither `.tmp/k8s-inline-experiment.json` nor `cloud/validation-work`; when Git Bash cannot start, the validator runs a labelled static fallback that is explicitly not equivalent to `bash -n`. Live Docker, Kubernetes, Slurm, and provider runtime proof remains environment-backed and therefore `Track 39` stays `In Review`.
+- Track 39 archive review on 2026-06-23 revalidated the offline cloud/HPC scaffold with `python cloud\validate_cloud_hpc.py` and `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1 -SkipCargoTests`. The cloud validator passed with the labelled static shell fallback because Git Bash could not create its signal pipe on this Windows host; the fallback is not equivalent to live Slurm scheduler proof. The aggregate validator passed after compile/check gates, `kairo_gym` unittest, cloud offline validation, and time-travel demo validation.
 - The hardened Track 36-40 aggregate passed on 2026-05-18 with `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`; when sandboxed `rustup toolchain list` hit Windows pipe access denial, the script used the installed `stable-x86_64-pc-windows-gnu` directory fallback and completed successfully.
 - Track 41 closeout on 2026-05-17 passed `node scripts/validation/validate-learning-coverage.mjs`, `python notebooks/validate_notebooks.py`, `npm --prefix website run check:all`, `node scripts/dx/validate-docs-workflow.mjs`, `pwsh -NoProfile -File docs/tutorials/validate-tutorials.ps1`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`. The strict clean-tree closeout remains blocked by the repo-local `.git/index.lock` ACL issue, not by Track 41 validation.
 - Track 42-44 setup validation on 2026-05-19 passed `node scripts/validation/validate-code-health.mjs`, `node scripts/validation/validate-publication-readiness.mjs`, `node scripts/validation/validate-hpc-registry-readiness.mjs`, `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_artifacts.ps1`, and `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1`. The new validators prove publication workflow structure and gating, not external registry submissions.

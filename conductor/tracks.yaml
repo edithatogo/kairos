@@ -542,7 +542,7 @@ tracks:
       - aas-validate
   - id: 39
     name: Cloud/HPC Batch Runners
-    status: In Review
+    status: Done
     owner: cloud-agent
     depends_on: ["22", "15"]
     owned_paths:

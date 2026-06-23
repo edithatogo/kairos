@@ -1,8 +1,10 @@
 # Handoff: Track 39 Cloud / HPC Batch Runners
 
+Last updated: 2026-06-23
+
 ## Summary
 
-Defined the scaffold and offline validation layer for production-scale KairoECS execution. The current verified scope is the `kairo-ecs-cli` command surface, manifest shape, local rendering, shell syntax, checkpoint/spot policy wiring, and local telemetry checksum behavior. The offline validator passes, but live Docker builds, Kubernetes cluster reconciliation, Slurm scheduler submission, and AWS/GCP/Azure provider API acceptance still require environment-backed validation before any readiness claim.
+Archived as `Done` on 2026-06-23 for the legacy offline cloud/HPC runner scaffold. The current verified scope is the `kairo-ecs-cli` command surface, manifest shape, local rendering, static shell policy checks, checkpoint/spot policy wiring, local telemetry checksum behavior, runtime evidence boundaries, and partial Azure Batch CPU substrate evidence. This archive does not claim Docker image execution, Kubernetes reconciliation, Slurm scheduler execution, KairoECS cloud batch scenario runs, output/checksum proof, GPU/HPC proof, AWS/GCP canaries, or production Azure runtime acceptance; those requirements remain owned by Tracks 43/54/55.
 
 ## Files changed
 
@@ -54,7 +56,7 @@ Blockers are explicitly constrained to runtime proof capture, not offline valida
 
 ## Next-phase decision
 
-Remain `In Review`. Offline validation is complete for this slice, but live Docker, Kubernetes, Slurm, and provider evidence still needs to be captured before any readiness claim.
+Archived as `Done` for the legacy offline cloud/HPC runner scaffold. Future production cloud/HPC runtime acceptance must proceed through Tracks 43/54/55 rather than reopening Track 39.
 
 ## Risks and unresolved questions
 
@@ -94,7 +96,7 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Pending for the next actual phase closeout. The current blocker is not the offline scaffold; it is the remaining live Docker, Kubernetes, Slurm, and provider-runtime evidence required before readiness claims are defensible. Before this track advances, record `$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase decision here.
+Track 39 is cleanly closable as the legacy offline cloud/HPC runner scaffold. The archive review reran `python cloud\validate_cloud_hpc.py` on 2026-06-23; it passed with the labelled static shell fallback because Git Bash could not create its signal pipe on this Windows host. The archive review also reran `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1 -SkipCargoTests`; it passed after compile/check gates, `kairo_gym` unittest, cloud offline validation, and time-travel demo validation. The archive records offline scaffold/reference proof and partial Azure CPU Batch substrate evidence only. Docker image execution, Kubernetes reconciliation, Slurm scheduler execution, KairoECS cloud batch scenario runs, output/checksum proof, GPU/HPC proof, AWS/GCP canaries, and production Azure runtime acceptance remain blocked for Tracks 43/54/55.
 
 ## Review remediation -- 2026-05-17
 
@@ -113,3 +115,12 @@ Pending for the next actual phase closeout. The current blocker is not the offli
 - Accepted fix: `cloud/validate_cloud_hpc.py` now runs a limited static shell fallback when Bash exists but cannot start. The fallback checks shebangs, line endings, quoting, heredoc closure, and common block balance, and warns that it is not equivalent to `bash -n`.
 - Validation: `python cloud/validate_cloud_hpc.py` passed with the fallback static shell validation path on this Windows host. Git Bash still failed to start with `couldn't create signal pipe, Win32 error 5`; this does not satisfy live Slurm scheduler proof.
 - Cleanup: `cloud/validation-work` was absent after the passing validator run. `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` passed non-strict after rerun outside the sandbox; strict `-RequireCleanWorkingTree` remains inappropriate before commit/push in this shared dirty worktree.
+
+## Archive review -- 2026-06-23
+
+- Review result: no additional in-scope source defects were found for the legacy Track 39 offline scaffold. Live Docker, Kubernetes, Slurm, AWS/GCP/Azure provider canaries, KairoECS scenario execution, output/checksum evidence, GPU/HPC proof, and production registry acceptance remain explicit follow-up gates rather than reasons to keep this scaffold track open.
+- Accepted fix: registry and closeout surfaces were reconciled from `In Review` and pending placeholders to an archived `Done` state for Track 39 only.
+- Validation: `python cloud\validate_cloud_hpc.py` passed on 2026-06-23 with the labelled static shell fallback because Bash could not create its signal pipe on this Windows host.
+- Validation: `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1 -SkipCargoTests` passed on 2026-06-23 after the compile/check gates, `kairo_gym` unittest, cloud offline validation, and time-travel demo validation.
+- Deferred by scope: no Docker daemon proof, Kubernetes cluster proof, Slurm `sbatch` proof, AWS/GCP canary, production Azure KairoECS scenario proof, telemetry output/checksum proof from a real cloud run, or GPU/HPC scaling proof is attached to Track 39. Public production cloud/HPC claims remain blocked until Tracks 43, 54, and 55 attach live evidence.
+- Next-phase decision: Track 39 is archived as `Done`; future production cloud/HPC runtime acceptance must proceed through Tracks 43/54/55 rather than this legacy scaffold track.

@@ -687,18 +687,18 @@ entries:
     next_phase_decision: "Track 38 is Done for the owned FMI/FMU bridge scaffold; FMU archive extraction, dynamic symbol loading, and live co-simulation remain follow-up scope."
   - track_id: "39"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 39 remains In Review after 2026-05-18 follow-up review remediation closed the CLI ownership, GCP sweep rendering, validator cleanup, and Bash-startup skip findings; offline validation and the hardened Track 36-40 aggregate pass, but live Docker, Kubernetes, Slurm, and cloud-provider proof remain environment-backed blockers."
+    review_result: "Track 39 archived as Done on 2026-06-23 after focused review found no remaining in-scope local scaffold defects and the offline validator plus hardened Track 36-40 aggregate passed. This closes the legacy offline cloud/HPC scaffold only; Docker image execution, Kubernetes reconciliation, Slurm scheduler execution, KairoECS cloud batch scenario runs, output/checksum proof, GPU/HPC proof, AWS/GCP canaries, and production Azure runtime acceptance remain owned by Tracks 43, 54, and 55."
     fixes_applied: true
     validation_commands:
       - "python cloud/validate_cloud_hpc.py"
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\36-streaming-real-time-processing\\validate-track36-40.ps1 -SkipCargoTests"
-    git_status: "dirty: Track 39 remediation plus unrelated local edits remain in the worktree"
-    commit_sha: "pending-remediation-commit"
-    pushed_ref: "pending-remediation-push"
-    next_phase_decision: "Track 39 is In Review; live Docker, Kubernetes, Slurm, and cloud-provider acceptance remain blocked until formal review and environment-backed validation exist."
+    git_status: "pending archive commit and push"
+    commit_sha: "18f036468b44d9a6eab9a38153d4d437a2bd3d1d"
+    pushed_ref: "pending-archive-push"
+    next_phase_decision: "Track 39 is Done as an archived legacy offline scaffold; real Docker, Kubernetes, Slurm, cloud-provider, KairoECS scenario, telemetry output/checksum, and GPU/HPC runtime claims remain blocked until Tracks 43, 54, and 55 attach evidence."
   - track_id: "40"
     phase: "implementation-review"
     state: closed
