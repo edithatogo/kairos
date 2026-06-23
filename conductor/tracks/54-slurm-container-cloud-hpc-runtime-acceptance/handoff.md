@@ -63,3 +63,11 @@ next-phase decision before advancing this track.
 Added local runtime evidence validation with blocked Docker, Kubernetes, Slurm, AWS Batch, GCP Batch, and Azure Batch scopes. Passed scopes must carry scenario output and sha256 checksums; non-passed scopes must carry structured blockers. Live runtime canaries remain pending.
 
 Commands: node --check scripts/validation/validate-hpc-runtime-evidence.mjs; node scripts/validation/validate-hpc-runtime-evidence.mjs.
+
+## Archive review - 2026-06-23
+
+- `$conductor-review`: focused archive review found no remaining in-scope source defects in the Track 54 local blocked-scope runtime-evidence gate.
+- accepted fixes: archive/status bookkeeping and phase-closeout state repair; no validator logic fixes were required.
+- validation: `python cloud/validate_cloud_hpc.py` passed with the documented static shell fallback, `node scripts/validation/validate-hpc-registry-readiness.mjs` passed with `production_claim_status: blocked`, `node --check scripts/validation/validate-hpc-runtime-evidence.mjs`, `node scripts/validation/validate-hpc-runtime-evidence.mjs`, Conductor phase-gate, DAG, artifact validators, and `git diff --check` passed locally.
+- residual scope: Docker image execution, Kubernetes server-side validation, Slurm jobs, AWS/GCP/Azure Batch canaries, real Track 49 MPI runtime paths, and real Track 52 GPU runtime paths remain incomplete. This archive does not claim production cloud/HPC runtime acceptance.
+- archive decision: Track 54 is `Done` for the repo-side blocked-scope runtime-evidence gate only.

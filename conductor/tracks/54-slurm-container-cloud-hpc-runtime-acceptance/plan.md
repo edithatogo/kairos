@@ -64,3 +64,11 @@ phase begins:
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 8. Advance only after there is no in-scope unstaged or untracked work except
    documented draft satellites.
+
+## Archive boundary - 2026-06-23
+
+- [x] Review the Track 54 local runtime-evidence validator, blocked-scope manifest, negative fixture, and registry/status surfaces.
+- [x] Revalidate offline cloud/HPC validation, HPC registry readiness, runtime-evidence validation, Conductor phase gates, DAG validation, artifact validation, and `git diff --check`.
+- [x] Archive Track 54 as `Done` only for the repo-side blocked-scope runtime-evidence gate.
+- [x] Record that Docker, Kubernetes, Slurm, AWS Batch, GCP Batch, Azure Batch, real MPI scheduler paths, and real GPU scheduler paths remain incomplete and are not claimed by this archive.
+- [x] Record the Windows host limitation: `cloud/validate_cloud_hpc.py` used its documented static shell fallback because Git Bash could not create its signal pipe; this is not equivalent to live Slurm or shell execution proof.

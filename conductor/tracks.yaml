@@ -11,7 +11,7 @@ status_vocabulary:
   - Cancelled
 composite_gates:
   ffi-rc-slice:
-    description: "FFI Release Candidate ready Ã¢â‚¬â€ all binding tracks (06-11) can begin implementation"
+    description: "FFI Release Candidate ready - all binding tracks (06-11) can begin implementation"
     required:
       - id: "02"
         status: Spec Approved
@@ -809,7 +809,7 @@ tracks:
       - openmodelica-roundtrip
   - id: 54
     name: Slurm, Container & Cloud HPC Runtime Acceptance
-    status: In Review
+    status: Done
     owner: cloud-agent + distributed-agent + gpu-compute-agent + release-agent
     depends_on: ["39", "43", "49", "52"]
     owned_paths:

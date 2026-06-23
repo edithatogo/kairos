@@ -937,20 +937,24 @@ entries:
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 53 is In Progress after archive and FMI 2 lifecycle contract baselines; dynamic loading, FMI 3 calls, 1,000-step co-simulation, and OpenModelica evidence remain required before In Review."
   - track_id: "54"
-    phase: "runtime-evidence-validator"
-    state: pending
+    phase: "runtime-evidence-gate"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 54 now has the first runtime-evidence gate slice: Docker, Kubernetes, Slurm, AWS Batch, GCP Batch, and Azure Batch scopes are represented in a manifest; passed scopes require scenario output and sha256 checksums; non-passed scopes require structured blocker evidence. Live runtime execution remains pending."
+    review_result: "Track 54 archived as Done on 2026-06-23 for the repo-side blocked-scope runtime-evidence gate. Review found no validator defects; the prior closeout text was stale and incorrectly described the track as In Progress. Live Docker, Kubernetes, Slurm, AWS/GCP/Azure Batch, MPI scheduler, and GPU scheduler proof remain incomplete and unclaimed."
     fixes_applied: true
     validation_commands:
-      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "python cloud/validate_cloud_hpc.py (passed with documented static shell fallback on this Windows host)"
+      - "node scripts/validation/validate-hpc-registry-readiness.mjs"
       - "node --check scripts/validation/validate-hpc-runtime-evidence.mjs"
       - "node scripts/validation/validate-hpc-runtime-evidence.mjs"
-    git_status: "runtime evidence validator commit pushed; strict git closeout passed"
-    commit_sha: "0c47f113045a08f768cfa0a16fba9fa8f2829807"
-    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
-    next_phase_decision: "Track 54 is In Progress after the local runtime-evidence validator slice; live Docker, Kubernetes, Slurm, and provider canary evidence remains required before In Review."
+      - "powershell -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_artifacts.ps1"
+      - "git diff --check"
+    git_status: "pending archive commit and push"
+    commit_sha: "c077d27c912b3df552249811b2618f37340f9575"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 54 is Done only as an archived repo-side blocked-scope runtime-evidence gate; production runtime acceptance remains blocked until live scheduler/container/provider proof is attached in a future release-governed slice."
   - track_id: "55"
     phase: "scaling-certification-contract"
     state: pending
