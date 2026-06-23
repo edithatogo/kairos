@@ -65,3 +65,6 @@ Run `$conductor-review` before advancing this track. Apply accepted fixes in own
 - validation: `npm --prefix website run check:sota` passed after the sandboxed run hit Windows `spawn EPERM`; `npm --prefix website run check:all` passed with link validation, Astro build, generated compatibility routes, and docs quality validation; `node scripts/dx/validate-docs-workflow.mjs` passed with docs dev smoke; Conductor phase-gate, DAG, and artifact validators passed with 0 errors and 0 warnings.
 - residual scope: TypeDoc, OpenAPI, hosted DocSearch, and live hosted-search operations remain deferred activation-condition work and are not claimed by this archive.
 - archive decision: Track 45 is `Done` for the repo-side active docs-platform gate.
+
+- archive commit SHA: `c1ae99b516db2c7375508ff0b02d5536f385ecff`.
+- pushed ref: `origin/codex/kairos-hpc-parity-wave` pending final push confirmation.
