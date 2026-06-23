@@ -1,6 +1,6 @@
 # 43 Cloud/HPC Registry Publication & Runtime Acceptance - handoff.md
 
-Last updated: 2026-06-22
+Last updated: 2026-06-23
 
 ## Summary
 
@@ -80,3 +80,30 @@ Local implementation/review commands for this slice:
 next-phase decision: Track 43 is In Review for guarded publication and runtime evidence gating. Keep it out of Done until live Docker, Kubernetes, Slurm, AWS/GCP Batch, Azure KairoECS container/scenario evidence, protected publication, and release-manager approval are attached.
 
 Record accepted review fixes, commit SHA, pushed ref, `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`, and GitHub Actions review after commit/push. Track 43 is not Done; production publication remains blocked by the live runtime evidence gaps above.
+
+## Archive review - 2026-06-23
+
+Track 43 was reviewed and archived as Done for the repo-side guarded cloud/HPC registry publication and runtime-acceptance evidence gate. The archive covers the HPC registry manifest, runtime acceptance evidence manifest, negative production-claim fixture, guarded publication helper, protected workflow structure, offline cloud/HPC validator, and code-health gate.
+
+Accepted fixes applied:
+
+- No source-code defects were found in the guarded publication/runtime-evidence gate.
+- The plan and registry/status surfaces were updated to make the archive boundary explicit.
+
+Validation evidence:
+
+- node scripts/validation/validate-hpc-registry-readiness.mjs --check-negative-fixtures passed with 6 publication surfaces, 6 runtime scopes, production_claim_status blocked, and hpc-publication environment.
+- python cloud/validate_cloud_hpc.py passed with the recorded limited static shell-validation fallback warning because bash -n was unavailable on this Windows runner.
+- node scripts/validation/validate-code-health.mjs passed with total score 10 and minimum 9.5.
+- node scripts/release/publish-hpc.mjs --mode dry-run --version 0.0.0-test passed in dependency-light dry-run mode and skipped Docker because the runner has no Docker context.
+- node scripts/release/publish-hpc.mjs --mode publish --version 0.0.0-test failed as expected because live publication evidence and all-passed runtime scopes are required before protected HPC publication.
+
+Residual release gates not claimed by this archive:
+
+- Docker image build/run canary.
+- Kubernetes operator/bundle canary.
+- Slurm single-job and array canaries.
+- AWS and GCP Batch canaries.
+- Azure kairo-ecs-cli container/scenario canary with output/checksum evidence.
+- Protected hpc-publication dispatch and release-manager approval.
+- Real image digest, SBOM, signature/attestation, and publication evidence for an actual release.

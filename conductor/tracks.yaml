@@ -614,7 +614,7 @@ tracks:
       - code-health-floor
   - id: 43
     name: Cloud/HPC Registry Publication & Runtime Acceptance
-    status: In Review
+    status: Done
     owner: hpc-registry-agent + cloud-agent + release-agent
     depends_on: ["22", "35", "39", "42", "44"]
     owned_paths:

@@ -643,3 +643,9 @@ Track 61 completed its planned local multi-game certification phase:
 - Added a Track 61 scenario manifest spanning normal-form flat-array games and extensive-form Graph-ECS games, plus a validator that enforces both forms, required solver assertions, evidence commands, `ChildOf`/`TransitionTo` EntityId relations, negative fixtures, and no pointer/Box graph topology in the relevant source modules.
 - Local gates passed: default and `graph-relations` crate tests, multi-game certification self-test, crate clippy with `graph-relations`, the normal-form quick benchmark smoke, Conductor phase gates, and DAG validation.
 - Track 61 is now In Review after the Phase 2 push, strict git closeout, and GitHub Actions review passed with 63 successful checks and `deploy-pages` skipped. It is not Done; chance-weighted stochastic extensive-form parity and broader release-governed evidence remain follow-up scope.
+
+## Track 43 Archive Review - 2026-06-23
+
+Track 43 is archived as Done for the guarded repo-side cloud/HPC registry publication and runtime-acceptance evidence gate. The archive validates the HPC registry manifest, runtime evidence manifest, negative production-claim fixture, guarded publication helper, offline cloud/HPC validator, and code-health floor while keeping production_claim_status blocked.
+
+The archive does not claim live cloud/HPC runtime readiness. Docker, Kubernetes, Slurm, AWS/GCP Batch, Azure KairoECS container/scenario execution, protected hpc-publication dispatch, release-manager approval, image digest, SBOM, signature/attestation, and real publication evidence remain release gates before any production cloud/HPC claim.

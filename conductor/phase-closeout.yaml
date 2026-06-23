@@ -795,22 +795,22 @@ entries:
     next_phase_decision: "Track 42 remains In Review; production publication remains blocked until registry-side trusted publishers/accounts and protected-environment dry-run evidence are attached."
   - track_id: "43"
     phase: "runtime-acceptance-evidence-gate"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 43 has a guarded runtime acceptance evidence slice: the HPC registry manifest points at a machine-readable runtime evidence manifest, required Docker/Kubernetes/Slurm/AWS/GCP/Azure KairoECS live scopes are explicit, Azure substrate proof remains partial, and a negative fixture proves unsupported production-ready evidence is rejected. Live runtime canaries remain blocked by unavailable local Docker, Kubernetes, Slurm, AWS, and non-mutating cloud contexts."
-    fixes_applied: false
+    review_result: "Track 43 archived as Done on 2026-06-23 for the guarded repo-side cloud/HPC registry publication and runtime-acceptance evidence gate. Review found no remaining source-code defects in the scaffold; dry-run publication passes, protected publish remains correctly blocked without live publication evidence, and production cloud/HPC claims remain release-gated."
+    fixes_applied: true
     validation_commands:
       - "node scripts/validation/validate-hpc-registry-readiness.mjs --check-negative-fixtures"
-      - "node scripts/release/publish-hpc.mjs --mode dry-run --version 0.0.0-test"
-      - "node scripts/release/publish-hpc.mjs --mode publish --version 0.0.0-test (expected failure until live evidence is complete)"
       - "python cloud/validate_cloud_hpc.py"
       - "node scripts/validation/validate-code-health.mjs"
+      - "node scripts/release/publish-hpc.mjs --mode dry-run --version 0.0.0-test"
+      - "node scripts/release/publish-hpc.mjs --mode publish --version 0.0.0-test (expected failure: live publication evidence required)"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "runtime evidence gate commit pushed; strict git closeout passed"
-    commit_sha: "a5c9bddf75cc431fdc63bc751ad9295b644da2d1"
-    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
-    next_phase_decision: "Track 43 is In Review for guarded publication and runtime evidence gating. Keep it out of Done until live Docker, Kubernetes, Slurm, AWS/GCP Batch, Azure KairoECS container/scenario evidence, protected publication, and release-manager approval are attached."
+    git_status: "pending archive commit and push"
+    commit_sha: "9ec69bc026855deb35534987436bfc55533890d2"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 43 is Done as an archived guarded publication/runtime-evidence scaffold; live Docker, Kubernetes, Slurm, AWS/GCP Batch, Azure KairoECS container/scenario evidence, protected publication, and release-manager approval remain blocked release gates."
   - track_id: "47"
     phase: "track-creation"
     state: pending
