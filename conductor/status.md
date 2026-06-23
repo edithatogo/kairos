@@ -117,6 +117,13 @@ backends unless an explicit backend is implemented, and no real GPU parity,
 10x speedup, or hardware memory-budget claim is made here. Those live GPU
 acceptance requirements remain owned by Track 52 and the production HPC parity
 tracks.
+Track 33 was archived as `Done` on 2026-06-23 after focused `$conductor-review`
+found no remaining in-scope local scaffold defects and the Track 33 runtime
+validator passed on this host. The archive closes the legacy browser WebGPU
+scaffold only: `crates/kairo-ecs-webgpu` and `website/webgpu-demo` still report
+real WebGPU dispatch as unavailable/not configured unless browser bindings and
+device setup are implemented. No browser WebGPU device parity, frame-rate, or
+cross-browser claim is made here.
 Software-only implementation on 2026-05-18 addressed the remaining dependency-free
 Track 34 and Track 35 work. Track 34 now has deterministic 4/8/16/32 LP
 benchmark-smoke samples and a documented Time Warp rollback spike without
@@ -247,6 +254,7 @@ Latest local baseline validation on 2026-05-07; current targeted verification is
 - Track 32-35 remediation on 2026-05-17 added GNU-toolchain runtime reruns that now pass: `pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -RunRuntimeTests`, `pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1 -RunRuntimeTests`, `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1 -RunTests`, and `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1 -RunTests`. These prove the scaffolded crate tests on this host, not the missing real GPU, browser, scaling, or multi-node acceptance evidence.
 - Track 32-35 follow-up review remediation on 2026-05-18 revalidated the same runtime gates after closing the remaining local findings: Track 32 passed with 10 GPU unit tests, 4 contract tests, ABM parity, and DES parity; Track 33 passed with 8 WebGPU unit tests, 3 parity tests, demo smoke, and WGSL subset validation; Track 34 passed with 11 PDES tests; Track 35 passed with 14 MPI tests and 15 gRPC tests.
 - Track 32 archive review on 2026-06-23 reran `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\32-gpu-compute-acceleration\validate-track32.ps1 -RunRuntimeTests`; it passed with 10 GPU unit tests, 4 contract tests, ABM parity, DES parity, 3 persistent-memory tests, and doc-tests. This proves the local scaffold and reference contracts, not native GPU hardware execution.
+- Track 33 archive review on 2026-06-23 reran `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\33-webgpu-compute-browser\validate-track33.ps1 -RunRuntimeTests`; it passed with demo smoke, WGSL subset validation, 8 WebGPU unit tests, 3 parity/contract tests, and doc-tests. This proves the local scaffold and reference contracts, not browser WebGPU device execution.
 - Track 34-35 software-only implementation on 2026-05-18 revalidated the dependency-free additions: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests` passed with 13 PDES tests, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests` passed with 15 MPI tests and 16 gRPC tests.
 - Track 36-40 aggregate offline validation passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`, `python cloud/validate_cloud_hpc.py`, and `node website/time-travel-demo/validate-demo.mjs`.
 - Track 36, 37, 38, and 40 later advanced to `Done` on 2026-05-10 after GNU-toolchain reruns cleared the Windows linker blocker for their owned compile/test gates.

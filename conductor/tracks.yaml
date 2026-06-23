@@ -461,7 +461,7 @@ tracks:
       - gpu-benchmark-threshold
   - id: 33
     name: WebGPU Compute for Browser
-    status: In Review
+    status: Done
     owner: webgpu-agent
     depends_on: ["09", "32"]
     owned_paths:
