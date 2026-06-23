@@ -107,3 +107,6 @@ Residual release gates not claimed by this archive:
 - Azure kairo-ecs-cli container/scenario canary with output/checksum evidence.
 - Protected hpc-publication dispatch and release-manager approval.
 - Real image digest, SBOM, signature/attestation, and publication evidence for an actual release.
+
+Archive commit: 5c007d1499503bb17e46c9ca869c9d3d621e756a
+Pushed ref: origin/codex/kairos-hpc-parity-wave
