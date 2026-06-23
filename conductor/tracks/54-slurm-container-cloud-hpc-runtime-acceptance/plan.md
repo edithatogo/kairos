@@ -2,10 +2,17 @@
 
 ## Phase 0 - TDD and dry-run baseline
 
-- Task 0.1: Add failing validators for Docker, Kubernetes, Slurm, and provider
+- [x] Task 0.1: Add failing validators for Docker, Kubernetes, Slurm, and provider
   evidence manifests.
-- Task 0.2: Add dry-run checks that reject missing scenario output checksums.
-- Task 0.3: Add explicit quota/blocker evidence format tests.
+- [x] Task 0.2: Add dry-run checks that reject missing scenario output checksums.
+- [x] Task 0.3: Add explicit quota/blocker evidence format tests.
+
+2026-06-23 evidence: `scripts/validation/validate-hpc-runtime-evidence.mjs`
+now validates the Track 54 runtime-evidence manifest and rejects the negative
+fixture at
+`conductor/tracks/54-slurm-container-cloud-hpc-runtime-acceptance/negative/missing-checksum.json`.
+Live Docker, Kubernetes, Slurm, and provider canaries remain open Phase 1-3
+work; no production runtime acceptance is claimed.
 
 ## Phase 1 - Container and Kubernetes
 

@@ -1,15 +1,17 @@
 # Track 54 Handoff
 
-Last updated: 2026-06-19
+Last updated: 2026-06-23
 
 ## Summary
 
 Track 54 owns live container, Slurm, Kubernetes, and provider runtime
-acceptance. It is artifact-only at creation.
+acceptance. The current implementation adds a local runtime-evidence validator
+and blocked-scope manifest; it does not claim live runtime acceptance.
 
 ## Files changed
 
 - `conductor/tracks/54-slurm-container-cloud-hpc-runtime-acceptance/*`
+- `scripts/validation/validate-hpc-runtime-evidence.mjs`
 
 ## Contracts consumed
 
@@ -21,23 +23,30 @@ acceptance. It is artifact-only at creation.
 
 ## Contracts changed
 
-Future implementation will define scheduler evidence locations and runtime
-acceptance commands consumed by Track 55.
+The runtime-evidence manifest now defines scheduler/provider scope records,
+scenario-output checksum requirements for passed scopes, and structured blocker
+fields for unavailable live environments.
 
 ## Tests added
 
-No runtime tests are added in the track-creation slice.
+Local validator coverage added:
+
+- `node --check scripts/validation/validate-hpc-runtime-evidence.mjs`
+- `node scripts/validation/validate-hpc-runtime-evidence.mjs`
+- Negative fixture:
+  `conductor/tracks/54-slurm-container-cloud-hpc-runtime-acceptance/negative/missing-checksum.json`
 
 ## Known risks
 
 No Docker, Kubernetes, Slurm, AWS, GCP, or Azure live KairoECS scenario proof
-exists at creation.
+exists yet. The manifest records these as blocked scopes with owners,
+expiration dates, and evidence commands instead of treating them as passed.
 
 ## Follow-up issues
 
-- Add failing runtime evidence validators.
-- Run container/Kubernetes/Slurm canaries.
-- Run provider batch canaries or record explicit quota blockers.
+- Run live container/Kubernetes/Slurm canaries.
+- Run provider batch canaries when credentials/quota are available.
+- Attach real scenario logs, raw outputs, and sha256 checksums before any Done claim.
 
 ## Integration notes
 
