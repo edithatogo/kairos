@@ -655,3 +655,8 @@ The archive does not claim live cloud/HPC runtime readiness. Docker, Kubernetes,
 Track 44 is archived as Done for the repo-side code and repository health floor. The scorecard and validator report 10/10 against the 9.5 release floor, the code-health workflow runs the validator, and Tracks 42/43 consume the code-health-floor publication gate.
 
 The archive does not claim live GitHub API score ingestion, release trend storage, package-specific health sub-scores, or any waiver approval. Those remain follow-up/release-governance scope.
+## Track 45 Archive Review - 2026-06-23
+
+Track 45 is archived as Done for the repo-side Astro/Starlight docs-platform gate. The review found no remaining in-scope source defects; the accepted fixes were archive/status bookkeeping and closeout-ledger repair only.
+
+The archive does not claim TypeDoc, OpenAPI, hosted DocSearch, or live hosted-search operations. Those remain deferred activation-condition scope. The sandboxed docs SOTA run hit Windows `spawn EPERM`; the escalated local `check:sota`, `check:all`, docs workflow smoke, Conductor phase-gate, DAG, and artifact validators passed.

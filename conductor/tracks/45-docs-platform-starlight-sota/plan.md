@@ -32,3 +32,11 @@ Before any task or phase in this track is marked complete, and before the next p
 6. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` to verify recorded commits, pushed refs, and cleanup state.
 8. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
+
+## Archive boundary - 2026-06-23
+
+- [x] Review the Track 45 Astro/Starlight docs-platform surface and automatically apply accepted in-scope fixes.
+- [x] Revalidate the docs SOTA gate, full docs build/quality gate, docs workflow smoke, Conductor phase gates, DAG validator, and artifact validator.
+- [x] Archive Track 45 as `Done` for the repo-side active docs-platform claim.
+- [x] Record that TypeDoc, OpenAPI, hosted DocSearch, and any live hosted-search operations remain deferred activation-condition work and are not claimed by this archive.
+- [x] Record the sandbox limitation: the sandboxed docs build hit Windows `spawn EPERM`; the escalated local docs gates passed and are the accepted review evidence.

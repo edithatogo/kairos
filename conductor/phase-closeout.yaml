@@ -734,24 +734,22 @@ entries:
     pushed_ref: "blocked-by-source-git-acl-20260517"
     next_phase_decision: "Track 41 is Done for the validated docs-quality, learning-coverage, notebook, and docs-platform parity slice; active Astro/Starlight platform hardening is now owned by Track 45."
   - track_id: "45"
-    phase: "implementation-review"
-    state: pending
+    phase: "docs-platform-sota"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Focused local review on 2026-06-18 found no Track 45 plan/spec defects; docs workflow and docs-platform SOTA validators passed on the current tree."
-    fixes_applied: false
+    review_result: "Track 45 archived as Done on 2026-06-23 for the repo-side Astro/Starlight docs platform gate. Review found no source-code defects; the sandboxed docs build failed with Windows spawn EPERM, then the escalated docs SOTA/build gates passed. Deferred TypeDoc, OpenAPI, and hosted DocSearch remain follow-up scope."
+    fixes_applied: true
     validation_commands:
-      - "node scripts/validation/validate-docs-platform-sota.mjs"
-      - "npm --prefix website run check:sota"
+      - "npm --prefix website run check:sota (escalated after sandbox spawn EPERM)"
       - "npm --prefix website run check:all"
       - "node scripts/dx/validate-docs-workflow.mjs"
-      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_phase_gates.ps1"
-      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_artifacts.ps1"
-      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
-    git_status: "clean after commit 0749d4139fff6a86cdf623c336541cd461055a9b; strict global closeout passed after restoring origin/conductor-close-reviewed-tracks-20260510 to a7e6f4a68bad9aa9483997d3a0207031066929a1"
-    commit_sha: "0749d4139fff6a86cdf623c336541cd461055a9b"
-    pushed_ref: "origin/codex/kairos-conductor-closeout"
-    next_phase_decision: "Track 45 remains In Review until pull-request CI confirms the branch."
+      - "powershell -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "pending archive commit and push"
+    commit_sha: "9478a9a0e88842800a30fd4233ca7a337f87bf84"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 45 is Done as an archived repo-side docs platform gate; TypeDoc/OpenAPI/hosted DocSearch and live hosted-search operations remain deferred activation-condition scope."
   - track_id: "44"
     phase: "code-repository-health-floor"
     state: closed
@@ -763,9 +761,7 @@ entries:
       - "powershell -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
     git_status: "clean after archive evidence commit and push"
-    commit_sha: "75e87778db67918ad50d3812c15fc7aecf591be3"
-f48f60685376258bbb3e5f58b5848fb717a62962
-"
+    commit_sha: "9478a9a0e88842800a30fd4233ca7a337f87bf84"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 44 is Done as an archived repo-side health floor; live score ingestion, trend storage, package-specific sub-scores, and any waiver approval remain release-governance follow-up scope."
   - track_id: "46"

@@ -11,7 +11,7 @@ status_vocabulary:
   - Cancelled
 composite_gates:
   ffi-rc-slice:
-    description: "FFI Release Candidate ready — all binding tracks (06-11) can begin implementation"
+    description: "FFI Release Candidate ready â€” all binding tracks (06-11) can begin implementation"
     required:
       - id: "02"
         status: Spec Approved
@@ -651,7 +651,7 @@ tracks:
       - package-sota-score
   - id: 45
     name: Astro/Starlight Docs Platform and Polyglot Experience
-    status: In Review
+    status: Done
     owner: docs-platform-agent + docs-agent + ci-agent
     depends_on: ["14", "17", "27", "41", "44"]
     owned_paths:
