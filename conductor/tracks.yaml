@@ -11,7 +11,7 @@ status_vocabulary:
   - Cancelled
 composite_gates:
   ffi-rc-slice:
-    description: "FFI Release Candidate ready â€” all binding tracks (06-11) can begin implementation"
+    description: "FFI Release Candidate ready Ã¢â‚¬â€ all binding tracks (06-11) can begin implementation"
     required:
       - id: "02"
         status: Spec Approved
@@ -669,7 +669,7 @@ tracks:
       - docs-platform-sota
   - id: 46
     name: HPC Parity Charter, Baselines & Evidence Gates
-    status: In Review
+    status: Done
     owner: benchmark-agent + interop-agent + redteam-agent + wave-manager-agent
     depends_on: ["18", "26", "28", "29", "31", "44"]
     owned_paths:

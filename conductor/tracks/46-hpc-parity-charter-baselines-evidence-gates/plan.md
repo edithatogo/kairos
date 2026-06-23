@@ -61,3 +61,10 @@ phase begins:
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 8. Advance only after there is no in-scope unstaged or untracked work except
    documented draft satellites.
+
+## Archive boundary - 2026-06-23
+
+- [x] Review the Track 46 HPC parity charter, evidence schema, sample manifests, claim-boundary validator, quality gates, and scorecard surfaces.
+- [x] Revalidate charter phrase gates, quality-gate catalogue, `validate-hpc-parity-evidence.mjs`, Conductor phase gates, DAG validation, artifact validation, and `git diff --check`.
+- [x] Archive Track 46 as `Done` for governance-only HPC parity evidence gating.
+- [x] Record that runtime PDES, Time Warp, MPI/gRPC, NUMA, parallel I/O, GPU, FMI, Slurm/cloud, and weak/strong scaling proof remain owned by Tracks 47-55 and are not claimed by this archive.

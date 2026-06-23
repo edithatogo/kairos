@@ -765,19 +765,23 @@ entries:
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 44 is Done as an archived repo-side health floor; live score ingestion, trend storage, package-specific sub-scores, and any waiver approval remain release-governance follow-up scope."
   - track_id: "46"
-    phase: "track-creation"
-    state: pending
+    phase: "hpc-parity-charter"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 46 was created as the HPC parity charter and live-evidence gate for Tracks 47-55. The first implementation slice now adds the evidence schema, sample manifests, and claim-boundary validator; runtime implementation is not part of this track."
-    fixes_applied: false
+    review_result: "Track 46 archived as Done on 2026-06-23 for the governance-only HPC parity charter, evidence schema, sample manifests, and claim-boundary validator. Review found no source-code defects; runtime HPC proof remains explicitly owned by Tracks 47-55."
+    fixes_applied: true
     validation_commands:
-      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "Select-String conductor/hpc-parity-wave.md for Tracks 46-55, Proof standard, and Evidence manifest fields"
+      - "Select-String conductor/quality-gates.md for hpc-parity-charter, hpc-evidence-manifest, and hpc-claim-boundary"
       - "node scripts/validation/validate-hpc-parity-evidence.mjs"
-    git_status: "evidence schema and claim-boundary validator commit pushed; strict git closeout passed"
-    commit_sha: "35f93a4344615e2f8a4e5ca8a61ad7a483e87106"
-    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
-    next_phase_decision: "Track 46 is In Review after evidence-manifest validators, claim-boundary scans, push, strict closeout, and GitHub Actions review; runtime HPC proof remains owned by Tracks 47-55 before any Done or parity claim."
+      - "powershell -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_artifacts.ps1"
+      - "git diff --check"
+    git_status: "pending archive commit and push"
+    commit_sha: "ba75e1380ca45a61efc0e23dbac06b6a09768a2a"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 46 is Done as an archived governance/evidence-contract gate; production runtime proof remains blocked on Tracks 47-55 before any HPC parity claim."
   - track_id: "42"
     phase: "registry-publication-readiness"
     state: pending

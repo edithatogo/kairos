@@ -660,3 +660,9 @@ The archive does not claim live GitHub API score ingestion, release trend storag
 Track 45 is archived as Done for the repo-side Astro/Starlight docs-platform gate. The review found no remaining in-scope source defects; the accepted fixes were archive/status bookkeeping and closeout-ledger repair only.
 
 The archive does not claim TypeDoc, OpenAPI, hosted DocSearch, or live hosted-search operations. Those remain deferred activation-condition scope. The sandboxed docs SOTA run hit Windows `spawn EPERM`; the escalated local `check:sota`, `check:all`, docs workflow smoke, Conductor phase-gate, DAG, and artifact validators passed.
+
+## Track 46 Archive Review - 2026-06-23
+
+Track 46 is archived as Done for the governance-only HPC parity charter and evidence gate. The archive validates the shared evidence schema, local scaffold and live-HPC template manifests, quality-gate catalogue entries, SOTA/claim-boundary surfaces, and executable claim-boundary validator.
+
+The archive does not claim runtime HPC parity. Production PDES, Time Warp, MPI/gRPC, NUMA, parallel I/O, GPU, FMI, Slurm/cloud runtime acceptance, and weak/strong scaling evidence remain required in Tracks 47-55 before any production HPC parity claim.
