@@ -577,18 +577,18 @@ entries:
     next_phase_decision: "Track 24 is Done; keep browser UX claims bounded to the current fixture-backed playground and committed SVG visual assets."
   - track_id: "32"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 32 remains In Review after 2026-05-18 follow-up review remediation closed the local DES event-buffer budget finding and Colab GPU smoke documentation gap; the GNU-toolchain runtime gate passes, but real GPU hardware parity and benchmark evidence remain external blockers."
+    review_result: "Track 32 archived as Done on 2026-06-23 after focused review found no remaining in-scope local scaffold defects and the runtime validator passed. This closes the legacy optional GPU scaffold only; real native GPU execution, hardware parity, persistent device-memory, and benchmark evidence remain owned by Track 52 and the production HPC parity wave."
     fixes_applied: true
     validation_commands:
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTest"
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -RunRuntimeTests"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\32-gpu-compute-acceleration\\validate-track32.ps1 -RunRuntimeTests"
-    git_status: "dirty: Track 32 remediation plus unrelated local edits remain in the worktree"
-    commit_sha: "pending-remediation-commit"
-    pushed_ref: "pending-remediation-push"
-    next_phase_decision: "Track 32 is In Review; real GPU backend, hardware parity, and speedup claims remain blocked until a GPU runner and formal review evidence exist."
+    git_status: "clean after archive commit and push"
+    commit_sha: "0d0dc6f5432c37f00d0fd8c6023b55a100497ba6"
+    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
+    next_phase_decision: "Track 32 is Done as an archived legacy scaffold; real GPU backend, hardware parity, and speedup claims remain blocked until Track 52 and downstream live-HPC gates attach hardware evidence."
   - track_id: "33"
     phase: "implementation-review"
     state: pending

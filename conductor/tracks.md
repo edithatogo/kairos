@@ -36,7 +36,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 29 | Wave Manager & Execution Gatekeeper | Done | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |
 | 30 | Toolchain & Version Support Matrix | Done | `toolchain-agent` | See `conductor/tracks/30-*/spec.md` |
 | 31 | Performance Regression Guard | Done | `perf-regression-agent` | See `conductor/tracks/31-*/spec.md` |
-| 32 | GPU Compute Acceleration | In Review | `gpu-compute-agent` | See `conductor/tracks/32-*/spec.md` |
+| 32 | GPU Compute Acceleration | Done | `gpu-compute-agent` | See `conductor/tracks/32-*/spec.md` |
 | 33 | WebGPU Compute for Browser | In Review | `webgpu-agent` | See `conductor/tracks/33-*/spec.md` |
 | 34 | PDES & Parallel Execution | In Review | `pdes-agent` | See `conductor/tracks/34-*/spec.md` |
 | 35 | Distributed Simulation (MPI/gRPC) | In Review | `distributed-agent` | See `conductor/tracks/35-*/spec.md` |

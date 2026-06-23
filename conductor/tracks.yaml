@@ -449,7 +449,7 @@ tracks:
       - threshold-definition-exists
   - id: 32
     name: GPU Compute Acceleration
-    status: In Review
+    status: Done
     owner: gpu-compute-agent
     depends_on: ["01"]
     owned_paths:
