@@ -48,3 +48,9 @@ Track 55 consumes runtime evidence and scheduler metadata from this track.
 Run `$conductor-review`, record accepted fixes, commit SHA, pushed ref,
 `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`, and the
 next-phase decision before advancing this track.
+
+## Implementation Note 2026-06-23
+
+Added local runtime evidence validation with blocked Docker, Kubernetes, Slurm, AWS Batch, GCP Batch, and Azure Batch scopes. Passed scopes must carry scenario output and sha256 checksums; non-passed scopes must carry structured blockers. Live runtime canaries remain pending.
+
+Commands: node --check scripts/validation/validate-hpc-runtime-evidence.mjs; node scripts/validation/validate-hpc-runtime-evidence.mjs.
