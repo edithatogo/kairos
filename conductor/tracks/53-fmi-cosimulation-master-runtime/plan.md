@@ -29,7 +29,9 @@
 ## Phase 2 - Dynamic loading
 
 - Task 2.1: Add dynamic library loading behind `fmi-runtime`.
-- Task 2.2: Bind FMI 2 lifecycle functions safely.
+- [x] Task 2.2: Bind FMI 2 lifecycle functions safely.
+  - Red: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-fmi --features fmi-runtime,fmi2 --test fmi2_lifecycle` failed with missing `Fmi2LifecycleState`, checked raw-parts constructor, and null-component error.
+  - Green: same command passed after adding explicit lifecycle state tracking, a null-rejecting unsafe checked constructor, idempotent terminate/free cleanup coverage, and safety docs.
 - Task 2.3: Bind FMI 3 lifecycle functions safely.
 
 ## Phase 3 - Co-simulation master

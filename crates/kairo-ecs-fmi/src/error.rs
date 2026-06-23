@@ -5,6 +5,7 @@ pub type FmiResult<T> = Result<T, FmiError>;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum FmiError {
+    NullComponent,
     UnsupportedArchiveExtraction {
         path: PathBuf,
     },
@@ -45,6 +46,7 @@ pub enum FmiError {
 impl fmt::Display for FmiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::NullComponent => write!(f, "FMI component pointer is null"),
             Self::UnsupportedArchiveExtraction { path } => write!(
                 f,
                 "FMU archive extraction is not wired yet for {}; unpack the FMU first",
