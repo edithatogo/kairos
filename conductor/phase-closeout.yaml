@@ -621,18 +621,18 @@ entries:
     next_phase_decision: "Track 34 is Done as an archived legacy scaffold; real production PDES scheduler integration, speedup, distributed runtime, and Time Warp claims remain blocked until Tracks 47, 48, 49, and 55 attach evidence."
   - track_id: "35"
     phase: "implementation-review"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 35 remains In Review after 2026-05-18 follow-up review remediation closed the MPI/gRPC pending-event GVT and embedded source/destination strictness findings; the GNU-toolchain runtime gate passes, but real rsmpi/tonic transports and multi-node proof remain external blockers."
+    review_result: "Track 35 archived as Done on 2026-06-23 after focused review found no remaining in-scope local scaffold defects and the runtime validator passed. This closes the legacy dependency-free MPI/gRPC transport emulator scaffold only; real rsmpi, tonic/prost, multi-node execution, migration runtime, distributed telemetry aggregation, and fault tolerance remain owned by Tracks 49, 54, and 55."
     fixes_applied: true
     validation_commands:
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1"
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1 -RunTests"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\35-distributed-simulation-mpi-grpc\\validate-track35.ps1 -RunTests"
-    git_status: "dirty: Track 35 remediation plus unrelated local edits remain in the worktree"
-    commit_sha: "pending-remediation-commit"
-    pushed_ref: "pending-remediation-push"
-    next_phase_decision: "Track 35 is In Review; the runtime gate now passes, but real rsmpi/tonic transports, two-node tests, migration serialization, telemetry aggregation, and fault tolerance remain follow-up implementation scope."
+    git_status: "pending archive commit and push"
+    commit_sha: "958239eaccf433dbcd8ad5ac84988199aaf596cc"
+    pushed_ref: "pending-archive-push"
+    next_phase_decision: "Track 35 is Done as an archived legacy scaffold; real distributed MPI/gRPC runtime, multi-node execution, migration runtime, distributed telemetry aggregation, and fault-tolerance claims remain blocked until Tracks 49, 54, and 55 attach evidence."
   - track_id: "36"
     phase: "implementation-review"
     state: closed

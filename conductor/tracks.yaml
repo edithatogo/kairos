@@ -488,7 +488,7 @@ tracks:
       - pdes-deadlock-free
   - id: 35
     name: Distributed Simulation (MPI/gRPC)
-    status: In Review
+    status: Done
     owner: distributed-agent
     depends_on: ["34"]
     owned_paths:

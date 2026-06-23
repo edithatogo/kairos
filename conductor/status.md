@@ -126,6 +126,7 @@ device setup are implemented. No browser WebGPU device parity, frame-rate, or
 cross-browser claim is made here.
 
 Track 34 archive review on 2026-06-23 reran `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests`; it passed with 17 PDES tests and doc-tests. This proves the local scaffold/reference contracts, not production PDES speedup or distributed runtime execution.
+Track 35 archive review on 2026-06-23 reran `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests`; it passed with 18 MPI tests, 20 gRPC tests, and doc-tests. This proves the local dependency-free emulator/reference contracts, not real distributed MPI/gRPC runtime execution.
 Track 34 was archived as `Done` on 2026-06-23 after focused `$conductor-review`
 found no remaining in-scope local scaffold defects and the Track 34 runtime
 validator passed on this host. The archive closes the legacy conservative PDES
@@ -135,13 +136,16 @@ contracts. No production PDES scheduler integration, wall-clock speedup,
 distributed runtime, or production Time Warp claim is made here. Those live
 production requirements remain owned by Tracks 47, 48, 49, and 55.
 
-Software-only implementation on 2026-05-18 addressed the remaining dependency-free
-Track 35 work. Track 35 now has dependency-free MPI and gRPC local two-node
-contract proof helpers covering event exchange, migration envelope validation,
-telemetry merge counts, GVT/failure evidence, and explicit no-real runtime
-claims. Track 35 remains `In Review` only for the real multi-node and
-transport-runtime evidence that needs unavailable hardware, platform, or software
-dependencies.
+Track 35 was archived as `Done` on 2026-06-23 after focused `$conductor-review`
+found no remaining in-scope local scaffold defects and the Track 35 runtime
+validator passed on this host. The archive closes the legacy dependency-free MPI
+and gRPC transport emulator scaffolds only: `crates/kairo-ecs-mpi` and
+`crates/kairo-ecs-grpc` prove local event exchange, source/destination envelope,
+pending-event GVT, launch-contract, migration/telemetry contract, and heartbeat
+classification behavior. No real `rsmpi`, `tonic`/`prost`, multi-node
+execution, migration runtime, distributed telemetry aggregation, or fault
+tolerance claim is made here. Those live production requirements remain owned by
+Tracks 49, 54, and 55.
 
 Track 41 advanced to `Done` on 2026-05-17 after the docs-quality workflow,
 learning-coverage matrix, notebook inventory, tutorial index, and docs-platform
@@ -265,6 +269,7 @@ Latest local baseline validation on 2026-05-07; current targeted verification is
 - Track 32 archive review on 2026-06-23 reran `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\32-gpu-compute-acceleration\validate-track32.ps1 -RunRuntimeTests`; it passed with 10 GPU unit tests, 4 contract tests, ABM parity, DES parity, 3 persistent-memory tests, and doc-tests. This proves the local scaffold and reference contracts, not native GPU hardware execution.
 - Track 33 archive review on 2026-06-23 reran `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\33-webgpu-compute-browser\validate-track33.ps1 -RunRuntimeTests`; it passed with demo smoke, WGSL subset validation, 8 WebGPU unit tests, 3 parity/contract tests, and doc-tests. This proves the local scaffold and reference contracts, not browser WebGPU device execution.
 - Track 34 archive review on 2026-06-23 revalidated the dependency-free PDES scaffold with `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests`, passing 17 PDES tests and doc-tests. The older Track 35 software-only implementation gate still passes separately with its MPI/gRPC local tests.
+- Track 35 archive review on 2026-06-23 revalidated the dependency-free MPI/gRPC emulator scaffold with `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests`, passing 18 MPI tests, 20 gRPC tests, and doc-tests. This proves local emulator contracts, not real `rsmpi`, `tonic`/`prost`, or multi-node runtime proof.
 - Track 36-40 aggregate offline validation passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`, `python cloud/validate_cloud_hpc.py`, and `node website/time-travel-demo/validate-demo.mjs`.
 - Track 36, 37, 38, and 40 later advanced to `Done` on 2026-05-10 after GNU-toolchain reruns cleared the Windows linker blocker for their owned compile/test gates.
 - Track 39 remediation on 2026-05-18 fixed the CLI ownership record, GCP sweep rendering, validator cleanup, and shell-validation fallback. `python cloud/validate_cloud_hpc.py` passes and leaves neither `.tmp/k8s-inline-experiment.json` nor `cloud/validation-work`; when Git Bash cannot start, the validator runs a labelled static fallback that is explicitly not equivalent to `bash -n`. Live Docker, Kubernetes, Slurm, and provider runtime proof remains environment-backed and therefore `Track 39` stays `In Review`.
