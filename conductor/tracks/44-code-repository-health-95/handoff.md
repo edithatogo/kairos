@@ -1,6 +1,6 @@
 # 44 Code and Repository Health >= 9.5 - handoff.md
 
-Last updated: 2026-06-18
+Last updated: 2026-06-23
 
 ## Summary
 
@@ -50,3 +50,25 @@ The score threshold is intentionally high and release-gating.
 - pushed ref: `origin/codex/kairos-conductor-closeout` after branch push.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed on 2026-06-18 after restoring `origin/conductor-close-reviewed-tracks-20260510` to historical tip `a7e6f4a68bad9aa9483997d3a0207031066929a1`.
 - next-phase decision: Track 44 is locally closeout-ready; keep it `In Review` until pull-request CI confirms the branch.
+
+## Archive review - 2026-06-23
+
+Track 44 was reviewed and archived as Done for the repo-side code and repository health floor. The archive covers the scorecard, validator, workflow wiring, and dependency integration consumed by Tracks 42 and 43 before publication.
+
+Accepted fixes applied:
+
+- No source-code defects were found in the Track 44 owned surface.
+- Registry/status surfaces and closeout notes were updated to make the archive boundary explicit.
+
+Validation evidence:
+
+- node scripts/validation/validate-code-health.mjs passed with total_current 10 and total_minimum 9.5.
+- powershell -NoProfile -File scripts/validate_conductor_phase_gates.ps1 passed.
+- powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1 passed.
+
+Residual release gates not claimed by this archive:
+
+- Live GitHub API score ingestion.
+- Historical trend storage over releases.
+- Package-specific health sub-scores.
+- Any release waiver still requires explicit, time-bound release-manager approval.

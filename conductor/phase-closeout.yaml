@@ -753,18 +753,21 @@ entries:
     pushed_ref: "origin/codex/kairos-conductor-closeout"
     next_phase_decision: "Track 45 remains In Review until pull-request CI confirms the branch."
   - track_id: "44"
-    phase: "implementation-review"
-    state: pending
+    phase: "code-repository-health-floor"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Focused local review found no Track 44 scorecard gate defects; residual live API/trend-history enhancements remain follow-up work."
-    fixes_applied: false
+    review_result: "Track 44 archived as Done on 2026-06-23 for the repo-side code/repository health floor. Review found no source-code defects in the scorecard, validator, workflow, or publication dependency wiring; the validator reports 10/10 against the 9.5 floor. Live GitHub API score ingestion, trend history, and package-specific sub-scores remain follow-up scope."
+    fixes_applied: true
     validation_commands:
       - "node scripts/validation/validate-code-health.mjs"
-      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: "clean after commit 0749d4139fff6a86cdf623c336541cd461055a9b; strict global closeout passed after restoring origin/conductor-close-reviewed-tracks-20260510 to a7e6f4a68bad9aa9483997d3a0207031066929a1"
-    commit_sha: "0749d4139fff6a86cdf623c336541cd461055a9b"
-    pushed_ref: "origin/codex/kairos-conductor-closeout"
-    next_phase_decision: "Track 44 is locally closeout-ready; keep it In Review until pull-request CI confirms the branch."
+      - "powershell -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "pending archive commit and push"
+    commit_sha: "
+f48f60685376258bbb3e5f58b5848fb717a62962
+"
+    pushed_ref: "pending"
+    next_phase_decision: "Track 44 is Done as an archived repo-side health floor; live score ingestion, trend storage, package-specific sub-scores, and any waiver approval remain release-governance follow-up scope."
   - track_id: "46"
     phase: "track-creation"
     state: pending

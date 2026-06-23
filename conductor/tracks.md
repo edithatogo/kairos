@@ -48,7 +48,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 41 | Documentation Platform, Quality Gates & Learning Coverage | Done | `docs-agent + ci-agent + community-agent` | See `conductor/tracks/41-*/spec.md` |
 | 42 | Package Registry Publication & Provenance | In Review | `publication-agent + release-agent + binding agents` | See `conductor/tracks/42-*/spec.md` |
 | 43 | Cloud/HPC Registry Publication & Runtime Acceptance | Done | `hpc-registry-agent + cloud-agent + release-agent` | See `conductor/tracks/43-*/spec.md` |
-| 44 | Code and Repository Health >= 9.5 | In Review | `health-agent + ci-agent + security-agent + release-agent` | See `conductor/tracks/44-*/spec.md` |
+| 44 | Code and Repository Health >= 9.5 | Done | `health-agent + ci-agent + security-agent + release-agent` | See `conductor/tracks/44-*/spec.md` |
 | 45 | Astro/Starlight Docs Platform and Polyglot Experience | In Review | `docs-platform-agent + docs-agent + ci-agent` | See `conductor/tracks/45-*/spec.md` |
 | 46 | HPC Parity Charter, Baselines & Evidence Gates | In Review | `benchmark-agent + interop-agent + redteam-agent + wave-manager-agent` | See `conductor/tracks/46-*/spec.md` |
 | 47 | PDES Conservative Lookahead Production Runtime | In Progress | `pdes-agent + performance-agent` | See `conductor/tracks/47-*/spec.md` |

@@ -649,3 +649,9 @@ Track 61 completed its planned local multi-game certification phase:
 Track 43 is archived as Done for the guarded repo-side cloud/HPC registry publication and runtime-acceptance evidence gate. The archive validates the HPC registry manifest, runtime evidence manifest, negative production-claim fixture, guarded publication helper, offline cloud/HPC validator, and code-health floor while keeping production_claim_status blocked.
 
 The archive does not claim live cloud/HPC runtime readiness. Docker, Kubernetes, Slurm, AWS/GCP Batch, Azure KairoECS container/scenario execution, protected hpc-publication dispatch, release-manager approval, image digest, SBOM, signature/attestation, and real publication evidence remain release gates before any production cloud/HPC claim.
+
+## Track 44 Archive Review - 2026-06-23
+
+Track 44 is archived as Done for the repo-side code and repository health floor. The scorecard and validator report 10/10 against the 9.5 release floor, the code-health workflow runs the validator, and Tracks 42/43 consume the code-health-floor publication gate.
+
+The archive does not claim live GitHub API score ingestion, release trend storage, package-specific health sub-scores, or any waiver approval. Those remain follow-up/release-governance scope.
