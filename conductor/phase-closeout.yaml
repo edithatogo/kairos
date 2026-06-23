@@ -600,7 +600,7 @@ entries:
       - "$env:RUSTUP_TOOLCHAIN='stable-x86_64-pc-windows-gnu'; pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1 -RunRuntimeTests"
       - "powershell -NoProfile -ExecutionPolicy Bypass -File conductor\\tracks\\33-webgpu-compute-browser\\validate-track33.ps1 -RunRuntimeTests"
     git_status: "clean after archive commit and push"
-    commit_sha: "8e179bcfd21f97858c5e410d8bc3891fa7c319bb"
+    commit_sha: "66e91d71b24aab5ca59d34e187b7a026e5ccdc01"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 33 is Done as an archived legacy scaffold; real browser WebGPU device validation remains blocked until the wasm/browser harness and GPU-capable runner attach evidence."
   - track_id: "34"
