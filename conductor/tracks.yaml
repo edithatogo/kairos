@@ -473,7 +473,7 @@ tracks:
       - wasm-gpu-parity
   - id: 34
     name: PDES & Parallel Execution
-    status: In Review
+    status: Done
     owner: pdes-agent
     depends_on: ["01"]
     owned_paths:
