@@ -1,6 +1,7 @@
 # Track 61 Handoff
 
 Status: In Review
+Last updated: 2026-06-23
 
 Phase 2 is implemented locally. The `kairo-ecs-game-theory` crate now exposes normal-form flat-array solvers plus a feature-gated `extensive_form` module behind `graph-relations` with sequential decision nodes, chance nodes, terminal nodes, information sets, action edges, chance outcomes, terminal utilities, malformed-topology validation, deterministic traversal over edge entities, backward induction, imperfect-information fixture validation, and multi-game certification evidence over flat ECS component stores.
 

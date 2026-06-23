@@ -1,6 +1,43 @@
 # Track 58 Handoff
 
 Status: In Review
+Last updated: 2026-06-23
+
+## Summary
+
+Track 58 owns deterministic ontology-to-Rust component generation and generated-component API integration. Phase 1 is In Review after codegen, generated crate wiring, validation, push, strict closeout, and GitHub Actions review; Phase 2 generated-code API integration remains open before Done.
+
+## Files changed
+
+- `crates/kairo-ecs-game-ontology/src/lib.rs`
+- `crates/kairo-ecs-game-ontology/tests/codegen.rs`
+- `crates/kairo-ecs-game-theory/src/lib.rs`
+- `crates/kairo-ecs-game-theory/tests/generated_components.rs`
+- `open-game-theory-ontology/fixtures/generated/rust/game_components.rs`
+- `scripts/validation/validate-game-theory-codegen.mjs`
+- Conductor Track 58 plan, handoff, and closeout artifacts.
+
+## Contracts consumed
+
+- Track 57 normalized ontology IR and checked-in Turtle/JSON-LD fixtures.
+- Track 56 game-theory evidence and claim-boundary rules.
+
+## Contracts changed
+
+- Defines deterministic Rust naming, reserved-word handling, generated component manifests, and feature-gated generated-component exposure.
+
+## Tests added
+
+- Codegen golden-regeneration tests.
+- JSON-LD/Turtle equivalence tests.
+- Invalid ontology contract tests.
+- Generated component construction tests behind `generated-components`.
+- `validate-game-theory-codegen.mjs` release-package and generated-output checks.
+
+## Known risks
+
+- Windows linker shadowing blocked local `cargo test` execution on this host after compile checks passed; this remains recorded as an environment blocker, not a source defect.
+- Track 58 cannot move Done until remaining Phase 2 API integration and release evidence complete.
 
 ## Current implementation evidence
 

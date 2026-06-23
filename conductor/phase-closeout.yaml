@@ -773,10 +773,10 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "node scripts/validation/validate-hpc-parity-evidence.mjs"
-    git_status: "implementation slice committed locally as 35f93a4344615e2f8a4e5ca8a61ad7a483e87106; push and strict git closeout pending"
+    git_status: "evidence schema and claim-boundary validator commit pushed; strict git closeout passed"
     commit_sha: "35f93a4344615e2f8a4e5ca8a61ad7a483e87106"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
-    next_phase_decision: "Track 46 is In Progress; evidence-manifest validators and claim-boundary scans are implemented locally, with review, commit, push, and strict git closeout still pending before In Review."
+    next_phase_decision: "Track 46 is In Review after evidence-manifest validators, claim-boundary scans, push, strict closeout, and GitHub Actions review; runtime HPC proof remains owned by Tracks 47-55 before any Done or parity claim."
   - track_id: "42"
     phase: "registry-publication-readiness"
     state: pending
@@ -965,7 +965,7 @@ entries:
     next_phase_decision: "Track 55 is In Progress after the first scenario/evidence contract slice; live weak/strong scaling profiles, raw artifacts, plots, checksums, and upstream Track 47-54 evidence remain required before In Review."
   - track_id: "56"
     phase: "phase-1-charter-and-claim-boundary-closeout"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
     review_result: "Track 56 completed the wave charter and evidence-gate implementation slice: game-theory ontology wave charter, evidence schema/templates, evidence validator, claim-boundary scanner, and negative fixtures. Closeout review found no runtime-code defect because this track is governance-only; the required fixes were release-boundary spec sections and evidence/status reconciliation."
     fixes_applied: true
@@ -975,13 +975,13 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
-    git_status: "pending closeout metadata commit"
-    commit_sha: "234ba2b, ba18cdc, 75c7b8f, 59d1ce1, 6d85555; closeout metadata commit pending"
-    pushed_ref: "pending closeout metadata push"
+    git_status: "closeout metadata commit pushed; strict git closeout and GitHub Actions review passed"
+    commit_sha: "0238fc11ef7a179bbb2f2bf8090a1747f803e915"
+    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 56 is In Review after the wave charter, evidence manifest validator, claim-boundary scanner, negative fixtures, release-boundary spec sections, and handoff reconciliation. Keep it out of Done until downstream Tracks 57-61 are complete or release claims explicitly exclude incomplete downstream capability."
   - track_id: "57"
     phase: "phase-1-parser-ingestion-closeout"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
     review_result: "Track 57 completed the ontology subrepo and parser ingestion slice: subrepo skeleton, Turtle/JSON-LD fixtures, parser crate, deterministic IR normalization, malformed-input tests, and review fixes. Closeout review found no remaining in-scope parser defect; the required fixes were release-boundary spec sections and evidence/status reconciliation."
     fixes_applied: true
@@ -991,9 +991,9 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
-    git_status: "pending closeout metadata commit"
-    commit_sha: "4e72c6f, cbf9be3, 7802e84, 32100c3, f86e718, 4ff503c, ef9e15d, 8e8e25a, efc69a3; closeout metadata commit pending"
-    pushed_ref: "pending closeout metadata push"
+    git_status: "closeout metadata commit pushed; strict git closeout and GitHub Actions review passed"
+    commit_sha: "0238fc11ef7a179bbb2f2bf8090a1747f803e915"
+    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 57 is In Review after the ontology subrepo, Turtle/JSON-LD fixtures, parser crate, canonical IR normalization, review fixes, release-boundary spec sections, and handoff reconciliation. Keep release claims limited to checked-in fixtures until broader external ontology compatibility is validated."
   - track_id: "58"
     phase: "phase-0-1-codegen-contract-and-generator"
@@ -1010,7 +1010,7 @@ entries:
       - "node scripts/validation/validate-game-theory-codegen.mjs"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "phase 1 implementation and CI review commits pushed; strict git closeout rerun pending for this evidence update"
+    git_status: "phase 1 implementation and CI review commits pushed; strict git closeout passed for this evidence update"
     commit_sha: "14f3f4d, 2d49b07, 8486d90, 25201c5, 9a3e714d4890841573c11f18aa96dbdcb554c055, 643a29b52e73460b648aad6e26cc1890c51db3f5, 5bd5b34bd6d5232caaee7a2ca02207c315515e34, 7b2dca2a2380aedac731cb4d70285b948745fee5, e39c3d8ad1984cb4be9057103e92a2afd53cc308, dbaf8bb, 4f9864b5b625d0469f9bfaf21659598dd6779022, 287e8d6e2249368179e91d75501a544772ef78c4"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 58 Phase 1 is In Review after push and GitHub Actions review. Continue with Phase 2 generated-code API integration tasks; Track 58 cannot move Done until all planned codegen tasks, API review, local gates, GitHub Actions, and handoff evidence are complete."

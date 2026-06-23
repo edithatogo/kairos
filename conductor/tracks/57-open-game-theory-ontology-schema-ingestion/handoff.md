@@ -70,9 +70,9 @@ Track 57 completed the ontology subrepo and parser-ingestion slice. The reposito
 
 - $conductor-review: no in-scope code findings after reviewing Track 57 Phase 1 against spec and workflow; local linker limitation recorded as environment blocker rather than source defect.
 - accepted fixes: ownership move in parse_jsonld finalization fixed before task 1.2 commit.
-- commit SHA: pending for this closeout metadata commit.
-- pushed ref: pending for this closeout metadata commit.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending after push.
-- GitHub Actions review: pending after push.
+- commit SHA: `0238fc11ef7a179bbb2f2bf8090a1747f803e915`.
+- pushed ref: `origin/codex/kairos-hpc-parity-wave`.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after push.
+- GitHub Actions review: passed after push.
 - waivers: none.
 - next-phase decision: move to `In Review`; Track 58 may consume the normalized IR, but Track 57 must not move `Done` until release wording and broader external-schema support are explicitly accepted or excluded.

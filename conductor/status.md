@@ -168,7 +168,7 @@ release-manager approval remain unproven.
 
 Tracks 46-55 were added on 2026-06-19 as the production HPC parity wave. They
 make the live-proof gap explicit rather than marking the current scaffolds
-complete. Track 46 is now `In Progress` with a machine-readable evidence schema,
+complete. Track 46 is now `In Review` with a machine-readable evidence schema,
 scaffold/live-HPC template manifests, and an executable claim-boundary validator.
 Track 47 is `In Progress` with the first conservative lookahead enforcement
 slice in `kairo-ecs-pdes`. Track 48 is `In Progress` with a `time-warp`
@@ -192,7 +192,7 @@ evidence remain incomplete. Track 53 is `In Progress` with a first
 `fmi-runtime` archive-handling slice in `kairo-ecs-fmi` for stored-entry `.fmu`
 extraction, traversal rejection, and reuse of the unpacked-layout validator;
 dynamic loading, FMI 2/3 lifecycle stepping, OpenModelica roundtrip, and live
-FMU evidence remain incomplete. Track 54 is `In Progress` with a local runtime
+FMU evidence remain incomplete. Track 54 is `In Review` with a local runtime
 evidence validator and blocked-scope manifest for Docker, Kubernetes, Slurm,
 AWS Batch, GCP Batch, and Azure Batch; live runtime canaries remain incomplete.
 Track 55 is `In Progress` with a draft scenario/evidence contract and repaired

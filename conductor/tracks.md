@@ -46,11 +46,11 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 39 | Cloud/HPC Batch Runners | In Review | `cloud-agent` | See `conductor/tracks/39-*/spec.md` |
 | 40 | Time-Travel Debugging & Interactive Stepping | Done | `timetravel-agent` | See `conductor/tracks/40-*/spec.md` |
 | 41 | Documentation Platform, Quality Gates & Learning Coverage | Done | `docs-agent + ci-agent + community-agent` | See `conductor/tracks/41-*/spec.md` |
-| 42 | Package Registry Publication & Provenance | Spec Approved | `publication-agent + release-agent + binding agents` | See `conductor/tracks/42-*/spec.md` |
+| 42 | Package Registry Publication & Provenance | In Review | `publication-agent + release-agent + binding agents` | See `conductor/tracks/42-*/spec.md` |
 | 43 | Cloud/HPC Registry Publication & Runtime Acceptance | In Review | `hpc-registry-agent + cloud-agent + release-agent` | See `conductor/tracks/43-*/spec.md` |
 | 44 | Code and Repository Health >= 9.5 | In Review | `health-agent + ci-agent + security-agent + release-agent` | See `conductor/tracks/44-*/spec.md` |
 | 45 | Astro/Starlight Docs Platform and Polyglot Experience | In Review | `docs-platform-agent + docs-agent + ci-agent` | See `conductor/tracks/45-*/spec.md` |
-| 46 | HPC Parity Charter, Baselines & Evidence Gates | In Progress | `benchmark-agent + interop-agent + redteam-agent + wave-manager-agent` | See `conductor/tracks/46-*/spec.md` |
+| 46 | HPC Parity Charter, Baselines & Evidence Gates | In Review | `benchmark-agent + interop-agent + redteam-agent + wave-manager-agent` | See `conductor/tracks/46-*/spec.md` |
 | 47 | PDES Conservative Lookahead Production Runtime | In Progress | `pdes-agent + performance-agent` | See `conductor/tracks/47-*/spec.md` |
 | 48 | Time Warp Optimistic Rollback Runtime | In Progress | `pdes-agent + timetravel-agent + ecs-agent` | See `conductor/tracks/48-*/spec.md` |
 | 49 | Distributed MPI/gRPC State Synchronization | In Progress | `distributed-agent + pdes-agent` | See `conductor/tracks/49-*/spec.md` |
@@ -58,7 +58,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | In Progress | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
 | 52 | Native GPU Acceleration with Persistent Device Memory | In Progress | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
 | 53 | FMI 2/3 Co-Simulation Master Runtime | In Progress | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
-| 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Spec Approved | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |
+| 54 | Slurm, Container & Cloud HPC Runtime Acceptance | In Review | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |
 | 55 | End-to-End Weak/Strong Scaling Certification | In Progress | `performance-agent + benchmark-agent + cloud-agent + release-agent` | See `conductor/tracks/55-*/spec.md` |
 | 56 | Game Theory Ontology Wave Charter and Evidence Gates | In Review | `ontology-agent + game-theory-agent + wave-manager-agent` | See `conductor/tracks/56-*/spec.md` |
 | 57 | Open Game Theory Ontology Subrepo and Schema Ingestion | In Review | `ontology-agent + rust-agent` | See `conductor/tracks/57-*/spec.md` |
