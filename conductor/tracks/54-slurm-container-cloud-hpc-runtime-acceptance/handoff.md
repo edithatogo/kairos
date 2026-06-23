@@ -71,3 +71,6 @@ Commands: node --check scripts/validation/validate-hpc-runtime-evidence.mjs; nod
 - validation: `python cloud/validate_cloud_hpc.py` passed with the documented static shell fallback, `node scripts/validation/validate-hpc-registry-readiness.mjs` passed with `production_claim_status: blocked`, `node --check scripts/validation/validate-hpc-runtime-evidence.mjs`, `node scripts/validation/validate-hpc-runtime-evidence.mjs`, Conductor phase-gate, DAG, artifact validators, and `git diff --check` passed locally.
 - residual scope: Docker image execution, Kubernetes server-side validation, Slurm jobs, AWS/GCP/Azure Batch canaries, real Track 49 MPI runtime paths, and real Track 52 GPU runtime paths remain incomplete. This archive does not claim production cloud/HPC runtime acceptance.
 - archive decision: Track 54 is `Done` for the repo-side blocked-scope runtime-evidence gate only.
+
+- archive commit SHA: `e969bbef99836253d361bfb4c7546f583c74d002`.
+- pushed ref: `origin/codex/kairos-hpc-parity-wave`.
