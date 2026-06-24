@@ -234,6 +234,11 @@ scaling proof is claimed. None of these tracks is `Done`; live MPI,
 NUMA/hwloc, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains
 required before production-grade HPC parity can be claimed.
 
+The HPC parity wave now includes `scripts/validation/validate-hpc-live-template-blockers.mjs`,
+which prevents Tracks 51, 52, and 55 from being treated as `Done` while their
+live parallel-filesystem, GPU-hardware, or weak/strong scaling evidence remains
+only `live-hpc-template` manifests.
+
 Tracks 56-61 were added on 2026-06-19 as the open game theory ontology and
 multi-game runtime wave. They split the earlier monolithic Track 56 concept into
 granular implementation tracks. Track 56 is now `In Review` with the wave

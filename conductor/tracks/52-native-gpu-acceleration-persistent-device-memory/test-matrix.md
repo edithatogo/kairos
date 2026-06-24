@@ -6,6 +6,7 @@
 | GPU crate tests | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features wgpu-backend,cuda-backend` | Implementation |
 | WebGPU crate tests | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-webgpu --features webgpu` | Review |
 | Local CPU parity evidence manifest | `node scripts/validation/validate-hpc-parity-evidence.mjs` | Phase 4 scaffold evidence |
+| Live-template blocker guard | `node scripts/validation/validate-hpc-live-template-blockers.mjs` | Review and Done |
 | Real wgpu dispatch | `cargo test -p kairo-ecs-gpu --features wgpu-backend --test real_wgpu_device` | Done |
 | Real CUDA dispatch | `cargo test -p kairo-ecs-gpu --features cuda-backend --test real_cuda_device` | Done |
 | Live wgpu hardware manifest | Completed `conductor/hpc-evidence/manifests/track52-live-gpu-hardware-template.json` copy promoted to `evidence_class: live-hpc`, with raw artifact checksum, adapter/device metadata, and `waiver.status: none`; validate with `node scripts/validation/validate-hpc-parity-evidence.mjs` | Done |
