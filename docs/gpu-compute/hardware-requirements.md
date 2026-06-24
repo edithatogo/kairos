@@ -11,6 +11,11 @@ No performance claim is accepted until a hardware-backed validation run records:
 
 CPU-only CI may run compile and fallback parity tests but must not publish speedup numbers.
 
+The Track 52 hardware gate requires a completed live evidence manifest copied
+from `conductor/hpc-evidence/manifests/track52-live-gpu-hardware-template.json`.
+The local CPU parity scaffold manifest is useful for contract validation, but it
+does not satisfy the wgpu or CUDA hardware gates.
+
 ## Lowest-cost validation routes
 
 Use the routes in `free-testing-routes.md` when you need smoke coverage without

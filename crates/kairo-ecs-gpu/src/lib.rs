@@ -5,6 +5,7 @@
 
 pub mod buffer;
 pub mod compute;
+pub mod contract;
 pub mod transfer;
 
 #[cfg(feature = "cuda-backend")]
@@ -25,5 +26,11 @@ pub use compute::{
     NativeGpuBackendKind, NativeGpuInitializationReport, PersistentGpuSession, ResidentBufferKind,
     CUDA_BACKEND_NOT_CONFIGURED, DEFAULT_WORKGROUP_SIZE, TRACK32_TARGET_MEMORY_BUDGET,
     WGPU_BACKEND_NOT_CONFIGURED,
+};
+pub use contract::{
+    CpuFallbackParityContract, CpuFallbackParityReport, DeviceBufferAccess, GpuBatchCommand,
+    GpuBatchDispatch, GpuBatchStats, GpuFallbackPolicy, GpuKernelContract,
+    NativeBackendContractError, NativeGpuBackendRequest, PersistentDeviceMemory,
+    ResidentDeviceBuffer,
 };
 pub use transfer::{TransferDirection, TransferPlan, TransferStep};

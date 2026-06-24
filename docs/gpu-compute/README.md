@@ -11,6 +11,8 @@ Current artifacts:
   and host-side execution plans.
 - `event-ordering.md` defines deterministic and nondeterministic DES event behavior.
 - `hardware-requirements.md` records the hardware matrix required before performance claims are accepted.
+- `evidence-boundary.md` separates local CPU parity scaffold evidence from
+  live wgpu/CUDA hardware proof.
 - `free-testing-routes.md` records the lowest-cost validation routes for Metal,
   NVIDIA NIM-backed library smoke tests, Colab GPU smoke, and TPU notebook smoke.
 - `colab-gpu-smoke.md` documents the free Colab GPU notebook route.
