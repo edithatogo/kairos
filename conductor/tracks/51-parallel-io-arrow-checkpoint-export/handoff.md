@@ -1,6 +1,6 @@
 # Track 51 Handoff
 
-Last updated: 2026-06-19
+Last updated: 2026-06-24
 
 ## Summary
 
@@ -103,3 +103,15 @@ Strict closeout:
 
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
 - result: passed after evidence commit `b5df195`.
+
+## Evidence manifest boundary
+
+Track 51 now has a Track 46-style local scaffold record and a live parallel-filesystem template:
+
+- `conductor/hpc-evidence/manifests/track51-local-arrow-checkpoint-scaffold.json` records local Arrow/checkpoint contract gates only. It is not native Arrow, native HDF5, native ADIOS2, Lustre, GPFS, MPI-I/O, or throughput proof.
+- `conductor/hpc-evidence/manifests/track51-live-parallel-filesystem-template.json` must be replaced by a reviewed `live-hpc` manifest before Track 51 can satisfy `parallel-filesystem-evidence`.
+- Live proof must include stripe count, stripe size, block size, rank count, scheduler or queue, job ID, launch command, raw artifact path, and `sha256:` checksum.
+- Track 54 owns scheduler collection handoff, but Track 51 owns the Arrow/checkpoint writer evidence manifest and parallel filesystem claim boundary.
+- Track 55 should consume only reviewed `live-hpc` manifests for scaling or throughput summaries; local scaffold records are not scaling proof.
+
+Docs and bench evidence boundaries were added at `docs/parallel-io/evidence-boundary.md` and `benches/parallel-io/README.md`.

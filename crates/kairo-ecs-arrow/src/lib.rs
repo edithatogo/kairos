@@ -274,23 +274,45 @@ impl EventLogBatch {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ArrowError {
+    AdapterDisabled(&'static str),
     EmptyField(&'static str),
-    InvalidHexLength { expected: usize, actual: usize },
+    InvalidBlockLayout(&'static str),
+    InvalidCheckpointFormat {
+        expected: &'static str,
+        actual: String,
+    },
+    InvalidHexLength {
+        expected: usize,
+        actual: usize,
+    },
     InvalidHexDigit,
     InvalidNumber(&'static str),
     InvalidStatus(String),
     InvalidTimeScale(String),
     InvalidUtf8,
+    Io(String),
     UnexpectedFieldHeader,
     UnexpectedStreamHeader,
     UnsupportedSchemaVersion(u16),
-    WrongCellCount { expected: usize, actual: usize },
+    WrongCellCount {
+        expected: usize,
+        actual: usize,
+    },
 }
 
 impl Display for ArrowError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::AdapterDisabled(adapter) => {
+                write!(f, "{adapter} checkpoint adapter is disabled")
+            }
             Self::EmptyField(field) => write!(f, "{field} must not be empty"),
+            Self::InvalidBlockLayout(reason) => {
+                write!(f, "invalid contiguous block layout: {reason}")
+            }
+            Self::InvalidCheckpointFormat { expected, actual } => {
+                write!(f, "expected {expected} checkpoint format, got {actual}")
+            }
             Self::InvalidHexLength { expected, actual } => {
                 write!(f, "expected {expected} hex characters, got {actual}")
             }
@@ -299,6 +321,7 @@ impl Display for ArrowError {
             Self::InvalidStatus(status) => write!(f, "invalid event status: {status}"),
             Self::InvalidTimeScale(time_scale) => write!(f, "invalid time scale: {time_scale}"),
             Self::InvalidUtf8 => f.write_str("payload is not valid UTF-8"),
+            Self::Io(error) => write!(f, "I/O error: {error}"),
             Self::UnexpectedFieldHeader => f.write_str("unexpected event-log field header"),
             Self::UnexpectedStreamHeader => f.write_str("unexpected event-log stream header"),
             Self::UnsupportedSchemaVersion(version) => {
@@ -319,6 +342,17 @@ pub struct ContiguousBlock {
     pub offset_bytes: u64,
     pub byte_len: u64,
     pub row_count: usize,
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ContiguousWriteManifest {
+    pub stream: String,
+    pub schema_fingerprint: String,
+    pub row_count: usize,
+    pub encoded_len: usize,
+    pub blocks: Vec<ContiguousBlock>,
+    pub checksum: u64,
 }
 
 #[cfg(feature = "parallel-io")]
@@ -360,6 +394,41 @@ impl ParallelIoRecordBatch {
             blocks,
             encoded_len,
         })
+    }
+
+    pub fn to_record_batch_bytes(&self) -> Vec<u8> {
+        EventLogBatch::new(self.records.clone())
+            .expect("parallel I/O records are validated at construction")
+            .to_smoke_bytes()
+    }
+
+    pub fn write_contiguous_blocks<W: std::io::Write>(
+        &self,
+        mut writer: W,
+    ) -> Result<ContiguousWriteManifest, ArrowError> {
+        validate_contiguous_blocks(&self.blocks, self.records.len(), Some(self.encoded_len))?;
+        let payload = self.to_record_batch_bytes();
+        writer
+            .write_all(&payload)
+            .map_err(|error| ArrowError::Io(error.to_string()))?;
+
+        Ok(ContiguousWriteManifest {
+            stream: EVENT_LOG_STREAM.to_string(),
+            schema_fingerprint: self.schema_fingerprint(),
+            row_count: self.row_count(),
+            encoded_len: payload.len(),
+            blocks: self.blocks.clone(),
+            checksum: stable_hash_bytes(&payload),
+        })
+    }
+
+    pub fn write_contiguous_blocks_to_path(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<ContiguousWriteManifest, ArrowError> {
+        let file = std::fs::File::create(path.as_ref())
+            .map_err(|error| ArrowError::Io(error.to_string()))?;
+        self.write_contiguous_blocks(file)
     }
 
     pub fn row_count(&self) -> usize {
@@ -465,6 +534,40 @@ pub struct RestoredCheckpoint {
     pub final_tick: u128,
     pub records: Vec<CheckpointRecord>,
 }
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CheckpointAdapterReceipt {
+    pub format: CheckpointFormat,
+    pub path: String,
+    pub row_count: usize,
+    pub checksum: u64,
+    pub contract_only: bool,
+}
+
+#[cfg(feature = "parallel-io")]
+pub trait CheckpointAdapter {
+    fn format(&self) -> CheckpointFormat;
+
+    fn write_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        manifest: &CheckpointManifest,
+    ) -> Result<CheckpointAdapterReceipt, ArrowError>;
+
+    fn restore_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<RestoredCheckpoint, ArrowError>;
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct Hdf5CheckpointAdapter;
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct Adios2CheckpointAdapter;
 
 #[cfg(feature = "parallel-io")]
 impl CheckpointManifest {
@@ -634,22 +737,40 @@ impl CheckpointManifest {
         if manifest.calculate_checksum() != manifest.checksum {
             return Err(ArrowError::InvalidNumber("checksum"));
         }
+        manifest.validate_for_restore()?;
         Ok(manifest)
     }
 
-    pub fn restore(&self) -> Result<RestoredCheckpoint, ArrowError> {
+    pub fn write_contract_file(&self, path: impl AsRef<std::path::Path>) -> Result<(), ArrowError> {
+        std::fs::write(path.as_ref(), self.to_contract_bytes())
+            .map_err(|error| ArrowError::Io(error.to_string()))
+    }
+
+    pub fn read_contract_file(path: impl AsRef<std::path::Path>) -> Result<Self, ArrowError> {
+        let payload =
+            std::fs::read(path.as_ref()).map_err(|error| ArrowError::Io(error.to_string()))?;
+        Self::from_contract_bytes(&payload)
+    }
+
+    pub fn validate_for_restore(&self) -> Result<(), ArrowError> {
         if self.row_count != self.records.len() {
             return Err(ArrowError::WrongCellCount {
                 expected: self.row_count,
                 actual: self.records.len(),
             });
         }
+        validate_contiguous_blocks(&self.blocks, self.row_count, None)?;
         if self.schema_fingerprint != event_log_schema_fingerprint() {
             return Err(ArrowError::UnexpectedStreamHeader);
         }
         if self.calculate_checksum() != self.checksum {
             return Err(ArrowError::InvalidNumber("checksum"));
         }
+        Ok(())
+    }
+
+    pub fn restore(&self) -> Result<RestoredCheckpoint, ArrowError> {
+        self.validate_for_restore()?;
         let final_tick = self
             .records
             .iter()
@@ -687,6 +808,123 @@ impl CheckpointManifest {
         }
         checksum
     }
+}
+
+#[cfg(feature = "parallel-io")]
+impl CheckpointAdapter for Hdf5CheckpointAdapter {
+    fn format(&self) -> CheckpointFormat {
+        CheckpointFormat::Hdf5
+    }
+
+    fn write_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        manifest: &CheckpointManifest,
+    ) -> Result<CheckpointAdapterReceipt, ArrowError> {
+        #[cfg(feature = "hdf5")]
+        {
+            write_adapter_contract(path, manifest, CheckpointFormat::Hdf5)
+        }
+        #[cfg(not(feature = "hdf5"))]
+        {
+            let _ = (path, manifest);
+            Err(ArrowError::AdapterDisabled("hdf5"))
+        }
+    }
+
+    fn restore_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<RestoredCheckpoint, ArrowError> {
+        #[cfg(feature = "hdf5")]
+        {
+            restore_adapter_contract(path, CheckpointFormat::Hdf5)
+        }
+        #[cfg(not(feature = "hdf5"))]
+        {
+            let _ = path;
+            Err(ArrowError::AdapterDisabled("hdf5"))
+        }
+    }
+}
+
+#[cfg(feature = "parallel-io")]
+impl CheckpointAdapter for Adios2CheckpointAdapter {
+    fn format(&self) -> CheckpointFormat {
+        CheckpointFormat::Adios2
+    }
+
+    fn write_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        manifest: &CheckpointManifest,
+    ) -> Result<CheckpointAdapterReceipt, ArrowError> {
+        #[cfg(feature = "adios2")]
+        {
+            write_adapter_contract(path, manifest, CheckpointFormat::Adios2)
+        }
+        #[cfg(not(feature = "adios2"))]
+        {
+            let _ = (path, manifest);
+            Err(ArrowError::AdapterDisabled("adios2"))
+        }
+    }
+
+    fn restore_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<RestoredCheckpoint, ArrowError> {
+        #[cfg(feature = "adios2")]
+        {
+            restore_adapter_contract(path, CheckpointFormat::Adios2)
+        }
+        #[cfg(not(feature = "adios2"))]
+        {
+            let _ = path;
+            Err(ArrowError::AdapterDisabled("adios2"))
+        }
+    }
+}
+
+#[cfg(all(feature = "parallel-io", any(feature = "hdf5", feature = "adios2")))]
+fn write_adapter_contract(
+    path: impl AsRef<std::path::Path>,
+    manifest: &CheckpointManifest,
+    expected_format: CheckpointFormat,
+) -> Result<CheckpointAdapterReceipt, ArrowError> {
+    require_checkpoint_format(manifest, expected_format)?;
+    manifest.write_contract_file(path.as_ref())?;
+    Ok(CheckpointAdapterReceipt {
+        format: expected_format,
+        path: path.as_ref().display().to_string(),
+        row_count: manifest.row_count,
+        checksum: manifest.checksum,
+        contract_only: true,
+    })
+}
+
+#[cfg(all(feature = "parallel-io", any(feature = "hdf5", feature = "adios2")))]
+fn restore_adapter_contract(
+    path: impl AsRef<std::path::Path>,
+    expected_format: CheckpointFormat,
+) -> Result<RestoredCheckpoint, ArrowError> {
+    let manifest = CheckpointManifest::read_contract_file(path.as_ref())?;
+    require_checkpoint_format(&manifest, expected_format)?;
+    manifest.restore()
+}
+
+#[cfg(all(feature = "parallel-io", any(feature = "hdf5", feature = "adios2")))]
+fn require_checkpoint_format(
+    manifest: &CheckpointManifest,
+    expected_format: CheckpointFormat,
+) -> Result<(), ArrowError> {
+    if manifest.format != expected_format {
+        return Err(ArrowError::InvalidCheckpointFormat {
+            expected: expected_format.as_str(),
+            actual: manifest.format.as_str().to_string(),
+        });
+    }
+    Ok(())
 }
 
 pub struct ArrowEventLog {
@@ -773,9 +1011,76 @@ fn synthetic_handle_entity(value: &str) -> EntityId {
 }
 
 fn stable_hash(value: &str) -> u64 {
-    value.bytes().fold(0xcbf29ce484222325, |hash, byte| {
-        (hash ^ u64::from(byte)).wrapping_mul(0x100000001b3)
+    stable_hash_bytes(value.as_bytes())
+}
+
+fn stable_hash_bytes(bytes: &[u8]) -> u64 {
+    bytes.iter().fold(0xcbf29ce484222325, |hash, byte| {
+        (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3)
     })
+}
+
+#[cfg(feature = "parallel-io")]
+fn validate_contiguous_blocks(
+    blocks: &[ContiguousBlock],
+    row_count: usize,
+    expected_len: Option<usize>,
+) -> Result<(), ArrowError> {
+    if row_count == 0 {
+        if !blocks.is_empty() {
+            return Err(ArrowError::InvalidBlockLayout(
+                "empty batches must not declare blocks",
+            ));
+        }
+        return Ok(());
+    }
+    if blocks.is_empty() {
+        return Err(ArrowError::InvalidBlockLayout(
+            "non-empty batches must declare a block",
+        ));
+    }
+
+    let mut next_offset = 0_u64;
+    let mut rows = 0_usize;
+    for block in blocks {
+        if block.offset_bytes != next_offset {
+            return Err(ArrowError::InvalidBlockLayout(
+                "block offsets must be contiguous",
+            ));
+        }
+        if block.byte_len == 0 {
+            return Err(ArrowError::InvalidBlockLayout(
+                "non-empty blocks must have bytes",
+            ));
+        }
+        if block.row_count == 0 {
+            return Err(ArrowError::InvalidBlockLayout(
+                "non-empty blocks must have rows",
+            ));
+        }
+        rows = rows
+            .checked_add(block.row_count)
+            .ok_or(ArrowError::InvalidBlockLayout("block row counts overflow"))?;
+        next_offset =
+            next_offset
+                .checked_add(block.byte_len)
+                .ok_or(ArrowError::InvalidBlockLayout(
+                    "block byte lengths overflow",
+                ))?;
+    }
+    if rows != row_count {
+        return Err(ArrowError::InvalidBlockLayout(
+            "block row counts must match manifest",
+        ));
+    }
+    if let Some(expected_len) = expected_len {
+        if next_offset != expected_len as u64 {
+            return Err(ArrowError::InvalidBlockLayout(
+                "block bytes must match encoded length",
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn parse_event_handle(hex_value: &str) -> Result<EventId, ArrowError> {
