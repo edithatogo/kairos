@@ -1,13 +1,9 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 const repoRoot = process.env.KAIRO_REPO_ROOT || process.cwd();
-const tracksYamlPath = path.join(repoRoot, "conductor", "tracks.yaml");
-const manifestDir = path.join(repoRoot, "conductor", "hpc-evidence", "manifests");
 
 const liveTemplateBlockers = [
   {
@@ -29,27 +25,27 @@ const liveTemplateBlockers = [
 
 const issues = [];
 
-function addIssue(message) {
-  issues.push(message);
+function addIssue(message, targetIssues = issues) {
+  targetIssues.push(message);
 }
 
-function readText(filePath) {
+function readText(filePath, root, targetIssues = issues) {
   if (!fs.existsSync(filePath)) {
-    addIssue(`Missing required file: ${path.relative(repoRoot, filePath)}`);
+    addIssue(`Missing required file: ${path.relative(root, filePath)}`, targetIssues);
     return "";
   }
   return fs.readFileSync(filePath, "utf8");
 }
 
-function readJson(filePath) {
-  const text = readText(filePath);
+function readJson(filePath, root, targetIssues = issues) {
+  const text = readText(filePath, root, targetIssues);
   if (!text) {
     return null;
   }
   try {
     return JSON.parse(text);
   } catch (error) {
-    addIssue(`Invalid JSON in ${path.relative(repoRoot, filePath)}: ${error.message}`);
+    addIssue(`Invalid JSON in ${path.relative(root, filePath)}: ${error.message}`, targetIssues);
     return null;
   }
 }
@@ -72,19 +68,21 @@ function parseTrackStatuses(text) {
   return statuses;
 }
 
-function validateBlockers() {
-  const statuses = parseTrackStatuses(readText(tracksYamlPath));
+function validateBlockers(root = repoRoot, targetIssues = issues) {
+  const tracksYamlPath = path.join(root, "conductor", "tracks.yaml");
+  const manifestDir = path.join(root, "conductor", "hpc-evidence", "manifests");
+  const statuses = parseTrackStatuses(readText(tracksYamlPath, root, targetIssues));
   for (const blocker of liveTemplateBlockers) {
     const status = statuses.get(blocker.trackId);
     if (!status) {
-      addIssue(`${blocker.label} is missing from conductor/tracks.yaml`);
+      addIssue(`${blocker.label} is missing from conductor/tracks.yaml`, targetIssues);
       continue;
     }
 
     const templateFiles = [];
     for (const manifestName of blocker.manifests) {
       const manifestPath = path.join(manifestDir, manifestName);
-      const manifest = readJson(manifestPath);
+      const manifest = readJson(manifestPath, root, targetIssues);
       if (manifest?.evidence_class === "live-hpc-template") {
         templateFiles.push(manifestName);
       }
@@ -93,6 +91,7 @@ function validateBlockers() {
     if (status === "Done" && templateFiles.length > 0) {
       addIssue(
         `${blocker.label} cannot be Done while live evidence manifests remain templates: ${templateFiles.join(", ")}`,
+        targetIssues,
       );
     }
   }
@@ -129,28 +128,14 @@ function runSelfTest() {
       }
     }
 
-    const oldRoot = process.env.KAIRO_REPO_ROOT;
-    process.env.KAIRO_REPO_ROOT = tmp;
-    const result = spawnSelf();
-    if (oldRoot === undefined) {
-      delete process.env.KAIRO_REPO_ROOT;
-    } else {
-      process.env.KAIRO_REPO_ROOT = oldRoot;
-    }
-    if (result.status !== 1 || !result.stderr.includes("Track 51 parallel filesystem evidence cannot be Done")) {
+    const selfTestIssues = [];
+    validateBlockers(tmp, selfTestIssues);
+    if (!selfTestIssues.some((issue) => issue.includes("Track 51 parallel filesystem evidence cannot be Done"))) {
       addIssue("self-test did not fail a Done track with live-hpc-template evidence");
     }
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
   }
-}
-
-function spawnSelf() {
-  return spawnSync(process.execPath, [fileURLToPath(import.meta.url)], {
-    cwd: process.env.KAIRO_REPO_ROOT,
-    env: process.env,
-    encoding: "utf8",
-  });
 }
 
 validateBlockers();
