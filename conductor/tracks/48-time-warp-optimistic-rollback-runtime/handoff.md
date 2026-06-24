@@ -1,6 +1,6 @@
 # Track 48 Handoff
 
-Last updated: 2026-06-22
+Last updated: 2026-06-24
 
 ## Summary
 
@@ -9,19 +9,24 @@ slice adds a `time-warp` feature-gated local runtime primitive for straggler
 rollback, anti-message cancellation, invalidated-send anti-message emission,
 generation-checked component access, monotonic-GVT fossil collection, pre-GVT
 straggler rejection, duplicate-positive rejection, and local overhead/rollback
-pressure counters.
+pressure counters. The 2026-06-24 evidence-worker pass adds a local scaffold
+manifest for that proof boundary without expanding the runtime claim to
+distributed optimistic rollback.
 
 ## Files changed
 
 - `crates/kairo-ecs-pdes/Cargo.toml`
 - `crates/kairo-ecs-pdes/src/lib.rs`
 - `conductor/tracks/48-time-warp-optimistic-rollback-runtime/*`
+- `conductor/hpc-evidence/manifests/track48-local-time-warp-rollback-scaffold.json`
 
 ## Contracts consumed
 
 - Track 47 production LP contract.
 - Track 40 trace/replay semantics.
 - Track 46 evidence manifest.
+- Track 49 distributed transport boundary, consumed only as a blocked handoff
+  line for future distributed proof.
 
 ## Contracts changed
 
@@ -56,7 +61,13 @@ Warp scheduler. The current rollback model undoes future positives and emits
 anti-messages for invalidated local inputs; it does not yet preserve a replay
 queue for rolled-back future work or model downstream output anti-messages.
 Optimistic execution beyond conservative safe time, benchmark evidence, live
-HPC evidence, and distributed anti-message transport remain unimplemented.
+HPC evidence, and distributed anti-message transport remain unimplemented. The
+local evidence manifest
+`conductor/hpc-evidence/manifests/track48-local-time-warp-rollback-scaffold.json`
+is scaffold evidence only: it records local rollback/GVT/anti-message contract
+coverage and an explicit `not-live` waiver. It does not prove distributed
+optimistic rollback, cross-rank causality repair, replay redelivery,
+downstream-output anti-message propagation, or live HPC execution.
 
 ## Follow-up issues
 
@@ -64,12 +75,22 @@ HPC evidence, and distributed anti-message transport remain unimplemented.
   required Track 49 redelivery contract before any production Time Warp claim.
 - Model downstream output anti-messages separately from canceled input events.
 - Add rollback overhead benchmarks.
+- Replace the local scaffold manifest with live distributed rollback evidence
+  that records transport implementation, MPI/gRPC rank topology, raw artifacts,
+  checksums, and reviewer acceptance before any `evidence-backed` Time Warp
+  release claim.
 
 ## Integration notes
 
 Any ECS storage changes require ecs-agent handoff before implementation. Track
 49 can draft transport tests around `TimeWarpEventId` and `TimeWarpMessageKind`,
-but distributed delivery remains out of scope for this slice.
+but distributed delivery remains out of scope for this slice. A valid
+distributed optimistic rollback proof must come from Track 48 plus Track 49
+integration and include at least: straggler delivery across process or rank
+boundaries, deterministic anti-message routing for invalidated downstream
+outputs, replay/redelivery of rolled-back future positives, GVT advancement
+across participants, raw run artifacts, and checksums. The local manifest gate
+validates evidence shape and claim boundaries only.
 
 ## Phase closeout evidence
 
@@ -89,6 +110,7 @@ Passing implementation gates:
 - `CARGO_INCREMENTAL=0 rustup run stable-x86_64-pc-windows-gnu cargo clippy --workspace --all-targets --all-features --jobs 1 -- -D warnings`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_phase_gates.ps1`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1`
+- `node scripts/validation/validate-hpc-parity-evidence.mjs`
 
 Initial full-workspace attempts without `--jobs 1` failed with OS error 112,
 "There is not enough space on the disk." Removing generated build output and
