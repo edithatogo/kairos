@@ -7,6 +7,7 @@
 | ADIOS2 roundtrip | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --features adios2` | Done |
 | Restart parity | `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-arrow --test checkpoint_restart` | Review |
 | Live-template blocker guard | `node scripts/validation/validate-hpc-live-template-blockers.mjs` | Review and Done |
+| Free compute route boundary | `node scripts/validation/validate-free-compute-routes.mjs` | Review |
 | Full workspace | `rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features` | Phase closeout |
 | Phase gates | `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | Phase movement |
 | Git closeout | `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` | Closeout |

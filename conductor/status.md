@@ -239,6 +239,13 @@ which prevents Tracks 51, 52, and 55 from being treated as `Done` while their
 live parallel-filesystem, GPU-hardware, or weak/strong scaling evidence remains
 only `live-hpc-template` manifests.
 
+The free or near-free compute route matrix at `conductor/free-compute-routes.json`
+is validated by `scripts/validation/validate-free-compute-routes.mjs`. It allows
+GitHub Actions, Docker-on-GitHub-hosted runners, and Hugging Face Spaces to
+reduce CPU/container/demo blockers, while explicitly preserving the live-HPC
+blockers for Slurm, MPI multi-node, Lustre/GPFS, native GPU benchmarking, and
+weak/strong scaling certification.
+
 Tracks 56-61 were added on 2026-06-19 as the open game theory ontology and
 multi-game runtime wave. They split the earlier monolithic Track 56 concept into
 granular implementation tracks. Track 56 is now `In Review` with the wave

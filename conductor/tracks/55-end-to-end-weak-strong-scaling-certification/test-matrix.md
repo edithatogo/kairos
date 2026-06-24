@@ -6,6 +6,7 @@
 | Regression threshold coverage | `python benches/regression/compare.py` | Review |
 | HPC evidence manifest shape | `node scripts/validation/validate-hpc-parity-evidence.mjs` | Review |
 | Live-template blocker guard | `node scripts/validation/validate-hpc-live-template-blockers.mjs` | Review and Done |
+| Free compute route boundary | `node scripts/validation/validate-free-compute-routes.mjs` | Review |
 | Scaling certification contract | `node scripts/validation/validate-hpc-scaling-certification.mjs --self-test` | Review |
 | Weak scaling run | `python benches/hpc/run_scaling.py --mode weak --manifest conductor/tracks/55-end-to-end-weak-strong-scaling-certification/evidence.json` | Done |
 | Strong scaling run | `python benches/hpc/run_scaling.py --mode strong --manifest conductor/tracks/55-end-to-end-weak-strong-scaling-certification/evidence.json` | Done |

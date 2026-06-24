@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths:
       - 'conductor/**'
+      - 'docs/cloud-hpc/free-compute-blocker-plan.md'
       - '.github/workflows/**'
       - 'scripts/validate_conductor*.ps1'
       - 'scripts/validation/**'
@@ -17,6 +18,7 @@ on:
   pull_request:
     paths:
       - 'conductor/**'
+      - 'docs/cloud-hpc/free-compute-blocker-plan.md'
       - '.github/workflows/**'
       - 'scripts/validate_conductor*.ps1'
       - 'scripts/validation/**'
@@ -59,6 +61,9 @@ jobs:
 
       - name: Validate Track 13 metadata alignment
         run: node scripts/validation/validate-track13-metadata.mjs
+
+      - name: Validate free compute blocker routes
+        run: node scripts/validation/validate-free-compute-routes.mjs
 
       - name: Validate track coverage
         run: pwsh -NoProfile -File scripts/validate_track_coverage.ps1
