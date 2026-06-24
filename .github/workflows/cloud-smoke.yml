@@ -14,7 +14,9 @@ on:
       - "docs/cloud-hpc/**"
       - "conductor/free-compute-routes.json"
       - "scripts/validation/validate-free-compute-routes.mjs"
+      - "scripts/validation/validate-docker-runtime-preflight.mjs"
       - "tests/free-compute-routes.test.mjs"
+      - "tests/docker-runtime-preflight.test.mjs"
       - "website/time-travel-demo/**"
       - ".github/workflows/cloud-smoke.yml"
   push:
@@ -27,7 +29,9 @@ on:
       - "docs/cloud-hpc/**"
       - "conductor/free-compute-routes.json"
       - "scripts/validation/validate-free-compute-routes.mjs"
+      - "scripts/validation/validate-docker-runtime-preflight.mjs"
       - "tests/free-compute-routes.test.mjs"
+      - "tests/docker-runtime-preflight.test.mjs"
       - "website/time-travel-demo/**"
       - ".github/workflows/cloud-smoke.yml"
 
@@ -77,6 +81,12 @@ jobs:
 
       - name: Validate free compute blocker routes
         run: node scripts/validation/validate-free-compute-routes.mjs
+
+      - name: Test Docker runtime preflight
+        run: node --test tests/docker-runtime-preflight.test.mjs
+
+      - name: Probe Docker runtime availability
+        run: node scripts/validation/validate-docker-runtime-preflight.mjs --require-docker
 
       - name: Validate time-travel demo fixture
         run: node website/time-travel-demo/validate-demo.mjs

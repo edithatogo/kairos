@@ -38,6 +38,14 @@ Read-only probe on 2026-06-18:
 - `gcloud`: CLI has a configured project, but no GCP Batch mutation was run.
 - `az`: Azure for Students subscription is enabled; no Azure mutation was run in this probe.
 
+Read-only Docker preflight on 2026-06-24:
+
+- `node scripts/validation/validate-docker-runtime-preflight.mjs`: records Docker
+  CLI/daemon readiness when available and returns an explicit blocker otherwise.
+- `node scripts/validation/validate-docker-runtime-preflight.mjs --require-docker`:
+  strict form for CI or live Docker canaries that must fail when Docker is not
+  usable.
+
 ## Evidence format policy
 
 - Runtime evidence must include: command used, runner/cluster/account/region/partition, job identifiers, final status, and output/checkpoint artifact references.
