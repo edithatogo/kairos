@@ -10,6 +10,11 @@ const node = process.execPath;
 const capture = path.join(repoRoot, "scripts", "evidence", "capture-hpc-evidence.mjs");
 const validator = path.join(repoRoot, "scripts", "validation", "validate-hpc-parity-evidence.mjs");
 
+
+function resolvePayloadPath(payloadPath) {
+  return path.isAbsolute(payloadPath) ? payloadPath : path.join(repoRoot, payloadPath);
+}
+
 function runCapture(extraArgs = []) {
   const out = fs.mkdtempSync(path.join(os.tmpdir(), "kairo-hpc-evidence-"));
   const result = spawnSync(
@@ -40,8 +45,8 @@ test("capture utility records a scaffold manifest and checksummed raw artifact",
   const { out, result } = runCapture();
   assert.equal(result.status, 0, result.stderr);
   const payload = JSON.parse(result.stdout);
-  const manifestPath = path.join(repoRoot, payload.manifest);
-  const artifactPath = path.join(repoRoot, payload.artifact);
+  const manifestPath = resolvePayloadPath(payload.manifest);
+  const artifactPath = resolvePayloadPath(payload.artifact);
   assert.ok(manifestPath.startsWith(out));
   assert.ok(fs.existsSync(manifestPath));
   assert.ok(fs.existsSync(artifactPath));
@@ -58,7 +63,7 @@ test("live-hpc capture uses no waiver and passes parity evidence validation when
   const { out, result } = runCapture(["--evidence-class", "live-hpc", "--pushed-ref", "origin/test", "--mpi-implementation", "test-mpi", "--scheduler", "test-slurm"]);
   assert.equal(result.status, 0, result.stderr);
   const payload = JSON.parse(result.stdout);
-  const generatedManifestPath = path.join(repoRoot, payload.manifest);
+  const generatedManifestPath = resolvePayloadPath(payload.manifest);
   const manifest = JSON.parse(fs.readFileSync(generatedManifestPath, "utf8"));
   assert.equal(manifest.evidence_class, "live-hpc");
   assert.equal(manifest.waiver.status, "none");
