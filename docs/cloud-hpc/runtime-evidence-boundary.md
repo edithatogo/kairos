@@ -46,6 +46,18 @@ Read-only Docker preflight on 2026-06-24:
   strict form for CI or live Docker canaries that must fail when Docker is not
   usable.
 
+Read-only Kubernetes, Slurm, and cloud CLI preflight on 2026-06-24:
+
+- `node scripts/validation/validate-external-runtime-preflight.mjs`: records
+  `kubectl`, `sbatch`, `aws`, `gcloud`, and `az` probe availability and
+  distinguishes missing CLI, sandbox-blocked spawn, and failed probe states.
+- `node scripts/validation/validate-external-runtime-preflight.mjs --require-all`:
+  strict form for a live runtime canary host that must have every external CLI
+  available before Kubernetes, Slurm, or provider acceptance evidence can be
+  captured.
+- Passing this preflight is not live runtime proof. It only proves that the
+  runner can start the external control-plane clients needed by the live gates.
+
 ## Evidence format policy
 
 - Runtime evidence must include: command used, runner/cluster/account/region/partition, job identifiers, final status, and output/checkpoint artifact references.
