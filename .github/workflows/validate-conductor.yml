@@ -11,11 +11,13 @@ on:
       - 'conductor/**'
       - 'docs/cloud-hpc/free-compute-blocker-plan.md'
       - 'docs/cloud-hpc/evidence-capture.md'
+      - 'docs/developer-experience/windows-linker-resolution.md'
       - '.github/workflows/**'
       - 'scripts/validate_conductor*.ps1'
       - 'scripts/validation/**'
       - 'scripts/evidence/**'
       - 'tests/hpc-evidence-capture.test.mjs'
+      - 'tests/windows-linker-resolution.test.mjs'
       - 'deny.toml'
       - 'rust-toolchain.toml'
   pull_request:
@@ -23,11 +25,13 @@ on:
       - 'conductor/**'
       - 'docs/cloud-hpc/free-compute-blocker-plan.md'
       - 'docs/cloud-hpc/evidence-capture.md'
+      - 'docs/developer-experience/windows-linker-resolution.md'
       - '.github/workflows/**'
       - 'scripts/validate_conductor*.ps1'
       - 'scripts/validation/**'
       - 'scripts/evidence/**'
       - 'tests/hpc-evidence-capture.test.mjs'
+      - 'tests/windows-linker-resolution.test.mjs'
       - 'deny.toml'
       - 'rust-toolchain.toml'
   schedule:
@@ -73,6 +77,9 @@ jobs:
 
       - name: Test HPC evidence capture utility
         run: node --test tests/hpc-evidence-capture.test.mjs
+
+      - name: Test Windows linker resolution diagnostic
+        run: node --test tests/windows-linker-resolution.test.mjs
 
       - name: Validate track coverage
         run: pwsh -NoProfile -File scripts/validate_track_coverage.ps1
