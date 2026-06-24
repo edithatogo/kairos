@@ -77,6 +77,12 @@
     "53": "pending-live-fmi",
     "54": "pending-live-runtime-acceptance"
   },
+  "hpc_evidence_manifests": {
+    "local_scaling_smoke": "conductor/hpc-evidence/manifests/track55-local-scaling-smoke-scaffold.json",
+    "live_weak_scaling_template": "conductor/hpc-evidence/manifests/track55-live-weak-scaling-template.json",
+    "live_strong_scaling_template": "conductor/hpc-evidence/manifests/track55-live-strong-scaling-template.json",
+    "certification_boundary": "The local scaffold is not live evidence. Weak and strong templates must be replaced by live-hpc manifests before profile status can become certified."
+  },
   "raw_result_policy": {
     "accepted_reference_schemes": [
       "artifact://",
