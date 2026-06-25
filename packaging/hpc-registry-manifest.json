@@ -4,6 +4,7 @@
   "production_publish_default": false,
   "health_floor": 9.5,
   "github_environment": "hpc-publication",
+  "runtime_evidence_manifest": "packaging/hpc-runtime-acceptance-evidence.json",
   "registries": [
     {
       "surface": "OCI image",

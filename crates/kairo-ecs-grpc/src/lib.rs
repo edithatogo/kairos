@@ -16,11 +16,13 @@ pub const GRPC_SERVICE_NAME: &str = "kairo.ecs.simulation.v1.SimulationTransport
 pub enum GrpcContractMessage {
     ExchangeEvents,
     ExchangeEventsReturn,
+    ExchangeAntiMessages,
     MigrationRequest,
     MigrationAck,
     StreamTelemetry,
     GvtProposal,
     GvtDecision,
+    Heartbeat,
 }
 
 /// Dependency-free envelope used by transport contract tests.
@@ -89,6 +91,32 @@ impl GrpcContractEnvelope {
         }
     }
 
+    pub fn anti_message(source_lp: LpId, destination_lp: LpId) -> Self {
+        Self {
+            protocol_id: GRPC_PROTOCOL_ID,
+            protocol_version: GRPC_PROTOCOL_VERSION,
+            service: GRPC_SERVICE_NAME,
+            kind: GrpcContractMessage::ExchangeAntiMessages,
+            source_lp,
+            destination_lp: Some(destination_lp),
+            migration_id: None,
+            payload_bytes: 0,
+        }
+    }
+
+    pub fn heartbeat(source_lp: LpId) -> Self {
+        Self {
+            protocol_id: GRPC_PROTOCOL_ID,
+            protocol_version: GRPC_PROTOCOL_VERSION,
+            service: GRPC_SERVICE_NAME,
+            kind: GrpcContractMessage::Heartbeat,
+            source_lp,
+            destination_lp: None,
+            migration_id: None,
+            payload_bytes: 0,
+        }
+    }
+
     pub fn validate(&self) -> Result<(), ProtocolValidationError> {
         if self.protocol_id != GRPC_PROTOCOL_ID {
             return Err(ProtocolValidationError::ProtocolMismatch);
@@ -137,6 +165,27 @@ impl Default for GrpcTransportConfig {
             heartbeat_interval: Duration::from_secs(1),
             heartbeat_timeout: Duration::from_secs(10),
         }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcRetryPolicy {
+    pub max_attempts: u32,
+    pub base_delay: Duration,
+    pub max_delay: Duration,
+    pub retry_on_unavailable: bool,
+}
+
+impl GrpcRetryPolicy {
+    pub fn validate(&self) -> Result<(), ProtocolValidationError> {
+        if self.max_attempts == 0
+            || self.base_delay.is_zero()
+            || self.max_delay.is_zero()
+            || self.base_delay > self.max_delay
+        {
+            return Err(ProtocolValidationError::InvalidRetryPolicy);
+        }
+        Ok(())
     }
 }
 
@@ -308,15 +357,128 @@ pub fn local_two_node_contract_proof() -> Result<GrpcLocalTwoNodeProof, Protocol
     })
 }
 
+/// Command contract for a real two-process gRPC launch.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcProcessLaunchPlan {
+    pub process_count: u32,
+    pub server_endpoint: String,
+    pub client_endpoint: String,
+    pub service: String,
+}
+
+impl GrpcProcessLaunchPlan {
+    pub fn validate(&self) -> Result<(), ProtocolValidationError> {
+        if self.process_count < 2 {
+            return Err(ProtocolValidationError::InvalidProcessCount);
+        }
+        if self.service != GRPC_SERVICE_NAME {
+            return Err(ProtocolValidationError::InvalidService);
+        }
+        if !is_supported_endpoint(&self.server_endpoint) {
+            return Err(ProtocolValidationError::InvalidEndpoint(
+                self.server_endpoint.clone(),
+            ));
+        }
+        if !is_supported_endpoint(&self.client_endpoint)
+            || self.client_endpoint == self.server_endpoint
+        {
+            return Err(ProtocolValidationError::InvalidEndpoint(
+                self.client_endpoint.clone(),
+            ));
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcTwoProcessSmokeContract {
+    pub process_count: u32,
+    pub server_endpoint: String,
+    pub client_endpoint: String,
+    pub service: String,
+    pub real_grpc_runtime_claimed: bool,
+}
+
+pub fn grpc_two_process_smoke_contract(
+    launch: &GrpcProcessLaunchPlan,
+) -> Result<GrpcTwoProcessSmokeContract, ProtocolValidationError> {
+    launch.validate()?;
+    Ok(GrpcTwoProcessSmokeContract {
+        process_count: launch.process_count,
+        server_endpoint: launch.server_endpoint.clone(),
+        client_endpoint: launch.client_endpoint.clone(),
+        service: launch.service.clone(),
+        real_grpc_runtime_claimed: false,
+    })
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcVersionedComponentBlob {
+    pub component_type_id: String,
+    pub generation: u64,
+    pub payload: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcPendingEventMetadata {
+    pub source_lp: LpId,
+    pub dest_lp: LpId,
+    pub tick: Tick,
+    pub sequence: u64,
+    pub payload_bytes: usize,
+    pub anti_message: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GrpcEntityMigrationSnapshot {
+    pub entity: EntityId,
+    pub source_lp: LpId,
+    pub dest_lp: LpId,
+    pub migration_id: String,
+    pub components: Vec<GrpcVersionedComponentBlob>,
+    pub pending_events: Vec<GrpcPendingEventMetadata>,
+}
+
+impl GrpcEntityMigrationSnapshot {
+    pub fn validate(&self) -> Result<(), ProtocolValidationError> {
+        validate_migration_envelope(
+            self.source_lp,
+            self.dest_lp,
+            &self.migration_id,
+            self.components.iter().map(|component| {
+                (
+                    component.component_type_id.as_str(),
+                    component.payload.as_slice(),
+                )
+            }),
+        )?;
+
+        for event in &self.pending_events {
+            if event.source_lp == event.dest_lp {
+                return Err(ProtocolValidationError::SelfMigration(event.source_lp));
+            }
+            if event.payload_bytes == 0 && !event.anti_message {
+                return Err(ProtocolValidationError::EmptyComponentPayload(
+                    "pending-event".to_string(),
+                ));
+            }
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ProtocolValidationError {
     ProtocolMismatch,
     ProtocolVersionMismatch { expected: u16, got: u16 },
     InvalidService,
+    InvalidProcessCount,
     DuplicatePeer(LpId),
     SelfPeer(LpId),
     InvalidEndpoint(String),
     InvalidTimeouts,
+    InvalidRetryPolicy,
     InvalidMigrationId,
     SelfMigration(LpId),
     EmptyComponentSet,
@@ -644,12 +806,18 @@ mod tests {
     fn grpc_contract_envelopes_track_protocol_identity() {
         let exchange = GrpcContractEnvelope::exchange_events(LpId(1), LpId(2), 4);
         let gvt = GrpcContractEnvelope::gvt(LpId(0));
+        let anti = GrpcContractEnvelope::anti_message(LpId(1), LpId(2));
+        let heartbeat = GrpcContractEnvelope::heartbeat(LpId(1));
 
         assert_eq!(exchange.validate(), Ok(()));
         assert_eq!(gvt.validate(), Ok(()));
+        assert_eq!(anti.validate(), Ok(()));
+        assert_eq!(heartbeat.validate(), Ok(()));
         assert_eq!(exchange.protocol_id, GRPC_PROTOCOL_ID);
         assert_eq!(exchange.protocol_version, GRPC_PROTOCOL_VERSION);
         assert_eq!(exchange.destination_lp, Some(LpId(2)));
+        assert_eq!(anti.kind, GrpcContractMessage::ExchangeAntiMessages);
+        assert_eq!(heartbeat.kind, GrpcContractMessage::Heartbeat);
     }
 
     #[test]
@@ -832,6 +1000,35 @@ mod tests {
     }
 
     #[test]
+    fn retry_policy_rejects_zero_attempts_and_inverted_backoff() {
+        let policy = GrpcRetryPolicy {
+            max_attempts: 3,
+            base_delay: Duration::from_millis(10),
+            max_delay: Duration::from_millis(250),
+            retry_on_unavailable: true,
+        };
+
+        assert_eq!(policy.validate(), Ok(()));
+        assert_eq!(
+            GrpcRetryPolicy {
+                max_attempts: 0,
+                ..policy.clone()
+            }
+            .validate(),
+            Err(ProtocolValidationError::InvalidRetryPolicy)
+        );
+        assert_eq!(
+            GrpcRetryPolicy {
+                base_delay: Duration::from_millis(500),
+                max_delay: Duration::from_millis(100),
+                ..policy
+            }
+            .validate(),
+            Err(ProtocolValidationError::InvalidRetryPolicy)
+        );
+    }
+
+    #[test]
     fn local_two_node_contract_proof_covers_event_migration_telemetry_and_failure() {
         let proof = local_two_node_contract_proof().unwrap();
 
@@ -842,5 +1039,78 @@ mod tests {
         assert!(proof.simulation_continues_after_non_leader_failure);
         assert!(proof.final_state_parity);
         assert!(!proof.real_grpc_runtime_claimed);
+    }
+
+    #[test]
+    fn grpc_two_process_launch_contract_requires_distinct_real_socket_endpoints() {
+        let launch = GrpcProcessLaunchPlan {
+            process_count: 2,
+            server_endpoint: "http://127.0.0.1:50051".to_string(),
+            client_endpoint: "http://127.0.0.1:50052".to_string(),
+            service: GRPC_SERVICE_NAME.to_string(),
+        };
+
+        let smoke = grpc_two_process_smoke_contract(&launch).unwrap();
+
+        assert_eq!(smoke.process_count, 2);
+        assert_eq!(smoke.service, GRPC_SERVICE_NAME);
+        assert!(!smoke.real_grpc_runtime_claimed);
+        assert_eq!(
+            grpc_two_process_smoke_contract(&GrpcProcessLaunchPlan {
+                process_count: 1,
+                ..launch
+            }),
+            Err(ProtocolValidationError::InvalidProcessCount)
+        );
+    }
+
+    #[test]
+    fn grpc_entity_migration_snapshot_preserves_generation_and_pending_events() {
+        let snapshot = GrpcEntityMigrationSnapshot {
+            entity: EntityId::new(77, 5),
+            source_lp: LpId(2),
+            dest_lp: LpId(3),
+            migration_id: "grpc-migrate-77".to_string(),
+            components: vec![GrpcVersionedComponentBlob {
+                component_type_id: "utility".to_string(),
+                generation: 9,
+                payload: vec![4, 5, 6],
+            }],
+            pending_events: vec![GrpcPendingEventMetadata {
+                source_lp: LpId(2),
+                dest_lp: LpId(3),
+                tick: Tick::from_ticks(13),
+                sequence: 21,
+                payload_bytes: 16,
+                anti_message: false,
+            }],
+        };
+
+        assert_eq!(snapshot.validate(), Ok(()));
+        assert_eq!(snapshot.entity.generation, 5);
+        assert_eq!(snapshot.components[0].generation, 9);
+        assert_eq!(snapshot.pending_events[0].tick, Tick::from_ticks(13));
+    }
+
+    #[test]
+    fn grpc_proto_contract_covers_generation_pending_events_heartbeats_and_antimessages() {
+        let proto = include_str!("../proto/simulation.proto");
+
+        for required in [
+            "uint64 generation",
+            "repeated PendingEvent pending_events",
+            "message PendingEvent",
+            "bool anti_message",
+            "message Heartbeat",
+            "message RetryPolicy",
+            "message AntiMessage",
+            "rpc ExchangeAntiMessages",
+            "rpc Heartbeat",
+        ] {
+            assert!(
+                proto.contains(required),
+                "simulation.proto missing required Track 49 contract token: {required}"
+            );
+        }
     }
 }

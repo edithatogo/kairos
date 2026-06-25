@@ -1,0 +1,62 @@
+{
+  "schema_version": "kairoecs.hpc.scaling.scenarios.v1",
+  "track_id": "55",
+  "scenarios": [
+    {
+      "id": "des_event_queue_baseline",
+      "category": "des",
+      "description": "Discrete-event scheduler throughput with fixed event payload shape.",
+      "upstream_track": "47",
+      "required_runtime": "pdes"
+    },
+    {
+      "id": "abm_agent_transition_batch",
+      "category": "abm",
+      "description": "Agent transition batches with deterministic state update parity.",
+      "upstream_track": "52",
+      "required_runtime": "wgpu-backend or cuda-backend"
+    },
+    {
+      "id": "hybrid_pdes_abm_checkpoint",
+      "category": "hybrid",
+      "description": "Hybrid DES and ABM scenario with checkpoint and restart validation.",
+      "upstream_track": "51",
+      "required_runtime": "parallel-io"
+    },
+    {
+      "id": "distributed_time_warp_sync",
+      "category": "distributed",
+      "description": "Distributed LP exchange with rollback pressure and GVT progression.",
+      "upstream_track": "48",
+      "required_runtime": "time-warp"
+    },
+    {
+      "id": "mpi_grpc_entity_migration",
+      "category": "mpi-grpc",
+      "description": "Cross-rank entity migration using MPI or gRPC transport contracts.",
+      "upstream_track": "49",
+      "required_runtime": "mpi or grpc"
+    },
+    {
+      "id": "numa_parallel_io_restart",
+      "category": "numa-io",
+      "description": "NUMA-local event lifecycle with parallel checkpoint write and restore.",
+      "upstream_track": "50",
+      "required_runtime": "numa,parallel-io"
+    },
+    {
+      "id": "fmi_cosim_checkpoint_family",
+      "category": "fmi",
+      "description": "FMI co-simulation family included in scaling certification once Track 53 closes.",
+      "upstream_track": "53",
+      "required_runtime": "fmi-runtime"
+    },
+    {
+      "id": "slurm_cloud_acceptance_family",
+      "category": "scheduler",
+      "description": "Scheduler acceptance family linking Slurm/container/cloud evidence to scaling runs.",
+      "upstream_track": "54",
+      "required_runtime": "slurm/container/cloud"
+    }
+  ]
+}

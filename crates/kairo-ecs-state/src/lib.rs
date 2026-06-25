@@ -331,6 +331,27 @@ impl<T> ComponentStore<T> {
     }
 }
 
+#[cfg(feature = "numa")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ComponentLocalityPlan {
+    pub numa_node_hint: Option<u32>,
+    pub rows: usize,
+    pub dense_bytes: usize,
+    pub cache_local: bool,
+}
+
+#[cfg(feature = "numa")]
+impl ComponentLocalityPlan {
+    pub fn for_store<T>(store: &ComponentStore<T>, numa_node_hint: u32) -> Self {
+        Self {
+            numa_node_hint: Some(numa_node_hint),
+            rows: store.len(),
+            dense_bytes: store.len() * std::mem::size_of::<T>(),
+            cache_local: true,
+        }
+    }
+}
+
 impl<T> Default for ComponentStore<T> {
     fn default() -> Self {
         Self::new()
@@ -387,5 +408,27 @@ impl ComponentRegistry {
 impl Default for ComponentRegistry {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod numa_tests {
+    use super::*;
+
+    #[cfg(feature = "numa")]
+    #[test]
+    fn component_locality_plan_preserves_dense_order_and_node_hint() {
+        let mut store = ComponentStore::with_capacity(4);
+        let first = EntityId::new(0, 0);
+        let second = EntityId::new(1, 0);
+        assert!(store.insert(first, 10_i32));
+        assert!(store.insert(second, 20_i32));
+
+        let plan = ComponentLocalityPlan::for_store(&store, 2);
+
+        assert_eq!(plan.numa_node_hint, Some(2));
+        assert_eq!(plan.rows, 2);
+        assert_eq!(plan.dense_bytes, 2 * std::mem::size_of::<i32>());
+        assert!(plan.cache_local);
     }
 }

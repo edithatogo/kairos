@@ -1,0 +1,88 @@
+{
+  "schema_version": "kairoecs.hpc.runtime-acceptance.v1",
+  "track_id": "54",
+  "claim_status": "blocked",
+  "claim_boundary": "No Docker, Kubernetes, Slurm, AWS, GCP, or Azure KairoECS runtime acceptance claim is approved by this local manifest.",
+  "runtime_scopes": [
+    {
+      "scope": "docker",
+      "status": "blocked",
+      "required_command": "docker build/run kairo-ecs hpc image and cli smoke",
+      "blocker": {
+        "reason": "Docker daemon/runtime proof has not been executed in this workspace.",
+        "owner": "runtime-agent",
+        "expires": "2026-12-31",
+        "evidence_command": "docker build/run kairo-ecs hpc image and cli smoke"
+      }
+    },
+    {
+      "scope": "kubernetes",
+      "status": "blocked",
+      "required_command": "kubectl apply dry-run server for k8s manifests",
+      "blocker": {
+        "reason": "No Kubernetes API server context has validated the manifests.",
+        "owner": "runtime-agent",
+        "expires": "2026-12-31",
+        "evidence_command": "kubectl apply dry-run server for k8s manifests"
+      }
+    },
+    {
+      "scope": "slurm",
+      "status": "blocked",
+      "required_command": "sbatch hpc/slurm/kairo-ecs-smoke.sbatch",
+      "blocker": {
+        "reason": "No Slurm scheduler context is available in this workspace.",
+        "owner": "runtime-agent",
+        "expires": "2026-12-31",
+        "evidence_command": "sbatch hpc/slurm/kairo-ecs-smoke.sbatch"
+      }
+    },
+    {
+      "scope": "aws-batch",
+      "status": "blocked",
+      "required_command": "aws batch submit-job with KairoECS canary payload",
+      "blocker": {
+        "reason": "No AWS Batch account/queue canary has been executed.",
+        "owner": "runtime-agent",
+        "expires": "2026-12-31",
+        "evidence_command": "aws batch submit-job with KairoECS canary payload"
+      }
+    },
+    {
+      "scope": "gcp-batch",
+      "status": "blocked",
+      "required_command": "gcloud batch jobs submit kairo-canary with cloud/gcp/batch-job.json",
+      "blocker": {
+        "reason": "No GCP Batch canary has been executed.",
+        "owner": "runtime-agent",
+        "expires": "2026-12-31",
+        "evidence_command": "gcloud batch jobs submit kairo-canary with cloud/gcp/batch-job.json"
+      }
+    },
+    {
+      "scope": "azure-batch",
+      "status": "blocked",
+      "required_command": "az batch task create with KairoECS canary payload",
+      "blocker": {
+        "reason": "Only Azure Batch substrate proof exists; no KairoECS container/scenario task has run.",
+        "owner": "runtime-agent",
+        "expires": "2026-12-31",
+        "evidence_command": "az batch task create with KairoECS canary payload"
+      }
+    }
+  ],
+  "evidence_policy": {
+    "passed_scope_requires": [
+      "scenario_output",
+      "checksum_sha256",
+      "required_command"
+    ],
+    "checksum_format": "sha256:<64 lowercase hex characters>",
+    "non_passed_scope_requires": [
+      "blocker.reason",
+      "blocker.owner",
+      "blocker.expires",
+      "blocker.evidence_command"
+    ]
+  }
+}

@@ -243,6 +243,118 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **distributed-telemetry-merge**: `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1` - validates the distributed telemetry protocol scaffold and keeps Arrow batch merge claims limited to the documented transport emulator.
 
+### Tracks 46-55 production HPC parity gates
+
+**hpc-parity-charter**: validates that `conductor/hpc-parity-wave.md` exists and defines external parity targets, live-proof rules, evidence fields, and release-claim boundaries for Tracks 46-55.
+
+**hpc-evidence-manifest**: validates that a track claiming live HPC proof records track ID, task ID, commit SHA, pushed ref, hardware, topology, scheduler, toolchain, runtime, command, raw artifact, checksum, reviewer, and waiver status.
+
+**hpc-claim-boundary**: validates that README, docs, packaging, registry, and release-note surfaces use `planned`, `scaffolded`, `fallback-only`, or `evidence-backed` language according to the available manifests.
+
+**pdes-production-lookahead**: validates the production conservative PDES runtime enforces declared LP lookahead and rejects causality-unsafe remote events with typed errors.
+
+**time-warp-rollback-parity**: validates optimistic Time Warp rollback restores final state parity after straggler-message causality violations.
+
+**time-warp-antimessage-integrity**: validates anti-messages cancel exactly the intended positive messages and preserve deterministic envelope identity.
+
+**generational-bitset-rollback**: validates rollback snapshots preserve component generations and prevent stale component access after rollback.
+
+**fossil-collection-safety**: validates fossil collection is gated by GVT and cannot delete state needed for a future rollback.
+
+**real-mpi-multirank**: validates MPI execution across real ranks with a recorded MPI implementation, rank count, launch command, and result artifact.
+
+**real-grpc-node-smoke**: validates gRPC execution across separate OS processes or nodes using real sockets and recorded endpoint evidence.
+
+**numa-topology-discovery**: validates NUMA, core, cache, and memory locality discovery through `hwloc` where available, with typed unsupported results elsewhere.
+
+**core-affinity-binding**: validates opt-in CPU affinity binding, observation, and release semantics without affecting default scheduler behavior.
+
+**event-arena-lifecycle**: validates event arena/pool allocation reuse, lifecycle clearing, and stale-event prevention.
+
+**zero-copy-ffi-layout**: validates FFI pointer layout, alignment, ownership, and lifetime boundaries required for zero-copy data transfer.
+
+**allocator-contention-budget**: validates allocation hot paths avoid global lock contention and record concurrency metrics.
+
+**arrow-recordbatch-real**: validates telemetry and checkpoint output uses real Apache Arrow arrays and record batches rather than smoke-byte encoding.
+
+**hdf5-checkpoint-roundtrip**: validates HDF5 checkpoint export and restart parity with recorded library and platform evidence.
+
+**adios2-checkpoint-roundtrip**: validates ADIOS2 checkpoint export and restart parity with recorded library and platform evidence.
+
+**parallel-filesystem-evidence**: validates Lustre, GPFS, or MPI-I/O write evidence records stripe/block/rank/checksum metadata before throughput claims.
+
+**checkpoint-restart-parity**: validates checkpoint restore reproduces final-state parity, including pending events and component generations.
+
+**real-wgpu-device-dispatch**: validates real `wgpu` adapter/device/queue initialization and compute dispatch on GPU-capable hardware.
+
+**real-cuda-kernel-dispatch**: validates real CUDA context, stream, module, and kernel dispatch on CUDA-capable hardware.
+
+**persistent-device-memory**: validates device buffers remain resident across simulation ticks and records host/device copy boundaries.
+
+**gpu-cpu-parity**: validates GPU batch results match CPU reference results for deterministic DES, ABM, and mixed workloads.
+
+**fmu-archive-roundtrip**: validates `.fmu` zip package extraction, path traversal protection, modelDescription validation, and export repackaging.
+
+**fmi-dynamic-loading**: validates dynamic library symbol binding through typed FMI lifecycle wrappers with cleanup on every error path.
+
+**fmi2-cosim-1000-step**: validates FMI 2 co-simulation master stepping for at least 1,000 scheduler-coupled steps.
+
+**fmi3-cosim-1000-step**: validates FMI 3 co-simulation master stepping for at least 1,000 scheduler-coupled steps.
+
+**openmodelica-roundtrip**: validates exported or imported FMUs round trip through OpenModelica or an explicitly documented equivalent tool.
+
+**container-runtime-kairos**: validates a KairoECS container image builds, runs a scenario, emits output, and records digest plus checksum evidence.
+
+**kubernetes-runtime-kairos**: validates a Kubernetes job runs a KairoECS scenario and records cluster, job, pod, log, output, and checksum evidence.
+
+**slurm-runtime-kairos**: validates Slurm single-job, array-job, MPI, and GPU templates run KairoECS scenarios with recorded job IDs and outputs.
+
+**weak-scaling-profile**: validates weak scaling results across increasing resources with raw manifests, checksums, and hardware/scheduler metadata.
+
+**strong-scaling-profile**: validates strong scaling results for a fixed workload across increasing resources with raw manifests, checksums, and hardware/scheduler metadata.
+
+**end-to-end-hpc-scenario**: validates an integrated scenario exercises PDES, distributed sync, GPU, checkpoint/restart, and FMI paths where relevant.
+
+**scaling-raw-results-policy**: validates scaling plots or summaries link to raw immutable artifacts and do not replace raw evidence.
+
+**hpc-release-certification**: validates Track 55 has reviewed weak/strong scaling evidence before any production-grade HPC parity claim is made.
+
+### Tracks 56-61 open game theory ontology and multi-game runtime gates
+
+**game-theory-charter**: validates that `conductor/game-theory-ontology-wave.md` defines ontology, codegen, Graph-ECS, normal-form, extensive-form, commit-cadence, phase-review, push, and GitHub Actions evidence rules for Tracks 56-61.
+
+**ontology-evidence-manifest**: validates that game-theory track evidence records track ID, task ID, commit SHA, pushed ref, ontology source, parser/generator version, test command, raw fixture path, reviewer, GitHub Actions result, and waiver status.
+
+**github-actions-review**: validates that a pushed track phase records `gh pr checks --watch` or an equivalent GitHub Actions review result before the track moves past `In Review`.
+
+**task-level-commits**: validates that every completed plan task records a corresponding commit using the `track NN task X.Y: <short outcome>` message format, and that the handoff maps commits to tasks.
+
+**turtle-jsonld-ingestion**: validates Turtle and JSON-LD ontology fixtures parse into the canonical ontology IR with typed errors for malformed schemas.
+
+**ontology-roundtrip-fixtures**: validates ontology fixture normalization is deterministic and preserves class IDs, labels, properties, relationships, datatypes, source provenance, and version metadata.
+
+**deterministic-codegen**: validates ontology-to-Rust generation is stable across repeated runs and produces no unreviewed diff.
+
+**generated-component-api-review**: validates generated game-theory components have compatibility review evidence before solver tracks depend on them.
+
+**graph-relations-feature-boundary**: validates graph-relations APIs are unavailable in default builds and available only behind the explicit `graph-relations` feature.
+
+**entity-id-edge-components**: validates Graph-ECS relationship components such as `ChildOf(Entity)` and `TransitionTo(Entity)` store Entity IDs as data rather than pointer topology.
+
+**no-pointer-topology-scan**: validates Graph-ECS and generated game-theory topology code does not use raw pointers, self-referential structs, or boxed graph node ownership.
+
+**payoff-matrix-components**: validates normal-form payoff matrix components enforce player, action, shape, ordering, and utility-domain invariants.
+
+**strategy-space-components**: validates strategy-space components encode player/action availability and deterministic iteration over flat ECS data.
+
+**normal-form-solver-parity**: validates normal-form solver systems match golden fixtures for best response, pure Nash equilibrium, and dominated-strategy elimination.
+
+**graph-traversal-solver-parity**: validates extensive-form solvers traverse Graph-ECS relations deterministically and match golden sequential-game fixtures.
+
+**sequential-game-fixtures**: validates extensive-form fixture coverage for decision nodes, chance nodes, information sets, terminal utility, malformed topology, and cycle rejection.
+
+**end-to-end-multigame-certification**: validates Track 61 evidence spans ontology ingestion, codegen, graph relations, normal-form solvers, extensive-form solvers, benchmarks, review outcomes, pushed refs, and GitHub Actions review.
+
 ### Tracks 36-40 streaming, ML, FMI, cloud/HPC, and debugging gates
 
 **kafka-smoke**: `cargo test -p kairo-ecs-streaming --features kafka` - validates the dependency-free Kafka feature surface and adapter type alias exposed by the Track 36 R2 scaffold. It does not prove a live Kafka broker connection until a broker-backed integration harness is added.

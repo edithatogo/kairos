@@ -1,0 +1,100 @@
+{
+  "schema_version": "kairoecs.hpc.scaling.evidence.v1",
+  "track_id": "55",
+  "certification_status": "blocked-upstream-live-evidence",
+  "claim_boundary": "No production HPC parity, weak scaling, or strong scaling claim is approved by this draft manifest.",
+  "profiles": [
+    {
+      "mode": "weak",
+      "status": "blocked",
+      "scenario_ids": [
+        "des_event_queue_baseline",
+        "abm_agent_transition_batch",
+        "hybrid_pdes_abm_checkpoint",
+        "distributed_time_warp_sync",
+        "mpi_grpc_entity_migration",
+        "numa_parallel_io_restart",
+        "fmi_cosim_checkpoint_family",
+        "slurm_cloud_acceptance_family"
+      ],
+      "required_metrics": [
+        "throughput_events_per_second",
+        "parallel_efficiency",
+        "memory_gib",
+        "io_write_gib_per_second",
+        "rollback_rate",
+        "gvt_lag_seconds",
+        "gpu_batch_throughput",
+        "fmi_step_latency_ms"
+      ],
+      "raw_results": [],
+      "blocker": {
+        "status": "active",
+        "reason": "Tracks 47-54 have not all produced live runtime evidence.",
+        "owner": "performance-agent",
+        "expires": "2026-12-31"
+      }
+    },
+    {
+      "mode": "strong",
+      "status": "blocked",
+      "scenario_ids": [
+        "des_event_queue_baseline",
+        "abm_agent_transition_batch",
+        "hybrid_pdes_abm_checkpoint",
+        "distributed_time_warp_sync",
+        "mpi_grpc_entity_migration",
+        "numa_parallel_io_restart",
+        "fmi_cosim_checkpoint_family",
+        "slurm_cloud_acceptance_family"
+      ],
+      "required_metrics": [
+        "fixed_workload_size",
+        "wall_time_seconds",
+        "speedup",
+        "parallel_efficiency",
+        "memory_gib",
+        "io_write_gib_per_second",
+        "rollback_rate",
+        "gvt_lag_seconds"
+      ],
+      "raw_results": [],
+      "blocker": {
+        "status": "active",
+        "reason": "Tracks 47-54 have not all produced live runtime evidence.",
+        "owner": "performance-agent",
+        "expires": "2026-12-31"
+      }
+    }
+  ],
+  "upstream_tracks": {
+    "47": "pending-live-pdes",
+    "48": "pending-live-time-warp",
+    "49": "pending-live-mpi-grpc",
+    "50": "pending-live-numa",
+    "51": "pending-live-parallel-io",
+    "52": "pending-live-gpu",
+    "53": "pending-live-fmi",
+    "54": "pending-live-runtime-acceptance"
+  },
+  "hpc_evidence_manifests": {
+    "local_scaling_smoke": "conductor/hpc-evidence/manifests/track55-local-scaling-smoke-scaffold.json",
+    "live_weak_scaling_template": "conductor/hpc-evidence/manifests/track55-live-weak-scaling-template.json",
+    "live_strong_scaling_template": "conductor/hpc-evidence/manifests/track55-live-strong-scaling-template.json",
+    "certification_boundary": "The local scaffold is not live evidence. Weak and strong templates must be replaced by live-hpc manifests before profile status can become certified."
+  },
+  "raw_result_policy": {
+    "accepted_reference_schemes": [
+      "artifact://",
+      "s3://",
+      "gs://",
+      "az://",
+      "file://"
+    ],
+    "checksum_format": "sha256:<64 lowercase hex characters>",
+    "certification_requires_profiles": [
+      "weak",
+      "strong"
+    ]
+  }
+}

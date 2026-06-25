@@ -40,3 +40,10 @@ Before any task or phase in this track is marked complete, and before the next p
 6. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` to verify recorded commits, pushed refs, and cleanup state.
 8. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
+
+## Archive boundary
+
+- [x] Review and archive the repo-side guarded cloud/HPC publication and runtime-evidence gate as Done.
+- [x] Verify the guarded registry manifest and runtime evidence validator pass while keeping production_claim_status blocked.
+- [x] Verify protected publish mode fails until live publication evidence and all required runtime scopes are passed.
+- [x] Record that Docker, Kubernetes, Slurm, AWS Batch, GCP Batch, Azure KairoECS scenario canaries, protected publication, and release-manager approval remain release-gated and are not claimed by this archive.

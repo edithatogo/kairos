@@ -1,0 +1,54 @@
+{
+  "schema_version": "kairoecs.hpc.evidence.v1",
+  "track_id": "NN",
+  "task_id": "N.N",
+  "commit_sha": "0000000000000000000000000000000000000000",
+  "pushed_ref": "refs/remotes/origin/<branch-containing-proof>",
+  "evidence_class": "live-hpc-template",
+  "capability": "Replace with the exact live HPC capability under proof.",
+  "hardware": {
+    "cpu_model": "Replace with CPU model.",
+    "cpu_topology": "Replace with socket/core/thread/cache topology.",
+    "memory_topology": "Replace with NUMA node, memory size, and locality topology.",
+    "accelerator_model": "Replace with GPU/accelerator model or state none when not relevant.",
+    "driver": "Replace with driver/runtime version or state none when not relevant."
+  },
+  "system": {
+    "operating_system": "Replace with OS image, kernel, and architecture."
+  },
+  "toolchain": {
+    "rust_toolchain": "Replace with rustc/cargo version.",
+    "compiler": "Replace with C/C++/CUDA compiler versions when relevant.",
+    "mpi_implementation": "Replace with MPI implementation and version or none when not relevant.",
+    "scheduler": "Replace with Slurm/Kubernetes/provider scheduler version or none when not relevant."
+  },
+  "runtime": {
+    "command": "Replace with the exact command line used to generate evidence.",
+    "environment": {
+      "RUSTFLAGS": "Replace with effective value or none.",
+      "LD_LIBRARY_PATH": "Replace with effective value or none."
+    },
+    "feature_flags": [
+      "replace-with-feature-gates"
+    ],
+    "input_scenario": "Replace with scenario, seed manifest, FMU, checkpoint, or benchmark input."
+  },
+  "storage": {
+    "filesystem_or_object_store": "Replace with local, Lustre, GPFS, object store, or provider storage details."
+  },
+  "result": {
+    "expected": "Replace with acceptance threshold.",
+    "observed": "Replace with measured result.",
+    "raw_artifact_path": "Replace with immutable artifact path.",
+    "checksum": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "review": {
+    "reviewer": "Replace with reviewer name or handle.",
+    "evidence_date": "YYYY-MM-DD"
+  },
+  "waiver": {
+    "status": "template-required",
+    "owner": "Replace with owning downstream track.",
+    "expires": "Replace with waiver expiry or none for real live-hpc manifests."
+  }
+}

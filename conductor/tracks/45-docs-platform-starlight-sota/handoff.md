@@ -1,5 +1,7 @@
 # 45 Astro/Starlight Docs Platform and Polyglot Experience - handoff.md
 
+Last updated: 2026-06-23
+
 ## Summary
 
 2026-05-19: Track 45 formalizes the active Astro/Starlight docs platform and adds a dedicated SOTA validator for versioning, the local polyglot plugin, llms.txt, icons, generated search, and archive-route evidence.
@@ -55,3 +57,14 @@ Run `$conductor-review` before advancing this track. Apply accepted fixes in own
 - pushed ref: `origin/codex/kairos-conductor-closeout` after branch push.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed on 2026-06-18 after restoring `origin/conductor-close-reviewed-tracks-20260510` to historical tip `a7e6f4a68bad9aa9483997d3a0207031066929a1`.
 - next-phase decision: keep Track 45 `In Review` until pull-request CI confirms the branch.
+
+## Archive review - 2026-06-23
+
+- `$conductor-review`: focused archive review found no remaining in-scope source defects in the Track 45 active Astro/Starlight docs-platform surface.
+- accepted fixes: archive/status bookkeeping only; no code-path fixes were required.
+- validation: `npm --prefix website run check:sota` passed after the sandboxed run hit Windows `spawn EPERM`; `npm --prefix website run check:all` passed with link validation, Astro build, generated compatibility routes, and docs quality validation; `node scripts/dx/validate-docs-workflow.mjs` passed with docs dev smoke; Conductor phase-gate, DAG, and artifact validators passed with 0 errors and 0 warnings.
+- residual scope: TypeDoc, OpenAPI, hosted DocSearch, and live hosted-search operations remain deferred activation-condition work and are not claimed by this archive.
+- archive decision: Track 45 is `Done` for the repo-side active docs-platform gate.
+
+- archive commit SHA: `c1ae99b516db2c7375508ff0b02d5536f385ecff`.
+- pushed ref: `origin/codex/kairos-hpc-parity-wave` pending final push confirmation.

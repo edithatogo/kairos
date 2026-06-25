@@ -1,10 +1,10 @@
 # Handoff: Track 32 GPU Compute Acceleration
 
-Last updated: 2026-05-11
+Last updated: 2026-06-23
 
 ## Status
 
-Initial scaffold implemented and tightened. Native GPU backends now expose explicit `*-backend-not-configured` contracts instead of silently falling back to CPU work. The crate facade, buffer/transfer layers, host-side execution plan helpers, WGSL shader scaffolds, CPU fallback parity harnesses, GPU compute documentation, hardware-independent memory/dispatch contracts, and local feature-isolation validator exist.
+Archived as `Done` for the legacy optional GPU scaffold after focused review on 2026-06-23. Native GPU backends expose explicit `*-backend-not-configured` contracts instead of silently falling back to CPU work. The crate facade, buffer/transfer layers, host-side execution plan helpers, WGSL shader scaffolds, CPU fallback parity harnesses, GPU compute documentation, hardware-independent memory/dispatch contracts, persistent-memory contract tests, and local feature-isolation/runtime validator exist. Real native GPU execution, hardware parity, and benchmark evidence are not claimed by this archive and remain owned by Track 52 plus the production HPC parity wave.
 
 ## Summary
 
@@ -142,3 +142,11 @@ but real GPU parity, performance, and benchmark evidence still need hardware.
 - Accepted fix: `docs/gpu-compute/colab-gpu-smoke.md` now has a maturity label, reproducibility command, expected output, and explicit Track 32 evidence boundary.
 - Validation: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\32-gpu-compute-acceleration\validate-track32.ps1 -RunRuntimeTests` passed with 10 GPU unit tests, 4 contract tests, ABM parity, DES parity, and doc-tests.
 - Next-phase decision: remain `In Review`; this closes the local review finding but does not replace real GPU hardware parity, performance, or benchmark evidence.
+
+## Archive review -- 2026-06-23
+
+- Review result: no additional in-scope source defects were found for the legacy Track 32 scaffold. The remaining live GPU execution, hardware parity, persistent native device-memory, and benchmark requirements are intentionally carried by Track 52 and the HPC parity wave rather than by reopening this scaffold track.
+- Accepted fix: registry and closeout surfaces were reconciled from `In Review`/pending placeholders to an archived `Done` state for Track 32 only.
+- Validation: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\32-gpu-compute-acceleration\validate-track32.ps1 -RunRuntimeTests` passed on 2026-06-23 with 10 GPU unit tests, 4 contract tests, ABM parity, DES parity, 3 persistent-memory tests, and doc-tests.
+- Deferred by scope: no real GPU hardware parity, 10x speedup, or 10M-entity memory-budget evidence is attached to Track 32. Public GPU acceleration claims remain blocked until Track 52 and downstream live-HPC gates attach hardware evidence.
+- Next-phase decision: Track 32 is archived as `Done`; future native GPU execution work must proceed through Track 52 rather than this legacy scaffold track.

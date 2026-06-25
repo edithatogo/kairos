@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "generated_fixture": "game_components.rs",
+  "source_fixtures": [
+    "schemas/turtle/normal-form.ttl",
+    "schemas/turtle/extensive-form.ttl",
+    "schemas/jsonld/normal-form.jsonld",
+    "schemas/jsonld/extensive-form.jsonld"
+  ],
+  "determinism_contract": "byte-identical rustfmt-compatible output from normalized ontology IR",
+  "track": "58-ontology-rust-component-codegen"
+}

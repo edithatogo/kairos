@@ -1,5 +1,7 @@
 #![forbid(unsafe_code)]
 
+#[cfg(feature = "time-warp")]
+use std::collections::BTreeSet;
 use std::collections::{BTreeMap, VecDeque};
 
 use kairo_ecs_types::{EntityId, SimDuration, SimTime};
@@ -74,9 +76,34 @@ impl TransportError {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PdesError {
     DuplicateLogicalProcess(LpId),
-    MismatchedWorldSegment { lp_id: LpId, segment_id: LpId },
+    MismatchedWorldSegment {
+        lp_id: LpId,
+        segment_id: LpId,
+    },
     SelfLoopNeighbor(LpId),
-    DuplicateNeighbor { lp_id: LpId, neighbor: LpId },
+    DuplicateNeighbor {
+        lp_id: LpId,
+        neighbor: LpId,
+    },
+    LookaheadViolation {
+        lp_id: LpId,
+        event_tick: Tick,
+        minimum_tick: Tick,
+    },
+    StragglerEvent {
+        lp_id: LpId,
+        event_tick: Tick,
+        local_time: Tick,
+    },
+    LookaheadOverflow {
+        lp_id: LpId,
+        local_time: Tick,
+        lookahead: SimDuration,
+    },
+    InvalidPartitionCount,
+    InvalidPartitionLookahead,
+    EmptyPartitionEntities,
+    DuplicatePartitionEntity(EntityId),
     Transport(TransportError),
 }
 
@@ -203,8 +230,18 @@ impl PdesTransport for ThreadChannelTransport {
 pub struct PdesScheduler<T: PdesTransport> {
     lps: BTreeMap<LpId, Box<dyn LogicalProcess>>,
     neighbors: BTreeMap<LpId, Vec<LpId>>,
+    inbound_safe_times: BTreeMap<LpId, BTreeMap<LpId, Tick>>,
+    stalled_steps: BTreeMap<LpId, usize>,
     transport: T,
     gvt: Tick,
+}
+
+/// Observable conservative scheduler progression state.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PdesRuntimeStatus {
+    pub gvt: Tick,
+    pub safe_time_frontier: BTreeMap<LpId, Tick>,
+    pub stalled_lps: BTreeMap<LpId, usize>,
 }
 
 impl<T: PdesTransport> PdesScheduler<T> {
@@ -212,6 +249,8 @@ impl<T: PdesTransport> PdesScheduler<T> {
         Self {
             lps: BTreeMap::new(),
             neighbors: BTreeMap::new(),
+            inbound_safe_times: BTreeMap::new(),
+            stalled_steps: BTreeMap::new(),
             transport,
             gvt: SimTime::ZERO,
         }
@@ -254,6 +293,8 @@ impl<T: PdesTransport> PdesScheduler<T> {
 
         lp.init(lp_id, &world_segment);
         self.neighbors.insert(lp_id, unique_neighbors);
+        self.inbound_safe_times.entry(lp_id).or_default();
+        self.stalled_steps.entry(lp_id).or_default();
         self.lps.insert(lp_id, lp);
         Ok(())
     }
@@ -266,60 +307,104 @@ impl<T: PdesTransport> PdesScheduler<T> {
         &self.transport
     }
 
+    pub fn runtime_status(&self) -> PdesRuntimeStatus {
+        let safe_time_frontier = self
+            .lps
+            .keys()
+            .copied()
+            .map(|lp_id| (lp_id, self.safe_time_frontier(lp_id)))
+            .collect();
+        let stalled_lps = self
+            .stalled_steps
+            .iter()
+            .filter_map(|(lp_id, stalled_steps)| {
+                if *stalled_steps > 0 {
+                    Some((*lp_id, *stalled_steps))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        PdesRuntimeStatus {
+            gvt: self.gvt,
+            safe_time_frontier,
+            stalled_lps,
+        }
+    }
+
     pub fn step_until(&mut self, until: Tick) -> Result<(), PdesError> {
         let lp_ids: Vec<LpId> = self.lps.keys().copied().collect();
 
         for lp_id in &lp_ids {
             let inbound = self.transport.recv(*lp_id).map_err(PdesError::Transport)?;
-            let mut safe_until = until;
-            let events = inbound
-                .into_iter()
-                .filter_map(|message| match message {
-                    PdesMessage::Event(event) => Some(event),
-                    PdesMessage::Null(message) => {
-                        safe_until = safe_until.min(message.safe_time);
-                        None
+            let local_time = self
+                .lps
+                .get(lp_id)
+                .expect("lp id came from scheduler map")
+                .local_time();
+            let mut events = Vec::new();
+            for message in inbound {
+                match message {
+                    PdesMessage::Event(event) => {
+                        if event.tick < local_time {
+                            return Err(PdesError::StragglerEvent {
+                                lp_id: *lp_id,
+                                event_tick: event.tick,
+                                local_time,
+                            });
+                        }
+                        events.push(event);
                     }
-                })
-                .collect();
+                    PdesMessage::Null(message) => {
+                        self.record_null_message(*lp_id, message);
+                    }
+                }
+            }
+            let safe_until = until.min(self.safe_time_frontier(*lp_id));
 
             if let Some(lp) = self.lps.get_mut(lp_id) {
                 lp.receive_remote_events(events);
-                lp.process_local_events(safe_until.max(lp.local_time()));
+                let current_time = lp.local_time();
+                let bounded_until = safe_until.max(current_time);
+                if bounded_until == current_time && current_time < until {
+                    *self.stalled_steps.entry(*lp_id).or_default() += 1;
+                } else {
+                    self.stalled_steps.insert(*lp_id, 0);
+                }
+                lp.process_local_events(bounded_until);
             }
         }
 
         for lp_id in &lp_ids {
-            if let Some(lp) = self.lps.get_mut(lp_id) {
-                for event in lp.schedule_remote_event() {
-                    self.transport
-                        .send(event.dest_lp, PdesMessage::Event(event))
-                        .map_err(PdesError::Transport)?;
-                }
+            let (minimum_remote_tick, outbound) = {
+                let lp = self
+                    .lps
+                    .get_mut(lp_id)
+                    .expect("lp id came from scheduler map");
+                let minimum_remote_tick = Self::minimum_remote_tick(*lp_id, lp.as_ref())?;
+                let outbound = lp.schedule_remote_event();
+                (minimum_remote_tick, outbound)
+            };
 
-                let safe_time = lp
-                    .local_time()
-                    .checked_add(lp.lookahead())
-                    .unwrap_or(lp.local_time());
-                if let Some(neighbors) = self.neighbors.get(lp_id) {
-                    for neighbor in neighbors {
-                        self.transport
-                            .send(
-                                *neighbor,
-                                PdesMessage::Null(NullMessage {
-                                    source_lp: *lp_id,
-                                    dest_lp: *neighbor,
-                                    safe_time,
-                                }),
-                            )
-                            .map_err(PdesError::Transport)?;
-                    }
+            for event in outbound {
+                if event.tick < minimum_remote_tick {
+                    return Err(PdesError::LookaheadViolation {
+                        lp_id: *lp_id,
+                        event_tick: event.tick,
+                        minimum_tick: minimum_remote_tick,
+                    });
                 }
+                self.transport
+                    .send(event.dest_lp, PdesMessage::Event(event))
+                    .map_err(PdesError::Transport)?;
             }
+
+            self.advertise_null_messages(*lp_id, minimum_remote_tick)?;
         }
 
         self.transport.barrier();
-        self.gvt = self.compute_gvt();
+        self.gvt = self.gvt.max(self.compute_gvt());
 
         for lp in self.lps.values_mut() {
             let advance_tick = self.gvt.max(lp.local_time());
@@ -327,6 +412,54 @@ impl<T: PdesTransport> PdesScheduler<T> {
         }
 
         Ok(())
+    }
+
+    fn minimum_remote_tick(lp_id: LpId, lp: &dyn LogicalProcess) -> Result<Tick, PdesError> {
+        lp.local_time()
+            .checked_add(lp.lookahead())
+            .ok_or(PdesError::LookaheadOverflow {
+                lp_id,
+                local_time: lp.local_time(),
+                lookahead: lp.lookahead(),
+            })
+    }
+
+    fn advertise_null_messages(
+        &mut self,
+        source_lp: LpId,
+        safe_time: Tick,
+    ) -> Result<(), PdesError> {
+        if let Some(neighbors) = self.neighbors.get(&source_lp) {
+            for neighbor in neighbors {
+                self.transport
+                    .send(
+                        *neighbor,
+                        PdesMessage::Null(NullMessage {
+                            source_lp,
+                            dest_lp: *neighbor,
+                            safe_time,
+                        }),
+                    )
+                    .map_err(PdesError::Transport)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn record_null_message(&mut self, lp_id: LpId, message: NullMessage) {
+        self.inbound_safe_times
+            .entry(lp_id)
+            .or_default()
+            .entry(message.source_lp)
+            .and_modify(|current| *current = (*current).max(message.safe_time))
+            .or_insert(message.safe_time);
+    }
+
+    fn safe_time_frontier(&self, lp_id: LpId) -> Tick {
+        self.inbound_safe_times
+            .get(&lp_id)
+            .and_then(|safe_times| safe_times.values().copied().min())
+            .unwrap_or(Tick::from_ticks(u128::MAX))
     }
 
     fn compute_gvt(&mut self) -> Tick {
@@ -337,6 +470,78 @@ impl<T: PdesTransport> PdesScheduler<T> {
             .min()
             .unwrap_or(SimTime::ZERO);
         self.transport.all_reduce_min(local_min)
+    }
+}
+
+/// Deterministic logical-process partition plan for conservative PDES startup.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PartitionPlan {
+    lp_count: u32,
+    lookahead: SimDuration,
+    segments: Vec<WorldSegment>,
+    owners: BTreeMap<EntityId, LpId>,
+}
+
+impl PartitionPlan {
+    pub fn from_entities(
+        lp_count: u32,
+        lookahead: SimDuration,
+        mut entities: Vec<EntityId>,
+    ) -> Result<Self, PdesError> {
+        if lp_count == 0 {
+            return Err(PdesError::InvalidPartitionCount);
+        }
+        if lookahead == SimDuration::ZERO {
+            return Err(PdesError::InvalidPartitionLookahead);
+        }
+        if entities.is_empty() {
+            return Err(PdesError::EmptyPartitionEntities);
+        }
+
+        entities.sort();
+        for pair in entities.windows(2) {
+            if pair[0] == pair[1] {
+                return Err(PdesError::DuplicatePartitionEntity(pair[0]));
+            }
+        }
+
+        let mut segments = (0..lp_count)
+            .map(|index| WorldSegment {
+                id: LpId(index),
+                lp_count,
+                entities: Vec::new(),
+            })
+            .collect::<Vec<_>>();
+        let mut owners = BTreeMap::new();
+
+        for (index, entity) in entities.into_iter().enumerate() {
+            let lp_id = LpId((index as u32) % lp_count);
+            segments[lp_id.0 as usize].entities.push(entity);
+            owners.insert(entity, lp_id);
+        }
+
+        Ok(Self {
+            lp_count,
+            lookahead,
+            segments,
+            owners,
+        })
+    }
+
+    pub fn lp_count(&self) -> u32 {
+        self.lp_count
+    }
+
+    pub fn lookahead(&self) -> SimDuration {
+        self.lookahead
+    }
+
+    pub fn segments(&self) -> &[WorldSegment] {
+        &self.segments
+    }
+
+    pub fn owner_of(&self, entity: EntityId) -> Option<LpId> {
+        self.owners.get(&entity).copied()
     }
 }
 
@@ -387,6 +592,606 @@ pub struct PdesScalingSample {
     pub gvt_samples: usize,
     pub final_state_parity: bool,
     pub hardware_speedup_claimed: bool,
+}
+
+/// Stable identity for a Time Warp message.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct TimeWarpEventId {
+    pub source_lp: LpId,
+    pub dest_lp: LpId,
+    pub tick: Tick,
+    pub sequence: u64,
+}
+
+/// Positive events apply work; anti-messages cancel matching positives.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TimeWarpMessageKind {
+    Positive,
+    Anti,
+}
+
+/// Component delta carried by a Time Warp event.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct TimeWarpDelta {
+    pub entity: EntityId,
+    pub component_slot: u32,
+    pub amount: i128,
+}
+
+/// Dependency-free Time Warp event contract for local rollback tests.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TimeWarpEvent {
+    pub id: TimeWarpEventId,
+    pub kind: TimeWarpMessageKind,
+    pub deltas: Vec<TimeWarpDelta>,
+}
+
+/// Flat component key used by the generation-aware rollback guard.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct TimeWarpComponentKey {
+    pub lp_id: LpId,
+    pub entity: EntityId,
+    pub component_slot: u32,
+}
+
+/// Read token bound to a specific component generation.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct TimeWarpComponentToken {
+    key: TimeWarpComponentKey,
+    generation: u64,
+}
+
+/// Why a positive Time Warp event was invalidated locally.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TimeWarpCancellationReason {
+    RollbackInvalidatedEvent,
+    AntiMessageReceived,
+    PositiveArrivedAfterAntiMessage,
+}
+
+/// Local cancellation metadata emitted alongside anti-message/cancel reports.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct TimeWarpCancellationMetadata {
+    pub event_id: TimeWarpEventId,
+    pub reason: TimeWarpCancellationReason,
+    pub rollback_to: Option<Tick>,
+    pub cancellation_tick: Tick,
+}
+
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum TimeWarpError {
+    StaleGeneration,
+    DuplicatePositiveEvent(TimeWarpEventId),
+    GvtRegression {
+        current_gvt: Tick,
+        requested_gvt: Tick,
+    },
+    EventBeforeGvt {
+        event_id: TimeWarpEventId,
+        gvt: Tick,
+    },
+}
+
+/// Result from one optimistic Time Warp event-processing step.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TimeWarpStepReport {
+    pub rollback_to: Option<Tick>,
+    pub rolled_back_events: Vec<TimeWarpEventId>,
+    pub anti_messages: Vec<TimeWarpEvent>,
+    pub canceled_events: Vec<TimeWarpEventId>,
+    pub cancellation_metadata: Vec<TimeWarpCancellationMetadata>,
+}
+
+/// Result from pruning rollback history that is older than a proven GVT.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TimeWarpFossilReport {
+    pub previous_gvt: Tick,
+    pub new_gvt: Tick,
+    pub collected_events: Vec<TimeWarpEventId>,
+    pub collected_state_checkpoints: usize,
+    pub retained_events: usize,
+    pub oldest_retained_tick: Option<Tick>,
+}
+
+/// Local pressure counters for the dependency-free Time Warp runtime.
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TimeWarpOverheadMetrics {
+    pub gvt: Tick,
+    pub local_processes: usize,
+    pub executed_log_len: usize,
+    pub state_checkpoints: usize,
+    pub canceled_event_ids: usize,
+    pub component_cells: usize,
+    pub component_generations: u64,
+    pub state_saves_total: usize,
+    pub rollbacks_total: usize,
+    pub rolled_back_events_total: usize,
+    pub anti_messages_emitted_total: usize,
+    pub fossil_collected_events_total: usize,
+    pub duplicate_positives_rejected: usize,
+    pub max_rollback_depth: usize,
+    pub max_rollback_distance: SimDuration,
+}
+
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct TimeWarpComponentCell {
+    value: i128,
+    generation: u64,
+}
+
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct ExecutedTimeWarpEvent {
+    event: TimeWarpEvent,
+}
+
+#[cfg(feature = "time-warp")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct TimeWarpStateCheckpoint {
+    lp_id: LpId,
+    tick: Tick,
+    local_time: Tick,
+    components: BTreeMap<TimeWarpComponentKey, TimeWarpComponentCell>,
+}
+
+/// Minimal optimistic rollback runtime used by the Track 48 TDD slice.
+#[cfg(feature = "time-warp")]
+#[derive(Debug, Default)]
+pub struct TimeWarpRuntime {
+    gvt: Tick,
+    local_times: BTreeMap<LpId, Tick>,
+    components: BTreeMap<TimeWarpComponentKey, TimeWarpComponentCell>,
+    executed: Vec<ExecutedTimeWarpEvent>,
+    checkpoints: Vec<TimeWarpStateCheckpoint>,
+    canceled: BTreeSet<TimeWarpEventId>,
+    metrics: TimeWarpMetrics,
+}
+
+#[cfg(feature = "time-warp")]
+#[derive(Debug, Default)]
+struct TimeWarpMetrics {
+    state_saves_total: usize,
+    rollbacks_total: usize,
+    rolled_back_events_total: usize,
+    anti_messages_emitted_total: usize,
+    fossil_collected_events_total: usize,
+    duplicate_positives_rejected: usize,
+    max_rollback_depth: usize,
+    max_rollback_distance: SimDuration,
+}
+
+#[cfg(feature = "time-warp")]
+impl TimeWarpRuntime {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn process_event(
+        &mut self,
+        event: TimeWarpEvent,
+    ) -> Result<TimeWarpStepReport, TimeWarpError> {
+        if event.id.tick < self.gvt {
+            return Err(TimeWarpError::EventBeforeGvt {
+                event_id: event.id,
+                gvt: self.gvt,
+            });
+        }
+        match event.kind {
+            TimeWarpMessageKind::Anti => Ok(self.cancel_event(event.id)),
+            TimeWarpMessageKind::Positive => self.process_positive_event(event),
+        }
+    }
+
+    pub fn local_time(&self, lp_id: LpId) -> Tick {
+        self.local_times
+            .get(&lp_id)
+            .copied()
+            .unwrap_or(SimTime::ZERO)
+    }
+
+    pub fn gvt(&self) -> Tick {
+        self.gvt
+    }
+
+    pub fn executed_len(&self) -> usize {
+        self.executed.len()
+    }
+
+    pub fn checkpoint_len(&self) -> usize {
+        self.checkpoints.len()
+    }
+
+    pub fn overhead_metrics(&self) -> TimeWarpOverheadMetrics {
+        let component_generations = self
+            .components
+            .values()
+            .map(|cell| cell.generation)
+            .fold(0u64, u64::saturating_add);
+
+        TimeWarpOverheadMetrics {
+            gvt: self.gvt,
+            local_processes: self.local_times.len(),
+            executed_log_len: self.executed.len(),
+            state_checkpoints: self.checkpoints.len(),
+            canceled_event_ids: self.canceled.len(),
+            component_cells: self.components.len(),
+            component_generations,
+            state_saves_total: self.metrics.state_saves_total,
+            rollbacks_total: self.metrics.rollbacks_total,
+            rolled_back_events_total: self.metrics.rolled_back_events_total,
+            anti_messages_emitted_total: self.metrics.anti_messages_emitted_total,
+            fossil_collected_events_total: self.metrics.fossil_collected_events_total,
+            duplicate_positives_rejected: self.metrics.duplicate_positives_rejected,
+            max_rollback_depth: self.metrics.max_rollback_depth,
+            max_rollback_distance: self.metrics.max_rollback_distance,
+        }
+    }
+
+    pub fn fossil_collect(&mut self, gvt: Tick) -> Result<TimeWarpFossilReport, TimeWarpError> {
+        if gvt < self.gvt {
+            return Err(TimeWarpError::GvtRegression {
+                current_gvt: self.gvt,
+                requested_gvt: gvt,
+            });
+        }
+
+        let previous_gvt = self.gvt;
+        self.gvt = gvt;
+        let mut retained = Vec::with_capacity(self.executed.len());
+        let mut collected_events = Vec::new();
+
+        for entry in std::mem::take(&mut self.executed) {
+            if entry.event.id.tick < gvt {
+                collected_events.push(entry.event.id);
+            } else {
+                retained.push(entry);
+            }
+        }
+
+        let oldest_retained_tick = retained.iter().map(|entry| entry.event.id.tick).min();
+        let retained_events = retained.len();
+        self.executed = retained;
+        let collected_state_checkpoints = self.prune_checkpoints_before_gvt(gvt);
+        self.metrics.fossil_collected_events_total = self
+            .metrics
+            .fossil_collected_events_total
+            .saturating_add(collected_events.len());
+
+        Ok(TimeWarpFossilReport {
+            previous_gvt,
+            new_gvt: gvt,
+            collected_events,
+            collected_state_checkpoints,
+            retained_events,
+            oldest_retained_tick,
+        })
+    }
+
+    pub fn component_value(
+        &self,
+        lp_id: LpId,
+        entity: EntityId,
+        component_slot: u32,
+    ) -> Option<i128> {
+        self.components
+            .get(&TimeWarpComponentKey {
+                lp_id,
+                entity,
+                component_slot,
+            })
+            .map(|cell| cell.value)
+    }
+
+    pub fn is_canceled(&self, event_id: TimeWarpEventId) -> bool {
+        self.canceled.contains(&event_id)
+    }
+
+    pub fn write_component(
+        &mut self,
+        key: TimeWarpComponentKey,
+        value: i128,
+    ) -> TimeWarpComponentToken {
+        let next_generation = self
+            .components
+            .get(&key)
+            .map_or(1, |cell| cell.generation.saturating_add(1));
+        self.components.insert(
+            key,
+            TimeWarpComponentCell {
+                value,
+                generation: next_generation,
+            },
+        );
+        TimeWarpComponentToken {
+            key,
+            generation: next_generation,
+        }
+    }
+
+    pub fn read_component(&self, token: TimeWarpComponentToken) -> Result<i128, TimeWarpError> {
+        let cell = self
+            .components
+            .get(&token.key)
+            .ok_or(TimeWarpError::StaleGeneration)?;
+        if cell.generation == token.generation {
+            Ok(cell.value)
+        } else {
+            Err(TimeWarpError::StaleGeneration)
+        }
+    }
+
+    fn process_positive_event(
+        &mut self,
+        event: TimeWarpEvent,
+    ) -> Result<TimeWarpStepReport, TimeWarpError> {
+        if self.executed.iter().any(|entry| entry.event.id == event.id) {
+            self.metrics.duplicate_positives_rejected =
+                self.metrics.duplicate_positives_rejected.saturating_add(1);
+            return Err(TimeWarpError::DuplicatePositiveEvent(event.id));
+        }
+        if self.canceled.contains(&event.id) {
+            return Ok(TimeWarpStepReport {
+                rollback_to: None,
+                rolled_back_events: Vec::new(),
+                anti_messages: Vec::new(),
+                canceled_events: vec![event.id],
+                cancellation_metadata: vec![TimeWarpCancellationMetadata {
+                    event_id: event.id,
+                    reason: TimeWarpCancellationReason::PositiveArrivedAfterAntiMessage,
+                    rollback_to: None,
+                    cancellation_tick: event.id.tick,
+                }],
+            });
+        }
+
+        let current_time = self.local_time(event.id.dest_lp);
+        let rollback_to = (event.id.tick < current_time).then_some(event.id.tick);
+        let mut rolled_back_events = Vec::new();
+        let mut anti_messages = Vec::new();
+        let mut cancellation_metadata = Vec::new();
+        if rollback_to.is_some() {
+            let rollback = self.rollback_after(event.id.dest_lp, event.id.tick);
+            rolled_back_events = rollback.rolled_back_events;
+            anti_messages = rollback.anti_messages;
+            cancellation_metadata = rollback.cancellation_metadata;
+            self.metrics.rollbacks_total = self.metrics.rollbacks_total.saturating_add(1);
+            self.metrics.rolled_back_events_total = self
+                .metrics
+                .rolled_back_events_total
+                .saturating_add(rolled_back_events.len());
+            self.metrics.anti_messages_emitted_total = self
+                .metrics
+                .anti_messages_emitted_total
+                .saturating_add(anti_messages.len());
+            self.metrics.max_rollback_depth = self
+                .metrics
+                .max_rollback_depth
+                .max(rolled_back_events.len());
+            let rollback_distance = current_time
+                .duration_since(event.id.tick)
+                .unwrap_or(SimDuration::ZERO);
+            self.metrics.max_rollback_distance =
+                self.metrics.max_rollback_distance.max(rollback_distance);
+        }
+
+        self.apply_event(&event);
+        self.executed.push(ExecutedTimeWarpEvent {
+            event: event.clone(),
+        });
+        self.local_times.insert(
+            event.id.dest_lp,
+            self.local_time(event.id.dest_lp).max(event.id.tick),
+        );
+        self.save_state_checkpoint(event.id.dest_lp, event.id.tick);
+
+        Ok(TimeWarpStepReport {
+            rollback_to,
+            rolled_back_events,
+            anti_messages,
+            canceled_events: Vec::new(),
+            cancellation_metadata,
+        })
+    }
+
+    fn cancel_event(&mut self, event_id: TimeWarpEventId) -> TimeWarpStepReport {
+        self.canceled.insert(event_id);
+        let mut canceled_events = Vec::new();
+        if let Some(index) = self
+            .executed
+            .iter()
+            .position(|entry| entry.event.id == event_id)
+        {
+            let _entry = self.executed.remove(index);
+            canceled_events.push(event_id);
+            self.rebuild_lp_from_history(event_id.dest_lp);
+        }
+
+        TimeWarpStepReport {
+            rollback_to: canceled_events.first().map(|_| event_id.tick),
+            rolled_back_events: canceled_events.clone(),
+            anti_messages: Vec::new(),
+            canceled_events: canceled_events.clone(),
+            cancellation_metadata: canceled_events
+                .into_iter()
+                .map(|event_id| TimeWarpCancellationMetadata {
+                    event_id,
+                    reason: TimeWarpCancellationReason::AntiMessageReceived,
+                    rollback_to: Some(event_id.tick),
+                    cancellation_tick: event_id.tick,
+                })
+                .collect(),
+        }
+    }
+
+    fn rollback_after(&mut self, lp_id: LpId, tick: Tick) -> TimeWarpStepReport {
+        let mut retained = Vec::with_capacity(self.executed.len());
+        let mut rolled_back = Vec::new();
+        let mut anti_messages = Vec::new();
+        let mut cancellation_metadata = Vec::new();
+
+        for entry in std::mem::take(&mut self.executed) {
+            if entry.event.id.dest_lp == lp_id && entry.event.id.tick > tick {
+                rolled_back.push(entry.event.id);
+                anti_messages.push(TimeWarpEvent {
+                    id: entry.event.id,
+                    kind: TimeWarpMessageKind::Anti,
+                    deltas: Vec::new(),
+                });
+                cancellation_metadata.push(TimeWarpCancellationMetadata {
+                    event_id: entry.event.id,
+                    reason: TimeWarpCancellationReason::RollbackInvalidatedEvent,
+                    rollback_to: Some(tick),
+                    cancellation_tick: tick,
+                });
+            } else {
+                retained.push(entry);
+            }
+        }
+
+        self.executed = retained;
+        self.restore_lp_to_checkpoint(lp_id, tick);
+        self.prune_checkpoints_after(lp_id, tick);
+
+        TimeWarpStepReport {
+            rollback_to: Some(tick),
+            rolled_back_events: rolled_back,
+            anti_messages,
+            canceled_events: Vec::new(),
+            cancellation_metadata,
+        }
+    }
+
+    fn apply_event(&mut self, event: &TimeWarpEvent) {
+        for delta in &event.deltas {
+            self.apply_delta(event.id.dest_lp, *delta, delta.amount);
+        }
+    }
+
+    fn apply_delta(&mut self, lp_id: LpId, delta: TimeWarpDelta, amount: i128) {
+        let key = TimeWarpComponentKey {
+            lp_id,
+            entity: delta.entity,
+            component_slot: delta.component_slot,
+        };
+        let current = self
+            .components
+            .get(&key)
+            .copied()
+            .unwrap_or(TimeWarpComponentCell {
+                value: 0,
+                generation: 0,
+            });
+        self.components.insert(
+            key,
+            TimeWarpComponentCell {
+                value: current.value + amount,
+                generation: current.generation.saturating_add(1),
+            },
+        );
+    }
+
+    fn recompute_local_time(&mut self, lp_id: LpId) {
+        let next_time = self
+            .executed
+            .iter()
+            .filter(|entry| entry.event.id.dest_lp == lp_id)
+            .map(|entry| entry.event.id.tick)
+            .max()
+            .unwrap_or(SimTime::ZERO);
+        self.local_times.insert(lp_id, next_time);
+    }
+
+    fn save_state_checkpoint(&mut self, lp_id: LpId, tick: Tick) {
+        let components = self
+            .components
+            .iter()
+            .filter_map(|(key, cell)| (key.lp_id == lp_id).then_some((*key, *cell)))
+            .collect();
+        self.checkpoints.push(TimeWarpStateCheckpoint {
+            lp_id,
+            tick,
+            local_time: self.local_time(lp_id),
+            components,
+        });
+        self.metrics.state_saves_total = self.metrics.state_saves_total.saturating_add(1);
+    }
+
+    fn restore_lp_to_checkpoint(&mut self, lp_id: LpId, tick: Tick) {
+        let checkpoint = self
+            .checkpoints
+            .iter()
+            .filter(|checkpoint| checkpoint.lp_id == lp_id && checkpoint.tick <= tick)
+            .max_by_key(|checkpoint| checkpoint.tick)
+            .cloned();
+
+        self.components.retain(|key, _| key.lp_id != lp_id);
+        if let Some(checkpoint) = checkpoint {
+            self.components.extend(checkpoint.components);
+            self.local_times.insert(lp_id, checkpoint.local_time);
+        } else {
+            self.local_times.insert(lp_id, SimTime::ZERO);
+        }
+    }
+
+    fn prune_checkpoints_after(&mut self, lp_id: LpId, tick: Tick) {
+        self.checkpoints
+            .retain(|checkpoint| checkpoint.lp_id != lp_id || checkpoint.tick <= tick);
+    }
+
+    fn prune_checkpoints_before_gvt(&mut self, gvt: Tick) -> usize {
+        let mut floor_by_lp: BTreeMap<LpId, usize> = BTreeMap::new();
+        for (index, checkpoint) in self.checkpoints.iter().enumerate() {
+            if checkpoint.tick < gvt {
+                floor_by_lp.insert(checkpoint.lp_id, index);
+            }
+        }
+
+        let before = self.checkpoints.len();
+        self.checkpoints = self
+            .checkpoints
+            .iter()
+            .enumerate()
+            .filter_map(|(index, checkpoint)| {
+                (checkpoint.tick >= gvt || floor_by_lp.get(&checkpoint.lp_id) == Some(&index))
+                    .then_some(checkpoint.clone())
+            })
+            .collect();
+        before.saturating_sub(self.checkpoints.len())
+    }
+
+    fn rebuild_lp_from_history(&mut self, lp_id: LpId) {
+        let mut history = self
+            .executed
+            .iter()
+            .filter_map(|entry| (entry.event.id.dest_lp == lp_id).then_some(entry.event.clone()))
+            .collect::<Vec<_>>();
+        history.sort_by_key(|event| (event.id.tick, event.id.sequence));
+
+        self.components.retain(|key, _| key.lp_id != lp_id);
+        self.checkpoints
+            .retain(|checkpoint| checkpoint.lp_id != lp_id);
+        self.local_times.insert(lp_id, SimTime::ZERO);
+
+        for event in history {
+            self.apply_event(&event);
+            self.local_times.insert(lp_id, event.id.tick);
+            self.save_state_checkpoint(lp_id, event.id.tick);
+        }
+        self.recompute_local_time(lp_id);
+    }
 }
 
 /// Research-spike result for optimistic Time Warp rollback behaviour.
@@ -840,11 +1645,92 @@ mod tests {
     }
 
     #[test]
+    fn scheduler_rejects_remote_events_before_declared_lookahead() {
+        let event = RemoteEvent {
+            source_lp: LpId(0),
+            dest_lp: LpId(1),
+            tick: SimTime::from_ticks(4),
+            event_payload: b"too-early".to_vec(),
+        };
+        let transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
+        let mut scheduler = PdesScheduler::new(transport);
+
+        scheduler
+            .add_lp(
+                LpId(0),
+                segment(LpId(0)),
+                vec![LpId(1)],
+                Box::new(TestLp::new(2, vec![event])),
+            )
+            .unwrap();
+        scheduler
+            .add_lp(
+                LpId(1),
+                segment(LpId(1)),
+                vec![LpId(0)],
+                Box::new(TestLp::new(2, Vec::new())),
+            )
+            .unwrap();
+
+        assert_eq!(
+            scheduler.step_until(SimTime::from_ticks(3)),
+            Err(PdesError::LookaheadViolation {
+                lp_id: LpId(0),
+                event_tick: SimTime::from_ticks(4),
+                minimum_tick: SimTime::from_ticks(5),
+            })
+        );
+    }
+
+    #[test]
+    fn scheduler_rejects_overflowing_lookahead_before_remote_send() {
+        let event = RemoteEvent {
+            source_lp: LpId(0),
+            dest_lp: LpId(1),
+            tick: SimTime::from_ticks(u128::MAX),
+            event_payload: b"overflow".to_vec(),
+        };
+        let transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
+        let mut scheduler = PdesScheduler::new(transport);
+
+        scheduler
+            .add_lp(
+                LpId(0),
+                segment(LpId(0)),
+                vec![LpId(1)],
+                Box::new(TestLp {
+                    local_time: SimTime::from_ticks(u128::MAX),
+                    lookahead: SimDuration::from_ticks(1),
+                    outbound: vec![event],
+                    received: Vec::new(),
+                }),
+            )
+            .unwrap();
+        scheduler
+            .add_lp(
+                LpId(1),
+                segment(LpId(1)),
+                vec![LpId(0)],
+                Box::new(TestLp::new(1, Vec::new())),
+            )
+            .unwrap();
+
+        assert_eq!(
+            scheduler.step_until(SimTime::from_ticks(u128::MAX)),
+            Err(PdesError::LookaheadOverflow {
+                lp_id: LpId(0),
+                local_time: SimTime::from_ticks(u128::MAX),
+                lookahead: SimDuration::from_ticks(1),
+            })
+        );
+    }
+
+    #[test]
     fn in_memory_gvt_includes_inflight_message_timestamps() {
         let event = RemoteEvent {
             source_lp: LpId(0),
             dest_lp: LpId(1),
-            tick: SimTime::from_ticks(1),
+            tick: SimTime::from_ticks(3),
             event_payload: b"early".to_vec(),
         };
         let transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
@@ -869,7 +1755,7 @@ mod tests {
 
         scheduler.step_until(SimTime::from_ticks(3)).unwrap();
 
-        assert_eq!(scheduler.gvt(), SimTime::from_ticks(1));
+        assert_eq!(scheduler.gvt(), SimTime::from_ticks(3));
     }
 
     #[test]
@@ -943,6 +1829,87 @@ mod tests {
         );
     }
 
+    #[test]
+    fn scheduler_rejects_inbound_stragglers_before_local_time() {
+        let mut transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
+        transport
+            .send(
+                LpId(0),
+                PdesMessage::Event(RemoteEvent {
+                    source_lp: LpId(1),
+                    dest_lp: LpId(0),
+                    tick: SimTime::from_ticks(4),
+                    event_payload: vec![1],
+                }),
+            )
+            .unwrap();
+        let mut scheduler = PdesScheduler::new(transport);
+
+        scheduler
+            .add_lp(
+                LpId(0),
+                segment(LpId(0)),
+                Vec::new(),
+                Box::new(TestLp {
+                    local_time: SimTime::from_ticks(5),
+                    lookahead: SimDuration::from_ticks(1),
+                    outbound: Vec::new(),
+                    received: Vec::new(),
+                }),
+            )
+            .unwrap();
+
+        assert_eq!(
+            scheduler.step_until(SimTime::from_ticks(8)),
+            Err(PdesError::StragglerEvent {
+                lp_id: LpId(0),
+                event_tick: SimTime::from_ticks(4),
+                local_time: SimTime::from_ticks(5),
+            })
+        );
+    }
+
+    #[test]
+    fn scheduler_reports_stalled_lps_when_safe_time_blocks_progress() {
+        let mut transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
+        transport
+            .send(
+                LpId(0),
+                PdesMessage::Null(NullMessage {
+                    source_lp: LpId(1),
+                    dest_lp: LpId(0),
+                    safe_time: SimTime::from_ticks(2),
+                }),
+            )
+            .unwrap();
+        let mut scheduler = PdesScheduler::new(transport);
+
+        scheduler
+            .add_lp(
+                LpId(0),
+                segment(LpId(0)),
+                Vec::new(),
+                Box::new(TestLp {
+                    local_time: SimTime::from_ticks(5),
+                    lookahead: SimDuration::from_ticks(1),
+                    outbound: Vec::new(),
+                    received: Vec::new(),
+                }),
+            )
+            .unwrap();
+
+        scheduler.step_until(SimTime::from_ticks(8)).unwrap();
+
+        let status = scheduler.runtime_status();
+        let mut expected_frontier = BTreeMap::new();
+        expected_frontier.insert(LpId(0), SimTime::from_ticks(2));
+        let mut expected_stalled = BTreeMap::new();
+        expected_stalled.insert(LpId(0), 1);
+
+        assert_eq!(status.gvt, SimTime::from_ticks(5));
+        assert_eq!(status.safe_time_frontier, expected_frontier);
+        assert_eq!(status.stalled_lps, expected_stalled);
+    }
     #[test]
     fn scheduler_rejects_duplicate_and_mismatched_lps() {
         let transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
@@ -1087,5 +2054,392 @@ mod tests {
             }),
             Err("PDES workload must include at least one LP".to_string())
         );
+    }
+
+    #[test]
+    fn partition_plan_assigns_entities_deterministically_by_entity_id() {
+        let plan = PartitionPlan::from_entities(
+            3,
+            SimDuration::from_ticks(2),
+            vec![
+                EntityId::new(8, 0),
+                EntityId::new(2, 0),
+                EntityId::new(5, 0),
+                EntityId::new(3, 1),
+                EntityId::new(2, 1),
+            ],
+        )
+        .unwrap();
+
+        assert_eq!(plan.lp_count(), 3);
+        assert_eq!(plan.lookahead(), SimDuration::from_ticks(2));
+        assert_eq!(
+            plan.segments(),
+            &[
+                WorldSegment {
+                    id: LpId(0),
+                    lp_count: 3,
+                    entities: vec![EntityId::new(2, 0), EntityId::new(5, 0)],
+                },
+                WorldSegment {
+                    id: LpId(1),
+                    lp_count: 3,
+                    entities: vec![EntityId::new(2, 1), EntityId::new(8, 0)],
+                },
+                WorldSegment {
+                    id: LpId(2),
+                    lp_count: 3,
+                    entities: vec![EntityId::new(3, 1)],
+                },
+            ]
+        );
+        assert_eq!(plan.owner_of(EntityId::new(8, 0)), Some(LpId(1)));
+        assert_eq!(plan.owner_of(EntityId::new(3, 1)), Some(LpId(2)));
+        assert_eq!(plan.owner_of(EntityId::new(99, 0)), None);
+    }
+
+    #[test]
+    fn partition_plan_rejects_invalid_inputs() {
+        assert_eq!(
+            PartitionPlan::from_entities(0, SimDuration::from_ticks(1), vec![EntityId::new(1, 0)]),
+            Err(PdesError::InvalidPartitionCount)
+        );
+        assert_eq!(
+            PartitionPlan::from_entities(2, SimDuration::ZERO, vec![EntityId::new(1, 0)]),
+            Err(PdesError::InvalidPartitionLookahead)
+        );
+        assert_eq!(
+            PartitionPlan::from_entities(2, SimDuration::from_ticks(1), Vec::new()),
+            Err(PdesError::EmptyPartitionEntities)
+        );
+        assert_eq!(
+            PartitionPlan::from_entities(
+                2,
+                SimDuration::from_ticks(1),
+                vec![EntityId::new(1, 0), EntityId::new(1, 0)],
+            ),
+            Err(PdesError::DuplicatePartitionEntity(EntityId::new(1, 0)))
+        );
+    }
+
+    #[cfg(feature = "time-warp")]
+    fn time_warp_event(tick: u128, sequence: u64, amount: i128) -> TimeWarpEvent {
+        TimeWarpEvent {
+            id: TimeWarpEventId {
+                source_lp: LpId(0),
+                dest_lp: LpId(1),
+                tick: SimTime::from_ticks(tick),
+                sequence,
+            },
+            kind: TimeWarpMessageKind::Positive,
+            deltas: vec![TimeWarpDelta {
+                entity: EntityId::new(7, 0),
+                component_slot: 0,
+                amount,
+            }],
+        }
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_straggler_rolls_back_to_prior_checkpoint() {
+        let mut engine = TimeWarpRuntime::new();
+        let late = TimeWarpEvent {
+            id: TimeWarpEventId {
+                source_lp: LpId(0),
+                dest_lp: LpId(1),
+                tick: SimTime::from_ticks(10),
+                sequence: 1,
+            },
+            kind: TimeWarpMessageKind::Positive,
+            deltas: vec![TimeWarpDelta {
+                entity: EntityId::new(7, 0),
+                component_slot: 0,
+                amount: 11,
+            }],
+        };
+        let straggler = TimeWarpEvent {
+            id: TimeWarpEventId {
+                source_lp: LpId(0),
+                dest_lp: LpId(1),
+                tick: SimTime::from_ticks(4),
+                sequence: 2,
+            },
+            kind: TimeWarpMessageKind::Positive,
+            deltas: vec![TimeWarpDelta {
+                entity: EntityId::new(7, 0),
+                component_slot: 0,
+                amount: 3,
+            }],
+        };
+
+        assert_eq!(engine.process_event(late).unwrap().rollback_to, None);
+        let report = engine.process_event(straggler).unwrap();
+
+        assert_eq!(report.rollback_to, Some(SimTime::from_ticks(4)));
+        assert_eq!(report.rolled_back_events.len(), 1);
+        assert_eq!(
+            engine.component_value(LpId(1), EntityId::new(7, 0), 0),
+            Some(3)
+        );
+        assert_eq!(engine.local_time(LpId(1)), SimTime::from_ticks(4));
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_antimessage_cancels_matching_positive_event() {
+        let mut engine = TimeWarpRuntime::new();
+        let event_id = TimeWarpEventId {
+            source_lp: LpId(0),
+            dest_lp: LpId(1),
+            tick: SimTime::from_ticks(6),
+            sequence: 10,
+        };
+        let positive = TimeWarpEvent {
+            id: event_id,
+            kind: TimeWarpMessageKind::Positive,
+            deltas: vec![TimeWarpDelta {
+                entity: EntityId::new(9, 0),
+                component_slot: 1,
+                amount: 13,
+            }],
+        };
+        let anti = TimeWarpEvent {
+            id: event_id,
+            kind: TimeWarpMessageKind::Anti,
+            deltas: Vec::new(),
+        };
+
+        engine.process_event(positive).unwrap();
+        let report = engine.process_event(anti).unwrap();
+
+        assert_eq!(report.canceled_events, vec![event_id]);
+        assert_eq!(
+            engine.component_value(LpId(1), EntityId::new(9, 0), 1),
+            None
+        );
+        assert!(engine.is_canceled(event_id));
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_generation_token_rejects_stale_component_access() {
+        let mut engine = TimeWarpRuntime::new();
+        let key = TimeWarpComponentKey {
+            lp_id: LpId(0),
+            entity: EntityId::new(12, 0),
+            component_slot: 2,
+        };
+
+        let first = engine.write_component(key, 42);
+        let second = engine.write_component(key, 43);
+
+        assert_eq!(
+            engine.read_component(first),
+            Err(TimeWarpError::StaleGeneration)
+        );
+        assert_eq!(engine.read_component(second), Ok(43));
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_state_save_restores_absent_component_after_rollback() {
+        let mut engine = TimeWarpRuntime::new();
+        let base = time_warp_event(5, 1, 5);
+        let future_only_component = TimeWarpEvent {
+            id: TimeWarpEventId {
+                source_lp: LpId(0),
+                dest_lp: LpId(1),
+                tick: SimTime::from_ticks(9),
+                sequence: 2,
+            },
+            kind: TimeWarpMessageKind::Positive,
+            deltas: vec![TimeWarpDelta {
+                entity: EntityId::new(7, 0),
+                component_slot: 3,
+                amount: 9,
+            }],
+        };
+
+        engine.process_event(base).unwrap();
+        engine.process_event(future_only_component.clone()).unwrap();
+        let report = engine.process_event(time_warp_event(7, 3, 7)).unwrap();
+
+        assert_eq!(report.rollback_to, Some(SimTime::from_ticks(7)));
+        assert_eq!(report.rolled_back_events, vec![future_only_component.id]);
+        assert_eq!(
+            engine.component_value(LpId(1), EntityId::new(7, 0), 0),
+            Some(12)
+        );
+        assert_eq!(
+            engine.component_value(LpId(1), EntityId::new(7, 0), 3),
+            None
+        );
+        assert_eq!(engine.checkpoint_len(), 2);
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_reports_cancellation_metadata_for_rollback_and_antimessage() {
+        let mut engine = TimeWarpRuntime::new();
+        let future = time_warp_event(10, 1, 10);
+        engine.process_event(future.clone()).unwrap();
+
+        let rollback = engine.process_event(time_warp_event(4, 2, 4)).unwrap();
+
+        assert_eq!(
+            rollback.cancellation_metadata,
+            vec![TimeWarpCancellationMetadata {
+                event_id: future.id,
+                reason: TimeWarpCancellationReason::RollbackInvalidatedEvent,
+                rollback_to: Some(SimTime::from_ticks(4)),
+                cancellation_tick: SimTime::from_ticks(4),
+            }]
+        );
+
+        let mut anti = time_warp_event(4, 2, 0);
+        anti.kind = TimeWarpMessageKind::Anti;
+        anti.deltas.clear();
+        let canceled = engine.process_event(anti).unwrap();
+
+        assert_eq!(
+            canceled.cancellation_metadata,
+            vec![TimeWarpCancellationMetadata {
+                event_id: time_warp_event(4, 2, 0).id,
+                reason: TimeWarpCancellationReason::AntiMessageReceived,
+                rollback_to: Some(SimTime::from_ticks(4)),
+                cancellation_tick: SimTime::from_ticks(4),
+            }]
+        );
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_fossil_collects_only_history_before_gvt() {
+        let mut engine = TimeWarpRuntime::new();
+        engine.process_event(time_warp_event(2, 1, 2)).unwrap();
+        engine.process_event(time_warp_event(5, 2, 5)).unwrap();
+        engine.process_event(time_warp_event(9, 3, 9)).unwrap();
+
+        let report = engine.fossil_collect(SimTime::from_ticks(5)).unwrap();
+
+        assert_eq!(report.previous_gvt, SimTime::ZERO);
+        assert_eq!(report.new_gvt, SimTime::from_ticks(5));
+        assert_eq!(
+            report.collected_events,
+            vec![TimeWarpEventId {
+                source_lp: LpId(0),
+                dest_lp: LpId(1),
+                tick: SimTime::from_ticks(2),
+                sequence: 1,
+            }]
+        );
+        assert_eq!(report.retained_events, 2);
+        assert_eq!(report.oldest_retained_tick, Some(SimTime::from_ticks(5)));
+        assert_eq!(engine.executed_len(), 2);
+        assert_eq!(engine.overhead_metrics().fossil_collected_events_total, 1);
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_fossil_collection_preserves_rollback_at_or_after_gvt() {
+        let mut engine = TimeWarpRuntime::new();
+        engine.process_event(time_warp_event(5, 1, 5)).unwrap();
+        engine.process_event(time_warp_event(9, 2, 9)).unwrap();
+        engine.fossil_collect(SimTime::from_ticks(5)).unwrap();
+
+        let report = engine.process_event(time_warp_event(7, 3, 7)).unwrap();
+
+        assert_eq!(report.rollback_to, Some(SimTime::from_ticks(7)));
+        assert_eq!(report.rolled_back_events, vec![time_warp_event(9, 2, 9).id]);
+        assert_eq!(report.anti_messages.len(), 1);
+        assert_eq!(
+            engine.component_value(LpId(1), EntityId::new(7, 0), 0),
+            Some(12)
+        );
+        assert_eq!(engine.local_time(LpId(1)), SimTime::from_ticks(7));
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_rejects_pre_gvt_stragglers_and_gvt_regression() {
+        let mut engine = TimeWarpRuntime::new();
+        engine.process_event(time_warp_event(5, 1, 5)).unwrap();
+        engine.fossil_collect(SimTime::from_ticks(5)).unwrap();
+
+        assert_eq!(
+            engine.process_event(time_warp_event(4, 2, 4)),
+            Err(TimeWarpError::EventBeforeGvt {
+                event_id: time_warp_event(4, 2, 4).id,
+                gvt: SimTime::from_ticks(5),
+            })
+        );
+        let mut pre_gvt_anti = time_warp_event(4, 3, 0);
+        pre_gvt_anti.kind = TimeWarpMessageKind::Anti;
+        pre_gvt_anti.deltas.clear();
+        assert_eq!(
+            engine.process_event(pre_gvt_anti.clone()),
+            Err(TimeWarpError::EventBeforeGvt {
+                event_id: pre_gvt_anti.id,
+                gvt: SimTime::from_ticks(5),
+            })
+        );
+        assert_eq!(
+            engine.fossil_collect(SimTime::from_ticks(3)),
+            Err(TimeWarpError::GvtRegression {
+                current_gvt: SimTime::from_ticks(5),
+                requested_gvt: SimTime::from_ticks(3),
+            })
+        );
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_rejects_duplicate_positive_events_without_double_apply() {
+        let mut engine = TimeWarpRuntime::new();
+        let event = time_warp_event(6, 1, 6);
+
+        engine.process_event(event.clone()).unwrap();
+
+        assert_eq!(
+            engine.process_event(event.clone()),
+            Err(TimeWarpError::DuplicatePositiveEvent(event.id))
+        );
+        assert_eq!(
+            engine.component_value(LpId(1), EntityId::new(7, 0), 0),
+            Some(6)
+        );
+        assert_eq!(engine.overhead_metrics().duplicate_positives_rejected, 1);
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn time_warp_overhead_metrics_track_local_rollback_pressure() {
+        let mut engine = TimeWarpRuntime::new();
+        engine.process_event(time_warp_event(10, 1, 10)).unwrap();
+        let report = engine.process_event(time_warp_event(4, 2, 4)).unwrap();
+
+        assert_eq!(
+            report.anti_messages,
+            vec![time_warp_event(10, 1, 10).id]
+                .into_iter()
+                .map(|id| TimeWarpEvent {
+                    id,
+                    kind: TimeWarpMessageKind::Anti,
+                    deltas: Vec::new(),
+                })
+                .collect::<Vec<_>>()
+        );
+
+        let metrics = engine.overhead_metrics();
+        assert_eq!(metrics.gvt, SimTime::ZERO);
+        assert_eq!(metrics.local_processes, 1);
+        assert_eq!(metrics.executed_log_len, 1);
+        assert_eq!(metrics.component_cells, 1);
+        assert_eq!(metrics.rollbacks_total, 1);
+        assert_eq!(metrics.rolled_back_events_total, 1);
+        assert_eq!(metrics.anti_messages_emitted_total, 1);
+        assert_eq!(metrics.max_rollback_depth, 1);
+        assert_eq!(metrics.max_rollback_distance, SimDuration::from_ticks(6));
     }
 }

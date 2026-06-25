@@ -274,23 +274,45 @@ impl EventLogBatch {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ArrowError {
+    AdapterDisabled(&'static str),
     EmptyField(&'static str),
-    InvalidHexLength { expected: usize, actual: usize },
+    InvalidBlockLayout(&'static str),
+    InvalidCheckpointFormat {
+        expected: &'static str,
+        actual: String,
+    },
+    InvalidHexLength {
+        expected: usize,
+        actual: usize,
+    },
     InvalidHexDigit,
     InvalidNumber(&'static str),
     InvalidStatus(String),
     InvalidTimeScale(String),
     InvalidUtf8,
+    Io(String),
     UnexpectedFieldHeader,
     UnexpectedStreamHeader,
     UnsupportedSchemaVersion(u16),
-    WrongCellCount { expected: usize, actual: usize },
+    WrongCellCount {
+        expected: usize,
+        actual: usize,
+    },
 }
 
 impl Display for ArrowError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::AdapterDisabled(adapter) => {
+                write!(f, "{adapter} checkpoint adapter is disabled")
+            }
             Self::EmptyField(field) => write!(f, "{field} must not be empty"),
+            Self::InvalidBlockLayout(reason) => {
+                write!(f, "invalid contiguous block layout: {reason}")
+            }
+            Self::InvalidCheckpointFormat { expected, actual } => {
+                write!(f, "expected {expected} checkpoint format, got {actual}")
+            }
             Self::InvalidHexLength { expected, actual } => {
                 write!(f, "expected {expected} hex characters, got {actual}")
             }
@@ -299,6 +321,7 @@ impl Display for ArrowError {
             Self::InvalidStatus(status) => write!(f, "invalid event status: {status}"),
             Self::InvalidTimeScale(time_scale) => write!(f, "invalid time scale: {time_scale}"),
             Self::InvalidUtf8 => f.write_str("payload is not valid UTF-8"),
+            Self::Io(error) => write!(f, "I/O error: {error}"),
             Self::UnexpectedFieldHeader => f.write_str("unexpected event-log field header"),
             Self::UnexpectedStreamHeader => f.write_str("unexpected event-log stream header"),
             Self::UnsupportedSchemaVersion(version) => {
@@ -312,6 +335,597 @@ impl Display for ArrowError {
 }
 
 impl Error for ArrowError {}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ContiguousBlock {
+    pub offset_bytes: u64,
+    pub byte_len: u64,
+    pub row_count: usize,
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ContiguousWriteManifest {
+    pub stream: String,
+    pub schema_fingerprint: String,
+    pub row_count: usize,
+    pub encoded_len: usize,
+    pub blocks: Vec<ContiguousBlock>,
+    pub checksum: u64,
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ParallelIoRecordBatch {
+    records: Vec<EventLogRecord>,
+    blocks: Vec<ContiguousBlock>,
+    encoded_len: usize,
+}
+
+#[cfg(feature = "parallel-io")]
+impl ParallelIoRecordBatch {
+    pub fn from_dispatched<I>(run_id: &str, events: I) -> Result<Self, ArrowError>
+    where
+        I: IntoIterator<Item = DispatchedEvent>,
+    {
+        let records = events
+            .into_iter()
+            .map(|event| EventLogRecord::dispatched(run_id, event))
+            .collect::<Vec<_>>();
+        Self::from_records(records)
+    }
+
+    pub fn from_records(records: Vec<EventLogRecord>) -> Result<Self, ArrowError> {
+        let batch = EventLogBatch::new(records.clone())?;
+        let encoded_len = batch.to_smoke_bytes().len();
+        let blocks = if records.is_empty() {
+            Vec::new()
+        } else {
+            vec![ContiguousBlock {
+                offset_bytes: 0,
+                byte_len: encoded_len as u64,
+                row_count: records.len(),
+            }]
+        };
+
+        Ok(Self {
+            records,
+            blocks,
+            encoded_len,
+        })
+    }
+
+    pub fn to_record_batch_bytes(&self) -> Vec<u8> {
+        EventLogBatch::new(self.records.clone())
+            .expect("parallel I/O records are validated at construction")
+            .to_smoke_bytes()
+    }
+
+    pub fn write_contiguous_blocks<W: std::io::Write>(
+        &self,
+        mut writer: W,
+    ) -> Result<ContiguousWriteManifest, ArrowError> {
+        validate_contiguous_blocks(&self.blocks, self.records.len(), Some(self.encoded_len))?;
+        let payload = self.to_record_batch_bytes();
+        writer
+            .write_all(&payload)
+            .map_err(|error| ArrowError::Io(error.to_string()))?;
+
+        Ok(ContiguousWriteManifest {
+            stream: EVENT_LOG_STREAM.to_string(),
+            schema_fingerprint: self.schema_fingerprint(),
+            row_count: self.row_count(),
+            encoded_len: payload.len(),
+            blocks: self.blocks.clone(),
+            checksum: stable_hash_bytes(&payload),
+        })
+    }
+
+    pub fn write_contiguous_blocks_to_path(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<ContiguousWriteManifest, ArrowError> {
+        let file = std::fs::File::create(path.as_ref())
+            .map_err(|error| ArrowError::Io(error.to_string()))?;
+        self.write_contiguous_blocks(file)
+    }
+
+    pub fn row_count(&self) -> usize {
+        self.records.len()
+    }
+
+    pub fn records(&self) -> &[EventLogRecord] {
+        &self.records
+    }
+
+    pub fn schema_fingerprint(&self) -> String {
+        event_log_schema_fingerprint()
+    }
+
+    pub fn contiguous_blocks(&self) -> &[ContiguousBlock] {
+        &self.blocks
+    }
+
+    pub fn encoded_len(&self) -> usize {
+        self.encoded_len
+    }
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CheckpointFormat {
+    LocalContract,
+    Hdf5,
+    Adios2,
+}
+
+#[cfg(feature = "parallel-io")]
+impl CheckpointFormat {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::LocalContract => "local-contract",
+            Self::Hdf5 => "hdf5",
+            Self::Adios2 => "adios2",
+        }
+    }
+}
+
+#[cfg(feature = "parallel-io")]
+impl TryFrom<&str> for CheckpointFormat {
+    type Error = ArrowError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "local-contract" => Ok(Self::LocalContract),
+            "hdf5" => Ok(Self::Hdf5),
+            "adios2" => Ok(Self::Adios2),
+            _ => Err(ArrowError::UnexpectedStreamHeader),
+        }
+    }
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CheckpointRecord {
+    pub event_id: EventId,
+    pub entity_id: Option<EntityId>,
+    pub time_ticks: u128,
+    pub priority: i32,
+    pub sequence: u64,
+    pub event_kind: String,
+    pub status: EventStatus,
+    pub payload_ref: Option<String>,
+}
+
+#[cfg(feature = "parallel-io")]
+impl From<&EventLogRecord> for CheckpointRecord {
+    fn from(record: &EventLogRecord) -> Self {
+        Self {
+            event_id: record.event_id,
+            entity_id: record.entity_id,
+            time_ticks: record.time_ticks,
+            priority: record.priority,
+            sequence: record.sequence,
+            event_kind: record.event_kind.clone(),
+            status: record.status,
+            payload_ref: record.payload_ref.clone(),
+        }
+    }
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CheckpointManifest {
+    pub checkpoint_id: String,
+    pub format: CheckpointFormat,
+    pub run_id: String,
+    pub schema_fingerprint: String,
+    pub row_count: usize,
+    pub blocks: Vec<ContiguousBlock>,
+    pub records: Vec<CheckpointRecord>,
+    pub checksum: u64,
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RestoredCheckpoint {
+    pub run_id: String,
+    pub final_tick: u128,
+    pub records: Vec<CheckpointRecord>,
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CheckpointAdapterReceipt {
+    pub format: CheckpointFormat,
+    pub path: String,
+    pub row_count: usize,
+    pub checksum: u64,
+    pub contract_only: bool,
+}
+
+#[cfg(feature = "parallel-io")]
+pub trait CheckpointAdapter {
+    fn format(&self) -> CheckpointFormat;
+
+    fn write_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        manifest: &CheckpointManifest,
+    ) -> Result<CheckpointAdapterReceipt, ArrowError>;
+
+    fn restore_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<RestoredCheckpoint, ArrowError>;
+}
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct Hdf5CheckpointAdapter;
+
+#[cfg(feature = "parallel-io")]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct Adios2CheckpointAdapter;
+
+#[cfg(feature = "parallel-io")]
+impl CheckpointManifest {
+    pub fn from_batch(
+        checkpoint_id: &str,
+        format: CheckpointFormat,
+        batch: &ParallelIoRecordBatch,
+    ) -> Result<Self, ArrowError> {
+        if checkpoint_id.trim().is_empty() {
+            return Err(ArrowError::EmptyField("checkpoint_id"));
+        }
+        let Some(first) = batch.records().first() else {
+            return Err(ArrowError::WrongCellCount {
+                expected: 1,
+                actual: 0,
+            });
+        };
+        let run_id = first.run_id.clone();
+        if batch.records().iter().any(|record| record.run_id != run_id) {
+            return Err(ArrowError::UnexpectedStreamHeader);
+        }
+        let records = batch.records().iter().map(CheckpointRecord::from).collect();
+        let mut manifest = Self {
+            checkpoint_id: checkpoint_id.to_string(),
+            format,
+            run_id,
+            schema_fingerprint: batch.schema_fingerprint(),
+            row_count: batch.row_count(),
+            blocks: batch.contiguous_blocks().to_vec(),
+            records,
+            checksum: 0,
+        };
+        manifest.checksum = manifest.calculate_checksum();
+        Ok(manifest)
+    }
+
+    pub fn to_contract_bytes(&self) -> Vec<u8> {
+        let mut lines = vec![
+            "kairo-ecs-checkpoint-v1".to_string(),
+            [
+                escape_cell(&self.checkpoint_id),
+                escape_cell(self.format.as_str()),
+                escape_cell(&self.run_id),
+                escape_cell(&self.schema_fingerprint),
+                self.row_count.to_string(),
+                self.checksum.to_string(),
+                self.blocks
+                    .first()
+                    .map(|block| block.byte_len)
+                    .unwrap_or_default()
+                    .to_string(),
+            ]
+            .join("\t"),
+            "event_id\tentity_id\ttime_ticks\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref"
+                .to_string(),
+        ];
+
+        for record in &self.records {
+            lines.push(
+                [
+                    handle_hex(record.event_id.index, record.event_id.generation),
+                    record
+                        .entity_id
+                        .map(|entity_id| handle_hex(entity_id.index, entity_id.generation))
+                        .unwrap_or_default(),
+                    record.time_ticks.to_string(),
+                    record.priority.to_string(),
+                    record.sequence.to_string(),
+                    escape_cell(&record.event_kind),
+                    escape_cell(record.status.as_str()),
+                    escape_cell(record.payload_ref.as_deref().unwrap_or_default()),
+                ]
+                .join("\t"),
+            );
+        }
+        lines.push(String::new());
+        lines.join("\n").into_bytes()
+    }
+
+    pub fn from_contract_bytes(payload: &[u8]) -> Result<Self, ArrowError> {
+        let text = std::str::from_utf8(payload).map_err(|_| ArrowError::InvalidUtf8)?;
+        let mut lines = text.lines();
+        if lines.next() != Some("kairo-ecs-checkpoint-v1") {
+            return Err(ArrowError::UnexpectedStreamHeader);
+        }
+        let header = lines.next().ok_or(ArrowError::UnexpectedStreamHeader)?;
+        let header_cells = header.split('\t').collect::<Vec<_>>();
+        if header_cells.len() != 7 {
+            return Err(ArrowError::WrongCellCount {
+                expected: 7,
+                actual: header_cells.len(),
+            });
+        }
+        if lines.next()
+            != Some("event_id\tentity_id\ttime_ticks\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref")
+        {
+            return Err(ArrowError::UnexpectedFieldHeader);
+        }
+
+        let mut records = Vec::new();
+        for line in lines {
+            if line.is_empty() {
+                continue;
+            }
+            let cells = line.split('\t').collect::<Vec<_>>();
+            if cells.len() != 8 {
+                return Err(ArrowError::WrongCellCount {
+                    expected: 8,
+                    actual: cells.len(),
+                });
+            }
+            records.push(CheckpointRecord {
+                event_id: parse_event_handle(cells[0])?,
+                entity_id: if cells[1].is_empty() {
+                    None
+                } else {
+                    Some(parse_entity_handle(cells[1])?)
+                },
+                time_ticks: cells[2]
+                    .parse()
+                    .map_err(|_| ArrowError::InvalidNumber("time_ticks"))?,
+                priority: cells[3]
+                    .parse()
+                    .map_err(|_| ArrowError::InvalidNumber("priority"))?,
+                sequence: cells[4]
+                    .parse()
+                    .map_err(|_| ArrowError::InvalidNumber("sequence"))?,
+                event_kind: unescape_cell(cells[5]),
+                status: EventStatus::try_from(cells[6])?,
+                payload_ref: {
+                    let payload_ref = unescape_cell(cells[7]);
+                    if payload_ref.is_empty() {
+                        None
+                    } else {
+                        Some(payload_ref)
+                    }
+                },
+            });
+        }
+
+        let checksum = header_cells[5]
+            .parse()
+            .map_err(|_| ArrowError::InvalidNumber("checksum"))?;
+        let block_byte_len = header_cells[6]
+            .parse()
+            .map_err(|_| ArrowError::InvalidNumber("block_byte_len"))?;
+        let manifest = Self {
+            checkpoint_id: unescape_cell(header_cells[0]),
+            format: CheckpointFormat::try_from(unescape_cell(header_cells[1]).as_str())?,
+            run_id: unescape_cell(header_cells[2]),
+            schema_fingerprint: unescape_cell(header_cells[3]),
+            row_count: header_cells[4]
+                .parse()
+                .map_err(|_| ArrowError::InvalidNumber("row_count"))?,
+            blocks: if records.is_empty() {
+                Vec::new()
+            } else {
+                vec![ContiguousBlock {
+                    offset_bytes: 0,
+                    byte_len: block_byte_len,
+                    row_count: records.len(),
+                }]
+            },
+            records,
+            checksum,
+        };
+        if manifest.calculate_checksum() != manifest.checksum {
+            return Err(ArrowError::InvalidNumber("checksum"));
+        }
+        manifest.validate_for_restore()?;
+        Ok(manifest)
+    }
+
+    pub fn write_contract_file(&self, path: impl AsRef<std::path::Path>) -> Result<(), ArrowError> {
+        std::fs::write(path.as_ref(), self.to_contract_bytes())
+            .map_err(|error| ArrowError::Io(error.to_string()))
+    }
+
+    pub fn read_contract_file(path: impl AsRef<std::path::Path>) -> Result<Self, ArrowError> {
+        let payload =
+            std::fs::read(path.as_ref()).map_err(|error| ArrowError::Io(error.to_string()))?;
+        Self::from_contract_bytes(&payload)
+    }
+
+    pub fn validate_for_restore(&self) -> Result<(), ArrowError> {
+        if self.row_count != self.records.len() {
+            return Err(ArrowError::WrongCellCount {
+                expected: self.row_count,
+                actual: self.records.len(),
+            });
+        }
+        validate_contiguous_blocks(&self.blocks, self.row_count, None)?;
+        if self.schema_fingerprint != event_log_schema_fingerprint() {
+            return Err(ArrowError::UnexpectedStreamHeader);
+        }
+        if self.calculate_checksum() != self.checksum {
+            return Err(ArrowError::InvalidNumber("checksum"));
+        }
+        Ok(())
+    }
+
+    pub fn restore(&self) -> Result<RestoredCheckpoint, ArrowError> {
+        self.validate_for_restore()?;
+        let final_tick = self
+            .records
+            .iter()
+            .map(|record| record.time_ticks)
+            .max()
+            .unwrap_or(0);
+        Ok(RestoredCheckpoint {
+            run_id: self.run_id.clone(),
+            final_tick,
+            records: self.records.clone(),
+        })
+    }
+
+    fn calculate_checksum(&self) -> u64 {
+        let mut checksum = stable_hash(&self.checkpoint_id)
+            ^ stable_hash(self.format.as_str())
+            ^ stable_hash(&self.run_id)
+            ^ stable_hash(&self.schema_fingerprint)
+            ^ self.row_count as u64;
+        for record in &self.records {
+            checksum ^= record.event_id.index.rotate_left(7);
+            checksum ^= u64::from(record.event_id.generation).rotate_left(13);
+            if let Some(entity_id) = record.entity_id {
+                checksum ^= entity_id.index.rotate_left(29);
+                checksum ^= u64::from(entity_id.generation).rotate_left(31);
+            }
+            checksum ^= (record.time_ticks as u64).rotate_left(17);
+            checksum ^= (record.priority as i64 as u64).rotate_left(19);
+            checksum ^= record.sequence.rotate_left(23);
+            checksum ^= stable_hash(&record.event_kind);
+            checksum ^= stable_hash(record.status.as_str());
+            if let Some(payload_ref) = &record.payload_ref {
+                checksum ^= stable_hash(payload_ref).rotate_left(37);
+            }
+        }
+        checksum
+    }
+}
+
+#[cfg(feature = "parallel-io")]
+impl CheckpointAdapter for Hdf5CheckpointAdapter {
+    fn format(&self) -> CheckpointFormat {
+        CheckpointFormat::Hdf5
+    }
+
+    fn write_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        manifest: &CheckpointManifest,
+    ) -> Result<CheckpointAdapterReceipt, ArrowError> {
+        #[cfg(feature = "hdf5")]
+        {
+            write_adapter_contract(path, manifest, CheckpointFormat::Hdf5)
+        }
+        #[cfg(not(feature = "hdf5"))]
+        {
+            let _ = (path, manifest);
+            Err(ArrowError::AdapterDisabled("hdf5"))
+        }
+    }
+
+    fn restore_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<RestoredCheckpoint, ArrowError> {
+        #[cfg(feature = "hdf5")]
+        {
+            restore_adapter_contract(path, CheckpointFormat::Hdf5)
+        }
+        #[cfg(not(feature = "hdf5"))]
+        {
+            let _ = path;
+            Err(ArrowError::AdapterDisabled("hdf5"))
+        }
+    }
+}
+
+#[cfg(feature = "parallel-io")]
+impl CheckpointAdapter for Adios2CheckpointAdapter {
+    fn format(&self) -> CheckpointFormat {
+        CheckpointFormat::Adios2
+    }
+
+    fn write_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        manifest: &CheckpointManifest,
+    ) -> Result<CheckpointAdapterReceipt, ArrowError> {
+        #[cfg(feature = "adios2")]
+        {
+            write_adapter_contract(path, manifest, CheckpointFormat::Adios2)
+        }
+        #[cfg(not(feature = "adios2"))]
+        {
+            let _ = (path, manifest);
+            Err(ArrowError::AdapterDisabled("adios2"))
+        }
+    }
+
+    fn restore_manifest(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<RestoredCheckpoint, ArrowError> {
+        #[cfg(feature = "adios2")]
+        {
+            restore_adapter_contract(path, CheckpointFormat::Adios2)
+        }
+        #[cfg(not(feature = "adios2"))]
+        {
+            let _ = path;
+            Err(ArrowError::AdapterDisabled("adios2"))
+        }
+    }
+}
+
+#[cfg(all(feature = "parallel-io", any(feature = "hdf5", feature = "adios2")))]
+fn write_adapter_contract(
+    path: impl AsRef<std::path::Path>,
+    manifest: &CheckpointManifest,
+    expected_format: CheckpointFormat,
+) -> Result<CheckpointAdapterReceipt, ArrowError> {
+    require_checkpoint_format(manifest, expected_format)?;
+    manifest.write_contract_file(path.as_ref())?;
+    Ok(CheckpointAdapterReceipt {
+        format: expected_format,
+        path: path.as_ref().display().to_string(),
+        row_count: manifest.row_count,
+        checksum: manifest.checksum,
+        contract_only: true,
+    })
+}
+
+#[cfg(all(feature = "parallel-io", any(feature = "hdf5", feature = "adios2")))]
+fn restore_adapter_contract(
+    path: impl AsRef<std::path::Path>,
+    expected_format: CheckpointFormat,
+) -> Result<RestoredCheckpoint, ArrowError> {
+    let manifest = CheckpointManifest::read_contract_file(path.as_ref())?;
+    require_checkpoint_format(&manifest, expected_format)?;
+    manifest.restore()
+}
+
+#[cfg(all(feature = "parallel-io", any(feature = "hdf5", feature = "adios2")))]
+fn require_checkpoint_format(
+    manifest: &CheckpointManifest,
+    expected_format: CheckpointFormat,
+) -> Result<(), ArrowError> {
+    if manifest.format != expected_format {
+        return Err(ArrowError::InvalidCheckpointFormat {
+            expected: expected_format.as_str(),
+            actual: manifest.format.as_str().to_string(),
+        });
+    }
+    Ok(())
+}
 
 pub struct ArrowEventLog {
     run_id: String,
@@ -397,9 +1011,76 @@ fn synthetic_handle_entity(value: &str) -> EntityId {
 }
 
 fn stable_hash(value: &str) -> u64 {
-    value.bytes().fold(0xcbf29ce484222325, |hash, byte| {
-        (hash ^ u64::from(byte)).wrapping_mul(0x100000001b3)
+    stable_hash_bytes(value.as_bytes())
+}
+
+fn stable_hash_bytes(bytes: &[u8]) -> u64 {
+    bytes.iter().fold(0xcbf29ce484222325, |hash, byte| {
+        (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3)
     })
+}
+
+#[cfg(feature = "parallel-io")]
+fn validate_contiguous_blocks(
+    blocks: &[ContiguousBlock],
+    row_count: usize,
+    expected_len: Option<usize>,
+) -> Result<(), ArrowError> {
+    if row_count == 0 {
+        if !blocks.is_empty() {
+            return Err(ArrowError::InvalidBlockLayout(
+                "empty batches must not declare blocks",
+            ));
+        }
+        return Ok(());
+    }
+    if blocks.is_empty() {
+        return Err(ArrowError::InvalidBlockLayout(
+            "non-empty batches must declare a block",
+        ));
+    }
+
+    let mut next_offset = 0_u64;
+    let mut rows = 0_usize;
+    for block in blocks {
+        if block.offset_bytes != next_offset {
+            return Err(ArrowError::InvalidBlockLayout(
+                "block offsets must be contiguous",
+            ));
+        }
+        if block.byte_len == 0 {
+            return Err(ArrowError::InvalidBlockLayout(
+                "non-empty blocks must have bytes",
+            ));
+        }
+        if block.row_count == 0 {
+            return Err(ArrowError::InvalidBlockLayout(
+                "non-empty blocks must have rows",
+            ));
+        }
+        rows = rows
+            .checked_add(block.row_count)
+            .ok_or(ArrowError::InvalidBlockLayout("block row counts overflow"))?;
+        next_offset =
+            next_offset
+                .checked_add(block.byte_len)
+                .ok_or(ArrowError::InvalidBlockLayout(
+                    "block byte lengths overflow",
+                ))?;
+    }
+    if rows != row_count {
+        return Err(ArrowError::InvalidBlockLayout(
+            "block row counts must match manifest",
+        ));
+    }
+    if let Some(expected_len) = expected_len {
+        if next_offset != expected_len as u64 {
+            return Err(ArrowError::InvalidBlockLayout(
+                "block bytes must match encoded length",
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn parse_event_handle(hex_value: &str) -> Result<EventId, ArrowError> {

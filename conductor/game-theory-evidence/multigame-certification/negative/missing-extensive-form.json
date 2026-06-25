@@ -1,0 +1,46 @@
+{
+  "schema_version": "kairoecs.multigame.certification.v1",
+  "track_id": 61,
+  "track_name": "Extensive-Form Graph-ECS Runtime Certification",
+  "status": "negative-fixture",
+  "generated_at": "2026-06-20",
+  "crate": "kairo-ecs-game-theory",
+  "feature_gates": [
+    "graph-relations"
+  ],
+  "runtime_contracts": {},
+  "scenarios": [
+    {
+      "id": "normal_form_only",
+      "game_form": "normal-form",
+      "players": [
+        "row",
+        "column"
+      ],
+      "strategy_counts": [
+        2,
+        2
+      ],
+      "ecs_components": [
+        "StrategySpace",
+        "PayoffMatrix",
+        "Utility"
+      ],
+      "solver_assertions": [
+        {
+          "solver": "PureNashSolver",
+          "assertion": "normal-form only fixture must be rejected"
+        }
+      ],
+      "evidence_commands": [
+        "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test normal_form"
+      ]
+    }
+  ],
+  "acceptance_gates": [
+    "negative fixture"
+  ],
+  "known_limits": [
+    "negative fixture"
+  ]
+}

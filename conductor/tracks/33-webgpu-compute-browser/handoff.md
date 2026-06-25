@@ -1,12 +1,12 @@
 # Handoff: Track 33 WebGPU Compute for Browser
 
-Last updated: 2026-05-11
+Last updated: 2026-06-23
 
 Update tag: `host-only-next-harvest-slice`
 
 ## Status
 
-Initial scaffold implemented and tightened. Browser-native WebGPU device wiring is still blocked, and the crate now reports that explicitly through `BrowserBindingsNotConfigured` / `BrowserBackendNotConfigured` contracts. The crate facade, adapter/bridge/reference-dispatch scaffolds, fallback/parity capability metadata, WebGPU WGSL shader, static demo, smoke test, GPU-free WGSL subset validator, and comparison/subset docs exist.
+Archived as `Done` for the legacy browser WebGPU scaffold after focused review on 2026-06-23. Browser-native WebGPU device wiring is still blocked, and the crate reports that explicitly through `BrowserBindingsNotConfigured` / `BrowserBackendNotConfigured` contracts. The crate facade, adapter/bridge/reference-dispatch scaffolds, fallback/parity capability metadata, WebGPU WGSL shader, static demo, smoke test, GPU-free WGSL subset validator, and comparison/subset docs exist. Real browser WebGPU dispatch, Wasm binding proof, frame-rate evidence, and cross-browser smoke are not claimed by this archive.
 
 ## Summary
 
@@ -147,3 +147,11 @@ Keep this track `In Review` until those blockers are resolved. Record `$conducto
 - Accepted fix: `validate-track33.ps1` now scans the public demo HTML and JavaScript files for premature WebGPU dispatch or frame-rate claims while allowing explicit `not claimed` / `backend-not-configured` boundary text.
 - Validation: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\33-webgpu-compute-browser\validate-track33.ps1 -RunRuntimeTests` passed with demo smoke, WGSL subset validation, 8 WebGPU unit tests, 3 parity tests, and doc-tests.
 - Next-phase decision: remain `In Review`; this closes the local descriptor and claim-scan findings, but browser WebGPU device execution, Wasm binding proof, frame-rate evidence, and cross-browser smoke are still external follow-up gates.
+
+## Archive review -- 2026-06-23
+
+- Review result: no additional in-scope source defects were found for the legacy Track 33 scaffold. Browser WebGPU device execution, Wasm binding proof, frame-rate evidence, and cross-browser smoke remain explicit follow-up gates rather than reasons to keep this scaffold track open.
+- Accepted fix: registry and closeout surfaces were reconciled from `In Review`/pending placeholders to an archived `Done` state for Track 33 only.
+- Validation: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\33-webgpu-compute-browser\validate-track33.ps1 -RunRuntimeTests` passed on 2026-06-23 with demo smoke, WGSL subset validation, 8 WebGPU unit tests, 3 parity/contract tests, and doc-tests.
+- Deferred by scope: no browser WebGPU device parity, 100K-agent frame-rate, `wasm-pack build --target web`, or Chrome/Edge/Firefox cross-browser evidence is attached to Track 33. Public browser-GPU acceleration claims remain blocked until those live gates attach evidence.
+- Next-phase decision: Track 33 is archived as `Done`; future browser WebGPU execution work must proceed through a new runtime implementation slice rather than this legacy scaffold track.

@@ -1,0 +1,49 @@
+{
+  "schema_version": "kairoecs.multigame.certification.v1",
+  "track_id": 61,
+  "track_name": "Extensive-Form Graph-ECS Runtime Certification",
+  "status": "negative-fixture",
+  "generated_at": "2026-06-20",
+  "crate": "kairo-ecs-game-theory",
+  "feature_gates": [
+    "graph-relations"
+  ],
+  "runtime_contracts": {},
+  "scenarios": [
+    {
+      "id": "extensive_form_missing_transition",
+      "game_form": "extensive-form",
+      "players": [
+        "p1"
+      ],
+      "root_node": "root",
+      "node_counts": {
+        "decision": 1,
+        "chance": 0,
+        "terminal": 1,
+        "information_sets": 0,
+        "action_edges": 1
+      },
+      "ecs_components": [
+        "ExtensiveNode",
+        "ActionEdge",
+        "TerminalUtility"
+      ],
+      "solver_assertions": [
+        {
+          "solver": "extensive_form_paths",
+          "assertion": "missing ChildOf and TransitionTo must be rejected"
+        }
+      ],
+      "evidence_commands": [
+        "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory traversal_"
+      ]
+    }
+  ],
+  "acceptance_gates": [
+    "negative fixture"
+  ],
+  "known_limits": [
+    "negative fixture"
+  ]
+}

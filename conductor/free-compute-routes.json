@@ -1,0 +1,140 @@
+{
+  "schema_version": "kairoecs.free-compute-routes.v1",
+  "last_reviewed": "2026-06-24",
+  "purpose": "Classify free or near-free execution surfaces that can reduce repo-side blockers without satisfying live HPC parity claims.",
+  "claim_boundary": "Free CPU/container routes can prove packaging, build, smoke, and contract behavior. They cannot prove production HPC parity, Slurm scheduling, parallel filesystem throughput, native GPU speedup, or weak/strong scaling certification unless the route records real live-hpc manifests with raw artifacts and checksums.",
+  "routes": [
+    {
+      "id": "github-actions-standard-public",
+      "provider": "GitHub Actions",
+      "access_model": "free for public repositories on standard GitHub-hosted runners",
+      "source_url": "https://docs.github.com/billing/managing-billing-for-github-actions/about-billing-for-github-actions",
+      "repo_entrypoints": [
+        ".github/workflows/cloud-smoke.yml",
+        ".github/workflows/validate-conductor.yml",
+        ".github/workflows/benchmark-smoke.yml"
+      ],
+      "blockers_reduced": [
+        "Track 54 Docker image build and CLI help smoke through GitHub-hosted Docker runtime",
+        "Track 51/52/55 validator execution on clean Linux/Windows runners",
+        "Track 55 local scaling placeholder runner and aggregator checks"
+      ],
+      "required_evidence": [
+        "GitHub Actions run URL",
+        "commit SHA",
+        "job name",
+        "runner OS",
+        "command log"
+      ],
+      "not_proof_for": [
+        "Slurm scheduler execution",
+        "MPI multi-node execution",
+        "Lustre or GPFS throughput",
+        "native GPU kernel parity or speedup",
+        "weak/strong scaling certification"
+      ]
+    },
+    {
+      "id": "github-actions-macos-metal-smoke",
+      "provider": "GitHub Actions",
+      "access_model": "standard macOS GitHub-hosted runner for public repository workflow smoke",
+      "source_url": "https://docs.github.com/en/actions/reference/runners/github-hosted-runners",
+      "repo_entrypoints": [
+        ".github/workflows/gpu-free-smoke.yml"
+      ],
+      "blockers_reduced": [
+        "Track 52/33 Metal-adjacent compile and WebGPU smoke confidence",
+        "GPU docs and shader-surface regression checks"
+      ],
+      "required_evidence": [
+        "GitHub Actions run URL",
+        "macos-metal-smoke job result",
+        "commit SHA"
+      ],
+      "not_proof_for": [
+        "CUDA backend execution",
+        "wgpu native adapter parity on target HPC GPU",
+        "GPU benchmark threshold",
+        "persistent device-memory throughput"
+      ]
+    },
+    {
+      "id": "huggingface-spaces-cpu-basic",
+      "provider": "Hugging Face Spaces",
+      "access_model": "free basic CPU Space",
+      "source_url": "https://huggingface.co/docs/hub/en/spaces-overview",
+      "repo_entrypoints": [
+        "docs/cloud-hpc/free-compute-blocker-plan.md"
+      ],
+      "blockers_reduced": [
+        "Public CPU-only demo or smoke harness for local scaling placeholder JSON",
+        "Independent Linux CPU environment for docs/demo reproducibility"
+      ],
+      "required_evidence": [
+        "Space URL",
+        "Space commit SHA or revision",
+        "captured output artifact",
+        "command log"
+      ],
+      "not_proof_for": [
+        "HPC scheduler acceptance",
+        "parallel filesystem throughput",
+        "native GPU execution",
+        "MPI multi-rank cross-node behavior",
+        "production weak/strong scaling"
+      ]
+    },
+    {
+      "id": "huggingface-spaces-gpu-request",
+      "provider": "Hugging Face Spaces",
+      "access_model": "requested or on-demand GPU/ZeroGPU-style Space when available",
+      "source_url": "https://huggingface.co/docs/hub/en/spaces-gpus",
+      "repo_entrypoints": [
+        "docs/gpu-compute/free-testing-routes.md"
+      ],
+      "blockers_reduced": [
+        "Ad hoc GPU availability smoke when a Space is granted suitable hardware",
+        "NVIDIA-visible dependency and device enumeration smoke"
+      ],
+      "required_evidence": [
+        "Space URL",
+        "hardware tier",
+        "GPU model as reported by the runtime",
+        "raw output artifact",
+        "checksum"
+      ],
+      "not_proof_for": [
+        "stable CI coverage",
+        "guaranteed reproducible GPU capacity",
+        "Track 52 benchmark threshold without a completed live-hpc manifest",
+        "Track 55 scaling certification"
+      ]
+    },
+    {
+      "id": "docker-container-on-github-actions",
+      "provider": "Docker on GitHub-hosted runners",
+      "access_model": "Docker engine available inside applicable GitHub-hosted Linux jobs",
+      "source_url": "https://github.blog/enterprise-software/ci-cd/when-to-choose-github-hosted-runners-or-self-hosted-runners-with-github-actions/",
+      "repo_entrypoints": [
+        ".github/workflows/cloud-smoke.yml",
+        "docker/Dockerfile"
+      ],
+      "blockers_reduced": [
+        "Track 54 Docker build and CLI smoke when cloud-smoke passes",
+        "Container packaging regression detection"
+      ],
+      "required_evidence": [
+        "cloud-smoke workflow run URL",
+        "Docker build log",
+        "docker run command log",
+        "commit SHA"
+      ],
+      "not_proof_for": [
+        "Kubernetes reconciliation",
+        "Slurm job submission",
+        "cloud batch provider execution",
+        "checkpoint resume under scheduler preemption"
+      ]
+    }
+  ]
+}

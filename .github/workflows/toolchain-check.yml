@@ -64,7 +64,7 @@ jobs:
       matrix:
         include:
           - channel: stable
-            expected-prefix: "1.95"
+            expected-prefix: "1.96"
           - channel: beta
             expected-prefix: "1."
     steps:

@@ -10,6 +10,10 @@ on:
       - "crates/kairo-ecs-gpu/**"
       - "crates/kairo-ecs-webgpu/**"
       - "docs/gpu-compute/**"
+      - "docs/cloud-hpc/free-compute-blocker-plan.md"
+      - "conductor/free-compute-routes.json"
+      - "scripts/validation/validate-free-compute-routes.mjs"
+      - "tests/free-compute-routes.test.mjs"
       - "website/webgpu-demo/**"
       - "scripts/nim/**"
       - "notebooks/colab_gpu_smoke.ipynb"
@@ -48,6 +52,9 @@ jobs:
       - name: Browser demo smoke
         run: npm test --prefix website/webgpu-demo
 
+      - name: Validate free compute blocker routes
+        run: node scripts/validation/validate-free-compute-routes.mjs
+
   nim-gpu-smoke:
     name: nim-gpu-smoke
     runs-on: ubuntu-latest
@@ -59,6 +66,9 @@ jobs:
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: "24"
+
+      - name: Validate free compute blocker routes
+        run: node scripts/validation/validate-free-compute-routes.mjs
 
       - name: NIM smoke
         env:

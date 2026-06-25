@@ -72,7 +72,14 @@ if (!version) {
 assertVersion(version);
 
 run("node", ["scripts/validation/validate-code-health.mjs"]);
-run("node", ["scripts/validation/validate-hpc-registry-readiness.mjs"]);
+const registryValidationArgs = [
+  "scripts/validation/validate-hpc-registry-readiness.mjs",
+  "--check-negative-fixtures",
+];
+if (mode === "publish") {
+  registryValidationArgs.push("--require-live-publication-evidence");
+}
+run("node", registryValidationArgs);
 
 if (mode === "dry-run") {
   run("python", ["cloud/validate_cloud_hpc.py"]);

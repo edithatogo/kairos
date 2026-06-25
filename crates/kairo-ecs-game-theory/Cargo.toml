@@ -1,0 +1,23 @@
+[package]
+name = 'kairo-ecs-game-theory'
+version = '0.1.0'
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[features]
+default = []
+generated-components = []
+graph-relations = ["dep:kairo-ecs-state", "dep:kairo-ecs-types"]
+
+[dependencies]
+kairo-ecs-state = { path = "../kairo-ecs-state", optional = true }
+kairo-ecs-types = { path = "../kairo-ecs-types", optional = true }
+
+[[bench]]
+name = "normal_form"
+harness = false
+
+[lints]
+workspace = true

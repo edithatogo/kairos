@@ -1,6 +1,12 @@
 # KairoECS Conductor Status
 
-Last verified: 2026-05-19
+## Track 42 Archive Review - 2026-06-25
+
+Track 42 is archived as Done for the repo-side guarded language/package registry publication and provenance gate. The publication manifest, readiness validator, default-off workflow dispatch, dry-run helper, protected main-only publish job, release-publication environment guard, OIDC/provenance permissions, package manifest verification, and Track 44 code-health floor pass locally.
+
+This archive does not claim live public registry publication readiness. Registry-side trusted publisher/account setup, protected-environment dispatch evidence, release-manager approval, actual PyPI/npm/NuGet/crates.io/R/Julia/Go publication, and live provenance artifacts remain release-governed blockers before any public registry write.
+
+Last verified: 2026-06-19
 
 ## Setup state
 
@@ -83,9 +89,9 @@ evidence. Track 32, 33, 34, and 35 focused validators passed
 under `stable-x86_64-pc-windows-gnu`. The Track 36-40 aggregate offline
 validator also passed under the GNU Rust toolchain, covering streaming, ML,
 FMI, cloud/HPC, and time-travel debug scaffolds. Tracks 36, 37, 38, and 40
-later advanced to `Done` after their owned GNU-toolchain reruns passed; Track
-39 remains `In Review` because live Docker, Kubernetes, Slurm, and
-cloud-provider validation is still environment-backed.
+later advanced to `Done` after their owned GNU-toolchain reruns passed. Track
+39 later archived as `Done` for the offline cloud/HPC scaffold; live Docker,
+Kubernetes, Slurm, and cloud-provider validation remains environment-backed and release-gated by Tracks 43/54/55.
 
 Review remediation on 2026-05-17 tightened the Track 32-35 validator and
 runtime gates: the GPU/WebGPU and PDES/distributed `-RunRuntimeTests`/`-RunTests`
@@ -106,18 +112,46 @@ pending event timestamps in GVT reduction. Track 39 records explicit Track 22
 handoff approval for the scaffold-only CLI surface, renders GCP sweep
 parallelism from inputs, cleans validator scratch files, and runs a labelled
 static shell fallback when Bash cannot start on this Windows host. Tracks 32,
-33, 34, 35, and 39 remain `In Review` pending real GPU, browser, scaling,
-multi-node, Docker, Kubernetes, Slurm, and cloud-provider proof.
+33, 34, 35, and 39 have now been archived as legacy scaffold tracks; real GPU,
+browser, scaling, multi-node, Docker, Kubernetes, Slurm, and cloud-provider proof remains owned by the production parity and release-gating tracks.
 
-Software-only implementation on 2026-05-18 addressed the remaining dependency-free
-Track 34 and Track 35 work. Track 34 now has deterministic 4/8/16/32 LP
-benchmark-smoke samples and a documented Time Warp rollback spike without
-claiming hardware speedup. Track 35 now has dependency-free MPI and gRPC local
-two-node contract proof helpers covering event exchange, migration envelope
-validation, telemetry merge counts, GVT/failure evidence, and explicit no-real
-runtime claims. Tracks 34 and 35 remain `In Review` only for the real scaling,
-multi-node, and transport-runtime evidence that needs unavailable hardware,
-platform, or software dependencies.
+Track 32 was archived as `Done` on 2026-06-23 after a focused `$conductor-review`
+found no remaining in-scope local scaffold defects and the Track 32 runtime
+validator passed on this host. The archive closes the legacy optional GPU
+compute scaffold only: `crates/kairo-ecs-gpu` still reports unavailable native
+backends unless an explicit backend is implemented, and no real GPU parity,
+10x speedup, or hardware memory-budget claim is made here. Those live GPU
+acceptance requirements remain owned by Track 52 and the production HPC parity
+tracks.
+Track 33 was archived as `Done` on 2026-06-23 after focused `$conductor-review`
+found no remaining in-scope local scaffold defects and the Track 33 runtime
+validator passed on this host. The archive closes the legacy browser WebGPU
+scaffold only: `crates/kairo-ecs-webgpu` and `website/webgpu-demo` still report
+real WebGPU dispatch as unavailable/not configured unless browser bindings and
+device setup are implemented. No browser WebGPU device parity, frame-rate, or
+cross-browser claim is made here.
+
+Track 34 archive review on 2026-06-23 reran `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests`; it passed with 17 PDES tests and doc-tests. This proves the local scaffold/reference contracts, not production PDES speedup or distributed runtime execution.
+Track 35 archive review on 2026-06-23 reran `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests`; it passed with 18 MPI tests, 20 gRPC tests, and doc-tests. This proves the local dependency-free emulator/reference contracts, not real distributed MPI/gRPC runtime execution.
+Track 34 was archived as `Done` on 2026-06-23 after focused `$conductor-review`
+found no remaining in-scope local scaffold defects and the Track 34 runtime
+validator passed on this host. The archive closes the legacy conservative PDES
+scaffold only: `crates/kairo-ecs-pdes` proves local protocol, parity, GVT,
+deadlock, software-only scaling-smoke, and Time Warp spike documentation
+contracts. No production PDES scheduler integration, wall-clock speedup,
+distributed runtime, or production Time Warp claim is made here. Those live
+production requirements remain owned by Tracks 47, 48, 49, and 55.
+
+Track 35 was archived as `Done` on 2026-06-23 after focused `$conductor-review`
+found no remaining in-scope local scaffold defects and the Track 35 runtime
+validator passed on this host. The archive closes the legacy dependency-free MPI
+and gRPC transport emulator scaffolds only: `crates/kairo-ecs-mpi` and
+`crates/kairo-ecs-grpc` prove local event exchange, source/destination envelope,
+pending-event GVT, launch-contract, migration/telemetry contract, and heartbeat
+classification behavior. No real `rsmpi`, `tonic`/`prost`, multi-node
+execution, migration runtime, distributed telemetry aggregation, or fault
+tolerance claim is made here. Those live production requirements remain owned by
+Tracks 49, 54, and 55.
 
 Track 41 advanced to `Done` on 2026-05-17 after the docs-quality workflow,
 learning-coverage matrix, notebook inventory, tutorial index, and docs-platform
@@ -159,12 +193,80 @@ commit `0749d4139fff6a86cdf623c336541cd461055a9b` records the evidence update.
 Strict global git closeout now passes after restoring the historical closeout
 ref. The track remains `In Review` until pull-request CI confirms the branch.
 
-Track 39 and Track 43 now record partial Azure evidence from 2026-05-20: a live
-CPU Azure Batch substrate canary succeeded in the Azure for Students subscription.
-This narrows the Azure blocker but does not close Track 39 or Track 43 because
-KairoECS container/scenario execution, output/checksum evidence, GPU/HPC proof,
-AWS/GCP canaries, Docker, Kubernetes, Slurm, protected publication, and
-release-manager approval remain unproven.
+Track 39 was archived as `Done` on 2026-06-23 after focused `$conductor-review`
+found no remaining in-scope local scaffold defects and the offline Track 39
+validator plus hardened Track 36-40 aggregate passed on this host. The archive
+closes the legacy offline cloud/HPC runner scaffold only: manifest/template
+validation, local Kubernetes render checks, Slurm/static shell policy checks,
+telemetry checksum sidecars, runtime evidence boundaries, and the partial Azure
+Batch CPU substrate canary from 2026-05-20 are recorded. No Docker image
+execution, Kubernetes reconciliation, Slurm scheduler execution, KairoECS cloud
+batch scenario run, output/checksum proof, GPU/HPC proof, AWS/GCP canary, or
+production Azure KairoECS runtime claim is made here. Those live production
+requirements remain owned by Tracks 43, 54, and 55.
+
+Tracks 46-55 were added on 2026-06-19 as the production HPC parity wave. They
+make the live-proof gap explicit rather than marking the current scaffolds
+complete. Track 46 is now `In Review` with a machine-readable evidence schema,
+scaffold/live-HPC template manifests, and an executable claim-boundary validator.
+Track 47 is `In Progress` with the first conservative lookahead enforcement
+slice in `kairo-ecs-pdes`. Track 48 is `In Progress` with a `time-warp`
+feature-gated local rollback, anti-message, generation guard, monotonic-GVT
+fossil collection, pre-GVT rejection, duplicate-positive rejection, and
+overhead/rollback-pressure counter slice in `kairo-ecs-pdes`; production
+optimistic scheduling, replay/redelivery semantics, downstream-output
+anti-messages, benchmarks, distributed transport, and live evidence remain
+incomplete.
+Track 49 is `In Progress` with a first MPI/gRPC launch-contract and migration
+metadata baseline in `kairo-ecs-mpi` and `kairo-ecs-grpc`. Track 50 is `In
+Progress` with a first `numa` feature-gated topology, affinity, event-pool,
+component-locality, and FFI zero-copy layout contract baseline. Track 51 is
+`In Progress` with a first `parallel-io` feature-gated checkpoint/restart and
+contiguous-block contract baseline in `kairo-ecs-arrow`; native Arrow arrays,
+HDF5/ADIOS2 writers, and parallel filesystem evidence remain incomplete. Track
+52 is `In Progress` with a first persistent device-memory contract slice in
+`kairo-ecs-gpu` that records resident buffers, copy boundaries, and deterministic
+ABM/DES CPU parity; real wgpu/CUDA device execution and hardware benchmark
+evidence remain incomplete. Track 53 is `In Progress` with a first
+`fmi-runtime` archive-handling slice in `kairo-ecs-fmi` for stored-entry `.fmu`
+extraction, traversal rejection, and reuse of the unpacked-layout validator;
+dynamic loading, FMI 2/3 lifecycle stepping, OpenModelica roundtrip, and live
+FMU evidence remain incomplete. Track 54 is `In Review` with a local runtime
+evidence validator and blocked-scope manifest for Docker, Kubernetes, Slurm,
+AWS Batch, GCP Batch, and Azure Batch; live runtime canaries remain incomplete.
+Track 55 is `In Progress` with a draft scenario/evidence contract and repaired
+certification validator for final weak/strong scaling certification; no live
+scaling proof is claimed. None of these tracks is `Done`; live MPI,
+NUMA/hwloc, GPU, Slurm/cloud, HDF5/ADIOS2, FMU, and scaling evidence remains
+required before production-grade HPC parity can be claimed.
+
+The HPC parity wave now includes `scripts/validation/validate-hpc-live-template-blockers.mjs`,
+which prevents Tracks 51, 52, and 55 from being treated as `Done` while their
+live parallel-filesystem, GPU-hardware, or weak/strong scaling evidence remains
+only `live-hpc-template` manifests.
+
+The free or near-free compute route matrix at `conductor/free-compute-routes.json`
+is validated by `scripts/validation/validate-free-compute-routes.mjs`. It allows
+GitHub Actions, Docker-on-GitHub-hosted runners, and Hugging Face Spaces to
+reduce CPU/container/demo blockers, while explicitly preserving the live-HPC
+blockers for Slurm, MPI multi-node, Lustre/GPFS, native GPU benchmarking, and
+weak/strong scaling certification.
+
+Tracks 56-61 were added on 2026-06-19 as the open game theory ontology and
+multi-game runtime wave. They split the earlier monolithic Track 56 concept into
+granular implementation tracks. Track 56 is now `In Review` with the wave
+charter, evidence schema/templates, evidence validator, claim-boundary scanner,
+negative fixtures, and release-boundary closeout recorded. Track 57 is now
+`In Review` with the `open-game-theory-ontology/` subrepo, Turtle and JSON-LD
+fixtures, `kairo-ecs-game-ontology` parser crate, deterministic normalized IR,
+malformed-input tests, and review fixes. Track 58 is `In Review` for
+deterministic ontology-to-Rust generation and generated component compile
+gates. Track 59 is `In Review` for default-off Graph-ECS relations using
+Entity-ID `ChildOf` and `TransitionTo` components. Track 60 is `In Review` for
+normal-form flat-array components and solvers. Track 61 is `In Review` for
+extensive-form Graph-ECS traversal, backward induction, and local multi-game
+certification. None of Tracks 56-61 is `Done`; public release claims remain
+bounded to the checked-in evidence and each track's blocked paths.
 
 ## Validation evidence
 
@@ -187,14 +289,18 @@ Latest local baseline validation on 2026-05-07; current targeted verification is
 - Track 32-35 focused compile-time validators passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -SkipCargoTest`, `pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1`, `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1`, and `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1`.
 - Track 32-35 remediation on 2026-05-17 added GNU-toolchain runtime reruns that now pass: `pwsh -NoProfile -File conductor/tracks/32-gpu-compute-acceleration/validate-track32.ps1 -RunRuntimeTests`, `pwsh -NoProfile -File conductor/tracks/33-webgpu-compute-browser/validate-track33.ps1 -RunRuntimeTests`, `pwsh -NoProfile -File conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1 -RunTests`, and `pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1 -RunTests`. These prove the scaffolded crate tests on this host, not the missing real GPU, browser, scaling, or multi-node acceptance evidence.
 - Track 32-35 follow-up review remediation on 2026-05-18 revalidated the same runtime gates after closing the remaining local findings: Track 32 passed with 10 GPU unit tests, 4 contract tests, ABM parity, and DES parity; Track 33 passed with 8 WebGPU unit tests, 3 parity tests, demo smoke, and WGSL subset validation; Track 34 passed with 11 PDES tests; Track 35 passed with 14 MPI tests and 15 gRPC tests.
-- Track 34-35 software-only implementation on 2026-05-18 revalidated the dependency-free additions: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests` passed with 13 PDES tests, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests` passed with 15 MPI tests and 16 gRPC tests.
+- Track 32 archive review on 2026-06-23 reran `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\32-gpu-compute-acceleration\validate-track32.ps1 -RunRuntimeTests`; it passed with 10 GPU unit tests, 4 contract tests, ABM parity, DES parity, 3 persistent-memory tests, and doc-tests. This proves the local scaffold and reference contracts, not native GPU hardware execution.
+- Track 33 archive review on 2026-06-23 reran `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\33-webgpu-compute-browser\validate-track33.ps1 -RunRuntimeTests`; it passed with demo smoke, WGSL subset validation, 8 WebGPU unit tests, 3 parity/contract tests, and doc-tests. This proves the local scaffold and reference contracts, not browser WebGPU device execution.
+- Track 34 archive review on 2026-06-23 revalidated the dependency-free PDES scaffold with `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests`, passing 17 PDES tests and doc-tests. The older Track 35 software-only implementation gate still passes separately with its MPI/gRPC local tests.
+- Track 35 archive review on 2026-06-23 revalidated the dependency-free MPI/gRPC emulator scaffold with `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests`, passing 18 MPI tests, 20 gRPC tests, and doc-tests. This proves local emulator contracts, not real `rsmpi`, `tonic`/`prost`, or multi-node runtime proof.
 - Track 36-40 aggregate offline validation passed on 2026-05-10 under `stable-x86_64-pc-windows-gnu`: `pwsh -NoProfile -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`, `python cloud/validate_cloud_hpc.py`, and `node website/time-travel-demo/validate-demo.mjs`.
 - Track 36, 37, 38, and 40 later advanced to `Done` on 2026-05-10 after GNU-toolchain reruns cleared the Windows linker blocker for their owned compile/test gates.
-- Track 39 remediation on 2026-05-18 fixed the CLI ownership record, GCP sweep rendering, validator cleanup, and shell-validation fallback. `python cloud/validate_cloud_hpc.py` passes and leaves neither `.tmp/k8s-inline-experiment.json` nor `cloud/validation-work`; when Git Bash cannot start, the validator runs a labelled static fallback that is explicitly not equivalent to `bash -n`. Live Docker, Kubernetes, Slurm, and provider runtime proof remains environment-backed and therefore `Track 39` stays `In Review`.
+- Track 39 archive review on 2026-06-23 revalidated the offline cloud/HPC scaffold with `python cloud\validate_cloud_hpc.py` and `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1 -SkipCargoTests`. The cloud validator passed with the labelled static shell fallback because Git Bash could not create its signal pipe on this Windows host; the fallback is not equivalent to live Slurm scheduler proof. The aggregate validator passed after compile/check gates, `kairo_gym` unittest, cloud offline validation, and time-travel demo validation.
 - The hardened Track 36-40 aggregate passed on 2026-05-18 with `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests`; when sandboxed `rustup toolchain list` hit Windows pipe access denial, the script used the installed `stable-x86_64-pc-windows-gnu` directory fallback and completed successfully.
 - Track 41 closeout on 2026-05-17 passed `node scripts/validation/validate-learning-coverage.mjs`, `python notebooks/validate_notebooks.py`, `npm --prefix website run check:all`, `node scripts/dx/validate-docs-workflow.mjs`, `pwsh -NoProfile -File docs/tutorials/validate-tutorials.ps1`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`. The strict clean-tree closeout remains blocked by the repo-local `.git/index.lock` ACL issue, not by Track 41 validation.
 - Track 42-44 setup validation on 2026-05-19 passed `node scripts/validation/validate-code-health.mjs`, `node scripts/validation/validate-publication-readiness.mjs`, `node scripts/validation/validate-hpc-registry-readiness.mjs`, `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`, `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_artifacts.ps1`, and `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1`. The new validators prove publication workflow structure and gating, not external registry submissions.
 - Track 39/43 Azure substrate validation on 2026-05-20 completed a live CPU Batch canary with job `kairos-canary-20260520`, task `kairos-canary-task-001`, and exit code `0`; sanitized evidence is recorded in `docs/cloud-hpc/azure-batch-canary-2026-05-20.md`. This is not KairoECS container/scenario runtime acceptance.
+- Track 43 implementation review on 2026-06-22 advanced the registry publication lane to `In Review` for evidence gating: `packaging/hpc-runtime-acceptance-evidence.json` records required live scopes, `packaging/negative/hpc-runtime-evidence-production-without-proof.json` proves unsupported production-ready claims are rejected, and `node scripts/validation/validate-hpc-registry-readiness.mjs --check-negative-fixtures` validates the gate. Live Docker, Kubernetes, Slurm, AWS/GCP Batch, Azure KairoECS container/scenario proof, protected publication, and release-manager approval remain blockers before `Done`.
 - Track 44 closeout validation on 2026-06-18 passed `node scripts/validation/validate-code-health.mjs` with `total_current=10` and `total_minimum=9.5`, and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`.
 - Track 45 closeout validation on 2026-06-18 passed `node scripts/dx/validate-docs-workflow.mjs` and `node scripts/validation/validate-docs-platform-sota.mjs`, including Astro/Starlight build, internal link validation, generated compatibility routes, Pagefind output, llms.txt, Starlight versioning, icons, and local polyglot plugin checks.
 - Strict git closeout validation on 2026-06-18 passed after restoring `origin/conductor-close-reviewed-tracks-20260510` to historical tip `a7e6f4a68bad9aa9483997d3a0207031066929a1`.
@@ -485,3 +591,102 @@ See `conductor/implementation-readiness.md` for readiness levels and CI enforcem
 Use `conductor/workflow.md` as the primary execution workflow. Use `conductor/tracks.yaml`, `conductor/track-map.md`, and `conductor/subagents.md` for track selection and path ownership. Use `conductor/quality-gates.md` before accepting implementation work.
 
 Next command: `$conductor-status`.
+
+## Track 58 Phase 1 implementation review (2026-06-19)
+
+Track 58 advanced from Spec Approved to In Progress after deterministic ontology-to-Rust generation and generated component compile gates landed locally:
+
+- Task commits: 9a3e714d4890841573c11f18aa96dbdcb554c055, 643a29b52e73460b648aad6e26cc1890c51db3f5, 5bd5b34bd6d5232caaee7a2ca02207c315515e34, 7b2dca2a2380aedac731cb4d70285b948745fee5.
+- Local gates passed: cargo check for kairo-ecs-game-ontology with codegen tests, cargo check for kairo-ecs-game-theory with generated-components tests, node scripts/validation/validate-game-theory-codegen.mjs, Conductor phase gates, and DAG validation.
+- Review fix: JSON-LD context alias lines are no longer treated as ontology IDs.
+- Local cargo test executable runs remain blocked on this Windows host by Git link.exe shadowing MSVC link.exe; CI must execute the real test binaries before Track 58 can move beyond In Review.
+
+Track 58 Phase 1 reached In Review after the branch was pushed and GitHub Actions passed from head 287e8d6e2249368179e91d75501a544772ef78c4. CI review fixes were committed in 4f9864b5b625d0469f9bfaf21659598dd6779022 for deterministic generated trailing newlines and 287e8d6e2249368179e91d75501a544772ef78c4 for release-package manifest coverage of crates/kairo-ecs-game-theory/Cargo.toml.
+
+## Track 60 Phase 0 implementation review (2026-06-20)
+
+Track 60 advanced from Spec Approved to In Progress after the normal-form component model landed in `kairo-ecs-game-theory`:
+
+- Task commits: `8fd3e87 track 60 task 0.1: add normal form components` and `c97c7d7 track 60 task 0.2: validate normal form component invariants`.
+- The crate now exposes `normal_form::{StrategySpace, Utility, PayoffMatrix, NormalFormError}` with deterministic flattened profile indexing, finite utility validation, payoff-count validation, empty player/action rejection, duplicate strategy-name rejection, and invalid lookup handling.
+- Local gates passed: `rustfmt --check` for the normal-form files, `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test normal_form_components`, and `rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-game-theory --all-targets -- -D warnings`.
+- Track 60 remains In Progress. Best-response, pure Nash, dominated-strategy elimination, benchmark evidence, examples, push, strict git closeout, and GitHub Actions review remain required before any completion claim.
+
+## Track 60 Phase 1 implementation review (2026-06-20)
+
+Track 60 Phase 1 completed locally after solver-system TDD slices landed in `kairo-ecs-game-theory`:
+
+- Task commits: `ce2c22c track 60 task 1.1: implement best response solver`, `0fd85de track 60 task 1.2: implement pure nash solver`, and `de6a9fc track 60 task 1.3: implement dominated strategy elimination`.
+- Red states captured unresolved imports for `BestResponseSolver`, `PureNashSolver`, and `StrictDominanceSolver` before each implementation slice.
+- The crate now exposes best-response, pure Nash equilibrium, and strict dominated-strategy detection over the flat `PayoffMatrix` surface with deterministic profile ordering and typed invalid-player/opponent-profile errors.
+- Local gates passed: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test normal_form`, `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test normal_form_components`, `rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-game-theory --all-targets -- -D warnings`, Conductor phase gates, and DAG validation.
+- `$conductor-review` style phase review found no in-scope correctness fixes. Track 60 remains In Progress pending Phase 1 push, strict git closeout, GitHub Actions review, and Phase 2 benchmark/docs evidence.
+
+## Track 60 Phase 2 implementation review (2026-06-20)
+
+Track 60 completed its planned benchmark and documentation phase locally:
+
+- Task commits: `4e90f8f track 60 task 2.1: record normal form solver benchmarks` and `f9e1f1f track 60 task 2.2: document normal form runtime`.
+- Red states captured missing `normal_form` bench target and missing `normal_form_runtime` example before implementation.
+- Added `cargo bench -p kairo-ecs-game-theory --bench normal_form -- --quick`, `crates/kairo-ecs-game-theory/examples/normal_form_runtime.rs`, `docs/game-theory/normal-form-runtime.md`, and `conductor/tracks/60-normal-form-multigame-runtime-solvers/benchmark-evidence.json`.
+- Local gates passed: normal-form solver tests, component tests, example run, quick bench smoke, crate clippy, Conductor phase gates, and DAG validation.
+- Track 60 is now In Review after the Phase 2 push, strict git closeout, and GitHub Actions review passed with 63 successful checks and `deploy-pages` skipped.
+
+## Track 61 Phase 0 implementation review (2026-06-20)
+
+Track 61 completed its planned sequential component and topology-validation phase locally:
+
+- Task commits: `4d55376 track 61 task 0.1: add extensive form components` and `8e46a22 track 61 task 0.2: validate extensive form topology`.
+- Red states captured the missing `extensive_form` module, then the missing topology validator and error variants.
+- Added `kairo_ecs_game_theory::extensive_form` behind `graph-relations` with decision/chance/terminal nodes, information sets, action edges, chance outcomes, terminal utilities, and flat-store topology validation through `ChildOf`.
+- Local gates passed: extensive-form component tests, topology validation tests, and `kairo-ecs-game-theory` clippy with `graph-relations`.
+- Track 61 is now In Progress after the Phase 0 push, strict git closeout, and GitHub Actions review passed with 63 successful checks and `deploy-pages` skipped. Phase 1 traversal and solver work is next.
+
+## Track 61 Phase 1 implementation review (2026-06-20)
+
+Track 61 completed its planned traversal and solver phase locally:
+
+- Task commits: `2a95d95 track 61 task 1.1: traverse extensive form graph ecs`, `8aa7656 track 61 task 1.2: implement backward induction solver`, and `4a5a07b track 61 task 1.3: support information set fixtures`.
+- Red states captured missing traversal APIs, missing backward-induction solver, and missing information-set fixture APIs before implementation.
+- Added deterministic outgoing action traversal through `ChildOf` edge entities and `TransitionTo` targets, terminal path enumeration, backward induction over decision nodes, and information-set fixture validation for same-player/same-action-label constraints.
+- Local gates passed: traversal tests, backward-induction tests, information-set fixture tests, full `kairo-ecs-game-theory` feature tests, and crate clippy with `graph-relations`.
+- Track 61 remains In Progress after the Phase 1 push, strict git closeout, and GitHub Actions review passed with 63 successful checks and `deploy-pages` skipped. Phase 2 certification work is next.
+
+## Track 61 Phase 2 implementation review (2026-06-20)
+
+Track 61 completed its planned local multi-game certification phase:
+
+- Task commits: `baf1103 track 61 task 2.1: add multigame certification scenarios` and `a091615 track 61 task 2.2: validate multigame certification evidence`.
+- Red state captured the missing `scripts/validation/validate-multigame-certification.mjs` validator before implementation.
+- Added a Track 61 scenario manifest spanning normal-form flat-array games and extensive-form Graph-ECS games, plus a validator that enforces both forms, required solver assertions, evidence commands, `ChildOf`/`TransitionTo` EntityId relations, negative fixtures, and no pointer/Box graph topology in the relevant source modules.
+- Local gates passed: default and `graph-relations` crate tests, multi-game certification self-test, crate clippy with `graph-relations`, the normal-form quick benchmark smoke, Conductor phase gates, and DAG validation.
+- Track 61 is now In Review after the Phase 2 push, strict git closeout, and GitHub Actions review passed with 63 successful checks and `deploy-pages` skipped. It is not Done; broader release-governed evidence remains follow-up scope, while chance-weighted extensive-form expected-utility support is now implemented locally.
+
+## Track 43 Archive Review - 2026-06-23
+
+Track 43 is archived as Done for the guarded repo-side cloud/HPC registry publication and runtime-acceptance evidence gate. The archive validates the HPC registry manifest, runtime evidence manifest, negative production-claim fixture, guarded publication helper, offline cloud/HPC validator, and code-health floor while keeping production_claim_status blocked.
+
+The archive does not claim live cloud/HPC runtime readiness. Docker, Kubernetes, Slurm, AWS/GCP Batch, Azure KairoECS container/scenario execution, protected hpc-publication dispatch, release-manager approval, image digest, SBOM, signature/attestation, and real publication evidence remain release gates before any production cloud/HPC claim.
+
+## Track 44 Archive Review - 2026-06-23
+
+Track 44 is archived as Done for the repo-side code and repository health floor. The scorecard and validator report 10/10 against the 9.5 release floor, the code-health workflow runs the validator, and Tracks 42/43 consume the code-health-floor publication gate.
+
+The archive does not claim live GitHub API score ingestion, release trend storage, package-specific health sub-scores, or any waiver approval. Those remain follow-up/release-governance scope.
+## Track 45 Archive Review - 2026-06-23
+
+Track 45 is archived as Done for the repo-side Astro/Starlight docs-platform gate. The review found no remaining in-scope source defects; the accepted fixes were archive/status bookkeeping and closeout-ledger repair only.
+
+The archive does not claim TypeDoc, OpenAPI, hosted DocSearch, or live hosted-search operations. Those remain deferred activation-condition scope. The sandboxed docs SOTA run hit Windows `spawn EPERM`; the escalated local `check:sota`, `check:all`, docs workflow smoke, Conductor phase-gate, DAG, and artifact validators passed.
+
+## Track 46 Archive Review - 2026-06-23
+
+Track 46 is archived as Done for the governance-only HPC parity charter and evidence gate. The archive validates the shared evidence schema, local scaffold and live-HPC template manifests, quality-gate catalogue entries, SOTA/claim-boundary surfaces, and executable claim-boundary validator.
+
+The archive does not claim runtime HPC parity. Production PDES, Time Warp, MPI/gRPC, NUMA, parallel I/O, GPU, FMI, Slurm/cloud runtime acceptance, and weak/strong scaling evidence remain required in Tracks 47-55 before any production HPC parity claim.
+
+## Track 54 Archive Review - 2026-06-23
+
+Track 54 is archived as Done only for the repo-side blocked-scope runtime-evidence gate. The local validator, blocked Docker/Kubernetes/Slurm/AWS/GCP/Azure scopes, negative missing-checksum fixture, registry readiness gate, and Conductor validators pass, and the registry still reports `production_claim_status: blocked`.
+
+The archive does not claim production cloud/HPC runtime acceptance. Docker image execution, Kubernetes server-side validation, Slurm jobs, AWS/GCP/Azure Batch canaries, real Track 49 MPI runtime paths, real Track 52 GPU runtime paths, and release-manager runtime approval remain incomplete before any production runtime claim.

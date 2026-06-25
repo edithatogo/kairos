@@ -17,6 +17,15 @@
 | Publishing | staged registries with Track 42/43 gates | Trusted publishing or protected publication before production write |
 | Maintenance | deprecation and compatibility policy | Public compatibility table |
 | Interoperability | standards review | mapping docs published |
+| HPC parity charter | Tracks 46-55 live-proof wave | Evidence manifests and claim-boundary scans |
+| PDES production runtime | Conservative lookahead plus Time Warp | Live parity, deadlock, rollback, and scaling evidence |
+| Distributed synchronization | Real MPI and gRPC transports | Multi-rank and multi-process runtime proof |
+| NUMA and memory topology | hwloc, affinity, arenas, zero-copy layout | Topology, allocator, and FFI layout evidence |
+| Parallel I/O | Arrow record batches, HDF5, ADIOS2 | Checkpoint/restart and filesystem throughput evidence |
+| Native GPU acceleration | wgpu/CUDA persistent device memory | Real-device CPU parity and benchmark evidence |
+| FMI co-simulation | FMI 2/3 master runtime | FMU archive, dynamic loading, 1,000-step, and OpenModelica proof |
+| HPC runtime acceptance | Slurm, containers, Kubernetes, cloud batch | Live scheduler and provider canary evidence |
+| Scaling certification | Weak and strong scaling profiles | Raw result manifests and release certification |
 
 ## Scoring rubric
 
