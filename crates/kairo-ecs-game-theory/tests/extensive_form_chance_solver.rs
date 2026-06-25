@@ -32,6 +32,7 @@ fn add_action(
     assert!(transitions.insert(edge, TransitionTo(target)));
 }
 
+#[allow(clippy::too_many_arguments)]
 fn add_chance(
     source: EntityId,
     edge: EntityId,
