@@ -1,4 +1,5 @@
 ﻿#![cfg(feature = "graph-relations")]
+#![allow(unused_mut)]
 
 use kairo_ecs_game_theory::extensive_form::{
     ActionEdge, ChanceOutcome, ChanceTraversalStores, ChanceWeightedBackwardInductionSolver,
