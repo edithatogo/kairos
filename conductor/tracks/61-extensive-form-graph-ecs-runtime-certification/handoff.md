@@ -1,13 +1,13 @@
 # Track 61 Handoff
 
 Status: In Review
-Last updated: 2026-06-23
+Last updated: 2026-06-25
 
 Phase 2 is implemented locally. The `kairo-ecs-game-theory` crate now exposes normal-form flat-array solvers plus a feature-gated `extensive_form` module behind `graph-relations` with sequential decision nodes, chance nodes, terminal nodes, information sets, action edges, chance outcomes, terminal utilities, malformed-topology validation, deterministic traversal over edge entities, backward induction, imperfect-information fixture validation, and multi-game certification evidence over flat ECS component stores.
 
 ## Summary
 
-Track 61 has local multi-game certification evidence spanning normal-form flat arrays and extensive-form Graph-ECS stores. The Phase 2 push, strict closeout, and GitHub Actions review have passed; the track remains In Review rather than Done because stochastic chance-weighted extensive-form solving and broader release-parity proof remain bounded follow-up scope.
+Track 61 has local multi-game certification evidence spanning normal-form flat arrays and extensive-form Graph-ECS stores. The Phase 2 push, strict closeout, and GitHub Actions review have passed; chance-weighted extensive-form expected-utility support is now implemented locally, and the track remains In Review rather than Done because broader release-parity proof remains bounded follow-up scope.
 
 ## Files changed
 
@@ -18,6 +18,7 @@ Track 61 has local multi-game certification evidence spanning normal-form flat a
 - `crates/kairo-ecs-game-theory/tests/extensive_form_solver.rs`
 - `crates/kairo-ecs-game-theory/tests/extensive_form_topology.rs`
 - `crates/kairo-ecs-game-theory/tests/extensive_form_traversal.rs`
+- `crates/kairo-ecs-game-theory/tests/extensive_form_chance_solver.rs`
 - `conductor/game-theory-evidence/multigame-certification/track-61-scenarios.json`
 - `conductor/game-theory-evidence/multigame-certification/track-61-benchmark-evidence.json`
 - `conductor/game-theory-evidence/multigame-certification/negative/missing-extensive-form.json`
@@ -59,7 +60,7 @@ Track 61 has local multi-game certification evidence spanning normal-form flat a
 ## Known risks
 
 - Phase 1 supports deterministic decision-node traversal and backward induction only.
-- Chance-weighted expected utilities remain follow-up scope before any stochastic extensive-form parity claim.
+- Chance-weighted expected utilities are now implemented locally; keep broader stochastic/release-parity evidence gated by later release review.
 - Live HPC, distributed, GPU, or Slurm scaling proof remains outside this game-theory runtime track.
 
 ## Integration notes
@@ -68,7 +69,7 @@ Track 61 has local multi-game certification evidence spanning normal-form flat a
 
 ## Follow-up issues
 
-- Add chance-weighted expected-utility support before claiming full stochastic extensive-form parity.
+- Keep broader stochastic extensive-form and release documentation evidence aligned with future release gates.
 - Add release documentation and benchmark evidence for extensive-form execution.
 
 ## Phase closeout evidence
@@ -78,6 +79,8 @@ Track 61 has local multi-game certification evidence spanning normal-form flat a
 - Task 0.2 red state: `cargo test -p kairo-ecs-game-theory topology_validation --features graph-relations` failed because `validate_extensive_form_topology`, `ExtensiveFormTopology`, and topology error variants did not exist.
 - Task 0.2 commit: `8e46a22 track 61 task 0.2: validate extensive form topology`.
 - Local commands:
+  - `rustup run stable cargo check -p kairo-ecs-game-theory --features graph-relations` passed in the isolated temp workspace.
+  - `rustup run stable cargo check -p kairo-ecs-game-theory --features graph-relations --tests` passed in the isolated temp workspace.
   - `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory extensive_form_components --features graph-relations` passed with 3 tests.
   - `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory topology_validation --features graph-relations` passed with 4 tests.
   - `rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-game-theory --features graph-relations --all-targets -- -D warnings` passed.
@@ -98,6 +101,8 @@ Track 61 has local multi-game certification evidence spanning normal-form flat a
 - Task 1.3 red state: `cargo test -p kairo-ecs-game-theory information_set_fixtures --features graph-relations` failed because `information_set_fixtures` and information-set validation errors did not exist.
 - Task 1.3 commit: `4a5a07b track 61 task 1.3: support information set fixtures`.
 - Local commands:
+  - `rustup run stable cargo check -p kairo-ecs-game-theory --features graph-relations` passed in the isolated temp workspace.
+  - `rustup run stable cargo check -p kairo-ecs-game-theory --features graph-relations --tests` passed in the isolated temp workspace.
   - `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory traversal_ --features graph-relations` passed with 3 traversal tests.
   - `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory backward_induction --features graph-relations` passed with 3 solver tests.
   - `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory information_set_fixtures --features graph-relations` passed with 3 information-set tests.
@@ -131,4 +136,4 @@ Track 61 has local multi-game certification evidence spanning normal-form flat a
 - pushed ref: `origin/codex/kairos-hpc-parity-wave`.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after the Phase 2 push.
 - GitHub Actions review: `gh pr checks --watch` passed after the Phase 2 trigger push with 63 successful checks and `deploy-pages` skipped.
-- next-phase decision: Track 61 is In Review after Phase 2 implementation, review, push, strict closeout, and GitHub Actions review passed. Do not move to Done until chance-weighted stochastic extensive-form parity and any release-governed downstream evidence are explicitly accepted.
+- next-phase decision: Track 61 is In Review after Phase 2 implementation, review, push, strict closeout, and GitHub Actions review passed. Do not move to Done until broader release-governed downstream evidence is explicitly accepted.

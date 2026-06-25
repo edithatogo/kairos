@@ -163,6 +163,14 @@ pub struct ExtensiveTraversalStores<'a> {
     pub transitions: &'a ComponentStore<TransitionTo>,
 }
 
+#[derive(Clone, Copy)]
+pub struct ChanceTraversalStores<'a> {
+    pub child_of: &'a ComponentStore<ChildOf>,
+    pub actions: &'a ComponentStore<ActionEdge>,
+    pub chance_outcomes: &'a ComponentStore<ChanceOutcome>,
+    pub transitions: &'a ComponentStore<TransitionTo>,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TraversedActionEdge {
     pub source: EntityId,
@@ -172,10 +180,26 @@ pub struct TraversedActionEdge {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct TraversedChanceOutcome {
+    pub source: EntityId,
+    pub edge: EntityId,
+    pub target: EntityId,
+    pub label: String,
+    pub probability: f64,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct ExtensivePath {
     pub terminal: EntityId,
     pub actions: Vec<String>,
     pub payoffs: Vec<Utility>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ChanceWeightedPath {
+    pub terminal: Option<EntityId>,
+    pub actions: Vec<String>,
+    pub expected_payoffs: Vec<Utility>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -273,6 +297,40 @@ pub fn outgoing_action_edges(
     Ok(edges)
 }
 
+pub fn outgoing_chance_outcomes(
+    source: EntityId,
+    stores: ChanceTraversalStores<'_>,
+) -> Result<Vec<TraversedChanceOutcome>, ExtensiveFormError> {
+    let mut outcomes = Vec::new();
+
+    for edge in children_of(source, stores.child_of) {
+        let Some(outcome) = stores.chance_outcomes.get(edge) else {
+            continue;
+        };
+        let Some(transition_target) = transition_target(edge, stores.transitions) else {
+            return Err(ExtensiveFormError::MissingTransition { edge });
+        };
+        let outcome_target = outcome.target();
+        if outcome_target != transition_target {
+            return Err(ExtensiveFormError::TransitionTargetMismatch {
+                edge,
+                action_target: outcome_target,
+                transition_target,
+            });
+        }
+
+        outcomes.push(TraversedChanceOutcome {
+            source,
+            edge,
+            target: transition_target,
+            label: outcome.label().to_string(),
+            probability: outcome.probability(),
+        });
+    }
+
+    Ok(outcomes)
+}
+
 pub fn extensive_form_paths(
     root: EntityId,
     nodes: &ComponentStore<ExtensiveNode>,
@@ -344,6 +402,20 @@ impl BackwardInductionSolver {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
+pub struct ChanceWeightedBackwardInductionSolver;
+
+impl ChanceWeightedBackwardInductionSolver {
+    pub fn solve(
+        root: EntityId,
+        nodes: &ComponentStore<ExtensiveNode>,
+        terminals: &ComponentStore<TerminalUtility>,
+        stores: ChanceTraversalStores<'_>,
+    ) -> Result<ChanceWeightedPath, ExtensiveFormError> {
+        solve_chance_weighted(root, nodes, terminals, stores)
+    }
+}
+
 fn solve_backward(
     entity: EntityId,
     nodes: &ComponentStore<ExtensiveNode>,
@@ -398,6 +470,113 @@ fn solve_backward(
     }
 }
 
+fn solve_chance_weighted(
+    entity: EntityId,
+    nodes: &ComponentStore<ExtensiveNode>,
+    terminals: &ComponentStore<TerminalUtility>,
+    stores: ChanceTraversalStores<'_>,
+) -> Result<ChanceWeightedPath, ExtensiveFormError> {
+    let Some(node) = nodes.get(entity) else {
+        return Err(ExtensiveFormError::MissingNode { entity });
+    };
+
+    match node {
+        ExtensiveNode::Terminal => {
+            let Some(terminal) = terminals.get(entity) else {
+                return Err(ExtensiveFormError::MissingTerminalUtility { entity });
+            };
+            Ok(ChanceWeightedPath {
+                terminal: Some(entity),
+                actions: Vec::new(),
+                expected_payoffs: terminal.payoffs().to_vec(),
+            })
+        }
+        ExtensiveNode::Decision { player } => {
+            let edges = outgoing_action_edges(
+                entity,
+                ExtensiveTraversalStores {
+                    child_of: stores.child_of,
+                    actions: stores.actions,
+                    transitions: stores.transitions,
+                },
+            )?;
+            if edges.is_empty() {
+                return Err(ExtensiveFormError::NoOutgoingActions { entity });
+            }
+
+            let mut best = None;
+            let mut best_utility = None;
+            for edge in edges {
+                let mut candidate = solve_chance_weighted(edge.target, nodes, terminals, stores)?;
+                let utility = candidate.expected_payoffs.get(*player).copied().ok_or(
+                    ExtensiveFormError::MissingPlayerPayoff {
+                        entity: candidate.terminal.unwrap_or(edge.target),
+                        player: *player,
+                    },
+                )?;
+                candidate.actions.insert(0, edge.label);
+
+                if best_utility
+                    .map(|current: Utility| utility.value() > current.value())
+                    .unwrap_or(true)
+                {
+                    best_utility = Some(utility);
+                    best = Some(candidate);
+                }
+            }
+
+            best.ok_or(ExtensiveFormError::NoOutgoingActions { entity })
+        }
+        ExtensiveNode::Chance => {
+            let outcomes = outgoing_chance_outcomes(entity, stores)?;
+            if outcomes.is_empty() {
+                return Err(ExtensiveFormError::NoOutgoingChanceOutcomes { entity });
+            }
+
+            let mut expected: Option<Vec<f64>> = None;
+            for outcome in outcomes {
+                let candidate = solve_chance_weighted(outcome.target, nodes, terminals, stores)?;
+                let payoffs = candidate.expected_payoffs;
+                match &mut expected {
+                    None => {
+                        expected = Some(
+                            payoffs
+                                .iter()
+                                .map(|utility| outcome.probability * utility.value())
+                                .collect(),
+                        );
+                    }
+                    Some(accumulated) => {
+                        if accumulated.len() != payoffs.len() {
+                            return Err(ExtensiveFormError::InconsistentChancePayoffCount {
+                                entity,
+                                expected: accumulated.len(),
+                                actual: payoffs.len(),
+                            });
+                        }
+                        for (slot, payoff) in accumulated.iter_mut().zip(payoffs) {
+                            *slot += outcome.probability * payoff.value();
+                        }
+                    }
+                }
+            }
+
+            let expected_payoffs = expected
+                .expect("chance nodes with outcomes must produce an expectation")
+                .into_iter()
+                .map(Utility::new)
+                .collect::<Result<Vec<_>, _>>()
+                .expect("weighted payoffs remain finite");
+
+            Ok(ChanceWeightedPath {
+                terminal: None,
+                actions: Vec::new(),
+                expected_payoffs,
+            })
+        }
+    }
+}
+
 pub fn validate_extensive_form_topology(
     topology: ExtensiveFormTopology<'_>,
 ) -> Result<(), ExtensiveFormError> {
@@ -446,10 +625,18 @@ fn validate_reachable_node(
         return Ok(());
     }
 
-    if matches!(topology.nodes.get(entity), Some(ExtensiveNode::Terminal))
-        && !topology.terminals.contains(entity)
-    {
-        return Err(ExtensiveFormError::MissingTerminalUtility { entity });
+    match topology.nodes.get(entity) {
+        Some(ExtensiveNode::Terminal) if !topology.terminals.contains(entity) => {
+            return Err(ExtensiveFormError::MissingTerminalUtility { entity });
+        }
+        Some(ExtensiveNode::Chance) => {
+            let has_outcome = children_of(entity, topology.child_of)
+                .any(|child| topology.chance_outcomes.contains(child));
+            if !has_outcome {
+                return Err(ExtensiveFormError::NoOutgoingChanceOutcomes { entity });
+            }
+        }
+        _ => {}
     }
 
     for child in children_of(entity, topology.child_of) {
@@ -499,9 +686,17 @@ pub enum ExtensiveFormError {
     NoOutgoingActions {
         entity: EntityId,
     },
+    NoOutgoingChanceOutcomes {
+        entity: EntityId,
+    },
     MissingPlayerPayoff {
         entity: EntityId,
         player: usize,
+    },
+    InconsistentChancePayoffCount {
+        entity: EntityId,
+        expected: usize,
+        actual: usize,
     },
     UnsupportedChanceNode {
         entity: EntityId,
@@ -574,9 +769,23 @@ impl Display for ExtensiveFormError {
                 "non-terminal node {:?} must have at least one outgoing action",
                 entity
             ),
+            Self::NoOutgoingChanceOutcomes { entity } => write!(
+                formatter,
+                "chance node {:?} must have at least one outgoing chance outcome",
+                entity
+            ),
             Self::MissingPlayerPayoff { entity, player } => write!(
                 formatter,
                 "terminal node {:?} does not include a payoff for player {player}",
+                entity
+            ),
+            Self::InconsistentChancePayoffCount {
+                entity,
+                expected,
+                actual,
+            } => write!(
+                formatter,
+                "chance node {:?} encountered inconsistent payoff counts: expected {expected}, actual {actual}",
                 entity
             ),
             Self::UnsupportedChanceNode { entity } => write!(
