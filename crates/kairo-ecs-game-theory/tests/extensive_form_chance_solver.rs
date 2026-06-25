@@ -108,10 +108,7 @@ fn chance_weighted_solver_aggregates_expected_payoffs_for_chance_root() {
 
     assert_eq!(outcome.actions, Vec::<String>::new());
     assert_eq!(outcome.terminal, None);
-    assert_eq!(
-        outcome.expected_payoffs,
-        vec![utility(1.0), utility(2.5)]
-    );
+    assert_eq!(outcome.expected_payoffs, vec![utility(1.0), utility(2.5)]);
 }
 
 #[test]
