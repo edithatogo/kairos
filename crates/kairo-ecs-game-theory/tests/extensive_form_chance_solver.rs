@@ -1,4 +1,4 @@
-﻿#![cfg(feature = "graph-relations")]
+#![cfg(feature = "graph-relations")]
 #![allow(unused_mut)]
 
 use kairo_ecs_game_theory::extensive_form::{
@@ -103,8 +103,8 @@ fn chance_weighted_solver_aggregates_expected_payoffs_for_chance_root() {
         transitions: &mut transitions,
     };
 
-    let outcome = ChanceWeightedBackwardInductionSolver::solve(root, &nodes, &terminals, stores)
-        .unwrap();
+    let outcome =
+        ChanceWeightedBackwardInductionSolver::solve(root, &nodes, &terminals, stores).unwrap();
 
     assert_eq!(outcome.actions, Vec::<String>::new());
     assert_eq!(outcome.terminal, None);
@@ -197,14 +197,10 @@ fn chance_weighted_solver_uses_chance_expectation_inside_decision_nodes() {
         transitions: &mut transitions,
     };
 
-    let outcome = ChanceWeightedBackwardInductionSolver::solve(root, &nodes, &terminals, stores)
-        .unwrap();
+    let outcome =
+        ChanceWeightedBackwardInductionSolver::solve(root, &nodes, &terminals, stores).unwrap();
 
     assert_eq!(outcome.actions, vec!["enter".to_string()]);
     assert_eq!(outcome.terminal, None);
     assert_eq!(outcome.expected_payoffs, vec![utility(4.0)]);
 }
-
-
-
-
