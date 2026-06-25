@@ -795,7 +795,7 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
     git_status: "clean after archive closeout commit and push"
-    commit_sha: "0000000000000000000000000000000000000000"
+    commit_sha: "b6012d86056076c269d27e7df8111a5b5c7890fb"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 42 is Done only for the repo-side guarded publication/provenance gate; public registry writes remain blocked until external registry setup, protected-environment run evidence, release-manager approval, and live provenance artifacts are attached in a release-governed slice."
   - track_id: "43"
