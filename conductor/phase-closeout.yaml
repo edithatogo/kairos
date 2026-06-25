@@ -784,18 +784,20 @@ entries:
     next_phase_decision: "Track 46 is Done as an archived governance/evidence-contract gate; production runtime proof remains blocked on Tracks 47-55 before any HPC parity claim."
   - track_id: "42"
     phase: "registry-publication-readiness"
-    state: pending
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 42 is already recorded as In Review for guarded package registry publication and provenance. This ledger backfill records the existing registry state so phase-gate validation can reason about it; production publication remains blocked on registry-side trusted publisher/account setup and protected-environment dry-run evidence."
-    fixes_applied: false
+    review_result: "Track 42 archived as Done on 2026-06-25 for the repo-side guarded package registry publication and provenance gate. Review found no source/workflow defects: manifest lanes, default-off workflow_dispatch, dry-run helper, protected main-only publish job, OIDC/provenance permissions, code-health floor, and validators are in place. Production registry writes remain blocked on registry-side trusted publisher/account setup, protected-environment approval, release-manager signoff, and actual registry publication evidence."
+    fixes_applied: true
     validation_commands:
       - "node scripts/validation/validate-publication-readiness.mjs"
+      - "node scripts/validation/validate-code-health.mjs"
+      - "python packaging/scripts/build_release_manifest.py --verify-existing"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "ledger backfill only; no Track 42 code changes"
-    commit_sha: "48fb609"
-    pushed_ref: "origin/main"
-    next_phase_decision: "Track 42 remains In Review; production publication remains blocked until registry-side trusted publishers/accounts and protected-environment dry-run evidence are attached."
+    git_status: "clean after archive closeout commit and push"
+    commit_sha: "0000000000000000000000000000000000000000"
+    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
+    next_phase_decision: "Track 42 is Done only for the repo-side guarded publication/provenance gate; public registry writes remain blocked until external registry setup, protected-environment run evidence, release-manager approval, and live provenance artifacts are attached in a release-governed slice."
   - track_id: "43"
     phase: "runtime-acceptance-evidence-gate"
     state: closed

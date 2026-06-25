@@ -46,7 +46,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 39 | Cloud/HPC Batch Runners | Done | `cloud-agent` | See `conductor/tracks/39-*/spec.md` |
 | 40 | Time-Travel Debugging & Interactive Stepping | Done | `timetravel-agent` | See `conductor/tracks/40-*/spec.md` |
 | 41 | Documentation Platform, Quality Gates & Learning Coverage | Done | `docs-agent + ci-agent + community-agent` | See `conductor/tracks/41-*/spec.md` |
-| 42 | Package Registry Publication & Provenance | In Review | `publication-agent + release-agent + binding agents` | See `conductor/tracks/42-*/spec.md` |
+| 42 | Package Registry Publication & Provenance | Done | `publication-agent + release-agent + binding agents` | Archived repo-side guarded publication/provenance gate; live registry publication remains release-gated. |
 | 43 | Cloud/HPC Registry Publication & Runtime Acceptance | Done | `hpc-registry-agent + cloud-agent + release-agent` | See `conductor/tracks/43-*/spec.md` |
 | 44 | Code and Repository Health >= 9.5 | Done | `health-agent + ci-agent + security-agent + release-agent` | See `conductor/tracks/44-*/spec.md` |
 | 45 | Astro/Starlight Docs Platform and Polyglot Experience | Done | `docs-platform-agent + docs-agent + ci-agent` | See `conductor/tracks/45-*/spec.md` |

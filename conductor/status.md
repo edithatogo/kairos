@@ -1,5 +1,11 @@
 # KairoECS Conductor Status
 
+## Track 42 Archive Review - 2026-06-25
+
+Track 42 is archived as Done for the repo-side guarded language/package registry publication and provenance gate. The publication manifest, readiness validator, default-off workflow dispatch, dry-run helper, protected main-only publish job, release-publication environment guard, OIDC/provenance permissions, package manifest verification, and Track 44 code-health floor pass locally.
+
+This archive does not claim live public registry publication readiness. Registry-side trusted publisher/account setup, protected-environment dispatch evidence, release-manager approval, actual PyPI/npm/NuGet/crates.io/R/Julia/Go publication, and live provenance artifacts remain release-governed blockers before any public registry write.
+
 Last verified: 2026-06-19
 
 ## Setup state
