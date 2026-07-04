@@ -337,6 +337,43 @@ impl<T> Default for ComponentStore<T> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn world_reserve_increases_capacities() {
+        let mut world = World::new();
+        let initial_slots = world.slots.capacity();
+        let initial_free = world.free_indices.capacity();
+        let initial_live = world.live_entities.capacity();
+        let initial_pos = world.live_positions.capacity();
+
+        let reserve_amount = 10;
+        world.reserve(reserve_amount);
+
+        assert!(world.slots.capacity() >= initial_slots + reserve_amount);
+        assert!(world.free_indices.capacity() >= initial_free + reserve_amount);
+        assert!(world.live_entities.capacity() >= initial_live + reserve_amount);
+        assert!(world.live_positions.capacity() >= initial_pos + reserve_amount);
+    }
+
+    #[test]
+    fn component_store_reserve_increases_capacities() {
+        let mut store = ComponentStore::<u32>::new();
+        let initial_dense = store.dense.capacity();
+        let initial_sparse = store.sparse.capacity();
+        let initial_entities = store.entities.capacity();
+
+        let reserve_amount = 10;
+        store.reserve(reserve_amount);
+
+        assert!(store.dense.capacity() >= initial_dense + reserve_amount);
+        assert!(store.sparse.capacity() >= initial_sparse + reserve_amount);
+        assert!(store.entities.capacity() >= initial_entities + reserve_amount);
+    }
+}
+
 /// Type-erased component storage registry
 pub struct ComponentRegistry {
     stores: HashMap<TypeId, Box<dyn Any>>,
