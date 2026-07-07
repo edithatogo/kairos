@@ -111,3 +111,60 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validates_valid_submodel() {
+        let submodel = AasSubmodel::new("urn:kairo:test:state", "state")
+            .with_property(AasProperty::new("queueDepth", "xs:integer"));
+
+        submodel.validate().expect("valid submodel");
+    }
+
+    #[test]
+    fn rejects_empty_submodel_id() {
+        let submodel = AasSubmodel::new("", "state");
+        let error = submodel.validate().expect_err("empty submodel id");
+        assert!(error.to_string().contains("submodel id must not be empty"));
+    }
+
+    #[test]
+    fn rejects_empty_submodel_id_short() {
+        let submodel = AasSubmodel::new("urn:kairo:test:state", "");
+        let error = submodel.validate().expect_err("empty submodel idShort");
+        assert!(error.to_string().contains("submodel idShort must not be empty"));
+    }
+
+    #[test]
+    fn rejects_duplicate_property_id_short() {
+        let submodel = AasSubmodel::new("urn:kairo:test:state", "state")
+            .with_property(AasProperty::new("queueDepth", "xs:integer"))
+            .with_property(AasProperty::new("queueDepth", "xs:string"));
+
+        let error = submodel.validate().expect_err("duplicate property idShort");
+        assert!(error.to_string().contains("duplicate property idShort 'queueDepth'"));
+    }
+
+    #[test]
+    fn validates_valid_property() {
+        let property = AasProperty::new("queueDepth", "xs:integer");
+        property.validate().expect("valid property");
+    }
+
+    #[test]
+    fn rejects_empty_property_id_short() {
+        let property = AasProperty::new("", "xs:integer");
+        let error = property.validate().expect_err("empty property idShort");
+        assert!(error.to_string().contains("property idShort must not be empty"));
+    }
+
+    #[test]
+    fn rejects_empty_property_value_type() {
+        let property = AasProperty::new("queueDepth", "");
+        let error = property.validate().expect_err("empty property valueType");
+        assert!(error.to_string().contains("property valueType must not be empty"));
+    }
+}
