@@ -111,3 +111,25 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_with_property() {
+        let submodel = AasSubmodel::new("urn:kairo:test", "kairoTest")
+            .with_property(AasProperty::new("prop1", "xs:string"))
+            .with_property(AasProperty::new("prop2", "xs:int"));
+
+        assert_eq!(submodel.elements.len(), 2);
+
+        assert_eq!(submodel.elements[0].id_short, "prop1");
+        assert_eq!(submodel.elements[0].value_type, "xs:string");
+        assert_eq!(submodel.elements[0].semantic_id, None);
+
+        assert_eq!(submodel.elements[1].id_short, "prop2");
+        assert_eq!(submodel.elements[1].value_type, "xs:int");
+        assert_eq!(submodel.elements[1].semantic_id, None);
+    }
+}
