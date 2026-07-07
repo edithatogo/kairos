@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Metadata-only benchmark smoke checks for Track 12."""
 
-from __future__ import annotations
-
 import json
 import re
 from pathlib import Path
