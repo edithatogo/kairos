@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Build the dry-run release manifest and SHA256SUMS from package inventory."""
 
-from __future__ import annotations
-
 import argparse
 import hashlib
 import json
