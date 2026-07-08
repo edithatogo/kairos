@@ -40,8 +40,8 @@ fn print_trace_stats(events: &[RecordedEvent]) {
         return;
     }
 
-    let min_tick = events.iter().map(|e| e.tick).min().unwrap();
-    let max_tick = events.iter().map(|e| e.tick).max().unwrap();
+    let min_tick = events.iter().map(|e| e.tick).min().unwrap_or_default();
+    let max_tick = events.iter().map(|e| e.tick).max().unwrap_or_default();
     let unique_kinds: BTreeMap<u32, usize> = events.iter().fold(BTreeMap::new(), |mut acc, e| {
         *acc.entry(e.kind).or_insert(0) += 1;
         acc
