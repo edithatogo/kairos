@@ -1,7 +1,5 @@
 """Native FFI status for the dependency-light Python package slice."""
 
-from __future__ import annotations
-
 import os
 from dataclasses import dataclass
 
