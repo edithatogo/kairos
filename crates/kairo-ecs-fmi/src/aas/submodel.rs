@@ -111,3 +111,16 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_aas_submodel_new() {
+        let submodel = AasSubmodel::new("test-id", "test-id-short");
+        assert_eq!(submodel.id, "test-id");
+        assert_eq!(submodel.id_short, "test-id-short");
+        assert!(submodel.elements.is_empty());
+    }
+}
