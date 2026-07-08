@@ -67,8 +67,11 @@ def render_job(experiment: dict) -> dict:
             {
                 "name": "write-inline-scenario",
                 "image": "busybox:1.36",
-                "command": ["sh", "-c", f"printf '%s' \"$KAIRO_INLINE_SCENARIO\" > /scenario/{scenario_key}"],
-                "env": [{"name": "KAIRO_INLINE_SCENARIO", "value": scenario_ref["inline"]}],
+                "command": ["sh", "-c", "printf '%s' \"$KAIRO_INLINE_SCENARIO\" > \"/scenario/$KAIRO_SCENARIO_KEY\""],
+                "env": [
+                    {"name": "KAIRO_INLINE_SCENARIO", "value": scenario_ref["inline"]},
+                    {"name": "KAIRO_SCENARIO_KEY", "value": scenario_key},
+                ],
                 "volumeMounts": [{"name": "scenario", "mountPath": "/scenario"}],
             }
         )
