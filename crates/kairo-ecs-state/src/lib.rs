@@ -389,3 +389,47 @@ impl Default for ComponentRegistry {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_world_despawn() {
+        let mut world = World::new();
+
+        // Spawn a couple of entities
+        let entity1 = world.spawn();
+        let entity2 = world.spawn();
+        let entity3 = world.spawn();
+
+        assert_eq!(world.len(), 3);
+        assert!(world.is_alive(entity1));
+        assert!(world.is_alive(entity2));
+        assert!(world.is_alive(entity3));
+
+        // Despawn entity2
+        let despawned = world.despawn(entity2);
+        assert!(despawned);
+
+        // Verify entity2 is no longer alive
+        assert!(!world.is_alive(entity2));
+        assert_eq!(world.len(), 2);
+
+        // Despawning again should fail
+        assert!(!world.despawn(entity2));
+
+        // Other entities should still be alive
+        assert!(world.is_alive(entity1));
+        assert!(world.is_alive(entity3));
+
+        // Despawn an entity with an invalid index
+        let invalid_entity = EntityId { index: 999, generation: 0 };
+        assert!(!world.despawn(invalid_entity));
+
+        // Despawn an entity with a stale generation
+        let mut stale_entity = entity1;
+        stale_entity.generation += 1;
+        assert!(!world.despawn(stale_entity));
+    }
+}
