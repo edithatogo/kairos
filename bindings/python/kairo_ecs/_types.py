@@ -1,7 +1,5 @@
 """Dependency-light public value contracts for the Python binding."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import Enum
 from typing import ClassVar
