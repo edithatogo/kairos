@@ -177,8 +177,10 @@ export class SchedulerFacade {
   #nextEventId = 1n;
   #nextSequence = 0n;
   #queue: ScheduledEvent[] = [];
+  #queuedEvents = new Map<bigint, ScheduledEvent>();
   #dispatched: DispatchedEvent[] = [];
   #cancelled: CancelledEvent[] = [];
+  #cancelledIsSorted = true;
 
   get currentTimeTicks(): bigint {
     return this.#currentTimeTicks;
@@ -199,8 +201,20 @@ export class SchedulerFacade {
 
     this.#nextEventId += 1n;
     this.#nextSequence += 1n;
-    this.#queue.push(event);
-    this.#queue.sort(compareScheduledEvents);
+
+    let low = 0;
+    let high = this.#queue.length;
+    while (low < high) {
+      const mid = (low + high) >>> 1;
+      if (compareScheduledEvents(this.#queue[mid], event) < 0) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    this.#queue.splice(low, 0, event);
+    this.#queuedEvents.set(event.eventId, event);
+
     return event;
   }
 
@@ -213,20 +227,29 @@ export class SchedulerFacade {
 
   cancel(eventId: bigint | number | string): boolean {
     const normalizedEventId = normalizeUnsignedBigInt(eventId, "eventId");
-    const index = this.#queue.findIndex((event) => event.eventId === normalizedEventId);
+    const event = this.#queuedEvents.get(normalizedEventId);
 
-    if (index < 0) {
+    if (event === undefined) {
       return false;
     }
 
-    const [event] = this.#queue.splice(index, 1);
+    this.#queuedEvents.delete(normalizedEventId);
     this.#cancelled.push({ ...event, status: "cancelled" });
-    this.#cancelled.sort(compareScheduledEvents);
+    this.#cancelledIsSorted = false;
     return true;
   }
 
   step(): DispatchedEvent | null {
-    const next = this.#queue.shift();
+    let next: ScheduledEvent | undefined;
+    while (this.#queue.length > 0) {
+      const candidate = this.#queue.shift()!;
+      if (this.#queuedEvents.has(candidate.eventId)) {
+        this.#queuedEvents.delete(candidate.eventId);
+        next = candidate;
+        break;
+      }
+    }
+
     if (next === undefined) {
       return null;
     }
@@ -256,15 +279,25 @@ export class SchedulerFacade {
   }
 
   snapshot(): SchedulerSnapshot {
+    if (!this.#cancelledIsSorted) {
+      this.#cancelled.sort(compareScheduledEvents);
+      this.#cancelledIsSorted = true;
+    }
+
     return {
       currentTimeTicks: this.#currentTimeTicks,
-      queuedEvents: [...this.#queue],
+      queuedEvents: this.#queue.filter((ev) => this.#queuedEvents.has(ev.eventId)),
       dispatchedEvents: [...this.#dispatched],
       cancelledEvents: [...this.#cancelled],
     };
   }
 
   eventLog(runId: string): ArrowEventLogPayload {
+    if (!this.#cancelledIsSorted) {
+      this.#cancelled.sort(compareScheduledEvents);
+      this.#cancelledIsSorted = true;
+    }
+
     const rows = [...this.#dispatched, ...this.#cancelled]
       .sort(compareScheduledEvents)
       .map((event) => toArrowEventLogRow(runId, event));
