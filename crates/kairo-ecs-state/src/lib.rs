@@ -389,3 +389,29 @@ impl Default for ComponentRegistry {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_world_with_capacity() {
+        let capacity = 128;
+        let world = World::with_capacity(capacity);
+
+        assert!(world.slots.capacity() >= capacity);
+        assert!(world.free_indices.capacity() >= capacity);
+        assert!(world.live_entities.capacity() >= capacity);
+        assert!(world.live_positions.capacity() >= capacity);
+    }
+
+    #[test]
+    fn test_component_store_with_capacity() {
+        let capacity = 128;
+        let store = ComponentStore::<i32>::with_capacity(capacity);
+
+        assert!(store.dense.capacity() >= capacity);
+        assert!(store.sparse.capacity() >= capacity);
+        assert!(store.entities.capacity() >= capacity);
+    }
+}

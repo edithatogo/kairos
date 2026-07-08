@@ -1,0 +1,11 @@
+🧪 Add tests for with_capacity in kairo-ecs-state
+
+🎯 What:
+Addressed a testing gap in `kairo-ecs-state` by adding tests for the `with_capacity` constructors on both `World` and `ComponentStore`.
+
+📊 Coverage:
+- Verified that `World::with_capacity(size)` initializes its internal private vectors (`slots`, `free_indices`, `live_entities`, `live_positions`) with a capacity at least the requested size.
+- Verified that `ComponentStore::with_capacity(size)` initializes its internal vectors (`dense`, `sparse`, `entities`) with a capacity at least the requested size.
+
+✨ Result:
+Test coverage increased. The capacity logic is now validated to ensure proper resource pre-allocation in ECS state representations.
