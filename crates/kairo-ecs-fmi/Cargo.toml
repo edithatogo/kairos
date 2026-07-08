@@ -16,3 +16,10 @@ digital-twin = ["fmi2"]
 [lib]
 name = "kairo_ecs_fmi"
 path = "src/lib.rs"
+
+[[bench]]
+name = "sync_bench"
+harness = false
+
+[dev-dependencies]
+criterion = "0.5.1"
