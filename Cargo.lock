@@ -422,6 +422,9 @@ dependencies = [
 [[package]]
 name = "kairo-ecs-fmi"
 version = "0.1.0"
+dependencies = [
+ "criterion",
+]
 
 [[package]]
 name = "kairo-ecs-gpu"
