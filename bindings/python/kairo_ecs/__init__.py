@@ -1,7 +1,5 @@
 """Public Python package surface for KairoECS."""
 
-from __future__ import annotations
-
 from ._arrow import (
     EVENT_LOG_FIELDS,
     EVENT_LOG_STREAM,
@@ -11,7 +9,14 @@ from ._arrow import (
 )
 from ._ffi import ffi_status
 from ._scheduler import Scheduler
-from ._types import DispatchedEvent, EntityId, EventId, ScheduleRequest, SimTime, StepOutcome
+from ._types import (
+    DispatchedEvent,
+    EntityId,
+    EventId,
+    ScheduleRequest,
+    SimTime,
+    StepOutcome,
+)
 
 __all__ = [
     "__version__",
