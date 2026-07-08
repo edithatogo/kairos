@@ -111,3 +111,55 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_aas_property_to_json_no_semantic_id() {
+        let property = AasProperty::new("prop1", "xs:string");
+        let expected = r#"{"modelType":"Property","idShort":"prop1","valueType":"xs:string"}"#;
+        assert_eq!(property.to_json(), expected);
+    }
+
+    #[test]
+    fn test_aas_property_to_json_with_semantic_id() {
+        let mut property = AasProperty::new("prop2", "xs:double");
+        property.semantic_id = Some("http://acme.com/semantics/prop2".to_string());
+        let expected = r#"{"modelType":"Property","idShort":"prop2","valueType":"xs:double","semanticId":{"type":"ExternalReference","keys":[{"type":"GlobalReference","value":"http://acme.com/semantics/prop2"}]}}"#;
+        assert_eq!(property.to_json(), expected);
+    }
+
+    #[test]
+    fn test_aas_submodel_to_json_empty() {
+        let submodel = AasSubmodel::new("http://acme.com/submodels/sm1", "sm1");
+        let expected = r#"{"type":"ModelReference","keys":[{"type":"Submodel","value":"http://acme.com/submodels/sm1"}],"idShort":"sm1","submodelElements":[]}"#;
+        assert_eq!(submodel.to_json(), expected);
+    }
+
+    #[test]
+    fn test_aas_submodel_to_json_with_elements() {
+        let submodel = AasSubmodel::new("http://acme.com/sm2", "sm2")
+            .with_property(AasProperty::new("prop1", "xs:string"))
+            .with_property(AasProperty::new("prop2", "xs:int"));
+
+        let expected = r#"{"type":"ModelReference","keys":[{"type":"Submodel","value":"http://acme.com/sm2"}],"idShort":"sm2","submodelElements":[{"modelType":"Property","idShort":"prop1","valueType":"xs:string"},{"modelType":"Property","idShort":"prop2","valueType":"xs:int"}]}"#;
+        assert_eq!(submodel.to_json(), expected);
+    }
+
+    #[test]
+    fn test_to_json_escapes_special_characters() {
+        let mut property = AasProperty::new("prop\"1\"", "xs:string\\");
+        property.semantic_id = Some("http://acme.com/\"semantic\"\\id".to_string());
+        let submodel = AasSubmodel::new("sub\"model\"\\1", "sm\"1\"\\").with_property(property);
+
+        let expected_property_json = r#"{"modelType":"Property","idShort":"prop\"1\"","valueType":"xs:string\\","semanticId":{"type":"ExternalReference","keys":[{"type":"GlobalReference","value":"http://acme.com/\"semantic\"\\id"}]}}"#;
+        let expected_submodel_json = format!(
+            r#"{{"type":"ModelReference","keys":[{{"type":"Submodel","value":"sub\"model\"\\1"}}],"idShort":"sm\"1\"\\","submodelElements":[{}]}}"#,
+            expected_property_json
+        );
+
+        assert_eq!(submodel.to_json(), expected_submodel_json);
+    }
+}
