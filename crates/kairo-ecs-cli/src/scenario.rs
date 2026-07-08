@@ -223,3 +223,121 @@ fn unquote(value: &str) -> String {
         .trim()
         .to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn valid_scenario() -> ScenarioManifest {
+        ScenarioManifest {
+            schema_version: "kairoecs.scenario.v1".to_string(),
+            scenario_id: "test_scenario".to_string(),
+            model_id: "test_model".to_string(),
+            fixture_id: "test_fixture".to_string(),
+            fixture_path: PathBuf::from("."),
+            base_seed: 42,
+            replications: 10,
+            max_events: 1000,
+            artifact_root: PathBuf::from("."),
+            resume_checkpoint_every_events: 100,
+            expected_kind_order: vec![1, 2, 3],
+        }
+    }
+
+    fn valid_seed() -> SeedManifest {
+        SeedManifest {
+            schema_version: "kairoecs.seed.v1".to_string(),
+            scenario_id: "test_scenario".to_string(),
+            base_seed: 42,
+            fixture_id: "test_fixture".to_string(),
+        }
+    }
+
+    #[test]
+    fn test_validate_scenario_and_seed_success() {
+        let scenario = valid_scenario();
+        let seed = valid_seed();
+        assert!(validate_scenario_and_seed(&scenario, &seed).is_ok());
+    }
+
+    #[test]
+    fn test_validate_scenario_invalid_schema() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.schema_version = "invalid.v1".to_string();
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::InvalidField { field: "schema_version", .. }));
+    }
+
+    #[test]
+    fn test_validate_seed_invalid_schema() {
+        let scenario = valid_scenario();
+        let mut seed = valid_seed();
+        seed.schema_version = "invalid.v1".to_string();
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::InvalidField { field: "schema_version", .. }));
+    }
+
+    #[test]
+    fn test_validate_mismatch_scenario_id() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.scenario_id = "other_scenario".to_string();
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::Mismatch(msg) if msg.contains("scenario_id mismatch")));
+    }
+
+    #[test]
+    fn test_validate_mismatch_base_seed() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.base_seed = 99;
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::Mismatch(msg) if msg.contains("base_seed mismatch")));
+    }
+
+    #[test]
+    fn test_validate_mismatch_fixture_id() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.fixture_id = "other_fixture".to_string();
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::Mismatch(msg) if msg.contains("fixture_id mismatch")));
+    }
+
+    #[test]
+    fn test_validate_zero_replications() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.replications = 0;
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::InvalidField { field: "replications", .. }));
+    }
+
+    #[test]
+    fn test_validate_zero_max_events() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.max_events = 0;
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::InvalidField { field: "max_events", .. }));
+    }
+
+    #[test]
+    fn test_validate_empty_expected_kind_order() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.expected_kind_order = vec![];
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::MissingField("expected_kind_order")));
+    }
+
+    #[test]
+    fn test_validate_missing_fixture_path() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.fixture_path = PathBuf::from("/this/path/does/not/exist");
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::Mismatch(msg) if msg.contains("fixture_path does not exist")));
+    }
+}
