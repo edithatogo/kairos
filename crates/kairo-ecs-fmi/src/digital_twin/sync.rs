@@ -57,30 +57,44 @@ impl TwinStateSnapshot {
     }
 
     pub fn diff(&self, next: &Self) -> TwinStateDiff {
-        let changed = next
-            .entries
-            .iter()
-            .filter(|entry| {
-                self.entries
-                    .iter()
-                    .find(|candidate| candidate.key == entry.key)
-                    .map(|candidate| candidate.value != entry.value)
-                    .unwrap_or(true)
-            })
-            .cloned()
-            .collect();
+        let mut changed = Vec::new();
+        let mut removed = Vec::new();
 
-        let removed = self
-            .entries
-            .iter()
-            .filter(|entry| {
-                !next
-                    .entries
-                    .iter()
-                    .any(|candidate| candidate.key == entry.key)
-            })
-            .map(|entry| entry.key.clone())
-            .collect();
+        let mut next_idx = 0;
+        let mut self_idx = 0;
+
+        while next_idx < next.entries.len() && self_idx < self.entries.len() {
+            let next_entry = &next.entries[next_idx];
+            let self_entry = &self.entries[self_idx];
+
+            match next_entry.key.cmp(&self_entry.key) {
+                std::cmp::Ordering::Less => {
+                    changed.push(next_entry.clone());
+                    next_idx += 1;
+                }
+                std::cmp::Ordering::Greater => {
+                    removed.push(self_entry.key.clone());
+                    self_idx += 1;
+                }
+                std::cmp::Ordering::Equal => {
+                    if next_entry.value != self_entry.value {
+                        changed.push(next_entry.clone());
+                    }
+                    next_idx += 1;
+                    self_idx += 1;
+                }
+            }
+        }
+
+        while next_idx < next.entries.len() {
+            changed.push(next.entries[next_idx].clone());
+            next_idx += 1;
+        }
+
+        while self_idx < self.entries.len() {
+            removed.push(self.entries[self_idx].key.clone());
+            self_idx += 1;
+        }
 
         TwinStateDiff {
             from_tick: self.tick,
