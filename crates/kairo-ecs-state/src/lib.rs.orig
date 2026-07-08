@@ -372,10 +372,7 @@ impl ComponentRegistry {
         if self.store::<T>().is_none() {
             self.register::<T>();
         }
-        let Some(store) = self.store_mut::<T>() else {
-            return false;
-        };
-        store.insert(entity, component)
+        self.store_mut::<T>().unwrap().insert(entity, component)
     }
 
     pub fn remove<T: 'static>(&mut self, entity: EntityId) -> Option<T> {

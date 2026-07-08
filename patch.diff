@@ -1,0 +1,14 @@
+--- crates/kairo-ecs-state/src/lib.rs
++++ crates/kairo-ecs-state/src/lib.rs
+@@ -373,7 +373,10 @@
+         if self.store::<T>().is_none() {
+             self.register::<T>();
+         }
+-        self.store_mut::<T>().unwrap().insert(entity, component)
++        let Some(store) = self.store_mut::<T>() else {
++            return false;
++        };
++        store.insert(entity, component)
+     }
+
+     pub fn remove<T: 'static>(&mut self, entity: EntityId) -> Option<T> {
