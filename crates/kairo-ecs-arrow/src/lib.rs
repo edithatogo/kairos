@@ -501,25 +501,11 @@ fn escape_cell(value: &str) -> String {
 }
 
 fn unescape_cell(value: &str) -> String {
-    let mut output = String::new();
-    let mut chars = value.chars();
-    while let Some(char) = chars.next() {
-        if char == '\\' {
-            match chars.next() {
-                Some('t') => output.push('\t'),
-                Some('n') => output.push('\n'),
-                Some('\\') => output.push('\\'),
-                Some(other) => {
-                    output.push('\\');
-                    output.push(other);
-                }
-                None => output.push('\\'),
-            }
-        } else {
-            output.push(char);
-        }
-    }
-    output
+    value
+        .split("\\\\")
+        .map(|s| s.replace("\\n", "\n").replace("\\t", "\t"))
+        .collect::<Vec<_>>()
+        .join("\\")
 }
 
 trait EncodeHex {
