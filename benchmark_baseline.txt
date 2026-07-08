@@ -1,0 +1,25 @@
+
+running 12 tests
+test digital_twin::connector::tests::publishes_initial_values_and_delta_changes_only ... ignored
+test digital_twin::connector::tests::rejects_invalid_publication_contracts ... ignored
+test digital_twin::sync::tests::checked_apply_rejects_wrong_base_tick ... ignored
+test digital_twin::sync::tests::checked_snapshot_rejects_duplicate_keys ... ignored
+test digital_twin::sync::tests::snapshot_diff_apply_round_trips ... ignored
+test export::model_description::tests::rejects_duplicate_value_references ... ignored
+test export::model_description::tests::renders_fmi2_model_description_with_variables ... ignored
+test export::model_description::tests::validates_generated_fmi2_xml_structure ... ignored
+test export::packager::tests::validates_written_unpacked_export_layout ... ignored
+test import::fmu_loader::tests::identifies_unpacked_fmu_layout ... ignored
+test import::fmu_loader::tests::rejects_model_description_without_fmi_version ... ignored
+test import::fmu_loader::tests::reports_missing_platform_binary_directory ... ignored
+
+test result: ok. 0 passed; 0 failed; 12 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+TwinStateSync/diff      time:   [5.3917 ms 5.5761 ms 5.7757 ms]
+                        change: [+5.7996% +9.1244% +12.955%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 21 outliers among 100 measurements (21.00%)
+  21 (21.00%) high severe
+TwinStateSync/apply     time:   [1.1559 ms 1.1589 ms 1.1619 ms]
+                        change: [-1.2307% -0.9280% -0.6448%] (p = 0.00 < 0.05)
+                        Change within noise threshold.

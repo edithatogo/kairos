@@ -1,0 +1,113 @@
+--- crates/kairo-ecs-fmi/src/digital_twin/sync.rs
++++ crates/kairo-ecs-fmi/src/digital_twin/sync.rs
+@@ -64,30 +64,18 @@
+     }
+
+     pub fn diff(&self, next: &Self) -> TwinStateDiff {
+-        let changed = next
+-            .entries
+-            .iter()
+-            .filter(|entry| {
+-                self.entries
+-                    .iter()
+-                    .find(|candidate| candidate.key == entry.key)
+-                    .map(|candidate| candidate.value != entry.value)
+-                    .unwrap_or(true)
+-            })
+-            .cloned()
+-            .collect();
+-
+-        let removed = self
+-            .entries
+-            .iter()
+-            .filter(|entry| {
+-                !next
+-                    .entries
+-                    .iter()
+-                    .any(|candidate| candidate.key == entry.key)
+-            })
+-            .map(|entry| entry.key.clone())
+-            .collect();
++        let mut changed = Vec::new();
++        let mut removed = Vec::new();
++
++        // Both self.entries and next.entries are guaranteed to be sorted by key
++        // because TwinStateSnapshot::new sorts them.
++        // We can do a single pass merge-like traversal to find diffs in O(N).
++
++        let mut self_iter = self.entries.iter().peekable();
++        let mut next_iter = next.entries.iter().peekable();
++
++        while let (Some(s), Some(n)) = (self_iter.peek(), next_iter.peek()) {
++            use std::cmp::Ordering;
++            match s.key.cmp(&n.key) {
++                Ordering::Less => {
++                    // Key is in self but not in next -> it was removed
++                    removed.push(s.key.clone());
++                    self_iter.next();
++                }
++                Ordering::Greater => {
++                    // Key is in next but not in self -> it was added (changed)
++                    changed.push((*n).clone());
++                    next_iter.next();
++                }
++                Ordering::Equal => {
++                    // Key is in both -> check if value changed
++                    if s.value != n.value {
++                        changed.push((*n).clone());
++                    }
++                    self_iter.next();
++                    next_iter.next();
++                }
++            }
++        }
++
++        // Any remaining items in self_iter were removed
++        for s in self_iter {
++            removed.push(s.key.clone());
++        }
++
++        // Any remaining items in next_iter were added (changed)
++        for n in next_iter {
++            changed.push(n.clone());
++        }
+
+         TwinStateDiff {
+             from_tick: self.tick,
+@@ -99,19 +87,24 @@
+     }
+
+     pub fn apply(&self, diff: &TwinStateDiff) -> Self {
+-        let mut entries: Vec<TwinStateEntry> = self
+-            .entries
+-            .iter()
+-            .filter(|entry| !diff.removed.iter().any(|removed| removed == &entry.key))
+-            .cloned()
+-            .collect();
+-
+-        for changed in &diff.changed {
+-            if let Some(existing) = entries.iter_mut().find(|entry| entry.key == changed.key) {
+-                existing.value = changed.value.clone();
+-            } else {
+-                entries.push(changed.clone());
+-            }
++        // removed could potentially be unsorted depending on how it was constructed
++        // so we sort it for binary search
++        let mut removed_sorted = diff.removed.clone();
++        removed_sorted.sort_unstable();
++
++        let mut entries: Vec<TwinStateEntry> = Vec::with_capacity(self.entries.len());
++        for entry in &self.entries {
++            if removed_sorted.binary_search(&entry.key).is_err() {
++                entries.push(entry.clone());
++            }
++        }
++
++        for changed in &diff.changed {
++            match entries.binary_search_by(|entry| entry.key.cmp(&changed.key)) {
++                Ok(idx) => entries[idx].value = changed.value.clone(),
++                Err(idx) => entries.insert(idx, changed.clone()),
++            }
+         }
+
+         Self::new(diff.to_tick, entries)

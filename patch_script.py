@@ -1,4 +1,6 @@
-#[derive(Debug, Clone, Eq, PartialEq)]
+import sys
+
+content = """#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TwinStateSnapshot {
     pub tick: u64,
     pub checksum: u64,
@@ -247,3 +249,9 @@ mod tests {
         );
     }
 }
+"""
+
+with open("crates/kairo-ecs-fmi/src/digital_twin/sync.rs", "w") as f:
+    f.write(content)
+
+print("Done")
