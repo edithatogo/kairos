@@ -24,97 +24,12 @@ fn run(args: Vec<String>) -> Result<(), String> {
     };
 
     match command {
-        "validate-scenario" => {
-            let scenario_path = flag_path(&args, "--scenario")?;
-            let seed_path = flag_path(&args, "--seed-manifest")?;
-            let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
-            let seed = load_seed_manifest(&seed_path).map_err(|error| error.to_string())?;
-            validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
-            println!(
-                "{{\"status\":\"ok\",\"scenario_id\":\"{}\",\"fixture_id\":\"{}\"}}",
-                scenario.scenario_id, scenario.fixture_id
-            );
-        }
-        "replay" => {
-            let scenario_path = flag_path(&args, "--scenario")?;
-            let seed_path = flag_path(&args, "--seed-manifest")?;
-            let output = flag_path(&args, "--output")?;
-            let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
-            let seed = load_seed_manifest(&seed_path).map_err(|error| error.to_string())?;
-            validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
-            let replay = replay_scheduler_ordering(&scenario)?;
-            write_replay_outputs(&scenario, &replay, &output)?;
-            println!(
-                "{{\"status\":\"ok\",\"scenario_id\":\"{}\",\"output\":\"{}\",\"summary_hash\":\"{}\"}}",
-                scenario.scenario_id,
-                output.display(),
-                replay.summary_hash
-            );
-        }
-        "resume-plan" => {
-            let scenario_path = flag_path(&args, "--scenario")?;
-            let output = flag_path(&args, "--output")?;
-            let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
-            write_resume_plan(&scenario, &output)?;
-            println!(
-                "{{\"status\":\"ok\",\"scenario_id\":\"{}\",\"checkpoint_every_events\":{}}}",
-                scenario.scenario_id, scenario.resume_checkpoint_every_events
-            );
-        }
-        "run" => {
-            let scenario_path = flag_path(&args, "--scenario")?;
-            let output = flag_path(&args, "--output").unwrap_or_else(|_| {
-                env::var_os("KAIRO_OUTPUT_URI")
-                    .map(PathBuf::from)
-                    .unwrap_or_else(|| PathBuf::from("kairo-run-output"))
-            });
-            if let Some(seed_path) = optional_flag_path(&args, "--seed-manifest") {
-                let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
-                let seed = load_seed_manifest(&seed_path).map_err(|error| error.to_string())?;
-                validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
-                let replay = replay_scheduler_ordering(&scenario)?;
-                write_replay_outputs(&scenario, &replay, &output)?;
-                println!(
-                    "{{\"status\":\"ok\",\"command\":\"run\",\"scenario_id\":\"{}\",\"output\":\"{}\",\"summary_hash\":\"{}\"}}",
-                    scenario.scenario_id,
-                    output.display(),
-                    replay.summary_hash
-                );
-            } else {
-                fs::create_dir_all(&output).map_err(|error| error.to_string())?;
-                fs::write(
-                    output.join("run-request.json"),
-                    format!(
-                        "{{\n  \"schema_version\": \"kairoecs.run-request.v1\",\n  \"scenario\": \"{}\",\n  \"status\": \"accepted-without-seed-manifest\",\n  \"note\": \"Track 39 runner scaffold captured the request; deterministic replay requires --seed-manifest.\"\n}}\n",
-                        scenario_path.display()
-                    ),
-                )
-                .map_err(|error| error.to_string())?;
-                println!(
-                    "{{\"status\":\"ok\",\"command\":\"run\",\"scenario\":\"{}\",\"output\":\"{}\",\"mode\":\"request-captured\"}}",
-                    scenario_path.display(),
-                    output.display()
-                );
-            }
-        }
-        "checkpoint" => {
-            let output = flag_path(&args, "--output")?;
-            write_checkpoint_manifest(&output)?;
-            println!(
-                "{{\"status\":\"ok\",\"command\":\"checkpoint\",\"output\":\"{}\"}}",
-                output.display()
-            );
-        }
-        "resume" => {
-            let checkpoint = flag_path(&args, "--checkpoint")?;
-            let output = flag_path(&args, "--output")?;
-            write_resume_request(&checkpoint, &output)?;
-            println!(
-                "{{\"status\":\"ok\",\"command\":\"resume\",\"checkpoint\":\"{}\",\"output\":\"{}\"}}",
-                checkpoint.display(),
-                output.display()
-            );
-        }
+        "validate-scenario" => handle_validate_scenario_command(&args)?,
+        "replay" => handle_replay_command(&args)?,
+        "resume-plan" => handle_resume_plan_command(&args)?,
+        "run" => handle_run_command(&args)?,
+        "checkpoint" => handle_checkpoint_command(&args)?,
+        "resume" => handle_resume_command(&args)?,
         "collect" | "analyze" => {
             return Err(format!(
                 "`{command}` is reserved for Track 22; use validate-scenario, replay, or resume-plan in this R2 slice"
@@ -124,6 +39,109 @@ fn run(args: Vec<String>) -> Result<(), String> {
         other => return Err(format!("unknown command `{other}`")),
     }
 
+    Ok(())
+}
+
+fn handle_validate_scenario_command(args: &[String]) -> Result<(), String> {
+    let scenario_path = flag_path(args, "--scenario")?;
+    let seed_path = flag_path(args, "--seed-manifest")?;
+    let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
+    let seed = load_seed_manifest(&seed_path).map_err(|error| error.to_string())?;
+    validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
+    println!(
+        "{{\"status\":\"ok\",\"scenario_id\":\"{}\",\"fixture_id\":\"{}\"}}",
+        scenario.scenario_id, scenario.fixture_id
+    );
+    Ok(())
+}
+
+fn handle_replay_command(args: &[String]) -> Result<(), String> {
+    let scenario_path = flag_path(args, "--scenario")?;
+    let seed_path = flag_path(args, "--seed-manifest")?;
+    let output = flag_path(args, "--output")?;
+    let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
+    let seed = load_seed_manifest(&seed_path).map_err(|error| error.to_string())?;
+    validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
+    let replay = replay_scheduler_ordering(&scenario)?;
+    write_replay_outputs(&scenario, &replay, &output)?;
+    println!(
+        "{{\"status\":\"ok\",\"scenario_id\":\"{}\",\"output\":\"{}\",\"summary_hash\":\"{}\"}}",
+        scenario.scenario_id,
+        output.display(),
+        replay.summary_hash
+    );
+    Ok(())
+}
+
+fn handle_resume_plan_command(args: &[String]) -> Result<(), String> {
+    let scenario_path = flag_path(args, "--scenario")?;
+    let output = flag_path(args, "--output")?;
+    let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
+    write_resume_plan(&scenario, &output)?;
+    println!(
+        "{{\"status\":\"ok\",\"scenario_id\":\"{}\",\"checkpoint_every_events\":{}}}",
+        scenario.scenario_id, scenario.resume_checkpoint_every_events
+    );
+    Ok(())
+}
+
+fn handle_checkpoint_command(args: &[String]) -> Result<(), String> {
+    let output = flag_path(args, "--output")?;
+    write_checkpoint_manifest(&output)?;
+    println!(
+        "{{\"status\":\"ok\",\"command\":\"checkpoint\",\"output\":\"{}\"}}",
+        output.display()
+    );
+    Ok(())
+}
+
+fn handle_resume_command(args: &[String]) -> Result<(), String> {
+    let checkpoint = flag_path(args, "--checkpoint")?;
+    let output = flag_path(args, "--output")?;
+    write_resume_request(&checkpoint, &output)?;
+    println!(
+        "{{\"status\":\"ok\",\"command\":\"resume\",\"checkpoint\":\"{}\",\"output\":\"{}\"}}",
+        checkpoint.display(),
+        output.display()
+    );
+    Ok(())
+}
+
+fn handle_run_command(args: &[String]) -> Result<(), String> {
+    let scenario_path = flag_path(args, "--scenario")?;
+    let output = flag_path(args, "--output").unwrap_or_else(|_| {
+        env::var_os("KAIRO_OUTPUT_URI")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("kairo-run-output"))
+    });
+    if let Some(seed_path) = optional_flag_path(args, "--seed-manifest") {
+        let scenario = load_scenario(&scenario_path).map_err(|error| error.to_string())?;
+        let seed = load_seed_manifest(&seed_path).map_err(|error| error.to_string())?;
+        validate_scenario_and_seed(&scenario, &seed).map_err(|error| error.to_string())?;
+        let replay = replay_scheduler_ordering(&scenario)?;
+        write_replay_outputs(&scenario, &replay, &output)?;
+        println!(
+            "{{\"status\":\"ok\",\"command\":\"run\",\"scenario_id\":\"{}\",\"output\":\"{}\",\"summary_hash\":\"{}\"}}",
+            scenario.scenario_id,
+            output.display(),
+            replay.summary_hash
+        );
+    } else {
+        fs::create_dir_all(&output).map_err(|error| error.to_string())?;
+        fs::write(
+            output.join("run-request.json"),
+            format!(
+                "{{\n  \"schema_version\": \"kairoecs.run-request.v1\",\n  \"scenario\": \"{}\",\n  \"status\": \"accepted-without-seed-manifest\",\n  \"note\": \"Track 39 runner scaffold captured the request; deterministic replay requires --seed-manifest.\"\n}}\n",
+                scenario_path.display()
+            ),
+        )
+        .map_err(|error| error.to_string())?;
+        println!(
+            "{{\"status\":\"ok\",\"command\":\"run\",\"scenario\":\"{}\",\"output\":\"{}\",\"mode\":\"request-captured\"}}",
+            scenario_path.display(),
+            output.display()
+        );
+    }
     Ok(())
 }
 
