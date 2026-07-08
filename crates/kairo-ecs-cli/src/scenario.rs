@@ -223,3 +223,199 @@ fn unquote(value: &str) -> String {
         .trim()
         .to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    #[test]
+    fn test_load_scenario_valid() {
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(
+            file,
+            "schema_version = 'kairoecs.scenario.v1'
+scenario_id = test_scenario
+model_id = test_model
+fixture_id = test_fixture
+fixture_path = /tmp/fixture
+base_seed = 42
+replications = 3
+max_events = 1000
+artifact_root = /tmp/artifacts
+resume_checkpoint_every_events = 500
+expected_kind_order = 1, 2, 3"
+        )
+        .unwrap();
+
+        let scenario = load_scenario(file.path()).unwrap();
+        assert_eq!(scenario.schema_version, "kairoecs.scenario.v1");
+        assert_eq!(scenario.scenario_id, "test_scenario");
+        assert_eq!(scenario.model_id, "test_model");
+        assert_eq!(scenario.fixture_id, "test_fixture");
+        assert_eq!(scenario.fixture_path, PathBuf::from("/tmp/fixture"));
+        assert_eq!(scenario.base_seed, 42);
+        assert_eq!(scenario.replications, 3);
+        assert_eq!(scenario.max_events, 1000);
+        assert_eq!(scenario.artifact_root, PathBuf::from("/tmp/artifacts"));
+        assert_eq!(scenario.resume_checkpoint_every_events, 500);
+        assert_eq!(scenario.expected_kind_order, vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn test_load_scenario_missing_field() {
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(
+            file,
+            "schema_version = 'kairoecs.scenario.v1'
+scenario_id = test_scenario"
+        )
+        .unwrap();
+
+        let err = load_scenario(file.path()).unwrap_err();
+        assert!(matches!(err, ScenarioError::MissingField("model_id")));
+    }
+
+    #[test]
+    fn test_load_scenario_invalid_u64() {
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(
+            file,
+            "schema_version = 'kairoecs.scenario.v1'
+scenario_id = test_scenario
+model_id = test_model
+fixture_id = test_fixture
+fixture_path = /tmp/fixture
+base_seed = not_a_number
+replications = 3
+max_events = 1000
+artifact_root = /tmp/artifacts
+resume_checkpoint_every_events = 500
+expected_kind_order = 1, 2, 3"
+        )
+        .unwrap();
+
+        let err = load_scenario(file.path()).unwrap_err();
+        assert!(matches!(
+            err,
+            ScenarioError::InvalidField { field, .. } if field == "base_seed"
+        ));
+    }
+
+    #[test]
+    fn test_load_scenario_invalid_list() {
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(
+            file,
+            "schema_version = 'kairoecs.scenario.v1'
+scenario_id = test_scenario
+model_id = test_model
+fixture_id = test_fixture
+fixture_path = /tmp/fixture
+base_seed = 42
+replications = 3
+max_events = 1000
+artifact_root = /tmp/artifacts
+resume_checkpoint_every_events = 500
+expected_kind_order = 1, a, 3"
+        )
+        .unwrap();
+
+        let err = load_scenario(file.path()).unwrap_err();
+        assert!(matches!(
+            err,
+            ScenarioError::InvalidField { field, .. } if field == "expected_kind_order"
+        ));
+    }
+
+    #[test]
+    fn test_load_scenario_file_not_found() {
+        let path = Path::new("/non_existent_file_path_12345");
+        let err = load_scenario(path).unwrap_err();
+        assert!(matches!(err, ScenarioError::Io { .. }));
+    }
+
+    #[test]
+    fn test_load_seed_manifest_valid() {
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(
+            file,
+            "schema_version = 'kairoecs.seed.v1'
+scenario_id = test_scenario
+base_seed = 42
+fixture_id = test_fixture"
+        )
+        .unwrap();
+
+        let seed = load_seed_manifest(file.path()).unwrap();
+        assert_eq!(seed.schema_version, "kairoecs.seed.v1");
+        assert_eq!(seed.scenario_id, "test_scenario");
+        assert_eq!(seed.base_seed, 42);
+        assert_eq!(seed.fixture_id, "test_fixture");
+    }
+
+    #[test]
+    fn test_validate_scenario_and_seed_valid() {
+        let fixture_path = NamedTempFile::new().unwrap();
+
+        let scenario = ScenarioManifest {
+            schema_version: "kairoecs.scenario.v1".to_string(),
+            scenario_id: "test_scenario".to_string(),
+            model_id: "test_model".to_string(),
+            fixture_id: "test_fixture".to_string(),
+            fixture_path: fixture_path.path().to_path_buf(),
+            base_seed: 42,
+            replications: 3,
+            max_events: 1000,
+            artifact_root: PathBuf::from("/tmp/artifacts"),
+            resume_checkpoint_every_events: 500,
+            expected_kind_order: vec![1, 2, 3],
+        };
+
+        let seed = SeedManifest {
+            schema_version: "kairoecs.seed.v1".to_string(),
+            scenario_id: "test_scenario".to_string(),
+            base_seed: 42,
+            fixture_id: "test_fixture".to_string(),
+        };
+
+        assert!(validate_scenario_and_seed(&scenario, &seed).is_ok());
+    }
+
+    #[test]
+    fn test_validate_scenario_and_seed_mismatch() {
+        let fixture_path = NamedTempFile::new().unwrap();
+
+        let scenario = ScenarioManifest {
+            schema_version: "kairoecs.scenario.v1".to_string(),
+            scenario_id: "test_scenario".to_string(),
+            model_id: "test_model".to_string(),
+            fixture_id: "test_fixture".to_string(),
+            fixture_path: fixture_path.path().to_path_buf(),
+            base_seed: 42,
+            replications: 3,
+            max_events: 1000,
+            artifact_root: PathBuf::from("/tmp/artifacts"),
+            resume_checkpoint_every_events: 500,
+            expected_kind_order: vec![1, 2, 3],
+        };
+
+        let mut seed = SeedManifest {
+            schema_version: "kairoecs.seed.v1".to_string(),
+            scenario_id: "different_scenario".to_string(),
+            base_seed: 42,
+            fixture_id: "test_fixture".to_string(),
+        };
+
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(
+            matches!(err, ScenarioError::Mismatch(msg) if msg.contains("scenario_id mismatch"))
+        );
+
+        seed.scenario_id = "test_scenario".to_string();
+        seed.base_seed = 99;
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::Mismatch(msg) if msg.contains("base_seed mismatch")));
+    }
+}
