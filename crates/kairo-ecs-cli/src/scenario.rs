@@ -223,3 +223,69 @@ fn unquote(value: &str) -> String {
         .trim()
         .to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    #[test]
+    fn test_load_seed_manifest_success() {
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(
+            file,
+            "schema_version = kairoecs.seed.v1\n\
+             scenario_id = test-scenario-1\n\
+             base_seed = 42\n\
+             fixture_id = test-fixture-1"
+        )
+        .unwrap();
+
+        let manifest = load_seed_manifest(file.path()).unwrap();
+        assert_eq!(manifest.schema_version, "kairoecs.seed.v1");
+        assert_eq!(manifest.scenario_id, "test-scenario-1");
+        assert_eq!(manifest.base_seed, 42);
+        assert_eq!(manifest.fixture_id, "test-fixture-1");
+    }
+
+    #[test]
+    fn test_load_seed_manifest_missing_field() {
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(
+            file,
+            "schema_version = kairoecs.seed.v1\n\
+             scenario_id = test-scenario-1\n\
+             fixture_id = test-fixture-1"
+        )
+        .unwrap();
+
+        let result = load_seed_manifest(file.path());
+        assert!(matches!(
+            result,
+            Err(ScenarioError::MissingField("base_seed"))
+        ));
+    }
+
+    #[test]
+    fn test_load_seed_manifest_invalid_field() {
+        let mut file = NamedTempFile::new().unwrap();
+        writeln!(
+            file,
+            "schema_version = kairoecs.seed.v1\n\
+             scenario_id = test-scenario-1\n\
+             base_seed = not_a_number\n\
+             fixture_id = test-fixture-1"
+        )
+        .unwrap();
+
+        let result = load_seed_manifest(file.path());
+        match result {
+            Err(ScenarioError::InvalidField { field, value }) => {
+                assert_eq!(field, "base_seed");
+                assert_eq!(value, "not_a_number");
+            }
+            _ => panic!("Expected InvalidField error"),
+        }
+    }
+}
