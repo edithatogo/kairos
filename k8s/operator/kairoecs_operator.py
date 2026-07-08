@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Offline-renderable Kubernetes Job skeleton for KairoECS experiments."""
 
-from __future__ import annotations
-
 import argparse
 import json
 from pathlib import Path
