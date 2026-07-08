@@ -389,3 +389,39 @@ impl Default for ComponentRegistry {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn world_new_is_empty() {
+        let world = World::new();
+        assert!(world.slots.is_empty());
+        assert!(world.free_indices.is_empty());
+        assert!(world.live_entities.is_empty());
+        assert!(world.live_positions.is_empty());
+        assert!(world.is_empty());
+        assert_eq!(world.len(), 0);
+    }
+
+    #[test]
+    fn world_with_capacity_is_empty_and_allocates() {
+        let capacity = 10;
+        let world = World::with_capacity(capacity);
+
+        // Should be empty initially
+        assert!(world.slots.is_empty());
+        assert!(world.free_indices.is_empty());
+        assert!(world.live_entities.is_empty());
+        assert!(world.live_positions.is_empty());
+        assert!(world.is_empty());
+        assert_eq!(world.len(), 0);
+
+        // Should have at least the requested capacity
+        assert!(world.slots.capacity() >= capacity);
+        assert!(world.free_indices.capacity() >= capacity);
+        assert!(world.live_entities.capacity() >= capacity);
+        assert!(world.live_positions.capacity() >= capacity);
+    }
+}
