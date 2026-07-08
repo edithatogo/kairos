@@ -98,10 +98,17 @@ impl TwinStateSnapshot {
             .cloned()
             .collect();
 
+        let mut existing_map: std::collections::HashMap<String, usize> = entries
+            .iter()
+            .enumerate()
+            .map(|(idx, entry)| (entry.key.clone(), idx))
+            .collect();
+
         for changed in &diff.changed {
-            if let Some(existing) = entries.iter_mut().find(|entry| entry.key == changed.key) {
-                existing.value = changed.value.clone();
+            if let Some(&idx) = existing_map.get(&changed.key) {
+                entries[idx].value = changed.value.clone();
             } else {
+                existing_map.insert(changed.key.clone(), entries.len());
                 entries.push(changed.clone());
             }
         }
