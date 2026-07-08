@@ -112,8 +112,9 @@ def load_inventory(path: Path) -> dict:
         step_commands.append(command)
         if FORBIDDEN_DRY_RUN_TEXT.search(command):
             raise SystemExit(f"local dry-run step is not offline/non-publishing: {command}")
-        require_bool(step.get("network_required"), "local_dry_run_sequence.step.network_required")
-        if step.get("network_required") is not False:
+        network_required = step.get("network_required")
+        require_bool(network_required, "local_dry_run_sequence.step.network_required")
+        if network_required is not False:
             raise SystemExit(f"local dry-run step must not require network: {command}")
         writes = require_list(step.get("writes"), "local_dry_run_sequence.step.writes")
         for write in writes:
