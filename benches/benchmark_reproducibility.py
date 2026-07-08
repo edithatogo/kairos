@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Track 18 benchmark reproducibility metadata checks."""
 
-from __future__ import annotations
 
 import json
 from pathlib import Path
