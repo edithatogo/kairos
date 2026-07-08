@@ -74,27 +74,24 @@ impl EventTrace {
     }
 
     pub fn reconstruct_at(&self, tick: u128) -> BTreeMap<String, String> {
-        let mut state = self
-            .snapshots
-            .iter()
-            .rev()
-            .find(|snapshot| snapshot.tick <= tick)
-            .map(|snapshot| snapshot.state.clone())
-            .unwrap_or_default();
+        let (mut state, snapshot_tick) = {
+            let idx = self
+                .snapshots
+                .partition_point(|snapshot| snapshot.tick <= tick);
+            if idx > 0 {
+                let snapshot = &self.snapshots[idx - 1];
+                (snapshot.state.clone(), snapshot.tick)
+            } else {
+                (BTreeMap::new(), 0)
+            }
+        };
 
-        let snapshot_tick = self
-            .snapshots
-            .iter()
-            .rev()
-            .find(|snapshot| snapshot.tick <= tick)
-            .map(|snapshot| snapshot.tick)
-            .unwrap_or(0);
-
-        for delta in self
+        let delta_start_idx = self
             .deltas
-            .iter()
-            .filter(|delta| delta.tick > snapshot_tick && delta.tick <= tick)
-        {
+            .partition_point(|delta| delta.tick <= snapshot_tick);
+        let delta_end_idx = self.deltas.partition_point(|delta| delta.tick <= tick);
+
+        for delta in &self.deltas[delta_start_idx..delta_end_idx] {
             for (key, value) in &delta.changes {
                 state.insert(key.clone(), value.clone());
             }

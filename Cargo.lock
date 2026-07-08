@@ -388,6 +388,7 @@ name = "kairo-ecs-debug"
 version = "0.0.0"
 dependencies = [
  "clap",
+ "criterion",
  "kairo-ecs-core",
  "kairo-ecs-types",
 ]
