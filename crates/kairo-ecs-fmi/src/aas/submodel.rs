@@ -111,3 +111,56 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn property_to_json_basic() {
+        let prop = AasProperty::new("myProp", "xs:string");
+        assert_eq!(
+            prop.to_json(),
+            r#"{"modelType":"Property","idShort":"myProp","valueType":"xs:string"}"#
+        );
+    }
+
+    #[test]
+    fn property_to_json_with_semantic_id() {
+        let mut prop = AasProperty::new("myProp", "xs:string");
+        prop.semantic_id = Some("urn:kairo:my-semantic-id".to_string());
+        assert_eq!(
+            prop.to_json(),
+            r#"{"modelType":"Property","idShort":"myProp","valueType":"xs:string","semanticId":{"type":"ExternalReference","keys":[{"type":"GlobalReference","value":"urn:kairo:my-semantic-id"}]}}"#
+        );
+    }
+
+    #[test]
+    fn property_to_json_escapes_special_chars() {
+        let prop = AasProperty::new("my\"Prop\\", "xs:\"string\\");
+        assert_eq!(
+            prop.to_json(),
+            r#"{"modelType":"Property","idShort":"my\"Prop\\","valueType":"xs:\"string\\"}"#
+        );
+    }
+
+    #[test]
+    fn submodel_to_json_empty() {
+        let submodel = AasSubmodel::new("urn:test:submodel", "mySubmodel");
+        assert_eq!(
+            submodel.to_json(),
+            r#"{"type":"ModelReference","keys":[{"type":"Submodel","value":"urn:test:submodel"}],"idShort":"mySubmodel","submodelElements":[]}"#
+        );
+    }
+
+    #[test]
+    fn submodel_to_json_with_properties() {
+        let submodel = AasSubmodel::new("urn:test:submodel", "mySubmodel")
+            .with_property(AasProperty::new("prop1", "xs:string"))
+            .with_property(AasProperty::new("prop2", "xs:integer"));
+        assert_eq!(
+            submodel.to_json(),
+            r#"{"type":"ModelReference","keys":[{"type":"Submodel","value":"urn:test:submodel"}],"idShort":"mySubmodel","submodelElements":[{"modelType":"Property","idShort":"prop1","valueType":"xs:string"},{"modelType":"Property","idShort":"prop2","valueType":"xs:integer"}]}"#
+        );
+    }
+}
