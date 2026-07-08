@@ -537,6 +537,21 @@ ${toc}
   var inp = document.getElementById('search');
   var res = document.getElementById('search-results');
   if (!inp || !res) return;
+
+  function escapeHTML(str) {
+    if (typeof str !== 'string') return '';
+    return str.replace(/[&<>"']/g, function(m) {
+      switch (m) {
+        case '&': return '&amp;';
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '"': return '&quot;';
+        case "'": return '&#39;';
+        default: return m;
+      }
+    });
+  }
+
   inp.addEventListener('input', function() {
     var q = this.value.toLowerCase().trim();
     if (q.length < 2) { res.hidden = true; return; }
@@ -547,7 +562,10 @@ ${toc}
       res.innerHTML = '<div class="no-results">No results</div>';
     } else {
       res.innerHTML = matches.map(function(d) {
-        return '<a href="' + (d.href || ('../../' + d.path.replace(/\\.md$/, '.html'))) + '"><div class="result-title">' + d.title + '</div><div class="result-excerpt">' + (d.excerpt || '').slice(0, 120) + '</div></a>';
+        var href = escapeHTML(d.href || ('../../' + d.path.replace(/\.md$/, '.html')));
+        var title = escapeHTML(d.title);
+        var excerpt = escapeHTML((d.excerpt || '').slice(0, 120));
+        return '<a href="' + href + '"><div class="result-title">' + title + '</div><div class="result-excerpt">' + excerpt + '</div></a>';
       }).join('');
     }
     res.hidden = false;
