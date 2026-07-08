@@ -6,7 +6,6 @@ copied locally, while s3://, gs://, and az:// URIs produce provider manifests
 that provider-specific upload jobs can consume in cloud environments.
 """
 
-from __future__ import annotations
 
 import argparse
 import hashlib
