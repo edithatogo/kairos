@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
 import math
-from typing import Any
+from typing import Any, Optional
 
 try:
     import gymnasium as gym
@@ -50,14 +48,14 @@ if gym is not None:
 class KairoGymEnv(_BaseEnv):
     metadata = {"render_modes": ["ansi"]}
 
-    def __init__(self, config: KairoGymConfig | None = None):
+    def __init__(self, config: Optional[KairoGymConfig] = None):
         self.config = config or KairoGymConfig()
         self.observation_space = build_observation_space(self.config.observation_size)
         self.action_space = build_action_space(self.config.action_size)
         self._step_count = 0
         self._state = [0.0 for _ in range(self.config.observation_size)]
 
-    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
+    def reset(self, *, seed: Optional[int] = None, options: Optional[dict[str, Any]] = None):
         if seed is not None and gym is not None:
             super().reset(seed=seed)
         self._step_count = 0
