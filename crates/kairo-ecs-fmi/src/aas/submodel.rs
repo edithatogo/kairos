@@ -111,3 +111,101 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validates_valid_property() {
+        let property = AasProperty::new("validId", "xs:string");
+        assert!(property.validate().is_ok());
+    }
+
+    #[test]
+    fn rejects_property_with_empty_id_short() {
+        let property = AasProperty::new("", "xs:string");
+        let error = property.validate().expect_err("property idShort");
+        assert!(error
+            .to_string()
+            .contains("property idShort must not be empty"));
+    }
+
+    #[test]
+    fn rejects_property_with_whitespace_id_short() {
+        let property = AasProperty::new("   ", "xs:string");
+        let error = property.validate().expect_err("property idShort");
+        assert!(error
+            .to_string()
+            .contains("property idShort must not be empty"));
+    }
+
+    #[test]
+    fn rejects_property_with_empty_value_type() {
+        let property = AasProperty::new("validId", "");
+        let error = property.validate().expect_err("property valueType");
+        assert!(error
+            .to_string()
+            .contains("property valueType must not be empty"));
+    }
+
+    #[test]
+    fn rejects_property_with_whitespace_value_type() {
+        let property = AasProperty::new("validId", "   ");
+        let error = property.validate().expect_err("property valueType");
+        assert!(error
+            .to_string()
+            .contains("property valueType must not be empty"));
+    }
+
+    #[test]
+    fn validates_valid_submodel() {
+        let submodel = AasSubmodel::new("urn:test:id", "testShort");
+        assert!(submodel.validate().is_ok());
+    }
+
+    #[test]
+    fn validates_submodel_with_properties() {
+        let submodel = AasSubmodel::new("urn:test:id", "testShort")
+            .with_property(AasProperty::new("prop1", "xs:string"))
+            .with_property(AasProperty::new("prop2", "xs:integer"));
+        assert!(submodel.validate().is_ok());
+    }
+
+    #[test]
+    fn rejects_submodel_with_empty_id() {
+        let submodel = AasSubmodel::new("", "testShort");
+        let error = submodel.validate().expect_err("submodel id");
+        assert!(error.to_string().contains("submodel id must not be empty"));
+    }
+
+    #[test]
+    fn rejects_submodel_with_empty_id_short() {
+        let submodel = AasSubmodel::new("urn:test:id", "");
+        let error = submodel.validate().expect_err("submodel idShort");
+        assert!(error
+            .to_string()
+            .contains("submodel idShort must not be empty"));
+    }
+
+    #[test]
+    fn rejects_submodel_with_invalid_property() {
+        let submodel = AasSubmodel::new("urn:test:id", "testShort")
+            .with_property(AasProperty::new("", "xs:string"));
+        let error = submodel.validate().expect_err("property idShort");
+        assert!(error
+            .to_string()
+            .contains("property idShort must not be empty"));
+    }
+
+    #[test]
+    fn rejects_submodel_with_duplicate_property_ids() {
+        let submodel = AasSubmodel::new("urn:test:id", "testShort")
+            .with_property(AasProperty::new("duplicate", "xs:string"))
+            .with_property(AasProperty::new("duplicate", "xs:integer"));
+        let error = submodel.validate().expect_err("duplicate property idShort");
+        assert!(error
+            .to_string()
+            .contains("duplicate property idShort 'duplicate'"));
+    }
+}
