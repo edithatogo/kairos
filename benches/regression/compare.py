@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Track 31 benchmark threshold validator and regression comparator."""
 
-from __future__ import annotations
 
 import argparse
 import json
