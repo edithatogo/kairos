@@ -122,6 +122,13 @@ function main() {
   const navigationEntries = collectNavigation(manifest);
   const generatedPages = [];
 
+  const navEntryMap = new Map();
+  for (const entry of navigationEntries) {
+    if (!navEntryMap.has(entry.sourcePath)) {
+      navEntryMap.set(entry.sourcePath, entry);
+    }
+  }
+
   for (const sourcePath of requiredPaths) {
     const repoPath = path.join(repoRoot, sourcePath);
     if (!fs.existsSync(repoPath)) {
@@ -131,7 +138,7 @@ function main() {
     if (outputPath === "website/playground/index.html") {
       continue;
     }
-    const navEntry = navigationEntries.find((entry) => entry.sourcePath === sourcePath);
+    const navEntry = navEntryMap.get(sourcePath);
     writeFile(outputPath, compatibilityPage({
       sourcePath,
       outputPath,
