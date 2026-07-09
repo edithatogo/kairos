@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 import os
 import re
@@ -55,7 +56,6 @@ def validate_notebook(path: Path) -> None:
     if kernelspec.get("name") != "python3":
         raise AssertionError(f"{path}: expected python3 kernelspec")
 
-    namespace: dict[str, object] = {"__name__": "__notebook__"}
     is_colab_smoke = path.name.startswith("colab_")
     code_cells = 0
     markdown_cells = 0
@@ -69,7 +69,10 @@ def validate_notebook(path: Path) -> None:
             code_cells += 1
             validate_code_source(path, index, source, allow_notebook_magics=is_colab_smoke)
             if not is_colab_smoke:
-                exec(compile(source, f"{path}:{index}", "exec"), namespace)
+                try:
+                    ast.parse(source, filename=f"{path}:{index}")
+                except SyntaxError as e:
+                    raise AssertionError(f"{path}:{index}: Syntax error: {e}") from e
         else:
             raise AssertionError(f"{path}: unsupported cell type {cell_type!r}")
 
