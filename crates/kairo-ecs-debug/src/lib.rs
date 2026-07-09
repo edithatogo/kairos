@@ -79,7 +79,12 @@ impl EventTrace {
             .iter()
             .rev()
             .find(|snapshot| snapshot.tick <= tick)
-            .map(|snapshot| snapshot.state.clone())
+            .map(|snapshot| {
+                snapshot
+                    .state
+                    .iter()
+                    .collect::<BTreeMap<&String, &String>>()
+            })
             .unwrap_or_default();
 
         let snapshot_tick = self
@@ -96,10 +101,13 @@ impl EventTrace {
             .filter(|delta| delta.tick > snapshot_tick && delta.tick <= tick)
         {
             for (key, value) in &delta.changes {
-                state.insert(key.clone(), value.clone());
+                state.insert(key, value);
             }
         }
         state
+            .into_iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
     }
 
     pub fn encode_lines(&self) -> String {
