@@ -111,3 +111,97 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_valid_submodel_empty_properties() {
+        let submodel = AasSubmodel::new("submodel-1", "Submodel1");
+        assert!(submodel.validate().is_ok());
+    }
+
+    #[test]
+    fn test_valid_submodel_with_properties() {
+        let submodel = AasSubmodel::new("submodel-1", "Submodel1")
+            .with_property(AasProperty::new("Prop1", "xs:string"))
+            .with_property(AasProperty::new("Prop2", "xs:integer"));
+        assert!(submodel.validate().is_ok());
+    }
+
+    #[test]
+    fn test_invalid_submodel_empty_id() {
+        let submodel = AasSubmodel::new("", "Submodel1");
+        let result = submodel.validate();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "AAS descriptor validation failed: submodel id must not be empty"
+        );
+    }
+
+    #[test]
+    fn test_invalid_submodel_empty_id_short() {
+        let submodel = AasSubmodel::new("submodel-1", "   ");
+        let result = submodel.validate();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "AAS descriptor validation failed: submodel idShort must not be empty"
+        );
+    }
+
+    #[test]
+    fn test_invalid_submodel_duplicate_property_id_short() {
+        let submodel = AasSubmodel::new("submodel-1", "Submodel1")
+            .with_property(AasProperty::new("Prop1", "xs:string"))
+            .with_property(AasProperty::new("Prop1", "xs:integer"));
+        let result = submodel.validate();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "AAS descriptor validation failed: duplicate property idShort 'Prop1'"
+        );
+    }
+
+    #[test]
+    fn test_invalid_submodel_invalid_property() {
+        let submodel = AasSubmodel::new("submodel-1", "Submodel1")
+            .with_property(AasProperty::new("", "xs:string"));
+        let result = submodel.validate();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "AAS descriptor validation failed: property idShort must not be empty"
+        );
+    }
+
+    #[test]
+    fn test_valid_property() {
+        let property = AasProperty::new("Prop1", "xs:string");
+        assert!(property.validate().is_ok());
+    }
+
+    #[test]
+    fn test_invalid_property_empty_id_short() {
+        let property = AasProperty::new("  ", "xs:string");
+        let result = property.validate();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "AAS descriptor validation failed: property idShort must not be empty"
+        );
+    }
+
+    #[test]
+    fn test_invalid_property_empty_value_type() {
+        let property = AasProperty::new("Prop1", "");
+        let result = property.validate();
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "AAS descriptor validation failed: property valueType must not be empty"
+        );
+    }
+}
