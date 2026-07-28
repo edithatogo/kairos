@@ -425,6 +425,7 @@ mod registry_insert_tests {
         assert!(registry.store::<u32>().is_none());
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -465,5 +466,16 @@ mod tests {
         // Despawn an entity with a stale generation
         let stale_entity = EntityId::new(entity1.index, entity1.generation.wrapping_add(1));
         assert!(!world.despawn(stale_entity));
+    }
+
+    #[test]
+    fn test_world_with_capacity() {
+        let capacity = 42;
+        let world = World::with_capacity(capacity);
+
+        assert!(world.slots.capacity() >= capacity);
+        assert!(world.free_indices.capacity() >= capacity);
+        assert!(world.live_entities.capacity() >= capacity);
+        assert!(world.live_positions.capacity() >= capacity);
     }
 }
