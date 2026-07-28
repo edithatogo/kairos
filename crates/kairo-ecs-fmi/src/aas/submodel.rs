@@ -111,3 +111,58 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_property_validate_success() {
+        let property = AasProperty::new("valid_id", "xs:string");
+        assert!(property.validate().is_ok());
+    }
+
+    #[test]
+    fn test_property_validate_empty_id_short() {
+        let property = AasProperty::new("", "xs:string");
+        let result = property.validate();
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("property idShort must not be empty"));
+    }
+
+    #[test]
+    fn test_property_validate_whitespace_id_short() {
+        let property = AasProperty::new("   ", "xs:string");
+        let result = property.validate();
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("property idShort must not be empty"));
+    }
+
+    #[test]
+    fn test_property_validate_empty_value_type() {
+        let property = AasProperty::new("valid_id", "");
+        let result = property.validate();
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("property valueType must not be empty"));
+    }
+
+    #[test]
+    fn test_property_validate_whitespace_value_type() {
+        let property = AasProperty::new("valid_id", " \t\n");
+        let result = property.validate();
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("property valueType must not be empty"));
+    }
+}
