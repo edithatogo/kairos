@@ -111,3 +111,55 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validates_valid_property() {
+        let property = AasProperty::new("validId", "xs:integer");
+        assert!(property.validate().is_ok());
+    }
+
+    #[test]
+    fn rejects_empty_property_id_short() {
+        let property = AasProperty::new("", "xs:integer");
+        let err = property
+            .validate()
+            .expect_err("should reject empty idShort");
+        assert!(err
+            .to_string()
+            .contains("property idShort must not be empty"));
+    }
+
+    #[test]
+    fn rejects_empty_property_value_type() {
+        let property = AasProperty::new("validId", "");
+        let err = property
+            .validate()
+            .expect_err("should reject empty valueType");
+        assert!(err
+            .to_string()
+            .contains("property valueType must not be empty"));
+    }
+
+    #[test]
+    fn rejects_whitespace_only_fields() {
+        let property_id = AasProperty::new("   ", "xs:integer");
+        let err_id = property_id
+            .validate()
+            .expect_err("should reject whitespace idShort");
+        assert!(err_id
+            .to_string()
+            .contains("property idShort must not be empty"));
+
+        let property_value = AasProperty::new("validId", "   ");
+        let err_value = property_value
+            .validate()
+            .expect_err("should reject whitespace valueType");
+        assert!(err_value
+            .to_string()
+            .contains("property valueType must not be empty"));
+    }
+}
