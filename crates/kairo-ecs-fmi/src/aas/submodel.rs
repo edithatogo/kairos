@@ -111,3 +111,65 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_aas_submodel_new() {
+        let submodel = AasSubmodel::new("http://example.com/submodel", "MySubmodel");
+        assert_eq!(submodel.id, "http://example.com/submodel");
+        assert_eq!(submodel.id_short, "MySubmodel");
+        assert!(submodel.elements.is_empty());
+    }
+
+    #[test]
+    fn test_aas_property_new() {
+        let property = AasProperty::new("MyProperty", "xs:string");
+        assert_eq!(property.id_short, "MyProperty");
+        assert_eq!(property.value_type, "xs:string");
+        assert_eq!(property.semantic_id, None);
+    }
+
+    #[test]
+    fn test_aas_submodel_with_property() {
+        let property = AasProperty::new("MyProperty", "xs:string");
+        let submodel = AasSubmodel::new("http://example.com/submodel", "MySubmodel")
+            .with_property(property.clone());
+        assert_eq!(submodel.elements.len(), 1);
+        assert_eq!(submodel.elements[0], property);
+    }
+
+    #[test]
+    fn test_aas_submodel_validate_success() {
+        let property = AasProperty::new("MyProperty", "xs:string");
+        let submodel =
+            AasSubmodel::new("http://example.com/submodel", "MySubmodel").with_property(property);
+        assert!(submodel.validate().is_ok());
+    }
+
+    #[test]
+    fn test_aas_submodel_validate_duplicate_property() {
+        let property = AasProperty::new("MyProperty", "xs:string");
+        let submodel = AasSubmodel::new("http://example.com/submodel", "MySubmodel")
+            .with_property(property.clone())
+            .with_property(property);
+        let result = submodel.validate();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_aas_submodel_validate_empty_id() {
+        let submodel = AasSubmodel::new("", "MySubmodel");
+        let result = submodel.validate();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_aas_property_validate_empty_id_short() {
+        let property = AasProperty::new("", "xs:string");
+        let result = property.validate();
+        assert!(result.is_err());
+    }
+}
