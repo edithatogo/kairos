@@ -630,23 +630,6 @@ tracks:
       - scheduler-runtime-evidence
       - provider-batch-canary
       - code-health-floor
-  - id: 44
-    name: Code and Repository Health >= 9.5
-    status: Spec Approved
-    owner: health-agent + ci-agent + security-agent + release-agent
-    depends_on: ["13", "20", "25", "28", "30", "31", "41"]
-    owned_paths:
-      - .github/workflows/code-health.yml
-      - conductor/code-health.md
-      - conductor/tracks/44-code-repository-health-95/
-      - scripts/validation/validate-code-health.mjs
-    required_gates:
-      - phase-closeout-check
-      - code-health-score
-      - repo-hygiene-score
-      - security-health-score
-      - docs-health-score
-      - package-sota-score
   - id: 45
     name: Astro/Starlight Docs Platform and Polyglot Experience
     status: In Review
