@@ -3,7 +3,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
+$repo = (Resolve-Path (Join-Path $PSScriptRoot "../../..")).Path
 $oldPythonPath = $env:PYTHONPATH
 $oldRustupToolchain = $env:RUSTUP_TOOLCHAIN
 $gnuToolchain = "stable-x86_64-pc-windows-gnu"
@@ -77,17 +77,17 @@ function Test-KairosRustupToolchainAvailable {
 
 $useGnuToolchain = (Test-KairosWindowsHost) -and (Test-KairosRustupToolchainAvailable -Toolchain $gnuToolchain)
 $env:RUSTUP_TOOLCHAIN = if ($useGnuToolchain) { $gnuToolchain } else { $oldRustupToolchain }
-$env:PYTHONPATH = (Join-Path $repo "python\kairo_gym\src")
+$env:PYTHONPATH = (Join-Path $repo "python/kairo_gym/src")
 Push-Location $repo
 try {
     $commands = @(
-        @{ Name = "streaming check"; Command = @("cargo", "check", "--manifest-path", "crates\kairo-ecs-streaming\Cargo.toml", "--all-features", "--tests") },
-        @{ Name = "ml check"; Command = @("cargo", "check", "--manifest-path", "crates\kairo-ecs-ml\Cargo.toml", "--all-features", "--tests") },
-        @{ Name = "fmi check"; Command = @("cargo", "check", "--manifest-path", "crates\kairo-ecs-fmi\Cargo.toml", "--all-features", "--tests") },
-        @{ Name = "debug check"; Command = @("cargo", "check", "--manifest-path", "crates\kairo-ecs-debug\Cargo.toml", "--tests") },
-        @{ Name = "kairo_gym unittest"; Command = @("python", "-m", "unittest", "discover", "-s", "python\kairo_gym\tests") },
-        @{ Name = "cloud offline validator"; Command = @("python", "cloud\validate_cloud_hpc.py") },
-        @{ Name = "time travel demo validator"; Command = @("node", "website\time-travel-demo\validate-demo.mjs") }
+        @{ Name = "streaming check"; Command = @("cargo", "check", "--manifest-path", "crates/kairo-ecs-streaming/Cargo.toml", "--all-features", "--tests") },
+        @{ Name = "ml check"; Command = @("cargo", "check", "--manifest-path", "crates/kairo-ecs-ml/Cargo.toml", "--all-features", "--tests") },
+        @{ Name = "fmi check"; Command = @("cargo", "check", "--manifest-path", "crates/kairo-ecs-fmi/Cargo.toml", "--all-features", "--tests") },
+        @{ Name = "debug check"; Command = @("cargo", "check", "--manifest-path", "crates/kairo-ecs-debug/Cargo.toml", "--tests") },
+        @{ Name = "kairo_gym unittest"; Command = @("python", "-m", "unittest", "discover", "-s", "python/kairo_gym/tests") },
+        @{ Name = "cloud offline validator"; Command = @("python", "cloud/validate_cloud_hpc.py") },
+        @{ Name = "time travel demo validator"; Command = @("node", "website/time-travel-demo/validate-demo.mjs") }
     )
 
     foreach ($item in $commands) {
@@ -101,14 +101,14 @@ try {
     }
 
     $docs = @(
-        @{ Path = "docs\streaming\architecture.md"; Needles = @("contract test doubles only", "not Kafka, NATS, WebSocket") },
-        @{ Path = "docs\streaming\broker-setup.md"; Needles = @("Tutorial: local contract smoke", "Evidence boundary") },
-        @{ Path = "docs\ml\architecture.md"; Needles = @("contract double", "does not load or execute a real ONNX graph") },
-        @{ Path = "docs\ml\surrogate-authoring.md"; Needles = @("Tutorial: dependency-free surrogate scaffold", "Evidence boundary") },
-        @{ Path = "docs\fmi-digital-twin\import-guide.md"; Needles = @("does not perform XSD validation", "still needs the dynamic loader implementation", "Tutorial: unpacked FMU preflight", "Evidence boundary") },
-        @{ Path = "docs\cloud-hpc\checkpoint-spot-policy.md"; Needles = @("does not prove", "Live provider validation", "Tutorial: offline cloud/HPC smoke", "Evidence boundary") },
-        @{ Path = "docs\debugging\trace-format.md"; Needles = @("offline line encoding", "Arrow IPC serialization remains") },
-        @{ Path = "docs\debugging\cli-reference.md"; Needles = @("Tutorial: local trace smoke", "Evidence boundary") }
+        @{ Path = "docs/streaming/architecture.md"; Needles = @("contract test doubles only", "not Kafka, NATS, WebSocket") },
+        @{ Path = "docs/streaming/broker-setup.md"; Needles = @("Tutorial: local contract smoke", "Evidence boundary") },
+        @{ Path = "docs/ml/architecture.md"; Needles = @("contract double", "does not load or execute a real ONNX graph") },
+        @{ Path = "docs/ml/surrogate-authoring.md"; Needles = @("Tutorial: dependency-free surrogate scaffold", "Evidence boundary") },
+        @{ Path = "docs/fmi-digital-twin/import-guide.md"; Needles = @("does not perform XSD validation", "still needs the dynamic loader implementation", "Tutorial: unpacked FMU preflight", "Evidence boundary") },
+        @{ Path = "docs/cloud-hpc/checkpoint-spot-policy.md"; Needles = @("does not prove", "Live provider validation", "Tutorial: offline cloud/HPC smoke", "Evidence boundary") },
+        @{ Path = "docs/debugging/trace-format.md"; Needles = @("offline line encoding", "Arrow IPC serialization remains") },
+        @{ Path = "docs/debugging/cli-reference.md"; Needles = @("Tutorial: local trace smoke", "Evidence boundary") }
     )
 
     foreach ($entry in $docs) {
@@ -120,7 +120,7 @@ try {
         }
     }
 
-    $invalidExperiment = Join-Path $repo "k8s\operator\invalid-experiment.validation.json"
+    $invalidExperiment = Join-Path $repo "k8s/operator/invalid-experiment.validation.json"
     $invalidExperimentJson = @{
         kind = "KairoECSExperiment"
         spec = @{
@@ -136,7 +136,7 @@ try {
     [System.IO.File]::WriteAllText($invalidExperiment, $invalidExperimentJson, $utf8NoBom)
     $previousErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    & python "k8s\operator\kairoecs_operator.py" --experiment $invalidExperiment
+    & python "k8s/operator/kairoecs_operator.py" --experiment $invalidExperiment
     $operatorExit = $LASTEXITCODE
     $ErrorActionPreference = $previousErrorActionPreference
     Remove-Item -LiteralPath $invalidExperiment -Force
@@ -146,9 +146,9 @@ try {
 
     if (-not $SkipCargoTests) {
         Write-Host "==> cargo test probes"
-        & cargo test --manifest-path crates\kairo-ecs-streaming\Cargo.toml --no-default-features
+        & cargo test --manifest-path crates/kairo-ecs-streaming/Cargo.toml --no-default-features
         if ($LASTEXITCODE -ne 0) { throw "streaming cargo test failed" }
-        & cargo test --manifest-path crates\kairo-ecs-ml\Cargo.toml --no-default-features
+        & cargo test --manifest-path crates/kairo-ecs-ml/Cargo.toml --no-default-features
         if ($LASTEXITCODE -ne 0) { throw "ml cargo test failed" }
     }
 

@@ -103,7 +103,7 @@ Assert-Contains -Path "conductor/quality-gates.md" -Needle "conductor/tracks.md"
 Assert-Contains -Path "conductor/quality-gates.md" -Needle "conductor/status.md" -Label "quality gate catalogue"
 Assert-Contains -Path "conductor/quality-gates.md" -Needle "validate_conductor_git_closeout.ps1" -Label "quality gate catalogue"
 
-$terminalStatuses = @("Done", "Deferred", "Cancelled")
+$terminalStatuses = @("Done", "Deferred", "Cancelled", "Archived")
 $records = @(Get-TrackRecords -Path $TracksYamlPath)
 if ($records.Count -eq 0) {
     Add-Issue -Severity "ERROR" -Message "No tracks parsed from $TracksYamlPath"

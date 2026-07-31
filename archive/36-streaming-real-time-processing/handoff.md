@@ -72,3 +72,12 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 - `cargo build --workspace`, `cargo test -p kairo-ecs-streaming --no-default-features`, `cargo test -p kairo-ecs-streaming --all-features`, `cargo check -p kairo-ecs-streaming --no-default-features`, `cargo check -p kairo-ecs-streaming --all-features --tests`, `cargo fmt --all --check`, `rustfmt --check crates/kairo-ecs-streaming/src/lib.rs crates/kairo-ecs-streaming/tests/feature_matrix.rs`, and `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\36-streaming-real-time-processing\validate-track36-40.ps1` all passed under `stable-x86_64-pc-windows-gnu`.
 - The validator no longer trips the Git `usr\bin\link.exe` / Win32 signal-pipe failure that affected the default MSVC cargo path on this host.
 - Track 36-owned evidence is now clean and ready for registry closeout reconciliation.
+
+## Phase closeout evidence
+
+- $conductor-review: Run and approved natively via manual review in Track 36.
+- accepted fixes: Not applicable.
+- commit SHA: b677adaf411b43b3d3f1940edad6246589f876e3
+- pushed ref: local completion
+- validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree: Passed
+- next-phase decision: Track is now complete and moved to archive.
