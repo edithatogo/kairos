@@ -19,10 +19,10 @@
 
 - [x] Require command, runner/cluster/account/region/partition, job ID, final status, and artifact references.
 - [x] Keep claims bounded to scaffold/offline validation until live evidence exists.
-- [ ] Run Docker canary.
-- [ ] Run Kubernetes canary.
-- [ ] Run Slurm canary.
-- [ ] Run AWS/GCP/Azure Batch canaries.
+- [x] Run Docker canary.
+- [x] Run Kubernetes canary.
+- [x] Run Slurm canary.
+- [x] Run AWS/GCP/Azure Batch canaries.
 
 ## Phase closeout gate
 

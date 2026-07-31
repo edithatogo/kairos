@@ -14,13 +14,13 @@ composite_gates:
     description: "FFI Release Candidate ready — all binding tracks (06-11) can begin implementation"
     required:
       - id: "02"
-        status: Spec Approved
+        status: In Progress
       - id: "04"
-        status: Spec Approved
+        status: In Progress
       - id: "12"
         status: In Progress
       - id: "25"
-        status: Spec Approved
+        status: In Progress
 tracks:
   - id: 00
     name: Project Foundation, Governance & Naming
@@ -596,7 +596,7 @@ tracks:
       - docs-platform-parity
   - id: 42
     name: Package Registry Publication & Provenance
-    status: Spec Approved
+    status: In Progress
     owner: publication-agent + release-agent + binding agents
     depends_on: ["06", "07", "08", "09", "10", "11", "15", "16", "20", "25", "28", "29", "30", "44"]
     owned_paths:
@@ -612,27 +612,9 @@ tracks:
       - provenance-attestation
       - package-sota-score
       - code-health-floor
-  - id: 43
-    name: Cloud/HPC Registry Publication & Runtime Acceptance
-    status: Spec Approved
-    owner: hpc-registry-agent + cloud-agent + release-agent
-    depends_on: ["22", "35", "39", "42", "44"]
-    owned_paths:
-      - .github/workflows/hpc-registry-publish.yml
-      - conductor/tracks/43-cloud-hpc-registry-publication-runtime-acceptance/
-      - packaging/hpc-registry-manifest.json
-      - scripts/release/publish-hpc.mjs
-      - scripts/validation/validate-hpc-registry-readiness.mjs
-    required_gates:
-      - phase-closeout-check
-      - hpc-registry-publication-plan
-      - container-registry-provenance
-      - scheduler-runtime-evidence
-      - provider-batch-canary
-      - code-health-floor
   - id: 44
     name: Code and Repository Health >= 9.5
-    status: Spec Approved
+    status: In Progress
     owner: health-agent + ci-agent + security-agent + release-agent
     depends_on: ["13", "20", "25", "28", "30", "31", "41"]
     owned_paths:
