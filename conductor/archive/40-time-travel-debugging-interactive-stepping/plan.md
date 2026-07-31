@@ -104,3 +104,6 @@ Before any task or phase in this track is marked complete, and before the next p
 6. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` to verify recorded commits, pushed refs, and cleanup state.
 8. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions

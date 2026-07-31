@@ -554,20 +554,6 @@ tracks:
       - docker-build
       - kubernetes-smoke
       - spot-checkpoint-test
-  - id: 40
-    name: Time-Travel Debugging & Interactive Stepping
-    status: Done
-    owner: timetravel-agent
-    depends_on: ["01", "12"]
-    owned_paths:
-      - crates/kairo-ecs-debug/
-      - docs/debugging/
-      - website/time-travel-demo/
-    required_gates:
-      - phase-closeout-check
-      - trace-record-replay
-      - fwd-back-parity
-      - breakpoint-smoke
   - id: 41
     name: Documentation Platform, Quality Gates & Learning Coverage
     status: Done
