@@ -111,3 +111,114 @@ fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn property_new() {
+        let prop = AasProperty::new("myProp", "xs:string");
+        assert_eq!(prop.id_short, "myProp");
+        assert_eq!(prop.value_type, "xs:string");
+        assert_eq!(prop.semantic_id, None);
+    }
+
+    #[test]
+    fn property_validate_success() {
+        let prop = AasProperty::new("myProp", "xs:string");
+        assert!(prop.validate().is_ok());
+    }
+
+    #[test]
+    fn property_validate_failure_empty_id_short() {
+        let prop = AasProperty::new("", "xs:string");
+        assert!(prop.validate().is_err());
+    }
+
+    #[test]
+    fn property_validate_failure_empty_value_type() {
+        let prop = AasProperty::new("myProp", "");
+        assert!(prop.validate().is_err());
+    }
+
+    #[test]
+    fn property_to_json_without_semantic_id() {
+        let prop = AasProperty::new("myProp", "xs:string");
+        let json = prop.to_json();
+        assert_eq!(
+            json,
+            r#"{"modelType":"Property","idShort":"myProp","valueType":"xs:string"}"#
+        );
+    }
+
+    #[test]
+    fn property_to_json_with_semantic_id() {
+        let mut prop = AasProperty::new("myProp", "xs:string");
+        prop.semantic_id = Some("urn:kairo:test:semanticId".to_string());
+        let json = prop.to_json();
+        assert_eq!(
+            json,
+            r#"{"modelType":"Property","idShort":"myProp","valueType":"xs:string","semanticId":{"type":"ExternalReference","keys":[{"type":"GlobalReference","value":"urn:kairo:test:semanticId"}]}}"#
+        );
+    }
+
+    #[test]
+    fn submodel_new() {
+        let submodel = AasSubmodel::new("urn:kairo:test:sm", "mySubmodel");
+        assert_eq!(submodel.id, "urn:kairo:test:sm");
+        assert_eq!(submodel.id_short, "mySubmodel");
+        assert!(submodel.elements.is_empty());
+    }
+
+    #[test]
+    fn submodel_with_property() {
+        let prop = AasProperty::new("myProp", "xs:string");
+        let submodel =
+            AasSubmodel::new("urn:kairo:test:sm", "mySubmodel").with_property(prop.clone());
+        assert_eq!(submodel.elements.len(), 1);
+        assert_eq!(submodel.elements[0], prop);
+    }
+
+    #[test]
+    fn submodel_validate_success() {
+        let submodel = AasSubmodel::new("urn:kairo:test:sm", "mySubmodel")
+            .with_property(AasProperty::new("prop1", "xs:string"))
+            .with_property(AasProperty::new("prop2", "xs:integer"));
+        assert!(submodel.validate().is_ok());
+    }
+
+    #[test]
+    fn submodel_validate_failure_empty_id() {
+        let submodel = AasSubmodel::new("", "mySubmodel");
+        assert!(submodel.validate().is_err());
+    }
+
+    #[test]
+    fn submodel_validate_failure_empty_id_short() {
+        let submodel = AasSubmodel::new("urn:kairo:test:sm", "");
+        assert!(submodel.validate().is_err());
+    }
+
+    #[test]
+    fn submodel_validate_failure_duplicate_property() {
+        let submodel = AasSubmodel::new("urn:kairo:test:sm", "mySubmodel")
+            .with_property(AasProperty::new("prop1", "xs:string"))
+            .with_property(AasProperty::new("prop1", "xs:integer"));
+        let error = submodel.validate().unwrap_err();
+        assert!(error
+            .to_string()
+            .contains("duplicate property idShort 'prop1'"));
+    }
+
+    #[test]
+    fn submodel_to_json() {
+        let submodel = AasSubmodel::new("urn:kairo:test:sm", "mySubmodel")
+            .with_property(AasProperty::new("prop1", "xs:string"));
+        let json = submodel.to_json();
+        assert_eq!(
+            json,
+            r#"{"type":"ModelReference","keys":[{"type":"Submodel","value":"urn:kairo:test:sm"}],"idShort":"mySubmodel","submodelElements":[{"modelType":"Property","idShort":"prop1","valueType":"xs:string"}]}"#
+        );
+    }
+}
