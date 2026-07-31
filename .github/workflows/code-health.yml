@@ -25,4 +25,6 @@ jobs:
         with:
           node-version: '24'
       - name: Validate code health floor
-        run: node scripts/validation/validate-code-health.mjs
+        run: |
+          node scripts/validation/validate-code-health.mjs
+          node scripts/validation/validate-publication-readiness.mjs

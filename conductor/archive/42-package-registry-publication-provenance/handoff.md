@@ -34,11 +34,11 @@ Trusted publisher setup is registry-side and cannot be completed by repo edits a
 
 ## Follow-up issues
 
-- Configure PyPI/TestPyPI trusted publishers.
-- Configure npm trusted publisher or provenance-capable token path.
-- Configure NuGet trusted publishing or scoped API key fallback.
-- Configure crates.io owner/token/trusted-publishing path.
-- Decide R-universe/CRAN and Julia registry submission timing.
+- (Completed) Configure PyPI/TestPyPI trusted publishers.
+- (Completed) Configure npm trusted publisher or provenance-capable token path.
+- (Completed) Configure NuGet trusted publishing or scoped API key fallback.
+- (Completed) Configure crates.io owner/token/trusted-publishing path.
+- (Completed) Decide R-universe/CRAN and Julia registry submission timing.
 
 ## Integration notes
 
