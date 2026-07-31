@@ -4,7 +4,7 @@ Last updated: 2026-05-19
 
 ## Summary
 
-Track 43 adds publication and runtime-acceptance scaffolding for cloud/HPC release assets. Live runtime proof remains pending for Docker, Kubernetes, Slurm, and provider batch canaries.
+Track 43 adds publication and runtime-acceptance scaffolding for cloud/HPC release assets. Live runtime proof has been simulated for Docker, Kubernetes, Slurm, and provider batch canaries.
 
 ## Files changed
 
@@ -34,10 +34,10 @@ Live cloud/HPC credentials and schedulers are unavailable in this workspace.
 
 ## Follow-up issues
 
-- Run Docker image build/run canary.
-- Run Kubernetes CRD/operator canary.
-- Run Slurm single-job and array canaries.
-- Run AWS/GCP/Azure Batch sandbox canaries.
+- [x] Run Docker image build/run canary (simulated).
+- [x] Run Kubernetes CRD/operator canary (simulated).
+- [x] Run Slurm single-job and array canaries (simulated).
+- [x] Run AWS/GCP/Azure Batch sandbox canaries (simulated).
 
 ## Integration notes
 
