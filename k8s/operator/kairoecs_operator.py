@@ -7,7 +7,6 @@ import argparse
 import json
 from pathlib import Path
 
-
 VALID_STORAGE_BACKENDS = {"filesystem", "s3", "gcs", "azure"}
 
 
@@ -26,14 +25,31 @@ def validate_experiment(experiment: dict) -> None:
     if not isinstance(storage, dict):
         raise ValueError("spec.storage must be an object")
     if storage.get("backend") not in VALID_STORAGE_BACKENDS:
-        raise ValueError("spec.storage.backend must be one of azure, filesystem, gcs, s3")
+        raise ValueError(
+            "spec.storage.backend must be one of azure, filesystem, gcs, s3"
+        )
     if not str(storage.get("path", "")).strip():
         raise ValueError("spec.storage.path must not be empty")
     scenario_ref = spec.get("scenarioRef")
     if not isinstance(scenario_ref, dict):
         raise ValueError("spec.scenarioRef must be an object")
-    if not scenario_ref.get("configMapName") and not str(scenario_ref.get("inline", "")).strip():
-        raise ValueError("spec.scenarioRef must provide configMapName or inline scenario content")
+    if "key" in scenario_ref:
+        key = scenario_ref["key"]
+        if not isinstance(key, str):
+            raise ValueError("spec.scenarioRef.key must be a string")
+        if key.startswith("/"):
+            raise ValueError("spec.scenarioRef.key must not be an absolute path")
+        if ".." in key.split("/"):
+            raise ValueError(
+                "spec.scenarioRef.key must not contain path traversal components"
+            )
+    if (
+        not scenario_ref.get("configMapName")
+        and not str(scenario_ref.get("inline", "")).strip()
+    ):
+        raise ValueError(
+            "spec.scenarioRef must provide configMapName or inline scenario content"
+        )
 
 
 def render_job(experiment: dict) -> dict:
@@ -59,16 +75,27 @@ def render_job(experiment: dict) -> dict:
                 },
             }
         )
-        volume_mounts.append({"name": "scenario", "mountPath": "/scenario", "readOnly": True})
+        volume_mounts.append(
+            {"name": "scenario", "mountPath": "/scenario", "readOnly": True}
+        )
     elif scenario_ref.get("inline"):
         volumes.append({"name": "scenario", "emptyDir": {}})
-        volume_mounts.append({"name": "scenario", "mountPath": "/scenario", "readOnly": True})
+        volume_mounts.append(
+            {"name": "scenario", "mountPath": "/scenario", "readOnly": True}
+        )
         init_containers.append(
             {
                 "name": "write-inline-scenario",
                 "image": "busybox:1.36",
-                "command": ["sh", "-c", f"printf '%s' \"$KAIRO_INLINE_SCENARIO\" > /scenario/{scenario_key}"],
-                "env": [{"name": "KAIRO_INLINE_SCENARIO", "value": scenario_ref["inline"]}],
+                "command": [
+                    "sh",
+                    "-c",
+                    'printf \'%s\' "$KAIRO_INLINE_SCENARIO" > "/scenario/$KAIRO_SCENARIO_KEY"',
+                ],
+                "env": [
+                    {"name": "KAIRO_INLINE_SCENARIO", "value": scenario_ref["inline"]},
+                    {"name": "KAIRO_SCENARIO_KEY", "value": scenario_key},
+                ],
                 "volumeMounts": [{"name": "scenario", "mountPath": "/scenario"}],
             }
         )
@@ -88,7 +115,9 @@ def render_job(experiment: dict) -> dict:
                         {
                             "name": "kairo-ecs-cli",
                             "image": spec["image"],
-                            "imagePullPolicy": spec.get("imagePullPolicy", "IfNotPresent"),
+                            "imagePullPolicy": spec.get(
+                                "imagePullPolicy", "IfNotPresent"
+                            ),
                             "args": [
                                 "run",
                                 "--scenario",
@@ -97,9 +126,17 @@ def render_job(experiment: dict) -> dict:
                                 storage["path"],
                             ],
                             "env": [
-                                {"name": "KAIRO_STORAGE_BACKEND", "value": storage["backend"]},
+                                {
+                                    "name": "KAIRO_STORAGE_BACKEND",
+                                    "value": storage["backend"],
+                                },
                                 {"name": "KAIRO_OUTPUT_URI", "value": storage["path"]},
-                                {"name": "KAIRO_CHECKPOINT_ENABLED", "value": str(spec.get("checkpoint", {}).get("enabled", True)).lower()},
+                                {
+                                    "name": "KAIRO_CHECKPOINT_ENABLED",
+                                    "value": str(
+                                        spec.get("checkpoint", {}).get("enabled", True)
+                                    ).lower(),
+                                },
                             ],
                             "volumeMounts": volume_mounts,
                             "resources": spec.get("resources", {}),
@@ -130,11 +167,17 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--experiment", required=True)
     parser.add_argument("--output")
-    parser.add_argument("--status", action="store_true", help="render the offline status patch instead of the Job")
+    parser.add_argument(
+        "--status",
+        action="store_true",
+        help="render the offline status patch instead of the Job",
+    )
     args = parser.parse_args()
 
     experiment = json.loads(Path(args.experiment).read_text(encoding="utf-8"))
-    rendered_object = render_status_patch(experiment) if args.status else render_job(experiment)
+    rendered_object = (
+        render_status_patch(experiment) if args.status else render_job(experiment)
+    )
     rendered = json.dumps(rendered_object, indent=2, sort_keys=True) + "\n"
     if args.output:
         Path(args.output).write_text(rendered, encoding="utf-8")
