@@ -24,7 +24,9 @@ class KairoGymContractTests(unittest.TestCase):
         self.assertEqual(register_kairo_env("KairoECS-Test-v0"), "KairoECS-Test-v0")
 
     def test_config_rejects_invalid_space_sizes(self):
-        with self.assertRaisesRegex(ValueError, "observation_size must be greater than zero"):
+        with self.assertRaisesRegex(
+            ValueError, "observation_size must be greater than zero"
+        ):
             KairoGymConfig(observation_size=0)
 
         with self.assertRaisesRegex(TypeError, "action_size must be an integer"):
