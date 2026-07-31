@@ -25,9 +25,9 @@
 ## Phase 3 - Validation
 
 - [x] Add `scripts/validation/validate-publication-readiness.mjs`.
-- [ ] Run publication readiness validation in CI.
-- [ ] Complete registry owner/trusted-publisher setup outside the repo.
-- [ ] Execute first protected-environment dry run from GitHub Actions.
+- [x] Run publication readiness validation in CI.
+- [x] Complete registry owner/trusted-publisher setup outside the repo.
+- [x] Execute first protected-environment dry run from GitHub Actions.
 
 ## Phase closeout gate
 
