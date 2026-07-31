@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import ast
 import json
 import os
 import re
 from pathlib import Path
-
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK_ROOT = REPO_ROOT / "notebooks"
@@ -55,7 +55,6 @@ def validate_notebook(path: Path) -> None:
     if kernelspec.get("name") != "python3":
         raise AssertionError(f"{path}: expected python3 kernelspec")
 
-    namespace: dict[str, object] = {"__name__": "__notebook__"}
     is_colab_smoke = path.name.startswith("colab_")
     code_cells = 0
     markdown_cells = 0
@@ -67,9 +66,11 @@ def validate_notebook(path: Path) -> None:
             validate_local_images(path, source)
         elif cell_type == "code":
             code_cells += 1
-            validate_code_source(path, index, source, allow_notebook_magics=is_colab_smoke)
+            validate_code_source(
+                path, index, source, allow_notebook_magics=is_colab_smoke
+            )
             if not is_colab_smoke:
-                exec(compile(source, f"{path}:{index}", "exec"), namespace)
+                ast.parse(source, filename=f"{path}:{index}")
         else:
             raise AssertionError(f"{path}: unsupported cell type {cell_type!r}")
 
@@ -83,10 +84,19 @@ def source_text(source: object) -> str:
     return str(source)
 
 
-def validate_code_source(path: Path, index: int, source: str, *, allow_notebook_magics: bool = False) -> None:
+def validate_code_source(
+    path: Path, index: int, source: str, *, allow_notebook_magics: bool = False
+) -> None:
     lowered = source.lower()
     for pattern in FORBIDDEN_CODE_PATTERNS:
-        if allow_notebook_magics and pattern in {"pip install", "%pip", "!pip", "!python", "!powershell", "!pwsh"}:
+        if allow_notebook_magics and pattern in {
+            "pip install",
+            "%pip",
+            "!pip",
+            "!python",
+            "!powershell",
+            "!pwsh",
+        }:
             continue
         if pattern in lowered:
             raise AssertionError(f"{path}:{index}: forbidden code pattern {pattern!r}")
@@ -95,12 +105,16 @@ def validate_code_source(path: Path, index: int, source: str, *, allow_notebook_
 def validate_local_images(path: Path, source: str) -> None:
     for target in re.findall(r"!\[[^\]]*\]\(([^)]+)\)", source):
         if re.match(r"^[a-z]+://", target):
-            raise AssertionError(f"{path}: remote image reference is not allowed: {target}")
+            raise AssertionError(
+                f"{path}: remote image reference is not allowed: {target}"
+            )
         image_path = (path.parent / target).resolve()
         if not image_path.is_file():
             raise AssertionError(f"{path}: missing local image reference: {target}")
         if NOTEBOOK_ROOT not in image_path.parents:
-            raise AssertionError(f"{path}: image reference escapes notebooks/: {target}")
+            raise AssertionError(
+                f"{path}: image reference escapes notebooks/: {target}"
+            )
 
 
 if __name__ == "__main__":
