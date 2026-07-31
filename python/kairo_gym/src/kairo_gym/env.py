@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, ClassVar
 
 try:
     import gymnasium as gym
@@ -11,7 +11,9 @@ except ImportError:  # pragma: no cover - exercised when optional dependency is 
     gym = None
 
     class _Box:
-        def __init__(self, low: float, high: float, shape: tuple[int, ...], dtype: type[float]):
+        def __init__(
+            self, low: float, high: float, shape: tuple[int, ...], dtype: type[float]
+        ):
             self.low = low
             self.high = high
             self.shape = shape
@@ -48,7 +50,7 @@ if gym is not None:
 
 
 class KairoGymEnv(_BaseEnv):
-    metadata = {"render_modes": ["ansi"]}
+    metadata: ClassVar[dict[str, Any]] = {"render_modes": ["ansi"]}
 
     def __init__(self, config: KairoGymConfig | None = None):
         self.config = config or KairoGymConfig()
@@ -109,7 +111,9 @@ def _coerce_action(action: Any, size: int) -> list[float]:
     try:
         values = [float(value) for value in action]
     except TypeError as error:
-        raise TypeError("action must be numeric or an iterable of numeric values") from error
+        raise TypeError(
+            "action must be numeric or an iterable of numeric values"
+        ) from error
     if any(not math.isfinite(value) for value in values):
         raise ValueError("action values must be finite")
     if len(values) < size:

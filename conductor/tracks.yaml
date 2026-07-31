@@ -513,19 +513,6 @@ tracks:
       - kafka-smoke
       - arrow-flight-smoke
       - realtime-wallclock-check
-  - id: 37
-    name: ML/AI Integration & Inference
-    status: Done
-    owner: ml-integration-agent
-    depends_on: ["23"]
-    owned_paths:
-      - crates/kairo-ecs-ml/
-      - docs/ml/
-      - examples/ml-surrogate/
-    required_gates:
-      - phase-closeout-check
-      - onnx-inference-smoke
-      - gymnasium-env-smoke
   - id: 38
     name: FMI/FMU & Digital Twin Bridge
     status: Done
