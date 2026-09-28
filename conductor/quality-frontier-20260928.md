@@ -48,26 +48,41 @@ read back after integration before the issues can be closed.
   and main commit status. A PR-specific Codecov status remains deferred until it
   can be provided by a workflow whose privileged definition is not PR-controlled.
 
-## Hosted settings readback still required
+## Hosted settings readback
 
-At the time of this audit, legacy `main` branch protection already blocks force
-push and deletion, enforces admins, and requires zero human approvals. It has no
-required status checks. Repository Actions settings now enforce full-SHA
+Legacy `main` branch protection blocks force-push and deletion, enforces admins
+and linear history, and requires zero human approvals. Required checks are
+configured in the separate active ruleset. Repository Actions settings enforce full-SHA
 references and selected publishers: GitHub-owned actions plus the publishers
 used by current workflows (`anchore`, `codecov`, `gitleaks`, `github`,
 `julia-actions`, `lycheeverse`, `ossf`, `pypa`, `r-lib`, `Swatinem`, and
-`taiki-e`, and `zizmorcore`). All checked workflow `uses:` references are SHA-pinned.
-Configure stable required check
-names after the hosted run succeeds, then capture a settings readback before
-closing #121. No team, CODEOWNERS, or human approval requirement is introduced.
+`taiki-e`, `zizmorcore`). All checked workflow `uses:` references are SHA-pinned.
+The active ruleset `main quality and security gates` (ID `24119475`) targets
+`main`, requires strict up-to-date results for `Rust core quality`,
+`CodeQL (javascript)`, `gitleaks`, `Reject CI skip directives`, and
+`code and repository health`, and blocks deletion and non-fast-forward updates.
+The repository owner has PR-only bypass for recovery. Legacy protection also
+enforces admins and linear history, blocks force-push/deletion, and requires
+zero approvals. Root and `.github/CODEOWNERS` contain duplicate maintainer
+templates, but required code-owner reviews are disabled; they impose no approval
+or team gate on this solo-maintained repository.
 
-Current readback: full-SHA pinning is enforced; all 59 Dependabot alerts remain
-visible; Dependabot automated security PRs are disabled after Renovate's active
-dashboard and security PRs were observed. Renovate's dashboard still reports
-`Missing locked version for dependency`; the centralized preset and lockfile
-coverage need a hosted refresh before #136 can be considered resolved. Actions
-blocks publishers outside the selected list; adding a new publisher requires
-an explicit settings change as part of workflow review.
+Hosted PR #154 readback at head `cec8ba8ed9e9587aa739167a4d21ff7dca78a00d`:
+61 checks passed, two were skipped by their conditions, and none failed or
+remained pending. Rust core run `36428243202` passed formatting, Clippy, one
+workspace test-and-coverage pass, docs, and dependency policy. The separate
+Codecov OIDC job was skipped as intended on a PR; the first trusted main push
+must still verify the Codecov repository, uploaded report, and commit status.
+
+Current readback: full-SHA pinning and selected publisher policy are enforced;
+all 59 Dependabot alerts remain visible. Dependabot automated security PRs are
+disabled while Renovate's dashboard and security PRs are active. Before this
+PR merges, Renovate showed 11 open update PRs and 11 updates awaiting schedule,
+along with `Missing locked version for dependency`. The new preset has not yet
+been loaded by hosted Renovate; refresh the dashboard after merge and confirm
+lock coverage before closing #136. Actions blocks publishers outside the
+selected list; adding a publisher requires an explicit settings change as part
+of workflow review.
 
 ## Local validation receipt
 
