@@ -6,8 +6,51 @@ concurrency:
 
 on:
   pull_request:
+    paths:
+      - '.github/actions/**'
+      - '.github/workflows/ci-bindings.yml'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'bindings/**'
+      - 'crates/**'
+      - 'conformance/**'
+      - 'examples/**'
+      - 'hpc/**'
+      - 'include/**'
+      - 'schemas/**'
+      - 'scripts/**'
+      - 'templates/**'
+      - 'tests/**'
+      - 'benches/**'
+      - 'build.rs'
+      - 'justfile'
+      - 'mise.toml'
+      - 'rust-toolchain.toml'
   push:
     branches: [main]
+    paths:
+      - '.github/actions/**'
+      - '.github/workflows/ci-bindings.yml'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'bindings/**'
+      - 'crates/**'
+      - 'conformance/**'
+      - 'examples/**'
+      - 'hpc/**'
+      - 'include/**'
+      - 'schemas/**'
+      - 'scripts/**'
+      - 'templates/**'
+      - 'tests/**'
+      - 'benches/**'
+      - 'build.rs'
+      - 'justfile'
+      - 'mise.toml'
+      - 'rust-toolchain.toml'
+  workflow_dispatch:
 
 permissions:
   contents: read
