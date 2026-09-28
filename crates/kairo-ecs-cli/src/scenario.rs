@@ -266,7 +266,13 @@ mod tests {
         let seed = valid_seed();
         scenario.schema_version = "invalid.v1".to_string();
         let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
-        assert!(matches!(err, ScenarioError::InvalidField { field: "schema_version", .. }));
+        assert!(matches!(
+            err,
+            ScenarioError::InvalidField {
+                field: "schema_version",
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -275,7 +281,13 @@ mod tests {
         let mut seed = valid_seed();
         seed.schema_version = "invalid.v1".to_string();
         let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
-        assert!(matches!(err, ScenarioError::InvalidField { field: "schema_version", .. }));
+        assert!(matches!(
+            err,
+            ScenarioError::InvalidField {
+                field: "schema_version",
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -284,7 +296,9 @@ mod tests {
         let seed = valid_seed();
         scenario.scenario_id = "other_scenario".to_string();
         let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
-        assert!(matches!(err, ScenarioError::Mismatch(msg) if msg.contains("scenario_id mismatch")));
+        assert!(
+            matches!(err, ScenarioError::Mismatch(msg) if msg.contains("scenario_id mismatch"))
+        );
     }
 
     #[test]
@@ -311,7 +325,13 @@ mod tests {
         let seed = valid_seed();
         scenario.replications = 0;
         let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
-        assert!(matches!(err, ScenarioError::InvalidField { field: "replications", .. }));
+        assert!(matches!(
+            err,
+            ScenarioError::InvalidField {
+                field: "replications",
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -320,7 +340,13 @@ mod tests {
         let seed = valid_seed();
         scenario.max_events = 0;
         let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
-        assert!(matches!(err, ScenarioError::InvalidField { field: "max_events", .. }));
+        assert!(matches!(
+            err,
+            ScenarioError::InvalidField {
+                field: "max_events",
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -329,7 +355,10 @@ mod tests {
         let seed = valid_seed();
         scenario.expected_kind_order = vec![];
         let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
-        assert!(matches!(err, ScenarioError::MissingField("expected_kind_order")));
+        assert!(matches!(
+            err,
+            ScenarioError::MissingField("expected_kind_order")
+        ));
     }
 
     #[test]
@@ -338,6 +367,8 @@ mod tests {
         let seed = valid_seed();
         scenario.fixture_path = PathBuf::from("/this/path/does/not/exist");
         let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
-        assert!(matches!(err, ScenarioError::Mismatch(msg) if msg.contains("fixture_path does not exist")));
+        assert!(
+            matches!(err, ScenarioError::Mismatch(msg) if msg.contains("fixture_path does not exist"))
+        );
     }
 }
