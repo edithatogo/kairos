@@ -3,7 +3,10 @@
 ## Required tests
 
 - Root workspace gate: `Cargo.toml`, `rust-toolchain.toml`, and `deny.toml` exist and are used.
-- Core CI runs `cargo fmt --all --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings`, and `cargo test --workspace`.
+- Core CI runs `cargo fmt --all --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings`, and one coverage-instrumented nextest pass.
+- Core CI runs the workspace nextest suite once under coverage instrumentation, then filters the same LCOV report to core scheduler production sources and enforces a 90% line-coverage floor; a minimal-permission job uploads the report with OIDC only on trusted main pushes. PRs use the Rust core check as their merge gate and do not receive OIDC.
+- `just test` creates the workspace LCOV report while running tests once. `just check-coverage` reads the last report without rerunning tests. `just ci` is the local equivalent of the core Rust formatting, lint, test/coverage, docs, and dependency-audit lane.
+- The weekly/manual mutation lane targets `kairo-ecs-core`, is limited to 25 minutes and two workers, fails on uncaught mutants, and retains `mutants.out` for 30 days.
 - Docs and release workflows fail when `website/`, `conductor/release-engineering.md`, or the release workflow files are missing.
 - Conformance validates fixture structure and expected replay data.
 - Conformance runs the checked-in Node validators, including the Track 07-13 hardening check, without depending on central script edits.
@@ -15,7 +18,9 @@
 - Package dry-runs and binding CI fail when their own manifests are missing instead of skipping quietly.
 - TypeScript binding smoke runs its declared scripts instead of treating them as optional.
 - Benchmark smoke runs the offline metadata harness and `kairo-ecs-bench` compile check.
-- Fuzzing workflows fail when harness directories are missing.
+- DST engine tests are excluded because `SimTime` uses logical integer ticks and the engine has no civil-time conversion; any future timestamp adapter must add DST boundary tests at that boundary.
+- Multithread stress tests are excluded until the single-thread scheduler and in-memory `&mut self` PDES transport are replaced by a concurrent API; thread-safety guarantees must accompany that API.
+- Fuzzing runs the checked-in scheduler request harness for 60 seconds weekly or on demand, enforces a 2 GiB RSS cap, and preserves crash artifacts for 30 days.
 
 ## CI commands
 
@@ -28,7 +33,8 @@ cargo deny check
 cargo audit
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo nextest run --workspace --all-features
+cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info
+node scripts/validation/check-core-coverage.mjs lcov.info
 cargo doc --workspace --all-features --no-deps
 pwsh -NoProfile -File scripts/validate_track13_supply_chain.ps1
 for f in .github/workflows/*.yml; do test -s "$f"; done
@@ -36,6 +42,7 @@ node tests/conformance/conformance-check.mjs
 node tests/conformance/track07_13_hardening_check.mjs
 node tests/conformance/track12_20_evidence_check.mjs
 node scripts/validation/validate-track13-metadata.mjs
+cargo +nightly fuzz run scheduler_requests -- -max_total_time=60 -rss_limit_mb=2048
 python benches/benchmark_smoke.py
 cargo check -p kairo-ecs-bench
 test -f renovate.json
