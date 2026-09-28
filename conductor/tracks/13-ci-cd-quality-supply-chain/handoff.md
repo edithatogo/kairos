@@ -81,6 +81,32 @@ Tracks 07-13, 14, 15, 20, 25, and 28 consume these gates directly. Keep future w
 
 No release, registry, or remote publication side effects were performed.
 
+## 2026-09-28 quality frontier cross-track handoff
+
+User-authorized issues #120, #121, #122, and #136 required bounded scheduler
+quality coverage, one-pass CI, dependency automation, and hosted security gates.
+PR #154 integrates the Track 13-owned workflow, Renovate, validation, and test
+matrix changes. No public schema or API contract changed.
+
+- Track 01 owns the scheduler source and property tests touched by this work.
+  Its handoff records the release-only pending-event accounting correction and
+  the deterministic property suite. Track 01 remains under review; this note
+  does not advance its status or waive its owner lane.
+- Track 06 owns the Python package metadata and binding files touched by this
+  work. Its handoff records the declared Ruff test extra and lint corrections.
+  Track 06 remains under review; this note does not advance its status or waive
+  its owner lane.
+- Track 30 owns the stable-toolchain expectation corrected after hosted CI
+  installed Rust 1.98 while the matrix still expected 1.95. Its matrix handoff
+  and validation record that refresh.
+
+PR #154 hosted Actions at commit `a97d54063c3080e401fc19a17fb8bb1c018b70c8`
+passed 61 checks, skipped two conditional jobs, and had no pending or failing
+checks. The active `main quality and security gates` ruleset is recorded in
+`conductor/quality-frontier-20260928.md`. The first trusted main-push Codecov
+upload and hosted Renovate refresh remain post-merge evidence gates; weekly
+hosted fuzz and mutation runs also remain due.
+
 ## Follow-up issues
 
 No additional follow-up issues were recorded by this Conductor hygiene update.

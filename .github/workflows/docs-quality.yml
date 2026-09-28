@@ -7,6 +7,8 @@ concurrency:
 on:
   pull_request:
     paths:
+      - '.github/workflows/docs.yml'
+      - '.github/workflows/docs-quality.yml'
       - '**/*.md'
       - '**/*.mmd'
       - 'docs/**'
@@ -17,8 +19,6 @@ on:
       - 'crates/kairo-ecs-core/**'
       - 'planning/diagrams/**'
       - 'scripts/validation/**'
-  push:
-    branches: [main]
 
 permissions:
   contents: read
@@ -51,7 +51,7 @@ jobs:
       - name: Markdown link check
         uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2.8.0
         with:
-          args: --verbose --no-progress './README.md' './docs/**/*.md'
+          args: --verbose --no-progress './**/*.md'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Tutorial validation

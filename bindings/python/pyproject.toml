@@ -14,7 +14,7 @@ dependencies = []
 
 [project.optional-dependencies]
 arrow = ["pyarrow>=14"]
-test = ["pytest"]
+test = ["pytest", "ruff==0.16.9"]
 
 [tool.setuptools]
 packages = ["kairo_ecs"]
