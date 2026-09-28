@@ -1,4 +1,7 @@
 target/
+mutants.out*/
+fuzz/artifacts/
+lcov.info
 dist/
 **/node_modules/
 *.Rcheck/

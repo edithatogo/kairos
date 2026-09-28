@@ -2,7 +2,7 @@ name: ci-bindings
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 on:
   pull_request:
@@ -30,8 +30,9 @@ jobs:
       - name: Python binding smoke
         run: |
           test -f bindings/python/pyproject.toml
-          python -m pip install -U pip maturin pytest ruff pyarrow
+          python -m pip install -U pip maturin pyarrow
           cd bindings/python
+          python -m pip install -e '.[test]'
           ruff check .
           python -m pytest -q
 
