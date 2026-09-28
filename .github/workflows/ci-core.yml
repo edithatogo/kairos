@@ -68,10 +68,10 @@ jobs:
     needs: rust-core
     runs-on: ubuntu-latest
     permissions:
-      actions: read
-      contents: read
-      id-token: write
-      pull-requests: read
+      actions: read # Download the coverage artifact produced by this run.
+      contents: read # Read commit metadata for the coverage upload.
+      id-token: write # Request a short-lived Codecov OIDC token; this job runs only on main pushes.
+      pull-requests: read # Associate uploaded coverage with its pull request metadata.
     steps:
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v7.0.0
         with:
