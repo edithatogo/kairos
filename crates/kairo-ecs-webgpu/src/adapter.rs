@@ -13,7 +13,7 @@ pub fn detect_adapter() -> AdapterStatus {
 
 #[cfg(test)]
 thread_local! {
-    pub(crate) static MOCK_ADAPTER_STATUS: std::cell::RefCell<Option<AdapterStatus>> = std::cell::RefCell::new(None);
+    pub(crate) static MOCK_ADAPTER_STATUS: std::cell::RefCell<Option<AdapterStatus>> = const { std::cell::RefCell::new(None) };
 }
 
 #[cfg(test)]
