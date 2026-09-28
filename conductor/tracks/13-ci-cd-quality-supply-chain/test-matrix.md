@@ -17,6 +17,8 @@
 - The offline supply-chain gate runs `scripts/validate_track13_supply_chain.ps1`, which executes the Track 13 metadata validator, `cargo metadata --no-deps --format-version 1`, cargo-deny advisory/source checks, and `cargo audit` when those scanners are installed locally.
 - Validate Conductor runs on both `ubuntu-latest` and `windows-latest` so PowerShell and Node validators are exercised cross-platform.
 - Package dry-runs and binding CI fail when their own manifests are missing instead of skipping quietly.
+- Package dry-runs validate package artifacts while language tests run only in binding CI; Python package build/twine checks run once on Python 3.14, with the 3.10–3.14 compatibility matrix retained in binding CI.
+- npm package validation builds once during `npm ci` preparation and uses `npm pack --dry-run --ignore-scripts` to inspect the resulting package without rerunning prepack; NuGet package validation packs the library without repeating the net10 test project.
 - TypeScript binding smoke runs its declared scripts instead of treating them as optional.
 - Benchmark smoke runs the offline metadata harness and `kairo-ecs-bench` compile check.
 - DST engine tests are excluded because `SimTime` uses logical integer ticks and the engine has no civil-time conversion; any future timestamp adapter must add DST boundary tests at that boundary.

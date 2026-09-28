@@ -110,6 +110,22 @@ hosted fuzz and mutation runs also remain due.
 ## Follow-up issues
 
 No additional follow-up issues were recorded by this Conductor hygiene update.
+
+## 2026-09-29 package-check deduplication
+
+The package dry-run workflow now checks packaging outputs without rerunning
+language tests already covered by `ci-bindings` and workspace compilation
+already covered by `ci-core`. The Python package and metadata check runs once on
+Python 3.14; the binding test matrix still covers Python 3.10–3.14. Julia and
+Go package jobs were removed because they only repeated their binding tests and
+did not create package artifacts. npm builds once during `npm ci` preparation,
+then inspects the package with lifecycle scripts disabled; NuGet restores and
+packs the library without rerunning the net10 test project. The PR path filter
+includes the workflow file itself. Local `actionlint` and `git diff --check`
+passed; hosted Actions must pass on the refreshed PR head before integration.
+
+The changelog, this handoff, and the Track 13 test matrix were updated with the
+workflow change. No release or package publication was performed.
 ## Phase closeout evidence
 
 `$conductor-review` completed on 2026-05-08 with no blocking Track 13 findings. Accepted fixes: none required in the workflow surface during this closeout pass. Validation commands passed: `node scripts/validation/validate-track13-metadata.mjs`, `node tests/conformance/track07_13_hardening_check.mjs`, `node tests/conformance/track12_20_evidence_check.mjs`, and `pwsh -NoProfile -File scripts\validate_track13_supply_chain.ps1`. `cargo-deny` and `cargo-audit` were unavailable locally and reported as skipped by the Track 13 supply-chain gate. Git cleanup state: dirty because local Conductor closeout/status edits are pending commit. Commit SHA: `5dd1937566898b2e028ac61dab1e9dd173e6d919`; pushed ref: `origin/main`. Strict cleanup gate `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` remains pending until these local closeout edits are committed. Next-phase decision: Track 13 is Done for the current CI/CD and supply-chain scaffold; future mandatory advisory scanner installation or release hardening belongs in Track 20 or a scoped follow-up.

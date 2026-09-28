@@ -30,6 +30,13 @@ read back after integration before the issues can be closed.
 - Core CI remains the sole cargo audit/advisory scan. Policy CI still checks
   workflow/dependency policy metadata but no longer installs and repeats both
   scanners.
+- Package dry-run CI now checks package artifacts without duplicating the
+  language tests in binding CI or workspace test compilation in core CI. It
+  builds Python artifacts once on Python 3.14 (binding CI retains the 3.10–3.14
+  test matrix), lets npm pack inspect the single build produced by `npm ci`, and
+  packs NuGet without rerunning its net10 test project. Julia and Go dry-run
+  jobs were removed because they repeated binding tests and had no distinct
+  package artifact check. Hosted Actions on the updated PR head remains pending.
 - CI installs the pinned cargo tools from their release binaries through a
   SHA-pinned installer action with checksum verification and source-build
   fallback disabled, avoiding long cold `cargo install` builds.
