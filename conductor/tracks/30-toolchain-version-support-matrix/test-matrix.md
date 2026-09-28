@@ -32,9 +32,9 @@ Last updated: 2026-09-28.
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` | Pass | Static matrix, workflow trigger, and gate checks passed locally on 2026-05-07. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedVersion 1.98.1` | Pass | Exact tested baseline check; see dated validation receipt below. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedVersion 1.99.0-beta.8` | Pass when beta matches snapshot; otherwise advisory mismatch | Dated beta canary snapshot observed 2026-09-27; exact mismatch is non-blocking in CI. |
-| `rustup run 1.76.0 cargo test --workspace --locked` | Pass: 228 tests, 64 suites | `conductor/evidence/d1.2-msrv-rust-1.76.0-20260928.log`; SHA-256 `96c13eab2d8dffa17d802fb989c79b915012cc0a652cf79f22b0fcadceafbd35` |
-| `rustup run 1.98.1 cargo test --workspace --locked` | Pass: 228 tests, 64 suites | `conductor/evidence/d1.2-stable-rust-1.98.1-20260928.log`; SHA-256 `0fdb8d567f804b6efe00b2c34ab43a23fdd2cefd4bebb393d223f1fbb106f551` |
-| `rustup run beta cargo check --workspace --locked` | Pass: Rust 1.99.0-beta.8 | `conductor/evidence/d1.2-beta-rust-1.99.0-beta.8-20260928.log`; SHA-256 `7ca6672bf4f51b770470cab9cf4e5272482d33db1274bdd2d67c00dc8e84c81d` |
+| `rustup run 1.76.0 cargo test --workspace --locked` | Pass: 228 tests, 64 suites | `conductor/evidence/d1.2-msrv-rust-1.76.0-20260928.log`; SHA-256 `97ac7324f8b9eab2a8eb169f905e7851af148b5ae2f3d0e8b6eab7db5a165a2f` |
+| `rustup run 1.98.1 cargo test --workspace --locked` | Pass: 228 tests, 64 suites | `conductor/evidence/d1.2-stable-rust-1.98.1-20260928.log`; SHA-256 `fcce663653865ffcd1cd6c38d5d578245dd96e2176e55f1ac92bffecddaf1d2d` |
+| `rustup run beta cargo check --workspace --locked` | Pass: Rust 1.99.0-beta.8 | `conductor/evidence/d1.2-beta-rust-1.99.0-beta.8-20260928.log`; SHA-256 `a208e13ce33e23c5b576131115c6a02b5348792ba53cbae0924bff55b580e09b` |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedPrefix 3.13` | Pass | Local `python --version` reports Python 3.13.x and matches the expected prefix. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem node -ExpectedPrefix 24` | Pass | Local Node reports 24.x. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem dotnet -ExpectedPrefix 11.0` | Pass | Local .NET reports 11.0; the machine currently defaults to preview, not the stable 10.0 SDK lane. |
@@ -45,11 +45,11 @@ Last updated: 2026-09-28.
 ## D1.2 toolchain and security receipts — 2026-09-28
 
 - Rust 1.76.0 workspace: 228 tests, 64 suites passed; log SHA-256
-  `96c13eab2d8dffa17d802fb989c79b915012cc0a652cf79f22b0fcadceafbd35`.
+  `97ac7324f8b9eab2a8eb169f905e7851af148b5ae2f3d0e8b6eab7db5a165a2f`.
 - Rust 1.98.1 workspace: 228 tests, 64 suites passed; log SHA-256
-  `0fdb8d567f804b6efe00b2c34ab43a23fdd2cefd4bebb393d223f1fbb106f551`.
+  `fcce663653865ffcd1cd6c38d5d578245dd96e2176e55f1ac92bffecddaf1d2d`.
 - Rust 1.99.0-beta.8 `cargo check --workspace --locked`: passed; log SHA-256
-  `7ca6672bf4f51b770470cab9cf4e5272482d33db1274bdd2d67c00dc8e84c81d`.
+  `a208e13ce33e23c5b576131115c6a02b5348792ba53cbae0924bff55b580e09b`.
 - Track 13 supply-chain script: metadata, cargo-deny and cargo-audit 0.22.1
   passed; raw log SHA-256
   `b8ab651da5cd1ed7593952d462dce03098faae8950f57f7c84f23b6e51be74e0`.
