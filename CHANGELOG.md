@@ -56,6 +56,7 @@ Format:
 
 ### Fixed
 
+- The TypeScript binding now requires Vitest 4.1.11 or later in its package metadata, so fresh installs retain the advisory fix.
 - Update the locked Rust dependency `crossbeam-epoch` to 0.9.20, which includes the fix for RUSTSEC-2026-0204.
 - Scheduler dispatch now removes pending IDs in release builds, preserving pending counts and preventing cancellation of already-dispatched events.
 - Go binding CI now runs `gofmt` with shellcheck-safe file argument handling while preserving the existing tracked-file format gate.
