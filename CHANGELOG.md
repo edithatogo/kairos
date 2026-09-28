@@ -46,6 +46,7 @@ Format:
 - Renovate now uses the Kairos preset with lower PR concurrency, while low-risk automerge stays off until stable required CI checks are configured.
 - Python binding CI installs Ruff and test tools from the package's declared test extra.
 - Binding smoke matrices now skip documentation-only changes; a manual workflow dispatch still runs the full matrix.
+- Nightly checks can be dispatched as mutation, heavy, or both, so focused runs avoid repeating unrelated expensive suites.
 - R binding and package dry-run workflows now use the runner R toolchain with an apt fallback, avoiding the hanging external setup action for base R smoke coverage.
 - Release-governance wording now records the maintenance handoff and blocker state alongside the release policy docs, with Track 15 publication still gated behind dry-run evidence and registry/toolchain verification.
 - Track 12 conformance status now records the merged PR #12 closeout and moves the track to In Review.
