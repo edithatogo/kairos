@@ -12,7 +12,7 @@ read back after integration before the issues can be closed.
 | Technique | Decision and evidence |
 | --- | --- |
 | Property-based | Added 256-case scheduler ordering and cancellation/accounting properties with a fixed seed. Shrinking remains available for deterministic reproduction. |
-| Mutation | Added a weekly/manual lane for `kairo-ecs-core`, capped at 25 minutes, two mutation workers, and a timeout multiplier of three. An uncaught mutant fails the run; `mutants.out` is retained for 30 days. First hosted score is still required to establish the measured baseline. |
+| Mutation | Added a weekly/manual lane for `kairo-ecs-core`, capped at 25 minutes, two mutation workers, and a timeout multiplier of three. An uncaught mutant fails the run; `mutants.out` is retained for 30 days. Hosted manual run `36456693140` passed on foundation commit `c54a949` with 73 mutants: 52 caught, 21 unviable, and 0 missed. The first scheduled weekly run on `main` remains to be verified. |
 | Fuzzing | Added a scheduler request harness with fixed-size, bounded inputs, accounting/order invariants, a 60-second fuzz budget, a 2 GiB RSS limit, and retained crash artifacts. |
 | DST | Excluded from engine tests. `SimTime` is an integer logical tick; the engine has no civil calendar, timezone, or daylight-saving conversion. A future adapter that maps civil time to ticks must own and test that conversion. |
 | Multithreading | Excluded from scheduler/transport stress tests until a concurrent runtime is implemented. The core contract explicitly says single-threaded; `ThreadChannelTransport` is currently an in-memory `BTreeMap`/`VecDeque` and mutating operations require `&mut self`. These types do not expose a concurrent transport contract. |
@@ -99,7 +99,7 @@ relative path and file contents of `Cargo.toml`,
 | --- | --- | --- |
 | `rustup run stable cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info` followed by `node scripts/validation/check-core-coverage.mjs lcov.info` | Exit 0; 258/258 tests passed; core 437/463 lines (94.38%) | Local `lcov.info`, SHA-256 `ac8268dc4218ad1e63f8b5731b7e29b0c183513c11d969115c419e2704f7dfcc` |
 | `cargo mutants --package kairo-ecs-core --jobs 2 --timeout-multiplier 3 --output mutants.out.20260928` | Exit 0; 73 mutants, 52 caught, 21 unviable, 0 missed | Local `mutants.out.20260928/mutants.out/outcomes.json`, SHA-256 `d31661f976539f13425fe1dbf133de9ffa3cab8c0f5575f9ef2be55b26fd6622` |
-| `rustup run nightly-2026-07-01 cargo fuzz run scheduler_requests -- -runs=1000 -rss_limit_mb=2048` | Exit 0; 1,000 executions, no crash | Bounded local smoke output; hosted weekly run remains required |
+| `rustup run nightly-2026-07-01 cargo fuzz run scheduler_requests -- -runs=1000 -rss_limit_mb=2048` | Exit 0; 1,000 executions, no crash | Bounded local smoke output; hosted manual run `36456693099` also passed on foundation commit `c54a949` (2,419,484 executions in 61 seconds, no crash); first scheduled weekly run on `main` remains to be verified |
 | `rustup run stable cargo test --release -p kairo-ecs-core` | Exit 0; 32 tests passed (17 unit, 4 conformance, 8 integration, 3 property) | Run after correcting release-only pending-event accounting |
 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | Exit 0 | Post-fix workspace lint |
 | `actionlint .github/workflows/*.yml`, metadata validator, `git diff --check` | Exit 0 | Post-fix workflow and patch checks |
@@ -117,6 +117,8 @@ It identified the PR OIDC trust boundary, which was subsequently tightened to
 trusted `main` pushes only. The scan report therefore does not certify the
 final working tree; the hosted checks and final review remain outstanding.
 
-These local receipts validate the current core/property/fuzz inputs only; they do
-not substitute for the first hosted Actions run, Codecov readback, Renovate
-dashboard refresh, or refreshed PR checks.
+The manual hosted fuzz and mutation runs above validate the bounded workflows on
+foundation commit `c54a949`; the current PR checks validate the updated branch.
+The first scheduled weekly run on `main`, trusted-main Codecov upload/readback,
+Renovate shared-preset refresh, and final PR checks after integration remain
+acceptance gates.
