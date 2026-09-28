@@ -59,7 +59,7 @@ Format:
 
 ### Fixed
 
-- TypeScript/Wasm binding and template test tooling now use Vitest 4.1.11, and the binding package requires that patched minimum for fresh installs.
+- TypeScript/Wasm binding and template dependencies now use patched Vitest 4.1.11 and Vite 8.0.16 releases.
 - Update the locked Rust dependency `crossbeam-epoch` to 0.9.20, which includes the fix for RUSTSEC-2026-0204.
 - Scheduler dispatch now removes pending IDs in release builds, preserving pending counts and preventing cancellation of already-dispatched events.
 - Go binding CI now runs `gofmt` with shellcheck-safe file argument handling while preserving the existing tracked-file format gate.
