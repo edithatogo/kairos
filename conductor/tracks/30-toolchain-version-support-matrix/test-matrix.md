@@ -11,6 +11,7 @@ Last updated: 2026-05-07.
 | `conductor/quality-gates.md` includes `toolchain-matrix-current` and `version-drop-policy-check` | yes | yes | yes | yes | Track 30 gate rows added under Gate definitions. |
 | `.github/workflows/toolchain-check.yml` exists and is referenced in CI | yes | yes | yes | yes | Workflow exists and triggers on matrix, gate, workflow, and manifest path changes. |
 | `toolchain-check.yml` fails when a CI runner version is outside the declared matrix | yes | yes | yes | yes | Workflow calls `validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem ... -ExpectedPrefix ...`; local Python mismatch probe failed as expected. |
+| Go tests and vet run once in binding CI; Go package lane remains covered by declared toolchain floor | yes | yes | yes | yes | `ci-bindings.yml` runs `go test ./...` and `go vet ./...`; `toolchain-check.yml` validates Go `1.25.x` and `1.26.x`. Package dry-run no longer repeats test-only Go work. |
 | `toolchain-check.yml` triggers on PRs that modify binding package manifests | yes | yes | yes | yes | Trigger paths include Python, R, Julia, TypeScript, C#, and Go manifest files. |
 | Every binding track (06-11) has at least one row in the matrix | yes | yes | yes | yes | Matrix rows map to Tracks 06, 07, 08, 09, 10, and 11. |
 | OS/arch cells are labeled as `CI-covered`, `best-effort`, or `unsupported` | yes | yes | yes | yes | Matrix legend and row cells use the accepted labels. |

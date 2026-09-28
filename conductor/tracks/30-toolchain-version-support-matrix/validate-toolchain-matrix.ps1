@@ -81,8 +81,8 @@ function Get-InstalledVersion {
 $matrix = Get-Content -LiteralPath $matrixPath -Raw
 $gates = Get-Content -LiteralPath $gatesPath -Raw
 $workflow = Get-Content -LiteralPath $workflowPath -Raw
-$packageDryRunPath = Join-Path $repoRoot ".github\workflows\package-dry-run.yml"
-$packageDryRun = Get-Content -LiteralPath $packageDryRunPath -Raw
+$bindingWorkflowPath = Join-Path $repoRoot ".github\workflows\ci-bindings.yml"
+$bindingWorkflow = Get-Content -LiteralPath $bindingWorkflowPath -Raw
 $typescriptPackagePath = Join-Path $repoRoot "bindings\typescript\package.json"
 $typescriptPackage = Get-Content -LiteralPath $typescriptPackagePath -Raw | ConvertFrom-Json
 
@@ -145,10 +145,9 @@ foreach ($expectation in $laneExpectations) {
     Assert-Contains -Text $workflow -Needle $expectation.Workflow -Label "workflow lane matching matrix"
 }
 
-Assert-Contains -Text $packageDryRun -Needle "go-version: '1.25.x'" -Label "package dry-run Go support floor"
-if ($packageDryRun.Contains("go-version: '1.24'") -or $packageDryRun.Contains('go-version: "1.24"')) {
-    throw "Package dry-run must not reintroduce deprecated Go 1.24."
-}
+Assert-Contains -Text $bindingWorkflow -Needle 'go-version: ''stable''' -Label "Go binding test toolchain"
+Assert-Contains -Text $bindingWorkflow -Needle 'go vet ./...' -Label "Go binding vet coverage"
+Assert-Contains -Text $bindingWorkflow -Needle 'go test ./...' -Label "Go binding test coverage"
 
 if ($typescriptPackage.engines.node -ne ">=22 <25") {
     throw "TypeScript package engines.node must stay aligned with the Node 22/24 production support floor."
