@@ -67,22 +67,24 @@ zero approvals. Root and `.github/CODEOWNERS` contain duplicate maintainer
 templates, but required code-owner reviews are disabled; they impose no approval
 or team gate on this solo-maintained repository.
 
-Hosted PR #154 readback at head `cec8ba8ed9e9587aa739167a4d21ff7dca78a00d`:
-61 checks passed, two were skipped by their conditions, and none failed or
-remained pending. Rust core run `36428243202` passed formatting, Clippy, one
-workspace test-and-coverage pass, docs, and dependency policy. The separate
-Codecov OIDC job was skipped as intended on a PR; the first trusted main push
-must still verify the Codecov repository, uploaded report, and commit status.
+Hosted PR #154 readback at head `c54a949709873dcf1ce515c71276a6e3e526a0fc`:
+59 checks passed, the Codecov OIDC upload was skipped as intended on a PR, and
+none failed or remained pending. Rust core run `36456678729` passed formatting,
+Clippy, one workspace test-and-coverage pass, docs, and dependency policy. The
+first trusted main push must still verify the Codecov repository, uploaded
+report, and main commit status.
 
 Current readback: full-SHA pinning and selected publisher policy are enforced;
-all 59 Dependabot alerts remain visible. Dependabot automated security PRs are
-disabled while Renovate's dashboard and security PRs are active. Before this
-PR merges, Renovate showed 11 open update PRs and 11 updates awaiting schedule,
-along with `Missing locked version for dependency`. The new preset has not yet
-been loaded by hosted Renovate; refresh the dashboard after merge and confirm
-lock coverage before closing #136. Actions blocks publishers outside the
-selected list; adding a publisher requires an explicit settings change as part
-of workflow review.
+43 Dependabot alerts remain open (2 critical, 19 high, 18 moderate, 4 low).
+Dependabot-created update PRs from September 3–18 remain open alongside active
+Renovate PRs and its Dependency Dashboard. No Dependabot configuration file is
+present in `.github` on `main`; the remaining Dependabot PRs are backlog to
+triage, not evidence that another configuration file should be added. The
+hosted Renovate app has produced PRs and its dashboard, but the shared preset in
+this branch has not yet been loaded by hosted Renovate. After this PR merges,
+refresh the dashboard and confirm lock coverage before closing #136. Actions
+blocks publishers outside the selected list; adding a publisher requires an
+explicit settings change as part of workflow review.
 
 ## Local validation receipt
 
