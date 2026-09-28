@@ -537,18 +537,45 @@ ${toc}
   var inp = document.getElementById('search');
   var res = document.getElementById('search-results');
   if (!inp || !res) return;
+
+  function safeResultHref(document) {
+    var candidate = document.href || ('../../' + String(document.path || '').replace(/\.md$/, '.html'));
+    try {
+      var parsed = new URL(candidate, window.location.href);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+      return parsed.href;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function appendTextElement(parent, className, value) {
+    var element = document.createElement('div');
+    element.className = className;
+    element.textContent = typeof value === 'string' ? value : '';
+    parent.appendChild(element);
+  }
+
   inp.addEventListener('input', function() {
     var q = this.value.toLowerCase().trim();
     if (q.length < 2) { res.hidden = true; return; }
     var matches = idx.filter(function(d) {
       return (d.title + ' ' + d.headings.join(' ') + ' ' + d.excerpt).toLowerCase().indexOf(q) >= 0;
     }).slice(0, 12);
+    res.replaceChildren();
     if (!matches.length) {
-      res.innerHTML = '<div class="no-results">No results</div>';
+      appendTextElement(res, 'no-results', 'No results');
     } else {
-      res.innerHTML = matches.map(function(d) {
-        return '<a href="' + (d.href || ('../../' + d.path.replace(/\\.md$/, '.html'))) + '"><div class="result-title">' + d.title + '</div><div class="result-excerpt">' + (d.excerpt || '').slice(0, 120) + '</div></a>';
-      }).join('');
+      matches.forEach(function(d) {
+        var href = safeResultHref(d);
+        if (!href) return;
+        var link = document.createElement('a');
+        link.href = href;
+        appendTextElement(link, 'result-title', d.title);
+        appendTextElement(link, 'result-excerpt', (d.excerpt || '').slice(0, 120));
+        res.appendChild(link);
+      });
+      if (!res.childNodes.length) appendTextElement(res, 'no-results', 'No results');
     }
     res.hidden = false;
   });
