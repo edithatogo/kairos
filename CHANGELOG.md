@@ -45,6 +45,7 @@ Format:
 - Toolchain support metadata and its CI check now track Rust 1.98 stable instead of the stale 1.95 baseline.
 - Renovate now uses the Kairos preset with lower PR concurrency, while low-risk automerge stays off until stable required CI checks are configured.
 - Python binding CI installs Ruff and test tools from the package's declared test extra.
+- Binding smoke matrices now skip documentation-only changes; a manual workflow dispatch still runs the full matrix.
 - R binding and package dry-run workflows now use the runner R toolchain with an apt fallback, avoiding the hanging external setup action for base R smoke coverage.
 - Release-governance wording now records the maintenance handoff and blocker state alongside the release policy docs, with Track 15 publication still gated behind dry-run evidence and registry/toolchain verification.
 - Track 12 conformance status now records the merged PR #12 closeout and moves the track to In Review.
