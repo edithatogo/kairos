@@ -1,0 +1,4 @@
+build==1.6.1
+twine==7.0.0
+setuptools==80.9.0
+wheel==0.45.1

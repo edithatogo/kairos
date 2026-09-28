@@ -16,6 +16,7 @@ Format:
 
 ### Added
 
+- Security reporting guidance now links to the repository's verified private vulnerability reporting route and explains coordinated public disclosure.
 - Scheduler property, bounded fuzz, mutation, and core-coverage gates, with one instrumented workspace test pass and selected GitHub Actions publishers.
 - Core CI installs pinned Rust tooling from checksum-verified release binaries to avoid slow source builds on clean runners.
 - Conductor setup for KairoECS tracks, subagents, release engineering, community adoption, and red-team review.
@@ -54,6 +55,7 @@ Format:
 - NuGet package dry-runs now target the stable `net10.0` package lane explicitly so the preview `net11.0` compatibility lane does not require a preview SDK in release packaging CI.
 - Public docs workflow validation now builds the Starlight site and smokes the generated documentation output instead of checking the retired static-site scaffold.
 - Docs Quality CI now runs the dedicated docs-platform SOTA validator after the Starlight workflow smoke.
+- CI and bootstrap Python tools now install from SHA-256 hash-locked requirement files; the npm CLI and Mermaid CLI use committed integrity-locked package files, and NuGet packaging uses locked restore.
 
 ### Fixed
 

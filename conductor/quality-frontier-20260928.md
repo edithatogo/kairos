@@ -44,6 +44,7 @@ read back after integration before the issues can be closed.
   remain non-cancellable. The daily heavy Miri/benchmark lane is filtered away
   from the additional weekly mutation schedule, avoiding a duplicate Sunday run.
 - Python CI installs its pinned Ruff version from the package's test extra.
+- OpenSSF Scorecard PinnedDependencies findings #455, #454, #453, #404, #403, #386, and #377 now have local source fixes: NuGet package dry-run restore is in locked mode against the committed `net10.0` lock file; Python bootstrap, binding CI, and package dry-run dependencies install from SHA-256 hash-verified locks; bootstrap npm and docs Mermaid CLI install via committed `npm ci` package locks with integrity hashes. The Python lock inputs retain exact direct versions, and generated locks capture transitive versions and available wheel/sdist hashes. The Mermaid CLI is `11.17.0`: its `12.0.0` dependency tree produced six high-severity audit findings, while the selected lock audits cleanly. Hosted Scorecard alert refresh remains pending integration and a new default-branch scan.
 - Renovate now extends `github>edithatogo/renovate-config`, retains repo-specific
   grouping, runs on Brisbane time, and is limited to one PR per hour/two open
   PRs. Inherited low-risk automerge is disabled until stable required checks
@@ -93,7 +94,44 @@ refresh the dashboard and confirm lock coverage before closing #136. Actions
 blocks publishers outside the selected list; adding a publisher requires an
 explicit settings change as part of workflow review.
 
+Scorecard SecurityPolicy alert #118 is addressed in the branch policy text:
+`SECURITY.md` links directly to GitHub's private vulnerability reporting action,
+and a live repository API readback confirmed private vulnerability reporting is
+enabled (`enabled: true`). The policy names GitHub Security Advisory publication
+as the coordinated public disclosure route and does not invent an email contact.
+Refresh Scorecard's hosted finding after this branch is integrated.
+
 ## Local validation receipt
+
+### Scorecard pinned dependency remediation
+
+The seven live alerts from the default-branch Scorecard snapshot pointed to
+package installs in package dry-run, bootstrap, binding CI, and docs CI. The
+updated commands use `pip install --require-hashes`, `npm ci` with committed
+package locks, or `dotnet restore -p:RestoreLockedMode=true`; the NuGet lock
+contains the current `net10.0` graph (no third-party packages are currently
+referenced by the package project). These local checks validate the lock
+formats and commands but do not update GitHub's hosted alert snapshot.
+
+| Alert | Source location on `main` | Local closure evidence |
+| --- | --- | --- |
+| #455 | `.github/workflows/package-dry-run.yml` NuGet restore | Uses committed `bindings/csharp/src/Kairo.ECS/packages.lock.json` in locked restore and pack mode; local restore and pack succeeded. |
+| #454 | `.github/workflows/package-dry-run.yml` Python build/twine install | Uses `scripts/package-python-tools.lock` with exact inputs and SHA-256 hashes for the complete transitive graph; hash-mode dry-run, build, and twine check succeeded. |
+| #453, #403 | `scripts/bootstrap.sh` Python tool installs | Both mutable pip commands now share `scripts/bootstrap-python-tools.lock`; hash-mode dry-run succeeded in a temporary Python 3.14 venv. |
+| #404 | `scripts/bootstrap.sh` global npm install | Replaced with `npm ci` from `scripts/bootstrap-node-tools/package-lock.json` (npm 11.20.0 plus resolved integrity hashes); CLI execution and audit succeeded. |
+| #386 | `.github/workflows/ci-bindings.yml` Python installs | Uses the bootstrap lock across Python 3.10–3.14; the lock includes exact, hash-verified tools, and the package editable install disables dependency/build-isolation resolution after those tools are installed. |
+| #377 | `.github/workflows/docs-quality.yml` global Mermaid CLI install | Replaced with `npm ci` from `tools/docs-quality-node-tools/package-lock.json` (Mermaid CLI 11.17.0); install, npm audit, CLI version, and a real diagram render succeeded. |
+
+| Check | Result | Evidence and limit |
+| --- | --- | --- |
+| Python requirement locks and package | Pass | In a temporary Python 3.14 venv, `python -m pip install --dry-run --require-hashes -r scripts/package-python-tools.lock` and the same command for `scripts/bootstrap-python-tools.lock` succeeded. The package lock was then installed with `--require-hashes`; `python -m build --no-isolation` and `python -m twine check dist/*` succeeded. An initial host-wide dry-run was blocked by PEP 668; the venv rerun completed successfully. |
+| npm CLI lock | Pass | `npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools`; locked CLI reported `11.20.0`; `npm audit --prefix scripts/bootstrap-node-tools` reported zero vulnerabilities. |
+| Mermaid lock and render | Pass | `npm ci --prefix tools/docs-quality-node-tools`; `mmdc --version` reported `11.17.0`; npm audit reported zero vulnerabilities. The workflow explicitly installs Puppeteer's browser after npm ci; with the pinned Chrome headless shell `154.0.8037.57` in `/tmp/kairos-puppeteer-cache`, Mermaid rendered `planning/diagrams/api-review-gate.mmd` successfully. Mermaid CLI `12.0.0` was rejected after its transitive tree reported six high findings. |
+| NuGet lock | Pass | `dotnet restore` with `RestoreLockedMode=true`, followed by `dotnet pack --no-restore` with locked mode, succeeded for `net10.0`; generated package was `Kairo.ECS.0.1.0-preview.1.nupkg`. |
+| Workflow and shell syntax | Pass | `actionlint` on all three changed workflows, `shellcheck scripts/bootstrap.sh`, and `git diff --check` all exited 0. |
+
+Hosted Scorecard must be refreshed after integration; this receipt does not
+claim that the live alerts are already closed.
 
 Environment: `/Users/doughnut/Documents/careops-sim/.worktrees/kairos-quality-frontier-122`,
 baseline commit `fae901558f07b7b717a676adbafbe2cdc78dea1c`, stable Rust `1.96.0`

@@ -9,6 +9,7 @@ on:
     paths:
       - '.github/actions/**'
       - '.github/workflows/ci-bindings.yml'
+      - 'scripts/bootstrap-python-tools.lock'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.cargo/**'
@@ -32,6 +33,7 @@ on:
     paths:
       - '.github/actions/**'
       - '.github/workflows/ci-bindings.yml'
+      - 'scripts/bootstrap-python-tools.lock'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.cargo/**'
@@ -73,9 +75,9 @@ jobs:
       - name: Python binding smoke
         run: |
           test -f bindings/python/pyproject.toml
-          python -m pip install -U pip maturin pyarrow
+          python -m pip install --require-hashes -r scripts/bootstrap-python-tools.lock
           cd bindings/python
-          python -m pip install -e '.[test]'
+          python -m pip install --no-deps --no-build-isolation -e '.[test]'
           ruff check .
           python -m pytest -q
 

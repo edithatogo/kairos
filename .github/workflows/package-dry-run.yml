@@ -9,6 +9,13 @@ on:
     paths:
       - 'crates/**'
       - 'bindings/**'
+      - 'scripts/bootstrap-node-tools/package.json'
+      - 'scripts/bootstrap-node-tools/package-lock.json'
+      - 'scripts/bootstrap-python-tools.lock'
+      - 'scripts/package-python-tools.in'
+      - 'scripts/package-python-tools.lock'
+      - 'tools/docs-quality-node-tools/package.json'
+      - 'tools/docs-quality-node-tools/package-lock.json'
       - '.github/workflows/package-dry-run.yml'
   workflow_dispatch:
 
@@ -53,9 +60,9 @@ jobs:
         run: |
           test -f bindings/python/pyproject.toml
           test -d bindings/python/kairo_ecs
-          python -m pip install -U build twine
+          python -m pip install --require-hashes -r "$GITHUB_WORKSPACE/scripts/package-python-tools.lock"
           cd bindings/python
-          python -m build
+          python -m build --no-isolation
           twine check ./dist/*
   r-package:
     name: r-package
@@ -94,8 +101,9 @@ jobs:
           test -f bindings/typescript/tsconfig.json
           test -d bindings/typescript/src
           cd bindings/typescript
-          npm ci
-          # npm ci runs prepare (build); skip prepack so npm pack does not rebuild.
+          npm ci --ignore-scripts
+          npm run build
+          # Build once explicitly; ignore scripts prevents npm pack lifecycle rebuilds.
           npm pack --dry-run --ignore-scripts
   nuget-package:
     name: nuget-package
@@ -110,5 +118,5 @@ jobs:
         run: |
           test -f bindings/csharp/Kairo.ECS.sln
           test -f bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj
-          dotnet restore bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -p:TargetFrameworks=net10.0 -p:UseSharedCompilation=false -m:1 -nr:false
-          dotnet pack bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -c Release -p:TargetFrameworks=net10.0 --no-restore -p:UseSharedCompilation=false -m:1 -nr:false
+          dotnet restore bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -p:TargetFrameworks=net10.0 -p:RestoreLockedMode=true -p:UseSharedCompilation=false -m:1 -nr:false
+          dotnet pack bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -c Release -p:TargetFrameworks=net10.0 --no-restore -p:RestoreLockedMode=true -p:UseSharedCompilation=false -m:1 -nr:false
