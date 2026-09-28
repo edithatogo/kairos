@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import kairo_ecs
 import pytest
+
+import kairo_ecs
 
 
 def test_event_log_batch_round_trips_smoke_bytes() -> None:
