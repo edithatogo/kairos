@@ -1,51 +1,43 @@
- Downloading crates ...
-  Downloaded crossbeam-epoch v0.9.20
-   Compiling crossbeam-epoch v0.9.20
-   Compiling crossbeam-deque v0.8.6
-   Compiling rayon-core v1.13.0
-   Compiling rayon v1.12.0
-   Compiling criterion v0.5.1
-   Compiling kairo-ecs-bench v0.1.0 (/Users/doughnut/Documents/careops-sim/libs/kairos/crates/kairo-ecs-bench)
-    Finished test [unoptimized + debuginfo] target(s) in 9.23s
+    Finished test [unoptimized + debuginfo] target(s) in 0.53s
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_abm-a4de3077029593a6)
 
 running 7 tests
-test tests::behavior_decision_can_despawn_agent ... ok
-test tests::behavior_simulation_replays_entity_rng ... ok
-test tests::behavior_simulation_respects_event_budget ... ok
+test tests::spawn_and_attach ... ok
 test tests::behavior_simulation_updates_in_scheduler_order ... ok
+test tests::behavior_decision_can_despawn_agent ... ok
 test tests::despawned_agent_future_events_do_not_update_behavior ... ok
 test tests::schedule_and_step ... ok
-test tests::spawn_and_attach ... ok
+test tests::behavior_simulation_respects_event_budget ... ok
+test tests::behavior_simulation_replays_entity_rng ... ok
 
-test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running tests/abm_behavior_update_v1.rs (target/debug/deps/abm_behavior_update_v1-966a936e89c9d7a5)
 
 running 2 tests
-test abm_behavior_update_v1_runs_updates_in_scheduler_order ... ok
 test abm_behavior_update_v1_replays_entity_rng_streams ... ok
+test abm_behavior_update_v1_runs_updates_in_scheduler_order ... ok
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running tests/abm_integration.rs (target/debug/deps/abm_integration-3da30d0696b45013)
 
 running 3 tests
+test schedule_and_dispatch ... ok
 test agent_with_components ... ok
 test multi_agent_scheduling ... ok
-test schedule_and_dispatch ... ok
 
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_arrow-df32ecd960b453b0)
 
 running 6 tests
-test tests::event_log_schema_matches_track_04_order ... ok
-test tests::previous_facade_still_flushes_records ... ok
-test tests::event_log_batch_round_trips_smoke_bytes ... ok
-test tests::smoke_bytes_preserve_escaped_strings_and_payload_ref ... ok
-test tests::dispatched_record_maps_core_event_fields ... ok
 test tests::validation_rejects_incompatible_schema_version ... ok
+test tests::event_log_schema_matches_track_04_order ... ok
+test tests::dispatched_record_maps_core_event_fields ... ok
+test tests::event_log_batch_round_trips_smoke_bytes ... ok
+test tests::previous_facade_still_flushes_records ... ok
+test tests::smoke_bytes_preserve_escaped_strings_and_payload_ref ... ok
 
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -76,46 +68,46 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_core-9c0f0f6003c40742)
 
 running 14 tests
+test tests::cancellation_rejects_unknown_and_dispatched_events ... ok
 test tests::facade_reports_invalid_priority_without_scheduling ... ok
+test tests::facade_maps_cancellation_and_limit_statuses ... ok
+test tests::facade_schedules_steps_and_exposes_status_codes ... ok
+test tests::cancellation_skips_event_without_reordering_rest ... ok
+test tests::facade_exposes_scheduler_stats_snapshot ... ok
+test tests::dispatches_by_time_priority_then_sequence ... ok
+test tests::cancelled_future_event_does_not_force_limit_after_active_events_finish ... ok
 test tests::run_for_is_bounded ... ok
 test tests::run_for_with_zero_limit_reports_limit_reached ... ok
-test tests::cancellation_rejects_unknown_and_dispatched_events ... ok
-test tests::dispatches_by_time_priority_then_sequence ... ok
-test tests::facade_maps_cancellation_and_limit_statuses ... ok
-test tests::facade_exposes_scheduler_stats_snapshot ... ok
-test tests::cancelled_future_event_does_not_force_limit_after_active_events_finish ... ok
-test tests::cancellation_skips_event_without_reordering_rest ... ok
-test tests::facade_schedules_steps_and_exposes_status_codes ... ok
 test tests::run_until_or_for_reports_limit_reached_when_event_budget_is_exhausted_first ... ok
-test tests::run_until_or_for_stops_on_bounds ... ok
 test tests::run_until_stops_at_time_limit ... ok
 test tests::scheduler_stats_track_scheduled_cancelled_dispatched_and_pending ... ok
+test tests::run_until_or_for_stops_on_bounds ... ok
 
 test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running tests/conformance_fixtures.rs (target/debug/deps/conformance_fixtures-ee19383521ec5848)
 
 running 4 tests
-test conformance_deterministic_ordering ... ok
 test conformance_rng_replay ... ok
-test conformance_zero_delay_guard ... ok
 test conformance_cancellation ... ok
+test conformance_zero_delay_guard ... ok
+test conformance_deterministic_ordering ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running tests/integration.rs (target/debug/deps/integration-ff3ec82b6f393f7e)
 
 running 8 tests
 test test_empty_scheduler ... ok
-test test_cancel_then_schedule ... ok
 test test_trace_recorder ... ok
+test test_run_for_bounds ... ok
+test test_cancel_then_schedule ... ok
+test test_zero_delay_guard ... ok
 test test_run_until_bounds ... ok
 test test_deterministic_replay ... ok
-test test_run_for_bounds ... ok
-test test_zero_delay_guard ... ok
 test test_large_event_count ... ok
 
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_cs_bridge-7904ce9a95d3b5b7)
 
@@ -126,17 +118,17 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_debug-55dc543534b79954)
 
 running 9 tests
-test tests::trace_line_validation_accepts_encoded_trace ... ok
 test tests::breakpoint_matches_event_kind ... ok
-test tests::debugger_steps_back_and_goto_tick ... ok
-test tests::line_encoding_declares_schema ... ok
 test tests::replay_reconstructs_state_from_snapshot_and_deltas ... ok
-test tests::trace_line_validation_rejects_malformed_custom_event_kind ... ok
+test tests::debugger_steps_back_and_goto_tick ... ok
+test tests::trace_line_validation_accepts_encoded_trace ... ok
 test tests::trace_line_validation_rejects_missing_or_unsupported_schema ... ok
-test tests::trace_line_validation_rejects_out_of_order_ticks ... ok
+test tests::trace_line_validation_rejects_malformed_custom_event_kind ... ok
 test tests::trace_line_validation_rejects_malformed_delta_fields ... ok
+test tests::trace_line_validation_rejects_out_of_order_ticks ... ok
+test tests::line_encoding_declares_schema ... ok
 
-test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running unittests src/main.rs (target/debug/deps/kairo_ecs_debug-fdeba1786c98f1eb)
 
@@ -147,21 +139,21 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_des-19464e7d0ffa13ee)
 
 running 5 tests
-test tests::trajectory_records_scheduler_order ... ok
 test tests::des_context_creates ... ok
 test tests::resource_request_blocks ... ok
 test tests::schedule_and_step ... ok
 test tests::trajectory_reports_event_budget_limit ... ok
+test tests::trajectory_records_scheduler_order ... ok
 
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running tests/des_integration.rs (target/debug/deps/des_integration-ec63066211eb0349)
 
 running 4 tests
+test resource_queue_fifo ... ok
+test resource_not_found ... ok
 test factory_bottleneck_smoke ... ok
 test parallel_resources ... ok
-test resource_not_found ... ok
-test resource_queue_fifo ... ok
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -179,38 +171,38 @@ running 2 tests
 test tests::reexports_bridge_version ... ok
 test tests::diplomat_facade_uses_ffi_lifecycle ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_ffi-3cc468382929e09b)
 
 running 5 tests
 test tests::canonical_header_matches_generated_surface ... ok
 test tests::ffi_version_is_stable ... ok
+test tests::schedule_and_step_through_bridge ... ok
 test tests::engine_lifecycle_is_explicit ... ok
 test tests::panic_boundary_returns_panic_status ... ok
-test tests::schedule_and_step_through_bridge ... ok
 
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running tests/ffi_integration.rs (target/debug/deps/ffi_integration-60f0769ad35e5a34)
 
 running 14 tests
-test test_run_until_or_for_applies_both_bounds ... ok
-test test_engine_create_free ... ok
 test test_ffi_version ... ok
-test test_run_for_limit ... ok
-test test_engine_reset ... ok
-test test_schedule_cancel ... ok
-test test_stats ... ok
-test test_telemetry_flush ... ok
-test test_schedule_ordering ... ok
+test test_engine_create_free ... ok
 test test_schedule_and_step ... ok
 test test_error_message ... ok
-test test_schedule_after_uses_current_time ... ok
 test test_run_until_limit ... ok
 test test_engine_double_free ... ok
+test test_schedule_cancel ... ok
+test test_engine_reset ... ok
+test test_run_for_limit ... ok
+test test_schedule_ordering ... ok
+test test_stats ... ok
+test test_schedule_after_uses_current_time ... ok
+test test_run_until_or_for_applies_both_bounds ... ok
+test test_telemetry_flush ... ok
 
-test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_fmi-8f144710947246eb)
 
@@ -221,24 +213,24 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_gpu-41d16b07a79ddba9)
 
 running 10 tests
-test transfer::tests::checked_transfer_totals_report_overflow ... ok
-test compute::tests::des_execution_plan_accounts_for_event_roundtrip ... ok
-test compute::tests::state_footprint_tracks_flat_buffer_bytes ... ok
-test compute::tests::dispatch_shape_uses_webgpu_safe_workgroups ... ok
-test compute::tests::abm_execution_plan_tracks_state_and_transfers ... ok
 test compute::tests::abm_step_is_seed_reproducible ... ok
-test transfer::tests::transfer_plan_separates_upload_and_download_totals ... ok
-test compute::tests::des_execution_plan_budget_checks_include_event_transfer_pressure ... ok
+test compute::tests::state_footprint_tracks_flat_buffer_bytes ... ok
 test buffer::tests::typed_buffer_tracks_item_and_byte_length ... ok
+test transfer::tests::checked_transfer_totals_report_overflow ... ok
+test compute::tests::des_execution_plan_budget_checks_include_event_transfer_pressure ... ok
+test compute::tests::abm_execution_plan_tracks_state_and_transfers ... ok
+test compute::tests::des_execution_plan_accounts_for_event_roundtrip ... ok
 test buffer::tests::empty_buffer_is_rejected ... ok
+test compute::tests::dispatch_shape_uses_webgpu_safe_workgroups ... ok
+test transfer::tests::transfer_plan_separates_upload_and_download_totals ... ok
 
 test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running tests/contract_smoke.rs (target/debug/deps/contract_smoke-f744b05b8215515e)
 
 running 4 tests
-test execution_plans_are_public_and_backend_agnostic ... ok
 test cpu_fallback_reports_explicit_capabilities ... ok
+test execution_plans_are_public_and_backend_agnostic ... ok
 test des_execution_plan_budget_api_includes_event_buffers ... ok
 test footprint_and_dispatch_contract_are_hardware_independent ... ok
 
@@ -261,48 +253,48 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_grpc-c802d5fe0895507d)
 
 running 16 tests
-test tests::default_timeouts_keep_heartbeat_below_failure_timeout ... ok
 test tests::grpc_contract_envelopes_track_protocol_identity ... ok
-test tests::grpc_contract_rejects_empty_migration_id ... ok
 test tests::heartbeat_classifier_marks_late_worker_failed ... ok
+test tests::default_timeouts_keep_heartbeat_below_failure_timeout ... ok
+test tests::grpc_contract_rejects_empty_migration_id ... ok
 test tests::local_smoke_validates_peers_and_timeout_config ... ok
-test tests::migration_validator_accepts_complete_request ... ok
-test tests::migration_validator_rejects_empty_component_set ... ok
+test tests::local_two_node_contract_proof_covers_event_migration_telemetry_and_failure ... ok
 test tests::peer_validator_rejects_duplicate_peer_ids ... ok
 test tests::peer_list_is_preserved ... ok
-test tests::local_two_node_contract_proof_covers_event_migration_telemetry_and_failure ... ok
 test tests::protocol_emulator_includes_pending_event_timestamps_in_gvt_round ... ok
+test tests::migration_validator_accepts_complete_request ... ok
+test tests::migration_validator_rejects_empty_component_set ... ok
 test tests::protocol_emulator_round_trips_null_messages ... ok
 test tests::protocol_emulator_uses_current_gvt_candidate_round ... ok
 test tests::telemetry_batch_validator_requires_monotonic_tick_range ... ok
-test tests::transport_send_rejects_unknown_lp ... ok
 test tests::transport_send_rejects_unknown_source_and_destination_mismatch ... ok
+test tests::transport_send_rejects_unknown_lp ... ok
 
-test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_ml-41b4e53bb048663b)
 
 running 11 tests
 test tests::backend_status_reports_dependency_free_scaffold ... ok
 test tests::metadata_rejects_blank_name_and_empty_shapes ... ok
-test tests::ort_session_runs_shape_checked_inference ... ok
-test tests::tensor_rejects_non_finite_values ... ok
+test tests::tensor_rejects_shape_mismatch ... ok
 test tests::tensor_rejects_zero_dimension ... ok
 test tests::tick_hook_rejects_bad_output_shape_after_predict ... ok
 test tests::tick_hook_rejects_input_shape_before_predict ... ok
 test tests::tick_hook_runs_matching_phase_only ... ok
+test tests::tensor_rejects_non_finite_values ... ok
+test tests::ort_session_runs_shape_checked_inference ... ok
 test tests::try_register_rejects_duplicate_model_name_and_version ... ok
-test tests::tensor_rejects_shape_mismatch ... ok
 test tests::try_register_validates_model_metadata_contract ... ok
 
-test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running tests/feature_matrix.rs (target/debug/deps/feature_matrix-b9863b5bfc38c35a)
 
 running 4 tests
-test featureless_session_rejects_input_shape_mismatch_before_inference ... ok
-test featureless_session_reports_backend_not_configured ... ok
 test featureless_tick_hook_rejects_duplicate_model_registration ... ok
+test featureless_session_reports_backend_not_configured ... ok
+test featureless_session_rejects_input_shape_mismatch_before_inference ... ok
 test featureless_tick_hook_runs_registered_model ... ok
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
@@ -310,23 +302,23 @@ test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_mpi-a4441d572fff7d11)
 
 running 15 tests
-test tests::local_two_rank_contract_proof_covers_event_migration_and_telemetry ... ok
+test tests::message_tags_are_stable ... ok
 test tests::migration_validator_accepts_component_payloads ... ok
+test tests::rank_assignment_preserves_lp_mapping ... ok
+test tests::rank_validator_rejects_duplicate_lps ... ok
+test tests::local_smoke_validates_rank_mapping_and_protocol_tags ... ok
 test tests::migration_validator_rejects_self_migration ... ok
 test tests::protocol_emulator_includes_pending_event_timestamps_in_gvt_round ... ok
-test tests::message_tags_are_stable ... ok
-test tests::local_smoke_validates_rank_mapping_and_protocol_tags ... ok
+test tests::local_two_rank_contract_proof_covers_event_migration_and_telemetry ... ok
 test tests::protocol_emulator_uses_current_gvt_candidate_round ... ok
-test tests::rank_validator_rejects_duplicate_lps ... ok
 test tests::telemetry_batch_validator_requires_ordered_non_empty_payload ... ok
-test tests::transport_contracts_use_stable_mpi_protocol_metadata ... ok
-test tests::transport_send_rejects_unknown_lp ... ok
-test tests::transport_contract_rejects_migration_without_payload_or_id ... ok
-test tests::rank_assignment_preserves_lp_mapping ... ok
 test tests::protocol_emulator_round_trips_event_messages ... ok
+test tests::transport_contract_rejects_migration_without_payload_or_id ... ok
+test tests::transport_send_rejects_unknown_lp ... ok
+test tests::transport_contracts_use_stable_mpi_protocol_metadata ... ok
 test tests::transport_send_rejects_unknown_source_and_destination_mismatch ... ok
 
-test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_pdes-443f88d28d3a595d)
 
@@ -334,18 +326,18 @@ running 13 tests
 test tests::time_warp_spike_documents_rollback_risk ... ok
 test tests::scheduler_never_moves_lp_time_backward ... ok
 test tests::scheduler_sends_events_and_null_messages ... ok
-test tests::scheduler_ignores_stale_null_safe_time_for_local_progress ... ok
 test tests::in_memory_gvt_includes_inflight_message_timestamps ... ok
-test tests::conservative_validator_reports_parity_gvt_and_deadlock_evidence ... ok
-test tests::partitioned_reference_matches_sequential_final_state ... ok
 test tests::scheduler_rejects_duplicate_and_mismatched_lps ... ok
+test tests::scheduler_ignores_stale_null_safe_time_for_local_progress ... ok
 test tests::transport_rejects_unknown_destinations_and_sources ... ok
 test tests::transport_round_trips_remote_events ... ok
 test tests::validator_rejects_empty_or_degenerate_workloads ... ok
+test tests::conservative_validator_reports_parity_gvt_and_deadlock_evidence ... ok
+test tests::partitioned_reference_matches_sequential_final_state ... ok
 test tests::scaling_smoke_samples_cover_required_lp_counts_without_speedup_claims ... ok
 test tests::stress_reference_progresses_gvt_for_every_tick ... ok
 
-test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.69s
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.75s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_rng-99c13fa3eb4790de)
 
@@ -353,10 +345,10 @@ running 5 tests
 test tests::different_run_seeds_diverge ... ok
 test tests::distinct_entity_inputs_diverge ... ok
 test tests::entity_seed_is_reproducible ... ok
-test tests::stream_replays_from_run_seed ... ok
 test tests::entity_stream_replays_exactly ... ok
+test tests::stream_replays_from_run_seed ... ok
 
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_state-c03dcd1bbfd8e237)
 
@@ -367,10 +359,10 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running tests/component_storage.rs (target/debug/deps/component_storage-e6bbfb724ed6205c)
 
 running 6 tests
-test component_store_rejects_stale_generation_for_same_index ... ok
-test component_store_newer_generation_supersedes_stale_row ... ok
-test component_store_replaces_same_entity_without_duplicate_row ... ok
 test component_registry_multi_type_and_remove ... ok
+test component_store_newer_generation_supersedes_stale_row ... ok
+test component_store_rejects_stale_generation_for_same_index ... ok
+test component_store_replaces_same_entity_without_duplicate_row ... ok
 test world_entity_lifecycle_recycles_indices_and_rejects_stale_handles ... ok
 test world_snapshot_is_deterministic_across_repeated_reads ... ok
 
@@ -379,31 +371,31 @@ test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_streaming-0f4278a95f5daf41)
 
 running 10 tests
-test tests::event_log_contract_rejects_wrong_schema_version ... ok
 test tests::event_log_contract_rejects_invalid_required_fields ... ok
-test tests::event_log_message_exposes_arrow_contract_fields ... ok
-test tests::in_memory_sink_rejects_invalid_contract_message ... ok
-test tests::in_memory_sink_rejects_sequence_regression_for_same_run ... ok
-test tests::in_memory_sink_rejects_time_regression_for_same_run ... ok
-test tests::in_memory_stream_round_trips_messages ... ok
-test tests::pacing_contract_rejects_zero_tick_duration ... ok
-test tests::snapshot_rejects_unknown_stream_name ... ok
 test tests::event_log_contract_rejects_missing_event_id ... ok
+test tests::event_log_contract_rejects_wrong_schema_version ... ok
+test tests::event_log_message_exposes_arrow_contract_fields ... ok
+test tests::in_memory_sink_rejects_sequence_regression_for_same_run ... ok
+test tests::in_memory_stream_round_trips_messages ... ok
+test tests::snapshot_rejects_unknown_stream_name ... ok
+test tests::pacing_contract_rejects_zero_tick_duration ... ok
+test tests::in_memory_sink_rejects_time_regression_for_same_run ... ok
+test tests::in_memory_sink_rejects_invalid_contract_message ... ok
 
-test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 
      Running tests/feature_matrix.rs (target/debug/deps/feature_matrix-7759c0151a59c2f2)
 
 running 7 tests
-test base_featureless_stream_contract_round_trips ... ok
-test in_memory_adapter_rejects_time_regression_per_run ... ok
-test in_memory_adapter_rejects_sequence_regression_per_run ... ok
-test in_memory_adapter_enforces_event_log_contract ... ok
+test snapshot_provider_rejects_unknown_stream_name ... ok
 test in_memory_adapter_rejects_unversioned_event_log_contract ... ok
 test snapshot_provider_filters_by_arrow_stream_name ... ok
-test snapshot_provider_rejects_unknown_stream_name ... ok
+test in_memory_adapter_enforces_event_log_contract ... ok
+test in_memory_adapter_rejects_sequence_regression_per_run ... ok
+test base_featureless_stream_contract_round_trips ... ok
+test in_memory_adapter_rejects_time_regression_per_run ... ok
 
-test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_types-ab170a7fa763fa2b)
 
@@ -412,12 +404,12 @@ test tests::constructors_validate_wide_inputs ... ok
 test tests::handles_are_deterministically_ordered ... ok
 test tests::request_construction_validates_priority_range ... ok
 test tests::schedule_request_and_dispatch_are_stable_and_ordered ... ok
-test tests::step_outcome_accessors_work ... ok
 test tests::sim_time_checked_add_overflow_is_none ... ok
 test tests::sim_time_uses_fixed_ticks ... ok
+test tests::step_outcome_accessors_work ... ok
 test tests::versioned_wrapper_carries_version_and_value ... ok
 
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_uniffi-b752e7769276cb2f)
 
@@ -425,18 +417,18 @@ running 2 tests
 test tests::reexports_bridge_version ... ok
 test tests::facade_schedules_and_steps ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_viz-398ba33a500c7995)
 
 running 8 tests
-test tests::rejects_blank_entity_labels ... ok
-test tests::default_renderer_status_is_headless_only ... ok
-test tests::renders_deterministic_headless_text ... ok
-test tests::renders_formal_visualization_fixture_json ... ok
 test tests::converts_dispatched_events_to_headless_markers ... ok
 test tests::converts_world_snapshot_to_deterministic_headless_frame ... ok
+test tests::default_renderer_status_is_headless_only ... ok
+test tests::rejects_blank_entity_labels ... ok
 test tests::renders_deterministic_headless_svg ... ok
+test tests::renders_deterministic_headless_text ... ok
+test tests::renders_formal_visualization_fixture_json ... ok
 test tests::summarizes_frame_without_gui_dependencies ... ok
 
 test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
@@ -452,18 +444,18 @@ test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_wasm-fee2a99f76092e82)
 
 running 3 tests
+test tests::explicit_free_is_idempotent_from_the_wrapper_surface ... ok
 test tests::default_build_exposes_track_04_schema_constant ... ok
 test tests::engine_wraps_ffi_scheduler_statuses ... ok
-test tests::explicit_free_is_idempotent_from_the_wrapper_surface ... ok
 
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running unittests src/lib.rs (target/debug/deps/kairo_ecs_webgpu-416a967930340b5c)
 
 running 8 tests
-test bridge::tests::rejects_misaligned_wasm_offset ... ok
 test adapter::tests::native_ci_reports_webgpu_unavailable ... ok
 test bridge::tests::accepts_webgpu_aligned_buffer_descriptor ... ok
+test bridge::tests::rejects_misaligned_wasm_offset ... ok
 test bridge::tests::rejects_partial_elements ... ok
 test bridge::tests::rejects_zero_stride_without_panicking ... ok
 test capability::tests::reports_cpu_fallback_until_browser_bindings_are_configured ... ok
@@ -479,7 +471,7 @@ test browser_webgpu_dispatch_is_explicitly_unavailable_until_configured ... ok
 test capability_metadata_identifies_fallback_parity_contract ... ok
 test fixed_seed_reference_contract_matches_cpu_reference ... ok
 
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
    Doc-tests kairo-ecs-abm
 
