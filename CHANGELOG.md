@@ -59,6 +59,8 @@ Format:
 
 ### Fixed
 
+- The Kubernetes operator restricts scenario paths to safe ConfigMap keys and keeps shell values as literal environment data, preventing command injection and path traversal.
+
 - Update the locked Rust dependency `crossbeam-epoch` to 0.9.20, which includes the fix for RUSTSEC-2026-0204.
 - Scheduler dispatch now removes pending IDs in release builds, preserving pending counts and preventing cancellation of already-dispatched events.
 - Go binding CI now runs `gofmt` with shellcheck-safe file argument handling while preserving the existing tracked-file format gate.

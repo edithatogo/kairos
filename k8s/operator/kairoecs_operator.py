@@ -5,10 +5,45 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
-
+import re
+from pathlib import Path, PurePosixPath
 
 VALID_STORAGE_BACKENDS = {"filesystem", "s3", "gcs", "azure"}
+CONFIG_MAP_KEY = re.compile(r"[A-Za-z0-9._-]+\Z")
+DNS_LABEL = re.compile(r"[a-z0-9](?:[-a-z0-9]*[a-z0-9])?\Z")
+
+
+def validate_scenario_key(key: object) -> str:
+    """Require one portable ConfigMap key and one file directly under /scenario."""
+    if not isinstance(key, str):
+        raise TypeError("spec.scenarioRef.key must be a string")
+    if key.startswith("/"):
+        raise ValueError("spec.scenarioRef.key must not be an absolute path")
+    if ".." in key.split("/"):
+        raise ValueError(
+            "spec.scenarioRef.key must not contain path traversal components"
+        )
+    if "\\" in key:
+        raise ValueError("spec.scenarioRef.key must not contain backslashes")
+    if "%" in key:
+        raise ValueError("spec.scenarioRef.key must not use URL-encoded paths")
+    if key in {"", ".", ".."} or not CONFIG_MAP_KEY.fullmatch(key):
+        raise ValueError(
+            "spec.scenarioRef.key must be a single safe ConfigMap filename"
+        )
+
+    scenario_dir = PurePosixPath("/scenario")
+    scenario_path = scenario_dir / key
+    if scenario_path.parent != scenario_dir or scenario_path.name != key:
+        raise ValueError("spec.scenarioRef.key must stay inside /scenario")
+    return key
+
+
+def is_dns_subdomain(value: object) -> bool:
+    if not isinstance(value, str) or len(value) > 253:
+        return False
+    labels = value.split(".")
+    return all(len(label) <= 63 and DNS_LABEL.fullmatch(label) for label in labels)
 
 
 def validate_experiment(experiment: dict) -> None:
@@ -16,7 +51,7 @@ def validate_experiment(experiment: dict) -> None:
         raise ValueError("experiment kind must be KairoECSExperiment")
     spec = experiment.get("spec")
     if not isinstance(spec, dict):
-        raise ValueError("experiment spec must be an object")
+        raise TypeError("experiment spec must be an object")
     if not str(spec.get("image", "")).strip():
         raise ValueError("spec.image must not be empty")
     parallelism = int(spec.get("parallelism", 1))
@@ -24,16 +59,27 @@ def validate_experiment(experiment: dict) -> None:
         raise ValueError("spec.parallelism must be greater than zero")
     storage = spec.get("storage")
     if not isinstance(storage, dict):
-        raise ValueError("spec.storage must be an object")
+        raise TypeError("spec.storage must be an object")
     if storage.get("backend") not in VALID_STORAGE_BACKENDS:
-        raise ValueError("spec.storage.backend must be one of azure, filesystem, gcs, s3")
+        raise ValueError(
+            "spec.storage.backend must be one of azure, filesystem, gcs, s3"
+        )
     if not str(storage.get("path", "")).strip():
         raise ValueError("spec.storage.path must not be empty")
     scenario_ref = spec.get("scenarioRef")
     if not isinstance(scenario_ref, dict):
-        raise ValueError("spec.scenarioRef must be an object")
-    if not scenario_ref.get("configMapName") and not str(scenario_ref.get("inline", "")).strip():
-        raise ValueError("spec.scenarioRef must provide configMapName or inline scenario content")
+        raise TypeError("spec.scenarioRef must be an object")
+    validate_scenario_key(scenario_ref.get("key", "scenario.yaml"))
+    config_map_name = scenario_ref.get("configMapName")
+    if config_map_name is not None and not is_dns_subdomain(config_map_name):
+        raise ValueError("spec.scenarioRef.configMapName must be a DNS subdomain")
+    if (
+        not scenario_ref.get("configMapName")
+        and not str(scenario_ref.get("inline", "")).strip()
+    ):
+        raise ValueError(
+            "spec.scenarioRef must provide configMapName or inline scenario content"
+        )
 
 
 def render_job(experiment: dict) -> dict:
@@ -44,7 +90,7 @@ def render_job(experiment: dict) -> dict:
     parallelism = int(spec.get("parallelism", 1))
     storage = spec["storage"]
     scenario_ref = spec.get("scenarioRef", {})
-    scenario_key = scenario_ref.get("key", "scenario.yaml")
+    scenario_key = validate_scenario_key(scenario_ref.get("key", "scenario.yaml"))
     scenario_mount = f"/scenario/{scenario_key}"
     volumes = []
     volume_mounts = []
@@ -59,16 +105,28 @@ def render_job(experiment: dict) -> dict:
                 },
             }
         )
-        volume_mounts.append({"name": "scenario", "mountPath": "/scenario", "readOnly": True})
+        volume_mounts.append(
+            {"name": "scenario", "mountPath": "/scenario", "readOnly": True}
+        )
     elif scenario_ref.get("inline"):
         volumes.append({"name": "scenario", "emptyDir": {}})
-        volume_mounts.append({"name": "scenario", "mountPath": "/scenario", "readOnly": True})
+        volume_mounts.append(
+            {"name": "scenario", "mountPath": "/scenario", "readOnly": True}
+        )
         init_containers.append(
             {
                 "name": "write-inline-scenario",
                 "image": "busybox:1.36",
-                "command": ["sh", "-c", f"printf '%s' \"$KAIRO_INLINE_SCENARIO\" > /scenario/{scenario_key}"],
-                "env": [{"name": "KAIRO_INLINE_SCENARIO", "value": scenario_ref["inline"]}],
+                "command": [
+                    "sh",
+                    "-c",
+                    'printf \'%s\' "$KAIRO_INLINE_SCENARIO" > "$KAIRO_SCENARIO_DIR/$KAIRO_SCENARIO_KEY"',
+                ],
+                "env": [
+                    {"name": "KAIRO_INLINE_SCENARIO", "value": scenario_ref["inline"]},
+                    {"name": "KAIRO_SCENARIO_KEY", "value": scenario_key},
+                    {"name": "KAIRO_SCENARIO_DIR", "value": "/scenario"},
+                ],
                 "volumeMounts": [{"name": "scenario", "mountPath": "/scenario"}],
             }
         )
@@ -88,7 +146,9 @@ def render_job(experiment: dict) -> dict:
                         {
                             "name": "kairo-ecs-cli",
                             "image": spec["image"],
-                            "imagePullPolicy": spec.get("imagePullPolicy", "IfNotPresent"),
+                            "imagePullPolicy": spec.get(
+                                "imagePullPolicy", "IfNotPresent"
+                            ),
                             "args": [
                                 "run",
                                 "--scenario",
@@ -97,9 +157,17 @@ def render_job(experiment: dict) -> dict:
                                 storage["path"],
                             ],
                             "env": [
-                                {"name": "KAIRO_STORAGE_BACKEND", "value": storage["backend"]},
+                                {
+                                    "name": "KAIRO_STORAGE_BACKEND",
+                                    "value": storage["backend"],
+                                },
                                 {"name": "KAIRO_OUTPUT_URI", "value": storage["path"]},
-                                {"name": "KAIRO_CHECKPOINT_ENABLED", "value": str(spec.get("checkpoint", {}).get("enabled", True)).lower()},
+                                {
+                                    "name": "KAIRO_CHECKPOINT_ENABLED",
+                                    "value": str(
+                                        spec.get("checkpoint", {}).get("enabled", True)
+                                    ).lower(),
+                                },
                             ],
                             "volumeMounts": volume_mounts,
                             "resources": spec.get("resources", {}),
@@ -130,11 +198,17 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--experiment", required=True)
     parser.add_argument("--output")
-    parser.add_argument("--status", action="store_true", help="render the offline status patch instead of the Job")
+    parser.add_argument(
+        "--status",
+        action="store_true",
+        help="render the offline status patch instead of the Job",
+    )
     args = parser.parse_args()
 
     experiment = json.loads(Path(args.experiment).read_text(encoding="utf-8"))
-    rendered_object = render_status_patch(experiment) if args.status else render_job(experiment)
+    rendered_object = (
+        render_status_patch(experiment) if args.status else render_job(experiment)
+    )
     rendered = json.dumps(rendered_object, indent=2, sort_keys=True) + "\n"
     if args.output:
         Path(args.output).write_text(rendered, encoding="utf-8")
