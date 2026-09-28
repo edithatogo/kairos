@@ -275,7 +275,8 @@ requireTerms('.github/workflows/ci-policy.yml', [
 ]);
 
 requireTerms('.github/workflows/ci-bindings.yml', [
-  "python -m pip install -e '.[test]'",
+  'python -m pip install --require-hashes -r scripts/bootstrap-python-tools.lock',
+  "python -m pip install --no-deps --no-build-isolation -e '.[test]'",
   'ruff check .',
 ]);
 requireTerms('bindings/python/pyproject.toml', ['ruff==0.16.9']);

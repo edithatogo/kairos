@@ -1,5 +1,6 @@
 pip==25.0.1
 build==1.6.1
+backports.tarfile==1.2.0
 twine==7.0.0
 maturin==1.9.6
 pytest==8.3.5
