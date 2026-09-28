@@ -41,6 +41,7 @@ Format:
 
 ### Changed
 
+- Toolchain support metadata and its CI check now track Rust 1.98 stable instead of the stale 1.95 baseline.
 - Renovate now uses the Kairos preset with lower PR concurrency, while low-risk automerge stays off until stable required CI checks are configured.
 - Python binding CI installs Ruff and test tools from the package's declared test extra.
 - R binding and package dry-run workflows now use the runner R toolchain with an apt fallback, avoiding the hanging external setup action for base R smoke coverage.
