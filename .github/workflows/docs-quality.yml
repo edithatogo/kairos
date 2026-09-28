@@ -2,7 +2,7 @@ name: Docs Quality
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ on:
       - '.github/workflows/docs-quality.yml'
       - 'tools/docs-quality-node-tools/package.json'
       - 'tools/docs-quality-node-tools/package-lock.json'
-      - '**/*.md'
+      - '*.md'
       - '**/*.mmd'
       - 'docs/**'
       - 'website/**'
@@ -51,12 +51,25 @@ jobs:
             echo "Rendering $f"
             tools/docs-quality-node-tools/node_modules/.bin/mmdc -p .mermaid-puppeteer.json -i "$f" -o "/tmp/mermaid-out/$(basename "$f").svg"
           done
+      - name: Restore Lychee cache
+        id: lychee-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .lycheecache
+          key: lychee-${{ runner.os }}-${{ github.sha }}
+          restore-keys: lychee-${{ runner.os }}-
       - name: Markdown link check
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
-          args: --verbose --no-progress './**/*.md'
+          args: --verbose --no-progress --cache --max-cache-age 1d './*.md' './docs/**/*.md' './website/**/*.md'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Save Lychee cache
+        if: always()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .lycheecache
+          key: ${{ steps.lychee-cache.outputs.cache-primary-key }}
       - name: Tutorial validation
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1
       - name: Install website dependencies
