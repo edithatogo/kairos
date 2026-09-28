@@ -61,6 +61,34 @@ function Invoke-OptionalCommand {
     Write-Host "$Name passed" -ForegroundColor Green
 }
 
+function Invoke-OptionalCargoSubcommand {
+    param(
+        [string]$Name,
+        [string]$Subcommand,
+        [scriptblock]$Command
+    )
+
+    # Cargo can discover installed plugins from CARGO_HOME even when the
+    # standalone cargo-<subcommand> executable is not on PowerShell's PATH.
+    $probeOutput = & cargo $Subcommand --version 2>&1
+    $probeExit = if ($null -eq $LASTEXITCODE) { 0 } else { $LASTEXITCODE }
+    if ($probeExit -ne 0) {
+        Add-Result -Name $Name -Status "skipped" -Detail "cargo $Subcommand subcommand not installed"
+        Write-Host "$Name skipped: cargo $Subcommand subcommand not installed" -ForegroundColor Yellow
+        return
+    }
+
+    Write-Host "Running $Name ($($probeOutput -join ' '))..." -ForegroundColor Cyan
+    & $Command
+    $exitCode = if ($null -eq $LASTEXITCODE) { 0 } else { $LASTEXITCODE }
+    if ($exitCode -ne 0) {
+        throw "$Name failed with exit code $exitCode"
+    }
+
+    Add-Result -Name $Name -Status "passed"
+    Write-Host "$Name passed" -ForegroundColor Green
+}
+
 Push-Location $RepoRoot
 try {
     Invoke-RequiredCommand -Name "Track 13 metadata validator" -Command {
@@ -75,7 +103,7 @@ try {
         cargo deny check advisories sources
     }
 
-    Invoke-OptionalCommand -Name "cargo audit" -Executable "cargo-audit" -Command {
+    Invoke-OptionalCargoSubcommand -Name "cargo audit" -Subcommand "audit" -Command {
         cargo audit
     }
 

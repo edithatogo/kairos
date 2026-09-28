@@ -1,0 +1,30 @@
+Running Track 13 metadata validator...
+{
+  "status": "ok",
+  "validator": "scripts/validation/validate-track13-metadata.mjs",
+  "checked_tracks": 46,
+  "track13_required_gates": [
+    "phase-closeout-check",
+    "workflow-presence",
+    "cargo-metadata",
+    "dependency-policy"
+  ]
+}
+Track 13 metadata validator passed
+Running cargo metadata...
+cargo metadata passed
+Running cargo deny advisories and sources...
+advisories ok, sources ok
+cargo deny advisories and sources passed
+Running cargo audit (cargo-audit-audit 0.22.1)...
+    Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1271 security advisories (from /Users/doughnut/.cargo/advisory-db)
+    Updating crates.io index
+    Scanning Cargo.lock for vulnerabilities (102 crate dependencies)
+cargo audit passed
+
+Track 13 supply-chain gate summary:
+  Track 13 metadata validator: passed
+  cargo metadata: passed
+  cargo deny advisories and sources: passed
+  cargo audit: passed

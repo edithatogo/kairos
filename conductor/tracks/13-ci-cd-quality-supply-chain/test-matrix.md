@@ -40,7 +40,8 @@ python benches/benchmark_smoke.py
 cargo check -p kairo-ecs-bench
 test -f renovate.json
 rg -n 'rust-version = "1\.76"' Cargo.toml
-rg -n 'channel = "stable"' rust-toolchain.toml
+rg -n 'channel = "1.98.1"' rust-toolchain.toml
+rg -n 'Rust 1.76 default-feature MSRV|rustup run 1.76.0 cargo test --workspace --locked' .github/workflows/ci-core.yml
 rg -n 'unknown-registry = "deny"|unknown-git = "deny"' deny.toml
 rg -n "future surface; skipping" .github/workflows/ci-bindings.yml .github/workflows/package-dry-run.yml && exit 1 || exit 0
 rg -n "No benchmarks yet|No fuzz harness yet|\|\| true" .github/workflows/benchmarks.yml .github/workflows/fuzzing.yml && exit 1 || exit 0

@@ -15,8 +15,8 @@ Current R2 smoke slice:
 Reproducibility commands:
 
 ```powershell
-cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des --test des_resource_queue_v1
-cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-abm --test abm_behavior_update_v1
+cargo +1.98.1-x86_64-pc-windows-gnu test -p kairo-ecs-des --test des_resource_queue_v1
+cargo +1.98.1-x86_64-pc-windows-gnu test -p kairo-ecs-abm --test abm_behavior_update_v1
 ```
 
 Expected output: both commands complete with all named Track 03 fixture tests

@@ -20,8 +20,8 @@ function Test-WindowsHost {
 }
 
 function Invoke-CargoWorkspaceTests {
-    if ((Test-WindowsHost) -and (Test-RustupToolchainInstalled -Toolchain "stable-x86_64-pc-windows-gnu")) {
-        & rustup run stable-x86_64-pc-windows-gnu cargo test --workspace
+    if ((Test-WindowsHost) -and (Test-RustupToolchainInstalled -Toolchain "1.98.1-x86_64-pc-windows-gnu")) {
+        & rustup run 1.98.1-x86_64-pc-windows-gnu cargo test --workspace
     } else {
         & cargo test --workspace
     }

@@ -126,3 +126,20 @@ Phase closeout evidence refreshed on 2026-05-10:
   closeout commit and push.
 - Next-phase decision: Track 30 is `Done`. Reopen only for a scoped support
   matrix change, runner coverage promotion, or version-drop policy update.
+
+## Scoped matrix maintenance — 2026-09-28
+
+Kairos owner approved preserving Rust 1.76 as the default-feature workspace
+floor, pinning the tested developer/integration stable baseline to 1.98.1, and
+recording beta `1.99.0-beta.8` (observed 2026-09-27) as a non-blocking exact
+snapshot. The matrix and validator are updated accordingly. Track 13 owns
+`rust-toolchain.toml` and core workflow changes; this matrix update is locally reviewed as part of parent D1.2; parent formal acceptance remains pending. This section does not reopen or
+rewrite the historical 2026-05-10 closeout record above.
+
+Local validation on macOS ARM (2026-09-28): static matrix validator and
+`actionlint` passed for the eight affected workflows; exact Rust 1.98.1 and
+1.99.0-beta.8 checks passed, and an intentionally wrong beta version failed.
+The 228-test/64-suite default-feature workspace passed at Rust 1.76.0 and
+1.98.1; `cargo check --workspace --locked` passed at beta. Full command logs and
+SHA-256 values are in `conductor/evidence/d1.2-*-20260928.log`. GitHub-hosted
+Actions and Windows remain unverified until this branch is pushed/run.

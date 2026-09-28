@@ -1,6 +1,6 @@
 # Toolchain & Version Support Matrix
 
-Last refreshed: 2026-05-07.
+Last refreshed: 2026-09-28.
 
 This document is the single source of truth for KairoECS language and runner version support. Binding tracks may support a narrower feature surface while they are still scaffolding, but they must not raise a minimum version or drop a supported version without following the version-drop policy below.
 
@@ -8,9 +8,9 @@ This document is the single source of truth for KairoECS language and runner ver
 
 | Source | Evidence used |
 |---|---|
-| `rust-toolchain.toml` | Rust channel is `stable`; components are `rustfmt` and `clippy`. |
+| `rust-toolchain.toml` | Rust toolchain is pinned to `1.98.1`; components are `rustfmt` and `clippy`. |
 | `Cargo.toml` | Workspace `rust-version` is `1.76`; edition is `2021`. |
-| `mise.toml` | Repo-local developer defaults are Rust `stable`, Python `3.14`, Node `lts`, Go `latest`, Julia `latest`, R `latest`, .NET `10.0`. |
+| `mise.toml` | Repo-local developer defaults are Rust `1.98.1`, Python `3.14`, Node `lts`, Go `latest`, Julia `latest`, R `latest`, .NET `10.0`. |
 | `bindings/python/pyproject.toml` | Python binding declares `requires-python = ">=3.10"`. |
 | `bindings/r/DESCRIPTION` | R binding declares `Depends: R (>= 4.2)`. |
 | `bindings/julia/Project.toml` | Julia binding declares `[compat] julia = "1.10"`. |
@@ -30,7 +30,7 @@ Support labels:
 
 | Ecosystem | Binding track | Minimum supported version | Latest/current supported version | Experimental or preview lane | CI selector | Deprecation horizon | Linux x86_64 | Linux aarch64 | macOS x86_64 | macOS aarch64 | Windows x86_64 |
 |---|---:|---|---|---|---|---|---|---|---|---|---|
-| Rust core | 00/01/13 | MSRV `1.76`; default channel `stable` | Rust `1.95.x` stable as of 2026-05-06 | Rust `beta` advisory lane | `stable`, `beta` | MSRV may rise only after 2 release cycles or 6 months notice; `stable` tracks upstream stable. | CI-covered | best-effort | best-effort | best-effort | best-effort |
+| Rust core | 00/01/13 | MSRV `1.76`; tested baseline `1.98.1` | Rust `1.98.1` stable, verified 2026-09-28 | Rust `1.99.0-beta.8`, observed 2026-09-27; floating `beta` selector, advisory only | `1.76` MSRV check, `1.98.1` pinned baseline, `beta` advisory | MSRV may rise only after 2 release cycles or 6 months notice; integration CI uses exact Rust `1.98.1`; beta is non-blocking and must be refreshed against its observed version/date. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | Python binding | 06 | CPython `3.10` | CPython `3.14.x` | CPython 3.14 free-threaded smoke where runner support exists | `3.10`, `3.11`, `3.12`, `3.13`, `3.14` | Drop only after upstream PSF security support ends and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | R binding | 07 | R `4.2` package floor; CI floor is previous CRAN release | R `4.6.x` current release | R-devel advisory lane only | `oldrel-1`, `release` | Drop a package floor only after CRAN support pressure or dependency incompatibility is documented for 2 cycles/6 months. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | Julia binding | 08 | Julia `1.10` LTS-compatible floor | Julia `1.12.x` current stable | Julia `1.13` beta advisory lane only | `1.10`, `1.12` | Drop an LTS-compatible floor only after Julia LTS guidance changes and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
@@ -40,9 +40,9 @@ Support labels:
 
 ## Rust
 
-The Rust support row is the source of truth for the core workspace MSRV, stable CI lane, and beta advisory lane.
+The Rust support row is the source of truth for the core workspace MSRV, exact tested integration baseline, and dated beta advisory lane. Core/default-feature consumers remain supported at Rust 1.76; verify that floor explicitly. Packages that adopt Arrow/Parquet must live in a separate package boundary with an explicitly tested candidate floor of Rust 1.88, after Track 04 schema/interoperability review. TOML parsing stays out of core; if selected for a config/tool package, declare and test its candidate floor of Rust 1.85 there. Neither candidate dependency is approved for addition by this matrix update.
 
-On Windows developer hosts, `scripts/validate_conductor_setup.ps1` prefers the installed `stable-x86_64-pc-windows-gnu` Rust toolchain for local workspace tests when it is available. This avoids accidental resolution of Git's `link.exe` on hosts without a working MSVC linker while keeping Windows runner coverage `best-effort` until Track 13 provisions hosted or self-hosted Windows lanes.
+On Windows developer hosts, `scripts/validate_conductor_setup.ps1` prefers the installed `1.98.1-x86_64-pc-windows-gnu` Rust toolchain for local workspace tests when it is available. This avoids accidental resolution of Git's `link.exe` on hosts without a working MSVC linker while keeping Windows runner coverage `best-effort` until Track 13 provisions hosted or self-hosted Windows lanes.
 
 ## Python
 

@@ -48,7 +48,7 @@ Invoke-Optional "Install Rust formatter and linter components" {
 
 if (-not $SkipCargoInstalls) {
     $cargoInstall = @("cargo")
-    $gnuToolchain = "stable-x86_64-pc-windows-gnu"
+    $gnuToolchain = "1.98.1-x86_64-pc-windows-gnu"
     $toolchains = @(rustup toolchain list)
     if ($toolchains -match [regex]::Escape($gnuToolchain)) {
         $cargoInstall = @("rustup", "run", $gnuToolchain, "cargo")

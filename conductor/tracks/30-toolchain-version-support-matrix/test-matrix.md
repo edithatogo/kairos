@@ -1,6 +1,6 @@
 # Test Matrix: Track 30 Toolchain & Version Support Matrix
 
-Last updated: 2026-05-07.
+Last updated: 2026-09-28.
 
 | Check | Alpha | Beta | RC | 1.0 | Current evidence |
 |---|---:|---:|---:|---:|---|
@@ -20,14 +20,21 @@ Last updated: 2026-05-07.
 | Release checklist (Track 15) references the toolchain matrix gate | no | no | yes | yes | Out of current owned scope; handed off to Track 15. |
 | Deprecation notice appears in release notes for 2 cycles before removal | no | partial | yes | yes | Matrix policy now requires it; release-note implementation remains Track 15/16 scope. |
 | New major language versions are added to the matrix within 1 release cycle | yes | yes | yes | yes | Runner coverage policy now requires refresh within one KairoECS release cycle. |
+| Rust baseline is exact and reproducible | yes | yes | yes | yes | `rust-toolchain.toml` and `mise.toml` pin `1.98.1`; core CI uses the same exact version. |
+| Advertised Rust MSRV is exercised | yes | yes | yes | yes | `ci-core.yml` tests the default-feature workspace using `rustup run 1.76.0 cargo test --workspace --locked`. |
+| Rust beta canary is date/version qualified and advisory | yes | yes | yes | yes | Beta lane expects `1.99.0-beta.8` observed 2026-09-27 and uses `continue-on-error`; exact version mismatch is reported. |
+| Rust exact-version mismatch is rejected | yes | yes | yes | yes | `validate-toolchain-matrix.ps1 -ExpectedVersion` compares the complete Rust version string. |
 
 ## Focused Validation Commands
 
 | Command | Result | Evidence |
 |---|---|---|
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` | Pass | Static matrix, workflow trigger, and gate checks passed locally on 2026-05-07. |
-| `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedPrefix 1.94` | Pass | Local Rust reports 1.94; the local toolchain is behind the matrix's current stable CI lane. |
-| `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedPrefix 1.95` | Expected fail | Local Rust reports 1.94; GitHub Actions is expected to install stable 1.95 for the matrix lane. |
+| `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedVersion 1.98.1` | Pass | Exact tested baseline check; see dated validation receipt below. |
+| `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedVersion 1.99.0-beta.8` | Pass when beta matches snapshot; otherwise advisory mismatch | Dated beta canary snapshot observed 2026-09-27; exact mismatch is non-blocking in CI. |
+| `rustup run 1.76.0 cargo test --workspace --locked` | Pass: 228 tests, 64 suites | `conductor/evidence/d1.2-msrv-rust-1.76.0-20260928.log`; SHA-256 `96c13eab2d8dffa17d802fb989c79b915012cc0a652cf79f22b0fcadceafbd35` |
+| `rustup run 1.98.1 cargo test --workspace --locked` | Pass: 228 tests, 64 suites | `conductor/evidence/d1.2-stable-rust-1.98.1-20260928.log`; SHA-256 `0fdb8d567f804b6efe00b2c34ab43a23fdd2cefd4bebb393d223f1fbb106f551` |
+| `rustup run beta cargo check --workspace --locked` | Pass: Rust 1.99.0-beta.8 | `conductor/evidence/d1.2-beta-rust-1.99.0-beta.8-20260928.log`; SHA-256 `7ca6672bf4f51b770470cab9cf4e5272482d33db1274bdd2d67c00dc8e84c81d` |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedPrefix 3.13` | Pass | Local `python --version` reports Python 3.13.x and matches the expected prefix. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem node -ExpectedPrefix 24` | Pass | Local Node reports 24.x. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem dotnet -ExpectedPrefix 11.0` | Pass | Local .NET reports 11.0; the machine currently defaults to preview, not the stable 10.0 SDK lane. |
@@ -35,6 +42,22 @@ Last updated: 2026-05-07.
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem go -ExpectedPrefix 1.26` | Pass | Local Go reports 1.26.x. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedPrefix 3.11` | Expected fail | Local `python --version` reports Python 3.13.x, proving that prefix mismatch detection is active. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedPrefix 9.99` | Expected fail | Validator returned `python version mismatch`, proving mismatch detection. |
+## D1.2 toolchain and security receipts — 2026-09-28
+
+- Rust 1.76.0 workspace: 228 tests, 64 suites passed; log SHA-256
+  `96c13eab2d8dffa17d802fb989c79b915012cc0a652cf79f22b0fcadceafbd35`.
+- Rust 1.98.1 workspace: 228 tests, 64 suites passed; log SHA-256
+  `0fdb8d567f804b6efe00b2c34ab43a23fdd2cefd4bebb393d223f1fbb106f551`.
+- Rust 1.99.0-beta.8 `cargo check --workspace --locked`: passed; log SHA-256
+  `7ca6672bf4f51b770470cab9cf4e5272482d33db1274bdd2d67c00dc8e84c81d`.
+- Track 13 supply-chain script: metadata, cargo-deny and cargo-audit 0.22.1
+  passed; raw log SHA-256
+  `b8ab651da5cd1ed7593952d462dce03098faae8950f57f7c84f23b6e51be74e0`.
+- RUSTSEC-2026-0204: patched lock pin `crossbeam-epoch 0.9.20` (MSRV 1.61);
+  no package manifest change.
+- `actionlint` on the eight affected workflows and `git diff --check`: passed.
+  Hosted Actions and Windows remain unverified.
+
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.

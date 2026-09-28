@@ -12,6 +12,7 @@ on:
       - "conductor/tracks/30-toolchain-version-support-matrix/**"
       - ".github/workflows/toolchain-check.yml"
       - "rust-toolchain.toml"
+      - "templates/rust-toolchain.toml"
       - "Cargo.toml"
       - "mise.toml"
       - "bindings/python/pyproject.toml"
@@ -30,6 +31,7 @@ on:
       - "conductor/tracks/30-toolchain-version-support-matrix/**"
       - ".github/workflows/toolchain-check.yml"
       - "rust-toolchain.toml"
+      - "templates/rust-toolchain.toml"
       - "Cargo.toml"
       - "mise.toml"
       - "bindings/python/pyproject.toml"
@@ -63,10 +65,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - channel: stable
-            expected-prefix: "1.95"
+          - channel: "1.98.1"
+            expected-version: "1.98.1"
+            advisory: false
           - channel: beta
-            expected-prefix: "1."
+            expected-version: "1.99.0-beta.8"
+            advisory: true
+    continue-on-error: ${{ matrix.advisory }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -76,12 +81,17 @@ jobs:
           CHANNEL: ${{ matrix.channel }}
         run: |
           rustup toolchain install "$CHANNEL" --profile minimal --component rustfmt --component clippy
-          rustup override set "$CHANNEL"
       - name: Validate installed Rust channel
         shell: pwsh
         env:
-          EXPECTED_PREFIX: ${{ matrix.expected-prefix }}
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedPrefix $env:EXPECTED_PREFIX
+          RUSTUP_TOOLCHAIN: ${{ matrix.channel }}
+          EXPECTED_VERSION: ${{ matrix.expected-version }}
+        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedVersion $env:EXPECTED_VERSION
+      - name: Compile workspace on advisory beta
+        if: matrix.advisory
+        env:
+          RUSTUP_TOOLCHAIN: ${{ matrix.channel }}
+        run: cargo check --workspace --locked
 
   python:
     name: Python ${{ matrix.python-version }}

@@ -65,8 +65,8 @@ paths while native FFI artifacts are still being stabilized.
 ## Quick Validation
 
 ```powershell
-cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-core -p kairo-ecs-state
-cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm
+cargo +1.98.1-x86_64-pc-windows-gnu test -p kairo-ecs-core -p kairo-ecs-state
+cargo +1.98.1-x86_64-pc-windows-gnu test -p kairo-ecs-des -p kairo-ecs-abm
 node tests/conformance/conformance-check.mjs
 npm --prefix website run check:all
 pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1

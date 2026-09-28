@@ -20,10 +20,10 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - name: Install Rust stable
+      - name: Install Rust 1.98.1
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt --component clippy
-          rustup default stable
+          rustup toolchain install 1.98.1 --profile minimal --component rustfmt --component clippy
+          rustup default 1.98.1
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
       - name: Install cargo tools
         run: |
@@ -49,3 +49,15 @@ jobs:
           test -f deny.toml
           cargo deny check advisories sources
           cargo audit
+
+  rust-msrv:
+    name: Rust 1.76 default-feature MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Install Rust 1.76.0
+        run: rustup toolchain install 1.76.0 --profile minimal
+      - name: Test published workspace baseline
+        run: rustup run 1.76.0 cargo test --workspace --locked
