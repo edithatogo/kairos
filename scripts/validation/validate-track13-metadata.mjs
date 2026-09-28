@@ -247,6 +247,12 @@ for (const workflow of workflowFiles) {
 }
 
 requireTerms('.github/workflows/ci-core.yml', [
+  'taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29',
+  'cargo-nextest@0.9.133',
+  'cargo-deny@0.18.9',
+  'cargo-audit@0.22.1',
+  'cargo-llvm-cov@0.6.18',
+  'fallback: none',
   'cargo metadata --no-deps --format-version 1',
   'cargo fmt --all --check',
   'cargo clippy --workspace --all-targets --all-features -- -D warnings',

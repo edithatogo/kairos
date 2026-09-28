@@ -30,6 +30,9 @@ read back after integration before the issues can be closed.
 - Core CI remains the sole cargo audit/advisory scan. Policy CI still checks
   workflow/dependency policy metadata but no longer installs and repeats both
   scanners.
+- CI installs the pinned cargo tools from their release binaries through a
+  SHA-pinned installer action with checksum verification and source-build
+  fallback disabled, avoiding long cold `cargo install` builds.
 - Pull-request runs cancel stale runs for the same ref; push and scheduled work
   remain non-cancellable. The daily heavy Miri/benchmark lane is filtered away
   from the additional weekly mutation schedule, avoiding a duplicate Sunday run.
@@ -53,7 +56,7 @@ required status checks. Repository Actions settings now enforce full-SHA
 references and selected publishers: GitHub-owned actions plus the publishers
 used by current workflows (`anchore`, `codecov`, `gitleaks`, `github`,
 `julia-actions`, `lycheeverse`, `ossf`, `pypa`, `r-lib`, `Swatinem`, and
-`zizmorcore`). All checked workflow `uses:` references are SHA-pinned.
+`taiki-e`, and `zizmorcore`). All checked workflow `uses:` references are SHA-pinned.
 Configure stable required check
 names after the hosted run succeeds, then capture a settings readback before
 closing #121. No team, CODEOWNERS, or human approval requirement is introduced.

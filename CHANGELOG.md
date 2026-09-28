@@ -17,6 +17,7 @@ Format:
 ### Added
 
 - Scheduler property, bounded fuzz, mutation, and core-coverage gates, with one instrumented workspace test pass and selected GitHub Actions publishers.
+- Core CI installs pinned Rust tooling from checksum-verified release binaries to avoid slow source builds on clean runners.
 - Conductor setup for KairoECS tracks, subagents, release engineering, community adoption, and red-team review.
 - Release governance slice covering changelog enforcement, compatibility/deprecation rules, release evidence, and maintenance handoff.
 - Track 16 maintainer rotation and escalation record for release-manager, compatibility-review, package-evidence, supply-chain, and docs-review coverage.
