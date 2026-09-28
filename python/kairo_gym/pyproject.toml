@@ -10,4 +10,4 @@ requires-python = ">=3.9"
 dependencies = []
 
 [project.optional-dependencies]
-gymnasium = ["gymnasium>=0.29"]
+gymnasium = ["gymnasium>=0.29.1"]
