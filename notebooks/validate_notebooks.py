@@ -70,7 +70,12 @@ def validate_notebook(path: Path) -> None:
                 path, index, source, allow_notebook_magics=is_colab_smoke
             )
             if not is_colab_smoke:
-                ast.parse(source, filename=f"{path}:{index}")
+                try:
+                    ast.parse(source, filename=f"{path}:{index}")
+                except SyntaxError as error:
+                    raise AssertionError(
+                        f"{path}:{index}: Syntax error: {error}"
+                    ) from error
         else:
             raise AssertionError(f"{path}: unsupported cell type {cell_type!r}")
 
