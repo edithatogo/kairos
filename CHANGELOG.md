@@ -54,6 +54,7 @@ Format:
 
 ### Fixed
 
+- Update the locked Rust dependency `crossbeam-epoch` to 0.9.20, which includes the fix for RUSTSEC-2026-0204.
 - Scheduler dispatch now removes pending IDs in release builds, preserving pending counts and preventing cancellation of already-dispatched events.
 - Go binding CI now runs `gofmt` with shellcheck-safe file argument handling while preserving the existing tracked-file format gate.
 - Track 13 workflow inventory gates now include `.github/workflows/gpu-free-smoke.yml` so conductor metadata validation covers the new GPU-free smoke workflow.
