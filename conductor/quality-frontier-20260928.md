@@ -62,7 +62,10 @@ read back after integration before the issues can be closed.
 ## Hosted settings readback
 
 Legacy `main` branch protection blocks force-push and deletion, enforces admins
-and linear history, and requires zero human approvals. Required checks are
+and linear history, and requires zero human approvals. This is deliberate for
+the solo-maintainer model in issue #121; Scorecard's CodeReview alert #117 is
+therefore an evidence-backed exclusion until a qualified second maintainer is
+available, rather than a reason to impose an unstaffed approval gate. Required checks are
 configured in the separate active ruleset. Repository Actions settings enforce full-SHA
 references and selected publishers: GitHub-owned actions plus the publishers
 used by current workflows (`anchore`, `codecov`, `gitleaks`, `github`,
@@ -85,8 +88,10 @@ Clippy, one workspace test-and-coverage pass, docs, and dependency policy. The
 first trusted main push must still verify the Codecov repository, uploaded
 report, and main commit status.
 
-Current readback: full-SHA pinning and selected publisher policy are enforced;
-43 Dependabot alerts remain open (2 critical, 19 high, 18 moderate, 4 low).
+Current default-branch security snapshot (2026-09-29, `fae901558f07b7b717a676adbafbe2cdc78dea1c`): 43 Dependabot alerts (2 critical,
+19 high, 18 moderate, 4 low), 13 code-scanning alerts, and 0 secret-scanning
+alerts. This snapshot predates integration of this branch; its alert counts do
+not represent the state after these changes.
 Dependabot-created update PRs from September 3–18 remain open alongside active
 Renovate PRs and its Dependency Dashboard. No Dependabot configuration file is
 present in `.github` on `main`; the remaining Dependabot PRs are backlog to
@@ -103,6 +108,28 @@ and a live repository API readback confirmed private vulnerability reporting is
 enabled (`enabled: true`). The policy names GitHub Security Advisory publication
 as the coordinated public disclosure route and does not invent an email contact.
 Refresh Scorecard's hosted finding after this branch is integrated.
+
+### Scorecard alert dispositions
+
+These are dispositions against the default-branch Scorecard snapshot at
+`fae9015` (2026-09-29), not claims that hosted alerts are cleared. A fresh
+default-branch scan is required after integration.
+
+| Alert | Disposition and remaining evidence gate |
+| --- | --- |
+| #117 CodeReview | Intentional solo-maintainer exclusion: required approvals remain zero under issue #121. Reconsider when a qualified second maintainer is available; do not weaken this staffing constraint to improve the score. |
+| #119 CII Best Practices | No CII badge or certification is currently claimed. This is an external, voluntary program; do not mark satisfied absent an application and independently verified award. |
+| #118 SecurityPolicy | Branch policy text and enabled private vulnerability reporting address the finding locally. The fix is unmerged; hosted alert closure remains pending a post-integration scan. |
+| #120 SASTID, #121 FuzzingID | Latest default-branch scan reports 21/22 commits scanned for these code-scanning checks. Branch workflows add CodeQL and bounded fuzzing, but these findings remain open until a fresh default-branch scan confirms coverage. |
+| #482 VulnerabilitiesID | Default-branch snapshot reports 31 advisories. No local evidence here establishes that this alert is cleared; refresh dependency scanning on the integrated default branch and triage any remaining advisories. |
+| #455, #454, #453, #404, #403, #386, #377 PinnedDependencies | Local source fixes and validation are recorded below. Hosted findings remain pending integration and a new Scorecard scan. |
+
+The active ruleset currently requires five stable checks: `Rust core quality`,
+`CodeQL (javascript)`, `gitleaks`, `Reject CI skip directives`, and `code and
+repository health`. Branch protection enforces admins and linear history with
+zero required human approvals, consistent with issue #121. These controls are
+current settings readback; they do not clear the default-branch CodeReview
+finding or the other Scorecard alerts by themselves.
 
 ## Local validation receipt
 
