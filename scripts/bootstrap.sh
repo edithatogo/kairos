@@ -5,10 +5,10 @@ for tool in just; do
   cargo install "$tool" --version "1.50.0" --locked || true
 done
 for spec in \
-  "cargo-nextest@0.9.133" \
-  "cargo-deny@0.18.9" \
-  "cargo-audit@0.22.1" \
-  "cargo-llvm-cov@0.6.18"; do
+  "cargo-nextest@0.9.146" \
+  "cargo-deny@0.20.2" \
+  "cargo-audit@0.22.2" \
+  "cargo-llvm-cov@0.9.1"; do
   cargo install "${spec%@*}" --version "${spec#*@}" --locked || true
 done
 python -m pip install -U pip==25.0.1 || true
