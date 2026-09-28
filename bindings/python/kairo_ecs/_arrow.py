@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, TypeVar
 
 from ._types import DispatchedEvent, EntityId, EventId
+
+_HandleT = TypeVar("_HandleT", EventId, EntityId)
 
 SCHEMA_VERSION = 1
 EVENT_LOG_STREAM = "kairo_ecs.event_log.v1"
@@ -231,15 +233,15 @@ def _handle_bytes(handle: EventId | EntityId) -> bytes:
     return handle.index.to_bytes(8, "little") + handle.generation.to_bytes(4, "little")
 
 
-def _parse_handle(hex_value: str, kind: type[EventId | EntityId]) -> EventId | EntityId:
+def _parse_handle(hex_value: str, kind: type[_HandleT]) -> _HandleT:
     if len(hex_value) != 24:
         raise ValueError("handle must be 12 bytes")
     return _parse_handle_bytes(bytes.fromhex(hex_value), kind)
 
 
 def _parse_handle_bytes(
-    payload: bytes, kind: type[EventId | EntityId]
-) -> EventId | EntityId:
+    payload: bytes, kind: type[_HandleT]
+) -> _HandleT:
     if len(payload) != 12:
         raise ValueError("handle must be 12 bytes")
     return kind(int.from_bytes(payload[:8], "little"), int.from_bytes(payload[8:12], "little"))
