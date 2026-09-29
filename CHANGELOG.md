@@ -44,6 +44,7 @@ Format:
 
 ### Changed
 
+- Python scheduler and FFI modules no longer import future annotation handling where every annotation resolves at module definition on the supported Python versions.
 - The optional Python Arrow extra now requires PyArrow 25.0.1 or later; the supported Python range remains 3.10–3.14.
 
 - Toolchain docs validation now recognizes the pinned `just` and npm CLI commands used by the Unix bootstrap script.
