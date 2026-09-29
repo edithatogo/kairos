@@ -44,6 +44,14 @@ Live runtime claims are still blocked by environment availability. Record eviden
 
 Blockers are explicitly constrained to runtime proof capture, not offline validation. Offline validators remain valid and usable for PR smoke checks and schema review.
 
+## Azure Batch substrate canary -- 2026-05-20
+
+- Accepted partial evidence: a live Azure Batch CPU substrate canary completed in the Azure for Students subscription. The run created a disposable resource group, storage account/container, Batch account, one low-priority `standard_a1_v2` Ubuntu pool node, job `kairos-canary-20260520`, and task `kairos-canary-task-001`.
+- Result: the task completed successfully with exit code `0` and returned stdout/stderr. Sanitized evidence is recorded in `docs/cloud-hpc/azure-batch-canary-2026-05-20.md`.
+- Boundary: this is substrate evidence only. It does not prove Docker image execution, `kairo-ecs-cli` scenario execution, telemetry output/checksum generation from KairoECS, GPU parity, HPC scaling, or production registry acceptance.
+- Deferred by environment: local Docker could not connect to a Docker daemon, so a readable `kairo-ecs-cli` image was not built and pushed from this host. The Batch quota report showed zero GPU/HPC-family quota, so GPU/HPC hardware proof remains blocked in this subscription.
+- Hygiene: raw Azure CLI scratch notes and stdout/stderr captures remain under ignored `.azure/`; the repo-tracked evidence stays sanitized and account identifiers remain out of public docs.
+
 ## Next-phase decision
 
 Remain `In Review`. Offline validation is complete for this slice, but live Docker, Kubernetes, Slurm, and provider evidence still needs to be captured before any readiness claim.

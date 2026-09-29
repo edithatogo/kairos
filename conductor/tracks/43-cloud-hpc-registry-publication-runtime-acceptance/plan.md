@@ -23,6 +23,10 @@
 - [ ] Run Kubernetes canary.
 - [ ] Run Slurm canary.
 - [ ] Run AWS/GCP/Azure Batch canaries.
+  - [x] Azure CPU Batch substrate canary completed on 2026-05-20.
+  - [ ] Azure `kairo-ecs-cli` container/scenario canary with output/checksum evidence.
+  - [ ] AWS Batch canary.
+  - [ ] GCP Batch canary.
 
 ## Phase closeout gate
 
