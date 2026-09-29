@@ -63,6 +63,9 @@ ci: # Same core checks as the required Rust CI lane; run before opening a PR.
     cargo deny check advisories sources
     cargo audit
 
+quality-drift:
+    node scripts/validation/quality-frontier-drift.mjs --output artifacts/quality-frontier-drift.json
+
 bindings-smoke:
     echo "Run Python/R/Julia/TS/C#/Go smoke tests when bindings exist."
 
