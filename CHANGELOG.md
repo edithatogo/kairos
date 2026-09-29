@@ -64,6 +64,8 @@ Format:
 
 ### Fixed
 
+- Upgrade Astro to 7.3.5 and its Starlight integration/plugins to security-compatible releases, fixing the critical Astro image-optimization remote-code-execution alert.
+
 - Trusted-main Codecov uploads now check out the repository configuration before uploading the coverage artifact.
 - Kubernetes experiment scenario keys are now restricted to safe single-component filenames and are passed to the inline writer through environment variables, preventing shell injection and path traversal.
 - Website documentation search now renders indexed content as text and accepts only same-origin HTTP(S) links, preventing search-index DOM XSS.
