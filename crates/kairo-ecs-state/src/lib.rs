@@ -511,4 +511,45 @@ mod tests {
         assert!(store.sparse.capacity() >= additional);
         assert!(store.entities.capacity() >= additional);
     }
+
+    #[test]
+    fn world_reserve_adds_capacity_after_entities_exist() {
+        let mut world = World::new();
+        world.spawn();
+        world.spawn();
+        let additional = 10;
+
+        let slots_required = world.slots.len() + additional;
+        let free_indices_required = world.free_indices.len() + additional;
+        let live_entities_required = world.live_entities.len() + additional;
+        let live_positions_required = world.live_positions.len() + additional;
+
+        world.reserve(additional);
+
+        assert!(world.slots.capacity() >= slots_required);
+        assert!(world.free_indices.capacity() >= free_indices_required);
+        assert!(world.live_entities.capacity() >= live_entities_required);
+        assert!(world.live_positions.capacity() >= live_positions_required);
+    }
+
+    #[test]
+    fn component_store_reserve_adds_capacity_after_components_exist() {
+        let mut world = World::new();
+        let entities = [world.spawn(), world.spawn(), world.spawn()];
+        let mut store = ComponentStore::<u32>::new();
+        for (value, entity) in entities.into_iter().enumerate() {
+            assert!(store.insert(entity, value as u32));
+        }
+        let additional = 10;
+
+        let dense_required = store.dense.len() + additional;
+        let sparse_required = store.sparse.len() + additional;
+        let entities_required = store.entities.len() + additional;
+
+        store.reserve(additional);
+
+        assert!(store.dense.capacity() >= dense_required);
+        assert!(store.sparse.capacity() >= sparse_required);
+        assert!(store.entities.capacity() >= entities_required);
+    }
 }
