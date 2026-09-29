@@ -478,4 +478,37 @@ mod tests {
         assert!(world.live_entities.capacity() >= capacity);
         assert!(world.live_positions.capacity() >= capacity);
     }
+
+    #[test]
+    fn component_store_with_capacity_reserves_all_storage_vectors() {
+        let capacity = 42;
+        let store = ComponentStore::<u32>::with_capacity(capacity);
+
+        assert!(store.dense.capacity() >= capacity);
+        assert!(store.sparse.capacity() >= capacity);
+        assert!(store.entities.capacity() >= capacity);
+    }
+
+    #[test]
+    fn world_reserve_grows_all_storage_vectors_from_empty() {
+        let additional = 10;
+        let mut world = World::new();
+        world.reserve(additional);
+
+        assert!(world.slots.capacity() >= additional);
+        assert!(world.free_indices.capacity() >= additional);
+        assert!(world.live_entities.capacity() >= additional);
+        assert!(world.live_positions.capacity() >= additional);
+    }
+
+    #[test]
+    fn component_store_reserve_grows_all_storage_vectors_from_empty() {
+        let additional = 10;
+        let mut store = ComponentStore::<u32>::new();
+        store.reserve(additional);
+
+        assert!(store.dense.capacity() >= additional);
+        assert!(store.sparse.capacity() >= additional);
+        assert!(store.entities.capacity() >= additional);
+    }
 }
