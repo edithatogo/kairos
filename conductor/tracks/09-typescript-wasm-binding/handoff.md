@@ -111,6 +111,14 @@ Strict cleanup gate `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTre
 
 Additional closeout evidence on 2026-05-08 confirmed `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passes, so the default Rust wrapper unit-test blocker is resolved.
 
+## Full cancellation lifecycle follow-up — 2026-09-30
+
+Review found that lazy cancellation left tombstones for `step()` to discard with repeated `Array.shift()`, moving quadratic array compaction into later dispatch. Commit `d962d9f7bd647d011ee5498ac67cf795bc7492d9` adds a queue-head cursor and amortized prefix compaction, a regression test that cancels 3,072 of 4,096 events before draining/inserting another event, and a benchmark that times both cancellation and complete dispatch drain. This supersedes the cancellation-only result above as the performance evidence for the candidate.
+
+On Node `v22.23.3`, Darwin arm64, Apple M1 Max, baseline `384e8546d69f9cbf2746fcb2ab646263256e6dec`, candidate `d962d9f7bd647d011ee5498ac67cf795bc7492d9`, 20,000 events, 10,000 cancellations, and three repetitions, median full-lifecycle times were 2,009.505 ms baseline versus 18.368 ms candidate for reverse-end cancellation (109.4x), and 1,527.449 ms versus 3.717 ms for seeded-random cancellation (410.9x). The benchmark asserts every remaining event drains exactly once and the queue is empty afterward. Raw results are in `bindings/typescript/bench/results-node22-20k.json`.
+
+Validation on the candidate source: `npm test` passed (2 files, 8 tests), `npm run typecheck` passed, benchmark completed with exit 0, and `git diff --check` passed before commit. The benchmark runtime archive was Node's official v22.23.3 Darwin ARM64 build and its SHA-256 matched the official `SHASUMS256.txt`. Fresh hosted Actions on the pushed commit remain required before this PR is considered ready.
+
 2026-05-08 review reconciliation:
 
 - `$conductor-review` result: no in-scope TypeScript/Wasm code defect was found, but closeout is process-blocked because commit and pushed-ref evidence remain blocked in the shared dirty worktree.

@@ -1,7 +1,7 @@
 {
-  "baselineRef": "384e8546d69f9cbf2746fcb2ab646263256e6dec",
+  "baselineRef": "origin/main",
   "baselineSha": "384e8546d69f9cbf2746fcb2ab646263256e6dec",
-  "candidateSha": "ca798012e9a5b95fe68d22684105d01a4e1368fd",
+  "candidateSha": "d962d9f7bd647d011ee5498ac67cf795bc7492d9",
   "runtime": "v22.23.3",
   "platform": "darwin",
   "arch": "arm64",
@@ -9,26 +9,110 @@
   "events": 20000,
   "cancellations": 10000,
   "repetitions": 3,
-  "timing": "cancellation loop only; event scheduling and snapshot assertions are outside the timed interval",
+  "timing": "cancellation loop and full drain are measured separately; scheduling and snapshot assertions are outside the timed intervals",
   "randomOrder": "LCG seed 0x84c0ffee with Fisher-Yates shuffle; first requested IDs are cancelled",
   "measurements": {
     "reverse-end": {
-      "rawMs": {
-        "baseline": [2165.523459, 1576.9570000000003, 1457.5991250000006],
-        "candidate": [11.644792000000052, 15.540250000000015, 1.137084000001778]
+      "rawMeasurements": {
+        "baseline": [
+          {
+            "cancellationMs": 1942.2740839999997,
+            "drainMs": 67.2308750000002,
+            "totalMs": 2009.5049589999999
+          },
+          {
+            "cancellationMs": 1411.0064590000002,
+            "drainMs": 284.877708,
+            "totalMs": 1695.8841670000002
+          },
+          {
+            "cancellationMs": 1863.9750419999982,
+            "drainMs": 203.22404200000165,
+            "totalMs": 2067.199084
+          }
+        ],
+        "candidate": [
+          {
+            "cancellationMs": 26.075082999999722,
+            "drainMs": 4.889667000000372,
+            "totalMs": 30.964750000000095
+          },
+          {
+            "cancellationMs": 1.4540830000005371,
+            "drainMs": 9.95641699999942,
+            "totalMs": 11.410499999999956
+          },
+          {
+            "cancellationMs": 0.9235000000007858,
+            "drainMs": 17.444666999999754,
+            "totalMs": 18.36816700000054
+          }
+        ]
       },
-      "baselineMedianMs": 1576.9570000000003,
-      "candidateMedianMs": 11.644792000000052,
-      "medianSpeedup": 135.42165459030898
+      "medianMeasurements": {
+        "baseline": {
+          "cancellationMs": 1863.9750419999982,
+          "drainMs": 203.22404200000165,
+          "totalMs": 2009.5049589999999
+        },
+        "candidate": {
+          "cancellationMs": 1.4540830000005371,
+          "drainMs": 9.95641699999942,
+          "totalMs": 18.36816700000054
+        }
+      },
+      "totalLifecycleSpeedup": 109.40149656740059
     },
     "seeded-random": {
-      "rawMs": {
-        "baseline": [1639.0292910000026, 1645.3866249999992, 1480.9417080000057],
-        "candidate": [12.191291999999521, 1.676833000001352, 31.848791999997047]
+      "rawMeasurements": {
+        "baseline": [
+          {
+            "cancellationMs": 1518.4647919999989,
+            "drainMs": 52.81812499999796,
+            "totalMs": 1571.2829169999968
+          },
+          {
+            "cancellationMs": 1334.225957999999,
+            "drainMs": 77.01058300000295,
+            "totalMs": 1411.236541000002
+          },
+          {
+            "cancellationMs": 1457.8202909999964,
+            "drainMs": 69.62883299999521,
+            "totalMs": 1527.4491239999916
+          }
+        ],
+        "candidate": [
+          {
+            "cancellationMs": 1.9330420000005688,
+            "drainMs": 1.7839590000003227,
+            "totalMs": 3.7170010000008915
+          },
+          {
+            "cancellationMs": 1.3522499999999127,
+            "drainMs": 10.984333000000333,
+            "totalMs": 12.336583000000246
+          },
+          {
+            "cancellationMs": 1.2229999999981374,
+            "drainMs": 1.6717079999943962,
+            "totalMs": 2.8947079999925336
+          }
+        ]
       },
-      "baselineMedianMs": 1639.0292910000026,
-      "candidateMedianMs": 12.191291999999521,
-      "medianSpeedup": 134.44262437484616
+      "medianMeasurements": {
+        "baseline": {
+          "cancellationMs": 1457.8202909999964,
+          "drainMs": 69.62883299999521,
+          "totalMs": 1527.4491239999916
+        },
+        "candidate": {
+          "cancellationMs": 1.3522499999999127,
+          "drainMs": 1.7839590000003227,
+          "totalMs": 3.7170010000008915
+        }
+      },
+      "totalLifecycleSpeedup": 410.9358926725135
     }
   }
 }
