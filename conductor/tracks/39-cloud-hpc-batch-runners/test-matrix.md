@@ -11,6 +11,7 @@
 | Kubernetes CRD (`kairoecs-experiment.yaml`) is valid against `apiextensions.k8s.io/v1` schema | yes | yes | yes |
 | Kubernetes operator smoke test: create experiment CR, verify pod spawns, verify phase transitions to Completed | no | yes | yes |
 | Kubernetes operator smoke test: experiment with intentional failure transitions to Failed phase | no | yes | yes |
+| Kubernetes scenario filename is validated before it reaches ConfigMap paths, volume mounts, or shell commands | yes | yes | yes |
 | Slurm `submit-experiment.sh` wrapper syntax-checked and prepared for scheduler canary submission via `hpc/slurm/submit-experiment.sh --scenario scenarios/factory_bottleneck_v1.yaml --output /tmp/kairo-ecs-runs --partition gpu --nodes 1` | yes | yes | yes |
 | Slurm job array `submit-sweep.sh` produces correct `#SBATCH --array=0-N` directive for N-1 variants | yes | yes | yes |
 | Spot checkpoint/restore test: send SIGTERM to running container, verify checkpoint file written with non-zero size | yes | yes | yes |
@@ -26,6 +27,8 @@
 | Telemetry checksum verification is automated in CI using local S3-compatible service (MinIO/moto) | no | no | yes |
 
 ## Current local validation
+
+- `python -m unittest discover -s k8s/operator -p 'test_*.py'` covers traversal, absolute paths, shell metacharacters, safe defaults, and both inline and ConfigMap sources.
 
 - `python cloud/validate_cloud_hpc.py` passed on 2026-05-11 and remains the detailed Track 39 offline validator, including the `kairo-ecs-cli` command surface.
 - `python k8s/operator/kairoecs_operator.py --experiment k8s/samples/experiment.json` renders the sample `batch/v1` indexed Job.
