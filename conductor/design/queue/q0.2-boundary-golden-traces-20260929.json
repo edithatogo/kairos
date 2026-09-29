@@ -1,0 +1,393 @@
+{
+  "fixture": "des_resource_queue_boundaries_v1",
+  "version": 1,
+  "provenance": "synthetic",
+  "evidence": [
+    {
+      "id": "CM-DEADLINE-GRANT-001",
+      "classification": "proposed_policy_trace_reference"
+    },
+    {
+      "id": "CM-COMP-PREEMPT-001",
+      "classification": "proposed_policy_trace_reference"
+    },
+    {
+      "id": "CM-CAPACITY-001",
+      "classification": "proposed_policy_trace_reference"
+    }
+  ],
+  "cases": [
+    {
+      "id": "release_at_exclusive_deadline",
+      "initial_capacity": 1,
+      "initial_active": [
+        {
+          "request_id": "H",
+          "priority": 5,
+          "admission_sequence": 0
+        }
+      ],
+      "initial_queued": [
+        {
+          "request_id": "D",
+          "priority": 1,
+          "admission_sequence": 1,
+          "deadline": 5
+        }
+      ],
+      "operations": [
+        {
+          "at_ticks": 5,
+          "op": {
+            "dispatch_release": {
+              "request_id": "H"
+            }
+          }
+        },
+        {
+          "at_ticks": 5,
+          "op": {
+            "dispatch_timeout": {
+              "request_id": "D"
+            }
+          }
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 5,
+          "capacity": 1,
+          "active": [],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "D",
+              "status": "TimedOut"
+            },
+            {
+              "request_id": "H",
+              "status": "Released"
+            }
+          ],
+          "granted": [],
+          "completed": [],
+          "timed_out": [
+            "D"
+          ],
+          "interrupted": [],
+          "accepted": true
+        },
+        {
+          "at_ticks": 5,
+          "capacity": 1,
+          "active": [],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "D",
+              "status": "TimedOut"
+            },
+            {
+              "request_id": "H",
+              "status": "Released"
+            }
+          ],
+          "granted": [],
+          "completed": [],
+          "timed_out": [
+            "D"
+          ],
+          "interrupted": [],
+          "accepted": true
+        }
+      ],
+      "invariant": "A queued deadline is exclusive: D times out at tick 5 before release arbitration and is never granted, even when release dispatches before its timeout token."
+    },
+    {
+      "id": "timeout_token_at_exclusive_deadline",
+      "initial_capacity": 1,
+      "initial_active": [
+        {
+          "request_id": "H",
+          "priority": 5,
+          "admission_sequence": 0
+        }
+      ],
+      "initial_queued": [
+        {
+          "request_id": "D",
+          "priority": 1,
+          "admission_sequence": 1,
+          "deadline": 5
+        }
+      ],
+      "operations": [
+        {
+          "at_ticks": 5,
+          "op": {
+            "dispatch_timeout": {
+              "request_id": "D"
+            }
+          }
+        },
+        {
+          "at_ticks": 5,
+          "op": {
+            "dispatch_release": {
+              "request_id": "H"
+            }
+          }
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 5,
+          "capacity": 1,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 5,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "D",
+              "status": "TimedOut"
+            }
+          ],
+          "granted": [],
+          "completed": [],
+          "timed_out": [
+            "D"
+          ],
+          "interrupted": [],
+          "accepted": true
+        },
+        {
+          "at_ticks": 5,
+          "capacity": 1,
+          "active": [],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "D",
+              "status": "TimedOut"
+            },
+            {
+              "request_id": "H",
+              "status": "Released"
+            }
+          ],
+          "granted": [],
+          "completed": [],
+          "timed_out": [
+            "D"
+          ],
+          "interrupted": [],
+          "accepted": true
+        }
+      ],
+      "invariant": "Preprocessing expires D at its exclusive deadline; its timeout token is then stale, and the later release cannot grant D."
+    },
+    {
+      "id": "completion_at_admission_tick",
+      "initial_capacity": 1,
+      "initial_active": [
+        {
+          "request_id": "A",
+          "priority": 5,
+          "admission_sequence": 1,
+          "completion_at": 5
+        }
+      ],
+      "initial_queued": [],
+      "operations": [
+        {
+          "at_ticks": 5,
+          "op": {
+            "submit": {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 2,
+              "work_duration": 2,
+              "can_preempt": true
+            }
+          }
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 5,
+          "capacity": 1,
+          "active": [
+            {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 2,
+              "completion_at": 7
+            }
+          ],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "A",
+              "status": "Completed"
+            }
+          ],
+          "granted": [
+            "B"
+          ],
+          "completed": [
+            "A"
+          ],
+          "timed_out": [],
+          "interrupted": [],
+          "accepted": true
+        }
+      ],
+      "invariant": "Timed work completing at T becomes Completed before admission and arbitration; A is not interrupted, and B receives the freed capacity."
+    },
+    {
+      "id": "capacity_shrink_below_active_count_rejected",
+      "initial_capacity": 2,
+      "initial_active": [
+        {
+          "request_id": "A",
+          "priority": 1,
+          "admission_sequence": 1
+        },
+        {
+          "request_id": "B",
+          "priority": 2,
+          "admission_sequence": 2
+        }
+      ],
+      "initial_queued": [],
+      "operations": [
+        {
+          "at_ticks": 1,
+          "op": {
+            "set_capacity": {
+              "capacity": 1
+            }
+          }
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 1,
+          "capacity": 2,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 1,
+              "admission_sequence": 1
+            },
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 2
+            }
+          ],
+          "queued": [],
+          "terminal": [],
+          "granted": [],
+          "completed": [],
+          "timed_out": [],
+          "interrupted": [],
+          "accepted": false
+        }
+      ],
+      "invariant": "A capacity shrink below the active allocation count rejects atomically and preserves capacity and both active allocations."
+    },
+    {
+      "id": "idle_zero_capacity_then_queue_drain",
+      "initial_capacity": 1,
+      "initial_active": [],
+      "initial_queued": [],
+      "operations": [
+        {
+          "at_ticks": 1,
+          "op": {
+            "set_capacity": {
+              "capacity": 0
+            }
+          }
+        },
+        {
+          "at_ticks": 2,
+          "op": {
+            "submit": {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 1
+            }
+          }
+        },
+        {
+          "at_ticks": 3,
+          "op": {
+            "set_capacity": {
+              "capacity": 1
+            }
+          }
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 1,
+          "capacity": 0,
+          "active": [],
+          "queued": [],
+          "terminal": [],
+          "granted": [],
+          "completed": [],
+          "timed_out": [],
+          "interrupted": [],
+          "accepted": true
+        },
+        {
+          "at_ticks": 2,
+          "capacity": 0,
+          "active": [],
+          "queued": [
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 1
+            }
+          ],
+          "terminal": [],
+          "granted": [],
+          "completed": [],
+          "timed_out": [],
+          "interrupted": [],
+          "accepted": true
+        },
+        {
+          "at_ticks": 3,
+          "capacity": 1,
+          "active": [
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 1
+            }
+          ],
+          "queued": [],
+          "terminal": [],
+          "granted": [
+            "C"
+          ],
+          "completed": [],
+          "timed_out": [],
+          "interrupted": [],
+          "accepted": true
+        }
+      ],
+      "invariant": "From idle capacity one, an accepted shrink reaches capacity zero; C then queues at zero capacity and is granted immediately when capacity grows to one."
+    }
+  ]
+}
