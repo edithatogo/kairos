@@ -13,6 +13,7 @@
 | Dependency-free unpacked FMU export validation reports missing package artifacts | yes | yes | yes |
 | `modelDescription.xml` structural validation rejects duplicate names/value references and generated output-structure mismatches | yes | yes | yes |
 | AAS structural validation rejects missing IDs and duplicate property IDs, plus duplicate submodel IDs and idShort values | yes | yes | yes |
+| AAS unit tests cover constructors/property insertion order, validation edges, duplicate properties, and valid JSON escaping for quotes, backslashes, newline, tab, and U+0001 controls | yes | yes | yes |
 | Digital-twin publication contract validation rejects invalid sample rates, topic prefixes, and non-finite values | yes | yes | yes |
 | FMU shared library loads from `.fmu` archive | yes | yes | yes |
 | Unpacked FMU layout detects `modelDescription.xml` and host binary path | yes | yes | yes |
@@ -52,6 +53,8 @@
 - Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features`
 - Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path crates/kairo-ecs-fmi/Cargo.toml --all-features --tests`
 - Passing: `cargo +stable-x86_64-pc-windows-gnu check --manifest-path examples/fmi-co-simulation/basic-import/Cargo.toml`
+- Passing (2026-09-30, local): `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features aas` (8 unit tests; includes parser-backed AAS JSON validity cases)
+- Passing (2026-09-30, local): `cargo fmt --manifest-path crates/kairo-ecs-fmi/Cargo.toml --check`
 - Blocked: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features fmi2` remains gated until live shared-library FMU execution is available on a runner with FMI-compatible binaries.
 - Passing: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/36-streaming-real-time-processing/validate-track36-40.ps1 -SkipCargoTests` covers FMI all-feature compile checks and bounded offline-claim documentation.
 ## Phase closeout gate
