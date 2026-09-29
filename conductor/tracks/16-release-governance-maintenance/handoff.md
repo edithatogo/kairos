@@ -118,3 +118,12 @@ Implementation/review pass on 2026-05-08:
 - Pushed ref: blocked; no push performed.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: not run because shared phase-closeout is already blocked and the worktree is not clean.
 - Next-phase decision: keep Track 16 `In Progress` until the unrelated Track 19 phase-closeout evidence blocker is resolved or waived; Track 16's compatibility and changelog gates are locally satisfied.
+
+## Cross-track handoff — PR #170 (2026-09-29)
+
+- Track owner: `release-agent`; requested review: validate the changelog entry for the bootstrap runtime minimum and its release-facing wording.
+- Artifact: `CHANGELOG.md` records that the pinned bootstrap npm CLI now requires Node.js >=22.9.0. No release workflow, compatibility policy, package publication, or version claim changed.
+- Contracts consumed: Track 27's bootstrap runtime declaration and the repository Node toolchain matrix.
+- Risks and follow-up: Dependabot alerts #64–66 remain unresolved upstream in npm's bundled dependencies; this PR does not represent them as fixed. Any later npm CLI update that addresses them should be separately recorded and assessed against bootstrap support policy.
+- Validation: on 2026-09-29, in `/private/tmp/kairos-bootstrap-node-security` at base `0c77e8909fc7cbf7c628cdda6350177cb9e88e8a` plus the PR worktree, `pwsh -NoProfile -File conductor/tracks/16-release-governance-maintenance/validate-release-governance.ps1` passed (exit 0; changelog and compatibility gates reported ok). The Track 16 changelog-policy rule is not triggered by this set of changed paths; the hosted changelog-policy check will provide the fresh PR-diff result. The bootstrap `npm audit` command exits 1 for unresolved #64–66; no security fix is claimed.
+- Owner acceptance: pending. Track-role names are not mapped to a GitHub reviewer for this path; do not treat the changelog portion as accepted until the Track 16 owner reviews the entry.

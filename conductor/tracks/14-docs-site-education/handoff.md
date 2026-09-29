@@ -85,3 +85,11 @@ Track 14 advanced to In Review on 2026-05-08 after `$conductor-review` found one
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: blocked until the Track 14 slice is committed and the shared worktree is clean enough for strict closeout.
 - `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1`: passed on 2026-05-09.
 - next-phase decision: Track 14 is Done with docs-build and link-check-plan gates satisfied through the npm-backed website flow; `just docs-build` now passes on Windows through the PowerShell shell override.
+
+## Cross-track handoff — PR #170 (2026-09-29)
+
+- Track owner: `docs-agent`; requested review: confirm the installation prerequisite wording is consistent with the TypeScript binding manifest and the separate repository bootstrap requirement.
+- Artifact: `docs/install.md` states Node.js 22 LTS or newer for the TypeScript/Wasm binding and Node.js >=22.9.0 for the repository bootstrap's pinned npm CLI. The binding package's declared range remains unchanged.
+- Contracts consumed: `bindings/typescript/package.json` Node engine range and `scripts/bootstrap-node-tools/package.json` Node engine declaration.
+- Validation: on 2026-09-29, in `/private/tmp/kairos-bootstrap-node-security` at base `0c77e8909fc7cbf7c628cdda6350177cb9e88e8a` plus the PR worktree, `npm ci --prefix website` passed (exit 0; system Node 26.10.0/npm 11.19.1), `npm --prefix website run check:all` passed (exit 0; 103 required paths, 3 Markdown sources, 6 navigation sections; 16 pages built; output under `website/build/`), and `pwsh -NoProfile -File conductor/tracks/14-docs-site-education/validate-docs-site.ps1` passed (exit 0). The build emitted existing empty-i18n/404 content warnings but completed successfully.
+- Owner acceptance: pending. Track-role names are not mapped to a GitHub reviewer for this path; do not treat the docs portion as accepted until the Track 14 owner reviews the prerequisite wording.
