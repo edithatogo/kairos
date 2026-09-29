@@ -221,10 +221,9 @@ mod tests {
             r#"{"type":"ModelReference","keys":[{"type":"Submodel","value":"urn:kairo:queue"}],"idShort":"queue","submodelElements":[]}"#
         );
 
-        let populated = empty.with_property(first).with_property(AasProperty::new(
-            "queueName",
-            "xs:string",
-        ));
+        let populated = empty
+            .with_property(first)
+            .with_property(AasProperty::new("queueName", "xs:string"));
         assert_eq!(
             populated.to_json(),
             r#"{"type":"ModelReference","keys":[{"type":"Submodel","value":"urn:kairo:queue"}],"idShort":"queue","submodelElements":[{"modelType":"Property","idShort":"queueDepth","valueType":"xs:integer"},{"modelType":"Property","idShort":"queueName","valueType":"xs:string"}]}"#
