@@ -85,10 +85,15 @@ No release, registry, or remote publication side effects were performed.
 
 Base: `dc8ba8f5f68168456f1e8710b62b5e59060eb8f3` (main after PR #154).
 Working tree: `/Users/doughnut/Documents/careops-sim/.worktrees/kairos-docs-ci-dedup-154`.
-The required Rust core context now aggregates stable verification and a parallel
-Rust 1.76 locked compile. Stable verification runs doctests separately from the
-single coverage-instrumented nextest suite. The clap dependency range and lock
-were constrained to releases compatible with the declared MSRV.
+The required Rust core context now aggregates stable verification, a Rust 1.76
+locked library/binary compile, and a Rust 1.77 locked wasm-export compile. The
+first hosted 1.76 attempt used stable because the repository toolchain file
+overrides `rustup default`; an explicit `cargo +1.76.0` invocation then exposed
+that current `wasm-bindgen` requires Rust 1.77. The Wasm crate now declares that
+floor and has its own wasm-target lane. Stable verification runs doctests
+separately from the single coverage-instrumented nextest suite. The clap
+dependency range and lock were constrained to releases compatible with the
+declared core MSRV.
 
 The quality drift receipt now keeps the PR-only skip guard in the five-context
 ruleset contract, verifies that its workflow source is present on main, and
@@ -105,8 +110,8 @@ Validation on this working tree:
 - `node scripts/validation/validate-track13-metadata.mjs` — exit 0; 46 tracks.
 - `cargo test --doc --workspace --all-features` — exit 0 on stable; 29.72 s;
   doc-test harnesses compiled and completed across the workspace.
-- `rustup run 1.76.0 cargo check --workspace --all-features --locked` — exit 0;
-  no tests were repeated in the MSRV lane.
+- `rustup run 1.76.0 cargo check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked` — exit 0; no tests were repeated in the core MSRV lane.
+- The Rust 1.77 Wasm MSRV lane still requires a fresh hosted result on the updated PR head.
 - `just quality-drift` — exit 1 with receipt
   `artifacts/quality-frontier-drift.json`; only the uncommitted source state and
   missing exact-SHA Codecov project status were non-pass. The PR-only skip

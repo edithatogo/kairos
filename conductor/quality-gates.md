@@ -13,11 +13,12 @@ cargo audit
 cargo semver-checks check-release
 ```
 
-The required `Rust core quality` GitHub check combines the stable verification
-job with a parallel locked `cargo +1.76.0 check --workspace --all-features
---locked` on Rust 1.76. The stable job runs the workspace test suite once under coverage,
-then runs doctests as their own test class. The aggregate is successful only
-when both jobs pass.
+The required `Rust core quality` GitHub check combines stable verification with
+parallel MSRV lanes. Rust 1.76 checks all workspace library and binary targets
+except `kairo-ecs-wasm`; that binding declares Rust 1.77 to match its current
+`wasm-bindgen` floor and compiles its `wasm-export` target there. Stable CI runs
+the workspace test suite once under coverage, then runs doctests as their own
+test class. The aggregate is successful only when all three jobs pass.
 
 ## Heavy/nightly gates
 

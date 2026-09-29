@@ -45,6 +45,7 @@ Format:
 ### Changed
 
 - Required Rust CI now checks the locked workspace on the declared 1.76 MSRV in parallel with stable verification, and runs all-feature doctests as a distinct test class.
+- The Rust Wasm export crate now declares its Rust 1.77 minimum and has a dedicated locked wasm-target CI lane.
 
 - Toolchain support metadata and its CI check now track Rust 1.98 stable instead of the stale 1.95 baseline.
 - Renovate now uses the Kairos preset with lower PR concurrency, while low-risk automerge stays off until stable required CI checks are configured.

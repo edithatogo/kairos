@@ -5,7 +5,8 @@
 - Root workspace gate: `Cargo.toml`, `rust-toolchain.toml`, and `deny.toml` exist and are used.
 - Core CI installs pinned Rust tool binaries from checksum-verified, SHA-pinned GitHub releases and disables source-build fallbacks.
 - Core CI runs `cargo fmt --all --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings`, and one coverage-instrumented nextest pass.
-- Required Rust core CI runs the stable test/coverage/docs lane and a parallel locked `cargo +1.76.0 check --workspace --all-features --locked` on the declared Rust 1.76 MSRV; a stable aggregate check requires both jobs.
+- Required Rust core CI runs stable verification, a Rust 1.76 locked library/binary compile, and a Rust 1.77 wasm-target compile; a stable aggregate check requires all three jobs.
+- The Rust 1.76 lane checks `cargo +1.76.0 check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked`. The separately declared Wasm binding floor is 1.77 and checks `cargo +1.77.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown`.
 - Core CI runs `cargo test --doc --workspace --all-features` once as a distinct test class; this complements nextest without repeating unit and integration tests.
 - Core CI runs the workspace nextest suite once under coverage instrumentation, then filters the same LCOV report to core scheduler production sources and enforces a 90% line-coverage floor; a minimal-permission job uploads the report with OIDC only on trusted main pushes. PRs use the Rust core check as their merge gate and do not receive OIDC.
 - `just test` creates the workspace LCOV report while running tests once. `just check-coverage` reads the last report without rerunning tests. `just ci` is the local equivalent of the core Rust formatting, lint, test/coverage, docs, and dependency-audit lane.

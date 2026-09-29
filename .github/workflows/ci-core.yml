@@ -75,21 +75,36 @@ jobs:
         run: rustup toolchain install 1.76.0 --profile minimal
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
       - name: Check workspace on Rust 1.76
-        run: cargo +1.76.0 check --workspace --all-features --locked
+        run: cargo +1.76.0 check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked
+
+  rust-wasm-msrv:
+    name: Rust Wasm MSRV 1.77
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Install Rust Wasm MSRV
+        run: rustup toolchain install 1.77.0 --profile minimal --target wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - name: Check wasm-export on Rust 1.77
+        run: cargo +1.77.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown
 
   rust-core:
     name: Rust core quality
     if: always()
-    needs: [rust-stable, rust-msrv]
+    needs: [rust-stable, rust-msrv, rust-wasm-msrv]
     runs-on: ubuntu-latest
     steps:
       - name: Require stable and MSRV verification
         env:
           RUST_STABLE_RESULT: ${{ needs.rust-stable.result }}
           RUST_MSRV_RESULT: ${{ needs.rust-msrv.result }}
+          RUST_WASM_MSRV_RESULT: ${{ needs.rust-wasm-msrv.result }}
         run: |
           test "$RUST_STABLE_RESULT" = success
           test "$RUST_MSRV_RESULT" = success
+          test "$RUST_WASM_MSRV_RESULT" = success
 
   codecov:
     name: Codecov OIDC upload

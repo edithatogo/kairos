@@ -40,7 +40,7 @@ Support labels:
 
 ## Rust
 
-The Rust support row is the source of truth for the core workspace MSRV, stable CI lane, and beta advisory lane. The MSRV lane compiles the locked workspace without repeating its test suite; stable CI owns tests, coverage, doctests, docs, and dependency policy.
+The Rust support row is the source of truth for the core workspace MSRV, stable CI lane, and beta advisory lane. The core MSRV lane compiles locked library and binary targets without repeating the test suite; stable CI owns tests, coverage, doctests, docs, and dependency policy. The separate `kairo-ecs-wasm` export crate declares Rust 1.77 and has a locked wasm-target MSRV check because its current `wasm-bindgen` dependency requires that floor.
 
 On Windows developer hosts, `scripts/validate_conductor_setup.ps1` prefers the installed `stable-x86_64-pc-windows-gnu` Rust toolchain for local workspace tests when it is available. This avoids accidental resolution of Git's `link.exe` on hosts without a working MSVC linker while keeping Windows runner coverage `best-effort` until Track 13 provisions hosted or self-hosted Windows lanes.
 
