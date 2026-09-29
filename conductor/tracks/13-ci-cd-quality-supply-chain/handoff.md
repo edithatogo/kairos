@@ -190,6 +190,16 @@ can satisfy the receipt.
 Before PR #154 integration, Renovate preset refresh and Codecov upload/status
 remain pending. Rerun `just quality-drift` after integration and retain that
 fresh receipt with the issue closeout evidence.
+
+## 2026-09-29 Codecov configuration discovery
+
+After trusted-main upload on `8fd4ab83daacfe0494fe16ecde2d320ffa3faef0`, the
+CodeCov CLI log said it could not find a config file. The upload job downloaded
+`lcov.info` but did not check out repository sources, so the root `codecov.yml`
+was absent from its workspace. The job now checks out the exact triggering
+commit with credentials disabled before downloading the artifact. The Track 13
+metadata validator checks that order. A fresh trusted-main upload and exact-SHA
+`codecov/project` status are still required to confirm hosted provider behavior.
 ## Phase closeout evidence
 
 `$conductor-review` completed on 2026-05-08 with no blocking Track 13 findings. Accepted fixes: none required in the workflow surface during this closeout pass. Validation commands passed: `node scripts/validation/validate-track13-metadata.mjs`, `node tests/conformance/track07_13_hardening_check.mjs`, `node tests/conformance/track12_20_evidence_check.mjs`, and `pwsh -NoProfile -File scripts\validate_track13_supply_chain.ps1`. `cargo-deny` and `cargo-audit` were unavailable locally and reported as skipped by the Track 13 supply-chain gate. Git cleanup state: dirty because local Conductor closeout/status edits are pending commit. Commit SHA: `5dd1937566898b2e028ac61dab1e9dd173e6d919`; pushed ref: `origin/main`. Strict cleanup gate `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` remains pending until these local closeout edits are committed. Next-phase decision: Track 13 is Done for the current CI/CD and supply-chain scaffold; future mandatory advisory scanner installation or release hardening belongs in Track 20 or a scoped follow-up.

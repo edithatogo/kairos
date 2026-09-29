@@ -298,6 +298,11 @@ requireTerms('bindings/python/pyproject.toml', ['ruff==0.16.9']);
 requireTerms('scripts/validation/check-core-coverage.mjs', ['kairo-ecs-core/src/', '90']);
 
 requirePattern('.github/workflows/dependency-review.yml', /fail-on-severity:\s*high/, 'high-severity dependency review gate');
+requirePattern(
+  '.github/workflows/ci-core.yml',
+  /codecov:[\s\S]*?steps:[\s\S]*?actions\/checkout@[0-9a-f]{40}[\s\S]*?persist-credentials: false[\s\S]*?actions\/download-artifact@/,
+  'Codecov upload job checks out its configuration before downloading coverage',
+);
 requirePattern('deny.toml', /wildcards\s*=\s*"deny"/, 'wildcard dependency denial');
 requirePattern('deny.toml', /unknown-registry\s*=\s*"deny"/, 'unknown registry denial');
 requirePattern('deny.toml', /unknown-git\s*=\s*"deny"/, 'unknown git source denial');
