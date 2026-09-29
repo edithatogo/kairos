@@ -1,0 +1,630 @@
+{
+  "fixture": "des_resource_same_tick_order_budget_v1",
+  "version": 1,
+  "provenance": "synthetic",
+  "evidence": [
+    {
+      "path": "conductor/contracts/core-contract.md",
+      "lines": "16-20",
+      "classification": "scheduler_order_contract"
+    },
+    {
+      "path": "conductor/tracks/des_queue_preemption_20260925/spec.md",
+      "lines": "103-108,178-196",
+      "classification": "local_queue_and_flow_contract"
+    }
+  ],
+  "cases": [
+    {
+      "id": "cancel_first_equal_scheduler_priority",
+      "initial_state": {
+        "at_ticks": 10,
+        "resource_capacity": 1,
+        "active": [
+          {
+            "claim_id": "H-001",
+            "owner_id": "patient-h",
+            "priority": 9,
+            "admission_sequence": 6
+          }
+        ],
+        "queued": [
+          {
+            "claim_id": "R-001",
+            "owner_id": "patient-1",
+            "priority": 5,
+            "admission_sequence": 7
+          }
+        ],
+        "terminal": [],
+        "pending_commands": [
+          "cancel-R",
+          "reprioritize-R"
+        ],
+        "processed_commands": []
+      },
+      "scheduled_commands": [
+        {
+          "command_id": "cancel-R",
+          "at_ticks": 10,
+          "scheduler_priority": 0,
+          "sequence": 1,
+          "action": "cancel",
+          "claim_id": "R-001"
+        },
+        {
+          "command_id": "reprioritize-R",
+          "at_ticks": 10,
+          "scheduler_priority": 0,
+          "sequence": 2,
+          "action": "reprioritize",
+          "claim_id": "R-001",
+          "target_queue_priority": 1
+        }
+      ],
+      "operations": [
+        {
+          "at_ticks": 10,
+          "dispatch_command_id": "cancel-R",
+          "scheduler_priority": 0,
+          "sequence": 1,
+          "action": "cancel",
+          "claim_id": "R-001"
+        },
+        {
+          "at_ticks": 10,
+          "dispatch_command_id": "reprioritize-R",
+          "scheduler_priority": 0,
+          "sequence": 2,
+          "action": "reprioritize",
+          "claim_id": "R-001",
+          "target_queue_priority": 1
+        }
+      ],
+      "expected_dispatch_order": [
+        "cancel-R",
+        "reprioritize-R"
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 10,
+          "resource_capacity": 1,
+          "active": [
+            {
+              "claim_id": "H-001",
+              "owner_id": "patient-h",
+              "priority": 9,
+              "admission_sequence": 6
+            }
+          ],
+          "queued": [],
+          "terminal": [
+            {
+              "claim_id": "R-001",
+              "owner_id": "patient-1",
+              "status": "Cancelled",
+              "at_ticks": 10
+            }
+          ],
+          "pending_commands": [
+            "reprioritize-R"
+          ],
+          "processed_commands": [
+            {
+              "command_id": "cancel-R",
+              "outcome": "Cancelled"
+            }
+          ],
+          "last_outcome": {
+            "command_id": "cancel-R",
+            "status": "success"
+          }
+        },
+        {
+          "at_ticks": 10,
+          "resource_capacity": 1,
+          "active": [
+            {
+              "claim_id": "H-001",
+              "owner_id": "patient-h",
+              "priority": 9,
+              "admission_sequence": 6
+            }
+          ],
+          "queued": [],
+          "terminal": [
+            {
+              "claim_id": "R-001",
+              "owner_id": "patient-1",
+              "status": "Cancelled",
+              "at_ticks": 10
+            }
+          ],
+          "pending_commands": [],
+          "processed_commands": [
+            {
+              "command_id": "cancel-R",
+              "outcome": "Cancelled"
+            },
+            {
+              "command_id": "reprioritize-R",
+              "outcome": "AlreadyTerminal"
+            }
+          ],
+          "last_outcome": {
+            "command_id": "reprioritize-R",
+            "error": "AlreadyTerminal"
+          }
+        }
+      ],
+      "invariant": "At one tick and equal scheduler priority, insertion sequence dispatches cancel first. R becomes terminal Cancelled; reprioritize returns AlreadyTerminal. Scheduler priority orders commands and is distinct from R resource queue priority."
+    },
+    {
+      "id": "reprioritize_first_equal_scheduler_priority",
+      "initial_state": {
+        "at_ticks": 10,
+        "resource_capacity": 1,
+        "active": [
+          {
+            "claim_id": "H-001",
+            "owner_id": "patient-h",
+            "priority": 9,
+            "admission_sequence": 6
+          }
+        ],
+        "queued": [
+          {
+            "claim_id": "R-001",
+            "owner_id": "patient-1",
+            "priority": 5,
+            "admission_sequence": 7
+          }
+        ],
+        "terminal": [],
+        "pending_commands": [
+          "reprioritize-R",
+          "cancel-R"
+        ],
+        "processed_commands": []
+      },
+      "scheduled_commands": [
+        {
+          "command_id": "reprioritize-R",
+          "at_ticks": 10,
+          "scheduler_priority": 0,
+          "sequence": 1,
+          "action": "reprioritize",
+          "claim_id": "R-001",
+          "target_queue_priority": 1
+        },
+        {
+          "command_id": "cancel-R",
+          "at_ticks": 10,
+          "scheduler_priority": 0,
+          "sequence": 2,
+          "action": "cancel",
+          "claim_id": "R-001"
+        }
+      ],
+      "operations": [
+        {
+          "at_ticks": 10,
+          "dispatch_command_id": "reprioritize-R",
+          "scheduler_priority": 0,
+          "sequence": 1,
+          "action": "reprioritize",
+          "claim_id": "R-001",
+          "target_queue_priority": 1
+        },
+        {
+          "at_ticks": 10,
+          "dispatch_command_id": "cancel-R",
+          "scheduler_priority": 0,
+          "sequence": 2,
+          "action": "cancel",
+          "claim_id": "R-001"
+        }
+      ],
+      "expected_dispatch_order": [
+        "reprioritize-R",
+        "cancel-R"
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 10,
+          "resource_capacity": 1,
+          "active": [
+            {
+              "claim_id": "H-001",
+              "owner_id": "patient-h",
+              "priority": 9,
+              "admission_sequence": 6
+            }
+          ],
+          "queued": [
+            {
+              "claim_id": "R-001",
+              "owner_id": "patient-1",
+              "priority": 1,
+              "admission_sequence": 7
+            }
+          ],
+          "terminal": [],
+          "pending_commands": [
+            "cancel-R"
+          ],
+          "processed_commands": [
+            {
+              "command_id": "reprioritize-R",
+              "outcome": "Applied",
+              "queue_priority": 1,
+              "admission_sequence": 7
+            }
+          ],
+          "last_outcome": {
+            "command_id": "reprioritize-R",
+            "status": "success"
+          }
+        },
+        {
+          "at_ticks": 10,
+          "resource_capacity": 1,
+          "active": [
+            {
+              "claim_id": "H-001",
+              "owner_id": "patient-h",
+              "priority": 9,
+              "admission_sequence": 6
+            }
+          ],
+          "queued": [],
+          "terminal": [
+            {
+              "claim_id": "R-001",
+              "owner_id": "patient-1",
+              "status": "Cancelled",
+              "at_ticks": 10
+            }
+          ],
+          "pending_commands": [],
+          "processed_commands": [
+            {
+              "command_id": "reprioritize-R",
+              "outcome": "Applied",
+              "queue_priority": 1,
+              "admission_sequence": 7
+            },
+            {
+              "command_id": "cancel-R",
+              "outcome": "Cancelled"
+            }
+          ],
+          "last_outcome": {
+            "command_id": "cancel-R",
+            "status": "success"
+          }
+        }
+      ],
+      "invariant": "At one tick and equal scheduler priority, insertion sequence dispatches reprioritize first. It changes R queue priority to 1 while preserving admission sequence 7; the later cancel succeeds. Scheduler and queue priorities remain separate."
+    },
+    {
+      "id": "scheduler_priority_precedes_insertion_order",
+      "initial_state": {
+        "at_ticks": 10,
+        "resource_capacity": 1,
+        "active": [
+          {
+            "claim_id": "H-001",
+            "owner_id": "patient-h",
+            "priority": 9,
+            "admission_sequence": 6
+          }
+        ],
+        "queued": [
+          {
+            "claim_id": "R-001",
+            "owner_id": "patient-1",
+            "priority": 5,
+            "admission_sequence": 7
+          }
+        ],
+        "terminal": [],
+        "pending_commands": [
+          "cancel-R",
+          "reprioritize-R"
+        ],
+        "processed_commands": []
+      },
+      "scheduled_commands": [
+        {
+          "command_id": "cancel-R",
+          "at_ticks": 10,
+          "scheduler_priority": 0,
+          "sequence": 1,
+          "action": "cancel",
+          "claim_id": "R-001"
+        },
+        {
+          "command_id": "reprioritize-R",
+          "at_ticks": 10,
+          "scheduler_priority": -1,
+          "sequence": 2,
+          "action": "reprioritize",
+          "claim_id": "R-001",
+          "target_queue_priority": 1
+        }
+      ],
+      "operations": [
+        {
+          "at_ticks": 10,
+          "dispatch_command_id": "reprioritize-R",
+          "scheduler_priority": -1,
+          "sequence": 2,
+          "action": "reprioritize",
+          "claim_id": "R-001",
+          "target_queue_priority": 1
+        },
+        {
+          "at_ticks": 10,
+          "dispatch_command_id": "cancel-R",
+          "scheduler_priority": 0,
+          "sequence": 1,
+          "action": "cancel",
+          "claim_id": "R-001"
+        }
+      ],
+      "expected_dispatch_order": [
+        "reprioritize-R",
+        "cancel-R"
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 10,
+          "resource_capacity": 1,
+          "active": [
+            {
+              "claim_id": "H-001",
+              "owner_id": "patient-h",
+              "priority": 9,
+              "admission_sequence": 6
+            }
+          ],
+          "queued": [
+            {
+              "claim_id": "R-001",
+              "owner_id": "patient-1",
+              "priority": 1,
+              "admission_sequence": 7
+            }
+          ],
+          "terminal": [],
+          "pending_commands": [
+            "cancel-R"
+          ],
+          "processed_commands": [
+            {
+              "command_id": "reprioritize-R",
+              "outcome": "Applied",
+              "queue_priority": 1,
+              "admission_sequence": 7
+            }
+          ],
+          "last_outcome": {
+            "command_id": "reprioritize-R",
+            "status": "success"
+          }
+        },
+        {
+          "at_ticks": 10,
+          "resource_capacity": 1,
+          "active": [
+            {
+              "claim_id": "H-001",
+              "owner_id": "patient-h",
+              "priority": 9,
+              "admission_sequence": 6
+            }
+          ],
+          "queued": [],
+          "terminal": [
+            {
+              "claim_id": "R-001",
+              "owner_id": "patient-1",
+              "status": "Cancelled",
+              "at_ticks": 10
+            }
+          ],
+          "pending_commands": [],
+          "processed_commands": [
+            {
+              "command_id": "reprioritize-R",
+              "outcome": "Applied",
+              "queue_priority": 1,
+              "admission_sequence": 7
+            },
+            {
+              "command_id": "cancel-R",
+              "outcome": "Cancelled"
+            }
+          ],
+          "last_outcome": {
+            "command_id": "cancel-R",
+            "status": "success"
+          }
+        }
+      ],
+      "invariant": "Scheduler orders same-time commands by (time, scheduler_priority, sequence): reprioritize with priority -1 dispatches before earlier-inserted cancel with priority 0. It changes only resource queue priority; cancellation then succeeds."
+    },
+    {
+      "id": "notification_counted_against_same_tick_budget",
+      "initial_state": {
+        "at_ticks": 0,
+        "max_same_tick_flow_transitions": 2,
+        "transitions_used_at_tick": 0,
+        "lifecycle_transition_history": [],
+        "delivered_notifications": [],
+        "pending_flow_work": [
+          {
+            "kind": "flow_lifecycle_transition",
+            "id": "transition-002",
+            "at_ticks": 0
+          }
+        ]
+      },
+      "scheduled_commands": [],
+      "operations": [
+        {
+          "at_ticks": 0,
+          "operation_id": "commit-transition-001",
+          "action": "commit_flow_lifecycle_transition",
+          "transition_id": "transition-001",
+          "run_call": "call-1"
+        },
+        {
+          "at_ticks": 0,
+          "operation_id": "deliver-notification-001",
+          "action": "deliver_flow_continuation_notification",
+          "notification_id": "notification-001",
+          "run_call": "call-1"
+        },
+        {
+          "at_ticks": 0,
+          "operation_id": "attempt-transition-002",
+          "action": "attempt_pending_flow_lifecycle_transition",
+          "transition_id": "transition-002",
+          "run_call": "call-1"
+        },
+        {
+          "at_ticks": 0,
+          "operation_id": "repeat-transition-002",
+          "action": "repeat_same_tick_run_call",
+          "transition_id": "transition-002",
+          "run_call": "call-2"
+        }
+      ],
+      "expected_dispatch_order": [
+        "transition-001",
+        "notification-001",
+        "transition-002 blocked",
+        "transition-002 blocked on repeat"
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 0,
+          "transitions_used_at_tick": 1,
+          "lifecycle_transition_history": [
+            {
+              "transition_id": "transition-001",
+              "at_ticks": 0
+            }
+          ],
+          "delivered_notifications": [],
+          "pending_flow_work": [
+            {
+              "kind": "flow_continuation_notification",
+              "id": "notification-001",
+              "at_ticks": 0
+            },
+            {
+              "kind": "flow_lifecycle_transition",
+              "id": "transition-002",
+              "at_ticks": 0
+            }
+          ],
+          "call_outcome": {
+            "status": "committed"
+          }
+        },
+        {
+          "at_ticks": 0,
+          "transitions_used_at_tick": 2,
+          "lifecycle_transition_history": [
+            {
+              "transition_id": "transition-001",
+              "at_ticks": 0
+            }
+          ],
+          "delivered_notifications": [
+            {
+              "notification_id": "notification-001",
+              "at_ticks": 0
+            }
+          ],
+          "pending_flow_work": [
+            {
+              "kind": "flow_lifecycle_transition",
+              "id": "transition-002",
+              "at_ticks": 0
+            }
+          ],
+          "call_outcome": {
+            "status": "delivered"
+          }
+        },
+        {
+          "at_ticks": 0,
+          "transitions_used_at_tick": 2,
+          "lifecycle_transition_history": [
+            {
+              "transition_id": "transition-001",
+              "at_ticks": 0
+            }
+          ],
+          "delivered_notifications": [
+            {
+              "notification_id": "notification-001",
+              "at_ticks": 0
+            }
+          ],
+          "pending_flow_work": [
+            {
+              "kind": "flow_lifecycle_transition",
+              "id": "transition-002",
+              "at_ticks": 0
+            }
+          ],
+          "call_outcome": {
+            "status": "blocked",
+            "error": {
+              "type": "SameTickBudgetExceeded",
+              "at_ticks": 0,
+              "limit": 2
+            }
+          }
+        },
+        {
+          "at_ticks": 0,
+          "transitions_used_at_tick": 2,
+          "lifecycle_transition_history": [
+            {
+              "transition_id": "transition-001",
+              "at_ticks": 0
+            }
+          ],
+          "delivered_notifications": [
+            {
+              "notification_id": "notification-001",
+              "at_ticks": 0
+            }
+          ],
+          "pending_flow_work": [
+            {
+              "kind": "flow_lifecycle_transition",
+              "id": "transition-002",
+              "at_ticks": 0
+            }
+          ],
+          "call_outcome": {
+            "status": "blocked",
+            "error": {
+              "type": "SameTickBudgetExceeded",
+              "at_ticks": 0,
+              "limit": 2
+            }
+          }
+        }
+      ],
+      "invariant": "One committed lifecycle transition and one delivered continuation notification consume the configured budget of 2 at tick 0. The next lifecycle transition remains pending and returns SameTickBudgetExceeded {at_ticks:0, limit:2}; a repeated call at tick 0 returns the same outcome without changing state or count. Operation labels are synthetic trace steps, not API claims."
+    }
+  ]
+}

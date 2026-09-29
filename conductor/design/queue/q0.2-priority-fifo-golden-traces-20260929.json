@@ -674,7 +674,7 @@
         {
           "at_ticks": 5,
           "op": "enqueue",
-          "request_id": "B",
+          "request_id": "B2",
           "priority": 2,
           "can_preempt": false,
           "preemptible_strategy": null
@@ -697,7 +697,7 @@
         {
           "at_ticks": 9,
           "op": "release",
-          "request_id": "B"
+          "request_id": "B2"
         }
       ],
       "expected_after_each": [
@@ -814,7 +814,7 @@
               "admission_sequence": 3
             },
             {
-              "request_id": "B",
+              "request_id": "B2",
               "priority": 2,
               "admission_sequence": 4
             }
@@ -837,7 +837,7 @@
               "admission_sequence": 3
             },
             {
-              "request_id": "B",
+              "request_id": "B2",
               "priority": 2,
               "admission_sequence": 4
             }
@@ -855,7 +855,7 @@
           ],
           "queued": [
             {
-              "request_id": "B",
+              "request_id": "B2",
               "priority": 2,
               "admission_sequence": 4
             }
@@ -866,7 +866,7 @@
           "at_ticks": 8,
           "active": [
             {
-              "request_id": "B",
+              "request_id": "B2",
               "priority": 2,
               "admission_sequence": 4
             }
@@ -884,9 +884,9 @@
       "expected_grants": [
         "A",
         "C",
-        "B"
+        "B2"
       ],
-      "invariant": "Cancellation removes B's sequence 2 admission; its resubmission receives sequence 4 and follows A and C."
+      "invariant": "Cancellation removes B's sequence 2 claim; resubmission uses distinct claim ID B2 and receives sequence 4 after A and C."
     },
     {
       "id": "equal_priority_does_not_preempt",
