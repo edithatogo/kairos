@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
-import { evaluateDrift, isAfterIntegration } from '../../scripts/validation/quality-frontier-drift.mjs';
+import { readFileSync } from 'node:fs';
+import { ciSkipGuardContract, evaluateDrift, isAfterIntegration } from '../../scripts/validation/quality-frontier-drift.mjs';
+
+assert.deepEqual(ciSkipGuardContract(readFileSync('.github/workflows/ci-skip-guard.yml', 'utf8')),
+  { pullRequestTrigger: true, jobName: true });
 
 assert.equal(isAfterIntegration('2026-09-29T00:00:01Z', '2026-09-29T00:00:00Z'), true);
 assert.equal(isAfterIntegration('2026-09-29T00:00:00Z', '2026-09-29T00:00:00Z'), false);
@@ -12,6 +16,8 @@ const source = {
   branch: 'main',
   commit: 'abc123',
   dirty: false,
+  ciSkipGuardHash: 'blob-ci-skip-guard',
+  ciSkipGuardContract: { pullRequestTrigger: true, jobName: true },
   contextFiles: { 'AGENTS.md': true, 'SECURITY.md': true, 'CONTRIBUTING.md': true },
   contextFileHashes: { 'AGENTS.md': 'blob-agents', 'SECURITY.md': 'blob-security', 'CONTRIBUTING.md': 'blob-contributing' },
   justfileHash: 'blob-justfile',
@@ -33,6 +39,7 @@ const requiredChecks = [
   'Reject CI skip directives',
   'code and repository health',
 ];
+const pushRequiredChecks = requiredChecks.filter((name) => name !== 'Reject CI skip directives');
 const hosted = {
   defaultBranch: 'main',
   defaultBranchCommit: 'abc123',
@@ -64,7 +71,7 @@ const hosted = {
   renovateRefreshEvidence: [{ kind: 'pull_request', number: 157, createdAt: '2026-09-29T00:00:00Z' }],
   renovateRefreshedAfterIntegration: true,
   mainChecks: [
-    ...requiredChecks.map((name) => ({ name, status: 'completed', conclusion: 'success', head_sha: 'abc123', started_at: '2026-09-29T00:00:00Z' })),
+    ...pushRequiredChecks.map((name) => ({ name, status: 'completed', conclusion: 'success', head_sha: 'abc123', started_at: '2026-09-29T00:00:00Z' })),
     { name: 'Codecov OIDC upload', status: 'completed', conclusion: 'success', head_sha: 'abc123', started_at: '2026-09-29T00:00:00Z', app: { slug: 'github-actions' } },
   ],
   mainStatuses: [
@@ -72,11 +79,12 @@ const hosted = {
     { context: 'codecov/patch', state: 'failure', sha: 'abc123', created_at: '2026-09-29T00:00:00Z' },
   ],
   mainContextFiles: { 'AGENTS.md': 'blob-agents', 'SECURITY.md': 'blob-security', 'CONTRIBUTING.md': 'blob-contributing', justfile: 'blob-justfile' },
+  mainCiSkipGuard: { sha: 'blob-ci-skip-guard', pullRequestTrigger: true, jobName: true },
   availability: {
     ruleset: true, protection: true, actions: true, workflowPermissions: true,
     selectedActions: true, privateReporting: true, mainRenovate: true, mainContextFiles: true,
     renovateActivity: true,
-    mainChecks: true, mainStatuses: true,
+    mainChecks: true, mainStatuses: true, mainCiSkipGuard: true,
   },
 };
 
@@ -94,6 +102,7 @@ const pending = evaluateDrift({
     mainChecks: hosted.mainChecks.filter((check) => !/codecov/i.test(check.name)),
     mainStatuses: [],
     mainContextFiles: { 'AGENTS.md': null, 'SECURITY.md': null, 'CONTRIBUTING.md': null, justfile: null },
+    mainCiSkipGuard: null,
     renovateDashboard: { state: 'open', author: 'renovate[bot]' },
     renovateRefreshedAfterIntegration: false,
   },
@@ -109,6 +118,38 @@ const drift = evaluateDrift({
 });
 assert.equal(drift.status, 'drift');
 assert.equal(drift.checks.find((check) => check.name === 'actions_settings').status, 'drift');
+
+const missingSkipGuardRule = evaluateDrift({
+  source,
+  hosted: {
+    ...hosted,
+    ruleset: {
+      ...hosted.ruleset,
+      rules: hosted.ruleset.rules.map((rule) => rule.type === 'required_status_checks'
+        ? { ...rule, parameters: { required_status_checks: rule.parameters.required_status_checks.filter((check) => check.context !== 'Reject CI skip directives') } }
+        : rule),
+    },
+  },
+});
+assert.equal(missingSkipGuardRule.checks.find((check) => check.name === 'required_stable_checks').status, 'drift');
+
+const missingPushCheck = evaluateDrift({
+  source,
+  hosted: { ...hosted, mainChecks: hosted.mainChecks.filter((check) => check.name !== 'gitleaks') },
+});
+assert.equal(missingPushCheck.checks.find((check) => check.name === 'current_required_check_runs').status, 'drift');
+
+const changedSkipGuard = evaluateDrift({
+  source,
+  hosted: { ...hosted, mainCiSkipGuard: { ...hosted.mainCiSkipGuard, sha: 'old-blob' } },
+});
+assert.equal(changedSkipGuard.checks.find((check) => check.name === 'main_ci_skip_guard_workflow_current').status, 'drift');
+
+const invalidSkipGuardSource = evaluateDrift({
+  source: { ...source, ciSkipGuardContract: { pullRequestTrigger: false, jobName: true } },
+  hosted,
+});
+assert.equal(invalidSkipGuardSource.checks.find((check) => check.name === 'source_ci_skip_guard_contract').status, 'drift');
 
 const unavailable = evaluateDrift({ source, hosted: { ...hosted, availability: { ...hosted.availability, ruleset: false } } });
 assert.equal(unavailable.checks.find((check) => check.name === 'ruleset_active_for_main').status, 'unavailable');

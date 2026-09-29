@@ -258,8 +258,23 @@ requireTerms('.github/workflows/ci-core.yml', [
   'cargo clippy --workspace --all-targets --all-features -- -D warnings',
   'cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info',
   'node scripts/validation/check-core-coverage.mjs lcov.info',
+  'cargo test --doc --workspace --all-features',
+  'Rust MSRV 1.76',
+  'cargo +1.76.0 check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked',
+  'Rust Wasm MSRV 1.77',
+  'cargo +1.77.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown',
+  'needs: [rust-stable, rust-msrv, rust-wasm-msrv]',
   'cargo deny check',
   'cargo audit',
+]);
+
+requireTerms('codecov.yml', [
+  'coverage:',
+  'status:',
+  'project:',
+  'target: auto',
+  'threshold: 0%',
+  '- rust-core',
 ]);
 
 requireTerms('.github/workflows/ci-policy.yml', [
