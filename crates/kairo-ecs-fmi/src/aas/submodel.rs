@@ -208,6 +208,30 @@ mod tests {
     }
 
     #[test]
+    fn to_json_omits_absent_semantic_id_and_preserves_property_order() {
+        let first = AasProperty::new("queueDepth", "xs:integer");
+        assert_eq!(
+            first.to_json(),
+            r#"{"modelType":"Property","idShort":"queueDepth","valueType":"xs:integer"}"#
+        );
+
+        let empty = AasSubmodel::new("urn:kairo:queue", "queue");
+        assert_eq!(
+            empty.to_json(),
+            r#"{"type":"ModelReference","keys":[{"type":"Submodel","value":"urn:kairo:queue"}],"idShort":"queue","submodelElements":[]}"#
+        );
+
+        let populated = empty.with_property(first).with_property(AasProperty::new(
+            "queueName",
+            "xs:string",
+        ));
+        assert_eq!(
+            populated.to_json(),
+            r#"{"type":"ModelReference","keys":[{"type":"Submodel","value":"urn:kairo:queue"}],"idShort":"queue","submodelElements":[{"modelType":"Property","idShort":"queueDepth","valueType":"xs:integer"},{"modelType":"Property","idShort":"queueName","valueType":"xs:string"}]}"#
+        );
+    }
+
+    #[test]
     fn to_json_escapes_control_characters_and_preserves_unicode() {
         let control_value = "line\nwith\ttab\u{0001} and café 🩺";
         let property = AasProperty::new(control_value, "xs:string");
