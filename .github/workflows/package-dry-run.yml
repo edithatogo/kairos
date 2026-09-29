@@ -118,5 +118,5 @@ jobs:
         run: |
           test -f bindings/csharp/Kairo.ECS.sln
           test -f bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj
-          dotnet restore bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -p:TargetFrameworks=net10.0 -p:RestoreLockedMode=true -p:UseSharedCompilation=false -m:1 -nr:false
+          dotnet restore bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -p:TargetFrameworks=net10.0 --locked-mode -p:UseSharedCompilation=false -m:1 -nr:false
           dotnet pack bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -c Release -p:TargetFrameworks=net10.0 --no-restore -p:RestoreLockedMode=true -p:UseSharedCompilation=false -m:1 -nr:false

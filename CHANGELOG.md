@@ -44,6 +44,10 @@ Format:
 
 ### Changed
 
+- Conformance fixture catalog now points to the zero-delay fixture file while preserving its ordering-only scope.
+
+- Conformance fixture docs now mark the tested zero-delay ordering fixture as ready and state its livelock evidence limit.
+
 - `KairoEcsBuffer::default()` now produces a null pointer and zero length on Rust 1.76-compatible toolchains.
 - Required Rust CI now checks the locked workspace on the declared 1.76 MSRV in parallel with stable verification, and runs all-feature doctests as a distinct test class.
 - The Rust Wasm export crate now declares its Rust 1.77 minimum and has a dedicated locked wasm-target CI lane.
@@ -58,6 +62,7 @@ Format:
 - Release-governance wording now records the maintenance handoff and blocker state alongside the release policy docs, with Track 15 publication still gated behind dry-run evidence and registry/toolchain verification.
 - Track 12 conformance status now records the merged PR #12 closeout and moves the track to In Review.
 - NuGet package dry-runs now target the stable `net10.0` package lane explicitly so the preview `net11.0` compatibility lane does not require a preview SDK in release packaging CI.
+- NuGet package dry-run restore now uses the explicit `--locked-mode` switch so Scorecard recognizes the checked-in package lock as pinned.
 - Public docs workflow validation now builds the Starlight site and smokes the generated documentation output instead of checking the retired static-site scaffold.
 - Docs Quality CI now runs the dedicated docs-platform SOTA validator after the Starlight workflow smoke.
 - CI and bootstrap Python tools now install from SHA-256 hash-locked requirement files; the npm CLI and Mermaid CLI use committed integrity-locked package files, and NuGet packaging uses locked restore.
@@ -66,7 +71,7 @@ Format:
 
 - Python's optional Arrow extra now requires PyArrow 14.0.2 or later to exclude releases affected by an upstream Arrow reader security advisory.
 - Upgrade Astro to 7.3.5 and its Starlight integration/plugins to security-compatible releases, fixing the critical Astro image-optimization remote-code-execution alert.
-
+- Updated TypeScript binding development dependencies (Vitest 4.1.11, Vite 8.3.1, and PostCSS 8.5.28) and raised the TypeScript template Vitest pin to 4.1.11.
 - Trusted-main Codecov uploads now check out the repository configuration before uploading the coverage artifact.
 - Kubernetes experiment scenario keys are now restricted to safe single-component filenames and are passed to the inline writer through environment variables, preventing shell injection and path traversal.
 - Website documentation search now renders indexed content as text and accepts only same-origin HTTP(S) links, preventing search-index DOM XSS.
