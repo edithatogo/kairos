@@ -190,7 +190,7 @@
               "priority": 5,
               "admission_sequence": 1,
               "attempt": 0,
-              "elapsed_ticks": 0,
+              "elapsed_ticks": 3,
               "remaining_ticks": 7,
               "original_duration": 10,
               "cumulative_busy_ticks": 3,
