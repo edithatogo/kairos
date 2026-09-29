@@ -424,7 +424,10 @@ mod tests {
         assert!(world.is_alive(entity3));
 
         // Despawn an entity with an invalid index
-        let invalid_entity = EntityId { index: 999, generation: 0 };
+        let invalid_entity = EntityId {
+            index: 999,
+            generation: 0,
+        };
         assert!(!world.despawn(invalid_entity));
 
         // Despawn an entity with a stale generation
