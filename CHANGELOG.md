@@ -14,6 +14,10 @@ Format:
 
 ## Unreleased
 
+### Changed
+
+- Binding CI now runs only the language lanes affected by a pull request, falls back to all lanes when classification is uncertain, and checks the Gymnasium wrapper on Python 3.9 and 3.14.
+
 ### Fixed
 
 - Bootstrap npm tooling now locks ip-address 10.7.1 and brace-expansion 5.0.12 outside npm’s embedded bundle, rejecting vulnerable bundled copies.

@@ -6,28 +6,6 @@ concurrency:
 
 on:
   pull_request:
-    paths:
-      - '.github/actions/**'
-      - '.github/workflows/ci-bindings.yml'
-      - 'scripts/bootstrap-python-tools.lock'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - '.cargo/**'
-      - 'bindings/**'
-      - 'crates/**'
-      - 'conformance/**'
-      - 'examples/**'
-      - 'hpc/**'
-      - 'include/**'
-      - 'schemas/**'
-      - 'scripts/**'
-      - 'templates/**'
-      - 'tests/**'
-      - 'benches/**'
-      - 'build.rs'
-      - 'justfile'
-      - 'mise.toml'
-      - 'rust-toolchain.toml'
   push:
     branches: [main]
     paths:
@@ -38,7 +16,9 @@ on:
       - 'Cargo.lock'
       - '.cargo/**'
       - 'bindings/**'
+      - 'python/kairo_gym/**'
       - 'crates/**'
+      - 'packaging/**'
       - 'conformance/**'
       - 'examples/**'
       - 'hpc/**'
@@ -58,7 +38,35 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Classify binding changes
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.classify.outputs.python }}
+      r: ${{ steps.classify.outputs.r }}
+      julia: ${{ steps.classify.outputs.julia }}
+      typescript: ${{ steps.classify.outputs.typescript }}
+      csharp: ${{ steps.classify.outputs.csharp }}
+      go: ${{ steps.classify.outputs.go }}
+      gym: ${{ steps.classify.outputs.gym }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify binding change routing
+        run: node tests/conformance/ci-binding-change-classifier-check.mjs
+      - name: Classify changed files
+        id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        run: node scripts/validation/classify-binding-ci-changes.mjs "$EVENT_NAME" "$BASE_SHA" "$HEAD_SHA" >> "$GITHUB_OUTPUT"
+
   python:
+    needs: changes
+    if: always() && (needs.changes.result != 'success' || needs.changes.outputs.python == 'true')
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
@@ -82,6 +90,8 @@ jobs:
           python -m pytest -q
 
   r:
+    needs: changes
+    if: always() && (needs.changes.result != 'success' || needs.changes.outputs.r == 'true')
     name: R binding
     runs-on: ubuntu-latest
     steps:
@@ -102,6 +112,8 @@ jobs:
           Rscript tests/smoke-base.R
 
   julia:
+    needs: changes
+    if: always() && (needs.changes.result != 'success' || needs.changes.outputs.julia == 'true')
     name: Julia binding
     runs-on: ubuntu-latest
     steps:
@@ -117,6 +129,8 @@ jobs:
           julia --project=bindings/julia -e 'using Pkg; Pkg.instantiate(); Pkg.test()'
 
   typescript:
+    needs: changes
+    if: always() && (needs.changes.result != 'success' || needs.changes.outputs.typescript == 'true')
     name: TypeScript/Wasm binding
     runs-on: ubuntu-latest
     steps:
@@ -135,6 +149,8 @@ jobs:
           npm test
 
   csharp:
+    needs: changes
+    if: always() && (needs.changes.result != 'success' || needs.changes.outputs.csharp == 'true')
     name: C# ${{ matrix.target-framework }}
     runs-on: ubuntu-latest
     strategy:
@@ -160,6 +176,8 @@ jobs:
           dotnet test bindings/csharp/tests/Kairo.ECS.Tests/Kairo.ECS.Tests.csproj -c Release -f "$TARGET_FRAMEWORK" -p:TreatWarningsAsErrors=true
 
   go:
+    needs: changes
+    if: always() && (needs.changes.result != 'success' || needs.changes.outputs.go == 'true')
     name: Go binding
     runs-on: ubuntu-latest
     steps:
@@ -177,3 +195,78 @@ jobs:
           cd bindings/go
           go vet ./...
           go test ./...
+
+  python-gym:
+    needs: changes
+    if: always() && (needs.changes.result != 'success' || needs.changes.outputs.gym == 'true')
+    name: Gymnasium wrapper Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.14']
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install and check optional Gymnasium integration
+        if: matrix.python-version == '3.14'
+        run: |
+          python -m pip install -e 'python/kairo_gym[gymnasium]'
+          python - <<'PY'
+          import gymnasium
+          from gymnasium.utils.env_checker import check_env
+          from kairo_gym import KairoGymEnv
+
+          env = KairoGymEnv()
+          assert isinstance(env, gymnasium.Env)
+          check_env(env)
+          PY
+      - name: Gymnasium wrapper smoke
+        run: |
+          if [ "${{ matrix.python-version }}" = '3.9' ]; then
+            PYTHONPATH=python/kairo_gym/src python -m unittest discover -s python/kairo_gym/tests -v
+          else
+            python -m unittest discover -s python/kairo_gym/tests -v
+          fi
+
+  binding-ci:
+    name: Binding CI
+    if: always()
+    needs: [changes, python, r, julia, typescript, csharp, go, python-gym]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require selected binding checks and classifier
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          PYTHON_REQUIRED: ${{ needs.changes.outputs.python }}
+          R_REQUIRED: ${{ needs.changes.outputs.r }}
+          JULIA_REQUIRED: ${{ needs.changes.outputs.julia }}
+          TYPESCRIPT_REQUIRED: ${{ needs.changes.outputs.typescript }}
+          CSHARP_REQUIRED: ${{ needs.changes.outputs.csharp }}
+          GO_REQUIRED: ${{ needs.changes.outputs.go }}
+          GYM_REQUIRED: ${{ needs.changes.outputs.gym }}
+          PYTHON_RESULT: ${{ needs.python.result }}
+          R_RESULT: ${{ needs.r.result }}
+          JULIA_RESULT: ${{ needs.julia.result }}
+          TYPESCRIPT_RESULT: ${{ needs.typescript.result }}
+          CSHARP_RESULT: ${{ needs.csharp.result }}
+          GO_RESULT: ${{ needs.go.result }}
+          GYM_RESULT: ${{ needs.python-gym.result }}
+        run: |
+          set -euo pipefail
+          test "$CHANGES_RESULT" = success
+          for lane in python r julia typescript csharp go gym; do
+            required_var="${lane^^}_REQUIRED"
+            result_var="${lane^^}_RESULT"
+            required="${!required_var}"
+            result="${!result_var}"
+            case "$required" in
+              true) test "$result" = success ;;
+              false) test "$result" = skipped ;;
+              *) echo "Missing or invalid classification for $lane: $required" >&2; exit 1 ;;
+            esac
+          done
