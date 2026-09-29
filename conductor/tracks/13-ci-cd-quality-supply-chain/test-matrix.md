@@ -21,6 +21,7 @@
 - The conformance job runs `tests/conformance/quality-frontier-drift-check.mjs` against pass, pending-integration, drift, and unavailable GitHub evidence fixtures.
 - The drift receipt retains all five required ruleset contexts while expecting only the four push-capable checks on a main SHA; it verifies the PR-only skip-guard workflow trigger, job name, and exact main-branch workflow blob.
 - Root `codecov.yml` requests a project status for the `rust-core` coverage flag; hosted acceptance still requires an exact-SHA `codecov/project` status after a trusted-main upload.
+- The trusted-main Codecov upload job checks out the repository before downloading `lcov.info`, so Codecov can read the root status configuration; the Track 13 metadata validator enforces this ordering.
 - `just quality-drift` performs a read-only live settings readback, binds Actions results to the resolved default-branch SHA, and writes a JSON receipt to `artifacts/quality-frontier-drift.json`. Drift, pending integration, or unavailable APIs remain non-pass exit states.
 - Validate Conductor runs on both `ubuntu-latest` and `windows-latest` so PowerShell and Node validators are exercised cross-platform.
 - Package dry-runs and binding CI fail when their own manifests are missing instead of skipping quietly.

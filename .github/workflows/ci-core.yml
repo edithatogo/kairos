@@ -117,6 +117,9 @@ jobs:
       id-token: write # Request a short-lived Codecov OIDC token; this job runs only on main pushes.
       pull-requests: read # Associate uploaded coverage with its pull request metadata.
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v7.0.0
         with:
           name: rust-coverage
