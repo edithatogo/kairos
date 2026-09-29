@@ -23,6 +23,27 @@ Events dispatch by:
 
 This ordering is required by all language bindings and conformance fixtures.
 
+## FlowRuntime event-kind allocation
+
+The Kairos owner approved `EventKind::Custom(4000..=4003)` for FlowRuntime's
+internal events on 2026-09-30. The allocation is local to FlowRuntime:
+
+| Code | Symbol | Meaning |
+| --- | --- | --- |
+| 4000 | `FLOW_COMMAND_DISPATCH_EVENT_KIND` | Dispatch a Flow command |
+| 4001 | `FLOW_WORK_COMPLETION_EVENT_KIND` | Complete scheduled work |
+| 4002 | `FLOW_WAITING_DEADLINE_EVENT_KIND` | Expire a waiting claim |
+| 4003 | `FLOW_CONTINUATION_NOTIFICATION_EVENT_KIND` | Notify a waiting continuation |
+
+FlowRuntime must schedule these kinds through private constructors and reject
+caller-supplied use of the reserved codes at every Flow ingress, including
+handler command sinks and adapters. Raw core and ABM scheduler APIs retain their
+current `EventKind::Custom(u32)` contract; this allocation does not enforce
+global uniqueness. The scheduler order above and `event_log.v1` encoding
+`custom:<code>` remain unchanged. Deterministic ingress, ordering and telemetry
+fixtures are required before the FlowRuntime implementation is accepted. Track
+25 reviews the additive public API.
+
 ## Run-loop controls
 
 ```text
