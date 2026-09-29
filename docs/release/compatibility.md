@@ -8,6 +8,7 @@ aligned with `conductor/contracts/versioning-compatibility.md`.
 | Surface | Roots | R2 status |
 |---|---|---|
 | Rust crates | `crates/kairo-ecs-types`, `crates/kairo-ecs-core`, `crates/kairo-ecs-state`, `crates/kairo-ecs-rng` | Checked in; semver policy applies |
+| Rust DES/ABM APIs | `crates/kairo-ecs-des`, `crates/kairo-ecs-abm` | Checked in; experimental roots. Proposed FlowRuntime and adapter symbols remain under release hold pending exact API review. |
 | C ABI | `crates/kairo-ecs-ffi`, `include/`, `include/kairo_ecs.h` | Compatibility-sensitive when present in release artifacts |
 | Host bindings | `bindings/python`, `bindings/r`, `bindings/julia`, `bindings/typescript`, `bindings/csharp`, `bindings/go` | Checked in; dry-run packaging only until Track 15 clears publish gates |
 | Arrow schemas | `schemas/arrow/`, `schemas/arrow/event_log_v1.schema.json` | Schema changes require versioning and compatibility notes |

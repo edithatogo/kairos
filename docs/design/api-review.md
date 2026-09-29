@@ -12,4 +12,5 @@ Machine-checkable Track 25 artifacts:
 - `docs/design/compatibility-governance.md`
 - `docs/design/compatibility-matrix.md`
 - `docs/design/protected-surface-inventory.json`
+- `docs/design/api-reviews/flow-runtime-q0.1.md` records the owner-approved preimplementation design disposition, not a completed symbol-level Track 25 API review; exact-symbol and release gates remain open. Per-root disposition files link from that record.
 - `docs/design/validate-compatibility-pack.ps1`

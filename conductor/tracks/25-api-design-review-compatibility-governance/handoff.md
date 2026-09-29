@@ -145,3 +145,17 @@ slice did not commit or push.
 - Pushed ref: not pushed from this local multi-worker slice.
 - Strict git closeout: `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` failed with `Working tree has uncommitted tracked or untracked changes; closeout requires a clean tree`.
 - Next-phase decision: Track 25 has no compatibility-pack validation blocker. Reviewer signoff, commit/push evidence, and strict clean-worktree closeout are still required before moving Track 25 to `Done`.
+
+## CareOps Q0.1 Flow design review intake — 2026-09-29
+
+The Kairos repository owner directed adoption of the CareOps Q0.1 recommended
+architecture. Its Flow-specific adapter introduces public Rust surfaces in both
+`crates/kairo-ecs-des` and `crates/kairo-ecs-abm`; both exact roots are recorded
+as experimental in the protected-surface inventory and aligned policy, matrix,
+and release compatibility note. The design review is at
+`docs/design/api-reviews/flow-runtime-q0.1.md`.
+
+This intake accepts only the architecture and surface classification. Concrete
+Flow symbols still require Q0.2/Q0.3 contracts and symbol-level review before
+implementation is released. The new API remains under release hold. This note
+does not close Track 25 or replace its remaining phase gates.

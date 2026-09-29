@@ -1,6 +1,6 @@
 # Proposed Flow continuation context and checkpoint boundary
 
-Status: proposal for owner and track review; not an approved API or implementation.
+Status: owner-approved Q0.1 continuation boundary; no codec API or implementation is approved.
 Date: 2026-09-29
 Scope: Q0.1 codec ownership boundary for Flow continuation state.
 
@@ -44,4 +44,4 @@ These are gates for future codec work, not claims that a codec or resumable chec
 4. Track 04: identify the RNG and seed state required for deterministic continuation.
 5. Track 25: review the compatibility classification and API/release gates before any future public codec surface is added.
 
-Until these owners agree on the portable checkpoint boundary, keep the Flow continuation context typed, owned, and in memory, and leave serialization and registration API choices to the later coordinated contract.
+The Kairos owner approved this Q0.1 boundary: keep continuation typed, owned, and in memory; defer portable checkpoint/resume to Track 22. No codec or serialization API is authorized. The Track 22 implementation contract still requires its own owner review.

@@ -1,14 +1,14 @@
 # Proposed Track 25 review gate for CareOps Flow API
 
-Status: review-ready proposal; not an API approval or compatibility-policy change.
+Status: Q0.1 design disposition recorded; exact method signatures and release remain held. This proposal is not a completed Track 25 template review.
 Date: 2026-09-29
 Related CareOps decision record: `conductor/design/queue/ADR-0003-flow-runtime-contract-proposed.md`
 
 ## Review outcome today
 
-**Decision: release hold.** The queue/Flow design can be reviewed, but the Track 25 API review template cannot accept it yet: its required exact affected root, `crates/kairo-ecs-des`, is absent from `docs/design/protected-surface-inventory.json`. The API review template requires an exact inventory match. This record does not edit that inventory or policy and does not treat the proposal as a public API.
+**Decision: accept the owner-approved Q0.1 design direction and experimental classification for both exact roots; retain a release hold.** `crates/kairo-ecs-des` and `crates/kairo-ecs-abm` are now in the protected-surface inventory and aligned policy, matrix, and release note. Preimplementation design dispositions are recorded per root. Concrete Flow symbol signatures and implementation-level API governance/release review remain incomplete; this proposal is not that signoff.
 
-The proposed Rust contract is additive and experimental in intent. It preserves existing `DESContext`, FIFO `Resource`, `ABMContext`, and `BehaviorSimulation` behavior; keeps scheduler order and RNG derivation; and does not change C ABI, Arrow schemas, or host bindings. These are design claims to verify again against implementation, not release evidence. The proposals specify one private shared `FlowRuntime`, opaque handles, checked commands, facade-scoped lifetime caps and cleanup, and typed in-memory continuation context. Portable checkpoint encoding remains with Track 22 and its upstream owners.
+The owner-approved Rust design is additive and experimental in intent. It preserves existing `DESContext`, FIFO `Resource`, `ABMContext`, and `BehaviorSimulation` behavior; keeps scheduler order and RNG derivation; and does not change C ABI, Arrow schemas, or host bindings. These remain implementation claims to verify, not release evidence. The design specifies one private shared `FlowRuntime`, opaque handles, checked commands, facade-scoped lifetime caps and cleanup, a DES-owned dispatcher with ABM adapter, and typed in-memory continuation. Both DES and ABM exact roots are registered. Portable checkpoint encoding remains with Track 22. See the preimplementation design disposition at `docs/design/api-reviews/flow-runtime-q0.1.md` and the per-root review records `flow-runtime-des-q0.1.md` and `flow-runtime-abm-q0.1.md`; all retain a release hold.
 
 ## Proposed Track 25 intake
 
@@ -16,17 +16,15 @@ The proposed Rust contract is additive and experimental in intent. It preserves 
 |---|---|---|
 | Review title | Additive experimental FlowRuntime and queue API | CareOps ADR-0003 |
 | Proposed by | CareOps Sim coordinator | Recorded in ADR-0003 |
-| Affected root | `crates/kairo-ecs-des` | Missing from protected-surface inventory; blocking rule fails |
+| Affected roots | `crates/kairo-ecs-des`; `crates/kairo-ecs-abm` | Both exact roots are registered as experimental; per-root design dispositions exist, but concrete symbols remain unreviewed |
 | Surface family | `rust_api` | Proposed; no C ABI, Arrow, or host API change in this design |
-| Proposed first release stage | `alpha` after root/policy review | Not authorized today; the API remains on release hold |
-| Compatibility level | `release-hold` pending exact-root registration and owner decisions | Track 25 template cannot accept while root is absent |
-| Decision | `release hold` | Required until Track 25 review is complete |
+| Proposed first release stage | Alpha candidate after Q0.2/Q0.3 and symbol-level review | Not authorized by this design disposition; release remains held |
+| Compatibility level | `experimental-breaking` for proposed Flow symbols | Existing legacy API behavior is preserved; proposed symbols remain held before release |
+| Decision | `accepted` for design classification; release hold remains | Concrete symbol-level API and release reviews are pending |
 
-### Proposed inventory treatment for Track 25 to review
+### Root registration disposition
 
-If the maintainers accept this boundary, add one exact experimental Rust root for `crates/kairo-ecs-des` and align the versioning policy, compatibility matrix, API review record, release note, and compatibility validator. The inventory example should distinguish the legacy DES helpers from the new Flow surface. Track 25 owns and approves these edits; this proposal grants no write or acceptance authority over those files.
-
-If Track 25 rejects that root or classification, it must identify an alternative exact protected boundary that satisfies its template before Q0.1 can close. Until then, implementation remains behind Q0.1 and D2.
+The Kairos owner directed registration of both existing crate roots because the new API is additive across DES and ABM. The inventory, policy, matrix, release note, and validator are aligned. The Q0.1 design records accept this classification only; they do not review concrete method signatures or authorize alpha/release. The full Track 25 track remains open.
 
 ## Required owner decisions
 
@@ -34,18 +32,18 @@ If Track 25 rejects that root or classification, it must identify an alternative
 |---|---|---|---|
 | Track 01 — core/state | Are a fresh private runtime and facade-only scheduling/create/despawn with cumulative `u32::MAX` caps acceptable, alongside typed component-removal hooks? | Accept the documented supported-use bound; make cleanup guarantee conditional on successful in-memory cleanup and `World::despawn`; do not claim global core/state overflow safety. | No Q1 implementation |
 | Track 03 — Flow/DES/ABM | Where does the adapter live, what dependency edge does it add, and how are event kinds routed to handlers at deterministic dispatch boundaries? | Add a Flow-specific adapter with read-only shared queries and buffered checked commands; preserve the separate legacy `BehaviorSimulation`. | No Q1 implementation |
-| Track 25 — API governance | Register/classify the exact DES crate root and complete the API review and compatibility pack. | Add an experimental Rust root and keep release hold until the inventory, policy, matrix, API record, and release note agree. | No Q0.1 close or release claim |
+| Track 25 — API governance | After Q0.2/Q0.3 and implementation settle concrete symbols, complete the symbol-level DES and ABM API review and confirm compatibility fixtures and release evidence. | If either root cannot be classified under the existing policy, hold implementation and revise the API boundary through its owner review. | Concrete-symbol approval and release remain held; Q0.1 root registration and design disposition are already recorded |
 | Track 22 with Tracks 01/03/04/25 | Which complete state is needed for portable checkpoint/resume? | Keep queue continuation typed and in-memory now; coordinate a later versioned checkpoint contract; do not add a second snapshot standard. | No portable checkpoint claim |
 
-Track-level owners may delegate evidence gathering, but only recorded owner dispositions count as approval. The prior source reviews are technical reviews, not owner signoffs.
+The Kairos owner disposition is recorded in the parent Q0.1 package. Independent read-only technical reviews informed the clarified boundaries, but are not represented as release signoffs or full Track 25 closeout.
 
-## Required evidence before the hold can be lifted
+## Remaining gates
 
-1. Track 01 disposition on the runtime ownership, operation limits, cleanup hooks, and conditional failure semantics.
-2. Track 03 disposition on adapter crate/dependency direction, dispatch route, handler/context identity, and buffered command boundary.
-3. Track 25 protected-root inventory and aligned compatibility artifacts, plus a completed API review record with reviewer signoff.
-4. Consolidated ADR-0003 updated with those dispositions and source hashes, then reviewed at the pinned Kairos commit.
-5. Q0.2 semantic fixtures only after Q0.1 is accepted; Q1 implementation only after Q0 and D2 gates.
+1. Q0.2 must freeze queue/tie/deadline/completion/preemption semantics as executable fixtures.
+2. Q0.3 must freeze Flow event IDs, lifecycle records, and transition joins.
+3. Before implementation merge, perform exact-symbol compatibility review for both roots and run the required conformance/MSRV/API tests.
+4. Keep the release hold until implementation evidence, release reviewer signoff, and any required red-team review are complete.
+5. Q1 implementation remains gated on Q0 closeout and D2 hosted-CI readiness.
 
 ## Evidence references
 
@@ -56,4 +54,4 @@ Track-level owners may delegate evidence gathering, but only recorded owner disp
 - Exact-root inventory: `docs/design/protected-surface-inventory.json`
 - Track 25 source of truth: `conductor/contracts/versioning-compatibility.md`
 
-This record makes the release hold explicit and reviewable. It is not the required Track 25 acceptance and does not mark Q0.1 complete.
+This proposal records the design-time gate and remaining release hold; it does not close Track 25. Q0.1 phase acceptance is recorded separately in the parent CareOps evidence after its manual traces and local checks pass.

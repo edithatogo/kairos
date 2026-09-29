@@ -1,6 +1,6 @@
 # Proposed FlowRuntime contract for Kairos
 
-Status: proposal for owner and track review; not an approved API or implementation.
+Status: owner-approved Q0.1 architecture direction; exact public API and implementation remain gated.
 Date: 2026-09-29
 Scope: Q0.1 runtime ownership, opaque handles, errors, and supported-use limits.
 
@@ -8,7 +8,7 @@ Scope: Q0.1 runtime ownership, opaque handles, errors, and supported-use limits.
 
 Add an experimental, Rust-native `FlowRuntime` to `kairo-ecs-des`. One runtime owns exactly one private `Scheduler`, `World`, and `ComponentRegistry`. Resource, claim, work, lease, and interruption state belongs to that shared runtime, so its DES events and Flow-facing ABM work observe one simulation clock and one ECS world.
 
-Keep the existing `DESContext`, `Resource`, `ABMContext`, `BehaviorContext`, `AgentBehavior`, and `BehaviorSimulation` APIs and their observable behavior unchanged. This proposal adds a separate path; it does not migrate or retrofit legacy users. It leaves scheduler ordering and RNG derivation unchanged. It does not add a dependency from DES to ABM or choose another crate boundary for the behavior adapter.
+Keep the existing `DESContext`, `Resource`, `ABMContext`, `BehaviorContext`, `AgentBehavior`, and `BehaviorSimulation` APIs and their observable behavior unchanged. This proposal adds a separate path; it does not migrate or retrofit legacy users. It leaves scheduler ordering and RNG derivation unchanged. DES owns deterministic dispatch and its registered handler boundary. The separate Flow-specific adapter lives in `kairo-ecs-abm` and depends on DES; DES must not depend on ABM. The adapter implements the DES-defined behavior hook. Existing standalone ABM APIs and behavior remain unchanged.
 
 The public Flow handles are opaque newtypes whose fields and constructors remain private:
 
@@ -22,6 +22,43 @@ The public Flow handles are opaque newtypes whose fields and constructors remain
 Callers create and operate on these identities through `FlowRuntime` methods. They cannot construct handles from arbitrary entity IDs or mutate internal queue, allocation, work, scheduler, world, or component-registry state. The runtime may expose read-only snapshots or queries, but not mutable core stores. Every command validates handle generation/liveness and the relevant lifecycle state before changing state. Time-bearing commands reject a requested time earlier than the runtime's current time before calling the core scheduler.
 
 `FlowError` is the common typed boundary for expected command failures. Its variants should distinguish stale handles, unknown resources, terminal claims/work, invalid time, capacity conflicts, configured limits, and invalid command/builder state. Errors must not silently repair invalid state or partially apply a command. The final public variant names and payloads remain subject to Track 25 API review.
+
+## Q0.1 owner disposition and clarified boundaries
+
+On 2026-09-29 the Kairos owner directed adoption of the four recommended Q0.1
+dispositions: (1) private FlowRuntime with facade-only mutations and cumulative
+`u32::MAX` operation caps; (2) DES-owned shared runtime/dispatcher with an ABM
+adapter depending on DES; (3) experimental API-root registration and compatibility
+review for both DES and ABM because the adapter adds public ABM symbols; and (4)
+typed, owned, in-memory continuation with portable checkpointing deferred to
+Track 22. The owner direction does not remove Q0.2/Q0.3, D2, exact-symbol review,
+or release gates.
+
+The cap proof assumes a new Scheduler and World whose counters/generations start
+at zero; a private runtime that never exposes mutable core/state objects; and no
+schedule/create/despawn mutator path outside the checked facade. `u32::MAX` is an
+overflow envelope, not an allocation, memory, or throughput guarantee. Flow-owned
+cleanup covers only engine-owned component types. Before despawning, the runtime
+must remove the target entity's typed components and all reverse references to it
+in queues, allocations, claims, leases, and work records. Those internal value
+types must not introduce user-defined panicking destructors. If cleanup or
+`World::despawn` fails, the runtime must not report success; rollback after a
+panic is not promised.
+
+DES owns event dispatch and handler registration. The ABM adapter implements the
+Flow-specific hook, uses typed read-only queries, and returns buffered commands;
+DES validates and applies them at a deterministic dispatch boundary. No handler
+may expose mutable scheduler/world/registry state. Query/application order must
+not depend on `HashMap` or dense component-store iteration. Q0.2/Q0.3 must still
+freeze the callback and RNG identity lifecycle, command-buffer atomicity and
+rejection behavior, event-kind allocation, and notification order. These details
+are not public signatures approved by this Q0.1 disposition.
+
+Both `crates/kairo-ecs-des` and `crates/kairo-ecs-abm` are now registered as
+experimental protected Rust API roots. The owner-approved design review is
+recorded at `docs/design/api-reviews/flow-runtime-q0.1.md`. It accepts the
+architecture and surface classification only; release remains held until exact
+symbols are reviewed against the frozen semantics and implementation evidence.
 
 ## Handles and errors
 
@@ -43,28 +80,25 @@ The current scheduler counters and event generation, and the world's entity gene
 
 Each counter is maintained by FlowRuntime using checked arithmetic. When the next operation would exceed its limit, the runtime returns the configured-limit error before calling the underlying scheduler/world operation or changing Flow state. Counters are cumulative for the runtime lifetime and are not reset when an entity is despawned or an event is cancelled. This conservative total-despawn bound ensures no entity generation can wrap due to Flow-mediated despawns in a runtime whose world starts with fresh generations. All relevant mutations, including resource/claim/work creation and cleanup, must go through this facade for the limit to apply.
 
-FlowRuntime registers typed cleanup hooks for every component type that its facade inserts. Before despawning an entity, it removes Flow queue/work/claim/lease state and invokes those hooks to remove that entity from each registered component store. The cleanup guarantee applies when the in-memory cleanup hooks complete successfully and the underlying `World::despawn` succeeds. This is not a panic-proof transactional or rollback guarantee: if cleanup or despawn fails or panics, the runtime must not report a successful despawn, and recovery semantics require owner review. Components inserted outside the Flow facade are outside this cleanup guarantee; the runtime must not provide a mutable registry handle that enables such insertion.
+FlowRuntime registers typed cleanup hooks for every component type that its facade inserts. Before despawning an entity, it removes Flow queue/work/claim/lease state and invokes those hooks to remove that entity from each registered component store. The cleanup guarantee applies only to engine-owned Flow component types and reverse references and only when the cleanup hooks complete and the underlying `World::despawn` succeeds. The runtime must not provide a mutable registry handle or insertion route for unmanaged components. These internal value types must not run user-defined destructors. This is not a panic-proof transactional or rollback guarantee: if cleanup or despawn fails or panics, the runtime must not report success.
 
 The limits intentionally constrain supported Flow use rather than changing the guarantees of Scheduler or World for other callers. If broader checked-overflow guarantees are required, Track 01 must separately design additive core/state contracts and tests.
 
 ## Compatibility boundary
 
-This is an additive experimental Rust proposal located in the existing `kairo-ecs-des` crate. It preserves all legacy DES and ABM public APIs and behavior, does not alter core event ordering or RNG stream derivation, and does not change Arrow schemas, C ABI, WASM/host bindings, or Cargo manifests in this planning leaf. Queue priority remains a resource-allocation concern, separate from scheduler event priority.
+This is an additive experimental Rust proposal rooted in `kairo-ecs-des`, with a Flow-specific adapter in `kairo-ecs-abm`. Both exact crate roots are registered in the protected-surface inventory. It preserves legacy DES/ABM public APIs and behavior, does not alter core event ordering or RNG stream derivation, and does not change Arrow schemas, C ABI, WASM/host bindings, or Cargo manifests in this planning leaf. Queue priority remains a resource-allocation concern, separate from scheduler event priority. The concrete Flow symbols remain under release hold until Q0.2/Q0.3 and implementation-level review.
 
-No compatibility or release approval is implied. Track 25 must classify the exact `kairo-ecs-des` public root in the protected-surface inventory and complete its API review before implementation is treated as reviewed for release. Track 01 must review the supported-use overflow and cleanup boundary. Existing Kairos APIs remain available regardless of the future Flow API's experimental classification.
+The Q0.1 owner-approved design disposition registers the exact `crates/kairo-ecs-des` and `crates/kairo-ecs-abm` roots as experimental and aligns the compatibility artifacts. This is not a concrete-symbol API review or release approval. Exact symbols remain under release hold pending Q0.2/Q0.3 contracts, implementation-level Track 25 review, and tests. Existing Kairos APIs remain available regardless of the future Flow API's experimental classification.
 
-The exact Track 03 behavior-adapter dependency and dispatch route remain open for review. Track 03 should determine how a Flow-specific adapter reads the shared runtime through restricted queries, submits checked commands at deterministic dispatch boundaries, and avoids the separate `BehaviorSimulation` context. This proposal does not choose whether that adapter lives in DES, ABM, a third crate, or a particular event-kind dispatch mechanism.
+The owner-approved Track 03 direction places the adapter in `kairo-ecs-abm` with an acyclic dependency on DES. DES owns deterministic dispatch and handler registration; the adapter uses restricted typed queries and buffered checked commands, preserving standalone `BehaviorSimulation`. Q0.2/Q0.3 still freeze exact callback signatures, per-agent RNG lifecycle, event IDs, command validation/atomicity, and transition order.
 
 Continuation context serialization and snapshot ownership are deferred to Q0.1.codec. This proposal only requires any in-memory continuation state used by later queue work to be owned by the shared runtime; it does not specify a portable codec or snapshot format.
 
-## Open owner review
+## Remaining Q0.2/Q0.3 contract questions
 
-1. Does Kairos accept an additive experimental `FlowRuntime` in `kairo-ecs-des` with one private scheduler, world, and component registry while preserving every legacy DES/ABM API and behavior?
-2. Does Track 01 accept the per-runtime `u32::MAX` lifetime caps as the supported-use boundary for existing unchecked scheduler/world counters, with broader overflow guarantees deferred to separate core/state work?
-3. Does Track 01 agree that typed cleanup hooks for every facade-inserted component, plus queue/work cleanup before despawn, are sufficient for Flow-mediated entity cleanup?
-4. Which exact behavior-adapter dependency and deterministic dispatch route should Track 03 select? This remains unresolved here by design.
-5. Which terminal-claim retention and lease-revision lifecycle details should Q0.2 freeze before code implementation? Q0.2 should also require claim disposal to be allowed only after the claim is terminal, and forbid disposal while any lease for that claim remains active.
-6. Which exact experimental/protected-surface classification and review evidence does Track 25 require for this API root?
-7. Confirm that continuation codec and snapshot ownership remain deferred to Q0.1.codec.
+1. Q0.2 must decide claim terminal-record retention and lease-revision lifecycle. Claim disposal is allowed only after terminal state and when no lease remains active.
+2. Q0.2 must specify atomicity and failure behavior for state transitions, exact same-tick boundaries, and typed cleanup of reverse references.
+3. Q0.3 must freeze event-kind IDs, callback registration/dispatch identity, per-agent RNG lifecycle, buffered-command validation/application, lifecycle record schema, and transition order.
+4. Concrete method/error signatures must be reviewed against the two registered roots before implementation is merged. Portable checkpoint semantics remain with Track 22.
 
-Until these owners review the relevant questions, this document is a contract proposal only. It grants no authority to modify public APIs, core/state behavior, compatibility policy, or release status.
+The Kairos owner approved the Q0.1 architecture direction above. These remaining design details must be settled before implementation; the approval does not authorize broader core/state API changes, host bindings, or release.

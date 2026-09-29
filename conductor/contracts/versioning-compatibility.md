@@ -29,6 +29,8 @@ artifacts are required.
 | Rust core API | `crates/kairo-ecs-core` | experimental | Scheduler ordering, run loop, queue behavior, cancellation, and deterministic event ordering |
 | Rust state API | `crates/kairo-ecs-state` | experimental | Entity/component storage, generational handles, query behavior, and state snapshots |
 | Rust RNG API | `crates/kairo-ecs-rng` | experimental | Seed derivation, stream naming, and deterministic distribution behavior |
+| Rust DES API | `crates/kairo-ecs-des` | experimental | Legacy `DESContext`/FIFO `Resource` behavior and proposed additive FlowRuntime/queue/preemption surface |
+| Rust ABM API | `crates/kairo-ecs-abm` | experimental | Legacy ABM behavior and proposed adapter over the shared DES FlowRuntime |
 | C ABI | `include/kairo_ecs.h` | migration-only until public preview | `kairo_ecs_ffi_version`, handle ownership, status codes, and exported C symbols |
 | Arrow event log schema | `schemas/arrow/event_log_v1.schema.json` | migration-only until telemetry preview | Event-log fields, metadata keys, nullability, and schema version |
 | Python API | `bindings/python` | experimental | Python import root, scheduler wrapper, Arrow helpers, and package-level API |
