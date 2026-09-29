@@ -632,7 +632,7 @@ tracks:
       - code-health-floor
   - id: 44
     name: Code and Repository Health >= 9.5
-    status: Spec Approved
+    status: In Review
     owner: health-agent + ci-agent + security-agent + release-agent
     depends_on: ["13", "20", "25", "28", "30", "31", "41"]
     owned_paths:

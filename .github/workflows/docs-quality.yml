@@ -37,11 +37,29 @@ jobs:
       - name: Check Mermaid diagrams render
         run: |
           npm install -g @mermaid-js/mermaid-cli
-          cat > .mermaid-puppeteer.json <<'JSON'
+          chrome_path=""
+          if command -v google-chrome >/dev/null 2>&1; then
+            chrome_path="$(command -v google-chrome)"
+          elif command -v chromium >/dev/null 2>&1; then
+            chrome_path="$(command -v chromium)"
+          elif command -v chromium-browser >/dev/null 2>&1; then
+            chrome_path="$(command -v chromium-browser)"
+          fi
+          if [ -n "$chrome_path" ]; then
+            cat > .mermaid-puppeteer.json <<JSON
+          {
+            "executablePath": "$chrome_path",
+            "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+          }
+          JSON
+          else
+            npx --yes puppeteer browsers install chrome-headless-shell
+            cat > .mermaid-puppeteer.json <<'JSON'
           {
             "args": ["--no-sandbox", "--disable-setuid-sandbox"]
           }
           JSON
+          fi
           mkdir -p /tmp/mermaid-out
           shopt -s globstar nullglob
           for f in **/*.mmd; do
