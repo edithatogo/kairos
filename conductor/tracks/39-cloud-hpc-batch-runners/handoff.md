@@ -1,5 +1,23 @@
 # Handoff: Track 39 Cloud / HPC Batch Runners
 
+## 2026-09-29 Kubernetes scenario-key hardening
+
+Validated `scenarioRef.key` as a conservative single-component filename before
+using it as a ConfigMap item path or mounted scenario path. The inline writer
+now receives its output path through `KAIRO_SCENARIO_PATH`, not shell-string
+interpolation. Unit coverage rejects traversal, absolute paths, backslashes,
+shell metacharacters, dot segments, and non-string keys for both ConfigMap and
+inline scenarios, while checking valid default/custom paths.
+
+Validation on the current PR worktree:
+
+- `python3 -m unittest discover -s k8s/operator -p 'test_*.py'` — pass; 2 test methods including 16 rejected-key cases.
+- `python3 cloud/validate_cloud_hpc.py` — pass.
+- `.github/workflows/cloud-smoke.yml` runs the new test module in CI.
+
+This focused security fix does not advance Track 39 status or claim Kubernetes
+cluster/runtime acceptance.
+
 ## Summary
 
 Defined the scaffold and offline validation layer for production-scale KairoECS execution. The current verified scope is the `kairo-ecs-cli` command surface, manifest shape, local rendering, shell syntax, checkpoint/spot policy wiring, and local telemetry checksum behavior. The offline validator passes, but live Docker builds, Kubernetes cluster reconciliation, Slurm scheduler submission, and AWS/GCP/Azure provider API acceptance still require environment-backed validation before any readiness claim.
