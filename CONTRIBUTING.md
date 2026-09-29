@@ -31,12 +31,12 @@ The public onboarding detail lives at `docs/community/contributor-onboarding.md`
 ## Required checks before PR
 
 ```bash
-just fmt
-just lint
-just test
+just ci
 ```
 
 If the full environment is not ready yet, run the relevant subset and explain what could not be run.
+
+For a current GitHub settings and quality-frontier readback, run `just quality-drift` with authenticated, read-only `gh` access. It writes `artifacts/quality-frontier-drift.json`; pre-merge integrations are reported as `pending`, settings mismatches as `drift`, and inaccessible evidence as `unavailable`.
 
 ## Public API changes
 
