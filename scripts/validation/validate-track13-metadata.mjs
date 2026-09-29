@@ -258,8 +258,21 @@ requireTerms('.github/workflows/ci-core.yml', [
   'cargo clippy --workspace --all-targets --all-features -- -D warnings',
   'cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info',
   'node scripts/validation/check-core-coverage.mjs lcov.info',
+  'cargo test --doc --workspace --all-features',
+  'Rust MSRV 1.76',
+  'cargo check --workspace --all-features --locked',
+  'needs: [rust-stable, rust-msrv]',
   'cargo deny check',
   'cargo audit',
+]);
+
+requireTerms('codecov.yml', [
+  'coverage:',
+  'status:',
+  'project:',
+  'target: auto',
+  'threshold: 0%',
+  '- rust-core',
 ]);
 
 requireTerms('.github/workflows/ci-policy.yml', [

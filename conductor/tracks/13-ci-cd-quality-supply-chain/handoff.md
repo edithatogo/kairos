@@ -81,6 +81,40 @@ Tracks 07-13, 14, 15, 20, 25, and 28 consume these gates directly. Keep future w
 
 No release, registry, or remote publication side effects were performed.
 
+## 2026-09-29 post-integration CI follow-up
+
+Base: `dc8ba8f5f68168456f1e8710b62b5e59060eb8f3` (main after PR #154).
+Working tree: `/Users/doughnut/Documents/careops-sim/.worktrees/kairos-docs-ci-dedup-154`.
+The required Rust core context now aggregates stable verification and a parallel
+Rust 1.76 locked compile. Stable verification runs doctests separately from the
+single coverage-instrumented nextest suite. The clap dependency range and lock
+were constrained to releases compatible with the declared MSRV.
+
+The quality drift receipt now keeps the PR-only skip guard in the five-context
+ruleset contract, verifies that its workflow source is present on main, and
+expects only four push-capable contexts on an exact main SHA. Its Codecov
+configuration requests a `rust-core` project status. Exact-SHA hosted acceptance
+is still pending: the trusted-main OIDC upload succeeded on `dc8ba8f`, but GitHub
+returned no Codecov project status for that SHA.
+
+Validation on this working tree:
+
+- `actionlint .github/workflows/*.yml` — exit 0.
+- `node tests/conformance/quality-frontier-drift-check.mjs` — exit 0; pass,
+  pending, drift, unavailable, PR-only guard, and push-check cases covered.
+- `node scripts/validation/validate-track13-metadata.mjs` — exit 0; 46 tracks.
+- `cargo test --doc --workspace --all-features` — exit 0 on stable; 29.72 s;
+  doc-test harnesses compiled and completed across the workspace.
+- `rustup run 1.76.0 cargo check --workspace --all-features --locked` — exit 0;
+  no tests were repeated in the MSRV lane.
+- `just quality-drift` — exit 1 with receipt
+  `artifacts/quality-frontier-drift.json`; only the uncommitted source state and
+  missing exact-SHA Codecov project status were non-pass. The PR-only skip
+  workflow matched main and all four push-required contexts were present.
+
+The manual `Fuzzing Smoke` dispatch on main is run `36556097004`; its result is
+not yet recorded here. No Track status or phase closeout was advanced.
+
 ## 2026-09-28 quality frontier cross-track handoff
 
 User-authorized issues #120, #121, #122, and #136 required bounded scheduler

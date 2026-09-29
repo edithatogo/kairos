@@ -13,8 +13,8 @@ permissions:
   contents: read
 
 jobs:
-  rust-core:
-    name: Rust core quality
+  rust-stable:
+    name: Rust stable verification
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -52,6 +52,8 @@ jobs:
           name: rust-coverage
           path: lcov.info
           if-no-files-found: error
+      - name: Doctests
+        run: cargo test --doc --workspace --all-features
       - name: Docs
         env:
           RUSTDOCFLAGS: -D warnings
@@ -61,6 +63,35 @@ jobs:
           test -f deny.toml
           cargo deny check advisories sources
           cargo audit
+
+  rust-msrv:
+    name: Rust MSRV 1.76
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Install Rust MSRV
+        run: |
+          rustup toolchain install 1.76.0 --profile minimal
+          rustup default 1.76.0
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - name: Check workspace on Rust 1.76
+        run: cargo check --workspace --all-features --locked
+
+  rust-core:
+    name: Rust core quality
+    if: always()
+    needs: [rust-stable, rust-msrv]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require stable and MSRV verification
+        env:
+          RUST_STABLE_RESULT: ${{ needs.rust-stable.result }}
+          RUST_MSRV_RESULT: ${{ needs.rust-msrv.result }}
+        run: |
+          test "$RUST_STABLE_RESULT" = success
+          test "$RUST_MSRV_RESULT" = success
 
   codecov:
     name: Codecov OIDC upload

@@ -44,6 +44,8 @@ Format:
 
 ### Changed
 
+- Required Rust CI now checks the locked workspace on the declared 1.76 MSRV in parallel with stable verification, and runs all-feature doctests as a distinct test class.
+
 - Toolchain support metadata and its CI check now track Rust 1.98 stable instead of the stale 1.95 baseline.
 - Renovate now uses the Kairos preset with lower PR concurrency, while low-risk automerge stays off until stable required CI checks are configured.
 - Python binding CI installs Ruff and test tools from the package's declared test extra.
@@ -59,6 +61,9 @@ Format:
 - CI and bootstrap Python tools now install from SHA-256 hash-locked requirement files; the npm CLI and Mermaid CLI use committed integrity-locked package files, and NuGet packaging uses locked restore.
 
 ### Fixed
+
+- Quality drift readback now models the PR-only skip guard as a required ruleset context backed by exact main-branch workflow source, without expecting a push check run.
+- Codecov now has an explicit `rust-core` project-status policy for trusted-main coverage uploads.
 
 - Notebook validation parses cells as Python syntax without executing them; the `notebooks` validator now reports source context for syntax errors.
 

@@ -5,6 +5,8 @@
 - Root workspace gate: `Cargo.toml`, `rust-toolchain.toml`, and `deny.toml` exist and are used.
 - Core CI installs pinned Rust tool binaries from checksum-verified, SHA-pinned GitHub releases and disables source-build fallbacks.
 - Core CI runs `cargo fmt --all --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings`, and one coverage-instrumented nextest pass.
+- Required Rust core CI runs the stable test/coverage/docs lane and a parallel locked `cargo check --workspace --all-features --locked` on the declared Rust 1.76 MSRV; a stable aggregate check requires both jobs.
+- Core CI runs `cargo test --doc --workspace --all-features` once as a distinct test class; this complements nextest without repeating unit and integration tests.
 - Core CI runs the workspace nextest suite once under coverage instrumentation, then filters the same LCOV report to core scheduler production sources and enforces a 90% line-coverage floor; a minimal-permission job uploads the report with OIDC only on trusted main pushes. PRs use the Rust core check as their merge gate and do not receive OIDC.
 - `just test` creates the workspace LCOV report while running tests once. `just check-coverage` reads the last report without rerunning tests. `just ci` is the local equivalent of the core Rust formatting, lint, test/coverage, docs, and dependency-audit lane.
 - The weekly/manual mutation lane targets `kairo-ecs-core`, is limited to 25 minutes and two workers, fails on uncaught mutants, and retains `mutants.out` for 30 days.
@@ -16,6 +18,8 @@
 - Track 13 metadata alignment dynamically inventories every checked-in `.github/workflows/*.yml` file, requires an explicit workflow `name`, `on`, and top-level `permissions` block, and verifies both `ci-policy.yml` and `workflow-security.yml` list every workflow.
 - The offline supply-chain gate runs `scripts/validate_track13_supply_chain.ps1`, which executes the Track 13 metadata validator, `cargo metadata --no-deps --format-version 1`, cargo-deny advisory/source checks, and `cargo audit` when those scanners are installed locally.
 - The conformance job runs `tests/conformance/quality-frontier-drift-check.mjs` against pass, pending-integration, drift, and unavailable GitHub evidence fixtures.
+- The drift receipt retains all five required ruleset contexts while expecting only the four push-capable checks on a main SHA; it verifies the PR-only skip-guard workflow trigger, job name, and exact main-branch workflow blob.
+- Root `codecov.yml` requests a project status for the `rust-core` coverage flag; hosted acceptance still requires an exact-SHA `codecov/project` status after a trusted-main upload.
 - `just quality-drift` performs a read-only live settings readback, binds Actions results to the resolved default-branch SHA, and writes a JSON receipt to `artifacts/quality-frontier-drift.json`. Drift, pending integration, or unavailable APIs remain non-pass exit states.
 - Validate Conductor runs on both `ubuntu-latest` and `windows-latest` so PowerShell and Node validators are exercised cross-platform.
 - Package dry-runs and binding CI fail when their own manifests are missing instead of skipping quietly.

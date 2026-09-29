@@ -6,12 +6,18 @@
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo nextest run --workspace --all-features
-cargo test --doc --workspace
+cargo test --doc --workspace --all-features
 cargo llvm-cov --workspace --all-features --fail-under-lines 80
 cargo deny check
 cargo audit
 cargo semver-checks check-release
 ```
+
+The required `Rust core quality` GitHub check combines the stable verification
+job with a parallel locked `cargo check --workspace --all-features --locked` on
+Rust 1.76. The stable job runs the workspace test suite once under coverage,
+then runs doctests as their own test class. The aggregate is successful only
+when both jobs pass.
 
 ## Heavy/nightly gates
 
