@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "description": "Hash-locked npm CLI used by the local bootstrap script",
+  "engines": {
+    "node": ">=22.9.0"
+  },
   "dependencies": {
     "npm": "11.20.0"
   }
