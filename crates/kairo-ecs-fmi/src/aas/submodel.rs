@@ -136,7 +136,13 @@ mod tests {
 
     #[test]
     fn constructors_preserve_fields_and_with_property_appends_in_order() {
+        let empty_submodel = AasSubmodel::new("urn:kairo:empty", "empty");
+        assert!(empty_submodel.elements.is_empty());
+
         let first = AasProperty::new("queueDepth", "xs:integer");
+        assert_eq!(first.id_short, "queueDepth");
+        assert_eq!(first.value_type, "xs:integer");
+        assert_eq!(first.semantic_id, None);
         let second = AasProperty {
             semantic_id: Some("urn:kairo:queue-depth".to_string()),
             ..AasProperty::new("queueName", "xs:string")
