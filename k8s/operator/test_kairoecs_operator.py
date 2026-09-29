@@ -151,5 +151,69 @@ class ExperimentValidationTests(unittest.TestCase):
                     operator.validate_experiment(invalid)
 
 
+class RenderJobTests(unittest.TestCase):
+    def test_renders_configmap_scenario_and_storage_settings(self):
+        experiment = valid_experiment(
+            {"configMapName": "scenario-config", "key": "custom-scenario.yaml"}
+        )
+        experiment["metadata"] = {"name": "test-exp"}
+        experiment["spec"].update(
+            {
+                "image": "kairo:latest",
+                "parallelism": 2,
+                "storage": {"backend": "s3", "path": "s3://bucket/test"},
+                "resources": {"requests": {"cpu": "1", "memory": "1Gi"}},
+                "checkpoint": {"enabled": False},
+            }
+        )
+
+        job = operator.render_job(experiment)
+        job_spec = job["spec"]
+        template_spec = job_spec["template"]["spec"]
+        container = template_spec["containers"][0]
+        env = {entry["name"]: entry["value"] for entry in container["env"]}
+
+        self.assertEqual(job["apiVersion"], "batch/v1")
+        self.assertEqual(job["kind"], "Job")
+        self.assertEqual(job["metadata"]["name"], "test-exp-run")
+        self.assertEqual(job_spec["parallelism"], 2)
+        self.assertEqual(job_spec["completions"], 2)
+        self.assertEqual(template_spec["restartPolicy"], "Never")
+        self.assertEqual(container["image"], "kairo:latest")
+        self.assertEqual(container["resources"], {"requests": {"cpu": "1", "memory": "1Gi"}})
+        self.assertEqual(env["KAIRO_STORAGE_BACKEND"], "s3")
+        self.assertEqual(env["KAIRO_OUTPUT_URI"], "s3://bucket/test")
+        self.assertEqual(env["KAIRO_CHECKPOINT_ENABLED"], "false")
+        self.assertIn("/scenario/custom-scenario.yaml", container["args"])
+        self.assertEqual(
+            template_spec["volumes"][0]["configMap"]["name"], "scenario-config"
+        )
+        self.assertEqual(
+            template_spec["volumes"][0]["configMap"]["items"],
+            [{"key": "custom-scenario.yaml", "path": "custom-scenario.yaml"}],
+        )
+
+    def test_renders_inline_scenario_with_defaults(self):
+        experiment = valid_experiment({"inline": "scenario-content-here"})
+
+        job = operator.render_job(experiment)
+        template_spec = job["spec"]["template"]["spec"]
+        init_container = template_spec["initContainers"][0]
+        init_env = {entry["name"]: entry["value"] for entry in init_container["env"]}
+        container = template_spec["containers"][0]
+        container_env = {entry["name"]: entry["value"] for entry in container["env"]}
+
+        self.assertEqual(init_container["name"], "write-inline-scenario")
+        self.assertEqual(init_env["KAIRO_INLINE_SCENARIO"], "scenario-content-here")
+        self.assertEqual(init_env["KAIRO_SCENARIO_PATH"], "/scenario/scenario.yaml")
+        self.assertEqual(
+            init_container["command"][2],
+            'printf \'%s\' "$KAIRO_INLINE_SCENARIO" > "$KAIRO_SCENARIO_PATH"',
+        )
+        self.assertEqual(job["spec"]["parallelism"], 1)
+        self.assertEqual(job["spec"]["completions"], 1)
+        self.assertEqual(container_env["KAIRO_CHECKPOINT_ENABLED"], "true")
+
+
 if __name__ == "__main__":
     unittest.main()
