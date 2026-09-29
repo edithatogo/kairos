@@ -1,0 +1,34 @@
+{
+  "baselineRef": "384e8546d69f9cbf2746fcb2ab646263256e6dec",
+  "baselineSha": "384e8546d69f9cbf2746fcb2ab646263256e6dec",
+  "candidateSha": "ca798012e9a5b95fe68d22684105d01a4e1368fd",
+  "runtime": "v22.23.3",
+  "platform": "darwin",
+  "arch": "arm64",
+  "cpu": "Apple M1 Max",
+  "events": 20000,
+  "cancellations": 10000,
+  "repetitions": 3,
+  "timing": "cancellation loop only; event scheduling and snapshot assertions are outside the timed interval",
+  "randomOrder": "LCG seed 0x84c0ffee with Fisher-Yates shuffle; first requested IDs are cancelled",
+  "measurements": {
+    "reverse-end": {
+      "rawMs": {
+        "baseline": [2165.523459, 1576.9570000000003, 1457.5991250000006],
+        "candidate": [11.644792000000052, 15.540250000000015, 1.137084000001778]
+      },
+      "baselineMedianMs": 1576.9570000000003,
+      "candidateMedianMs": 11.644792000000052,
+      "medianSpeedup": 135.42165459030898
+    },
+    "seeded-random": {
+      "rawMs": {
+        "baseline": [1639.0292910000026, 1645.3866249999992, 1480.9417080000057],
+        "candidate": [12.191291999999521, 1.676833000001352, 31.848791999997047]
+      },
+      "baselineMedianMs": 1639.0292910000026,
+      "candidateMedianMs": 12.191291999999521,
+      "medianSpeedup": 134.44262437484616
+    }
+  }
+}
