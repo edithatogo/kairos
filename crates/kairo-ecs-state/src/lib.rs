@@ -392,6 +392,12 @@ impl ComponentRegistry {
     }
 }
 
+impl Default for ComponentRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod registry_insert_tests {
     use super::*;
@@ -419,13 +425,6 @@ mod registry_insert_tests {
         assert!(registry.store::<u32>().is_none());
     }
 }
-
-impl Default for ComponentRegistry {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
