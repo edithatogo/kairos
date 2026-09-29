@@ -424,15 +424,11 @@ mod tests {
         assert!(world.is_alive(entity3));
 
         // Despawn an entity with an invalid index
-        let invalid_entity = EntityId {
-            index: 999,
-            generation: 0,
-        };
+        let invalid_entity = EntityId::new(999, 0);
         assert!(!world.despawn(invalid_entity));
 
         // Despawn an entity with a stale generation
-        let mut stale_entity = entity1;
-        stale_entity.generation += 1;
+        let stale_entity = EntityId::new(entity1.index, entity1.generation.wrapping_add(1));
         assert!(!world.despawn(stale_entity));
     }
 }
