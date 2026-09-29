@@ -9,10 +9,18 @@ interpolation. Unit coverage rejects traversal, absolute paths, backslashes,
 shell metacharacters, dot segments, and non-string keys for both ConfigMap and
 inline scenarios, while checking valid default/custom paths.
 
-Validation on the current PR worktree:
+Local validation evidence (2026-09-29):
 
-- `python3 -m unittest discover -s k8s/operator -p 'test_*.py'` — pass; 2 test methods including 16 rejected-key cases.
-- `python3 cloud/validate_cloud_hpc.py` — pass.
+- Working directory: `/Users/doughnut/Documents/careops-sim/.worktrees/kairos-docs-ci-dedup-154`.
+- Source commit tested: `2207f0901d5fa63585c670c6c2856add67857e56`; PR was subsequently rebased onto `ac5fcc749dd6ea1201a38ec29a9e583ea8c85bf3` at `5a5fbe2124470d62b34e78f34a955d20d1119d81`. The scenario validation/operator source is unchanged by that rebase; hosted checks ran on the rebased PR head.
+- Toolchain: Python `3.14.7`; actionlint `1.7.12`.
+- `python3 -m unittest discover -s k8s/operator -p 'test_*.py'` — exit `0`; 2 test methods including 16 rejected-key subtests. Output artifact: terminal output only (not retained as a file).
+- `python3 cloud/validate_cloud_hpc.py` — exit `0`. Output artifact: terminal output only (not retained as a file).
+- `actionlint .github/workflows/cloud-smoke.yml` — exit `0`. Output artifact: terminal output only (not retained as a file).
+- `python3 -m py_compile k8s/operator/kairoecs_operator.py k8s/operator/test_kairoecs_operator.py` — exit `0`. Output artifact: bytecode under ignored `__pycache__`; no report retained.
+- `git diff --check` — exit `0`.
+- SHA-256 inputs: `k8s/operator/kairoecs_operator.py` `f0a2fc83b4b2df532d60713af5aac6132b92facae19f950f2d1c8e6e5b92c182`; `k8s/operator/test_kairoecs_operator.py` `9f6610595256dfcb2ed54dc7baad87749d98e7711623dd6f77340bcbc952c12c`; `k8s/samples/experiment.json` `9ad6be1741c76f5b28d23708674d950a422405641346344a7abfe062c106c19f`.
+- Hosted `cloud / offline-cloud-hpc-smoke` ran on PR head `5a5fbe2124470d62b34e78f34a955d20d1119d81` and passed; hosted artifacts/logs remain attached to Actions run `36563334526`.
 - `.github/workflows/cloud-smoke.yml` runs the new test module in CI.
 
 This focused security fix does not advance Track 39 status or claim Kubernetes
