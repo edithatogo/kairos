@@ -64,6 +64,7 @@ Format:
 
 ### Fixed
 
+- Python's optional Arrow extra now requires PyArrow 14.0.2 or later to exclude releases affected by an upstream Arrow reader security advisory.
 - Upgrade Astro to 7.3.5 and its Starlight integration/plugins to security-compatible releases, fixing the critical Astro image-optimization remote-code-execution alert.
 
 - Trusted-main Codecov uploads now check out the repository configuration before uploading the coverage artifact.
