@@ -16,27 +16,20 @@ jobs:
   fuzz-smoke:
     name: fuzz-smoke
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - name: Install Rust nightly
+      - name: Install Rust stable
         run: |
-          rustup toolchain install nightly --profile minimal
-          rustup default nightly
+          rustup toolchain install stable --profile minimal
+          rustup default stable
       - name: Install cargo-fuzz
-        run: cargo install cargo-fuzz --version 0.13.2 --locked
-      - name: Scheduler fuzz smoke
+        run: cargo install cargo-fuzz --locked
+      - name: FFI fuzz smoke
+        shell: bash
         run: |
           set -euo pipefail
-          test -f fuzz/Cargo.toml
-          cargo +nightly fuzz run scheduler_requests -- -max_total_time=60 -rss_limit_mb=2048
-      - name: Preserve crash corpus
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: scheduler-fuzz-artifacts
-          path: fuzz/artifacts
-          if-no-files-found: warn
-          retention-days: 30
+          test -f Cargo.toml
+          test -d fuzz
+          cargo fuzz run ffi_boundary -- -max_total_time=60

@@ -81,70 +81,9 @@ Tracks 07-13, 14, 15, 20, 25, and 28 consume these gates directly. Keep future w
 
 No release, registry, or remote publication side effects were performed.
 
-## 2026-09-28 quality frontier cross-track handoff
-
-User-authorized issues #120, #121, #122, and #136 required bounded scheduler
-quality coverage, one-pass CI, dependency automation, and hosted security gates.
-PR #154 integrates the Track 13-owned workflow, Renovate, validation, and test
-matrix changes. No public schema or API contract changed.
-
-- Track 01 owns the scheduler source and property tests touched by this work.
-  Its handoff records the release-only pending-event accounting correction and
-  the deterministic property suite. Track 01 remains under review; this note
-  does not advance its status or waive its owner lane.
-- Track 06 owns the Python package metadata and binding files touched by this
-  work. Its handoff records the declared Ruff test extra and lint corrections.
-  Track 06 remains under review; this note does not advance its status or waive
-  its owner lane.
-- Track 30 owns the stable-toolchain expectation corrected after hosted CI
-  installed Rust 1.98 while the matrix still expected 1.95. Its matrix handoff
-  and validation record that refresh.
-
-PR #154 hosted Actions at commit `a97d54063c3080e401fc19a17fb8bb1c018b70c8`
-passed 61 checks, skipped two conditional jobs, and had no pending or failing
-checks. The active `main quality and security gates` ruleset is recorded in
-`conductor/quality-frontier-20260928.md`. The first trusted main-push Codecov
-upload and hosted Renovate refresh remain post-merge evidence gates; weekly
-hosted fuzz and mutation runs also remain due.
-
 ## Follow-up issues
 
 No additional follow-up issues were recorded by this Conductor hygiene update.
-
-## 2026-09-29 package-check deduplication
-
-The package dry-run workflow now checks packaging outputs without rerunning
-language tests already covered by `ci-bindings` and workspace compilation
-already covered by `ci-core`. The Python package and metadata check runs once on
-Python 3.14; the binding test matrix still covers Python 3.10–3.14. Julia and
-Go package jobs were removed because they only repeated their binding tests and
-did not create package artifacts. npm builds once during `npm ci` preparation,
-then inspects the package with lifecycle scripts disabled; NuGet restores and
-packs the library without rerunning the net10 test project. The PR path filter
-includes the workflow file itself. Local `actionlint` and `git diff --check`
-passed; hosted Actions must pass on the refreshed PR head before integration.
-
-The changelog, this handoff, and the Track 13 test matrix were updated with the
-workflow change. No release or package publication was performed.
-
-## 2026-09-29 quality-frontier drift receipt
-
-Added `just quality-drift`, a read-only GitHub settings readback that records
-source context, the active main ruleset, legacy branch protection, Actions
-publisher and token settings, private vulnerability reporting, the default-
-branch Renovate preset, required check runs bound to the resolved default-branch
-SHA, trusted-main Codecov upload/status, and Renovate refresh evidence. The JSON
-receipt is written to the ignored `artifacts/quality-frontier-drift.json` path.
-It distinguishes `pass`, `drift`, `pending`, and `unavailable`; pending provider
-evidence cannot be treated as a pass. The conformance workflow exercises these
-states with offline fixtures. Renovate refresh evidence is measured strictly
-after the latest merged pull request's GitHub `merged_at`, and duplicate
-Codecov upload/status records are reduced to the newest run/status before they
-can satisfy the receipt.
-
-Before PR #154 integration, Renovate preset refresh and Codecov upload/status
-remain pending. Rerun `just quality-drift` after integration and retain that
-fresh receipt with the issue closeout evidence.
 ## Phase closeout evidence
 
 `$conductor-review` completed on 2026-05-08 with no blocking Track 13 findings. Accepted fixes: none required in the workflow surface during this closeout pass. Validation commands passed: `node scripts/validation/validate-track13-metadata.mjs`, `node tests/conformance/track07_13_hardening_check.mjs`, `node tests/conformance/track12_20_evidence_check.mjs`, and `pwsh -NoProfile -File scripts\validate_track13_supply_chain.ps1`. `cargo-deny` and `cargo-audit` were unavailable locally and reported as skipped by the Track 13 supply-chain gate. Git cleanup state: dirty because local Conductor closeout/status edits are pending commit. Commit SHA: `5dd1937566898b2e028ac61dab1e9dd173e6d919`; pushed ref: `origin/main`. Strict cleanup gate `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` remains pending until these local closeout edits are committed. Next-phase decision: Track 13 is Done for the current CI/CD and supply-chain scaffold; future mandatory advisory scanner installation or release hardening belongs in Track 20 or a scoped follow-up.

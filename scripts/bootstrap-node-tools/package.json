@@ -1,9 +1,0 @@
-{
-  "name": "kairos-bootstrap-node-tools",
-  "private": true,
-  "version": "1.0.0",
-  "description": "Hash-locked npm CLI used by the local bootstrap script",
-  "dependencies": {
-    "npm": "11.20.0"
-  }
-}

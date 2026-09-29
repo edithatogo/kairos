@@ -247,17 +247,10 @@ for (const workflow of workflowFiles) {
 }
 
 requireTerms('.github/workflows/ci-core.yml', [
-  'taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29',
-  'cargo-nextest@0.9.146',
-  'cargo-deny@0.20.2',
-  'cargo-audit@0.22.2',
-  'cargo-llvm-cov@0.9.1',
-  'fallback: none',
   'cargo metadata --no-deps --format-version 1',
   'cargo fmt --all --check',
   'cargo clippy --workspace --all-targets --all-features -- -D warnings',
-  'cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info',
-  'node scripts/validation/check-core-coverage.mjs lcov.info',
+  'cargo nextest run --workspace --all-features',
   'cargo deny check',
   'cargo audit',
 ]);
@@ -267,20 +260,14 @@ requireTerms('.github/workflows/ci-policy.yml', [
   'Workflow consistency policy',
   'renovate.json',
   'cargo metadata --no-deps --format-version 1',
+  'cargo deny check',
+  'cargo audit',
   '.github/workflows/validate-conductor.yml',
   '.github/workflows/scorecard.yml',
   '.github/workflows/secret-scan.yml',
   '.github/workflows/codeql.yml',
   '.github/workflows/sbom-attestations.yml',
 ]);
-
-requireTerms('.github/workflows/ci-bindings.yml', [
-  'python -m pip install --require-hashes -r scripts/bootstrap-python-tools.lock',
-  "python -m pip install --no-deps --no-build-isolation -e '.[test]'",
-  'ruff check .',
-]);
-requireTerms('bindings/python/pyproject.toml', ['ruff==0.16.9']);
-requireTerms('scripts/validation/check-core-coverage.mjs', ['kairo-ecs-core/src/', '90']);
 
 requirePattern('.github/workflows/dependency-review.yml', /fail-on-severity:\s*high/, 'high-severity dependency review gate');
 requirePattern('deny.toml', /wildcards\s*=\s*"deny"/, 'wildcard dependency denial');

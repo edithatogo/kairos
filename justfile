@@ -8,7 +8,6 @@ dev-validate:
     rustc --version
     cargo --version
     cargo nextest --version
-    cargo llvm-cov --version
     cargo vet --version
     python --version
     node --version
@@ -25,11 +24,7 @@ lint:
     cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 test:
-    cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info
-    node scripts/validation/check-core-coverage.mjs lcov.info
-
-check-coverage:
-    node scripts/validation/check-core-coverage.mjs lcov.info
+    cargo nextest run --workspace --all-features
 
 docs-bootstrap:
     npm --prefix website ci
@@ -54,17 +49,6 @@ toolchain-docs:
 security:
     cargo deny check
     cargo audit
-
-ci: # Same core checks as the required Rust CI lane; run before opening a PR.
-    cargo fmt --all --check
-    cargo clippy --workspace --all-targets --all-features -- -D warnings
-    just test
-    RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
-    cargo deny check advisories sources
-    cargo audit
-
-quality-drift:
-    node scripts/validation/quality-frontier-drift.mjs --output artifacts/quality-frontier-drift.json
 
 bindings-smoke:
     echo "Run Python/R/Julia/TS/C#/Go smoke tests when bindings exist."

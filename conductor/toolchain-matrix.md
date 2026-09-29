@@ -30,7 +30,7 @@ Support labels:
 
 | Ecosystem | Binding track | Minimum supported version | Latest/current supported version | Experimental or preview lane | CI selector | Deprecation horizon | Linux x86_64 | Linux aarch64 | macOS x86_64 | macOS aarch64 | Windows x86_64 |
 |---|---:|---|---|---|---|---|---|---|---|---|---|
-| Rust core | 00/01/13 | MSRV `1.76`; default channel `stable` | Rust `1.98.x` stable as of 2026-09-28 | Rust `beta` advisory lane | `stable`, `beta` | MSRV may rise only after 2 release cycles or 6 months notice; `stable` tracks upstream stable. | CI-covered | best-effort | best-effort | best-effort | best-effort |
+| Rust core | 00/01/13 | MSRV `1.76`; default channel `stable` | Rust `1.95.x` stable as of 2026-05-06 | Rust `beta` advisory lane | `stable`, `beta` | MSRV may rise only after 2 release cycles or 6 months notice; `stable` tracks upstream stable. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | Python binding | 06 | CPython `3.10` | CPython `3.14.x` | CPython 3.14 free-threaded smoke where runner support exists | `3.10`, `3.11`, `3.12`, `3.13`, `3.14` | Drop only after upstream PSF security support ends and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | R binding | 07 | R `4.2` package floor; CI floor is previous CRAN release | R `4.6.x` current release | R-devel advisory lane only | `oldrel-1`, `release` | Drop a package floor only after CRAN support pressure or dependency incompatibility is documented for 2 cycles/6 months. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | Julia binding | 08 | Julia `1.10` LTS-compatible floor | Julia `1.12.x` current stable | Julia `1.13` beta advisory lane only | `1.10`, `1.12` | Drop an LTS-compatible floor only after Julia LTS guidance changes and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
@@ -102,7 +102,7 @@ The `version-drop-policy-check` gate fails if a version disappears from the matr
 | Ecosystem | Version or lane | Notice started | Earliest removal | Reason | Status |
 |---|---|---|---|---|---|
 | Node.js | `20.x` | 2026-05-06 | 2026-11-06 | Node 20 reached EOL on 2026-04-30; KairoECS CI now prefers Node 22 and 24. | Deprecated; no new CI lanes should be added. |
-| Go | `1.24.x` package dry-run lane | 2026-05-06 | 2026-11-06 | Go supports the two most recent releases; Track 30 CI now covers 1.25 and 1.26. | Deprecated; Go test/vet runs in binding CI and the Go 1.25 floor is checked by toolchain CI. |
+| Go | `1.24.x` package dry-run lane | 2026-05-06 | 2026-11-06 | Go supports the two most recent releases; Track 30 CI now covers 1.25 and 1.26. | Deprecated; package dry-run now uses the supported Go 1.25 floor. |
 
 ## Maintainer Update Procedure
 
