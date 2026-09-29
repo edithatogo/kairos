@@ -372,10 +372,12 @@ impl ComponentRegistry {
     /// Returns `false` when the entity is stale or the typed store is unavailable.
     #[must_use]
     pub fn insert<T: 'static>(&mut self, entity: EntityId, component: T) -> bool {
-        if self.store::<T>().is_none() {
-            self.register::<T>();
-        }
-        let Some(store) = self.store_mut::<T>() else {
+        let store = self
+            .stores
+            .entry(TypeId::of::<T>())
+            .or_insert_with(|| Box::new(ComponentStore::<T>::new()))
+            .downcast_mut::<ComponentStore<T>>();
+        let Some(store) = store else {
             return false;
         };
         store.insert(entity, component)
