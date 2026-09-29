@@ -1,0 +1,891 @@
+{
+  "fixture": "des_resource_preemption_strategies_v1",
+  "version": 1,
+  "provenance": "synthetic",
+  "evidence": [
+    {
+      "id": "TC-SUSPEND-001",
+      "classification": "proposed_policy_trace_reference"
+    },
+    {
+      "id": "TC-ABORT-001",
+      "classification": "proposed_policy_trace_reference"
+    },
+    {
+      "id": "TC-RESTART-001",
+      "classification": "proposed_policy_trace_reference"
+    }
+  ],
+  "cases": [
+    {
+      "id": "suspend_low_work",
+      "capacity": 1,
+      "initial_active": [],
+      "initial_queued": [],
+      "operations": [
+        {
+          "at_ticks": 0,
+          "op": {
+            "submit_work": {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "work_duration": 10,
+              "duration_draw_id": "draw-A-duration-001",
+              "can_preempt": false,
+              "preemptible_strategy": "Suspend"
+            }
+          }
+        },
+        {
+          "at_ticks": 3,
+          "op": {
+            "submit_work": {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 2,
+              "work_duration": 2,
+              "duration_draw_id": "draw-B-duration-001",
+              "can_preempt": true,
+              "preemptible_strategy": null
+            }
+          }
+        },
+        {
+          "at_ticks": 5,
+          "op": {
+            "dispatch_completion": {
+              "request_id": "B",
+              "attempt": 0
+            }
+          }
+        },
+        {
+          "at_ticks": 12,
+          "op": {
+            "dispatch_completion": {
+              "request_id": "A",
+              "attempt": 0
+            }
+          }
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 0,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 10,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 0,
+              "duration_draw_id": "draw-A-duration-001",
+              "segment_started_at": 0,
+              "completion_at": 10,
+              "preemptible_strategy": "Suspend"
+            }
+          ],
+          "queued": [],
+          "terminal": [],
+          "granted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            }
+          ],
+          "completed": [],
+          "interrupted": [],
+          "aborted": [],
+          "draws": [
+            {
+              "request_id": "A",
+              "draw_id": "draw-A-duration-001",
+              "sampled_ticks": 10
+            }
+          ],
+          "accepted": true
+        },
+        {
+          "at_ticks": 3,
+          "active": [
+            {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 2,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 2,
+              "original_duration": 2,
+              "cumulative_busy_ticks": 0,
+              "duration_draw_id": "draw-B-duration-001",
+              "segment_started_at": 3,
+              "completion_at": 5,
+              "preemptible_strategy": null
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "recovery_policy": "Suspend",
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 3,
+              "duration_draw_id": "draw-A-duration-001",
+              "completed_attempt": 0,
+              "next_attempt": 0
+            }
+          ],
+          "terminal": [],
+          "granted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            }
+          ],
+          "completed": [],
+          "interrupted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Suspend"
+            }
+          ],
+          "aborted": [],
+          "draws": [
+            {
+              "request_id": "A",
+              "draw_id": "draw-A-duration-001",
+              "sampled_ticks": 10
+            },
+            {
+              "request_id": "B",
+              "draw_id": "draw-B-duration-001",
+              "sampled_ticks": 2
+            }
+          ],
+          "accepted": true
+        },
+        {
+          "at_ticks": 5,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 7,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 3,
+              "duration_draw_id": "draw-A-duration-001",
+              "segment_started_at": 5,
+              "completion_at": 12,
+              "preemptible_strategy": "Suspend"
+            }
+          ],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "B",
+              "status": "Completed",
+              "at_ticks": 5
+            }
+          ],
+          "granted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            },
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 5,
+              "resumed": true
+            }
+          ],
+          "completed": [
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 5,
+              "cumulative_busy_ticks": 2
+            }
+          ],
+          "interrupted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Suspend"
+            }
+          ],
+          "aborted": [],
+          "draws": [
+            {
+              "request_id": "A",
+              "draw_id": "draw-A-duration-001",
+              "sampled_ticks": 10
+            },
+            {
+              "request_id": "B",
+              "draw_id": "draw-B-duration-001",
+              "sampled_ticks": 2
+            }
+          ],
+          "accepted": true
+        },
+        {
+          "at_ticks": 12,
+          "active": [],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "B",
+              "status": "Completed",
+              "at_ticks": 5
+            },
+            {
+              "request_id": "A",
+              "status": "Completed",
+              "at_ticks": 12
+            }
+          ],
+          "granted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            },
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 5,
+              "resumed": true
+            }
+          ],
+          "completed": [
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 5,
+              "cumulative_busy_ticks": 2
+            },
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 12,
+              "cumulative_busy_ticks": 10
+            }
+          ],
+          "interrupted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Suspend"
+            }
+          ],
+          "aborted": [],
+          "draws": [
+            {
+              "request_id": "A",
+              "draw_id": "draw-A-duration-001",
+              "sampled_ticks": 10
+            },
+            {
+              "request_id": "B",
+              "draw_id": "draw-B-duration-001",
+              "sampled_ticks": 2
+            }
+          ],
+          "accepted": true
+        }
+      ],
+      "invariant": "A is interrupted once at tick 3 and resumes its 7 remaining ticks after B completes at tick 5; B completes at 5 and A completes at 12 with 10 cumulative busy ticks."
+    },
+    {
+      "id": "abort_low_work",
+      "capacity": 1,
+      "initial_active": [],
+      "initial_queued": [],
+      "operations": [
+        {
+          "at_ticks": 0,
+          "op": {
+            "submit_work": {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "work_duration": 10,
+              "duration_draw_id": "draw-A-duration-001",
+              "can_preempt": false,
+              "preemptible_strategy": "Abort"
+            }
+          }
+        },
+        {
+          "at_ticks": 3,
+          "op": {
+            "submit_work": {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 2,
+              "work_duration": 2,
+              "duration_draw_id": "draw-B-duration-001",
+              "can_preempt": true,
+              "preemptible_strategy": null
+            }
+          }
+        },
+        {
+          "at_ticks": 5,
+          "op": {
+            "dispatch_completion": {
+              "request_id": "B",
+              "attempt": 0
+            }
+          }
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 0,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 10,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 0,
+              "duration_draw_id": "draw-A-duration-001",
+              "segment_started_at": 0,
+              "completion_at": 10,
+              "preemptible_strategy": "Abort"
+            }
+          ],
+          "queued": [],
+          "terminal": [],
+          "granted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            }
+          ],
+          "completed": [],
+          "interrupted": [],
+          "aborted": [],
+          "draws": [
+            {
+              "request_id": "A",
+              "draw_id": "draw-A-duration-001",
+              "sampled_ticks": 10
+            }
+          ],
+          "accepted": true
+        },
+        {
+          "at_ticks": 3,
+          "active": [
+            {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 2,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 2,
+              "original_duration": 2,
+              "cumulative_busy_ticks": 0,
+              "duration_draw_id": "draw-B-duration-001",
+              "segment_started_at": 3,
+              "completion_at": 5,
+              "preemptible_strategy": null
+            }
+          ],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "A",
+              "status": "Aborted",
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7
+            }
+          ],
+          "granted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            }
+          ],
+          "completed": [],
+          "interrupted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Abort"
+            }
+          ],
+          "aborted": [
+            {
+              "request_id": "A",
+              "status": "Aborted",
+              "at_ticks": 3,
+              "attempt": 0,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7
+            }
+          ],
+          "draws": [
+            {
+              "request_id": "A",
+              "draw_id": "draw-A-duration-001",
+              "sampled_ticks": 10
+            },
+            {
+              "request_id": "B",
+              "draw_id": "draw-B-duration-001",
+              "sampled_ticks": 2
+            }
+          ],
+          "accepted": true
+        },
+        {
+          "at_ticks": 5,
+          "active": [],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "A",
+              "status": "Aborted",
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7
+            },
+            {
+              "request_id": "B",
+              "status": "Completed",
+              "at_ticks": 5
+            }
+          ],
+          "granted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            }
+          ],
+          "completed": [
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 5,
+              "cumulative_busy_ticks": 2
+            }
+          ],
+          "interrupted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Abort"
+            }
+          ],
+          "aborted": [
+            {
+              "request_id": "A",
+              "status": "Aborted",
+              "at_ticks": 3,
+              "attempt": 0,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7
+            }
+          ],
+          "draws": [
+            {
+              "request_id": "A",
+              "draw_id": "draw-A-duration-001",
+              "sampled_ticks": 10
+            },
+            {
+              "request_id": "B",
+              "draw_id": "draw-B-duration-001",
+              "sampled_ticks": 2
+            }
+          ],
+          "accepted": true
+        }
+      ],
+      "invariant": "A is interrupted and aborted once at tick 3 with 7 ticks unperformed; it never requeues or completes. B completes at tick 5."
+    },
+    {
+      "id": "restart_low_work",
+      "capacity": 1,
+      "initial_active": [],
+      "initial_queued": [],
+      "operations": [
+        {
+          "at_ticks": 0,
+          "op": {
+            "submit_work": {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "work_duration": 10,
+              "duration_draw_id": "draw-A-duration-001",
+              "can_preempt": false,
+              "preemptible_strategy": "Restart"
+            }
+          }
+        },
+        {
+          "at_ticks": 3,
+          "op": {
+            "submit_work": {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 2,
+              "work_duration": 2,
+              "duration_draw_id": "draw-B-duration-001",
+              "can_preempt": true,
+              "preemptible_strategy": null
+            }
+          }
+        },
+        {
+          "at_ticks": 5,
+          "op": {
+            "dispatch_completion": {
+              "request_id": "B",
+              "attempt": 0
+            }
+          }
+        },
+        {
+          "at_ticks": 15,
+          "op": {
+            "dispatch_completion": {
+              "request_id": "A",
+              "attempt": 1
+            }
+          }
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 0,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 10,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 0,
+              "duration_draw_id": "draw-A-duration-001",
+              "segment_started_at": 0,
+              "completion_at": 10,
+              "preemptible_strategy": "Restart"
+            }
+          ],
+          "queued": [],
+          "terminal": [],
+          "granted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            }
+          ],
+          "completed": [],
+          "interrupted": [],
+          "aborted": [],
+          "draws": [
+            {
+              "request_id": "A",
+              "draw_id": "draw-A-duration-001",
+              "sampled_ticks": 10
+            }
+          ],
+          "accepted": true
+        },
+        {
+          "at_ticks": 3,
+          "active": [
+            {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 2,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 2,
+              "original_duration": 2,
+              "cumulative_busy_ticks": 0,
+              "duration_draw_id": "draw-B-duration-001",
+              "segment_started_at": 3,
+              "completion_at": 5,
+              "preemptible_strategy": null
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "recovery_policy": "Restart",
+              "elapsed_ticks": 3,
+              "remaining_ticks": 10,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 3,
+              "duration_draw_id": "draw-A-duration-001",
+              "completed_attempt": 0,
+              "next_attempt": 1
+            }
+          ],
+          "terminal": [],
+          "granted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            }
+          ],
+          "completed": [],
+          "interrupted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Restart"
+            }
+          ],
+          "aborted": [],
+          "draws": [
+            {
+              "request_id": "A",
+              "draw_id": "draw-A-duration-001",
+              "sampled_ticks": 10
+            },
+            {
+              "request_id": "B",
+              "draw_id": "draw-B-duration-001",
+              "sampled_ticks": 2
+            }
+          ],
+          "accepted": true
+        },
+        {
+          "at_ticks": 5,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "attempt": 1,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 10,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 3,
+              "duration_draw_id": "draw-A-duration-001",
+              "segment_started_at": 5,
+              "completion_at": 15,
+              "preemptible_strategy": "Restart"
+            }
+          ],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "B",
+              "status": "Completed",
+              "at_ticks": 5
+            }
+          ],
+          "granted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            },
+            {
+              "request_id": "A",
+              "attempt": 1,
+              "at_ticks": 5,
+              "restarted": true
+            }
+          ],
+          "completed": [
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 5,
+              "cumulative_busy_ticks": 2
+            }
+          ],
+          "interrupted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Restart"
+            }
+          ],
+          "aborted": [],
+          "draws": [
+            {
+              "request_id": "A",
+              "draw_id": "draw-A-duration-001",
+              "sampled_ticks": 10
+            },
+            {
+              "request_id": "B",
+              "draw_id": "draw-B-duration-001",
+              "sampled_ticks": 2
+            }
+          ],
+          "accepted": true
+        },
+        {
+          "at_ticks": 15,
+          "active": [],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "B",
+              "status": "Completed",
+              "at_ticks": 5
+            },
+            {
+              "request_id": "A",
+              "status": "Completed",
+              "at_ticks": 15
+            }
+          ],
+          "granted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            },
+            {
+              "request_id": "A",
+              "attempt": 1,
+              "at_ticks": 5,
+              "restarted": true
+            }
+          ],
+          "completed": [
+            {
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 5,
+              "cumulative_busy_ticks": 2
+            },
+            {
+              "request_id": "A",
+              "attempt": 1,
+              "at_ticks": 15,
+              "cumulative_busy_ticks": 13
+            }
+          ],
+          "interrupted": [
+            {
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Restart"
+            }
+          ],
+          "aborted": [],
+          "draws": [
+            {
+              "request_id": "A",
+              "draw_id": "draw-A-duration-001",
+              "sampled_ticks": 10
+            },
+            {
+              "request_id": "B",
+              "draw_id": "draw-B-duration-001",
+              "sampled_ticks": 2
+            }
+          ],
+          "accepted": true
+        }
+      ],
+      "invariant": "A is interrupted once at tick 3, restarts as attempt 1 at tick 5 using the original sampled duration and draw, and completes at tick 15 with 13 cumulative busy ticks."
+    }
+  ]
+}
