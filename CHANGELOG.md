@@ -44,6 +44,8 @@ Format:
 
 ### Changed
 
+- The optional Python Arrow extra now requires PyArrow 25.0.1 or later; the supported Python range remains 3.10–3.14.
+
 - Toolchain docs validation now recognizes the pinned `just` and npm CLI commands used by the Unix bootstrap script.
 
 - Conformance fixture catalog now points to the zero-delay fixture file while preserving its ordering-only scope.
