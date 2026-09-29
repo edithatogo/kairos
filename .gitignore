@@ -5,6 +5,7 @@ lcov.info
 artifacts/
 dist/
 **/node_modules/
+scripts/bootstrap-node-tools/npm-patched.tgz
 *.Rcheck/
 bindings/*.tar.gz
 **/obj/
