@@ -24,7 +24,7 @@ Re-run before implementation and release.
 
 ## .NET
 
-- Source: https://dotnet.microsoft.com/en-us/platform/support/policy
+- Source: https://learn.microsoft.com/en-us/lifecycle/products/microsoft-net-and-net-core
 - Source: https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-11/overview
 - Checked facts:
   - .NET 10 is LTS and supported until November 14, 2028.

@@ -12,6 +12,7 @@
 - `cargo check --manifest-path crates/kairo-ecs-wasm/Cargo.toml` for the default Rust wasm wrapper contract. Last run: pass, 2026-05-08.
 - `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates/kairo-ecs-wasm/Cargo.toml` for the default Rust wasm wrapper contract. Last run: pass, 2026-05-08, 3 unit tests and 0 doctests.
 - `cargo check --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export` for the generated `wasm-bindgen` export layer. Last run: blocked, 2026-05-07, because build scripts for `wasm-bindgen` dependencies hit Git's `usr\bin\link.exe` and fail with Win32 error 5.
+- The Wasm export crate declares Rust 1.77, matching the current `wasm-bindgen` MSRV. Required CI checks the locked `wasm32-unknown-unknown` target with `wasm-export` on Rust 1.77.
 - Track 12 fixture bridge is covered by `npm test` through `test/conformance.test.ts`.
 - `wasm-pack test --node` only once the `wasm-export` feature can compile on the local runner.
 - `node tests/conformance/track07_13_hardening_check.mjs` verifies this track no longer claims package publishing ownership or unimplemented server runtime support.

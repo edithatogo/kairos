@@ -73,8 +73,10 @@ KairoECS.self_check()
 ## TypeScript/Wasm binding
 
 ### Prerequisites
-- Node.js >= 20 LTS
+- Node.js >=22 <25 (CI-tested lines: Node 22 and 24)
 - npm
+
+The repository chooses Node.js >=22.9.0 as its supported bootstrap floor to drop EOL Node 20. The pinned npm 11.20.0 CLI itself supports Node.js `^20.17.0 || >=22.9.0`; this repository's bootstrap floor intentionally excludes EOL Node 20.
 
 ### Install
 ```bash

@@ -44,6 +44,9 @@ jobs:
       - name: Validate cloud and HPC manifests
         run: python cloud/validate_cloud_hpc.py
 
+      - name: Test Kubernetes scenario key validation
+        run: python -m unittest discover -s k8s/operator -p 'test_*.py'
+
       - name: Render Kubernetes job from sample experiment
         run: python k8s/operator/kairoecs_operator.py --experiment k8s/samples/experiment.json --output /tmp/kairo-job.json
 
