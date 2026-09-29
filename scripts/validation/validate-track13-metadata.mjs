@@ -260,7 +260,7 @@ requireTerms('.github/workflows/ci-core.yml', [
   'node scripts/validation/check-core-coverage.mjs lcov.info',
   'cargo test --doc --workspace --all-features',
   'Rust MSRV 1.76',
-  'cargo check --workspace --all-features --locked',
+  'cargo +1.76.0 check --workspace --all-features --locked',
   'needs: [rust-stable, rust-msrv]',
   'cargo deny check',
   'cargo audit',

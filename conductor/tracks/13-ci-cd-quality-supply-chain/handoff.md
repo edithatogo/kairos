@@ -112,8 +112,14 @@ Validation on this working tree:
   missing exact-SHA Codecov project status were non-pass. The PR-only skip
   workflow matched main and all four push-required contexts were present.
 
-The manual `Fuzzing Smoke` dispatch on main is run `36556097004`; its result is
-not yet recorded here. No Track status or phase closeout was advanced.
+The manual `Fuzzing Smoke` dispatch on main is run `36556097004`; it completed
+successfully on `dc8ba8f5f68168456f1e8710b62b5e59060eb8f3` in 2 minutes. The
+scheduler fuzz step and job passed; no crash corpus artifact existed to upload.
+Automated review of PR #161 found that the repository's `rust-toolchain.toml`
+overrides `rustup default`, so the hosted MSRV step is being changed to invoke
+`cargo +1.76.0` explicitly before merge. The initial PR run is not treated as
+MSRV evidence; the corrected hosted check must pass. No Track status or phase
+closeout was advanced.
 
 ## 2026-09-28 quality frontier cross-track handoff
 

@@ -72,12 +72,10 @@ jobs:
         with:
           persist-credentials: false
       - name: Install Rust MSRV
-        run: |
-          rustup toolchain install 1.76.0 --profile minimal
-          rustup default 1.76.0
+        run: rustup toolchain install 1.76.0 --profile minimal
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
       - name: Check workspace on Rust 1.76
-        run: cargo check --workspace --all-features --locked
+        run: cargo +1.76.0 check --workspace --all-features --locked
 
   rust-core:
     name: Rust core quality
