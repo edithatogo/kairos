@@ -76,6 +76,8 @@ jobs:
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1
       - name: Install website dependencies
         run: npm ci --prefix website
+      - name: Search DOM XSS regression tests
+        run: node website/scripts/test-search-security.mjs
       - name: Docs workflow validation
         run: node scripts/dx/validate-docs-workflow.mjs
       - name: Build docs site
