@@ -14,7 +14,7 @@ class SimTime:
     """Fixed-tick simulation time."""
 
     if TYPE_CHECKING:
-        ZERO: ClassVar[SimTime]
+        ZERO: ClassVar["SimTime"]
 
     ticks: int = 0
 
@@ -23,7 +23,7 @@ class SimTime:
             raise ValueError("ticks must fit in an unsigned 128-bit integer")
 
     @classmethod
-    def from_ticks(cls, ticks: int) -> SimTime:
+    def from_ticks(cls, ticks: int) -> "SimTime":
         return cls(ticks)
 
 
