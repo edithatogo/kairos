@@ -226,8 +226,10 @@ jobs:
           check_env(env)
           PY
       - name: Gymnasium wrapper smoke
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
         run: |
-          if [ "${{ matrix.python-version }}" = '3.9' ]; then
+          if [ "$PYTHON_VERSION" = '3.9' ]; then
             PYTHONPATH=python/kairo_gym/src python -m unittest discover -s python/kairo_gym/tests -v
           else
             python -m unittest discover -s python/kairo_gym/tests -v
