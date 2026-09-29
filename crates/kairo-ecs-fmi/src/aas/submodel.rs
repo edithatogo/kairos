@@ -172,6 +172,18 @@ mod tests {
     }
 
     #[test]
+    fn submodel_validation_accepts_empty_and_valid_property_lists() {
+        AasSubmodel::new("urn:kairo:empty", "empty")
+            .validate()
+            .expect("empty submodel is valid");
+
+        AasSubmodel::new("urn:kairo:queue", "queue")
+            .with_property(AasProperty::new("queueDepth", "xs:integer"))
+            .validate()
+            .expect("submodel with valid properties is valid");
+    }
+
+    #[test]
     fn submodel_validation_rejects_empty_fields_and_invalid_or_duplicate_properties() {
         for (submodel, message) in [
             (AasSubmodel::new("", "valid"), "submodel id"),
