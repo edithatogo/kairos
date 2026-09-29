@@ -32,6 +32,5 @@ python notebooks\validate_notebooks.py
 ```
 
 The validator parses every checked-in `.ipynb` file under this directory,
-checks Python syntax without executing code cells, and verifies that referenced
-local figures exist. Colab smoke notebooks allow notebook magics and skip Python
-syntax parsing; their code cells are still checked for forbidden text patterns.
+executes Python code cells in order, and checks that referenced local figures
+exist.

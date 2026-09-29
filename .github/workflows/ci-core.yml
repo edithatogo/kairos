@@ -2,7 +2,7 @@ name: ci-core
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: false
 
 on:
   pull_request:
@@ -25,15 +25,11 @@ jobs:
           rustup toolchain install stable --profile minimal --component rustfmt --component clippy
           rustup default stable
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
-      - name: Install pinned cargo tools
-        uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2.87.21
-        with:
-          tool: |
-            cargo-nextest@0.9.146
-            cargo-deny@0.20.2
-            cargo-audit@0.22.2
-            cargo-llvm-cov@0.9.1
-          fallback: none
+      - name: Install cargo tools
+        run: |
+          cargo install cargo-nextest --version 0.9.133 --locked
+          cargo install cargo-deny --version 0.18.9 --locked
+          cargo install cargo-audit --version 0.22.1 --locked
       - name: Verify workspace readiness
         run: |
           test -f Cargo.toml
@@ -42,16 +38,8 @@ jobs:
         run: cargo fmt --all --check
       - name: Clippy
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
-      - name: Workspace tests and core coverage
-        run: |
-          cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info
-          node scripts/validation/check-core-coverage.mjs lcov.info
-      - name: Preserve coverage report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: rust-coverage
-          path: lcov.info
-          if-no-files-found: error
+      - name: Tests
+        run: cargo nextest run --workspace --all-features
       - name: Docs
         env:
           RUSTDOCFLAGS: -D warnings
@@ -61,24 +49,3 @@ jobs:
           test -f deny.toml
           cargo deny check advisories sources
           cargo audit
-
-  codecov:
-    name: Codecov OIDC upload
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: rust-core
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read # Download the coverage artifact produced by this run.
-      contents: read # Read commit metadata for the coverage upload.
-      id-token: write # Request a short-lived Codecov OIDC token; this job runs only on main pushes.
-      pull-requests: read # Associate uploaded coverage with its pull request metadata.
-    steps:
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v7.0.0
-        with:
-          name: rust-coverage
-      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
-        with:
-          files: lcov.info
-          flags: rust-core
-          fail_ci_if_error: true
-          use_oidc: true

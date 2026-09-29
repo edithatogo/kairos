@@ -1,13 +1,16 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>edithatogo/renovate-config"
+    "config:recommended",
+    ":dependencyDashboard"
   ],
   "dependencyDashboard": true,
-  "timezone": "Australia/Brisbane",
-  "schedule": ["before 6am on Monday"],
-  "prConcurrentLimit": 2,
-  "prHourlyLimit": 1,
+  "timezone": "Australia/Sydney",
+  "schedule": [
+    "* 0-8 * * 1"
+  ],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 4,
   "rangeStrategy": "bump",
   "labels": [
     "dependencies"
@@ -21,12 +24,6 @@
     "schedule": []
   },
   "packageRules": [
-    {
-      "description": "Keep dependency PRs manual until required CI checks are configured",
-      "matchUpdateTypes": ["digest", "pin", "patch"],
-      "automerge": false,
-      "platformAutomerge": false
-    },
     {
       "matchManagers": [
         "github-actions"
