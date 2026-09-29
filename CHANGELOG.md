@@ -44,6 +44,10 @@ Format:
 
 ### Changed
 
+- Conformance fixture catalog now points to the zero-delay fixture file while preserving its ordering-only scope.
+
+- Conformance fixture docs now mark the tested zero-delay ordering fixture as ready and state its livelock evidence limit.
+
 - `KairoEcsBuffer::default()` now produces a null pointer and zero length on Rust 1.76-compatible toolchains.
 - Required Rust CI now checks the locked workspace on the declared 1.76 MSRV in parallel with stable verification, and runs all-feature doctests as a distinct test class.
 - The Rust Wasm export crate now declares its Rust 1.77 minimum and has a dedicated locked wasm-target CI lane.
