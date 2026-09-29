@@ -8,7 +8,16 @@ Until 1.0, only the latest release line receives security fixes unless otherwise
 
 ## Reporting
 
-Open a private security advisory on GitHub or email the security contact listed by the project maintainers once the repository is public.
+Use GitHub's **Report a vulnerability** action on the repository's Security tab to
+submit a private report:
+[Report a vulnerability](https://github.com/edithatogo/kairos/security/advisories/new).
+Private vulnerability reporting is enabled for this repository. Do not include
+unfixed vulnerability details in a public issue or discussion.
+
+After a fix or mitigation is available and the maintainer has made a coordinated
+disclosure decision, the advisory can be published through GitHub's security
+advisory process. This is the public disclosure route; it is not a channel for
+initial reports.
 
 Please include:
 

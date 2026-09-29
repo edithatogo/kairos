@@ -17,3 +17,10 @@ path = "src/lib.rs"
 [[bin]]
 name = "kairo-ecs-debug"
 path = "src/main.rs"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "reconstruct"
+harness = false

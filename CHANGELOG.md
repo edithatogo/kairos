@@ -16,6 +16,10 @@ Format:
 
 ### Added
 
+- Security reporting guidance now links to the repository's verified private vulnerability reporting route and explains coordinated public disclosure.
+- Scheduler property, bounded fuzz, mutation, and core-coverage gates, with one instrumented workspace test pass and selected GitHub Actions publishers.
+- Read-only `just quality-drift` receipt for live branch rules, Actions permissions, Renovate, Codecov, and exact-default-commit check results.
+- Core CI installs pinned Rust tooling from checksum-verified release binaries to avoid slow source builds on clean runners.
 - Conductor setup for KairoECS tracks, subagents, release engineering, community adoption, and red-team review.
 - Release governance slice covering changelog enforcement, compatibility/deprecation rules, release evidence, and maintenance handoff.
 - Track 16 maintainer rotation and escalation record for release-manager, compatibility-review, package-evidence, supply-chain, and docs-review coverage.
@@ -40,17 +44,26 @@ Format:
 
 ### Changed
 
+- Toolchain support metadata and its CI check now track Rust 1.98 stable instead of the stale 1.95 baseline.
+- Renovate now uses the Kairos preset with lower PR concurrency, while low-risk automerge stays off until stable required CI checks are configured.
+- Python binding CI installs Ruff and test tools from the package's declared test extra.
+- Binding smoke matrices now skip documentation-only changes; a manual workflow dispatch still runs the full matrix.
+- Package dry-run CI now validates packages without repeating binding tests, builds the Python package once, and avoids rebuilding npm package artifacts during pack validation.
+- Nightly checks can be dispatched as mutation, heavy, or both, so focused runs avoid repeating unrelated expensive suites.
 - R binding and package dry-run workflows now use the runner R toolchain with an apt fallback, avoiding the hanging external setup action for base R smoke coverage.
 - Release-governance wording now records the maintenance handoff and blocker state alongside the release policy docs, with Track 15 publication still gated behind dry-run evidence and registry/toolchain verification.
 - Track 12 conformance status now records the merged PR #12 closeout and moves the track to In Review.
 - NuGet package dry-runs now target the stable `net10.0` package lane explicitly so the preview `net11.0` compatibility lane does not require a preview SDK in release packaging CI.
 - Public docs workflow validation now builds the Starlight site and smokes the generated documentation output instead of checking the retired static-site scaffold.
 - Docs Quality CI now runs the dedicated docs-platform SOTA validator after the Starlight workflow smoke.
+- CI and bootstrap Python tools now install from SHA-256 hash-locked requirement files; the npm CLI and Mermaid CLI use committed integrity-locked package files, and NuGet packaging uses locked restore.
 
 ### Fixed
 
-- Update the locked Rust dependency `crossbeam-epoch` to 0.9.20, which includes the fix for RUSTSEC-2026-0204.
+- Notebook validation parses cells as Python syntax without executing them; the `notebooks` validator now reports source context for syntax errors.
 
+- Update the locked Rust dependency `crossbeam-epoch` to 0.9.20, which includes the fix for RUSTSEC-2026-0204.
+- Scheduler dispatch now removes pending IDs in release builds, preserving pending counts and preventing cancellation of already-dispatched events.
 - Go binding CI now runs `gofmt` with shellcheck-safe file argument handling while preserving the existing tracked-file format gate.
 - Track 13 workflow inventory gates now include `.github/workflows/gpu-free-smoke.yml` so conductor metadata validation covers the new GPU-free smoke workflow.
 - Track 38 FMI test evidence now records the live shared-library FMU test blocker required by the conductor coverage gate.
