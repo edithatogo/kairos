@@ -44,6 +44,8 @@ Format:
 
 ### Changed
 
+- Toolchain docs validation now recognizes the pinned `just` and npm CLI commands used by the Unix bootstrap script.
+
 - Conformance fixture catalog now points to the zero-delay fixture file while preserving its ordering-only scope.
 
 - Conformance fixture docs now mark the tested zero-delay ordering fixture as ready and state its livelock evidence limit.
