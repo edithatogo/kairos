@@ -73,8 +73,10 @@ KairoECS.self_check()
 ## TypeScript/Wasm binding
 
 ### Prerequisites
-- Node.js >= 20 LTS
+- Node.js >= 22 LTS
 - npm
+
+The repository bootstrap also requires Node.js >= 22.9.0 because the pinned npm CLI declares that runtime minimum.
 
 ### Install
 ```bash
