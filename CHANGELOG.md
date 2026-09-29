@@ -64,6 +64,7 @@ Format:
 
 ### Fixed
 
+- Website documentation search now renders indexed content as text and accepts only same-origin HTTP(S) links, preventing search-index DOM XSS.
 - Quality drift readback now models the PR-only skip guard as a required ruleset context backed by exact main-branch workflow source, without expecting a push check run.
 - Codecov now has an explicit `rust-core` project-status policy for trusted-main coverage uploads.
 

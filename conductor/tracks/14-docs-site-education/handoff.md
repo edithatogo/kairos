@@ -1,5 +1,10 @@
 # Handoff — 14 Documentation Site & Education
 
+2026-09-29: Track 45's search-rendering security follow-up also changes the
+legacy documentation search client under this track's `website/` ownership.
+The Track 45 handoff records the focused source change and regression evidence;
+Track 14 status is unchanged.
+
 ## Summary
 
 Documented the docs site as a static `website/` build, aligned the site home with the repository docs tree, and documented the `npm ci`, `npm run build`, `npm run check:links`, `npm run check:quality`, `npm run check:all`, and `npm run dev` commands that implement the site validation flow.
