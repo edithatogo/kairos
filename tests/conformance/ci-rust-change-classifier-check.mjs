@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import { requiresRustVerification } from '../../scripts/validation/classify-rust-ci-changes.mjs';
 
 assert.equal(requiresRustVerification(['README.md', 'docs/guide.md']), false);
+assert.equal(requiresRustVerification(['CHANGELOG.md']), false);
+assert.equal(requiresRustVerification(['bindings/python/kairo_ecs/__init__.py']), false);
+assert.equal(requiresRustVerification([]), true);
+assert.equal(requiresRustVerification(['new-root-config.toml']), true);
+assert.equal(requiresRustVerification(['docs/guide.md', 'new-root-config.toml']), true);
 assert.equal(requiresRustVerification(['crates/kairo-ecs-core/src/lib.rs']), true);
 assert.equal(requiresRustVerification(['include/kairo_ecs.h']), true);
 assert.equal(requiresRustVerification(['schemas/arrow/event_log_v1.schema.json']), true);

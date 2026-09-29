@@ -17,8 +17,19 @@ const RUST_RELEVANT_PATHS = [
   /^\.github\/workflows\/ci-core\.yml$/,
 ];
 
+const KNOWN_NON_RUST_PATHS = [
+  /^README(?:\.[^/]*)?$/,
+  /^CHANGELOG\.md$/,
+  /^(?:docs|conductor)\//,
+  /^(?:website|bindings|templates|python|r|julia|go|csharp)\//,
+];
+
 export function requiresRustVerification(paths) {
-  return paths.some((path) => RUST_RELEVANT_PATHS.some((pattern) => pattern.test(path)));
+  // Empty or unfamiliar change sets must run Rust verification. Only skip it
+  // when every changed path is in a deliberately small, known unrelated set.
+  if (paths.length === 0) return true;
+  return paths.some((path) => !KNOWN_NON_RUST_PATHS.some((pattern) => pattern.test(path))
+    || RUST_RELEVANT_PATHS.some((pattern) => pattern.test(path)));
 }
 
 function main(args) {
