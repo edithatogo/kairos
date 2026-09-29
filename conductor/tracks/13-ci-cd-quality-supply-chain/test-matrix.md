@@ -15,6 +15,8 @@
 - Track 13 metadata alignment validates `conductor/tracks.yaml` without changing track statuses and maps `workflow-presence`, `cargo-metadata`, and `dependency-policy` to checked-in workflow evidence.
 - Track 13 metadata alignment dynamically inventories every checked-in `.github/workflows/*.yml` file, requires an explicit workflow `name`, `on`, and top-level `permissions` block, and verifies both `ci-policy.yml` and `workflow-security.yml` list every workflow.
 - The offline supply-chain gate runs `scripts/validate_track13_supply_chain.ps1`, which executes the Track 13 metadata validator, `cargo metadata --no-deps --format-version 1`, cargo-deny advisory/source checks, and `cargo audit` when those scanners are installed locally.
+- The conformance job runs `tests/conformance/quality-frontier-drift-check.mjs` against pass, pending-integration, drift, and unavailable GitHub evidence fixtures.
+- `just quality-drift` performs a read-only live settings readback, binds Actions results to the resolved default-branch SHA, and writes a JSON receipt to `artifacts/quality-frontier-drift.json`. Drift, pending integration, or unavailable APIs remain non-pass exit states.
 - Validate Conductor runs on both `ubuntu-latest` and `windows-latest` so PowerShell and Node validators are exercised cross-platform.
 - Package dry-runs and binding CI fail when their own manifests are missing instead of skipping quietly.
 - Package dry-runs validate package artifacts while language tests run only in binding CI; Python package build/twine checks run once on Python 3.14, with the 3.10–3.14 compatibility matrix retained in binding CI.

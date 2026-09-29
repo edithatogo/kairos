@@ -212,3 +212,32 @@ foundation commit `c54a949`; the current PR checks validate the updated branch.
 The first scheduled weekly run on `main`, trusted-main Codecov upload/readback,
 Renovate shared-preset refresh, and final PR checks after integration remain
 acceptance gates.
+
+## 2026-09-29 receipt and PR refresh
+
+The live `just quality-drift` readback was run from PR #154's local checkout at
+base snapshot `fae901558f07b7b717a676adbafbe2cdc78dea1c`. The receipt returned
+`pending` (exit 2), as expected while #154 remains open: its source checkout is
+dirty, the main branch does not yet contain the candidate context and Renovate
+changes, current main lacks the new skip-guard run, and trusted-main Codecov
+upload/status have not run on the updated default branch. Ruleset, legacy
+protection, Actions publisher/token settings, and private vulnerability
+reporting passed their live readbacks. The generated receipt is intentionally
+ignored at `artifacts/quality-frontier-drift.json`; rerun the command after
+integration to create closeout evidence.
+
+The receipt now compares Renovate bot PR/comment activity to the latest merged
+PR's GitHub `merged_at`, not a commit timestamp, and evaluates only the newest
+exact-name Codecov OIDC upload and `codecov/project` status on the default
+branch SHA. Offline conformance cases cover pending, stale, failed, and
+unavailable evidence. `node tests/conformance/quality-frontier-drift-check.mjs`,
+`node tests/conformance/conformance-check.mjs`, JavaScript syntax checks, and
+`git diff --check` passed after these changes; hosted checks for this new patch
+have not run yet.
+
+As of this live readback, PR #154 is open on head
+`b64105836e75f3d9ce8cf60ea8fe2673cc13746d`, with a clean merge state and 53
+successful checks plus the expected PR-only Codecov OIDC skip. The locally
+updated receipt patch is not part of that head yet. Current open security
+counts from GitHub are 43 Dependabot alerts (2 critical, 19 high, 18 medium,
+4 low), 13 code-scanning alerts, and 0 secret-scanning alerts.
