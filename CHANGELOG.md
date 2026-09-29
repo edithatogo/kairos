@@ -44,6 +44,7 @@ Format:
 
 ### Changed
 
+- Update the TypeScript/WASM Vite resolution to 8.3.1 to include current security fixes.
 - Toolchain support metadata and its CI check now track Rust 1.98 stable instead of the stale 1.95 baseline.
 - Renovate now uses the Kairos preset with lower PR concurrency, while low-risk automerge stays off until stable required CI checks are configured.
 - Python binding CI installs Ruff and test tools from the package's declared test extra.
