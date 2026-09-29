@@ -23,6 +23,7 @@ Format:
 - `kairo-ecs-state` now tests `World::despawn` for successful removal, repeated despawn, invalid indices, and stale generations.
 - Python FFI status tests now assert the complete response and cover an empty library-path setting.
 - `kairo-ecs-state` now has a regression test for the empty `World::new()` state.
+- Regression coverage now verifies `World::with_capacity` reserves all four entity vectors.
 - Security reporting guidance now links to the repository's verified private vulnerability reporting route and explains coordinated public disclosure.
 - Scheduler property, bounded fuzz, mutation, and core-coverage gates, with one instrumented workspace test pass and selected GitHub Actions publishers.
 - Read-only `just quality-drift` receipt for live branch rules, Actions permissions, Renovate, Codecov, and exact-default-commit check results.
