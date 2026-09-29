@@ -1,0 +1,869 @@
+{
+  "fixture": "des_resource_guardrail_traces_v1",
+  "version": 1,
+  "provenance": "synthetic",
+  "evidence": [
+    {
+      "path": "conductor/tracks/des_queue_preemption_20260925/spec.md",
+      "lines": "178-196",
+      "classification": "local_policy_contract"
+    },
+    {
+      "path": "conductor/tracks/des_queue_preemption_20260925/plan.md",
+      "lines": "42-50",
+      "classification": "planned_design_coverage"
+    }
+  ],
+  "cases": [
+    {
+      "id": "victim_tie_latest_admission",
+      "kind": "preemption_victim_tie",
+      "config": {
+        "capacity": 2
+      },
+      "initial_state": {
+        "at_ticks": 0,
+        "active": [],
+        "queued": [],
+        "terminal": [],
+        "transition_history": []
+      },
+      "operations": [
+        {
+          "at_ticks": 0,
+          "action": "submit_work",
+          "request_id": "A",
+          "priority": 5,
+          "admission_sequence": 1,
+          "work_duration": 10,
+          "preemptible_strategy": "Suspend"
+        },
+        {
+          "at_ticks": 0,
+          "action": "submit_work",
+          "request_id": "C",
+          "priority": 5,
+          "admission_sequence": 2,
+          "work_duration": 10,
+          "preemptible_strategy": "Suspend"
+        },
+        {
+          "at_ticks": 3,
+          "action": "submit_work",
+          "request_id": "B",
+          "priority": 1,
+          "admission_sequence": 3,
+          "work_duration": 2,
+          "can_preempt": true,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 5,
+          "action": "dispatch_completion",
+          "request_id": "B",
+          "attempt": 0
+        },
+        {
+          "at_ticks": 10,
+          "action": "dispatch_completion",
+          "request_id": "A",
+          "attempt": 0
+        },
+        {
+          "at_ticks": 12,
+          "action": "dispatch_completion",
+          "request_id": "C",
+          "attempt": 0
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 0,
+          "capacity": 2,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 10,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 0,
+              "segment_started_at": 0,
+              "completion_at": 10,
+              "preemptible_strategy": "Suspend"
+            }
+          ],
+          "queued": [],
+          "terminal": [],
+          "transition_history": [
+            {
+              "transition": "Grant",
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            }
+          ]
+        },
+        {
+          "at_ticks": 0,
+          "capacity": 2,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 10,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 0,
+              "segment_started_at": 0,
+              "completion_at": 10,
+              "preemptible_strategy": "Suspend"
+            },
+            {
+              "request_id": "C",
+              "priority": 5,
+              "admission_sequence": 2,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 10,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 0,
+              "segment_started_at": 0,
+              "completion_at": 10,
+              "preemptible_strategy": "Suspend"
+            }
+          ],
+          "queued": [],
+          "terminal": [],
+          "transition_history": [
+            {
+              "transition": "Grant",
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "transition": "Grant",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 0
+            }
+          ]
+        },
+        {
+          "at_ticks": 3,
+          "capacity": 2,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "attempt": 0,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 3,
+              "segment_started_at": 0,
+              "completion_at": 10,
+              "preemptible_strategy": "Suspend"
+            },
+            {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 3,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 2,
+              "original_duration": 2,
+              "cumulative_busy_ticks": 0,
+              "segment_started_at": 3,
+              "completion_at": 5,
+              "preemptible_strategy": null
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "C",
+              "priority": 5,
+              "admission_sequence": 2,
+              "recovery_policy": "Suspend",
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 3,
+              "completed_attempt": 0,
+              "next_attempt": 0
+            }
+          ],
+          "terminal": [],
+          "transition_history": [
+            {
+              "transition": "Grant",
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "transition": "Grant",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "transition": "Interrupt",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Suspend"
+            },
+            {
+              "transition": "Grant",
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            }
+          ]
+        },
+        {
+          "at_ticks": 5,
+          "capacity": 2,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1,
+              "attempt": 0,
+              "elapsed_ticks": 5,
+              "remaining_ticks": 5,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 5,
+              "segment_started_at": 0,
+              "completion_at": 10,
+              "preemptible_strategy": "Suspend"
+            },
+            {
+              "request_id": "C",
+              "priority": 5,
+              "admission_sequence": 2,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 7,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 3,
+              "segment_started_at": 5,
+              "completion_at": 12,
+              "preemptible_strategy": "Suspend"
+            }
+          ],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "B",
+              "status": "Completed",
+              "at_ticks": 5
+            }
+          ],
+          "transition_history": [
+            {
+              "transition": "Grant",
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "transition": "Grant",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "transition": "Interrupt",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Suspend"
+            },
+            {
+              "transition": "Grant",
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            },
+            {
+              "transition": "Complete",
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 5,
+              "cumulative_busy_ticks": 2
+            },
+            {
+              "transition": "Grant",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 5,
+              "resumed": true
+            }
+          ]
+        },
+        {
+          "at_ticks": 10,
+          "capacity": 2,
+          "active": [
+            {
+              "request_id": "C",
+              "priority": 5,
+              "admission_sequence": 2,
+              "attempt": 0,
+              "elapsed_ticks": 5,
+              "remaining_ticks": 2,
+              "original_duration": 10,
+              "cumulative_busy_ticks": 8,
+              "segment_started_at": 5,
+              "completion_at": 12,
+              "preemptible_strategy": "Suspend"
+            }
+          ],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "B",
+              "status": "Completed",
+              "at_ticks": 5
+            },
+            {
+              "request_id": "A",
+              "status": "Completed",
+              "at_ticks": 10
+            }
+          ],
+          "transition_history": [
+            {
+              "transition": "Grant",
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "transition": "Grant",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "transition": "Interrupt",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Suspend"
+            },
+            {
+              "transition": "Grant",
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            },
+            {
+              "transition": "Complete",
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 5,
+              "cumulative_busy_ticks": 2
+            },
+            {
+              "transition": "Grant",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 5,
+              "resumed": true
+            },
+            {
+              "transition": "Complete",
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 10,
+              "cumulative_busy_ticks": 10
+            }
+          ]
+        },
+        {
+          "at_ticks": 12,
+          "capacity": 2,
+          "active": [],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "B",
+              "status": "Completed",
+              "at_ticks": 5
+            },
+            {
+              "request_id": "A",
+              "status": "Completed",
+              "at_ticks": 10
+            },
+            {
+              "request_id": "C",
+              "status": "Completed",
+              "at_ticks": 12
+            }
+          ],
+          "transition_history": [
+            {
+              "transition": "Grant",
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "transition": "Grant",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 0
+            },
+            {
+              "transition": "Interrupt",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 3,
+              "elapsed_ticks": 3,
+              "remaining_ticks": 7,
+              "strategy": "Suspend"
+            },
+            {
+              "transition": "Grant",
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 3
+            },
+            {
+              "transition": "Complete",
+              "request_id": "B",
+              "attempt": 0,
+              "at_ticks": 5,
+              "cumulative_busy_ticks": 2
+            },
+            {
+              "transition": "Grant",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 5,
+              "resumed": true
+            },
+            {
+              "transition": "Complete",
+              "request_id": "A",
+              "attempt": 0,
+              "at_ticks": 10,
+              "cumulative_busy_ticks": 10
+            },
+            {
+              "transition": "Complete",
+              "request_id": "C",
+              "attempt": 0,
+              "at_ticks": 12,
+              "cumulative_busy_ticks": 10
+            }
+          ]
+        }
+      ],
+      "invariant": "When two active claims have equally urgent eligible priority, evict only the one with the latest original admission sequence. C is interrupted at tick 3, B completes at 5, C resumes its remaining 7 ticks, A completes at 10, and C completes at 12."
+    },
+    {
+      "id": "zero_duration_completes_once",
+      "kind": "zero_duration_flow_lifecycle",
+      "config": {
+        "max_same_tick_flow_transitions": 2
+      },
+      "initial_state": {
+        "at_ticks": 0,
+        "active": [],
+        "queued": [],
+        "terminal": [],
+        "pending_flow_transitions": [],
+        "transition_history": [],
+        "transitions_used_at_tick": 0
+      },
+      "operations": [
+        {
+          "at_ticks": 0,
+          "action": "prepare_synthetic_work",
+          "request_id": "Z",
+          "priority": 1,
+          "admission_sequence": 1,
+          "work_duration": 0
+        },
+        {
+          "at_ticks": 0,
+          "action": "commit_flow_transition",
+          "transition": "Grant",
+          "request_id": "Z"
+        },
+        {
+          "at_ticks": 0,
+          "action": "commit_flow_transition",
+          "transition": "Complete",
+          "request_id": "Z"
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 0,
+          "active": [],
+          "queued": [],
+          "terminal": [],
+          "pending_flow_transitions": [
+            {
+              "transition": "Grant",
+              "request_id": "Z"
+            }
+          ],
+          "transition_history": [],
+          "transitions_used_at_tick": 0
+        },
+        {
+          "at_ticks": 0,
+          "active": [
+            {
+              "request_id": "Z",
+              "priority": 1,
+              "admission_sequence": 1,
+              "attempt": 0,
+              "elapsed_ticks": 0,
+              "remaining_ticks": 0,
+              "original_duration": 0,
+              "segment_started_at": 0,
+              "completion_at": 0
+            }
+          ],
+          "queued": [],
+          "terminal": [],
+          "pending_flow_transitions": [
+            {
+              "transition": "Complete",
+              "request_id": "Z"
+            }
+          ],
+          "transition_history": [
+            {
+              "transition": "Grant",
+              "request_id": "Z",
+              "at_ticks": 0
+            }
+          ],
+          "transitions_used_at_tick": 1
+        },
+        {
+          "at_ticks": 0,
+          "active": [],
+          "queued": [],
+          "terminal": [
+            {
+              "request_id": "Z",
+              "status": "Completed",
+              "at_ticks": 0
+            }
+          ],
+          "pending_flow_transitions": [],
+          "transition_history": [
+            {
+              "transition": "Grant",
+              "request_id": "Z",
+              "at_ticks": 0
+            },
+            {
+              "transition": "Complete",
+              "request_id": "Z",
+              "at_ticks": 0
+            }
+          ],
+          "transitions_used_at_tick": 2
+        }
+      ],
+      "invariant": "A zero-duration claim emits one Grant followed by one Complete at tick 0. Those two committed Flow transitions exactly consume the configured budget of 2; no third transition is generated. Operation action labels describe this synthetic trace and do not assert a runtime API."
+    },
+    {
+      "id": "same_tick_budget_overrun_and_repeat",
+      "kind": "same_tick_flow_transition_budget",
+      "config": {
+        "max_same_tick_flow_transitions": 2
+      },
+      "initial_state": {
+        "at_ticks": 0,
+        "transitions_used_at_tick": 0,
+        "transition_history": [],
+        "pending_flow_transitions": [
+          {
+            "transition_id": "synthetic-flow-transition-001",
+            "at_ticks": 0
+          },
+          {
+            "transition_id": "synthetic-flow-transition-002",
+            "at_ticks": 0
+          },
+          {
+            "transition_id": "synthetic-flow-transition-003",
+            "at_ticks": 0
+          }
+        ]
+      },
+      "operations": [
+        {
+          "at_ticks": 0,
+          "action": "attempt_pending_flow_transition",
+          "transition_id": "synthetic-flow-transition-001",
+          "run_call": "call-1"
+        },
+        {
+          "at_ticks": 0,
+          "action": "attempt_pending_flow_transition",
+          "transition_id": "synthetic-flow-transition-002",
+          "run_call": "call-1"
+        },
+        {
+          "at_ticks": 0,
+          "action": "attempt_pending_flow_transition",
+          "transition_id": "synthetic-flow-transition-003",
+          "run_call": "call-1"
+        },
+        {
+          "at_ticks": 0,
+          "action": "repeat_same_tick_run_call",
+          "transition_id": "synthetic-flow-transition-003",
+          "run_call": "call-2"
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 0,
+          "transitions_used_at_tick": 1,
+          "transition_history": [
+            {
+              "transition_id": "synthetic-flow-transition-001",
+              "at_ticks": 0
+            }
+          ],
+          "pending_flow_transitions": [
+            {
+              "transition_id": "synthetic-flow-transition-002",
+              "at_ticks": 0
+            },
+            {
+              "transition_id": "synthetic-flow-transition-003",
+              "at_ticks": 0
+            }
+          ],
+          "call_outcome": {
+            "status": "committed",
+            "transition_id": "synthetic-flow-transition-001"
+          }
+        },
+        {
+          "at_ticks": 0,
+          "transitions_used_at_tick": 2,
+          "transition_history": [
+            {
+              "transition_id": "synthetic-flow-transition-001",
+              "at_ticks": 0
+            },
+            {
+              "transition_id": "synthetic-flow-transition-002",
+              "at_ticks": 0
+            }
+          ],
+          "pending_flow_transitions": [
+            {
+              "transition_id": "synthetic-flow-transition-003",
+              "at_ticks": 0
+            }
+          ],
+          "call_outcome": {
+            "status": "committed",
+            "transition_id": "synthetic-flow-transition-002"
+          }
+        },
+        {
+          "at_ticks": 0,
+          "transitions_used_at_tick": 2,
+          "transition_history": [
+            {
+              "transition_id": "synthetic-flow-transition-001",
+              "at_ticks": 0
+            },
+            {
+              "transition_id": "synthetic-flow-transition-002",
+              "at_ticks": 0
+            }
+          ],
+          "pending_flow_transitions": [
+            {
+              "transition_id": "synthetic-flow-transition-003",
+              "at_ticks": 0
+            }
+          ],
+          "call_outcome": {
+            "status": "blocked",
+            "error": {
+              "type": "SameTickBudgetExceeded",
+              "at_ticks": 0,
+              "limit": 2
+            }
+          }
+        },
+        {
+          "at_ticks": 0,
+          "transitions_used_at_tick": 2,
+          "transition_history": [
+            {
+              "transition_id": "synthetic-flow-transition-001",
+              "at_ticks": 0
+            },
+            {
+              "transition_id": "synthetic-flow-transition-002",
+              "at_ticks": 0
+            }
+          ],
+          "pending_flow_transitions": [
+            {
+              "transition_id": "synthetic-flow-transition-003",
+              "at_ticks": 0
+            }
+          ],
+          "call_outcome": {
+            "status": "blocked",
+            "error": {
+              "type": "SameTickBudgetExceeded",
+              "at_ticks": 0,
+              "limit": 2
+            }
+          }
+        }
+      ],
+      "invariant": "At tick 0, two transitions commit under limit 2. The third remains pending and returns SameTickBudgetExceeded {at_ticks:0, limit:2}; another call at tick 0 returns the same outcome without changing the count, history, or pending transition. Attempt labels and IDs are synthetic trace data, not runtime API claims."
+    },
+    {
+      "id": "same_tick_budget_resets_after_advance",
+      "kind": "same_tick_flow_transition_budget_reset",
+      "config": {
+        "max_same_tick_flow_transitions": 1
+      },
+      "initial_state": {
+        "at_ticks": 0,
+        "transitions_used_at_tick": 0,
+        "transition_counts_by_tick": {
+          "0": 0
+        },
+        "transition_history": [],
+        "pending_flow_transitions": [
+          {
+            "transition_id": "tick-0-transition",
+            "at_ticks": 0
+          },
+          {
+            "transition_id": "tick-1-transition",
+            "at_ticks": 1
+          }
+        ]
+      },
+      "operations": [
+        {
+          "at_ticks": 0,
+          "action": "attempt_pending_flow_transition",
+          "transition_id": "tick-0-transition",
+          "run_call": "call-1"
+        },
+        {
+          "at_ticks": 1,
+          "action": "advance_simulation_time",
+          "from_ticks": 0,
+          "to_ticks": 1
+        },
+        {
+          "at_ticks": 1,
+          "action": "attempt_pending_flow_transition",
+          "transition_id": "tick-1-transition",
+          "run_call": "call-2"
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 0,
+          "transitions_used_at_tick": 1,
+          "transition_counts_by_tick": {
+            "0": 1
+          },
+          "transition_history": [
+            {
+              "transition_id": "tick-0-transition",
+              "at_ticks": 0
+            }
+          ],
+          "pending_flow_transitions": [
+            {
+              "transition_id": "tick-1-transition",
+              "at_ticks": 1
+            }
+          ],
+          "call_outcome": {
+            "status": "committed"
+          }
+        },
+        {
+          "at_ticks": 1,
+          "transitions_used_at_tick": 0,
+          "transition_counts_by_tick": {
+            "0": 1,
+            "1": 0
+          },
+          "transition_history": [
+            {
+              "transition_id": "tick-0-transition",
+              "at_ticks": 0
+            }
+          ],
+          "pending_flow_transitions": [
+            {
+              "transition_id": "tick-1-transition",
+              "at_ticks": 1
+            }
+          ],
+          "call_outcome": {
+            "status": "time_advanced"
+          }
+        },
+        {
+          "at_ticks": 1,
+          "transitions_used_at_tick": 1,
+          "transition_counts_by_tick": {
+            "0": 1,
+            "1": 1
+          },
+          "transition_history": [
+            {
+              "transition_id": "tick-0-transition",
+              "at_ticks": 0
+            },
+            {
+              "transition_id": "tick-1-transition",
+              "at_ticks": 1
+            }
+          ],
+          "pending_flow_transitions": [],
+          "call_outcome": {
+            "status": "committed"
+          }
+        }
+      ],
+      "invariant": "With limit 1, one transition commits at tick 0. Advancing to tick 1 resets that tick counter; one further transition commits at tick 1, with count 1 for each tick. No default budget is encoded."
+    }
+  ]
+}
