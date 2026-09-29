@@ -215,16 +215,13 @@ acceptance gates.
 
 ## 2026-09-29 receipt and PR refresh
 
-The live `just quality-drift` readback was run from PR #154's local checkout at
-base snapshot `fae901558f07b7b717a676adbafbe2cdc78dea1c`. The receipt returned
-`pending` (exit 2), as expected while #154 remains open: its source checkout is
-dirty, the main branch does not yet contain the candidate context and Renovate
-changes, current main lacks the new skip-guard run, and trusted-main Codecov
-upload/status have not run on the updated default branch. Ruleset, legacy
-protection, Actions publisher/token settings, and private vulnerability
+An earlier live `just quality-drift` readback used PR #154's checkout at base
+snapshot `fae901558f07b7b717a676adbafbe2cdc78dea1c`. That receipt returned
+`pending` (exit 2). At that time, the source checkout was dirty and the main
+branch did not contain the candidate context or Renovate changes. Ruleset,
+legacy protection, Actions publisher/token settings, and private vulnerability
 reporting passed their live readbacks. The generated receipt is intentionally
-ignored at `artifacts/quality-frontier-drift.json`; rerun the command after
-integration to create closeout evidence.
+ignored at `artifacts/quality-frontier-drift.json`.
 
 The receipt now compares Renovate bot PR/comment activity to the latest merged
 PR's GitHub `merged_at`, not a commit timestamp, and evaluates only the newest
@@ -232,12 +229,19 @@ exact-name Codecov OIDC upload and `codecov/project` status on the default
 branch SHA. Offline conformance cases cover pending, stale, failed, and
 unavailable evidence. `node tests/conformance/quality-frontier-drift-check.mjs`,
 `node tests/conformance/conformance-check.mjs`, JavaScript syntax checks, and
-`git diff --check` passed after these changes; hosted checks for this new patch
-have not run yet.
+`git diff --check` passed for the implementation. Hosted checks passed on
+`76adc71f185f259b63cf962f7beb8015a531d802`; the PR-only Codecov OIDC upload
+was skipped as designed.
 
-As of this live readback, PR #154 is open on head
-`b64105836e75f3d9ce8cf60ea8fe2673cc13746d`, with a clean merge state and 53
-successful checks plus the expected PR-only Codecov OIDC skip. The locally
-updated receipt patch is not part of that head yet. Current open security
-counts from GitHub are 43 Dependabot alerts (2 critical, 19 high, 18 medium,
-4 low), 13 code-scanning alerts, and 0 secret-scanning alerts.
+## Current PR #154 receipt
+
+At head `76adc71f185f259b63cf962f7beb8015a531d802`, PR #154 is open with a
+clean merge state and 53 successful checks plus the expected PR-only Codecov
+OIDC skip. The checkout is clean. The latest `just quality-drift` receipt is
+`pending` (exit 2) for five post-integration/provider gates: candidate context
+files on the default branch, the hosted Renovate preset, Renovate refresh after
+integration, required check runs on the integrated default-branch SHA, and a
+trusted-main Codecov upload/status on that SHA. Current GitHub security counts
+are 43 Dependabot alerts (2 critical, 19 high, 18 medium, 4 low), 13
+code-scanning alerts, and 0 secret-scanning alerts. These counts are a dated
+snapshot; the alerts require a fresh scan and triage after integration.
