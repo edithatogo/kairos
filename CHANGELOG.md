@@ -18,6 +18,7 @@ Format:
 
 - Security reporting guidance now links to the repository's verified private vulnerability reporting route and explains coordinated public disclosure.
 - Scheduler property, bounded fuzz, mutation, and core-coverage gates, with one instrumented workspace test pass and selected GitHub Actions publishers.
+- Read-only `just quality-drift` receipt for live branch rules, Actions permissions, Renovate, Codecov, and exact-default-commit check results.
 - Core CI installs pinned Rust tooling from checksum-verified release binaries to avoid slow source builds on clean runners.
 - Added an empty-state regression test for `World::new()` in `kairo-ecs-state`.
 - Conductor setup for KairoECS tracks, subagents, release engineering, community adoption, and red-team review.
