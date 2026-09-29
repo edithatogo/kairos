@@ -1,0 +1,966 @@
+{
+  "fixture": "des_resource_queue_priority_v1",
+  "version": 1,
+  "provenance": "synthetic",
+  "ordering_key": [
+    "priority_ascending",
+    "original_admission_sequence_ascending",
+    "request_id_ascending"
+  ],
+  "evidence": [
+    {
+      "id": "CM-PRIORITY-001",
+      "classification": "proposed_policy_trace_reference"
+    },
+    {
+      "id": "CM-FIFO-TIE-001",
+      "classification": "proposed_policy_trace_reference"
+    }
+  ],
+  "cases": [
+    {
+      "id": "priority_beats_arrival",
+      "capacity": 1,
+      "initial_active": [
+        {
+          "request_id": "H",
+          "priority": 9,
+          "admission_sequence": 0
+        }
+      ],
+      "operations": [
+        {
+          "at_ticks": 1,
+          "op": "enqueue",
+          "request_id": "A",
+          "priority": 5,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 2,
+          "op": "enqueue",
+          "request_id": "B",
+          "priority": 1,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 3,
+          "op": "enqueue",
+          "request_id": "C",
+          "priority": 3,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 4,
+          "op": "release",
+          "request_id": "H"
+        },
+        {
+          "at_ticks": 5,
+          "op": "release",
+          "request_id": "B"
+        },
+        {
+          "at_ticks": 6,
+          "op": "release",
+          "request_id": "C"
+        },
+        {
+          "at_ticks": 7,
+          "op": "release",
+          "request_id": "A"
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 1,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 2,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 2
+            },
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 3,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 2
+            },
+            {
+              "request_id": "C",
+              "priority": 3,
+              "admission_sequence": 3
+            },
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 4,
+          "active": [
+            {
+              "request_id": "B",
+              "priority": 1,
+              "admission_sequence": 2
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "C",
+              "priority": 3,
+              "admission_sequence": 3
+            },
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1
+            }
+          ],
+          "granted_request_id": "B"
+        },
+        {
+          "at_ticks": 5,
+          "active": [
+            {
+              "request_id": "C",
+              "priority": 3,
+              "admission_sequence": 3
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1
+            }
+          ],
+          "granted_request_id": "C"
+        },
+        {
+          "at_ticks": 6,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 5,
+              "admission_sequence": 1
+            }
+          ],
+          "queued": [],
+          "granted_request_id": "A"
+        },
+        {
+          "at_ticks": 7,
+          "active": [],
+          "queued": [],
+          "granted_request_id": null
+        }
+      ],
+      "expected_grants": [
+        "B",
+        "C",
+        "A"
+      ],
+      "invariant": "Lower numeric priority is more urgent; on release, the most urgent queued request is granted immediately."
+    },
+    {
+      "id": "equal_priority_fifo",
+      "capacity": 1,
+      "initial_active": [
+        {
+          "request_id": "H",
+          "priority": 9,
+          "admission_sequence": 0
+        }
+      ],
+      "operations": [
+        {
+          "at_ticks": 1,
+          "op": "enqueue",
+          "request_id": "A",
+          "priority": 2,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 2,
+          "op": "enqueue",
+          "request_id": "B",
+          "priority": 2,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 3,
+          "op": "enqueue",
+          "request_id": "C",
+          "priority": 2,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 4,
+          "op": "release",
+          "request_id": "H"
+        },
+        {
+          "at_ticks": 5,
+          "op": "release",
+          "request_id": "A"
+        },
+        {
+          "at_ticks": 6,
+          "op": "release",
+          "request_id": "B"
+        },
+        {
+          "at_ticks": 7,
+          "op": "release",
+          "request_id": "C"
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 1,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 2,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            },
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 2
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 3,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            },
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 2
+            },
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 4,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 2
+            },
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            }
+          ],
+          "granted_request_id": "A"
+        },
+        {
+          "at_ticks": 5,
+          "active": [
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 2
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            }
+          ],
+          "granted_request_id": "B"
+        },
+        {
+          "at_ticks": 6,
+          "active": [
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            }
+          ],
+          "queued": [],
+          "granted_request_id": "C"
+        },
+        {
+          "at_ticks": 7,
+          "active": [],
+          "queued": [],
+          "granted_request_id": null
+        }
+      ],
+      "expected_grants": [
+        "A",
+        "B",
+        "C"
+      ],
+      "invariant": "Equal-priority requests are granted in original admission-sequence order."
+    },
+    {
+      "id": "rekey_keeps_sequence",
+      "capacity": 1,
+      "initial_active": [
+        {
+          "request_id": "H",
+          "priority": 9,
+          "admission_sequence": 0
+        }
+      ],
+      "operations": [
+        {
+          "at_ticks": 1,
+          "op": "enqueue",
+          "request_id": "A",
+          "priority": 2,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 2,
+          "op": "enqueue",
+          "request_id": "B",
+          "priority": 5,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 3,
+          "op": "enqueue",
+          "request_id": "C",
+          "priority": 2,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 4,
+          "op": "reprioritize",
+          "request_id": "B",
+          "priority": 2
+        },
+        {
+          "at_ticks": 5,
+          "op": "release",
+          "request_id": "H"
+        },
+        {
+          "at_ticks": 6,
+          "op": "release",
+          "request_id": "A"
+        },
+        {
+          "at_ticks": 7,
+          "op": "release",
+          "request_id": "B"
+        },
+        {
+          "at_ticks": 8,
+          "op": "release",
+          "request_id": "C"
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 1,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 2,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            },
+            {
+              "request_id": "B",
+              "priority": 5,
+              "admission_sequence": 2
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 3,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            },
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            },
+            {
+              "request_id": "B",
+              "priority": 5,
+              "admission_sequence": 2
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 4,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            },
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 2
+            },
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 5,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 2
+            },
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            }
+          ],
+          "granted_request_id": "A"
+        },
+        {
+          "at_ticks": 6,
+          "active": [
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 2
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            }
+          ],
+          "granted_request_id": "B"
+        },
+        {
+          "at_ticks": 7,
+          "active": [
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            }
+          ],
+          "queued": [],
+          "granted_request_id": "C"
+        },
+        {
+          "at_ticks": 8,
+          "active": [],
+          "queued": [],
+          "granted_request_id": null
+        }
+      ],
+      "expected_grants": [
+        "A",
+        "B",
+        "C"
+      ],
+      "invariant": "Reprioritization changes priority while preserving original admission sequence; B retains sequence 2."
+    },
+    {
+      "id": "cancel_resubmit_gets_new_sequence",
+      "capacity": 1,
+      "initial_active": [
+        {
+          "request_id": "H",
+          "priority": 9,
+          "admission_sequence": 0
+        }
+      ],
+      "operations": [
+        {
+          "at_ticks": 1,
+          "op": "enqueue",
+          "request_id": "A",
+          "priority": 2,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 2,
+          "op": "enqueue",
+          "request_id": "B",
+          "priority": 5,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 3,
+          "op": "enqueue",
+          "request_id": "C",
+          "priority": 2,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 4,
+          "op": "cancel",
+          "request_id": "B"
+        },
+        {
+          "at_ticks": 5,
+          "op": "enqueue",
+          "request_id": "B",
+          "priority": 2,
+          "can_preempt": false,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 6,
+          "op": "release",
+          "request_id": "H"
+        },
+        {
+          "at_ticks": 7,
+          "op": "release",
+          "request_id": "A"
+        },
+        {
+          "at_ticks": 8,
+          "op": "release",
+          "request_id": "C"
+        },
+        {
+          "at_ticks": 9,
+          "op": "release",
+          "request_id": "B"
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 1,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 2,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            },
+            {
+              "request_id": "B",
+              "priority": 5,
+              "admission_sequence": 2
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 3,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            },
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            },
+            {
+              "request_id": "B",
+              "priority": 5,
+              "admission_sequence": 2
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 4,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            },
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 5,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 9,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            },
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            },
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 4
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 6,
+          "active": [
+            {
+              "request_id": "A",
+              "priority": 2,
+              "admission_sequence": 1
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            },
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 4
+            }
+          ],
+          "granted_request_id": "A"
+        },
+        {
+          "at_ticks": 7,
+          "active": [
+            {
+              "request_id": "C",
+              "priority": 2,
+              "admission_sequence": 3
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 4
+            }
+          ],
+          "granted_request_id": "C"
+        },
+        {
+          "at_ticks": 8,
+          "active": [
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 4
+            }
+          ],
+          "queued": [],
+          "granted_request_id": "B"
+        },
+        {
+          "at_ticks": 9,
+          "active": [],
+          "queued": [],
+          "granted_request_id": null
+        }
+      ],
+      "expected_grants": [
+        "A",
+        "C",
+        "B"
+      ],
+      "invariant": "Cancellation removes B's sequence 2 admission; its resubmission receives sequence 4 and follows A and C."
+    },
+    {
+      "id": "equal_priority_does_not_preempt",
+      "capacity": 1,
+      "initial_active": [
+        {
+          "request_id": "H",
+          "priority": 2,
+          "admission_sequence": 0,
+          "preemptible_strategy": "Suspend"
+        }
+      ],
+      "operations": [
+        {
+          "at_ticks": 1,
+          "op": "enqueue",
+          "request_id": "B",
+          "priority": 2,
+          "can_preempt": true,
+          "preemptible_strategy": null
+        },
+        {
+          "at_ticks": 2,
+          "op": "release",
+          "request_id": "H"
+        },
+        {
+          "at_ticks": 3,
+          "op": "release",
+          "request_id": "B"
+        }
+      ],
+      "expected_after_each": [
+        {
+          "at_ticks": 1,
+          "active": [
+            {
+              "request_id": "H",
+              "priority": 2,
+              "admission_sequence": 0
+            }
+          ],
+          "queued": [
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 1
+            }
+          ],
+          "granted_request_id": null
+        },
+        {
+          "at_ticks": 2,
+          "active": [
+            {
+              "request_id": "B",
+              "priority": 2,
+              "admission_sequence": 1
+            }
+          ],
+          "queued": [],
+          "granted_request_id": "B"
+        },
+        {
+          "at_ticks": 3,
+          "active": [],
+          "queued": [],
+          "granted_request_id": null
+        }
+      ],
+      "expected_grants": [
+        "B"
+      ],
+      "invariant": "A can_preempt request cannot evict an active request at equal priority; H stays active and B waits until H releases."
+    }
+  ]
+}
