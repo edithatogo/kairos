@@ -52,7 +52,7 @@ Format:
 
 - Conformance fixture docs now mark the tested zero-delay ordering fixture as ready and state its livelock evidence limit.
 
-- The pinned bootstrap npm CLI now declares Node.js 22.9.0 as its minimum runtime; the CI toolchain matrix already validates Node 22 and 24.
+- The bootstrap npm CLI is updated to npm 12.1.0, with its supported Node.js runtime range documented separately from the TypeScript/Wasm binding.
 - `KairoEcsBuffer::default()` now produces a null pointer and zero length on Rust 1.76-compatible toolchains.
 - Required Rust CI now checks the locked workspace on the declared 1.76 MSRV in parallel with stable verification, and runs all-feature doctests as a distinct test class.
 - The Rust Wasm export crate now declares its Rust 1.77 minimum and has a dedicated locked wasm-target CI lane.

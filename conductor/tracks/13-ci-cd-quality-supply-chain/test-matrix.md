@@ -27,6 +27,7 @@
 - Package dry-runs and binding CI fail when their own manifests are missing instead of skipping quietly.
 - Package dry-runs validate package artifacts while language tests run only in binding CI; Python package build/twine checks run once on Python 3.14, with the 3.10–3.14 compatibility matrix retained in binding CI.
 - npm package validation builds once during `npm ci` preparation and uses `npm pack --dry-run --ignore-scripts` to inspect the resulting package without rerunning prepack; NuGet package validation packs the library without repeating the net10 test project.
+- Bootstrap npm supply-chain validation regenerates npm 12.1.0 from its integrity-pinned registry tarball, checks deterministic artifact/lock integrity and absence of vulnerable bundled copies, installs with `npm ci --ignore-scripts`, verifies resolved patched dependency paths, and runs CLI version/help, npm audit, and npm audit signatures. CI uses Node 22.22.2, npm 12's lowest supported runtime; the bootstrap generator and npm ci fail closed.
 - TypeScript binding smoke runs its declared scripts instead of treating them as optional.
 - Benchmark smoke runs the offline metadata harness and `kairo-ecs-bench` compile check.
 - DST engine tests are excluded because `SimTime` uses logical integer ticks and the engine has no civil-time conversion; any future timestamp adapter must add DST boundary tests at that boundary.
@@ -36,6 +37,13 @@
 ## CI commands
 
 ```bash
+python3 scripts/bootstrap-node-tools/prepare_npm_cli.py --check
+npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools
+node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js --version
+node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js help
+node scripts/bootstrap-node-tools/validate_npm_cli.mjs
+node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js audit --prefix scripts/bootstrap-node-tools --audit-level=moderate
+node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js audit signatures --prefix scripts/bootstrap-node-tools
 test -f Cargo.toml
 test -f rust-toolchain.toml
 test -f deny.toml
