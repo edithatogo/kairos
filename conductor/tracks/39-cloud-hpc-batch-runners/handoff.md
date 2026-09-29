@@ -1,5 +1,31 @@
 # Handoff: Track 39 Cloud / HPC Batch Runners
 
+## PR #102 status-patch test refresh -- 2026-09-30
+
+Re-expressed PR #102's default-phase, custom-phase, and missing-fields cases as
+`unittest.TestCase` methods in the existing operator test module. This is the
+module discovered by `.github/workflows/cloud-smoke.yml`; the former nested
+pytest module was not included by that workflow's unittest discovery command.
+The tests assert the complete default patch, caller-provided phase, initial run
+counts, and fallback API version, kind, and resource name.
+
+Local evidence:
+
+- Working directory: `/tmp/kairos-pr102-refresh`.
+- Base commit: `384e8546d69f9cbf2746fcb2ab646263256e6dec` (`origin/main` at task start).
+- Tested source commit: `dca7f8395636cc29a8c5d8d1dee4c6740252b2c7` (the candidate commit before this handoff-only amendment; test source was identical).
+- Toolchain: Python `3.14.7` on macOS arm64. The workflow command's `python`
+  executable is not installed on this host; its equivalent `python3` was used.
+- `python3 -m unittest discover -s k8s/operator -p 'test_*.py'` — exit `0`, 5
+  tests passed (2 scenario-key tests and 3 status-patch tests).
+- `python3 -m py_compile k8s/operator/test_kairoecs_operator.py` — exit `0`.
+- `git diff --check` — exit `0`.
+- Test source SHA-256: `22bd31738e899e5763e70a4a8b45d85f73908c398e0e497a2fa75c4840247cd1`.
+- Operator source SHA-256: `f0a2fc83b4b2df532d60713af5aac6132b92facae19f950f2d1c8e6e5b92c182`.
+This is local evidence only. The GitHub Actions `cloud / offline-cloud-hpc-smoke`
+result must be checked on the refreshed PR head before merge consideration; no
+cluster reconciliation or Kubernetes runtime acceptance is claimed.
+
 ## 2026-09-29 Kubernetes scenario-key hardening
 
 Validated `scenarioRef.key` as a conservative single-component filename before
