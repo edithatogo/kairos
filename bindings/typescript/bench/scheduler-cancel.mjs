@@ -70,13 +70,19 @@ function measure(SchedulerFacade, events, ids) {
   for (const eventId of ids) {
     if (scheduler.cancel(eventId)) cancelled += 1;
   }
-  const elapsedMs = performance.now() - start;
+  const cancellationMs = performance.now() - start;
+
+  const drainStart = performance.now();
+  let drained = 0;
+  while (scheduler.step() !== null) drained += 1;
+  const drainMs = performance.now() - drainStart;
 
   assert.equal(cancelled, ids.length, 'every requested event must cancel once');
+  assert.equal(drained, events - ids.length, 'every uncancelled event must drain once');
   const snapshot = scheduler.snapshot();
-  assert.equal(snapshot.queuedEvents.length, events - ids.length);
+  assert.equal(snapshot.queuedEvents.length, 0);
   assert.equal(snapshot.cancelledEvents.length, ids.length);
-  return elapsedMs;
+  return { cancellationMs, drainMs, totalMs: cancellationMs + drainMs };
 }
 
 const options = parseOptions(process.argv.slice(2));
@@ -104,20 +110,29 @@ try {
 
   for (const mode of ['reverse-end', 'seeded-random']) {
     const ids = cancellationIds(options.events, options.cancellations, mode);
-    const rawMs = Object.fromEntries(implementations.map(([name]) => [name, []]));
+    const rawMeasurements = Object.fromEntries(implementations.map(([name]) => [name, []]));
     for (let repetition = 0; repetition < options.repetitions; repetition += 1) {
       const order = repetition % 2 === 0 ? implementations : [...implementations].reverse();
       for (const [name, SchedulerFacade] of order) {
-        rawMs[name].push(measure(SchedulerFacade, options.events, ids));
+        rawMeasurements[name].push(measure(SchedulerFacade, options.events, ids));
       }
     }
-    const baselineMedianMs = median(rawMs.baseline);
-    const candidateMedianMs = median(rawMs.candidate);
+    const medianMeasurements = Object.fromEntries(
+      implementations.map(([name]) => [
+        name,
+        Object.fromEntries(
+          ['cancellationMs', 'drainMs', 'totalMs'].map((metric) => [
+            metric,
+            median(rawMeasurements[name].map((measurement) => measurement[metric])),
+          ]),
+        ),
+      ]),
+    );
     measurements[mode] = {
-      rawMs,
-      baselineMedianMs,
-      candidateMedianMs,
-      medianSpeedup: baselineMedianMs / candidateMedianMs,
+      rawMeasurements,
+      medianMeasurements,
+      totalLifecycleSpeedup:
+        medianMeasurements.baseline.totalMs / medianMeasurements.candidate.totalMs,
     };
   }
 
@@ -132,7 +147,7 @@ try {
     events: options.events,
     cancellations: options.cancellations,
     repetitions: options.repetitions,
-    timing: 'cancellation loop only; event scheduling and snapshot assertions are outside the timed interval',
+    timing: 'cancellation loop and full drain are measured separately; scheduling and snapshot assertions are outside the timed intervals',
     randomOrder: 'LCG seed 0x84c0ffee with Fisher-Yates shuffle; first requested IDs are cancelled',
     measurements,
   }, null, 2));

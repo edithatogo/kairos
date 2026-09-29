@@ -81,6 +81,31 @@ describe("scheduler facade", () => {
     expect(roundTripArrowEventLog(eventLog)).toEqual(eventLog);
   });
 
+  it("drains cancellation tombstones without losing later scheduled events", () => {
+    const scheduler = createSchedulerFacade();
+    const scheduled = Array.from({ length: 4_096 }, (_, index) =>
+      scheduler.scheduleAt({ timeTicks: index + 1, eventKind: "bulk" }),
+    );
+
+    for (const event of scheduled.slice(0, 3_072)) {
+      expect(scheduler.cancel(event.eventId)).toBe(true);
+    }
+
+    const inserted = scheduler.scheduleAt({ timeTicks: 0, eventKind: "inserted" });
+    const dispatched = scheduler.runFor(1_025);
+
+    expect(dispatched).toHaveLength(1_025);
+    expect(dispatched.map((event) => event.eventId)).toEqual([
+      inserted.eventId,
+      ...scheduled.slice(3_072).map((event) => event.eventId),
+    ]);
+    expect(scheduler.snapshot().queuedEvents).toEqual([]);
+    expect(scheduler.step()).toBeNull();
+
+    const afterDrain = scheduler.scheduleAt({ timeTicks: 5_000, eventKind: "after-drain" });
+    expect(scheduler.step()?.eventId).toBe(afterDrain.eventId);
+  });
+
   it("rejects incompatible event-log payloads", () => {
     expect(() =>
       roundTripArrowEventLog({

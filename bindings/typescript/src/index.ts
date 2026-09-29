@@ -177,6 +177,7 @@ export class SchedulerFacade {
   #nextEventId = 1n;
   #nextSequence = 0n;
   #queue: ScheduledEvent[] = [];
+  #queueHead = 0;
   #queuedEvents = new Map<bigint, ScheduledEvent>();
   #dispatched: DispatchedEvent[] = [];
   #cancelled: CancelledEvent[] = [];
@@ -202,7 +203,7 @@ export class SchedulerFacade {
     this.#nextEventId += 1n;
     this.#nextSequence += 1n;
 
-    let low = 0;
+    let low = this.#queueHead;
     let high = this.#queue.length;
     while (low < high) {
       const mid = (low + high) >>> 1;
@@ -241,14 +242,16 @@ export class SchedulerFacade {
 
   step(): DispatchedEvent | null {
     let next: ScheduledEvent | undefined;
-    while (this.#queue.length > 0) {
-      const candidate = this.#queue.shift()!;
+    while (this.#queueHead < this.#queue.length) {
+      const candidate = this.#queue[this.#queueHead++]!;
       if (this.#queuedEvents.has(candidate.eventId)) {
         this.#queuedEvents.delete(candidate.eventId);
         next = candidate;
         break;
       }
     }
+
+    this.#compactQueuePrefix();
 
     if (next === undefined) {
       return null;
@@ -286,7 +289,7 @@ export class SchedulerFacade {
 
     return {
       currentTimeTicks: this.#currentTimeTicks,
-      queuedEvents: this.#queue.filter((ev) => this.#queuedEvents.has(ev.eventId)),
+      queuedEvents: this.#queue.slice(this.#queueHead).filter((ev) => this.#queuedEvents.has(ev.eventId)),
       dispatchedEvents: [...this.#dispatched],
       cancelledEvents: [...this.#cancelled],
     };
@@ -308,6 +311,19 @@ export class SchedulerFacade {
       fields: EVENT_LOG_FIELDS,
       rows,
     };
+  }
+
+  #compactQueuePrefix(): void {
+    if (this.#queueHead === this.#queue.length) {
+      this.#queue = [];
+      this.#queueHead = 0;
+      return;
+    }
+
+    if (this.#queueHead >= 1_024 && this.#queueHead * 2 >= this.#queue.length) {
+      this.#queue = this.#queue.slice(this.#queueHead);
+      this.#queueHead = 0;
+    }
   }
 }
 
