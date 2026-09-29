@@ -58,7 +58,7 @@ Format:
 - The C# binding now pins the .NET 10.0.401 SDK for local development and CI.
 - C# test tooling now uses MSTest 4.4.1 and Microsoft.NET.Test.Sdk 18.10.1.
 - GitHub Actions pins are refreshed to verified immutable upstream releases, including compatible latest-major updates.
-- Core CI now skips Rust stable and MSRV verification on changes outside Rust sources, Cargo inputs, Rust fixtures, and core CI validation; the required `Rust core quality` check still reports the explicit result.
+- Pull-request core CI skips Rust verification when changes avoid Rust sources, Cargo inputs, Rust fixtures, ABI/schema contracts, and classifier policy; every main push still refreshes trusted Codecov evidence. The required `Rust core quality` status reports the explicit classification and fails closed.
 - The optional Python Arrow extra now requires PyArrow 25.0.1 or later; the supported Python range remains 3.10–3.14.
 - Python value contracts now use explicit string forward references where `SimTime` refers to itself, allowing removal of postponed-annotations import safely.
 - Python Arrow event-log helpers now rely on the supported Python 3.10+ annotation behavior without the redundant future import.

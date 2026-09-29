@@ -31,34 +31,7 @@ jobs:
           HEAD_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          if [[ "$EVENT_NAME" == pull_request ]]; then
-            changed_files="$(git diff --name-only --diff-filter=ACMRTUXB "$BASE_SHA...$HEAD_SHA")"
-          elif [[ "$EVENT_NAME" == push ]]; then
-            if [[ "$BASE_SHA" =~ ^0+$ ]]; then
-              echo "Initial push has no comparison base; running Rust verification."
-              echo "rust=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-            changed_files="$(git diff --name-only --diff-filter=ACMRTUXB "$BASE_SHA" "$HEAD_SHA")"
-          else
-            echo "Unsupported event: $EVENT_NAME" >&2
-            exit 1
-          fi
-
-          # Rust verification covers Rust source, Cargo inputs, Rust-owned test
-          # fixtures, and the CI policy/scripts that define these checks.
-          rust_required=false
-          while IFS= read -r path; do
-            [[ -n "$path" ]] || continue
-            case "$path" in
-              *.rs|Cargo.toml|Cargo.lock|*/Cargo.toml|*/Cargo.lock|deny.toml|rust-toolchain|rust-toolchain.toml|.cargo/*|*/.cargo/*|crates/*|fuzz/*|conformance/fixtures/*|scripts/validation/check-core-coverage.mjs|.github/workflows/ci-core.yml)
-                rust_required=true
-                break
-                ;;
-            esac
-          done <<< "$changed_files"
-
-          echo "rust=$rust_required" >> "$GITHUB_OUTPUT"
+          node scripts/validation/classify-rust-ci-changes.mjs "$EVENT_NAME" "$BASE_SHA" "$HEAD_SHA" >> "$GITHUB_OUTPUT"
 
   rust-stable:
     name: Rust stable verification
@@ -178,7 +151,7 @@ jobs:
 
   codecov:
     name: Codecov OIDC upload
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.changes.outputs.rust == 'true'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [changes, rust-core]
     runs-on: ubuntu-latest
     permissions:
