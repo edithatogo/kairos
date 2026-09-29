@@ -126,6 +126,25 @@ passed; hosted Actions must pass on the refreshed PR head before integration.
 
 The changelog, this handoff, and the Track 13 test matrix were updated with the
 workflow change. No release or package publication was performed.
+
+## 2026-09-29 quality-frontier drift receipt
+
+Added `just quality-drift`, a read-only GitHub settings readback that records
+source context, the active main ruleset, legacy branch protection, Actions
+publisher and token settings, private vulnerability reporting, the default-
+branch Renovate preset, required check runs bound to the resolved default-branch
+SHA, trusted-main Codecov upload/status, and Renovate refresh evidence. The JSON
+receipt is written to the ignored `artifacts/quality-frontier-drift.json` path.
+It distinguishes `pass`, `drift`, `pending`, and `unavailable`; pending provider
+evidence cannot be treated as a pass. The conformance workflow exercises these
+states with offline fixtures. Renovate refresh evidence is measured strictly
+after the latest merged pull request's GitHub `merged_at`, and duplicate
+Codecov upload/status records are reduced to the newest run/status before they
+can satisfy the receipt.
+
+Before PR #154 integration, Renovate preset refresh and Codecov upload/status
+remain pending. Rerun `just quality-drift` after integration and retain that
+fresh receipt with the issue closeout evidence.
 ## Phase closeout evidence
 
 `$conductor-review` completed on 2026-05-08 with no blocking Track 13 findings. Accepted fixes: none required in the workflow surface during this closeout pass. Validation commands passed: `node scripts/validation/validate-track13-metadata.mjs`, `node tests/conformance/track07_13_hardening_check.mjs`, `node tests/conformance/track12_20_evidence_check.mjs`, and `pwsh -NoProfile -File scripts\validate_track13_supply_chain.ps1`. `cargo-deny` and `cargo-audit` were unavailable locally and reported as skipped by the Track 13 supply-chain gate. Git cleanup state: dirty because local Conductor closeout/status edits are pending commit. Commit SHA: `5dd1937566898b2e028ac61dab1e9dd173e6d919`; pushed ref: `origin/main`. Strict cleanup gate `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` remains pending until these local closeout edits are committed. Next-phase decision: Track 13 is Done for the current CI/CD and supply-chain scaffold; future mandatory advisory scanner installation or release hardening belongs in Track 20 or a scoped follow-up.
