@@ -5,10 +5,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 
 VALID_STORAGE_BACKENDS = {"filesystem", "s3", "gcs", "azure"}
+SCENARIO_KEY_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,252}\Z")
+
+
+def validate_scenario_key(key: object) -> str:
+    if not isinstance(key, str) or not SCENARIO_KEY_PATTERN.fullmatch(key) or key in {".", ".."}:
+        raise ValueError("spec.scenarioRef.key must be a safe filename")
+    return key
 
 
 def validate_experiment(experiment: dict) -> None:
@@ -32,6 +40,7 @@ def validate_experiment(experiment: dict) -> None:
     scenario_ref = spec.get("scenarioRef")
     if not isinstance(scenario_ref, dict):
         raise ValueError("spec.scenarioRef must be an object")
+    validate_scenario_key(scenario_ref.get("key", "scenario.yaml"))
     if not scenario_ref.get("configMapName") and not str(scenario_ref.get("inline", "")).strip():
         raise ValueError("spec.scenarioRef must provide configMapName or inline scenario content")
 
@@ -44,7 +53,7 @@ def render_job(experiment: dict) -> dict:
     parallelism = int(spec.get("parallelism", 1))
     storage = spec["storage"]
     scenario_ref = spec.get("scenarioRef", {})
-    scenario_key = scenario_ref.get("key", "scenario.yaml")
+    scenario_key = validate_scenario_key(scenario_ref.get("key", "scenario.yaml"))
     scenario_mount = f"/scenario/{scenario_key}"
     volumes = []
     volume_mounts = []
@@ -67,8 +76,11 @@ def render_job(experiment: dict) -> dict:
             {
                 "name": "write-inline-scenario",
                 "image": "busybox:1.36",
-                "command": ["sh", "-c", f"printf '%s' \"$KAIRO_INLINE_SCENARIO\" > /scenario/{scenario_key}"],
-                "env": [{"name": "KAIRO_INLINE_SCENARIO", "value": scenario_ref["inline"]}],
+                "command": ["sh", "-c", "printf '%s' \"$KAIRO_INLINE_SCENARIO\" > \"$KAIRO_SCENARIO_PATH\""],
+                "env": [
+                    {"name": "KAIRO_INLINE_SCENARIO", "value": scenario_ref["inline"]},
+                    {"name": "KAIRO_SCENARIO_PATH", "value": scenario_mount},
+                ],
                 "volumeMounts": [{"name": "scenario", "mountPath": "/scenario"}],
             }
         )

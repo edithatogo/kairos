@@ -1,0 +1,15 @@
+{
+  "name": "kairos-bootstrap-node-tools",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Hash-locked npm CLI used by the local bootstrap script",
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
+  "overrides": {
+    "ip-address": "10.5.1"
+  },
+  "dependencies": {
+    "npm": "file:./npm-patched.tgz"
+  }
+}

@@ -73,8 +73,10 @@ KairoECS.self_check()
 ## TypeScript/Wasm binding
 
 ### Prerequisites
-- Node.js >= 20 LTS
+- Node.js >=22 <25 (CI-tested lines: Node 22 and 24)
 - npm
+
+The bootstrap CLI is pinned to npm 12.1.0. npm 12 requires Node.js `^22.22.2 || ^24.15.0 || >=26.0.0`; the bootstrap tools use that runtime range. The TypeScript/Wasm binding keeps its separate Node.js `>=22 <25` range, and CI covers Node 22 and 24.
 
 ### Install
 ```bash

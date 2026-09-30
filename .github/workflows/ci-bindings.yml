@@ -2,12 +2,57 @@ name: ci-bindings
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 on:
   pull_request:
+    paths:
+      - '.github/actions/**'
+      - '.github/workflows/ci-bindings.yml'
+      - 'scripts/bootstrap-python-tools.lock'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'bindings/**'
+      - 'crates/**'
+      - 'conformance/**'
+      - 'examples/**'
+      - 'hpc/**'
+      - 'include/**'
+      - 'schemas/**'
+      - 'scripts/**'
+      - 'templates/**'
+      - 'tests/**'
+      - 'benches/**'
+      - 'build.rs'
+      - 'justfile'
+      - 'mise.toml'
+      - 'rust-toolchain.toml'
   push:
     branches: [main]
+    paths:
+      - '.github/actions/**'
+      - '.github/workflows/ci-bindings.yml'
+      - 'scripts/bootstrap-python-tools.lock'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.cargo/**'
+      - 'bindings/**'
+      - 'crates/**'
+      - 'conformance/**'
+      - 'examples/**'
+      - 'hpc/**'
+      - 'include/**'
+      - 'schemas/**'
+      - 'scripts/**'
+      - 'templates/**'
+      - 'tests/**'
+      - 'benches/**'
+      - 'build.rs'
+      - 'justfile'
+      - 'mise.toml'
+      - 'rust-toolchain.toml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -30,8 +75,9 @@ jobs:
       - name: Python binding smoke
         run: |
           test -f bindings/python/pyproject.toml
-          python -m pip install -U pip maturin pytest ruff pyarrow
+          python -m pip install --require-hashes -r scripts/bootstrap-python-tools.lock
           cd bindings/python
+          python -m pip install --no-deps --no-build-isolation -e '.[test]'
           ruff check .
           python -m pytest -q
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 MAX_U128 = (1 << 128) - 1
 MAX_U64 = (1 << 64) - 1
@@ -15,7 +15,8 @@ MAX_U32 = (1 << 32) - 1
 class SimTime:
     """Fixed-tick simulation time."""
 
-    ZERO: ClassVar["SimTime"]
+    if TYPE_CHECKING:
+        ZERO: ClassVar[SimTime]
 
     ticks: int = 0
 
@@ -24,7 +25,7 @@ class SimTime:
             raise ValueError("ticks must fit in an unsigned 128-bit integer")
 
     @classmethod
-    def from_ticks(cls, ticks: int) -> "SimTime":
+    def from_ticks(cls, ticks: int) -> SimTime:
         return cls(ticks)
 
 

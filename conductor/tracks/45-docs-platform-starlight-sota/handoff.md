@@ -1,5 +1,21 @@
 # 45 Astro/Starlight Docs Platform and Polyglot Experience - handoff.md
 
+## 2026-09-29 search-rendering security follow-up
+
+The legacy generated documentation search client now builds result nodes with
+DOM APIs and assigns indexed titles and excerpts through `textContent`. Result
+URLs must resolve to same-origin HTTP(S); script schemes and external origins
+are ignored. The regression harness runs in Docs Quality before the site build
+and covers HTML payloads, dangerous schemes, cross-origin links, and relative
+paths. This is a focused hardening change; it does not advance Track 45 status.
+
+Validation on PR worktree based on `76820e7a0fbfe6306640b63f2ce55730d0fe7cbc`:
+
+- `node website/scripts/test-search-security.mjs` — pass.
+- `npm --prefix website run build` — pass; 16 Astro pages and 101 compatibility pages generated.
+- `actionlint .github/workflows/docs.yml` — pass.
+- `git diff --check` — pass.
+
 ## Summary
 
 2026-05-19: Track 45 formalizes the active Astro/Starlight docs platform and adds a dedicated SOTA validator for versioning, the local polyglot plugin, llms.txt, icons, generated search, and archive-route evidence.
@@ -48,9 +64,10 @@ Run `$conductor-review` before advancing this track. Apply accepted fixes in own
 
 ## Phase closeout evidence
 
-- `$conductor-review`: pending for PR review.
-- accepted fixes: none yet.
-- commit SHA: pending.
-- pushed ref: pending.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending after commit and push.
-- next-phase decision: keep Track 45 `In Review` until CI and review closeout complete.
+- `$conductor-review`: focused local review on 2026-06-18 found no Track 45 plan/spec defects in the Astro/Starlight platform gate. Deferred TypeDoc, OpenAPI, and hosted DocSearch remain correctly recorded as activation-condition follow-ups, not current requirements.
+- accepted fixes: none required for the Track 45 owned surface in this pass.
+- validation: `node scripts/dx/validate-docs-workflow.mjs` passed with link validation, Astro build, generated compatibility routes, and docs dev smoke; `node scripts/validation/validate-docs-platform-sota.mjs` passed with Starlight versioning, link validator, llms.txt, icons, and local polyglot plugin evidence.
+- commit SHA: `0749d4139fff6a86cdf623c336541cd461055a9b`.
+- pushed ref: `origin/codex/kairos-conductor-closeout` after branch push.
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed on 2026-06-18 after restoring `origin/conductor-close-reviewed-tracks-20260510` to historical tip `a7e6f4a68bad9aa9483997d3a0207031066929a1`.
+- next-phase decision: keep Track 45 `In Review` until pull-request CI confirms the branch.
