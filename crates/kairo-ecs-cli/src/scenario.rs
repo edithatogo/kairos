@@ -529,7 +529,9 @@ mod tests {
     fn test_validate_missing_fixture_path() {
         let mut scenario = valid_scenario();
         let seed = valid_seed();
-        scenario.fixture_path = PathBuf::from("/this/path/does/not/exist");
+        scenario.fixture_path = std::env::temp_dir()
+            .join(format!("kairos-missing-fixture-{}", std::process::id()))
+            .join("fixture");
         let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
         assert!(
             matches!(err, ScenarioError::Mismatch(msg) if msg.contains("fixture_path does not exist"))
