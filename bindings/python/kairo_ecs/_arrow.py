@@ -1,7 +1,5 @@
 """Event-log v1 smoke roundtrip helpers for the Python binding."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, TypeVar
@@ -51,7 +49,7 @@ class EventLogRecord:
     payload_ref: str | None = None
 
     @classmethod
-    def dispatched(cls, run_id: str, event: DispatchedEvent) -> EventLogRecord:
+    def dispatched(cls, run_id: str, event: DispatchedEvent) -> "EventLogRecord":
         return cls(
             schema_version=SCHEMA_VERSION,
             run_id=run_id,
@@ -163,7 +161,7 @@ class EventLogBatch:
         return pa.Table.from_pylist(rows, schema=schema)
 
     @classmethod
-    def from_smoke_bytes(cls, payload: bytes) -> EventLogBatch:
+    def from_smoke_bytes(cls, payload: bytes) -> "EventLogBatch":
         lines = payload.decode("utf-8").splitlines()
         expected_header = f"stream={EVENT_LOG_STREAM};schema_version={SCHEMA_VERSION}"
         if len(lines) < 2 or lines[0] != expected_header:
@@ -199,7 +197,7 @@ class EventLogBatch:
         return cls(records)
 
     @classmethod
-    def from_pyarrow_table(cls, table: Any) -> EventLogBatch:
+    def from_pyarrow_table(cls, table: Any) -> "EventLogBatch":
         if tuple(table.schema.names) != tuple(field[0] for field in EVENT_LOG_FIELDS):
             raise ValueError("unexpected Arrow event-log field order")
 
