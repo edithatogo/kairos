@@ -1,0 +1,9 @@
+{
+  "name": "kairos-docs-quality-tools",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Hash-locked Mermaid CLI used by documentation CI",
+  "dependencies": {
+    "@mermaid-js/mermaid-cli": "11.17.0"
+  }
+}

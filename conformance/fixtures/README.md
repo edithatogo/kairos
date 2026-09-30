@@ -12,7 +12,7 @@ The target directory-backed runner shape remains the one in `conductor/contracts
 | `scheduler_cancellation_v1` | `cancellation.json` | Cancellation without reordering the remaining queue | Track 01, Track 02, Tracks 06-11 |
 | `rng_reproducibility_v1` | `rng_replay.json` | Reproducible entity-derived random streams | Track 01, Track 02, Tracks 06-11 |
 | `vvuq_scenario_replay_v1` | `vvuq_scenario_replay.json` | Scenario/seed replay evidence boundary for the local VVUQ smoke | Tracks 21-22 |
-| `zero_delay_guard_v1` | planned | Guardrail for zero-delay livelock behavior | Track 01, Track 02, Tracks 06-11 |
+| `zero_delay_guard_v1` | `zero_delay_guard.json` | Zero-delay event ordering guardrails; this fixture does not claim a native livelock harness | Track 01, Track 02, Tracks 06-11 |
 | `des_resource_queue_v1` | planned | Resource queue behavior for DES workflows | Track 01, Track 02, Tracks 06-11 |
 | `abm_behavior_update_v1` | planned | Behavior update semantics for ABM workflows | Track 01, Track 02, Tracks 06-11 |
 | `hybrid_des_abm_v1` | planned | Mixed DES and ABM run contract | Track 01, Track 02, Tracks 06-11 |
