@@ -215,5 +215,56 @@ class RenderJobTests(unittest.TestCase):
         self.assertEqual(container_env["KAIRO_CHECKPOINT_ENABLED"], "true")
 
 
+class StatusPatchTests(unittest.TestCase):
+    def test_default_phase_preserves_experiment_identity_and_initial_counts(self):
+        experiment_resource = {
+            "apiVersion": "test.kairo.ecs/v1",
+            "kind": "CustomExperiment",
+            "metadata": {"name": "test-exp"},
+        }
+
+        self.assertEqual(
+            operator.render_status_patch(experiment_resource),
+            {
+                "apiVersion": "test.kairo.ecs/v1",
+                "kind": "CustomExperiment",
+                "metadata": {"name": "test-exp"},
+                "status": {
+                    "phase": "Rendered",
+                    "completedRuns": 0,
+                    "failedRuns": 0,
+                },
+            },
+        )
+
+    def test_custom_phase_is_preserved(self):
+        experiment_resource = {
+            "apiVersion": "test.kairo.ecs/v1",
+            "kind": "CustomExperiment",
+            "metadata": {"name": "test-exp"},
+        }
+
+        patch = operator.render_status_patch(experiment_resource, phase="Running")
+
+        self.assertEqual(patch["status"]["phase"], "Running")
+        self.assertEqual(patch["status"]["completedRuns"], 0)
+        self.assertEqual(patch["status"]["failedRuns"], 0)
+
+    def test_missing_identity_fields_use_documented_defaults(self):
+        self.assertEqual(
+            operator.render_status_patch({}),
+            {
+                "apiVersion": "kairo.ecs/v1alpha1",
+                "kind": "KairoECSExperiment",
+                "metadata": {"name": "kairo-experiment"},
+                "status": {
+                    "phase": "Rendered",
+                    "completedRuns": 0,
+                    "failedRuns": 0,
+                },
+            },
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
