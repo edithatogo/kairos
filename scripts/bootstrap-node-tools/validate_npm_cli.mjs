@@ -28,6 +28,11 @@ const agentPackagePath = createRequire(
 const ipAddressPackagePath = createRequire(agentPackagePath).resolve('ip-address/package.json');
 const ipAddressPackage = createRequire(agentPackagePath)(ipAddressPackagePath);
 assert.equal(dirname(ipAddressPackagePath), resolve(scriptDirectory, 'node_modules/ip-address'));
-assert.equal(ipAddressPackage.version, '10.5.1');
+assert.equal(ipAddressPackage.version, '10.7.1');
+
+const braceExpansionPath = createRequire(npmPackagePath).resolve('brace-expansion/package.json');
+const braceExpansionPackage = createRequire(npmPackagePath)(braceExpansionPath);
+assert.equal(dirname(braceExpansionPath), resolve(scriptDirectory, 'node_modules/brace-expansion'));
+assert.equal(braceExpansionPackage.version, '5.0.12');
 
 console.log(`npm ${npmPackage.version} resolves locked, top-level dependencies correctly`);

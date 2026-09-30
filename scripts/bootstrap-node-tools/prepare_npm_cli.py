@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Prepare the hash-locked npm CLI bundle used by the bootstrap tools.
 
-The official npm tarball is integrity-pinned below. The repack only moves two
-direct dependencies out of npm's embedded bundle so npm's v3 lock can resolve
-their full dependency graph and apply the two exact security overrides. The
+The official npm tarball is integrity-pinned below. The repack moves vulnerable
+and security-patched dependencies out of npm's embedded bundle so npm's v3
+lock can resolve their full dependency graph and apply exact security overrides. The
 generated tarball is local, ignored, and never published.
 
 Run without arguments before the one-time lock refresh. Run with ``--check``
@@ -32,8 +32,8 @@ SOURCE_INTEGRITY = (
     "sha512-Fyhu62pNx70YCs/5+dEmJQTFVmSKwvo5CA0qvBkGDRpob42MJ6G2RQ2tdxeKM4nYnIZDqkYAxEgqtoejn9QGtQ=="
 )
 PATCHED_DEPENDENCIES = ("make-fetch-happen", "node-gyp")
-REMOVED_BUNDLES = (*PATCHED_DEPENDENCIES, "ip-address", "undici")
-FIXED_DEPENDENCIES = {"ip-address": "10.5.1"}
+REMOVED_BUNDLES = (*PATCHED_DEPENDENCIES, "ip-address", "undici", "brace-expansion")
+FIXED_DEPENDENCIES = {"ip-address": "10.7.1", "brace-expansion": "5.0.12"}
 MIN_UNDICI = (8, 4, 1)
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -113,7 +113,7 @@ def repack(source_data: bytes) -> bytes:
                                 raise RuntimeError(
                                     f"npm bundle layout changed: {dependency} is not a direct bundle"
                                 )
-                            bundles.remove(dependency)
+                        bundles[:] = [name for name in bundles if name not in REMOVED_BUNDLES]
                         content = (json.dumps(manifest, indent=2, ensure_ascii=False) + "\n").encode()
                     elif member.isfile():
                         source_file = source.extractfile(member)
@@ -189,9 +189,11 @@ def verify_lock(artifact_integrity: str) -> None:
     for path, dependency in packages.items():
         name = path.rsplit("node_modules/", maxsplit=1)[-1]
         version = dependency.get("version", "")
-        if name == "ip-address" and version != FIXED_DEPENDENCIES[name]:
+        if name in FIXED_DEPENDENCIES and version != FIXED_DEPENDENCIES[name]:
             vulnerable_entries.append(f"{path}@{version}")
-        if name == "ip-address" and dependency.get("inBundle"):
+        if name in FIXED_DEPENDENCIES and dependency.get("inBundle"):
+            vulnerable_entries.append(f"{path}@{version} (still bundled)")
+        if name == "brace-expansion" and dependency.get("inBundle"):
             vulnerable_entries.append(f"{path}@{version} (still bundled)")
         if name == "undici":
             if dependency.get("inBundle"):
