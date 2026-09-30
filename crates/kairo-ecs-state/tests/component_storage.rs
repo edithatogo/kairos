@@ -125,3 +125,11 @@ fn component_registry_multi_type_and_remove() {
     assert_eq!(reg.remove::<i32>(e), Some(42));
     assert_eq!(reg.get::<i32>(e), None);
 }
+
+#[test]
+fn world_new_is_empty() {
+    let world = World::new();
+    assert!(world.is_empty());
+    assert_eq!(world.len(), 0);
+    assert_eq!(world.snapshot().entities(), &[]);
+}
