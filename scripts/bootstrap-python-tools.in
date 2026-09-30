@@ -1,0 +1,11 @@
+pip==25.0.1
+build==1.6.1
+backports.tarfile==1.2.0
+twine==7.0.0
+maturin==1.9.6
+pytest==8.3.5
+hypothesis==6.131.0
+ruff==0.16.9
+pyarrow==24.0.0
+setuptools==80.9.0
+wheel==0.45.1

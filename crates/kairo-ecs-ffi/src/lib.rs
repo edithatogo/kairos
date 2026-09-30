@@ -27,10 +27,19 @@ const DEFAULT_ERROR_MSG: &str = "ok";
 const FALLBACK_ERROR_MSG: &str = "invalid error";
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct KairoEcsBuffer {
     pub data: *const u8,
     pub len: usize,
+}
+
+impl Default for KairoEcsBuffer {
+    fn default() -> Self {
+        Self {
+            data: std::ptr::null(),
+            len: 0,
+        }
+    }
 }
 
 #[repr(C)]

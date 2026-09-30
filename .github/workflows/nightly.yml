@@ -7,14 +7,57 @@ concurrency:
 on:
   schedule:
     - cron: '17 3 * * *'
+    - cron: '47 3 * * 0'
   workflow_dispatch:
+    inputs:
+      suite:
+        description: Checks to run manually
+        type: choice
+        options:
+          - heavy
+          - mutation
+          - both
+        default: heavy
+        required: true
 
 permissions:
   contents: read
 
 jobs:
+  mutation:
+    name: core mutation score
+    if: >-
+      github.event.schedule == '47 3 * * 0' ||
+      (github.event_name == 'workflow_dispatch' &&
+      (inputs.suite == 'mutation' || inputs.suite == 'both'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Install Rust stable
+        run: rustup toolchain install stable --profile minimal
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - name: Install cargo-mutants
+        run: cargo install cargo-mutants --version 27.1.0 --locked
+      - name: Mutate the Rust scheduler core
+        run: cargo mutants --package kairo-ecs-core --jobs 2 --timeout-multiplier 3
+      - name: Preserve mutation results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: cargo-mutants-outcomes
+          path: mutants.out
+          if-no-files-found: warn
+          retention-days: 30
+
   heavy-rust-checks:
     name: heavy-rust-checks
+    if: >-
+      github.event.schedule == '17 3 * * *' ||
+      (github.event_name == 'workflow_dispatch' &&
+      (inputs.suite == 'heavy' || inputs.suite == 'both'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
