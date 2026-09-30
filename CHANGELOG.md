@@ -50,6 +50,7 @@ Format:
 
 ### Changed
 
+- Removed unused postponed-annotation imports from the Python binding, cloud validation, and Gym modules while preserving Gym's Python 3.9 compatibility.
 - The optional Python Arrow extra now requires PyArrow 25.0.1 or later; the supported Python range remains 3.10–3.14.
 - Python value contracts now use explicit string forward references where `SimTime` refers to itself, allowing removal of postponed-annotations import safely.
 - Python Arrow event-log helpers now rely on the supported Python 3.10+ annotation behavior without the redundant future import.
