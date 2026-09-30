@@ -94,3 +94,17 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 - Commit SHA: blocked; no commit was created in this pass because required gates did not all pass.
 - Pushed ref: blocked; no push was attempted.
 - Next-phase decision: Track 06 remains `In Review`; do not move to `Done` until Arrow/build/clean-tree blockers are resolved or formally waived by the appropriate owner.
+
+## 2026-09-28 Track 13 quality frontier handoff
+
+Under the user-authorized Kairos quality frontier (#120–#122), the Track
+13-owned Python CI setup now installs the package's declared `.[test]` extra,
+which includes pinned Ruff. Ruff findings in the Track 06-owned package modules
+were corrected without changing Python API or behavior. Track 06-owned files in
+PR #154 are `bindings/python/pyproject.toml` and the three modules listed in
+the pull request diff.
+
+The Python 3.10–3.14 hosted matrix and binding smoke checks passed for PR #154
+at `a97d54063c3080e401fc19a17fb8bb1c018b70c8`. This records the cross-track
+handoff only; it does not change Track 06's registry status or waive its owner
+lane.
