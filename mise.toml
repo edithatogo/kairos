@@ -1,6 +1,6 @@
 [tools]
 rust = "stable"
-python = "3.14"
+python = "3.14.7"
 node = "lts"
 go = "latest"
 julia = "latest"
