@@ -13,8 +13,30 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Classify Rust changes
+    runs-on: ubuntu-latest
+    outputs:
+      rust: ${{ steps.classify.outputs.rust }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Classify changed files
+        id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node scripts/validation/classify-rust-ci-changes.mjs "$EVENT_NAME" "$BASE_SHA" "$HEAD_SHA" >> "$GITHUB_OUTPUT"
+
   rust-stable:
     name: Rust stable verification
+    if: needs.changes.outputs.rust == 'true'
+    needs: changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -66,6 +88,8 @@ jobs:
 
   rust-msrv:
     name: Rust MSRV 1.76
+    if: needs.changes.outputs.rust == 'true'
+    needs: changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -79,6 +103,8 @@ jobs:
 
   rust-wasm-msrv:
     name: Rust Wasm MSRV 1.77
+    if: needs.changes.outputs.rust == 'true'
+    needs: changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -93,23 +119,40 @@ jobs:
   rust-core:
     name: Rust core quality
     if: always()
-    needs: [rust-stable, rust-msrv, rust-wasm-msrv]
+    needs: [changes, rust-stable, rust-msrv, rust-wasm-msrv]
     runs-on: ubuntu-latest
     steps:
-      - name: Require stable and MSRV verification
+      - name: Require Rust verification or an explicit skip
         env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          RUST_REQUIRED: ${{ needs.changes.outputs.rust }}
           RUST_STABLE_RESULT: ${{ needs.rust-stable.result }}
           RUST_MSRV_RESULT: ${{ needs.rust-msrv.result }}
           RUST_WASM_MSRV_RESULT: ${{ needs.rust-wasm-msrv.result }}
         run: |
-          test "$RUST_STABLE_RESULT" = success
-          test "$RUST_MSRV_RESULT" = success
-          test "$RUST_WASM_MSRV_RESULT" = success
+          set -euo pipefail
+          test "$CHANGES_RESULT" = success
+          case "$RUST_REQUIRED" in
+            true)
+              test "$RUST_STABLE_RESULT" = success
+              test "$RUST_MSRV_RESULT" = success
+              test "$RUST_WASM_MSRV_RESULT" = success
+              ;;
+            false)
+              test "$RUST_STABLE_RESULT" = skipped
+              test "$RUST_MSRV_RESULT" = skipped
+              test "$RUST_WASM_MSRV_RESULT" = skipped
+              ;;
+            *)
+              echo "Rust change classification did not produce true or false." >&2
+              exit 1
+              ;;
+          esac
 
   codecov:
     name: Codecov OIDC upload
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: rust-core
+    needs: [changes, rust-core]
     runs-on: ubuntu-latest
     permissions:
       actions: read # Download the coverage artifact produced by this run.

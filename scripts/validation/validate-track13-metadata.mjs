@@ -263,9 +263,28 @@ requireTerms('.github/workflows/ci-core.yml', [
   'cargo +1.76.0 check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked',
   'Rust Wasm MSRV 1.77',
   'cargo +1.77.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown',
-  'needs: [rust-stable, rust-msrv, rust-wasm-msrv]',
+  'name: Classify Rust changes',
+  'scripts/validation/classify-rust-ci-changes.mjs',
+  "if: needs.changes.outputs.rust == 'true'",
+  'needs: [changes, rust-stable, rust-msrv, rust-wasm-msrv]',
+  'test "$CHANGES_RESULT" = success',
+  'test "$RUST_STABLE_RESULT" = skipped',
+  'test "$RUST_MSRV_RESULT" = skipped',
+  'test "$RUST_WASM_MSRV_RESULT" = skipped',
   'cargo deny check',
   'cargo audit',
+]);
+
+requireTerms('scripts/validation/classify-rust-ci-changes.mjs', [
+  "['diff', '--no-renames', '--name-only'",
+  "if (eventName === 'push')",
+  "console.log('rust=true')",
+]);
+requireTerms('tests/conformance/ci-rust-change-classifier-check.mjs', [
+  'README.md',
+  'deleted.rs',
+  'include/kairo_ecs.h',
+  'schemas/arrow/event_log_v1.schema.json',
 ]);
 
 requireTerms('codecov.yml', [
