@@ -14,6 +14,10 @@ Format:
 
 ## Unreleased
 
+### Fixed
+
+- Bootstrap npm tooling now locks ip-address 10.7.1 and brace-expansion 5.0.12 outside npm’s embedded bundle, rejecting vulnerable bundled copies.
+
 ### Added
 
 - `kairo-ecs-state` now tests `World::despawn` for successful removal, repeated despawn, invalid indices, and stale generations.
