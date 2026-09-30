@@ -443,6 +443,7 @@ dependencies = [
 name = "kairo-ecs-fmi"
 version = "0.1.0"
 dependencies = [
+ "criterion",
  "serde_json",
 ]
 

@@ -19,3 +19,9 @@ path = "src/lib.rs"
 
 [dev-dependencies]
 serde_json = "1"
+criterion = "0.5"
+
+[[bench]]
+name = "twin_snapshot_diff"
+harness = false
+required-features = ["digital-twin"]

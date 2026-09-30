@@ -57,30 +57,81 @@ impl TwinStateSnapshot {
     }
 
     pub fn diff(&self, next: &Self) -> TwinStateDiff {
-        let changed = next
-            .entries
-            .iter()
-            .filter(|entry| {
-                self.entries
-                    .iter()
-                    .find(|candidate| candidate.key == entry.key)
-                    .map(|candidate| candidate.value != entry.value)
-                    .unwrap_or(true)
-            })
-            .cloned()
-            .collect();
+        // `entries` is public, so callers can bypass `new`'s sort or provide
+        // duplicate keys. Preserve the original semantics for those snapshots;
+        // the common constructor-produced, unique-key case uses the linear walk.
+        if !strictly_sorted_unique(&self.entries) || !strictly_sorted_unique(&next.entries) {
+            let changed = next
+                .entries
+                .iter()
+                .filter(|entry| {
+                    self.entries
+                        .iter()
+                        .find(|candidate| candidate.key == entry.key)
+                        .map(|candidate| candidate.value != entry.value)
+                        .unwrap_or(true)
+                })
+                .cloned()
+                .collect();
 
-        let removed = self
-            .entries
-            .iter()
-            .filter(|entry| {
-                !next
-                    .entries
-                    .iter()
-                    .any(|candidate| candidate.key == entry.key)
-            })
-            .map(|entry| entry.key.clone())
-            .collect();
+            let removed = self
+                .entries
+                .iter()
+                .filter(|entry| {
+                    !next
+                        .entries
+                        .iter()
+                        .any(|candidate| candidate.key == entry.key)
+                })
+                .map(|entry| entry.key.clone())
+                .collect();
+
+            return TwinStateDiff {
+                from_tick: self.tick,
+                to_tick: next.tick,
+                changed,
+                removed,
+            };
+        }
+
+        let mut changed = Vec::new();
+        let mut removed = Vec::new();
+
+        let mut self_iter = self.entries.iter().peekable();
+        let mut next_iter = next.entries.iter().peekable();
+
+        while let (Some(self_entry), Some(next_entry)) = (self_iter.peek(), next_iter.peek()) {
+            match self_entry.key.cmp(&next_entry.key) {
+                std::cmp::Ordering::Less => {
+                    // In self but not in next -> removed
+                    removed.push(self_entry.key.clone());
+                    self_iter.next();
+                }
+                std::cmp::Ordering::Greater => {
+                    // In next but not in self -> added (which is just 'changed')
+                    changed.push((*next_entry).clone());
+                    next_iter.next();
+                }
+                std::cmp::Ordering::Equal => {
+                    // Key matches, check if value changed
+                    if self_entry.value != next_entry.value {
+                        changed.push((*next_entry).clone());
+                    }
+                    self_iter.next();
+                    next_iter.next();
+                }
+            }
+        }
+
+        // Any remaining in self are removed
+        for entry in self_iter {
+            removed.push(entry.key.clone());
+        }
+
+        // Any remaining in next are added (changed)
+        for entry in next_iter {
+            changed.push(entry.clone());
+        }
 
         TwinStateDiff {
             from_tick: self.tick,
@@ -122,6 +173,10 @@ impl TwinStateSnapshot {
         }
         Ok(self.apply(diff))
     }
+}
+
+fn strictly_sorted_unique(entries: &[TwinStateEntry]) -> bool {
+    entries.windows(2).all(|pair| pair[0].key < pair[1].key)
 }
 
 impl TwinStateEntry {
@@ -186,6 +241,66 @@ mod tests {
         let diff = before.diff(&after);
         assert_eq!(before.apply(&diff), after);
         assert_eq!(before.try_apply(&diff).expect("checked apply"), after);
+    }
+
+    #[test]
+    fn diff_preserves_duplicate_key_behavior_for_direct_snapshots() {
+        let before = TwinStateSnapshot {
+            tick: 1,
+            checksum: 0,
+            entries: vec![
+                TwinStateEntry::new("a", "first"),
+                TwinStateEntry::new("a", "second"),
+            ],
+        };
+        let next = TwinStateSnapshot {
+            tick: 2,
+            checksum: 0,
+            entries: vec![
+                TwinStateEntry::new("a", "changed"),
+                TwinStateEntry::new("a", "also changed"),
+            ],
+        };
+
+        assert_eq!(
+            before.diff(&next),
+            TwinStateDiff {
+                from_tick: 1,
+                to_tick: 2,
+                changed: next.entries.clone(),
+                removed: Vec::new(),
+            }
+        );
+    }
+
+    #[test]
+    fn diff_preserves_unsorted_direct_snapshot_behavior() {
+        let before = TwinStateSnapshot {
+            tick: 1,
+            checksum: 0,
+            entries: vec![
+                TwinStateEntry::new("b", "same"),
+                TwinStateEntry::new("a", "old"),
+            ],
+        };
+        let next = TwinStateSnapshot {
+            tick: 2,
+            checksum: 0,
+            entries: vec![
+                TwinStateEntry::new("a", "new"),
+                TwinStateEntry::new("b", "same"),
+            ],
+        };
+
+        assert_eq!(
+            before.diff(&next),
+            TwinStateDiff {
+                from_tick: 1,
+                to_tick: 2,
+                changed: vec![TwinStateEntry::new("a", "new")],
+                removed: Vec::new(),
+            }
+        );
     }
 
     #[test]
