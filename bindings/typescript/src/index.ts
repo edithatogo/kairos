@@ -177,8 +177,11 @@ export class SchedulerFacade {
   #nextEventId = 1n;
   #nextSequence = 0n;
   #queue: ScheduledEvent[] = [];
+  #queueHead = 0;
+  #queuedEvents = new Map<bigint, ScheduledEvent>();
   #dispatched: DispatchedEvent[] = [];
   #cancelled: CancelledEvent[] = [];
+  #cancelledIsSorted = true;
 
   get currentTimeTicks(): bigint {
     return this.#currentTimeTicks;
@@ -199,8 +202,20 @@ export class SchedulerFacade {
 
     this.#nextEventId += 1n;
     this.#nextSequence += 1n;
-    this.#queue.push(event);
-    this.#queue.sort(compareScheduledEvents);
+
+    let low = this.#queueHead;
+    let high = this.#queue.length;
+    while (low < high) {
+      const mid = (low + high) >>> 1;
+      if (compareScheduledEvents(this.#queue[mid], event) < 0) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+    this.#queue.splice(low, 0, event);
+    this.#queuedEvents.set(event.eventId, event);
+
     return event;
   }
 
@@ -213,20 +228,31 @@ export class SchedulerFacade {
 
   cancel(eventId: bigint | number | string): boolean {
     const normalizedEventId = normalizeUnsignedBigInt(eventId, "eventId");
-    const index = this.#queue.findIndex((event) => event.eventId === normalizedEventId);
+    const event = this.#queuedEvents.get(normalizedEventId);
 
-    if (index < 0) {
+    if (event === undefined) {
       return false;
     }
 
-    const [event] = this.#queue.splice(index, 1);
+    this.#queuedEvents.delete(normalizedEventId);
     this.#cancelled.push({ ...event, status: "cancelled" });
-    this.#cancelled.sort(compareScheduledEvents);
+    this.#cancelledIsSorted = false;
     return true;
   }
 
   step(): DispatchedEvent | null {
-    const next = this.#queue.shift();
+    let next: ScheduledEvent | undefined;
+    while (this.#queueHead < this.#queue.length) {
+      const candidate = this.#queue[this.#queueHead++]!;
+      if (this.#queuedEvents.has(candidate.eventId)) {
+        this.#queuedEvents.delete(candidate.eventId);
+        next = candidate;
+        break;
+      }
+    }
+
+    this.#compactQueuePrefix();
+
     if (next === undefined) {
       return null;
     }
@@ -256,15 +282,25 @@ export class SchedulerFacade {
   }
 
   snapshot(): SchedulerSnapshot {
+    if (!this.#cancelledIsSorted) {
+      this.#cancelled.sort(compareScheduledEvents);
+      this.#cancelledIsSorted = true;
+    }
+
     return {
       currentTimeTicks: this.#currentTimeTicks,
-      queuedEvents: [...this.#queue],
+      queuedEvents: this.#queue.slice(this.#queueHead).filter((ev) => this.#queuedEvents.has(ev.eventId)),
       dispatchedEvents: [...this.#dispatched],
       cancelledEvents: [...this.#cancelled],
     };
   }
 
   eventLog(runId: string): ArrowEventLogPayload {
+    if (!this.#cancelledIsSorted) {
+      this.#cancelled.sort(compareScheduledEvents);
+      this.#cancelledIsSorted = true;
+    }
+
     const rows = [...this.#dispatched, ...this.#cancelled]
       .sort(compareScheduledEvents)
       .map((event) => toArrowEventLogRow(runId, event));
@@ -275,6 +311,19 @@ export class SchedulerFacade {
       fields: EVENT_LOG_FIELDS,
       rows,
     };
+  }
+
+  #compactQueuePrefix(): void {
+    if (this.#queueHead === this.#queue.length) {
+      this.#queue = [];
+      this.#queueHead = 0;
+      return;
+    }
+
+    if (this.#queueHead >= 1_024 && this.#queueHead * 2 >= this.#queue.length) {
+      this.#queue = this.#queue.slice(this.#queueHead);
+      this.#queueHead = 0;
+    }
   }
 }
 
