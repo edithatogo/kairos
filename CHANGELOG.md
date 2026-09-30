@@ -79,6 +79,7 @@ Format:
 
 ### Fixed
 
+- `ComponentRegistry::insert` now returns `false` instead of panicking if its typed store cannot be recovered, while preserving normal insertion behavior.
 - Python's optional Arrow extra now requires PyArrow 14.0.2 or later to exclude releases affected by an upstream Arrow reader security advisory.
 - Upgrade Astro to 7.3.5 and its Starlight integration/plugins to security-compatible releases, fixing the critical Astro image-optimization remote-code-execution alert.
 - Updated TypeScript binding development dependencies (Vitest 4.1.11, Vite 8.3.1, and PostCSS 8.5.28) and raised the TypeScript template Vitest pin to 4.1.11.

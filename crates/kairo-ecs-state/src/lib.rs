@@ -367,12 +367,20 @@ impl ComponentRegistry {
             .and_then(|b| b.downcast_mut::<ComponentStore<T>>())
     }
 
+    /// Inserts a component into its type store, registering the store on demand.
+    ///
+    /// Returns `false` when the entity is stale or the typed store is unavailable.
     #[must_use]
     pub fn insert<T: 'static>(&mut self, entity: EntityId, component: T) -> bool {
-        if self.store::<T>().is_none() {
-            self.register::<T>();
-        }
-        self.store_mut::<T>().unwrap().insert(entity, component)
+        let store = self
+            .stores
+            .entry(TypeId::of::<T>())
+            .or_insert_with(|| Box::new(ComponentStore::<T>::new()))
+            .downcast_mut::<ComponentStore<T>>();
+        let Some(store) = store else {
+            return false;
+        };
+        store.insert(entity, component)
     }
 
     pub fn remove<T: 'static>(&mut self, entity: EntityId) -> Option<T> {
@@ -390,6 +398,33 @@ impl Default for ComponentRegistry {
     }
 }
 
+#[cfg(test)]
+mod registry_insert_tests {
+    use super::*;
+
+    #[test]
+    fn insert_registers_missing_store_and_keeps_normal_behavior() {
+        let mut registry = ComponentRegistry::new();
+        let mut world = World::new();
+        let entity = world.spawn();
+
+        assert!(registry.insert(entity, 42_u32));
+        assert_eq!(registry.get::<u32>(entity), Some(&42));
+    }
+
+    #[test]
+    fn insert_returns_false_for_an_inconsistent_typed_store() {
+        let mut registry = ComponentRegistry::new();
+        registry
+            .stores
+            .insert(TypeId::of::<u32>(), Box::new(ComponentStore::<u64>::new()));
+        let mut world = World::new();
+        let entity = world.spawn();
+
+        assert!(!registry.insert(entity, 42_u32));
+        assert!(registry.store::<u32>().is_none());
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
