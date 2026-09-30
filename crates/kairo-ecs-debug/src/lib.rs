@@ -77,16 +77,21 @@ impl EventTrace {
     }
 
     pub fn reconstruct_at(&self, tick: u128) -> BTreeMap<String, String> {
-        let (mut state, snapshot_tick) = {
-            let idx = self
-                .snapshots
-                .partition_point(|snapshot| snapshot.tick <= tick);
-            if idx > 0 {
-                let snapshot = &self.snapshots[idx - 1];
-                (snapshot.state.clone(), snapshot.tick)
+        let snapshot_idx = self
+            .snapshots
+            .partition_point(|snapshot| snapshot.tick <= tick);
+        if self.deltas.is_empty() {
+            return if snapshot_idx > 0 {
+                self.snapshots[snapshot_idx - 1].state.clone()
             } else {
-                (BTreeMap::new(), 0)
-            }
+                BTreeMap::new()
+            };
+        }
+        let (snapshot, snapshot_tick) = if snapshot_idx > 0 {
+            let snapshot = &self.snapshots[snapshot_idx - 1];
+            (Some(snapshot), snapshot.tick)
+        } else {
+            (None, 0)
         };
 
         let delta_start_idx = self
@@ -94,12 +99,25 @@ impl EventTrace {
             .partition_point(|delta| delta.tick <= snapshot_tick);
         let delta_end_idx = self.deltas.partition_point(|delta| delta.tick <= tick);
 
+        if delta_start_idx == delta_end_idx {
+            return snapshot
+                .map(|snapshot| snapshot.state.clone())
+                .unwrap_or_default();
+        }
+
+        let mut state: BTreeMap<&String, &String> = snapshot
+            .map(|snapshot| snapshot.state.iter().collect())
+            .unwrap_or_default();
+
         for delta in &self.deltas[delta_start_idx..delta_end_idx] {
             for (key, value) in &delta.changes {
-                state.insert(key.clone(), value.clone());
+                state.insert(key, value);
             }
         }
         state
+            .into_iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
     }
 
     pub fn encode_lines(&self) -> String {
