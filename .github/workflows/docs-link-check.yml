@@ -5,11 +5,8 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  pull_request:
-    paths:
-      - 'docs/**'
-      - 'conductor/**'
-      - 'README.md'
+  schedule:
+    - cron: '23 19 * * 0'
   workflow_dispatch:
 
 permissions:
@@ -19,13 +16,27 @@ jobs:
   lychee:
     name: lychee
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+      - name: Restore Lychee cache
+        id: lychee-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .lycheecache
+          key: lychee-${{ runner.os }}-${{ github.sha }}
+          restore-keys: lychee-${{ runner.os }}-
       - name: Link Checker
         uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2.8.0
         with:
-          args: --verbose --no-progress './**/*.md'
+          args: --verbose --no-progress --cache --max-cache-age 1d './**/*.md'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Save Lychee cache
+        if: always()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .lycheecache
+          key: ${{ steps.lychee-cache.outputs.cache-primary-key }}
