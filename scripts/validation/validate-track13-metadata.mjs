@@ -258,8 +258,23 @@ requireTerms('.github/workflows/ci-core.yml', [
   'cargo clippy --workspace --all-targets --all-features -- -D warnings',
   'cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info',
   'node scripts/validation/check-core-coverage.mjs lcov.info',
+  'cargo test --doc --workspace --all-features',
+  'Rust MSRV 1.76',
+  'cargo +1.76.0 check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked',
+  'Rust Wasm MSRV 1.77',
+  'cargo +1.77.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown',
+  'needs: [rust-stable, rust-msrv, rust-wasm-msrv]',
   'cargo deny check',
   'cargo audit',
+]);
+
+requireTerms('codecov.yml', [
+  'coverage:',
+  'status:',
+  'project:',
+  'target: auto',
+  'threshold: 0%',
+  '- rust-core',
 ]);
 
 requireTerms('.github/workflows/ci-policy.yml', [
@@ -283,6 +298,11 @@ requireTerms('bindings/python/pyproject.toml', ['ruff==0.16.9']);
 requireTerms('scripts/validation/check-core-coverage.mjs', ['kairo-ecs-core/src/', '90']);
 
 requirePattern('.github/workflows/dependency-review.yml', /fail-on-severity:\s*high/, 'high-severity dependency review gate');
+requirePattern(
+  '.github/workflows/ci-core.yml',
+  /codecov:[\s\S]*?steps:[\s\S]*?actions\/checkout@[0-9a-f]{40}[\s\S]*?persist-credentials: false[\s\S]*?actions\/download-artifact@/,
+  'Codecov upload job checks out its configuration before downloading coverage',
+);
 requirePattern('deny.toml', /wildcards\s*=\s*"deny"/, 'wildcard dependency denial');
 requirePattern('deny.toml', /unknown-registry\s*=\s*"deny"/, 'unknown registry denial');
 requirePattern('deny.toml', /unknown-git\s*=\s*"deny"/, 'unknown git source denial');

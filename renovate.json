@@ -47,6 +47,16 @@
       "matchManagers": [
         "cargo"
       ],
+      "matchFileNames": [
+        "templates/Cargo.toml"
+      ],
+      "description": "Skip Cargo artifact generation for the incomplete template workspace, which has no lockfile or member crates yet",
+      "skipArtifactsUpdate": true
+    },
+    {
+      "matchManagers": [
+        "cargo"
+      ],
       "matchUpdateTypes": [
         "patch",
         "minor"

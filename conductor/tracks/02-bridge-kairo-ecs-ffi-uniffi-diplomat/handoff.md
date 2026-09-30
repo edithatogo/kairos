@@ -1,5 +1,19 @@
 # Handoff — 02 The Bridge: kairo-ecs-ffi, UniFFI & Diplomat
 
+## 2026-09-29 MSRV compatibility follow-up
+
+Rust 1.76 CI exposed that raw pointers do not implement `Default` on that
+toolchain. `KairoEcsBuffer` now has an explicit default of a null data pointer
+and zero length, preserving the empty-buffer sentinel consumed by FFI error
+paths. Validation on the current PR worktree:
+
+- `rustup run 1.76.0 cargo check -p kairo-ecs-ffi --locked` — exit 0.
+- `rustup run 1.76.0 cargo check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked` — exit 0.
+- `git diff --check` — exit 0.
+
+This compatibility fix is a Track 02-owned source change discovered by Track
+13's new MSRV gate. It does not advance Track 02 status.
+
 Last verified: 2026-05-08
 
 ## Summary

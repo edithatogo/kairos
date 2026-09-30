@@ -44,6 +44,19 @@ Format:
 
 ### Changed
 
+- The optional Python Arrow extra now requires PyArrow 25.0.1 or later; the supported Python range remains 3.10–3.14.
+
+- Toolchain docs validation now recognizes the pinned `just` and npm CLI commands used by the Unix bootstrap script.
+
+- Conformance fixture catalog now points to the zero-delay fixture file while preserving its ordering-only scope.
+
+- Conformance fixture docs now mark the tested zero-delay ordering fixture as ready and state its livelock evidence limit.
+
+- The bootstrap npm CLI is updated to npm 12.1.0, with its supported Node.js runtime range documented separately from the TypeScript/Wasm binding.
+- `KairoEcsBuffer::default()` now produces a null pointer and zero length on Rust 1.76-compatible toolchains.
+- Required Rust CI now checks the locked workspace on the declared 1.76 MSRV in parallel with stable verification, and runs all-feature doctests as a distinct test class.
+- The Rust Wasm export crate now declares its Rust 1.77 minimum and has a dedicated locked wasm-target CI lane.
+
 - Toolchain support metadata and its CI check now track Rust 1.98 stable instead of the stale 1.95 baseline.
 - Renovate now uses the Kairos preset with lower PR concurrency, while low-risk automerge stays off until stable required CI checks are configured.
 - Python binding CI installs Ruff and test tools from the package's declared test extra.
@@ -54,11 +67,21 @@ Format:
 - Release-governance wording now records the maintenance handoff and blocker state alongside the release policy docs, with Track 15 publication still gated behind dry-run evidence and registry/toolchain verification.
 - Track 12 conformance status now records the merged PR #12 closeout and moves the track to In Review.
 - NuGet package dry-runs now target the stable `net10.0` package lane explicitly so the preview `net11.0` compatibility lane does not require a preview SDK in release packaging CI.
+- NuGet package dry-run restore now uses the explicit `--locked-mode` switch so Scorecard recognizes the checked-in package lock as pinned.
 - Public docs workflow validation now builds the Starlight site and smokes the generated documentation output instead of checking the retired static-site scaffold.
 - Docs Quality CI now runs the dedicated docs-platform SOTA validator after the Starlight workflow smoke.
 - CI and bootstrap Python tools now install from SHA-256 hash-locked requirement files; the npm CLI and Mermaid CLI use committed integrity-locked package files, and NuGet packaging uses locked restore.
 
 ### Fixed
+
+- Python's optional Arrow extra now requires PyArrow 14.0.2 or later to exclude releases affected by an upstream Arrow reader security advisory.
+- Upgrade Astro to 7.3.5 and its Starlight integration/plugins to security-compatible releases, fixing the critical Astro image-optimization remote-code-execution alert.
+- Updated TypeScript binding development dependencies (Vitest 4.1.11, Vite 8.3.1, and PostCSS 8.5.28) and raised the TypeScript template Vitest pin to 4.1.11.
+- Trusted-main Codecov uploads now check out the repository configuration before uploading the coverage artifact.
+- Kubernetes experiment scenario keys are now restricted to safe single-component filenames and are passed to the inline writer through environment variables, preventing shell injection and path traversal.
+- Website documentation search now renders indexed content as text and accepts only same-origin HTTP(S) links, preventing search-index DOM XSS.
+- Quality drift readback now models the PR-only skip guard as a required ruleset context backed by exact main-branch workflow source, without expecting a push check run.
+- Codecov now has an explicit `rust-core` project-status policy for trusted-main coverage uploads.
 
 - Notebook validation parses cells as Python syntax without executing them; the `notebooks` validator now reports source context for syntax errors.
 
@@ -70,3 +93,4 @@ Format:
 - Docs platform documentation now preserves the existing tutorial-quality sentinel wording while documenting the Astro/Starlight migration.
 - Docs Quality CI now installs `website` dependencies before running the Astro/Starlight docs workflow validator.
 - Docs platform notes now retain the learning-coverage live-site parity language after the Starlight migration.
+- Docs Quality CI now avoids policy-banned shell fallbacks when configuring Mermaid Chrome rendering.

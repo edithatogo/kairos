@@ -2,7 +2,7 @@ name: Docs Quality
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 on:
   pull_request:
@@ -21,6 +21,8 @@ on:
       - 'crates/kairo-ecs-core/**'
       - 'planning/diagrams/**'
       - 'scripts/validation/**'
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -74,6 +76,8 @@ jobs:
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1
       - name: Install website dependencies
         run: npm ci --prefix website
+      - name: Search DOM XSS regression tests
+        run: node website/scripts/test-search-security.mjs
       - name: Docs workflow validation
         run: node scripts/dx/validate-docs-workflow.mjs
       - name: Build docs site

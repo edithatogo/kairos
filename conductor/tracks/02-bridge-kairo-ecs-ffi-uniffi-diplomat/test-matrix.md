@@ -12,6 +12,7 @@ Last verified: 2026-05-08
 
 ### General workspace checks
 
+- `cargo +1.76.0 check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked` compiles core bridge APIs on the declared workspace MSRV.
 - `cargo metadata --no-deps --format-version 1`
 - `cargo test --workspace --all-features`
 - `cargo fmt --all --check`

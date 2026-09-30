@@ -86,9 +86,16 @@ function main() {
   assertIncludes(windowsBootstrap, "CheckOnly", "scripts/bootstrap.ps1");
 
   const unixBootstrap = readText("scripts/bootstrap.sh");
-  assertIncludes(unixBootstrap, "for tool in just", "scripts/bootstrap.sh");
-  assertMatches(unixBootstrap, /cargo install "\$tool"(?: --version "[^"]+")? --locked/, "scripts/bootstrap.sh");
-  assertIncludes(unixBootstrap, "npm --prefix website ci", "scripts/bootstrap.sh");
+  assertMatches(
+    unixBootstrap,
+    /cargo install just --version "\d+\.\d+\.\d+" --locked/,
+    "scripts/bootstrap.sh pinned just installation",
+  );
+  assertMatches(
+    unixBootstrap,
+    /node scripts\/bootstrap-node-tools\/node_modules\/npm\/bin\/npm-cli\.js --prefix website ci/,
+    "scripts/bootstrap.sh pinned npm website install",
+  );
   assertIncludes(unixBootstrap, "just dev-validate", "scripts/bootstrap.sh");
 
   process.stdout.write("Toolchain docs validation passed.\n");

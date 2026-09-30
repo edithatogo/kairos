@@ -81,6 +81,51 @@ Tracks 07-13, 14, 15, 20, 25, and 28 consume these gates directly. Keep future w
 
 No release, registry, or remote publication side effects were performed.
 
+## 2026-09-29 post-integration CI follow-up
+
+Base: `dc8ba8f5f68168456f1e8710b62b5e59060eb8f3` (main after PR #154).
+Working tree: `/Users/doughnut/Documents/careops-sim/.worktrees/kairos-docs-ci-dedup-154`.
+The required Rust core context now aggregates stable verification, a Rust 1.76
+locked library/binary compile, and a Rust 1.77 locked wasm-export compile. The
+first hosted 1.76 attempt used stable because the repository toolchain file
+overrides `rustup default`; an explicit `cargo +1.76.0` invocation then exposed
+that current `wasm-bindgen` requires Rust 1.77. The Wasm crate now declares that
+floor and has its own wasm-target lane. Stable verification runs doctests
+separately from the single coverage-instrumented nextest suite. The clap
+dependency range and lock were constrained to releases compatible with the
+declared core MSRV.
+
+The quality drift receipt now keeps the PR-only skip guard in the five-context
+ruleset contract, verifies that its workflow source is present on main, and
+expects only four push-capable contexts on an exact main SHA. Its Codecov
+configuration requests a `rust-core` project status. Exact-SHA hosted acceptance
+is still pending: the trusted-main OIDC upload succeeded on `dc8ba8f`, but GitHub
+returned no Codecov project status for that SHA.
+
+Validation on this working tree:
+
+- `actionlint .github/workflows/*.yml` — exit 0.
+- `node tests/conformance/quality-frontier-drift-check.mjs` — exit 0; pass,
+  pending, drift, unavailable, PR-only guard, and push-check cases covered.
+- `node scripts/validation/validate-track13-metadata.mjs` — exit 0; 46 tracks.
+- `cargo test --doc --workspace --all-features` — exit 0 on stable; 29.72 s;
+  doc-test harnesses compiled and completed across the workspace.
+- `rustup run 1.76.0 cargo check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked` — exit 0; no tests were repeated in the core MSRV lane.
+- The Rust 1.77 Wasm MSRV lane still requires a fresh hosted result on the updated PR head.
+- `just quality-drift` — exit 1 with receipt
+  `artifacts/quality-frontier-drift.json`; only the uncommitted source state and
+  missing exact-SHA Codecov project status were non-pass. The PR-only skip
+  workflow matched main and all four push-required contexts were present.
+
+The manual `Fuzzing Smoke` dispatch on main is run `36556097004`; it completed
+successfully on `dc8ba8f5f68168456f1e8710b62b5e59060eb8f3` in 2 minutes. The
+scheduler fuzz step and job passed; no crash corpus artifact existed to upload.
+Automated review of PR #161 found that the repository's `rust-toolchain.toml`
+overrides `rustup default`, so the hosted MSRV step is being changed to invoke
+`cargo +1.76.0` explicitly before merge. The initial PR run is not treated as
+MSRV evidence; the corrected hosted check must pass. No Track status or phase
+closeout was advanced.
+
 ## 2026-09-28 quality frontier cross-track handoff
 
 User-authorized issues #120, #121, #122, and #136 required bounded scheduler
@@ -145,6 +190,20 @@ can satisfy the receipt.
 Before PR #154 integration, Renovate preset refresh and Codecov upload/status
 remain pending. Rerun `just quality-drift` after integration and retain that
 fresh receipt with the issue closeout evidence.
+
+## 2026-09-29 Codecov configuration discovery
+
+After trusted-main upload on `8fd4ab83daacfe0494fe16ecde2d320ffa3faef0`, the
+CodeCov CLI log said it could not find a config file. The upload job downloaded
+`lcov.info` but did not check out repository sources, so the root `codecov.yml`
+was absent from its workspace. The job now checks out the exact triggering
+commit with credentials disabled before downloading the artifact. The Track 13
+metadata validator checks that order. A fresh trusted-main upload and exact-SHA
+`codecov/project` status are still required to confirm hosted provider behavior.
 ## Phase closeout evidence
 
 `$conductor-review` completed on 2026-05-08 with no blocking Track 13 findings. Accepted fixes: none required in the workflow surface during this closeout pass. Validation commands passed: `node scripts/validation/validate-track13-metadata.mjs`, `node tests/conformance/track07_13_hardening_check.mjs`, `node tests/conformance/track12_20_evidence_check.mjs`, and `pwsh -NoProfile -File scripts\validate_track13_supply_chain.ps1`. `cargo-deny` and `cargo-audit` were unavailable locally and reported as skipped by the Track 13 supply-chain gate. Git cleanup state: dirty because local Conductor closeout/status edits are pending commit. Commit SHA: `5dd1937566898b2e028ac61dab1e9dd173e6d919`; pushed ref: `origin/main`. Strict cleanup gate `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` remains pending until these local closeout edits are committed. Next-phase decision: Track 13 is Done for the current CI/CD and supply-chain scaffold; future mandatory advisory scanner installation or release hardening belongs in Track 20 or a scoped follow-up.
+
+## Follow-up evidence — issue #122 npm bundle remediation candidate (2026-09-30)
+
+The package dry-run now prepares the locally repacked, registry-integrity-pinned npm 12.1.0 CLI before `npm ci`, validates the resolved top-level patched dependencies, then runs npm version/help, audit, and audit-signature checks on the minimum Node 22 runtime supported by npm 12. Bootstrap no longer suppresses generator or locked-install failures. Local validation in the isolated Kairos candidate passed: generator `--check` twice with identical artifact SRI; clean bootstrap-tools `npm ci`; npm version/help; runtime resolution validator; `npm audit` (zero vulnerabilities); `npm audit signatures` (196 registry package signatures and 91 attestations); and `git diff --check`. Hosted Actions execution and Dependabot/Security readback after integration are still pending; do not mark alerts #64–66 or issue #122 closed from local evidence.

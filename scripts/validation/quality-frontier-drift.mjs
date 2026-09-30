@@ -11,6 +11,9 @@ const EXPECTED_CHECKS = [
   'Reject CI skip directives',
   'code and repository health',
 ].sort();
+const EXPECTED_PUSH_CHECKS = EXPECTED_CHECKS.filter((name) => name !== 'Reject CI skip directives');
+const CI_SKIP_GUARD_PATH = '.github/workflows/ci-skip-guard.yml';
+const CI_SKIP_GUARD_JOB = 'Reject CI skip directives';
 const EXPECTED_ACTION_PUBLISHERS = [
   'anchore/*',
   'codecov/*',
@@ -44,6 +47,7 @@ const EVIDENCE_SOURCES = {
   main_renovate_preset_and_dashboard: 'GitHub REST: repos/{owner}/{repo}/contents/renovate.json?ref={resolved_default_branch_sha}',
   renovate_refresh_after_integration: 'GitHub REST: latest merged pull request, issues/136, and open pull requests by renovate[bot]',
   current_required_check_runs: 'GitHub REST: commits/{default_branch_sha}/check-runs',
+  main_ci_skip_guard_workflow_current: 'GitHub REST: repos/{owner}/{repo}/contents/.github/workflows/ci-skip-guard.yml?ref={resolved_default_branch_sha}',
   trusted_main_codecov_upload_and_status: 'GitHub REST: commits/{default_branch_sha}/check-runs and /statuses',
 };
 
@@ -78,6 +82,13 @@ function checkStatus(hosted, key) {
   return hosted.availability?.[key] === false ? 'unavailable' : undefined;
 }
 
+function ciSkipGuardContract(text) {
+  return {
+    pullRequestTrigger: /^\s+pull_request:\s*$/m.test(text.slice(text.indexOf('\non:') + 1, text.indexOf('\npermissions:'))),
+    jobName: new RegExp(`^\\s+name:\\s*${CI_SKIP_GUARD_JOB}\\s*$`, 'm').test(text),
+  };
+}
+
 function requiredRuleChecks(ruleset) {
   return (ruleset?.rules ?? [])
     .filter((rule) => rule.type === 'required_status_checks')
@@ -95,6 +106,10 @@ function evaluateDrift({ source, hosted }) {
   addCheck(checks, 'one_command_ci_recipe', true, Boolean(source.hasJustCiRecipe));
   addCheck(checks, 'source_renovate_preset', EXPECTED_RENOVATE_PRESET, source.renovatePreset ?? null);
   addCheck(checks, 'source_renovate_dashboard', true, Boolean(source.renovateDashboard));
+  addCheck(checks, 'source_ci_skip_guard_contract', {
+    pullRequestTrigger: true,
+    jobName: true,
+  }, source.ciSkipGuardContract ?? null);
 
   const sourceContextHashes = { ...source.contextFileHashes, justfile: source.justfileHash };
   const contextHashesStatus = checkStatus(hosted, 'mainContextFiles') ?? (same(sourceContextHashes, hosted.mainContextFiles)
@@ -102,6 +117,14 @@ function evaluateDrift({ source, hosted }) {
   addCheck(checks, 'main_context_files_current', sourceContextHashes, hosted.mainContextFiles,
     contextHashesStatus, contextHashesStatus === 'pending'
       ? 'Canonical context and validation source are on the candidate branch and await integration.' : undefined);
+  const skipGuardStatus = checkStatus(hosted, 'mainCiSkipGuard') ?? (same(source.ciSkipGuardHash, hosted.mainCiSkipGuard?.sha)
+    ? 'pass' : (hosted.integrationPending || source.dirty ? 'pending' : 'drift'));
+  addCheck(checks, 'main_ci_skip_guard_workflow_current', {
+    sha: source.ciSkipGuardHash,
+    pullRequestTrigger: true,
+    jobName: true,
+  }, hosted.mainCiSkipGuard ?? null, skipGuardStatus,
+  skipGuardStatus === 'pending' ? 'The PR-only required gate source is on the candidate branch and awaits integration.' : undefined);
 
   const ruleset = hosted.ruleset;
   addCheck(checks, 'ruleset_active_for_main', {
@@ -208,7 +231,7 @@ function evaluateDrift({ source, hosted }) {
     const previous = currentCheckContexts.get(check.name);
     if (!previous || (check.started_at ?? '') > (previous.started_at ?? '')) currentCheckContexts.set(check.name, check);
   }
-  const requiredChecks = EXPECTED_CHECKS.map((name) => {
+  const requiredChecks = EXPECTED_PUSH_CHECKS.map((name) => {
     const check = currentCheckContexts.get(name);
     return { name, status: check?.status ?? 'missing', conclusion: check?.conclusion ?? null, headSha: check?.head_sha ?? null, url: check?.details_url ?? null };
   });
@@ -217,7 +240,7 @@ function evaluateDrift({ source, hosted }) {
     ? 'pass'
     : (hosted.integrationPending || requiredChecks.some((check) => check.status === 'queued' || check.status === 'in_progress')
       ? 'pending' : 'drift'));
-  addCheck(checks, 'current_required_check_runs', EXPECTED_CHECKS.map((name) => ({ name, status: 'completed', conclusion: 'success', headSha: hosted.defaultBranchCommit })),
+  addCheck(checks, 'current_required_check_runs', EXPECTED_PUSH_CHECKS.map((name) => ({ name, status: 'completed', conclusion: 'success', headSha: hosted.defaultBranchCommit })),
     requiredChecks, requiredCheckStatus, hosted.integrationPending ? 'Current default-branch checks are recorded after the candidate is integrated.' : undefined);
   const codecovStillRunning = ['queued', 'in_progress'].includes(latestUpload?.status) || latestProjectStatus?.state === 'pending';
   const codecovStatus = checkStatus(hosted, 'mainChecks') ?? checkStatus(hosted, 'mainStatuses') ?? (hosted.integrationPending
@@ -293,6 +316,7 @@ function sourceSnapshot(root) {
   const git = (args) => run('git', ['-C', root, ...args]);
   const renovate = JSON.parse(readFileSync(resolve(root, 'renovate.json'), 'utf8'));
   const justfile = readFileSync(resolve(root, 'justfile'), 'utf8');
+  const ciSkipGuardText = readFileSync(resolve(root, CI_SKIP_GUARD_PATH), 'utf8');
   return {
     generatedAt: new Date().toISOString(),
     repository: 'edithatogo/kairos',
@@ -307,6 +331,8 @@ function sourceSnapshot(root) {
     contextFileHashes: Object.fromEntries(REQUIRED_CONTEXT_FILES.map((path) => [path,
       existsSync(resolve(root, path)) ? run('git', ['-C', root, 'hash-object', path]) : null])),
     justfileHash: run('git', ['-C', root, 'hash-object', 'justfile']),
+    ciSkipGuardHash: run('git', ['-C', root, 'hash-object', CI_SKIP_GUARD_PATH]),
+    ciSkipGuardContract: ciSkipGuardContract(ciSkipGuardText),
     hasJustCiRecipe: /^ci:\s/m.test(justfile),
     renovatePreset: renovate.extends?.find((preset) => preset.startsWith('github>')) ?? null,
     renovateDashboard: Boolean(renovate.dependencyDashboard),
@@ -327,6 +353,14 @@ function getMainRenovate(repository, defaultBranchCommit) {
 function getMainFileHash(repository, defaultBranchCommit, path) {
   const result = ghJsonOptional(`repos/${repository}/contents/${path}?ref=${encodeURIComponent(defaultBranchCommit)}`);
   return result.value?.sha ?? null;
+}
+
+function getMainCiSkipGuard(repository, defaultBranchCommit) {
+  const result = ghJsonOptional(`repos/${repository}/contents/${CI_SKIP_GUARD_PATH}?ref=${encodeURIComponent(defaultBranchCommit)}`);
+  if (!result.value) return null;
+  const entry = result.value;
+  const text = Buffer.from(entry.content, 'base64').toString('utf8');
+  return { sha: entry.sha, ...ciSkipGuardContract(text) };
 }
 
 function collectHosted(repository, source) {
@@ -358,6 +392,7 @@ function collectHosted(repository, source) {
     path,
     getMainFileHash(repository, defaultBranchCommit, path),
   ]));
+  const mainCiSkipGuard = getMainCiSkipGuard(repository, defaultBranchCommit);
   const renovateComments = ghJsonLinesPaginated(`repos/${repository}/issues/136/comments?per_page=100`,
     '.[] | {author: .user.login, createdAt: .created_at, url: .html_url}');
   const candidatePullOpen = openPulls.some((pull) => pull.headSha === source.commit || (source.upstreamBranch && pull.headRef === source.upstreamBranch));
@@ -391,6 +426,7 @@ function collectHosted(repository, source) {
     renovateRefreshEvidence,
     renovateRefreshedAfterIntegration: renovateRefreshEvidence.length > 0,
     mainContextFiles,
+    mainCiSkipGuard,
     availability: {
       ruleset: true,
       protection: protectionResult.ok,
@@ -400,6 +436,7 @@ function collectHosted(repository, source) {
       privateReporting: true,
       mainRenovate: mainRenovateResult.ok,
       mainContextFiles: true,
+      mainCiSkipGuard: true,
       renovateActivity: true,
       mainChecks: Array.isArray(mainChecks),
       mainStatuses: Array.isArray(mainStatuses),
@@ -448,4 +485,4 @@ function main() {
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
 if (isMain) main();
 
-export { evaluateDrift, isAfterIntegration };
+export { ciSkipGuardContract, evaluateDrift, isAfterIntegration };

@@ -10,6 +10,7 @@ for spec in \
   cargo install "${spec%@*}" --version "${spec#*@}" --locked || true
 done
 python -m pip install --require-hashes -r scripts/bootstrap-python-tools.lock || true
-npm ci --prefix scripts/bootstrap-node-tools || true
+python3 scripts/bootstrap-node-tools/prepare_npm_cli.py --check
+npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools
 node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js --prefix website ci || true
 printf '\nKairoECS bootstrap complete. Run: just dev-validate\n'
