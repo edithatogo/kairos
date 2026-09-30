@@ -16,3 +16,6 @@ digital-twin = ["fmi2"]
 [lib]
 name = "kairo_ecs_fmi"
 path = "src/lib.rs"
+
+[dev-dependencies]
+serde_json = "1"

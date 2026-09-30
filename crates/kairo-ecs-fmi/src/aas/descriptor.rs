@@ -1,4 +1,4 @@
-use crate::aas::submodel::AasSubmodel;
+use crate::aas::submodel::{escape_json, AasSubmodel};
 use crate::{
     error::{validation_error, FmiResult},
     FmiError,
@@ -69,10 +69,6 @@ impl AasDescriptor {
     }
 }
 
-fn escape_json(value: &str) -> String {
-    value.replace('\\', "\\\\").replace('"', "\\\"")
-}
-
 fn require_non_empty(field: &'static str, value: &str) -> Result<(), FmiError> {
     if value.trim().is_empty() {
         Err(validation_error(
@@ -108,5 +104,23 @@ mod tests {
 
         let error = descriptor.validate().expect_err("duplicate submodel id");
         assert!(error.to_string().contains("duplicate submodel id"));
+    }
+
+    #[test]
+    fn to_json_escapes_control_characters_and_preserves_unicode() {
+        let control_value = "descriptor\nwith\ttab\u{0001} and café 🩺";
+        let mut descriptor = AasDescriptor::new(control_value, control_value)
+            .with_submodel(AasSubmodel::new(control_value, control_value));
+        descriptor.asset_kind = control_value.to_string();
+
+        let json = descriptor.to_json();
+        let parsed: serde_json::Value = serde_json::from_str(&json).expect("valid JSON output");
+        let shell = &parsed["assetAdministrationShells"][0];
+        assert_eq!(shell["id"], control_value);
+        assert_eq!(shell["idShort"], control_value);
+        assert_eq!(shell["assetInformation"]["assetKind"], control_value);
+        assert_eq!(shell["submodels"][0]["keys"][0]["value"], control_value);
+        assert_eq!(shell["submodels"][0]["idShort"], control_value);
+        assert!(json.contains(r#"descriptor\nwith\ttab\u0001 and café 🩺"#));
     }
 }
