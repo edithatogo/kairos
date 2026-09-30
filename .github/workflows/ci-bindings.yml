@@ -215,8 +215,8 @@ jobs:
       - name: Install and check optional Gymnasium integration
         if: matrix.python-version == '3.14'
         run: |
-          python -m pip install -e 'python/kairo_gym[gymnasium]'
-          python - <<'PY'
+          python -m pip install --require-hashes -r python/kairo_gym/ci-requirements.lock
+          PYTHONPATH=python/kairo_gym/src python - <<'PY'
           import gymnasium
           from gymnasium.utils.env_checker import check_env
           from kairo_gym import KairoGymEnv
@@ -227,13 +227,9 @@ jobs:
           PY
       - name: Gymnasium wrapper smoke
         env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
+          PYTHONPATH: python/kairo_gym/src
         run: |
-          if [ "$PYTHON_VERSION" = '3.9' ]; then
-            PYTHONPATH=python/kairo_gym/src python -m unittest discover -s python/kairo_gym/tests -v
-          else
-            python -m unittest discover -s python/kairo_gym/tests -v
-          fi
+          python -m unittest discover -s python/kairo_gym/tests -v
 
   binding-ci:
     name: Binding CI

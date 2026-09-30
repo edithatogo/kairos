@@ -4,7 +4,7 @@
 
 - Pull requests classify changed paths before binding checks. A C#-only change runs both C# targets; a Gym wrapper change runs Python 3.9 and 3.14; known docs-only changes run no language lane. Unknown paths, shared build/ABI/conformance/toolchain inputs, an empty diff, or classifier failure must run every binding lane. Main pushes and manual dispatch keep the full lane set.
 - `node tests/conformance/ci-binding-change-classifier-check.mjs` covers lane routing, shared inputs, docs, unknown paths, rename/delete path pairs, and fail-closed empty/malformed path input.
-- The `python/kairo_gym` tests run on the package's declared Python 3.9 floor and current Python 3.14. Python 3.14 installs the optional Gymnasium extra and runs Gymnasium's environment checker; this path is included in binding workflow change classification.
+- The `python/kairo_gym` tests run on the package's declared Python 3.9 floor and current Python 3.14. Python 3.14 installs the latest selected Gymnasium CI version plus transitive dependencies from `python/kairo_gym/ci-requirements.lock` with `--require-hashes`, then runs Gymnasium's environment checker; this path is included in binding workflow change classification.
 
 - Root workspace gate: `Cargo.toml`, `rust-toolchain.toml`, and `deny.toml` exist and are used.
 - Core CI installs pinned Rust tool binaries from checksum-verified, SHA-pinned GitHub releases and disables source-build fallbacks.
