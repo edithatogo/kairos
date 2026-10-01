@@ -46,3 +46,18 @@ Review-hardening expectation:
 - Run `pwsh -NoProfile -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1` to preserve existing citation metadata consistency.
 - Run `pwsh -NoProfile -File scripts/validate_conductor_setup.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` to preserve numbered track structure and the existing ledger.
 - Manually review the destination matrix against #90–#94: each destination must specify prerequisites, authoritative evidence and pending external state. Provider eligibility and completion require later native readbacks; local docs checks cannot prove them.
+
+## Issue #91 metadata correction (2026-10-01)
+
+The earlier 2026-05-11 date-bearing metadata result above is historical. Current
+metadata is explicitly unreleased; publication dates are required only when the
+lifecycle record switches to `released` with exact-release evidence. Field-grep
+rows are discovery aids and do not establish release publication.
+
+- `python3 conductor/tracks/19-research-software-citation-archival/test-metadata-lifecycle.py`: six isolated validator fixtures cover unreleased pass, rejected invented date, released missing evidence, locally consistent released fixture, date disagreement and crate-license drift.
+- `pwsh -NoProfile -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1`: checks lifecycle, metadata agreement and Rust workspace license inheritance.
+- `cargo metadata --no-deps --format-version 1`: resolved package license evidence; all 26 workspace crates inherit Apache-2.0 OR MIT.
+- `node tests/conformance/track12_20_evidence_check.mjs`: aggregate assertion follows the same lifecycle contract.
+
+A locally passing released fixture is deliberately synthetic and proves rejection
+logic, not a published release. Issue #91 stays open for named-release readback.

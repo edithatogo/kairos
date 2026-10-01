@@ -20,6 +20,8 @@ Format:
 
 ### Fixed
 
+- Rust license metadata now matches the established Apache-2.0 OR MIT grant; unreleased citation seeds omit unsupported publication dates and require a named-release evidence record before claiming release.
+
 - FMU archive extraction requires a fresh destination to prevent symlink escapes; conservative PDES waits for every peer bound, and TimeWarp cancellation preserves committed state below GVT.
 - Track coverage validation now fails when its Rust workspace test command fails.
 

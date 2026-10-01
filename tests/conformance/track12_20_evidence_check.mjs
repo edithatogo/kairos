@@ -207,10 +207,16 @@ function assertReleaseAndCitationEvidence() {
   const repository = scalarFromCff(citation, 'repository-code');
 
   assert(version && version === codemeta.version && version === zenodo.version, 'citation version metadata drifted');
-  assert(
-    releaseDate && releaseDate === codemeta.datePublished && releaseDate === zenodo.publication_date,
-    'citation release-date metadata drifted',
-  );
+  const status = readJson('docs/research/release-metadata-status.json');
+  assert(['unreleased', 'released'].includes(status.status), 'unknown metadata lifecycle state');
+  if (status.status === 'unreleased') {
+    assert(!releaseDate && !codemeta.datePublished && !zenodo.publication_date && !status.release_evidence,
+      'unreleased metadata must not claim publication dates or release evidence');
+  } else {
+    assert(releaseDate && releaseDate === codemeta.datePublished && releaseDate === zenodo.publication_date,
+      'released citation requires matching publication dates');
+    assert(status.release_evidence?.version === version, 'named release evidence required');
+  }
   assert(repository && repository === codemeta.codeRepository, 'citation repository metadata drifted');
 
   const citationGuide = read('docs/research/citation.md');

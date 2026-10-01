@@ -26,7 +26,7 @@ This track is designed to run in parallel with core implementation. The subagent
 
 ## Outputs
 
-- `CITATION.cff`: validated pre-release metadata with authors, title, version, release date, license, and repository URL. DOI remains absent until a Zenodo draft or minted DOI exists.
+- `CITATION.cff`: validated pre-release metadata with authors, title, planned version, lifecycle (release date only after publication), license, and repository URL. DOI remains absent until a Zenodo draft or minted DOI exists.
 - `codemeta.json`: checked-in CodeMeta seed kept synchronized with `CITATION.cff` release version, date, license, and repository URL.
 - `paper/`: software-paper seed describing KairoECS architecture, benchmarks, and research contribution without claiming journal submission or acceptance.
 - `docs/research/citation.md`: archival plan with the current Zenodo/DOI status, release-archive workflow, and provenance record requirements.

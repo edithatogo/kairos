@@ -1,0 +1,18 @@
+{
+  "status": "unreleased",
+  "planned_version": "0.4.0-alpha.1",
+  "repository": "https://github.com/edithatogo/kairos",
+  "license": "Apache-2.0 OR MIT",
+  "source_commit": "063e95491e54dbc23e79d017bb50c7ea16e123bc",
+  "observation_date": "2026-10-01",
+  "github_readback": {
+    "tags": [],
+    "releases": [],
+    "commands": [
+      "gh api repos/edithatogo/kairos/tags",
+      "gh api repos/edithatogo/kairos/releases"
+    ]
+  },
+  "release_evidence": null,
+  "remaining_gate": "Issue #91 stays open until a reviewed named-release record identifies its exact source commit, version, license, artifacts and validation receipts."
+}
