@@ -38,3 +38,9 @@ jobs:
           languages: ${{ matrix.language }}
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          wait-for-processing: true
+      - name: Gate high and critical code-scanning alerts
+        uses: edithatogo/.github/.github/actions/code-scanning-gate@c3e51f894a500198e67c864a1f0c460ba72e12cd
+        with:
+          timeout-seconds: "0" # SARIF processing completed in the preceding step.

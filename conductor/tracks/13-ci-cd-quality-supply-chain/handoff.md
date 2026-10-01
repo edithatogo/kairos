@@ -230,3 +230,9 @@ must pass on the exact PR head before integration; no merge was performed.
 ## Follow-up evidence — issue #122 npm bundle remediation candidate (2026-09-30)
 
 The package dry-run now prepares the locally repacked, registry-integrity-pinned npm 12.1.0 CLI before `npm ci`, validates the resolved top-level patched dependencies, then runs npm version/help, audit, and audit-signature checks on the minimum Node 22 runtime supported by npm 12. Bootstrap no longer suppresses generator or locked-install failures. Local validation in the isolated Kairos candidate passed: generator `--check` twice with identical artifact SRI; clean bootstrap-tools `npm ci`; npm version/help; runtime resolution validator; `npm audit` (zero vulnerabilities); `npm audit signatures` (196 registry package signatures and 91 attestations); and `git diff --check`. Hosted Actions execution and Dependabot/Security readback after integration are still pending; do not mark alerts #64–66 or issue #122 closed from local evidence.
+
+## Issue #32 shared scanning gate
+
+CodeQL and Scorecard wait for SARIF processing, then call the shared organization gate pinned to `c3e51f894a500198e67c864a1f0c460ba72e12cd`. High/critical alerts matching the analyzed commit fail the action; API errors fail closed. No repository-local alert enforcement script is retained. The metadata validator guards processing order and SHA pinning. Hosted exact-head and post-merge evidence remain required.
+
+Local evidence (2026-10-01, base `063e95491e54dbc23e79d017bb50c7ea16e123bc`): Track13 metadata, Track07-13 and Track12-20 conformance, actionlint for both workflows, and diff whitespace checks passed. The exact pinned upstream Python script was fetched to a temporary file and executed with mocked alert API responses: high and critical exit 1; medium, empty and another commit exit 0; API failure exits 1; pagination traverses all mock pages. No synthetic alerts were published.
