@@ -16,10 +16,10 @@ resolution, or an authoritative ineligibility decision, is recorded.
 
 ## Current provider criteria
 
-The [SciCrunch Registry curation guidelines](https://scicrunch.org/scicrunch/about/Curation%20Guidelines)
+The SciCrunch Registry curation guidelines (`https://scicrunch.org/scicrunch/about/Curation%20Guidelines`)
 include research software tools and allow resource owners or other people to
 suggest resources. The stated required registration fields are name, URL and
-description. The [resource suggestion page](https://scicrunch.org/create/resource)
+description. The resource suggestion page (`https://scicrunch.org/create/resource`)
 explains that curator approval is needed before an RRID is generated.
 The [provider RRID FAQ](https://www.scicrunch.com/faq-rrid-tool) identifies
 SciCrunch Registry as the authority for software and other tools.
@@ -33,6 +33,9 @@ commit/version separately when citing an implementation.
 
 The curation guidelines were available through the search engine's indexed
 provider text on the assessment date. Direct retrieval returned HTTP 403.
+These four protected provider endpoints also returned HTTP 403 in hosted
+Docs Quality. Their exact URLs are retained as literal lookup evidence rather
+than presented as verified active links; no global link-check exception was added.
 This limits live verification; recheck the native provider form and guidelines
 before submission. No fields were entered into a provider form.
 
@@ -64,8 +67,8 @@ citation author field.
 ## Bounded lookup and adoption evidence
 
 - Provider lookup attempts:
-  <https://scicrunch.org/resources/Tools/search?q=KairoECS> and
-  <https://scicrunch.org/resources/Tools/search?q=edithatogo%2Fkairos>.
+  `https://scicrunch.org/resources/Tools/search?q=KairoECS` and
+  `https://scicrunch.org/resources/Tools/search?q=edithatogo%2Fkairos`.
   Both were inaccessible through the web tool. Result: **unavailable**, not
   “no matching RRID”. A search-engine query `site:scicrunch.org "KairoECS"`
   returned no matching resource in the result set; this does not establish

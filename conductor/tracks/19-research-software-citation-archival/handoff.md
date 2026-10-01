@@ -162,3 +162,9 @@ Track12–20 conformance all exited 0. `git diff --check` passed.
 Independent read-only review by the RRID worker found no blocking factual or
 workflow findings. Rust tests were not repeated locally for this docs-only diff;
 hosted exact-head checks and post-merge readback remain required.
+
+Hosted Docs Quality initially failed on four documented SciCrunch endpoints
+returning HTTP403. The RRID assessment now retains those unavailable URLs as
+literal evidence and preserves native recheck/acceptance gates; no CI permission,
+link-check acceptance policy or global exception was changed. Other live
+provider sources and all local links remain checkable.
