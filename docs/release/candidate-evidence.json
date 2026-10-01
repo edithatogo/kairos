@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "source_commit": "c369ed1ac5111290a1e18974e6d282329cf70959",
+  "planned_product_version": "0.4.0-alpha.1",
+  "status": "source-rehearsal-prepared-publication-blocked",
+  "source_archive": {
+    "path": "kairos-source-c369ed1.tar.gz",
+    "sha256": "0ba31755442d5fffc0f2ad4ca675c814e2bd98831bd270aef39398bce1d6d06e",
+    "repeated_generation_identical": true
+  },
+  "manifest_inventory_count": 34,
+  "workspace_crates": 26,
+  "hosted_packaging_receipt": {
+    "source_sha": "c369ed1ac5111290a1e18974e6d282329cf70959",
+    "receipt_run": 36813270279,
+    "receipt_sha": "a1f2bd5096403b10db0c689570977f3da6615f3d",
+    "receipt_success": true,
+    "receipt_artifacts": {
+      "total_count": 0,
+      "artifacts": []
+    },
+    "package_input_changes": [],
+    "equivalent_package_inputs": true,
+    "current_workflow_blobs": {
+      ".github/workflows/package-dry-run.yml": "48aba1b7cb578a9074d0a56ed75315fadeab3ca9",
+      ".github/workflows/release.yml": "48a5fe78f6ac59cb35fd0099eb98950c0d05b050",
+      ".github/workflows/sbom-attestations.yml": "d0a1a655d0aba61e86697c7591b4b8c9627f9563",
+      ".github/workflows/release-attestations.yml": "5d9ccdd0b7d8afc6c46c751c87d856d94eb1ad38"
+    },
+    "limitations": [
+      "receipt has no retained package archives",
+      "source-manifest checksums are not archive checksums",
+      "no release/SBOM/provenance workflow runs",
+      "SBOM workflows need artifact acquisition; ignored dist is absent on fresh checkout",
+      "release delivery static validator reports absent SBOM/provenance without failing"
+    ]
+  },
+  "local_commands": [
+    {
+      "argv": [
+        "python3",
+        "packaging/scripts/build_release_manifest.py",
+        "--check"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "python3",
+        "packaging/scripts/build_release_manifest.py",
+        "--version",
+        "0.4.0-alpha.1-rehearsal"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "python3",
+        "packaging/scripts/build_release_manifest.py",
+        "--verify-existing"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "python3",
+        "conductor/tracks/15-packaging-publishing-delivery/test-dry-run-policy.py"
+      ],
+      "exit": 0
+    },
+    {
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_track15_release_delivery.ps1"
+      ],
+      "exit": 0
+    }
+  ],
+  "artifact_scope": "Source archive and manifest inventory only; no built native packages, artifact SBOM or provenance attestation.",
+  "blockers": [
+    "owner-reviewed product/package version mapping",
+    "39 internal path dependency version constraints for crates.io packaging",
+    "registry name and publisher/environment readiness",
+    "actual retained package/native artifacts across supported targets",
+    "artifact-linked SBOM/provenance and hosted release workflow evidence",
+    "release-owner review, compatibility/health/security gates"
+  ],
+  "toolchain": {
+    "git": "git version 2.56.0",
+    "python3": "Python 3.14.7",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01) (Homebrew)",
+    "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05) (Homebrew)"
+  },
+  "input_sha256": {
+    "Cargo.toml": "183584f511603be2d573072f66a97eff936238fde31a0b7bbde12c1d815499d2",
+    "Cargo.lock": "0b0cd84a052a4c8550cef7be5227d7764804d57f65d89cacc3a675e9eec3914d",
+    "packaging/release-package-manifest.json": "7ef44df2dab4aa2ce8e9cde33615f40205133f816297c10d384b23022e8a832a"
+  },
+  "validation_scope": {
+    "source_archive_baseline": "c369ed1ac5111290a1e18974e6d282329cf70959",
+    "policy_checks": "Preparation worktree with the Track15 compatibility fix; not a claim that the archived baseline passes the old gate",
+    "policy_validator_sha256": "56c477701d545dccbf8dbd6a768b710389ccb4349325d43567fbab6b48283f92"
+  }
+}

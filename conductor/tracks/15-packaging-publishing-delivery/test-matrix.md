@@ -8,7 +8,7 @@
 - Docs coverage for any change to package naming, registry order, or release policy.
 - Release-delivery gate coverage for the workflow step that runs before artifact upload.
 - No-production-publish check: the track must not introduce live publish commands.
-- No-publish-manifest check: the first local sequence must not add publish or publication manifest files.
+- No-publish-manifest check: the offline sequence must not generate publication manifests. The existing Track42 configuration is permitted only with reviewed dry-run/approval defaults; unexpected manifests remain rejected.
 - Aggregate Track 12-20 evidence check: the package manifest remains dry-run only and wired into conformance CI.
 
 ## Track-specific commands
@@ -81,3 +81,7 @@ publish manifests.
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
+
+## Release preparation policy regression
+
+`python3 conductor/tracks/15-packaging-publishing-delivery/test-dry-run-policy.py` covers existing gated Track42 configuration, rejection of enabled production defaults, and rejection of unexpected generated publication manifests. This validates offline policy structure, not public release readiness or SBOM/provenance availability.
