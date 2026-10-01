@@ -4,7 +4,6 @@
   "name": "KairoECS",
   "description": "Rust-first multi-method simulation engine for DES and ABM with polyglot bindings and Arrow telemetry.",
   "version": "0.4.0-alpha.1",
-  "datePublished": "2026-05-05",
   "programmingLanguage": [
     "Rust",
     "Python",

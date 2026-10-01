@@ -87,6 +87,7 @@ function Normalize-License {
 $citationText = Read-Text 'CITATION.cff'
 $codeMetaText = Read-Text 'codemeta.json'
 $zenodoText = Read-Text '.zenodo.json'
+$status = (Read-Text 'docs/research/release-metadata-status.json') | ConvertFrom-Json
 $guideText = Read-Text 'docs/research/citation.md'
 $paperText = Read-Text 'paper/paper.md'
 $paperBibText = Read-Text 'paper/paper.bib'
@@ -111,7 +112,6 @@ $cffRequired = @(
     'message',
     'title',
     'version',
-    'date-released',
     'type',
     'abstract',
     'license',
@@ -130,7 +130,7 @@ foreach ($block in @('authors', 'keywords')) {
 }
 
 if ($null -ne $codeMeta) {
-    foreach ($field in @('@context', '@type', 'name', 'description', 'version', 'datePublished', 'programmingLanguage', 'license', 'codeRepository', 'developmentStatus')) {
+    foreach ($field in @('@context', '@type', 'name', 'description', 'version', 'programmingLanguage', 'license', 'codeRepository', 'developmentStatus')) {
         Require-JsonField $codeMeta $field 'codemeta.json' | Out-Null
     }
     if ($codeMeta.'@context' -ne 'https://doi.org/10.5063/schema/codemeta-3.0') {
@@ -139,7 +139,7 @@ if ($null -ne $codeMeta) {
 }
 
 if ($null -ne $zenodo) {
-    foreach ($field in @('title', 'upload_type', 'version', 'publication_date', 'access_right', 'description', 'creators', 'license', 'keywords')) {
+    foreach ($field in @('title', 'upload_type', 'version', 'access_right', 'description', 'creators', 'license', 'keywords')) {
         Require-JsonField $zenodo $field '.zenodo.json' | Out-Null
     }
 }
@@ -148,8 +148,39 @@ if ($null -ne $codeMeta -and $null -ne $zenodo) {
     if ($cff['version'] -ne $codeMeta.version -or $cff['version'] -ne $zenodo.version) {
         Add-Failure "Version mismatch across citation metadata: CITATION=$($cff['version']), codemeta=$($codeMeta.version), zenodo=$($zenodo.version)"
     }
-    if ($cff['date-released'] -ne $codeMeta.datePublished -or $cff['date-released'] -ne $zenodo.publication_date) {
-        Add-Failure "Release date mismatch across citation metadata: CITATION=$($cff['date-released']), codemeta=$($codeMeta.datePublished), zenodo=$($zenodo.publication_date)"
+    $releaseDate = Get-CffScalar $citationText 'date-released'
+    if ($status.status -eq 'unreleased') {
+        if ($releaseDate -or $codeMeta.datePublished -or $zenodo.publication_date -or $status.release_evidence) {
+            Add-Failure "Unreleased metadata must omit publication dates and release evidence"
+        }
+    } elseif ($status.status -eq 'released') {
+        if (-not $releaseDate -or $releaseDate -ne $codeMeta.datePublished -or $releaseDate -ne $zenodo.publication_date) {
+            Add-Failure "Released metadata requires matching publication dates"
+        }
+        foreach ($field in @('source_commit', 'version', 'license', 'tag_url', 'release_url', 'artifacts', 'validation_receipts')) {
+            Require-JsonField $status.release_evidence $field 'release evidence' | Out-Null
+        }
+        if ($status.release_evidence.source_commit -notmatch '^[0-9a-f]{40}$' -or @($status.release_evidence.artifacts).Count -eq 0 -or @($status.release_evidence.validation_receipts).Count -eq 0) {
+            Add-Failure "Release evidence requires full commit SHA, artifacts and validation receipts"
+        }
+        if ($status.release_evidence.version -ne $cff['version'] -or $status.release_evidence.license -ne $cff['license']) {
+            Add-Failure "Release evidence version/license disagrees with citation metadata"
+        }
+    } else {
+        Add-Failure "Unknown metadata lifecycle status: $($status.status)"
+    }
+    if ($status.planned_version -ne $cff['version'] -or $status.license -ne $cff['license']) {
+        Add-Failure "Metadata lifecycle record disagrees with citation version/license"
+    }
+    $manifestText = Read-Text 'Cargo.toml'
+    if ($manifestText -notmatch '(?m)^license = "Apache-2\.0 OR MIT"$') {
+        Add-Failure "Cargo workspace license must match established dual-license policy"
+    }
+    Get-ChildItem (Join-Path $RepoRoot 'crates') -Filter Cargo.toml -Recurse | ForEach-Object {
+        $manifest = Get-Content $_.FullName -Raw
+        if ($manifest -notmatch '(?m)^license\.workspace = true\s*$') {
+            Add-Failure "Rust crate must inherit workspace license: $($_.FullName)"
+        }
     }
     if ($cff['repository-code'] -ne $codeMeta.codeRepository) {
         Add-Failure "Repository URL mismatch: CITATION=$($cff['repository-code']), codemeta=$($codeMeta.codeRepository)"

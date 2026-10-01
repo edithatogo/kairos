@@ -7,7 +7,7 @@ This page is the source-of-truth summary for how KairoECS should be cited and ar
 - Start from `website/src/index.md` for navigation.
 - Use `docs/community/adoption.md` for the user path into the project.
 - Use `docs/trustworthy-simulation/replay-and-seeds.md` and `docs/trustworthy-simulation/verification-validation-uncertainty.md` for reproducibility context.
-- The current pre-release citation target is `0.4.0-alpha.1` and the repository code URL is `https://github.com/edithatogo/kairos`.
+- The planned, unreleased metadata version is `0.4.0-alpha.1` and the repository code URL is `https://github.com/edithatogo/kairos`.
 
 ## Citation metadata
 
@@ -24,7 +24,6 @@ The required fields are:
   - `message`
   - `title`
   - `version`
-  - `date-released`
   - `type`
   - `authors`
   - `abstract`
@@ -37,7 +36,6 @@ The required fields are:
   - `name`
   - `description`
   - `version`
-  - `datePublished`
   - `programmingLanguage`
   - `license`
   - `codeRepository`
@@ -46,7 +44,6 @@ The required fields are:
   - `title`
   - `upload_type`
   - `version`
-  - `publication_date`
   - `access_right`
   - `description`
   - `creators`
@@ -86,7 +83,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research
 ```
 
 The validator checks that `CITATION.cff`, `codemeta.json`, `.zenodo.json`,
-`paper/paper.md`, `paper/paper.bib`, and this guide agree on version, date,
+`paper/paper.md`, `paper/paper.bib`, and this guide agree on planned version, lifecycle, dates when released,
 repository URL, title, license, and the current non-minted archive status.
 
 ## Archive notes
@@ -114,3 +111,24 @@ Release notes must include:
 - the release metadata version, if it differs from the source code tag
 
 If a release is not yet archived, the release note must say that explicitly.
+
+## Unreleased metadata and licensing (#91)
+
+`0.4.0-alpha.1` is a planned metadata seed, not an existing Git tag or GitHub
+Release. The 2026-10-01 GitHub readback returned no tags and no releases; its
+commands and source revision are recorded in `release-metadata-status.json`.
+Publication dates are omitted until a named release exists. Cite the full commit
+SHA used for an experiment while working from unreleased source.
+
+The root LICENSE and LICENSE.md already grant Apache-2.0 OR MIT; Rust crate
+metadata inherits that same policy. This correction changes metadata, not rights.
+Binding packages retain their declared license subsets (Python, TypeScript and
+C# Apache-2.0; R MIT) under the existing root dual-license grant.
+
+Before switching the lifecycle record to `released`, record the full source SHA,
+version, license, tag and release URLs, artifact hashes/locations, and validation
+receipts; add the same actual publication date to CFF, CodeMeta and Zenodo.
+Run the local validator, then read back the tag, release and artifacts from GitHub.
+Local consistency cannot prove release publication or external acceptance. Issue
+#91 remains open until that reviewed exact-release evidence exists. No tag,
+release, DOI or provider submission is created by this metadata correction.

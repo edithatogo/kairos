@@ -100,3 +100,30 @@ Validation from `/private/tmp/kairos-pr95-integration` on base `b194277e675c7d13
 - `git diff --check`: exit 0.
 
 Hosted Actions, provider eligibility/readbacks and native issue/project reconciliation remain pending. This local planning slice authorizes no external registry submission or publication.
+
+## Issue #91 handoff — 2026-10-01
+
+Prepared metadata correction from main `063e954`: reconciled Cargo licenses with
+the existing root Apache-2.0 OR MIT grant and removed unsupported publication
+dates from unreleased citation/CodeMeta/Zenodo seeds. The planned version remains
+`0.4.0-alpha.1`. Binding package license subsets are documented in the citation
+guide. No new license rights, public API or publishing policy are introduced.
+
+`docs/research/release-metadata-status.json` records the full observed source SHA
+and authoritative GitHub tags/releases readbacks (both empty). The lifecycle
+validator and aggregate Track12-20 assertion now distinguish local unreleased
+preparation from release evidence. Six isolated validator regression cases,
+metadata validation, aggregate Track12-20 validation and resolved Cargo metadata
+passed locally in `/private/tmp/kairos-issue91-metadata`. No runtime changes were
+made, so Rust runtime tests were not repeated. Hosted Actions are coordinator-owned.
+
+Issue #91 remains pending: its exact-release record needs the source SHA, version,
+license, tag/release URLs, artifact hashes/locations and validation receipts, plus
+authoritative published-object readback. No release, tag, archive or DOI was
+created. This is a bounded issue correction; no Conductor phase was advanced.
+
+Focused command results: metadata validator, lifecycle regressions, aggregate
+Track12-20, `cargo metadata --no-deps --format-version 1`, phase-gate validator
+and `git diff --check` exited 0. `just check-docs` passed link validation but failed
+the Astro build with exit 127 (`astro: command not found`) in the fresh worktree;
+docs build remains unverified locally until website dependencies are installed.

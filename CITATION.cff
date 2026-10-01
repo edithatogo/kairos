@@ -1,8 +1,7 @@
 cff-version: 1.2.0
-message: "If you use KairoECS in research or operational analysis, please cite the project using this metadata. Keep this file synchronized with the release note, archive note, and Zenodo draft before the first archived release."
+message: "If you use KairoECS in research or operational analysis, this is unreleased metadata for the planned version, not an archived release citation. Cite the exact source commit used. Keep this file synchronized with the release note, archive note, and Zenodo draft before the first archived release."
 title: "KairoECS: A Rust-first multi-method simulation engine for DES and ABM"
 version: "0.4.0-alpha.1"
-date-released: "2026-05-05"
 type: software
 authors:
   - name: "KairoECS contributors"

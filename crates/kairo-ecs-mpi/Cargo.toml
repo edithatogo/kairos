@@ -2,7 +2,7 @@
 name = "kairo-ecs-mpi"
 version = "0.0.0"
 edition = "2021"
-license = "Apache-2.0"
+license.workspace = true
 repository = "https://github.com/edithatogo/kairos"
 rust-version = "1.76"
 
