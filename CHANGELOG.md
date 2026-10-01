@@ -16,7 +16,7 @@ Format:
 
 ### Changed
 
-- RRID readiness now records the accessible native suggestion form, its required contact email, and a bounded KairoECS name lookup; submission and curator acceptance remain pending.
+- RRID readiness records the native suggestion form and bounded KairoECS name lookup; SciCrunch received the resource suggestion on 2026-10-01, while curator acceptance and RRID assignment remain pending.
 
 - Rust test and benchmark serialization dependencies use Serde 1.0.229 and serde_json 1.0.151 while preserving RNG versions and the supported compiler floor.
 
