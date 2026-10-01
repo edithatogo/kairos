@@ -58,7 +58,7 @@ dry-run policy, health floor and protected environment. It executes no publicati
 commands; unexpected/generated manifests still fail.
 
 Four isolated fixtures verify the accepted existing configuration, rejected
-production enablement rejected unexpected manifest and rejected string health-score values. The Track15 delivery
+production enablement, rejected unexpected manifest, and rejected string health-score values. The Track15 delivery
 validator passes structural checks but reports missing attestation; that is not
 a release-readiness pass. Local policy checks run on the preparation worktree
 with this fix, rather than on the archived baseline's old validator. The JSON
