@@ -82,3 +82,21 @@ Do not use Track 19 metadata as release authorization by itself; it supports rel
 - pushed ref: `origin/conductor-close-reviewed-tracks-20260510`
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed for the repository clean tree after the closeout commit was recorded and pushed.
 - next-phase decision: Track 19 is `Done`; keep citation/archive metadata bounded to the existing pre-release seed until a DOI-minted archive record exists.
+
+
+## PR #95 registry roadmap reconstruction — 2026-10-01
+
+The registry planning scope is integrated into the existing numbered Track 19. `docs/research/registry-readiness.md` maps #90 and #91–#94 to licensing/release metadata, Software Heritage, RRID, and JOSS prerequisites and authoritative completion evidence. Track 19 spec, plan and test matrix link the roadmap; CHANGELOG records the documentation addition. Original PR #95's replacement of global product, technology, workflow and track registries and its duplicate unnumbered track are excluded. No track status, dependency, ownership or phase advances.
+
+Review: every destination has a prerequisite and an external completion gate. Readiness, project membership, archive IDs, journal acceptance and submission are not inferred from preparation; #90–#94 remain open follow-ups. Existing citation metadata and pre-DOI status are preserved.
+
+Validation from `/private/tmp/kairos-pr95-integration` on base `b194277e675c7d1332f8b7393bd4b21af661d066`, with Node 26.10.0, npm 11.19.1, PowerShell 7.6.6 and Rust 1.98.1:
+
+- `pwsh -NoProfile -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1`: exit 0, existing `0.4.0-alpha.1` metadata seed remains not DOI-minted.
+- `pwsh -NoProfile -File scripts/validate_conductor_setup.ps1`: exit 0, numbered track structure, no-skip claims, phase/git ledger checks and its workspace tests passed.
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`: exit 0, zero errors/warnings.
+- `just check-docs`: first attempt failed because Astro was absent in the fresh worktree; after `npm ci --prefix website --ignore-scripts --no-audit --no-fund` installed the checked-in lock, rerun exited 0. Build, internal links and HTTP smoke passed; generated artifact: `website/build/`. Existing empty i18n/404 content warnings remained.
+- Focused relative-link readback for the new roadmap and changed Track 19 spec/plan: all referenced local targets resolve.
+- `git diff --check`: exit 0.
+
+Hosted Actions, provider eligibility/readbacks and native issue/project reconciliation remain pending. This local planning slice authorizes no external registry submission or publication.
