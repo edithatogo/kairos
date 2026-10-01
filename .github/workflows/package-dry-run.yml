@@ -223,7 +223,8 @@ jobs:
     name: verify-and-retain-package-archives
     needs: [rust-package, python-package, r-package, npm-package, nuget-package, julia-package, go-package]
     runs-on: ubuntu-latest
-    # Read is limited to downloading this run's artifacts and source for the validator.
+    # The validator only downloads this run's artifacts and reads the checked-out source;
+    # it does not publish packages or change repository contents.
     permissions:
       actions: read
       contents: read
