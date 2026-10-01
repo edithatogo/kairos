@@ -54,3 +54,10 @@ No additional blocked paths are declared for this track beyond the ownership and
 ## Release implications
 
 This track contributes to release readiness only through the acceptance criteria and quality gates listed here and in conductor/quality-gates.md. It does not independently authorize public release, registry publication, or production-readiness claims without the dependent packaging, supply-chain, compatibility, red-team, and wave-management gates.
+
+
+## Registry and discoverability roadmap
+
+[Issue #90](https://github.com/edithatogo/kairos/issues/90) and subissues #91–#94 extend this track with licensing/release metadata, Software Heritage archival, RRID maturity/adoption assessment, and JOSS age/adoption readiness. The destination matrix and evidence contract live in [docs/research/registry-readiness.md](../../../docs/research/registry-readiness.md), a Track 19 documentation artifact.
+
+Acceptance for this planning slice requires explicit issue traceability, prerequisites, completion evidence and unresolved external gates for every destination. It does not change Track 19's existing metadata acceptance or authorize publication. Project membership and provider acceptance require their own authoritative readbacks.

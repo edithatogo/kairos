@@ -38,3 +38,11 @@ Review-hardening expectation:
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
+
+
+## Registry roadmap validation
+
+- Run `just check-docs` for Markdown links and fragments.
+- Run `pwsh -NoProfile -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1` to preserve existing citation metadata consistency.
+- Run `pwsh -NoProfile -File scripts/validate_conductor_setup.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` to preserve numbered track structure and the existing ledger.
+- Manually review the destination matrix against #90–#94: each destination must specify prerequisites, authoritative evidence and pending external state. Provider eligibility and completion require later native readbacks; local docs checks cannot prove them.

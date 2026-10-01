@@ -72,3 +72,15 @@ Before any task or phase in this track is marked complete, and before the next p
 6. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` to verify recorded commits, pushed refs, and cleanup state.
 8. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
+
+## Registry roadmap follow-up (#90)
+
+The [registry readiness matrix](../../../docs/research/registry-readiness.md) preserves the remaining work without opening a duplicate, unnumbered Conductor track:
+
+- [ ] #91: review licensing and exact-release metadata evidence under existing release gates.
+- [ ] #92: inspect archival coverage, then record a resolvable Software Heritage record/SWHID matching the intended revision.
+- [ ] #93: assess current RRID eligibility and independent adoption evidence before submission.
+- [ ] #94: assess current JOSS age, research contribution and adoption criteria before submission.
+- [ ] Reconcile #90/native subissue links and project visibility with authoritative GitHub readbacks; preserve provider receipts and outstanding external gates in the handoff.
+
+These follow-ups remain open. The roadmap is preparation and does not establish repository release readiness, external acceptance or identifier issuance.

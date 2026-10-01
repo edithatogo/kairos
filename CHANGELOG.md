@@ -28,6 +28,8 @@ Format:
 
 ### Added
 
+- Research software registry roadmap links licensing, Software Heritage, RRID and JOSS deliverables to explicit prerequisites and external evidence gates within Track 19.
+
 - `kairo-ecs-state` now tests `World::despawn` for successful removal, repeated despawn, invalid indices, and stale generations.
 - Python FFI status tests now assert the complete response and cover an empty library-path setting.
 - `kairo-ecs-state` now has a regression test for the empty `World::new()` state.
