@@ -20,6 +20,7 @@ Format:
 
 ### Fixed
 
+- Gymnasium integration CI now installs the selected stable Gymnasium dependency set from a hash-locked requirements file.
 - Bootstrap npm tooling now locks ip-address 10.7.1 and brace-expansion 5.0.12 outside npm’s embedded bundle, rejecting vulnerable bundled copies.
 
 ### Added
