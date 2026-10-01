@@ -16,6 +16,8 @@ Format:
 
 ### Changed
 
+- RRID readiness now records the accessible native suggestion form, its required contact email, and a bounded KairoECS name lookup; submission and curator acceptance remain pending.
+
 - Binding CI now runs only the language lanes affected by a pull request, falls back to all lanes when classification is uncertain, and checks the Gymnasium wrapper on Python 3.9 and 3.14.
 
 ### Fixed
