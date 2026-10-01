@@ -19,7 +19,7 @@ This roadmap implements the planning scope of [issue #90](https://github.com/edi
 4. For each external action, record the destination, exact release/source revision, submission receipt, authoritative URL or identifier, observation date and readback result. Distinguish prepared, submitted, accepted, archived and identifier-resolved states.
 5. Reconcile issue state and the Track 19 handoff with those receipts. Keep unresolved external gates open; close a deliverable only with authoritative completion evidence or a documented ineligibility decision.
 
-No external registry action or acceptance is claimed by this roadmap. The existing citation guide remains explicit that its pre-release metadata seed is not DOI-minted. Publication requires the applicable release, security and compatibility gates and maintainer authority.
+Software Heritage source archival is verified below. No named release, RRID registration, JOSS submission or journal acceptance is claimed. The existing citation guide remains explicit that its pre-release metadata seed is not DOI-minted. Publication requires the applicable release, security and compatibility gates and maintainer authority.
 
 ## Assessed follow-ups (2026-10-01)
 
