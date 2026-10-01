@@ -130,3 +130,5 @@ Format:
 - Enforce current-commit high/critical code-scanning findings using the pinned shared organization gate after CodeQL and Scorecard SARIF processing.
 
 - Add evidence-based JOSS, RRID and Software Heritage readiness assessments; record source archival request separately from release readiness and reconcile the public dual-license summary.
+
+- Prepare an exact-source release rehearsal and reconcile the offline packaging gate with existing disabled-by-default registry configuration.

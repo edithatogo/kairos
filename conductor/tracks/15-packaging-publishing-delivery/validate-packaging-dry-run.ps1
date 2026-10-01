@@ -75,8 +75,28 @@ $publishManifestFiles = @(
     Get-ChildItem -LiteralPath 'packaging','dist' -Recurse -File -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -match '(?i)(publish|publication).*manifest|manifest.*(publish|publication)' }
 )
-if ($publishManifestFiles.Count -gt 0) {
-    throw "Publish manifest files are not allowed in this dry-run sequence: $($publishManifestFiles.FullName -join ', ')"
+foreach ($publicationFile in $publishManifestFiles) {
+    $relativePath = [System.IO.Path]::GetRelativePath($RepoRoot, $publicationFile.FullName).Replace('\', '/')
+    # Track 42's reviewed configuration exists independently of this offline sequence.
+    # Never execute its commands or allow generated/unrecognized publication manifests.
+    if ($relativePath -ne 'packaging/publication-registry-manifest.json') {
+        throw "Unexpected publication manifest in offline dry-run: $relativePath"
+    }
+    $publication = Get-Content -LiteralPath $publicationFile.FullName -Raw | ConvertFrom-Json
+    $numericHealth = $publication.health_floor -is [int] -or $publication.health_floor -is [long] -or $publication.health_floor -is [double] -or $publication.health_floor -is [decimal]
+    if (-not $numericHealth -or [double]::IsNaN([double]$publication.health_floor) -or [double]::IsInfinity([double]$publication.health_floor)) {
+        throw 'Publication health floor must be finite numeric evidence'
+    }
+    if ($publication.schema_version -ne 1 -or
+        $publication.release_stage -ne 'publication-implementation' -or
+        $publication.production_publish_default -isnot [bool] -or
+        $publication.production_publish_default -ne $false -or
+        $publication.policy.default_mode -ne 'dry-run' -or
+        $publication.health_floor -lt 9.5 -or
+        $publication.health_floor -gt 10 -or
+        $publication.github_environment -ne 'release-publication') {
+        throw 'Track 42 publication configuration must retain its reviewed dry-run and approval boundaries'
+    }
 }
 
 Write-Host "track15_status=ok"
