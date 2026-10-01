@@ -101,6 +101,19 @@ to fail if publish/publication manifest files appear under `packaging/` or
 ## Follow-up issues
 
 Keep public publishing blocked until registry names, legal metadata, compatibility gates, and dry-run package evidence are complete across the package matrix.
+
+## Package archive retention extension — 2026-10-01
+
+The existing package dry-run jobs now emit real package files and a dependent
+aggregation job validates the seven ecosystem outputs, records per-job command
+and toolchain receipts, and retains the combined SHA-256-indexed artifact for
+90 days. Julia and Go outputs are source archives until a tagged registry
+package exists. Track 16 release documentation records the retained archive
+formats and limitations. Workflow edits consume Track 13's CI and workflow
+security ownership; its workflow inventory and action-security checks remain
+required. This maintenance extension does not enable publication or claim the
+broader Rust workspace package set is registry-ready.
+
 ## Phase closeout evidence
 
 2026-05-09 implementation slice:
