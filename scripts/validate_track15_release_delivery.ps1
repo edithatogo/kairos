@@ -3,12 +3,18 @@ param(
     [string]$TrackValidatorPath = "conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1",
     [string]$ReleaseChecklistPath = "docs/release/release-checklist.md",
     [string]$SupplyChainPath = "docs/release/supply-chain-verification.md",
-    [string]$MaintenanceHandoffPath = "docs/release/maintenance-handoff.md"
+    [string]$MaintenanceHandoffPath = "docs/release/maintenance-handoff.md",
+    [string]$EvidenceDirectoryPath = "dist"
 )
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 Set-Location $RepoRoot
+$EvidenceRoot = if ([System.IO.Path]::IsPathRooted($EvidenceDirectoryPath)) {
+    [System.IO.Path]::GetFullPath($EvidenceDirectoryPath)
+} else {
+    [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $EvidenceDirectoryPath))
+}
 
 $issues = [System.Collections.Generic.List[string]]::new()
 
@@ -80,6 +86,9 @@ if ($releaseWorkflow.Length -gt 0) {
     if ($verifyEvidenceIndex -lt 0) {
         Add-Issue -Message "release.yml does not verify generated release evidence before artifact upload"
     }
+    if (($gateIndex -ge 0) -and ($verifyEvidenceIndex -ge 0) -and ($gateIndex -lt $verifyEvidenceIndex)) {
+        Add-Issue -Message "Track 15 release delivery gate must run after generated manifest verification"
+    }
     if (($gateIndex -ge 0) -and ($uploadIndex -ge 0) -and ($gateIndex -gt $uploadIndex)) {
         Add-Issue -Message "Track 15 release delivery gate must run before artifact upload"
     }
@@ -97,8 +106,9 @@ if ($releaseWorkflow.Length -gt 0) {
 $checklist = Read-Text -Path $ReleaseChecklistPath
 if ($checklist.Length -gt 0) {
     foreach ($needle in @(
-        "SBOM generated.",
-        "Provenance or attestation generated.",
+        "Valid SPDX 2.3 SBOM generated at ``dist/sbom.spdx.json``.",
+        "Provenance generated at ``dist/provenance.json`` or ``dist/provenance.intoto.jsonl`` and covers every SHA-256 subject in the generated release manifest.",
+        "``dist/SUPPLY-CHAIN-SHA256SUMS`` verifies the SBOM and provenance files.",
         "Generated release evidence verified: ``python packaging/scripts/build_release_manifest.py --verify-existing``.",
         "Any remaining publish blockers are recorded in the maintenance handoff before leaving dry-run mode."
     )) {
@@ -130,19 +140,123 @@ if ($handoff.Length -gt 0) {
     }
 }
 
-$sbomEvidence = Test-Path -LiteralPath "dist/sbom.spdx.json"
-$provenanceEvidence = @(
-    "dist/provenance.json",
-    "dist/provenance.intoto.jsonl"
-) | Where-Object { Test-Path -LiteralPath $_ }
+$sbomPath = Join-Path $EvidenceRoot "sbom.spdx.json"
+$provenancePath = @(
+    (Join-Path $EvidenceRoot "provenance.json"),
+    (Join-Path $EvidenceRoot "provenance.intoto.jsonl")
+) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+$supplyChainChecksumsPath = Join-Path $EvidenceRoot "SUPPLY-CHAIN-SHA256SUMS"
+$releaseManifestPath = Join-Path $EvidenceRoot "release-artifact-manifest.json"
 
-if ($sbomEvidence -or $provenanceEvidence.Count -gt 0) {
-    Write-Host "release_delivery_waits_on_attestation=false"
-    Write-Host "release_delivery_evidence=sbom_or_provenance_present"
+$sbom = $null
+if (-not (Test-Path -LiteralPath $sbomPath -PathType Leaf)) {
+    Add-Issue -Message "Missing required release SBOM: $sbomPath"
 } else {
-    $blocker = "registry name availability remains unverified; target-machine toolchains remain unverified; production publish stays disabled"
+    try {
+        $sbom = Get-Content -LiteralPath $sbomPath -Raw | ConvertFrom-Json -ErrorAction Stop
+        if ($sbom.spdxVersion -ne "SPDX-2.3" -or
+            $sbom.SPDXID -ne "SPDXRef-DOCUMENT" -or
+            -not $sbom.creationInfo.created -or
+            @($sbom.creationInfo.creators).Count -eq 0 -or
+            @($sbom.packages).Count -eq 0) {
+            Add-Issue -Message "Release SBOM is not a populated SPDX-2.3 JSON document: $sbomPath"
+        }
+    } catch {
+        Add-Issue -Message "Release SBOM is not valid JSON: $sbomPath ($($_.Exception.Message))"
+    }
+}
+
+$provenanceDigests = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+if (-not $provenancePath) {
+    Add-Issue -Message "Missing required release provenance: expected provenance.json or provenance.intoto.jsonl in $EvidenceRoot"
+} else {
+    try {
+        $statements = [System.Collections.Generic.List[object]]::new()
+        if ($provenancePath.EndsWith(".jsonl", [System.StringComparison]::OrdinalIgnoreCase)) {
+            foreach ($line in (Get-Content -LiteralPath $provenancePath | Where-Object { $_.Trim().Length -gt 0 })) {
+                $statements.Add(($line | ConvertFrom-Json -ErrorAction Stop))
+            }
+        } else {
+            $provenance = Get-Content -LiteralPath $provenancePath -Raw | ConvertFrom-Json -ErrorAction Stop
+            if ($provenance.dsseEnvelope.payload) {
+                $payloadJson = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String([string]$provenance.dsseEnvelope.payload))
+                $statements.Add(($payloadJson | ConvertFrom-Json -ErrorAction Stop))
+            } else {
+                $statements.Add($provenance)
+            }
+        }
+
+        foreach ($statement in $statements) {
+            $subjects = if ($statement.subject) { @($statement.subject) } else { @($statement.subjects) }
+            foreach ($subject in $subjects) {
+                $digest = [string]$subject.digest.sha256
+                if ($digest -match "^[0-9a-fA-F]{64}$") {
+                    [void]$provenanceDigests.Add($digest)
+                }
+            }
+        }
+        if ($provenanceDigests.Count -eq 0) {
+            Add-Issue -Message "Release provenance has no subject with a SHA-256 digest: $provenancePath"
+        }
+    } catch {
+        Add-Issue -Message "Release provenance is not valid JSON/in-toto evidence: $provenancePath ($($_.Exception.Message))"
+    }
+}
+
+if (-not (Test-Path -LiteralPath $releaseManifestPath -PathType Leaf)) {
+    Add-Issue -Message "Missing required generated release artifact manifest: $releaseManifestPath"
+} elseif ($provenanceDigests.Count -gt 0) {
+    try {
+        $releaseManifest = Get-Content -LiteralPath $releaseManifestPath -Raw | ConvertFrom-Json -ErrorAction Stop
+        $expectedDigests = @($releaseManifest.artifacts | ForEach-Object { [string]$_.sha256 } | Where-Object { $_ -match "^[0-9a-fA-F]{64}$" } | Select-Object -Unique)
+        if ($expectedDigests.Count -eq 0) {
+            Add-Issue -Message "Generated release artifact manifest has no SHA-256 subjects: $releaseManifestPath"
+        } else {
+            $missingProvenanceDigests = @($expectedDigests | Where-Object { -not $provenanceDigests.Contains($_) })
+            if ($missingProvenanceDigests.Count -gt 0) {
+                Add-Issue -Message "Release provenance does not cover all generated release manifest subjects ($($missingProvenanceDigests.Count) missing)"
+            }
+        }
+    } catch {
+        Add-Issue -Message "Generated release artifact manifest is not valid JSON: $releaseManifestPath ($($_.Exception.Message))"
+    }
+}
+
+$evidenceFiles = @("sbom.spdx.json")
+if ($provenancePath) {
+    $evidenceFiles += [System.IO.Path]::GetFileName($provenancePath)
+}
+if (-not (Test-Path -LiteralPath $supplyChainChecksumsPath -PathType Leaf)) {
+    Add-Issue -Message "Missing required release evidence checksum list: $supplyChainChecksumsPath"
+} else {
+    $checksumEntries = @{}
+    foreach ($line in Get-Content -LiteralPath $supplyChainChecksumsPath) {
+        if ($line -match "^\s*([0-9a-fA-F]{64})\s+\*?(.+?)\s*$") {
+            $checksumEntries[[System.IO.Path]::GetFileName($Matches[2])] = $Matches[1].ToLowerInvariant()
+        }
+    }
+    foreach ($fileName in $evidenceFiles) {
+        $path = Join-Path $EvidenceRoot $fileName
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+            continue
+        }
+        if (-not $checksumEntries.ContainsKey($fileName)) {
+            Add-Issue -Message "Release evidence checksum list does not cover $fileName"
+            continue
+        }
+        $actualHash = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($checksumEntries[$fileName] -ne $actualHash) {
+            Add-Issue -Message "Release evidence checksum mismatch for $fileName"
+        }
+    }
+}
+
+if ($issues.Count -gt 0) {
     Write-Host "release_delivery_waits_on_attestation=true"
-    Write-Host "release_delivery_blocker=$blocker"
+    Write-Host "release_delivery_evidence=missing_or_invalid"
+} else {
+    Write-Host "release_delivery_waits_on_attestation=false"
+    Write-Host "release_delivery_evidence=sbom_provenance_and_checksums_valid"
 }
 
 Write-Host ""

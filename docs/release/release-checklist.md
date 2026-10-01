@@ -48,8 +48,9 @@
 - [ ] `dist/SHA256SUMS` generated and reviewed.
 - [ ] Generated release evidence verified: `python packaging/scripts/build_release_manifest.py --verify-existing`.
 - [ ] Dry-run output reviewed for package inventory, registry modes, and checksum coverage.
-- [ ] SBOM generated.
-- [ ] Provenance or attestation generated.
+- [ ] Valid SPDX 2.3 SBOM generated at `dist/sbom.spdx.json`.
+- [ ] Provenance generated at `dist/provenance.json` or `dist/provenance.intoto.jsonl` and covers every SHA-256 subject in the generated release manifest.
+- [ ] `dist/SUPPLY-CHAIN-SHA256SUMS` verifies the SBOM and provenance files.
 - [ ] GitHub Release draft reviewed.
 - [ ] Package dry-runs complete for the release set: Rust, Python, R, Julia, TypeScript/Wasm, C#, and Go.
 - [ ] Registry dry-run matrix reviewed against `packaging/release-package-manifest.json`.

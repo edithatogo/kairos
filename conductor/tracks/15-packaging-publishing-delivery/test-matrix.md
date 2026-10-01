@@ -7,6 +7,7 @@
 - Dry-run coverage for every ecosystem that supports packaging locally.
 - Docs coverage for any change to package naming, registry order, or release policy.
 - Release-delivery gate coverage for the workflow step that runs before artifact upload.
+- Required release evidence is fail-closed: a valid SPDX 2.3 SBOM, provenance covering all release-manifest SHA-256 subjects, and matching entries in `SUPPLY-CHAIN-SHA256SUMS` must exist before artifact upload.
 - Archive retention coverage: the seven package jobs upload their actual native archive or explicitly labelled source archive; the aggregator validates archive members, matches each archive to its command/toolchain receipt, writes and verifies SHA-256 sums, and uploads the combined archive tree for 90 days.
 - No-production-publish check: the track must not introduce live publish commands.
 - No-publish-manifest check: the offline sequence must not generate publication manifests. The existing Track42 configuration is permitted only with reviewed dry-run/approval defaults; unexpected manifests remain rejected.
@@ -22,6 +23,7 @@ python packaging/scripts/build_release_manifest.py --version 0.0.0-r2-dry-run
 python packaging/scripts/build_release_manifest.py --verify-existing
 powershell -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/15-packaging-publishing-delivery/validate-packaging-dry-run.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/test_track15_release_evidence_gate.ps1
 node tests/conformance/track12_20_evidence_check.mjs
 ```
 
@@ -50,9 +52,12 @@ paths, expected release evidence output paths, the ordered local dry-run
 sequence, and the absence of publish manifest files.
 
 `scripts/validate_track15_release_delivery.ps1` reuses the packaging dry-run
-validator, checks that the release workflow runs the Track 15 delivery gate
-before `Upload artifacts`, and records the current blocker state when SBOM or
-provenance evidence is not yet present.
+validator and fails if the release tree lacks a populated SPDX 2.3 SBOM,
+provenance whose subjects cover the generated release manifest, or a checksum
+list matching those evidence files. The release workflow runs this gate after
+manifest verification and before `Upload artifacts`. The regression test
+asserts failure for missing evidence, checksum drift, and incomplete provenance
+subjects, plus success for a complete matching evidence set.
 
 ## First local sequence
 

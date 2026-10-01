@@ -114,6 +114,20 @@ security ownership; its workflow inventory and action-security checks remain
 required. This maintenance extension does not enable publication or claim the
 broader Rust workspace package set is registry-ready.
 
+## Fail-closed release evidence gate — 2026-10-01
+
+The release-delivery validator now fails when `dist/sbom.spdx.json` is absent
+or is not a populated SPDX 2.3 document, when neither `dist/provenance.json`
+nor `dist/provenance.intoto.jsonl` contains SHA-256 subjects covering every
+entry in `dist/release-artifact-manifest.json`, or when
+`dist/SUPPLY-CHAIN-SHA256SUMS` is missing or does not match the SBOM and
+provenance files. The release workflow runs this check after generated manifest
+verification and before upload. Missing evidence in the current local `dist/`
+tree is an expected release blocker; no evidence is synthesized from the local
+post-build records under `.artifacts`.
+
+Regression command: `pwsh -NoProfile -ExecutionPolicy Bypass -File tests/test_track15_release_evidence_gate.ps1`.
+
 ## Phase closeout evidence
 
 2026-05-09 implementation slice:
