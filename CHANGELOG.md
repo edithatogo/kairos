@@ -126,3 +126,5 @@ Format:
 - Docs Quality CI now installs `website` dependencies before running the Astro/Starlight docs workflow validator.
 - Docs platform notes now retain the learning-coverage live-site parity language after the Starlight migration.
 - Docs Quality CI now avoids policy-banned shell fallbacks when configuring Mermaid Chrome rendering.
+
+- Enforce current-commit high/critical code-scanning findings using the pinned shared organization gate after CodeQL and Scorecard SARIF processing.

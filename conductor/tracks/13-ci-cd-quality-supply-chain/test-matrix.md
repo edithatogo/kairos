@@ -98,3 +98,7 @@ test -f conductor/tracks.yaml
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
+
+## Issue #32 shared scanning gate
+
+CodeQL and Scorecard wait for SARIF processing, then call the shared organization gate pinned to `c3e51f894a500198e67c864a1f0c460ba72e12cd`. High/critical alerts matching the analyzed commit fail the action; API errors fail closed. No repository-local alert enforcement script is retained. The metadata validator guards processing order and SHA pinning. Hosted exact-head and post-merge evidence remain required.
