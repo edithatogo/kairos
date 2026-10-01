@@ -347,6 +347,13 @@ requireTerms('.github/workflows/scorecard.yml', [
   'github/codeql-action/upload-sarif@',
 ]);
 
+// A processed SARIF upload must precede the immutable shared enforcement action.
+for (const workflow of ['codeql', 'scorecard']) {
+  const text = read(`.github/workflows/${workflow}.yml`);
+  assert(/github\/codeql-action\/(?:analyze|upload-sarif)@[0-9a-f]{40}[\s\S]*?wait-for-processing: true[\s\S]*?uses: edithatogo\/\.github\/\.github\/actions\/code-scanning-gate@[0-9a-f]{40}[\s\S]*?timeout-seconds: ["']0["']/.test(text),
+    `${workflow} must process SARIF before its SHA-pinned shared scanning gate`);
+}
+
 requireTerms('.github/workflows/sbom-attestations.yml', [
   'attestations: write',
   'sbom.spdx.json',

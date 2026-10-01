@@ -47,3 +47,8 @@ jobs:
         with:
           sarif_file: scorecard-results.sarif
           category: OpenSSF Scorecard
+          wait-for-processing: true
+      - name: Gate high and critical code-scanning alerts
+        uses: edithatogo/.github/.github/actions/code-scanning-gate@c3e51f894a500198e67c864a1f0c460ba72e12cd
+        with:
+          timeout-seconds: "0" # SARIF processing completed in the preceding step.
