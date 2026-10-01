@@ -85,6 +85,18 @@ browser-smoke gates. The generated `wasm-bindgen` export layer is behind the
 ## Follow-up issues
 
 No additional follow-up issues were recorded by this Conductor hygiene update.
+
+## Scheduler cancellation benchmark evidence — 2026-09-30
+
+Added `bindings/typescript/bench/scheduler-cancel.mjs` as a manual, bounded comparison of the base and candidate `SchedulerFacade`. Setup schedules 20,000 ascending events outside the timer; only 10,000 cancellations are timed. The seeded-random case uses LCG seed `0x84c0ffee` and Fisher-Yates ordering. Each repetition asserts the final queued/cancelled counts. The script compares the selected baseline commit to the checked-out source, emits raw samples and medians, and does not add timing assertions to CI.
+
+Command: `/opt/homebrew/opt/node@22/bin/node --experimental-strip-types bindings/typescript/bench/scheduler-cancel.mjs --base 384e8546d69f9cbf2746fcb2ab646263256e6dec --events 20000 --cancellations 10000 --repetitions 3`.
+
+Working directory: Kairos PR #84 worktree. Baseline source: `384e8546d69f9cbf2746fcb2ab646263256e6dec`; candidate source: `ca798012e9a5b95fe68d22684105d01a4e1368fd`. Toolchain: Node `v22.23.3`, Darwin arm64, Apple M1 Max. Exit status: 0. Raw output: `bindings/typescript/bench/results-node22-20k.json`.
+
+Observed median cancellation-only speedups: 135.4x for reverse-end cancellation and 134.4x for seeded-random cancellation. These are synthetic local measurements and are not portable performance guarantees. The earlier PR-description 50,000-event / 495x measurement was not reproduced; a baseline setup attempt exceeded 50 seconds before the timed cancellation phase. The 50,000-event figure should not be presented as independently validated.
+
+Additional focused checks after adding the benchmark: `npm ci --prefix bindings/typescript` passed on Node 22.23.3 with zero reported vulnerabilities; `npm run typecheck --prefix bindings/typescript` passed; `npm test --prefix bindings/typescript` passed (2 files, 7 tests); and the benchmark smoke run at 1,000 events / 500 cancellations passed its state assertions. `git diff --check` passed. Full hosted Actions for the updated PR head remain the integration gate.
 ## Phase closeout evidence
 
 `$conductor-review` implementation review pass on 2026-05-08 found no in-scope TypeScript/Wasm package correctness findings after the status type hole in the event-log converter was fixed.
@@ -98,6 +110,14 @@ Pushed ref: blocked until a cleaned Track 09 closeout commit can be pushed.
 Strict cleanup gate `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` must pass after commit and push.
 
 Additional closeout evidence on 2026-05-08 confirmed `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates\kairo-ecs-wasm\Cargo.toml` passes, so the default Rust wrapper unit-test blocker is resolved.
+
+## Full cancellation lifecycle follow-up — 2026-09-30
+
+Review found that lazy cancellation left tombstones for `step()` to discard with repeated `Array.shift()`, moving quadratic array compaction into later dispatch. Commit `d962d9f7bd647d011ee5498ac67cf795bc7492d9` adds a queue-head cursor and amortized prefix compaction, a regression test that cancels 3,072 of 4,096 events before draining/inserting another event, and a benchmark that times both cancellation and complete dispatch drain. This supersedes the cancellation-only result above as the performance evidence for the candidate.
+
+On Node `v22.23.3`, Darwin arm64, Apple M1 Max, baseline `384e8546d69f9cbf2746fcb2ab646263256e6dec`, candidate `d962d9f7bd647d011ee5498ac67cf795bc7492d9`, 20,000 events, 10,000 cancellations, and three repetitions, median full-lifecycle times were 2,009.505 ms baseline versus 18.368 ms candidate for reverse-end cancellation (109.4x), and 1,527.449 ms versus 3.717 ms for seeded-random cancellation (410.9x). The benchmark asserts every remaining event drains exactly once and the queue is empty afterward. Raw results are in `bindings/typescript/bench/results-node22-20k.json`.
+
+Validation on the candidate source: `npm test` passed (2 files, 8 tests), `npm run typecheck` passed, benchmark completed with exit 0, and `git diff --check` passed before commit. The benchmark runtime archive was Node's official v22.23.3 Darwin ARM64 build and its SHA-256 matched the official `SHASUMS256.txt`. Fresh hosted Actions on the pushed commit remain required before this PR is considered ready.
 
 2026-05-08 review reconciliation:
 

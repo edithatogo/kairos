@@ -7,7 +7,7 @@ use crate::{
 pub struct DigitalTwinConnector {
     sample_rate_hz: f64,
     epsilon: f64,
-    last_values: Vec<(u32, f64)>,
+    last_values: std::collections::HashMap<u32, f64>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -22,7 +22,7 @@ impl DigitalTwinConnector {
         Self {
             sample_rate_hz,
             epsilon,
-            last_values: Vec::new(),
+            last_values: std::collections::HashMap::new(),
         }
     }
 
@@ -74,19 +74,17 @@ impl DigitalTwinConnector {
                     ),
                 ));
             }
-            let previous = self
-                .last_values
-                .iter_mut()
-                .find(|(candidate, _)| *candidate == value_reference);
-
-            match previous {
-                Some((_, previous_value)) if (*previous_value - value).abs() <= self.epsilon => {}
-                Some((_, previous_value)) => {
-                    *previous_value = value;
-                    publications.push(publication(topic_prefix, value_reference, value));
+            use std::collections::hash_map::Entry;
+            match self.last_values.entry(value_reference) {
+                Entry::Occupied(mut entry) => {
+                    let previous_value = entry.get_mut();
+                    if (*previous_value - value).abs() > self.epsilon {
+                        *previous_value = value;
+                        publications.push(publication(topic_prefix, value_reference, value));
+                    }
                 }
-                None => {
-                    self.last_values.push((value_reference, value));
+                Entry::Vacant(entry) => {
+                    entry.insert(value);
                     publications.push(publication(topic_prefix, value_reference, value));
                 }
             }

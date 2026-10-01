@@ -33,7 +33,10 @@ pub struct TraceDelta {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EventTrace {
     pub schema: &'static str,
+    /// Snapshots in nondecreasing tick order; use [`EventTrace::snapshot`] to add them.
     pub snapshots: Vec<TraceSnapshot>,
+    /// Deltas in `(tick, priority, sequence)` order; use
+    /// [`EventTrace::record_event`] to add them.
     pub deltas: Vec<TraceDelta>,
 }
 
@@ -74,32 +77,47 @@ impl EventTrace {
     }
 
     pub fn reconstruct_at(&self, tick: u128) -> BTreeMap<String, String> {
-        let mut state = self
+        let snapshot_idx = self
             .snapshots
-            .iter()
-            .rev()
-            .find(|snapshot| snapshot.tick <= tick)
-            .map(|snapshot| snapshot.state.clone())
+            .partition_point(|snapshot| snapshot.tick <= tick);
+        if self.deltas.is_empty() {
+            return if snapshot_idx > 0 {
+                self.snapshots[snapshot_idx - 1].state.clone()
+            } else {
+                BTreeMap::new()
+            };
+        }
+        let (snapshot, snapshot_tick) = if snapshot_idx > 0 {
+            let snapshot = &self.snapshots[snapshot_idx - 1];
+            (Some(snapshot), snapshot.tick)
+        } else {
+            (None, 0)
+        };
+
+        let delta_start_idx = self
+            .deltas
+            .partition_point(|delta| delta.tick <= snapshot_tick);
+        let delta_end_idx = self.deltas.partition_point(|delta| delta.tick <= tick);
+
+        if delta_start_idx == delta_end_idx {
+            return snapshot
+                .map(|snapshot| snapshot.state.clone())
+                .unwrap_or_default();
+        }
+
+        let mut state: BTreeMap<&String, &String> = snapshot
+            .map(|snapshot| snapshot.state.iter().collect())
             .unwrap_or_default();
 
-        let snapshot_tick = self
-            .snapshots
-            .iter()
-            .rev()
-            .find(|snapshot| snapshot.tick <= tick)
-            .map(|snapshot| snapshot.tick)
-            .unwrap_or(0);
-
-        for delta in self
-            .deltas
-            .iter()
-            .filter(|delta| delta.tick > snapshot_tick && delta.tick <= tick)
-        {
+        for delta in &self.deltas[delta_start_idx..delta_end_idx] {
             for (key, value) in &delta.changes {
-                state.insert(key.clone(), value.clone());
+                state.insert(key, value);
             }
         }
         state
+            .into_iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
     }
 
     pub fn encode_lines(&self) -> String {
@@ -612,6 +630,30 @@ mod tests {
         trace.record_event(event(5, 1, 0), change);
 
         assert_eq!(trace.reconstruct_at(0)["machine.status"], "idle");
+        assert_eq!(trace.reconstruct_at(5)["machine.status"], "busy");
+    }
+
+    #[test]
+    fn reconstruct_at_uses_latest_snapshot_and_only_later_deltas() {
+        let mut trace = EventTrace::default();
+        let mut before = BTreeMap::new();
+        before.insert("machine.status".to_string(), "idle".to_string());
+        trace.snapshot(SimTime::from_ticks(2), before);
+
+        let mut at_snapshot = BTreeMap::new();
+        at_snapshot.insert("machine.status".to_string(), "snapshot".to_string());
+        trace.snapshot(SimTime::from_ticks(4), at_snapshot);
+
+        let mut before_snapshot_delta = BTreeMap::new();
+        before_snapshot_delta.insert("machine.status".to_string(), "stale".to_string());
+        trace.record_event(event(3, 1, 0), before_snapshot_delta);
+
+        let mut after_snapshot_delta = BTreeMap::new();
+        after_snapshot_delta.insert("machine.status".to_string(), "busy".to_string());
+        trace.record_event(event(5, 2, 1), after_snapshot_delta);
+
+        assert_eq!(trace.reconstruct_at(3)["machine.status"], "stale");
+        assert_eq!(trace.reconstruct_at(4)["machine.status"], "snapshot");
         assert_eq!(trace.reconstruct_at(5)["machine.status"], "busy");
     }
 

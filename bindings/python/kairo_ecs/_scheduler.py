@@ -1,7 +1,5 @@
 """Python-native scheduler facade used before native wheels are configured."""
 
-from __future__ import annotations
-
 from heapq import heappop, heappush
 
 from ._types import DispatchedEvent, EventId, ScheduleRequest, SimTime, StepOutcome

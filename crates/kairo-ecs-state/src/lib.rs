@@ -388,12 +388,20 @@ impl ComponentRegistry {
             .and_then(|b| b.downcast_mut::<ComponentStore<T>>())
     }
 
+    /// Inserts a component into its type store, registering the store on demand.
+    ///
+    /// Returns `false` when the entity is stale or the typed store is unavailable.
     #[must_use]
     pub fn insert<T: 'static>(&mut self, entity: EntityId, component: T) -> bool {
-        if self.store::<T>().is_none() {
-            self.register::<T>();
-        }
-        self.store_mut::<T>().unwrap().insert(entity, component)
+        let store = self
+            .stores
+            .entry(TypeId::of::<T>())
+            .or_insert_with(|| Box::new(ComponentStore::<T>::new()))
+            .downcast_mut::<ComponentStore<T>>();
+        let Some(store) = store else {
+            return false;
+        };
+        store.insert(entity, component)
     }
 
     pub fn remove<T: 'static>(&mut self, entity: EntityId) -> Option<T> {
@@ -411,7 +419,7 @@ impl Default for ComponentRegistry {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "numa"))]
 mod numa_tests {
     use super::*;
 
@@ -430,5 +438,161 @@ mod numa_tests {
         assert_eq!(plan.rows, 2);
         assert_eq!(plan.dense_bytes, 2 * std::mem::size_of::<i32>());
         assert!(plan.cache_local);
+    }
+}
+
+#[cfg(test)]
+mod registry_insert_tests {
+    use super::*;
+
+    #[test]
+    fn insert_registers_missing_store_and_keeps_normal_behavior() {
+        let mut registry = ComponentRegistry::new();
+        let mut world = World::new();
+        let entity = world.spawn();
+
+        assert!(registry.insert(entity, 42_u32));
+        assert_eq!(registry.get::<u32>(entity), Some(&42));
+    }
+
+    #[test]
+    fn insert_returns_false_for_an_inconsistent_typed_store() {
+        let mut registry = ComponentRegistry::new();
+        registry
+            .stores
+            .insert(TypeId::of::<u32>(), Box::new(ComponentStore::<u64>::new()));
+        let mut world = World::new();
+        let entity = world.spawn();
+
+        assert!(!registry.insert(entity, 42_u32));
+        assert!(registry.store::<u32>().is_none());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_world_despawn() {
+        let mut world = World::new();
+
+        // Spawn a couple of entities
+        let entity1 = world.spawn();
+        let entity2 = world.spawn();
+        let entity3 = world.spawn();
+
+        assert_eq!(world.len(), 3);
+        assert!(world.is_alive(entity1));
+        assert!(world.is_alive(entity2));
+        assert!(world.is_alive(entity3));
+
+        // Despawn entity2
+        let despawned = world.despawn(entity2);
+        assert!(despawned);
+
+        // Verify entity2 is no longer alive
+        assert!(!world.is_alive(entity2));
+        assert_eq!(world.len(), 2);
+
+        // Despawning again should fail
+        assert!(!world.despawn(entity2));
+
+        // Other entities should still be alive
+        assert!(world.is_alive(entity1));
+        assert!(world.is_alive(entity3));
+
+        // Despawn an entity with an invalid index
+        let invalid_entity = EntityId::new(999, 0);
+        assert!(!world.despawn(invalid_entity));
+
+        // Despawn an entity with a stale generation
+        let stale_entity = EntityId::new(entity1.index, entity1.generation.wrapping_add(1));
+        assert!(!world.despawn(stale_entity));
+    }
+
+    #[test]
+    fn test_world_with_capacity() {
+        let capacity = 42;
+        let world = World::with_capacity(capacity);
+
+        assert!(world.slots.capacity() >= capacity);
+        assert!(world.free_indices.capacity() >= capacity);
+        assert!(world.live_entities.capacity() >= capacity);
+        assert!(world.live_positions.capacity() >= capacity);
+    }
+
+    #[test]
+    fn component_store_with_capacity_reserves_all_storage_vectors() {
+        let capacity = 42;
+        let store = ComponentStore::<u32>::with_capacity(capacity);
+
+        assert!(store.dense.capacity() >= capacity);
+        assert!(store.sparse.capacity() >= capacity);
+        assert!(store.entities.capacity() >= capacity);
+    }
+
+    #[test]
+    fn world_reserve_grows_all_storage_vectors_from_empty() {
+        let additional = 10;
+        let mut world = World::new();
+        world.reserve(additional);
+
+        assert!(world.slots.capacity() >= additional);
+        assert!(world.free_indices.capacity() >= additional);
+        assert!(world.live_entities.capacity() >= additional);
+        assert!(world.live_positions.capacity() >= additional);
+    }
+
+    #[test]
+    fn component_store_reserve_grows_all_storage_vectors_from_empty() {
+        let additional = 10;
+        let mut store = ComponentStore::<u32>::new();
+        store.reserve(additional);
+
+        assert!(store.dense.capacity() >= additional);
+        assert!(store.sparse.capacity() >= additional);
+        assert!(store.entities.capacity() >= additional);
+    }
+
+    #[test]
+    fn world_reserve_adds_capacity_after_entities_exist() {
+        let mut world = World::new();
+        world.spawn();
+        world.spawn();
+        let additional = 10;
+
+        let slots_required = world.slots.len() + additional;
+        let free_indices_required = world.free_indices.len() + additional;
+        let live_entities_required = world.live_entities.len() + additional;
+        let live_positions_required = world.live_positions.len() + additional;
+
+        world.reserve(additional);
+
+        assert!(world.slots.capacity() >= slots_required);
+        assert!(world.free_indices.capacity() >= free_indices_required);
+        assert!(world.live_entities.capacity() >= live_entities_required);
+        assert!(world.live_positions.capacity() >= live_positions_required);
+    }
+
+    #[test]
+    fn component_store_reserve_adds_capacity_after_components_exist() {
+        let mut world = World::new();
+        let entities = [world.spawn(), world.spawn(), world.spawn()];
+        let mut store = ComponentStore::<u32>::new();
+        for (value, entity) in entities.into_iter().enumerate() {
+            assert!(store.insert(entity, value as u32));
+        }
+        let additional = 10;
+
+        let dense_required = store.dense.len() + additional;
+        let sparse_required = store.sparse.len() + additional;
+        let entities_required = store.entities.len() + additional;
+
+        store.reserve(additional);
+
+        assert!(store.dense.capacity() >= dense_required);
+        assert!(store.sparse.capacity() >= sparse_required);
+        assert!(store.entities.capacity() >= entities_required);
     }
 }

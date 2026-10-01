@@ -1,12 +1,12 @@
 """Event-log v1 smoke roundtrip helpers for the Python binding."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, TypeVar
 
 from ._types import DispatchedEvent, EntityId, EventId
+
+_HandleT = TypeVar("_HandleT", EventId, EntityId)
 
 SCHEMA_VERSION = 1
 EVENT_LOG_STREAM = "kairo_ecs.event_log.v1"
@@ -92,9 +92,11 @@ class EventLogBatch:
     def to_smoke_bytes(self) -> bytes:
         lines = [
             f"stream={EVENT_LOG_STREAM};schema_version={SCHEMA_VERSION}",
-            "schema_version\trun_id\tevent_id_hex\tentity_id_hex\t"
-            "time_ticks_le_hex\ttime_scale\tpriority\tsequence\t"
-            "event_kind\tstatus\tpayload_ref",
+            (
+                "schema_version\trun_id\tevent_id_hex\tentity_id_hex\t"
+                "time_ticks_le_hex\ttime_scale\tpriority\tsequence\t"
+                "event_kind\tstatus\tpayload_ref"
+            ),
         ]
         for record in self.records:
             entity_hex = _handle_hex(record.entity_id) if record.entity_id else ""
@@ -229,13 +231,15 @@ def _handle_bytes(handle: EventId | EntityId) -> bytes:
     return handle.index.to_bytes(8, "little") + handle.generation.to_bytes(4, "little")
 
 
-def _parse_handle(hex_value: str, kind: type[EventId] | type[EntityId]) -> EventId | EntityId:
+def _parse_handle(hex_value: str, kind: type[_HandleT]) -> _HandleT:
     if len(hex_value) != 24:
         raise ValueError("handle must be 12 bytes")
     return _parse_handle_bytes(bytes.fromhex(hex_value), kind)
 
 
-def _parse_handle_bytes(payload: bytes, kind: type[EventId] | type[EntityId]) -> EventId | EntityId:
+def _parse_handle_bytes(
+    payload: bytes, kind: type[_HandleT]
+) -> _HandleT:
     if len(payload) != 12:
         raise ValueError("handle must be 12 bytes")
     return kind(int.from_bytes(payload[:8], "little"), int.from_bytes(payload[8:12], "little"))

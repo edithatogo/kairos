@@ -1,16 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended",
-    ":dependencyDashboard"
+    "github>edithatogo/renovate-config"
   ],
   "dependencyDashboard": true,
-  "timezone": "Australia/Sydney",
-  "schedule": [
-    "* 0-8 * * 1"
-  ],
-  "prConcurrentLimit": 10,
-  "prHourlyLimit": 4,
+  "timezone": "Australia/Brisbane",
+  "schedule": ["before 6am on Monday"],
+  "prConcurrentLimit": 2,
+  "prHourlyLimit": 1,
   "rangeStrategy": "bump",
   "labels": [
     "dependencies"
@@ -24,6 +21,12 @@
     "schedule": []
   },
   "packageRules": [
+    {
+      "description": "Keep dependency PRs manual until required CI checks are configured",
+      "matchUpdateTypes": ["digest", "pin", "patch"],
+      "automerge": false,
+      "platformAutomerge": false
+    },
     {
       "matchManagers": [
         "github-actions"
@@ -39,6 +42,16 @@
         "Microsoft.NET.Test.Sdk"
       ],
       "groupName": "dotnet-test-dependencies"
+    },
+    {
+      "matchManagers": [
+        "cargo"
+      ],
+      "matchFileNames": [
+        "templates/Cargo.toml"
+      ],
+      "description": "Skip Cargo artifact generation for the incomplete template workspace, which has no lockfile or member crates yet",
+      "skipArtifactsUpdate": true
     },
     {
       "matchManagers": [

@@ -108,7 +108,21 @@ fn conservative_lookahead_rejects_early_remote_events_and_allows_boundary_events
         event_payload: b"early".to_vec(),
     };
     let early_state = state_at(0);
-    let mut scheduler = PdesScheduler::new(ThreadChannelTransport::new([LpId(0), LpId(1)]));
+    // Begin after the peers promise that no event precedes the tested horizon.
+    let mut transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
+    for (source_lp, dest_lp) in [(LpId(0), LpId(1)), (LpId(1), LpId(0))] {
+        transport
+            .send(
+                dest_lp,
+                PdesMessage::Null(NullMessage {
+                    source_lp,
+                    dest_lp,
+                    safe_time: SimTime::from_ticks(3),
+                }),
+            )
+            .unwrap();
+    }
+    let mut scheduler = PdesScheduler::new(transport);
     scheduler
         .add_lp(
             LpId(0),
@@ -154,7 +168,21 @@ fn conservative_lookahead_rejects_early_remote_events_and_allows_boundary_events
         event_payload: b"boundary".to_vec(),
     };
     let boundary_state = state_at(0);
-    let mut scheduler = PdesScheduler::new(ThreadChannelTransport::new([LpId(0), LpId(1)]));
+    // Begin after the peers promise that no event precedes the tested horizon.
+    let mut transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
+    for (source_lp, dest_lp) in [(LpId(0), LpId(1)), (LpId(1), LpId(0))] {
+        transport
+            .send(
+                dest_lp,
+                PdesMessage::Null(NullMessage {
+                    source_lp,
+                    dest_lp,
+                    safe_time: SimTime::from_ticks(3),
+                }),
+            )
+            .unwrap();
+    }
+    let mut scheduler = PdesScheduler::new(transport);
     scheduler
         .add_lp(
             LpId(0),

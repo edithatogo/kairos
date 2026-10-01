@@ -113,3 +113,11 @@ No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
 The Windows linker blocker is cleared for the owned compile/test gates when the GNU Rust toolchain is used on this host. Remaining Track 38 closure work is still the broader acceptance surface: `.fmu` archive loading, 1000-step reference FMU smoke execution, OpenModelica round-trip validation, AAS schema validation, and cross-platform CI coverage. Record the final review/fix/commit/push evidence here only when those gates are actually added or an explicit blocker note is needed for the owned slice.
+
+## AAS submodel test refresh — 2026-09-30
+
+- Added focused unit coverage for constructor fields and `with_property` insertion order, empty and whitespace-only validation fields, invalid nested properties, duplicate property `idShort`, and parser-verified JSON escaping across descriptor, submodel, property, and semantic ID output.
+- Fixed the shared AAS JSON string escaping path: quotes, backslashes, the standard short control escapes, and every remaining U+0000–U+001F control now serialize as valid JSON escapes; other Unicode characters are preserved. Descriptor and submodel serializers use the same helper. Added `serde_json` as a test-only dependency so the tests parse serialized output and verify decoded values.
+- Consolidated worthwhile cases observed in the overlapping historical PRs #35, #49, #56, #57, #67, #75, #78, #96, #97, #99, #100, #104, and #106. Repeated constructor and validation examples were combined rather than copied as separate tests. Exact JSON output assertions cover quote/backslash behavior; parser round trips cover control characters and Unicode preservation.
+- Local validation passed: `cargo test --manifest-path crates/kairo-ecs-fmi/Cargo.toml --features aas` (8 tests total, including existing descriptor tests and parser-backed JSON tests) and `cargo fmt --manifest-path crates/kairo-ecs-fmi/Cargo.toml --check`.
+- This is local evidence only; no Actions run was triggered. Valid JSON escaping is not evidence of external AAS schema conformance; that remains a separate acceptance gate.

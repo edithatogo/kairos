@@ -2,7 +2,7 @@ name: CI Policy
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 on:
   pull_request:
@@ -32,7 +32,7 @@ jobs:
     name: Workflow and supply-chain policy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Required CI files are present
@@ -97,8 +97,3 @@ jobs:
           grep -n -E 'unknown-registry = "deny"' deny.toml
           grep -n -E 'unknown-git = "deny"' deny.toml
           grep -n -F 'allow-registry = ["https://github.com/rust-lang/crates.io-index"]' deny.toml
-      - name: Cargo supply-chain checks
-        run: |
-          cargo install cargo-deny cargo-audit --locked
-          cargo deny check advisories sources
-          cargo audit

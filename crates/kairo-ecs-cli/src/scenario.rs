@@ -223,3 +223,318 @@ fn unquote(value: &str) -> String {
         .trim()
         .to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static NEXT_MANIFEST_ID: AtomicU64 = AtomicU64::new(0);
+
+    struct TestManifestFile(PathBuf);
+
+    impl TestManifestFile {
+        fn new(contents: &str) -> Self {
+            let id = NEXT_MANIFEST_ID.fetch_add(1, Ordering::Relaxed);
+            let path = std::env::temp_dir().join(format!(
+                "kairos-manifest-test-{}-{id}.toml",
+                std::process::id()
+            ));
+            fs::write(&path, contents).expect("write temporary manifest");
+            Self(path)
+        }
+
+        fn path(&self) -> &Path {
+            &self.0
+        }
+    }
+
+    impl Drop for TestManifestFile {
+        fn drop(&mut self) {
+            let _ = fs::remove_file(&self.0);
+        }
+    }
+
+    #[test]
+    fn load_scenario_parses_manifest_fields() {
+        let file = TestManifestFile::new(
+            "schema_version = 'kairoecs.scenario.v1'\n\
+             scenario_id = test_scenario\n\
+             model_id = test_model\n\
+             fixture_id = test_fixture\n\
+             fixture_path = /tmp/fixture\n\
+             base_seed = 42\n\
+             replications = 3\n\
+             max_events = 1000\n\
+             artifact_root = /tmp/artifacts\n\
+             resume_checkpoint_every_events = 500\n\
+             expected_kind_order = 1, 2, 3\n",
+        );
+
+        let scenario = load_scenario(file.path()).unwrap();
+
+        assert_eq!(scenario.schema_version, "kairoecs.scenario.v1");
+        assert_eq!(scenario.scenario_id, "test_scenario");
+        assert_eq!(scenario.model_id, "test_model");
+        assert_eq!(scenario.fixture_id, "test_fixture");
+        assert_eq!(scenario.fixture_path, PathBuf::from("/tmp/fixture"));
+        assert_eq!(scenario.base_seed, 42);
+        assert_eq!(scenario.replications, 3);
+        assert_eq!(scenario.max_events, 1000);
+        assert_eq!(scenario.artifact_root, PathBuf::from("/tmp/artifacts"));
+        assert_eq!(scenario.resume_checkpoint_every_events, 500);
+        assert_eq!(scenario.expected_kind_order, vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn load_scenario_reports_missing_field() {
+        let file = TestManifestFile::new(
+            "schema_version = kairoecs.scenario.v1\nscenario_id = test_scenario\n",
+        );
+
+        assert!(matches!(
+            load_scenario(file.path()),
+            Err(ScenarioError::MissingField("model_id"))
+        ));
+    }
+
+    #[test]
+    fn load_scenario_reports_invalid_numeric_value() {
+        let file = TestManifestFile::new(
+            "schema_version = kairoecs.scenario.v1\n\
+             scenario_id = test_scenario\n\
+             model_id = test_model\n\
+             fixture_id = test_fixture\n\
+             fixture_path = /tmp/fixture\n\
+             base_seed = not_a_number\n",
+        );
+
+        assert!(matches!(
+            load_scenario(file.path()),
+            Err(ScenarioError::InvalidField {
+                field: "base_seed",
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn load_scenario_reports_invalid_kind_order() {
+        let file = TestManifestFile::new(
+            "schema_version = kairoecs.scenario.v1\n\
+             scenario_id = test_scenario\n\
+             model_id = test_model\n\
+             fixture_id = test_fixture\n\
+             fixture_path = /tmp/fixture\n\
+             base_seed = 42\n\
+             replications = 3\n\
+             max_events = 1000\n\
+             artifact_root = /tmp/artifacts\n\
+             resume_checkpoint_every_events = 500\n\
+             expected_kind_order = 1, invalid, 3\n",
+        );
+
+        assert!(matches!(
+            load_scenario(file.path()),
+            Err(ScenarioError::InvalidField {
+                field: "expected_kind_order",
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn load_seed_manifest_parses_manifest_fields() {
+        let file = TestManifestFile::new(
+            "schema_version = kairoecs.seed.v1\n\
+             scenario_id = test_scenario\n\
+             base_seed = 42\n\
+             fixture_id = test_fixture\n",
+        );
+
+        let seed = load_seed_manifest(file.path()).unwrap();
+
+        assert_eq!(seed.schema_version, "kairoecs.seed.v1");
+        assert_eq!(seed.scenario_id, "test_scenario");
+        assert_eq!(seed.base_seed, 42);
+        assert_eq!(seed.fixture_id, "test_fixture");
+    }
+
+    #[test]
+    fn load_seed_manifest_reports_missing_field() {
+        let file = TestManifestFile::new(
+            "schema_version = kairoecs.seed.v1\n\
+             scenario_id = test_scenario\n\
+             fixture_id = test_fixture\n",
+        );
+
+        assert!(matches!(
+            load_seed_manifest(file.path()),
+            Err(ScenarioError::MissingField("base_seed"))
+        ));
+    }
+
+    #[test]
+    fn load_seed_manifest_reports_invalid_numeric_value() {
+        let file = TestManifestFile::new(
+            "schema_version = kairoecs.seed.v1\n\
+             scenario_id = test_scenario\n\
+             base_seed = not_a_number\n\
+             fixture_id = test_fixture\n",
+        );
+
+        assert!(matches!(
+            load_seed_manifest(file.path()),
+            Err(ScenarioError::InvalidField {
+                field: "base_seed",
+                ..
+            })
+        ));
+    }
+
+    fn valid_scenario() -> ScenarioManifest {
+        ScenarioManifest {
+            schema_version: "kairoecs.scenario.v1".to_string(),
+            scenario_id: "test_scenario".to_string(),
+            model_id: "test_model".to_string(),
+            fixture_id: "test_fixture".to_string(),
+            fixture_path: PathBuf::from("."),
+            base_seed: 42,
+            replications: 10,
+            max_events: 1000,
+            artifact_root: PathBuf::from("."),
+            resume_checkpoint_every_events: 100,
+            expected_kind_order: vec![1, 2, 3],
+        }
+    }
+
+    fn valid_seed() -> SeedManifest {
+        SeedManifest {
+            schema_version: "kairoecs.seed.v1".to_string(),
+            scenario_id: "test_scenario".to_string(),
+            base_seed: 42,
+            fixture_id: "test_fixture".to_string(),
+        }
+    }
+
+    #[test]
+    fn test_validate_scenario_and_seed_success() {
+        let scenario = valid_scenario();
+        let seed = valid_seed();
+        assert!(validate_scenario_and_seed(&scenario, &seed).is_ok());
+    }
+
+    #[test]
+    fn test_validate_scenario_invalid_schema() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.schema_version = "invalid.v1".to_string();
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(
+            err,
+            ScenarioError::InvalidField {
+                field: "schema_version",
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn test_validate_seed_invalid_schema() {
+        let scenario = valid_scenario();
+        let mut seed = valid_seed();
+        seed.schema_version = "invalid.v1".to_string();
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(
+            err,
+            ScenarioError::InvalidField {
+                field: "schema_version",
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn test_validate_mismatch_scenario_id() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.scenario_id = "other_scenario".to_string();
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(
+            matches!(err, ScenarioError::Mismatch(msg) if msg.contains("scenario_id mismatch"))
+        );
+    }
+
+    #[test]
+    fn test_validate_mismatch_base_seed() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.base_seed = 99;
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::Mismatch(msg) if msg.contains("base_seed mismatch")));
+    }
+
+    #[test]
+    fn test_validate_mismatch_fixture_id() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.fixture_id = "other_fixture".to_string();
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(err, ScenarioError::Mismatch(msg) if msg.contains("fixture_id mismatch")));
+    }
+
+    #[test]
+    fn test_validate_zero_replications() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.replications = 0;
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(
+            err,
+            ScenarioError::InvalidField {
+                field: "replications",
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn test_validate_zero_max_events() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.max_events = 0;
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(
+            err,
+            ScenarioError::InvalidField {
+                field: "max_events",
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn test_validate_empty_expected_kind_order() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.expected_kind_order = vec![];
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(matches!(
+            err,
+            ScenarioError::MissingField("expected_kind_order")
+        ));
+    }
+
+    #[test]
+    fn test_validate_missing_fixture_path() {
+        let mut scenario = valid_scenario();
+        let seed = valid_seed();
+        scenario.fixture_path = std::env::temp_dir()
+            .join(format!("kairos-missing-fixture-{}", std::process::id()))
+            .join("fixture");
+        let err = validate_scenario_and_seed(&scenario, &seed).unwrap_err();
+        assert!(
+            matches!(err, ScenarioError::Mismatch(msg) if msg.contains("fixture_path does not exist"))
+        );
+    }
+}

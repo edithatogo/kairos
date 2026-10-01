@@ -277,9 +277,9 @@ pub struct GrpcLocalTwoNodeProof {
     pub real_grpc_runtime_claimed: bool,
 }
 
-pub fn local_two_node_contract_proof() -> Result<GrpcLocalTwoNodeProof, ProtocolValidationError> {
+fn setup_test_transport() -> Result<(GrpcTransport, GrpcTransportConfig), ProtocolValidationError> {
     let config = GrpcTransportConfig::default();
-    let mut transport = GrpcTransport::new(
+    let transport = GrpcTransport::new(
         LpId(7),
         vec![GrpcPeer {
             lp_id: LpId(8),
@@ -288,7 +288,12 @@ pub fn local_two_node_contract_proof() -> Result<GrpcLocalTwoNodeProof, Protocol
         config.clone(),
     );
     transport.validate_protocol()?;
+    Ok((transport, config))
+}
 
+fn exchange_test_events(
+    transport: &mut GrpcTransport,
+) -> Result<(kairo_ecs_pdes::RemoteEvent, Vec<PdesMessage>), ProtocolValidationError> {
     let event = kairo_ecs_pdes::RemoteEvent {
         source_lp: LpId(7),
         dest_lp: LpId(8),
@@ -299,6 +304,14 @@ pub fn local_two_node_contract_proof() -> Result<GrpcLocalTwoNodeProof, Protocol
         .send(LpId(8), PdesMessage::Event(event.clone()))
         .map_err(|_| ProtocolValidationError::UnknownTransportLp)?;
 
+    let received = transport
+        .recv(LpId(8))
+        .map_err(|_| ProtocolValidationError::UnknownTransportLp)?;
+
+    Ok((event, received))
+}
+
+fn validate_test_migration() -> Result<usize, ProtocolValidationError> {
     let migration = GrpcMigrationRequest {
         entity: EntityId {
             index: 11,
@@ -313,7 +326,10 @@ pub fn local_two_node_contract_proof() -> Result<GrpcLocalTwoNodeProof, Protocol
         }],
     };
     migration.validate()?;
+    Ok(1)
+}
 
+fn validate_test_telemetry() -> Result<usize, ProtocolValidationError> {
     let telemetry = [
         GrpcTelemetryBatch {
             source_lp: LpId(7),
@@ -331,15 +347,24 @@ pub fn local_two_node_contract_proof() -> Result<GrpcLocalTwoNodeProof, Protocol
     for batch in &telemetry {
         batch.validate()?;
     }
+    Ok(telemetry.len())
+}
 
+fn check_test_worker_status(config: &GrpcTransportConfig) -> WorkerStatus {
     let heartbeat = WorkerHeartbeat {
         lp_id: LpId(8),
         elapsed_since_last_seen: Duration::from_secs(10),
     };
-    let worker_status = classify_worker(&heartbeat, &config);
-    let received = transport
-        .recv(LpId(8))
-        .map_err(|_| ProtocolValidationError::UnknownTransportLp)?;
+    classify_worker(&heartbeat, config)
+}
+
+pub fn local_two_node_contract_proof() -> Result<GrpcLocalTwoNodeProof, ProtocolValidationError> {
+    let (mut transport, config) = setup_test_transport()?;
+    let (event, received) = exchange_test_events(&mut transport)?;
+    let migrations_validated = validate_test_migration()?;
+    let telemetry_batches_merged = validate_test_telemetry()?;
+    let worker_status = check_test_worker_status(&config);
+
     let exchanged_events = received
         .iter()
         .filter(|message| matches!(message, PdesMessage::Event(_)))
@@ -347,8 +372,8 @@ pub fn local_two_node_contract_proof() -> Result<GrpcLocalTwoNodeProof, Protocol
 
     Ok(GrpcLocalTwoNodeProof {
         exchanged_events,
-        migrations_validated: 1,
-        telemetry_batches_merged: telemetry.len(),
+        migrations_validated,
+        telemetry_batches_merged,
         failed_workers_detected: usize::from(worker_status == WorkerStatus::Failed),
         simulation_continues_after_non_leader_failure: worker_status == WorkerStatus::Failed
             && transport.local_lp() == LpId(7),

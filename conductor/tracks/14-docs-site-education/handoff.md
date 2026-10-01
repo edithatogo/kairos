@@ -1,5 +1,10 @@
 # Handoff — 14 Documentation Site & Education
 
+2026-09-29: Track 45's search-rendering security follow-up also changes the
+legacy documentation search client under this track's `website/` ownership.
+The Track 45 handoff records the focused source change and regression evidence;
+Track 14 status is unchanged.
+
 ## Summary
 
 Documented the docs site as a static `website/` build, aligned the site home with the repository docs tree, and documented the `npm ci`, `npm run build`, `npm run check:links`, `npm run check:quality`, `npm run check:all`, and `npm run dev` commands that implement the site validation flow.
@@ -80,3 +85,12 @@ Track 14 advanced to In Review on 2026-05-08 after `$conductor-review` found one
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: blocked until the Track 14 slice is committed and the shared worktree is clean enough for strict closeout.
 - `pwsh -NoProfile -File scripts\validate_conductor_phase_gates.ps1`: passed on 2026-05-09.
 - next-phase decision: Track 14 is Done with docs-build and link-check-plan gates satisfied through the npm-backed website flow; `just docs-build` now passes on Windows through the PowerShell shell override.
+
+## Cross-track handoff — PR #170 (2026-09-29)
+
+- Track owner: `docs-agent`; requested review: confirm the installation prerequisite wording is consistent with the TypeScript binding manifest and the separate repository bootstrap requirement.
+- Artifact: `docs/install.md` states Node.js `>=22 <25` for the TypeScript/Wasm binding, notes that CI covers Node 22 and 24, and states the repository's bootstrap floor is `>=22.9.0` to drop EOL Node 20. It also records npm 11.20.0's actual `^20.17.0 || >=22.9.0` engine range; the binding package's declared range remains unchanged.
+- Contracts consumed: `bindings/typescript/package.json` Node engine range and `scripts/bootstrap-node-tools/package.json` Node engine declaration.
+- Validation: on 2026-09-29, in `/private/tmp/kairos-bootstrap-node-security` at base `0c77e8909fc7cbf7c628cdda6350177cb9e88e8a` plus the PR worktree, `npm ci --prefix website` passed (exit 0; system Node 26.10.0/npm 11.19.1), `npm --prefix website run check:all` passed (exit 0; 103 required paths, 3 Markdown sources, 6 navigation sections; 16 pages built; output under `website/build/`), and `pwsh -NoProfile -File conductor/tracks/14-docs-site-education/validate-docs-site.ps1` passed (exit 0). The build emitted existing empty-i18n/404 content warnings but completed successfully.
+- Reviewer feedback on 2026-09-29 rejected the initial prerequisite wording and requested two corrections: state the binding range as Node `>=22 <25` with CI-tested 22/24, and state that the repository chooses `>=22.9.0` as its supported bootstrap floor to drop EOL Node 20 while npm 11.20.0 itself still supports `^20.17.0 || >=22.9.0`. Both corrections are in `docs/install.md` and were accepted on the subsequent Track 14 recheck recorded below.
+- Owner acceptance: accepted by the Track 14 reviewer on 2026-09-29, after review of PR head `4d113b5fc7e6efaede703273075b00573d5b99f1`. Scope: the `docs/install.md` Node `>=22 <25` TypeScript/Wasm range, CI-tested Node 22/24 lines, repository-selected `>=22.9.0` bootstrap floor, and explicit npm 11.20.0 engine range `^20.17.0 || >=22.9.0`. Evidence: reviewer recheck acceptance reported for that head; no GitHub review ID is available in PR metadata. No change to the binding package's engine contract.

@@ -2,6 +2,22 @@
 
 Last updated: 2026-06-23
 
+## 2026-09-29 search-rendering security follow-up
+
+The legacy generated documentation search client now builds result nodes with
+DOM APIs and assigns indexed titles and excerpts through `textContent`. Result
+URLs must resolve to same-origin HTTP(S); script schemes and external origins
+are ignored. The regression harness runs in Docs Quality before the site build
+and covers HTML payloads, dangerous schemes, cross-origin links, and relative
+paths. This is a focused hardening change; it does not advance Track 45 status.
+
+Validation on PR worktree based on `76820e7a0fbfe6306640b63f2ce55730d0fe7cbc`:
+
+- `node website/scripts/test-search-security.mjs` — pass.
+- `npm --prefix website run build` — pass; 16 Astro pages and 101 compatibility pages generated.
+- `actionlint .github/workflows/docs.yml` — pass.
+- `git diff --check` — pass.
+
 ## Summary
 
 2026-05-19: Track 45 formalizes the active Astro/Starlight docs platform and adds a dedicated SOTA validator for versioning, the local polyglot plugin, llms.txt, icons, generated search, and archive-route evidence.

@@ -1,0 +1,2 @@
+# Keep the optional Gymnasium smoke lane on the latest selected stable release.
+gymnasium==1.3.0

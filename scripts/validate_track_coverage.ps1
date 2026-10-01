@@ -469,6 +469,9 @@ if ($wavePolicy -notmatch "No-skip controls") {
 
 if (-not $SkipCargo) {
     cargo test --workspace
+    if ($LASTEXITCODE -ne 0) {
+        throw "Cargo workspace tests failed with exit code $LASTEXITCODE"
+    }
 }
 
 Write-Host "Track coverage validation passed."

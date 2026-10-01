@@ -37,7 +37,7 @@ validator passed again. Track 30 is closed as `Done`.
 - `bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj`: target frameworks are `net10.0;net11.0`.
 - `bindings/go/go.mod`: module floor is `go 1.23`.
 - `.github/workflows/ci-bindings.yml`: existing binding CI is Ubuntu-hosted and covers Python 3.10-3.14, Node LTS, .NET 10/11, and Go stable.
-- `.github/workflows/package-dry-run.yml`: package dry-run now references Go `1.25.x`, matching the supported CI floor.
+- `.github/workflows/package-dry-run.yml`: Go test/vet-only work is omitted because `.github/workflows/ci-bindings.yml` already runs both; `.github/workflows/toolchain-check.yml` still validates the declared Go `1.25.x` support floor and `1.26.x` current lane.
 
 ## Contracts consumed
 
@@ -75,7 +75,7 @@ validator passed again. Track 30 is closed as `Done`.
 - Track 10: .NET 10 is stable; .NET 11 remains preview/experimental until GA.
 - Track 11: Go module floor remains 1.23; CI support floor is 1.25/1.26.
 - Track 13: Provision non-Ubuntu and aarch64 runner coverage before RC if those cells should become release-supported.
-- Track 15: Keep package dry-run on the supported Go floor and do not reintroduce Go 1.24 after the deprecation notice.
+- Track 15: Keep Go package/support-floor validation in the binding and toolchain workflows; avoid repeating Go test/vet in package dry-run, and do not reintroduce Go 1.24 as a supported lane after its deprecation notice.
 
 ## Open risks
 

@@ -12,6 +12,7 @@
 - `cargo check --manifest-path crates/kairo-ecs-wasm/Cargo.toml` for the default Rust wasm wrapper contract. Last run: pass, 2026-05-08.
 - `cargo +stable-x86_64-pc-windows-gnu test --manifest-path crates/kairo-ecs-wasm/Cargo.toml` for the default Rust wasm wrapper contract. Last run: pass, 2026-05-08, 3 unit tests and 0 doctests.
 - `cargo check --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export` for the generated `wasm-bindgen` export layer. Last run: blocked, 2026-05-07, because build scripts for `wasm-bindgen` dependencies hit Git's `usr\bin\link.exe` and fail with Win32 error 5.
+- The Wasm export crate declares Rust 1.77, matching the current `wasm-bindgen` MSRV. Required CI checks the locked `wasm32-unknown-unknown` target with `wasm-export` on Rust 1.77.
 - Track 12 fixture bridge is covered by `npm test` through `test/conformance.test.ts`.
 - `wasm-pack test --node` only once the `wasm-export` feature can compile on the local runner.
 - `node tests/conformance/track07_13_hardening_check.mjs` verifies this track no longer claims package publishing ownership or unimplemented server runtime support.
@@ -29,6 +30,8 @@
 - Keep the checked-in validation to `npm` scripts, `cargo check`, and the Track 07-13 hardening check until a runtime runner is added in a later track.
 - The TypeScript scheduler facade now exposes `cancel(eventId)` and preserves cancelled events in snapshots and event-log rows.
 - The TypeScript event-log payload now includes Track 04 schema version, field metadata, 12-byte little-endian handle hex, and 16-byte little-endian tick hex.
+- Performance-sensitive scheduler cancellation changes can be compared locally without adding timing-sensitive CI assertions. Run `node --experimental-strip-types bindings/typescript/bench/scheduler-cancel.mjs --base <baseline-commit> --events 20000 --cancellations 10000 --repetitions 3` on a supported Node.js 22–24 runtime; the benchmark records exact raw timings, medians, source commits, and post-state checks while timing only the cancellation loop. Fetch the intended base ref first; the command compares its TypeScript source to the checked-out candidate.
+- The scheduler cancellation benchmark is intentionally manual rather than part of hosted CI: machine contention makes timing assertions unsuitable for stable PR gates. The 2026-09-30 Node 22.23.3 run and raw JSON are retained at `bindings/typescript/bench/results-node22-20k.json`.
 
 ## CI command
 

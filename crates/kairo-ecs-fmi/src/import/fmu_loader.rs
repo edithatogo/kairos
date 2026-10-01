@@ -80,6 +80,10 @@ impl FmuArchive {
         FmuLayout::from_unpacked_dir(root)
     }
 
+    /// Extract into a new directory. Existing destinations are rejected so archive
+    /// writes cannot follow files or symlinks supplied by a previous extraction.
+    /// The caller must keep the destination's parent under its control while
+    /// extraction runs.
     pub fn extract_to(&self, destination: impl AsRef<Path>) -> FmiResult<FmuLayout> {
         extract_stored_zip_entries(&self.path, destination.as_ref())?;
         FmuLayout::from_unpacked_dir(destination.as_ref())
@@ -225,7 +229,14 @@ fn shared_library_extension() -> &'static str {
 fn extract_stored_zip_entries(path: &Path, destination: &Path) -> FmiResult<()> {
     let bytes =
         fs::read(path).map_err(|error| io_error("read FMU archive", path.to_path_buf(), error))?;
-    fs::create_dir_all(destination)
+    let mut directory = fs::DirBuilder::new();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::DirBuilderExt;
+        directory.mode(0o700);
+    }
+    directory
+        .create(destination)
         .map_err(|error| io_error("create FMU extraction directory", destination.into(), error))?;
 
     let mut offset = 0usize;
@@ -401,6 +412,48 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn rejects_existing_extraction_tree_and_destination_symlink() {
+        use std::os::unix::fs::symlink;
+
+        let root = std::env::temp_dir().join(format!(
+            "kairo-fmu-symlink-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir(&root).unwrap();
+        let outside = root.join("outside");
+        fs::create_dir(&outside).unwrap();
+        fs::write(outside.join("victim"), b"original").unwrap();
+        let archive = root.join("input.fmu");
+        let name = b"resources/victim";
+        let body = b"overwritten";
+        let mut bytes = vec![0u8; 30];
+        bytes[0..4].copy_from_slice(&0x0403_4b50u32.to_le_bytes());
+        bytes[18..22].copy_from_slice(&(body.len() as u32).to_le_bytes());
+        bytes[22..26].copy_from_slice(&(body.len() as u32).to_le_bytes());
+        bytes[26..28].copy_from_slice(&(name.len() as u16).to_le_bytes());
+        bytes.extend_from_slice(name);
+        bytes.extend_from_slice(body);
+        fs::write(&archive, bytes).unwrap();
+
+        let destination = root.join("existing");
+        fs::create_dir(&destination).unwrap();
+        symlink(&outside, destination.join("resources")).unwrap();
+        assert!(extract_stored_zip_entries(&archive, &destination).is_err());
+        assert_eq!(fs::read(outside.join("victim")).unwrap(), b"original");
+
+        let linked_destination = root.join("linked");
+        symlink(&outside, &linked_destination).unwrap();
+        assert!(extract_stored_zip_entries(&archive, &linked_destination).is_err());
+        assert!(!outside.join("resources").exists());
+        fs::remove_dir_all(root).unwrap();
+    }
 
     #[test]
     fn identifies_unpacked_fmu_layout() {

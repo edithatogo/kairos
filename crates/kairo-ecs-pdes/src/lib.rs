@@ -292,8 +292,15 @@ impl<T: PdesTransport> PdesScheduler<T> {
         }
 
         lp.init(lp_id, &world_segment);
+        self.inbound_safe_times.insert(
+            lp_id,
+            unique_neighbors
+                .iter()
+                .copied()
+                .map(|peer| (peer, SimTime::ZERO))
+                .collect(),
+        );
         self.neighbors.insert(lp_id, unique_neighbors);
-        self.inbound_safe_times.entry(lp_id).or_default();
         self.stalled_steps.entry(lp_id).or_default();
         self.lps.insert(lp_id, lp);
         Ok(())
@@ -1103,17 +1110,6 @@ impl TimeWarpRuntime {
         );
     }
 
-    fn recompute_local_time(&mut self, lp_id: LpId) {
-        let next_time = self
-            .executed
-            .iter()
-            .filter(|entry| entry.event.id.dest_lp == lp_id)
-            .map(|entry| entry.event.id.tick)
-            .max()
-            .unwrap_or(SimTime::ZERO);
-        self.local_times.insert(lp_id, next_time);
-    }
-
     fn save_state_checkpoint(&mut self, lp_id: LpId, tick: Tick) {
         let components = self
             .components
@@ -1173,6 +1169,12 @@ impl TimeWarpRuntime {
     }
 
     fn rebuild_lp_from_history(&mut self, lp_id: LpId) {
+        let floor = self
+            .checkpoints
+            .iter()
+            .filter(|checkpoint| checkpoint.lp_id == lp_id && checkpoint.tick < self.gvt)
+            .max_by_key(|checkpoint| checkpoint.tick)
+            .cloned();
         let mut history = self
             .executed
             .iter()
@@ -1185,12 +1187,20 @@ impl TimeWarpRuntime {
             .retain(|checkpoint| checkpoint.lp_id != lp_id);
         self.local_times.insert(lp_id, SimTime::ZERO);
 
+        if let Some(floor) = floor {
+            self.components
+                .extend(floor.components.iter().map(|(key, cell)| (*key, *cell)));
+            self.local_times.insert(lp_id, floor.local_time);
+            self.checkpoints.push(floor);
+        }
+
         for event in history {
             self.apply_event(&event);
             self.local_times.insert(lp_id, event.id.tick);
             self.save_state_checkpoint(lp_id, event.id.tick);
         }
-        self.recompute_local_time(lp_id);
+        self.local_times
+            .insert(lp_id, self.local_time(lp_id).max(self.gvt));
     }
 }
 
@@ -1638,6 +1648,18 @@ mod tests {
             )
             .unwrap();
 
+        // This test starts after both peers have advertised the initial horizon.
+        for (source, destination) in [(LpId(0), LpId(1)), (LpId(1), LpId(0))] {
+            scheduler.record_null_message(
+                destination,
+                NullMessage {
+                    source_lp: source,
+                    dest_lp: destination,
+                    safe_time: SimTime::from_ticks(3),
+                },
+            );
+        }
+
         scheduler.step_until(SimTime::from_ticks(3)).unwrap();
 
         assert_eq!(scheduler.gvt(), SimTime::from_ticks(3));
@@ -1671,6 +1693,18 @@ mod tests {
                 Box::new(TestLp::new(2, Vec::new())),
             )
             .unwrap();
+
+        // This test starts after both peers have advertised the initial horizon.
+        for (source, destination) in [(LpId(0), LpId(1)), (LpId(1), LpId(0))] {
+            scheduler.record_null_message(
+                destination,
+                NullMessage {
+                    source_lp: source,
+                    dest_lp: destination,
+                    safe_time: SimTime::from_ticks(3),
+                },
+            );
+        }
 
         assert_eq!(
             scheduler.step_until(SimTime::from_ticks(3)),
@@ -1752,6 +1786,18 @@ mod tests {
                 Box::new(TestLp::new(0, Vec::new())),
             )
             .unwrap();
+
+        // This test starts after both peers have advertised the initial horizon.
+        for (source, destination) in [(LpId(0), LpId(1)), (LpId(1), LpId(0))] {
+            scheduler.record_null_message(
+                destination,
+                NullMessage {
+                    source_lp: source,
+                    dest_lp: destination,
+                    safe_time: SimTime::from_ticks(3),
+                },
+            );
+        }
 
         scheduler.step_until(SimTime::from_ticks(3)).unwrap();
 
@@ -1910,6 +1956,49 @@ mod tests {
         assert_eq!(status.safe_time_frontier, expected_frontier);
         assert_eq!(status.stalled_lps, expected_stalled);
     }
+    #[test]
+    fn conservative_frontier_waits_for_every_peer() {
+        let transport = ThreadChannelTransport::new([LpId(0), LpId(1), LpId(2)]);
+        let mut scheduler = PdesScheduler::new(transport);
+        scheduler
+            .add_lp(
+                LpId(0),
+                segment(LpId(0)),
+                vec![LpId(1), LpId(2)],
+                Box::new(TestLp::new(0, Vec::new())),
+            )
+            .unwrap();
+        assert_eq!(scheduler.safe_time_frontier(LpId(0)), SimTime::ZERO);
+        scheduler.step_until(SimTime::from_ticks(100)).unwrap();
+        assert_eq!(scheduler.lps[&LpId(0)].local_time(), SimTime::ZERO);
+        scheduler.record_null_message(
+            LpId(0),
+            NullMessage {
+                source_lp: LpId(1),
+                dest_lp: LpId(0),
+                safe_time: SimTime::from_ticks(100),
+            },
+        );
+        assert_eq!(scheduler.safe_time_frontier(LpId(0)), SimTime::ZERO);
+        scheduler.record_null_message(
+            LpId(0),
+            NullMessage {
+                source_lp: LpId(2),
+                dest_lp: LpId(0),
+                safe_time: SimTime::from_ticks(50),
+            },
+        );
+        assert_eq!(
+            scheduler.safe_time_frontier(LpId(0)),
+            SimTime::from_ticks(50)
+        );
+        scheduler.step_until(SimTime::from_ticks(100)).unwrap();
+        assert_eq!(
+            scheduler.lps[&LpId(0)].local_time(),
+            SimTime::from_ticks(50)
+        );
+    }
+
     #[test]
     fn scheduler_rejects_duplicate_and_mismatched_lps() {
         let transport = ThreadChannelTransport::new([LpId(0), LpId(1)]);
@@ -2338,6 +2427,28 @@ mod tests {
         assert_eq!(report.oldest_retained_tick, Some(SimTime::from_ticks(5)));
         assert_eq!(engine.executed_len(), 2);
         assert_eq!(engine.overhead_metrics().fossil_collected_events_total, 1);
+    }
+
+    #[cfg(feature = "time-warp")]
+    #[test]
+    fn anti_after_fossil_collection_preserves_committed_floor() {
+        let mut engine = TimeWarpRuntime::new();
+        engine.process_event(time_warp_event(2, 1, 2)).unwrap();
+        engine.process_event(time_warp_event(5, 2, 5)).unwrap();
+        engine.fossil_collect(SimTime::from_ticks(5)).unwrap();
+        let mut anti = time_warp_event(5, 2, 0);
+        anti.kind = TimeWarpMessageKind::Anti;
+        engine.process_event(anti).unwrap();
+        assert_eq!(
+            engine.component_value(LpId(1), EntityId::new(7, 0), 0),
+            Some(2)
+        );
+        assert_eq!(engine.local_time(LpId(1)), SimTime::from_ticks(5));
+        engine.process_event(time_warp_event(6, 3, 6)).unwrap();
+        assert_eq!(
+            engine.component_value(LpId(1), EntityId::new(7, 0), 0),
+            Some(8)
+        );
     }
 
     #[cfg(feature = "time-warp")]
