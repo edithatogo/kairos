@@ -32,7 +32,7 @@ external evidence required by their issue contracts.
 |---|---|---|
 | #94 JOSS | Public-development age requirement unmet at this date; actual research-use evidence unestablished; paper is a seed. | Preserve public-development evidence, execute/document a real research workflow, and prepare the scoped paper with human authorship and AI disclosure. Reassess the current journal criteria before submission. |
 | #93 RRID | Required descriptive metadata prepared; no provider age/adoption threshold found. Native duplicate search unavailable. | Restore native registry access, verify aliases/URL against existing records, then submit the reviewed resource description and retain curator/readback evidence. |
-| #92 Software Heritage | One archival request accepted and now loading; no verified SWHID at this observation. No release exists. | Read back request 2520249, then verify exact revision and directory resolution after loading. Preserve the separate named-release evidence gate. |
+| #92 Software Heritage | Source revision archived and resolved; full visit, snapshot, matching tree and README retrieval verified. No release exists. | After a reviewed release exists, resolve its exact source and applicable archived tag/release object; reuse existing coverage. |
 
 The README license summary is reconciled with the existing dual-license grant
 as part of this assessment integration. No source rights, package publication

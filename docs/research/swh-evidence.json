@@ -3,9 +3,9 @@
   "issue": "https://github.com/edithatogo/kairos/issues/92",
   "origin": "https://github.com/edithatogo/kairos",
   "source_revision": "a7e03d06bac836bb45170b3a90068f8ea50d6173",
-  "status": "requested-loading-running",
+  "status": "source-revision-archived-and-resolved",
   "archive_request_submitted": true,
-  "resolved_swhid": null,
+  "resolved_swhid": "swh:1:rev:a7e03d06bac836bb45170b3a90068f8ea50d6173",
   "release_status": "no-tags-or-releases-observed",
   "observations": [
     {
@@ -57,7 +57,7 @@
     "body": "{\"id\":2520249,\"origin_url\":\"https://github.com/edithatogo/kairos\",\"visit_type\":\"git\",\"save_request_date\":\"2026-10-01T04:14:44.894080+00:00\",\"save_request_status\":\"accepted\",\"save_task_status\":\"pending\",\"visit_status\":null,\"visit_date\":null,\"loading_task_id\":422023708,\"note\":\"\",\"from_webhook\":false,\"webhook_origin\":\"\",\"snapshot_swhid\":null,\"next_run\":\"2026-10-01T04:14:44.865048Z\",\"request_url\":\"https://archive.softwareheritage.org/api/1/origin/save/2520249/\"}"
   },
   "archive_request_readback": {
-    "timestamp_utc": "2026-10-01T04:18:12.073717+00:00",
+    "timestamp_utc": "2026-10-01T04:20:17.610596+00:00",
     "method": "GET",
     "url": "https://archive.softwareheritage.org/api/1/origin/save/2520249/",
     "status": 200,
@@ -67,18 +67,19 @@
       "visit_type": "git",
       "save_request_date": "2026-10-01T04:14:44.894080+00:00",
       "save_request_status": "accepted",
-      "save_task_status": "running",
-      "visit_status": "created",
+      "save_task_status": "succeeded",
+      "visit_status": "full",
       "visit_date": "2026-10-01T04:16:36.908000+00:00",
       "loading_task_id": 422023708,
       "note": "",
       "from_webhook": false,
       "webhook_origin": "",
-      "snapshot_swhid": null,
+      "snapshot_swhid": "swh:1:snp:07c2f449c102030c511df7dad3e7a35fc160d559",
       "next_run": "2026-10-01T04:14:44.865048Z",
       "metadata": {
         "worker": "loader@loader-save-code-now-7c68c997b7-zklzr"
       },
+      "snapshot_url": "https://archive.softwareheritage.org/api/1/snapshot/07c2f449c102030c511df7dad3e7a35fc160d559/",
       "request_url": "https://archive.softwareheritage.org/api/1/origin/save/2520249/"
     }
   },
@@ -106,6 +107,90 @@
         "metadata": null,
         "request_url": "https://archive.softwareheritage.org/api/1/origin/save/2520249/"
       }
+    },
+    {
+      "timestamp_utc": "2026-10-01T04:18:12.073717+00:00",
+      "method": "GET",
+      "url": "https://archive.softwareheritage.org/api/1/origin/save/2520249/",
+      "status": 200,
+      "body": {
+        "id": 2520249,
+        "origin_url": "https://github.com/edithatogo/kairos",
+        "visit_type": "git",
+        "save_request_date": "2026-10-01T04:14:44.894080+00:00",
+        "save_request_status": "accepted",
+        "save_task_status": "running",
+        "visit_status": "created",
+        "visit_date": "2026-10-01T04:16:36.908000+00:00",
+        "loading_task_id": 422023708,
+        "note": "",
+        "from_webhook": false,
+        "webhook_origin": "",
+        "snapshot_swhid": null,
+        "next_run": "2026-10-01T04:14:44.865048Z",
+        "metadata": {
+          "worker": "loader@loader-save-code-now-7c68c997b7-zklzr"
+        },
+        "request_url": "https://archive.softwareheritage.org/api/1/origin/save/2520249/"
+      }
     }
-  ]
+  ],
+  "snapshot_swhid": "swh:1:snp:07c2f449c102030c511df7dad3e7a35fc160d559",
+  "archival_resolution": {
+    "revision": {
+      "timestamp_utc": "2026-10-01T04:20:17.554939+00:00",
+      "url": "https://archive.softwareheritage.org/api/1/revision/a7e03d06bac836bb45170b3a90068f8ea50d6173/",
+      "status": 200,
+      "body_projection": {
+        "id": "a7e03d06bac836bb45170b3a90068f8ea50d6173",
+        "type": "git",
+        "directory": "4cd09b1983910fdff99ecc675e79d269ea922ebc",
+        "synthetic": false,
+        "directory_url": "https://archive.softwareheritage.org/api/1/directory/4cd09b1983910fdff99ecc675e79d269ea922ebc/"
+      }
+    },
+    "snapshot": {
+      "timestamp_utc": "2026-10-01T04:20:18.198456+00:00",
+      "url": "https://archive.softwareheritage.org/api/1/snapshot/07c2f449c102030c511df7dad3e7a35fc160d559/",
+      "status": 200,
+      "main_branch": {
+        "target": "a7e03d06bac836bb45170b3a90068f8ea50d6173",
+        "target_type": "revision",
+        "target_url": "https://archive.softwareheritage.org/api/1/revision/a7e03d06bac836bb45170b3a90068f8ea50d6173/"
+      }
+    },
+    "visits": {
+      "timestamp_utc": "2026-10-01T04:20:19.054029+00:00",
+      "method": "GET",
+      "url": "https://archive.softwareheritage.org/api/1/origin/https://github.com/edithatogo/kairos/visits/",
+      "status": 200,
+      "body": [
+        {
+          "origin": "https://github.com/edithatogo/kairos",
+          "visit": 1,
+          "date": "2026-10-01T04:16:36.908000+00:00",
+          "status": "full",
+          "snapshot": "07c2f449c102030c511df7dad3e7a35fc160d559",
+          "type": "git",
+          "metadata": {},
+          "origin_visit_url": "https://archive.softwareheritage.org/api/1/origin/https://github.com/edithatogo/kairos/visit/1/",
+          "snapshot_url": "https://archive.softwareheritage.org/api/1/snapshot/07c2f449c102030c511df7dad3e7a35fc160d559/"
+        }
+      ]
+    },
+    "directory": {
+      "timestamp_utc": "2026-10-01T04:21:16.379586+00:00",
+      "url": "https://archive.softwareheritage.org/api/1/directory/4cd09b1983910fdff99ecc675e79d269ea922ebc/",
+      "status": 200,
+      "entry_count": 61
+    },
+    "source_comparison": {
+      "git_tree": "4cd09b1983910fdff99ecc675e79d269ea922ebc",
+      "root_entries_match_git_ls_tree": true,
+      "entry_count": 61,
+      "archived_readme_raw_url": "https://archive.softwareheritage.org/api/1/content/sha1_git:92dfade6819dc54f7cb99f4f80bbbf96082255f6/raw/",
+      "readme_bytes_match_git_show": true,
+      "readme_sha256": "900dd6ad75ee2fd9a16082ff7781ff3168f11a68fbbd5286248944e4b779943c"
+    }
+  }
 }

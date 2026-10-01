@@ -146,8 +146,9 @@ this is a scoped coordinator evidence review under the existing track contract,
 not a full phase closeout. No track status or phase advances.
 
 One authorized public-source archival request was submitted: 2520249, accepted
-then scheduled and running. Loading and exact-revision SWHID resolution remain pending in
-`swh-evidence.json`; this request does not publish a release. RRID registration
+then scheduled/running and finally succeeded. Exact revision and directory
+resolution, all 61 root entries and README byte comparison are verified in
+`swh-evidence.json`; the source is archived. This request does not publish a release. RRID registration
 and JOSS submission were not attempted; native RRID access and JOSS public age,
 real research-use evidence, paper/authorship gates remain unresolved.
 
