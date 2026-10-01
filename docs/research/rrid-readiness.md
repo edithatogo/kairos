@@ -10,7 +10,8 @@ Assessed 2026-10-01 against source commit
 The assessment is prepared. KairoECS appears to fit the SciCrunch software
 resource category and its three required descriptive fields are available.
 This is an assessment of published criteria, not a curator eligibility decision.
-No resource was submitted and no RRID was obtained. A native exact-name
+The resource suggestion was submitted once on 2026-10-01. Curator acceptance
+and RRID assignment remain pending; no RRID was obtained. A native exact-name
 lookup for KairoECS returned no similar resource; broader alias and URL lookup
 remains pending. Keep #93 open until provider acceptance and identifier
 resolution, or an authoritative ineligibility decision, is recorded.
@@ -43,8 +44,9 @@ the automatic Cloudflare challenge cleared. The suggestion form at
 `https://scicrunch.org/create/resourcesuggestion` was accessible and showed
 required email, name and URL fields, with optional description and citation.
 This form requirement differs from the indexed curation guidance above: a
-submission contact email is required. No form was submitted and no receipt
-or identifier was obtained.
+submission contact email is required. The maintainer subsequently supplied
+the contact email through the native form; its value is omitted from public
+evidence. Submission and receipt evidence are recorded below.
 
 ## Required fields and repository evidence
 
@@ -59,8 +61,8 @@ or identifier was obtained.
 | Independent adoption | Bounded public searches below did not establish independent use | Not established by this assessment; not stated provider prerequisite |
 
 Prepared name: **KairoECS**. Prepared canonical URL:
-<https://github.com/edithatogo/kairos>. Submission contact email: **pending
-maintainer input**; do not infer one from Git or citation metadata.
+<https://github.com/edithatogo/kairos>. Submission contact email: **provided
+by the maintainer in the native form**; its value is not published here.
 
 Prepared description for maintainer review:
 
@@ -97,26 +99,34 @@ citation author field.
   census. Stars, views, forks, contributor activity and planned integrations
   must not be substituted for demonstrated independent use.
 
+## Submission receipt — 2026-10-01
+
+After the maintainer provided the required email, the native form was read back
+and Submit was clicked once. The provider navigated to
+`https://scicrunch.org/scicrunch/about/resource?resource_suggestion=finish` and
+displayed a submission thank-you heading explaining that acceptance would lead
+to a registry entry and RRID. This confirms the provider submission receipt,
+not curator acceptance. The confirmation displayed no submission identifier,
+resource-record URL or RRID. A screenshot is retained privately by the
+coordinator; it and the contact email are not included in public Git artifacts.
+
+Do not resubmit while curator review is pending. The exact-name duplicate
+lookup above remains bounded; it does not establish exhaustive registry absence.
+
 ## Remaining checklist and acceptance evidence
 
-1. Recheck provider criteria/form and search KairoECS, Kairos, repository URL
-   and relevant aliases directly. Record query, date, result URL and any matching
-   record. Inspect identity before reusing a similarly named software RRID.
-2. Maintainer reviews resource identity, concise scope and canonical URL, and
-   supplies the required submission contact email. Name, URL and description
-   are prepared; contact email remains pending. Preserve the pre-release
-   disclosure. Optional description and citation fields do not replace email.
-3. With explicit registration authority, submit once through the provider's
-   resource channel; retain a receipt and pending status. A submission or
-   provisional record does not satisfy curator acceptance.
-4. Record curator acceptance (or rejection/ineligibility decision), exact RRID,
+1. If a candidate existing record or curator query appears, check KairoECS,
+   Kairos, repository URL and relevant aliases, then inspect identity before
+   reusing a similarly named software RRID. Broader alias lookup remains pending.
+2. Await the provider's curator decision for the submitted suggestion. Keep the
+   current receipt and pending status; submission does not establish acceptance.
+3. Record curator acceptance (or rejection/ineligibility decision), exact RRID,
    authoritative record URL, observation date and readback. Resolve the identifier
    through the provider and verify name, description and URL match KairoECS.
-5. Update citation guidance only after that readback. RRID and release-specific
+4. Update citation guidance only after that readback. RRID and release-specific
    DOI/SWHID serve different purposes; preserve the source version separately.
-6. Close #93 only with accepted/resolvable identity evidence, or an authoritative
-   documented ineligibility decision. Until then the local assessment is delivered
-   and external completion remains pending.
+5. Close #93 only with accepted/resolvable identity evidence, or an authoritative
+   documented ineligibility decision. Until then external completion remains pending.
 
 Failure modes include duplicate naming, confusing an indexed no-result with a
 native registry search, presenting curator review as guaranteed, and turning a
@@ -127,6 +137,7 @@ above provides explicit evidence gates for each.
 
 This documentation-only packet uses `git diff --check` and manual link/claim
 review. The native provider search and form readbacks above are bounded UI evidence.
-No runtime, docs-site, hosted Actions, provider submission or identifier
+Native provider submission and its confirmation receipt are recorded above.
+No runtime, docs-site, hosted Actions, curator acceptance or identifier
 resolution check is claimed. Coordinator integration can run the existing
 Track 19 documentation gates without repeating unrelated Rust tests.
