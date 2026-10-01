@@ -18,9 +18,13 @@ Format:
 
 - RRID readiness now records the accessible native suggestion form, its required contact email, and a bounded KairoECS name lookup; submission and curator acceptance remain pending.
 
+- Rust test and benchmark serialization dependencies use Serde 1.0.229 and serde_json 1.0.151 while preserving RNG versions and the supported compiler floor.
+
 - Binding CI now runs only the language lanes affected by a pull request, falls back to all lanes when classification is uncertain, and checks the Gymnasium wrapper on Python 3.9 and 3.14.
 
 ### Fixed
+
+- Dependency license policy recognizes Unicode-3.0 for the existing unicode-ident dependency.
 
 - Rust license metadata now matches the established Apache-2.0 OR MIT grant; unreleased citation seeds omit unsupported publication dates and require a named-release evidence record before claiming release.
 
