@@ -61,3 +61,14 @@ rows are discovery aids and do not establish release publication.
 
 A locally passing released fixture is deliberately synthetic and proves rejection
 logic, not a published release. Issue #91 stays open for named-release readback.
+
+## Registry assessments — #92–#94
+
+Documentation-only changes use `node website/scripts/check-links.js`,
+`pwsh -NoProfile -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1`,
+JSON parsing of `docs/research/swh-evidence.json`, and `git diff --check`.
+Hosted docs/quality checks on the exact PR head supply the build evidence.
+Source/runtime suites need not be repeated locally for unchanged Rust source.
+Manual review verifies primary-provider URLs, observation/source provenance,
+explicit unknown states, separation of preparation/request/loading/resolution,
+and that #92–#94 external gates remain open.

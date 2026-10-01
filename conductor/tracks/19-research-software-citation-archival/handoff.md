@@ -127,3 +127,37 @@ Track12-20, `cargo metadata --no-deps --format-version 1`, phase-gate validator
 and `git diff --check` exited 0. `just check-docs` passed link validation but failed
 the Astro build with exit 127 (`astro: command not found`) in the fresh worktree;
 docs build remains unverified locally until website dependencies are installed.
+
+## Registry evidence assessments — #92, #93, #94 (2026-10-01)
+
+Three disjoint worker packets assessed source `a7e03d06bac836bb45170b3a90068f8ea50d6173`:
+JOSS (`b632fd4`), RRID (`49fd1dd`), Software Heritage (`f76bfe3`).
+Their outputs are linked from `docs/research/registry-readiness.md`.
+The coordinator integrated all three and corrected README's Apache-only summary
+under a foundation-owner handoff: this is consistency with the existing grant,
+not a legal-policy change or new license. No public APIs, CI, manifests,
+release policy or parent submodule pin changed.
+
+Bounded review found no unsupported adoption, published-release or provider
+acceptance claims. Criteria distinguish actual research use from independent
+adoption and avoid copying JOSS thresholds into RRID registration.
+Canonical conductor-review requires an index absent from this Kairos checkout;
+this is a scoped coordinator evidence review under the existing track contract,
+not a full phase closeout. No track status or phase advances.
+
+One authorized public-source archival request was submitted: 2520249, accepted
+then scheduled and running. Loading and exact-revision SWHID resolution remain pending in
+`swh-evidence.json`; this request does not publish a release. RRID registration
+and JOSS submission were not attempted; native RRID access and JOSS public age,
+real research-use evidence, paper/authorship gates remain unresolved.
+
+Issues #92–#94 remain open under their external evidence contracts. The numbered
+Track19 artifacts supersede obsolete unnumbered track references in those issues.
+
+Local integrated validation at this source base, working directory
+`/private/tmp/kairos-registry-readiness`: docs link check, Track19 citation/archive
+validator, Software Heritage JSON parsing, phase-gate validation and aggregate
+Track12–20 conformance all exited 0. `git diff --check` passed.
+Independent read-only review by the RRID worker found no blocking factual or
+workflow findings. Rust tests were not repeated locally for this docs-only diff;
+hosted exact-head checks and post-merge readback remain required.

@@ -128,3 +128,5 @@ Format:
 - Docs Quality CI now avoids policy-banned shell fallbacks when configuring Mermaid Chrome rendering.
 
 - Enforce current-commit high/critical code-scanning findings using the pinned shared organization gate after CodeQL and Scorecard SARIF processing.
+
+- Add evidence-based JOSS, RRID and Software Heritage readiness assessments; record source archival request separately from release readiness and reconcile the public dual-license summary.

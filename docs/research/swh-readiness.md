@@ -51,7 +51,7 @@ Accept: application/json
 HTTP 200 JSON receipt: request `2520249`, loading task `422023708`, request
 status `accepted`, task status `pending`. Visit status/date and snapshot SWHID
 were null. The full response is retained in `swh-evidence.json`. Readback at 04:15:26 UTC returned HTTP 200 with task status
-`scheduled`; this is scheduling evidence. Source archival
+`scheduled`. A later readback recorded in the evidence JSON reports `running` with a visit created; loading is still in progress. Source archival
 is pending; no archived revision or identifier has been verified.
 
 The next exact action is a bounded readback of
