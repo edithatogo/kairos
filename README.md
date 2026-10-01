@@ -105,4 +105,4 @@ When a track changes status, `conductor/tracks.yaml`, `conductor/tracks.md`,
 
 ## License
 
-Apache-2.0. See [LICENSE](LICENSE).
+Apache-2.0 OR MIT. See [LICENSE](LICENSE), [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT).
