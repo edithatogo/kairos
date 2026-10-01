@@ -42,7 +42,7 @@ def validate_archive(path: Path) -> None:
                 if member.issym() or member.islnk():
                     raise ValueError(f"links are not allowed in {path}: {member.name}")
         return
-    if path.suffix in {".whl", ".nupkg", ".tgz"}:
+    if path.suffix in {".whl", ".nupkg"}:
         with zipfile.ZipFile(path) as archive:
             names = archive.namelist()
             if not names:

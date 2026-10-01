@@ -15,6 +15,14 @@ SPEC.loader.exec_module(MODULE)
 
 
 class PackageArchiveBundleTests(unittest.TestCase):
+    def test_tgz_must_be_a_gzip_tar_archive(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "package.tgz"
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr("package/file.txt", "contents")
+            with self.assertRaises(tarfile.ReadError):
+                MODULE.validate_archive(path)
+
     def test_build_indexes_and_verifies_all_seven_ecosystems(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
