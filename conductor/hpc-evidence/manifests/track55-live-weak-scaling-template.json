@@ -1,0 +1,56 @@
+{
+  "schema_version": "kairoecs.hpc.evidence.v1",
+  "track_id": "55",
+  "task_id": "1.live-weak-scaling",
+  "commit_sha": "0000000000000000000000000000000000000000",
+  "pushed_ref": "refs/remotes/origin/<branch-containing-weak-scaling-proof>",
+  "evidence_class": "live-hpc-template",
+  "capability": "Track 55 live weak scaling certification proof across representative HPC scenarios.",
+  "hardware": {
+    "cpu_model": "Replace with CPU model for every node class used.",
+    "cpu_topology": "Replace with sockets, cores, threads, cache, and rank or LP placement topology.",
+    "memory_topology": "Replace with NUMA nodes, memory size, locality policy, and bandwidth notes.",
+    "accelerator_model": "Replace with GPU or accelerator model, count, and memory, or state none when not used.",
+    "driver": "Replace with accelerator, network, MPI, and storage driver versions relevant to the run."
+  },
+  "system": {
+    "operating_system": "Replace with OS image, kernel, architecture, and cluster image identifier."
+  },
+  "toolchain": {
+    "rust_toolchain": "Replace with rustc and cargo versions from the pushed proof run.",
+    "compiler": "Replace with C/C++/CUDA compiler versions when relevant.",
+    "mpi_implementation": "Replace with MPI implementation and version or none when not used.",
+    "scheduler": "Replace with Slurm, Kubernetes, Batch, or provider scheduler version and queue details."
+  },
+  "runtime": {
+    "command": "python benches/hpc/run_scaling.py --mode weak --manifest conductor/tracks/55-end-to-end-weak-strong-scaling-certification/evidence.json",
+    "environment": {
+      "KAIRO_HPC_SCALING_MODE": "weak",
+      "KAIRO_HPC_SCENARIO_SET": "Track 55 representative scenarios",
+      "RUSTFLAGS": "Replace with effective value or none",
+      "LD_LIBRARY_PATH": "Replace with effective value or none"
+    },
+    "feature_flags": [
+      "replace-with-runtime-feature-gates-used-for-proof"
+    ],
+    "input_scenario": "Weak scaling profile covering DES, ABM, hybrid, distributed, MPI/gRPC, NUMA/I/O, FMI, and scheduler categories as upstream evidence allows."
+  },
+  "storage": {
+    "filesystem_or_object_store": "Replace with immutable artifact store for raw weak scaling results, plots, logs, and manifests."
+  },
+  "result": {
+    "expected": "Weak scaling raw results include throughput, efficiency, memory, I/O, rollback, GVT, GPU, and FMI metrics for all certified scenario categories.",
+    "observed": "Replace with measured weak scaling summary and explicit excluded categories, if any.",
+    "raw_artifact_path": "artifact://replace-with-immutable-weak-scaling-result-bundle",
+    "checksum": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "review": {
+    "reviewer": "Replace with reviewer name or handle.",
+    "evidence_date": "YYYY-MM-DD"
+  },
+  "waiver": {
+    "status": "template-required",
+    "owner": "Track 55",
+    "expires": "Replace with none only after this template becomes live-hpc evidence."
+  }
+}

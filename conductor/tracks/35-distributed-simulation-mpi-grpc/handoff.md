@@ -1,12 +1,10 @@
 # Handoff: Track 35 Distributed Simulation (MPI/gRPC)
 
-Last updated: 2026-05-11
+Last updated: 2026-06-23
 
 ## Current status
 
-Phase 0 and Phase 1 design artifacts now exist. The Track 35 implementation is a
-transport scaffold only. It does not yet include real `rsmpi`, `tonic`, or
-`prost` runtime wiring.
+Archived as `Done` on 2026-06-23 for the legacy dependency-free MPI/gRPC transport scaffold. The focused runtime validator passes on this host. This archive does not claim real `rsmpi`, `tonic`/`prost`, multi-node execution, migration runtime, distributed telemetry aggregation, or fault tolerance; those requirements remain owned by Tracks 49/54/55.
 
 Implemented artifacts:
 
@@ -139,25 +137,11 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Track 35 is not ready for closeout yet. The offline validator passed on 2026-05-11
-(`pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1`),
-and that evidence now includes transport trait error-path parity plus protocol-envelope
-contract placeholders.
-The optional runtime gate (`-RunTests`) now passes on this host through
-`stable-x86_64-pc-windows-gnu`. The remaining blockers are still the real
-`rsmpi` transport, the real `tonic`/`prost` gRPC transport, 2-node execution checks, migration serialization,
-distributed telemetry aggregation, and gRPC fault-tolerance behavior. Keep this
-track `In Review` until those blockers are resolved and closeout evidence can be
-recorded. Before the track can move to `Done`, record `$conductor-review` findings,
-accepted fixes, deferred or blocked fixes, validation commands, cleanup state,
-commit SHA or explicit push blocker, pushed ref, strict
-`validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase
-decision here.
+Track 35 is cleanly closable as the legacy dependency-free distributed transport scaffold. The archive review reran `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests` on 2026-06-23; it passed with 18 MPI tests, 20 gRPC tests, and doc-tests. The archive records local emulator/reference proof only. Real `rsmpi`, `tonic`/`prost`, multi-node execution, migration runtime, distributed telemetry aggregation, and fault tolerance remain blocked for Tracks 49/54/55 rather than this legacy scaffold track.
 
 ## Next-phase decision
 
-Remain `In Review`. The validator now fails loudly on runtime errors, but real
-MPI/gRPC transport wiring and multi-node evidence are still missing.
+Archived as `Done` for the legacy dependency-free MPI/gRPC transport scaffold. Future real distributed runtime work must proceed through Tracks 49/54/55 rather than reopening Track 35.
 
 ## Review remediation -- 2026-05-17
 
@@ -185,3 +169,11 @@ MPI/gRPC transport wiring and multi-node evidence are still missing.
 - Implemented `local_two_node_contract_proof` for the gRPC placeholder transport, covering dependency-free event exchange, migration envelope validation, telemetry merge count, non-leader failure classification, and an explicit no-real-gRPC-runtime claim.
 - Updated distributed docs, the test matrix, and `validate-track35.ps1` so the software-only local proof is recorded without implying real `rsmpi`, `tonic`, `prost`, multi-node, or network runtime coverage.
 - Next-phase decision: remain `In Review`; the local dependency-free proof is now stronger, but the real runtime dependencies remain blocked by platform/software setup.
+
+## Archive review -- 2026-06-23
+
+- Review result: no additional in-scope source defects were found for the legacy Track 35 scaffold. Real `rsmpi`, `tonic`/`prost`, multi-node execution, migration runtime, distributed telemetry aggregation, and fault tolerance remain explicit follow-up gates rather than reasons to keep this scaffold track open.
+- Accepted fix: registry and closeout surfaces were reconciled from `In Review` and pending placeholders to an archived `Done` state for Track 35 only.
+- Validation: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\35-distributed-simulation-mpi-grpc\validate-track35.ps1 -RunTests` passed on 2026-06-23 with 18 MPI tests, 20 gRPC tests, and doc-tests.
+- Deferred by scope: no real distributed MPI/gRPC runtime, real network transport, multi-node execution, migration runtime, distributed telemetry runtime aggregation, or fault-tolerance evidence is attached to Track 35. Public production distributed-runtime claims remain blocked until Tracks 49, 54, and 55 attach live evidence.
+- Next-phase decision: Track 35 is archived as `Done`; future production distributed runtime work must proceed through Tracks 49/54/55 rather than this legacy scaffold track.

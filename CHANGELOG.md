@@ -20,6 +20,9 @@ Format:
 
 ### Fixed
 
+- FMU archive extraction requires a fresh destination to prevent symlink escapes; conservative PDES waits for every peer bound, and TimeWarp cancellation preserves committed state below GVT.
+- Track coverage validation now fails when its Rust workspace test command fails.
+
 - Gymnasium integration CI now installs the selected stable Gymnasium dependency set from a hash-locked requirements file.
 - Bootstrap npm tooling now locks ip-address 10.7.1 and brace-expansion 5.0.12 outside npm’s embedded bundle, rejecting vulnerable bundled copies.
 
@@ -54,6 +57,7 @@ Format:
 - Astro Starlight documentation site under `website/`, including versioned R1 archive pages, `llms.txt` exports, link validation, icon support, and KairoECS polyglot metadata for Rust, Python, R, Julia, TypeScript/WASM, C#, and Go documentation.
 - Protected registry publication workflows for Rust, Python, R, Julia, TypeScript/WASM, C#, Go, and cloud/HPC artifacts, with dry-run helpers, GitHub environments, and a code/repository health floor above 9.5 before production publication.
 - Track 45 docs-platform SOTA gate for the active Astro/Starlight site, covering versioning, the local polyglot plugin, llms.txt output, icons, generated search, and archived release-route evidence.
+- Conductor HPC Parity Wave tracks 46-55, covering production parity gates for PDES, Time Warp, MPI/gRPC synchronization, NUMA memory lifecycle, parallel I/O checkpoints, GPU acceleration, FMI co-simulation, Slurm/cloud runtime acceptance, and weak/strong scaling certification.
 
 ### Changed
 

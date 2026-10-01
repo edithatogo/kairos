@@ -1,0 +1,41 @@
+{
+  "track_id": 60,
+  "track_name": "Normal-Form Multi-Game Runtime and Solvers",
+  "phase": "template",
+  "status": "planned",
+  "task_commits": [
+    {
+      "task": "TEMPLATE",
+      "commit_sha": "0000000000000000000000000000000000000000",
+      "message": "replace with task commit",
+      "local_gates": [
+        "replace with local gate command"
+      ]
+    }
+  ],
+  "review": {
+    "command": "$conductor-review 60",
+    "result": "pending",
+    "accepted_fixes": []
+  },
+  "push": {
+    "ref": "pending",
+    "pushed_sha": "0000000000000000000000000000000000000000"
+  },
+  "github_actions": {
+    "command": "gh pr checks --watch",
+    "result": "pending",
+    "run_url": "pending"
+  },
+  "validation": [
+    {
+      "command": "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1",
+      "result": "pending",
+      "notes": "template"
+    }
+  ],
+  "evidence_paths": [
+    "conductor/game-theory-evidence/templates/track-60-template.json"
+  ],
+  "waivers": []
+}

@@ -36,20 +36,36 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 29 | Wave Manager & Execution Gatekeeper | Done | `wave-manager-agent` | See `conductor/tracks/29-*/spec.md` |
 | 30 | Toolchain & Version Support Matrix | Done | `toolchain-agent` | See `conductor/tracks/30-*/spec.md` |
 | 31 | Performance Regression Guard | Done | `perf-regression-agent` | See `conductor/tracks/31-*/spec.md` |
-| 32 | GPU Compute Acceleration | In Review | `gpu-compute-agent` | See `conductor/tracks/32-*/spec.md` |
-| 33 | WebGPU Compute for Browser | In Review | `webgpu-agent` | See `conductor/tracks/33-*/spec.md` |
-| 34 | PDES & Parallel Execution | In Review | `pdes-agent` | See `conductor/tracks/34-*/spec.md` |
-| 35 | Distributed Simulation (MPI/gRPC) | In Review | `distributed-agent` | See `conductor/tracks/35-*/spec.md` |
+| 32 | GPU Compute Acceleration | Done | `gpu-compute-agent` | See `conductor/tracks/32-*/spec.md` |
+| 33 | WebGPU Compute for Browser | Done | `webgpu-agent` | See `conductor/tracks/33-*/spec.md` |
+| 34 | PDES & Parallel Execution | Done | `pdes-agent` | See `conductor/tracks/34-*/spec.md` |
+| 35 | Distributed Simulation (MPI/gRPC) | Done | `distributed-agent` | See `conductor/tracks/35-*/spec.md` |
 | 36 | Streaming & Real-Time Processing | Done | `streaming-agent` | See `conductor/tracks/36-*/spec.md` |
 | 37 | ML/AI Integration & Inference | Done | `ml-integration-agent` | See `conductor/tracks/37-*/spec.md` |
 | 38 | FMI/FMU & Digital Twin Bridge | Done | `fmi-agent` | See `conductor/tracks/38-*/spec.md` |
-| 39 | Cloud/HPC Batch Runners | In Review | `cloud-agent` | See `conductor/tracks/39-*/spec.md` |
+| 39 | Cloud/HPC Batch Runners | Done | `cloud-agent` | See `conductor/tracks/39-*/spec.md` |
 | 40 | Time-Travel Debugging & Interactive Stepping | Done | `timetravel-agent` | See `conductor/tracks/40-*/spec.md` |
 | 41 | Documentation Platform, Quality Gates & Learning Coverage | Done | `docs-agent + ci-agent + community-agent` | See `conductor/tracks/41-*/spec.md` |
-| 42 | Package Registry Publication & Provenance | Spec Approved | `publication-agent + release-agent + binding agents` | See `conductor/tracks/42-*/spec.md` |
-| 43 | Cloud/HPC Registry Publication & Runtime Acceptance | Spec Approved | `hpc-registry-agent + cloud-agent + release-agent` | See `conductor/tracks/43-*/spec.md` |
-| 44 | Code and Repository Health >= 9.5 | In Review | `health-agent + ci-agent + security-agent + release-agent` | See `conductor/tracks/44-*/spec.md` |
-| 45 | Astro/Starlight Docs Platform and Polyglot Experience | In Review | `docs-platform-agent + docs-agent + ci-agent` | See `conductor/tracks/45-*/spec.md` |
+| 42 | Package Registry Publication & Provenance | Done | `publication-agent + release-agent + binding agents` | Archived repo-side guarded publication/provenance gate; live registry publication remains release-gated. |
+| 43 | Cloud/HPC Registry Publication & Runtime Acceptance | Done | `hpc-registry-agent + cloud-agent + release-agent` | See `conductor/tracks/43-*/spec.md` |
+| 44 | Code and Repository Health >= 9.5 | Done | `health-agent + ci-agent + security-agent + release-agent` | See `conductor/tracks/44-*/spec.md` |
+| 45 | Astro/Starlight Docs Platform and Polyglot Experience | Done | `docs-platform-agent + docs-agent + ci-agent` | See `conductor/tracks/45-*/spec.md` |
+| 46 | HPC Parity Charter, Baselines & Evidence Gates | Done | `benchmark-agent + interop-agent + redteam-agent + wave-manager-agent` | See `conductor/tracks/46-*/spec.md` |
+| 47 | PDES Conservative Lookahead Production Runtime | In Progress | `pdes-agent + performance-agent` | See `conductor/tracks/47-*/spec.md` |
+| 48 | Time Warp Optimistic Rollback Runtime | In Progress | `pdes-agent + timetravel-agent + ecs-agent` | See `conductor/tracks/48-*/spec.md` |
+| 49 | Distributed MPI/gRPC State Synchronization | In Progress | `distributed-agent + pdes-agent` | See `conductor/tracks/49-*/spec.md` |
+| 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | In Progress | `core-scheduler-agent + ecs-agent + ffi-agent` | See `conductor/tracks/50-*/spec.md` |
+| 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | In Progress | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
+| 52 | Native GPU Acceleration with Persistent Device Memory | In Progress | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
+| 53 | FMI 2/3 Co-Simulation Master Runtime | In Progress | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
+| 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Done | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |
+| 55 | End-to-End Weak/Strong Scaling Certification | In Progress | `performance-agent + benchmark-agent + cloud-agent + release-agent` | See `conductor/tracks/55-*/spec.md` |
+| 56 | Game Theory Ontology Wave Charter and Evidence Gates | In Review | `ontology-agent + game-theory-agent + wave-manager-agent` | See `conductor/tracks/56-*/spec.md` |
+| 57 | Open Game Theory Ontology Subrepo and Schema Ingestion | In Review | `ontology-agent + rust-agent` | See `conductor/tracks/57-*/spec.md` |
+| 58 | Ontology-to-Rust Component Code Generation | In Review | `ontology-agent + ecs-agent + api-governance-agent` | See `conductor/tracks/58-*/spec.md` |
+| 59 | Feature-Gated Graph Relations ECS Module | In Review | `ecs-agent + core-scheduler-agent + conformance-agent` | See `conductor/tracks/59-*/spec.md` |
+| 60 | Normal-Form Multi-Game Runtime and Solvers | In Review | `game-theory-agent + ecs-agent + performance-agent` | See `conductor/tracks/60-*/spec.md` |
+| 61 | Extensive-Form Graph-ECS Runtime and Certification | In Review | `game-theory-agent + ecs-agent + benchmark-agent + redteam-agent` | See `conductor/tracks/61-*/spec.md` |
 
 ## Track status vocabulary
 
@@ -71,3 +87,5 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 - GitHub automation, dependency review, scorecard, SBOM, and release workflows already exist under `.github/`; registry publication manifests are now owned by Track 42, cloud/HPC publication manifests by Track 43, and production publication by the Track 44 health gate.
 - Tracks 34, 35, and 38 are release-critical for distributed simulation, FMI digital-twin, and PDES infrastructure.
 - Tracks 32, 33, 36, 37, 39, 40, and 41 are non-release-critical (enhancement only).
+- Tracks 46-55 are release-gating for any production HPC parity claim. They do not mark existing scaffold tracks complete; they define the live-proof layer for PDES, Time Warp, MPI/gRPC, NUMA, parallel I/O, GPU, FMI, Slurm/cloud runtime acceptance, and weak/strong scaling certification.
+- Tracks 56-61 are release-gating for any public open-game-theory ontology, graph-relational ECS, or multi-game solver claim. They require task-level commits, phase review/push closeouts, and GitHub Actions review before any track can move beyond `In Review`.

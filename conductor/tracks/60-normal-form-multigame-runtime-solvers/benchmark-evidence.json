@@ -1,0 +1,20 @@
+{
+  "track_id": "60",
+  "phase": "phase-2-performance-and-evidence",
+  "benchmark": "normal_form_solver_quick",
+  "status": "local_smoke_contract",
+  "claim_boundary": "This benchmark is a deterministic compile-and-smoke gate for flat normal-form solver execution. It is not a release performance claim and does not establish cross-library parity.",
+  "command": "rustup run stable-x86_64-pc-windows-gnu cargo bench -p kairo-ecs-game-theory --bench normal_form -- --quick",
+  "fixture": {
+    "players": 4,
+    "strategies_per_player": 3,
+    "profiles": 81,
+    "payoff_layout": "contiguous profile-major, player-minor"
+  },
+  "required_before_done": [
+    "repeatable criterion or equivalent timing harness",
+    "raw result artifact with host, CPU, compiler, and run metadata",
+    "comparison against accepted parity target implementations",
+    "reviewed variance and regression threshold policy"
+  ]
+}

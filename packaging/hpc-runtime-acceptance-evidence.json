@@ -1,0 +1,85 @@
+{
+  "schema_version": "kairoecs.hpc.runtime-acceptance.v1",
+  "track_id": "43",
+  "production_claim_status": "blocked",
+  "last_verified": "2026-06-22",
+  "release_blockers": [
+    "Docker image build and KairoECS CLI scenario smoke evidence is missing.",
+    "Kubernetes CRD/operator live apply and terminal job-state evidence is missing.",
+    "Slurm single-job and array submission evidence is missing.",
+    "AWS Batch sandbox canary evidence is missing.",
+    "GCP Batch sandbox canary evidence is missing.",
+    "Azure KairoECS container/scenario output and checksum evidence is missing."
+  ],
+  "required_scopes": [
+    {
+      "scope": "docker-image-cli-smoke",
+      "status": "pending",
+      "required_command": "docker build -t kairo-ecs-cli:latest -f docker/Dockerfile . && docker run --rm kairo-ecs-cli:latest run --scenario scenarios/factory_bottleneck_v1.yaml --output /tmp/kairo-ecs-runs",
+      "blocker": "No Docker runtime proof is recorded for this track.",
+      "evidence_path": ""
+    },
+    {
+      "scope": "kubernetes-operator-smoke",
+      "status": "pending",
+      "required_command": "kubectl apply -f k8s/crd/kairoecs-experiment.yaml && kubectl create -f k8s/samples/experiment.json && kubectl wait for terminal job state",
+      "blocker": "No Kubernetes cluster proof is recorded for this track.",
+      "evidence_path": ""
+    },
+    {
+      "scope": "slurm-single-and-array-smoke",
+      "status": "pending",
+      "required_command": "hpc/slurm/submit-experiment.sh and hpc/slurm/submit-sweep.sh on a scheduler where sbatch is available",
+      "blocker": "No Slurm scheduler proof is recorded for this track.",
+      "evidence_path": ""
+    },
+    {
+      "scope": "aws-batch-canary",
+      "status": "pending",
+      "required_command": "cloud/aws/submit-experiment.sh against an AWS Batch sandbox",
+      "blocker": "No AWS Batch sandbox proof is recorded for this track.",
+      "evidence_path": ""
+    },
+    {
+      "scope": "gcp-batch-canary",
+      "status": "pending",
+      "required_command": "cloud/gcp/submit-experiment.sh against a GCP Batch test project",
+      "blocker": "No GCP Batch sandbox proof is recorded for this track.",
+      "evidence_path": ""
+    },
+    {
+      "scope": "azure-batch-kairoecs-canary",
+      "status": "partial",
+      "required_command": "cloud/azure/submit-experiment.ps1 against an Azure Batch pool using a readable kairo-ecs-cli image and factory-bottleneck scenario",
+      "blocker": "Azure CPU Batch substrate proof exists, but KairoECS container/scenario output and checksum evidence are missing.",
+      "evidence_path": "docs/cloud-hpc/azure-batch-canary-2026-05-20.md"
+    }
+  ],
+  "accepted_evidence_fields": [
+    "command",
+    "runner_or_cluster",
+    "account_or_project",
+    "region_or_partition",
+    "job_id",
+    "final_status",
+    "artifact_paths",
+    "checksum_sha256"
+  ],
+  "evidence_records": [
+    {
+      "scope": "azure-batch-substrate",
+      "status": "partial",
+      "command": "/bin/bash -lc 'echo KAIRO_AZURE_BATCH_CANARY; date -u; uname -a; python3 --version || true'",
+      "runner_or_cluster": "Azure Batch pool kairoscanarypool",
+      "account_or_project": "Azure for Students",
+      "region_or_partition": "australiaeast",
+      "job_id": "kairos-canary-20260520/kairos-canary-task-001",
+      "final_status": "completed success exit_code=0",
+      "artifact_paths": [
+        "docs/cloud-hpc/azure-batch-canary-2026-05-20.md"
+      ],
+      "checksum_sha256": "",
+      "claim_boundary": "Substrate-only evidence; not KairoECS image/scenario acceptance and not GPU/HPC proof."
+    }
+  ]
+}

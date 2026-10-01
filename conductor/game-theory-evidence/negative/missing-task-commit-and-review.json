@@ -1,0 +1,36 @@
+{
+  "track_id": 57,
+  "track_name": "Open Game Theory Ontology Subrepo and Schema Ingestion",
+  "phase": "negative-fixture",
+  "status": "in_review",
+  "task_commits": [
+    {
+      "task": "0.1",
+      "commit_sha": "0000000000000000000000000000000000000000",
+      "message": "placeholder scaffold only",
+      "local_gates": []
+    }
+  ],
+  "review": {
+    "command": "$conductor-review 57",
+    "result": "pending",
+    "accepted_fixes": []
+  },
+  "push": {
+    "ref": "pending",
+    "pushed_sha": "0000000000000000000000000000000000000000"
+  },
+  "github_actions": {
+    "command": "gh pr checks --watch",
+    "result": "pending",
+    "run_url": "pending"
+  },
+  "validation": [
+    {
+      "command": "none",
+      "result": "pending"
+    }
+  ],
+  "evidence_paths": [],
+  "waivers": []
+}

@@ -18,6 +18,9 @@ evidence for:
 
 Additional transport/lifecycle checks now recorded in this slice:
 
+- `PartitionPlan::from_entities` sorts generational entity IDs deterministically,
+  assigns them round-robin across LPs, records owner lookups, and rejects zero
+  LPs, zero lookahead, empty entity sets, and duplicate entity IDs.
 - LP registration rejects duplicate LP IDs, mismatched segment IDs, self-neighbor
   declarations, and duplicate neighbor entries at `add_lp` time.
 - transport sends/receives are strict; sending or receiving against unknown LP

@@ -11,7 +11,7 @@ status_vocabulary:
   - Cancelled
 composite_gates:
   ffi-rc-slice:
-    description: "FFI Release Candidate ready — all binding tracks (06-11) can begin implementation"
+    description: "FFI Release Candidate ready - all binding tracks (06-11) can begin implementation"
     required:
       - id: "02"
         status: Spec Approved
@@ -449,7 +449,7 @@ tracks:
       - threshold-definition-exists
   - id: 32
     name: GPU Compute Acceleration
-    status: In Review
+    status: Done
     owner: gpu-compute-agent
     depends_on: ["01"]
     owned_paths:
@@ -461,7 +461,7 @@ tracks:
       - gpu-benchmark-threshold
   - id: 33
     name: WebGPU Compute for Browser
-    status: In Review
+    status: Done
     owner: webgpu-agent
     depends_on: ["09", "32"]
     owned_paths:
@@ -473,7 +473,7 @@ tracks:
       - wasm-gpu-parity
   - id: 34
     name: PDES & Parallel Execution
-    status: In Review
+    status: Done
     owner: pdes-agent
     depends_on: ["01"]
     owned_paths:
@@ -488,7 +488,7 @@ tracks:
       - pdes-deadlock-free
   - id: 35
     name: Distributed Simulation (MPI/gRPC)
-    status: In Review
+    status: Done
     owner: distributed-agent
     depends_on: ["34"]
     owned_paths:
@@ -542,7 +542,7 @@ tracks:
       - aas-validate
   - id: 39
     name: Cloud/HPC Batch Runners
-    status: In Review
+    status: Done
     owner: cloud-agent
     depends_on: ["22", "15"]
     owned_paths:
@@ -596,7 +596,7 @@ tracks:
       - docs-platform-parity
   - id: 42
     name: Package Registry Publication & Provenance
-    status: Spec Approved
+    status: Done
     owner: publication-agent + release-agent + binding agents
     depends_on: ["06", "07", "08", "09", "10", "11", "15", "16", "20", "25", "28", "29", "30", "44"]
     owned_paths:
@@ -614,13 +614,15 @@ tracks:
       - code-health-floor
   - id: 43
     name: Cloud/HPC Registry Publication & Runtime Acceptance
-    status: Spec Approved
+    status: Done
     owner: hpc-registry-agent + cloud-agent + release-agent
     depends_on: ["22", "35", "39", "42", "44"]
     owned_paths:
       - .github/workflows/hpc-registry-publish.yml
       - conductor/tracks/43-cloud-hpc-registry-publication-runtime-acceptance/
       - packaging/hpc-registry-manifest.json
+      - packaging/hpc-runtime-acceptance-evidence.json
+      - packaging/negative/hpc-runtime-evidence-production-without-proof.json
       - scripts/release/publish-hpc.mjs
       - scripts/validation/validate-hpc-registry-readiness.mjs
     required_gates:
@@ -632,7 +634,7 @@ tracks:
       - code-health-floor
   - id: 44
     name: Code and Repository Health >= 9.5
-    status: In Review
+    status: Done
     owner: health-agent + ci-agent + security-agent + release-agent
     depends_on: ["13", "20", "25", "28", "30", "31", "41"]
     owned_paths:
@@ -649,7 +651,7 @@ tracks:
       - package-sota-score
   - id: 45
     name: Astro/Starlight Docs Platform and Polyglot Experience
-    status: In Review
+    status: Done
     owner: docs-platform-agent + docs-agent + ci-agent
     depends_on: ["14", "17", "27", "41", "44"]
     owned_paths:
@@ -665,3 +667,279 @@ tracks:
       - polyglot-docs-plugin
       - llms-txt
       - docs-platform-sota
+  - id: 46
+    name: HPC Parity Charter, Baselines & Evidence Gates
+    status: Done
+    owner: benchmark-agent + interop-agent + redteam-agent + wave-manager-agent
+    depends_on: ["18", "26", "28", "29", "31", "44"]
+    owned_paths:
+      - conductor/hpc-parity-wave.md
+      - conductor/hpc-evidence/
+      - conductor/sota-scorecard.md
+      - conductor/quality-gates.md
+      - scripts/validation/validate-hpc-parity-evidence.mjs
+      - conductor/tracks/46-hpc-parity-charter-baselines-evidence-gates/
+    required_gates:
+      - phase-closeout-check
+      - hpc-parity-charter
+      - hpc-evidence-manifest
+      - hpc-claim-boundary
+  - id: 47
+    name: PDES Conservative Lookahead Production Runtime
+    status: In Progress
+    owner: pdes-agent + performance-agent
+    depends_on: ["34", "46"]
+    owned_paths:
+      - crates/kairo-ecs-pdes/
+      - benches/pdes/
+      - docs/pdes/
+      - conductor/tracks/47-pdes-conservative-lookahead-production-runtime/
+    required_gates:
+      - phase-closeout-check
+      - pdes-production-lookahead
+      - pdes-sequential-parity
+      - gvt-progression-check
+      - pdes-deadlock-free
+      - hpc-evidence-manifest
+  - id: 48
+    name: Time Warp Optimistic Rollback Runtime
+    status: In Progress
+    owner: pdes-agent + timetravel-agent + ecs-agent
+    depends_on: ["47"]
+    owned_paths:
+      - crates/kairo-ecs-pdes/
+      - docs/pdes/
+      - benches/pdes/
+      - conductor/tracks/48-time-warp-optimistic-rollback-runtime/
+    required_gates:
+      - phase-closeout-check
+      - time-warp-rollback-parity
+      - time-warp-antimessage-integrity
+      - generational-bitset-rollback
+      - fossil-collection-safety
+      - hpc-evidence-manifest
+  - id: 49
+    name: Distributed MPI/gRPC State Synchronization
+    status: In Progress
+    owner: distributed-agent + pdes-agent
+    depends_on: ["35", "47", "48"]
+    owned_paths:
+      - crates/kairo-ecs-mpi/
+      - crates/kairo-ecs-grpc/
+      - docs/distributed/
+      - conductor/tracks/49-distributed-mpi-grpc-state-synchronization/
+    required_gates:
+      - phase-closeout-check
+      - real-mpi-multirank
+      - real-grpc-node-smoke
+      - distributed-state-parity
+      - entity-migration-integrity
+      - distributed-telemetry-merge
+      - hpc-evidence-manifest
+  - id: 50
+    name: NUMA Topology, Affinity & HPC Memory Lifecycle
+    status: In Progress
+    owner: core-scheduler-agent + ecs-agent + ffi-agent
+    depends_on: ["01", "02", "46"]
+    owned_paths:
+      - crates/kairo-ecs-core/
+      - crates/kairo-ecs-state/
+      - crates/kairo-ecs-ffi/
+      - docs/performance/
+      - conductor/tracks/50-numa-topology-affinity-memory-lifecycle/
+    required_gates:
+      - phase-closeout-check
+      - numa-topology-discovery
+      - core-affinity-binding
+      - event-arena-lifecycle
+      - zero-copy-ffi-layout
+      - allocator-contention-budget
+  - id: 51
+    name: Parallel I/O, Arrow Record Batches & Checkpoint Export
+    status: In Progress
+    owner: arrow-agent + cloud-agent + performance-agent
+    depends_on: ["04", "39", "46"]
+    owned_paths:
+      - crates/kairo-ecs-arrow/
+      - schemas/arrow/
+      - examples/telemetry/
+      - docs/parallel-io/
+      - conductor/tracks/51-parallel-io-arrow-checkpoint-export/
+    required_gates:
+      - phase-closeout-check
+      - arrow-recordbatch-real
+      - hdf5-checkpoint-roundtrip
+      - adios2-checkpoint-roundtrip
+      - parallel-filesystem-evidence
+      - checkpoint-restart-parity
+  - id: 52
+    name: Native GPU Acceleration with Persistent Device Memory
+    status: In Progress
+    owner: gpu-compute-agent + performance-agent
+    depends_on: ["32", "33", "46", "50"]
+    owned_paths:
+      - crates/kairo-ecs-gpu/
+      - crates/kairo-ecs-webgpu/
+      - docs/gpu-compute/
+      - website/webgpu-demo/
+      - conductor/tracks/52-native-gpu-acceleration-persistent-device-memory/
+    required_gates:
+      - phase-closeout-check
+      - real-wgpu-device-dispatch
+      - real-cuda-kernel-dispatch
+      - persistent-device-memory
+      - gpu-cpu-parity
+      - gpu-benchmark-threshold
+  - id: 53
+    name: FMI 2/3 Co-Simulation Master Runtime
+    status: In Progress
+    owner: fmi-agent + ffi-agent + interop-agent
+    depends_on: ["38", "46", "02"]
+    owned_paths:
+      - crates/kairo-ecs-fmi/
+      - examples/fmi-co-simulation/
+      - docs/fmi-digital-twin/
+      - conductor/tracks/53-fmi-cosimulation-master-runtime/
+    required_gates:
+      - phase-closeout-check
+      - fmu-archive-roundtrip
+      - fmi-dynamic-loading
+      - fmi2-cosim-1000-step
+      - fmi3-cosim-1000-step
+      - openmodelica-roundtrip
+  - id: 54
+    name: Slurm, Container & Cloud HPC Runtime Acceptance
+    status: Done
+    owner: cloud-agent + distributed-agent + gpu-compute-agent + release-agent
+    depends_on: ["39", "43", "49", "52"]
+    owned_paths:
+      - docker/
+      - k8s/
+      - hpc/slurm/
+      - cloud/
+      - docs/cloud-hpc/
+      - conductor/tracks/54-slurm-container-cloud-hpc-runtime-acceptance/
+    required_gates:
+      - phase-closeout-check
+      - container-runtime-kairos
+      - kubernetes-runtime-kairos
+      - slurm-runtime-kairos
+      - provider-batch-canary
+      - scheduler-runtime-evidence
+  - id: 55
+    name: End-to-End Weak/Strong Scaling Certification
+    status: In Progress
+    owner: performance-agent + benchmark-agent + cloud-agent + release-agent
+    depends_on: ["47", "48", "49", "50", "51", "52", "53", "54"]
+    owned_paths:
+      - benches/
+      - docs/benchmarks/
+      - docs/cloud-hpc/
+      - conductor/tracks/55-end-to-end-weak-strong-scaling-certification/
+    required_gates:
+      - phase-closeout-check
+      - weak-scaling-profile
+      - strong-scaling-profile
+      - end-to-end-hpc-scenario
+      - scaling-raw-results-policy
+      - hpc-release-certification
+  - id: 56
+    name: Game Theory Ontology Wave Charter and Evidence Gates
+    status: In Review
+    owner: ontology-agent + game-theory-agent + wave-manager-agent
+    depends_on: ["25", "26", "29"]
+    owned_paths:
+      - conductor/game-theory-ontology-wave.md
+      - conductor/game-theory-evidence/
+      - conductor/tracks/56-game-theory-ontology-wave-charter/
+    required_gates:
+      - phase-closeout-check
+      - game-theory-charter
+      - ontology-evidence-manifest
+      - github-actions-review
+  - id: 57
+    name: Open Game Theory Ontology Subrepo and Schema Ingestion
+    status: In Review
+    owner: ontology-agent + rust-agent
+    depends_on: ["56"]
+    owned_paths:
+      - open-game-theory-ontology/
+      - crates/kairo-ecs-game-ontology/
+      - docs/game-theory/ontology-ingestion.md
+      - conductor/tracks/57-open-game-theory-ontology-schema-ingestion/
+    required_gates:
+      - phase-closeout-check
+      - turtle-jsonld-ingestion
+      - ontology-roundtrip-fixtures
+      - task-level-commits
+      - github-actions-review
+  - id: 58
+    name: Ontology-to-Rust Component Code Generation
+    status: In Review
+    owner: ontology-agent + ecs-agent + api-governance-agent
+    depends_on: ["57"]
+    owned_paths:
+      - crates/kairo-ecs-game-ontology/
+      - crates/kairo-ecs-game-theory/
+      - generated/game-theory/
+      - docs/game-theory/codegen.md
+      - conductor/tracks/58-ontology-rust-component-codegen/
+    required_gates:
+      - phase-closeout-check
+      - deterministic-codegen
+      - generated-component-api-review
+      - task-level-commits
+      - github-actions-review
+  - id: 59
+    name: Feature-Gated Graph Relations ECS Module
+    status: In Review
+    owner: ecs-agent + core-scheduler-agent + conformance-agent
+    depends_on: ["01", "56", "58"]
+    owned_paths:
+      - crates/kairo-ecs-state/
+      - crates/kairo-ecs-core/
+      - crates/kairo-ecs-game-theory/
+      - docs/game-theory/graph-relations.md
+      - conductor/tracks/59-feature-gated-graph-relations-ecs/
+    required_gates:
+      - phase-closeout-check
+      - graph-relations-feature-boundary
+      - entity-id-edge-components
+      - no-pointer-topology-scan
+      - task-level-commits
+      - github-actions-review
+  - id: 60
+    name: Normal-Form Multi-Game Runtime and Solvers
+    status: In Review
+    owner: game-theory-agent + ecs-agent + performance-agent
+    depends_on: ["58", "59"]
+    owned_paths:
+      - crates/kairo-ecs-game-theory/
+      - crates/kairo-ecs-game-theory/examples/normal_form_runtime.rs
+      - docs/game-theory/normal-form-runtime.md
+      - conductor/tracks/60-normal-form-multigame-runtime-solvers/
+    required_gates:
+      - phase-closeout-check
+      - payoff-matrix-components
+      - strategy-space-components
+      - normal-form-solver-parity
+      - task-level-commits
+      - github-actions-review
+  - id: 61
+    name: Extensive-Form Graph-ECS Runtime and Certification
+    status: In Review
+    owner: game-theory-agent + ecs-agent + benchmark-agent + redteam-agent
+    depends_on: ["59", "60"]
+    owned_paths:
+      - crates/kairo-ecs-game-theory/
+      - crates/kairo-ecs-game-theory/src/extensive_form.rs
+      - crates/kairo-ecs-game-theory/tests/extensive_form_components.rs
+      - crates/kairo-ecs-game-theory/tests/extensive_form_topology.rs
+      - conductor/tracks/61-extensive-form-graph-ecs-runtime-certification/
+    required_gates:
+      - phase-closeout-check
+      - graph-traversal-solver-parity
+      - sequential-game-fixtures
+      - end-to-end-multigame-certification
+      - task-level-commits
+      - github-actions-review

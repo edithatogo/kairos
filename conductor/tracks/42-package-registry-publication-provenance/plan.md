@@ -25,9 +25,15 @@
 ## Phase 3 - Validation
 
 - [x] Add `scripts/validation/validate-publication-readiness.mjs`.
-- [ ] Run publication readiness validation in CI.
+- [x] Run publication readiness validation in CI/preflight gate.
 - [ ] Complete registry owner/trusted-publisher setup outside the repo.
 - [ ] Execute first protected-environment dry run from GitHub Actions.
+
+## Archive decision - 2026-06-25
+
+Track 42 is archived as Done for the repo-side guarded publication/provenance gate: the publication manifest, readiness validator, default-off workflow dispatch, dry-run helper, protected main-only publish job, OIDC/provenance permissions, release-publication environment guard, code-health floor, and package manifest verification all validate locally.
+
+This archive does not claim live public registry publication. Registry owner/trusted-publisher setup, protected-environment dispatch evidence, release-manager approval, actual public registry writes, and live provenance artifacts remain release-governed blockers before any production publication.
 
 ## Phase closeout gate
 

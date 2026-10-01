@@ -23,6 +23,9 @@ pages.
   tied to real committed inputs.
 - The raw-results policy blocks public performance claims until command,
   environment, seed, fixture, baseline, and raw output artifacts are archived.
+- GPU performance claims additionally require Track 52 live wgpu or CUDA
+  hardware evidence. The current Track 52 local CPU parity manifest is scaffold
+  evidence only and does not publish a speedup result.
 
 ## Local validation
 
@@ -42,3 +45,5 @@ not publish or validate native timing results.
 - `benches/raw-results-policy.json`
 - `benches/benchmark_smoke.py`
 - `benches/benchmark_reproducibility.py`
+- `conductor/hpc-evidence/manifests/track52-local-cpu-parity-scaffold.json`
+- `conductor/hpc-evidence/manifests/track52-live-gpu-hardware-template.json`

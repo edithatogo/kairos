@@ -1,0 +1,52 @@
+{
+  "@context": {
+    "gt": "https://kairos.dev/ontology/game-theory#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "type": "@type",
+    "id": "@id"
+  },
+  "@graph": [
+    {
+      "id": "gt:DecisionNode",
+      "type": "rdfs:Class"
+    },
+    {
+      "id": "gt:ChanceNode",
+      "type": "rdfs:Class"
+    },
+    {
+      "id": "gt:TerminalNode",
+      "type": "rdfs:Class"
+    },
+    {
+      "id": "gt:InformationSet",
+      "type": "rdfs:Class"
+    },
+    {
+      "id": "gt:Action",
+      "type": "rdfs:Class"
+    },
+    {
+      "id": "gt:Transition",
+      "type": "rdfs:Class"
+    },
+    {
+      "id": "gt:hasAction",
+      "type": "rdfs:Property",
+      "rdfs:domain": "gt:DecisionNode",
+      "rdfs:range": "gt:Action"
+    },
+    {
+      "id": "gt:transitionTo",
+      "type": "rdfs:Property",
+      "rdfs:domain": "gt:Action",
+      "rdfs:range": "gt:Transition"
+    },
+    {
+      "id": "gt:inInformationSet",
+      "type": "rdfs:Property",
+      "rdfs:domain": "gt:DecisionNode",
+      "rdfs:range": "gt:InformationSet"
+    }
+  ]
+}

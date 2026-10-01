@@ -1,10 +1,12 @@
 # 42 Package Registry Publication & Provenance - handoff.md
 
-Last updated: 2026-05-19
+Last updated: 2026-06-25
 
 ## Summary
 
 Track 42 implements the guarded package registry publication lane. The current slice adds the manifest, validator, workflow, and release-gate wiring. Public publication remains blocked until registry accounts/trusted publishers are configured and the protected environment approves a run.
+
+Archive review on 2026-06-25 found no remaining source/workflow defect in the repo-side guarded publication gate. Track 42 is Done only for the repo-side manifest, validator, dry-run helper, protected workflow, OIDC/provenance, and code-health gating surfaces; live public registry writes remain blocked by external release operations and evidence requirements.
 
 ## Files changed
 
@@ -32,6 +34,8 @@ Public language registry writes now require Track 42 and Track 44 gates.
 
 Trusted publisher setup is registry-side and cannot be completed by repo edits alone.
 
+The first protected-environment GitHub Actions dispatch and any live public registry publication evidence are intentionally not claimed by this archive.
+
 ## Follow-up issues
 
 - Configure PyPI/TestPyPI trusted publishers.
@@ -46,4 +50,12 @@ Use the protected `release-publication` environment for public writes. Dry runs 
 
 ## Phase closeout evidence
 
-`$conductor-review` must be run before promotion. Record accepted fixes, commit SHA, pushed ref, `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`, and next-phase decision here during closeout.
+2026-06-25 review/validation commands:
+
+- `node scripts/validation/validate-publication-readiness.mjs`
+- `node scripts/validation/validate-code-health.mjs`
+- `python packaging/scripts/build_release_manifest.py --verify-existing`
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`
+
+Archive commit SHA and pushed ref are recorded in `conductor/phase-closeout.yaml`. Run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after the archive commit is pushed.

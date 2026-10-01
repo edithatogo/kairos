@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kairoecs.hpc.scaling.profile.schema.v1",
+  "title": "KairoECS Track 55 weak/strong scaling profile",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "track_id",
+    "mode",
+    "scenario_id",
+    "measurement_kind",
+    "resource_plan",
+    "samples",
+    "live_hpc_required"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "kairoecs.hpc.scaling.profile.v1"
+    },
+    "track_id": {
+      "const": "55"
+    },
+    "mode": {
+      "enum": ["weak", "strong"]
+    },
+    "scenario_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "measurement_kind": {
+      "enum": ["deterministic-local-placeholder", "live-hpc-raw-result"]
+    },
+    "resource_plan": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["resource_index", "ranks", "logical_processes", "numa_nodes", "gpu_devices"],
+        "properties": {
+          "resource_index": { "type": "integer", "minimum": 1 },
+          "ranks": { "type": "integer", "minimum": 1 },
+          "logical_processes": { "type": "integer", "minimum": 1 },
+          "numa_nodes": { "type": "integer", "minimum": 1 },
+          "gpu_devices": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "samples": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "resource_index",
+          "workload_events",
+          "throughput_events_per_second",
+          "parallel_efficiency",
+          "wall_time_seconds",
+          "memory_gib",
+          "io_write_gib_per_second",
+          "restart_parity",
+          "final_state_parity"
+        ],
+        "properties": {
+          "resource_index": { "type": "integer", "minimum": 1 },
+          "workload_events": { "type": "integer", "minimum": 1 },
+          "throughput_events_per_second": { "type": "number", "exclusiveMinimum": 0 },
+          "parallel_efficiency": { "type": "number", "minimum": 0, "maximum": 1 },
+          "wall_time_seconds": { "type": "number", "exclusiveMinimum": 0 },
+          "speedup": { "type": "number", "exclusiveMinimum": 0 },
+          "memory_gib": { "type": "number", "minimum": 0 },
+          "io_write_gib_per_second": { "type": "number", "minimum": 0 },
+          "rollback_rate": { "type": "number", "minimum": 0 },
+          "gvt_lag_seconds": { "type": "number", "minimum": 0 },
+          "gpu_batch_throughput": { "type": "number", "minimum": 0 },
+          "fmi_step_latency_ms": { "type": "number", "minimum": 0 },
+          "restart_parity": { "enum": ["placeholder-pass", "not-applicable", "live-pass", "live-fail"] },
+          "final_state_parity": { "type": "boolean" }
+        }
+      }
+    },
+    "live_hpc_required": {
+      "type": "boolean"
+    },
+    "live_hpc_error": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "const": "LIVE_HPC_REQUIRED" },
+        "message": { "type": "string", "minLength": 1 },
+        "required_evidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

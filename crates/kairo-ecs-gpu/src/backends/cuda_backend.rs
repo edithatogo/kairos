@@ -1,16 +1,33 @@
 use crate::compute::{
     DesEvent, GpuBackendAvailability, GpuCompute, GpuComputeError, GpuState, GpuStepStats,
-    CUDA_BACKEND_NOT_CONFIGURED,
+    NativeGpuBackendKind, NativeGpuInitializationReport, CUDA_BACKEND_NOT_CONFIGURED,
 };
+
+pub const CUDA_DEVICE_UNAVAILABLE_REASON: &str =
+    "real CUDA context initialization is not linked in this build";
 
 /// Feature-gated CUDA backend contract.
 ///
 /// The crate does not include CUDA bindings yet, so this type reports an
 /// explicit unavailable status instead of falling back to CPU work.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct CudaBackend;
 
 impl CudaBackend {
+    pub fn initialize_required_context() -> Result<Self, GpuComputeError> {
+        Err(GpuComputeError::DeviceUnavailable {
+            backend: CUDA_BACKEND_NOT_CONFIGURED,
+            reason: CUDA_DEVICE_UNAVAILABLE_REASON,
+        })
+    }
+
+    pub const fn initialization_report() -> NativeGpuInitializationReport {
+        NativeGpuInitializationReport::unavailable(
+            NativeGpuBackendKind::Cuda,
+            CUDA_DEVICE_UNAVAILABLE_REASON,
+        )
+    }
+
     pub fn new_without_context_for_tests() -> Self {
         Self
     }

@@ -1,0 +1,46 @@
+{
+  "schema_version": "kairoecs.multigame.benchmark.v1",
+  "track_id": 61,
+  "track_name": "Extensive-Form Graph-ECS Runtime Certification",
+  "generated_at": "2026-06-20",
+  "host": "local Windows GNU Rust toolchain",
+  "commands": [
+    {
+      "command": "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory",
+      "result": "passed",
+      "summary": "normal-form component and solver tests passed; feature-gated extensive-form tests compiled out as expected without graph-relations"
+    },
+    {
+      "command": "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --features graph-relations",
+      "result": "passed",
+      "summary": "31 crate tests passed across normal-form, graph-relations, extensive-form components, topology validation, traversal, backward induction, and information-set fixtures"
+    },
+    {
+      "command": "node scripts/validation/validate-multigame-certification.mjs --self-test",
+      "result": "passed",
+      "summary": "scenario manifest, source no-pointer scan, and negative fixtures passed"
+    },
+    {
+      "command": "rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-game-theory --features graph-relations --all-targets -- -D warnings",
+      "result": "passed",
+      "summary": "crate clippy passed with graph-relations enabled"
+    },
+    {
+      "command": "rustup run stable-x86_64-pc-windows-gnu cargo bench -p kairo-ecs-game-theory --bench normal_form -- --quick",
+      "result": "passed",
+      "summary": {
+        "benchmark": "normal_form_solver_quick",
+        "iterations": 64,
+        "elapsed_ns": 406000,
+        "best_response_count": 64,
+        "equilibrium_count": 128,
+        "dominated_count": 64
+      }
+    }
+  ],
+  "scope_boundaries": [
+    "certifies local multi-game runtime wiring across normal-form flat arrays and extensive-form Graph-ECS component stores",
+    "does not claim chance-weighted stochastic extensive-form solving",
+    "does not claim live HPC, distributed, GPU, or Slurm scaling proof"
+  ]
+}

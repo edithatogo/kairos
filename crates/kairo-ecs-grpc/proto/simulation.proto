@@ -18,11 +18,22 @@ message MigrationRequest {
   uint32 dest_lp = 4;
   string migration_id = 5;
   repeated ComponentBlob components = 6;
+  repeated PendingEvent pending_events = 7;
 }
 
 message ComponentBlob {
   string component_type_id = 1;
-  bytes payload = 2;
+  uint64 generation = 2;
+  bytes payload = 3;
+}
+
+message PendingEvent {
+  uint32 source_lp = 1;
+  uint32 dest_lp = 2;
+  uint64 tick = 3;
+  uint64 sequence = 4;
+  uint64 payload_bytes = 5;
+  bool anti_message = 6;
 }
 
 message MigrationAck {
@@ -47,11 +58,39 @@ message GvtDecision {
   uint64 gvt_tick = 1;
 }
 
+message AntiMessage {
+  uint32 source_lp = 1;
+  uint32 dest_lp = 2;
+  uint64 tick = 3;
+  uint64 sequence = 4;
+}
+
+message Heartbeat {
+  uint32 source_lp = 1;
+  uint64 observed_tick = 2;
+  uint64 elapsed_since_last_seen_ms = 3;
+}
+
+message HeartbeatAck {
+  uint32 source_lp = 1;
+  bool accepted = 2;
+  string message = 3;
+}
+
+message RetryPolicy {
+  uint32 max_attempts = 1;
+  uint64 base_delay_ms = 2;
+  uint64 max_delay_ms = 3;
+  bool retry_on_unavailable = 4;
+}
+
 // Runtime transport contract placeholder for service discovery: this is not wired to
 // transport runtime in the current track slice.
 service SimulationTransport {
   rpc ExchangeEvents(stream RemoteEvent) returns (stream RemoteEvent);
+  rpc ExchangeAntiMessages(stream AntiMessage) returns (stream AntiMessage);
   rpc MigrateEntity(MigrationRequest) returns (MigrationAck);
   rpc StreamTelemetry(stream TelemetryBatch) returns (MigrationAck);
   rpc GvtSync(GvtProposal) returns (GvtDecision);
+  rpc Heartbeat(Heartbeat) returns (HeartbeatAck);
 }

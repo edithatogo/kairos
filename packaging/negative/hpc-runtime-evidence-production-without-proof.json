@@ -1,0 +1,27 @@
+{
+  "schema_version": "kairoecs.hpc.runtime-acceptance.v1",
+  "track_id": "43",
+  "production_claim_status": "ready",
+  "last_verified": "2026-06-22",
+  "release_blockers": [],
+  "required_scopes": [
+    {
+      "scope": "docker-image-cli-smoke",
+      "status": "pending",
+      "required_command": "docker build -t kairo-ecs-cli:latest -f docker/Dockerfile .",
+      "blocker": "",
+      "evidence_path": ""
+    }
+  ],
+  "accepted_evidence_fields": [
+    "command",
+    "runner_or_cluster",
+    "account_or_project",
+    "region_or_partition",
+    "job_id",
+    "final_status",
+    "artifact_paths",
+    "checksum_sha256"
+  ],
+  "evidence_records": []
+}

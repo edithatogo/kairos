@@ -1,0 +1,58 @@
+{
+  "schema_version": "kairoecs.hpc.evidence.v1",
+  "track_id": "51",
+  "task_id": "3.2",
+  "commit_sha": "0000000000000000000000000000000000000000",
+  "pushed_ref": "refs/remotes/origin/replace-with-track51-live-proof-branch",
+  "evidence_class": "live-hpc-template",
+  "capability": "Track-51-live-Lustre-GPFS-or-MPI-IO-parallel-filesystem-proof",
+  "hardware": {
+    "cpu_model": "Replace-with-compute-node-CPU-model.",
+    "cpu_topology": "Replace-with-socket-core-thread-cache-and-NUMA-topology.",
+    "memory_topology": "Replace-with-NUMA-node-count-memory-size-and-locality-topology.",
+    "accelerator_model": "Replace-with-accelerator-model-or-none.",
+    "driver": "Replace-with-storage-accelerator-and-runtime-driver-versions-or-none."
+  },
+  "system": {
+    "operating_system": "Replace-with-OS-image-kernel-architecture-and-cluster-image."
+  },
+  "toolchain": {
+    "rust_toolchain": "Replace-with-rustc-and-cargo-versions.",
+    "compiler": "Replace-with-C-CXX-compiler-and-HDF5-ADIOS2-build-toolchain-versions.",
+    "mpi_implementation": "Replace-with-MPI-implementation-and-version-or-none.",
+    "scheduler": "Replace-with-scheduler-version-partition-and-queue."
+  },
+  "runtime": {
+    "command": "Replace-with-exact-cargo-bench-test-mpirun-srun-or-scheduler-command.",
+    "environment": {
+      "RUSTFLAGS": "Replace-with-effective-value-or-none.",
+      "LD_LIBRARY_PATH": "Replace-with-effective-value-or-none.",
+      "KAIRO_PARALLEL_IO_STRIPE_COUNT": "Replace-with-effective-stripe-count-or-none.",
+      "KAIRO_PARALLEL_IO_BLOCK_BYTES": "Replace-with-effective-block-size."
+    },
+    "feature_flags": [
+      "parallel-io",
+      "hdf5",
+      "adios2"
+    ],
+    "input_scenario": "Replace-with-scenario-seed-manifest-checkpoint-manifest-rank-count-block-size-and-writer-format."
+  },
+  "storage": {
+    "filesystem_or_object_store": "Replace-with-Lustre-GPFS-MPI-IO-or-object-store-details-including-mount-stripe-policy-block-size-rank-count-and-checksum-policy."
+  },
+  "result": {
+    "expected": "Replace-with-acceptance-threshold-for-contiguous-block-writes-checkpoint-restart-parity-and-raw-artifact-retention.",
+    "observed": "Replace-with-measured-throughput-rank-count-stripe-or-block-metadata-restart-result-and-artifact-references.",
+    "raw_artifact_path": "Replace-with-immutable-raw-result-path-under-cluster-object-store-or-checked-in-evidence-export.",
+    "checksum": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "review": {
+    "reviewer": "Replace-with-reviewer-name-or-handle.",
+    "evidence_date": "YYYY-MM-DD"
+  },
+  "waiver": {
+    "status": "template-required",
+    "owner": "Track-51",
+    "expires": "When-replaced-by-reviewed-live-hpc-manifest-for-the-exact-filesystem-and-checkpoint-path-under-proof."
+  }
+}

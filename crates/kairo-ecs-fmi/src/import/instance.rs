@@ -11,10 +11,18 @@ pub trait FmuInstance {
     fn terminate(&mut self) -> FmiResult<()>;
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Fmi2LifecycleState {
+    Instantiated,
+    InitializationMode,
+    StepMode,
+    Terminated,
+}
+
 pub struct Fmi2CoSimulationInstance {
     component: Fmi2Component,
     table: Fmi2FunctionTable,
-    terminated: bool,
+    lifecycle_state: Fmi2LifecycleState,
 }
 
 impl Fmi2CoSimulationInstance {
@@ -30,8 +38,30 @@ impl Fmi2CoSimulationInstance {
         Self {
             component,
             table,
-            terminated: false,
+            lifecycle_state: Fmi2LifecycleState::Instantiated,
         }
+    }
+
+    /// Builds an FMI 2 co-simulation wrapper after rejecting a null component.
+    ///
+    /// # Safety
+    ///
+    /// `component` must be a valid FMI component created by the same FMU function table,
+    /// and every function pointer in `table` must remain valid for the lifetime of the
+    /// returned wrapper.
+    pub unsafe fn from_raw_parts_checked(
+        component: Fmi2Component,
+        table: Fmi2FunctionTable,
+    ) -> FmiResult<Self> {
+        if component.is_null() {
+            Err(FmiError::NullComponent)
+        } else {
+            Ok(Self::from_raw_parts(component, table))
+        }
+    }
+
+    pub fn lifecycle_state(&self) -> Fmi2LifecycleState {
+        self.lifecycle_state
     }
 
     pub fn setup_experiment(
@@ -184,12 +214,16 @@ impl Fmi2CoSimulationInstance {
 impl FmuInstance for Fmi2CoSimulationInstance {
     fn enter_initialization_mode(&mut self) -> FmiResult<()> {
         let status = unsafe { (self.table.enter_initialization_mode)(self.component) };
-        require_success("fmi2EnterInitializationMode", status)
+        require_success("fmi2EnterInitializationMode", status)?;
+        self.lifecycle_state = Fmi2LifecycleState::InitializationMode;
+        Ok(())
     }
 
     fn exit_initialization_mode(&mut self) -> FmiResult<()> {
         let status = unsafe { (self.table.exit_initialization_mode)(self.component) };
-        require_success("fmi2ExitInitializationMode", status)
+        require_success("fmi2ExitInitializationMode", status)?;
+        self.lifecycle_state = Fmi2LifecycleState::StepMode;
+        Ok(())
     }
 
     fn do_step(&mut self, current_time: f64, step_size: f64) -> FmiResult<()> {
@@ -206,12 +240,12 @@ impl FmuInstance for Fmi2CoSimulationInstance {
     }
 
     fn terminate(&mut self) -> FmiResult<()> {
-        if self.terminated {
+        if self.lifecycle_state == Fmi2LifecycleState::Terminated {
             return Ok(());
         }
         let status = unsafe { (self.table.terminate)(self.component) };
         require_success("fmi2Terminate", status)?;
-        self.terminated = true;
+        self.lifecycle_state = Fmi2LifecycleState::Terminated;
         Ok(())
     }
 }

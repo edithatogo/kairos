@@ -15,3 +15,7 @@ kairo-ecs-core = { path = "../kairo-ecs-core" }
 kairo-ecs-state = { path = "../kairo-ecs-state" }
 kairo-ecs-types = { path = "../kairo-ecs-types" }
 kairo-ecs-rng = { path = "../kairo-ecs-rng" }
+
+[features]
+default = []
+numa = ["kairo-ecs-core/numa", "kairo-ecs-state/numa"]

@@ -1,0 +1,56 @@
+{
+  "schema_version": "kairoecs.hpc.evidence.v1",
+  "track_id": "51",
+  "task_id": "3.3",
+  "commit_sha": "245a5ccaed7ae9a522e1fb887511232f6bed73d2",
+  "pushed_ref": "origin/codex/kairos-hpc-parity-wave",
+  "evidence_class": "scaffold",
+  "capability": "Track-51-local-Arrow-checkpoint-gate-record",
+  "hardware": {
+    "cpu_model": "local-Windows-development-workstation",
+    "cpu_topology": "not-collected-for-local-scaffold-evidence",
+    "memory_topology": "not-collected-for-local-scaffold-evidence",
+    "accelerator_model": "none-for-local-scaffold-evidence",
+    "driver": "none-for-local-scaffold-evidence"
+  },
+  "system": {
+    "operating_system": "Windows-local-development-environment"
+  },
+  "toolchain": {
+    "rust_toolchain": "stable-x86_64-pc-windows-gnu",
+    "compiler": "stable-x86_64-pc-windows-gnu-rustc",
+    "mpi_implementation": "none-for-local-scaffold-evidence",
+    "scheduler": "none-for-local-scaffold-evidence"
+  },
+  "runtime": {
+    "command": "cargo-test-kairo-ecs-arrow-parallel-io-hdf5-adios2-checkpoint-restart",
+    "environment": {
+      "CARGO_INCREMENTAL": "0",
+      "mode": "local-scaffold-validation"
+    },
+    "feature_flags": [
+      "parallel-io",
+      "hdf5",
+      "adios2"
+    ],
+    "input_scenario": "Track-51-checkpoint-manifest-and-restart-parity-contract-tests"
+  },
+  "storage": {
+    "filesystem_or_object_store": "local-repository-filesystem-no-Lustre-GPFS-or-MPI-IO"
+  },
+  "result": {
+    "expected": "local-Arrow-checkpoint-contract-tests-pass-with-no-live-HPC-claim",
+    "observed": "handoff-records-passing-local-gates-scaffold-only-no-native-or-parallel-filesystem-proof",
+    "raw_artifact_path": "conductor/tracks/51-parallel-io-arrow-checkpoint-export/handoff.md",
+    "checksum": "not-live"
+  },
+  "review": {
+    "reviewer": "Codex-Track-51-evidence-worker",
+    "evidence_date": "2026-06-24"
+  },
+  "waiver": {
+    "status": "not-live",
+    "owner": "Track-51",
+    "expires": "when-Track-51-records-live-Lustre-GPFS-or-MPI-IO-evidence-with-checksum"
+  }
+}

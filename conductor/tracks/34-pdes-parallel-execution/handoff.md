@@ -1,9 +1,14 @@
 # Handoff: Track 34 PDES & Parallel Execution
 
+Last updated: 2026-06-23
+
 ## Current status
 
-Phase 0 and the Phase 1 contracts now have concrete artifacts. The Track 34
-implementation is a conservative PDES scaffold, not a production scheduler.
+Archived as `Done` on 2026-06-23 for the legacy conservative PDES scaffold.
+Phase 0 and the Phase 1 contracts have concrete artifacts, and the focused
+runtime validator passes on this host. This archive does not claim a production
+PDES scheduler, wall-clock speedup, distributed runtime execution, or production
+Time Warp support; those requirements remain owned by Tracks 47/48/49/55.
 
 Implemented artifacts:
 
@@ -123,24 +128,17 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 No additional integration notes were recorded by this Conductor hygiene update.
 ## Phase closeout evidence
 
-Track 34 is not cleanly closable yet. The offline validator passed on
-2026-05-11 (`pwsh -NoProfile -File
-conductor/tracks/34-pdes-parallel-execution/validate-track34.ps1`), and local
-API-contract regression tests were added to close transport/topology validation
-blockers in-scope for this slice. The GNU-toolchain runtime gate now passes on
-this host, but scaling benchmarks and the Time Warp follow-up remain outstanding.
-Keep this track `In Review` until the remaining closeout evidence is recorded.
-Before the track can move to `Done`, record
-`$conductor-review` findings, accepted fixes, deferred or blocked fixes, validation
-commands, cleanup state, commit SHA or explicit push blocker, pushed ref, strict
-`validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` result, and next-phase
-decision here.
+Track 34 is cleanly closable as the legacy conservative PDES scaffold. The
+archive review reran `powershell -NoProfile -ExecutionPolicy Bypass -File
+conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests` on
+2026-06-23; it passed with 17 PDES tests and doc-tests. The archive records local
+scaffold/reference proof only. Production scheduler integration, wall-clock
+speedup, distributed runtime execution, and production Time Warp support remain
+blocked for Tracks 47/48/49/55 rather than this legacy scaffold track.
 
 ## Next-phase decision
 
-Remain `In Review`. The transport/topology contract is now tighter and the host
-runtime gate passes, but scaling evidence and the Time Warp follow-up still block
-closeout.
+Archived as `Done` for the legacy conservative PDES scaffold. Future production PDES runtime work must proceed through Tracks 47/48/49/55 rather than reopening Track 34.
 
 ## Review remediation -- 2026-05-17
 
@@ -167,3 +165,11 @@ closeout.
 - Implemented `time_warp_two_lp_spike` and documented `docs/pdes/time-warp-spike.md`, recording rollback risk and recommending that production Track 34 stay conservative-first until snapshots, anti-messages, and fossil collection are designed.
 - Updated benchmark documentation and the Track 34 validator so local scaling-smoke evidence is accepted while hardware speedup and hardware parity claims remain explicitly prohibited.
 - Next-phase decision: remain `In Review`; local software-only scaling and Time Warp documentation are now addressed, but hardware throughput speedup and cross-platform runtime evidence remain outside the current dependency-free slice.
+
+## Archive review -- 2026-06-23
+
+- Review result: no additional in-scope source defects were found for the legacy Track 34 scaffold. Production scheduler integration, wall-clock speedup, distributed runtime proof, and production Time Warp remain explicit follow-up gates rather than reasons to keep this scaffold track open.
+- Accepted fix: registry and closeout surfaces were reconciled from `In Review` and pending placeholders to an archived `Done` state for Track 34 only.
+- Validation: `powershell -NoProfile -ExecutionPolicy Bypass -File conductor\tracks\34-pdes-parallel-execution\validate-track34.ps1 -RunTests` passed on 2026-06-23 with 17 PDES tests and doc-tests.
+- Deferred by scope: no production PDES scheduler integration, real wall-clock speedup, distributed runtime proof, or production Time Warp evidence is attached to Track 34. Public production PDES claims remain blocked until Tracks 47, 48, 49, and 55 attach live evidence.
+- Next-phase decision: Track 34 is archived as `Done`; future production PDES runtime work must proceed through Tracks 47/48/49/55 rather than this legacy scaffold track.

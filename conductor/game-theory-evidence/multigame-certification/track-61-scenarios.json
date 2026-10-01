@@ -1,0 +1,172 @@
+{
+  "schema_version": "kairoecs.multigame.certification.v1",
+  "track_id": 61,
+  "track_name": "Extensive-Form Graph-ECS Runtime Certification",
+  "status": "implementation-evidence",
+  "generated_at": "2026-06-20",
+  "crate": "kairo-ecs-game-theory",
+  "feature_gates": [
+    "graph-relations"
+  ],
+  "runtime_contracts": {
+    "normal_form": {
+      "component_module": "kairo_ecs_game_theory::normal_form",
+      "storage_model": "flat payoff matrix and strategy arrays",
+      "solver_surfaces": [
+        "BestResponseSolver",
+        "PureNashSolver",
+        "StrictDominanceSolver"
+      ],
+      "certification_goal": "normal-form games execute from cache-local flat ECS data without recursive graph allocation"
+    },
+    "extensive_form": {
+      "component_module": "kairo_ecs_game_theory::extensive_form",
+      "storage_model": "Graph-ECS edge entities linked by EntityId through ChildOf and TransitionTo",
+      "solver_surfaces": [
+        "extensive_form_paths",
+        "BackwardInductionSolver",
+        "information_set_fixtures"
+      ],
+      "certification_goal": "sequential games traverse Graph-ECS component stores without self-referencing pointers or boxed topology nodes"
+    }
+  },
+  "scenarios": [
+    {
+      "id": "normal_form_prisoners_dilemma",
+      "game_form": "normal-form",
+      "players": [
+        "row",
+        "column"
+      ],
+      "strategy_counts": [
+        2,
+        2
+      ],
+      "ecs_components": [
+        "StrategySpace",
+        "PayoffMatrix",
+        "Utility"
+      ],
+      "solver_assertions": [
+        {
+          "solver": "BestResponseSolver",
+          "assertion": "defect is the unique best response to cooperate and defect for each player"
+        },
+        {
+          "solver": "PureNashSolver",
+          "assertion": "defect/defect is the unique pure Nash equilibrium"
+        }
+      ],
+      "evidence_commands": [
+        "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test normal_form"
+      ]
+    },
+    {
+      "id": "normal_form_coordination_dominance",
+      "game_form": "normal-form",
+      "players": [
+        "alpha",
+        "beta"
+      ],
+      "strategy_counts": [
+        3,
+        2
+      ],
+      "ecs_components": [
+        "StrategySpace",
+        "PayoffMatrix",
+        "Utility"
+      ],
+      "solver_assertions": [
+        {
+          "solver": "StrictDominanceSolver",
+          "assertion": "strictly dominated strategies are reported deterministically by player and strategy index"
+        }
+      ],
+      "evidence_commands": [
+        "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --test normal_form"
+      ]
+    },
+    {
+      "id": "extensive_form_entry_deterrence",
+      "game_form": "extensive-form",
+      "players": [
+        "entrant",
+        "incumbent"
+      ],
+      "root_node": "entrant_decision",
+      "node_counts": {
+        "decision": 2,
+        "chance": 0,
+        "terminal": 3,
+        "information_sets": 0,
+        "action_edges": 4
+      },
+      "ecs_components": [
+        "ExtensiveNode",
+        "ActionEdge",
+        "ChildOf",
+        "TransitionTo",
+        "TerminalUtility"
+      ],
+      "solver_assertions": [
+        {
+          "solver": "extensive_form_paths",
+          "assertion": "all terminal paths are enumerated through edge entities and EntityId targets"
+        },
+        {
+          "solver": "BackwardInductionSolver",
+          "assertion": "the current player at each decision node selects the branch with the highest own terminal utility"
+        }
+      ],
+      "evidence_commands": [
+        "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory traversal_ --features graph-relations",
+        "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory backward_induction --features graph-relations"
+      ]
+    },
+    {
+      "id": "extensive_form_imperfect_information_fixture",
+      "game_form": "extensive-form",
+      "players": [
+        "sender",
+        "receiver"
+      ],
+      "root_node": "sender_type",
+      "node_counts": {
+        "decision": 3,
+        "chance": 1,
+        "terminal": 4,
+        "information_sets": 1,
+        "action_edges": 6
+      },
+      "ecs_components": [
+        "ExtensiveNode",
+        "ChanceOutcome",
+        "InformationSet",
+        "ActionEdge",
+        "ChildOf",
+        "TransitionTo",
+        "TerminalUtility"
+      ],
+      "solver_assertions": [
+        {
+          "solver": "information_set_fixtures",
+          "assertion": "information-set grouped decision nodes belong to the same player and expose the same ordered action labels"
+        }
+      ],
+      "evidence_commands": [
+        "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory information_set_fixtures --features graph-relations"
+      ]
+    }
+  ],
+  "acceptance_gates": [
+    "normal-form and extensive-form scenarios are both present",
+    "each scenario records ECS components, solver assertions, and executable evidence commands",
+    "extensive-form scenarios use ChildOf and TransitionTo EntityId relations",
+    "no scenario requires self-referencing pointers, Box topology nodes, or recursive owned graph structures"
+  ],
+  "known_limits": [
+    "chance-weighted expected utility remains a bounded follow-up before stochastic extensive-form parity is claimed",
+    "this certification manifest records local runtime evidence and does not claim live HPC or distributed execution proof"
+  ]
+}

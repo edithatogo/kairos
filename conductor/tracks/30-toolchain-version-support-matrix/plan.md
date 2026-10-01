@@ -28,7 +28,7 @@ Evidence 2026-05-06: this slice changed only Track 30 artifacts, `conductor/tool
 - Go: two most recent stable releases.
 - Node/TypeScript: LTS and current.
 
-Evidence 2026-05-06: matrix now records Rust MSRV 1.76/stable 1.95/beta lane, Python 3.10-3.14, R 4.2 package floor plus 4.5/4.6 CI lanes, Julia 1.10/1.12, Node 22/24 with Node 20 deprecated, .NET 10/11, and Go 1.25/1.26 with Go module floor 1.23.
+Evidence 2026-05-06: matrix now records Rust MSRV 1.76/stable 1.95/beta lane, Python 3.10-3.14, R 4.2 package floor plus 4.5/4.6 CI lanes, Julia 1.10/1.12, Node 22/24 with Node 20 deprecated, .NET 10/11, and Go 1.25/1.26 with Go module floor 1.23. Evidence 2026-06-19: GitHub Actions current-stable Rust refreshed to 1.96.x after hosted Linux stable reported rustc 1.96.0.
 
 ### Task 1.2 - Define OS/arch support [x]
 - Per language, specify: Linux x86_64, Linux aarch64, macOS x86_64, macOS aarch64, Windows x86_64.

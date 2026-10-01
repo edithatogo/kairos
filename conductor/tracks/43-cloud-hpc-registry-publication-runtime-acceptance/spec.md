@@ -23,6 +23,8 @@ Tracks 22, 35, 39, 42, and 44.
 ```text
 .github/workflows/hpc-registry-publish.yml
 packaging/hpc-registry-manifest.json
+packaging/hpc-runtime-acceptance-evidence.json
+packaging/negative/hpc-runtime-evidence-production-without-proof.json
 scripts/validation/validate-hpc-registry-readiness.mjs
 conductor/tracks/43-cloud-hpc-registry-publication-runtime-acceptance/*
 ```

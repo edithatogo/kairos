@@ -1,0 +1,55 @@
+{
+  "schema_version": "kairoecs.hpc.evidence.v1",
+  "track_id": "52",
+  "task_id": "4.2",
+  "commit_sha": "0000000000000000000000000000000000000000",
+  "pushed_ref": "refs/remotes/origin/branch-containing-track52-gpu-proof",
+  "evidence_class": "live-hpc-template",
+  "capability": "Track-52 live wgpu or CUDA hardware parity and benchmark proof.",
+  "hardware": {
+    "cpu_model": "Replace with CPU model.",
+    "cpu_topology": "Replace with socket/core/thread/cache topology.",
+    "memory_topology": "Replace with NUMA node, host memory size, and host/device locality topology.",
+    "accelerator_model": "Replace with exact GPU model, backend target, device ID, and VRAM size.",
+    "driver": "Replace with graphics or CUDA driver/runtime version."
+  },
+  "system": {
+    "operating_system": "Replace with OS image, kernel/build, architecture, and GPU runtime stack."
+  },
+  "toolchain": {
+    "rust_toolchain": "Replace with rustc/cargo version.",
+    "compiler": "Replace with shader compiler, CUDA compiler, C/C++ compiler, and relevant SDK versions.",
+    "mpi_implementation": "none for single-node Track 52 hardware proof unless the run is launched under MPI.",
+    "scheduler": "Replace with local shell, Slurm allocation, CI runner, Kubernetes job, or provider scheduler."
+  },
+  "runtime": {
+    "command": "Replace with the exact cargo test or benchmark command used to generate the raw artifact.",
+    "environment": {
+      "RUSTFLAGS": "Replace with effective value or none.",
+      "WGPU_BACKEND": "Replace with Vulkan, Metal, DX12, or none for CUDA.",
+      "CUDA_VISIBLE_DEVICES": "Replace with effective value or none for wgpu-only runs."
+    },
+    "feature_flags": [
+      "wgpu-backend-or-cuda-backend"
+    ],
+    "input_scenario": "Replace with DES, ABM, mixed parity, persistent-memory, or benchmark scenario and seed manifest."
+  },
+  "storage": {
+    "filesystem_or_object_store": "Replace with local disk, CI artifact store, Lustre, GPFS, or provider object store details."
+  },
+  "result": {
+    "expected": "Replace with parity tolerance, copy-boundary expectation, resident-buffer expectation, and benchmark threshold.",
+    "observed": "Replace with measured parity result, raw timings, memory residency counters, device metadata, and speedup or no-speedup result.",
+    "raw_artifact_path": "Replace with immutable raw output, command capture, environment capture, and benchmark result bundle path.",
+    "checksum": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "review": {
+    "reviewer": "Replace with reviewer name or handle.",
+    "evidence_date": "YYYY-MM-DD"
+  },
+  "waiver": {
+    "status": "template-required",
+    "owner": "Track 52",
+    "expires": "Replace with none for real live-hpc evidence; template must be copied and completed before any hardware claim."
+  }
+}

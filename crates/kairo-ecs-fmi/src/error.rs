@@ -5,8 +5,17 @@ pub type FmiResult<T> = Result<T, FmiError>;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum FmiError {
+    NullComponent,
     UnsupportedArchiveExtraction {
         path: PathBuf,
+    },
+    UnsupportedArchiveCompression {
+        path: PathBuf,
+        method: u16,
+    },
+    UnsafeArchiveEntry {
+        path: PathBuf,
+        entry: String,
     },
     MissingModelDescription {
         root: PathBuf,
@@ -37,11 +46,21 @@ pub enum FmiError {
 impl fmt::Display for FmiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::NullComponent => write!(f, "FMI component pointer is null"),
             Self::UnsupportedArchiveExtraction { path } => write!(
                 f,
                 "FMU archive extraction is not wired yet for {}; unpack the FMU first",
                 path.display()
             ),
+            Self::UnsupportedArchiveCompression { path, method } => write!(
+                f,
+                "unsupported FMU archive compression method {} in {}",
+                method,
+                path.display()
+            ),
+            Self::UnsafeArchiveEntry { path, entry } => {
+                write!(f, "unsafe archive entry {} in {}", entry, path.display())
+            }
             Self::MissingModelDescription { root } => {
                 write!(f, "missing modelDescription.xml under {}", root.display())
             }

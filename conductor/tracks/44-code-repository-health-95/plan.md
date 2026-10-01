@@ -33,3 +33,10 @@ Before any task or phase in this track is marked complete, and before the next p
 6. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` to verify recorded commits, pushed refs, and cleanup state.
 8. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
+
+## Archive boundary
+
+- [x] Review and archive the repo-side code/repository health floor as Done.
+- [x] Verify the health validator reports 10/10 against the 9.5 release floor.
+- [x] Verify the Conductor phase and DAG gates pass with Track 44 status set to Done.
+- [x] Record that live GitHub API score ingestion, trend storage, and package-specific sub-scores remain follow-up scope and are not claimed by this archive.

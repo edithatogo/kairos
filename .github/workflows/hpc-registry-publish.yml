@@ -37,7 +37,7 @@ jobs:
       - name: Validate HPC publication gates
         run: |
           node scripts/validation/validate-code-health.mjs
-          node scripts/validation/validate-hpc-registry-readiness.mjs
+          node scripts/validation/validate-hpc-registry-readiness.mjs --check-negative-fixtures
       - name: Dry-run publication commands
         env:
           KAIROS_VERSION: ${{ github.event.inputs.version }}
@@ -67,7 +67,7 @@ jobs:
       - name: Final health gate
         run: |
           node scripts/validation/validate-code-health.mjs
-          node scripts/validation/validate-hpc-registry-readiness.mjs
+          node scripts/validation/validate-hpc-registry-readiness.mjs --check-negative-fixtures --require-live-publication-evidence
       - name: Execute HPC publication lane
         env:
           GITHUB_ACTOR: ${{ github.actor }}

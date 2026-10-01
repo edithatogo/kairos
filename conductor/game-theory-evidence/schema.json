@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/edithatogo/kairos/conductor/game-theory-evidence/schema.json",
+  "title": "Kairos game theory ontology wave evidence manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "track_id",
+    "track_name",
+    "phase",
+    "status",
+    "task_commits",
+    "review",
+    "push",
+    "github_actions",
+    "validation",
+    "evidence_paths",
+    "waivers"
+  ],
+  "properties": {
+    "track_id": {
+      "type": "integer",
+      "minimum": 56,
+      "maximum": 61
+    },
+    "track_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "in_progress",
+        "in_review",
+        "blocked",
+        "done"
+      ]
+    },
+    "task_commits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "task",
+          "commit_sha",
+          "message",
+          "local_gates"
+        ],
+        "properties": {
+          "task": {
+            "type": "string"
+          },
+          "commit_sha": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "message": {
+            "type": "string"
+          },
+          "local_gates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "result",
+        "accepted_fixes"
+      ],
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "result": {
+          "type": "string"
+        },
+        "accepted_fixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "push": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ref",
+        "pushed_sha"
+      ],
+      "properties": {
+        "ref": {
+          "type": "string"
+        },
+        "pushed_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    },
+    "github_actions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "result",
+        "run_url"
+      ],
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "result": {
+          "type": "string"
+        },
+        "run_url": {
+          "type": "string"
+        }
+      }
+    },
+    "validation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command",
+          "result"
+        ],
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidence_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "waivers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "reason",
+          "owner",
+          "expires"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "expires": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

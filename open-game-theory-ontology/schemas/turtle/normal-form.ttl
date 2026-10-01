@@ -1,0 +1,12 @@
+@prefix gt: <https://kairos.dev/ontology/game-theory#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+gt:Game a rdfs:Class .
+gt:Player a rdfs:Class .
+gt:Strategy a rdfs:Class .
+gt:PayoffMatrix a rdfs:Class .
+gt:Utility a rdfs:Class .
+gt:hasPlayer a rdfs:Property ; rdfs:domain gt:Game ; rdfs:range gt:Player .
+gt:hasStrategy a rdfs:Property ; rdfs:domain gt:Player ; rdfs:range gt:Strategy .
+gt:hasPayoffMatrix a rdfs:Property ; rdfs:domain gt:Game ; rdfs:range gt:PayoffMatrix .
+gt:hasUtility a rdfs:Property ; rdfs:domain gt:PayoffMatrix ; rdfs:range gt:Utility .

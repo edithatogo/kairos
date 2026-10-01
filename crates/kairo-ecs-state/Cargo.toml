@@ -9,6 +9,9 @@ rust-version.workspace = true
 [dependencies]
 kairo-ecs-types = { path = "../kairo-ecs-types" }
 
+[features]
+default = []
+numa = []
+
 [lib]
 path = "src/lib.rs"
-

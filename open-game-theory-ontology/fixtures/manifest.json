@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "fixtures": [
+    {
+      "id": "normal-form",
+      "turtle": "schemas/turtle/normal-form.ttl",
+      "jsonld": "schemas/jsonld/normal-form.jsonld",
+      "concepts": [
+        "Game",
+        "Player",
+        "Strategy",
+        "PayoffMatrix",
+        "Utility"
+      ]
+    },
+    {
+      "id": "extensive-form",
+      "turtle": "schemas/turtle/extensive-form.ttl",
+      "jsonld": "schemas/jsonld/extensive-form.jsonld",
+      "concepts": [
+        "DecisionNode",
+        "ChanceNode",
+        "TerminalNode",
+        "InformationSet",
+        "Action",
+        "Transition"
+      ]
+    }
+  ],
+  "required_formats": [
+    "turtle",
+    "jsonld"
+  ],
+  "normal_form_concepts": [
+    "Game",
+    "Player",
+    "Strategy",
+    "PayoffMatrix",
+    "Utility"
+  ],
+  "extensive_form_concepts": [
+    "DecisionNode",
+    "ChanceNode",
+    "TerminalNode",
+    "InformationSet",
+    "Action",
+    "Transition"
+  ]
+}
