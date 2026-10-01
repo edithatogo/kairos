@@ -7,6 +7,24 @@ Current status: release governance is documented and locally checkable, but
 publication remains blocked while Track 15 stays in dry-run mode and registry
 name/toolchain verification remains unverified on the target machines.
 
+## Actual package archive rehearsal — 2026-10-01
+
+The package dry-run workflow now builds archive files, gathers them into a
+checksummed tree, and retains that tree as a GitHub Actions artifact for 90 days.
+The local rehearsal at source `738f2206f7a59e338c169d771faae7b73cd6372b`
+produced eight files: one Rust `.crate`, Python wheel and source distribution,
+R source package, npm `.tgz`, NuGet `.nupkg`, and Julia/Go source archives.
+Julia and Go source archives are fallbacks for their untagged registry surfaces;
+they are not registry package artifacts. R CMD check completed with one NOTE for
+missing optional suggested packages and skipped package tests per the workflow
+command. Full Rust workspace packaging remains blocked by internal path
+dependencies without registry versions.
+
+The local archive index, build receipts, checksum list, and ZIP are retained in
+the caller's ignored `.artifacts/` directory. After the workflow change is
+merged, the combined `kairos-actual-package-archives-<commit>` Actions artifact
+will be the shared 90-day copy. Neither copy enables registry publication.
+
 Latest local dry-run evidence, generated on 2026-05-08:
 
 - `dist/release-artifact-manifest.json` was generated with version `0.0.0-r2-dry-run`.

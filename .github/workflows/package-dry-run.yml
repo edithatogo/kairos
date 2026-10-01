@@ -17,6 +17,9 @@ on:
       - 'scripts/bootstrap-python-tools.lock'
       - 'scripts/package-python-tools.in'
       - 'scripts/package-python-tools.lock'
+      - 'packaging/scripts/build_package_archive_bundle.py'
+      - 'packaging/scripts/write_package_build_receipt.py'
+      - 'tests/test_package_archive_bundle.py'
       - 'tools/docs-quality-node-tools/package.json'
       - 'tools/docs-quality-node-tools/package-lock.json'
       - '.github/workflows/package-dry-run.yml'
@@ -44,8 +47,17 @@ jobs:
           test -f crates/kairo-ecs-rng/Cargo.toml
           test -f crates/kairo-ecs-state/Cargo.toml
           test -f crates/kairo-ecs-types/Cargo.toml
-          cargo package --allow-dirty -p kairo-ecs-types
+          cargo package --locked --allow-dirty -p kairo-ecs-types
+          mkdir -p dist/packages/rust
+          cp target/package/kairo-ecs-types-*.crate dist/packages/rust/
+          python3 packaging/scripts/write_package_build_receipt.py --ecosystem rust --archive-dir dist/packages/rust --source-commit "$GITHUB_SHA" --command 'cargo package --locked --allow-dirty -p kairo-ecs-types' --toolchain "$(rustc --version); $(cargo --version)"
           python packaging/scripts/build_release_manifest.py --check
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kairos-package-rust
+          path: dist/packages/rust/
+          if-no-files-found: error
+          retention-days: 7
   python-package:
     name: python-package (${{ matrix.python-version }})
     runs-on: ubuntu-latest
@@ -65,8 +77,16 @@ jobs:
           test -d bindings/python/kairo_ecs
           python -m pip install --require-hashes -r "$GITHUB_WORKSPACE/scripts/package-python-tools.lock"
           cd bindings/python
-          python -m build --no-isolation
-          twine check ./dist/*
+          python -m build --no-isolation --outdir "$GITHUB_WORKSPACE/dist/packages/python"
+          python -m twine check "$GITHUB_WORKSPACE"/dist/packages/python/*
+          cd "$GITHUB_WORKSPACE"
+          python3 packaging/scripts/write_package_build_receipt.py --ecosystem python --archive-dir dist/packages/python --source-commit "$GITHUB_SHA" --command 'python -m build --no-isolation; python -m twine check' --toolchain "$(python --version); $(python -m build --version); $(python -m twine --version)"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kairos-package-python
+          path: dist/packages/python/
+          if-no-files-found: error
+          retention-days: 7
   r-package:
     name: r-package
     runs-on: ubuntu-latest
@@ -89,6 +109,16 @@ jobs:
           cd bindings/r
           R CMD build .
           _R_CHECK_FORCE_SUGGESTS_=false R CMD check --no-manual --no-tests ./*.tar.gz
+          mkdir -p "$GITHUB_WORKSPACE/dist/packages/r"
+          cp ./*.tar.gz "$GITHUB_WORKSPACE/dist/packages/r/"
+          cd "$GITHUB_WORKSPACE"
+          python3 packaging/scripts/write_package_build_receipt.py --ecosystem r --archive-dir dist/packages/r --source-commit "$GITHUB_SHA" --command 'R CMD build; R CMD check --no-manual --no-tests' --toolchain "$(R --version | head -n 1)" --validation-notes 'R CMD check completed with one NOTE for unavailable optional suggested packages; package tests skipped by the specified --no-tests workflow command.'
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kairos-package-r
+          path: dist/packages/r/
+          if-no-files-found: error
+          retention-days: 7
   npm-package:
     name: npm-package
     runs-on: ubuntu-latest
@@ -116,7 +146,16 @@ jobs:
           npm ci --ignore-scripts
           npm run build
           # Build once explicitly; ignore scripts prevents npm pack lifecycle rebuilds.
-          npm pack --dry-run --ignore-scripts
+          mkdir -p "$GITHUB_WORKSPACE/dist/packages/typescript"
+          npm pack --ignore-scripts --pack-destination "$GITHUB_WORKSPACE/dist/packages/typescript"
+          cd "$GITHUB_WORKSPACE"
+          python3 packaging/scripts/write_package_build_receipt.py --ecosystem typescript --archive-dir dist/packages/typescript --source-commit "$GITHUB_SHA" --command 'npm ci --ignore-scripts; npm run build; npm pack --ignore-scripts' --toolchain "$(node --version); $(npm --version)"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kairos-package-typescript
+          path: dist/packages/typescript/
+          if-no-files-found: error
+          retention-days: 7
   nuget-package:
     name: nuget-package
     runs-on: ubuntu-latest
@@ -131,4 +170,81 @@ jobs:
           test -f bindings/csharp/Kairo.ECS.sln
           test -f bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj
           dotnet restore bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -p:TargetFrameworks=net10.0 --locked-mode -p:UseSharedCompilation=false -m:1 -nr:false
-          dotnet pack bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -c Release -p:TargetFrameworks=net10.0 --no-restore -p:RestoreLockedMode=true -p:UseSharedCompilation=false -m:1 -nr:false
+          mkdir -p "$GITHUB_WORKSPACE/dist/packages/nuget"
+          dotnet pack bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -c Release -p:TargetFrameworks=net10.0 --no-restore -p:RestoreLockedMode=true -p:UseSharedCompilation=false -m:1 -nr:false -o "$GITHUB_WORKSPACE/dist/packages/nuget"
+          python3 packaging/scripts/write_package_build_receipt.py --ecosystem nuget --archive-dir dist/packages/nuget --source-commit "$GITHUB_SHA" --command 'dotnet restore --locked-mode; dotnet pack -c Release -p:TargetFrameworks=net10.0 --no-restore' --toolchain "dotnet $(dotnet --version)"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kairos-package-nuget
+          path: dist/packages/nuget/
+          if-no-files-found: error
+          retention-days: 7
+
+  julia-package:
+    name: julia-source-archive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Archive Julia package source
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"$/\1/p' bindings/julia/Project.toml)
+          mkdir -p dist/packages/julia
+          git archive --format=tar --prefix="KairoECS-${version}-source/" "${GITHUB_SHA}:bindings/julia" | gzip -n > "dist/packages/julia/KairoECS-${version}-source.tar.gz"
+          python3 packaging/scripts/write_package_build_receipt.py --ecosystem julia --archive-dir dist/packages/julia --source-commit "$GITHUB_SHA" --command 'git archive bindings/julia; gzip -n' --toolchain "$(git --version); $(gzip --version | head -n 1)" --validation-notes 'Julia package tests run in the required ci-bindings workflow.'
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kairos-package-julia
+          path: dist/packages/julia/
+          if-no-files-found: error
+          retention-days: 7
+
+  go-package:
+    name: go-source-archive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Archive Go module source
+        run: |
+          mkdir -p dist/packages/go
+          git archive --format=tar --prefix="kairos-go-${GITHUB_SHA::12}/" "${GITHUB_SHA}:bindings/go" | gzip -n > "dist/packages/go/kairos-go-${GITHUB_SHA::12}-source.tar.gz"
+          python3 packaging/scripts/write_package_build_receipt.py --ecosystem go --archive-dir dist/packages/go --source-commit "$GITHUB_SHA" --command 'git archive bindings/go; gzip -n' --toolchain "$(git --version); $(gzip --version | head -n 1)" --validation-notes 'Go module tests and vet run in the required ci-bindings workflow.'
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kairos-package-go
+          path: dist/packages/go/
+          if-no-files-found: error
+          retention-days: 7
+
+  retain-package-archives:
+    name: verify-and-retain-package-archives
+    needs: [rust-package, python-package, r-package, npm-package, nuget-package, julia-package, go-package]
+    runs-on: ubuntu-latest
+    # The validator only downloads this run's artifacts and reads the checked-out source;
+    # it does not publish packages or change repository contents.
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v7.0.0
+        with:
+          pattern: kairos-package-*
+          path: dist/package-archives
+      - name: Validate archives and write SHA-256 index
+        run: |
+          python3 packaging/scripts/build_package_archive_bundle.py \
+            --input dist/package-archives \
+            --output dist/retained-package-archives \
+            --source-commit "$GITHUB_SHA"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kairos-actual-package-archives-${{ github.sha }}
+          path: dist/retained-package-archives/
+          if-no-files-found: error
+          retention-days: 90

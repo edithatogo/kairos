@@ -16,6 +16,9 @@ Format:
 
 ### Changed
 
+- Package dry runs now retain actual supported ecosystem archives, verify a shared SHA-256 index, and upload the combined archive tree for 90 days without publishing.
+- Release delivery checks now fail closed unless an SPDX SBOM, manifest-covering provenance, and matching checksums are present before artifact upload.
+
 - RRID readiness records the native suggestion form and bounded KairoECS name lookup; SciCrunch received the resource suggestion on 2026-10-01, while curator acceptance and RRID assignment remain pending.
 
 - Rust test and benchmark serialization dependencies use Serde 1.0.229 and serde_json 1.0.151 while preserving RNG versions and the supported compiler floor.

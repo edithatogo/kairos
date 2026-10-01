@@ -64,8 +64,6 @@ jobs:
           cargo test --workspace --all-features --no-run
           cargo package --allow-dirty --workspace
           cargo publish --dry-run --workspace
-      - name: Validate release delivery gate
-        run: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1
       - name: Build release manifest
         env:
           RELEASE_VERSION: ${{ github.event.inputs.version }}
@@ -73,6 +71,10 @@ jobs:
         run: python packaging/scripts/build_release_manifest.py --version "${RELEASE_VERSION}" --dry-run "${DRY_RUN}"
       - name: Validate release manifest
         run: python packaging/scripts/build_release_manifest.py --verify-existing
+      - name: Test release evidence gate
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File tests/test_track15_release_evidence_gate.ps1
+      - name: Validate release delivery gate
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_track15_release_delivery.ps1
       - name: Upload artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
