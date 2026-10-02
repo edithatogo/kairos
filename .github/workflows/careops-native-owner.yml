@@ -52,6 +52,7 @@ jobs:
       - name: Test reusable native owner packages
         run: |
           mkdir -p .artifacts/ci/native
+          set -o pipefail
           cargo +1.98.1 test --locked -p kairo-ecs-core -p kairo-ecs-types -p kairo-ecs-state -p kairo-ecs-rng -p kairo-ecs-des -p kairo-ecs-abm 2>&1 | tee .artifacts/ci/native/owner.log
       - name: Retain bounded failure log
         if: failure()
