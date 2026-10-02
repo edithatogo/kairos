@@ -1,0 +1,63 @@
+name: CareOps native owner
+
+on:
+  push:
+    branches: ['codex/careops-*']
+  pull_request:
+    paths:
+      - 'crates/kairo-ecs-core/**'
+      - 'crates/kairo-ecs-types/**'
+      - 'crates/kairo-ecs-state/**'
+      - 'crates/kairo-ecs-rng/**'
+      - 'crates/kairo-ecs-des/**'
+      - 'crates/kairo-ecs-abm/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/careops-native-owner.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  native:
+    name: Native owner (${{ matrix.os }})
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Install reviewed Rust 1.98.1
+        run: rustup toolchain install 1.98.1 --profile minimal
+      - name: Verify actual native host and source
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          git rev-parse HEAD
+          rustc +1.98.1 -vV
+          uname -a
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            test "$(uname -m)" = arm64
+          else
+            test "$(uname -m)" = x86_64
+          fi
+      - name: Test reusable native owner packages
+        run: |
+          mkdir -p .artifacts/ci/native
+          cargo +1.98.1 test --locked -p kairo-ecs-core -p kairo-ecs-types -p kairo-ecs-state -p kairo-ecs-rng -p kairo-ecs-des -p kairo-ecs-abm 2>&1 | tee .artifacts/ci/native/owner.log
+      - name: Retain bounded failure log
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: careops-owner-failure-${{ matrix.os }}
+          path: .artifacts/ci/native/owner.log
+          retention-days: 7
+          if-no-files-found: error
