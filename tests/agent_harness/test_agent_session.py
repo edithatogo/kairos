@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 SCRIPT = Path(__file__).resolve().parents[2] / 'scripts/agent_session.py'
 spec = importlib.util.spec_from_file_location('agent_session', SCRIPT)
@@ -179,6 +180,19 @@ class SessionTests(unittest.TestCase):
                 self.assertEqual(run.returncode, 1)
                 self.assertIn('FAIL:', run.stderr)
                 self.assertNotIn('Traceback', run.stderr)
+
+    def test_case_alias_cannot_expand_exact_write_scope(self):
+        lease = session.claim(self.root, 'a', 'fixture', ['Docs'])
+        (self.root / 'docs').mkdir(); (self.root / 'docs/plan.md').write_text('out of exact scope')
+        with self.assertRaisesRegex(ValueError, 'outside reservation'):
+            session.check(self.root, lease['token'])
+
+    def test_oversized_context_rejected_before_file_allocation(self):
+        (self.root / 'large.md').write_text('x' * 100000)
+        self.git('add', 'large.md'); self.git('commit', '-qm', 'large')
+        with patch.object(Path, 'open', side_effect=AssertionError('must not read oversized file')):
+            with self.assertRaisesRegex(ValueError, 'before read'):
+                session.snapshot(self.root, 'fixture', ['large.md'], 100)
 
 
 def sys_executable():

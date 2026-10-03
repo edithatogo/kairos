@@ -197,16 +197,24 @@ def recover(root, token, reason, owner_stopped=False):
 
 def snapshot(root, task, paths, budget=24000):
     root, _ = identity(root)
-    if not task.strip() or budget < 1 or not paths:
-        raise ValueError('task, paths and positive budget required')
+    if not task.strip() or not 1 <= budget <= 1000000 or not paths:
+        raise ValueError('task, paths and byte budget 1..1000000 required')
     tracked = set(subprocess.check_output(['git', '-C', str(root), 'ls-files', '-z']).decode().split('\0'))
     documents = []
+    bytes_read = 0
     for name in sorted(set(path_key(p) for p in paths)):
         safe_path(root, name)
         path = root / name
         if name not in tracked or not path.is_file() or path.is_symlink() or not path.resolve().is_relative_to(root):
             raise ValueError('context must be tracked regular text within this repository: ' + name)
-        data = path.read_bytes()
+        remaining = budget - bytes_read
+        if path.stat().st_size > remaining:
+            raise ValueError('context exceeds byte budget before read')
+        with path.open('rb') as stream:
+            data = stream.read(remaining + 1)
+        if len(data) > remaining:
+            raise ValueError('context grew beyond byte budget during read')
+        bytes_read += len(data)
         try:
             text = data.decode('utf-8')
         except UnicodeDecodeError:
