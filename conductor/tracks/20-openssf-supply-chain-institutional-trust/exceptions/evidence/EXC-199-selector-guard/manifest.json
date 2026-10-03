@@ -1,0 +1,125 @@
+{
+  "source_commit": "d38da5bfd42ce73370d0defe63873ac51a7d3468",
+  "files": [
+    {
+      "path": "actual-gate/behavior-npm.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "actual-gate/behavior-npm.stdout",
+      "sha256": "6f96f35580b655b8b801055955203c3393b8ed633ee3872eaa7fa95df17d949e"
+    },
+    {
+      "path": "actual-gate/behavior-top.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "actual-gate/behavior-top.stdout",
+      "sha256": "6f96f35580b655b8b801055955203c3393b8ed633ee3872eaa7fa95df17d949e"
+    },
+    {
+      "path": "actual-gate/commit.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "actual-gate/commit.stdout",
+      "sha256": "272261940ca6106406f8ba2caefde3df60b1549aa77e4d6cf6ac9c80ca14d2eb"
+    },
+    {
+      "path": "actual-gate/installer-tests.stderr",
+      "sha256": "f755f9961642d41d2cce1b5fcc5bd31a8f151b234240802aa302b8532879c56f"
+    },
+    {
+      "path": "actual-gate/installer-tests.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "actual-gate/node-version.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "actual-gate/node-version.stdout",
+      "sha256": "510734775b8bc8f762a1e5bdb144a2bbc76c4c981a4a50b1bcd9d594c292b18c"
+    },
+    {
+      "path": "actual-gate/npm-version.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "actual-gate/npm-version.stdout",
+      "sha256": "a712c758275b460d18fa77a26ed3589689bb3f69dcc1ea99b913e32db92a5cd2"
+    },
+    {
+      "path": "actual-gate/raw-audit.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "actual-gate/raw-audit.stdout",
+      "sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c"
+    },
+    {
+      "path": "actual-gate/receipt.json",
+      "sha256": "05e666295f5f0622e4f06d63a97b485144ca2378e2404aeb826f3f92bb051ea7"
+    },
+    {
+      "path": "actual-gate/resolution.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "actual-gate/resolution.stdout",
+      "sha256": "1c9defa7cd77e48f778b7650cba91941cb124138a512901a43bd0edd6eb5ed9e"
+    },
+    {
+      "path": "actual-gate.stderr",
+      "sha256": "ed4038180123a982fbdc923a62c8c479fb1db36c3fc95f904d12477dc6b6fe76"
+    },
+    {
+      "path": "actual-gate.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "classifier.stderr",
+      "sha256": "e2cbf97836df17a39afe84a75826b7ec3535dedf8fccc11e963f58661b1619a3"
+    },
+    {
+      "path": "classifier.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "dag.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "dag.stdout",
+      "sha256": "86958ef5f8bd039b9c2c96df9e29c17f71a5f3846b1e9e16d2cedf2abda01962"
+    },
+    {
+      "path": "phase.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "phase.stdout",
+      "sha256": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2"
+    },
+    {
+      "path": "runner.stderr",
+      "sha256": "376716a87a646d68d5723d3e18e037b2fb19c1396f77265b5662e03ca196a215"
+    },
+    {
+      "path": "runner.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "verification.json",
+      "sha256": "ed88585c884c6c6a13ecfb3bb5f397ba94000b299771dbec7305ae21743598b1"
+    },
+    {
+      "path": "wire.stderr",
+      "sha256": "de60fac0c94c42b510830496c3729d408c9c0697ce526ea9635e32003f247741"
+    },
+    {
+      "path": "wire.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}
