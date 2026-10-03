@@ -8,7 +8,7 @@ repository = "https://github.com/edithatogo/kairos"
 description = "WASM bindings for KairoECS"
 
 [dependencies]
-kairo-ecs-ffi = { path = "../kairo-ecs-ffi" }
+kairo-ecs-ffi = { path = "../kairo-ecs-ffi" , version = "=0.1.0" }
 wasm-bindgen = { version = "0.2", optional = true }
 
 [features]

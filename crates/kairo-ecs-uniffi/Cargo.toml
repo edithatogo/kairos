@@ -11,4 +11,4 @@ name = "kairo_ecs_uniffi"
 path = "src/lib.rs"
 
 [dependencies]
-kairo-ecs-ffi = { path = "../kairo-ecs-ffi" }
+kairo-ecs-ffi = { path = "../kairo-ecs-ffi" , version = "=0.1.0" }
