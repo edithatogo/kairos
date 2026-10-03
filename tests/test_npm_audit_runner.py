@@ -197,6 +197,7 @@ class NpmAuditRunnerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self._dispatch(wrong_github_ref, event)
 
+    @mock.patch.dict(os.environ, {}, clear=True)
     def test_local_main_unknown_or_main_branch_cannot_impersonate_pr193(self):
         with mock.patch.object(runner, "local_repository", return_value="edithatogo/kairos"), mock.patch.object(
             runner, "local_git_branch", return_value="codex/exc199-activation"
