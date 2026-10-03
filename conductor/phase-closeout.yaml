@@ -73,7 +73,7 @@ entries:
     phase: "track-closeout"
     state: closed
     review_command: "$conductor-review with independent read-only source review"
-    review_result: "Existing minimal track closeout retained; additive manual resource slice has no Q1 source blocker; 33 selected DES tests pass on Rust 1.98.1 and 1.76.0. Exact-commit hosted owner CI required before parent acceptance."
+    review_result: "Existing minimal track closeout retained; additive manual resource slice has no Q1 source blocker; Q2 non-preemptive join reviewed; 43 DES tests pass, release/MSRV qualification recorded; C1 temporal partial remains unaccepted. Exact-commit hosted owner CI required before parent acceptance."
     fixes_applied: true
     validation_commands:
       - "cargo test --locked -p kairo-ecs-des"
@@ -82,7 +82,7 @@ entries:
       - "cargo deny --locked --workspace --all-features check"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
     git_status: "Clean source commit; reviewed evidence pending commit and push"
-    commit_sha: "d8791ad981429f5b7d3c2238d0b034c04781488e"
+    commit_sha: "6b5176b781b80267ab4a620d205a2a137fdce4f5"
     pushed_ref: "origin/codex/careops-resource-lifecycle"
     next_phase_decision: "Manual resource slice only; parent acceptance follows owner CI; Q2-Q4 remain pending."
   - track_id: "04"
