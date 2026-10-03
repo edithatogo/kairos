@@ -129,3 +129,14 @@ run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit
 and push. The next-phase decision is to keep Track 48 In Progress until
 optimistic safe-time execution, replay/redelivery semantics, benchmark evidence,
 distributed transport, and live HPC evidence are complete.
+
+
+## Resumed implementation — after Track 47 merge
+
+PR #193 merged as fc2f7b7f8e24faef8d02e29aaaaaf64852945cf0 after all 19 exact-head workflow runs passed. Active branch is codex/kairos-track48-optimistic-runtime; parent checkout/pin remain outside this task. Architecture and ECS/trace reviews settled the bound contract in docs/pdes/optimistic-runtime-contract.md. No distributed/Done claim is made.
+
+Actual RED baseline at source fc2f7b7: Rust 1.98.1 compiled three regression tests and exited 101. Initial seed restoration, stale-token recreation and anti rebuild each fail their independent oracle. Test source is integrated from d1e6472 as 1b3c0d8. Worker logs/receipt remain in /private/tmp/kairos-track48-regressions/artifacts/track48-red-baseline. One advisory lease token was mistakenly printed during a check; it was released immediately after commit and root verified no such lease remains active. No token is committed.
+
+GenerationBitset source eb8a15153ac95666a3962e895ea6bfbbeb738191fc4b7a83c763ed00ae725a90 integrated at b4be30d. Worker standalone 11 tests pass on Rust 1.98.1; independent reviewer also ran all 11 on Rust 1.76.0 and 1.98.1 with exit 0. Module exports/full crate integration remain pending. Construction/restore allocation paths are source-reviewed; allocation failure was not fault-injected. Snapshot cloning uses ordinary Vec clone; no blanket allocation-safe claim is made.
+
+The original Track 48/49 distributed acceptance cycle remains explicit. No Track 49 production dispatch or dependency change is authorized by this local packet. Current EXC-193 is PR #193-only; any future exception needs its own governed approval.
