@@ -1,12 +1,13 @@
 //! Experimental, single-world Flow facade. No portable checkpoint promise.
 use crate::preemption::{select_replacement, HolderCandidate, WaitingCandidate};
-use kairo_ecs_core::Scheduler;
+use kairo_ecs_core::{ScheduledEventPreview, Scheduler, SchedulerStats};
 use kairo_ecs_state::{ComponentRegistry, World};
 use kairo_ecs_types::{
     EntityId, EventId, EventKind, ScheduleRequest, SimDuration, SimTime, StepOutcome,
 };
 use std::any::{Any, TypeId};
 use std::collections::{BTreeMap, BTreeSet};
+use std::num::NonZeroU64;
 
 /// Generational resource identity.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -41,6 +42,37 @@ pub enum FlowError {
     InvalidState,
     #[error("invalid work")]
     InvalidWork,
+    #[error("same-tick transition budget exceeded at {at_ticks} (limit {limit})")]
+    SameTickBudgetExceeded { at_ticks: u128, limit: u64 },
+    #[error("Flow run is halted")]
+    RunHalted,
+}
+/// Immutable run configuration for the experimental Flow surface.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct FlowConfig {
+    pub max_same_tick_flow_transitions: NonZeroU64,
+}
+impl Default for FlowConfig {
+    fn default() -> Self {
+        Self {
+            max_same_tick_flow_transitions: NonZeroU64::new(100_000).unwrap(),
+        }
+    }
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct FlowBudgetHalt {
+    pub at: SimTime,
+    pub consumed: u64,
+    pub required_cost: u64,
+    pub pending: ScheduledEventPreview,
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct FlowBudgetSnapshot {
+    pub tick: Option<SimTime>,
+    pub consumed: u64,
+    pub limit: NonZeroU64,
+    pub halted: Option<FlowBudgetHalt>,
+    pub scheduler: SchedulerStats,
 }
 
 /// Generational request identity retained after termination.
@@ -234,6 +266,7 @@ struct HandlerDescriptor {
     context_type: TypeId,
     present: fn(&dyn Any, LifecycleTransition) -> bool,
     invoke: HandlerBridge,
+    context_present: fn(&ComponentRegistry, EntityId) -> bool,
     handlers: Box<dyn Any>,
 }
 fn handler_present<C: 'static>(h: &dyn Any, transition: LifecycleTransition) -> bool {
@@ -291,6 +324,8 @@ fn cleanup_restart<T: 'static, C: 'static>(registry: &mut ComponentRegistry, id:
 #[derive(Clone, Copy)]
 struct WorkDescriptor {
     cleanup: ContextCleanup,
+    context_present: fn(&ComponentRegistry, EntityId) -> bool,
+    restart_present: fn(&ComponentRegistry, EntityId) -> bool,
     prepare: Option<fn(&ComponentRegistry, EntityId) -> Box<dyn PreparedContext>>,
 }
 #[derive(Clone, Debug)]
@@ -372,6 +407,20 @@ struct ResourceStage {
     queue: ClaimQueue,
     active: ActiveAllocations,
 }
+struct DispatchPlan {
+    resources: BTreeMap<ResourceId, ResourceStage>,
+    requests: BTreeMap<RequestId, ResourceRequest>,
+    progress: BTreeMap<WorkId, WorkProgress>,
+    tokens: Vec<(Command, SimTime, Option<Notification>)>,
+    factories: Vec<WorkId>,
+    removed_works: Vec<(WorkId, WorkDescriptor)>,
+    remove_resource: Option<ResourceId>,
+    remove_actor: Option<EntityId>,
+    destroyed: u64,
+    scheduled: u64,
+    admission: u64,
+    lease_revision: u64,
+}
 /// Declarative admission; fields do not mutate runtime state until submit.
 pub struct AcquireBuilder<'a> {
     runtime: &'a mut FlowRuntime,
@@ -425,6 +474,7 @@ impl AcquireBuilder<'_> {
         self
     }
     pub fn submit(self) -> Result<RequestId, FlowError> {
+        self.runtime.check_running()?;
         let owner = self.owner.ok_or(FlowError::InvalidState)?;
         self.runtime.submit_configured(
             self.resource,
@@ -443,6 +493,10 @@ impl AcquireBuilder<'_> {
 /// Private shared scheduler/world/registry. Single process, experimental Rust API.
 /// All runtime resource changes occur only at command dispatch boundaries.
 pub struct FlowRuntime {
+    config: FlowConfig,
+    budget_tick: Option<SimTime>,
+    budget_consumed: u64,
+    budget_halt: Option<FlowBudgetHalt>,
     scheduler: Scheduler,
     world: World,
     registry: ComponentRegistry,
@@ -473,7 +527,14 @@ impl Default for FlowRuntime {
 }
 impl FlowRuntime {
     pub fn new() -> Self {
+        Self::with_config(FlowConfig::default())
+    }
+    pub fn with_config(config: FlowConfig) -> Self {
         Self {
+            config,
+            budget_tick: None,
+            budget_consumed: 0,
+            budget_halt: None,
             scheduler: Scheduler::new(),
             world: World::new(),
             registry: ComponentRegistry::new(),
@@ -493,10 +554,33 @@ impl FlowRuntime {
             next_lease: 0,
         }
     }
+    pub fn budget_snapshot(&self) -> FlowBudgetSnapshot {
+        FlowBudgetSnapshot {
+            tick: self.budget_tick,
+            consumed: self.budget_consumed,
+            limit: self.config.max_same_tick_flow_transitions,
+            halted: self.budget_halt,
+            scheduler: self.scheduler.stats(),
+        }
+    }
+    fn check_running(&self) -> Result<(), FlowError> {
+        if self.budget_halt.is_some() {
+            Err(FlowError::RunHalted)
+        } else {
+            Ok(())
+        }
+    }
+    fn halt_error(&self) -> Option<FlowError> {
+        self.budget_halt.map(|h| FlowError::SameTickBudgetExceeded {
+            at_ticks: h.at.ticks(),
+            limit: self.config.max_same_tick_flow_transitions.get(),
+        })
+    }
     pub fn now(&self) -> SimTime {
         self.scheduler.now()
     }
     fn spawn(&mut self) -> Result<EntityId, FlowError> {
+        self.check_running()?;
         if self.created >= OPERATION_CAP {
             return Err(FlowError::CounterOverflow);
         }
@@ -527,6 +611,7 @@ impl FlowRuntime {
         }
     }
     fn check_schedule(&self, at: SimTime) -> Result<(), FlowError> {
+        self.check_running()?;
         if at < self.now() {
             return Err(FlowError::PastCommand);
         }
@@ -583,6 +668,7 @@ impl FlowRuntime {
         registration: &str,
         context: C,
     ) -> Result<WorkId, FlowError> {
+        self.check_running()?;
         self.actor(owner)?;
         self.validate_context::<C>(registration)?;
         if registration.trim().is_empty()
@@ -611,6 +697,8 @@ impl FlowRuntime {
             id,
             WorkDescriptor {
                 cleanup: cleanup_context::<C>,
+                context_present: |registry, id| registry.get::<WorkContext<C>>(id).is_some(),
+                restart_present: |_, _| false,
                 prepare: None,
             },
         );
@@ -621,6 +709,7 @@ impl FlowRuntime {
         registration: &str,
         handlers: WorkHandlers<C>,
     ) -> Result<(), FlowError> {
+        self.check_running()?;
         if registration.trim().is_empty()
             || self.context_types.contains_key(registration)
             || self.handlers.contains_key(registration)
@@ -633,6 +722,7 @@ impl FlowRuntime {
                 context_type: TypeId::of::<C>(),
                 present: handler_present::<C>,
                 invoke: invoke_handler::<C>,
+                context_present: |registry, id| registry.get::<WorkContext<C>>(id).is_some(),
                 handlers: Box::new(handlers),
             },
         );
@@ -646,6 +736,7 @@ impl FlowRuntime {
         initial_template: T,
         make_context: fn(&T) -> C,
     ) -> Result<WorkId, FlowError> {
+        self.check_running()?;
         self.actor(owner)?;
         self.validate_context::<C>(registration)?;
         if self.created >= OPERATION_CAP {
@@ -664,6 +755,8 @@ impl FlowRuntime {
             work,
             WorkDescriptor {
                 cleanup: cleanup_restart::<T, C>,
+                context_present: |registry, id| registry.get::<WorkContext<C>>(id).is_some(),
+                restart_present: |registry, id| registry.get::<RestartTemplate<T, C>>(id).is_some(),
                 prepare: Some(prepare_restart::<T, C>),
             },
         );
@@ -768,6 +861,7 @@ impl FlowRuntime {
         can_preempt: bool,
         preemptible: Option<PreemptionStrategy>,
     ) -> Result<RequestId, FlowError> {
+        self.check_running()?;
         self.actor(owner)?;
         self.resource(resource)?;
         if (timed && work.is_none()) || (preemptible.is_some() && (!timed || work.is_none())) {
@@ -866,6 +960,7 @@ impl FlowRuntime {
         })
     }
     pub fn release(&mut self, lease: LeaseId, at: SimTime) -> Result<(), FlowError> {
+        self.check_running()?;
         self.check_schedule(at)?;
         let request = self.request(lease.request)?;
         if request.state != RequestState::Active
@@ -887,6 +982,7 @@ impl FlowRuntime {
         at: SimTime,
         priority: i32,
     ) -> Result<(), FlowError> {
+        self.check_running()?;
         let r = self.request(id)?;
         if terminal(r.state) {
             return Err(FlowError::TerminalRequest);
@@ -908,6 +1004,7 @@ impl FlowRuntime {
         at: SimTime,
         priority: i32,
     ) -> Result<(), FlowError> {
+        self.check_running()?;
         let r = self.request(id)?;
         if terminal(r.state) {
             return Err(FlowError::TerminalRequest);
@@ -915,6 +1012,7 @@ impl FlowRuntime {
         self.schedule_priority(Command::Reprioritize(id, level), at, priority)
     }
     pub fn set_capacity(&mut self, id: ResourceId, total: u32) -> Result<(), FlowError> {
+        self.check_running()?;
         if self.resource(id)?.active.len() > total as usize {
             return Err(FlowError::CapacityInUse);
         }
@@ -935,6 +1033,7 @@ impl FlowRuntime {
         })
     }
     pub fn remove_resource(&mut self, id: ResourceId) -> Result<(), FlowError> {
+        self.check_running()?;
         self.resource(id)?;
         if self.in_use(id) {
             return Err(FlowError::ResourceInUse);
@@ -942,10 +1041,14 @@ impl FlowRuntime {
         self.schedule(Command::Remove(id), self.now())
     }
     pub fn despawn_actor(&mut self, id: EntityId) -> Result<(), FlowError> {
+        self.check_running()?;
         self.actor(id)?;
         self.schedule(Command::Despawn(id), self.now())
     }
     pub fn run_for(&mut self, max_events: u64) -> Result<FlowRun, FlowError> {
+        if let Some(error) = self.halt_error() {
+            return Err(error);
+        }
         let mut dispatches = Vec::new();
         for _ in 0..max_events {
             match self.step()? {
@@ -959,51 +1062,113 @@ impl FlowRuntime {
         })
     }
     pub fn step(&mut self) -> Result<Option<FlowDispatch>, FlowError> {
-        let event = match self.scheduler.step() {
-            StepOutcome::Empty => return Ok(None),
-            StepOutcome::LimitReached => return Err(FlowError::InvalidState),
-            StepOutcome::Dispatched(event) => event,
+        if let Some(error) = self.halt_error() {
+            return Err(error);
+        }
+        let Some(preview) = self.scheduler.peek_next() else {
+            return Ok(None);
         };
+        self.scheduler
+            .stats()
+            .dispatched_events
+            .checked_add(1)
+            .filter(|n| *n <= OPERATION_CAP)
+            .ok_or(FlowError::CounterOverflow)?;
         let command = self
             .commands
-            .remove(&event.id)
+            .get(&preview.id)
+            .cloned()
             .ok_or(FlowError::InvalidState)?;
-        // Reservations are admission metadata, not authoritative allocation state.
-        if let Command::Release(lease) = command {
-            self.pending_releases.remove(&lease);
-        }
         let mut outcome = FlowDispatch {
-            event: event.id,
-            at: event.at,
+            event: preview.id,
+            at: preview.at,
             records: Vec::new(),
             error: None,
         };
-        if let Command::Notify = command {
-            if let Some(n) = self.notifications.remove(&event.id) {
-                let _causal_origin = (n.origin, n.ordinal);
-                if let Ok(spec) = self.work(n.work) {
-                    if self.world.is_alive(spec.owner) {
-                        if let Some(h) = self.handlers.get(&spec.context_type_key) {
-                            (h.invoke)(
-                                &mut self.registry,
-                                n.work.0,
-                                &n.progress,
-                                n.transition,
-                                h.handlers.as_ref(),
-                            );
-                        }
-                    }
-                }
-            }
-            return Ok(Some(outcome));
+        let plan = if matches!(command, Command::Notify) {
+            None
+        } else {
+            self.plan(command.clone(), &mut outcome)?
+        };
+        let delivery = if matches!(command, Command::Notify) {
+            self.notifications
+                .get(&preview.id)
+                .filter(|n| self.notification_deliverable(n))
+                .cloned()
+        } else {
+            None
+        };
+        let cost = u64::try_from(outcome.records.len())
+            .map_err(|_| FlowError::CounterOverflow)?
+            .checked_add(u64::from(delivery.is_some()))
+            .ok_or(FlowError::CounterOverflow)?;
+        let consumed = if self.budget_tick == Some(preview.at) {
+            self.budget_consumed
+        } else {
+            0
+        };
+        let total = consumed
+            .checked_add(cost)
+            .ok_or(FlowError::CounterOverflow)?;
+        if total > self.config.max_same_tick_flow_transitions.get() {
+            self.budget_halt = Some(FlowBudgetHalt {
+                at: preview.at,
+                consumed,
+                required_cost: cost,
+                pending: preview,
+            });
+            return Err(self.halt_error().unwrap());
         }
-        if let Err(error) = self.dispatch(command, &mut outcome) {
-            outcome.error = Some(error);
-            outcome.records.clear();
+        match self.scheduler.step() {
+            StepOutcome::Dispatched(event) => {
+                assert_eq!(event.id, preview.id);
+                assert_eq!(event.at, preview.at);
+            }
+            _ => unreachable!("validated live scheduler head"),
+        }
+        self.commands.remove(&preview.id);
+        if let Command::Release(lease) = command {
+            self.pending_releases.remove(&lease);
+        }
+        if let Some(plan) = plan {
+            self.commit_plan(plan);
+        }
+        self.budget_tick = Some(preview.at);
+        self.budget_consumed = total;
+        if matches!(command, Command::Notify) {
+            self.notifications.remove(&preview.id);
+            if let Some(n) = delivery {
+                let _causal_origin = (n.origin, n.ordinal);
+                let spec = self
+                    .registry
+                    .get::<WorkSpec>(n.work.0)
+                    .expect("validated notification work");
+                let h = &self.handlers[&spec.context_type_key];
+                (h.invoke)(
+                    &mut self.registry,
+                    n.work.0,
+                    &n.progress,
+                    n.transition,
+                    h.handlers.as_ref(),
+                );
+            }
         }
         Ok(Some(outcome))
     }
-    fn dispatch(&mut self, command: Command, outcome: &mut FlowDispatch) -> Result<(), FlowError> {
+    fn notification_deliverable(&self, n: &Notification) -> bool {
+        self.registry.get::<WorkSpec>(n.work.0).is_some_and(|spec| {
+            self.world.is_alive(spec.owner)
+                && self.handlers.get(&spec.context_type_key).is_some_and(|h| {
+                    (h.present)(h.handlers.as_ref(), n.transition)
+                        && (h.context_present)(&self.registry, n.work.0)
+                })
+        })
+    }
+    fn plan(
+        &self,
+        command: Command,
+        outcome: &mut FlowDispatch,
+    ) -> Result<Option<DispatchPlan>, FlowError> {
         // Internal stale completion tokens are strict no-ops. In particular,
         // they cannot lend their causal event to another allocation due now.
         // Explicit user commands still process their independent due boundaries.
@@ -1025,7 +1190,7 @@ impl FlowRuntime {
                             })
                 });
             if !live {
-                return Ok(());
+                return Ok(None);
             }
         }
         // Stage all affected ECS values. No writes until every derived transition
@@ -1600,12 +1765,91 @@ impl FlowRuntime {
             .checked_add(token_count)
             .filter(|n| *n <= OPERATION_CAP)
             .ok_or(FlowError::CounterOverflow)?;
-        // Factory invocations are after every arithmetic/invariant reservation.
+        // Every Scheduler::schedule call belongs to Flow ingress or this token list.
+        // The u32 operation cap also bounds scheduler index/sequence/counter additions
+        // before schedule (whose existing API returns EventId without a Result).
+        self.scheduler
+            .stats()
+            .scheduled_events
+            .checked_add(token_count)
+            .filter(|n| *n <= OPERATION_CAP)
+            .ok_or(FlowError::CounterOverflow)?;
+        let mut cleanup_ids = BTreeSet::new();
+        if let Some(resource) = remove_resource {
+            if !self.world.is_alive(resource.0) {
+                return Err(FlowError::InvalidState);
+            }
+            cleanup_ids.insert(resource.0);
+        }
+        if let Some(owner) = remove_actor {
+            self.actor(owner)?;
+            cleanup_ids.insert(owner);
+        }
+        for (work, descriptor) in &removed_works {
+            if !self.world.is_alive(work.0)
+                || !(descriptor.context_present)(&self.registry, work.0)
+                || !self
+                    .registry
+                    .get::<WorkSpec>(work.0)
+                    .is_some_and(|spec| Some(spec.owner) == remove_actor)
+                || self.registry.get::<WorkProgress>(work.0).is_none()
+                || (descriptor.prepare.is_some()
+                    && !(descriptor.restart_present)(&self.registry, work.0))
+                || !cleanup_ids.insert(work.0)
+            {
+                return Err(FlowError::InvalidState);
+            }
+        }
+        if u64::try_from(cleanup_ids.len()).map_err(|_| FlowError::CounterOverflow)? != despawns {
+            return Err(FlowError::InvalidState);
+        }
+        for work in &factories {
+            let descriptor = self.works.get(work).ok_or(FlowError::InvalidState)?;
+            if descriptor.prepare.is_none()
+                || !(descriptor.context_present)(&self.registry, work.0)
+                || !self.world.is_alive(work.0)
+                || !(descriptor.restart_present)(&self.registry, work.0)
+            {
+                return Err(FlowError::InvalidState);
+            }
+        }
+        Ok(Some(DispatchPlan {
+            resources,
+            requests,
+            progress,
+            tokens,
+            factories,
+            removed_works,
+            remove_resource,
+            remove_actor,
+            destroyed,
+            scheduled,
+            admission,
+            lease_revision,
+        }))
+    }
+    fn commit_plan(&mut self, plan: DispatchPlan) {
+        let DispatchPlan {
+            resources,
+            requests,
+            progress,
+            tokens,
+            factories,
+            removed_works,
+            remove_resource,
+            remove_actor,
+            destroyed,
+            scheduled,
+            admission,
+            lease_revision,
+        } = plan;
         let prepared: Vec<_> = factories
             .into_iter()
             .map(|w| {
-                let factory = self.works[&w].prepare.expect("preflighted factory");
-                (w, factory(&self.registry, w.0))
+                (
+                    w,
+                    (self.works[&w].prepare.expect("preflighted factory"))(&self.registry, w.0),
+                )
             })
             .collect();
         // Commit after the complete plan validates.
@@ -1666,7 +1910,6 @@ impl FlowRuntime {
         self.destroyed = destroyed;
         self.next_admission = admission;
         self.next_lease = lease_revision;
-        Ok(())
     }
 }
 fn terminal(state: RequestState) -> bool {
@@ -1974,7 +2217,9 @@ mod tests {
             records: Vec::new(),
             error: None,
         };
-        f.dispatch(command, &mut outcome)?;
+        if let Some(plan) = f.plan(command, &mut outcome)? {
+            f.commit_plan(plan);
+        }
         Ok(outcome)
     }
     fn active_timed(
@@ -2044,9 +2289,11 @@ mod tests {
             let scheduled = f.scheduled;
             let revision = f.next_lease;
             let admission = f.next_admission;
-            let outcome = f.step().unwrap().unwrap();
-            assert_eq!(outcome.error, Some(FlowError::CounterOverflow));
-            assert!(outcome.records.is_empty());
+            let head = f.scheduler.peek_next();
+            let stats = f.scheduler.stats();
+            assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
+            assert_eq!(f.scheduler.peek_next(), head);
+            assert_eq!(f.scheduler.stats(), stats);
             assert_eq!(f.resource(resource).unwrap(), before);
             assert_eq!(f.registry.get::<WorkProgress>(work.0), Some(&progress));
             assert_eq!(f.request(low).unwrap().state, RequestState::Active);
@@ -2108,10 +2355,13 @@ mod tests {
             .iter()
             .map(|w| f.registry.get::<WorkProgress>(w.0).unwrap().clone())
             .collect();
-        assert_eq!(
-            dispatch_at(&mut f, Command::Capacity(resource, 2), 1),
-            Err(FlowError::CounterOverflow)
-        );
+        f.schedule(Command::Capacity(resource, 2), ticks(1))
+            .unwrap();
+        let head = f.scheduler.peek_next();
+        let stats = f.scheduler.stats();
+        assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
+        assert_eq!(f.scheduler.peek_next(), head);
+        assert_eq!(f.scheduler.stats(), stats);
         assert_eq!(f.resource(resource).unwrap(), before);
         for (w, p) in works.iter().zip(progress) {
             assert_eq!(f.registry.get::<WorkProgress>(w.0), Some(&p));
@@ -2211,10 +2461,7 @@ mod tests {
             .unwrap()
             .attempt_revision = u64::MAX;
         let before = f.resource(r).unwrap();
-        assert_eq!(
-            f.step().unwrap().unwrap().error,
-            Some(FlowError::CounterOverflow)
-        );
+        assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
         assert_eq!(f.resource(r).unwrap(), before);
         assert_eq!(FACTORY_CALLS.load(std::sync::atomic::Ordering::SeqCst), 1);
         f.registry
@@ -2328,10 +2575,7 @@ mod tests {
         let before = f.resource(r).unwrap();
         f.destroyed = OPERATION_CAP - 1;
         f.despawn_actor(a).unwrap();
-        assert_eq!(
-            f.step().unwrap().unwrap().error,
-            Some(FlowError::CounterOverflow)
-        );
+        assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
         assert_eq!(f.resource(r).unwrap(), before);
         assert_eq!(f.work_context::<u32>(w), Ok(&42));
         assert!(f.actor(a).is_ok());
@@ -2534,14 +2778,16 @@ mod tests {
         let before = f.resource(r).unwrap();
         f.next_lease = u64::MAX;
         f.set_capacity(r, 1).unwrap();
-        let dispatch = f.step().unwrap().unwrap();
-        assert_eq!(dispatch.error, Some(FlowError::CounterOverflow));
-        assert!(dispatch.records.is_empty());
+        let head = f.scheduler.peek_next();
+        let stats = f.scheduler.stats();
+        assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
+        assert_eq!(f.scheduler.peek_next(), head);
+        assert_eq!(f.scheduler.stats(), stats);
         assert_eq!(f.resource(r).unwrap(), before);
         assert_eq!(f.request(q).unwrap().state, RequestState::Queued);
     }
     #[test]
-    fn failed_release_preflight_preserves_lease_and_clears_reservation() {
+    fn failed_release_preflight_preserves_lease_head_and_reservation() {
         let mut f = FlowRuntime::new();
         let a = f.spawn_actor().unwrap();
         let r = f.create_resource(1).unwrap();
@@ -2553,14 +2799,13 @@ mod tests {
         let before = f.resource(r).unwrap();
         f.next_lease = u64::MAX;
         f.release(lease, t()).unwrap();
-        assert_eq!(
-            f.step().unwrap().unwrap().error,
-            Some(FlowError::CounterOverflow)
-        );
+        assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
         assert_eq!(f.resource(r).unwrap(), before);
+        assert!(f.pending_releases.contains(&lease));
+        assert_eq!(f.release(lease, t()), Err(FlowError::InvalidLease));
         f.next_lease = 10;
-        assert!(f.release(lease, t()).is_ok());
         f.step().unwrap();
+        assert!(!f.pending_releases.contains(&lease));
         assert_eq!(f.request(q).unwrap().state, RequestState::Released);
     }
     #[test]
@@ -2570,11 +2815,337 @@ mod tests {
         let r = f.create_resource(1).unwrap();
         let q = f.submit(r, a, t()).unwrap();
         f.next_admission = u64::MAX;
-        assert_eq!(
-            f.step().unwrap().unwrap().error,
-            Some(FlowError::CounterOverflow)
-        );
+        assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
         assert_eq!(f.request(q).unwrap().state, RequestState::Pending);
         assert_eq!(f.resource(r).unwrap().available, 1);
+    }
+}
+
+#[cfg(test)]
+mod same_tick_budget_private {
+    use super::*;
+    fn time(n: u128) -> SimTime {
+        SimTime::from_ticks(n)
+    }
+    fn duration(n: u128) -> SimDuration {
+        SimDuration::from_ticks(n)
+    }
+    fn configured(limit: u64) -> FlowRuntime {
+        FlowRuntime::with_config(FlowConfig {
+            max_same_tick_flow_transitions: NonZeroU64::new(limit).unwrap(),
+        })
+    }
+    fn pending_preserved(f: &mut FlowRuntime, expected: FlowError) {
+        let head = f.scheduler.peek_next();
+        let stats = f.scheduler.stats();
+        let reservations = f.pending_releases.clone();
+        let commands = f.commands.keys().copied().collect::<Vec<_>>();
+        let world = f.world.snapshot();
+        assert_eq!(f.step().unwrap_err(), expected);
+        assert_eq!(f.scheduler.peek_next(), head);
+        assert_eq!(f.scheduler.stats(), stats);
+        assert_eq!(f.pending_releases, reservations);
+        assert_eq!(f.commands.keys().copied().collect::<Vec<_>>(), commands);
+        assert_eq!(f.world.snapshot(), world);
+    }
+    #[test]
+    fn arithmetic_injections_preserve_real_head_and_all_admission_state() {
+        for injection in 0..5 {
+            let mut f = configured(100);
+            let owner = f.spawn_actor().unwrap();
+            let r = f.create_resource(1).unwrap();
+            let w = f
+                .create_work(owner, duration(2), "overflow", 42u32)
+                .unwrap();
+            let q = f
+                .acquire(r)
+                .owner(owner)
+                .at(time(1))
+                .timed_work(w)
+                .submit()
+                .unwrap();
+            match injection {
+                0 => f.next_admission = u64::MAX,
+                1 => f.next_lease = u64::MAX,
+                2 => f.scheduled = OPERATION_CAP,
+                3 => {
+                    f.registry
+                        .store_mut::<WorkProgress>()
+                        .unwrap()
+                        .get_mut(w.0)
+                        .unwrap()
+                        .execution_revision = u64::MAX
+                }
+                4 => {
+                    f.registry
+                        .store_mut::<WorkProgress>()
+                        .unwrap()
+                        .get_mut(w.0)
+                        .unwrap()
+                        .remaining = duration(u128::MAX)
+                }
+                _ => unreachable!(),
+            }
+            let resource = f.resource(r).unwrap();
+            let request = f.request(q).unwrap();
+            let progress = f.registry.get::<WorkProgress>(w.0).unwrap().clone();
+            pending_preserved(&mut f, FlowError::CounterOverflow);
+            assert_eq!(f.resource(r).unwrap(), resource);
+            assert_eq!(f.request(q).unwrap(), request);
+            assert_eq!(f.registry.get::<WorkProgress>(w.0), Some(&progress));
+            assert_eq!(f.work_context::<u32>(w).unwrap(), &42);
+        }
+    }
+    #[test]
+    fn cleanup_and_budget_add_overflow_preserve_head() {
+        let mut f = configured(u64::MAX);
+        let owner = f.spawn_actor().unwrap();
+        let r = f.create_resource(1).unwrap();
+        let w = f.create_work(owner, duration(2), "cleanup", 9u32).unwrap();
+        let q = f.submit_work(r, owner, w, time(0)).unwrap();
+        f.step().unwrap();
+        f.despawn_actor(owner).unwrap();
+        f.destroyed = OPERATION_CAP;
+        pending_preserved(&mut f, FlowError::CounterOverflow);
+        assert_eq!(f.work_context::<u32>(w).unwrap(), &9);
+        assert_eq!(f.request(q).unwrap().state, RequestState::Active);
+        f.destroyed = 0;
+        f.budget_consumed = u64::MAX;
+        pending_preserved(&mut f, FlowError::CounterOverflow);
+        assert!(f.budget_halt.is_none());
+    }
+    #[test]
+    fn zero_duration_admission_is_one_three_row_plan_or_retains_pending_command() {
+        for limit in [2, 3] {
+            let mut f = configured(limit);
+            let owner = f.spawn_actor().unwrap();
+            let r = f.create_resource(1).unwrap();
+            let w = f.create_work(owner, duration(0), "zero", 42u32).unwrap();
+            let q = f.acquire(r).owner(owner).timed_work(w).submit().unwrap();
+            let resource = f.resource(r).unwrap();
+            let progress = f.work_progress(w).unwrap();
+            if limit == 2 {
+                pending_preserved(
+                    &mut f,
+                    FlowError::SameTickBudgetExceeded { at_ticks: 0, limit },
+                );
+                assert_eq!(f.request(q).unwrap().state, RequestState::Pending);
+                assert_eq!(f.resource(r).unwrap(), resource);
+                assert_eq!(f.work_progress(w).unwrap(), progress);
+                assert_eq!(f.work_context::<u32>(w).unwrap(), &42);
+                let halt = f.budget_halt.unwrap();
+                assert_eq!(halt.required_cost, 3);
+                assert_eq!(
+                    halt.pending.kind,
+                    EventKind::custom(FLOW_COMMAND_DISPATCH_EVENT_KIND)
+                );
+            } else {
+                let completed = f.step().unwrap().unwrap();
+                assert_eq!(
+                    completed
+                        .records
+                        .iter()
+                        .map(|r| r.transition)
+                        .collect::<Vec<_>>(),
+                    vec![
+                        LifecycleTransition::Queued,
+                        LifecycleTransition::Granted,
+                        LifecycleTransition::Completed
+                    ]
+                );
+                assert_eq!(f.request(q).unwrap().state, RequestState::Completed);
+                assert_eq!(f.budget_consumed, 3);
+                // The first command is event0; its one original completion token is event1.
+                let preview = f.scheduler.peek_next().unwrap();
+                assert_eq!(preview.id, EventId::new(1, 1));
+                assert_eq!(
+                    preview.kind,
+                    EventKind::custom(FLOW_TIMED_COMPLETION_EVENT_KIND)
+                );
+                assert_eq!(preview.at, time(0));
+                let stale = f.step().unwrap().unwrap();
+                assert_eq!(stale.event, preview.id);
+                assert_eq!(stale.at, time(0));
+                assert!(stale.records.is_empty());
+                assert!(stale.error.is_none());
+                assert_eq!(f.budget_consumed, 3);
+                assert!(f.step().unwrap().is_none());
+            }
+        }
+    }
+    #[test]
+    fn private_release_due_boundary_budget_is_atomic_in_both_dispositions() {
+        for preloads in [1, 2] {
+            let mut f = configured(3);
+            let owner = f.spawn_actor().unwrap();
+            let r = f.create_resource(1).unwrap();
+            let dummy = f.create_resource(0).unwrap();
+            let w = f
+                .create_work(owner, duration(2), "due.release", ())
+                .unwrap();
+            let q = f.acquire(r).owner(owner).timed_work(w).submit().unwrap();
+            f.step().unwrap();
+            let lease = f.request(q).unwrap().lease.unwrap();
+            let waiting = f.submit(r, owner, time(0)).unwrap();
+            f.step().unwrap();
+            // Private lower scheduler priority puts the invalid release before completion.
+            f.schedule_priority(Command::Release(lease), time(2), -1)
+                .unwrap();
+            f.pending_releases.insert(lease);
+            for _ in 0..preloads {
+                f.acquire(dummy)
+                    .owner(owner)
+                    .at(time(2))
+                    .scheduler_priority(-2)
+                    .submit()
+                    .unwrap();
+            }
+            for _ in 0..preloads {
+                f.step().unwrap();
+            }
+            let before = f.resource(r).unwrap();
+            if preloads == 2 {
+                pending_preserved(
+                    &mut f,
+                    FlowError::SameTickBudgetExceeded {
+                        at_ticks: 2,
+                        limit: 3,
+                    },
+                );
+                assert_eq!(f.resource(r).unwrap(), before);
+                assert_eq!(f.request(waiting).unwrap().state, RequestState::Queued);
+                assert_eq!(f.budget_halt.unwrap().required_cost, 2);
+            } else {
+                let d = f.step().unwrap().unwrap();
+                assert_eq!(d.error, Some(FlowError::InvalidLease));
+                assert_eq!(
+                    d.records.iter().map(|r| r.transition).collect::<Vec<_>>(),
+                    vec![LifecycleTransition::Completed, LifecycleTransition::Granted]
+                );
+                assert_eq!(f.request(waiting).unwrap().state, RequestState::Active);
+                assert!(!f.pending_releases.contains(&lease));
+            }
+        }
+    }
+    fn factory(template: &std::rc::Rc<std::cell::Cell<u32>>) -> std::rc::Rc<std::cell::Cell<u32>> {
+        template.set(template.get() + 1);
+        template.clone()
+    }
+    #[test]
+    fn restart_factory_is_not_called_for_budget_rejected_resume() {
+        let mut f = configured(5);
+        let owner = f.spawn_actor().unwrap();
+        let r = f.create_resource(1).unwrap();
+        let dummy = f.create_resource(0).unwrap();
+        let calls = std::rc::Rc::new(std::cell::Cell::new(0));
+        let low = f
+            .create_restartable_work(owner, duration(10), "factory", calls.clone(), factory)
+            .unwrap();
+        let q = f
+            .acquire(r)
+            .owner(owner)
+            .timed_work(low)
+            .priority(9)
+            .preemptible(PreemptionStrategy::Restart)
+            .submit()
+            .unwrap();
+        f.step().unwrap();
+        let urgent = f.create_work(owner, duration(1), "urgent", ()).unwrap();
+        f.acquire(r)
+            .owner(owner)
+            .at(time(1))
+            .timed_work(urgent)
+            .priority(1)
+            .can_preempt(true)
+            .submit()
+            .unwrap();
+        f.step().unwrap();
+        assert_eq!(calls.get(), 1);
+        // Four dummy rows at tick2 leave fewer than completion + restart grant's two rows.
+        for _ in 0..4 {
+            f.acquire(dummy)
+                .owner(owner)
+                .at(time(2))
+                .scheduler_priority(-1)
+                .submit()
+                .unwrap();
+        }
+        for _ in 0..4 {
+            f.step().unwrap();
+        }
+        pending_preserved(
+            &mut f,
+            FlowError::SameTickBudgetExceeded {
+                at_ticks: 2,
+                limit: 5,
+            },
+        );
+        assert_eq!(calls.get(), 1);
+        assert_eq!(f.request(q).unwrap().state, RequestState::Suspended);
+    }
+    #[test]
+    fn missing_owner_context_or_handler_notification_is_zero_cost_at_limit() {
+        for absent in 0..3 {
+            let mut f = configured(2);
+            let owner = f.spawn_actor().unwrap();
+            let r = f.create_resource(1).unwrap();
+            f.register_work_handlers(
+                "handler",
+                WorkHandlers {
+                    on_cancel: Some(|c: &mut u32, _| *c += 1),
+                    ..WorkHandlers::default()
+                },
+            )
+            .unwrap();
+            let w = f.create_work(owner, duration(10), "handler", 0u32).unwrap();
+            let q = f.acquire(r).owner(owner).timed_work(w).submit().unwrap();
+            f.step().unwrap();
+            f.cancel(q, time(1)).unwrap();
+            f.step().unwrap();
+            match absent {
+                0 => {
+                    f.world.despawn(owner);
+                }
+                1 => {
+                    f.registry.remove::<WorkContext<u32>>(w.0);
+                }
+                _ => {
+                    f.handlers.remove("handler");
+                }
+            }
+            f.budget_consumed = 2;
+            let d = f.step().unwrap().unwrap();
+            assert!(d.records.is_empty());
+            assert_eq!(f.budget_consumed, 2);
+            assert!(f.budget_halt.is_none());
+            if absent != 1 {
+                assert_eq!(f.registry.get::<WorkContext<u32>>(w.0).unwrap().0, 0);
+            }
+        }
+    }
+    #[test]
+    fn cleanup_missing_typed_context_or_dead_work_is_rejected_before_consume() {
+        for dead in [false, true] {
+            let mut f = configured(100);
+            let owner = f.spawn_actor().unwrap();
+            let r = f.create_resource(1).unwrap();
+            let w = f
+                .create_work(owner, duration(2), "cleanup.validation", 42u32)
+                .unwrap();
+            let q = f.submit_work(r, owner, w, time(0)).unwrap();
+            f.step().unwrap();
+            f.despawn_actor(owner).unwrap();
+            if dead {
+                f.world.despawn(w.0);
+            } else {
+                f.registry.remove::<WorkContext<u32>>(w.0);
+            }
+            let resource = f.resource(r).unwrap();
+            let progress = f.registry.get::<WorkProgress>(w.0).unwrap().clone();
+            pending_preserved(&mut f, FlowError::InvalidState);
+            assert_eq!(f.resource(r).unwrap(), resource);
+            assert_eq!(f.request(q).unwrap().state, RequestState::Active);
+            assert_eq!(f.registry.get::<WorkProgress>(w.0), Some(&progress));
+        }
     }
 }
