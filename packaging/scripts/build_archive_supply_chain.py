@@ -22,6 +22,8 @@ import uuid
 import sys
 import importlib.metadata
 
+BUILD_TYPE = 'urn:careops:build-type:verified-archive-copy:v1'
+BUILDER_ID = 'urn:careops:local-untrusted-builder:archive-copy'
 LIMIT = 2 * 1024**3
 
 def digest(path: Path) -> str:
@@ -217,7 +219,7 @@ def _generate(source: Path, output: Path, commit: str, acquisition: Path, syft: 
         sbom = {'spdxVersion': 'SPDX-2.3', 'dataLicense': 'CC0-1.0', 'SPDXID': 'SPDXRef-DOCUMENT', 'name': 'Kairos actual package archives', 'documentNamespace': 'https://github.com/edithatogo/kairos/sbom/' + str(uuid.uuid4()), 'creationInfo': {'created': now, 'creators': ['Tool: kairos-archive-evidence']}, 'packages': packages, 'externalDocumentRefs': refs, 'relationships': relationships, 'comment': 'Packaged identities plus detected components. Go/Julia use packaged manifest identities. Unknown licenses/versions remain unknown; this is not a transitive dependency completeness assertion.'}
         validator.validate(sbom)
         (output / 'sbom.spdx.json').write_text(json.dumps(sbom, indent=2, sort_keys=True) + '\n')
-        statement = {'_type': 'https://in-toto.io/Statement/v1', 'subject': [{'name': r['path'], 'digest': {'sha256': r['sha256']}} for r in manifest['artifacts']], 'predicateType': 'https://slsa.dev/provenance/v1', 'predicate': {'buildDefinition': {'buildType': 'https://github.com/edithatogo/kairos/buildtypes/verified-archive-copy/v1', 'externalParameters': {'source_commit': commit, 'original_run_id': acq.get('run_id')}, 'resolvedDependencies': [{'uri': 'https://github.com/edithatogo/kairos/actions/runs/' + str(acq.get('run_id')), 'digest': {'sha256': acq['artifact_digest'][7:]}}, {'uri': 'ARCHIVE-INDEX.json', 'digest': {'sha256': digest(source / 'ARCHIVE-INDEX.json')}}]}, 'runDetails': {'builder': {'id': 'https://github.com/edithatogo/kairos/builders/local-untrusted-archive-copy'}, 'metadata': {'startedOn': started, 'finishedOn': now}}}}
+        statement = {'_type': 'https://in-toto.io/Statement/v1', 'subject': [{'name': r['path'], 'digest': {'sha256': r['sha256']}} for r in manifest['artifacts']], 'predicateType': 'https://slsa.dev/provenance/v1', 'predicate': {'buildDefinition': {'buildType': BUILD_TYPE, 'externalParameters': {'source_commit': commit, 'original_run_id': acq.get('run_id')}, 'resolvedDependencies': [{'uri': 'https://github.com/edithatogo/kairos/actions/runs/' + str(acq.get('run_id')), 'digest': {'sha256': acq['artifact_digest'][7:]}}, {'uri': 'ARCHIVE-INDEX.json', 'digest': {'sha256': digest(source / 'ARCHIVE-INDEX.json')}}]}, 'runDetails': {'builder': {'id': BUILDER_ID}, 'metadata': {'startedOn': started, 'finishedOn': now}}}}
         source_identities = {name: digest(Path(__file__).with_name(name)) for name in ('build_archive_supply_chain.py', 'build_archive_release_manifest.py', 'build_package_archive_bundle.py')}
         runtime = {'python': sys.version, 'jsonschema': importlib.metadata.version('jsonschema')}
         dependencies = statement['predicate']['buildDefinition']['resolvedDependencies']
