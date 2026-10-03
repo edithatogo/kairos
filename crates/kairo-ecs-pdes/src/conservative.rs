@@ -107,7 +107,8 @@ pub struct RuntimeReport {
     pub rounds: u64,
     /// Monotonic global virtual time snapshots, beginning at zero.
     pub gvt_history: Vec<Tick>,
-    /// Maximum simultaneous scoped LP workers in any execution round.
+    /// Maximum spawned LP worker cohort in one execution round.
+    /// This does not measure simultaneous CPU execution.
     pub worker_count: usize,
 }
 

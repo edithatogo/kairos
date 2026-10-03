@@ -198,6 +198,19 @@ def filesystem_metadata() -> str:
     return f"{result}; local repository filesystem"
 
 
+def execution_metadata(input_scenario: dict, exit_status: int) -> dict:
+    """Identify the exact generated scenario and completed benchmark invocation."""
+    canonical_input = json.dumps(
+        input_scenario, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode("utf-8")
+    return {
+        "working_directory": ".",
+        "benchmark_exit_status": exit_status,
+        "input_scenario_sha256": "sha256:" + hashlib.sha256(canonical_input).hexdigest(),
+        "input_hash_scope": "canonical input_scenario JSON; sorted keys, compact separators, ASCII escapes, UTF-8 bytes; payload generator defined by source commit",
+    }
+
+
 def validate_result(text: str, repetitions: int, seed: int) -> dict:
     result = json.loads(text)
     if result.get("schema_version") != "kairoecs.pdes.benchmark.v1":
@@ -234,7 +247,7 @@ def validate_result(text: str, repetitions: int, seed: int) -> dict:
         if counters["worker_count"] < 1 or counters["rounds"] < 1:
             raise ValueError("runtime must report at least one worker and one scheduler round")
         if counters["worker_count"] != row["lp_count"]:
-            raise ValueError("worker count must reflect every LP active in the concurrent round")
+            raise ValueError("worker count must reflect the spawned LP cohort in a round")
         if counters["gvt_ticks"] != 1 or counters["null_messages"] < 1:
             raise ValueError("runtime GVT and null-message progression is incomplete")
         for key in ("sequential_events_per_second", "pdes_events_per_second"):
@@ -330,7 +343,20 @@ def main() -> int:
     if compiler.startswith("unavailable") or compiler.startswith("command returned no output"):
         parser.error("Rust compiler metadata could not be collected")
     command_text = " ".join(command) + "\n"
+    input_scenario = {
+        "lp_counts": [4, 8, 16, 32],
+        "topology": "directed ring; each LP sends to its successor",
+        "payload_generator": "SplitMix64; implementation fixed by source commit",
+        "scaling_profiles": {
+            "strong": f"{benchmark['strong_total_events']} initial events total across LP counts",
+            "weak": f"{benchmark['weak_events_per_lp']} initial events per LP",
+        },
+        "seed": args.seed,
+        "repetitions": args.repetitions,
+        "warmup_runs": benchmark["warmup_runs"],
+    }
     environment = {
+        **execution_metadata(input_scenario, completed.returncode),
         "platform": platform.platform(),
         "python": sys.version,
         "git_status_porcelain": git_status,
@@ -387,21 +413,11 @@ def main() -> int:
                 **environment,
                 "started_at_utc": started_at,
                 "working_tree_state": "clean tested commit; generated evidence is stored separately",
-                "runtime_workers": "reported per benchmark row by runtime worker_count counters",
+                "runtime_workers": "worker_count is the maximum spawned LP worker cohort in one round; it does not measure simultaneous CPU execution",
                 "threading": "runtime-owned OS threads; no external transport",
             },
             "feature_flags": ["pdes"],
-            "input_scenario": {
-                "lp_counts": [4, 8, 16, 32],
-                "topology": "directed ring; each LP sends to its successor",
-                "scaling_profiles": {
-                    "strong": f"{benchmark['strong_total_events']} initial events total across LP counts",
-                    "weak": f"{benchmark['weak_events_per_lp']} initial events per LP",
-                },
-                "seed": args.seed,
-                "repetitions": args.repetitions,
-                "warmup_runs": benchmark["warmup_runs"],
-            },
+            "input_scenario": input_scenario,
         },
         "storage": {"filesystem_or_object_store": environment["filesystem"]},
         "result": {

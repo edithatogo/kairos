@@ -47,13 +47,15 @@ throughput, event-count, worker, GVT, null-message, and parity fields, then
 creates a new directory under `benches/pdes/evidence/`. It never overwrites a
 prior bundle. The manifest records the checked-out commit and remotely verified
 ref, CPU model and topology, memory size and topology, operating system, Rust
-compiler/toolchain, exact command and selected environment variables, topology,
+compiler/toolchain, exact command, repository-relative working directory, child
+exit status, selected environment variables, canonical scenario input hash, topology,
 seed, feature flag, raw result path, and its SHA-256 checksum. Set
 `--evidence-class scaffold --pushed-ref local-only` for a local collection that
 is not tied to a remotely pushed ref.
 
 The measured runtime uses real OS threads on one host. Its worker count records
-the maximum number of LP workers active in a round. These runs do not establish
+the maximum spawned LP worker cohort in a round, rather than measured
+simultaneous CPU execution. These runs do not establish
 multi-node behavior, cluster-scheduler behavior, HPC parity, or certified
 weak/strong scaling. Thread count can exceed physical core count at 32 LPs; the
 collector records the host core topology so those timings remain interpretable.
@@ -65,3 +67,12 @@ Collector guard self-checks:
 ```sh
 python3 -m unittest benches.pdes.test_collect_evidence -v
 ```
+
+
+`input_scenario_sha256` identifies the compact UTF-8 JSON bytes of the input
+scenario with sorted keys and ASCII escapes. The scenario includes the seed,
+LP/workload matrix, repetition/warmup parameters and payload generator; its
+implementation is fixed by the recorded source commit. It is a scenario hash,
+not a separately measured digest of every generated event payload.
+`working_directory` is `.` relative to that commit's repository root, and
+`benchmark_exit_status` records the completed child benchmark process.

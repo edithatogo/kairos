@@ -154,3 +154,18 @@ paths from public metadata, requires an explicit nonblank live reviewer, and
 fails metadata commands closed. Direct metadata check observed APFS; collector
 py_compile, all 7 evidence-boundary self-checks and diff integrity passed.
 The root coordinator retries capture only against the next clean pushed commit.
+
+
+Acceptance-audit metadata follow-up: collector records repository-relative
+`working_directory` (`.`), the completed child `benchmark_exit_status`, and
+`input_scenario_sha256` over canonical sorted compact UTF-8 scenario JSON.
+Its scope includes seed/profile/LP and repetition/warmup parameters, with the
+payload generator defined by source commit; it is not an event-payload digest.
+`worker_count` is the maximum spawned LP cohort in a round, not measured
+simultaneous CPU execution. First capture
+`benches/pdes/evidence/20261003T023344Z-77797709da-5f5d46e7` is preserved unchanged
+while the root captures the final audited metadata against the next pushed
+commit. Eight collector self-checks passed, including metadata JSON round-trip,
+canonical key-order stability and changed-seed hash sensitivity. Pinned Rust
+1.98.1 targeted crate formatting and all-target/all-feature clippy passed;
+only a Rust documentation comment changed, with no runtime behavior change.

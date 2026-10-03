@@ -55,6 +55,18 @@ def sample_result() -> dict:
 
 
 class CollectorValidation(unittest.TestCase):
+    def test_execution_metadata_survives_json_serialization_and_identifies_input(self) -> None:
+        scenario = {"seed": 47_2026, "lp_counts": [4, 8, 16, 32]}
+        metadata = json.loads(json.dumps(collector.execution_metadata(scenario, 0)))
+        self.assertEqual(metadata["working_directory"], ".")
+        self.assertEqual(metadata["benchmark_exit_status"], 0)
+        self.assertRegex(metadata["input_scenario_sha256"], r"^sha256:[0-9a-f]{64}$")
+        reordered = {"lp_counts": [4, 8, 16, 32], "seed": 47_2026}
+        self.assertEqual(metadata["input_scenario_sha256"], collector.execution_metadata(reordered, 0)["input_scenario_sha256"])
+        changed = {**scenario, "seed": 1}
+        self.assertNotEqual(metadata["input_scenario_sha256"], collector.execution_metadata(changed, 0)["input_scenario_sha256"])
+        self.assertEqual(collector.execution_metadata(scenario, 7)["benchmark_exit_status"], 7)
+
     def test_rejects_dirty_non_owned_core_source(self) -> None:
         status = collector.normalize_git_status(" M crates/kairo-ecs-core/src/lib.rs\n")
         self.assertTrue(status.startswith(" M "))
