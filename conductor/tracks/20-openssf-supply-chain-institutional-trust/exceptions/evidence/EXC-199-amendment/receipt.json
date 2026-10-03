@@ -126,11 +126,13 @@
       "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
   ],
-  "completed_at": "2026-10-03T15:44:23.411521+00:00",
   "preparation_tool_metadata": {
     "measured_at": "2026-10-03T15:48:25.874845+00:00",
     "scope": "measured separately at amendment preparation; original seven-command capture remains distinct",
     "node": "v26.10.0",
     "npm": "12.1.0"
-  }
+  },
+  "original_seven_completed_at": "2026-10-03T15:44:23.411521+00:00",
+  "supplemental_signature_capture_note": "Signatures and preparation metadata were captured subsequently; original seven-command timestamp is preserved separately.",
+  "completed_at": "2026-10-03T15:52:56.521332+00:00"
 }
