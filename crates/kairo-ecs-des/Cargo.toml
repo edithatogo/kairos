@@ -11,3 +11,4 @@ kairo-ecs-types = { path = "../kairo-ecs-types" }
 kairo-ecs-core = { path = "../kairo-ecs-core" }
 kairo-ecs-state = { path = "../kairo-ecs-state" }
 kairo-ecs-rng = { path = "../kairo-ecs-rng" }
+thiserror = "=2.0.20"

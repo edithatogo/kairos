@@ -16,18 +16,29 @@ pub struct ResourceCapacity {
     pub total: u32,
 }
 /// Experimental Flow errors; messages are not a stable compatibility key.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum FlowError {
+    #[error("invalid entity")]
     InvalidEntity,
+    #[error("invalid resource")]
     InvalidResource,
+    #[error("invalid request")]
     InvalidRequest,
+    #[error("terminal request")]
     TerminalRequest,
+    #[error("invalid lease")]
     InvalidLease,
+    #[error("capacity in use")]
     CapacityInUse,
+    #[error("resource in use")]
     ResourceInUse,
+    #[error("past command")]
     PastCommand,
+    #[error("counter overflow")]
     CounterOverflow,
+    #[error("invalid state")]
     InvalidState,
+    #[error("invalid work")]
     InvalidWork,
 }
 
