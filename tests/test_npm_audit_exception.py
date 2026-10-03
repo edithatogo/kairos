@@ -159,7 +159,9 @@ class NpmAuditExceptionPolicyTests(unittest.TestCase):
     def test_scope_requires_both_the_bound_pr_and_an_allowed_context(self):
         self.assert_rejected(pull_request=194)
         self.assert_rejected(context="development_pr_194")
-        self.assert_rejected(pull_request=True)
+        for invalid_pr in (True, 193.0, "193"):
+            with self.subTest(invalid_pr=invalid_pr):
+                self.assert_rejected(pull_request=invalid_pr)
         for context in ("publication", "release_candidate", "1.0"):
             with self.subTest(context=context):
                 self.assert_rejected(context=context)

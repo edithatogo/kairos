@@ -262,7 +262,14 @@ class NpmAuditRunnerTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         runner.verify_exc199_evidence(damaged_root, policy)
 
-    def _run_main_with_fake_commands(self, raw_stdout: str, raw_exit: int, raw_stderr: str = ""):
+    def _run_main_with_fake_commands(
+        self,
+        raw_stdout: str,
+        raw_exit: int,
+        raw_stderr: str = "",
+        scope_error: str | None = None,
+        source_error: str | None = None,
+    ):
         policy = json.loads((EXCEPTIONS / "EXC-199-http-cache.json").read_text())
         raw_argv = policy["raw_audit_command"]
 
@@ -282,9 +289,16 @@ class NpmAuditRunnerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / "evidence"
             identity = ("development_pr_199", 199, "edithatogo/kairos", "codex/kairos-track48-optimistic-runtime", "EXC-199")
+            context_patch = (
+                mock.patch.object(runner, "execution_context", return_value=identity)
+                if scope_error is None
+                else mock.patch.object(runner, "execution_context", side_effect=ValueError(scope_error))
+            )
             with (
-                mock.patch.object(runner, "execution_context", return_value=identity),
-                mock.patch.object(runner, "verify_sources"),
+                context_patch,
+                mock.patch.object(
+                    runner, "verify_sources", side_effect=ValueError(source_error) if source_error else None
+                ) as verify_sources,
                 mock.patch.object(runner.subprocess, "run", side_effect=fake_run) as run,
                 mock.patch.dict(os.environ, {}, clear=True),
                 mock.patch.object(sys, "argv", ["run_npm_audit_gate.py", "--report-dir", str(output)]),
@@ -295,14 +309,15 @@ class NpmAuditRunnerTests(unittest.TestCase):
             receipt = json.loads((output / "receipt.json").read_text())
             raw_bytes = (output / "raw-audit.stdout").read_bytes()
             raw_stderr = (output / "raw-audit.stderr").read_bytes()
-            return result, run.call_count, receipt, raw_bytes, raw_stderr
+            return result, run.call_count, receipt, raw_bytes, raw_stderr, verify_sources.call_count
 
     def test_main_retains_raw_audit_artifacts_when_approved_record_is_blocked(self):
         report_path = EXCEPTIONS / "evidence/EXC-199/audit/pr199-0a3b86a/raw-audit.json"
         raw_stdout = report_path.read_text()
-        result, run_count, receipt, raw_bytes, raw_stderr = self._run_main_with_fake_commands(raw_stdout, 1)
+        result, run_count, receipt, raw_bytes, raw_stderr, proof_calls = self._run_main_with_fake_commands(raw_stdout, 1)
         self.assertEqual(result, 1)
         self.assertEqual(run_count, 8)
+        self.assertEqual(proof_calls, 1)
         self.assertEqual(receipt["classification"], "failed")
         self.assertIn("stale-fallback gap", receipt["error"])
         self.assertEqual(receipt["raw_audit"]["status"], "executed")
@@ -316,11 +331,76 @@ class NpmAuditRunnerTests(unittest.TestCase):
         clean = json.loads((EXCEPTIONS / "evidence/EXC-199/audit/pr199-0a3b86a/raw-audit.json").read_text())
         clean["vulnerabilities"] = {}
         clean["metadata"]["vulnerabilities"] = {key: 0 for key in ("info", "low", "moderate", "high", "critical", "total")}
-        result, _, receipt, _, _ = self._run_main_with_fake_commands(json.dumps(clean), 0)
+        result, _, receipt, raw_bytes, _, proof_calls = self._run_main_with_fake_commands(
+            json.dumps(clean), 0, source_error="verify_sources must not run for clean audits"
+        )
         self.assertEqual(result, 0)
+        self.assertEqual(proof_calls, 0)
         self.assertEqual(receipt["classification"], "clean")
         self.assertEqual(receipt["raw_audit"]["status"], "executed")
         self.assertEqual(receipt["raw_audit"]["exit"], 0)
+        self.assertEqual(raw_bytes.decode(), json.dumps(clean))
+
+    def test_unknown_local_or_pr_scope_can_pass_only_a_strict_clean_audit(self):
+        clean = json.loads((EXCEPTIONS / "evidence/EXC-199/audit/pr199-0a3b86a/raw-audit.json").read_text())
+        clean["vulnerabilities"] = {}
+        clean["metadata"]["vulnerabilities"] = {key: 0 for key in ("info", "low", "moderate", "high", "critical", "total")}
+        for scope_error in ("unapproved local branch", "unapproved PR source"):
+            with self.subTest(scope_error=scope_error):
+                result, _, receipt, _, _, proof_calls = self._run_main_with_fake_commands(
+                    json.dumps(clean), 0, scope_error=scope_error,
+                    source_error="verify_sources must not run without non-clean exception classification",
+                )
+                self.assertEqual(result, 0)
+                self.assertEqual(proof_calls, 0)
+                self.assertEqual(receipt["classification"], "clean")
+                self.assertEqual(receipt["exception_scope"], {"status": "unapproved", "error": scope_error})
+                self.assertEqual(receipt["raw_audit"]["status"], "executed")
+                self.assertEqual(receipt["raw_audit"]["exit"], 0)
+
+    def test_unknown_scope_nonclean_audit_is_retained_then_rejected(self):
+        raw_stdout = (EXCEPTIONS / "evidence/EXC-199/audit/pr199-0a3b86a/raw-audit.json").read_text()
+        result, _, receipt, raw_bytes, raw_stderr, proof_calls = self._run_main_with_fake_commands(
+            raw_stdout, 1, scope_error="unapproved local branch"
+        )
+        self.assertEqual(result, 1)
+        self.assertEqual(proof_calls, 0)
+        self.assertEqual(receipt["classification"], "failed")
+        self.assertIn("repository and head ref are required", receipt["error"])
+        self.assertEqual(receipt["raw_audit"]["status"], "executed")
+        self.assertEqual(receipt["raw_audit"]["exit"], 1)
+        self.assertEqual(raw_bytes.decode(), raw_stdout)
+        self.assertEqual(raw_stderr, b"")
+
+    def test_clean_schema_and_counts_are_validated_before_exception_proofs(self):
+        malformed = json.loads((EXCEPTIONS / "evidence/EXC-199/audit/pr199-0a3b86a/raw-audit.json").read_text())
+        malformed["vulnerabilities"] = {}
+        malformed["metadata"]["vulnerabilities"] = {key: 0 for key in ("info", "low", "moderate", "high", "critical", "total")}
+        malformed["auditReportVersion"] = 3
+        raw_stdout = json.dumps(malformed)
+        result, run_count, receipt, raw_bytes, _, proof_calls = self._run_main_with_fake_commands(
+            raw_stdout, 0, source_error="verify_sources must not run before clean schema validation"
+        )
+        self.assertEqual(result, 1)
+        self.assertEqual(run_count, 1)
+        self.assertEqual(proof_calls, 0)
+        self.assertIn("unsupported audit report version", receipt["error"])
+        self.assertEqual(receipt["raw_audit"]["status"], "executed")
+        self.assertEqual(receipt["raw_audit"]["exit"], 0)
+        self.assertEqual(raw_bytes.decode(), raw_stdout)
+
+    def test_known_scope_proof_drift_is_rejected_after_retaining_raw_audit(self):
+        raw_stdout = (EXCEPTIONS / "evidence/EXC-199/audit/pr199-0a3b86a/raw-audit.json").read_text()
+        result, _, receipt, raw_bytes, raw_stderr, proof_calls = self._run_main_with_fake_commands(
+            raw_stdout, 1, source_error="proof drift: scripts/bootstrap-node-tools/package-lock.json"
+        )
+        self.assertEqual(result, 1)
+        self.assertEqual(proof_calls, 1)
+        self.assertIn("proof drift", receipt["error"])
+        self.assertEqual(receipt["raw_audit"]["status"], "executed")
+        self.assertEqual(receipt["raw_audit"]["exit"], 1)
+        self.assertEqual(raw_bytes.decode(), raw_stdout)
+        self.assertEqual(raw_stderr, b"")
 
 
 if __name__ == "__main__":

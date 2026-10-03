@@ -27,10 +27,18 @@ COPIES = {
     "node_modules/npm/node_modules/http-cache-semantics",
 }
 EXPECTED_REPOSITORY = "edithatogo/kairos"
+EXCEPTION_POLICY_PATHS = {
+    "EXC-193": "EXC-193-http-cache.json",
+    "EXC-199": "EXC-199-http-cache.json",
+}
 EXPECTED_BRANCH = "codex/kairos-implementation-programme"
 EXPECTED_BRANCH_BY_PR = {
     193: "codex/kairos-implementation-programme",
     199: "codex/kairos-track48-optimistic-runtime",
+}
+EXPECTED_CONTEXTS_BY_PR = {
+    193: frozenset({"development_pr_193", "alpha_package_dry_run", "beta_package_dry_run"}),
+    199: frozenset({"development_pr_199", "alpha_package_dry_run", "beta_package_dry_run"}),
 }
 EXPECTED_FILE_HASHES = {
     "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
@@ -89,10 +97,7 @@ def _identity_for_branch(repository: str, branch: str):
         raise ValueError("exception cannot apply outside the approved repository")
     for pull_request, expected_branch in EXPECTED_BRANCH_BY_PR.items():
         if branch == expected_branch:
-            module, record = _scope(f"EXC-{pull_request}")
-            if record["repository"] != repository or record["head_ref"] != branch:
-                raise ValueError("static exception identity mapping is inconsistent")
-            return module, pull_request
+            return pull_request
     raise ValueError("unapproved local branch")
 
 
@@ -123,11 +128,10 @@ def local_git_branch() -> str:
 
 def execution_context() -> tuple[str, int, str, str, str]:
     """Return context, PR, repository, head ref and selected exception ID."""
-    module = _policy_module()
     if os.environ.get("GITHUB_ACTIONS") != "true":
         repository = local_repository()
         branch = local_git_branch()
-        module, pull_request = _identity_for_branch(repository, branch)
+        pull_request = _identity_for_branch(repository, branch)
         return f"development_pr_{pull_request}", pull_request, repository, branch, f"EXC-{pull_request}"
 
     repository = os.environ.get("GITHUB_REPOSITORY", "")
@@ -151,7 +155,9 @@ def execution_context() -> tuple[str, int, str, str, str]:
         branch = head.get("ref")
         if head["repo"].get("full_name") != EXPECTED_REPOSITORY:
             raise ValueError("unapproved PR source")
-        module, _ = _identity_for_branch(repository, branch)
+        expected_pull_request = _identity_for_branch(repository, branch)
+        if isinstance(pull_request, bool) or not isinstance(pull_request, int) or pull_request != expected_pull_request:
+            raise ValueError("pull request number does not match the exact branch mapping")
         context = f"development_pr_{pull_request}"
     elif kind == "workflow_dispatch":
         ref = event.get("ref")
@@ -161,7 +167,7 @@ def execution_context() -> tuple[str, int, str, str, str]:
         if github_ref != "refs/heads/" + ref.removeprefix("refs/heads/"):
             raise ValueError("workflow dispatch ref mismatch")
         branch = ref.removeprefix("refs/heads/")
-        module, pull_request = _identity_for_branch(repository, branch)
+        pull_request = _identity_for_branch(repository, branch)
         inputs = event.get("inputs", {})
         if not isinstance(inputs, dict):
             raise ValueError("workflow dispatch inputs are malformed")
@@ -169,14 +175,14 @@ def execution_context() -> tuple[str, int, str, str, str]:
     else:
         raise ValueError("exception cannot apply to this event")
 
-    record = module._POLICY_RECORDS[f"EXC-{pull_request}"]
     if (
         isinstance(pull_request, bool)
-        or pull_request != record["required_pull_request"]
-        or branch != record["head_ref"]
+        or not isinstance(pull_request, int)
+        or pull_request not in EXPECTED_BRANCH_BY_PR
+        or branch != EXPECTED_BRANCH_BY_PR[pull_request]
     ):
         raise ValueError("unapproved PR/ref mapping")
-    if not isinstance(context, str) or context not in record["allowed_contexts"]:
+    if not isinstance(context, str) or context not in EXPECTED_CONTEXTS_BY_PR[pull_request]:
         raise ValueError("event context is outside the exact PR exception scope")
     return context, pull_request, repository, branch, f"EXC-{pull_request}"
 
@@ -353,14 +359,53 @@ def main():
         return result, item
 
     try:
-        context, pr, repository, head_ref, exception_id = execution_context()
-        module, record = _scope(exception_id)
-        policy_path = EXCEPTIONS / record["policy_path"]
-        policy_bytes = policy_path.read_bytes()
-        policy = read_json(policy_bytes.decode("utf-8"))
-        receipt.update({"exception_id": exception_id, "repository": repository, "pull_request": pr,
-                        "head_ref": head_ref, "context": context, "policy_sha256": digest(policy_bytes)})
-        verify_sources(ROOT, policy)
+        try:
+            context, pr, repository, head_ref, exception_id = execution_context()
+            receipt["exception_scope"] = {"status": "approved_exact_scope"}
+        except (OSError, ValueError, subprocess.SubprocessError) as scope_error:
+            # A failed scope match must never grant an exception, but it should
+            # not prevent an independent strict clean audit from succeeding.
+            context = repository = head_ref = None
+            pr = None
+            exception_id = None
+            receipt["exception_scope"] = {
+                "status": "unapproved",
+                "error": str(scope_error),
+            }
+        if exception_id is not None:
+            if exception_id not in EXCEPTION_POLICY_PATHS:
+                raise ValueError("exception is not in the static runner allowlist")
+            receipt["exception_id"] = exception_id
+        if context is not None:
+            receipt.update({"repository": repository, "pull_request": pr, "head_ref": head_ref, "context": context})
+
+        # Always retain raw output before checking exception-only proofs or
+        # mitigation controls. The fixed argv prevents a changed policy record
+        # from selecting a different command.
+        receipt["raw_audit"] = {"status": "started", "argv": EXPECTED_AUDIT_COMMAND}
+        raw_result, raw = command(EXPECTED_AUDIT_COMMAND, "raw-audit")
+        receipt["raw_audit"] = {"status": "executed", **raw}
+
+        if raw_result.stdout and raw_result.stderr:
+            raise ValueError("audit stderr requires review; raw output retained")
+        module = _policy_module()
+        report = read_json(raw_result.stdout)
+        is_clean = module.validate_audit_result(report, raw_result.returncode)
+
+        if not is_clean:
+            if context is None:
+                # Findings cannot use an exception without a trusted exact
+                # identity. classify() rejects after the raw result is saved.
+                module.classify(report, raw_result.returncode, {}, "unapproved", 0)
+            policy_path = EXCEPTIONS / EXCEPTION_POLICY_PATHS[exception_id]
+            record = module._POLICY_RECORDS[exception_id]
+            if record["policy_path"] != policy_path.name:
+                raise ValueError("static exception policy path is inconsistent")
+            policy_bytes = policy_path.read_bytes()
+            policy = read_json(policy_bytes.decode("utf-8"))
+            receipt["policy_sha256"] = digest(policy_bytes)
+            verify_sources(ROOT, policy)
+
         commands = [
             ([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_http_cache_patch.py", "-v"], "installer-tests"),
             (["node", "scripts/bootstrap-node-tools/validate_npm_cli.mjs"], "resolution"),
@@ -368,26 +413,25 @@ def main():
             (["node", "tests/http-cache-security-regression.mjs", "scripts/bootstrap-node-tools/node_modules/npm/node_modules/http-cache-semantics/index.js"], "behavior-npm"),
         ]
         for argv, label in commands:
-            result, _ = command(argv, label)
-            if result.returncode:
+            command_result, _ = command(argv, label)
+            if command_result.returncode:
                 raise ValueError(f"mitigation check failed: {label}")
         for argv, label in [(["node", "--version"], "node-version"), (["git", "rev-parse", "HEAD"], "commit"), (["node", "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js", "--version"], "npm-version")]:
-            result, _ = command(argv, label)
-            if result.returncode:
+            command_result, _ = command(argv, label)
+            if command_result.returncode:
                 raise ValueError(f"runtime metadata failed: {label}")
-            receipt[label] = result.stdout.strip()
+            receipt[label] = command_result.stdout.strip()
         if receipt["npm-version"] != "12.1.0":
             raise ValueError("npm tool version drift")
-        receipt["raw_audit"] = {"status": "started", "argv": policy["raw_audit_command"]}
-        result, raw = command(policy["raw_audit_command"], "raw-audit")
-        receipt["raw_audit"] = {"status": "executed", **raw}
-        if result.stdout and result.stderr:
-            raise ValueError("audit stderr requires review; raw output retained")
-        receipt["classification"] = module.classify(
-            read_json(result.stdout), result.returncode, policy, context, pr,
-            repository=repository, head_ref=head_ref,
-        )
-        print(receipt["classification"] + "; raw audit exit=" + str(result.returncode))
+
+        if is_clean:
+            receipt["classification"] = "clean"
+        else:
+            receipt["classification"] = module.classify(
+                report, raw_result.returncode, policy, context, pr,
+                repository=repository, head_ref=head_ref,
+            )
+        print(receipt["classification"] + "; raw audit exit=" + str(raw_result.returncode))
         return 0
     except (OSError, ValueError, KeyError, TypeError, AttributeError, subprocess.SubprocessError) as exc:
         receipt["error"] = str(exc)

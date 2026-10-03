@@ -200,9 +200,12 @@ def _validate_approval(
     if approved_at >= expires_at:
         _reject("approval must precede expiry")
 
+    if isinstance(pull_request, bool) or not isinstance(pull_request, int):
+        _reject("actual pull request number must be an integer")
     if pull_request != record["required_pull_request"]:
         _reject(f"the actual pull request must be EXC-{pull_request} policy's required PR")
-    if policy.get("required_pull_request") != record["required_pull_request"]:
+    policy_pr = policy.get("required_pull_request")
+    if isinstance(policy_pr, bool) or not isinstance(policy_pr, int) or policy_pr != record["required_pull_request"]:
         _reject("the policy's required pull request is invalid")
     policy_repository = policy.get("repository")
     if repository != record["repository"] or (policy_repository is not None and policy_repository != record["repository"]):
@@ -258,6 +261,35 @@ def _classify_reviewed_graph(
     return "approved_temporary_exception"
 
 
+def validate_audit_result(report: dict, raw_exit: int) -> bool:
+    """Validate raw npm report structure and counts; return whether it is clean.
+
+    This check is independent of exception records and is safe to run before
+    looking at exception-only source proofs. It never turns a finding into a
+    pass; callers must classify non-empty reports separately.
+    """
+    if not isinstance(report, dict):
+        _reject("audit report must be an object")
+    if "error" in report or report.get("errors"):
+        _reject("audit report contains an error")
+    version = report.get("auditReportVersion")
+    if isinstance(version, bool) or not isinstance(version, int) or version != 2:
+        _reject("unsupported audit report version")
+    vulnerabilities = report.get("vulnerabilities")
+    if not isinstance(vulnerabilities, dict):
+        _reject("vulnerabilities must be an object")
+    counts = _validate_counts(report, vulnerabilities)
+
+    if not vulnerabilities:
+        if isinstance(raw_exit, bool) or not isinstance(raw_exit, int) or raw_exit != 0 or any(counts.values()):
+            _reject("a clean audit requires exit 0 and zero vulnerability counts")
+        return True
+    if isinstance(raw_exit, bool) or not isinstance(raw_exit, int) or raw_exit != 1:
+        _reject("a non-empty audit requires raw exit 1")
+    _validate_graph(vulnerabilities)
+    return False
+
+
 def classify(
     report: dict,
     raw_exit: int,
@@ -269,23 +301,13 @@ def classify(
     head_ref: str | None = None,
 ) -> str:
     """Return ``clean`` or a narrowly scoped exception; preserve raw exit."""
-    if not isinstance(report, dict) or not isinstance(policy, dict):
-        _reject("audit report and policy must be objects")
-    if "error" in report or report.get("errors"):
-        _reject("audit report contains an error")
-    version = report.get("auditReportVersion")
-    if isinstance(version, bool) or not isinstance(version, int) or version != 2:
-        _reject("unsupported audit report version")
-    vulnerabilities = report.get("vulnerabilities")
-    if not isinstance(vulnerabilities, dict):
-        _reject("vulnerabilities must be an object")
-    counts = _validate_counts(report, vulnerabilities)
+    if not isinstance(policy, dict):
+        _reject("policy must be an object")
 
     # A genuinely clean audit is a strict pass and does not consume an exception.
-    if not vulnerabilities:
-        if isinstance(raw_exit, bool) or not isinstance(raw_exit, int) or raw_exit != 0 or any(counts.values()):
-            _reject("a clean audit requires exit 0 and zero vulnerability counts")
+    if validate_audit_result(report, raw_exit):
         return "clean"
+    vulnerabilities = report["vulnerabilities"]
 
     if repository is None or head_ref is None:
         _reject("repository and head ref are required for exception classification")
