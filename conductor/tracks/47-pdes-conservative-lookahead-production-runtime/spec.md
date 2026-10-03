@@ -8,9 +8,12 @@ sequential parity, and measured scaling evidence.
 
 ## Maturity
 
-In Progress implementation track. The event-owned single-host runtime is
-available behind `pdes` as a preview API, while full closeout still requires
-raw hardware evidence, complete local gates, review and hosted checks.
+In Review. The event-owned single-host runtime is available behind `pdes` as a
+preview API, and the raw host evidence has been captured, registered and
+reviewed. Final closeout still requires the exact-head hosted checks and
+coordinated acceptance. The current `Package Dry Runs` npm job fails its audit
+on public advisory GHSA-ch52-4w7c-c8xp in the npm bootstrap dependency tree; the
+report says no fix is available, so that hosted gate remains unresolved.
 Track 34 compatibility APIs retain their original scaffold contracts.
 
 ## Inputs

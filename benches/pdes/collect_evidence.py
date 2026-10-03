@@ -20,9 +20,13 @@ from uuid import uuid4
 ROOT = Path(__file__).resolve().parents[2]
 EVIDENCE_ROOT = ROOT / "benches" / "pdes" / "evidence"
 TOOLCHAIN = "1.98.1"
+LINUX_PROC_ROOT = Path("/proc")
+LINUX_SYS_ROOT = Path("/sys")
 
 
-def command_output(command: list[str], *, timeout: int = 20) -> str:
+def command_output(
+    command: list[str], *, timeout: int = 20, env: dict[str, str] | None = None
+) -> str:
     try:
         result = subprocess.run(
             command,
@@ -32,6 +36,7 @@ def command_output(command: list[str], *, timeout: int = 20) -> str:
             stderr=subprocess.STDOUT,
             check=False,
             timeout=timeout,
+            env=env,
         )
     except (OSError, subprocess.TimeoutExpired) as error:
         return f"unavailable ({type(error).__name__}: {error})"
@@ -111,6 +116,177 @@ def validate_ref(ref: str, commit_sha: str) -> None:
         raise ValueError("--pushed-ref must resolve to --commit-sha for this local collection")
 
 
+def parse_cpu_list(value: str) -> set[int] | None:
+    """Parse the comma/range format used by Linux sysfs CPU lists."""
+    cpus: set[int] = set()
+    try:
+        for part in value.strip().split(","):
+            bounds = part.split("-")
+            if len(bounds) == 1:
+                start = end = int(bounds[0])
+            elif len(bounds) == 2:
+                start, end = map(int, bounds)
+            else:
+                return None
+            if start < 0 or end < start or end - start > 1_000_000:
+                return None
+            cpus.update(range(start, end + 1))
+    except ValueError:
+        return None
+    return cpus or None
+
+
+def linux_sysfs_core_count(cpu_root: Path, logical: int) -> int | None:
+    """Count kernel-visible core groups without guessing from logical CPUs."""
+    cpu_dirs = sorted(
+        (path for path in cpu_root.glob("cpu[0-9]*") if path.name[3:].isdigit()),
+        key=lambda path: int(path.name[3:]),
+    )
+    online_path = cpu_root / "online"
+    try:
+        online = parse_cpu_list(online_path.read_text(encoding="utf-8"))
+    except OSError:
+        online = None
+    if online is not None:
+        cpu_dirs = [path for path in cpu_dirs if int(path.name[3:]) in online]
+        if len(cpu_dirs) != len(online):
+            return None
+    if not cpu_dirs:
+        return None
+
+    package_core_ids: set[tuple[int, int]] = set()
+    package_core_complete = True
+    for cpu_dir in cpu_dirs:
+        topology = cpu_dir / "topology"
+        try:
+            package = int((topology / "physical_package_id").read_text(encoding="utf-8").strip())
+            core = int((topology / "core_id").read_text(encoding="utf-8").strip())
+        except (OSError, ValueError):
+            package_core_complete = False
+            break
+        if package < 0 or core < 0:
+            package_core_complete = False
+            break
+        package_core_ids.add((package, core))
+    if package_core_complete and package_core_ids:
+        return len(package_core_ids)
+
+    sibling_groups: set[tuple[int, ...]] = set()
+    cpu_to_group: dict[int, tuple[int, ...]] = {}
+    for cpu_dir in cpu_dirs:
+        cpu = int(cpu_dir.name[3:])
+        try:
+            siblings = parse_cpu_list(
+                (cpu_dir / "topology" / "thread_siblings_list").read_text(encoding="utf-8")
+            )
+        except OSError:
+            return None
+        if siblings is None or cpu not in siblings:
+            return None
+        group = tuple(sorted(siblings))
+        sibling_groups.add(group)
+        cpu_to_group[cpu] = group
+    assigned: dict[int, tuple[int, ...]] = {}
+    for group in sibling_groups:
+        for cpu in group:
+            previous = assigned.setdefault(cpu, group)
+            if previous != group:
+                return None
+    if any(assigned.get(cpu) != group for cpu, group in cpu_to_group.items()):
+        return None
+    if logical > 0 and len(sibling_groups) > logical:
+        return None
+    return len(sibling_groups) if sibling_groups else None
+
+
+def linux_proc_core_count(cpuinfo: str) -> int | None:
+    """Read complete x86-style package/core pairs when the kernel provides them."""
+    cores: set[tuple[int, int]] = set()
+    blocks = [block for block in cpuinfo.split("\n\n") if block.strip()]
+    if not blocks:
+        return None
+    for block in blocks:
+        values = {
+            key.strip(): value.strip()
+            for line in block.splitlines() if ":" in line
+            for key, value in [line.split(":", 1)]
+        }
+        if not all(key in values for key in ("processor", "physical id", "core id")):
+            return None
+        try:
+            processor, package, core = (
+                int(values[key].strip())
+                for key in ("processor", "physical id", "core id")
+            )
+        except ValueError:
+            return None
+        if min(processor, package, core) < 0:
+            return None
+        cores.add((package, core))
+    return len(cores) if cores else None
+
+
+def linux_lscpu_core_count(output: str) -> int | None:
+    """Parse lscpu's explicitly requested CPU/package/core CSV columns."""
+    header: list[str] | None = None
+    rows: list[list[str]] = []
+    for line in output.splitlines():
+        line = line.strip()
+        if line.startswith("#"):
+            fields = [field.strip().upper() for field in line.lstrip("# ").split(",")]
+            if {"CPU", "SOCKET", "CORE"}.issubset(fields):
+                header = fields
+        elif line:
+            rows.append([field.strip() for field in line.split(",")])
+    if header is None or not rows:
+        return None
+    try:
+        cpu_index, socket_index, core_index = (
+            header.index("CPU"), header.index("SOCKET"), header.index("CORE")
+        )
+        groups: set[tuple[int, int]] = set()
+        processors: set[int] = set()
+        for row in rows:
+            processor, socket, core = (
+                int(row[index]) for index in (cpu_index, socket_index, core_index)
+            )
+            if min(processor, socket, core) < 0 or processor in processors:
+                return None
+            processors.add(processor)
+            groups.add((socket, core))
+    except (IndexError, ValueError):
+        return None
+    return len(groups) if groups else None
+
+
+def linux_cpu_model(cpuinfo: str, lscpu: str) -> str:
+    """Return a model string actually reported by procfs or lscpu."""
+    preferred = ("model name", "Hardware", "Processor", "Model")
+    values = dict(
+        (key.strip().lower(), value.strip())
+        for line in cpuinfo.splitlines() if ":" in line
+        for key, value in [line.split(":", 1)]
+    )
+    for key in preferred:
+        value = values.get(key.lower(), "")
+        if (
+            value and value.lower() not in {"unknown", "none", "-1"}
+            and not re.fullmatch(r"\d+", value)
+        ):
+            return value
+    implementer = values.get("cpu implementer", "")
+    part = values.get("cpu part", "")
+    if implementer and part:
+        return f"ARM CPU identifiers reported by kernel: implementer {implementer}, part {part}"
+    for line in lscpu.splitlines():
+        key, separator, value = line.partition(":")
+        if separator and key.strip().lower() in {"model name", "model", "hardware"}:
+            value = value.strip()
+            if value and value.lower() not in {"unknown", "none", "-1"}:
+                return value
+    return "unavailable (no CPU model field reported)"
+
+
 def hardware_metadata() -> dict[str, str | int]:
     if platform.system() == "Darwin":
         cpu_model = command_output(["sysctl", "-n", "machdep.cpu.brand_string"])
@@ -124,18 +300,36 @@ def hardware_metadata() -> dict[str, str | int]:
         accelerator = "none; this benchmark exercises CPU threads only"
         driver = "none; no accelerator driver is used by this benchmark"
     elif platform.system() == "Linux":
-        cpuinfo = Path("/proc/cpuinfo").read_text(encoding="utf-8", errors="replace")
-        cpu_model = next((line.split(":", 1)[1].strip() for line in cpuinfo.splitlines() if line.startswith("model name")), "")
+        try:
+            cpuinfo = (LINUX_PROC_ROOT / "cpuinfo").read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            cpuinfo = ""
         logical = os.cpu_count() or 0
-        physical_ids = set()
-        for block in cpuinfo.split("\n\n"):
-            values = dict(line.split(":", 1) for line in block.splitlines() if ":" in line)
-            if "physical id" in values and "core id" in values:
-                physical_ids.add((values["physical id"].strip(), values["core id"].strip()))
-        physical = len(physical_ids)
-        memory = next((line.split(":", 1)[1].strip() for line in Path("/proc/meminfo").read_text().splitlines() if line.startswith("MemTotal:")), "")
-        cpu_topology = f"{physical} physical cores; {logical} logical CPUs"
-        nodes = sorted(Path("/sys/devices/system/node").glob("node[0-9]*"))
+        stable_env = {**os.environ, "LC_ALL": "C"}
+        lscpu = command_output(["lscpu"], env=stable_env)
+        cpu_model = linux_cpu_model(cpuinfo, lscpu)
+        cpu_root = LINUX_SYS_ROOT / "devices/system/cpu"
+        physical = linux_sysfs_core_count(cpu_root, logical)
+        topology_source = "sysfs"
+        if physical is None:
+            physical = linux_proc_core_count(cpuinfo)
+            topology_source = "procfs"
+        if physical is None:
+            physical = linux_lscpu_core_count(
+                command_output(["lscpu", "--parse=CPU,SOCKET,CORE"], env=stable_env)
+            )
+            topology_source = "lscpu"
+        if physical is None:
+            physical = 0
+            cpu_topology = f"unknown (kernel core topology unavailable); {logical} logical CPUs"
+        else:
+            cpu_topology = f"{physical} kernel-reported core groups ({topology_source}); {logical} logical CPUs"
+        try:
+            meminfo = (LINUX_PROC_ROOT / "meminfo").read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            meminfo = ""
+        memory = next((line.split(":", 1)[1].strip() for line in meminfo.splitlines() if line.startswith("MemTotal:")), "")
+        nodes = sorted((LINUX_SYS_ROOT / "devices/system/node").glob("node[0-9]*"))
         numa_summary = "; ".join(
             f"{node.name} {next((line.split(':', 1)[1].strip() for line in (node / 'meminfo').read_text().splitlines() if 'MemTotal' in line), 'memory unreported')}"
             for node in nodes
