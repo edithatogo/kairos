@@ -85,6 +85,9 @@ class SessionTests(unittest.TestCase):
         session.claim(self.root, 'b', 'second', ['src'])
 
     def test_path_traversal_symlink_and_unknown_token_rejected(self):
+        for name in ('.git/config', '.GIT/config', 'nested/.Git/config'):
+            with self.assertRaises(ValueError):
+                session.path_key(name)
         (self.root / 'alias').symlink_to('contract.md')
         for path in ('../escape', '/absolute', '.git/config', 'alias'):
             with self.assertRaises(ValueError):

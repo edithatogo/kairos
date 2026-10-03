@@ -32,7 +32,7 @@ def identity(root):
 
 def path_key(value):
     path = PurePosixPath(value)
-    if not value or path.is_absolute() or '..' in path.parts or '.git' in path.parts:
+    if not value or path.is_absolute() or '..' in path.parts or any(unicodedata.normalize('NFC', p).casefold() == '.git' for p in path.parts):
         raise ValueError('paths must be repository-relative without .git or traversal')
     return str(path)
 
