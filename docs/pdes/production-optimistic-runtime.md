@@ -78,3 +78,16 @@ separate cost accounting. These local measurements cannot establish simultaneous
 CPU execution, MPI/gRPC rollback, distributed GVT, or a general scaling benefit.
 The [distributed handoff proposal](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/distributed-interface-handoff.md)
 retains those acceptance requirements and grants no Track49 dispatch.
+
+## Accepted local smoke measurements
+
+Source `ec9828e`, Rust1.98.1, fixed seed482027; one warmup and five alternating repeats. Median run-call durations:
+
+| Traffic / LPs | Conservative ms | Optimistic ms | Committed events | Extra executions | Replay executions |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| sparse / 4 | 28.313708 | 0.044041 | 36 | 10 | 10 |
+| dense / 4 | 119.983125 | 0.595792 | 141 | 134 | 92 |
+| sparse / 8 | 63.305542 | 0.079209 | 71 | 24 | 23 |
+| dense / 8 | 107.950417 | 1.826667 | 292 | 431 | 240 |
+
+[Raw results and source binding](../../benches/pdes/evidence/track48-ec9828e/time_warp_evidence.json) preserve every sample. The lightweight model and conservative thread/null-message work make these fixture-specific durations; they do not establish a general performance advantage. Setup, validation/extraction and fossil collection are excluded from both timing intervals. Dense fixtures require substantially more rollback/replay in this model.
