@@ -3,7 +3,6 @@
 mod flow;
 pub use flow::*;
 
-#[cfg(test)]
 mod preemption;
 
 use kairo_ecs_core::Scheduler;
