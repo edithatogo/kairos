@@ -1,5 +1,11 @@
 #![forbid(unsafe_code)]
 
+mod flow_adapter;
+pub use flow_adapter::{
+    create_flow_agent, register_flow_agent_behavior, schedule_flow_agent_update, FlowAgentBehavior,
+    FlowAgentContext, FlowAgentHandle,
+};
+
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_rng::DeterministicStream;
 use kairo_ecs_state::{ComponentRegistry, World};
