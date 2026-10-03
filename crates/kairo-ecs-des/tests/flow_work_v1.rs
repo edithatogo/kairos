@@ -84,3 +84,26 @@ fn actor_cleanup_drops_context_and_recycled_work_id_is_stale() {
     assert_ne!(w, replacement);
     assert!(f.work_context::<Owned>(w).is_err());
 }
+
+#[test]
+fn manual_allocation_inspection_preserves_owner_work_and_grant_time() {
+    let mut f = FlowRuntime::new();
+    let owner = f.spawn_actor().unwrap();
+    let resource = f.create_resource(1).unwrap();
+    let work = f
+        .create_work(owner, SimDuration::from_ticks(4), "inspect.v1", 42u32)
+        .unwrap();
+    let request = f
+        .submit_work(resource, owner, work, SimTime::from_ticks(3))
+        .unwrap();
+    f.step().unwrap();
+    let snapshot = f.resource(resource).unwrap();
+    let allocation = &snapshot.allocations[0];
+    assert_eq!(allocation.owner, owner);
+    assert_eq!(allocation.request, request);
+    assert_eq!(allocation.work, Some(work));
+    assert_eq!(allocation.granted_at, SimTime::from_ticks(3));
+    assert_eq!(allocation.segment_started_at, allocation.granted_at);
+    assert_eq!(allocation.completion_at, None);
+    assert_eq!(allocation.lease, snapshot.active[0]);
+}

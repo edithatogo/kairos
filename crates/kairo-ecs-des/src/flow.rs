@@ -104,7 +104,19 @@ fn cleanup_context<C: 'static>(registry: &mut ComponentRegistry, id: EntityId) {
 type ContextCleanup = fn(&mut ComponentRegistry, EntityId);
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ActiveAllocations {
-    leases: BTreeSet<LeaseId>,
+    leases: BTreeMap<LeaseId, Allocation>,
+}
+/// Authoritative manual allocation; timed work is introduced in Q3.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Allocation {
+    pub lease: LeaseId,
+    pub request: RequestId,
+    pub owner: EntityId,
+    pub work: Option<WorkId>,
+    pub priority_level: i32,
+    pub granted_at: SimTime,
+    pub segment_started_at: SimTime,
+    pub completion_at: Option<SimTime>,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ResourceSnapshot {
@@ -112,6 +124,7 @@ pub struct ResourceSnapshot {
     pub available: u32,
     pub queued: Vec<RequestId>,
     pub active: Vec<LeaseId>,
+    pub allocations: Vec<Allocation>,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LifecycleRecord {
@@ -387,7 +400,8 @@ impl FlowRuntime {
                 .checked_sub(used)
                 .ok_or(FlowError::InvalidState)?,
             queued: queue.requests.iter().map(|key| key.request).collect(),
-            active: active.leases.iter().copied().collect(),
+            active: active.leases.keys().copied().collect(),
+            allocations: active.leases.values().cloned().collect(),
         })
     }
     pub fn release(&mut self, lease: LeaseId, at: SimTime) -> Result<(), FlowError> {
@@ -538,7 +552,7 @@ impl FlowRuntime {
                 let resource = resources
                     .get_mut(&request.resource)
                     .ok_or(FlowError::InvalidResource)?;
-                if !resource.active.leases.remove(&lease) {
+                if resource.active.leases.remove(&lease).is_none() {
                     return Err(FlowError::InvalidState);
                 }
                 request.state = RequestState::Released;
@@ -618,7 +632,19 @@ impl FlowRuntime {
                     revision: lease_revision,
                 };
                 lease_revision = next;
-                resource.active.leases.insert(lease);
+                resource.active.leases.insert(
+                    lease,
+                    Allocation {
+                        lease,
+                        request: request_id,
+                        owner: request.owner,
+                        work: request.work,
+                        priority_level: request.priority_level,
+                        granted_at: outcome.at,
+                        segment_started_at: outcome.at,
+                        completion_at: None,
+                    },
+                );
                 request.lease = Some(lease);
                 request.state = RequestState::Active;
                 record(outcome, request_id, request)?;
