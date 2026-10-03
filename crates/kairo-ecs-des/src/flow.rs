@@ -58,6 +58,7 @@ pub enum RequestState {
     Active,
     Released,
     Cancelled,
+    TimedOut,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ResourceRequest {
@@ -68,6 +69,8 @@ pub struct ResourceRequest {
     pub lease: Option<LeaseId>,
     pub priority_level: i32,
     pub work: Option<WorkId>,
+    pub submitted_at: SimTime,
+    pub deadline: Option<SimTime>,
 }
 /// Ordering index derived from authoritative request fields.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -155,6 +158,9 @@ enum Command {
     Capacity(ResourceId, u32),
     Remove(ResourceId),
     Despawn(EntityId),
+    Deadline(RequestId),
+    Cancel(RequestId),
+    Reprioritize(RequestId, i32),
 }
 #[derive(Clone)]
 struct ResourceStage {
@@ -169,6 +175,9 @@ pub struct AcquireBuilder<'a> {
     owner: Option<EntityId>,
     work: Option<WorkId>,
     at: SimTime,
+    priority: i32,
+    deadline: Option<SimTime>,
+    scheduler_priority: i32,
 }
 impl AcquireBuilder<'_> {
     pub fn owner(mut self, owner: EntityId) -> Self {
@@ -183,10 +192,29 @@ impl AcquireBuilder<'_> {
         self.work = Some(work);
         self
     }
+    pub fn priority(mut self, level: i32) -> Self {
+        self.priority = level;
+        self
+    }
+    pub fn deadline(mut self, at: SimTime) -> Self {
+        self.deadline = Some(at);
+        self
+    }
+    pub fn scheduler_priority(mut self, priority: i32) -> Self {
+        self.scheduler_priority = priority;
+        self
+    }
     pub fn submit(self) -> Result<RequestId, FlowError> {
         let owner = self.owner.ok_or(FlowError::InvalidState)?;
-        self.runtime
-            .submit_inner(self.resource, owner, self.work, self.at)
+        self.runtime.submit_configured(
+            self.resource,
+            owner,
+            self.work,
+            self.at,
+            self.priority,
+            self.deadline,
+            self.scheduler_priority,
+        )
     }
 }
 /// Private shared scheduler/world/registry. Single process, experimental Rust API.
@@ -208,6 +236,8 @@ pub struct FlowRuntime {
     next_admission: u64,
     next_lease: u64,
 }
+const FLOW_COMMAND_DISPATCH_EVENT_KIND: u32 = 4000;
+const FLOW_WAITING_DEADLINE_EVENT_KIND: u32 = 4002;
 const OPERATION_CAP: u64 = u32::MAX as u64;
 impl Default for FlowRuntime {
     fn default() -> Self {
@@ -277,12 +307,23 @@ impl FlowRuntime {
         Ok(())
     }
     fn schedule(&mut self, command: Command, at: SimTime) -> Result<(), FlowError> {
+        self.schedule_priority(command, at, 0)
+    }
+    fn schedule_priority(
+        &mut self,
+        command: Command,
+        at: SimTime,
+        priority: i32,
+    ) -> Result<(), FlowError> {
         self.check_schedule(at)?;
         let event = self.scheduler.schedule(ScheduleRequest {
             at,
-            priority: 0,
+            priority,
             entity: None,
-            kind: EventKind::custom(4000),
+            kind: EventKind::custom(match command {
+                Command::Deadline(_) => FLOW_WAITING_DEADLINE_EVENT_KIND,
+                _ => FLOW_COMMAND_DISPATCH_EVENT_KIND,
+            }),
         });
         self.scheduled += 1;
         self.commands.insert(event, command);
@@ -296,6 +337,9 @@ impl FlowRuntime {
             owner: None,
             work: None,
             at,
+            priority: 0,
+            deadline: None,
+            scheduler_priority: 0,
         }
     }
     pub fn create_work<C: 'static>(
@@ -370,9 +414,32 @@ impl FlowRuntime {
         work: Option<WorkId>,
         at: SimTime,
     ) -> Result<RequestId, FlowError> {
+        self.submit_configured(resource, owner, work, at, 0, None, 0)
+    }
+    #[allow(clippy::too_many_arguments)]
+    fn submit_configured(
+        &mut self,
+        resource: ResourceId,
+        owner: EntityId,
+        work: Option<WorkId>,
+        at: SimTime,
+        priority: i32,
+        deadline: Option<SimTime>,
+        scheduler_priority: i32,
+    ) -> Result<RequestId, FlowError> {
         self.actor(owner)?;
         self.resource(resource)?;
         self.check_schedule(at)?;
+        let timeout = deadline.filter(|d| *d > at);
+        let needed = 1 + u64::from(timeout.is_some());
+        if self
+            .scheduled
+            .checked_add(needed)
+            .filter(|n| *n <= OPERATION_CAP)
+            .is_none()
+        {
+            return Err(FlowError::CounterOverflow);
+        }
         let mut spec = match work {
             Some(id) => {
                 let spec = self.work(id)?;
@@ -392,12 +459,17 @@ impl FlowRuntime {
                 state: RequestState::Pending,
                 admission_sequence: None,
                 lease: None,
-                priority_level: 0,
+                priority_level: priority,
                 work,
+                submitted_at: at,
+                deadline,
             },
         );
         self.requests.insert(request);
-        self.schedule(Command::Submit(request), at)?;
+        self.schedule_priority(Command::Submit(request), at, scheduler_priority)?;
+        if let Some(deadline) = timeout {
+            self.schedule(Command::Deadline(request), deadline)?;
+        }
         if let (Some(id), Some(spec)) = (work, spec.as_mut()) {
             spec.request = Some(request);
             let _ = self.registry.insert(id.0, spec.clone());
@@ -453,6 +525,42 @@ impl FlowRuntime {
         self.schedule(Command::Release(lease), at)?;
         self.pending_releases.insert(lease);
         Ok(())
+    }
+    pub fn cancel(&mut self, id: RequestId, at: SimTime) -> Result<(), FlowError> {
+        self.cancel_with_scheduler_priority(id, at, 0)
+    }
+    pub fn cancel_with_scheduler_priority(
+        &mut self,
+        id: RequestId,
+        at: SimTime,
+        priority: i32,
+    ) -> Result<(), FlowError> {
+        let r = self.request(id)?;
+        if terminal(r.state) {
+            return Err(FlowError::TerminalRequest);
+        }
+        self.schedule_priority(Command::Cancel(id), at, priority)
+    }
+    pub fn reprioritize(
+        &mut self,
+        id: RequestId,
+        level: i32,
+        at: SimTime,
+    ) -> Result<(), FlowError> {
+        self.reprioritize_with_scheduler_priority(id, level, at, 0)
+    }
+    pub fn reprioritize_with_scheduler_priority(
+        &mut self,
+        id: RequestId,
+        level: i32,
+        at: SimTime,
+        priority: i32,
+    ) -> Result<(), FlowError> {
+        let r = self.request(id)?;
+        if terminal(r.state) {
+            return Err(FlowError::TerminalRequest);
+        }
+        self.schedule_priority(Command::Reprioritize(id, level), at, priority)
     }
     pub fn set_capacity(&mut self, id: ResourceId, total: u32) -> Result<(), FlowError> {
         if self.resource(id)?.active.len() > total as usize {
@@ -557,95 +665,222 @@ impl FlowRuntime {
         let mut remove_actor = None;
         let mut admission = self.next_admission;
         let mut lease_revision = self.next_lease;
-        match command {
-            Command::Submit(id) => {
-                let request = requests.get_mut(&id).ok_or(FlowError::InvalidRequest)?;
-                if request.state != RequestState::Pending {
-                    return Err(FlowError::TerminalRequest);
-                }
-                self.actor(request.owner)?;
-                let resource = resources
-                    .get_mut(&request.resource)
-                    .ok_or(FlowError::InvalidResource)?;
-                let next = admission.checked_add(1).ok_or(FlowError::CounterOverflow)?;
-                request.admission_sequence = Some(admission);
-                admission = next;
-                request.state = RequestState::Queued;
-                resource.queue.requests.insert(PriorityKey {
-                    level: request.priority_level,
-                    enqueue_sequence: request.admission_sequence.unwrap(),
-                    request: id,
-                });
-                affected.insert(request.resource);
-                record(outcome, id, request)?;
+        // Expire only resources causally targeted by this event.
+        let boundary_targets: BTreeSet<ResourceId> = match command {
+            Command::Submit(id)
+            | Command::Deadline(id)
+            | Command::Cancel(id)
+            | Command::Reprioritize(id, _) => requests
+                .get(&id)
+                .map(|r| BTreeSet::from([r.resource]))
+                .unwrap_or_default(),
+            Command::Release(lease) => requests
+                .get(&lease.request)
+                .map(|r| BTreeSet::from([r.resource]))
+                .unwrap_or_default(),
+            Command::Capacity(id, _) | Command::Remove(id) => BTreeSet::from([id]),
+            Command::Despawn(owner) => requests
+                .values()
+                .filter(|r| r.owner == owner && !terminal(r.state))
+                .map(|r| r.resource)
+                .collect(),
+        };
+        // Deadline is a waiting boundary independent of token insertion order.
+        for (resource_id, resource) in &mut resources {
+            if !boundary_targets.contains(resource_id) {
+                continue;
             }
-            Command::Release(lease) => {
-                let request = requests
-                    .get_mut(&lease.request)
-                    .ok_or(FlowError::InvalidLease)?;
-                if request.state != RequestState::Active || request.lease != Some(lease) {
-                    return Err(FlowError::InvalidLease);
-                }
-                let resource = resources
-                    .get_mut(&request.resource)
-                    .ok_or(FlowError::InvalidResource)?;
-                if resource.active.leases.remove(&lease).is_none() {
-                    return Err(FlowError::InvalidState);
-                }
-                request.state = RequestState::Released;
-                request.lease = None;
-                affected.insert(request.resource);
-                record(outcome, lease.request, request)?;
+            let expired: Vec<_> = resource
+                .queue
+                .requests
+                .iter()
+                .filter(|key| {
+                    requests
+                        .get(&key.request)
+                        .is_some_and(|r| r.deadline.is_some_and(|at| at <= outcome.at))
+                })
+                .copied()
+                .collect();
+            for key in expired {
+                resource.queue.requests.remove(&key);
+                let r = requests
+                    .get_mut(&key.request)
+                    .ok_or(FlowError::InvalidState)?;
+                r.state = RequestState::TimedOut;
+                r.deadline = None;
+                record(outcome, key.request, r)?;
+                affected.insert(*resource_id);
             }
-            Command::Capacity(id, total) => {
-                let resource = resources.get_mut(&id).ok_or(FlowError::InvalidResource)?;
-                if resource.active.leases.len() > total as usize {
-                    return Err(FlowError::CapacityInUse);
+        }
+        let boundary_resources = resources.clone();
+        let boundary_requests = requests.clone();
+        let boundary_affected = affected.clone();
+        let boundary_records = outcome.records.len();
+        let explicit = (|| -> Result<(), FlowError> {
+            match command {
+                Command::Submit(id) => {
+                    let request = requests.get_mut(&id).ok_or(FlowError::InvalidRequest)?;
+                    if request.state != RequestState::Pending {
+                        return Err(FlowError::TerminalRequest);
+                    }
+                    self.actor(request.owner)?;
+                    let resource = resources
+                        .get_mut(&request.resource)
+                        .ok_or(FlowError::InvalidResource)?;
+                    let next = admission.checked_add(1).ok_or(FlowError::CounterOverflow)?;
+                    request.admission_sequence = Some(admission);
+                    admission = next;
+                    if request.deadline.is_some_and(|at| at <= outcome.at) {
+                        request.state = RequestState::TimedOut;
+                        request.deadline = None;
+                        record(outcome, id, request)?;
+                        return Ok(());
+                    }
+                    request.state = RequestState::Queued;
+                    resource.queue.requests.insert(PriorityKey {
+                        level: request.priority_level,
+                        enqueue_sequence: request.admission_sequence.unwrap(),
+                        request: id,
+                    });
+                    affected.insert(request.resource);
+                    record(outcome, id, request)?;
                 }
-                resource.capacity.total = total;
-                affected.insert(id);
-            }
-            Command::Remove(id) => {
-                if !resources.contains_key(&id) {
-                    return Err(FlowError::InvalidResource);
-                }
-                if requests.values().any(|r| {
-                    r.resource == id
-                        && matches!(
-                            r.state,
-                            RequestState::Pending | RequestState::Queued | RequestState::Active
-                        )
-                }) {
-                    return Err(FlowError::ResourceInUse);
-                }
-                resources.remove(&id);
-                remove_resource = Some(id);
-            }
-            Command::Despawn(owner) => {
-                self.actor(owner)?;
-                for (id, request) in &mut requests {
-                    if request.owner != owner
-                        || matches!(
-                            request.state,
-                            RequestState::Released | RequestState::Cancelled
-                        )
-                    {
-                        continue;
+                Command::Release(lease) => {
+                    let request = requests
+                        .get_mut(&lease.request)
+                        .ok_or(FlowError::InvalidLease)?;
+                    if request.state != RequestState::Active || request.lease != Some(lease) {
+                        return Err(FlowError::InvalidLease);
                     }
                     let resource = resources
                         .get_mut(&request.resource)
                         .ok_or(FlowError::InvalidResource)?;
-                    resource.queue.requests.retain(|q| q.request != *id);
+                    if resource.active.leases.remove(&lease).is_none() {
+                        return Err(FlowError::InvalidState);
+                    }
+                    request.state = RequestState::Released;
+                    request.lease = None;
+                    affected.insert(request.resource);
+                    record(outcome, lease.request, request)?;
+                }
+                Command::Capacity(id, total) => {
+                    let resource = resources.get_mut(&id).ok_or(FlowError::InvalidResource)?;
+                    if resource.active.leases.len() > total as usize {
+                        return Err(FlowError::CapacityInUse);
+                    }
+                    resource.capacity.total = total;
+                    affected.insert(id);
+                }
+                Command::Remove(id) => {
+                    if !resources.contains_key(&id) {
+                        return Err(FlowError::InvalidResource);
+                    }
+                    if requests.values().any(|r| {
+                        r.resource == id
+                            && matches!(
+                                r.state,
+                                RequestState::Pending | RequestState::Queued | RequestState::Active
+                            )
+                    }) {
+                        return Err(FlowError::ResourceInUse);
+                    }
+                    resources.remove(&id);
+                    remove_resource = Some(id);
+                }
+                Command::Despawn(owner) => {
+                    self.actor(owner)?;
+                    for (id, request) in &mut requests {
+                        if request.owner != owner
+                            || matches!(
+                                request.state,
+                                RequestState::Released
+                                    | RequestState::Cancelled
+                                    | RequestState::TimedOut
+                            )
+                        {
+                            continue;
+                        }
+                        let resource = resources
+                            .get_mut(&request.resource)
+                            .ok_or(FlowError::InvalidResource)?;
+                        resource.queue.requests.retain(|q| q.request != *id);
+                        if let Some(lease) = request.lease {
+                            resource.active.leases.remove(&lease);
+                        }
+                        request.state = RequestState::Cancelled;
+                        request.lease = None;
+                        affected.insert(request.resource);
+                        record(outcome, *id, request)?;
+                    }
+                    remove_actor = Some(owner);
+                }
+                Command::Deadline(id) => {
+                    let _ = requests.get(&id).ok_or(FlowError::InvalidRequest)?;
+                }
+                Command::Cancel(id) => {
+                    let request = requests.get_mut(&id).ok_or(FlowError::InvalidRequest)?;
+                    if terminal(request.state) {
+                        return Err(FlowError::TerminalRequest);
+                    }
+                    let resource = resources
+                        .get_mut(&request.resource)
+                        .ok_or(FlowError::InvalidResource)?;
+                    resource.queue.requests.retain(|k| k.request != id);
                     if let Some(lease) = request.lease {
                         resource.active.leases.remove(&lease);
                     }
                     request.state = RequestState::Cancelled;
                     request.lease = None;
+                    request.deadline = None;
                     affected.insert(request.resource);
-                    record(outcome, *id, request)?;
+                    record(outcome, id, request)?;
                 }
-                remove_actor = Some(owner);
+                Command::Reprioritize(id, level) => {
+                    let request = requests.get_mut(&id).ok_or(FlowError::InvalidRequest)?;
+                    if terminal(request.state) {
+                        return Err(FlowError::TerminalRequest);
+                    }
+                    let resource = resources
+                        .get_mut(&request.resource)
+                        .ok_or(FlowError::InvalidResource)?;
+                    request.priority_level = level;
+                    if request.state == RequestState::Queued {
+                        resource.queue.requests.retain(|k| k.request != id);
+                        resource.queue.requests.insert(PriorityKey {
+                            level,
+                            enqueue_sequence: request
+                                .admission_sequence
+                                .ok_or(FlowError::InvalidState)?,
+                            request: id,
+                        });
+                    }
+                    if let Some(lease) = request.lease {
+                        resource
+                            .active
+                            .leases
+                            .get_mut(&lease)
+                            .ok_or(FlowError::InvalidState)?
+                            .priority_level = level;
+                    }
+                    affected.insert(request.resource);
+                }
+            };
+            Ok(())
+        })();
+        if let Err(error) = explicit {
+            // Rejected explicit operations cannot discard independent boundaries.
+            // Counter/preflight failure rejects the complete transaction.
+            if error == FlowError::CounterOverflow || error == FlowError::InvalidState {
+                return Err(error);
             }
+            resources = boundary_resources;
+            requests = boundary_requests;
+            affected = boundary_affected;
+            outcome.records.truncate(boundary_records);
+            outcome.error = Some(error);
+            remove_resource = None;
+            remove_actor = None;
+            admission = self.next_admission;
         }
         for id in affected {
             let resource = resources.get_mut(&id).ok_or(FlowError::InvalidState)?;
@@ -684,6 +919,7 @@ impl FlowRuntime {
                 );
                 request.lease = Some(lease);
                 request.state = RequestState::Active;
+                request.deadline = None;
                 record(outcome, request_id, request)?;
             }
         }
@@ -746,6 +982,13 @@ impl FlowRuntime {
         Ok(())
     }
 }
+fn terminal(state: RequestState) -> bool {
+    matches!(
+        state,
+        RequestState::Released | RequestState::Cancelled | RequestState::TimedOut
+    )
+}
+
 fn checked_ordinal(length: usize) -> Result<u32, FlowError> {
     u32::try_from(length).map_err(|_| FlowError::CounterOverflow)
 }
