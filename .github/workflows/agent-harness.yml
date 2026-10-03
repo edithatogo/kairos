@@ -1,0 +1,41 @@
+name: Agent harness
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-harness-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  session-regression:
+    name: Session guard (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            architecture: x86_64
+          - os: macos-15
+            architecture: arm64
+    env:
+      EXPECTED_ARCH: ${{ matrix.architecture }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Record and verify execution host
+        run: |
+          python3 --version
+          uname -m
+          test "$(uname -m)" = "$EXPECTED_ARCH"
+          python3 -c 'import sys; assert sys.version_info >= (3, 9)'
+      - name: Exercise session races and context boundaries
+        run: python3 -m unittest discover -s tests/agent_harness -v
