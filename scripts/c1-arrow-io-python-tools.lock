@@ -1,0 +1,9 @@
+# Hash-locked binary-wheel interoperability oracle dependencies for CPython 3.14.8.
+# NumPy 2.4.0 was rejected because PyPI yanked its files for a backward-compatibility bug.
+# Supported hosted targets: macOS arm64 and Linux x86_64.
+numpy==2.5.3 \
+    --hash=sha256:adc1ada2662f8a5f960b8a10d9986897e7499ef07e06d4cfe7197f8cce923c07 \
+    --hash=sha256:b0521d0f4aebb6e06189451025fa17a913287b13c03d5fe05c017333b654ea5b
+pyarrow==25.0.1 \
+    --hash=sha256:bf0b672390cdcb640d7288f96b826d71ff4e9abb254a86c89890baf51a29cee6 \
+    --hash=sha256:9171748cdf796972d85a4b60157c279913e242992e350c90c7450182a9838b2a
