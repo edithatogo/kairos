@@ -159,3 +159,8 @@ Regression command: `pwsh -NoProfile -ExecutionPolicy Bypass -File tests/test_tr
 - pushed ref: pending until the reconciliation commit is pushed.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until after push.
 - Next-phase decision: Track 15 is Done in the registry and narrative; production publishing remains blocked until registry/name/toolchain evidence and release-manager approval are recorded.
+
+
+## Exact archive acquisition verifier — 2026-10-04
+
+Coordinator prerequisite for Track20 attestation acquisition: `build_package_archive_bundle.py --verify-existing --output <downloaded-tree> --source-commit <expected-sha>` verifies retained archives without regenerating them and rejects a different source commit. Indexed paths must be canonical POSIX paths inside the tree without symlink ancestors. This does not acquire artifacts, generate SBOM/provenance or establish hosted attestation. Focused archive tests cover path rejection, seven-ecosystem checksums and tamper rejection.

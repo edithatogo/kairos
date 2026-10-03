@@ -150,6 +150,20 @@ def build(
     (output / "SHA256SUMS").write_text(checksums, encoding="utf-8")
 
 
+def indexed_path(output: Path, relative: object) -> Path:
+    if not isinstance(relative, str) or not relative or "\\" in relative:
+        raise ValueError("archive index path must be a nonempty POSIX relative path")
+    name = PurePosixPath(relative)
+    if name.is_absolute() or ".." in name.parts or ":" in relative or name.as_posix() != relative:
+        raise ValueError("archive index path must be canonical and remain in the artifact tree")
+    path = output / relative
+    if not path.resolve().is_relative_to(output.resolve()):
+        raise ValueError("archive index path escapes the artifact tree")
+    if any(part.is_symlink() for part in (path, *path.parents) if part.is_relative_to(output)):
+        raise ValueError("archive index path contains a symlink")
+    return path
+
+
 def verify(output: Path) -> None:
     index = json.loads((output / "ARCHIVE-INDEX.json").read_text(encoding="utf-8"))
     if index.get("schema_version") != 1:
@@ -180,7 +194,7 @@ def verify(output: Path) -> None:
         relative = artifact["path"]
         if relative in expected_paths:
             raise ValueError(f"duplicate archive index path: {relative}")
-        path = output / relative
+        path = indexed_path(output, relative)
         if path.is_symlink() or not path.is_file():
             raise ValueError(f"archive is missing or is a symlink: {relative}")
         digest = checksum(path)
@@ -206,12 +220,24 @@ def verify(output: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, required=True)
+    parser.add_argument("--input", type=Path)
+    parser.add_argument("--verify-existing", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source-commit", required=True)
     args = parser.parse_args()
-    build(args.input.resolve(), args.output.resolve(), args.source_commit)
+    if len(args.source_commit) != 40 or any(c not in "0123456789abcdef" for c in args.source_commit):
+        parser.error("--source-commit must be a full lowercase Git SHA")
+    if args.verify_existing:
+        if args.input is not None:
+            parser.error("--input is not allowed with --verify-existing")
+    elif args.input is None:
+        parser.error("--input is required when building")
+    else:
+        build(args.input.resolve(), args.output.resolve(), args.source_commit)
     verify(args.output.resolve())
+    index = json.loads((args.output / "ARCHIVE-INDEX.json").read_text(encoding="utf-8"))
+    if index["source_commit"] != args.source_commit:
+        raise ValueError("archive source commit differs from the expected acquisition commit")
     index_path = args.output / "ARCHIVE-INDEX.json"
     artifact_count = len(json.loads(index_path.read_text(encoding="utf-8"))["artifacts"])
     print(f"verified {artifact_count} package archives")

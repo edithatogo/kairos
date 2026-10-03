@@ -15,6 +15,26 @@ SPEC.loader.exec_module(MODULE)
 
 
 class PackageArchiveBundleTests(unittest.TestCase):
+    def test_indexed_paths_fail_closed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            for path in ["../outside.crate", "/tmp/archive.crate", "x/../y.crate", "x//y.crate", "C:/archive.crate", "x\\y.crate", "", None]:
+                with self.subTest(path=path), self.assertRaises(ValueError):
+                    MODULE.indexed_path(root, path)
+            external = root.parent / (root.name + "-external")
+            external.mkdir()
+            try:
+                (root / "linked").symlink_to(external, target_is_directory=True)
+                with self.assertRaises(ValueError):
+                    MODULE.indexed_path(root, "linked/archive.crate")
+                (root / "inside").mkdir()
+                (root / "alias").symlink_to(root / "inside", target_is_directory=True)
+                with self.assertRaises(ValueError):
+                    MODULE.indexed_path(root, "alias/archive.crate")
+                self.assertEqual(MODULE.indexed_path(root, "rust/package.crate"), root / "rust/package.crate")
+            finally:
+                external.rmdir()
+
     def test_tgz_must_be_a_gzip_tar_archive(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "package.tgz"
