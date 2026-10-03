@@ -79,6 +79,8 @@ jobs:
           npm ci --prefix website
           python3 scripts/bootstrap-node-tools/apply_http_cache_fix.py website/node_modules
           node tests/http-cache-security-regression.mjs website/node_modules/http-cache-semantics/index.js
+      - name: Local LLMS renderer contract tests
+        run: node --test website/tests/kairoecs-llms-txt.test.mjs
       - name: Search DOM XSS regression tests
         run: node website/scripts/test-search-security.mjs
       - name: Docs workflow validation
