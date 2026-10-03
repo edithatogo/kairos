@@ -15,19 +15,22 @@ const ROOT_MANIFEST = JSON.parse(readFileSync(join(ROOT, 'conformance/fixtures/m
 
 const fullReport = runConformance(ROOT);
 assert.equal(fullReport.status, 'ok');
-assert.equal(fullReport.validated_fixtures, 5);
+assert.equal(fullReport.validated_fixtures, 6);
 assert.deepEqual(fullReport.selected_fixtures, [
   'scheduler_ordering_v1',
   'scheduler_cancellation_v1',
   'rng_reproducibility_v1',
   'vvuq_scenario_replay_v1',
   'zero_delay_guard_v1',
+  'pdes_conservative_parity_v1',
 ]);
 assert.equal(fullReport.results[0].kind, 'ordering');
 assert.deepEqual(fullReport.results[0].observed.observed_kind_order, [1, 2, 4, 3]);
 assert.equal(fullReport.results[4].id, 'zero_delay_guard_v1');
 assert.deepEqual(fullReport.results[4].observed.observed_kind_order, [1, 2, 5, 10]);
 assert.equal(fullReport.results[4].observed.zero_delay_event_count, 4);
+assert.equal(fullReport.results[5].observed.validation_scope, 'fixture-contract-only');
+assert.equal(fullReport.results[5].observed.native_consumer, 'crates/kairo-ecs-pdes/tests/production_parity.rs');
 
 const filteredReport = runConformance(ROOT, { fixtureIds: ['rng_reproducibility_v1'] });
 assert.equal(filteredReport.validated_fixtures, 1);
