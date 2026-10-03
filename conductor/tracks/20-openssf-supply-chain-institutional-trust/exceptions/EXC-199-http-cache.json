@@ -1,0 +1,118 @@
+{
+  "id": "EXC-199",
+  "status": "proposed_pending_owner_decision",
+  "classification": "temporary_operational_exception_pending_owner_classification",
+  "pr": "https://github.com/edithatogo/kairos/pull/199",
+  "source_commit": "0a3b86aa33d1f158eaca2855e0e503cdac6e08ef",
+  "control": "bootstrap npm moderate audit in Package Dry Runs",
+  "raw_audit_command": [
+    "node",
+    "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+    "audit",
+    "--prefix",
+    "scripts/bootstrap-node-tools",
+    "--audit-level=moderate",
+    "--json"
+  ],
+  "raw_audit_exit": 1,
+  "audit_report_version": 2,
+  "advisory": {
+    "id": "GHSA-ch52-4w7c-c8xp",
+    "source": 1240991,
+    "url": "https://github.com/advisories/GHSA-ch52-4w7c-c8xp",
+    "package": "http-cache-semantics",
+    "version": "4.2.0",
+    "severity": "high",
+    "range": "<=4.2.0"
+  },
+  "finding_count": 19,
+  "vulnerabilities_sha256": "0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8",
+  "audit_baseline_sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c",
+  "raw_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "file_sha256": {
+    "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
+    "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "a928e08eacca08e497199ab58747ff751041643748a0f53ff988dbd7d2d0aa91",
+    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "3757fcb8d2bc16ba842cc5f3868c1f09de591ef50a599f56c83ab1d51397b9a4",
+    "tests/test_http_cache_patch.py": "542a970f0cf79242334b274cd93ec60ee32fb05b375d2302591cb822550479b9",
+    "tests/http-cache-security-regression.mjs": "298c3537d14c19afdc188cde554596d4f2fc4f95c56d387b79af9ab851f510b2"
+  },
+  "patched_index_sha256": "fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76",
+  "expires_at": "2026-10-10T00:00:00+10:00",
+  "expires_on_stage_advance": true,
+  "allowed_contexts": [
+    "development_pr_199",
+    "alpha_package_dry_run",
+    "beta_package_dry_run"
+  ],
+  "excluded_contexts": [
+    "release_candidate",
+    "1.0",
+    "publication",
+    "other_dependency_trees",
+    "website_dependency_tree",
+    "other_pull_requests"
+  ],
+  "approvals": {
+    "security_owner": null,
+    "release_owner": null,
+    "classification_accepted": false,
+    "approved_at": null,
+    "approval_evidence": null
+  },
+  "follow_up": "EXC-199-http-cache-decision.md",
+  "activation": "not_implemented; raw audit remains a strict failing gate pending owner decision and a separately reviewed implementation",
+  "required_pull_request": 199,
+  "scope_matching": "required_pull_request AND allowed_context AND exact repository/head_ref; conjunction only",
+  "repository": "edithatogo/kairos",
+  "head_ref": "codex/kairos-track48-optimistic-runtime",
+  "scope": "The pinned scripts/bootstrap-node-tools npm dependency tree for PR #199 development integration and its alpha/beta package dry runs only, subject to explicit owner approval and a separately reviewed activation change.",
+  "approval_gates": {
+    "security_owner": "explicit human approval required",
+    "release_owner": "explicit human approval required",
+    "classification": "temporary operational tooling limitation must be expressly accepted; AI review is not approval",
+    "activation": "separate implementation review and hosted exact-head checks required after approval"
+  },
+  "evidence": {
+    "evidence_directory": "evidence/EXC-199/",
+    "audit_capture": {
+      "source_commit": "0a3b86aa33d1f158eaca2855e0e503cdac6e08ef",
+      "receipt": "evidence/EXC-199/audit/pr199-0a3b86a/receipt.json",
+      "raw_report": "evidence/EXC-199/audit/pr199-0a3b86a/raw-audit.json",
+      "exit": 1,
+      "stderr_bytes": 0,
+      "high_graph_nodes": 19,
+      "raw_sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c",
+      "graph_sha256": "0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8"
+    },
+    "control_capture": {
+      "source_commit": "e3306f4ca3e560b81725a1b07a275d98643caefe",
+      "receipt": "evidence/EXC-199/controls/e3306f4/receipt.json",
+      "passing_checks": [
+        "patch-tests",
+        "resolution",
+        "behavior-top",
+        "behavior-npm",
+        "signatures"
+      ],
+      "note": "These are a separate local control run on e3306f4, not part of the raw-audit run.",
+      "receipt_sha256": "30cd4fe16c177dc58270bc09083a9cade4bf8d7f4010872dcc58d6efbfc4c08c"
+    },
+    "hosted_attempt": {
+      "associated_pr_head": "0a3b86aa33d1f158eaca2855e0e503cdac6e08ef",
+      "receipt": "evidence/EXC-199/hosted-pr199-0a3b86a/runner-receipt.json",
+      "raw_audit_status": "not_executed",
+      "runner_error": "unapproved PR source",
+      "note": "This hosted attempt did not execute the raw audit and is not evidence of an approved or passing exception."
+    },
+    "runtime_metadata": {
+      "file": "evidence/EXC-199/preparation/node-npm-versions.txt",
+      "measured_at": "2026-10-03T12:42:07Z",
+      "measured_source_head": "be54595e3fad310f952389520632cf9af6900e92",
+      "measurement_scope": "Preparation-time metadata only; not captured retroactively from either source run.",
+      "node": "v26.10.0",
+      "npm_cli": "12.1.0",
+      "metadata_sha256": "2df41a4349f4dc63e0a2bc0ac62ee896a2b3d27f3407f1442caf2f3765127e17"
+    }
+  },
+  "decision": "pending; this record proposes a narrowly scoped exception for review but grants no authorization"
+}
