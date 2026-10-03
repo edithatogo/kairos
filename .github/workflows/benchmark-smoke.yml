@@ -7,6 +7,7 @@ concurrency:
 on:
   pull_request:
     paths:
+      - '.github/workflows/benchmark-smoke.yml'
       - 'crates/**'
       - 'benches/**'
       - 'conformance/fixtures/**'
@@ -31,3 +32,23 @@ jobs:
           test -d benches
           python benches/benchmark_smoke.py
           cargo check -p kairo-ecs-bench
+      - name: PDES evidence collector checks
+        run: |
+          python3 -m unittest discover -s benches/pdes -p 'test_*.py' -v
+      - name: Linux collector hardware readback
+        run: |
+          python3 - <<'PYTHON'
+          import importlib.util
+          import json
+          from pathlib import Path
+          path = Path("benches/pdes/collect_evidence.py")
+          spec = importlib.util.spec_from_file_location("pdes_collector", path)
+          collector = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(collector)
+          hardware = collector.hardware_metadata()
+          assert hardware["physical_cpu_count"] > 0, hardware
+          assert hardware["logical_cpu_count"] > 0, hardware
+          assert hardware["memory_bytes"] > 0, hardware
+          assert not hardware["cpu_model"].startswith("unavailable"), hardware
+          print(json.dumps(hardware, indent=2))
+          PYTHON

@@ -13,3 +13,4 @@ Severity scale: Low (1-2), Medium (3-4), High (5-6), Critical (7-10).
 | Same-tick self loop | Non-terminating run | Per-call event budget with typed resumable budget exhaustion |
 | Source changes during benchmark capture | False commit provenance | Pushed ref readback, clean source and pre/post source digest equality |
 | More LPs than host cores | Misleading performance interpretation | Record real core/thread topology and oversubscription; no superiority claims |
+| Required npm audit has no published upstream fix | PR cannot pass all Actions or merge | Retain failed gate for GHSA-ch52-4w7c-c8xp; reverify a published fixed dependency and all exact-head Actions before acceptance |

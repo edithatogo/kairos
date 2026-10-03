@@ -179,3 +179,31 @@ Executed from the repository root: `python3 benches/pdes/collect_evidence.py --c
 Registered evidence: `conductor/hpc-evidence/manifests/track47-conservative-production-live.json`. The raw artifact, actual compiler/host/core/topology, scenario hash, working directory and child exit status are recorded in that manifest. All eight profiles pass parity. The raw checksum is `sha256:69003d380f88dfe48249ca02d3beff8da18ae0f7c30f989976196a03c12e121c`. Initial capture is preserved but superseded for acceptance.
 
 Track status is In Review. Hosted Actions and strict clean pushed git closeout remain pending; the next-phase decision is to wait for Track 47 merge before Track 48.
+
+## Hosted acceptance blocker - 2026-10-03
+
+PR: https://github.com/edithatogo/kairos/pull/193. At head
+`2502a4cce8526af74efc99a5ffedb1a2b6156cfb`, 15 PR Actions runs passed and
+one failed: Package Dry Runs run `37090747480`, npm-package job
+`111110374306`. Its required moderate-level npm audit exited 1 with 19
+high-severity dependency/metavulnerability nodes rooted in
+`npm@12.1.0 -> make-fetch-happen@16.0.1 -> http-cache-semantics@4.2.0`.
+The affected package is registry-resolved outside npm's repacked embedded bundle.
+
+Reviewed advisory: https://github.com/advisories/GHSA-ch52-4w7c-c8xp.
+It reports affected versions through 4.2.0 and no patched version. Independent
+registry/source review on 2026-10-03 found npm 12.2.0 still includes the same
+affected cache package. The upstream fix at
+https://github.com/kornelski/http-cache-semantics/pull/58 remains open and unmerged
+(head `14a8c2ad51740dc39bf3e8f1a11c845a5003f217`). No dependency upgrade,
+advisory suppression, fabricated package version, or gate removal was applied.
+A published fixed upstream candidate and successful existing audit are needed
+before final acceptance; Track 48 must wait for Track 47 merge.
+
+The two substantive PR review fixes are implemented: portable Linux kernel
+core topology/model evidence, with unavailable topology preserved, and a
+synchronized In Review spec. Root independently ran the 13-test collector suite
+(exit 0) and verified the actual Mac hardware readback. The bounded Track 13 CI
+handoff retains benchmark checks and adds those collector tests plus an actual
+Linux runner hardware readback, with no new actions, dependencies or permissions.
+Exact-head hosted verification for these follow-up changes is still pending.
