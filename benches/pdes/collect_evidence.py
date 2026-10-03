@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import plistlib
 import re
 import subprocess
 import sys
@@ -34,6 +35,8 @@ def command_output(command: list[str], *, timeout: int = 20) -> str:
         )
     except (OSError, subprocess.TimeoutExpired) as error:
         return f"unavailable ({type(error).__name__}: {error})"
+    if result.returncode != 0:
+        return f"unavailable (command exited {result.returncode})"
     return result.stdout.strip() or f"command returned no output (exit {result.returncode})"
 
 
@@ -163,6 +166,38 @@ def hardware_metadata() -> dict[str, str | int]:
     }
 
 
+def filesystem_metadata() -> str:
+    if platform.system() == "Darwin":
+        # BSD stat %T reports file kind, not the backing filesystem. Resolve the
+        # actual source volume through df, then retain only its filesystem type.
+        try:
+            volume = subprocess.run(
+                ["df", "-P", str(ROOT)], cwd=ROOT, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True,
+                timeout=20,
+            )
+            device = volume.stdout.splitlines()[1].split()[0]
+            info = subprocess.run(
+                ["diskutil", "info", "-plist", device], cwd=ROOT,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True,
+                timeout=20,
+            )
+            metadata = plistlib.loads(info.stdout)
+            result = metadata.get("FilesystemType")
+            if metadata.get("Error") or not isinstance(result, str) or not result:
+                raise ValueError("source volume filesystem type is absent")
+        except (OSError, subprocess.SubprocessError, IndexError,
+                plistlib.InvalidFileException) as error:
+            raise ValueError("source volume filesystem type could not be collected") from error
+    elif platform.system() == "Linux":
+        result = command_output(["stat", "-f", "-c", "%T", str(ROOT)])
+        if result.startswith(("unavailable", "command returned no output")):
+            raise ValueError("filesystem type could not be collected")
+    else:
+        raise ValueError(f"filesystem type collection is unsupported on {platform.system()}")
+    return f"{result}; local repository filesystem"
+
+
 def validate_result(text: str, repetitions: int, seed: int) -> dict:
     result = json.loads(text)
     if result.get("schema_version") != "kairoecs.pdes.benchmark.v1":
@@ -247,6 +282,8 @@ def main() -> int:
         parser.error("live-hpc evidence requires a pushed ref that resolves to the tested commit")
     if args.evidence_class == "live-hpc" and not args.pushed_ref.startswith("refs/remotes/origin/"):
         parser.error("live-hpc evidence requires a remotely verified refs/remotes/origin/<branch>")
+    if args.evidence_class == "live-hpc" and (not args.reviewer.strip() or args.reviewer == "local benchmark collection"):
+        parser.error("live-hpc evidence requires an explicit reviewer name or handle")
     if not 1 <= args.repetitions <= 100:
         parser.error("--repetitions must be in the range 1..100")
 
@@ -257,9 +294,14 @@ def main() -> int:
     dirty = False
     source_sha256 = source_tree_digest()
     hardware = hardware_metadata()
+    try:
+        filesystem = filesystem_metadata()
+    except ValueError as error:
+        parser.error(str(error))
     if (
         not hardware["cpu_model"] or not hardware["cpu_topology"]
         or not hardware["memory_topology"]
+        or str(hardware["cpu_model"]).startswith("unavailable")
         or int(hardware["physical_cpu_count"]) < 1
         or int(hardware["logical_cpu_count"]) < 1
         or int(hardware["memory_bytes"]) < 1
@@ -287,9 +329,6 @@ def main() -> int:
     compiler = command_output(["rustup", "run", TOOLCHAIN, "rustc", "-Vv"])
     if compiler.startswith("unavailable") or compiler.startswith("command returned no output"):
         parser.error("Rust compiler metadata could not be collected")
-    filesystem = command_output(["df", "-h", str(ROOT)])
-    if filesystem.startswith("unavailable") or filesystem.startswith("command returned no output"):
-        parser.error("filesystem metadata could not be collected")
     command_text = " ".join(command) + "\n"
     environment = {
         "platform": platform.platform(),

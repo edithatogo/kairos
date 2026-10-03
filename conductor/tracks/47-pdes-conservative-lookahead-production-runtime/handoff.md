@@ -143,3 +143,14 @@ accepted: `rustup run 1.98.1 cargo bench -p kairo-ecs-pdes --bench production
 matching LP count. Review-only raw output: `artifacts/track47-bench-smoke.json`
 and `.stderr`; these are not the pushed-source Track 46 manifest. Targeted bench
 formatting and clippy passed after that sole post-full-CI parser adjustment.
+
+
+Source commit SHA: `71acd990692a2cadd4cfea9c1f7396994ea81109` was pushed by the
+root coordinator. The first attempted hardware capture refused a dirty
+collector before benchmarking and created no evidence bundle. A narrow
+collector follow-up replaces BSD `stat %T` (which reports file kind) with actual
+source-volume `diskutil` filesystem-type readback, removes local mount/device
+paths from public metadata, requires an explicit nonblank live reviewer, and
+fails metadata commands closed. Direct metadata check observed APFS; collector
+py_compile, all 7 evidence-boundary self-checks and diff integrity passed.
+The root coordinator retries capture only against the next clean pushed commit.
