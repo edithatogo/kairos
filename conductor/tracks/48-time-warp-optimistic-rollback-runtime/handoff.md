@@ -239,3 +239,11 @@ During compiler-fix coordination, an expired worker lease was explicitly recover
 ## Final local gates and forward workspace MSRV
 
 At c87df47, pinned1.98 benchmark compilation,12 collector tests, local manifest, phase/DAG and strict clean Git checks pass; immutable copies are in benches/pdes/evidence/track48-local-gates-c87df47/. Matching absolute Cargo/rustc/rustdoc1.76 also passes locked all-feature workspace lib/bin check excluding Wasm; actual compiler cache and log verified in benches/pdes/evidence/track48-workspace-msrv-c87df47/. This forward evidence resolves current compiler compatibility without retrospectively asserting compiler identity for old wrapper-labelled Track47 MSRV receipts. No Windows, foreign-package or distributed proof is claimed.
+
+## Draft PR199 hosted readback
+
+Branch pushed and PR199 opened at0a3b86aa33d1f158eaca2855e0e503cdac6e08ef: https://github.com/edithatogo/kairos/pull/199. Native stable/MSRV, bindings, benchmark, docs and CodeQL lanes passed at that exact head. Conductor validation failed on missing historical Git objects and the worker optimistic test's absent time-warp feature guard. npm-package correctly rejected reuse of EXC193 on PR199 before executing raw audit; retained hosted receipt is in artifacts/track48-pr199-blockers/hosted-audit/. These are failed gates, not acceptance.
+
+Fresh local bootstrap raw audit exit1 retains19 high findings, empty stderr and exact previously reviewed graph SHA0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8. Current installer/resolution and both60-case behavior checks pass;194 package signatures verify. Raw commands/logs are retained under artifacts/track48-pr199-blockers/ and artifacts/track48-pr199-controls/. EXC193 is not extended. A separate199-only human decision remains required if an operational exception is proposed.
+
+Accepted website PR198 merged as upstreama481cb2 and was integrated as e3306f4; no native runtime source changed. Track48 remains In Progress with distributed acceptance and Track49 scheduling authority unchanged.
