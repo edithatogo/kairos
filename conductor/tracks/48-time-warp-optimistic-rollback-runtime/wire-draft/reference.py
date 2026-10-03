@@ -25,25 +25,32 @@ def decimal(value):
     return integer(int(value), U64)
 
 
-def identity(node, depth=0):
-    if depth > 128 or type(node) is not dict:
-        raise ValueError("ancestry bound/type")
-    if node.get("kind") == "root":
-        fields(node, ("kind", "source_lp", "sequence"))
-        return (0, integer(node["source_lp"], U32), decimal(node["sequence"]))
-    fields(node, ("kind", "parent", "ordinal"))
-    if node["kind"] != "output":
-        raise ValueError("unknown identity")
-    parent = node["parent"]
-    fields(parent, ("tick", "source_lp", "logical_id"))
-    child = identity(parent["logical_id"], depth + 1)
-    source = integer(parent["source_lp"], U32)
-    if child[0] == 0 and child[1] != source:
-        raise ValueError("parent root source mismatch")
-    tick = decimal(parent["tick"])
-    if child[0] == 1 and tick <= child[1][0]:
-        raise ValueError("nonfuture ancestor")
-    return (1, (tick, source, child), integer(node["ordinal"], U32))
+def identity(node):
+    # Iterative bounded preflight prevents recursion/serialization preceding validation.
+    parents = []
+    while True:
+        if type(node) is not dict:
+            raise ValueError("ancestry type")
+        if node.get("kind") == "root":
+            fields(node, ("kind", "source_lp", "sequence"))
+            result = (0, integer(node["source_lp"], U32), decimal(node["sequence"]))
+            break
+        if len(parents) >= 128:
+            raise ValueError("ancestry bound")
+        fields(node, ("kind", "parent", "ordinal"))
+        if node["kind"] != "output":
+            raise ValueError("unknown identity")
+        parent = node["parent"]
+        fields(parent, ("tick", "source_lp", "logical_id"))
+        parents.append((decimal(parent["tick"]), integer(parent["source_lp"], U32), integer(node["ordinal"], U32)))
+        node = parent["logical_id"]
+    for tick, source, ordinal in reversed(parents):
+        if result[0] == 0 and result[1] != source:
+            raise ValueError("parent root source mismatch")
+        if result[0] == 1 and tick <= result[1][0]:
+            raise ValueError("nonfuture ancestor")
+        result = (1, (tick, source, result), ordinal)
+    return result
 
 
 def envelope(message):
@@ -60,8 +67,6 @@ def envelope(message):
         raise ValueError("output must be future")
     epoch = decimal(message["authority_epoch"])
     incarnation = decimal(message["incarnation"])
-    if incarnation == 0:
-        raise ValueError("zero incarnation")
     payload = message["payload_hex"]
     if type(payload) is not str or len(payload) > 2 * MAX_PAYLOAD or not re.fullmatch(r"(?:[0-9a-f]{2})*", payload):
         raise ValueError("payload bytes")

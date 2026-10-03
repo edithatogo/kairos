@@ -257,3 +257,5 @@ Pending EXC199 packet integrated as ece2306 includes fresh audit and compensatin
 ## Independent wire preparation — 3 October 2026
 
 Reviewed draft requirements and deterministic reference fixtures are in [wire-draft/contract.md](wire-draft/contract.md), with source-bound packet and executed receipts alongside. Seven local reference tests and phase gates passed; these test delivery membership, structural identity, bounds and necessary GVT/fossil rules only. Actual codecs, native rollback/RNG parity, durable authority epochs, migration, receiver acknowledgements and live MPI/gRPC remain unimplemented/unverified. Existing protobuf gaps are documented without modifying Track49 files. Track49 production scheduling, Track48 Done, EXC199 approval, shared CI/manifests and the parent pin remain unchanged.
+
+Wire draft review fixes accept native incarnation zero, validate every ancestor tick and preflight bounded structural types before serialization. Ten local reference tests pass after those corrections. Deep/cyclic and invalid scalar cases fail before membership mutation; no decoder or allocation safety certification is implied.

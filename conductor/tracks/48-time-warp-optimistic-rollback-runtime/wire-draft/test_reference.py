@@ -40,8 +40,18 @@ class WireDraftTests(unittest.TestCase):
         self.assertEqual((key[2][2], key[3], metadata[1]), (U64, U64, U64))
         self.assertEqual(metadata[2], b"\x00\xff\x80")
 
+    def test_zero_incarnation_matches_native_initial_delivery(self):
+        message = copy.deepcopy(FIXTURES["messages"]["old"])
+        message["incarnation"] = "0"
+        self.assertEqual(envelope(message)[0][3], 0)
+        ledger = Ledger()
+        self.assertEqual(ledger.receive(message), "pending")
+        message["kind"] = "anti"
+        self.assertEqual(ledger.receive(message), "canceled")
+        self.assertEqual(ledger.pending, set())
+
     def test_conflicting_metadata_and_malformed_reject_unchanged(self):
-        changes = [{"dest_lp": 2}, {"payload_hex": "ff"}, {"tick": "11"}, {"source_lp": True}, {"dest_lp": -1}, {"dest_lp": 1 << 32}, {"tick": "01"}, {"tick": 10}, {"tick": str(U64 + 1)}, {"incarnation": "0"}, {"payload_hex": "f"}, {"payload_hex": "GG"}, {"payload_hex": "00" * 4097}, {"authority_epoch": "-1"}, {"unknown": 1}]
+        changes = [{"dest_lp": 2}, {"payload_hex": "ff"}, {"tick": "11"}, {"source_lp": True}, {"dest_lp": -1}, {"dest_lp": 1 << 32}, {"tick": "01"}, {"tick": 10}, {"tick": str(U64 + 1)}, {"incarnation": "-1"}, {"payload_hex": "f"}, {"payload_hex": "GG"}, {"payload_hex": "00" * 4097}, {"authority_epoch": "-1"}, {"unknown": 1}]
         for change in changes:
             with self.subTest(change=list(change)):
                 ledger = Ledger()
@@ -89,6 +99,22 @@ class WireDraftTests(unittest.TestCase):
         message["logical_id"] = node
         message["source_lp"] = 0
         message["tick"] = "3000"
+        with self.assertRaises(ValueError):
+            ledger.receive(message)
+        self.assertEqual(vars(ledger), before)
+
+    def test_cyclic_or_unserializable_input_rejects_unchanged(self):
+        message = copy.deepcopy(FIXTURES["messages"]["old"])
+        cyclic = {"kind": "output", "ordinal": 0}
+        cyclic["parent"] = {"tick": "1", "source_lp": 0, "logical_id": cyclic}
+        message["logical_id"] = cyclic
+        ledger = Ledger()
+        before = copy.deepcopy(vars(ledger))
+        with self.assertRaises(ValueError):
+            ledger.receive(message)
+        self.assertEqual(vars(ledger), before)
+        message = copy.deepcopy(FIXTURES["messages"]["old"])
+        message["payload_hex"] = object()
         with self.assertRaises(ValueError):
             ledger.receive(message)
         self.assertEqual(vars(ledger), before)
