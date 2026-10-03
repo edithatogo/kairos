@@ -16,6 +16,8 @@ Format:
 
 ### Changed
 
+- Refreshed the current-stable Rust matrix lane to 1.99, matching the official stable channel; the Rust 1.76 core MSRV is unchanged.
+
 - Package dry runs now retain actual supported ecosystem archives, verify a shared SHA-256 index, and upload the combined archive tree for 90 days without publishing.
 - Release delivery checks now fail closed unless an SPDX SBOM, manifest-covering provenance, and matching checksums are present before artifact upload.
 
