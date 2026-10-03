@@ -4,7 +4,7 @@ use kairo_ecs_des::{
     FlowConfig, FlowDispatch, FlowError, FlowRuntime, LifecycleTransition as L, RequestState,
     WorkHandlers, WorkProgress,
 };
-use kairo_ecs_types::{SimDuration, SimTime};
+use kairo_ecs_types::{EventKind, SimDuration, SimTime};
 
 fn t(n: u128) -> SimTime {
     SimTime::from_ticks(n)
@@ -131,7 +131,7 @@ fn first_admission_overflow_retains_head_and_permanently_halts() {
     assert_eq!(halt.required_cost, 2);
     assert_eq!(halt.pending.at, t(5));
     assert_eq!(halt.pending.sequence, 0);
-    assert_eq!(halt.pending.kind, 4000);
+    assert_eq!(halt.pending.kind, EventKind::custom(4000));
     assert_eq!(halted.scheduler, before.scheduler);
     assert_eq!(halted.tick, None);
     assert_eq!(halted.consumed, 0);
@@ -185,7 +185,7 @@ fn release_and_replacement_are_one_atomic_budget_plan() {
     exceeded(&mut f, 0, 4);
     let halt = f.budget_snapshot().halted.unwrap();
     assert_eq!((halt.consumed, halt.required_cost), (3, 2));
-    assert_eq!(halt.pending.kind, 4000);
+    assert_eq!(halt.pending.kind, EventKind::custom(4000));
     assert_eq!(f.budget_snapshot().scheduler, before.scheduler);
     assert_eq!(f.resource(r).unwrap(), resource);
     assert_eq!([f.request(a).unwrap(), f.request(b).unwrap()], requests);
@@ -256,7 +256,7 @@ fn blocked_notification_preserves_context_and_pending_token() {
     let halt = after.halted.unwrap();
     assert_eq!(
         (halt.consumed, halt.required_cost, halt.pending.kind),
-        (2, 1, 4003)
+        (2, 1, EventKind::custom(4003))
     );
     assert_eq!(after.scheduler, before.scheduler);
     assert_eq!(f.work_progress(work).unwrap(), progress);
@@ -345,7 +345,10 @@ fn due_boundary_and_rejected_cancel_eight_independent_ordering_cases() {
                 let after = f.budget_snapshot();
                 let halt = after.halted.unwrap();
                 assert_eq!((halt.consumed, halt.required_cost), (2, 2));
-                assert_eq!(halt.pending.kind, if cancel_head { 4000 } else { 4001 });
+                assert_eq!(
+                    halt.pending.kind,
+                    EventKind::custom(if cancel_head { 4000 } else { 4001 })
+                );
                 assert_eq!(halt.pending.sequence, sequence);
                 assert_eq!(
                     halt.pending.priority,
