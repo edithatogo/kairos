@@ -179,6 +179,7 @@ class NpmAuditRunnerTests(unittest.TestCase):
             self.assertEqual(result, 1)
             self.assertEqual(run.call_count, 8)
             receipt = json.loads((output / "receipt.json").read_text())
+            self.assertEqual(receipt["classification"], "failed")
             raw = receipt["raw_audit"]
             self.assertEqual(raw["status"], "executed")
             self.assertEqual(raw["exit"], 1)
