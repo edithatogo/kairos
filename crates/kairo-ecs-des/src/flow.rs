@@ -1,8 +1,11 @@
 //! Experimental, single-world Flow facade. No portable checkpoint promise.
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_state::{ComponentRegistry, World};
-use kairo_ecs_types::{EntityId, EventId, EventKind, ScheduleRequest, SimTime, StepOutcome};
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use kairo_ecs_types::{
+    EntityId, EventId, EventKind, ScheduleRequest, SimDuration, SimTime, StepOutcome,
+};
+use std::any::TypeId;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Generational resource identity.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -25,6 +28,7 @@ pub enum FlowError {
     PastCommand,
     CounterOverflow,
     InvalidState,
+    InvalidWork,
 }
 
 /// Generational request identity retained after termination.
@@ -51,11 +55,42 @@ pub struct ResourceRequest {
     pub state: RequestState,
     pub admission_sequence: Option<u64>,
     pub lease: Option<LeaseId>,
+    pub priority_level: i32,
+    pub work: Option<WorkId>,
 }
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub struct ClaimQueue {
-    requests: VecDeque<RequestId>,
+/// Ordering index derived from authoritative request fields.
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct PriorityKey {
+    pub level: i32,
+    pub enqueue_sequence: u64,
+    pub request: RequestId,
 }
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ClaimQueue<K: Ord = PriorityKey> {
+    requests: BTreeSet<K>,
+}
+impl<K: Ord> Default for ClaimQueue<K> {
+    fn default() -> Self {
+        Self {
+            requests: BTreeSet::new(),
+        }
+    }
+}
+/// Opaque work identity; owned context is live in-process state only.
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct WorkId(EntityId);
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct WorkSpec {
+    pub owner: EntityId,
+    pub original_duration: SimDuration,
+    pub context_type_key: String,
+    pub request: Option<RequestId>,
+}
+struct WorkContext<C>(C);
+fn cleanup_context<C: 'static>(registry: &mut ComponentRegistry, id: EntityId) {
+    registry.remove::<WorkContext<C>>(id);
+}
+type ContextCleanup = fn(&mut ComponentRegistry, EntityId);
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct ActiveAllocations {
     leases: BTreeSet<LeaseId>,
@@ -112,6 +147,8 @@ pub struct FlowRuntime {
     resources: BTreeSet<ResourceId>,
     requests: BTreeSet<RequestId>,
     actors: BTreeSet<EntityId>,
+    works: BTreeMap<WorkId, ContextCleanup>,
+    context_types: BTreeMap<String, TypeId>,
     commands: BTreeMap<EventId, Command>,
     pending_releases: BTreeSet<LeaseId>,
     created: u64,
@@ -135,6 +172,8 @@ impl FlowRuntime {
             resources: BTreeSet::new(),
             requests: BTreeSet::new(),
             actors: BTreeSet::new(),
+            works: BTreeMap::new(),
+            context_types: BTreeMap::new(),
             commands: BTreeMap::new(),
             pending_releases: BTreeSet::new(),
             created: 0,
@@ -163,7 +202,9 @@ impl FlowRuntime {
     pub fn create_resource(&mut self, total: u32) -> Result<ResourceId, FlowError> {
         let id = ResourceId(self.spawn()?);
         let _ = self.registry.insert(id.0, ResourceCapacity { total });
-        let _ = self.registry.insert(id.0, ClaimQueue::default());
+        let _ = self
+            .registry
+            .insert(id.0, ClaimQueue::<PriorityKey>::default());
         let _ = self.registry.insert(id.0, ActiveAllocations::default());
         self.resources.insert(id);
         Ok(id)
@@ -196,15 +237,91 @@ impl FlowRuntime {
         self.commands.insert(event, command);
         Ok(())
     }
+    pub fn create_work<C: 'static>(
+        &mut self,
+        owner: EntityId,
+        duration: SimDuration,
+        registration: &str,
+        context: C,
+    ) -> Result<WorkId, FlowError> {
+        self.actor(owner)?;
+        if registration.trim().is_empty()
+            || self
+                .context_types
+                .get(registration)
+                .is_some_and(|kind| *kind != TypeId::of::<C>())
+        {
+            return Err(FlowError::InvalidWork);
+        }
+        let id = WorkId(self.spawn()?);
+        let _ = self.registry.insert(
+            id.0,
+            WorkSpec {
+                owner,
+                original_duration: duration,
+                context_type_key: registration.to_owned(),
+                request: None,
+            },
+        );
+        let _ = self.registry.insert(id.0, WorkContext(context));
+        self.context_types
+            .insert(registration.to_owned(), TypeId::of::<C>());
+        self.works.insert(id, cleanup_context::<C>);
+        Ok(id)
+    }
+    pub fn work(&self, id: WorkId) -> Result<WorkSpec, FlowError> {
+        if !self.works.contains_key(&id) || !self.world.is_alive(id.0) {
+            return Err(FlowError::InvalidWork);
+        }
+        self.registry
+            .get::<WorkSpec>(id.0)
+            .cloned()
+            .ok_or(FlowError::InvalidWork)
+    }
+    pub fn work_context<C: 'static>(&self, id: WorkId) -> Result<&C, FlowError> {
+        self.work(id)?;
+        self.registry
+            .get::<WorkContext<C>>(id.0)
+            .map(|c| &c.0)
+            .ok_or(FlowError::InvalidWork)
+    }
     pub fn submit(
         &mut self,
         resource: ResourceId,
         owner: EntityId,
         at: SimTime,
     ) -> Result<RequestId, FlowError> {
+        self.submit_inner(resource, owner, None, at)
+    }
+    pub fn submit_work(
+        &mut self,
+        resource: ResourceId,
+        owner: EntityId,
+        work: WorkId,
+        at: SimTime,
+    ) -> Result<RequestId, FlowError> {
+        self.submit_inner(resource, owner, Some(work), at)
+    }
+    fn submit_inner(
+        &mut self,
+        resource: ResourceId,
+        owner: EntityId,
+        work: Option<WorkId>,
+        at: SimTime,
+    ) -> Result<RequestId, FlowError> {
         self.actor(owner)?;
         self.resource(resource)?;
         self.check_schedule(at)?;
+        let mut spec = match work {
+            Some(id) => {
+                let spec = self.work(id)?;
+                if spec.owner != owner || spec.request.is_some() {
+                    return Err(FlowError::InvalidWork);
+                };
+                Some(spec)
+            }
+            None => None,
+        };
         let request = RequestId(self.spawn()?);
         let _ = self.registry.insert(
             request.0,
@@ -214,10 +331,16 @@ impl FlowRuntime {
                 state: RequestState::Pending,
                 admission_sequence: None,
                 lease: None,
+                priority_level: 0,
+                work,
             },
         );
         self.requests.insert(request);
         self.schedule(Command::Submit(request), at)?;
+        if let (Some(id), Some(spec)) = (work, spec.as_mut()) {
+            spec.request = Some(request);
+            let _ = self.registry.insert(id.0, spec.clone());
+        }
         Ok(request)
     }
     pub fn request(&self, id: RequestId) -> Result<ResourceRequest, FlowError> {
@@ -252,7 +375,7 @@ impl FlowRuntime {
                 .total
                 .checked_sub(used)
                 .ok_or(FlowError::InvalidState)?,
-            queued: queue.requests.iter().copied().collect(),
+            queued: queue.requests.iter().map(|key| key.request).collect(),
             active: active.leases.iter().copied().collect(),
         })
     }
@@ -386,7 +509,11 @@ impl FlowRuntime {
                 request.admission_sequence = Some(admission);
                 admission = next;
                 request.state = RequestState::Queued;
-                resource.queue.requests.push_back(id);
+                resource.queue.requests.insert(PriorityKey {
+                    level: request.priority_level,
+                    enqueue_sequence: request.admission_sequence.unwrap(),
+                    request: id,
+                });
                 affected.insert(request.resource);
                 record(outcome, id, request)?;
             }
@@ -446,7 +573,7 @@ impl FlowRuntime {
                     let resource = resources
                         .get_mut(&request.resource)
                         .ok_or(FlowError::InvalidResource)?;
-                    resource.queue.requests.retain(|q| q != id);
+                    resource.queue.requests.retain(|q| q.request != *id);
                     if let Some(lease) = request.lease {
                         resource.active.leases.remove(&lease);
                     }
@@ -461,9 +588,10 @@ impl FlowRuntime {
         for id in affected {
             let resource = resources.get_mut(&id).ok_or(FlowError::InvalidState)?;
             while resource.active.leases.len() < (resource.capacity.total as usize) {
-                let Some(request_id) = resource.queue.requests.pop_front() else {
+                let Some(key) = resource.queue.requests.pop_first() else {
                     break;
                 };
+                let request_id = key.request;
                 let request = requests
                     .get_mut(&request_id)
                     .ok_or(FlowError::InvalidState)?;
@@ -485,7 +613,23 @@ impl FlowRuntime {
                 record(outcome, request_id, request)?;
             }
         }
-        let despawns = u64::from(remove_resource.is_some()) + u64::from(remove_actor.is_some());
+        let removed_works: Vec<_> = self
+            .works
+            .iter()
+            .filter(|(id, _)| {
+                remove_actor.is_some_and(|owner| {
+                    self.registry
+                        .get::<WorkSpec>(id.0)
+                        .is_some_and(|spec| spec.owner == owner)
+                })
+            })
+            .map(|(id, cleanup)| (*id, *cleanup))
+            .collect();
+        let work_despawns =
+            u64::try_from(removed_works.len()).map_err(|_| FlowError::CounterOverflow)?;
+        let despawns = u64::from(remove_resource.is_some())
+            + u64::from(remove_actor.is_some())
+            + work_despawns;
         let destroyed = self
             .destroyed
             .checked_add(despawns)
@@ -506,6 +650,12 @@ impl FlowRuntime {
             self.registry.remove::<ActiveAllocations>(id.0);
             self.resources.remove(&id);
             self.world.despawn(id.0);
+        }
+        for (work, cleanup) in removed_works {
+            self.works.remove(&work);
+            cleanup(&mut self.registry, work.0);
+            self.registry.remove::<WorkSpec>(work.0);
+            self.world.despawn(work.0);
         }
         if let Some(id) = remove_actor {
             self.actors.remove(&id);
@@ -547,6 +697,86 @@ fn record(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn cleanup_preflights_all_owned_work_before_mutation() {
+        let mut f = FlowRuntime::new();
+        let a = f.spawn_actor().unwrap();
+        let r = f.create_resource(1).unwrap();
+        let w = f
+            .create_work(a, SimDuration::from_ticks(1), "test.v1", 42u32)
+            .unwrap();
+        let q = f.submit_work(r, a, w, t()).unwrap();
+        f.step().unwrap();
+        let before = f.resource(r).unwrap();
+        f.destroyed = OPERATION_CAP - 1;
+        f.despawn_actor(a).unwrap();
+        assert_eq!(
+            f.step().unwrap().unwrap().error,
+            Some(FlowError::CounterOverflow)
+        );
+        assert_eq!(f.resource(r).unwrap(), before);
+        assert_eq!(f.work_context::<u32>(w), Ok(&42));
+        assert!(f.actor(a).is_ok());
+        assert_eq!(f.request(q).unwrap().state, RequestState::Active);
+    }
+    #[test]
+    fn work_admission_counter_failure_preserves_both_associations() {
+        let mut f = FlowRuntime::new();
+        let a = f.spawn_actor().unwrap();
+        let r = f.create_resource(1).unwrap();
+        let w = f
+            .create_work(a, SimDuration::from_ticks(1), "test.v1", 42u32)
+            .unwrap();
+        f.scheduled = OPERATION_CAP;
+        let before = f.world.snapshot();
+        assert_eq!(f.submit_work(r, a, w, t()), Err(FlowError::CounterOverflow));
+        assert_eq!(f.world.snapshot(), before);
+        assert!(f.work(w).unwrap().request.is_none());
+    }
+    #[test]
+    fn bounded_generated_operations_preserve_capacity_and_membership() {
+        for seed in 0..32u64 {
+            let mut f = FlowRuntime::new();
+            let actor = f.spawn_actor().unwrap();
+            let r = f.create_resource(2).unwrap();
+            let mut random = seed + 1;
+            for _ in 0..100 {
+                random = random.wrapping_mul(6364136223846793005).wrapping_add(1);
+                match random % 3 {
+                    0 => {
+                        f.submit(r, actor, t()).unwrap();
+                    }
+                    1 => {
+                        if let Some(lease) = f.resource(r).unwrap().active.first().copied() {
+                            f.release(lease, t()).unwrap();
+                        }
+                    }
+                    _ => {
+                        let _ = f.set_capacity(r, ((random >> 32) % 4) as u32);
+                    }
+                }
+                f.run_for(1).unwrap();
+                let snapshot = f.resource(r).unwrap();
+                assert_eq!(
+                    snapshot.available as usize + snapshot.active.len(),
+                    snapshot.total as usize
+                );
+                for key in &f.registry.get::<ClaimQueue>(r.0).unwrap().requests {
+                    let request = f.request(key.request).unwrap();
+                    assert_eq!(request.state, RequestState::Queued);
+                    assert!(request.lease.is_none());
+                    assert_eq!(key.level, request.priority_level);
+                    assert_eq!(Some(key.enqueue_sequence), request.admission_sequence);
+                }
+                for lease in &snapshot.active {
+                    let request = f.request(lease.request).unwrap();
+                    assert_eq!(request.state, RequestState::Active);
+                    assert_eq!(request.lease, Some(*lease));
+                    assert!(!snapshot.queued.contains(&lease.request));
+                }
+            }
+        }
+    }
     #[test]
     fn transition_ordinal_is_checked_uint32() {
         assert_eq!(checked_ordinal(u32::MAX as usize), Ok(u32::MAX));
