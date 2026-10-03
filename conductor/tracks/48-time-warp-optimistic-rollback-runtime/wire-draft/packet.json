@@ -1,0 +1,28 @@
+{
+  "status": "reviewed_preparation_only",
+  "base_sha": "967ee22be9f7ac783daeed12315131da577331a7",
+  "task": "Track48 draft distributed handoff/reference fixtures",
+  "review": "independent packet review in current chat; final source review still required",
+  "owned_paths": [
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/wire-draft",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/handoff.md"
+  ],
+  "protected": [
+    "parent checkout/pin",
+    "Track49 transport/protobuf",
+    "runtime source",
+    "shared manifests/locks/CI",
+    "security exception files",
+    "parallel Q3/Q4/C1/D3 paths"
+  ],
+  "source_sha256": {
+    "crates/kairo-ecs-pdes/src/optimistic.rs": "f728d1338ed6846d3da6f4f86734347e5cd8a041efb2b1b5f0271f98d2ea1b89",
+    "crates/kairo-ecs-pdes/src/lib.rs": "abe10eab1ee5aae614505d926ac0c8d68b1df28c37903ed53b429de79f65cc10",
+    "crates/kairo-ecs-grpc/proto/simulation.proto": "d149a113c77a182ad0e21fdb233c46503e845480021383ba041721d070621edd",
+    "docs/pdes/optimistic-runtime-contract.md": "0b82848eb7e2937bf03788b4f70e7deeb998bf48161fbc6197ecc61fd00eabd1",
+    "conductor/tracks/49-distributed-mpi-grpc-state-synchronization/agent-contract.md": "f09c91b86464fa91733eff39d0a092747c58ad0459da55fdea6d02578f555c7c"
+  },
+  "sizing": "Four coupled authored files; coordinator packet/receipt are bounded evidence.",
+  "seed": null,
+  "seed_reason": "fixed declarative vectors; no RNG sampling"
+}
