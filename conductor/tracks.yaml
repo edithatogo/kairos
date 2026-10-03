@@ -70,6 +70,9 @@ tracks:
   - id: 03
     name: The Flow - DES Trajectory API and ABM Behavior API
     status: Done
+    # Done refers to the historical minimal DES/ABM slice.
+    # Experimental Q3 development source 4289603 is qualified; Q4/Q5 remain pending.
+    # Governance strict clean-tree qualification and parent phase closeout remain pending.
     owner: des-api-agent + abm-api-agent
     depends_on: ["01", "26"]
     owned_paths:

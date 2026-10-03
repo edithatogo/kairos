@@ -186,3 +186,65 @@ No timezone parser, IPC/Parquet, empirical mapping or full C1 acceptance follows
 Worker receipt remains .artifacts/c1-temporal/result.json; coordinator fixes and
 pinned verification supersede its initial output hashes. Manifests/lock remained
 coordinator-owned. Full C1 tasks remain pending.
+
+## Experimental Q3 development extension — 2026-10-03
+
+### Scope and task mapping
+
+Historical Done describes the minimal DES/ABM slice. Qualified development source 42896037a7fac793f63d2f8867584f4faeb0b78e extends Track 03 implementation. It does not complete later Flow capabilities. Parent Q3 closeout remains pending; Q4 declarative Flow/ABM/telemetry and Q5 performance remain pending.
+
+- Q3.1 maps to Phase 3 fixtures. Primary low duration = 10 ticks; urgent duration = 2 ticks, arrival = tick 3. Urgent ends at tick 5; low ends at tick 12 under Suspend, tick 15 under Restart, or aborts at tick 3. Secondary urgent duration = 3 ticks, arrival = tick 4: urgent ends at tick 7; low ends at ticks 13/17 or aborts at tick 4. Nested interruptions, capacity-two victim ties, eligibility exclusions, zero-duration work, completion at the interruption tick in both insertion orders and suspended cancellation are covered. Before implementation, primary/secondary/nested fixtures failed compilation with 11/11/61 missing-API errors; no tests executed. Immutable repair e936b706 strengthens the oracles.
+- Q3.2 maps to Phase 3 experimental DES implementation: deterministic victims, atomic replacement, elapsed/remaining/busy accounting, typed owned context, attempt/execution revisions and cancellation. Root reviewed aggregate rollback, rejection-boundary preservation and strict stale-token identity. At 1455f762, 71 DES tests passed on each actual Rust 1.98.1 and 1.76 compiler; owner run 37118457361 passed both hosts.
+- Q3.3 maps to Phase 3 continuation tests and Phase 4 owned tests: typed deferred handlers emit once, Restart reuses the stored duration and immutable initial-template factory, and Abort never resumes. Generator v1 uses six seeds × 32 cases × three strategies = 576 cases per targeted run. Independent accounting applies after every dispatch, including empty events advancing time. Exact preemption counts and all terminal reasons are checked. Actual Rust 1.98.1/1.76 targeted tests and owner run 37121692873 passed; both host logs confirm the property binary and named test executed.
+- Q3.4 maps to scoped review and next-wave disposition. Root audited primary low busy totals = 10/13/3 ticks for Suspend/Restart/Abort; waiting = 2 ticks under Suspend/Restart and 0 ticks under Abort. Secondary low busy totals = 10/14/4 ticks; waiting = 3 ticks under Suspend/Restart and 0 ticks under Abort. Owned context/factory/revision review confirms no duration redraw. Root Track 01 review confirms unchanged core/state/RNG; Track 25 classifies enum/struct-literal changes as experimental-breaking, development-only, with migration and release hold. These are bounded internal reviews, not external maintainer signatures.
+
+### Evidence and limits
+
+Property source SHA256: d900dc3a9256794ea99822b2fd4f2362fb1bac9ac0ef802fca2ccaf7db71f904.
+Local receipt SHA256: cfeff46576f39b53089b159060def379fc204712b599eec2224a71e9d891c7b2.
+Hosted receipt SHA256: 7d3ae2a408cb19f89c55b3c19872c067a824f37061d4cbe03bbb6e6b8168f9ea.
+
+Parent 8494e303 records actual receipt locations and hashes in conductor/evidence/q3-prerequisite-task-acceptance-20261003.json and conductor/evidence/q3-property-qualified-pin-20261003.md. Manual and owner reviews are in conductor/evidence/q3-qualified-runtime-pin-20261003.md and conductor/evidence/q3-owner01-track25-review-migration-20261003.md.
+
+Coverage is bounded, not exhaustive; no shrinking or worker-count claim. Public FlowDispatch hides completion-token identity; the black-box model complements the existing private identity-injection test. Q4 persistent notification budget/general ingress and Q5 clone/retention costs remain pending. No release or stable-compatibility acceptance is implied.
+
+### Governance review and gates
+
+The conductor-review skill uses the root-approved alternate-layout handshake: root README.md links conductor/tracks.md, conductor/status.md and conductor/tracks.yaml; parent conductor/index.md provides routing. Child conductor/index.md and conductor/README.md are absent. Required product/technology/workflow/guidelines and all style guides exist and were reviewed. Unchanged native tests were not rerun.
+
+Actual phase validator command from this governance checkout:
+
+~~~text
+/private/tmp/careops-q3-pwsh-7.6.6/.artifacts/pwsh/runtime/pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1
+~~~
+
+It passed using verified PowerShell 7.6.6, exit 0, zero errors and zero warnings. Strict clean-tree command remains pending until root approves a commit and nonforce push:
+
+~~~text
+/private/tmp/careops-q3-pwsh-7.6.6/.artifacts/pwsh/runtime/pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree
+~~~
+
+Logs remain outside this source checkout. After strict proof, a bounded metadata follow-up will record the actual command, commit/ref and receipt in place of pending language. The final committed/pushed metadata head must pass phase and strict validators again. Owner CI then qualifies that exact head before a new parent pin and Q3 closeout review. Parent Q4 cannot advance before these gates are accepted.
+
+### Preserved historical Track 03 ledger record
+
+Copied verbatim from the qualified predecessor; these commands/results are historical, not freshly rerun.
+
+~~~yaml
+  - track_id: "03"
+    phase: "track-closeout"
+    state: closed
+    review_command: "$conductor-review with independent read-only source review"
+    review_result: "Existing minimal track closeout retained; additive manual resource slice has no Q1 source blocker; Q2 non-preemptive join reviewed; 43 DES tests pass, release/MSRV qualification recorded; C1 temporal partial remains unaccepted. Exact-commit hosted owner CI required before parent acceptance."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test --locked -p kairo-ecs-des"
+      - "cargo clippy --locked -p kairo-ecs-des --all-targets -- -D warnings"
+      - "rustup run 1.76.0 cargo test --locked -p kairo-ecs-des"
+      - "cargo deny --locked --workspace --all-features check"
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+    git_status: "Clean source commit; reviewed evidence pending commit and push"
+    commit_sha: "6b5176b781b80267ab4a620d205a2a137fdce4f5"
+    pushed_ref: "origin/codex/careops-resource-lifecycle"
+    next_phase_decision: "Manual resource slice only; parent acceptance follows owner CI; Q2-Q4 remain pending."
+~~~
