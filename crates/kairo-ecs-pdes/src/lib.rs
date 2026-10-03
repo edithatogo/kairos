@@ -8,6 +8,8 @@ pub use conservative::{ConservativeProcess, ConservativeRuntime, RuntimeError, R
 #[cfg(feature = "time-warp")]
 use std::collections::BTreeSet;
 use std::collections::{BTreeMap, VecDeque};
+#[cfg(feature = "time-warp")]
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use kairo_ecs_types::{EntityId, SimDuration, SimTime};
 
@@ -651,7 +653,10 @@ pub struct TimeWarpComponentKey {
     pub component_slot: u32,
 }
 
-/// Read token bound to a specific component generation.
+/// Read token bound to a component cell's unique validity stamp.
+///
+/// The private `generation` field stores this stamp; logical component
+/// generations remain separate and continue to drive the overhead metric.
 #[cfg(feature = "time-warp")]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct TimeWarpComponentToken {
@@ -738,10 +743,24 @@ pub struct TimeWarpOverheadMetrics {
 }
 
 #[cfg(feature = "time-warp")]
+static NEXT_TIME_WARP_VALIDITY_STAMP: AtomicU64 = AtomicU64::new(1);
+
+#[cfg(feature = "time-warp")]
+#[allow(deprecated)] // fetch_update supports the crate MSRV; Rust 1.98 renamed it to try_update.
+fn next_time_warp_validity_stamp() -> u64 {
+    NEXT_TIME_WARP_VALIDITY_STAMP
+        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |next| {
+            next.checked_add(1)
+        })
+        .unwrap_or_else(|_| panic!("Time Warp component validity stamp space exhausted"))
+}
+
+#[cfg(feature = "time-warp")]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct TimeWarpComponentCell {
     value: i128,
     generation: u64,
+    validity_stamp: u64,
 }
 
 #[cfg(feature = "time-warp")]
@@ -766,6 +785,7 @@ pub struct TimeWarpRuntime {
     gvt: Tick,
     local_times: BTreeMap<LpId, Tick>,
     components: BTreeMap<TimeWarpComponentKey, TimeWarpComponentCell>,
+    initial_components: BTreeMap<LpId, BTreeMap<TimeWarpComponentKey, TimeWarpComponentCell>>,
     executed: Vec<ExecutedTimeWarpEvent>,
     checkpoints: Vec<TimeWarpStateCheckpoint>,
     canceled: BTreeSet<TimeWarpEventId>,
@@ -911,6 +931,8 @@ impl TimeWarpRuntime {
         self.canceled.contains(&event_id)
     }
 
+    /// Writes a component and returns a token bound to a unique validity stamp.
+    /// The legacy non-fallible API panics if the process-wide stamp space is exhausted.
     pub fn write_component(
         &mut self,
         key: TimeWarpComponentKey,
@@ -920,16 +942,18 @@ impl TimeWarpRuntime {
             .components
             .get(&key)
             .map_or(1, |cell| cell.generation.saturating_add(1));
+        let validity_stamp = next_time_warp_validity_stamp();
         self.components.insert(
             key,
             TimeWarpComponentCell {
                 value,
                 generation: next_generation,
+                validity_stamp,
             },
         );
         TimeWarpComponentToken {
             key,
-            generation: next_generation,
+            generation: validity_stamp,
         }
     }
 
@@ -938,7 +962,7 @@ impl TimeWarpRuntime {
             .components
             .get(&token.key)
             .ok_or(TimeWarpError::StaleGeneration)?;
-        if cell.generation == token.generation {
+        if cell.validity_stamp == token.generation {
             Ok(cell.value)
         } else {
             Err(TimeWarpError::StaleGeneration)
@@ -968,6 +992,8 @@ impl TimeWarpRuntime {
                 }],
             });
         }
+
+        self.capture_initial_components(event.id.dest_lp);
 
         let current_time = self.local_time(event.id.dest_lp);
         let rollback_to = (event.id.tick < current_time).then_some(event.id.tick);
@@ -1105,14 +1131,40 @@ impl TimeWarpRuntime {
             .unwrap_or(TimeWarpComponentCell {
                 value: 0,
                 generation: 0,
+                validity_stamp: 0,
             });
         self.components.insert(
             key,
             TimeWarpComponentCell {
                 value: current.value + amount,
                 generation: current.generation.saturating_add(1),
+                validity_stamp: next_time_warp_validity_stamp(),
             },
         );
+    }
+
+    fn capture_initial_components(&mut self, lp_id: LpId) {
+        if self.initial_components.contains_key(&lp_id) {
+            return;
+        }
+
+        let components = self
+            .components
+            .iter()
+            .filter_map(|(key, cell)| (key.lp_id == lp_id).then_some((*key, *cell)))
+            .collect();
+        self.initial_components.insert(lp_id, components);
+    }
+
+    fn restore_components_with_fresh_stamps(
+        &mut self,
+        components: BTreeMap<TimeWarpComponentKey, TimeWarpComponentCell>,
+    ) {
+        self.components
+            .extend(components.into_iter().map(|(key, mut cell)| {
+                cell.validity_stamp = next_time_warp_validity_stamp();
+                (key, cell)
+            }));
     }
 
     fn save_state_checkpoint(&mut self, lp_id: LpId, tick: Tick) {
@@ -1140,9 +1192,12 @@ impl TimeWarpRuntime {
 
         self.components.retain(|key, _| key.lp_id != lp_id);
         if let Some(checkpoint) = checkpoint {
-            self.components.extend(checkpoint.components);
+            self.restore_components_with_fresh_stamps(checkpoint.components);
             self.local_times.insert(lp_id, checkpoint.local_time);
         } else {
+            if let Some(initial) = self.initial_components.get(&lp_id).cloned() {
+                self.restore_components_with_fresh_stamps(initial);
+            }
             self.local_times.insert(lp_id, SimTime::ZERO);
         }
     }
@@ -1193,10 +1248,11 @@ impl TimeWarpRuntime {
         self.local_times.insert(lp_id, SimTime::ZERO);
 
         if let Some(floor) = floor {
-            self.components
-                .extend(floor.components.iter().map(|(key, cell)| (*key, *cell)));
+            self.restore_components_with_fresh_stamps(floor.components.clone());
             self.local_times.insert(lp_id, floor.local_time);
             self.checkpoints.push(floor);
+        } else if let Some(initial) = self.initial_components.get(&lp_id).cloned() {
+            self.restore_components_with_fresh_stamps(initial);
         }
 
         for event in history {
@@ -2552,6 +2608,7 @@ mod tests {
         assert_eq!(metrics.local_processes, 1);
         assert_eq!(metrics.executed_log_len, 1);
         assert_eq!(metrics.component_cells, 1);
+        assert_eq!(metrics.component_generations, 1);
         assert_eq!(metrics.rollbacks_total, 1);
         assert_eq!(metrics.rolled_back_events_total, 1);
         assert_eq!(metrics.anti_messages_emitted_total, 1);
