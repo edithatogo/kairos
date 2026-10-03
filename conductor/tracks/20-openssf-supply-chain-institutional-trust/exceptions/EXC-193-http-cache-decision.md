@@ -1,6 +1,6 @@
 # EXC-193: proposed local cache mitigation audit exception
 
-Status: **proposed; inactive**. This record does not approve a vulnerability exception or change CI. PR #193 remains blocked by the unchanged npm audit.
+Status: **approved by the human sole maintainer in this chat on 3 October 2026**, acting in security-owner and release-owner roles. The operational classification is approved for this record only. Activation implementation and hosted checks must pass before merge. Raw npm audit findings remain failures in the retained scanner evidence.
 
 ## Decision requested
 
@@ -34,7 +34,7 @@ The classifier must reject a missing/pending/expired approval, wrong PR/context,
 
 Positive test cases: exact approved baseline, valid clean audit, patched dependency tree and valid alpha/beta context. Negative cases: pending/expired/unnamed approval; invalid stage/PR; publication; extra advisory at every severity; mixed direct advisories; changed node, range or severity; extra/missing copy; raw scan error or malformed JSON; source, lock, proof or patch drift; behavior or signature failure. Test that failed classification exits nonzero and raw artifacts survive that failure.
 
-No classifier or workflow acceptance alteration is activated by this proposal. These implementation and hosted tests are required before any exception-backed merge. Approval authorizes preparation of that activation change; it is not itself evidence that it passes.
+The approved classification permits the bounded classifier/workflow activation change. Implementation tests and exact-head hosted checks remain required before exception-backed merge. Approval is not itself evidence that those checks pass.
 
 ## Follow-up and rollback
 
@@ -42,4 +42,4 @@ This decision record is the follow-up ADR for the temporary exception. Before ex
 
 ## Preparation validation and limits
 
-The pending approval fields, all five source fingerprints, raw audit hash/finding fingerprint and exclusive advisory paths for all 19 graph nodes were independently checked against the current checkout and fresh audit. No approval or enabled CI classifier is claimed. The existing Track 20 trust validator exits 1 because it requires literal config:recommended in renovate.json; the unchanged repository uses github>edithatogo/renovate-config. Both files predate this proposal and have no diff. This broader validator mismatch remains a separate owner follow-up; it is not waived by EXC-193.
+During preparation, the then-pending approval fields and all five source fingerprints, raw audit hash/finding fingerprint and exclusive advisory paths for all 19 graph nodes were independently checked against the current checkout and fresh audit. Human approval has subsequently been recorded above; implementation and hosted verification remain separate gates. The existing Track 20 trust validator exits 1 because it requires literal config:recommended in renovate.json; the unchanged repository uses github>edithatogo/renovate-config. Both files predate this proposal and have no diff. This broader validator mismatch remains a separate owner follow-up; it is not waived by EXC-193.

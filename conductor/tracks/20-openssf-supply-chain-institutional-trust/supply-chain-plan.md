@@ -111,3 +111,7 @@ flowchart TD
 - Cosign/Sigstore for artifact signing
 - actionlint and zizmor for GitHub Actions hardening
 - Dependabot or Renovate for dependency updates
+
+## EXC-193 approved operational classification
+
+On 3 October 2026 the human sole maintainer approved EXC-193, acting in security-owner and release-owner roles. For this exception only, a version-based npm audit that cannot represent an exact independently verified local source mitigation is classified as a temporary operational tooling limitation. The raw advisory finding remains recorded; this is neither a published fixed version nor a permanent waiver. The immutable record and decision under `exceptions/` define PR #193-only development/alpha-beta dry-run scope and expiry at 00:00 Brisbane, 10 October 2026. RC, 1.0, publication and other dependency trees remain excluded. Named user approval does not establish passing implementation or hosted checks.

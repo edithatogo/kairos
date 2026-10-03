@@ -14,6 +14,9 @@ on:
       - 'scripts/bootstrap-node-tools/prepare_npm_cli.py'
       - 'scripts/bootstrap-node-tools/validate_npm_cli.mjs'
       - 'scripts/bootstrap-node-tools/apply_http_cache_fix.py'
+      - 'scripts/bootstrap-node-tools/run_npm_audit_gate.py'
+      - 'conductor/tracks/20-openssf-supply-chain-institutional-trust/exceptions/**'
+      - 'tests/test_npm_audit_exception.py'
       - 'tests/test_http_cache_patch.py'
       - 'tests/http-cache-security-regression.mjs'
       - 'scripts/bootstrap.sh'
@@ -135,16 +138,18 @@ jobs:
         with: { python-version: '3.14' }
       - name: npm pack dry run
         run: |
-          python3 -m unittest discover -s tests -p test_http_cache_patch.py -v
+          mkdir -p artifacts/npm-audit-gate
+          python3 - <<'PYTHON'
+          import json
+          from pathlib import Path
+          Path("artifacts/npm-audit-gate/receipt.json").write_text(json.dumps({"classification": "failed", "raw_audit": {"status": "not_executed"}, "reason": "preparation or tests have not completed"}))
+          PYTHON
           python3 scripts/bootstrap-node-tools/prepare_npm_cli.py --check
           npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools
           python3 scripts/bootstrap-node-tools/apply_http_cache_fix.py scripts/bootstrap-node-tools/node_modules
-          node tests/http-cache-security-regression.mjs
-          node tests/http-cache-security-regression.mjs scripts/bootstrap-node-tools/node_modules/npm/node_modules/http-cache-semantics/index.js
-          node scripts/bootstrap-node-tools/validate_npm_cli.mjs
-          node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js --version
+          python3 -m unittest discover -s tests -p test_npm_audit_exception.py -v
+          python3 scripts/bootstrap-node-tools/run_npm_audit_gate.py
           node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js help >/dev/null
-          node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js audit --prefix scripts/bootstrap-node-tools --audit-level=moderate
           node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js audit signatures --prefix scripts/bootstrap-node-tools
           test -f bindings/typescript/package.json
           test -f bindings/typescript/tsconfig.json
@@ -161,6 +166,14 @@ jobs:
         with:
           name: kairos-package-typescript
           path: dist/packages/typescript/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain raw npm audit and policy classification
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kairos-bootstrap-npm-audit
+          path: artifacts/npm-audit-gate/
           if-no-files-found: error
           retention-days: 7
   nuget-package:
