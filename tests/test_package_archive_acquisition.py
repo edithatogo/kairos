@@ -117,17 +117,90 @@ class AcquisitionTests(unittest.TestCase):
                         z.write(item, item.relative_to(retained).as_posix())
             self.artifact['digest'] = 'sha256:' + hashlib.sha256(archive.read_bytes()).hexdigest()
             payload = archive.read_bytes()
-            def download(argv, stdout, check):
+            def download(argv, path):
                 self.assertEqual(argv[-1], 'repos/edithatogo/kairos/actions/artifacts/9/zip')
-                stdout.write(payload)
+                path.write_bytes(payload)
+                return self.artifact['digest']
             output = root / 'acquired'
-            with patch.object(a, 'api', side_effect=[self.run, self.inventory]), patch.object(a.subprocess, 'run', side_effect=download), patch('sys.argv', ['acquire', '--run-id', '7', '--source-commit', self.sha, '--output', str(output)]):
+            with patch.object(a, 'api', side_effect=[self.run, self.inventory]), patch.object(a, 'download_verified', side_effect=download), patch('sys.argv', ['acquire', '--run-id', '7', '--source-commit', self.sha, '--output', str(output)]):
                 a.main()
             bundle.verify(output)
             self.assertEqual({p.relative_to(output).as_posix(): p.read_bytes() for p in output.rglob('*') if p.is_file()}, {p.relative_to(retained).as_posix(): p.read_bytes() for p in retained.rglob('*') if p.is_file()})
             receipt = json.loads(output.with_name('acquired.acquisition.json').read_text())
             self.assertEqual(receipt['source_commit'], self.sha)
             self.assertEqual(receipt['artifact_digest'], self.artifact['digest'])
+
+
+    def test_streamed_download_exact_limit_and_existing_destination(self):
+        import sys
+        with tempfile.TemporaryDirectory() as t:
+            path = Path(t) / 'download.zip'
+            digest = a.download_verified([sys.executable, '-c', 'import sys;sys.stdout.buffer.write(b"x"*32)'], path, 32)
+            self.assertEqual(path.read_bytes(), b'x' * 32)
+            self.assertEqual(digest, 'sha256:' + hashlib.sha256(b'x' * 32).hexdigest())
+            with self.assertRaises(FileExistsError):
+                a.download_verified([sys.executable, '-c', 'raise SystemExit(99)'], path, 32)
+            self.assertEqual(path.read_bytes(), b'x' * 32)
+
+    def test_streamed_download_over_limit_and_child_failure_cleanup(self):
+        import sys
+        import subprocess
+        with tempfile.TemporaryDirectory() as t:
+            path = Path(t) / 'download.zip'
+            with self.assertRaisesRegex(ValueError, 'byte limit'):
+                a.download_verified([sys.executable, '-c', 'import sys;sys.stdout.buffer.write(b"x"*33)'], path, 32)
+            self.assertFalse(path.exists())
+            with self.assertRaises(subprocess.CalledProcessError):
+                a.download_verified([sys.executable, '-c', 'import sys;sys.stdout.buffer.write(b"partial");sys.exit(7)'], path, 32)
+            self.assertFalse(path.exists())
+
+    def test_extraction_hashes_without_whole_archive_read(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            archive = root / 'a.zip'
+            with zipfile.ZipFile(archive, 'w') as z:
+                z.writestr('payload', b'content')
+            digest = 'sha256:' + hashlib.sha256(archive.read_bytes()).hexdigest()
+            with patch.object(Path, 'read_bytes', side_effect=AssertionError('whole archive allocation')):
+                a.extract_verified(archive, root / 'output', digest)
+            self.assertEqual((root / 'output/payload').read_bytes(), b'content')
+
+
+    def test_live_over_limit_producer_is_killed_and_reaped(self):
+        import sys
+        from unittest.mock import patch
+        real_popen = a.subprocess.Popen
+        children = []
+        def start(*args, **kwargs):
+            child = real_popen(*args, **kwargs)
+            children.append(child)
+            return child
+        with tempfile.TemporaryDirectory() as t:
+            path = Path(t) / 'download.zip'
+            with patch.object(a.subprocess, 'Popen', side_effect=start):
+                with self.assertRaisesRegex(ValueError, 'byte limit'):
+                    a.download_verified([sys.executable, '-c', 'import sys,time;sys.stdout.buffer.write(b"x"*33);sys.stdout.buffer.flush();time.sleep(30)'], path, 32)
+            self.assertEqual(len(children), 1)
+            self.assertIsNotNone(children[0].returncode)
+            self.assertIsNotNone(children[0].poll())
+            self.assertFalse(path.exists())
+
+    def test_producer_start_failure_removes_only_new_download(self):
+        with tempfile.TemporaryDirectory() as t:
+            path = Path(t) / 'download.zip'
+            with self.assertRaises(FileNotFoundError):
+                a.download_verified([str(Path(t) / 'missing-executable')], path, 32)
+            self.assertFalse(path.exists())
+
+    def test_multichunk_exact_limit_has_matching_digest(self):
+        import sys
+        size = 1024 * 1024 + 17
+        with tempfile.TemporaryDirectory() as t:
+            path = Path(t) / 'download.zip'
+            digest = a.download_verified([sys.executable, '-c', f'import sys;sys.stdout.buffer.write(b"z"*{size})'], path, size)
+            self.assertEqual(path.stat().st_size, size)
+            self.assertEqual(digest, 'sha256:' + hashlib.sha256(b'z' * size).hexdigest())
 
 if __name__ == '__main__':
     unittest.main()

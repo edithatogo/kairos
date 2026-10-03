@@ -51,10 +51,56 @@ def select_artifact(run: dict, inventory: dict, run_id: int, source_commit: str,
         raise ValueError("invalid artifact identity")
     return item
 
+def download_verified(argv: list[str], archive: Path, limit: int = MAX_BYTES) -> str:
+    """Bound bytes written, hash incrementally, and reap a failed producer."""
+    if type(limit) is not int or limit < 0:
+        raise ValueError("invalid download byte limit")
+    stream = archive.open("xb")  # Never remove a destination we did not create.
+    process = None
+    digest = hashlib.sha256()
+    total = 0
+    try:
+        with stream:
+            process = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            with process.stdout:
+                while True:
+                    block = process.stdout.read(min(1024 * 1024, limit - total + 1))
+                    if not block:
+                        break
+                    if len(block) > limit - total:
+                        raise ValueError("download exceeds byte limit")
+                    stream.write(block)
+                    digest.update(block)
+                    total += len(block)
+            code = process.wait()
+            if code:
+                raise subprocess.CalledProcessError(code, argv)
+        return "sha256:" + digest.hexdigest()
+    except BaseException:
+        if process is not None:
+            if process.poll() is None:
+                process.kill()
+            process.wait()
+        archive.unlink(missing_ok=True)
+        raise
+
+
+def archive_sha256(archive: Path) -> str:
+    digest = hashlib.sha256()
+    total = 0
+    with archive.open("rb") as stream:
+        while block := stream.read(1024 * 1024):
+            total += len(block)
+            if total > MAX_BYTES:
+                raise ValueError("download exceeds byte limit")
+            digest.update(block)
+    return "sha256:" + digest.hexdigest()
+
+
 def extract_verified(archive: Path, output: Path, digest: str) -> None:
     if archive.stat().st_size > MAX_BYTES:
         raise ValueError("download exceeds byte limit")
-    if "sha256:" + hashlib.sha256(archive.read_bytes()).hexdigest() != digest:
+    if archive_sha256(archive) != digest:
         raise ValueError("download differs from GitHub artifact digest")
     if output.exists():
         raise ValueError("extraction output must not exist")
@@ -106,8 +152,9 @@ def main() -> None:
     with tempfile.TemporaryDirectory(dir=args.output.parent) as temp:
         temp = Path(temp)
         archive = temp / "download.zip"
-        with archive.open("wb") as stream:
-            subprocess.run(["gh", "api", f"repos/{REPOSITORY}/actions/artifacts/{item['id']}/zip"], stdout=stream, check=True)
+        downloaded_digest = download_verified(["gh", "api", f"repos/{REPOSITORY}/actions/artifacts/{item['id']}/zip"], archive)
+        if downloaded_digest != item["digest"]:
+            raise ValueError("download differs from GitHub artifact digest")
         tree = temp / "bundle"
         extract_verified(archive, tree, item["digest"])
         spec = importlib.util.spec_from_file_location("bundle", Path(__file__).with_name("build_package_archive_bundle.py"))
