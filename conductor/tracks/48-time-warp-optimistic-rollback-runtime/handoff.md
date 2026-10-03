@@ -247,3 +247,9 @@ Branch pushed and PR199 opened at0a3b86aa33d1f158eaca2855e0e503cdac6e08ef: https
 Fresh local bootstrap raw audit exit1 retains19 high findings, empty stderr and exact previously reviewed graph SHA0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8. Current installer/resolution and both60-case behavior checks pass;194 package signatures verify. Raw commands/logs are retained under artifacts/track48-pr199-blockers/ and artifacts/track48-pr199-controls/. EXC193 is not extended. A separate199-only human decision remains required if an operational exception is proposed.
 
 Accepted website PR198 merged as upstreama481cb2 and was integrated as e3306f4; no native runtime source changed. Track48 remains In Progress with distributed acceptance and Track49 scheduling authority unchanged.
+
+## PR199 reviewed Conductor repair and pending exception
+
+Worker e008d78 integrated as b6b4943 adds the missing time-warp test guard, full-history checkout and Track13 handoff. Explicit1.98.1 default workspace305 tests and time-warp79 pass after reproduced default-feature E0432; immutable local captures are in benches/pdes/evidence/track48-conductor-repair-e008d78/. Exact-head hosted rerun remains required.
+
+Pending EXC199 packet integrated as ece2306 includes fresh audit and compensating-control evidence; approval fields remain unset. Its decision record is conductor/tracks/20-openssf-supply-chain-institutional-trust/exceptions/EXC-199-http-cache-decision.md. No classifier/runner/workflow activation or change to EXC193 scope was made. This is a concrete proposal for human Security/Release owner review, not an approved exception.

@@ -1,0 +1,23 @@
+{
+  "commit": "e008d7891adcf5b4e538cbb857b70d3c3a23c7a7",
+  "parent": "be54595e3fad310f952389520632cf9af6900e92",
+  "branch": "codex/track48-pr199-ci-gates",
+  "cwd": "/private/tmp/kairos-track48-pr199-ci-gates",
+  "working_tree_clean": true,
+  "source_sha256": {
+    "crates/kairo-ecs-pdes/tests/optimistic_runtime.rs": "23407dcec89ff09847338f989f481f73588fa2b920b4447097fe6dcc2517948e",
+    ".github/workflows/validate-conductor.yml": "126ef807658ba8590c31fd9faea455bccdd9d811e02b69cfa11dfb8fadaf910b",
+    "conductor/tracks/13-ci-cd-quality-supply-chain/handoff.md": "80689c7e326990c0d784864d2c499fec690f9f2795cb68e60d023764c472af44"
+  },
+  "sources_match_precommit_verified_sources": true,
+  "verification_receipts": {
+    "workspace-default.receipt.json": "84c62b5919cf382979382345cee9e9383d85876a0c61b127e85f096c13c28704",
+    "track48-time-warp.receipt.json": "b3b75973da02d07b0b62bcc181ed834e65154e94dbf1baa1cbca80963345600d",
+    "conductor-setup-no-cargo.receipt.json": "2aa1a1e8937705e7694a1e6799123bbab066151b1a282516c82f6b177d2ceacf",
+    "actionlint.receipt.json": "0dcf380a2837d8aa3c06ecaab43501986106748844c1ce4779f62e9489e879be",
+    "track13-metadata.receipt.json": "862802922823ed6e0513cb006f2db5981a0b058de01bb080aeab002934d4bb38",
+    "default-features-before-fix.receipt.json": "4d520f50e4f58b7483f513053a0249973fc4d2278cc5ca20ad7ac2300e892484"
+  },
+  "hosted_failure_log_sha256": "748c0400810248183af9e79feceadb96a45266b5e519fd526bad208f31937f94",
+  "hosted_exact_head_rerun": "pending; no hosted pass claimed"
+}
