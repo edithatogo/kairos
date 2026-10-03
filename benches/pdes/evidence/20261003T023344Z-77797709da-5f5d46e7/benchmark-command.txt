@@ -1,0 +1,1 @@
+rustup run 1.98.1 cargo bench -p kairo-ecs-pdes --bench production --features pdes -- --seed 472026 --repetitions 5

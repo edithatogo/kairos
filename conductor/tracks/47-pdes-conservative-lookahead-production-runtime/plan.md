@@ -24,7 +24,7 @@
 ## Phase 3 - Benchmark and evidence
 
 - [x] Task 3.1: Add 4/8/16/32 LP local benchmark-smoke samples.
-- Task 3.2: Record raw benchmark evidence using the Track 46 manifest fields.
+- [x] Task 3.2: Record raw benchmark evidence using the Track 46 manifest fields.
 - [x] Task 3.3: Add docs that distinguish local benchmark smoke from live scaling.
 
 ## Phase 4 - Integration handoff
@@ -77,3 +77,5 @@ Phase 3.2 and 5.3 remain open until actual raw capture and hosted
 closeout commands finish. Phase 5.1 has local Rust evidence recorded in the handoff;
 final Conductor/clean Git acceptance remains pending. Source review fixes and executed gates are recorded
 in the handoff; status advancement remains coordinated with the root ledgers.
+
+Raw capture task 3.2 is now evidenced by the remotely verified `45f01c49be1d15cefb64ad48e59ee0a7e4146b3e` host bundle and registered manifest. Hosted checks, push closeout and final acceptance remain pending.

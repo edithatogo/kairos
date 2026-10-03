@@ -1,0 +1,17 @@
+{
+  "benchmark_exit_status": 0,
+  "command": "rustup run 1.98.1 cargo bench -p kairo-ecs-pdes --bench production --features pdes -- --seed 472026 --repetitions 5",
+  "cpu_count_logical": 10,
+  "environment_variables": {},
+  "filesystem": "apfs; local repository filesystem",
+  "git_status_porcelain": "?? benches/pdes/evidence/20261003T023344Z-77797709da-5f5d46e7/benchmark-command.txt\n?? benches/pdes/evidence/20261003T023344Z-77797709da-5f5d46e7/benchmark-environment.json\n?? benches/pdes/evidence/20261003T023344Z-77797709da-5f5d46e7/benchmark-result.json\n?? benches/pdes/evidence/20261003T023344Z-77797709da-5f5d46e7/benchmark-stderr.txt\n?? benches/pdes/evidence/20261003T023344Z-77797709da-5f5d46e7/manifest.json",
+  "input_hash_scope": "canonical input_scenario JSON; sorted keys, compact separators, ASCII escapes, UTF-8 bytes; payload generator defined by source commit",
+  "input_scenario_sha256": "sha256:b6ea6eebb076a028875eb42a94ec28d0bc149023af7d1a62085dbf60a92c0863",
+  "memory_bytes": 34359738368,
+  "physical_cpu_count": 10,
+  "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+  "python": "3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "source_tree_dirty": false,
+  "source_tree_sha256": "d46012d74d26835e8caa7b5570972517b30d16b076dc4af09c9392bb9d811b5e",
+  "working_directory": "."
+}

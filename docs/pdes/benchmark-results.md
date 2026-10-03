@@ -38,7 +38,7 @@ python3 benches/pdes/collect_evidence.py \
   --commit-sha "$(git rev-parse HEAD)" \
   --pushed-ref refs/remotes/origin/BRANCH \
   --evidence-class live-hpc \
-  --seed 472026 --repetitions 5
+  --seed 472026 --repetitions 5 --reviewer "REVIEWER"
 ```
 
 The collector refuses dirty source inputs, checks that the source tree remains
@@ -76,3 +76,22 @@ implementation is fixed by the recorded source commit. It is a scenario hash,
 not a separately measured digest of every generated event payload.
 `working_directory` is `.` relative to that commit's repository root, and
 `benchmark_exit_status` records the completed child benchmark process.
+
+## Reviewed host capture - 2026-10-03
+
+Final source: `45f01c49be1d15cefb64ad48e59ee0a7e4146b3e`, verified on the remote branch before capture. Host: Apple M1 Max, 10 physical/logical CPUs, 32 GiB memory, APFS. Every configuration retained five raw samples and passed final-state parity. The 16/32-LP profiles exceed the host CPU count.
+
+| Profile | LPs | Median sequential events/s | Median PDES events/s |
+| --- | ---: | ---: | ---: |
+| strong | 4 | 4,433,500 | 12,843 |
+| strong | 8 | 4,728,198 | 12,997 |
+| strong | 16 | 4,644,865 | 16,444 |
+| strong | 32 | 4,674,465 | 23,004 |
+| weak | 4 | 5,019,608 | 6,728 |
+| weak | 8 | 4,847,337 | 11,562 |
+| weak | 16 | 4,621,940 | 17,811 |
+| weak | 32 | 4,616,512 | 21,170 |
+
+[Raw results](../../benches/pdes/evidence/20261003T023735Z-45f01c49be-534c5f9f/benchmark-result.json), [environment](../../benches/pdes/evidence/20261003T023735Z-45f01c49be-534c5f9f/benchmark-environment.json), and [registered manifest](../../conductor/hpc-evidence/manifests/track47-conservative-production-live.json). Raw SHA-256: `sha256:69003d380f88dfe48249ca02d3beff8da18ae0f7c30f989976196a03c12e121c`. The earlier `77797709da` bundle is retained as an initial capture; it lacks the explicit cwd/exit/scenario-hash fields and is not the acceptance bundle.
+
+This workload is substantially slower under PDES because each work round creates and joins OS workers. These measurements establish actual execution and parity, and do not establish a performance advantage.

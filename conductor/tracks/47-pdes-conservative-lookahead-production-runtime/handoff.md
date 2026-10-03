@@ -169,3 +169,13 @@ commit. Eight collector self-checks passed, including metadata JSON round-trip,
 canonical key-order stability and changed-seed hash sensitivity. Pinned Rust
 1.98.1 targeted crate formatting and all-target/all-feature clippy passed;
 only a Rust documentation comment changed, with no runtime behavior change.
+
+## Final source and hardware evidence - 2026-10-03
+
+Source commit SHA: `45f01c49be1d15cefb64ad48e59ee0a7e4146b3e`; remote readback confirmed the same SHA before capture.
+
+Executed from the repository root: `python3 benches/pdes/collect_evidence.py --commit-sha 45f01c49be1d15cefb64ad48e59ee0a7e4146b3e --pushed-ref refs/remotes/origin/codex/kairos-implementation-programme --evidence-class live-hpc --seed 472026 --repetitions 5 --reviewer "Codex Track 47 substantive review"`; exit status 0.
+
+Registered evidence: `conductor/hpc-evidence/manifests/track47-conservative-production-live.json`. The raw artifact, actual compiler/host/core/topology, scenario hash, working directory and child exit status are recorded in that manifest. All eight profiles pass parity. The raw checksum is `sha256:69003d380f88dfe48249ca02d3beff8da18ae0f7c30f989976196a03c12e121c`. Initial capture is preserved but superseded for acceptance.
+
+Track status is In Review. Hosted Actions and strict clean pushed git closeout remain pending; the next-phase decision is to wait for Track 47 merge before Track 48.

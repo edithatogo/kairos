@@ -1,5 +1,9 @@
 # KairoECS Conductor Status
 
+## Track 47 implementation review - 2026-10-03
+
+Track 47 is In Review after event-owned threaded execution, actual core Scheduler parity, adversarial protocol tests, local full CI and remotely pinned raw CPU benchmark capture. Source commit `45f01c49be1d15cefb64ad48e59ee0a7e4146b3e` identifies the final capture inputs. The registered live-host manifest records all eight 4/8/16/32-LP strong/weak profiles and five repetitions. Thread overhead and oversubscription are retained; no speedup or distributed scaling certification is claimed. Exact-head PR Actions and final closeout remain pending, and Track 48 must wait for merge.
+
 ## Track 42 Archive Review - 2026-06-25
 
 Track 42 is archived as Done for the repo-side guarded language/package registry publication and provenance gate. The publication manifest, readiness validator, default-off workflow dispatch, dry-run helper, protected main-only publish job, release-publication environment guard, OIDC/provenance permissions, package manifest verification, and Track 44 code-health floor pass locally.
