@@ -8,8 +8,10 @@ sequential parity, and measured scaling evidence.
 
 ## Maturity
 
-Spec Approved planning track. The current implementation remains the Track 34
-scaffold until this track's TDD implementation phases close.
+In Progress implementation track. The event-owned single-host runtime is
+available behind `pdes` as a preview API, while full closeout still requires
+raw hardware evidence, complete local gates, review and hosted checks.
+Track 34 compatibility APIs retain their original scaffold contracts.
 
 ## Inputs
 

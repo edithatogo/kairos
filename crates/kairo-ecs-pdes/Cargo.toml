@@ -16,3 +16,12 @@ time-warp = []
 
 [lib]
 path = "src/lib.rs"
+
+[dev-dependencies]
+serde_json = "1"
+kairo-ecs-core = { path = "../kairo-ecs-core" }
+
+[[bench]]
+name = "production"
+harness = false
+required-features = ["pdes"]

@@ -1,5 +1,9 @@
 # Global Virtual Time Algorithm
 
+Maturity: preview compatibility scaffold. The production event-owned API is
+[ConservativeRuntime](production-conservative-runtime.md); the descriptions
+below retain the Track 34 contract for existing callers.
+
 Global virtual time is defined as:
 
 ```text

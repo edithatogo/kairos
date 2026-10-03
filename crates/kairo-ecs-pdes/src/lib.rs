@@ -1,5 +1,10 @@
 #![forbid(unsafe_code)]
 
+#[cfg(feature = "pdes")]
+mod conservative;
+#[cfg(feature = "pdes")]
+pub use conservative::{ConservativeProcess, ConservativeRuntime, RuntimeError, RuntimeReport};
+
 #[cfg(feature = "time-warp")]
 use std::collections::BTreeSet;
 use std::collections::{BTreeMap, VecDeque};
