@@ -18,6 +18,8 @@ Format:
 
 - Retained package archives support verification against an expected source commit before attestation, with artifact paths confined to the downloaded tree.
 
+- Release dry runs require the final `dist/` artifact upload to find files and retain the uploaded evidence for 90 days.
+
 - Refreshed the current-stable Rust matrix lane to 1.99, matching the official stable channel; the Rust 1.76 core MSRV is unchanged.
 
 - Package dry runs now retain actual supported ecosystem archives, verify a shared SHA-256 index, and upload the combined archive tree for 90 days without publishing.
