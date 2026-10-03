@@ -1140,6 +1140,41 @@ mod tests {
         }
     }
     #[test]
+    fn capacity_growth_cannot_grant_at_deadline_in_either_token_order() {
+        for growth_first in [false, true] {
+            let mut f = FlowRuntime::new();
+            let a = f.spawn_actor().unwrap();
+            let r = f.create_resource(0).unwrap();
+            let at = SimTime::from_ticks(5);
+            if growth_first {
+                f.schedule(Command::Capacity(r, 1), at).unwrap();
+            }
+            let q = f.acquire(r).owner(a).deadline(at).submit().unwrap();
+            f.step().unwrap();
+            if !growth_first {
+                f.schedule(Command::Capacity(r, 1), at).unwrap();
+            }
+            let run = f.run_for(10).unwrap();
+            assert_eq!(f.request(q).unwrap().state, RequestState::TimedOut);
+            let state = f.resource(r).unwrap();
+            assert_eq!(state.total, 1);
+            assert_eq!(state.available, 1);
+            assert_eq!(
+                run.dispatches
+                    .iter()
+                    .flat_map(|d| &d.records)
+                    .filter(|e| e.request == q && e.state == RequestState::TimedOut)
+                    .count(),
+                1
+            );
+            assert!(!run
+                .dispatches
+                .iter()
+                .flat_map(|d| &d.records)
+                .any(|e| e.request == q && e.state == RequestState::Active));
+        }
+    }
+    #[test]
     fn deadline_admission_reserves_both_tokens_before_work_association() {
         let mut f = FlowRuntime::new();
         let a = f.spawn_actor().unwrap();
