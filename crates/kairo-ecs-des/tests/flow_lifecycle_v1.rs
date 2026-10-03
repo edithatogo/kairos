@@ -71,7 +71,7 @@ fn despawn_cancels_all_owned_work_before_granting_other_actors() {
     assert_eq!(dispatch.records.len(), 3);
     for (i, row) in dispatch.records.iter().enumerate() {
         assert_eq!(row.causal_event_id, dispatch.event);
-        assert_eq!(row.transition_ordinal, i as u64);
+        assert_eq!(row.transition_ordinal, i as u32);
     }
 }
 

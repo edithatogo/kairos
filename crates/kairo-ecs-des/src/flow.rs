@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 /// Generational resource identity.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct ResourceId(pub EntityId);
+pub struct ResourceId(EntityId);
 /// Capacity is ECS-owned; available capacity is always derived.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ResourceCapacity {
@@ -29,12 +29,12 @@ pub enum FlowError {
 
 /// Generational request identity retained after termination.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct RequestId(pub EntityId);
+pub struct RequestId(EntityId);
 /// Allocation identity; an old lease cannot release its replacement.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct LeaseId {
-    pub request: RequestId,
-    pub revision: u64,
+    request: RequestId,
+    revision: u64,
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RequestState {
@@ -75,7 +75,7 @@ pub struct LifecycleRecord {
     pub state: RequestState,
     pub lease: Option<LeaseId>,
     pub causal_event_id: EventId,
-    pub transition_ordinal: u64,
+    pub transition_ordinal: u32,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FlowDispatch {
@@ -162,9 +162,9 @@ impl FlowRuntime {
     }
     pub fn create_resource(&mut self, total: u32) -> Result<ResourceId, FlowError> {
         let id = ResourceId(self.spawn()?);
-        self.registry.insert(id.0, ResourceCapacity { total });
-        self.registry.insert(id.0, ClaimQueue::default());
-        self.registry.insert(id.0, ActiveAllocations::default());
+        let _ = self.registry.insert(id.0, ResourceCapacity { total });
+        let _ = self.registry.insert(id.0, ClaimQueue::default());
+        let _ = self.registry.insert(id.0, ActiveAllocations::default());
         self.resources.insert(id);
         Ok(id)
     }
@@ -206,7 +206,7 @@ impl FlowRuntime {
         self.resource(resource)?;
         self.check_schedule(at)?;
         let request = RequestId(self.spawn()?);
-        self.registry.insert(
+        let _ = self.registry.insert(
             request.0,
             ResourceRequest {
                 resource,
@@ -493,12 +493,12 @@ impl FlowRuntime {
             .ok_or(FlowError::CounterOverflow)?;
         // Commit after the complete plan validates.
         for (id, resource) in resources {
-            self.registry.insert(id.0, resource.capacity);
-            self.registry.insert(id.0, resource.queue);
-            self.registry.insert(id.0, resource.active);
+            let _ = self.registry.insert(id.0, resource.capacity);
+            let _ = self.registry.insert(id.0, resource.queue);
+            let _ = self.registry.insert(id.0, resource.active);
         }
         for (id, request) in requests {
-            self.registry.insert(id.0, request);
+            let _ = self.registry.insert(id.0, request);
         }
         if let Some(id) = remove_resource {
             self.registry.remove::<ResourceCapacity>(id.0);
@@ -522,12 +522,16 @@ impl FlowRuntime {
         Ok(())
     }
 }
+fn checked_ordinal(length: usize) -> Result<u32, FlowError> {
+    u32::try_from(length).map_err(|_| FlowError::CounterOverflow)
+}
+
 fn record(
     outcome: &mut FlowDispatch,
     id: RequestId,
     request: &ResourceRequest,
 ) -> Result<(), FlowError> {
-    let ordinal = u64::try_from(outcome.records.len()).map_err(|_| FlowError::CounterOverflow)?;
+    let ordinal = checked_ordinal(outcome.records.len())?;
     outcome.records.push(LifecycleRecord {
         request: id,
         resource: request.resource,
@@ -543,6 +547,16 @@ fn record(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn transition_ordinal_is_checked_uint32() {
+        assert_eq!(checked_ordinal(u32::MAX as usize), Ok(u32::MAX));
+        if usize::BITS > 32 {
+            assert_eq!(
+                checked_ordinal(u32::MAX as usize + 1),
+                Err(FlowError::CounterOverflow)
+            );
+        }
+    }
     fn t() -> SimTime {
         SimTime::from_ticks(0)
     }
