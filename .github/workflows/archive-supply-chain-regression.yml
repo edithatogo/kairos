@@ -1,0 +1,70 @@
+name: Archive Supply Chain Regression
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/archive-supply-chain-regression.yml'
+      - '.github/workflows/ci-policy.yml'
+      - '.github/workflows/workflow-security.yml'
+      - 'scripts/validation/validate-track13-metadata.mjs'
+      - 'scripts/archive-supply-chain-test-tools.in'
+      - 'scripts/archive-supply-chain-test-tools.lock'
+      - 'packaging/scripts/acquire_package_archive_bundle.py'
+      - 'packaging/scripts/build_archive_supply_chain.py'
+      - 'packaging/scripts/build_archive_release_manifest.py'
+      - 'packaging/scripts/build_package_archive_bundle.py'
+      - 'tests/test_archive_supply_chain.py'
+      - 'tests/test_archive_supply_chain_ci.py'
+      - 'tests/test_package_archive_acquisition.py'
+      - 'tests/fixtures/archive-supply-chain/**'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/archive-supply-chain-regression.yml'
+      - '.github/workflows/ci-policy.yml'
+      - '.github/workflows/workflow-security.yml'
+      - 'scripts/validation/validate-track13-metadata.mjs'
+      - 'scripts/archive-supply-chain-test-tools.in'
+      - 'scripts/archive-supply-chain-test-tools.lock'
+      - 'packaging/scripts/acquire_package_archive_bundle.py'
+      - 'packaging/scripts/build_archive_supply_chain.py'
+      - 'packaging/scripts/build_archive_release_manifest.py'
+      - 'packaging/scripts/build_package_archive_bundle.py'
+      - 'tests/test_archive_supply_chain.py'
+      - 'tests/test_archive_supply_chain_ci.py'
+      - 'tests/test_package_archive_acquisition.py'
+      - 'tests/fixtures/archive-supply-chain/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    name: Archive supply-chain regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14.8'
+      - name: Install hash-locked regression tools
+        env:
+          PIP_CONFIG_FILE: /dev/null
+          PIP_DISABLE_PIP_VERSION_CHECK: '1'
+        run: python -m pip install --require-hashes -r scripts/archive-supply-chain-test-tools.lock
+      - name: Test archive supply-chain generation and workflow contract
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python -m unittest discover -s tests -p 'test_archive_supply_chain*.py' -v
+      - name: Test bounded package archive acquisition
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python -m unittest discover -s tests -p 'test_package_archive_acquisition.py' -v

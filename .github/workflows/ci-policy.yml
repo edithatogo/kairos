@@ -66,6 +66,7 @@ jobs:
           test -f .github/workflows/hpc-registry-publish.yml
           test -f .github/workflows/nightly.yml
           test -f .github/workflows/package-dry-run.yml
+          test -f .github/workflows/archive-supply-chain-regression.yml
           test -f .github/workflows/release-attestations.yml
           test -f .github/workflows/release-drafter.yml
           test -f .github/workflows/release-plz.yml

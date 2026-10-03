@@ -202,6 +202,7 @@ for (const file of ['agent-contract.md', 'handoff.md', 'plan.md', 'risk-register
 
 for (const workflow of [
   'actions-security.yml',
+  'archive-supply-chain-regression.yml',
   'benchmark-smoke.yml',
   'bench-regression.yml',
   'benchmarks.yml',
