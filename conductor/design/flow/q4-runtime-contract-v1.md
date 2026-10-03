@@ -106,8 +106,9 @@ manifest compliance. Merely storing FlowConfig is insufficient.
 A separate read-only budget inspection surface must expose the counted tick
 (if one exists), consumed count, limit and optional halt details. Halt details
 include the blocked preview identity/time and the transaction's required
-cost. Exact inspection DTO names are gated with the implementation packet;
-no mutable scheduler or authoritative ECS values are exposed.
+cost. The concrete copied inspection DTOs and error shapes are frozen in the
+accepted internal inspection section below; no mutable scheduler or
+authoritative ECS values are exposed.
 
 ### Accounting
 
@@ -226,3 +227,73 @@ No Q4 checkbox is completed by this draft. No runtime/native/hosted test pass
 is claimed. Q3's qualified runtime, seeded model and legacy fixtures remain
 regression inputs. Portable checkpoints, complete Track 03 release and binding
 promotion remain outside this contract.
+
+## Accepted internal budget inspection and error contract
+
+Following the coordinator's bounded internal Track 01/03/25 review, these
+concrete copied inspection surfaces and errors are accepted for failing-fixture
+packet preparation. This amendment binds qualified development source
+`132fb4d525c2bd7b110fc11548c8d1b5fdf9a648` and parent integration
+`d9c9a62f25b23d6ce437c7d366cfeb1f91e6f265`. It does not implement them or
+accept the Flow budget runtime or whole Q4 phase.
+
+```rust
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct FlowBudgetSnapshot {
+    pub tick: Option<SimTime>,
+    pub consumed: u64,
+    pub limit: std::num::NonZeroU64,
+    pub halted: Option<FlowBudgetHalt>,
+    pub scheduler: kairo_ecs_core::SchedulerStats,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct FlowBudgetHalt {
+    pub at: SimTime,
+    pub consumed: u64,
+    pub required_cost: u64,
+    pub pending: kairo_ecs_core::ScheduledEventPreview,
+}
+
+// inherent FlowRuntime method
+pub fn budget_snapshot(&self) -> FlowBudgetSnapshot;
+
+// additions to the experimental FlowError enum
+SameTickBudgetExceeded { at_ticks: u128, limit: u64 },
+RunHalted,
+```
+
+Snapshot tick and consumed describe the last budget tick reached by a legal
+dispatch. Before any dispatch they are None and zero. A legal dispatch at a
+naturally later tick resets consumed, including a zero-cost stale dispatch.
+The copied SchedulerStats reports the actual committed scheduler state.
+
+Halt at/consumed describe the blocked event's effective tick: consumed is zero
+if that tick differs from the last legally reached tick. A failed preview
+does not advance scheduler.now, dispatch counters, live pending membership,
+or the committed snapshot tick/count. required_cost is the exact aggregate
+planned lifecycle cost, or one for a delivery that would actually invoke its
+live handler. pending copies the intact preview identity and ordering fields.
+No mutable scheduler, authoritative component or pending event cancellation
+surface is exposed.
+
+Budget exhaustion returns the original SameTickBudgetExceeded from every
+subsequent step/run_for, including run_for(0), without dispatching anything.
+Mutating ingress and setup after halt return RunHalted. Read-only inspection
+remains available. There is no same-run budget increase or recovery bypass.
+
+The FlowError enum additions are an experimental source-compatibility change
+for downstream exhaustive matches. The internal development disposition is
+accepted with existing migration/release holds retained; it is not a universal
+nonbreaking semver claim, stable release approval or external maintainer
+signature. Callback command batch types remain separately gated.
+
+Required joins remain: exact effective-at and aggregate plan fixtures, both
+due-completion/explicit rejection insertion orders and scheduler-priority
+overrides, notification accounting, retained pending work, private scheduling/
+counter/despawn/tick overflow and factory/callback preflight oracles. Public
+fixtures do not substitute for those private injection tests. Runtime planning
+must validate all arithmetic and budget before trusted factories or callbacks.
+
+Manifest recording remains Track 22's join; generic domain hooks, shared ABM,
+Track 04 sidecar and portable checkpoints are not implemented by this contract.
