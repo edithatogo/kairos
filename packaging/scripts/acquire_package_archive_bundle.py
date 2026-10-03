@@ -18,15 +18,26 @@ WORKFLOW = ".github/workflows/package-dry-run.yml"
 MAX_BYTES = 2 * 1024 * 1024 * 1024
 MAX_MEMBERS = 10000
 
-def select_artifact(run: dict, inventory: dict, run_id: int, source_commit: str) -> dict:
+def select_artifact(run: dict, inventory: dict, run_id: int, source_commit: str, head_commit: str | None = None, source_info: dict | None = None) -> dict:
     if not re.fullmatch(r"[0-9a-f]{40}", source_commit):
         raise ValueError("expected full lowercase source SHA")
-    if run.get("id") != run_id or run.get("head_sha") != source_commit:
+    if run.get("id") != run_id or run.get("head_sha") != (head_commit or source_commit):
         raise ValueError("run identity or source SHA differs")
     if run.get("repository", {}).get("full_name") != REPOSITORY or run.get("head_repository", {}).get("full_name") != REPOSITORY:
         raise ValueError("run must belong to the expected repository")
     if run.get("path") != WORKFLOW or run.get("status") != "completed" or run.get("conclusion") != "success":
         raise ValueError("expected successful completed package workflow")
+    if run.get("event") == "pull_request":
+        prs = run.get("pull_requests", [])
+        if not head_commit or not re.fullmatch(r"[0-9a-f]{40}", head_commit) or len(prs) != 1:
+            raise ValueError("PR acquisition requires an explicit head SHA and one PR identity")
+        pr = prs[0]
+        if pr.get("head", {}).get("sha") != head_commit or not source_info or source_info.get("sha") != source_commit:
+            raise ValueError("PR head or build commit metadata differs")
+        if [p.get("sha") for p in source_info.get("parents", [])] != [pr.get("base", {}).get("sha"), head_commit]:
+            raise ValueError("build commit is not the exact base/head merge")
+    elif source_commit != run.get("head_sha"):
+        raise ValueError("non-PR build SHA differs from run head")
     rows = inventory.get("artifacts")
     if not isinstance(rows, list) or inventory.get("total_count") != len(rows):
         raise ValueError("incomplete artifact inventory")
@@ -82,13 +93,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-id", type=int, required=True)
     parser.add_argument("--source-commit", required=True)
+    parser.add_argument("--head-commit", help="Explicit PR head; source commit remains exact built merge")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.run_id <= 0 or args.output.exists():
         parser.error("positive run ID and nonexistent output required")
     run = api(f"repos/{REPOSITORY}/actions/runs/{args.run_id}")
     inventory = api(f"repos/{REPOSITORY}/actions/runs/{args.run_id}/artifacts?per_page=100")
-    item = select_artifact(run, inventory, args.run_id, args.source_commit)
+    source_info = api(f"repos/{REPOSITORY}/commits/{args.source_commit}") if run.get("event") == "pull_request" else None
+    item = select_artifact(run, inventory, args.run_id, args.source_commit, args.head_commit, source_info)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=args.output.parent) as temp:
         temp = Path(temp)
@@ -109,7 +122,7 @@ def main() -> None:
         if receipt.exists():
             raise ValueError("acquisition receipt already exists")
         receipt.write_text(json.dumps({"repository": REPOSITORY, "run_id": args.run_id,
-            "source_commit": args.source_commit, "artifact_id": item["id"],
+            "source_commit": args.source_commit, "head_commit": run["head_sha"], "build_commit_parents": source_info.get("parents", []) if source_info else [], "artifact_id": item["id"],
             "artifact_digest": item["digest"], "archive_index_sha256": hashlib.sha256((tree / "ARCHIVE-INDEX.json").read_bytes()).hexdigest(),
             "scope": "verified acquisition; not original build provenance or release acceptance"}, indent=2) + "\n")
         shutil.move(str(tree), args.output)

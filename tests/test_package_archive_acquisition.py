@@ -71,6 +71,18 @@ class AcquisitionTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 a.extract_verified(archive, root / 'output', 'sha256:' + hashlib.sha256(archive.read_bytes()).hexdigest())
 
+    def test_pr_build_merge_and_head_are_distinct_verified_identities(self):
+        head = '2' * 40
+        base = '3' * 40
+        run = dict(self.run, event='pull_request', head_sha=head, pull_requests=[{'head': {'sha': head}, 'base': {'sha': base}}])
+        commit = {'sha': self.sha, 'parents': [{'sha': base}, {'sha': head}]}
+        self.assertEqual(a.select_artifact(run, self.inventory, 7, self.sha, head, commit), self.artifact)
+        for bad in [None, {'sha': self.sha, 'parents': [{'sha': head}, {'sha': base}]}, {'sha': '4' * 40, 'parents': commit['parents']}]:
+            with self.assertRaises(ValueError):
+                a.select_artifact(run, self.inventory, 7, self.sha, head, bad)
+        with self.assertRaises(ValueError):
+            a.select_artifact(run, self.inventory, 7, self.sha)
+
     def test_full_acquisition_preserves_seven_ecosystem_bundle(self):
         import io
         import json
