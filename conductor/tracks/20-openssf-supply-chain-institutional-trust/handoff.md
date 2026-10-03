@@ -120,3 +120,9 @@ lint tools are either installed or covered by hosted CI evidence.
 ## Phase closeout evidence
 
 `$conductor-review` completed for the Track 20-owned surface on 2026-05-08. Accepted fixes are listed above. Deferred or blocked fixes are limited to hosted provenance/attestation execution and release-stage publication gating. The local release-tree evidence is now present, and the validator passes. Commit SHA and pushed ref are recorded in the phase-closeout ledger after the reconciliation commit lands.
+
+## EXC-193 proposal — 3 October 2026
+
+Prepared a pending exception record, immutable raw audit baseline and decision/activation specification under `exceptions/`. Security and release owner classification/approval are absent. The operational category for a verified local source mitigation versus version-based advisory mismatch requires explicit acceptance; existing examples alone do not authorize it. CI audit acceptance remains strict. Scope is development integration/alpha-beta dry runs for PR #193 only, expiry 00:00 Brisbane 10 October, with RC/1.0/publication excluded. No status, release gate or approved exception is changed.
+
+Preparation validation limitation: the existing Track 20 trust validator fails on its literal Renovate preset expectation, while the unchanged Renovate config inherits github>edithatogo/renovate-config. EXC-193 does not waive this separate mismatch. Exact proposal hashes and finding graph were checked independently.
