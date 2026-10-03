@@ -1,0 +1,19 @@
+{
+  "installer.stderr": "4d55e655c0c4418ba3d2150b72de55687d019c75e48dfd20ec2c1668caec4b31",
+  "red-old-top.stderr": "aba0573aa09565cb4c9030a1f9c4c52d813b95125067a8c980b7c43fab2ff426",
+  "resolution.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "raw-audit.stdout": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c",
+  "green-new-nested.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "raw-audit.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "green-new-nested.stdout": "c3c4115264b07a153dd70cf21e09aac0718e36d5199e8630d62a02558be776d7",
+  "resolution.stdout": "1c9defa7cd77e48f778b7650cba91941cb124138a512901a43bd0edd6eb5ed9e",
+  "installer.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "red-old-top.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "green-new-website.stdout": "c3c4115264b07a153dd70cf21e09aac0718e36d5199e8630d62a02558be776d7",
+  "signatures.stdout": "17586e72fe0daac34dd1ac453039469b4fecf9078d9c881c19daf2082a5ca9c2",
+  "green-new-top.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "green-new-top.stdout": "c3c4115264b07a153dd70cf21e09aac0718e36d5199e8630d62a02558be776d7",
+  "signatures.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "receipt.json": "b9a04027d72ebb0da35a9f8fd59ab1d74c9c22f4900ed6ee267ceb52504a2ac5",
+  "green-new-website.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

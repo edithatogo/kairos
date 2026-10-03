@@ -1,0 +1,58 @@
+{
+  "id": "EXC-199-mitigation-amendment",
+  "status": "proposed_pending_human_scope_amendment",
+  "classification_authority": "Human explicitly approved temporary operational EXC199 classification on4October2026; this does not authorize changed proof bytes",
+  "required_pull_request": 199,
+  "repository": "edithatogo/kairos",
+  "head_ref": "codex/kairos-track48-optimistic-runtime",
+  "allowed_contexts": [
+    "development_pr_199",
+    "alpha_package_dry_run",
+    "beta_package_dry_run"
+  ],
+  "excluded_contexts": [
+    "release_candidate",
+    "1.0",
+    "publication",
+    "other_dependency_trees",
+    "website_dependency_tree",
+    "other_pull_requests"
+  ],
+  "expires_at": "2026-10-10T00:00:00+10:00",
+  "mitigation_source_commit": "2efedc5ea04c1caf26a200bd2450e9e38426e8fe",
+  "replaces_patched_index_sha256": "fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76",
+  "patched_index_sha256": "5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c",
+  "file_sha256": {
+    "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
+    "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "1745f11f6b2ae27c47ba00218970192ec0b0034d3d1467b524e411e2c3c9afa4",
+    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "68361630ff540c9e32e1e62417c805b54c35b57195f5108c7679b6ca4c15bcb8",
+    "tests/test_http_cache_patch.py": "4701a42699573255b6dac6c0815585137ac7e6132c8f2ebe3e7ddb95b9b0a641",
+    "tests/http-cache-security-regression.mjs": "05d4c9990c5dfc691798336443d28638a405a751076ae7147efc7a19a5392d9c"
+  },
+  "raw_audit_command": [
+    "node",
+    "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+    "audit",
+    "--prefix",
+    "scripts/bootstrap-node-tools",
+    "--audit-level=moderate",
+    "--json"
+  ],
+  "vulnerabilities_sha256": "0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8",
+  "raw_audit_exit": 1,
+  "finding_count": 19,
+  "raw_audit_sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c",
+  "raw_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "behavior_cases_per_copy": 248,
+  "installer_tests": 9,
+  "scope_amendment_approval": {
+    "security_owner": null,
+    "release_owner": null,
+    "approved_at": null,
+    "approval_evidence": null
+  },
+  "activation": "blocked until human scope amendment, reviewed integration and exact-head hosted gates",
+  "evidence_manifest": "evidence/EXC-199-amendment/manifest.json",
+  "website_note": "Third-copy behavior diagnostic is outside the EXC199 bootstrap-only exception; no website waiver",
+  "reason": "old locally mitigated source fails129of248 stale-fallback controls; stronger source changes four approved proof files and patch hash"
+}
