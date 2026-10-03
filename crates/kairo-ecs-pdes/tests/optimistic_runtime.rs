@@ -1,3 +1,5 @@
+#![cfg(feature = "time-warp")]
+
 use std::collections::BTreeMap;
 
 use kairo_ecs_pdes::{
