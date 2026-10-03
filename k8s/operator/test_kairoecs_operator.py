@@ -81,6 +81,28 @@ class ExperimentValidationTests(unittest.TestCase):
             with self.subTest(scenario_ref=scenario_ref):
                 operator.validate_experiment(valid_experiment(scenario_ref))
 
+    def test_rejects_non_integer_parallelism_before_rendering(self):
+        for value in (True, False, 1.5, "2", None, [], {}):
+            for action in (operator.validate_experiment, operator.render_job):
+                with self.subTest(value=value, action=action.__name__):
+                    candidate = valid_experiment()
+                    candidate["spec"]["parallelism"] = value
+                    with self.assertRaisesRegex(ValueError, "spec.parallelism must be an integer"):
+                        action(candidate)
+
+    def test_integer_parallelism_and_omitted_default_render_consistently(self):
+        for value in (1, 2, 100):
+            candidate = valid_experiment()
+            candidate["spec"]["parallelism"] = value
+            job = operator.render_job(candidate)
+            self.assertEqual(job["spec"]["parallelism"], value)
+            self.assertEqual(job["spec"]["completions"], value)
+        candidate = valid_experiment()
+        del candidate["spec"]["parallelism"]
+        job = operator.render_job(candidate)
+        self.assertEqual(job["spec"]["parallelism"], 1)
+        self.assertEqual(job["spec"]["completions"], 1)
+
     def test_rejects_invalid_fields_with_specific_errors(self):
         cases = []
 

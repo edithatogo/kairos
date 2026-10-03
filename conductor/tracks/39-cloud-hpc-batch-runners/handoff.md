@@ -1,5 +1,25 @@
 # Handoff: Track 39 Cloud / HPC Batch Runners
 
+## Retained operator test worktree closeout — 2026-10-03
+
+The PR #102 test-refresh worktree was reviewed against main `e743f1a2b0f43fe12c9c53cd078b14cc5acac112`. Its three status-patch cases are already present in the hosted discovery module; the old branch is not replayed wholesale. Current offline coverage is recorded in the test matrix without changing historical Track 39 completion or the production ownership of Tracks 43/54/55.
+
+A remaining validation gap was reproduced: `int()` accepted booleans, numeric strings and truncated floats despite `k8s/crd/kairoecs-experiment.yaml` specifying integer parallelism with minimum 1. Offline validation now rejects non-integers before rendering, preserves valid integers and the omitted default, and retains the existing non-positive rejection. No CLI, Arrow, scheduler, packaging or CRD schema changes.
+
+Working directory: `/private/tmp/kairos-pr102-refresh`; Python 3.14.8, macOS arm64. Source hash below binds the tested implementation; no simulation seed is applicable.
+
+- Added negative regression first: unittest discovery exited 1 (`/tmp/kairos-operator-negative-before.log`).
+- `python3 -m unittest discover -s k8s/operator -p 'test_*.py' -v`: exit 0, 11 tests (`/tmp/kairos-operator-validation-20261003.log`).
+- `python3 cloud/validate_cloud_hpc.py`: exit 0. Offline wrapper/manifest/policy checks only.
+- `python3 -m py_compile k8s/operator/kairoecs_operator.py k8s/operator/test_kairoecs_operator.py`: exit 0.
+- `git diff --check`: exit 0.
+
+Consumes Track 39's existing CRD and renderer contracts. No release gate or workflow changes. The CHANGELOG note is a narrow release-governance documentation handoff. Hosted Actions must pass at the final PR head before merge. Docker image execution, cluster deployment/reconciliation, cloud/provider APIs, Slurm runtime, checkpoint integrity and telemetry storage runtime are not assessed by this slice; their existing evidence boundaries and downstream ownership remain unchanged. Clients sending string/float/bool parallelism must supply a JSON integer to match the CRD.
+
+- Operator SHA-256: `e81030c13a5ccc891201afb82711375a2ca6d067c76589b63bbe293376a89428`.
+- Test SHA-256: `493550d6221aef627af32a61b61ce70c30735426720dfa00f8822443cd900f97`.
+
+
 Last updated: 2026-06-23
 
 ## 2026-09-29 Kubernetes scenario-key hardening
