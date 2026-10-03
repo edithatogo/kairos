@@ -232,3 +232,12 @@ Local integration readback at e27a44b: `PYTHONDONTWRITEBYTECODE=1 python3 -m uni
 
 
 Integrated regression readback at e11b52f: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_npm_audit*.py' -v` exited 0: 19 tests pass (13 classifier, six runner methods with adversarial subcases). Runner tests require the already installed patched tree; CI installs and verifies it before this suite. A mocked network-error scan returns failure and preserves raw stdout/stderr bytes, their hashes, raw exit 1 and failed receipt classification. Dependency copies, source identity/hash/proof, approval expiry, argv, branch/fork and duplicate-JSON negative controls pass. Root conformance fixture validator also exited 0 at 2088d8f. Exact-head hosted verification remains pending.
+
+
+## Hosted acceptance and implementation closeout — 3 October 2026
+
+Reviewed PR head `8a6bf6673e6f4a8226408550b4c7ec11b32fb347`: all 19 triggered GitHub Actions workflow runs completed successfully. [Package Dry Runs 37096693640](https://github.com/edithatogo/kairos/actions/runs/37096693640) passed all eight jobs, including npm and package archive retention. Strict clean Git closeout exited 0; no unresolved PR review threads remain.
+
+Independent security reviewer inspected the downloaded hosted audit artifact (`artifacts/exc193-hosted/37096693640`) and actual job logs: Node 22.22.2, npm 12.1.0, seven patcher checks, both 60-case behavior suites, 13 classifier tests, six runner tests, consumer resolution and 194 registry signatures pass. The raw scan exits 1 with exact baseline stdout hash e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c and empty stderr. Classification is approved_temporary_exception under the human-approved record. Actual PR merge-checkout commit is 3307d279b931f8d72a17d9831039f073bbfd92ef; it corresponds to this head and main 11164f6. No clean-audit claim is made.
+
+Track 47 implementation is accepted and marked Done. Final metadata-head Actions and actual merge remain required before Track 48 begins. EXC-193 expires 2026-10-10T00:00:00+10:00 and does not authorize another PR, RC/1.0 or publication. The prior Renovate trust-validator mismatch remains outside the exception; this closeout does not claim a broader trust/release qualification.

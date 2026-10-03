@@ -1,8 +1,8 @@
 # KairoECS Conductor Status
 
-## Track 47 implementation review - 2026-10-03
+## Track 47 implementation accepted - 2026-10-03
 
-Track 47 is In Review after event-owned threaded execution, actual core Scheduler parity, adversarial protocol tests, local full CI and remotely pinned raw CPU benchmark capture. Source commit `45f01c49be1d15cefb64ad48e59ee0a7e4146b3e` identifies the final capture inputs. The registered live-host manifest records all eight 4/8/16/32-LP strong/weak profiles and five repetitions. Thread overhead and oversubscription are retained; no speedup or distributed scaling certification is claimed. At PR head `2502a4c`, 15 workflow runs passed and Package Dry Runs failed on upstream GHSA-ch52-4w7c-c8xp, which has no published fix. Portable Linux metadata and maturity review fixes are complete; their exact-head checks remain pending. Human-approved EXC-193 now permits a narrowly bounded acceptance of the retained raw npm finding after verified mitigation; local classifier checks pass and exact-head hosted acceptance remains pending. Track 48 must wait for merge.
+Track 47 is Done for the event-owned single-host conservative runtime. Actual core Scheduler parity, typed protocol errors, 8-LP 10,000-tick progress, full local native CI and immutable five-repeat 4/8/16/32-LP CPU measurements are accepted. All 19 hosted workflow runs passed at `8a6bf6673e6f4a8226408550b4c7ec11b32fb347`; strict clean Git closeout passed. Human-approved EXC-193 permits only the exact retained raw cache advisory after verified source mitigation for PR #193 development/alpha-beta dry runs, expiring 00:00 Brisbane 10 October. RC, 1.0, publication and other PRs remain excluded. Final closeout metadata requires fresh head checks before merge; Track 48 waits for actual merge. No speedup or distributed HPC certification is claimed.
 
 ## Track 42 Archive Review - 2026-06-25
 

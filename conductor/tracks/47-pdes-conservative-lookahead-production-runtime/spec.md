@@ -8,11 +8,7 @@ sequential parity, and measured scaling evidence.
 
 ## Maturity
 
-In Review. The event-owned single-host runtime is available behind `pdes` as a
-preview API, and the raw host evidence has been captured, registered and
-reviewed. Final closeout still requires the exact-head hosted checks and
-coordinated acceptance. The raw npm audit still reports GHSA-ch52-4w7c-c8xp in the bootstrap dependency tree. The human-approved, expiring EXC-193 permits only the verified mitigation and exact finding graph for PR #193 development/alpha-beta dry runs; final-head hosted acceptance remains pending.
-Track 34 compatibility APIs retain their original scaffold contracts.
+Done for the event-owned single-host runtime behind `pdes` as a preview API. Raw host evidence is captured, registered and reviewed. All 19 workflow runs passed at the reviewed 8a6bf66 head. The human-approved, expiring EXC-193 accepts only the retained exact raw cache advisory after source mitigation for PR #193 development/alpha-beta dry runs. Final metadata-head CI and merge remain required. No RC/1.0, publication, speedup or distributed certification follows. Track 34 compatibility APIs retain their original scaffold contracts.
 
 ## Inputs
 

@@ -36,9 +36,9 @@
 
 ## Phase 5 - Closeout
 
-- Task 5.1: Run local crate tests, full workspace checks, and conductor gates.
+- [x] Task 5.1: Run local crate tests, full workspace checks, and conductor gates.
 - [x] Task 5.2: Run `$conductor-review`, apply accepted fixes, and update handoff.
-- Task 5.3: Push and watch GitHub Actions before requesting status advancement.
+- [x] Task 5.3: Push and watch GitHub Actions before requesting status advancement.
 
 ## Phase closeout gate
 
@@ -83,3 +83,5 @@ Raw capture task 3.2 is now evidenced by the remotely verified `45f01c49be1d15ce
 Hosted acceptance is blocked by the unchanged npm audit gate for GHSA-ch52-4w7c-c8xp (no published fixed dependency). Fifteen workflow runs passed on PR head `2502a4c`; follow-up review fixes require fresh hosted checks. Task 5.3 and track acceptance remain incomplete.
 
 The human-approved EXC-193 now provides a bounded alternative to waiting for an official cache dependency release. Final local regression tests, exact-head hosted Actions and clean Git closeout remain required before Task 5.3 or track acceptance is complete.
+
+Reviewed-source closeout: all 19 workflow runs succeeded at 8a6bf66, strict clean Git closeout passed, and independent hosted security review accepted the bounded EXC-193 classification with raw evidence retained. This supersedes earlier hosted-blocker entries above. The final status-only closeout commit requires fresh exact-head Actions before merge; Track 48 begins only after actual merge.

@@ -59,7 +59,7 @@
     "approval_evidence": "Direct user message \"I approve\" in chat 01a0f5f1-3c77-7f30-a8f1-14c1fcaa8814 responding to EXC-193 classification and dual-owner approval request; sole-maintainer dual-role assumption stated in commentary."
   },
   "follow_up": "EXC-193-http-cache-decision.md",
-  "activation": "approved; classifier and raw-artifact runner integrated; 19 local regression tests pass; exact-head hosted verification pending",
+  "activation": "approved and independently verified locally and in Package Dry Runs 37096693640 at PR head 8a6bf6673e6f4a8226408550b4c7ec11b32fb347; final closeout metadata checks and merge pending",
   "required_pull_request": 193,
   "scope_matching": "required_pull_request AND allowed_context; never an OR allowlist",
   "head_ref": "codex/kairos-implementation-programme"
