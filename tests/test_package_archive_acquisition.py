@@ -13,8 +13,8 @@ spec.loader.exec_module(a)
 class AcquisitionTests(unittest.TestCase):
     def setUp(self):
         self.sha = '1' * 40
-        self.run = {'id': 7, 'head_sha': self.sha, 'repository': {'full_name': a.REPOSITORY}, 'head_repository': {'full_name': a.REPOSITORY}, 'path': a.WORKFLOW, 'status': 'completed', 'conclusion': 'success'}
-        self.artifact = {'id': 9, 'name': 'kairos-actual-package-archives-' + self.sha, 'digest': 'sha256:' + 'a' * 64, 'expired': False}
+        self.run = {'id': 7, 'head_sha': self.sha, 'repository': {'full_name': a.REPOSITORY, 'id': 123}, 'head_repository': {'full_name': a.REPOSITORY, 'id': 123}, 'path': a.WORKFLOW, 'status': 'completed', 'conclusion': 'success'}
+        self.artifact = {'id': 9, 'name': 'kairos-actual-package-archives-' + self.sha, 'digest': 'sha256:' + 'a' * 64, 'expired': False, 'workflow_run': {'id': 7, 'head_sha': self.sha, 'repository_id': 123, 'head_repository_id': 123}}
         self.inventory = {'total_count': 1, 'artifacts': [self.artifact]}
 
     def test_exact_run_and_archive_identity(self):
@@ -73,6 +73,7 @@ class AcquisitionTests(unittest.TestCase):
 
     def test_pr_build_merge_and_head_are_distinct_verified_identities(self):
         head = '2' * 40
+        self.artifact['workflow_run']['head_sha'] = head
         base = '3' * 40
         run = dict(self.run, event='pull_request', head_sha=head, pull_requests=[{'head': {'sha': head}, 'base': {'sha': base}}])
         commit = {'sha': self.sha, 'parents': [{'sha': base}, {'sha': head}]}
@@ -201,6 +202,18 @@ class AcquisitionTests(unittest.TestCase):
             digest = a.download_verified([sys.executable, '-c', f'import sys;sys.stdout.buffer.write(b"z"*{size})'], path, size)
             self.assertEqual(path.stat().st_size, size)
             self.assertEqual(digest, 'sha256:' + hashlib.sha256(b'z' * size).hexdigest())
+
+
+    def test_artifact_origin_must_match_run_repository_and_head(self):
+        for key, value in [('id', 8), ('head_sha', '2' * 40), ('repository_id', 999), ('head_repository_id', 999)]:
+            item = copy.deepcopy(self.artifact)
+            item['workflow_run'][key] = value
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                a.select_artifact(self.run, {'total_count': 1, 'artifacts': [item]}, 7, self.sha)
+        item = dict(self.artifact)
+        del item['workflow_run']
+        with self.assertRaises(ValueError):
+            a.select_artifact(self.run, {'total_count': 1, 'artifacts': [item]}, 7, self.sha)
 
 if __name__ == '__main__':
     unittest.main()

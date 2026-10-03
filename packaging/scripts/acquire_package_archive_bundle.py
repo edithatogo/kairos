@@ -45,6 +45,14 @@ def select_artifact(run: dict, inventory: dict, run_id: int, source_commit: str,
     if len(matches) != 1:
         raise ValueError("expected exactly one matching retained bundle")
     item = matches[0]
+    origin = item.get("workflow_run")
+    if not isinstance(origin, dict) or origin.get("head_sha") != run["head_sha"]:
+        raise ValueError("artifact origin head differs from selected run")
+    expected_ids = {"id": run_id, "repository_id": run["repository"].get("id"),
+                    "head_repository_id": run["head_repository"].get("id")}
+    for key, expected in expected_ids.items():
+        if type(expected) is not int or expected <= 0 or type(origin.get(key)) is not int or origin[key] != expected:
+            raise ValueError("artifact origin run or repository differs")
     if item.get("expired") is not False or not re.fullmatch(r"sha256:[0-9a-f]{64}", str(item.get("digest", ""))):
         raise ValueError("artifact expired or lacks SHA-256 identity")
     if type(item.get("id")) is not int or item["id"] <= 0:
