@@ -7,18 +7,21 @@ import hashlib
 import json
 import os
 import platform
+import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Callable
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - older Python fails closed when Cargo config exists
+    tomllib = None
+
 ROOT = Path(__file__).resolve().parents[2]
 ARTIFACT_DIR = ROOT / "artifacts" / "track48-benchmark"
-COMMAND = [
-    "rustup",
-    "run",
-    "1.98.1",
-    "cargo",
+CARGO_ARGS = [
     "bench",
     "-p",
     "kairo-ecs-pdes",
@@ -27,6 +30,14 @@ COMMAND = [
     "--features",
     "pdes,time-warp",
 ]
+TOOLCHAIN = "1.98.1"
+WRAPPER_ENVIRONMENT_KEYS = (
+    "RUSTC_WRAPPER",
+    "RUSTC_WORKSPACE_WRAPPER",
+    "CARGO_BUILD_RUSTC_WRAPPER",
+    "CARGO_BUILD_RUSTC_WORKSPACE_WRAPPER",
+)
+TOOLCHAIN_SELECTION_ENVIRONMENT_KEYS = ("RUSTC", "CARGO_BUILD_RUSTC", "RUSTUP_TOOLCHAIN")
 EXPECTED_SEED = 48_2027
 EXPECTED_ROOTS_PER_LP = 8
 EXPECTED_MAX_HOPS = 8
@@ -252,11 +263,209 @@ def validate_output(document: Any) -> dict[str, str]:
     return hashes
 
 
-def command_output(args: list[str], cwd: Path) -> str:
-    result = subprocess.run(args, cwd=cwd, text=True, capture_output=True, check=False)
+def command_output(
+    args: list[str],
+    cwd: Path,
+    env: dict[str, str] | None = None,
+    runner: Callable[..., Any] = subprocess.run,
+) -> str:
+    result = runner(args, cwd=cwd, env=env, text=True, capture_output=True, check=False)
     if result.returncode != 0:
         raise RuntimeError(f"metadata command failed ({result.returncode}): {args!r}: {result.stderr.strip()}")
     return result.stdout.strip()
+
+
+def cargo_config_paths(root: Path, base_env: dict[str, str]) -> list[Path]:
+    paths = []
+    current = root.resolve()
+    for directory in (current, *current.parents):
+        for name in ("config.toml", "config"):
+            path = directory / ".cargo" / name
+            if path.is_file():
+                paths.append(path.resolve())
+    cargo_home = Path(base_env.get("CARGO_HOME", Path.home() / ".cargo")).expanduser()
+    for name in ("config.toml", "config"):
+        path = cargo_home / name
+        if path.is_file():
+            paths.append(path.resolve())
+    return sorted(set(paths))
+
+
+def cargo_wrapper_config_hashes(root: Path, base_env: dict[str, str]) -> dict[str, str]:
+    hashes = {}
+    for path in cargo_config_paths(root, base_env):
+        text = path.read_text(encoding="utf-8")
+        if tomllib is None:
+            raise ValueError("Python 3.11+ tomllib is required to inspect Cargo build configuration")
+        try:
+            config = tomllib.loads(text)
+        except tomllib.TOMLDecodeError as error:
+            raise ValueError(f"Cargo configuration cannot be parsed safely: {path}") from error
+
+        def nonempty(value: Any) -> bool:
+            if isinstance(value, dict):
+                value = value.get("value")
+            return value not in (None, "", [])
+
+        build = config.get("build", {})
+        if not isinstance(build, dict):
+            raise ValueError(f"Cargo build configuration is not a table: {path}")
+        for key in ("rustc", "rustc-wrapper", "rustc-workspace-wrapper", "rustflags"):
+            if nonempty(build.get(key)):
+                raise ValueError(f"Cargo compiler wrapper or Rust flags are configured in {path}: build.{key}")
+        target = config.get("target", {})
+        if not isinstance(target, dict):
+            raise ValueError(f"Cargo target configuration is not a table: {path}")
+        for target_name, target_config in target.items():
+            if isinstance(target_config, dict) and nonempty(target_config.get("rustflags")):
+                raise ValueError(f"Cargo target Rust flags are configured in {path}: target.{target_name}")
+        configured_env = config.get("env", {})
+        if not isinstance(configured_env, dict):
+            raise ValueError(f"Cargo environment configuration is not a table: {path}")
+        protected_env_keys = (
+            *WRAPPER_ENVIRONMENT_KEYS,
+            *TOOLCHAIN_SELECTION_ENVIRONMENT_KEYS,
+            "RUSTFLAGS",
+            "CARGO_ENCODED_RUSTFLAGS",
+            "CARGO_BUILD_RUSTFLAGS",
+        )
+        for key, value in configured_env.items():
+            if (key in protected_env_keys or is_rustflag_environment_key(key)) and nonempty(value):
+                raise ValueError(f"Cargo wrapper or Rust flags are configured in {path}: env.{key}")
+        hashes[str(path)] = hash_file(path)
+    return hashes
+
+
+def is_rustflag_environment_key(key: str) -> bool:
+    return key in ("RUSTFLAGS", "CARGO_ENCODED_RUSTFLAGS", "CARGO_BUILD_RUSTFLAGS") or (
+        key.startswith("CARGO_TARGET_") and key.endswith("_RUSTFLAGS")
+    )
+
+
+def rustflag_environment_keys(env: dict[str, str]) -> list[str]:
+    return sorted(key for key in env if is_rustflag_environment_key(key))
+
+
+def resolved_toolchain(
+    root: Path,
+    base_env: dict[str, str] | None = None,
+    command_runner: Callable[..., Any] = subprocess.run,
+) -> dict[str, Any]:
+    base_env = dict(os.environ if base_env is None else base_env)
+    rustup = shutil.which("rustup", path=base_env.get("PATH"))
+    if rustup is None:
+        raise RuntimeError("rustup executable is unavailable")
+    rustup = str(Path(rustup).resolve())
+    config_hashes = cargo_wrapper_config_hashes(root, base_env)
+    inherited_wrappers = [key for key in WRAPPER_ENVIRONMENT_KEYS if base_env.get(key)]
+    inherited_toolchain_selectors = [
+        key for key in TOOLCHAIN_SELECTION_ENVIRONMENT_KEYS if base_env.get(key)
+    ]
+    rustflags = rustflag_environment_keys(base_env)
+    nonempty_rustflags = [key for key in rustflags if base_env[key]]
+    if nonempty_rustflags:
+        fingerprints = [
+            f"{key}=sha256:{hashlib.sha256(base_env[key].encode()).hexdigest()}"
+            for key in nonempty_rustflags
+        ]
+        raise ValueError(
+            "non-empty Rust flags environment overrides are rejected for the fixed benchmark: "
+            + ", ".join(fingerprints)
+        )
+    sysroot = Path(
+        command_output(
+            [rustup, "run", TOOLCHAIN, "rustc", "--print", "sysroot"],
+            root,
+            base_env,
+            command_runner,
+        )
+    ).resolve(strict=True)
+    rustc = Path(
+        command_output(
+            [rustup, "which", "rustc", "--toolchain", TOOLCHAIN], root, base_env, command_runner
+        )
+    ).resolve(strict=True)
+    cargo = Path(
+        command_output(
+            [rustup, "which", "cargo", "--toolchain", TOOLCHAIN], root, base_env, command_runner
+        )
+    ).resolve(strict=True)
+    toolchain_bin = (sysroot / "bin").resolve(strict=True)
+    if rustc.parent != toolchain_bin or cargo.parent != toolchain_bin:
+        raise ValueError("resolved Rust tools do not belong to the requested toolchain sysroot")
+
+    rustc_version = command_output([str(rustc), "--version", "-v"], root, base_env, command_runner)
+    cargo_version = command_output([str(cargo), "--version"], root, base_env, command_runner)
+    cargo_verbose = command_output([str(cargo), "-vV"], root, base_env, command_runner)
+    if f"release: {TOOLCHAIN}" not in rustc_version.splitlines():
+        raise ValueError(f"resolved rustc version is not {TOOLCHAIN}")
+    if not cargo_version.startswith(f"cargo {TOOLCHAIN} "):
+        raise ValueError(f"resolved cargo version is not {TOOLCHAIN}")
+    if f"release: {TOOLCHAIN}" not in cargo_verbose.splitlines():
+        raise ValueError(f"resolved cargo provenance is not {TOOLCHAIN}")
+
+    return {
+        "toolchain": TOOLCHAIN,
+        "source_root": str(root.resolve()),
+        "rustup_path": rustup,
+        "sysroot": str(sysroot),
+        "toolchain_bin": str(toolchain_bin),
+        "rustc_path": str(rustc),
+        "rustc_version": rustc_version,
+        "rustc_sha256": hash_file(rustc),
+        "cargo_path": str(cargo),
+        "cargo_version": cargo_version,
+        "cargo_verbose_version": cargo_verbose,
+        "cargo_sha256": hash_file(cargo),
+        "cargo_config_sha256": config_hashes,
+        "disabled_wrapper_environment": inherited_wrappers,
+        "disabled_toolchain_environment": inherited_toolchain_selectors,
+        "cleared_empty_rustflags_environment": rustflags,
+    }
+
+
+def prepare_toolchain_environment(
+    base_env: dict[str, str], provenance: dict[str, Any]
+) -> dict[str, str]:
+    env = dict(base_env)
+    toolchain_bin = provenance["toolchain_bin"]
+    env["PATH"] = toolchain_bin + os.pathsep + env.get("PATH", "")
+    env["RUSTC"] = provenance["rustc_path"]
+    env["RUSTUP_TOOLCHAIN"] = provenance["toolchain"]
+    for key in WRAPPER_ENVIRONMENT_KEYS:
+        env.pop(key, None)
+    env.pop("CARGO_BUILD_RUSTC", None)
+    for key in provenance["cleared_empty_rustflags_environment"]:
+        env.pop(key, None)
+    return env
+
+
+def verify_toolchain_environment(env: dict[str, str], provenance: dict[str, Any]) -> None:
+    expected_rustc = Path(provenance["rustc_path"]).resolve(strict=True)
+    expected_bin = Path(provenance["toolchain_bin"]).resolve(strict=True)
+    configured_rustc = env.get("RUSTC")
+    if configured_rustc is None or Path(configured_rustc).resolve(strict=True) != expected_rustc:
+        raise ValueError("RUSTC does not point to the resolved toolchain compiler")
+    path_entries = env.get("PATH", "").split(os.pathsep)
+    if not path_entries or Path(path_entries[0]).resolve(strict=True) != expected_bin:
+        raise ValueError("toolchain bin directory is not first on PATH")
+    discovered_rustc = shutil.which("rustc", path=env.get("PATH"))
+    if discovered_rustc is None or Path(discovered_rustc).resolve(strict=True) != expected_rustc:
+        raise ValueError("PATH compiler does not match the resolved toolchain compiler")
+    if env.get("RUSTUP_TOOLCHAIN") != provenance["toolchain"]:
+        raise ValueError("RUSTUP_TOOLCHAIN does not match the resolved toolchain")
+    if any(env.get(key) for key in (*WRAPPER_ENVIRONMENT_KEYS, "CARGO_BUILD_RUSTC")):
+        raise ValueError("compiler wrapper or selector environment would override the resolved rustc")
+    active_rustflags = [key for key in rustflag_environment_keys(env) if env[key]]
+    if active_rustflags:
+        raise ValueError(f"Rust flags environment changed after resolution: {active_rustflags!r}")
+    if hash_file(expected_rustc) != provenance["rustc_sha256"]:
+        raise ValueError("resolved rustc binary changed after provenance capture")
+    if hash_file(Path(provenance["cargo_path"]).resolve(strict=True)) != provenance["cargo_sha256"]:
+        raise ValueError("resolved cargo binary changed after provenance capture")
+    current_config_hashes = cargo_wrapper_config_hashes(Path(provenance["source_root"]), env)
+    if current_config_hashes != provenance["cargo_config_sha256"]:
+        raise ValueError("Cargo compiler wrapper configuration changed after provenance capture")
 
 
 def source_paths(root: Path) -> list[str]:
@@ -340,12 +549,9 @@ def cpu_model(root: Path = ROOT) -> str:
     return platform.processor() or "unavailable"
 
 
-def runtime_metadata(root: Path) -> dict[str, Any]:
+def runtime_metadata(root: Path, provenance: dict[str, Any]) -> dict[str, Any]:
     return {
-        "toolchain": {
-            "rustc": command_output(["rustup", "run", "1.98.1", "rustc", "--version", "-v"], root),
-            "cargo": command_output(["rustup", "run", "1.98.1", "cargo", "--version"], root),
-        },
+        "toolchain": provenance,
         "hardware": {
             "system": platform.system(),
             "release": platform.release(),
@@ -365,9 +571,10 @@ def write_attempt(artifact_dir: Path, attempt: dict[str, Any]) -> Path:
 def collect_run(
     root: Path = ROOT,
     artifact_dir: Path = ARTIFACT_DIR,
-    command: list[str] = COMMAND,
+    command: list[str] | None = None,
     runner: Callable[..., Any] = subprocess.run,
     metadata: dict[str, Any] | None = None,
+    toolchain_resolver: Callable[..., dict[str, Any]] = resolved_toolchain,
 ) -> Path:
     root = root.resolve()
     artifact_dir.mkdir(parents=True, exist_ok=True)
@@ -390,11 +597,31 @@ def collect_run(
     attempt["head_before"] = before["head"]
     attempt["status_before"] = before["status"]
     attempt["source_sha256_before"] = before["source_sha256"]
-    attempt.update(metadata if metadata is not None else runtime_metadata(root))
     if before["status"]:
         attempt["validation_error"] = "source tree is not clean before benchmark execution"
         write_attempt(artifact_dir, attempt)
         raise ValueError(attempt["validation_error"])
+
+    try:
+        provenance = toolchain_resolver(root, env)
+        env = prepare_toolchain_environment(env, provenance)
+        verify_toolchain_environment(env, provenance)
+    except (OSError, RuntimeError, ValueError, KeyError) as error:
+        attempt["validation_error"] = f"could not resolve exact Rust {TOOLCHAIN} toolchain: {error}"
+        write_attempt(artifact_dir, attempt)
+        raise ValueError(attempt["validation_error"]) from error
+
+    if command is None:
+        command = [provenance["cargo_path"], *CARGO_ARGS]
+    attempt["command"] = command
+    attempt["compiler_provenance"] = provenance
+    attempt["execution_environment"] = {
+        "CARGO_TARGET_DIR": str(target_dir),
+        "PATH_first": provenance["toolchain_bin"],
+        "RUSTC": provenance["rustc_path"],
+        "RUSTUP_TOOLCHAIN": provenance["toolchain"],
+    }
+    attempt.update(metadata if metadata is not None else runtime_metadata(root, provenance))
 
     try:
         result = runner(command, cwd=root, env=env, text=True, capture_output=True, check=False)
@@ -426,6 +653,12 @@ def collect_run(
     attempt["status_after"] = after["status"]
     attempt["source_sha256_after"] = after["source_sha256"]
     changed = before != after
+    try:
+        verify_toolchain_environment(env, provenance)
+    except (OSError, ValueError, KeyError) as error:
+        attempt["validation_error"] = f"Rust toolchain changed during benchmark execution: {error}"
+        write_attempt(artifact_dir, attempt)
+        raise ValueError(attempt["validation_error"]) from error
     if changed:
         attempt["validation_error"] = "HEAD, clean status, or source hashes changed during benchmark execution"
         write_attempt(artifact_dir, attempt)

@@ -1,5 +1,8 @@
 import importlib.util
+import hashlib
 import json
+import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -149,15 +152,51 @@ class EvidenceValidationTests(unittest.TestCase):
         subprocess.run(["git", "commit", "-qm", "fixture"], cwd=root, check=True)
         return files
 
-    def runner_for(self, document, mutate=None):
+    def runner_for(self, document, mutate=None, inspect=None):
         output = json.dumps(document)
 
-        def run(_command, cwd, **_kwargs):
+        def run(command, cwd, env, **_kwargs):
             if mutate:
                 mutate(Path(cwd))
+            if inspect:
+                inspect(command, env)
             return SimpleNamespace(returncode=0, stdout=output, stderr="")
 
         return run
+
+    def fake_toolchain_resolver(self, location, source_root, base_env):
+        sysroot = location / "sysroot"
+        toolchain_bin = sysroot / "bin"
+        toolchain_bin.mkdir(parents=True, exist_ok=True)
+        rustc = toolchain_bin / "rustc"
+        cargo = toolchain_bin / "cargo"
+        rustc.write_text("test rustc binary")
+        cargo.write_text("test cargo binary")
+        rustc.chmod(0o755)
+        cargo.chmod(0o755)
+        return {
+            "toolchain": "1.98.1",
+            "source_root": str(Path(source_root).resolve()),
+            "rustup_path": "/test/rustup",
+            "sysroot": str(sysroot.resolve()),
+            "toolchain_bin": str(toolchain_bin.resolve()),
+            "rustc_path": str(rustc.resolve()),
+            "rustc_version": "rustc 1.98.1 (test)\nrelease: 1.98.1",
+            "rustc_sha256": hashlib.sha256(rustc.read_bytes()).hexdigest(),
+            "cargo_path": str(cargo.resolve()),
+            "cargo_version": "cargo 1.98.1 (test)",
+            "cargo_verbose_version": "cargo 1.98.1 (test)\nrelease: 1.98.1",
+            "cargo_sha256": hashlib.sha256(cargo.read_bytes()).hexdigest(),
+            "cargo_config_sha256": collector.cargo_wrapper_config_hashes(
+                Path(source_root), base_env
+            ),
+            "disabled_wrapper_environment": [
+                key for key in collector.WRAPPER_ENVIRONMENT_KEYS if base_env.get(key)
+            ],
+            "cleared_empty_rustflags_environment": collector.rustflag_environment_keys(
+                base_env
+            ),
+        }
 
     def test_clean_source_receipt_and_ignored_artifacts(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -167,17 +206,29 @@ class EvidenceValidationTests(unittest.TestCase):
             (root / "artifacts").mkdir()
             (root / "artifacts" / "ignored.bin").write_bytes(b"artifact")
             artifacts = Path(temporary) / "evidence"
+            provenance = self.fake_toolchain_resolver(
+                Path(temporary) / "toolchain", root, os.environ
+            )
+
+            def inspect_exact_compiler(command, env):
+                self.assertEqual(command[0], provenance["cargo_path"])
+                self.assertEqual(command[1:], collector.CARGO_ARGS)
+                self.assertEqual(env["RUSTC"], provenance["rustc_path"])
+                self.assertEqual(Path(env["PATH"].split(os.pathsep, 1)[0]), Path(provenance["toolchain_bin"]))
+
             result = collector.collect_run(
                 root,
                 artifacts,
-                ["bench"],
-                self.runner_for(self.document()),
+                runner=self.runner_for(self.document(), inspect=inspect_exact_compiler),
                 metadata={"toolchain": {}, "hardware": {}},
+                toolchain_resolver=lambda _root, _env: provenance,
             )
             evidence = json.loads(result.read_text())
             self.assertEqual(evidence["head_before"], evidence["head_after"])
             self.assertEqual(evidence["status_before"], "")
             self.assertEqual(evidence["source_sha256_before"], evidence["source_sha256_after"])
+            self.assertEqual(evidence["command"][0], provenance["cargo_path"])
+            self.assertEqual(evidence["compiler_provenance"], provenance)
 
     def test_dirty_untracked_source_is_rejected_with_attempt_receipt(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -193,6 +244,9 @@ class EvidenceValidationTests(unittest.TestCase):
                     ["bench"],
                     self.runner_for(self.document()),
                     metadata={"toolchain": {}, "hardware": {}},
+                    toolchain_resolver=lambda actual_root, env: self.fake_toolchain_resolver(
+                        Path(temporary) / "toolchain", actual_root, env
+                    ),
                 )
             self.assertTrue((artifacts / "time_warp_attempt.json").is_file())
 
@@ -214,6 +268,9 @@ class EvidenceValidationTests(unittest.TestCase):
                     ["bench"],
                     self.runner_for(self.document(), edit_source),
                     metadata={"toolchain": {}, "hardware": {}},
+                    toolchain_resolver=lambda actual_root, env: self.fake_toolchain_resolver(
+                        Path(temporary) / "toolchain", actual_root, env
+                    ),
                 )
             receipt = json.loads((artifacts / "time_warp_attempt.json").read_text())
             self.assertEqual(receipt["head_before"], receipt["head_after"])
@@ -238,10 +295,122 @@ class EvidenceValidationTests(unittest.TestCase):
                         ["bench"],
                         self.runner_for(doc),
                         metadata={"toolchain": {}, "hardware": {}},
+                        toolchain_resolver=lambda actual_root, env: self.fake_toolchain_resolver(
+                        Path(temporary) / "toolchain", actual_root, env
+                    ),
                     )
                 receipt = json.loads((artifacts / "time_warp_attempt.json").read_text())
                 self.assertIn("validation_error", receipt)
                 self.assertEqual(receipt["head_before"], receipt["head_after"])
+
+    def test_injected_path_compiler_drift_is_resolved_then_rejected_if_rebound(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            temporary = Path(temporary)
+            root = temporary / "repo"
+            root.mkdir()
+            drift_dir = temporary / "homebrew"
+            drift_dir.mkdir()
+            drift_rustc = drift_dir / "rustc"
+            drift_rustc.write_text("Homebrew rustc 1.99.0")
+            drift_rustc.chmod(0o755)
+            rustup_shim = drift_dir / "rustup"
+            rustup_shim.write_text("injected rustup selector")
+            rustup_shim.chmod(0o755)
+            provenance = self.fake_toolchain_resolver(temporary / "rustup", root, os.environ)
+            calls = []
+
+            def metadata_runner(args, **_kwargs):
+                calls.append(args)
+                if args[1:4] == ["run", "1.98.1", "rustc"]:
+                    output = provenance["sysroot"]
+                elif args[1:5] == ["which", "rustc", "--toolchain", "1.98.1"]:
+                    output = provenance["rustc_path"]
+                elif args[1:5] == ["which", "cargo", "--toolchain", "1.98.1"]:
+                    output = provenance["cargo_path"]
+                elif args[0] == provenance["rustc_path"]:
+                    output = provenance["rustc_version"]
+                elif args[0] == provenance["cargo_path"] and args[1:] == ["--version"]:
+                    output = provenance["cargo_version"]
+                elif args[0] == provenance["cargo_path"] and args[1:] == ["-vV"]:
+                    output = provenance["cargo_verbose_version"]
+                else:
+                    self.fail(f"unexpected toolchain metadata command: {args!r}")
+                return SimpleNamespace(returncode=0, stdout=output, stderr="")
+
+            base_env = dict(os.environ)
+            base_env["PATH"] = str(drift_dir) + os.pathsep + base_env.get("PATH", "")
+            base_env["RUSTC_WRAPPER"] = "/homebrew/bin/sccache"
+            base_env["CARGO_BUILD_RUSTC_WORKSPACE_WRAPPER"] = "/homebrew/bin/wrapper"
+            base_env["RUSTFLAGS"] = ""
+            base_env["RUSTC"] = "/homebrew/bin/rustc"
+            base_env["CARGO_BUILD_RUSTC"] = "/homebrew/bin/rustc"
+            base_env["RUSTUP_TOOLCHAIN"] = "1.99.0"
+            resolved = collector.resolved_toolchain(root, base_env, metadata_runner)
+            execution_env = collector.prepare_toolchain_environment(base_env, resolved)
+            collector.verify_toolchain_environment(execution_env, resolved)
+            self.assertEqual(Path(shutil.which("rustc", path=execution_env["PATH"])), Path(resolved["rustc_path"]))
+            self.assertEqual(Path(execution_env["RUSTC"]), Path(resolved["rustc_path"]))
+            self.assertEqual(Path(resolved["rustup_path"]), rustup_shim.resolve())
+            self.assertEqual(
+                resolved["disabled_wrapper_environment"],
+                ["RUSTC_WRAPPER", "CARGO_BUILD_RUSTC_WORKSPACE_WRAPPER"],
+            )
+            self.assertEqual(resolved["cleared_empty_rustflags_environment"], ["RUSTFLAGS"])
+            self.assertEqual(
+                resolved["disabled_toolchain_environment"],
+                ["RUSTC", "CARGO_BUILD_RUSTC", "RUSTUP_TOOLCHAIN"],
+            )
+            self.assertNotIn("CARGO_BUILD_RUSTC", execution_env)
+            self.assertEqual(execution_env["RUSTUP_TOOLCHAIN"], "1.98.1")
+            self.assertNotIn("RUSTC_WRAPPER", execution_env)
+            self.assertNotIn("CARGO_BUILD_RUSTC_WORKSPACE_WRAPPER", execution_env)
+            self.assertNotIn("RUSTFLAGS", execution_env)
+            self.assertTrue(any("1.98.1" in " ".join(call) for call in calls))
+
+            drifted_env = dict(execution_env)
+            drifted_env["RUSTC"] = str(drift_rustc)
+            with self.assertRaisesRegex(ValueError, "RUSTC does not point"):
+                collector.verify_toolchain_environment(drifted_env, resolved)
+
+    def test_cargo_wrapper_and_rustflags_configuration_fail_closed(self):
+        configurations = (
+            '[build]\n"rustc-wrapper" = "ccache"\n',
+            'build = { "rustc-workspace-wrapper" = "wrapper" }\n',
+            'build.rustc-wrapper = "ccache"\n',
+            '[build]\nrustflags = ["-C", "opt-level=2"]\n',
+            '[target."aarch64-apple-darwin"]\nrustflags = ["-C", "target-cpu=native"]\n',
+            '[env]\nRUSTC = { value = "/injected/rustc", force = true }\n',
+            '[env]\nCARGO_BUILD_RUSTC = { value = "/injected/rustc", force = true }\n',
+            '[env]\nRUSTUP_TOOLCHAIN = { value = "1.99.0", force = true }\n',
+            '[env]\nCARGO_TARGET_AARCH64_APPLE_DARWIN_RUSTFLAGS = { value = "-C target-cpu=native", force = true }\n',
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config = root / ".cargo" / "config.toml"
+            config.parent.mkdir()
+            env = {"CARGO_HOME": str(root / "empty-cargo-home")}
+            for text in configurations:
+                with self.subTest(config=text):
+                    config.write_text(text)
+                    with self.assertRaisesRegex(ValueError, "configured in"):
+                        collector.cargo_wrapper_config_hashes(root, env)
+
+    def test_nonempty_rustflags_environment_is_rejected_without_value_disclosure(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "repo"
+            root.mkdir()
+            provenance = self.fake_toolchain_resolver(
+                Path(temporary) / "toolchain", root, os.environ
+            )
+            env = dict(os.environ)
+            env["CARGO_TARGET_AARCH64_APPLE_DARWIN_RUSTFLAGS"] = "-C link-arg=private-marker"
+
+            def unused_runner(*_args, **_kwargs):
+                self.fail("nonempty Rust flags must reject before any toolchain command")
+
+            with self.assertRaisesRegex(ValueError, "CARGO_TARGET_AARCH64_APPLE_DARWIN_RUSTFLAGS=sha256:") as error:
+                collector.resolved_toolchain(root, env, unused_runner)
+            self.assertNotIn("private-marker", str(error.exception))
 
 
 if __name__ == "__main__":
