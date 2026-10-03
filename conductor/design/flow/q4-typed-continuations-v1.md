@@ -132,3 +132,35 @@ Coordinator accepted conceptual separate legacy-first two-token delivery and cos
 | Reference timing | issued referencing ticket retained; only whole-batch validation rejects foreign/forward/non-Acquire with InvalidCommandTicket | public sink and private forged-ref oracle |
 
 No executable verification commands are invented here. Followup bound fixture/implementation packets must resolve actual compiler paths, cache ownership, exact test targets and current leases at dispatch. This contract does not close Q4 builders, shared ABM adapters, telemetry or workflow phase review.
+
+
+## Reviewed extension boundary: shared Flow/ABM v1
+
+The companion [shared Flow/ABM v1 contract](q4-shared-abm-v1.md) defines a proposed
+experimental extension to this v1 baseline: a safe read-only World/time view,
+one explicitly typed domain behavior carrier/stream per actor generation,
+registration and opaque event-kind-bound handles, and a buffered DespawnActor
+owned command. Its status records the internal review stage; it does not claim
+implementation, hosted qualification or full Q4 acceptance.
+
+The existing five-command fixture and historical semantics above remain the
+baseline. The companion extends the owned enum and public errors under an
+explicit experimental source-compatibility/release hold; exhaustive matches may
+require migration. It is not a universal nonbreaking or stable release claim.
+
+All shared behavior commands, including DespawnActor, use the same callback
+cap, opaque ticket identities, whole-batch admission, causal receipts and
+persistent same-tick fail-stop rules. Actor cleanup requires atomic dispatch
+preflight of all then-live owned requests/work/carrier state and notifications.
+Future cleanup counts are not falsely claimed known at earlier scheduling.
+Legacy ABM mutable-World callbacks remain separate from the new borrowed API.
+No whole Registry reference aliases mutable typed context, no raw mutable
+scheduler/world escapes, and no second authoritative simulation clock is owned.
+
+The shared extension explicitly changes duplicate pending actor-despawn ingress:
+the live actor remains valid, but a second pending command rejects with the new
+`DuplicateActorDespawn` error before scheduling. Only the signature and normal
+single-despawn behavior of `despawn_actor` are preserved; this is an experimental
+behavior change under the release hold. Future lifecycle capture distinguishes
+causal prior leases from resulting active leases and records staged transition
+snapshots before cleanup clears state; Track 04 schema review remains separate.
