@@ -2,7 +2,7 @@
 
 ## Track 47 implementation accepted - 2026-10-03
 
-Track 47 is Done for the event-owned single-host conservative runtime. Actual core Scheduler parity, typed protocol errors, 8-LP 10,000-tick progress, full local native CI and immutable five-repeat 4/8/16/32-LP CPU measurements are accepted. All 19 hosted workflow runs passed at `8a6bf6673e6f4a8226408550b4c7ec11b32fb347`; strict clean Git closeout passed. Human-approved EXC-193 permits only the exact retained raw cache advisory after verified source mitigation for PR #193 development/alpha-beta dry runs, expiring 00:00 Brisbane 10 October. RC, 1.0, publication and other PRs remain excluded. Final closeout metadata requires fresh head checks before merge; Track 48 waits for actual merge. No speedup or distributed HPC certification is claimed.
+Track 47 is Done for the event-owned single-host conservative runtime. Actual core Scheduler parity, typed protocol errors, 8-LP 10,000-tick progress, full local native CI and immutable five-repeat 4/8/16/32-LP CPU measurements are accepted. All 19 final hosted workflow runs passed at `3f6efb8bc5d4e7ec1c54872356e167bede53b1f9`; strict clean Git closeout passed. Human-approved EXC-193 permits only the exact retained raw cache advisory after verified source mitigation for PR #193 development/alpha-beta dry runs, expiring 00:00 Brisbane 10 October. RC, 1.0, publication and other PRs remain excluded. PR #193 merged normally as `fc2f7b7f8e24faef8d02e29aaaaaf64852945cf0` on 2026-10-03; Track 48 local implementation proceeded after that verified merge. No speedup or distributed HPC certification is claimed.
 
 ## Track 42 Archive Review - 2026-06-25
 
@@ -213,14 +213,7 @@ Tracks 46-55 were added on 2026-06-19 as the production HPC parity wave. They
 make the live-proof gap explicit rather than marking the current scaffolds
 complete. Track 46 is now `In Review` with a machine-readable evidence schema,
 scaffold/live-HPC template manifests, and an executable claim-boundary validator.
-Track 47 is `In Progress` with the first conservative lookahead enforcement
-slice in `kairo-ecs-pdes`. Track 48 is `In Progress` with a `time-warp`
-feature-gated local rollback, anti-message, generation guard, monotonic-GVT
-fossil collection, pre-GVT rejection, duplicate-positive rejection, and
-overhead/rollback-pressure counter slice in `kairo-ecs-pdes`; production
-optimistic scheduling, replay/redelivery semantics, downstream-output
-anti-messages, benchmarks, distributed transport, and live evidence remain
-incomplete.
+Track 47 is `Done` for the accepted single-host conservative runtime (PR #193 merged). Track 48 remains `In Progress`: its new event-owned optimistic runtime now implements deterministic replay, recorded downstream cancellation, bounded progress, typed failure/poisoning, GVT fossil collection and generational membership restoration. Explicitly bound Rust 1.98.1 workspace CI passed 458 tests with 92.59% core line coverage at `7a432ab`. Earlier pinned compiler labels were withdrawn after actual Rust 1.99 compiler discovery; corrected MSRV and benchmark evidence are being collected. Hosted/security gates and live Track49 distributed rollback acceptance remain pending. No Track49 dependency change or Track48 Done follows from this local implementation.
 Track 49 is `In Progress` with a first MPI/gRPC launch-contract and migration
 metadata baseline in `kairo-ecs-mpi` and `kairo-ecs-grpc`. Track 50 is `In
 Progress` with a first `numa` feature-gated topology, affinity, event-pool,
