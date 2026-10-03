@@ -54,3 +54,41 @@ submit call. None means scheduler empty only; stale events return a dispatch.
 Consumed/rejected release always clears its reservation. No RNG/core ordering/
 Arrow or language binding changes; release held. Independent Track03/01/25 role
 review found no remaining architecture blocker, subject to these required tests.
+
+# Remaining Q1.2 types — proposal
+
+Within experimental Flow module, add opaque WorkId(EntityId), WorkSpec storing
+owner, original duration SimDuration, continuation registration key String and
+optional request association. WorkContext<C> owns typed C inside ComponentRegistry.
+create_work<C:'static>(owner,duration,registration:&str,context:C)->Result<WorkId,FlowError>;
+validate live actor, nonempty stable key, same key consistently registered to same
+Rust TypeId (runtime-owned lookup only; no portable schema promise), and creation
+cap before writes. work(id)->Result<WorkSpec,FlowError> returns clone;
+work_context<C:'static>(id)->Result<&C,FlowError> returns read-only typed context.
+submit_work(resource,owner,work,at)->Result<RequestId,FlowError> validates work
+owner and unused association, existing resource/actor/time/counters first. Work
+association is admission bookkeeping; grant remains asynchronous. Duplicate
+work association rejected transactionally. submit() remains manual lease-only.
+Actor despawn cancels all requests first, removes every owned WorkContext via a
+registered typed cleanup function and WorkSpec, then despawns work and actor with
+complete counter preflight. Terminal requests remain queryable but old WorkIds
+cannot resolve recycled entities. No timed completion or portable codecs yet.
+
+PriorityKey { level:i32, enqueue_sequence:u64, request:RequestId } derives Ord.
+ClaimQueue<K=PriorityKey> stores ordered BTreeSet<K> index. Current submit assigns
+level0 at committed admission. RequestState authoritative; queue indexes handles
+only. Q2 owns public priority/repriority/deadline admission and conformance.
+Legacy Resource unchanged. Public API Rust-only experimental, release-held;
+no core/RNG/Arrow/binding changes. Same-tick budget remains explicit Q4 followup.
+
+Independent review refinements: ResourceRequest stores priority_level=0 and
+work:Option<WorkId>, so the ordered index is derivable from authoritative state.
+Request/work association is written only after all admission validation and
+counters succeed, and retained after termination (no implicit work reuse). Actor
+cleanup preflights every work despawn plus actor in canonical work-ID order.
+Internal typed cleanup functions remove components only, never model callbacks.
+Arbitrary context destructors are trusted in-process code; panic rollback is not
+promised. Keys validate context typing only, not executable handler registration.
+Wrong context type and stale WorkId return InvalidWork without mutation; &C does
+not prohibit user context interior mutability. Exact RNG/order/Arrow/bindings
+unchanged. Timed work and handler dispatch remain Q3/Q4 qualification.
