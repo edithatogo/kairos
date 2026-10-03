@@ -1,7 +1,7 @@
 use kairo_ecs_arrow::trace_time::{
-    normalize_occurrence, relative_ticks, validate_location_interval,
-    validate_movement_claim, ClockRole, EventSemantic, IntervalRule, Lineage, MovementEvidence,
-    SourcePrecision, TemporalError, TimestampInput, TimeValue, TraceTimeResult,
+    normalize_occurrence, relative_ticks, validate_location_interval, validate_movement_claim,
+    ClockRole, EventSemantic, IntervalRule, Lineage, MovementEvidence, SourcePrecision,
+    TemporalError, TimeValue, TimestampInput, TraceTimeResult,
 };
 
 fn occurrence(utc_ns: i128, precision: SourcePrecision) -> TimestampInput {
@@ -48,12 +48,16 @@ fn occurrence_requires_the_right_clock_role_and_present_lineage() {
 
 #[test]
 fn unresolved_or_coarse_timestamps_are_exclusions_not_fabricated_ticks() {
-    for value in [TimeValue::UnresolvedLocal, TimeValue::AmbiguousLocal, TimeValue::NonexistentLocal] {
+    for (value, reason) in [
+        (TimeValue::UnresolvedLocal, TemporalError::UnresolvedLocal),
+        (TimeValue::AmbiguousLocal, TemporalError::AmbiguousLocal),
+        (TimeValue::NonexistentLocal, TemporalError::NonexistentLocal),
+    ] {
         let mut input = occurrence(0, SourcePrecision::Nanosecond);
         input.value = value;
         assert_eq!(
             normalize_occurrence(0, Some(input)),
-            TraceTimeResult::Excluded(TemporalError::UnresolvedLocal)
+            TraceTimeResult::Excluded(reason)
         );
     }
 
@@ -114,4 +118,52 @@ fn valid_boarding_after_episode_end_is_not_rejected_as_reversed_location_time() 
         validate_location_interval(25, None, IntervalRule::OpenOrForward),
         TraceTimeResult::Accepted(())
     );
+}
+
+#[test]
+fn exclusions_and_explicit_lineage_have_standard_error_and_preserve_meaning() {
+    for precision in [SourcePrecision::Coarse, SourcePrecision::Unknown] {
+        assert_eq!(
+            normalize_occurrence(0, Some(occurrence(0, precision))),
+            TraceTimeResult::Excluded(TemporalError::CoarsePrecision)
+        );
+    }
+    let mut input = occurrence(0, SourcePrecision::Nanosecond);
+    input.role = ClockRole::SourceRecorded;
+    assert_eq!(
+        normalize_occurrence(0, Some(input)),
+        TraceTimeResult::Excluded(TemporalError::ClockRoleMismatch)
+    );
+    for lineage in [Lineage::Derived, Lineage::Defaulted, Lineage::Unknown] {
+        let mut input = occurrence(0, SourcePrecision::Nanosecond);
+        input.lineage = Some(lineage);
+        let TraceTimeResult::Accepted(normalized) = normalize_occurrence(0, Some(input)) else {
+            panic!("explicit lineage must be retained")
+        };
+        assert_eq!(normalized.lineage, lineage);
+    }
+    for semantic in [
+        EventSemantic::EpisodeEnd,
+        EventSemantic::Boarding,
+        EventSemantic::Other,
+    ] {
+        assert_eq!(
+            validate_movement_claim(semantic, MovementEvidence::VerifiedPhysicalBoundary),
+            TraceTimeResult::Excluded(TemporalError::UnsupportedMovement)
+        );
+    }
+    assert_eq!(
+        validate_movement_claim(
+            EventSemantic::LocationChange,
+            MovementEvidence::VerifiedPhysicalBoundary
+        ),
+        TraceTimeResult::Accepted(())
+    );
+    assert_eq!(
+        validate_location_interval(5, Some(5), IntervalRule::OpenOrForward),
+        TraceTimeResult::Accepted(())
+    );
+    let error: &dyn std::error::Error = &TemporalError::AmbiguousLocal;
+    assert!(!error.to_string().is_empty());
+    assert!(error.source().is_none());
 }

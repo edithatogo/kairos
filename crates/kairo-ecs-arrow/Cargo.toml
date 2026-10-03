@@ -7,6 +7,7 @@ repository = "https://github.com/edithatogo/kairos"
 description = "Arrow telemetry and event log serialization for KairoECS"
 
 [dependencies]
+thiserror = "=2.0.20"
 kairo-ecs-types = { path = "../kairo-ecs-types" , version = "=0.0.0" }
 
 [[example]]

@@ -361,6 +361,7 @@ name = "kairo-ecs-arrow"
 version = "0.1.0"
 dependencies = [
  "kairo-ecs-types",
+ "thiserror",
 ]
 
 [[package]]

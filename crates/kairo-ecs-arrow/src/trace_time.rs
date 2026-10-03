@@ -7,17 +7,31 @@
 //! invented instant. This is separate from the legacy `event_log.v1` smoke API.
 
 /// Stable reason codes for rejecting temporal or source-semantic input.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum TemporalError {
+    #[error("occurrence precedes origin")]
     PreOrigin,
+    #[error("temporal arithmetic overflow")]
     Overflow,
+    #[error("missing occurrence time")]
     MissingOccurrence,
+    #[error("unresolved local time")]
     UnresolvedLocal,
+    #[error("ambiguous local time")]
+    AmbiguousLocal,
+    #[error("nonexistent local time")]
+    NonexistentLocal,
+    #[error("unsupported coarse precision")]
     CoarsePrecision,
+    #[error("sub-nanosecond precision")]
     SubNanosecond,
+    #[error("clock role mismatch")]
     ClockRoleMismatch,
+    #[error("unverified physical movement")]
     UnsupportedMovement,
+    #[error("missing temporal lineage")]
     MissingLineage,
+    #[error("reversed location interval")]
     ReversedInterval,
 }
 
@@ -92,10 +106,7 @@ pub struct NormalizedOccurrence {
 ///
 /// No rounding or saturation is permitted. Calendar/timezone resolution must
 /// happen before this function is called.
-pub fn relative_ticks(
-    origin_utc_ns: i128,
-    occurrence_utc_ns: i128,
-) -> Result<u128, TemporalError> {
+pub fn relative_ticks(origin_utc_ns: i128, occurrence_utc_ns: i128) -> Result<u128, TemporalError> {
     let delta = occurrence_utc_ns
         .checked_sub(origin_utc_ns)
         .ok_or(TemporalError::Overflow)?;
@@ -117,14 +128,23 @@ pub fn normalize_occurrence(
     let Some(lineage) = input.lineage else {
         return TraceTimeResult::Excluded(TemporalError::MissingLineage);
     };
-    if matches!(input.precision, SourcePrecision::Coarse | SourcePrecision::Unknown) {
+    if matches!(
+        input.precision,
+        SourcePrecision::Coarse | SourcePrecision::Unknown
+    ) {
         return TraceTimeResult::Excluded(TemporalError::CoarsePrecision);
     }
 
     let utc_nanoseconds = match input.value {
         TimeValue::ResolvedUtc(value) => value,
-        TimeValue::UnresolvedLocal | TimeValue::AmbiguousLocal | TimeValue::NonexistentLocal => {
-            return TraceTimeResult::Excluded(TemporalError::UnresolvedLocal);
+        TimeValue::UnresolvedLocal => {
+            return TraceTimeResult::Excluded(TemporalError::UnresolvedLocal)
+        }
+        TimeValue::AmbiguousLocal => {
+            return TraceTimeResult::Excluded(TemporalError::AmbiguousLocal)
+        }
+        TimeValue::NonexistentLocal => {
+            return TraceTimeResult::Excluded(TemporalError::NonexistentLocal)
         }
         TimeValue::DateOnly => {
             return TraceTimeResult::Excluded(TemporalError::CoarsePrecision);
