@@ -41,6 +41,8 @@ function assertBuildOutput(failures) {
   ]) {
     if (!exists(output)) {
       fail(`build output missing: ${output}`, failures);
+    } else if (output.endsWith(".txt") && fs.statSync(path.join(repoRoot, output)).size === 0) {
+      fail(`build output is empty: ${output}`, failures);
     }
   }
 }
@@ -62,7 +64,6 @@ function assertPackageScripts(failures) {
     "@astrojs/starlight",
     "starlight-versions",
     "starlight-links-validator",
-    "starlight-llms-txt",
     "starlight-plugin-icons",
   ]) {
     if (!pkg.dependencies?.[dependency]) {
@@ -77,7 +78,8 @@ function assertAstroConfig(failures) {
     "starlight(",
     "starlightVersions(",
     "starlightLinksValidator(",
-    "starlightLlmsTxt(",
+    'from "./src/plugins/kairoecs-llms-txt/index.mjs"',
+    "kairoecsLlmsTxt({",
     "starlightIconsPlugin(",
     "polyglotPlugin(",
     "R2 Preview",
@@ -112,7 +114,7 @@ function assertContent(failures) {
     "@astrojs/starlight",
     "starlight-versions",
     "starlight-links-validator",
-    "starlight-llms-txt",
+    "kairoecs-llms-txt",
     "starlight-plugin-icons",
     "kairoecs-starlight-polyglot",
   ]) {

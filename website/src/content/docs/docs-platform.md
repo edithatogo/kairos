@@ -11,8 +11,8 @@ The documentation site is implemented with Astro and Starlight.
 - `@astrojs/starlight` for docs routing, search, navigation, and page chrome.
 - `starlight-versions` for versioned documentation navigation.
 - `starlight-links-validator` for Starlight-aware link validation.
-- `starlight-llms-txt` for `llms.txt`, `llms-full.txt`, and focused LLM
-  ingestion surfaces.
+- `kairoecs-llms-txt`, the local MIT-attributed renderer for `llms.txt`,
+  `llms-full.txt`, and focused LLM ingestion surfaces.
 - `starlight-plugin-icons` for richer sidebar/code-block icon affordances.
 - `kairoecs-starlight-polyglot`, a local plugin that marks the language binding
   surface and keeps the polyglot scope visible to downstream automation.
