@@ -207,3 +207,11 @@ synchronized In Review spec. Root independently ran the 13-test collector suite
 handoff retains benchmark checks and adds those collector tests plus an actual
 Linux runner hardware readback, with no new actions, dependencies or permissions.
 Exact-head hosted verification for these follow-up changes is still pending.
+
+## HTTP cache local source mitigation — 3 October 2026
+
+User-authorized security follow-up owns the bootstrap-node-tools source patcher and validator, shell bootstrap invocation, and Track 13 package workflow wiring. This cross-track handoff does not change the Track 47 runtime or the published dependency identity.
+
+The patcher accepts only released http-cache-semantics@4.2.0 index SHA-256 `01b7d66c854b2fe53ac05c98feb6e0d64722ab8898a778e2d2426a8b468d178f` and exact patched SHA-256 `fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76`, from upstream commit `14a8c2ad51740dc39bf3e8f1a11c845a5003f217` ([PR 58](https://github.com/kornelski/http-cache-semantics/pull/58)). Package name/version, registry lock integrity and upstream MIT license remain unchanged. Replacements are atomic per file; errors fail closed before npm consumers run. This execution path is verified locally on macOS; Windows patcher behavior is unverified.
+
+Seven installer tests and 60 security/compatibility cases pass locally on Node 26.10.0; the full behavioral suite fails on the released source as an independent negative control. npm and make-fetch-happen must resolve the exact patched bytes. Local command receipts are in artifacts/http-cache-security-fix/receipt.json. Hosted Node 22.22.2 results remain pending. The raw npm audit and signature commands are retained unchanged: the advisory still marks version 4.2.0 affected, so audit/merge acceptance remains blocked until an official fix or a separately authorized governed exception. No exception is introduced here.

@@ -13,6 +13,9 @@ on:
       - 'scripts/bootstrap-node-tools/package-lock.json'
       - 'scripts/bootstrap-node-tools/prepare_npm_cli.py'
       - 'scripts/bootstrap-node-tools/validate_npm_cli.mjs'
+      - 'scripts/bootstrap-node-tools/apply_http_cache_fix.py'
+      - 'tests/test_http_cache_patch.py'
+      - 'tests/http-cache-security-regression.mjs'
       - 'scripts/bootstrap.sh'
       - 'scripts/bootstrap-python-tools.lock'
       - 'scripts/package-python-tools.in'
@@ -132,11 +135,15 @@ jobs:
         with: { python-version: '3.14' }
       - name: npm pack dry run
         run: |
+          python3 -m unittest discover -s tests -p test_http_cache_patch.py -v
           python3 scripts/bootstrap-node-tools/prepare_npm_cli.py --check
           npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools
+          python3 scripts/bootstrap-node-tools/apply_http_cache_fix.py scripts/bootstrap-node-tools/node_modules
+          node tests/http-cache-security-regression.mjs
+          node tests/http-cache-security-regression.mjs scripts/bootstrap-node-tools/node_modules/npm/node_modules/http-cache-semantics/index.js
+          node scripts/bootstrap-node-tools/validate_npm_cli.mjs
           node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js --version
           node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js help >/dev/null
-          node scripts/bootstrap-node-tools/validate_npm_cli.mjs
           node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js audit --prefix scripts/bootstrap-node-tools --audit-level=moderate
           node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js audit signatures --prefix scripts/bootstrap-node-tools
           test -f bindings/typescript/package.json
