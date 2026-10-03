@@ -120,3 +120,35 @@ lint tools are either installed or covered by hosted CI evidence.
 ## Phase closeout evidence
 
 `$conductor-review` completed for the Track 20-owned surface on 2026-05-08. Accepted fixes are listed above. Deferred or blocked fixes are limited to hosted provenance/attestation execution and release-stage publication gating. The local release-tree evidence is now present, and the validator passes. Commit SHA and pushed ref are recorded in the phase-closeout ledger after the reconciliation commit lands.
+
+## EXC-193 proposal — 3 October 2026
+
+Prepared a pending exception record, immutable raw audit baseline and decision/activation specification under `exceptions/`. Security and release owner classification/approval are absent. The operational category for a verified local source mitigation versus version-based advisory mismatch requires explicit acceptance; existing examples alone do not authorize it. CI audit acceptance remains strict. Scope is development integration/alpha-beta dry runs for PR #193 only, expiry 00:00 Brisbane 10 October, with RC/1.0/publication excluded. No status, release gate or approved exception is changed.
+
+Preparation validation limitation: the existing Track 20 trust validator fails on its literal Renovate preset expectation, while the unchanged Renovate config inherits github>edithatogo/renovate-config. EXC-193 does not waive this separate mismatch. Exact proposal hashes and finding graph were checked independently.
+
+EXC-193 activation: human approval received in this chat, with the sole maintainer acting in both security/release-owner roles. Approved operational classification and expiry are recorded; immutable acceptance anchors and raw-artifact runner are implemented. Independent classifier tests, integration and exact-head hosted verification remain pending, so no passing gate or merge is claimed yet.
+
+
+## Approved EXC-193 activation preparation
+
+The human sole maintainer approved EXC-193 in the current chat, acting in both security and release owner roles. This supersedes the earlier requirement to wait exclusively for a published fixed version. The narrowly bound exception permits PR #193 development integration and alpha/beta package dry runs only, until 2026-10-10T00:00:00+10:00. RC, 1.0 and publication remain excluded.
+
+The runner verifies immutable proof hashes and both installed patched copies, executes mitigation checks, retains raw audit stdout/stderr/exit and applies the exact advisory graph classifier. Initial local execution at 750a8d2 returned approved_temporary_exception with raw audit exit 1; this is no claim of a clean audit. Eleven local filesystem/context negative controls passed. Independent integrated tests exposed a Python test descriptor binding error; correction and fresh final-head execution are pending. Tracked runner adversarial tests and hosted verification are also pending. No merge or completed hosted gate is claimed here.
+
+
+Local integration readback at e27a44b: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p test_npm_audit_exception.py -v` passed all 13 tests. Independent reviewer reproduced that pass. `PYTHONDONTWRITEBYTECODE=1 python3 scripts/bootstrap-node-tools/run_npm_audit_gate.py` exited 0 with `approved_temporary_exception`; raw npm audit exited 1, stdout SHA-256 e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c and empty stderr. Runner receipt retains commit, Node 26.10.0, npm 12.1.0, command exits and output hashes in `artifacts/npm-audit-gate/receipt.json`. No seed applies to this audit. Cwd is the isolated Kairos implementation-programme worktree. Seven patcher checks, both 60-case cache suites and consumer resolution passed inside that invocation.
+
+`actionlint .github/workflows/package-dry-run.yml`, Conductor phase/DAG validators and HPC parity evidence validator each exited 0 at ae22f0c. Main's Rust stable matrix correction was then merged cleanly from 11164f6. Hosted acceptance and tracked runner regressions remain pending; prior Track 20 Renovate validator mismatch is separately recorded and remains outside EXC-193.
+
+
+Integrated regression readback at e11b52f: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_npm_audit*.py' -v` exited 0: 19 tests pass (13 classifier, six runner methods with adversarial subcases). Runner tests require the already installed patched tree; CI installs and verifies it before this suite. A mocked network-error scan returns failure and preserves raw stdout/stderr bytes, their hashes, raw exit 1 and failed receipt classification. Dependency copies, source identity/hash/proof, approval expiry, argv, branch/fork and duplicate-JSON negative controls pass. Root conformance fixture validator also exited 0 at 2088d8f. Exact-head hosted verification remains pending.
+
+
+## Hosted acceptance and implementation closeout — 3 October 2026
+
+Reviewed PR head `8a6bf6673e6f4a8226408550b4c7ec11b32fb347`: all 19 triggered GitHub Actions workflow runs completed successfully. [Package Dry Runs 37096693640](https://github.com/edithatogo/kairos/actions/runs/37096693640) passed all eight jobs, including npm and package archive retention. Strict clean Git closeout exited 0; no unresolved PR review threads remain.
+
+Independent security reviewer inspected the downloaded hosted audit artifact (`artifacts/exc193-hosted/37096693640`) and actual job logs: Node 22.22.2, npm 12.1.0, seven patcher checks, both 60-case behavior suites, 13 classifier tests, six runner tests, consumer resolution and 194 registry signatures pass. The raw scan exits 1 with exact baseline stdout hash e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c and empty stderr. Classification is approved_temporary_exception under the human-approved record. Actual PR merge-checkout commit is 3307d279b931f8d72a17d9831039f073bbfd92ef; it corresponds to this head and main 11164f6. No clean-audit claim is made.
+
+Track 47 implementation is accepted and marked Done. Final metadata-head Actions and actual merge remain required before Track 48 begins. EXC-193 expires 2026-10-10T00:00:00+10:00 and does not authorize another PR, RC/1.0 or publication. The prior Renovate trust-validator mismatch remains outside the exception; this closeout does not claim a broader trust/release qualification.

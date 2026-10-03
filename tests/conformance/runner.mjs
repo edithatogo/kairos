@@ -11,6 +11,7 @@ export const REQUIRED_READY_FIXTURE_IDS = Object.freeze([
 
 export const OPTIONAL_READY_FIXTURE_IDS = Object.freeze([
   'zero_delay_guard_v1',
+  'pdes_conservative_parity_v1',
 ]);
 
 const KNOWN_READY_FIXTURE_IDS = Object.freeze([
@@ -167,6 +168,22 @@ function assertZeroDelayGuardPayload(payload, fixture) {
   );
 }
 
+function assertPdesParityPayload(payload, fixture) {
+  assertBaseFixture(payload, fixture);
+  for (const field of ['lp_counts', 'seeds']) {
+    assert(Array.isArray(payload[field]) && payload[field].length > 0, `${fixture.id}.${field} must be non-empty`);
+    payload[field].forEach((value) => assertNonNegativeSafeInteger(value, `${fixture.id}.${field}`));
+    assert(new Set(payload[field]).size === payload[field].length, `${fixture.id}.${field} must be unique`);
+  }
+  assert(payload.lp_counts.every((value) => value > 0), `${fixture.id}.lp_counts must be positive`);
+  assert(JSON.stringify(payload.workloads) === JSON.stringify(['des', 'abm', 'mixed']), `${fixture.id}.workloads must cover des, abm and mixed`);
+  assertNonNegativeSafeInteger(payload.horizon_ticks, `${fixture.id}.horizon_ticks`);
+  assertNonNegativeSafeInteger(payload.lookahead_ticks, `${fixture.id}.lookahead_ticks`);
+  assert(payload.lookahead_ticks > 0 && payload.horizon_ticks > payload.lookahead_ticks, `${fixture.id} needs positive lookahead below horizon`);
+  assertString(payload.consumer, `${fixture.id}.consumer`);
+  assertString(payload.requirement, `${fixture.id}.requirement`);
+}
+
 export function sortEvents(events) {
   return [...events].sort((left, right) => {
     const leftTicks = left.at_ticks ?? 0;
@@ -289,12 +306,21 @@ export function validateFixturePayload(fixture, root = process.cwd()) {
   else if (fixture.id === 'zero_delay_guard_v1') assertZeroDelayGuardPayload(payload, fixture);
   else if (fixture.id === 'rng_reproducibility_v1') assertRngPayload(payload, fixture);
   else if (fixture.id === 'vvuq_scenario_replay_v1') assertVvuqPayload(payload, fixture, root);
+  else if (fixture.id === 'pdes_conservative_parity_v1') assertPdesParityPayload(payload, fixture);
   else assertBaseFixture(payload, fixture);
 
   return payload;
 }
 
 export function runFixture(fixture, payload) {
+  if (fixture.id === 'pdes_conservative_parity_v1') {
+    return {
+      validation_scope: 'fixture-contract-only',
+      native_consumer: payload.consumer,
+      native_command: 'cargo test -p kairo-ecs-pdes --features pdes --test production_parity',
+    };
+  }
+
   if (fixture.id === 'scheduler_ordering_v1') {
     const ordered = sortEvents(payload.events);
     const observedKinds = ordered.map((event) => event.kind);

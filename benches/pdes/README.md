@@ -1,29 +1,21 @@
-# PDES Benchmarks
+# PDES benchmark
 
-This directory is reserved for Track 34 scaling benchmarks. The current
-repository evidence is a deterministic benchmark-smoke harness in
-`crates/kairo-ecs-pdes/src/lib.rs`, not a wall-clock throughput benchmark.
+Maturity: preview local wall-clock evidence. The executable measures the
+single-host `ConservativeRuntime` and a sequential `kairo-ecs-core::Scheduler`
+baseline over matched deterministic event transitions. Timing includes setup,
+initial scheduling, dispatch, and state extraction. PDES samples include real
+scoped OS thread and round synchronization costs.
 
-Planned matrix:
+The benchmark runs 4, 8, 16, and 32 LPs with fixed strong and weak workloads,
+checks final-state parity on every repetition, and records throughput plus
+runtime counters. See [the result and reproduction contract](../../docs/pdes/benchmark-results.md).
+`production.rs` owns the executable; `collect_evidence.py` captures immutable
+raw output and the Track 46 environment manifest after source commit/ref
+verification. It reports local process measurements and does not certify
+multi-node or cluster scaling.
 
-- LP counts: 4, 8, 16, 32.
-- Workloads: entity-spawn-heavy, event-heavy, query-heavy, mixed.
-- Required checks: sequential final-state parity, ticks per second, GVT
-  progression rate.
+Collector negative checks run with:
 
-Benchmark-smoke coverage is complete for 4/8/16/32 LP logical configurations
-when `scaling_smoke_samples(&[4, 8, 16, 32])` passes. Hardware speedup results
-must not be marked complete until the suite is run on controlled hardware with
-at least four physical cores.
-
-Current validation:
-
-```powershell
-cargo test --manifest-path crates/kairo-ecs-pdes/Cargo.toml --features pdes
+```sh
+python3 -m unittest benches.pdes.test_collect_evidence -v
 ```
-
-Until Track 12 integrates a real benchmark target, PDES evidence is limited to
-the local validator in `kairo-ecs-pdes`: final-state parity, GVT progression,
-protocol traffic counts, 4/8/16/32 LP benchmark-smoke samples, Time Warp spike
-documentation, and deadlock-smoke completion. Do not publish speedup claims from
-this directory.

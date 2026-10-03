@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -34,5 +36,18 @@ const braceExpansionPath = createRequire(npmPackagePath).resolve('brace-expansio
 const braceExpansionPackage = createRequire(npmPackagePath)(braceExpansionPath);
 assert.equal(dirname(braceExpansionPath), resolve(scriptDirectory, 'node_modules/brace-expansion'));
 assert.equal(braceExpansionPackage.version, '5.0.12');
+
+const requireFromFetch = createRequire(requireFromNpm.resolve('make-fetch-happen/package.json'));
+for (const consumer of [requireFromNpm, requireFromFetch]) {
+  const cachePath = consumer.resolve('http-cache-semantics');
+  assert.ok([
+    resolve(scriptDirectory, 'node_modules/http-cache-semantics/index.js'),
+    resolve(scriptDirectory, 'node_modules/npm/node_modules/http-cache-semantics/index.js'),
+  ].includes(cachePath), 'cache consumer must resolve an expected installed package path');
+  assert.equal(consumer('http-cache-semantics/package.json').version, '4.2.0');
+  assert.equal(createHash('sha256').update(readFileSync(cachePath)).digest('hex'),
+    'fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76',
+    'npm consumers must resolve the reviewed local cache source mitigation');
+}
 
 console.log(`npm ${npmPackage.version} resolves locked, top-level dependencies correctly`);

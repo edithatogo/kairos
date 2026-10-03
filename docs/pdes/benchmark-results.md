@@ -1,34 +1,97 @@
-# PDES Benchmark Results
+# PDES benchmark evidence
 
-Local deterministic scaling smoke evidence now exists for the required 4, 8,
-16, and 32 LP configurations through `scaling_smoke_samples` in
-`crates/kairo-ecs-pdes/src/lib.rs`. The smoke run compares the sequential oracle
-with the partitioned reference, checks final-state parity, confirms GVT sample
-coverage, and records remote-event/null-message counts.
+Maturity: preview local wall-clock evidence.
 
-No hardware-speedup or hardware-parity claim is made in this slice.
+Track 47 now has a bounded wall-clock benchmark for the single-host
+`ConservativeRuntime`. The executable compares the Rust core `Scheduler` with
+the PDES runtime using the same event transitions and final-state check. Each
+timing includes scheduler/runtime construction, initial event scheduling,
+dispatch, and state extraction; PDES timing also includes scoped OS thread
+creation and round synchronization.
 
-Required scenarios:
+The workload matrix has four LP counts (4, 8, 16, 32) and two profiles:
 
-- LP counts: 4, 8, 16, 32.
-- Workloads: entity-spawn-heavy, event-heavy, query-heavy, mixed.
-- Metrics: ticks per second, final-state parity, GVT progression rate.
+- **Strong scaling:** 2,048 initial events total at every LP count.
+- **Weak scaling:** 128 initial events per LP.
 
-Current local smoke evidence:
+Each initial event updates its source LP and emits one event to its successor
+on a directed ring at the next tick. A fixed SplitMix64 seed generates event
+payloads. Each case has one warm-up per implementation and alternating measured
+order across repetitions. Raw elapsed nanoseconds, derived processed events per
+second, final state parity, processed and emitted event totals, null messages,
+scheduling rounds, final GVT, and observed worker count are retained per case.
+The baseline is a single-threaded scheduler using the same process callback and
+event payload; it is not a distributed or third-party simulator comparison.
 
-| LPs | Ticks | Entities/LP | Expected evidence |
-|---:|---:|---:|---|
-| 4 | 256 | 4 | final-state parity, GVT samples, remote events, null messages |
-| 8 | 256 | 4 | final-state parity, GVT samples, remote events, null messages |
-| 16 | 256 | 4 | final-state parity, GVT samples, remote events, null messages |
-| 32 | 256 | 4 | final-state parity, GVT samples, remote events, null messages |
+Build and run the bounded executable directly:
 
-The deterministic smoke suite is not a throughput benchmark. Throughput targets
-remain unclaimed until run on controlled hardware with at least four physical
-cores.
-
-Validation command for the current scaffold:
-
-```powershell
-cargo test --manifest-path crates/kairo-ecs-pdes/Cargo.toml --features pdes
+```sh
+rustup run 1.98.1 cargo bench -p kairo-ecs-pdes --bench production --features pdes -- --seed 472026 --repetitions 5
 ```
+
+For immutable Track 46 evidence, run the collector from a clean tested commit
+after pushing that commit. The remote tracking ref must resolve to the supplied
+commit SHA:
+
+```sh
+python3 benches/pdes/collect_evidence.py \
+  --commit-sha "$(git rev-parse HEAD)" \
+  --pushed-ref refs/remotes/origin/BRANCH \
+  --evidence-class live-hpc \
+  --seed 472026 --repetitions 5 --reviewer "REVIEWER"
+```
+
+The collector refuses dirty source inputs, checks that the source tree remains
+unchanged during collection, validates all eight cases and their timing,
+throughput, event-count, worker, GVT, null-message, and parity fields, then
+creates a new directory under `benches/pdes/evidence/`. It never overwrites a
+prior bundle. The manifest records the checked-out commit and remotely verified
+ref, CPU model and topology, memory size and topology, operating system, Rust
+compiler/toolchain, exact command, repository-relative working directory, child
+exit status, selected environment variables, canonical scenario input hash, topology,
+seed, feature flag, raw result path, and its SHA-256 checksum. Set
+`--evidence-class scaffold --pushed-ref local-only` for a local collection that
+is not tied to a remotely pushed ref.
+
+The measured runtime uses real OS threads on one host. Its worker count records
+the maximum spawned LP worker cohort in a round, rather than measured
+simultaneous CPU execution. These runs do not establish
+multi-node behavior, cluster-scheduler behavior, HPC parity, or certified
+weak/strong scaling. Thread count can exceed physical core count at 32 LPs; the
+collector records the host core topology so those timings remain interpretable.
+No speedup or superiority claim is made from this benchmark family. Track 55
+owns the cross-runtime and HPC scaling certification rollup.
+
+Collector guard self-checks:
+
+```sh
+python3 -m unittest benches.pdes.test_collect_evidence -v
+```
+
+
+`input_scenario_sha256` identifies the compact UTF-8 JSON bytes of the input
+scenario with sorted keys and ASCII escapes. The scenario includes the seed,
+LP/workload matrix, repetition/warmup parameters and payload generator; its
+implementation is fixed by the recorded source commit. It is a scenario hash,
+not a separately measured digest of every generated event payload.
+`working_directory` is `.` relative to that commit's repository root, and
+`benchmark_exit_status` records the completed child benchmark process.
+
+## Reviewed host capture - 2026-10-03
+
+Final source: `45f01c49be1d15cefb64ad48e59ee0a7e4146b3e`, verified on the remote branch before capture. Host: Apple M1 Max, 10 physical/logical CPUs, 32 GiB memory, APFS. Every configuration retained five raw samples and passed final-state parity. The 16/32-LP profiles exceed the host CPU count.
+
+| Profile | LPs | Median sequential events/s | Median PDES events/s |
+| --- | ---: | ---: | ---: |
+| strong | 4 | 4,433,500 | 12,843 |
+| strong | 8 | 4,728,198 | 12,997 |
+| strong | 16 | 4,644,865 | 16,444 |
+| strong | 32 | 4,674,465 | 23,004 |
+| weak | 4 | 5,019,608 | 6,728 |
+| weak | 8 | 4,847,337 | 11,562 |
+| weak | 16 | 4,621,940 | 17,811 |
+| weak | 32 | 4,616,512 | 21,170 |
+
+[Raw results](../../benches/pdes/evidence/20261003T023735Z-45f01c49be-534c5f9f/benchmark-result.json), [environment](../../benches/pdes/evidence/20261003T023735Z-45f01c49be-534c5f9f/benchmark-environment.json), and [registered manifest](../../conductor/hpc-evidence/manifests/track47-conservative-production-live.json). Raw SHA-256: `sha256:69003d380f88dfe48249ca02d3beff8da18ae0f7c30f989976196a03c12e121c`. The earlier `77797709da` bundle is retained as an initial capture; it lacks the explicit cwd/exit/scenario-hash fields and is not the acceptance bundle.
+
+This workload is substantially slower under PDES because each work round creates and joins OS workers. These measurements establish actual execution and parity, and do not establish a performance advantage.

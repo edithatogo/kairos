@@ -817,19 +817,25 @@ entries:
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 43 is Done as an archived guarded publication/runtime-evidence scaffold; live Docker, Kubernetes, Slurm, AWS/GCP Batch, Azure KairoECS container/scenario evidence, protected publication, and release-manager approval remain blocked release gates."
   - track_id: "47"
-    phase: "track-creation"
-    state: pending
+    phase: "production-runtime-review"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 47 was created as the production conservative PDES runtime follow-up. The first implementation slice adds typed conservative lookahead enforcement in the local PDES scheduler; full parity, partitioning, deadlock, benchmark, and live evidence work remains open."
-    fixes_applied: false
+    review_result: "Conservative runtime and immutable live-host evidence accepted. Local full native CI 414 tests/92.59% coverage and MSRV pass; reviewed mitigation and 19 classifier/runner tests pass. All 19 hosted workflow runs at 8a6bf66 succeeded. Independent security review verified retained raw audit exit 1 accepted only through human-approved EXC-193, 194 strict registry signatures, and both patched-cache behavioral suites. Final closeout metadata is subject to fresh hosted checks before merge."
+    fixes_applied: true
     validation_commands:
+      - "Pinned Rust 1.98.1 just ci: 414 tests pass; core coverage 92.59%; fmt, clippy, docs and dependency policy pass"
+      - "rustup run 1.76.0 cargo check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked"
+      - "python3 -m unittest discover -s benches/pdes -p test_*.py -v: 13 collector checks pass"
+      - "Five-repeat live CPU capture: command, cwd, child exit status, source/toolchain/input hashes and raw checksum in conductor/hpc-evidence/manifests/track47-conservative-production-live.json"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-pdes --features pdes"
-    git_status: "lookahead and deterministic partition-plan commits pushed; strict git closeout passed"
-    commit_sha: "b6f9bd9293068f4d47fd636867d02aa90825de08"
-    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
-    next_phase_decision: "Track 47 is In Progress after the lookahead and deterministic partition-plan slices; continue with full scheduler integration, GVT/deadlock stress, benchmark, and evidence-manifest tasks before In Review."
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "python3 -m unittest discover -s tests -p test_npm_audit*.py -v: 19 tests pass"
+      - "GitHub Actions exact head 8a6bf66: all 19 workflow runs success; Package Dry Runs 37096693640"
+      - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree: exit 0 at 8a6bf66"
+    git_status: "Reviewed source clean and pushed at 8a6bf66; strict clean Git closeout passed; closeout metadata awaits final-head CI and merge"
+    commit_sha: "8a6bf6673e6f4a8226408550b4c7ec11b32fb347"
+    pushed_ref: "origin/codex/kairos-implementation-programme"
+    next_phase_decision: "Track 47 implementation accepted. Merge only after final metadata-head Actions pass; then proceed to Track 48. EXC-193 does not authorize other PRs, RC/1.0 or publication."
   - track_id: "48"
     phase: "track-creation"
     state: pending

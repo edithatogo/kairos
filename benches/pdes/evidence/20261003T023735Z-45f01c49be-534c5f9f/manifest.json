@@ -1,0 +1,87 @@
+{
+  "capability": "Local strong/weak scaling timing and sequential final-state parity for the conservative PDES runtime",
+  "commit_sha": "45f01c49be1d15cefb64ad48e59ee0a7e4146b3e",
+  "evidence_class": "live-hpc",
+  "hardware": {
+    "accelerator_model": "none; this benchmark exercises CPU threads only",
+    "cpu_model": "Apple M1 Max",
+    "cpu_topology": "10 physical cores; 10 logical CPUs",
+    "driver": "none; no accelerator driver is used by this benchmark",
+    "memory_topology": "34,359,738,368 bytes total; NUMA topology not exposed by this macOS host"
+  },
+  "pushed_ref": "refs/remotes/origin/codex/kairos-implementation-programme",
+  "result": {
+    "checksum": "sha256:69003d380f88dfe48249ca02d3beff8da18ae0f7c30f989976196a03c12e121c",
+    "expected": "All 8 strong/weak configurations complete with sequential final-state parity; raw timing samples and runtime counters are recorded.",
+    "observed": "All 8 configurations reported parity=true. Single-host local CPU/thread runtime measurement; dirty_tree=false. This is not distributed HPC parity certification.",
+    "raw_artifact_path": "benches/pdes/evidence/20261003T023735Z-45f01c49be-534c5f9f/benchmark-result.json"
+  },
+  "review": {
+    "evidence_date": "2026-10-03",
+    "reviewer": "Codex Track 47 substantive review"
+  },
+  "runtime": {
+    "command": "rustup run 1.98.1 cargo bench -p kairo-ecs-pdes --bench production --features pdes -- --seed 472026 --repetitions 5",
+    "environment": {
+      "benchmark_exit_status": 0,
+      "command": "rustup run 1.98.1 cargo bench -p kairo-ecs-pdes --bench production --features pdes -- --seed 472026 --repetitions 5",
+      "cpu_count_logical": 10,
+      "environment_variables": {},
+      "filesystem": "apfs; local repository filesystem",
+      "git_status_porcelain": "?? benches/pdes/evidence/20261003T023344Z-77797709da-5f5d46e7/benchmark-command.txt\n?? benches/pdes/evidence/20261003T023344Z-77797709da-5f5d46e7/benchmark-environment.json\n?? benches/pdes/evidence/20261003T023344Z-77797709da-5f5d46e7/benchmark-result.json\n?? benches/pdes/evidence/20261003T023344Z-77797709da-5f5d46e7/benchmark-stderr.txt\n?? benches/pdes/evidence/20261003T023344Z-77797709da-5f5d46e7/manifest.json",
+      "input_hash_scope": "canonical input_scenario JSON; sorted keys, compact separators, ASCII escapes, UTF-8 bytes; payload generator defined by source commit",
+      "input_scenario_sha256": "sha256:b6ea6eebb076a028875eb42a94ec28d0bc149023af7d1a62085dbf60a92c0863",
+      "memory_bytes": 34359738368,
+      "physical_cpu_count": 10,
+      "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+      "python": "3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]",
+      "runtime_workers": "worker_count is the maximum spawned LP worker cohort in one round; it does not measure simultaneous CPU execution",
+      "source_tree_dirty": false,
+      "source_tree_sha256": "d46012d74d26835e8caa7b5570972517b30d16b076dc4af09c9392bb9d811b5e",
+      "started_at_utc": "2026-10-03T02:37:18+00:00",
+      "threading": "runtime-owned OS threads; no external transport",
+      "working_directory": ".",
+      "working_tree_state": "clean tested commit; generated evidence is stored separately"
+    },
+    "feature_flags": [
+      "pdes"
+    ],
+    "input_scenario": {
+      "lp_counts": [
+        4,
+        8,
+        16,
+        32
+      ],
+      "payload_generator": "SplitMix64; implementation fixed by source commit",
+      "repetitions": 5,
+      "scaling_profiles": {
+        "strong": "2048 initial events total across LP counts",
+        "weak": "128 initial events per LP"
+      },
+      "seed": 472026,
+      "topology": "directed ring; each LP sends to its successor",
+      "warmup_runs": 1
+    }
+  },
+  "schema_version": "kairoecs.hpc.evidence.v1",
+  "storage": {
+    "filesystem_or_object_store": "apfs; local repository filesystem"
+  },
+  "system": {
+    "operating_system": "macOS-27.0-arm64-arm-64bit-Mach-O"
+  },
+  "task_id": "3.2",
+  "toolchain": {
+    "compiler": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-apple-darwin\nrelease: 1.98.1\nLLVM version: 22.1.8",
+    "mpi_implementation": "not used; in-process local runtime",
+    "rust_toolchain": "1.98.1",
+    "scheduler": "local operating-system thread scheduler; no cluster scheduler"
+  },
+  "track_id": "47",
+  "waiver": {
+    "expires": "none",
+    "owner": "none",
+    "status": "none"
+  }
+}

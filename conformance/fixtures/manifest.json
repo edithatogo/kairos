@@ -59,6 +59,22 @@
       ]
     },
     {
+      "id": "pdes_conservative_parity_v1",
+      "status": "ready",
+      "kind": "pdes",
+      "source": "pdes_conservative_parity_v1.json",
+      "consumers": [
+        "47",
+        "49",
+        "55"
+      ],
+      "assertions": [
+        "actual sequential core scheduler and conservative runtime agree on DES, ABM and mixed owned final states",
+        "GVT is monotonic and reaches the inclusive horizon",
+        "Node validates fixture inputs; the Rust production_parity integration test executes native runtime assertions"
+      ]
+    },
+    {
       "id": "des_resource_queue_v1",
       "status": "planned",
       "kind": "des",

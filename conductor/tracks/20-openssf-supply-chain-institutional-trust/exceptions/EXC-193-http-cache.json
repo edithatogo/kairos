@@ -1,0 +1,66 @@
+{
+  "id": "EXC-193",
+  "status": "approved",
+  "classification": "temporary_operational_exception",
+  "pr": "https://github.com/edithatogo/kairos/pull/193",
+  "source_commit": "5d23e23050926c69403d6f098b10d34e13f058b3",
+  "control": "bootstrap npm moderate audit in Package Dry Runs",
+  "raw_audit_command": [
+    "node",
+    "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+    "audit",
+    "--prefix",
+    "scripts/bootstrap-node-tools",
+    "--audit-level=moderate",
+    "--json"
+  ],
+  "raw_audit_exit": 1,
+  "audit_report_version": 2,
+  "advisory": {
+    "id": "GHSA-ch52-4w7c-c8xp",
+    "source": 1240991,
+    "url": "https://github.com/advisories/GHSA-ch52-4w7c-c8xp",
+    "package": "http-cache-semantics",
+    "version": "4.2.0",
+    "severity": "high",
+    "range": "<=4.2.0"
+  },
+  "finding_count": 19,
+  "vulnerabilities_sha256": "0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8",
+  "audit_baseline_sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c",
+  "raw_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "file_sha256": {
+    "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
+    "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "a928e08eacca08e497199ab58747ff751041643748a0f53ff988dbd7d2d0aa91",
+    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "3757fcb8d2bc16ba842cc5f3868c1f09de591ef50a599f56c83ab1d51397b9a4",
+    "tests/test_http_cache_patch.py": "542a970f0cf79242334b274cd93ec60ee32fb05b375d2302591cb822550479b9",
+    "tests/http-cache-security-regression.mjs": "298c3537d14c19afdc188cde554596d4f2fc4f95c56d387b79af9ab851f510b2"
+  },
+  "patched_index_sha256": "fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76",
+  "expires_at": "2026-10-10T00:00:00+10:00",
+  "expires_on_stage_advance": true,
+  "allowed_contexts": [
+    "development_pr_193",
+    "alpha_package_dry_run",
+    "beta_package_dry_run"
+  ],
+  "excluded_contexts": [
+    "release_candidate",
+    "1.0",
+    "publication",
+    "other_dependency_trees",
+    "website_dependency_tree"
+  ],
+  "approvals": {
+    "security_owner": "human sole maintainer (this chat; repository account edithatogo)",
+    "release_owner": "human sole maintainer (this chat; repository account edithatogo)",
+    "classification_accepted": true,
+    "approved_at": "2026-10-03T14:07:09.417026+10:00",
+    "approval_evidence": "Direct user message \"I approve\" in chat 01a0f5f1-3c77-7f30-a8f1-14c1fcaa8814 responding to EXC-193 classification and dual-owner approval request; sole-maintainer dual-role assumption stated in commentary."
+  },
+  "follow_up": "EXC-193-http-cache-decision.md",
+  "activation": "approved and independently verified locally and in Package Dry Runs 37096693640 at PR head 8a6bf6673e6f4a8226408550b4c7ec11b32fb347; final closeout metadata checks and merge pending",
+  "required_pull_request": 193,
+  "scope_matching": "required_pull_request AND allowed_context; never an OR allowlist",
+  "head_ref": "codex/kairos-implementation-programme"
+}

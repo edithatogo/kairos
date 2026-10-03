@@ -1,5 +1,9 @@
 # KairoECS Conductor Status
 
+## Track 47 implementation accepted - 2026-10-03
+
+Track 47 is Done for the event-owned single-host conservative runtime. Actual core Scheduler parity, typed protocol errors, 8-LP 10,000-tick progress, full local native CI and immutable five-repeat 4/8/16/32-LP CPU measurements are accepted. All 19 hosted workflow runs passed at `8a6bf6673e6f4a8226408550b4c7ec11b32fb347`; strict clean Git closeout passed. Human-approved EXC-193 permits only the exact retained raw cache advisory after verified source mitigation for PR #193 development/alpha-beta dry runs, expiring 00:00 Brisbane 10 October. RC, 1.0, publication and other PRs remain excluded. Final closeout metadata requires fresh head checks before merge; Track 48 waits for actual merge. No speedup or distributed HPC certification is claimed.
+
 ## Track 42 Archive Review - 2026-06-25
 
 Track 42 is archived as Done for the repo-side guarded language/package registry publication and provenance gate. The publication manifest, readiness validator, default-off workflow dispatch, dry-run helper, protected main-only publish job, release-publication environment guard, OIDC/provenance permissions, package manifest verification, and Track 44 code-health floor pass locally.

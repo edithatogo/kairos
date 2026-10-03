@@ -8,6 +8,7 @@ import {
   parseConformanceArgs,
   runConformanceCli,
   runConformance,
+  validateFixturePayload,
 } from './runner.mjs';
 
 const ROOT = process.cwd();
@@ -15,19 +16,22 @@ const ROOT_MANIFEST = JSON.parse(readFileSync(join(ROOT, 'conformance/fixtures/m
 
 const fullReport = runConformance(ROOT);
 assert.equal(fullReport.status, 'ok');
-assert.equal(fullReport.validated_fixtures, 5);
+assert.equal(fullReport.validated_fixtures, 6);
 assert.deepEqual(fullReport.selected_fixtures, [
   'scheduler_ordering_v1',
   'scheduler_cancellation_v1',
   'rng_reproducibility_v1',
   'vvuq_scenario_replay_v1',
   'zero_delay_guard_v1',
+  'pdes_conservative_parity_v1',
 ]);
 assert.equal(fullReport.results[0].kind, 'ordering');
 assert.deepEqual(fullReport.results[0].observed.observed_kind_order, [1, 2, 4, 3]);
 assert.equal(fullReport.results[4].id, 'zero_delay_guard_v1');
 assert.deepEqual(fullReport.results[4].observed.observed_kind_order, [1, 2, 5, 10]);
 assert.equal(fullReport.results[4].observed.zero_delay_event_count, 4);
+assert.equal(fullReport.results[5].observed.validation_scope, 'fixture-contract-only');
+assert.equal(fullReport.results[5].observed.native_consumer, 'crates/kairo-ecs-pdes/tests/production_parity.rs');
 
 const filteredReport = runConformance(ROOT, { fixtureIds: ['rng_reproducibility_v1'] });
 assert.equal(filteredReport.validated_fixtures, 1);
@@ -278,6 +282,23 @@ try {
   rmSync(unsafeRngRoot, { recursive: true, force: true });
 }
 
+// Corruption of the native parity case set must not silently shrink its scope.
+const pdesRoot = mkdtempSync(join(tmpdir(), 'kairo-pdes-fixture-'));
+try {
+  const descriptor = ROOT_MANIFEST.fixtures.find((fixture) => fixture.id === 'pdes_conservative_parity_v1');
+  const original = JSON.parse(readFileSync(join(ROOT, 'conformance/fixtures', descriptor.source), 'utf8'));
+  for (const [mutated, error] of [
+    [{ ...original, workloads: ['des', 'abm'] }, /must cover des, abm and mixed/],
+    [{ ...original, seeds: [7, 7] }, /seeds must be unique/],
+    [{ ...original, lookahead_ticks: 0 }, /needs positive lookahead below horizon/],
+  ]) {
+    writeTextFile(pdesRoot, `conformance/fixtures/${descriptor.source}`, JSON.stringify(mutated));
+    assert.throws(() => validateFixturePayload(descriptor, pdesRoot), error);
+  }
+} finally {
+  rmSync(pdesRoot, { recursive: true, force: true });
+}
+
 console.log(JSON.stringify({
   status: 'ok',
   validator: 'tests/conformance/runner-self-test.mjs',
@@ -290,5 +311,6 @@ console.log(JSON.stringify({
     'runner CLI --fixture',
     'zero-delay guard fixture support',
     'unsafe RNG integer rejection',
+    'native PDES case-set, duplicate-seed and lookahead corruption rejection',
   ],
 }, null, 2));

@@ -1,0 +1,12 @@
+{
+  "fixture": "pdes_conservative_parity_v1",
+  "version": 1,
+  "lp_counts": [2, 8],
+  "workloads": ["des", "abm", "mixed"],
+  "seeds": [7, 47, 24301],
+  "horizon_ticks": 200,
+  "lookahead_ticks": 2,
+  "requirement": "The production conservative runtime and actual sequential core scheduler produce identical owned LP final state for deterministic FIFO DES service, evolving ABM agents with neighbor credits, and mixed execution. GVT is monotonic and reaches the inclusive horizon.",
+  "consumer": "crates/kairo-ecs-pdes/tests/production_parity.rs",
+  "maturity": "preview"
+}

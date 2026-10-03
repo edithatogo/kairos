@@ -1,5 +1,9 @@
 # LogicalProcess Trait
 
+Maturity: preview compatibility scaffold. The production event-owned API is
+[ConservativeRuntime](production-conservative-runtime.md); the descriptions
+below retain the Track 34 contract for existing callers.
+
 `LogicalProcess` is the unit of PDES partitioning. Each LP owns a `WorldSegment`,
 processes local events up to a requested tick, emits remote events for other LPs,
 receives inbound remote events, and advances to the latest safe time chosen by
