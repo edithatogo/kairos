@@ -852,7 +852,7 @@ entries:
     git_status: "Local implementation committed; supplemental gates passed at7a432ab. Final local preparation and forward workspace1.76 check passed atc87df47; development branch pushed at0a3b86a and draft PR199 opened; initial exact-head Actions passed native/binding/benchmark/CodeQL lanes but Conductor validation and PR-scoped npm audit failed. No phase or track status advancement; matching1.76 PDES94 and compiler-bound68b8d7a benchmark accepted."
     commit_sha: "3cd6d56ed98d39d311fe19f4d88857f43bfe6da6, ec9828ebcfc86fd86ae9f512e02b252202965a8b, 7a432ab46c3bfa5f3917f1cce0f4545fac39f649, 68b8d7a311b7acaa099a0f1c4aec4933f4b98a23"
     pushed_ref: "origin/codex/kairos-track48-optimistic-runtime"
-    next_phase_decision: "Remain In Progress. Compiler-bound MSRV/benchmark evidence accepted; complete exact-head hosted/security gates; retain live distributed rollback gate and unchanged Track49 dependency. EXC-193 covers PR193 only. Explicit accepted phase/interface scheduling decision is required before Track49 production dispatch."
+    next_phase_decision: "Remain In Progress. Compiler-bound MSRV/benchmark evidence accepted; complete exact-head hosted/security gates; retain live distributed rollback gate and unchanged Track49 dependency. EXC-193 covers PR193 only. Explicit accepted phase/interface scheduling decision is required before Track49 production dispatch. Human approved conditional Track49 production-entry ADR on4October2026; PR199 merge/security/interface/packet conditions remain pending. See Track29 adr-track49-phase-entry-20261004.md; full dependency/release gates unchanged."
   - track_id: "49"
     phase: "contract-baseline"
     state: pending
@@ -867,7 +867,7 @@ entries:
     git_status: "clean after pushed evidence commit fab9241a; strict git closeout passed"
     commit_sha: "83c1261cd3b3a1f1ed0a7da683c69f6960db1c35"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
-    next_phase_decision: "Track 49 is In Progress after the launch-contract and migration-metadata baseline; PR checks passed after push, but real rsmpi, tonic/prost, spawned process tests, and live evidence remain required before In Review."
+    next_phase_decision: "Track 49 is In Progress after the launch-contract and migration-metadata baseline; PR checks passed after push, but real rsmpi, tonic/prost, spawned process tests, and live evidence remain required before In Review. Human approved conditional Track49 production-entry ADR on4October2026; PR199 merge/security/interface/packet conditions remain pending. See Track29 adr-track49-phase-entry-20261004.md; full dependency/release gates unchanged."
   - track_id: "50"
     phase: "contract-baseline"
     state: pending

@@ -63,3 +63,7 @@ retains wire codecs, MPI/gRPC delivery and distributed failure behavior. Core EC
 debug, Arrow writers and launch infrastructure remain under their existing
 owners. Any interface changes return to both owners for review. This proposal
 needs the coordinator/user scheduling decision before production dispatch.
+
+## Scheduling decision recorded
+
+The 4 October2026 human approval is recorded in ../29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md (resolve from conductor/tracks). It approves only the conditional production-entry disposition; PR199 merge, exact-head gates and the reviewed codec packet remain unmet conditions. This draft wire requirement review does not certify an encoding or authorize current dispatch.
