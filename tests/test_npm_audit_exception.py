@@ -11,6 +11,7 @@ import unittest
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,25 +44,29 @@ class NpmAuditExceptionPolicyTests(unittest.TestCase):
         cls.proposed_policy = json.loads(
             (EXCEPTIONS / "EXC-193-http-cache.json").read_text()
         )
+        cls.exc199_policy = json.loads(
+            (EXCEPTIONS / "EXC-199-http-cache.json").read_text()
+        )
+        cls.exc199_baseline = json.loads(
+            (EXCEPTIONS / "evidence/EXC-199/audit/pr199-0a3b86a/raw-audit.json").read_text()
+        )
+        cls.policy_module = _load_policy_module()
         cls.now = datetime(2026, 10, 4, 12, 0, tzinfo=ZoneInfo("Australia/Brisbane"))
 
     def approved_policy(self):
-        policy = copy.deepcopy(self.proposed_policy)
-        policy["status"] = "approved"
-        policy["classification"] = "temporary_operational_exception"
-        approvals = policy["approvals"]
-        approvals.update(
-            {
-                "security_owner": "security-owner",
-                "release_owner": "release-owner",
-                "classification_accepted": True,
-                "approved_at": "2026-10-03T00:00:00+10:00",
-                "approval_evidence": "userapproval",
-            }
-        )
-        return policy
+        # Use the immutable approved record. Mutated copies must fail its pin.
+        return copy.deepcopy(self.proposed_policy)
 
-    def classify(self, report=None, raw_exit=1, policy=None, context="development_pr_193", pull_request=193):
+    def classify(
+        self,
+        report=None,
+        raw_exit=1,
+        policy=None,
+        context="development_pr_193",
+        pull_request=193,
+        repository="edithatogo/kairos",
+        head_ref="codex/kairos-implementation-programme",
+    ):
         return self.classifier(
             copy.deepcopy(self.baseline if report is None else report),
             raw_exit,
@@ -69,6 +74,8 @@ class NpmAuditExceptionPolicyTests(unittest.TestCase):
             context,
             pull_request,
             now=self.now,
+            repository=repository,
+            head_ref=head_ref,
         )
 
     def assert_rejected(self, **kwargs):
@@ -152,7 +159,9 @@ class NpmAuditExceptionPolicyTests(unittest.TestCase):
     def test_scope_requires_both_the_bound_pr_and_an_allowed_context(self):
         self.assert_rejected(pull_request=194)
         self.assert_rejected(context="development_pr_194")
-        self.assert_rejected(pull_request=True)
+        for invalid_pr in (True, 193.0, "193"):
+            with self.subTest(invalid_pr=invalid_pr):
+                self.assert_rejected(pull_request=invalid_pr)
         for context in ("publication", "release_candidate", "1.0"):
             with self.subTest(context=context):
                 self.assert_rejected(context=context)
@@ -264,6 +273,69 @@ class NpmAuditExceptionPolicyTests(unittest.TestCase):
         policy = self.approved_policy()
         policy["required_pull_request"] = True
         self.assert_rejected(policy=policy, pull_request=True)
+
+
+    def test_pr199_approved_classification_remains_blocked_by_stale_fallback_gap(self):
+        with self.assertRaisesRegex(ValueError, "stale-fallback gap"):
+            self.classifier(
+                copy.deepcopy(self.exc199_baseline),
+                1,
+                copy.deepcopy(self.exc199_policy),
+                "development_pr_199",
+                199,
+                now=self.now,
+                repository="edithatogo/kairos",
+                head_ref="codex/kairos-track48-optimistic-runtime",
+            )
+
+    def test_pr199_requires_exact_repository_pr_ref_and_context(self):
+        for repository, pull_request, head_ref, context in (
+            ("attacker/kairos", 199, "codex/kairos-track48-optimistic-runtime", "development_pr_199"),
+            ("edithatogo/kairos", 193, "codex/kairos-track48-optimistic-runtime", "development_pr_199"),
+            ("edithatogo/kairos", 199, "main", "development_pr_199"),
+            ("edithatogo/kairos", 199, "codex/kairos-track48-optimistic-runtime", "development_pr_193"),
+            ("edithatogo/kairos", 199, "codex/kairos-track48-optimistic-runtime", "publication"),
+        ):
+            with self.subTest(repository=repository, pull_request=pull_request, head_ref=head_ref, context=context):
+                with self.assertRaises(ValueError):
+                    self.classifier(
+                        copy.deepcopy(self.exc199_baseline), 1, copy.deepcopy(self.exc199_policy), context,
+                        pull_request, now=self.now, repository=repository, head_ref=head_ref,
+                    )
+
+    def test_hypothetical_reviewed_pr199_record_would_classify_only_with_exact_identity(self):
+        # This synthetic record is only a classifier positive fixture. It does
+        # not change the committed EXC-199 blocked status or its proof bytes.
+        candidate = copy.deepcopy(self.exc199_policy)
+        candidate["mitigation_review_status"] = "reviewed"
+        candidate["mitigation_review_evidence"] = "test fixture: future independent review accepted"
+        canonical = json.dumps(candidate, sort_keys=True, separators=(",", ":")).encode()
+        record = copy.deepcopy(self.policy_module._POLICY_RECORDS["EXC-199"])
+        record["record_sha256"] = hashlib.sha256(canonical).hexdigest()
+        record["mitigation_review_status"] = "reviewed"
+        with mock.patch.dict(self.policy_module._POLICY_RECORDS, {"EXC-199": record}):
+            result = self.policy_module.classify(
+                copy.deepcopy(self.exc199_baseline), 1, candidate, "development_pr_199", 199,
+                now=self.now, repository="edithatogo/kairos",
+                head_ref="codex/kairos-track48-optimistic-runtime",
+            )
+        self.assertEqual(result, "approved_temporary_exception")
+        self.assertEqual(self.exc199_policy["mitigation_review_status"], "blocked_stale_fallback_gap")
+
+    def test_pr199_immutable_policy_or_evidence_fingerprint_mutation_rejects(self):
+        for mutate in (
+            lambda policy: policy.__setitem__("mitigation_review_status", "reviewed"),
+            lambda policy: policy.__setitem__("vulnerabilities_sha256", "0" * 64),
+            lambda policy: policy.__setitem__("expires_at", "2027-10-10T00:00:00+10:00"),
+        ):
+            candidate = copy.deepcopy(self.exc199_policy)
+            mutate(candidate)
+            with self.assertRaises(ValueError):
+                self.classifier(
+                    copy.deepcopy(self.exc199_baseline), 1, candidate, "development_pr_199", 199,
+                    now=self.now, repository="edithatogo/kairos",
+                    head_ref="codex/kairos-track48-optimistic-runtime",
+                )
 
 
 if __name__ == "__main__":
