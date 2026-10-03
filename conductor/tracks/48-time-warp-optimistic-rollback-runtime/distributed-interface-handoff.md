@@ -9,7 +9,7 @@ rollback evidence from their integration. The proposed resolution is an explicit
 phase handoff: accept Track 48's reviewed local runtime and transport interface,
 merge its implementation-phase PR with status In Progress, authorize Track 49
 against that accepted interface, then return to Track 48 for distributed
-acceptance. A local merge alone does not authorize that scheduling change.
+acceptance. A local merge alone does not authorize that scheduling change. The accepted decision must explicitly record phase/interface dependency satisfaction consistently in coordinator scheduling and registry records; full-track dependencies cannot be implicitly bypassed.
 
 ## Proposed handoff gate
 
@@ -30,7 +30,7 @@ bounded validation; the local opaque Rust identity is not a validated wire codec
 
 Every positive and matching anti identifies the actual emitting source LP,
 opaque logical ID and incarnation. Replay preserves logical ID and produces a
-fresh incarnation. Namespacing must use the actual emitter rather than ancestral
+fresh incarnation. Producer restart or migration must not reuse a prior source-scoped cancellation identity: persist counters/authority epochs or adopt an equivalent reviewed wire scheme. Local nonrollback counters alone do not prove restart safety. Namespacing must use the actual emitter rather than ancestral
 root source. Duplicate delivery is idempotent or rejected consistently; conflicting
 metadata fails unchanged. Old antis cannot cancel replacement incarnations.
 Transport retains in-flight positives and antis in GVT accounting and cannot
@@ -51,7 +51,7 @@ acknowledgement, shutdown and failure behavior before implementation.
 Record exact source, commands, toolchains, topology, MPI/gRPC implementation,
 seeds/input hashes, raw logs, exit statuses, artifact hashes and independent
 review. Track 49 additionally requires real 2/4-rank MPI and two-process socket
-runs under its own plan. Local in-process runs and manifest validation do not
+runs, entity-migration integrity and distributed telemetry merge evidence under its own plan. Launch counts alone do not satisfy Track 49 acceptance. Local in-process runs and manifest validation do not
 satisfy these requirements. Track 48 remains In Progress until the live
 integration evidence is accepted; publication and broader HPC claims retain
 their separate gates.
