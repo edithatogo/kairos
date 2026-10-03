@@ -4,7 +4,29 @@
   "python": "3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]",
   "started_at": "2026-10-03T13:15:18.175577+00:00",
   "claim": "private cooperative lease used; no token retained",
-  "commands": [
+  "input_sha256": {
+    "crates/kairo-ecs-pdes/src/optimistic.rs": "f728d1338ed6846d3da6f4f86734347e5cd8a041efb2b1b5f0271f98d2ea1b89",
+    "crates/kairo-ecs-pdes/src/lib.rs": "abe10eab1ee5aae614505d926ac0c8d68b1df28c37903ed53b429de79f65cc10",
+    "crates/kairo-ecs-grpc/proto/simulation.proto": "d149a113c77a182ad0e21fdb233c46503e845480021383ba041721d070621edd",
+    "docs/pdes/optimistic-runtime-contract.md": "0b82848eb7e2937bf03788b4f70e7deeb998bf48161fbc6197ecc61fd00eabd1",
+    "conductor/tracks/49-distributed-mpi-grpc-state-synchronization/agent-contract.md": "f09c91b86464fa91733eff39d0a092747c58ad0459da55fdea6d02578f555c7c"
+  },
+  "source_sha256": {
+    "test_reference.py": "fcdee7570c19907a5691e4ebae896ed90b1f9eb797bebc5dd049395f56d5d9f7",
+    "packet.json": "036b96b15d4de76e78d196253852d02feea8c8d88809f38f8e06e4de9c5e900b",
+    "contract.md": "2e5944f4f6af3dd13c2abf7ba4297c7f2a95289c496442c0ba3723455589c641",
+    "reference.py": "fb3c1cb28c1c7f86bb8245805c8136199cbca6b77e0e06ba8f89e1254f4e72ca",
+    "fixtures.json": "b3042919fb14ec440bed1b4b7095cb6516e162a26c791ec2c3bde27c05a86033"
+  },
+  "completed_at": "2026-10-03T13:17:10.658857+00:00",
+  "scope": "Local draft reference only; no native codec, MPI/gRPC, persistence, runtime replay or hosted proof",
+  "review_fix_base": "7475e6d1b7e19e9c067a7a7649f35d32c8bf0e0e",
+  "review_fixes": [
+    "validate ancestry before typed-fixture serialization",
+    "validate strict future tick at every nested parent key",
+    "deep-input/nonfuture rejection leaves state unchanged"
+  ],
+  "superseded_commands": [
     {
       "argv": [
         "/opt/homebrew/opt/python@3.14/bin/python3.14",
@@ -38,20 +60,38 @@
       "stderr": ""
     }
   ],
-  "input_sha256": {
-    "crates/kairo-ecs-pdes/src/optimistic.rs": "f728d1338ed6846d3da6f4f86734347e5cd8a041efb2b1b5f0271f98d2ea1b89",
-    "crates/kairo-ecs-pdes/src/lib.rs": "abe10eab1ee5aae614505d926ac0c8d68b1df28c37903ed53b429de79f65cc10",
-    "crates/kairo-ecs-grpc/proto/simulation.proto": "d149a113c77a182ad0e21fdb233c46503e845480021383ba041721d070621edd",
-    "docs/pdes/optimistic-runtime-contract.md": "0b82848eb7e2937bf03788b4f70e7deeb998bf48161fbc6197ecc61fd00eabd1",
-    "conductor/tracks/49-distributed-mpi-grpc-state-synchronization/agent-contract.md": "f09c91b86464fa91733eff39d0a092747c58ad0459da55fdea6d02578f555c7c"
-  },
-  "source_sha256": {
-    "test_reference.py": "a77e14ce93f48d2d978ecd58b50fab7240af030124856b68fc00dbb8ed2c7a5a",
-    "packet.json": "036b96b15d4de76e78d196253852d02feea8c8d88809f38f8e06e4de9c5e900b",
-    "contract.md": "2e5944f4f6af3dd13c2abf7ba4297c7f2a95289c496442c0ba3723455589c641",
-    "reference.py": "905d4eefe2e4d48325b9bf8d37562a0c00e3a3dfb7c3d0c6e30ca794cd4beee1",
-    "fixtures.json": "b3042919fb14ec440bed1b4b7095cb6516e162a26c791ec2c3bde27c05a86033"
-  },
-  "completed_at": "2026-10-03T13:15:21.038922+00:00",
-  "scope": "Local draft reference only; no native codec, MPI/gRPC, persistence, runtime replay or hosted proof"
+  "commands": [
+    {
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "conductor/tracks/48-time-warp-optimistic-rollback-runtime/wire-draft",
+        "-p",
+        "test_reference.py",
+        "-v"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "9c10c4de7c4648a48dfa70e4a0a0d7be739ccda92d05cf020295fe9e7e844978",
+      "stdout": "",
+      "stderr": "test_ancestry_128_boundary_and_ordinal_overflow (test_reference.WireDraftTests.test_ancestry_128_boundary_and_ordinal_overflow) ... ok\ntest_conflicting_metadata_and_malformed_reject_unchanged (test_reference.WireDraftTests.test_conflicting_metadata_and_malformed_reject_unchanged) ... ok\ntest_declared_delivery_vectors (test_reference.WireDraftTests.test_declared_delivery_vectors) ... ok\ntest_full_parent_key_and_actual_emitter_order (test_reference.WireDraftTests.test_full_parent_key_and_actual_emitter_order) ... ok\ntest_gvt_all_categories_and_equality_fossil (test_reference.WireDraftTests.test_gvt_all_categories_and_equality_fossil) ... ok\ntest_nested_nonfuture_and_deep_input_reject_without_mutation (test_reference.WireDraftTests.test_nested_nonfuture_and_deep_input_reject_without_mutation) ... ok\ntest_oversized_scalar_before_mutation (test_reference.WireDraftTests.test_oversized_scalar_before_mutation) ... ok\ntest_u64_and_payload_are_lossless (test_reference.WireDraftTests.test_u64_and_payload_are_lossless) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 0.021s\n\nOK\n"
+    },
+    {
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_conductor_phase_gates.ps1"
+      ],
+      "exit": 0,
+      "stdout_sha256": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout": "=== Validate Conductor Phase Gates ===\n\n0 error(s), 0 warning(s)\nConductor phase gate validation passed.\n",
+      "stderr": ""
+    }
+  ]
 }

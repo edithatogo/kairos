@@ -40,13 +40,14 @@ def identity(node, depth=0):
     source = integer(parent["source_lp"], U32)
     if child[0] == 0 and child[1] != source:
         raise ValueError("parent root source mismatch")
-    return (1, (decimal(parent["tick"]), source, child), integer(node["ordinal"], U32))
+    tick = decimal(parent["tick"])
+    if child[0] == 1 and tick <= child[1][0]:
+        raise ValueError("nonfuture ancestor")
+    return (1, (tick, source, child), integer(node["ordinal"], U32))
 
 
 def envelope(message):
     fields(message, ("kind", "source_lp", "dest_lp", "tick", "logical_id", "authority_epoch", "incarnation", "payload_hex"))
-    if len(json.dumps(message, separators=(",", ":")).encode()) > MAX_BYTES:
-        raise ValueError("fixture byte limit")
     if message["kind"] not in ("positive", "anti"):
         raise ValueError("kind")
     source = integer(message["source_lp"], U32)
@@ -64,6 +65,9 @@ def envelope(message):
     payload = message["payload_hex"]
     if type(payload) is not str or len(payload) > 2 * MAX_PAYLOAD or not re.fullmatch(r"(?:[0-9a-f]{2})*", payload):
         raise ValueError("payload bytes")
+    # Bound shapes/scalars/depth before serialization of a typed fixture.
+    if len(json.dumps(message, separators=(",", ":")).encode()) > MAX_BYTES:
+        raise ValueError("fixture byte limit")
     return (source, epoch, logical, incarnation), (dest, tick, bytes.fromhex(payload))
 
 

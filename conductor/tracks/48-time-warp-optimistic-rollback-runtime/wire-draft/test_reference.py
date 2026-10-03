@@ -74,6 +74,25 @@ class WireDraftTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             envelope(child)
 
+    def test_nested_nonfuture_and_deep_input_reject_without_mutation(self):
+        message = copy.deepcopy(FIXTURES["messages"]["child20"])
+        outer = copy.deepcopy(message["logical_id"])
+        message["logical_id"] = {"kind": "output", "parent": {"tick": "20", "source_lp": 1, "logical_id": outer}, "ordinal": 0}
+        ledger = Ledger()
+        before = copy.deepcopy(vars(ledger))
+        with self.assertRaises(ValueError):
+            ledger.receive(message)
+        self.assertEqual(vars(ledger), before)
+        node = {"kind": "root", "source_lp": 0, "sequence": "1"}
+        for depth in range(2000):
+            node = {"kind": "output", "parent": {"tick": str(depth + 1), "source_lp": 0, "logical_id": node}, "ordinal": 0}
+        message["logical_id"] = node
+        message["source_lp"] = 0
+        message["tick"] = "3000"
+        with self.assertRaises(ValueError):
+            ledger.receive(message)
+        self.assertEqual(vars(ledger), before)
+
     def test_gvt_all_categories_and_equality_fossil(self):
         empty = {name: [] for name in FIXTURES["gvt_categories"]}
         for name in empty:
@@ -88,7 +107,7 @@ class WireDraftTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_floor("0", "1", {})
 
-    def test_fixture_byte_limit_before_mutation(self):
+    def test_oversized_scalar_before_mutation(self):
         message = copy.deepcopy(FIXTURES["messages"]["old"])
         message["logical_id"] = {"kind": "root", "source_lp": 0, "sequence": "9" * 70000}
         ledger = Ledger()
