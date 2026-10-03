@@ -11,9 +11,7 @@ sequential parity, and measured scaling evidence.
 In Review. The event-owned single-host runtime is available behind `pdes` as a
 preview API, and the raw host evidence has been captured, registered and
 reviewed. Final closeout still requires the exact-head hosted checks and
-coordinated acceptance. The current `Package Dry Runs` npm job fails its audit
-on public advisory GHSA-ch52-4w7c-c8xp in the npm bootstrap dependency tree; the
-report says no fix is available, so that hosted gate remains unresolved.
+coordinated acceptance. The raw npm audit still reports GHSA-ch52-4w7c-c8xp in the bootstrap dependency tree. The human-approved, expiring EXC-193 permits only the verified mitigation and exact finding graph for PR #193 development/alpha-beta dry runs; final-head hosted acceptance remains pending.
 Track 34 compatibility APIs retain their original scaffold contracts.
 
 ## Inputs

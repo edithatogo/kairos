@@ -820,7 +820,7 @@ entries:
     phase: "production-runtime-review"
     state: blocked
     review_command: "$conductor-review"
-    review_result: "Actual event-owned conservative runtime, real core Scheduler parity, 14 protocol regressions, 8-LP 10,000-tick stress and remotely pinned five-repeat CPU evidence are reviewed. 15 exact-head PR workflow runs passed at 2502a4c; npm Package Dry Runs failed on GHSA-ch52-4w7c-c8xp with no published fix. Review follow-up checks and final closeout remain pending."
+    review_result: "Actual event-owned conservative runtime, real core Scheduler parity, 14 protocol regressions, 8-LP 10,000-tick stress and remotely pinned five-repeat CPU evidence are reviewed. 15 exact-head PR workflow runs passed at 2502a4c; npm Package Dry Runs failed on GHSA-ch52-4w7c-c8xp with no published fix. Human-approved EXC-193 is implemented with raw finding retention; local classifier and source mitigation checks pass, runner regression and hosted final closeout remain pending."
     fixes_applied: true
     validation_commands:
       - "Pinned Rust 1.98.1 just ci: 414 tests pass; core coverage 92.59%; fmt, clippy, docs and dependency policy pass"
