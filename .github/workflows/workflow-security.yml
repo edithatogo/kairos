@@ -31,6 +31,7 @@ jobs:
       - name: Inventory workflow files
         run: |
           test -f .github/workflows/actions-security.yml
+          test -f .github/workflows/agent-harness.yml
           test -f .github/workflows/bench-regression.yml
           test -f .github/workflows/benchmark-smoke.yml
           test -f .github/workflows/benchmarks.yml
@@ -85,6 +86,7 @@ jobs:
       - name: Inventory workflow files
         run: |
           test -f .github/workflows/actions-security.yml
+          test -f .github/workflows/agent-harness.yml
           test -f .github/workflows/bench-regression.yml
           test -f .github/workflows/benchmark-smoke.yml
           test -f .github/workflows/benchmarks.yml
