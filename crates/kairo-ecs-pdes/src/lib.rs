@@ -6,6 +6,23 @@ mod conservative;
 pub use conservative::{ConservativeProcess, ConservativeRuntime, RuntimeError, RuntimeReport};
 
 #[cfg(feature = "time-warp")]
+mod generation_bitset;
+#[cfg(feature = "time-warp")]
+pub use generation_bitset::{
+    GenerationBitset, GenerationBitsetError, GenerationBitsetSnapshot, GenerationHandle,
+    MAX_GENERATION_SLOTS,
+};
+#[cfg(feature = "time-warp")]
+mod optimistic;
+#[cfg(feature = "time-warp")]
+pub use optimistic::{
+    LogicalEventId, OptimisticError, OptimisticEventOrderKey, OptimisticFossilReport,
+    OptimisticLimits, OptimisticMessage, OptimisticMessageKind, OptimisticProcess,
+    OptimisticRunProgress, OptimisticRuntime, OptimisticRuntimeReport, OptimisticStateError,
+    OptimisticStateToken, OptimisticTraceEntry,
+};
+
+#[cfg(feature = "time-warp")]
 use std::collections::BTreeSet;
 use std::collections::{BTreeMap, VecDeque};
 #[cfg(feature = "time-warp")]
