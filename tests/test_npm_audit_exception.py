@@ -36,7 +36,7 @@ def _load_policy_module():
 class NpmAuditExceptionPolicyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.classifier = _load_policy_module().classify
+        cls.classifier = staticmethod(_load_policy_module().classify)
         cls.baseline = json.loads(
             (EXCEPTIONS / "EXC-193-http-cache-audit-baseline.json").read_text()
         )
