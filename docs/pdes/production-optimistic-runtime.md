@@ -15,8 +15,9 @@ passed under the actual Homebrew Rust 1.99 compiler. Their original pinned
 compiler labels were withdrawn after compiler-path verification. At `7a432ab`,
 the explicitly bound Rust 1.98.1 workspace lane passed all 458 tests, core line
 coverage (92.59%), formatting, Clippy, rustdoc and Rust security checks.
-Rust 1.76 verification and corrected benchmark provenance have separate gates;
-hosted checks remain pending. No distributed acceptance or
+Matching Cargo/rustc 1.76.0 also passed the complete 94-test local PDES lane
+at `7a432ab`, verified independently from source hashes and compiler cache.
+Corrected benchmark provenance and hosted checks remain pending. No distributed acceptance or
 Track48 Done follows from these local results.
 
 ## Model contract
