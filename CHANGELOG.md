@@ -39,6 +39,8 @@ Format:
 
 ### Added
 
+- `kairo-ecs-pdes` adds a preview event-owned conservative runtime behind `pdes`, with per-LP state and queues, positive lookahead, scoped CPU workers, typed protocol errors, and a shared DES/ABM/mixed sequential-parity fixture. The existing callback scheduler remains compatible.
+
 - Research software registry roadmap links licensing, Software Heritage, RRID and JOSS deliverables to explicit prerequisites and external evidence gates within Track 19.
 
 - `kairo-ecs-state` now tests `World::despawn` for successful removal, repeated despawn, invalid indices, and stale generations.

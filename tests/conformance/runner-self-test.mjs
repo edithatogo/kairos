@@ -8,6 +8,7 @@ import {
   parseConformanceArgs,
   runConformanceCli,
   runConformance,
+  validateFixturePayload,
 } from './runner.mjs';
 
 const ROOT = process.cwd();
@@ -281,6 +282,23 @@ try {
   rmSync(unsafeRngRoot, { recursive: true, force: true });
 }
 
+// Corruption of the native parity case set must not silently shrink its scope.
+const pdesRoot = mkdtempSync(join(tmpdir(), 'kairo-pdes-fixture-'));
+try {
+  const descriptor = ROOT_MANIFEST.fixtures.find((fixture) => fixture.id === 'pdes_conservative_parity_v1');
+  const original = JSON.parse(readFileSync(join(ROOT, 'conformance/fixtures', descriptor.source), 'utf8'));
+  for (const [mutated, error] of [
+    [{ ...original, workloads: ['des', 'abm'] }, /must cover des, abm and mixed/],
+    [{ ...original, seeds: [7, 7] }, /seeds must be unique/],
+    [{ ...original, lookahead_ticks: 0 }, /needs positive lookahead below horizon/],
+  ]) {
+    writeTextFile(pdesRoot, `conformance/fixtures/${descriptor.source}`, JSON.stringify(mutated));
+    assert.throws(() => validateFixturePayload(descriptor, pdesRoot), error);
+  }
+} finally {
+  rmSync(pdesRoot, { recursive: true, force: true });
+}
+
 console.log(JSON.stringify({
   status: 'ok',
   validator: 'tests/conformance/runner-self-test.mjs',
@@ -293,5 +311,6 @@ console.log(JSON.stringify({
     'runner CLI --fixture',
     'zero-delay guard fixture support',
     'unsafe RNG integer rejection',
+    'native PDES case-set, duplicate-seed and lookahead corruption rejection',
   ],
 }, null, 2));
