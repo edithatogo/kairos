@@ -1,5 +1,8 @@
 #![forbid(unsafe_code)]
 
+mod flow;
+pub use flow::*;
+
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_state::World;
 use kairo_ecs_types::*;
