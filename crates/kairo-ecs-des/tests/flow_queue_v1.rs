@@ -129,3 +129,63 @@ fn timeout_evidence_survives_rejected_rekey_at_boundary() {
     assert_eq!(f.request(q).unwrap().state, RequestState::TimedOut);
     assert!(f.step().unwrap().unwrap().records.is_empty());
 }
+
+#[test]
+fn equal_priority_reverse_command_insertion_and_active_rekey() {
+    let mut f = FlowRuntime::new();
+    let o = f.spawn_actor().unwrap();
+    let r = f.create_resource(1).unwrap();
+    let q = f.submit(r, o, t(0)).unwrap();
+    f.step().unwrap();
+    let lease = f.request(q).unwrap().lease;
+    f.reprioritize(q, -7, t(1)).unwrap();
+    f.cancel(q, t(1)).unwrap();
+    let d = f.step().unwrap().unwrap();
+    assert_eq!(d.error, None);
+    assert_eq!(f.request(q).unwrap().lease, lease);
+    assert_eq!(f.resource(r).unwrap().allocations[0].priority_level, -7);
+    f.step().unwrap();
+    assert_eq!(f.request(q).unwrap().state, RequestState::Cancelled);
+    assert!(f.resource(r).unwrap().active.is_empty());
+}
+#[test]
+fn pending_cancel_has_one_terminal_transition_and_stale_tokens() {
+    let mut f = FlowRuntime::new();
+    let o = f.spawn_actor().unwrap();
+    let r = f.create_resource(1).unwrap();
+    let q = f
+        .acquire(r)
+        .owner(o)
+        .at(t(3))
+        .deadline(t(5))
+        .submit()
+        .unwrap();
+    f.cancel(q, t(1)).unwrap();
+    let run = f.run_for(10).unwrap();
+    assert_eq!(f.request(q).unwrap().state, RequestState::Cancelled);
+    assert_eq!(
+        run.dispatches
+            .iter()
+            .flat_map(|d| &d.records)
+            .filter(|e| e.request == q)
+            .count(),
+        1
+    );
+    assert!(f.resource(r).unwrap().active.is_empty());
+}
+#[test]
+fn unrelated_resource_command_cannot_steal_timeout_causality() {
+    let mut f = FlowRuntime::new();
+    let o = f.spawn_actor().unwrap();
+    let a = f.create_resource(1).unwrap();
+    let b = f.create_resource(0).unwrap();
+    let other = f.acquire(a).owner(o).at(t(5)).submit().unwrap();
+    let q = f.acquire(b).owner(o).deadline(t(5)).submit().unwrap();
+    f.step().unwrap();
+    let d = f.step().unwrap().unwrap();
+    assert!(d.records.iter().all(|e| e.request == other));
+    assert_eq!(f.request(q).unwrap().state, RequestState::Queued);
+    let d = f.step().unwrap().unwrap();
+    assert_eq!(d.records[0].request, q);
+    assert_eq!(d.records[0].state, RequestState::TimedOut);
+}

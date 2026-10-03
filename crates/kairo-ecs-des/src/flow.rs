@@ -1057,22 +1057,57 @@ mod tests {
             let actor = f.spawn_actor().unwrap();
             let r = f.create_resource(2).unwrap();
             let mut random = seed + 1;
+            let mut sequences = BTreeMap::new();
+            let mut terminals = BTreeSet::new();
             for _ in 0..100 {
                 random = random.wrapping_mul(6364136223846793005).wrapping_add(1);
-                match random % 3 {
+                let now = f.now();
+                let candidates: Vec<_> = f
+                    .requests
+                    .iter()
+                    .copied()
+                    .filter(|id| !terminal(f.request(*id).unwrap().state))
+                    .collect();
+                let chosen = candidates
+                    .get((random >> 16) as usize % candidates.len().max(1))
+                    .copied();
+                match random % 6 {
                     0 => {
-                        f.submit(r, actor, t()).unwrap();
+                        f.acquire(r)
+                            .owner(actor)
+                            .priority((random >> 32) as i32)
+                            .deadline(SimTime::from_ticks(now.ticks() + 1))
+                            .submit()
+                            .unwrap();
                     }
                     1 => {
                         if let Some(lease) = f.resource(r).unwrap().active.first().copied() {
-                            f.release(lease, t()).unwrap();
+                            let _ = f.release(lease, now);
+                        }
+                    }
+                    2 => {
+                        let _ = f.set_capacity(r, ((random >> 32) % 4) as u32);
+                    }
+                    3 => {
+                        if let Some(id) = chosen {
+                            let _ = f.cancel(id, now);
+                        }
+                    }
+                    4 => {
+                        if let Some(id) = chosen {
+                            let _ = f.reprioritize(id, (random >> 32) as i32, now);
                         }
                     }
                     _ => {
-                        let _ = f.set_capacity(r, ((random >> 32) % 4) as u32);
+                        f.submit(r, actor, now).unwrap();
                     }
                 }
-                f.run_for(1).unwrap();
+                let run = f.run_for(1).unwrap();
+                for row in run.dispatches.iter().flat_map(|d| &d.records) {
+                    if terminal(row.state) {
+                        assert!(terminals.insert(row.request));
+                    }
+                }
                 let snapshot = f.resource(r).unwrap();
                 assert_eq!(
                     snapshot.available as usize + snapshot.active.len(),
@@ -1085,6 +1120,16 @@ mod tests {
                     assert_eq!(key.level, request.priority_level);
                     assert_eq!(Some(key.enqueue_sequence), request.admission_sequence);
                 }
+                for id in &f.requests {
+                    let req = f.request(*id).unwrap();
+                    if terminal(req.state) {
+                        assert!(!snapshot.queued.contains(id));
+                        assert!(req.lease.is_none());
+                    }
+                    if let Some(seq) = req.admission_sequence {
+                        assert_eq!(*sequences.entry(*id).or_insert(seq), seq);
+                    }
+                }
                 for lease in &snapshot.active {
                     let request = f.request(lease.request).unwrap();
                     assert_eq!(request.state, RequestState::Active);
@@ -1093,6 +1138,28 @@ mod tests {
                 }
             }
         }
+    }
+    #[test]
+    fn deadline_admission_reserves_both_tokens_before_work_association() {
+        let mut f = FlowRuntime::new();
+        let a = f.spawn_actor().unwrap();
+        let r = f.create_resource(1).unwrap();
+        let w = f
+            .create_work(a, SimDuration::from_ticks(1), "budget.v1", ())
+            .unwrap();
+        f.scheduled = OPERATION_CAP - 1;
+        let before = f.world.snapshot();
+        assert_eq!(
+            f.acquire(r)
+                .owner(a)
+                .for_work(w)
+                .deadline(SimTime::from_ticks(1))
+                .submit(),
+            Err(FlowError::CounterOverflow)
+        );
+        assert_eq!(f.world.snapshot(), before);
+        assert!(f.work(w).unwrap().request.is_none());
+        assert_eq!(f.scheduled, OPERATION_CAP - 1);
     }
     #[test]
     fn transition_ordinal_is_checked_uint32() {
