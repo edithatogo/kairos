@@ -107,10 +107,16 @@ pub struct NormalizedOccurrence {
 /// No rounding or saturation is permitted. Calendar/timezone resolution must
 /// happen before this function is called.
 pub fn relative_ticks(origin_utc_ns: i128, occurrence_utc_ns: i128) -> Result<u128, TemporalError> {
-    let delta = occurrence_utc_ns
-        .checked_sub(origin_utc_ns)
-        .ok_or(TemporalError::Overflow)?;
-    u128::try_from(delta).map_err(|_| TemporalError::PreOrigin)
+    if occurrence_utc_ns < origin_utc_ns {
+        return Err(TemporalError::PreOrigin);
+    }
+
+    let sign_bit = 1u128 << 127;
+    let origin_ordered = (origin_utc_ns as u128) ^ sign_bit;
+    let occurrence_ordered = (occurrence_utc_ns as u128) ^ sign_bit;
+    occurrence_ordered
+        .checked_sub(origin_ordered)
+        .ok_or(TemporalError::Overflow)
 }
 
 /// Validate a required occurrence timestamp, preserving source precision and

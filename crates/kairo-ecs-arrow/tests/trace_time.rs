@@ -14,14 +14,11 @@ fn occurrence(utc_ns: i128, precision: SourcePrecision) -> TimestampInput {
 }
 
 #[test]
-fn relative_ticks_are_exact_and_reject_pre_origin_or_overflow() {
+fn relative_ticks_are_exact_and_reject_pre_origin() {
     assert_eq!(relative_ticks(10, 10), Ok(0));
     assert_eq!(relative_ticks(10, 70_000_000_010), Ok(70_000_000_000));
     assert_eq!(relative_ticks(10, 9), Err(TemporalError::PreOrigin));
-    assert_eq!(
-        relative_ticks(i128::MIN, i128::MAX),
-        Err(TemporalError::Overflow)
-    );
+    assert_eq!(relative_ticks(i128::MIN, i128::MAX), Ok(u128::MAX));
 }
 
 #[test]
