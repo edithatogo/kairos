@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Retain raw npm audit evidence and apply only approved EXC-193 policy."""
+"""Retain raw npm audit evidence and apply only explicitly approved PR-scoped policies."""
 from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
@@ -30,6 +30,15 @@ EXPECTED_AUDIT_COMMAND = ['node', 'scripts/bootstrap-node-tools/node_modules/npm
 EXPECTED_PATCHED_HASH = 'fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76'
 EXPECTED_GRAPH_HASH = '0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8'
 EXPECTED_BRANCH = "codex/kairos-implementation-programme"
+APPROVED_BRANCHES = {"EXC-193": (193, EXPECTED_BRANCH), "EXC-195": (195, "codex/vitest-floor-closeout-20261003")}
+
+def selected_policy_name():
+    if os.environ.get("GITHUB_ACTIONS") == "true" and os.environ.get("GITHUB_EVENT_NAME") == "pull_request":
+        event = read_json(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+        number = event.get("pull_request", {}).get("number")
+        if type(number) is int and number == 195:
+            return "EXC-195-http-cache.json"
+    return "EXC-193-http-cache.json"
 
 def digest(data):
     return hashlib.sha256(data).hexdigest()
@@ -46,25 +55,29 @@ def read_json(text):
     return json.loads(text, object_pairs_hook=unique_object)
 
 def execution_context(policy):
+    scope = APPROVED_BRANCHES.get(policy.get("id"))
+    if scope is None:
+        raise ValueError("unknown approved policy")
+    number, branch = scope
+    context = "development_pr_" + str(number)
     if os.environ.get("GITHUB_ACTIONS") != "true":
-        return "development_pr_193", 193
+        return context, number
     if os.environ.get("GITHUB_REPOSITORY") != "edithatogo/kairos":
         raise ValueError("exception cannot apply outside the approved repository")
     event = read_json(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
     if event.get("repository", {}).get("full_name") != "edithatogo/kairos":
         raise ValueError("unapproved event repository")
     kind = os.environ.get("GITHUB_EVENT_NAME")
-    branch = EXPECTED_BRANCH
     if policy["head_ref"] != branch:
         raise ValueError("exception branch drift")
     if kind == "pull_request":
         pr = event["pull_request"]
         if pr["head"]["ref"] != branch or pr["head"]["repo"]["full_name"] != "edithatogo/kairos":
             raise ValueError("unapproved PR source")
-        return "development_pr_193", pr["number"]
+        return context, pr["number"]
     if (kind == "workflow_dispatch" and os.environ.get("GITHUB_REF") == "refs/heads/" + branch
             and event.get("ref") in (branch, "refs/heads/" + branch)):
-        return "development_pr_193", 193
+        return context, number
     raise ValueError("exception cannot apply to this event or branch")
 
 def verify_sources(root, policy):
@@ -139,8 +152,10 @@ def main():
         receipt["checks"].append(item)
         return result, item
     try:
-        policy = read_json((EXCEPTIONS / "EXC-193-http-cache.json").read_text())
-        receipt["policy_sha256"] = digest((EXCEPTIONS / "EXC-193-http-cache.json").read_bytes())
+        policy_path = EXCEPTIONS / selected_policy_name()
+        policy = read_json(policy_path.read_text())
+        receipt["policy_id"] = policy["id"]
+        receipt["policy_sha256"] = digest(policy_path.read_bytes())
         context, pr = execution_context(policy)
         verify_sources(ROOT, policy)
         commands = [

@@ -135,3 +135,7 @@ Bounded Track 09 developer-tool change; the changelog note is the Track 16 docum
 Local working directory `/private/tmp/kairos-vitest-floor-closeout-20261003`: Node 26.10.0 and npm 11.19.1. This Node host is outside the binding's declared >=22 <25 support range; these local results are corroboration only, not support qualification. Exact-head hosted supported-node binding checks remain required before merge.
 
 Actual checks: `npm ci --ignore-scripts --prefix bindings/typescript`, `npm run build --prefix bindings/typescript`, `npm run typecheck --prefix bindings/typescript`, `npm test --prefix bindings/typescript` (8 tests), `npm audit --prefix bindings/typescript --json` (0 vulnerabilities), and `git diff --check`: exit 0. Logs and command/cwd/exit receipts are retained at `/tmp/vitest-floor-command-receipts.json` and `/tmp/vitest-floor-verified-*.log`. No simulation seed applies.
+
+## PR195 approval and refreshed security gate — 2026-10-04
+
+Human sole maintainer approved EXC-195 for this development PR only, retaining the EXC-193 verified source patch, raw advisory graph, expiry and release/publication exclusions. Refreshed accepted main includes PR193 and PR198. The Vitest dependency graph is unchanged. All 22 local classifier/runner/scope tests passed; local simulated PR195 gate and exact-head Actions require separate receipts. No release or package publication is authorized.
