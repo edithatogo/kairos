@@ -28,7 +28,7 @@
 
 ## Current local validation
 
-- `python -m unittest discover -s k8s/operator -p 'test_*.py'` covers traversal, absolute paths, shell metacharacters, safe defaults, and both inline and ConfigMap sources.
+- `python -m unittest discover -s k8s/operator -p 'test_*.py'` covers traversal, absolute paths, shell metacharacters, safe defaults, and both inline and ConfigMap sources. It also covers complete status patches, experiment validation, rendered storage/resources, and strict CRD integer parallelism (including rejection of booleans, floats, strings, null and containers).
 
 - `python cloud/validate_cloud_hpc.py` passed on 2026-05-11 and remains the detailed Track 39 offline validator, including the `kairo-ecs-cli` command surface.
 - `python k8s/operator/kairoecs_operator.py --experiment k8s/samples/experiment.json` renders the sample `batch/v1` indexed Job.

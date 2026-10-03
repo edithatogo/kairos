@@ -39,6 +39,8 @@ Format:
 
 ### Added
 
+- Offline Kubernetes experiment rendering rejects non-integer parallelism instead of silently coercing values that violate the CRD.
+
 - Internal agent tooling adds cooperative writer leases, bounded hashed context snapshots, and Linux/macOS ARM session-regression CI; it does not change the Rust API or authorize autonomous work.
 
 - Research software registry roadmap links licensing, Software Heritage, RRID and JOSS deliverables to explicit prerequisites and external evidence gates within Track 19.

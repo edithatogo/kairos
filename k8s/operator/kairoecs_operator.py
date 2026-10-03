@@ -25,7 +25,9 @@ def validate_experiment(experiment: dict) -> None:
         raise ValueError("experiment spec must be an object")
     if not str(spec.get("image", "")).strip():
         raise ValueError("spec.image must not be empty")
-    parallelism = int(spec.get("parallelism", 1))
+    parallelism = spec.get("parallelism", 1)
+    if type(parallelism) is not int:
+        raise ValueError("spec.parallelism must be an integer")
     if parallelism < 1:
         raise ValueError("spec.parallelism must be greater than zero")
     storage = spec.get("storage")
@@ -48,7 +50,7 @@ def render_job(experiment: dict) -> dict:
     metadata = experiment.get("metadata", {})
     spec = experiment["spec"]
     name = metadata.get("name", "kairo-experiment")
-    parallelism = int(spec.get("parallelism", 1))
+    parallelism = spec.get("parallelism", 1)
     storage = spec["storage"]
     scenario_ref = spec.get("scenarioRef", {})
     scenario_key = validate_scenario_key(scenario_ref.get("key", "scenario.yaml"))
