@@ -44,6 +44,8 @@ pub enum FlowError {
     InvalidWork,
     #[error("actor already has a domain context")]
     DuplicateActorDomainContext,
+    #[error("actor already has a pending despawn")]
+    DuplicateActorDespawn,
     #[error("reserved Flow event kind")]
     ReservedEventKind,
     #[error("unregistered domain event")]
@@ -364,6 +366,11 @@ pub enum FlowOwnedCommand {
     Domain {
         work: WorkId,
         kind: EventKind,
+        at: SimTime,
+        scheduler_priority: i32,
+    },
+    DespawnActor {
+        actor: EntityId,
         at: SimTime,
         scheduler_priority: i32,
     },
@@ -754,6 +761,11 @@ enum BatchCommand {
         at: SimTime,
         priority: i32,
     },
+    DespawnActor {
+        actor: EntityId,
+        at: SimTime,
+        priority: i32,
+    },
 }
 struct BatchAdmissionPlan {
     batch: u64,
@@ -890,6 +902,7 @@ pub struct FlowRuntime {
     notifications: BTreeMap<EventId, Notification>,
     commands: BTreeMap<EventId, Command>,
     pending_releases: BTreeSet<LeaseId>,
+    pending_despawns: BTreeSet<EntityId>,
     created: u64,
     destroyed: u64,
     scheduled: u64,
@@ -936,6 +949,7 @@ impl FlowRuntime {
             notifications: BTreeMap::new(),
             commands: BTreeMap::new(),
             pending_releases: BTreeSet::new(),
+            pending_despawns: BTreeSet::new(),
             created: 0,
             destroyed: 0,
             scheduled: 0,
@@ -1702,9 +1716,24 @@ impl FlowRuntime {
         self.schedule(Command::Remove(id), self.now())
     }
     pub fn despawn_actor(&mut self, id: EntityId) -> Result<(), FlowError> {
+        self.despawn_actor_at_with_scheduler_priority(id, self.now(), 0)
+    }
+    pub fn despawn_actor_at_with_scheduler_priority(
+        &mut self,
+        actor: EntityId,
+        at: SimTime,
+        priority: i32,
+    ) -> Result<(), FlowError> {
         self.check_running()?;
-        self.actor(id)?;
-        self.schedule(Command::Despawn(id), self.now())
+        self.actor(actor)?;
+        if self.pending_despawns.contains(&actor) {
+            return Err(FlowError::DuplicateActorDespawn);
+        }
+        // Scheduling checks time and both lifetime counters before allocating
+        // the actual event. Publishing the reservation is then infallible.
+        self.schedule_priority(Command::Despawn(actor), at, priority)?;
+        self.pending_despawns.insert(actor);
+        Ok(())
     }
     pub fn run_for(&mut self, max_events: u64) -> Result<FlowRun, FlowError> {
         if let Some(error) = self.halt_error() {
@@ -1811,6 +1840,9 @@ impl FlowRuntime {
         self.commands.remove(&preview.id);
         if let Command::Release(lease) = command {
             self.pending_releases.remove(&lease);
+        }
+        if let Command::Despawn(actor) = command {
+            self.pending_despawns.remove(&actor);
         }
         if let Some(plan) = plan {
             self.commit_plan(plan);
@@ -1953,6 +1985,7 @@ impl FlowRuntime {
         let mut commands = Vec::with_capacity(sink.commands.len());
         let mut associated = BTreeSet::new();
         let mut releases = self.pending_releases.clone();
+        let mut despawns = self.pending_despawns.clone();
         let mut created = self.created;
         let mut event_count = 0u64;
         for (position, command) in sink.commands.iter().enumerate() {
@@ -2059,6 +2092,25 @@ impl FlowRuntime {
                             BatchCommand::Reprioritize {
                                 request,
                                 level: *level,
+                                at: *at,
+                                priority: *scheduler_priority,
+                            },
+                            *at,
+                            1,
+                        )
+                    }
+                    FlowOwnedCommand::DespawnActor {
+                        actor,
+                        at,
+                        scheduler_priority,
+                    } => {
+                        self.actor(*actor)?;
+                        if !despawns.insert(*actor) {
+                            return Err(FlowError::DuplicateActorDespawn);
+                        }
+                        (
+                            BatchCommand::DespawnActor {
+                                actor: *actor,
                                 at: *at,
                                 priority: *scheduler_priority,
                             },
@@ -2217,6 +2269,14 @@ impl FlowRuntime {
                     at,
                     priority,
                 ),
+                BatchCommand::DespawnActor {
+                    actor,
+                    at,
+                    priority,
+                } => {
+                    self.pending_despawns.insert(actor);
+                    (Command::Despawn(actor), at, priority)
+                }
                 BatchCommand::Domain {
                     work,
                     kind,
@@ -5544,5 +5604,435 @@ mod actor_domain_private_tests {
         assert_eq!(f.work_progress(carrier).unwrap(), carrier_progress);
         assert_eq!(calls.get(), 0);
         assert!(f.world.is_alive(actor) && f.world.is_alive(task.0) && f.world.is_alive(carrier.0));
+    }
+}
+
+#[cfg(test)]
+mod buffered_despawn_private_tests {
+    use super::*;
+    use std::{cell::Cell, rc::Rc};
+    const KIND: EventKind = EventKind::custom(7600);
+    fn t(n: u128) -> SimTime {
+        SimTime::from_ticks(n)
+    }
+    fn view<'a>(
+        c: &'a mut Rc<Cell<u32>>,
+        _: &'a FlowCallbackSnapshot,
+        _: FlowWorldView<'a>,
+        _: &'a mut FlowCommandSink,
+    ) {
+        c.set(c.get() + 1);
+    }
+    fn legacy(c: &mut Rc<Cell<u32>>, _: &WorkProgress) {
+        c.set(c.get() + 1);
+    }
+    fn continuation(c: &mut Rc<Cell<u32>>, _: &FlowCallbackSnapshot, _: &mut FlowCommandSink) {
+        c.set(c.get() + 1);
+    }
+    fn setup(limit: u64) -> (FlowRuntime, EntityId, WorkId, Rc<Cell<u32>>) {
+        let mut f = FlowRuntime::with_config(FlowConfig {
+            max_same_tick_flow_transitions: NonZeroU64::new(limit).unwrap(),
+        });
+        f.register_domain_view_hook("shared", KIND, view).unwrap();
+        f.register_work_handlers(
+            "shared",
+            WorkHandlers {
+                on_cancel: Some(legacy),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        f.register_work_continuations(
+            "shared",
+            FlowContinuations {
+                on_cancel: Some(continuation),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let actor = f.spawn_actor().unwrap();
+        let calls: Rc<Cell<u32>> = Rc::new(Cell::new(0));
+        let carrier = f
+            .create_actor_domain_context(actor, "shared", KIND, calls.clone())
+            .unwrap();
+        (f, actor, carrier, calls)
+    }
+    macro_rules! capture {
+        ($f:expr) => {
+            (
+                (
+                    $f.scheduler.peek_next(),
+                    $f.scheduler.stats(),
+                    $f.budget_snapshot(),
+                    $f.world.snapshot(),
+                ),
+                (
+                    $f.created,
+                    $f.destroyed,
+                    $f.scheduled,
+                    $f.next_admission,
+                    $f.next_lease,
+                    $f.next_batch_identity,
+                ),
+                (
+                    $f.commands.keys().copied().collect::<Vec<_>>(),
+                    $f.actor_domains.clone(),
+                    $f.pending_releases.clone(),
+                    $f.pending_despawns.clone(),
+                    $f.notifications.len(),
+                    $f.actors.clone(),
+                    $f.works.len(),
+                ),
+            )
+        };
+    }
+    fn sink() -> FlowCommandSink {
+        FlowCommandSink::new(42, FlowCallbackConfig::default())
+    }
+    fn despawn(actor: EntityId, at: SimTime) -> FlowOwnedCommand {
+        FlowOwnedCommand::DespawnActor {
+            actor,
+            at,
+            scheduler_priority: 0,
+        }
+    }
+    fn active(
+        limit: u64,
+    ) -> (
+        FlowRuntime,
+        EntityId,
+        WorkId,
+        WorkId,
+        ResourceId,
+        RequestId,
+        RequestId,
+        Rc<Cell<u32>>,
+    ) {
+        let (mut f, actor, carrier, calls) = setup(limit);
+        let resource = f.create_resource(1).unwrap();
+        let work = f
+            .create_work(actor, SimDuration::from_ticks(10), "shared", calls.clone())
+            .unwrap();
+        let request = f
+            .acquire(resource)
+            .owner(actor)
+            .timed_work(work)
+            .submit()
+            .unwrap();
+        f.step().unwrap().unwrap();
+        let other = f.spawn_actor().unwrap();
+        let queued = f.submit(resource, other, t(1)).unwrap();
+        f.step().unwrap().unwrap();
+        assert_eq!(f.request(request).unwrap().state, RequestState::Active);
+        assert_eq!(f.request(queued).unwrap().state, RequestState::Queued);
+        (f, actor, carrier, work, resource, request, queued, calls)
+    }
+    #[test]
+    fn despawn_direct_duplicate_reservation_preserves_first_event_and_actor() {
+        let (mut f, actor, _, calls) = setup(100);
+        f.despawn_actor_at_with_scheduler_priority(actor, t(1), -3)
+            .unwrap();
+        let before = capture!(f);
+        assert_eq!(
+            f.despawn_actor(actor),
+            Err(FlowError::DuplicateActorDespawn)
+        );
+        assert_eq!(capture!(f), before);
+        assert_eq!(calls.get(), 0);
+        assert_eq!(f.scheduler.peek_next().unwrap().priority, -3);
+        f.step().unwrap().unwrap();
+        assert!(!f.pending_despawns.contains(&actor));
+        assert!(!f.world.is_alive(actor));
+    }
+    #[test]
+    fn despawn_batch_acquire_then_despawn_and_reverse_admit_atomically() {
+        for reverse in [false, true] {
+            let (mut f, actor, carrier, calls) = setup(100);
+            let resource = f.create_resource(1).unwrap();
+            let work = f
+                .create_work(actor, SimDuration::from_ticks(10), "shared", calls.clone())
+                .unwrap();
+            let acquire = FlowOwnedCommand::Acquire(FlowAcquireCommand {
+                resource,
+                owner: actor,
+                work: Some(work),
+                at: t(1),
+                priority_level: 0,
+                deadline: None,
+                scheduler_priority: 0,
+                timed: true,
+                can_preempt: false,
+                preemptible: None,
+            });
+            let mut s = sink();
+            if reverse {
+                s.emit(despawn(actor, t(1))).unwrap();
+                s.emit(acquire).unwrap();
+            } else {
+                s.emit(acquire).unwrap();
+                s.emit(despawn(actor, t(1))).unwrap();
+            }
+            let FlowBatchReceipt::Accepted(admitted) = f.admit_callback_batch(s) else {
+                panic!("valid batch")
+            };
+            assert_eq!(admitted.len(), 2);
+            let request = admitted.iter().find_map(|a| a.request).unwrap();
+            assert!(
+                f.world.is_alive(actor) && f.world.is_alive(carrier.0) && f.world.is_alive(work.0)
+            );
+            assert!(f.pending_despawns.contains(&actor));
+            let first = f.step().unwrap().unwrap();
+            assert_eq!(first.event, admitted[0].event);
+            let second = f.step().unwrap().unwrap();
+            assert_eq!(second.event, admitted[1].event);
+            if reverse {
+                assert_eq!(second.error, Some(FlowError::TerminalRequest));
+            } else {
+                assert!(first.error.is_none() && second.error.is_none());
+            }
+            assert_eq!(f.request(request).unwrap().state, RequestState::Cancelled);
+            assert!(!f.world.is_alive(actor));
+            assert!(f.pending_despawns.is_empty());
+            assert_eq!(calls.get(), 0);
+        }
+    }
+    #[test]
+    fn despawn_batch_release_then_duplicate_rolls_back_all_reservations() {
+        let (mut f, actor, _, _, _, q, _, calls) = active(100);
+        let lease = f.request(q).unwrap().lease.unwrap();
+        let mut s = sink();
+        s.emit(FlowOwnedCommand::Release { lease, at: t(2) })
+            .unwrap();
+        s.emit(despawn(actor, t(2))).unwrap();
+        let failed = s.emit(despawn(actor, t(2))).unwrap();
+        let before = capture!(f);
+        assert_eq!(
+            f.admit_callback_batch(s),
+            FlowBatchReceipt::Rejected(FlowBatchRejection {
+                failed_ticket: Some(failed),
+                error: FlowError::DuplicateActorDespawn
+            })
+        );
+        assert_eq!(capture!(f), before);
+        assert_eq!(calls.get(), 0);
+    }
+    #[test]
+    fn despawn_batch_time_counter_and_cap_failures_roll_back() {
+        for fault in 0..4 {
+            let (mut f, actor, carrier, calls) = setup(100);
+            let other = f.spawn_actor().unwrap();
+            let mut s = FlowCommandSink::new(
+                42,
+                FlowCallbackConfig {
+                    max_callback_commands: NonZeroUsize::new(if fault == 3 { 1 } else { 3 })
+                        .unwrap(),
+                },
+            );
+            if fault == 0 {
+                f.schedule_domain(carrier, KIND, t(2), 0).unwrap();
+                f.step().unwrap().unwrap();
+            }
+            s.emit(despawn(actor, if fault == 0 { t(2) } else { t(3) }))
+                .unwrap();
+            let second = s.emit(despawn(other, if fault == 0 { t(1) } else { t(3) }));
+            if fault == 1 {
+                f.scheduled = OPERATION_CAP - 1;
+            }
+            let before = capture!(f);
+            let scheduler_count = if fault == 2 {
+                OPERATION_CAP - 1
+            } else {
+                f.scheduler.stats().scheduled_events
+            };
+            let rejected = f.plan_callback_batch(&s, scheduler_count).err().unwrap();
+            let expected = match fault {
+                0 => FlowError::PastCommand,
+                3 => FlowError::CallbackBatchLimitExceeded,
+                _ => FlowError::CounterOverflow,
+            };
+            assert_eq!(rejected.error, expected);
+            assert_eq!(
+                rejected.failed_ticket,
+                if fault == 3 {
+                    None
+                } else {
+                    Some(second.unwrap())
+                }
+            );
+            assert_eq!(capture!(f), before);
+            assert_eq!(calls.get(), u32::from(fault == 0));
+        }
+        // The scheduler-count case above injects the pure planner argument;
+        // it does not mutate or claim rollback of the core scheduler counter.
+    }
+    #[test]
+    fn despawn_aggregate_cleanup_overflow_retains_pending_reservation_and_exact_head() {
+        let (mut f, actor, carrier, work, r, q, queued, calls) = active(100);
+        let lease = f.request(q).unwrap().lease.unwrap();
+        f.release(lease, t(5)).unwrap();
+        f.schedule_domain(carrier, KIND, t(4), 0).unwrap();
+        f.despawn_actor_at_with_scheduler_priority(actor, t(2), 0)
+            .unwrap();
+        f.destroyed = OPERATION_CAP - 2;
+        let before = capture!(f);
+        let resource = f.resource(r).unwrap();
+        let progress = f.work_progress(work).unwrap();
+        let requests = (f.request(q).unwrap(), f.request(queued).unwrap());
+        assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
+        assert_eq!(capture!(f), before);
+        assert_eq!(f.resource(r).unwrap(), resource);
+        assert_eq!(f.work_progress(work).unwrap(), progress);
+        assert_eq!(
+            (f.request(q).unwrap(), f.request(queued).unwrap()),
+            requests
+        );
+        assert_eq!(calls.get(), 0);
+    }
+    #[test]
+    fn despawn_metadata_and_notification_token_overflow_retains_pending_head() {
+        for fault in 0..4 {
+            let (mut f, actor, carrier, work, r, q, _, calls) = active(100);
+            f.despawn_actor_at_with_scheduler_priority(actor, t(2), 0)
+                .unwrap();
+            match fault {
+                0 => {
+                    f.registry.remove::<WorkSpec>(carrier.0);
+                }
+                1 => {
+                    f.actor_domains.remove(&actor);
+                }
+                2 => {
+                    f.registry.remove::<WorkContext<Rc<Cell<u32>>>>(carrier.0);
+                }
+                _ => {
+                    f.scheduled = OPERATION_CAP - 1;
+                }
+            }
+            let before = capture!(f);
+            let resource = f.resource(r).unwrap();
+            let progress = f.work_progress(work).unwrap();
+            let request = f.request(q).unwrap();
+            assert_eq!(
+                f.step().unwrap_err(),
+                if fault == 3 {
+                    FlowError::CounterOverflow
+                } else {
+                    FlowError::InvalidState
+                }
+            );
+            assert_eq!(capture!(f), before);
+            assert_eq!(f.resource(r).unwrap(), resource);
+            assert_eq!(f.work_progress(work).unwrap(), progress);
+            assert_eq!(f.request(q).unwrap(), request);
+            assert_eq!(calls.get(), 0);
+        }
+    }
+    #[test]
+    fn despawn_budget_fail_stop_retains_pending_head() {
+        let (mut f, actor, _, work, r, q, _, calls) = active(2);
+        let dummy = f.create_resource(0).unwrap();
+        let other = f.spawn_actor().unwrap();
+        f.despawn_actor_at_with_scheduler_priority(actor, t(2), 0)
+            .unwrap();
+        f.acquire(dummy)
+            .owner(other)
+            .at(t(2))
+            .scheduler_priority(-1)
+            .submit()
+            .unwrap();
+        f.step().unwrap().unwrap();
+        let head = f.scheduler.peek_next();
+        let stats = f.scheduler.stats();
+        let resource = f.resource(r).unwrap();
+        let request = f.request(q).unwrap();
+        let progress = f.work_progress(work).unwrap();
+        let world = f.world.snapshot();
+        assert_eq!(
+            f.step().unwrap_err(),
+            FlowError::SameTickBudgetExceeded {
+                at_ticks: 2,
+                limit: 2
+            }
+        );
+        let halt = f.budget_snapshot().halted.unwrap();
+        assert_eq!(halt.required_cost, 2);
+        assert_eq!(halt.consumed, 1);
+        assert_eq!(halt.pending, head.unwrap());
+        for _ in 0..2 {
+            assert_eq!(
+                f.step().unwrap_err(),
+                FlowError::SameTickBudgetExceeded {
+                    at_ticks: 2,
+                    limit: 2
+                }
+            );
+        }
+        assert_eq!(f.scheduler.peek_next(), head);
+        assert_eq!(f.scheduler.stats(), stats);
+        assert_eq!(f.resource(r).unwrap(), resource);
+        assert_eq!(f.request(q).unwrap(), request);
+        assert_eq!(f.work_progress(work).unwrap(), progress);
+        assert_eq!(f.world.snapshot(), world);
+        assert!(f.pending_despawns.contains(&actor));
+        assert_eq!(calls.get(), 0);
+    }
+    #[test]
+    fn despawn_cleanup_invalidates_old_domain_completion_and_notification_without_callbacks() {
+        let (mut f, actor, carrier, work, r, q, queued, calls) = active(100);
+        let lease = f.request(q).unwrap().lease.unwrap();
+        f.schedule_domain(carrier, KIND, t(3), 0).unwrap();
+        f.release(lease, t(5)).unwrap();
+        let survivor = f.spawn_actor().unwrap();
+        let survivor_calls: Rc<Cell<u32>> = Rc::new(Cell::new(0));
+        let survivor_work = f
+            .create_actor_domain_context(survivor, "shared", KIND, survivor_calls.clone())
+            .unwrap();
+        f.schedule_domain(survivor_work, KIND, t(4), 0).unwrap();
+        f.despawn_actor_at_with_scheduler_priority(actor, t(2), 0)
+            .unwrap();
+        let d = f.step().unwrap().unwrap();
+        assert_eq!(
+            d.records.iter().map(|r| r.transition).collect::<Vec<_>>(),
+            vec![LifecycleTransition::Cancelled, LifecycleTransition::Granted]
+        );
+        assert_eq!(f.request(queued).unwrap().state, RequestState::Active);
+        assert_eq!(f.resource(r).unwrap().available, 0);
+        assert!(!f.pending_releases.contains(&lease));
+        assert!(!f.world.is_alive(work.0));
+        let mut seen = BTreeSet::new();
+        for row in &d.records {
+            assert!(seen.insert((row.causal_event_id, row.transition_ordinal)));
+        }
+        let mut notifications = 0;
+        let mut domain_stale = 0;
+        let mut completion_stale = 0;
+        let mut drained = false;
+        for _ in 0..16 {
+            let Some(d) = f.step().unwrap() else {
+                drained = true;
+                break;
+            };
+            for row in &d.records {
+                assert!(seen.insert((row.causal_event_id, row.transition_ordinal)));
+            }
+            assert_eq!(calls.get(), 0);
+            if d.at == t(2) {
+                assert!(d.error.is_none() && d.records.is_empty() && d.callback_batches.is_empty());
+                notifications += 1;
+            }
+            if d.at == t(3) {
+                assert!(d.error.is_none() && d.records.is_empty() && d.callback_batches.is_empty());
+                domain_stale += 1;
+            }
+            if d.at == t(10) {
+                assert!(d.error.is_none() && d.records.is_empty() && d.callback_batches.is_empty());
+                completion_stale += 1;
+            }
+        }
+        assert!(drained);
+        assert_eq!((notifications, domain_stale, completion_stale), (2, 1, 1));
+        assert_eq!(survivor_calls.get(), 1);
+        assert_eq!(f.request(q).unwrap().state, RequestState::Cancelled);
+        assert!(f.pending_despawns.is_empty());
     }
 }
