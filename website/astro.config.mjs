@@ -2,9 +2,9 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 import starlightVersions from "starlight-versions";
 import starlightLinksValidator from "starlight-links-validator";
-import starlightLlmsTxt from "starlight-llms-txt";
 import { starlightIconsPlugin } from "starlight-plugin-icons";
 import polyglotPlugin from "./src/plugins/starlight-polyglot.mjs";
+import kairoecsLlmsTxt from "./src/plugins/kairoecs-llms-txt/index.mjs";
 
 const repo = "https://github.com/edithatogo/kairos";
 
@@ -72,7 +72,7 @@ export default defineConfig({
           failOnError: false,
           reporters: { githubActions: true, json: true },
         }),
-        starlightLlmsTxt({
+        kairoecsLlmsTxt({
           projectName: "KairoECS",
           details:
             "KairoECS documentation covers deterministic simulation, conformance evidence, and polyglot bindings.",

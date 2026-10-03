@@ -39,10 +39,50 @@ for (const dependency of [
   "@astrojs/starlight",
   "starlight-versions",
   "starlight-links-validator",
-  "starlight-llms-txt",
   "starlight-plugin-icons",
+  "@astrojs/mdx",
+  "hast-util-select",
+  "rehype-parse",
+  "rehype-remark",
+  "remark-gfm",
+  "remark-stringify",
+  "unified",
+  "unist-util-remove",
 ]) {
   if (!dependencies[dependency]) fail(`website/package.json missing dependency: ${dependency}`);
+}
+
+const localLlmsPlugin = readText("website/src/plugins/kairoecs-llms-txt/index.mjs");
+if (!localLlmsPlugin.includes('name: "kairoecs-llms-txt"')) fail("local LLMS plugin name is missing");
+for (const localFile of [
+  "website/src/plugins/kairoecs-llms-txt/index.mjs",
+  "website/src/plugins/kairoecs-llms-txt/generator.mjs",
+  "website/src/plugins/kairoecs-llms-txt/entry-to-simple-markdown.mjs",
+  "website/src/plugins/kairoecs-llms-txt/LICENSE",
+]) {
+  if (!fs.existsSync(path.join(repoRoot, localFile)) || fs.statSync(path.join(repoRoot, localFile)).size === 0) {
+    fail(`local LLMS integration file missing or empty: ${localFile}`);
+  }
+}
+const packageLock = readJson("website/package-lock.json");
+const lockPackages = packageLock.packages ?? {};
+const forbiddenLockNames = new Set([
+  "starlight-llms-txt",
+  "micromatch",
+  "braces",
+  "@types/micromatch",
+  "@types/braces",
+]);
+for (const [lockPath, lockEntry] of Object.entries(lockPackages)) {
+  const packageName = lockPath.startsWith("node_modules/") ? lockPath.slice("node_modules/".length) : "";
+  if (forbiddenLockNames.has(packageName)) fail(`forbidden package remains in website/package-lock.json: ${lockPath}`);
+  for (const field of ["dependencies", "optionalDependencies", "peerDependencies", "devDependencies"]) {
+    for (const dependency of Object.keys(lockEntry[field] ?? {})) {
+      if (forbiddenLockNames.has(dependency) || dependency === "braces") {
+        fail(`forbidden lock dependency edge in ${lockPath}: ${dependency}`);
+      }
+    }
+  }
 }
 
 const scripts = packageJson.scripts ?? {};
@@ -56,7 +96,7 @@ for (const marker of [
   "starlight({",
   "starlightVersions({",
   "starlightLinksValidator({",
-  "starlightLlmsTxt({",
+  "kairoecsLlmsTxt({",
   "starlightIconsPlugin({",
   "polyglotPlugin({",
   "R2 Preview",
@@ -109,9 +149,12 @@ for (const generated of [
   "website/build/r1/index.html",
   "website/build/llms.txt",
   "website/build/llms-full.txt",
+  "website/build/llms-small.txt",
   "website/build/pagefind/pagefind.js",
 ]) {
-  if (!fs.existsSync(path.join(repoRoot, generated))) fail(`missing generated docs artifact: ${generated}`);
+  const generatedPath = path.join(repoRoot, generated);
+  if (!fs.existsSync(generatedPath)) fail(`missing generated docs artifact: ${generated}`);
+  else if (generated.endsWith(".txt") && fs.statSync(generatedPath).size === 0) fail(`empty generated docs artifact: ${generated}`);
 }
 
 const builtIndex = readText("website/build/index.html");
@@ -129,7 +172,7 @@ for (const marker of [
   "Astro and Starlight as the active documentation shell",
   "starlight-versions",
   "kairoecs-starlight-polyglot",
-  "starlight-llms-txt",
+  "kairoecs-llms-txt",
 ]) {
   if (!docsPlatformMd.includes(marker)) fail(`docs/developer-experience/docs-platform.md missing marker: ${marker}`);
 }
@@ -152,5 +195,5 @@ if (issues.length > 0) {
 console.log(JSON.stringify({
   status: "ok",
   validator: "scripts/validation/validate-docs-platform-sota.mjs",
-  plugins: ["starlight-versions", "starlight-links-validator", "starlight-llms-txt", "starlight-plugin-icons", "kairoecs-starlight-polyglot"],
+  plugins: ["starlight-versions", "starlight-links-validator", "kairoecs-llms-txt", "starlight-plugin-icons", "kairoecs-starlight-polyglot"],
 }, null, 2));

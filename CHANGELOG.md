@@ -30,6 +30,7 @@ Format:
 ### Fixed
 
 - Website documentation builds verify a checksum-bound local cache-semantics mitigation and run installed-package security regressions before building; registry advisories remain open.
+- Website LLMS exports now use a local MIT-attributed renderer, removing the `starlight-llms-txt` braces/micromatch dependency path; hosted Node 24 Docs Quality runs its four-case contract test.
 
 - Dependency license policy recognizes Unicode-3.0 for the existing unicode-ident dependency.
 

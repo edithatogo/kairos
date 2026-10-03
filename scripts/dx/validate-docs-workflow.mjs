@@ -132,8 +132,17 @@ async function main() {
   const packageJson = JSON.parse(readText(packageJsonPath));
   assert(packageJson.scripts?.build === "astro build", "website build script is not wired to astro build");
   assert(packageJson.scripts?.start === "astro dev", "website start script is not wired to astro dev");
-  for (const dependency of ["astro", "@astrojs/starlight", "starlight-versions", "starlight-links-validator", "starlight-llms-txt", "starlight-plugin-icons"]) {
+  for (const dependency of ["astro", "@astrojs/starlight", "starlight-versions", "starlight-links-validator", "starlight-plugin-icons"]) {
     assert(packageJson.dependencies?.[dependency], `website package is missing ${dependency}`);
+  }
+  const astroConfig = readText(path.join(websiteRoot, "astro.config.mjs"));
+  assert(astroConfig.includes('from "./src/plugins/kairoecs-llms-txt/index.mjs"'), "Astro config is missing the local LLMS plugin import");
+  assert(astroConfig.includes("kairoecsLlmsTxt({"), "Astro config is missing the local LLMS plugin invocation");
+  for (const localFile of [
+    path.join(websiteRoot, "src", "plugins", "kairoecs-llms-txt", "index.mjs"),
+    path.join(websiteRoot, "src", "plugins", "kairoecs-llms-txt", "LICENSE"),
+  ]) {
+    assert(fs.existsSync(localFile) && fs.statSync(localFile).size > 0, `local LLMS integration file is missing or empty: ${localFile}`);
   }
   assert(packageJson.scripts?.["check:sota"] === "node ../scripts/validation/validate-docs-platform-sota.mjs", "website check:sota script is not wired to docs platform SOTA validation");
 
@@ -141,7 +150,7 @@ async function main() {
   assert(docsPlatform.includes("Astro and Starlight"), "docs-platform note does not mention the active Astro/Starlight stack");
   assert(docsPlatform.includes("starlight-versions"), "docs-platform note does not mention the versioning plugin");
   assert(docsPlatform.includes("kairoecs-starlight-polyglot"), "docs-platform note does not mention the polyglot plugin");
-  assert(docsPlatform.includes("starlight-llms-txt"), "docs-platform note does not mention the llms.txt plugin");
+  assert(docsPlatform.includes("kairoecs-llms-txt"), "docs-platform note does not mention the local llms.txt integration");
 
   const coverageMatrix = readText(path.join(repoRoot, "docs", "tutorials", "coverage-matrix.md"));
   assert(coverageMatrix.includes("Learning Coverage Matrix"), "coverage matrix is missing its title");
@@ -172,6 +181,10 @@ async function main() {
 
   await runNpm(["--prefix", "website", "run", "check:links"]);
   await runNpm(["--prefix", "website", "run", "build"]);
+  for (const output of ["llms.txt", "llms-full.txt", "llms-small.txt"]) {
+    const outputPath = path.join(websiteRoot, "build", output);
+    assert(fs.existsSync(outputPath) && fs.statSync(outputPath).size > 0, `local LLMS build output is missing or empty: ${outputPath}`);
+  }
 
   assert(fs.existsSync(buildIndexPath), "missing website/build/index.html after docs build");
   const built = readText(buildIndexPath);
