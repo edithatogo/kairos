@@ -70,7 +70,15 @@ fn dispatch_revalidates_capacity_change_without_partial_mutation() {
 
 #[test]
 fn partial_builder_rejects_before_allocating_request_or_event() {
- let mut f=FlowRuntime::new();let actor=f.spawn_actor().unwrap();let resource=f.create_resource(1).unwrap();let before=f.resource(resource).unwrap();
- assert_eq!(f.acquire(resource).submit(),Err(FlowError::InvalidState));assert_eq!(f.resource(resource).unwrap(),before);assert!(f.step().unwrap().is_none());
- let request=f.acquire(resource).owner(actor).at(t(0)).submit().unwrap();assert_eq!(f.request(request).unwrap().state,RequestState::Pending);f.step().unwrap();assert_eq!(f.request(request).unwrap().state,RequestState::Active);
+    let mut f = FlowRuntime::new();
+    let actor = f.spawn_actor().unwrap();
+    let resource = f.create_resource(1).unwrap();
+    let before = f.resource(resource).unwrap();
+    assert_eq!(f.acquire(resource).submit(), Err(FlowError::InvalidState));
+    assert_eq!(f.resource(resource).unwrap(), before);
+    assert!(f.step().unwrap().is_none());
+    let request = f.acquire(resource).owner(actor).at(t(0)).submit().unwrap();
+    assert_eq!(f.request(request).unwrap().state, RequestState::Pending);
+    f.step().unwrap();
+    assert_eq!(f.request(request).unwrap().state, RequestState::Active);
 }

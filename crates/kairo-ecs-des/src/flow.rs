@@ -162,6 +162,33 @@ struct ResourceStage {
     queue: ClaimQueue,
     active: ActiveAllocations,
 }
+/// Declarative admission; fields do not mutate runtime state until submit.
+pub struct AcquireBuilder<'a> {
+    runtime: &'a mut FlowRuntime,
+    resource: ResourceId,
+    owner: Option<EntityId>,
+    work: Option<WorkId>,
+    at: SimTime,
+}
+impl AcquireBuilder<'_> {
+    pub fn owner(mut self, owner: EntityId) -> Self {
+        self.owner = Some(owner);
+        self
+    }
+    pub fn at(mut self, at: SimTime) -> Self {
+        self.at = at;
+        self
+    }
+    pub fn for_work(mut self, work: WorkId) -> Self {
+        self.work = Some(work);
+        self
+    }
+    pub fn submit(self) -> Result<RequestId, FlowError> {
+        let owner = self.owner.ok_or(FlowError::InvalidState)?;
+        self.runtime
+            .submit_inner(self.resource, owner, self.work, self.at)
+    }
+}
 /// Private shared scheduler/world/registry. Single process, experimental Rust API.
 /// All runtime resource changes occur only at command dispatch boundaries.
 pub struct FlowRuntime {
@@ -260,6 +287,16 @@ impl FlowRuntime {
         self.scheduled += 1;
         self.commands.insert(event, command);
         Ok(())
+    }
+    pub fn acquire(&mut self, resource: ResourceId) -> AcquireBuilder<'_> {
+        let at = self.now();
+        AcquireBuilder {
+            runtime: self,
+            resource,
+            owner: None,
+            work: None,
+            at,
+        }
     }
     pub fn create_work<C: 'static>(
         &mut self,
