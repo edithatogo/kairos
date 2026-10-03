@@ -43,6 +43,7 @@ Format:
 
 - TypeScript binding development installs now declare the same Vitest 4.1.11 minimum already used by the reviewed lockfile and template.
 
+- `kairo-ecs-pdes` adds a preview event-owned conservative runtime behind `pdes`, with per-LP state and queues, positive lookahead, scoped CPU workers, typed protocol errors, and a shared DES/ABM/mixed sequential-parity fixture. The existing callback scheduler remains compatible.
 - Offline Kubernetes experiment rendering rejects non-integer parallelism instead of silently coercing values that violate the CRD.
 
 - Internal agent tooling adds cooperative writer leases, bounded hashed context snapshots, and Linux/macOS ARM session-regression CI; it does not change the Rust API or authorize autonomous work.

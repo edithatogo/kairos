@@ -487,7 +487,9 @@ dependencies = [
 name = "kairo-ecs-pdes"
 version = "0.0.0"
 dependencies = [
+ "kairo-ecs-core",
  "kairo-ecs-types",
+ "serde_json",
 ]
 
 [[package]]

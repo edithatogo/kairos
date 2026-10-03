@@ -102,3 +102,7 @@ test -f conductor/tracks.yaml
 ## Issue #32 shared scanning gate
 
 CodeQL and Scorecard wait for SARIF processing, then call the shared organization gate pinned to `c3e51f894a500198e67c864a1f0c460ba72e12cd`. High/critical alerts matching the analyzed commit fail the action; API errors fail closed. No repository-local alert enforcement script is retained. The metadata validator guards processing order and SHA pinning. Hosted exact-head and post-merge evidence remain required.
+
+## Local HTTP cache mitigation
+
+After each bootstrap npm ci, apply the exact hash-verified upstream PR 58 source fix, retaining http-cache-semantics@4.2.0 identity. Run seven offline installer regressions and 60 cache behavior cases for each installed npm consumer copy. Validate npm and make-fetch-happen resolution hashes before CLI use. The unchanged moderate npm audit still reports GHSA-ch52-4w7c-c8xp; this is local source remediation, not a published fixed version or audit exception. Linux hosted evidence remains required.

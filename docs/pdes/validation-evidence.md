@@ -1,5 +1,9 @@
 # PDES Validation Evidence
 
+Maturity: preview compatibility scaffold. The production event-owned API is
+[ConservativeRuntime](production-conservative-runtime.md); the descriptions
+below retain the Track 34 contract for existing callers.
+
 Track 34 keeps PDES validation conservative and local to `kairo-ecs-pdes`.
 The current validator does not claim scheduler integration or real speedup.
 No hardware-speedup or hardware-parity claim is made in this slice.

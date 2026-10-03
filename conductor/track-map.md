@@ -57,7 +57,7 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 44 | Code and Repository Health >= 9.5 | Hard production health floor | health-agent + ci-agent + security-agent + release-agent | Before production registry or parity claims |
 | 45 | Astro/Starlight Docs Platform and Polyglot Experience | Active docs platform SOTA gate | docs-platform-agent + docs-agent + ci-agent | After docs quality and code health |
 | 46 | HPC Parity Charter, Baselines & Evidence Gates | Shared live-proof charter for Tracks 47-55 | benchmark-agent + interop-agent + redteam-agent + wave-manager-agent | Starts the HPC parity wave |
-| 47 | PDES Conservative Lookahead Production Runtime | Production conservative PDES scheduler | pdes-agent + performance-agent | After Track 34 scaffold and Track 46 charter |
+| 47 | PDES Conservative Lookahead Production Runtime | Accepted event-owned single-host conservative runtime and live CPU evidence; final metadata checks and merge pending | pdes-agent + performance-agent | After Track 34 scaffold and Track 46 charter |
 | 48 | Time Warp Optimistic Rollback Runtime | Optimistic rollback, anti-messages, fossil collection | pdes-agent + timetravel-agent + ecs-agent | After Track 47 LP contract |
 | 49 | Distributed MPI/gRPC State Synchronization | Real MPI/gRPC transports and distributed state sync | distributed-agent + pdes-agent | After Tracks 35, 47, and 48 |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | hwloc, affinity, arenas, zero-copy FFI layout | core-scheduler-agent + ecs-agent + ffi-agent | After Tracks 01, 02, and 46 |

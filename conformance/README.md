@@ -17,6 +17,7 @@ Current ready fixture IDs:
 3. `rng_reproducibility_v1`
 4. `vvuq_scenario_replay_v1`
 5. `zero_delay_guard_v1`
+6. `pdes_conservative_parity_v1`
 
 Current planned fixture families that are still future scope:
 
@@ -33,6 +34,7 @@ The fixture family semantics are:
 - `rng_reproducibility_v1` covers reproducible entity-derived RNG streams.
 - `vvuq_scenario_replay_v1` covers scenario/seed replay evidence boundaries for VVUQ and experiment-runner smoke checks.
 - `zero_delay_guard_v1` covers zero-delay event ordering guardrails without claiming a native livelock harness.
+- `pdes_conservative_parity_v1` defines the LP counts, workloads, seeds, horizon and lookahead consumed by `crates/kairo-ecs-pdes/tests/production_parity.rs`. The Node runner validates the fixture contract only; the Rust integration test executes sequential/parallel parity and GVT assertions.
 
 The metadata-only chaos manifest lives at `conformance/chaos/manifest.json` and
 is validated by `tests/conformance/chaos-check.mjs`. It covers event

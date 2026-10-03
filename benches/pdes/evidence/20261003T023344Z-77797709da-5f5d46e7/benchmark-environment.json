@@ -1,0 +1,13 @@
+{
+  "command": "rustup run 1.98.1 cargo bench -p kairo-ecs-pdes --bench production --features pdes -- --seed 472026 --repetitions 5",
+  "cpu_count_logical": 10,
+  "environment_variables": {},
+  "filesystem": "apfs; local repository filesystem",
+  "git_status_porcelain": "",
+  "memory_bytes": 34359738368,
+  "physical_cpu_count": 10,
+  "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+  "python": "3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "source_tree_dirty": false,
+  "source_tree_sha256": "789489730e6583c462917c8dd34d8ac9581d357539b413b8000b365aa272e477"
+}

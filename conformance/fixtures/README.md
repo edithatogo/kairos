@@ -13,6 +13,7 @@ The target directory-backed runner shape remains the one in `conductor/contracts
 | `rng_reproducibility_v1` | `rng_replay.json` | Reproducible entity-derived random streams | Track 01, Track 02, Tracks 06-11 |
 | `vvuq_scenario_replay_v1` | `vvuq_scenario_replay.json` | Scenario/seed replay evidence boundary for the local VVUQ smoke | Tracks 21-22 |
 | `zero_delay_guard_v1` | `zero_delay_guard.json` | Zero-delay event ordering guardrails; this fixture does not claim a native livelock harness | Track 01, Track 02, Tracks 06-11 |
+| `pdes_conservative_parity_v1` | `pdes_conservative_parity_v1.json` | Native conservative PDES versus core scheduler final-state parity; Node contract validation only | Tracks 47, 49, 55 |
 | `des_resource_queue_v1` | planned | Resource queue behavior for DES workflows | Track 01, Track 02, Tracks 06-11 |
 | `abm_behavior_update_v1` | planned | Behavior update semantics for ABM workflows | Track 01, Track 02, Tracks 06-11 |
 | `hybrid_des_abm_v1` | planned | Mixed DES and ABM run contract | Track 01, Track 02, Tracks 06-11 |
@@ -30,6 +31,7 @@ Ready bootstrap fixtures must keep the following fields stable:
 - `run_seed` and `entity` when the fixture exercises reproducible RNG
 - `scenario_manifest`, `seed_manifest`, and `expected_summary_hash` when the fixture exercises VVUQ replay evidence
 - `requirement` when the fixture carries a plain-language contract note
+- `lp_counts`, `workloads`, `seeds`, `horizon_ticks`, `lookahead_ticks` and `consumer` for conservative PDES parity; the native consumer must exercise all three workload classes
 
 ## Consumption rules
 

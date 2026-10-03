@@ -8,8 +8,7 @@ sequential parity, and measured scaling evidence.
 
 ## Maturity
 
-Spec Approved planning track. The current implementation remains the Track 34
-scaffold until this track's TDD implementation phases close.
+Done for the event-owned single-host runtime behind `pdes` as a preview API. Raw host evidence is captured, registered and reviewed. All 19 workflow runs passed at the reviewed 8a6bf66 head. The human-approved, expiring EXC-193 accepts only the retained exact raw cache advisory after source mitigation for PR #193 development/alpha-beta dry runs. Final metadata-head CI and merge remain required. No RC/1.0, publication, speedup or distributed certification follows. Track 34 compatibility APIs retain their original scaffold contracts.
 
 ## Inputs
 

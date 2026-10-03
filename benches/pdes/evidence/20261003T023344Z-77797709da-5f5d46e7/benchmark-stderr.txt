@@ -1,0 +1,2 @@
+    Finished `bench` profile [optimized] target(s) in 0.59s
+     Running benches/production.rs (target/release/deps/production-d62b087209a0899b)
