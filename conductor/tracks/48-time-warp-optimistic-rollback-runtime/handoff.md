@@ -21,12 +21,12 @@ at `3cd6d56`. A subsequent compiler audit found Homebrew Rust 1.99.0 in both
 independent Cargo target caches despite command wrappers labelled 1.98.1 and
 1.76.0. Those results establish behavioral passes under the actual compiler;
 they do **not** establish either claimed pinned toolchain or MSRV. Explicit
-compiler-path reruns remain required, and the original receipts remain historical.
+compiler-path reruns below now pass; the original receipts remain historical.
 
 The source-bound sparse/dense benchmark at `ec9828e` has actual parity and five
 raw alternating repeats in
 `benches/pdes/evidence/track48-ec9828e/`. Its recorded wrapper toolchain metadata
-also needs actual Cargo-compiler reconciliation before a pinned-toolchain claim.
+is superseded for pinned compiler provenance by the accepted68b8d7a rerun below.
 The benchmark isolates runtime run calls and excludes setup, state/report
 extraction, validation and fossil collection. It is a small single-host fixture;
 no general speedup, simultaneous CPU execution or distributed proof is claimed.
@@ -41,15 +41,14 @@ The coordinator's source-bound receipt/log are
 `artifacts/track48-final-validation/receipt-resolved-pinned.json` and
 `just-ci-resolved-pinned.log`. Earlier LLVM discovery/format failures remain
 failed attempts, not pinned workspace evidence. The actual Rust 1.76.0 crate
-rerun is pending. No hosted Actions pass, push or merge is inferred.
+rerun passed94 tests with matching Cargo/rustc1.76; canonical proof is preserved. No hosted Actions pass, push or merge is inferred.
 A coordinator live-quality readback also reports a main-branch CodeQL/Scorecard
 failure for alert482, including GitHub-reviewed braces advisory
 `GHSA-vfj7-8cjw-p6xm` (affected<=3.0.3, no patched version in that readback),
 missing Codecov project status despite upload success, and Renovate refresh
 pending afterPR197. These are open cross-track/security evidence blockers;
 no alert dismissal, bypass or extension of PR193-only EXC-193 is authorized.
-The coordinator will reconcile global registry narratives and release notes in a
-separate owned packet after its CI lease ends.
+The coordinator reconciled global narratives and release notes in d62891e/eb02a14.
 
 Live distributed rollback artifacts, cross-participant GVT and the Track 49
 integration gate remain required before Done. Track 49 still depends on
@@ -228,3 +227,11 @@ Merged accepted upstreammain PR197 as0ab0c56; its two documentation workflow mit
 ## Explicit MSRV evidence accepted — 2026-10-03
 
 At source7a432ab, matching Cargo/rustc/rustdoc1.76.0 with explicit PATH/RUSTC/RUSTDOC and fresh target passed94 local pdes,time-warp tests plus doc tests. Independent review verified all bound source hashes, actual Cargo compiler cache and successful log SHA c9bca00d9a453414809181c1950294a4189169afd601ce77d77350dfd3078b01. Canonical unchanged copies are in benches/pdes/evidence/track48-msrv-7a432ab/. This resolves the local MSRV proof gap; historical compiler labels remain withdrawn. Benchmark compiler correction, exact-head hosted/security and live distributed gates remain pending.
+
+## Final compiler-bound local delivery — 2026-10-03
+
+Reviewed collector504aa4a integrated as68b8d7a. Absolute Cargo/rustc1.98.1, binary/configuration hashes, wrapper/selector refusal and fixed baseline flags resolve compiler drift. At clean68b8d7a,12 collector tests and strict fresh benchmark passed; independent review verified actual Cargo cache1.98.1/LLVM22.1.8,16 unchanged source hashes, raw logs and four parity cases with five alternating samples. Canonical evidence: benches/pdes/evidence/track48-68b8d7a/, SHAe7d08f74b0c448cac281cd95199e24cf9d34218a303a80ad0a66f8e1323cbc8c. Scope is tiny single-host lightweight-handler run-call smoke, with substantial timing variation and excluded setup/extraction/validation/fossil costs. No general speedup, CPU-concurrency or distributed claim.
+
+Explicit1.98 workspace CI458/coverage92.59% and matching1.76 local PDES94 tests are accepted. The workspace doc-test command at7c35f2a exited0 across25 targets with zero runnable examples, separately preserved in benches/pdes/evidence/track48-doctests-7c35f2a/. CHANGELOG d62891e and global evidence synchronization eb02a14 are committed; previous pending statements describe historical review snapshots. Exact-head push/hosted security/package gates and live distributed acceptance remain pending. Track48 stays In Progress; Track49 dependency/production authority unchanged.
+
+During compiler-fix coordination, an expired worker lease was explicitly recovered only after interruption; exact edits were preserved in stashes. A displayed cooperative lease token was revoked and rotated before continuation. No token is committed or active. Original failed attempts and superseded raw evidence remain preserved.

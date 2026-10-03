@@ -17,7 +17,7 @@ the explicitly bound Rust 1.98.1 workspace lane passed all 458 tests, core line
 coverage (92.59%), formatting, Clippy, rustdoc and Rust security checks.
 Matching Cargo/rustc 1.76.0 also passed the complete 94-test local PDES lane
 at `7a432ab`, verified independently from source hashes and compiler cache.
-Corrected benchmark provenance and hosted checks remain pending. No distributed acceptance or
+Compiler-bound benchmark evidence is accepted at `68b8d7a`; hosted checks remain pending. No distributed acceptance or
 Track48 Done follows from these local results.
 
 ## Model contract
@@ -84,6 +84,19 @@ CPU execution, MPI/gRPC rollback, distributed GVT, or a general scaling benefit.
 The [distributed handoff proposal](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/distributed-interface-handoff.md)
 retains those acceptance requirements and grants no Track49 dispatch.
 
+## Accepted compiler-bound local smoke
+
+Source `68b8d7a`, actual Rust1.98.1 Cargo/rustc with binary hashes and compiler-cache verification, seed482027; one warmup and five alternating samples. Median run-call durations:
+
+| Traffic / LPs | Conservative ms | Optimistic ms | Committed events | Extra executions | Replay executions |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| sparse / 4 | 40.290209 | 0.052791 | 36 | 10 | 10 |
+| dense / 4 | 56.366292 | 0.585834 | 141 | 134 | 92 |
+| sparse / 8 | 54.293834 | 0.075291 | 71 | 24 | 23 |
+| dense / 8 | 78.676834 | 1.831208 | 292 | 431 | 240 |
+
+[Accepted raw data and provenance](../../benches/pdes/evidence/track48-68b8d7a/README.md) preserve every sample. Timing varies substantially. This tiny lightweight ring and conservative thread/null-message overhead do not establish a general performance advantage or simultaneous CPU execution. Setup, extraction, validation and fossil collection are excluded. Native [workspace](../../benches/pdes/evidence/track48-native-7a432ab/README.md) and [MSRV](../../benches/pdes/evidence/track48-msrv-7a432ab/README.md) records are separate from hosted and distributed gates.
+
 ## Historical local smoke measurements: compiler metadata superseded
 
 Source `ec9828e`, actual Homebrew Rust 1.99.0 (the recorded Rust 1.98.1 label was incorrect), fixed seed482027; one warmup and five alternating repeats. Median run-call durations:
@@ -97,4 +110,4 @@ Source `ec9828e`, actual Homebrew Rust 1.99.0 (the recorded Rust 1.98.1 label wa
 
 [Raw results and source binding](../../benches/pdes/evidence/track48-ec9828e/time_warp_evidence.json) preserve every sample. The lightweight model and conservative thread/null-message work make these fixture-specific durations; they do not establish a general performance advantage. Setup, validation/extraction and fossil collection are excluded from both timing intervals. Dense fixtures require substantially more rollback/replay in this model.
 
-These raw files are preserved unchanged for audit. A compiler-bound collector rerun is required before accepting pinned-toolchain benchmark evidence.
+These raw files are preserved unchanged for audit. The accepted compiler-bound rerun above supersedes these original compiler labels; original bytes remain unchanged.

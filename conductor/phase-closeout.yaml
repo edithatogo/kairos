@@ -840,7 +840,7 @@ entries:
     phase: "local-runtime-review"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Reviewed event-owned optimistic runtime, exact-incarnation downstream cancellation, replay, bounded progress, GVT and generational membership restore. Local implementation accepted with heldout tests; compiler-label finding corrected by explicitly bound Rust1.98.1 workspace CI at7a432ab (458 tests, 92.59% core coverage, fmt/Clippy/rustdoc/RustSec passed). Earlier1.98/MSRV benchmark labels withdrawn: actual compiler was1.99. Corrected MSRV/benchmark and hosted/security evidence remain pending."
+    review_result: "Reviewed event-owned optimistic runtime, exact-incarnation downstream cancellation, replay, bounded progress, GVT and generational membership restore. Local implementation accepted with heldout tests; compiler-label finding corrected by explicitly bound Rust1.98.1 workspace CI at7a432ab (458 tests, 92.59% core coverage, fmt/Clippy/rustdoc/RustSec passed). Earlier1.98/MSRV benchmark labels withdrawn: actual compiler was1.99. Corrected MSRV94 tests and compiler-bound benchmark now accepted; hosted/security evidence remain pending."
     fixes_applied: true
     validation_commands:
       - "PATH=<resolved-1.98.1-bin>:$PATH RUSTC=<resolved-1.98.1-rustc> LLVM_COV=<matching-llvm-cov> LLVM_PROFDATA=<matching-llvm-profdata> RUSTUP_TOOLCHAIN=1.98.1 just ci"
@@ -849,10 +849,10 @@ entries:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
-    git_status: "Local implementation committed; supplemental gates passed at7a432ab. Development branch push/exact-head Actions pending. No phase or track status advancement."
-    commit_sha: "3cd6d56ed98d39d311fe19f4d88857f43bfe6da6, ec9828ebcfc86fd86ae9f512e02b252202965a8b, 7a432ab46c3bfa5f3917f1cce0f4545fac39f649"
+    git_status: "Local implementation committed; supplemental gates passed at7a432ab. Development branch push/exact-head Actions pending. No phase or track status advancement; matching1.76 PDES94 and compiler-bound68b8d7a benchmark accepted."
+    commit_sha: "3cd6d56ed98d39d311fe19f4d88857f43bfe6da6, ec9828ebcfc86fd86ae9f512e02b252202965a8b, 7a432ab46c3bfa5f3917f1cce0f4545fac39f649, 68b8d7a311b7acaa099a0f1c4aec4933f4b98a23"
     pushed_ref: "not-yet-pushed:codex/kairos-track48-optimistic-runtime"
-    next_phase_decision: "Remain In Progress. Complete compiler-bound MSRV/benchmark evidence and exact-head hosted/security gates; retain live distributed rollback gate and unchanged Track49 dependency. EXC-193 covers PR193 only. Explicit accepted phase/interface scheduling decision is required before Track49 production dispatch."
+    next_phase_decision: "Remain In Progress. Compiler-bound MSRV/benchmark evidence accepted; complete exact-head hosted/security gates; retain live distributed rollback gate and unchanged Track49 dependency. EXC-193 covers PR193 only. Explicit accepted phase/interface scheduling decision is required before Track49 production dispatch."
   - track_id: "49"
     phase: "contract-baseline"
     state: pending

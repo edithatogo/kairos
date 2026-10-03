@@ -2,7 +2,7 @@
 
 ## Summary
 
-The bounded local implementation is accepted for feature-preview review with actual pinned Rust1.98 workspace evidence; compiler-label corrections, MSRV rerun and coordinator metadata work precede final delivery, while distributed/security/release acceptance remains separate.
+The bounded local implementation is accepted for feature-preview review with actual pinned Rust1.98 workspace evidence; compiler-label corrections, actual MSRV rerun and coordinator metadata work are now accepted, while distributed/security/release acceptance remains separate.
 
 Review scope is `origin/main..7a432ab46c3bfa5f3917f1cce0f4545fac39f649`
 (20 non-Conductor files, 7053 insertions, six deletions), plus this isolated
@@ -65,3 +65,11 @@ tests and current coordinator receipts remain distinguishable.
 - **Context**: Cross-process/rank straggler repair, downstream cancellation/redelivery, participant GVT and live artifacts remain required. Existing EXC-193 applies only to PR193; local cargo-deny/audit do not waive unresolved security/release gates.
 - **Suggestion**: Keep local preview acceptance separate from distributed, hosted/security, dependency and release acceptance.
 - **Corrective action**: Preserved. Coordinator live-quality readback reports main-branch CodeQL/Scorecard alert482 failure, including `GHSA-vfj7-8cjw-p6xm` (braces<=3.0.3, patched version absent in that readback), missing Codecov project status despite upload success and pending Renovate refresh afterPR197. No alert dismissal/bypass or extension of EXC-193 is authorized. No Track49 production dispatch, dependency change, archive/delete or Track48 Done is authorized. Final Actions/push/merge and any required scheduling decision remain coordinator/user gates.
+
+## Final compiler-bound local delivery — 2026-10-03
+
+Reviewed collector504aa4a integrated as68b8d7a. Absolute Cargo/rustc1.98.1, binary/configuration hashes, wrapper/selector refusal and fixed baseline flags resolve compiler drift. At clean68b8d7a,12 collector tests and strict fresh benchmark passed; independent review verified actual Cargo cache1.98.1/LLVM22.1.8,16 unchanged source hashes, raw logs and four parity cases with five alternating samples. Canonical evidence: benches/pdes/evidence/track48-68b8d7a/, SHAe7d08f74b0c448cac281cd95199e24cf9d34218a303a80ad0a66f8e1323cbc8c. Scope is tiny single-host lightweight-handler run-call smoke, with substantial timing variation and excluded setup/extraction/validation/fossil costs. No general speedup, CPU-concurrency or distributed claim.
+
+Explicit1.98 workspace CI458/coverage92.59% and matching1.76 local PDES94 tests are accepted. The workspace doc-test command at7c35f2a exited0 across25 targets with zero runnable examples, separately preserved in benches/pdes/evidence/track48-doctests-7c35f2a/. CHANGELOG d62891e and global evidence synchronization eb02a14 are committed; previous pending statements describe historical review snapshots. Exact-head push/hosted security/package gates and live distributed acceptance remain pending. Track48 stays In Progress; Track49 dependency/production authority unchanged.
+
+During compiler-fix coordination, an expired worker lease was explicitly recovered only after interruption; exact edits were preserved in stashes. A displayed cooperative lease token was revoked and rotated before continuation. No token is committed or active. Original failed attempts and superseded raw evidence remain preserved.

@@ -132,7 +132,4 @@ are held until Track49 integration supplies actual cross-process/rank rollback,
 GVT and raw artifacts. Hosted exact-head CI, push/merge and release approval are
 separate gates. Coordinator quality readback also reports unresolved main CodeQL/Scorecard security alerts, missing Codecov project status and pending Renovate refresh; no existing PR193-only exception applies to this delivery. Track48 remains In Progress; dependencies are unchanged.
 
-The coordinator still owns the Track48 `CHANGELOG.md` entry and global Conductor
-narrative synchronization. This review records that release-note gap rather than
-claiming the existing changelog describes the new API. The current handoff and
-test matrix carry the local evidence and remaining gates.
+The affected-crate release note and global Conductor synchronization are committed in d62891e/eb02a14. Actual matching1.98 workspace and1.76 PDES tests, plus compiler-bound68b8d7a benchmark evidence, resolve the local compiler-provenance gaps. The handoff/test matrix retain hosted/security/distributed gates and no human release signoff is inferred.

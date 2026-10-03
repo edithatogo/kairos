@@ -52,7 +52,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 45 | Astro/Starlight Docs Platform and Polyglot Experience | Done | `docs-platform-agent + docs-agent + ci-agent` | See `conductor/tracks/45-*/spec.md` |
 | 46 | HPC Parity Charter, Baselines & Evidence Gates | Done | `benchmark-agent + interop-agent + redteam-agent + wave-manager-agent` | See `conductor/tracks/46-*/spec.md` |
 | 47 | PDES Conservative Lookahead Production Runtime | Done | `pdes-agent + performance-agent` | See `conductor/tracks/47-*/spec.md` |
-| 48 | Time Warp Optimistic Rollback Runtime | In Progress | `pdes-agent + timetravel-agent + ecs-agent` | Local runtime reviewed; compiler-bound evidence and hosted/distributed gates pending. See `conductor/tracks/48-*/handoff.md`. |
+| 48 | Time Warp Optimistic Rollback Runtime | In Progress | `pdes-agent + timetravel-agent + ecs-agent` | Local runtime reviewed; compiler-bound evidence accepted; hosted/distributed gates pending. See `conductor/tracks/48-*/handoff.md`. |
 | 49 | Distributed MPI/gRPC State Synchronization | In Progress | `distributed-agent + pdes-agent` | See `conductor/tracks/49-*/spec.md` |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | In Progress | `core-scheduler-agent + ecs-agent + ffi-agent` | See `conductor/tracks/50-*/spec.md` |
 | 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | In Progress | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
