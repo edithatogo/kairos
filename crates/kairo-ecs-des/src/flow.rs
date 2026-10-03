@@ -303,6 +303,20 @@ pub enum FlowCallbackCause {
         kind: EventKind,
     },
 }
+/// Borrowed view of the authoritative Flow world at committed delivery time.
+/// The view exposes no mutation or registry/scheduler access.
+pub struct FlowWorldView<'a> {
+    world: &'a World,
+    at: SimTime,
+}
+impl FlowWorldView<'_> {
+    pub fn now(&self) -> SimTime {
+        self.at
+    }
+    pub fn is_alive(&self, entity: EntityId) -> bool {
+        self.world.is_alive(entity)
+    }
+}
 /// Issued only by a live callback sink, scoped to its nonreused batch identity.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct FlowCommandTicket {
@@ -458,9 +472,24 @@ fn invoke_continuation<C: 'static>(
     }
 }
 struct DomainCallback<C>(FlowCallback<C>);
+type DomainViewBridge = fn(
+    &World,
+    &mut ComponentRegistry,
+    EntityId,
+    &FlowCallbackSnapshot,
+    &mut FlowCommandSink,
+    &dyn Any,
+);
+struct DomainViewCallback<C>(
+    for<'a> fn(&'a mut C, &'a FlowCallbackSnapshot, FlowWorldView<'a>, &'a mut FlowCommandSink),
+);
+enum DomainInvocation {
+    Legacy(ContinuationBridge),
+    View(DomainViewBridge),
+}
 struct DomainDescriptor {
     context_type: TypeId,
-    invoke: ContinuationBridge,
+    invoke: DomainInvocation,
     context_present: fn(&ComponentRegistry, EntityId) -> bool,
     callback: Box<dyn Any>,
 }
@@ -480,6 +509,34 @@ fn invoke_domain<C: 'static>(
         .and_then(|store| store.get_mut(entity))
     {
         callback(&mut context.0, snapshot, sink);
+    }
+}
+
+fn invoke_domain_view<C: 'static>(
+    world: &World,
+    registry: &mut ComponentRegistry,
+    entity: EntityId,
+    snapshot: &FlowCallbackSnapshot,
+    sink: &mut FlowCommandSink,
+    callback: &dyn Any,
+) {
+    let callback = callback
+        .downcast_ref::<DomainViewCallback<C>>()
+        .expect("validated view-domain context type")
+        .0;
+    if let Some(context) = registry
+        .store_mut::<WorkContext<C>>()
+        .and_then(|store| store.get_mut(entity))
+    {
+        callback(
+            &mut context.0,
+            snapshot,
+            FlowWorldView {
+                world,
+                at: snapshot.delivery.at,
+            },
+            sink,
+        );
     }
 }
 
@@ -1121,11 +1178,42 @@ impl FlowRuntime {
             key,
             DomainDescriptor {
                 context_type: TypeId::of::<C>(),
-                invoke: invoke_domain::<C>,
+                invoke: DomainInvocation::Legacy(invoke_domain::<C>),
                 context_present: |registry, entity| {
                     registry.get::<WorkContext<C>>(entity).is_some()
                 },
                 callback: Box::new(DomainCallback(callback)),
+            },
+        );
+        Ok(())
+    }
+    pub fn register_domain_view_hook<C: 'static>(
+        &mut self,
+        registration: &str,
+        kind: EventKind,
+        callback: for<'a> fn(
+            &'a mut C,
+            &'a FlowCallbackSnapshot,
+            FlowWorldView<'a>,
+            &'a mut FlowCommandSink,
+        ),
+    ) -> Result<(), FlowError> {
+        self.check_running()?;
+        Self::check_domain_kind(kind)?;
+        self.check_registration::<C>(registration)?;
+        let key = (registration.to_owned(), kind);
+        if self.domain_hooks.contains_key(&key) {
+            return Err(FlowError::InvalidWork);
+        }
+        self.domain_hooks.insert(
+            key,
+            DomainDescriptor {
+                context_type: TypeId::of::<C>(),
+                invoke: DomainInvocation::View(invoke_domain_view::<C>),
+                context_present: |registry, entity| {
+                    registry.get::<WorkContext<C>>(entity).is_some()
+                },
+                callback: Box::new(DomainViewCallback(callback)),
             },
         );
         Ok(())
@@ -1668,13 +1756,23 @@ impl FlowRuntime {
                                 cause: FlowCallbackCause::Domain { kind },
                             };
                             let h = &self.domain_hooks[&(key, kind)];
-                            (h.invoke)(
-                                &mut self.registry,
-                                work.0,
-                                &snapshot,
-                                &mut sink,
-                                h.callback.as_ref(),
-                            );
+                            match h.invoke {
+                                DomainInvocation::Legacy(invoke) => invoke(
+                                    &mut self.registry,
+                                    work.0,
+                                    &snapshot,
+                                    &mut sink,
+                                    h.callback.as_ref(),
+                                ),
+                                DomainInvocation::View(invoke) => invoke(
+                                    &self.world,
+                                    &mut self.registry,
+                                    work.0,
+                                    &snapshot,
+                                    &mut sink,
+                                    h.callback.as_ref(),
+                                ),
+                            }
                         }
                     }
                     // Validate the entire emitted batch after this once-only delivery.
@@ -4838,5 +4936,135 @@ mod continuation_private {
         assert_eq!(f.request(qa).unwrap().state, RequestState::Completed);
         assert_eq!(f.request(qb).unwrap().state, RequestState::TimedOut);
         assert!(f.step().unwrap().is_none());
+    }
+}
+
+#[cfg(test)]
+mod domain_view_private_tests {
+    use super::*;
+    use std::{cell::Cell, rc::Rc};
+    const KIND: EventKind = EventKind::custom(7405);
+    fn callback<'a>(
+        c: &'a mut Rc<Cell<u32>>,
+        s: &'a FlowCallbackSnapshot,
+        v: FlowWorldView<'a>,
+        _: &'a mut FlowCommandSink,
+    ) {
+        assert_eq!(v.now(), s.delivery.at);
+        c.set(c.get() + 1);
+    }
+    fn setup() -> (FlowRuntime, WorkId, Rc<Cell<u32>>) {
+        let mut f = FlowRuntime::new();
+        f.register_domain_view_hook("view", KIND, callback).unwrap();
+        let actor = f.spawn_actor().unwrap();
+        let calls: Rc<Cell<u32>> = Rc::new(Cell::new(0));
+        let work = f
+            .create_work(actor, SimDuration::ZERO, "view", calls.clone())
+            .unwrap();
+        f.schedule_domain(work, KIND, SimTime::from_ticks(3), 0)
+            .unwrap();
+        (f, work, calls)
+    }
+    macro_rules! capture {
+        ($f:expr) => {
+            (
+                $f.scheduler.peek_next(),
+                $f.scheduler.stats(),
+                $f.budget_snapshot(),
+                $f.world.snapshot(),
+                $f.created,
+                $f.destroyed,
+                $f.next_batch_identity,
+                $f.commands.keys().copied().collect::<Vec<_>>(),
+                $f.actors.clone(),
+                $f.works.len(),
+                $f.notifications.len(),
+            )
+        };
+    }
+    fn missing_context(wrong: bool) {
+        let (mut f, work, calls) = setup();
+        f.registry
+            .remove::<WorkContext<Rc<Cell<u32>>>>(work.0)
+            .unwrap();
+        if wrong {
+            assert!(f.registry.insert(work.0, WorkContext(17u32)));
+        }
+        let before = capture!(f);
+        let spec = f.work(work).unwrap();
+        let progress = f.work_progress(work).unwrap();
+        assert!(f.domain_delivery(work, KIND).unwrap().is_none());
+        assert_eq!(capture!(f), before);
+        assert_eq!(f.work(work).unwrap(), spec);
+        assert_eq!(f.work_progress(work).unwrap(), progress);
+        // Actual stale dispatch is consumed, preserving the existing semantics.
+        let d = f.step().unwrap().unwrap();
+        assert_eq!(d.at, SimTime::from_ticks(3));
+        assert!(d.error.is_none() && d.records.is_empty() && d.callback_batches.is_empty());
+        assert_eq!(calls.get(), 0);
+        assert_eq!(f.next_batch_identity, 0);
+        assert_eq!(f.budget_consumed, 0);
+        assert_eq!(f.world.snapshot(), before.3);
+        assert_eq!(f.created, before.4);
+        assert_eq!(f.destroyed, before.5);
+        assert_eq!(
+            f.scheduler.stats().dispatched_events,
+            before.1.dispatched_events + 1
+        );
+        assert_eq!(f.work(work).unwrap(), spec);
+        assert_eq!(f.work_progress(work).unwrap(), progress);
+        if wrong {
+            assert_eq!(f.registry.get::<WorkContext<u32>>(work.0).unwrap().0, 17);
+        }
+        assert!(f.step().unwrap().is_none());
+    }
+    #[test]
+    fn view_missing_context_inspection_is_nonmutating_then_consumed_stale() {
+        missing_context(false);
+    }
+    #[test]
+    fn view_wrong_context_inspection_is_nonmutating_then_consumed_stale() {
+        missing_context(true);
+    }
+    #[test]
+    fn view_missing_descriptor_preserves_consumed_semantic_error() {
+        let (mut f, work, calls) = setup();
+        f.domain_hooks.remove(&("view".to_owned(), KIND));
+        let before = capture!(f);
+        assert!(matches!(
+            f.domain_delivery(work, KIND),
+            Err(FlowError::UnregisteredDomainEvent)
+        ));
+        assert_eq!(capture!(f), before);
+        let d = f.step().unwrap().unwrap();
+        assert_eq!(d.error, Some(FlowError::UnregisteredDomainEvent));
+        assert!(d.records.is_empty() && d.callback_batches.is_empty());
+        assert_eq!(calls.get(), 0);
+        assert_eq!(f.next_batch_identity, 0);
+        assert_eq!(f.budget_consumed, 0);
+        assert_eq!(f.world.snapshot(), before.3);
+        assert!(f.step().unwrap().is_none());
+    }
+    #[test]
+    fn view_batch_identity_overflow_retains_exact_head_and_live_context() {
+        let (mut f, work, calls) = setup();
+        f.next_batch_identity = u64::MAX;
+        let before = capture!(f);
+        assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
+        assert_eq!(capture!(f), before);
+        assert_eq!(f.work_context::<Rc<Cell<u32>>>(work).unwrap().get(), 0);
+        assert_eq!(calls.get(), 0);
+    }
+    #[test]
+    fn view_budget_arithmetic_overflow_retains_exact_head_and_live_context() {
+        let (mut f, work, calls) = setup();
+        // Private arithmetic injection, not a reachable public event-count claim.
+        f.budget_tick = Some(SimTime::from_ticks(3));
+        f.budget_consumed = u64::MAX;
+        let before = capture!(f);
+        assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
+        assert_eq!(capture!(f), before);
+        assert_eq!(f.work_context::<Rc<Cell<u32>>>(work).unwrap().get(), 0);
+        assert_eq!(calls.get(), 0);
     }
 }
