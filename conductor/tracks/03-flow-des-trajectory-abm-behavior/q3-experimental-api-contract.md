@@ -40,7 +40,12 @@ callbacks, not serialized or dynamically loaded code.
 Callbacks run only as later dispatched internal notification events (reserved
 kind 4003), scheduler priority 0, in the committed transition order. Each token
 contains originating event/ordinal and an owned progress snapshot. Delivery does
-not emit another lifecycle row. Resume/restart use their corresponding handlers;
+not emit another lifecycle row. Progress is the captured transition snapshot;
+context is the live owned context at delivery, not a historical context copy.
+Later execution revisions do not suppress an already committed notification;
+handlers must interpret its captured transition. Only consumed token or removed
+owner/work context makes delivery stale. This preserves exactly-once observation
+without claiming rollback of application effects. Resume/restart use their corresponding handlers;
 Abort uses on_abort exactly once; explicit cancellation uses on_cancel exactly
 once, including cancellation while suspended. Token consumption prevents duplicate
 delivery. Removed owner/context invalidates pending delivery as an observable
