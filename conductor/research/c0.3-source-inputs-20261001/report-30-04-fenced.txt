@@ -1,0 +1,8 @@
+```text
+09:14  presentation
+09:19  triage
+09:47  clinical_care_start
+12:55  episode_end
+13:32  move to ED_BOARDING
+14:16  physical_departure
+```

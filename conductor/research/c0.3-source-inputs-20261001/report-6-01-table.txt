@@ -1,0 +1,8 @@
+| Need | Public Australian data now | Later Queensland/Cairns route |
+|---|---|---|
+| Annual/monthly arrival volume and broad case mix | **Yes** — AIHW aggregates | Validate/refine with EDC |
+| Patient-level interarrival process | **No open national event file** | EDC timestamps |
+| Joint ATS × arrival mode × diagnosis × disposition | Public marginals only | EDC extract |
+| Did-not-wait/other episode-end state modelling | Aggregate/status semantics available | Patient-level EDC required for patience analysis |
+| Active triage/assessment/review duration | **No** — admin clocks are insufficient | Direct time-motion needed even with EDC |
+| Staff/resource calendar | **No executable public Cairns roster found** | HHS roster/service-calendar acquisition |

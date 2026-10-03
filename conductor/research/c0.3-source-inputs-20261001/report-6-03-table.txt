@@ -1,0 +1,7 @@
+| File | Records | Purpose |
+|---|---:|---|
+| [des_evidence.csv](sandbox:/mnt/data/careops_ed_des_research_2026-09-27/des_evidence.csv) | 63 | Numeric candidate inputs/targets with provenance class, semantics, units, parameterisation, support, uncertainty, transfer limits and generic-profile disposition |
+| [asset_inventory.csv](sandbox:/mnt/data/careops_ed_des_research_2026-09-27/asset_inventory.csv) | 17 | Studies, datasets and repositories, including access/licence, raw-data availability and reuse limits |
+| [unresolved_inputs.csv](sandbox:/mnt/data/careops_ed_des_research_2026-09-27/unresolved_inputs.csv) | 14 | Remaining primitive/semantic gaps with prioritised acquisition actions |
+| [source_list.csv](sandbox:/mnt/data/careops_ed_des_research_2026-09-27/source_list.csv) | 19 | Exact titles, DOI/URL, publication/observation dates, sample/population, licence/access, source location and inspection status |
+| [manifest.json](sandbox:/mnt/data/careops_ed_des_research_2026-09-27/manifest.json) | 1 | Delivery manifest, scope, evidence-label vocabulary, record counts and hashes |

@@ -1,0 +1,8 @@
+| Provisional C0 concept | FHIR R4 / AU | HL7 v2.5.1 | AIHW NAPEDC 2026–27 | OMOP 5.5 |
+|---|---|---|---|---|
+| `source_event_time` | **Partial** — event-specific Encounter/status/location period | **Exact** when applicable/populated — `EVN-6` | **Partial** — milestone-specific date/time pairs | **Partial** — visit/detail bounds only |
+| `recorded_time` | **Partial** — matching `AuditEvent.recorded`; not `meta.lastUpdated` | **Exact** — `EVN-2` | **Unavailable** in audited NMDS | **Unavailable** as generic visit-source recording time |
+| `location_id` | **Exact** semantically — `Encounter.location.location` | **Partial** — `PV1-3` plus local PL dictionary | **Partial only at establishment level**, not detailed ED location | **Partial** — `care_site_id` is ETL-defined/coarser |
+| `location_start_time` / `location_end_time` | **Exact** semantically — `Encounter.location.period` | **Partial** — reconstruct from verified movement events | **Unavailable** for internal ED locations | **Partial** — `VISIT_DETAIL` only where ETL uses it this way |
+| `episode_end_time` | **Partial** — Encounter end is not necessarily AIHW episode end | **Partial** — A03/`PV1-45` requires workflow interpretation | **Exact** — METEOR 799780/799782 | **Partial** — visit end does not retain Australian semantic distinction |
+| `physical_departure_time` | **Partial** — final applicable ED location period, requiring location-boundary policy | **Partial** — movement/end events plus ED-location boundary | **Exact** — METEOR 799756/799758 | **Partial**, and unsafe without ETL provenance |

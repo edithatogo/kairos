@@ -1,0 +1,8 @@
+| File | Records | Purpose |
+|---|---:|---|
+| [method_decisions.csv](sandbox:/mnt/data/careops_partial_observation_validation/method_decisions.csv) | 18 | Stable `MD-*` choices, evidence class, rationale, sources, minimum data and abstention rules |
+| [fixture_proposals.csv](sandbox:/mnt/data/careops_partial_observation_validation/fixture_proposals.csv) | 14 | Hand-computable/synthetic `FX-*` fixtures with expected outcomes and range/provenance semantics |
+| [minimum_data_requirements.csv](sandbox:/mnt/data/careops_partial_observation_validation/minimum_data_requirements.csv) | 12 | Structural, identifiability and precision requirements plus failure action |
+| [source_list.csv](sandbox:/mnt/data/careops_partial_observation_validation/source_list.csv) | 19 | Exact DOI/URL, publication/observation dates where known, page/field location, sample/population, access/licence information and transfer notes |
+| [validation_protocol.yaml](sandbox:/mnt/data/careops_partial_observation_validation/validation_protocol.yaml) | 1 protocol | Machine-readable proposed workflow, leakage gates, metric roles, MC policy, uncertainty and abstention states |
+| [manifest.json](sandbox:/mnt/data/careops_partial_observation_validation/manifest.json) | 5 listed artefacts | Record counts, SHA-256 digests, research date, repository revision and attachment-status note |

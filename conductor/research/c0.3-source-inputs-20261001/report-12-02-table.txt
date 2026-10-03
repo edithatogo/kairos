@@ -1,0 +1,12 @@
+| Evidence needed | Minimum requirement | Failure behaviour |
+|---|---|---|
+| Primitive service/task duration | Direct start/end timestamps or elapsed primitive duration with units | Keep primitive unknown/synthetic; never infer from wait/LOS summary |
+| Censoring | Start, last observation, event/censor indicator; reason/mechanism where available | Abstain on censor-aware fit if event status is ambiguous |
+| Competing outcomes | Realised first-event type plus at-risk time | Pool a defensible composite or abstain on cause-specific estimate |
+| Temporal validation | Ordered date/day blocks with required calendar/clinical slices represented | Simplify claim or abstain; do not fill cells using future-to-past random splitting |
+| Patient/day dependence | Day identifier; stable pseudonymous patient identifier where repeat visits matter | Label intervals independence-assuming if clustering cannot be reconstructed |
+| Parametric primitive | Enough distinct uncensored observations to estimate the family, non-singular fit and precision sufficient for its target | Simplify family/pool strata/abstain |
+| Separate walking/task values | An independent observable or constraint for each separately claimed component, or successful synthetic parameter recovery | Report only identifiable combinations |
+| Empirical validation target | Actual held-out observations of that target | Published quantiles alone permit surrogate calibration/sensitivity, not empirical distributional validation |
+| Simulation comparison | Replications sufficient for declared MC precision | MC-indeterminate |
+| Data provenance | Source/version, fields, units, extraction/transformation history | Do not promote value to observed/fitted evidence |

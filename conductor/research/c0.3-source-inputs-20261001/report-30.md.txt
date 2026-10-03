@@ -1,0 +1,216 @@
+# Verify the minimal event and standards crosswalk
+
+## Scope, evidence status and research method
+
+**Research date:** 27 September 2026, Australia/Brisbane.
+
+**Overall finding:** the generic ED trace should preserve, as separate concepts, **source event time, source-system recorded time, physical location interval, non-admitted ED episode end, and physical ED departure**. The distinction is not merely modelling preference: it is directly supported by HL7 v2 timing semantics, FHIR's separation of encounter/location periods from audit recording time, and—most decisively for the Australian ED context—AIHW's separate definitions of non-admitted episode end and physical departure. OMOP CDM 5.5 cannot safely preserve all five distinctions without ETL provenance and, for some concepts, additional lineage/operations data. citeturn24view3turn24view5turn24view10turn24view14turn24view15turn24view17
+
+A material limitation is that the **four reports, standards bundle, calibration specification/plan and actual C0 trace schema named in the prompt were not retrievable in this session**. I therefore have not claimed to inspect them. The candidate C0 fields below are explicitly **provisional** and derived only from the bounded concepts stated in the research prompt. No local Cairns or other hospital-system availability is asserted.
+
+The inclusion strategy was deliberately narrow:
+
+- FHIR evidence was restricted to the permanent **FHIR R4 4.0.1** specification and the currently published Australian profiles, **AU Base 6.0.0** and **AU Core 2.0.0**. AU Base 6.0.0 and AU Core 2.0.0 are R4-based; the “6.0.0” AU Base release number must not be read as FHIR R6. AU Core 2.0.0 depends on AU Base 6.0.0. citeturn24view0turn24view1turn24view2
+- HL7 v2 semantics were checked against **v2.5.1 Chapters 2 and 3**, with the public HL7 Europe specification mirror used for field-level text. This is a **reference semantic version**, not evidence that a particular Australian hospital runs v2.5.1. citeturn24view5turn24view7
+- Australian ED definitions were checked against **AIHW/METEOR NAPEDC NMDS 2026–27, METEOR 809729**, the standard applicable from 1 July 2026 to 30 June 2027, plus its individual milestone data elements. citeturn24view10turn24view14
+- OMOP was checked against **CDM 5.5**, not the older 5.4-era definitions. OHDSI's current repository release is `v5.5.0`, published 25 August 2026, and the tag resolves to commit `ba3dc1b651cc243279052bca3d051485c3ec1136`. fileciteturn0file0L1-L2 fileciteturn1file0L1-L2
+
+The search excluded future 2027–28 ED reporting requirements except where a METEOR page happened to note their existence, FHIR R5/R6 elements that are not part of the current Australian R4 profiles, OMOP 6.0, full standards-platform design, non-ED domain tracks, local implementation assumptions, and any attempt to infer primitive service-time distributions from aggregate waiting-time or length-of-stay data. No PDF was used as evidentiary content; the cited primary material was available as HTML.
+
+The source manifest records publication/release dates, implementation periods where applicable, field locations, scope/population, sample-size status, access/licence status and repository revision. Because these are specifications/metadata standards rather than empirical cohorts, their `sample_size` is recorded as `not_applicable`, not invented. Licence terms that were not independently re-verified are marked accordingly rather than guessed. AU Base and AU Core themselves state CC0 licensing on their published implementation-guide pages. citeturn24view0turn24view1
+
+## Verified standards baseline
+
+### FHIR and Australian profiles
+
+The correct version-pinned Australian baseline is **FHIR R4 4.0.1 + AU Base 6.0.0 + AU Core 2.0.0**. FHIR R4 `Encounter` provides encounter-level periods, status-history periods and per-location periods; AU Base profiles the R4 Encounter rather than replacing its underlying temporal semantics. citeturn24view0turn24view1turn24view2
+
+For the proposed minimal trace, the useful FHIR distinctions are:
+
+| C0 concept | FHIR/AU candidate | Assessment |
+|---|---|---|
+| Episode identifier | `Encounter.identifier` | **Exact** at standards-semantic level |
+| Subject | `Encounter.subject` → Patient | **Partial** because source identifier/pseudonymisation policy is local |
+| Event occurrence | event-specific `Encounter.period`, `statusHistory.period`, `location.period` | **Partial**; there is no universal atomic Encounter event-time field |
+| Recorded time | linked `AuditEvent.recorded` | **Partial**; only when a corresponding audit event/source audit record exists |
+| Physical location | `Encounter.location.location` | **Exact** semantically |
+| Location interval | `Encounter.location.period` | **Exact** semantically when the location represents the required physical granularity |
+| ED episode end | `Encounter.period.end` and/or terminal status history | **Partial** |
+| Physical departure | final relevant ED `Encounter.location.period.end` | **Partial**, requiring an explicit ED-location boundary/profile |
+
+FHIR R4 explicitly defines `AuditEvent.period` as when the audited activity occurred and `AuditEvent.recorded` as when the event was recorded. That is useful evidence for keeping an occurrence timestamp and a recorded timestamp separate. citeturn24view3
+
+Conversely, **`Resource.meta.lastUpdated` must not be used as the generic C0 `recorded_time`**: FHIR defines it as the time the *resource version* last changed. A resource can be updated for reasons unrelated to the original clinical or operational event. citeturn24view4
+
+There is no sufficiently precise standard FHIR R4 Encounter field that simultaneously and unambiguously carries both the AIHW-style end of the non-admitted ED clinical episode and subsequent physical departure from the ED. If C0 needs both—and the Australian evidence says it should—then an Australian/local profile or operations table must document how each is represented. A dedicated extension would be a **proposed, reviewable option**, not something this research adopts. citeturn24view0turn24view14turn24view15
+
+Canonical specifications used include:
+
+`https://hl7.org/fhir/R4/encounter-definitions.html`
+`https://hl7.org/fhir/R4/auditevent-definitions.html`
+`https://hl7.org.au/fhir/StructureDefinition-au-encounter.html`
+`https://hl7.org.au/fhir/core/`
+
+### HL7 v2 message and event semantics
+
+HL7 v2 provides the strongest direct evidence for separating the two basic timestamps. In v2.5.1, **EVN-2 Recorded Date/Time** represents when the transaction was entered/recorded, whereas **EVN-6 Event Occurred** represents when the underlying event actually occurred. By contrast, **MSH-7 Date/Time Of Message** is the time the sending system created the message. These three clocks therefore must not be silently collapsed into one C0 timestamp. citeturn24view5turn24view6turn24view7
+
+For patient movement, A02 is specifically associated with a change in assigned physical location, with the new location in `PV1-3` and the previous location in `PV1-6`; the specification distinguishes such assigned-location changes from temporary tracking movements, for which A09/A10 can be relevant. A location **interval** is therefore not itself a single v2 field: it has to be reconstructed from a correctly ordered, cancellation-aware movement stream and the appropriate occurrence timestamps. citeturn24view8
+
+A03 represents the end of a stay and can represent the end of an emergency visit for a non-admitted patient, with `PV1-45` carrying visit-end/discharge date-time semantics. That still does **not** prove that a local A03 or `PV1-45` is equivalent to the AIHW non-admitted episode end for an admitted ED patient who continues boarding physically in the ED. That equivalence needs a local conformance/workflow mapping. citeturn24view9turn24view14
+
+Accordingly, for a v2 source:
+
+- `source_event_time ← EVN-6` is **exact when populated and applicable**.
+- `recorded_time ← EVN-2` is **exact** for the v2 recorded/entered semantic.
+- `MSH-7` should be retained separately if transport/message latency matters; it is not a substitute for either of the above.
+- `location_id ← PV1-3`, with `PV1-6` and A02/A09/A10 supporting transition reconstruction, is **partial** because local PL-component coding and workflow semantics are site-specific.
+- Any A08 change to `PV1-3` should **not automatically be converted into a physical movement event** without local profile/workflow evidence.
+
+Reference specifications:
+
+`https://hl7.eu/HL7v2x/v251/std251/ch02.html`
+`https://www.hl7.eu/HL7v2x/v251/std251/ch03.html`
+
+### AIHW emergency-department metadata
+
+The **NAPEDC NMDS 2026–27** is especially important because its episode scope remains active for an admitted patient until the patient physically leaves the ED. The NMDS therefore makes physical presence a distinct concept rather than assuming that admission or completion of non-admitted clinical care coincides with departure. citeturn24view10turn24view11
+
+METEOR's episode-end definition makes the difference explicit. For a patient subsequently admitted, **episode end time is the time the patient's non-admitted ED clinical care is completed**. Physical departure is separately defined by the physical-departure date/time elements. Thus a perfectly valid sequence is:
+
+`presentation < clinical care commencement < episode end < physical ED departure`.
+
+That last interval is precisely the sort of admitted-patient ED boarding period that would disappear if C0 collapsed the two end timestamps. citeturn24view14turn24view15turn24view16
+
+The relevant current elements include:
+
+| Concept | METEOR identifier | Standards status in crosswalk |
+|---|---:|---|
+| NAPEDC NMDS 2026–27 | **809729** | Governing dataset specification |
+| Non-admitted episode end status | **796802** | Context required to interpret end milestone |
+| Non-admitted episode end date | **799780** | **Exact** |
+| Non-admitted episode end time | **799782** | **Exact** |
+| Physical departure date | **799756** | **Exact** |
+| Physical departure time | **799758** | **Exact** |
+
+The NMDS also carries presentation, triage and clinical-care-commencement milestones, but it is an **episode-level reporting dataset, not a fine-grained event stream**. It does not supply detailed room/bed/location occupancy intervals or a generic source transaction-recorded timestamp. Those remain unavailable from this standards artefact alone. citeturn24view10turn24view12
+
+This distinction also prevents an important overclaim: an NMDS requirement proves how a submitted data item is defined; it does **not** prove which underlying hospital application records it, whether the raw value is directly stored or derived, its local audit timestamp, or that CareOps Sim has access to it.
+
+Primary dataset URL:
+
+`https://meteor.aihw.gov.au/content/809729`
+
+### OMOP CDM
+
+The appropriate current OMOP baseline is **CDM 5.5**. The current OHDSI release is `v5.5.0`, published on 25 August 2026, with tag commit `ba3dc1b651cc243279052bca3d051485c3ec1136`. citeturn24view17 fileciteturn0file0L1-L2 fileciteturn1file0L1-L2
+
+`VISIT_OCCURRENCE` represents the encounter-level visit. `VISIT_DETAIL` is optional and can represent finer-grained parts of the visit such as movement between units, making it a possible **partial** projection of location intervals when an ETL has deliberately modelled them that way. It cannot be assumed to contain room/bed movements merely because the table exists. citeturn24view17turn24view18
+
+More importantly, OMOP explicitly permits visit-end values to be generated under ETL conventions; for an Emergency Room Visit lacking an end value, documented CDM conventions can produce an end equal to the start. Therefore **`VISIT_OCCURRENCE.visit_end_datetime` is not, without ETL provenance, evidence of actual physical ED departure**. A simulator ingesting OMOP must know whether an end timestamp is observed, derived or defaulted. citeturn24view19
+
+OMOP likewise has no generic raw-source transaction `recorded_time` in `VISIT_OCCURRENCE`/`VISIT_DETAIL`, and its CDM identifiers can be ETL-generated. For this task it should therefore be treated as an **analytic projection/source adapter**, not as the authoritative semantic definition of the raw CareOps event trace. citeturn24view17turn24view18turn24view19
+
+Primary specification and release:
+
+`https://ohdsi.github.io/CommonDataModel/cdm55.html`
+`https://github.com/OHDSI/CommonDataModel/releases/tag/v5.5.0`
+
+## Minimal semantic crosswalk
+
+Because the actual C0 attachment was unavailable, I used stable IDs `C0-F001` through `C0-F011` for a **provisional minimum candidate field set**:
+
+`episode_id`, `subject_id`, `event_type`, `source_event_time`, `recorded_time`, `location_id`, `location_start_time`, `location_end_time`, `episode_end_time`, `physical_departure_time`, and `source_record_id`.
+
+They are not claimed to be the implemented C0 schema. The downloadable crosswalk contains all eleven fields against all four source families, for **44 mapping rows**.
+
+The key temporal subset is:
+
+| Provisional C0 concept | FHIR R4 / AU | HL7 v2.5.1 | AIHW NAPEDC 2026–27 | OMOP 5.5 |
+|---|---|---|---|---|
+| `source_event_time` | **Partial** — event-specific Encounter/status/location period | **Exact** when applicable/populated — `EVN-6` | **Partial** — milestone-specific date/time pairs | **Partial** — visit/detail bounds only |
+| `recorded_time` | **Partial** — matching `AuditEvent.recorded`; not `meta.lastUpdated` | **Exact** — `EVN-2` | **Unavailable** in audited NMDS | **Unavailable** as generic visit-source recording time |
+| `location_id` | **Exact** semantically — `Encounter.location.location` | **Partial** — `PV1-3` plus local PL dictionary | **Partial only at establishment level**, not detailed ED location | **Partial** — `care_site_id` is ETL-defined/coarser |
+| `location_start_time` / `location_end_time` | **Exact** semantically — `Encounter.location.period` | **Partial** — reconstruct from verified movement events | **Unavailable** for internal ED locations | **Partial** — `VISIT_DETAIL` only where ETL uses it this way |
+| `episode_end_time` | **Partial** — Encounter end is not necessarily AIHW episode end | **Partial** — A03/`PV1-45` requires workflow interpretation | **Exact** — METEOR 799780/799782 | **Partial** — visit end does not retain Australian semantic distinction |
+| `physical_departure_time` | **Partial** — final applicable ED location period, requiring location-boundary policy | **Partial** — movement/end events plus ED-location boundary | **Exact** — METEOR 799756/799758 | **Partial**, and unsafe without ETL provenance |
+
+The labels above describe **semantic mapping strength in the standard, not local data availability**. Every local-availability field in the supplied CSV is `unknown`, because no user-provided evidence of a local system/feed was available.
+
+This produces four concrete design consequences.
+
+**First, `source_event_time` and `recorded_time` should not be aliases.** HL7 v2 directly differentiates EVN-6 from EVN-2 and from MSH-7, while FHIR separately models activity period and audit recording time. citeturn24view3turn24view5turn24view6turn24view7
+
+**Second, location should be interval-valued rather than represented only by instantaneous “moved” events.** FHIR already expresses location as a period; v2 movement messages can be transformed into such periods only after applying sequencing, cancellation and local-location rules. citeturn24view0turn24view8
+
+**Third, `episode_end_time` and `physical_departure_time` should remain distinct whenever both are available.** AIHW's definitions make this an observed source-domain distinction, not a synthetic simulator distinction. In particular, admitted patients can have completed their non-admitted ED clinical care yet remain physically within the ED. citeturn24view11turn24view14turn24view15turn24view16
+
+**Fourth, source precision must be preserved.** AIHW's relevant time elements are `hhmm`; converting them to an internal timestamp may combine a date and time, but should not manufacture seconds, timezone offsets or false timestamp precision. The generated crosswalk therefore records transformation requirements rather than silently treating all source timestamps as equally precise. citeturn24view14turn24view16
+
+No empirical distribution parameters occur in this standards audit. Consequently `distribution_support`, `scenario_range`, `parameter_uncertainty` and `calibration_bounds` are recorded as `not_applicable`, while an unobserved empirical range is `unknown`. This avoids conflating a standards mapping with calibration evidence.
+
+## Synthetic validation records and proposed C0 consequences
+
+The positive examples are explicitly labelled **synthetic**. They demonstrate a valid admitted-patient chronology in which non-admitted ED care ends before physical departure:
+
+```text
+09:14  presentation
+09:19  triage
+09:47  clinical_care_start
+12:55  episode_end
+13:32  move to ED_BOARDING
+14:16  physical_departure
+```
+
+That sequence is intentionally compatible with AIHW's rule that an admitted patient's non-admitted ED episode can finish before they leave the ED. citeturn24view14turn24view15
+
+The six negative examples exercise semantic errors rather than arbitrary data-quality rules: a reversed location interval; departure before known presentation; using FHIR `meta.lastUpdated` as `recorded_time`; substituting HL7 `MSH-7` for `EVN-6`; assuming an A08/PV1-3 update proves physical movement; and treating an OMOP emergency-visit end as physical departure without ETL provenance. The last four are deliberately aimed at transformations that can appear superficially plausible but are not justified by the underlying standards. citeturn24view4turn24view7turn24view8turn24view19
+
+Two schema changes are therefore **candidates for review only**, conditional on what the inaccessible C0 schema actually contains:
+
+1. If C0 currently has only one generic timestamp per event, add or preserve a distinct `recorded_time` alongside the event-occurrence timestamp rather than overloading one field.
+2. If C0 currently has one ED end timestamp, preserve separate `episode_end_time` and `physical_departure_time`. Where a FHIR or v2 source cannot supply both exactly, the missing value should remain unknown or come from a documented site-specific profile/operations table—not be imputed from the other timestamp.
+
+Neither proposal is marked implemented or adopted.
+
+Fields most clearly requiring **site-specific evidence** are the ED location dictionary/boundary; the interpretation of v2 A02/A03/A08/A09/A10 and populated EVN/PV1 fields; whether FHIR audit events are retained and linked; how a local FHIR profile represents Australian episode end versus physical departure; timestamp precision/timezone conventions; cancellation/correction rules; and any OMOP ETL rules that derive visit/detail bounds.
+
+## Delivered artefacts
+
+The complete package is available as a single archive:
+
+**[Download the complete CareOps minimal-event crosswalk bundle](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27.zip)**
+
+| Deliverable | Records | Contents |
+|---|---:|---|
+| [minimal_event_crosswalk.csv](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/minimal_event_crosswalk.csv) | **44** | Eleven provisional C0 fields × four source families, with stable mapping IDs, exact/partial/unavailable classification, units, origin, evidence status, transformations and transfer limitations |
+| [source_version_manifest.csv](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/source_version_manifest.csv) | **20** | Version-pinned sources, exact URLs, DOI status, publication/release and observation/implementation periods, field locations, population/scope, sample-size status, access/licence status and revisions |
+| [c0_provisional_field_dictionary.yaml](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/c0_provisional_field_dictionary.yaml) | **11 fields** | Candidate C0 field definitions, explicitly marked provisional/policy |
+| [synthetic_positive_examples.jsonl](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/synthetic_positive_examples.jsonl) | **6** | Positive synthetic event examples, including episode-end-before-departure boarding |
+| [synthetic_negative_examples.jsonl](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/synthetic_negative_examples.jsonl) | **6** | Negative semantic/transformation examples with violation codes |
+| [source_list.csv](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/source_list.csv) | **20** | Compact source list with exact URLs and version/revision information |
+| [manifest.json](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/manifest.json) | **7 file entries** | File names, record counts, byte sizes and SHA-256 digests |
+| [README.md](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/README.md) | **1** | Status, classification vocabulary and transformation cautions |
+
+The machine-readable rows distinguish `published`, `policy`, `synthetic` and `unknown` provenance rather than presenting candidate mappings as observations. No fitted or elicited values are introduced because none were required or evidenced in this standards-only task. The full URLs and source-field locations are in `source_version_manifest.csv` and `source_list.csv`; DOI is explicitly `none` for these standards/repository artefacts rather than left ambiguous.
+
+The pinned OMOP repository information is especially worth retaining in provenance: release `v5.5.0`, published 25 August 2026, tag commit `ba3dc1b651cc243279052bca3d051485c3ec1136`. fileciteturn0file0L1-L2 fileciteturn1file0L1-L2
+
+## Conflicts, unresolved questions and priority evidence acquisition
+
+The main **standards conflict is representational rather than contradictory**. AIHW has a precise Australian operational distinction between completion of the non-admitted ED episode and physical departure; FHIR Encounter, generic HL7 v2 ADT semantics and OMOP do not all encode those two milestones as first-class, unambiguous fields. The safe crosswalk therefore preserves the AIHW distinction and classifies the other mappings as partial unless a local profile or ETL contract proves equivalence. citeturn24view14turn24view15turn24view17
+
+A second conflict is between **event-log semantics and state/interval models**. HL7 v2 supplies trigger messages and event timestamps; FHIR Encounter supplies state and periods; AIHW supplies episode-level milestone columns; OMOP supplies an analytical encounter model. None should be treated as though it were natively the CareOps event trace. The crosswalk therefore makes the source-to-canonical transformation explicit rather than choosing one source standard as the simulation schema. citeturn24view0turn24view5turn24view10turn24view17
+
+A third issue is **derived versus observed time**. OMOP's documented ETL conventions mean a syntactically valid visit-end timestamp is not necessarily an observed departure. Likewise, FHIR `meta.lastUpdated` is a resource-version timestamp and HL7 `MSH-7` is message creation time. Using any of these as a substitute for an unavailable physical event timestamp would change provenance from observed/published semantics to an unjustified inference. citeturn24view4turn24view7turn24view19
+
+The unresolved questions, in priority order, are therefore evidence-acquisition questions rather than implementation tasks:
+
+1. **Obtain the exact C0 trace schema/version and its field constraints.** This is the highest-priority gap because all `C0-Fxxx` identifiers in this report are provisional. The key audit is whether C0 already separates occurrence/recording time and episode end/physical departure.
+2. **For any eventual local ED profile, obtain the source data dictionary, FHIR conformance/profile declarations, HL7 version/profile and de-identified representative message sequences.** In particular, establish actual use and population of `EVN-2`, `EVN-6`, `PV1-3`, `PV1-6`, `PV1-19`, `PV1-44`, `PV1-45`, and A02/A03/A08/A09/A10, including cancellation/correction semantics. No such local population is assumed here.
+3. **Obtain the ED physical-location dictionary and boundary rules.** A source value cannot become a reliable location interval or physical-departure event until “inside ED” versus “outside ED” and temporary versus assigned locations are explicitly defined.
+4. **Obtain the source-to-AIHW submission mapping**, where available, for METEOR 809729—especially presentation, clinical-care commencement, episode end, episode-end status and physical departure. This is needed to distinguish directly recorded values from reporting-layer derivations. citeturn24view10turn24view12turn24view14turn24view15
+5. **If OMOP becomes an ingestion source, obtain the exact ETL specification and source-lineage tables** showing how `VISIT_OCCURRENCE` and `VISIT_DETAIL` start/end times and care sites were produced. Without this, OMOP visit end remains only a partial mapping and must not be elevated to observed physical departure. citeturn24view18turn24view19
+6. **Resolve redistribution/licensing details for any source whose licence was not independently verified.** The manifest deliberately says `not re-verified` rather than inferring licence rights from public accessibility.
+
+The evidence therefore supports a small, conservative interface rather than a broader standards platform: retain distinct event-occurrence and recording clocks; represent physical location as intervals; retain distinct ED episode-end and physical-departure milestones; preserve provenance and source precision; permit unknown values; and make source-specific transformations explicit. This is compatible with the stated single-authoritative-clock/state architecture and does not require changing Kairos itself. It does, however, identify a **review-worthy C0 schema requirement** if either of the two critical temporal distinctions is currently collapsed.

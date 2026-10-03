@@ -1,0 +1,8 @@
+| Concept | METEOR identifier | Standards status in crosswalk |
+|---|---:|---|
+| NAPEDC NMDS 2026–27 | **809729** | Governing dataset specification |
+| Non-admitted episode end status | **796802** | Context required to interpret end milestone |
+| Non-admitted episode end date | **799780** | **Exact** |
+| Non-admitted episode end time | **799782** | **Exact** |
+| Physical departure date | **799756** | **Exact** |
+| Physical departure time | **799758** | **Exact** |

@@ -1,0 +1,2258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://careops.invalid/schemas/calibration-v1.schema.json",
+  "title": "CareOps calibration contract records v1",
+  "description": "Logical JSON contract. Arrow physical encodings are specified in the C0.2 contract; this schema does not imply runtime implementation.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/mapping_bundle"
+    },
+    {
+      "$ref": "#/$defs/dataset_manifest"
+    },
+    {
+      "$ref": "#/$defs/trace_event"
+    },
+    {
+      "$ref": "#/$defs/trace_exclusion"
+    },
+    {
+      "$ref": "#/$defs/location_interval"
+    },
+    {
+      "$ref": "#/$defs/parameter_evidence"
+    },
+    {
+      "$ref": "#/$defs/fidelity_decision"
+    },
+    {
+      "$ref": "#/$defs/calibration_probe"
+    },
+    {
+      "$ref": "#/$defs/outcome_observation"
+    },
+    {
+      "$ref": "#/$defs/calibration_residual"
+    },
+    {
+      "$ref": "#/$defs/fidelity_policy_update"
+    },
+    {
+      "$ref": "#/$defs/calibration_metric"
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nullable_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "u128_decimal": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,38})$",
+      "description": "Unsigned decimal JSON representation of u128; consumers must enforce maximum 340282366920938463463374607431768211455."
+    },
+    "lineage": {
+      "type": "object",
+      "required": [
+        "status",
+        "mapping_version"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "observed",
+            "derived",
+            "defaulted",
+            "unknown"
+          ]
+        },
+        "mapping_version": {
+          "$ref": "#/$defs/id"
+        },
+        "evidence_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "derivation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "time_value": {
+      "type": "object",
+      "required": [
+        "raw",
+        "utc",
+        "relative_ticks",
+        "source_precision",
+        "lineage"
+      ],
+      "properties": {
+        "raw": {
+          "type": "string",
+          "minLength": 1
+        },
+        "utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_offset_or_zone": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "relative_ticks": {
+          "$ref": "#/$defs/u128_decimal"
+        },
+        "tick_resolution": {
+          "const": "1ns"
+        },
+        "source_precision": {
+          "enum": [
+            "minute",
+            "second",
+            "millisecond",
+            "microsecond",
+            "nanosecond",
+            "other"
+          ]
+        },
+        "lineage": {
+          "$ref": "#/$defs/lineage"
+        }
+      },
+      "additionalProperties": false
+    },
+    "mapping_status": {
+      "enum": [
+        "exact",
+        "partial",
+        "unverified",
+        "unavailable"
+      ]
+    },
+    "mapping_bundle": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "mapping_version",
+        "origin_utc",
+        "tick_resolution",
+        "event_kind_ranks",
+        "field_mappings",
+        "report30_candidates",
+        "seed_purpose_contract"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "mapping_bundle.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "mapping_version": {
+          "$ref": "#/$defs/id"
+        },
+        "origin_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tick_resolution": {
+          "const": "1ns"
+        },
+        "event_kind_ranks": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "field_mappings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field_mapping"
+          }
+        },
+        "report30_candidates": {
+          "type": "array",
+          "minItems": 11,
+          "maxItems": 11,
+          "items": {
+            "$ref": "#/$defs/report30_candidate"
+          }
+        },
+        "seed_purpose_contract": {
+          "$ref": "#/$defs/seed_purpose_contract"
+        },
+        "source_standards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_standard"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "field_mapping": {
+      "type": "object",
+      "required": [
+        "source_family",
+        "standard_edition",
+        "concept",
+        "semantic_status",
+        "local_availability",
+        "evidence_ref"
+      ],
+      "properties": {
+        "source_family": {
+          "enum": [
+            "FHIR_AU",
+            "HL7_V2",
+            "AIHW_NAPEDC",
+            "OMOP",
+            "local"
+          ]
+        },
+        "standard_edition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "concept": {
+          "$ref": "#/$defs/id"
+        },
+        "semantic_status": {
+          "$ref": "#/$defs/mapping_status"
+        },
+        "local_availability": {
+          "enum": [
+            "available",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "source_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transformation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "report30_candidate": {
+      "type": "object",
+      "required": [
+        "provisional_id",
+        "concept",
+        "canonical_target",
+        "source_record_only",
+        "local_availability",
+        "source_mappings"
+      ],
+      "properties": {
+        "provisional_id": {
+          "type": "string",
+          "pattern": "^C0-F0(0[1-9]|1[01])$"
+        },
+        "concept": {
+          "$ref": "#/$defs/id",
+          "description": "Report 30 provisional candidate concept; registry is frozen in c0.2-contract.md."
+        },
+        "canonical_target": {
+          "$ref": "#/$defs/id"
+        },
+        "source_record_only": {
+          "const": true
+        },
+        "local_availability": {
+          "const": "unknown"
+        },
+        "source_mappings": {
+          "type": "object",
+          "required": [
+            "FHIR_AU",
+            "HL7_V2",
+            "AIHW_NAPEDC",
+            "OMOP"
+          ],
+          "properties": {
+            "FHIR_AU": {
+              "$ref": "#/$defs/mapping_status"
+            },
+            "HL7_V2": {
+              "$ref": "#/$defs/mapping_status"
+            },
+            "AIHW_NAPEDC": {
+              "$ref": "#/$defs/mapping_status"
+            },
+            "OMOP": {
+              "$ref": "#/$defs/mapping_status"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "source_standard": {
+      "type": "object",
+      "required": [
+        "family",
+        "edition",
+        "role"
+      ],
+      "properties": {
+        "family": {
+          "$ref": "#/$defs/id"
+        },
+        "edition": {
+          "$ref": "#/$defs/id"
+        },
+        "role": {
+          "const": "report30-research-baseline"
+        },
+        "local_conformance": {
+          "const": "unverified"
+        }
+      },
+      "additionalProperties": false
+    },
+    "seed_purpose_contract": {
+      "type": "object",
+      "required": [
+        "contract_version",
+        "logical_identity_fields",
+        "purposes",
+        "approval_status",
+        "algorithm_id",
+        "coupling_mode",
+        "candidate_binding",
+        "encoding_status"
+      ],
+      "properties": {
+        "contract_version": {
+          "const": "kairoecs.seed-purpose.v1"
+        },
+        "logical_identity_fields": {
+          "const": [
+            "study_id",
+            "seed_schedule_id",
+            "replication_id",
+            "case_key",
+            "task_key",
+            "purpose"
+          ]
+        },
+        "purposes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "service",
+              "transit",
+              "behavior",
+              "calibration"
+            ]
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "approval_status": {
+          "const": "pending_track01"
+        },
+        "algorithm_id": {
+          "type": "null"
+        },
+        "encoding_status": {
+          "const": "pending_track01"
+        },
+        "coupling_mode": {
+          "enum": [
+            "paired_common_random_numbers",
+            "independent"
+          ]
+        },
+        "candidate_binding": {
+          "enum": [
+            "shared_across_candidates",
+            "candidate_scoped"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "coupling_mode": {
+                "const": "paired_common_random_numbers"
+              }
+            },
+            "required": [
+              "coupling_mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "candidate_binding": {
+                "const": "shared_across_candidates"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "coupling_mode": {
+                "const": "independent"
+              }
+            },
+            "required": [
+              "coupling_mode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "candidate_binding": {
+                "const": "candidate_scoped"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "dataset_manifest": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "dataset_id",
+        "mapping_version",
+        "input_hashes",
+        "origin_utc",
+        "tick_resolution",
+        "timestamp_policy",
+        "ordering_version",
+        "observation_window",
+        "counts",
+        "normalization_hash"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "dataset_manifest.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "dataset_id": {
+          "$ref": "#/$defs/id"
+        },
+        "mapping_version": {
+          "$ref": "#/$defs/id"
+        },
+        "input_hashes": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "origin_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tick_resolution": {
+          "const": "1ns"
+        },
+        "timestamp_policy": {
+          "const": "explicit-offset-utc;reject-naive-local"
+        },
+        "ordering_version": {
+          "$ref": "#/$defs/id"
+        },
+        "observation_window": {
+          "type": "object",
+          "required": [
+            "start_ticks",
+            "end_ticks"
+          ],
+          "properties": {
+            "start_ticks": {
+              "$ref": "#/$defs/u128_decimal"
+            },
+            "end_ticks": {
+              "$ref": "#/$defs/u128_decimal"
+            }
+          },
+          "additionalProperties": false
+        },
+        "counts": {
+          "type": "object",
+          "required": [
+            "input",
+            "accepted",
+            "excluded",
+            "censored"
+          ],
+          "properties": {
+            "input": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "accepted": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "excluded": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "censored": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "reason",
+              "count"
+            ],
+            "properties": {
+              "reason": {
+                "$ref": "#/$defs/id"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "normalization_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "trace_event": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "dataset_id",
+        "mapping_version",
+        "case_key",
+        "source_event_key",
+        "occurrence",
+        "event_kind",
+        "relative_ticks",
+        "source_order",
+        "occurrence_time",
+        "time_lineage",
+        "raw_event",
+        "disposition",
+        "knowledge_availability"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "trace_event.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "dataset_id": {
+          "$ref": "#/$defs/id"
+        },
+        "mapping_version": {
+          "$ref": "#/$defs/id"
+        },
+        "case_key": {
+          "$ref": "#/$defs/id"
+        },
+        "source_event_key": {
+          "$ref": "#/$defs/id"
+        },
+        "occurrence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "event_kind": {
+          "$ref": "#/$defs/id"
+        },
+        "relative_ticks": {
+          "$ref": "#/$defs/u128_decimal"
+        },
+        "source_order": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "event_kind_rank": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "occurrence_time": {
+          "$ref": "#/$defs/time_value"
+        },
+        "source_recorded_time": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/time_value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "message_created_time": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/time_value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "time_lineage": {
+          "type": "object",
+          "required": [
+            "occurrence",
+            "source_recorded",
+            "message_created"
+          ],
+          "properties": {
+            "occurrence": {
+              "$ref": "#/$defs/lineage"
+            },
+            "source_recorded": {
+              "$ref": "#/$defs/lineage"
+            },
+            "message_created": {
+              "$ref": "#/$defs/lineage"
+            }
+          },
+          "additionalProperties": false
+        },
+        "resource_key": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "actor_key": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "location_key": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "quality_flags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "raw_event": {
+          "type": "object",
+          "required": [
+            "source_family",
+            "source_event_type"
+          ],
+          "properties": {
+            "source_family": {
+              "$ref": "#/$defs/id"
+            },
+            "source_event_type": {
+              "$ref": "#/$defs/id"
+            },
+            "source_record_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "source_fields": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "disposition": {
+          "enum": [
+            "provisional",
+            "realized",
+            "unknown"
+          ]
+        },
+        "knowledge_availability": {
+          "type": "object",
+          "required": [
+            "status",
+            "available_at"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "known",
+                "not_yet_known",
+                "unknown"
+              ]
+            },
+            "available_at": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/time_value"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "trace_exclusion": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "dataset_id",
+        "mapping_version",
+        "source_event_key",
+        "raw_event",
+        "raw_time_values",
+        "exclusion_reason",
+        "lineage"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "trace_exclusion.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "dataset_id": {
+          "$ref": "#/$defs/id"
+        },
+        "mapping_version": {
+          "$ref": "#/$defs/id"
+        },
+        "source_event_key": {
+          "$ref": "#/$defs/id"
+        },
+        "raw_event": {
+          "type": "object",
+          "required": [
+            "source_family",
+            "source_event_type"
+          ],
+          "properties": {
+            "source_family": {
+              "$ref": "#/$defs/id"
+            },
+            "source_event_type": {
+              "$ref": "#/$defs/id"
+            },
+            "source_record_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "source_fields": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "raw_time_values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "exclusion_reason": {
+          "enum": [
+            "date_only_or_coarse_precision",
+            "missing_timezone",
+            "ambiguous_dst_fold",
+            "nonexistent_dst_gap",
+            "pre_origin",
+            "sub_nanosecond",
+            "overflow",
+            "missing_required_time",
+            "invalid_mapping",
+            "other"
+          ]
+        },
+        "lineage": {
+          "$ref": "#/$defs/lineage"
+        },
+        "detail": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "location_interval": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "dataset_id",
+        "case_key",
+        "interval_key",
+        "location_key",
+        "start",
+        "end",
+        "status",
+        "lineage"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "location_interval.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "dataset_id": {
+          "$ref": "#/$defs/id"
+        },
+        "case_key": {
+          "$ref": "#/$defs/id"
+        },
+        "interval_key": {
+          "$ref": "#/$defs/id"
+        },
+        "location_key": {
+          "$ref": "#/$defs/id"
+        },
+        "start": {
+          "type": "object",
+          "required": [
+            "time",
+            "event_ref"
+          ],
+          "properties": {
+            "time": {
+              "$ref": "#/$defs/time_value"
+            },
+            "event_ref": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "additionalProperties": false
+        },
+        "end": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "time": {
+              "$ref": "#/$defs/time_value"
+            },
+            "event_ref": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "additionalProperties": false
+        },
+        "status": {
+          "enum": [
+            "complete",
+            "open_right",
+            "unknown_end",
+            "invalid"
+          ]
+        },
+        "lineage": {
+          "$ref": "#/$defs/lineage"
+        }
+      },
+      "additionalProperties": false
+    },
+    "parameter_evidence": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "dataset_id",
+        "case_key",
+        "parameter_id",
+        "role",
+        "value",
+        "units",
+        "time_of_knowledge",
+        "availability_status",
+        "cluster_ids",
+        "cluster_status",
+        "lineage",
+        "mapping_version"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "parameter_evidence.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "dataset_id": {
+          "$ref": "#/$defs/id"
+        },
+        "case_key": {
+          "$ref": "#/$defs/id"
+        },
+        "parameter_id": {
+          "$ref": "#/$defs/id"
+        },
+        "role": {
+          "enum": [
+            "exogenous",
+            "primitive",
+            "clamp_only",
+            "target"
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "string",
+            "null"
+          ]
+        },
+        "units": {
+          "$ref": "#/$defs/id"
+        },
+        "time_of_knowledge": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/time_value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "availability_status": {
+          "enum": [
+            "available",
+            "not_yet_available",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "cluster_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "lineage": {
+          "$ref": "#/$defs/lineage"
+        },
+        "mapping_version": {
+          "$ref": "#/$defs/id"
+        },
+        "source_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cluster_status": {
+          "enum": [
+            "identified",
+            "unknown",
+            "not_applicable"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "cluster_status": {
+                "const": "identified"
+              }
+            },
+            "required": [
+              "cluster_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cluster_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "cluster_status": {
+                "enum": [
+                  "unknown",
+                  "not_applicable"
+                ]
+              }
+            },
+            "required": [
+              "cluster_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cluster_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "fidelity_decision": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "decision_id",
+        "task_key",
+        "policy",
+        "resolved_scope",
+        "resolution_rank",
+        "admitted_at",
+        "mapping_version",
+        "resolver_version",
+        "effective_for_task",
+        "entity_key",
+        "subsystem_key"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "fidelity_decision.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "decision_id": {
+          "$ref": "#/$defs/id"
+        },
+        "task_key": {
+          "$ref": "#/$defs/id"
+        },
+        "entity_key": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "subsystem_key": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "policy": {
+          "enum": [
+            "ShadowAnchored",
+            "FreeRunning"
+          ]
+        },
+        "resolved_scope": {
+          "enum": [
+            "entity_subsystem",
+            "entity",
+            "subsystem",
+            "global"
+          ]
+        },
+        "resolution_rank": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "admitted_at": {
+          "$ref": "#/$defs/time_value"
+        },
+        "mapping_version": {
+          "$ref": "#/$defs/id"
+        },
+        "resolver_version": {
+          "$ref": "#/$defs/id"
+        },
+        "effective_for_task": {
+          "const": true
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "resolved_scope": {
+                "const": "entity_subsystem"
+              }
+            },
+            "required": [
+              "resolved_scope"
+            ]
+          },
+          "then": {
+            "properties": {
+              "resolution_rank": {
+                "const": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "resolved_scope": {
+                "const": "entity"
+              }
+            },
+            "required": [
+              "resolved_scope"
+            ]
+          },
+          "then": {
+            "properties": {
+              "resolution_rank": {
+                "const": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "resolved_scope": {
+                "const": "subsystem"
+              }
+            },
+            "required": [
+              "resolved_scope"
+            ]
+          },
+          "then": {
+            "properties": {
+              "resolution_rank": {
+                "const": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "resolved_scope": {
+                "const": "global"
+              }
+            },
+            "required": [
+              "resolved_scope"
+            ]
+          },
+          "then": {
+            "properties": {
+              "resolution_rank": {
+                "const": 3
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "resolved_scope": {
+                "const": "entity_subsystem"
+              }
+            },
+            "required": [
+              "resolved_scope"
+            ]
+          },
+          "then": {
+            "properties": {
+              "entity_key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "subsystem_key": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "entity_key",
+              "subsystem_key"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "resolved_scope": {
+                "const": "entity"
+              }
+            },
+            "required": [
+              "resolved_scope"
+            ]
+          },
+          "then": {
+            "properties": {
+              "entity_key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "subsystem_key": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "entity_key",
+              "subsystem_key"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "resolved_scope": {
+                "const": "subsystem"
+              }
+            },
+            "required": [
+              "resolved_scope"
+            ]
+          },
+          "then": {
+            "properties": {
+              "entity_key": {
+                "type": "null"
+              },
+              "subsystem_key": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "entity_key",
+              "subsystem_key"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "resolved_scope": {
+                "const": "global"
+              }
+            },
+            "required": [
+              "resolved_scope"
+            ]
+          },
+          "then": {
+            "properties": {
+              "entity_key": {
+                "type": "null"
+              },
+              "subsystem_key": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "entity_key",
+              "subsystem_key"
+            ]
+          }
+        }
+      ]
+    },
+    "calibration_probe": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "probe_id",
+        "run_id",
+        "case_key",
+        "task_key",
+        "fidelity",
+        "observed_ledger_frontier",
+        "snapshot_hash",
+        "started_at",
+        "status",
+        "predicted_record_refs",
+        "observed_ledger_mutation",
+        "anchor_event_ref",
+        "seed_map_ref",
+        "parameter_hash",
+        "adapter_hash",
+        "anchor_role",
+        "study_id",
+        "candidate_id",
+        "replication_id",
+        "seed_schedule_id",
+        "seed_purposes"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "calibration_probe.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "probe_id": {
+          "$ref": "#/$defs/id"
+        },
+        "run_id": {
+          "$ref": "#/$defs/id"
+        },
+        "case_key": {
+          "$ref": "#/$defs/id"
+        },
+        "task_key": {
+          "$ref": "#/$defs/id"
+        },
+        "fidelity": {
+          "enum": [
+            "ShadowAnchored",
+            "FreeRunning"
+          ]
+        },
+        "observed_ledger_frontier": {
+          "$ref": "#/$defs/id"
+        },
+        "snapshot_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "started_at": {
+          "$ref": "#/$defs/time_value"
+        },
+        "status": {
+          "enum": [
+            "complete",
+            "censored",
+            "failed",
+            "infeasible",
+            "running"
+          ]
+        },
+        "predicted_record_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "observed_ledger_mutation": {
+          "const": false
+        },
+        "anchor_event_ref": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "seed_map_ref": {
+          "$ref": "#/$defs/id"
+        },
+        "parameter_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "adapter_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "anchor_role": {
+          "enum": [
+            "observed_source_transition",
+            "none"
+          ]
+        },
+        "study_id": {
+          "$ref": "#/$defs/id"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/id"
+        },
+        "replication_id": {
+          "$ref": "#/$defs/id"
+        },
+        "seed_schedule_id": {
+          "$ref": "#/$defs/id"
+        },
+        "seed_purposes": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "service",
+              "transit",
+              "behavior",
+              "calibration"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "anchor_role": {
+                "const": "observed_source_transition"
+              }
+            },
+            "required": [
+              "anchor_role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "anchor_event_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "anchor_role": {
+                "const": "none"
+              }
+            },
+            "required": [
+              "anchor_role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "anchor_event_ref": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "outcome_observation": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "dataset_id",
+        "case_key",
+        "endpoint",
+        "risk_start",
+        "last_observed",
+        "event_observed",
+        "event_time",
+        "event_cause",
+        "censor_status",
+        "censor_reason",
+        "cluster_ids",
+        "lineage"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "outcome_observation.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "dataset_id": {
+          "$ref": "#/$defs/id"
+        },
+        "case_key": {
+          "$ref": "#/$defs/id"
+        },
+        "endpoint": {
+          "$ref": "#/$defs/id"
+        },
+        "risk_start": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/time_value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_observed": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/time_value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "event_observed": {
+          "type": "boolean"
+        },
+        "event_time": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/time_value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "event_cause": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "censor_status": {
+          "enum": [
+            "not_censored",
+            "left",
+            "right",
+            "interval",
+            "unknown",
+            "missing"
+          ]
+        },
+        "censor_reason": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "cluster_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "lineage": {
+          "$ref": "#/$defs/lineage"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "event_observed": {
+                "const": true
+              }
+            },
+            "required": [
+              "event_observed"
+            ]
+          },
+          "then": {
+            "properties": {
+              "event_time": {
+                "$ref": "#/$defs/time_value"
+              },
+              "censor_status": {
+                "const": "not_censored"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "censor_status": {
+                "const": "right"
+              }
+            },
+            "required": [
+              "censor_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "last_observed": {
+                "$ref": "#/$defs/time_value"
+              },
+              "event_observed": {
+                "const": false
+              },
+              "event_time": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "censor_status": {
+                "enum": [
+                  "missing",
+                  "unknown"
+                ]
+              }
+            },
+            "required": [
+              "censor_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "event_observed": {
+                "const": false
+              },
+              "event_time": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "calibration_residual": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "dataset_id",
+        "scenario_id",
+        "run_id",
+        "candidate_id",
+        "case_key",
+        "task_key",
+        "occurrence",
+        "endpoint",
+        "fidelity",
+        "observed_ticks",
+        "predicted_ticks",
+        "residual_status",
+        "residual_sign",
+        "residual_magnitude",
+        "prediction_unclamped",
+        "anchor_role",
+        "feasibility",
+        "censor_status",
+        "study_id",
+        "replication_id",
+        "seed_schedule_id",
+        "seed_purpose",
+        "seed_map_ref",
+        "seed_contract_version",
+        "mapping_version",
+        "parameter_hash",
+        "graph_hash",
+        "causal_ref"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "calibration_residual.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "dataset_id": {
+          "$ref": "#/$defs/id"
+        },
+        "scenario_id": {
+          "$ref": "#/$defs/id"
+        },
+        "run_id": {
+          "$ref": "#/$defs/id"
+        },
+        "candidate_id": {
+          "$ref": "#/$defs/id"
+        },
+        "case_key": {
+          "$ref": "#/$defs/id"
+        },
+        "task_key": {
+          "$ref": "#/$defs/id"
+        },
+        "occurrence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "endpoint": {
+          "$ref": "#/$defs/id"
+        },
+        "fidelity": {
+          "enum": [
+            "ShadowAnchored",
+            "FreeRunning"
+          ]
+        },
+        "observed_ticks": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/u128_decimal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "predicted_ticks": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/u128_decimal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "residual_status": {
+          "enum": [
+            "computed",
+            "missing_observed",
+            "censored",
+            "probe_failed",
+            "infeasible"
+          ]
+        },
+        "residual_sign": {
+          "enum": [
+            "negative",
+            "zero",
+            "positive",
+            "undefined"
+          ]
+        },
+        "residual_magnitude": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/u128_decimal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prediction_unclamped": {
+          "const": true
+        },
+        "anchor_role": {
+          "enum": [
+            "observed_source_transition",
+            "none",
+            "unknown"
+          ]
+        },
+        "feasibility": {
+          "enum": [
+            "feasible",
+            "infeasible",
+            "unknown"
+          ]
+        },
+        "censor_status": {
+          "enum": [
+            "not_censored",
+            "left",
+            "right",
+            "interval",
+            "unknown",
+            "missing"
+          ]
+        },
+        "seed_contract_version": {
+          "$ref": "#/$defs/id"
+        },
+        "mapping_version": {
+          "$ref": "#/$defs/id"
+        },
+        "parameter_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "graph_hash": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "causal_ref": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "study_id": {
+          "$ref": "#/$defs/id"
+        },
+        "replication_id": {
+          "$ref": "#/$defs/id"
+        },
+        "seed_schedule_id": {
+          "$ref": "#/$defs/id"
+        },
+        "seed_purpose": {
+          "enum": [
+            "service",
+            "transit",
+            "behavior",
+            "calibration"
+          ]
+        },
+        "seed_map_ref": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "residual_status": {
+                "const": "computed"
+              }
+            },
+            "required": [
+              "residual_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "observed_ticks": {
+                "$ref": "#/$defs/u128_decimal"
+              },
+              "predicted_ticks": {
+                "$ref": "#/$defs/u128_decimal"
+              },
+              "residual_magnitude": {
+                "$ref": "#/$defs/u128_decimal"
+              },
+              "residual_sign": {
+                "enum": [
+                  "negative",
+                  "zero",
+                  "positive"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "residual_status": {
+                "enum": [
+                  "missing_observed",
+                  "censored"
+                ]
+              }
+            },
+            "required": [
+              "residual_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "observed_ticks": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "residual_status": {
+                "const": "probe_failed"
+              }
+            },
+            "required": [
+              "residual_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "predicted_ticks": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "residual_status": {
+                "enum": [
+                  "missing_observed",
+                  "censored",
+                  "probe_failed",
+                  "infeasible"
+                ]
+              }
+            },
+            "required": [
+              "residual_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "residual_sign": {
+                "const": "undefined"
+              },
+              "residual_magnitude": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "calibration_metric": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "metric",
+        "algorithm_version",
+        "endpoint",
+        "strata",
+        "window",
+        "units",
+        "reference_count",
+        "simulation_count",
+        "excluded_count",
+        "censored_count",
+        "missing_count",
+        "unmatched_count",
+        "failed_count",
+        "infeasible_count",
+        "value",
+        "status",
+        "uncertainty",
+        "provenance"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "calibration_metric.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "metric": {
+          "enum": [
+            "W1",
+            "KS_D",
+            "paired_residual_summary",
+            "other"
+          ]
+        },
+        "algorithm_version": {
+          "$ref": "#/$defs/id"
+        },
+        "endpoint": {
+          "$ref": "#/$defs/id"
+        },
+        "strata": {
+          "type": "object"
+        },
+        "window": {
+          "type": "object",
+          "required": [
+            "start_ticks",
+            "end_ticks"
+          ],
+          "properties": {
+            "start_ticks": {
+              "$ref": "#/$defs/u128_decimal"
+            },
+            "end_ticks": {
+              "$ref": "#/$defs/u128_decimal"
+            }
+          },
+          "additionalProperties": false
+        },
+        "units": {
+          "$ref": "#/$defs/id"
+        },
+        "reference_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "simulation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "excluded_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "censored_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "missing_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unmatched_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "computed",
+            "insufficient_data",
+            "empty",
+            "invalid",
+            "unverified"
+          ]
+        },
+        "uncertainty": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "provenance": {
+          "type": "object",
+          "required": [
+            "dataset_id",
+            "run_id",
+            "mapping_version",
+            "seed_schedule_id",
+            "seed_map_ref"
+          ],
+          "properties": {
+            "dataset_id": {
+              "$ref": "#/$defs/id"
+            },
+            "run_id": {
+              "$ref": "#/$defs/id"
+            },
+            "mapping_version": {
+              "$ref": "#/$defs/id"
+            },
+            "seed_contract_version": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "parameter_hash": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "seed_schedule_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "seed_map_ref": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "failed_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "infeasible_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "empty",
+                  "insufficient_data",
+                  "invalid",
+                  "unverified"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "fidelity_policy_update": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "schema_version",
+        "update_id",
+        "scope",
+        "new_policy",
+        "resolver_version",
+        "requested_at",
+        "status",
+        "quiescent_boundary_id",
+        "effective_from_task_keys"
+      ],
+      "properties": {
+        "record_type": {
+          "const": "fidelity_policy_update.v1"
+        },
+        "schema_version": {
+          "const": "calibration-v1"
+        },
+        "update_id": {
+          "$ref": "#/$defs/id"
+        },
+        "scope": {
+          "enum": [
+            "entity_subsystem",
+            "entity",
+            "subsystem",
+            "global"
+          ]
+        },
+        "entity_key": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "subsystem_key": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "new_policy": {
+          "enum": [
+            "ShadowAnchored",
+            "FreeRunning"
+          ]
+        },
+        "resolver_version": {
+          "$ref": "#/$defs/id"
+        },
+        "requested_at": {
+          "$ref": "#/$defs/time_value"
+        },
+        "status": {
+          "enum": [
+            "staged",
+            "applied",
+            "rejected"
+          ]
+        },
+        "quiescent_boundary_id": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "effective_from_task_keys": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "applied"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "quiescent_boundary_id": {
+                "$ref": "#/$defs/id"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "staged",
+                  "rejected"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "effective_from_task_keys": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+| ID | Decision | Classification |
+|---|---|---|
+| `MD-002` | Fit primitives only from directly measuring data; no LOS-to-service inference | Proposed choice, source-backed |
+| `MD-004` | Censoring represented explicitly and fitted censor-aware | Proposed choice, source-backed |
+| `MD-005` | Competing exits validated jointly in incidence and timing | Proposed choice, source-backed |
+| `MD-006` | Preserve day clustering; test patient×day clustering when repeat attendance matters | CareOps inference from cluster methods |
+| `MD-007` | Chronological day-level train/validation/test with boundary censoring | Proposed policy |
+| `MD-008` | Clamped replay requires profile/grid identifiability; abstain on ridges | Central proposed change |
+| `MD-009` | Locked unclamped/free-running holdout is mandatory | Central proposed change |
+| `MD-010` | W1/KS retained as marginal diagnostics, not sole validation gates | Proposed change, source-backed |
+| `MD-011` | Prespecified conditional and joint checks added | Proposed change |
+| `MD-012` | CRN paired candidate comparisons | Proposed choice, source-backed |
+| `MD-013` | Sequential MC precision; indeterminate at cap | Proposed policy, source-backed method |
+| `MD-014` | Outer data-refit plus inner simulation uncertainty | Proposed choice, source-backed |
+| `MD-015` | Keep bounded grid; do not silently adopt complex optimiser | Recommended disposition |
+| `MD-017` | Two-quantile distributions are synthetic/fitted surrogates | Required provenance distinction |

@@ -1,0 +1,375 @@
+# Calibration and validation under partial observation
+
+## Scope, evidence base and boundary
+
+**Research date:** 27 September 2026, Australia/Brisbane.
+
+**Attachment boundary.** The calibration specification, parameter specification, and F3/R2/R3 outputs named in the research prompt were not retrievable as conversation attachments in this session. I therefore did **not** inspect or infer their contents. The protocol below is provisional against the supplied project summary and the public Kairos repository. I checked the public repository at `main` revision `fae901558f07b7b717a676adbafbe2cdc78dea1c`, whose recorded commit date is 19 May 2026 UTC. fileciteturn2file0L2-L2
+
+That repository is useful evidence for architectural fit: its public VVUQ document defines validation in terms of fitness for intended use and places scenario manifests, seed manifests, event traces, Arrow/Parquet telemetry, replay commands, validation reports and uncertainty reports inside the credibility evidence boundary; it also explicitly says narrative alone is insufficient. fileciteturn6file0L2-L2 The repository licence is dual Apache-2.0/MIT. fileciteturn10file0L2-L5 I found no reason in the methodological evidence to replace that architecture.
+
+**Search and inclusion strategy.** I searched primary methodological publications, publisher records, PubMed, official NIST statistical documentation, and the original Kairos repository. Search concepts covered stochastic simulation input fitting and input uncertainty; censoring and competing risks in DES; clustered and crossed-effects resampling; temporal validation/leakage; trace-driven validation; calibration identifiability/model discrepancy; KS and multivariate distance tests; Monte Carlo stopping and common random numbers; and ED-specific simulation calibration under missing data. Sources were included where they directly informed one of those bounded questions. Detailed later-domain modelling, whole-hospital modelling, surgery, birthing, outpatient and waitlist tracks were excluded. ED calibration case studies were included only to compare optimisation alternatives, not as proof that their algorithms are optimal for Kairos.
+
+The most important limitation in the evidence is transferability. The strongest DES work on censoring and competing risks is based largely on simulation studies and oncology examples, not ED work-item processes. Degeling et al. studied alternative DES representations under censored individual-level data and found that performance deteriorated with increasing censoring and depended on the censoring mechanism, number of competing events and overlap of event-time distributions. fileciteturn7file0L1-L3 Franchini et al. similarly found worse accuracy with smaller samples and heavier censoring; their simulation included a particularly difficult `n=50`, 60%-censoring setting. fileciteturn8file0L1-L3 These papers justify *how to think about censoring and competing events*; they do not validate an ED-specific parameterisation.
+
+The public repository evidence and this methods review therefore support the following overall conclusion:
+
+> **Proposed choice:** keep the current bounded candidate/grid-search concept, deterministic replay and seed contracts, Arrow/Parquet evidence path, and separate clamped/unclamped prediction concept. Strengthen them by making clamped replay explicitly a calibration/diagnostic mode, requiring a temporally held-out unclamped/free-running validation mode, introducing identifiability and leakage gates, and separating stochastic from input-data uncertainty. Nothing here should be marked implemented.
+
+## Minimal validation protocol
+
+The smallest protocol I would regard as defensible has distinct data-audit, fitting, clamped-calibration, validation-selection, locked-test and uncertainty stages. This separation is important because fitting and validating against the same realised trajectory—especially when parts of that trajectory are clamped—can make a model look substantially better than it predicts.
+
+| Stage | Proposed operation | Required gate | Basis |
+|---|---|---|---|
+| **Data audit** | Classify each field as exogenous input, direct primitive observation, clamp-only observation or validation target. Record units, provenance, censor/event state, missingness reason and temporal availability. | No ambiguous units or event-versus-censor status in fitted fields. | Proposed choice, consistent with Kairos artefact provenance. fileciteturn6file0L2-L2 |
+| **Primitive fitting** | Fit primitive distributions only from directly observed primitive intervals. Compare a small prespecified family set and, where data support it, an empirical-resampling option. | Identifiable fit; censoring handled; uncertainty estimable. | Law distinguishes fitted theoretical and empirical approaches; Chick shows that both parameter and distribution-form uncertainty matter to simulation output. citeturn12search0turn10search0 |
+| **Clamped calibration** | Replay known historical exogenous information and permitted anchors, while also computing the corresponding **unclamped predictions**. Search the bounded candidate/grid space with common seeds. | Profile/grid objective must not contain an unresolved material ridge for any parameter reported separately. | Proposed Kairos-specific inference from trace-driven validation and calibration-identifiability literature. citeturn10search3turn11search3 |
+| **Validation selection** | On a later chronological block, select among the prespecified families/grid candidates using unclamped downstream behaviour. Assess marginal, conditional, joint and aggregate targets. | Use-critical discrepancies satisfy predeclared tolerances with adequate data and simulation precision. | Proposed choice; temporal dependence makes naïve random splitting inappropriate as the primary validation design. citeturn11search1turn11search5 |
+| **Locked test** | Freeze model, calibration bounds, route rules, target definitions, code and comparison thresholds; open the test period once. Replay historical exogenous arrivals/covariates if desired, but allow queues, routes, task starts and completions to evolve endogenously. | Report pass, fail or indeterminate without retuning. | Trace-driven simulation can legitimately share historical inputs, but the resulting observed/simulated responses are correlated and must be treated accordingly. citeturn10search3 |
+| **Uncertainty** | Repeat runs for stochastic uncertainty; separately resample/refit the input data and rerun to measure input-plus-stochastic uncertainty. | Report what each interval includes. | Chick explicitly distinguishes input-model/parameter uncertainty from simulation stochasticity. citeturn10search0 |
+
+### Primitive input fitting
+
+**Source-backed fact.** Law's simulation-input tutorial treats fitting a theoretical distribution and using empirical data/distributions as distinct input-modelling approaches. citeturn12search0turn12search50 Chick's analysis goes further: conditioning on one selected input distribution and one point parameter estimate omits uncertainty from both distributional form and input parameters. citeturn10search0
+
+**Proposed choice.** For each primitive duration, define a deliberately short candidate list on training data—for example, candidate families justified by support and mechanism plus an empirical-resampling candidate when the sample is adequate. Distribution support is a modelling constraint and must not be confused with the observed range. Selection should consider predictive performance on the validation block, not merely best in-sample fit.
+
+No primitive service time should be inferred from ED waiting-time or total-length-of-stay summaries. If the only evidence is, for example, a median and 90th percentile of LOS, primitive service time remains **unknown**. A family fitted to those two published points is a **fitted/synthetic surrogate** for that published outcome, not evidence about a latent primitive.
+
+For every parameter the data schema should therefore maintain separate fields for:
+
+`distribution_support` | `observed_range` | `scenario_range` | `parameter_uncertainty` | `calibration_bounds`
+
+They answer different questions and should never be collapsed into one range. Units, full parameterisation, conditioning variables, dependence assumptions and censoring rules are also required. This proposal is encoded in `MD-018` of the delivered decision file.
+
+### Temporal partitioning and leakage
+
+**Source-backed fact.** Serial dependence and possible non-stationarity make ordinary random cross-validation problematic for time-ordered data; out-of-sample temporal evaluation is therefore materially different from random row splitting. citeturn11search1turn11search5
+
+**Proposed policy.** Use whole calendar days in chronological order, with a provisional `60% / 20% / 20%` training/validation/test allocation. **Those percentages are policy values, not evidence-derived constants.** Coverage and precision outrank the ratio: a split is inadequate if it removes needed weekday, acuity or arrival-time strata from validation/test.
+
+The split must occur before:
+
+- estimating primitive distribution parameters;
+- choosing among candidate families;
+- estimating any data-derived route frequencies;
+- tuning calibration bounds;
+- choosing objective weights;
+- deciding which conditional slices look favourable;
+- setting metric tolerances.
+
+An encounter or work item unresolved at the end of a training observation window should be **administratively censored at that boundary**, not completed using information from the later validation period. This is both censoring hygiene and leakage prevention. The synthetic fixture `FX-014` demonstrates the rule with an interval beginning at calendar time 3, a training cutoff at 4 and true completion at 6: training sees one unit of event-free follow-up and a censor indicator, not the later completion.
+
+A model changed after examining the test result has consumed that test set. Any subsequent claim needs a new, later holdout.
+
+## Partial observation, censoring and identifiability
+
+### Censoring and competing events
+
+The censored-DES literature argues against treating censored observations as completed events and against assuming one competing-event formulation is universally adequate. Degeling et al. compared event-specific time distributions with combined time/cause approaches under varying censoring and found method performance was sensitive to censoring type and severity. fileciteturn7file0L1-L3 Earlier uncensored work compared four competing-risk implementations and likewise found performance depended on pathway/data characteristics rather than one representation dominating in every respect. fileciteturn8file2L1-L3 Franchini et al. demonstrate another probability-then-time representation and again show deterioration as data become sparse and censoring increases. fileciteturn8file0L1-L3
+
+For Kairos, I would therefore require each at-risk interval to carry:
+
+`risk_start`, `last_observed_time`, `event_indicator`, `realised_event_type`, `censor_reason`, plus any conditioning covariates.
+
+If two or more mutually exclusive exits terminate the same work-item state, both **event incidence** and **time to event** need validation. Fitting the observed times of cause A after simply discarding cause B is not a defensible default because the observed cause-specific sample has been selected by the competing process. The exact representation—event-specific clocks, probability-plus-distribution, or a joint time/cause formulation—should remain a bounded candidate choice until the data characteristics are known. The oncology provenance of these papers is an explicit transfer limitation; the choice needs ED-specific fixture and held-out evidence before promotion.
+
+A useful hand calculation is `FX-001`:
+
+- synthetic elapsed times: `1, 2, 4`;
+- event indicators: `1, 1, 0`;
+- exponential rate under right-censoring: \(2/(1+2+4)=2/7\), giving mean \(3.5\);
+- naively treating the censored `4` as an event gives \(3/7\), mean \(7/3 \approx 2.333\).
+
+The fixture must return the first result. Its point is not to endorse an exponential distribution, but to catch an implementation that silently converts censoring into completion.
+
+### Patient/day dependence
+
+**Source-backed fact.** Bouwmeester et al. explicitly compared patient-level, cluster-level and multilevel bootstrap schemes for clustered data, demonstrating that the resampling unit matters to internal-validation uncertainty. citeturn11search0turn11search6 Owen's pigeonhole bootstrap addresses crossed effects by separately resampling dimensions rather than pretending all individual rows are independent. citeturn11search7turn11search29
+
+**CareOps inference.** ED observations from the same calendar day share load, staffing/capacity conditions and queue history. Calendar day should therefore be the primary unit for split preservation and non-parametric resampling. This is not a statement that every ED correlation structure is exactly a random day effect; it is a conservative unit that preserves important common operational exposure.
+
+If a pseudonymous patient identifier shows material repeat attendances across days, patient and day are crossed rather than neatly nested. A two-way/pigeonhole-bootstrap sensitivity analysis is then preferable to claiming that whole-day resampling alone captures all dependence. If patient IDs are unavailable, uncertainty should be labelled accordingly rather than silently assuming independence.
+
+The hand-computable `FX-003` makes the effect visible. Two synthetic days contain `[0,0]` and `[10,10]`. Resampling two whole days gives possible means 0, 5 and 10 with probabilities 0.25, 0.5 and 0.25, giving variance 12.5. An IID row bootstrap from the four individual observations has mean variance 6.25. The exact ratio is fixture-specific, but the expected test outcome is that the day-cluster procedure preserves the larger between-day uncertainty.
+
+### Why clamped replay cannot identify everything
+
+This is the most important methodological change to the current proposal.
+
+Trace-driven simulation can legitimately replay historical inputs, but when simulated and observed systems share those inputs their outputs are correlated; Kleijnen, Cheng and Bettonvil developed validation methods specifically for this paired situation. citeturn10search3 More generally, calibration literature warns that fitting model parameters against observations in the presence of model discrepancy can produce biased and overconfident parameter estimates. citeturn11search3turn11search49
+
+**Kairos-specific inference:** if an observed/clamped interval provides only
+
+\[
+T_{\mathrm{observed}} = T_{\mathrm{walk}} + T_{\mathrm{task}},
+\]
+
+then clamped replay does not, by itself, provide two independent pieces of information from which to recover the two components.
+
+The fixture `FX-005` makes that structural problem explicit. With total time 5, walking grid `{1,2,3}` and task grid `{2,3,4}`, all of
+
+\[
+(1,4),\ (2,3),\ (3,2)
+\]
+
+fit perfectly. A more powerful optimiser would not solve this; it would merely choose somewhere on the ridge. The correct result is **abstention on separate walking and task estimates**. Only their sum is identified by that fixture.
+
+`FX-006` adds an independent observed walking time of 2. The unique grid solution becomes walking 2, task 3. That is the form of evidence needed to justify separate parameters.
+
+Accordingly:
+
+**Proposed choice:** every latent parameter exposed by clamped replay gets a profile/grid identifiability check. Two candidate parameter vectors are treated as indistinguishable when their objective difference is smaller than the uncertainty of that difference and yet the primitive parameter values differ materially for the intended use. Such a ridge is a failure to identify the parameters, not a reason to tighten calibration bounds after looking at the data.
+
+Clamped replay should therefore produce two objects:
+
+1. the **clamped reconstruction**, useful for debugging, conditional residuals and calibration; and
+2. the **unclamped counterfactual prediction** produced from information that would actually have been available at that point.
+
+Only the latter contributes to predictive validation of endogenous behaviour.
+
+## Validation targets, distributional agreement and Monte Carlo error
+
+### Free-running validation is a mandatory gate
+
+`FX-012` illustrates why. In a deterministic one-server queue with arrivals at 0 and 1 and service duration 2, the true free-running starts are 0 and 2; waits are 0 and 1; completions are 2 and 4. If the second service start is clamped to its observed arrival or start timestamp at time 1, the simulation no longer needs to reproduce the congestion that generated the wait. The calibration can look perfect while the queue mechanism is wrong.
+
+Trace-driven validation research supports using shared historical exogenous inputs as paired evidence, but also emphasises the induced correlation between simulated and observed outputs. citeturn10search3
+
+I therefore recommend two distinct holdout claims:
+
+**Micro/unclamped holdout:** replay actual held-out arrivals and patient covariates, but no downstream timestamp, task completion, queue release or route decision that constitutes the target. This isolates process-model quality while controlling the realised demand.
+
+**Macro/free-running holdout:** once the arrival model itself is being validated, generate arrivals from that model and compare aggregate temporal behaviour separately. A Micro trace-driven pass does not validate the arrival generator.
+
+### Marginal W1 and KS are useful but insufficient
+
+The existing proposed W1/KS residual analysis should be retained, but demoted from “distributional validation” to a component of validation.
+
+For KS, there are well-known formal limitations. NIST notes that KS is more sensitive near the centre of a distribution than in the tails, and ordinary one-sample KS critical regions are invalid when distribution parameters have been estimated from the same observations. citeturn12search5turn12search7 Consequently, a fitted primitive should not acquire a nominal KS p-value from ordinary tables and have that interpreted as independent validation.
+
+W1 has an opposite useful property in many operational applications: its magnitude remains in the target variable's units and therefore gives an interpretable discrepancy size. But a separate W1 for each variable is still a **marginal** comparison. Marginal agreement cannot establish pathway/dependence agreement.
+
+The hand-computable fixtures make these limitations concrete:
+
+- `FX-008`: reference `[0,0,0,0,100]`, simulation `[0,0,0,0,1000]`. The two-sample KS statistic is only `0.2`, while equal-weight 1-D W1 is `180` units. The metrics highlight different aspects of the miss.
+- `FX-007`: reference pairs `(0,0),(1,1)` versus simulated pairs `(0,1),(1,0)`. Each coordinate has identical marginals, so marginal W1 and KS are zero, yet the dependence is completely reversed.
+
+For the latter problem, Székely and Rizzo developed a distance-based multivariate two-sample test, which provides a reasonable lightweight joint diagnostic rather than adding an elaborate multivariate model. citeturn12search8turn12search16 In the `FX-007` construction the corresponding population-form energy-distance expression is \(2-\sqrt{2}\approx0.586>0\), correctly signalling that the joint distributions differ despite perfect marginals.
+
+**Proposed minimum target set:**
+
+- marginal W1 and ECDF/KS discrepancy for important continuous targets;
+- incidence differences with uncertainty for categorical/competing outcomes;
+- prespecified conditional comparisons using covariates available at or before arrival;
+- one compact joint-distribution diagnostic for an interpretable multivariate patient outcome vector;
+- operational aggregates by time block.
+
+Conditioning should preferentially use pre-arrival/pre-target variables such as acuity and arrival-time band. Selecting strata after inspecting residuals, or conditioning primary validation on model-generated outcomes chosen because they make the result look favourable, is another form of leakage.
+
+There is no defensible universal “KS < X” or “W1 < Y” validation threshold. Tolerances must be tied to the intended decision/use and declared before test.
+
+### Monte Carlo precision and common random numbers
+
+The simulation itself introduces sampling noise, which should not be confused with disagreement with real data.
+
+Common random numbers are well established for reducing the variance of **differences** between simulated alternatives. Nelson and Hsu describe CRN as a variance-reduction method for comparisons, and Nelson and Matejcik show procedures that use CRN to reduce the sample size needed for fixed-precision selection/comparison. citeturn10search5turn10search1
+
+That fits Kairos particularly well because deterministic seed contracts make semantic pairing feasible.
+
+**Proposed choice:** candidate `A` and candidate `B` should see the same semantically keyed exogenous random streams. Analysis should use their *paired* difference rather than two independent confidence intervals. `FX-010` has candidate outputs `[10,12,11]` and `[9,11,10]` under the same seeds: all paired differences equal 1, so the fixture's paired variance is zero.
+
+This benefit depends on random streams retaining the same meaning. If a candidate change causes one model to consume random numbers for completely different events than another, numeric seed equality alone does not constitute useful CRN. Keying streams by conceptual source—entity/event/cause rather than position in a global RNG sequence—is therefore preferable.
+
+Sequential confidence intervals provide a principled alternative to an arbitrary replication count. Kelton and Koenig specifically studied sequential stopping against a relative-width precision requirement. citeturn13search10
+
+The supplied protocol uses the following **provisional policy value**, not a published universal threshold:
+
+\[
+\text{95% MC CI half-width}\leq 0.25\times\text{acceptance tolerance}.
+\]
+
+If a metric tolerance is \(\delta\), simulation error should therefore contribute no more than `0.25 δ` half-width before a candidate is declared superior or a validation target is called pass/fail. A replication cap that is reached first produces **MC-indeterminate**, not a forced answer.
+
+For final test reporting, use a fresh seed family that was not involved in validation-based candidate selection.
+
+### Input uncertainty propagation
+
+A single fitted distribution followed by many simulation replications quantifies only simulation stochasticity conditional on that input fit. Chick's work explicitly identifies distributional-form and parameter uncertainty as additional contributors. citeturn10search0
+
+The minimal practical solution does not require a complex Bayesian calibration layer:
+
+1. resample training **day clusters**;
+2. refit the primitive input models within the prespecified candidate family set;
+3. rerun the simulator with inner stochastic replications;
+4. compare the resulting spread with repeated runs holding the fitted input fixed.
+
+Report at least:
+
+- **stochastic-only uncertainty**;
+- **input-plus-stochastic uncertainty**;
+- **structural/candidate-family sensitivity**.
+
+The delivered YAML gives initial outer-bootstrap counts of `200` and a maximum of `1000`. Those are explicitly labelled **policy**, not evidence-derived constants; the relevant substantive criterion is stability/precision of the interval for the decision being made.
+
+## Minimum evidence, bounded search and abstention
+
+### Minimum data requirements
+
+There is no defensible universal sample-size number for this problem. Adequacy depends on censoring, clustering, tail targets, number of fitted parameters, event rarity and the precision required for the intended decision; the competing-risk simulation literature directly demonstrates deterioration as effective information falls. fileciteturn7file0L1-L3 fileciteturn8file0L1-L3 Fixed claims such as “50 observations is enough” would therefore be false precision.
+
+The minimum should instead combine **structural observability** with **precision gates**:
+
+| Evidence needed | Minimum requirement | Failure behaviour |
+|---|---|---|
+| Primitive service/task duration | Direct start/end timestamps or elapsed primitive duration with units | Keep primitive unknown/synthetic; never infer from wait/LOS summary |
+| Censoring | Start, last observation, event/censor indicator; reason/mechanism where available | Abstain on censor-aware fit if event status is ambiguous |
+| Competing outcomes | Realised first-event type plus at-risk time | Pool a defensible composite or abstain on cause-specific estimate |
+| Temporal validation | Ordered date/day blocks with required calendar/clinical slices represented | Simplify claim or abstain; do not fill cells using future-to-past random splitting |
+| Patient/day dependence | Day identifier; stable pseudonymous patient identifier where repeat visits matter | Label intervals independence-assuming if clustering cannot be reconstructed |
+| Parametric primitive | Enough distinct uncensored observations to estimate the family, non-singular fit and precision sufficient for its target | Simplify family/pool strata/abstain |
+| Separate walking/task values | An independent observable or constraint for each separately claimed component, or successful synthetic parameter recovery | Report only identifiable combinations |
+| Empirical validation target | Actual held-out observations of that target | Published quantiles alone permit surrogate calibration/sensitivity, not empirical distributional validation |
+| Simulation comparison | Replications sufficient for declared MC precision | MC-indeterminate |
+| Data provenance | Source/version, fields, units, extraction/transformation history | Do not promote value to observed/fitted evidence |
+
+The complete 12-row version is in `minimum_data_requirements.csv`.
+
+### Two-quantile surrogates are not empirical reference distributions
+
+This distinction should be enforced in the data model.
+
+Suppose a source publishes only \(q_{0.5}=10\) and \(q_{0.9}=20\). If a lognormal family is **assumed**, then:
+
+\[
+\mu=\log 10\approx2.3026
+\]
+
+and
+
+\[
+\sigma=\frac{\log 20-\log 10}{\Phi^{-1}(0.9)}
+\approx0.5408.
+\]
+
+In `FX-009`:
+
+- `10` and `20` are **published** or synthetic-fixture values;
+- “lognormal” is a **policy/model-family assumption**;
+- \(\mu,\sigma\) are **fitted/derived** values;
+- empirical `observed_range` is **unknown**;
+- uncertainty is **unknown** unless the source gives uncertainty for its quantiles;
+- calibration bounds remain a separate field.
+
+Law's input-modelling treatment supports distinguishing fitted parametric models from empirical distributions. citeturn12search0turn12search50 Two quantiles are plainly not a patient-level empirical CDF, so an empirical-reference KS claim would be category error.
+
+### Keep bounded candidate/grid search
+
+There is primary ED-specific evidence that simulation optimisation can be used to estimate missing service times. Guo et al. used simulation and optimisation for incomplete ED service-time data. citeturn12search1turn12search13 Liu et al. used simulation-based optimisation to calibrate an ED agent-based model under data scarcity, including missing key service durations. citeturn13search0 De Santis et al. later used a simulation-based, derivative-free optimisation approach for missing ED DES parameters in an Italian case study. citeturn13search1turn13search3
+
+Those studies establish that more sophisticated optimisers are **available**, not that they dominate a bounded grid for Kairos. In the present setting, the unresolved methodological danger is non-identifiability under partial observation. An optimiser cannot manufacture information absent from the observations: in `FX-005` it could return `(1,4)`, `(2,3)` or `(3,2)` but cannot establish which latent decomposition is true.
+
+**Proposed decision:** retain the transparent bounded candidate/grid search. It gives three valuable diagnostics:
+
+- objective surfaces/ridges remain visible;
+- bound-hitting is obvious rather than hidden inside optimiser convergence;
+- deterministic CRN comparisons across candidates are straightforward.
+
+A coarse-to-fine grid refinement is reasonable **after** synthetic parameter-recovery tests show the target is identifiable. Escalation to derivative-free or other simulation optimisation should require a reviewed change showing that dimensionality has made the grid infeasible *and* that the proposed optimiser preserves identifiability diagnostics and MC precision. The existing ED optimisation literature does not, by itself, justify replacing the current bounded-search plan. citeturn12search1turn13search0turn13search1
+
+### Explicit abstention states
+
+The validation pipeline should have first-class abstention/indeterminate states rather than forcing every dataset to yield a calibrated value.
+
+**Primitive unavailable:** no direct primitive observation means the primitive remains unknown or synthetic.
+
+**Censoring ambiguous:** if “no completion” cannot be distinguished from missing recording, do not fit a standard censor-aware model and call it observed.
+
+**Rare/unknown competing cause:** pool only when the composite has a defensible interpretation; otherwise cause-specific calibration abstains.
+
+**Identifiability failure:** multiple materially different parameter vectors inside the MC indifference region means the affected primitive values are not separately identified.
+
+**Holdout coverage failure:** a required subgroup absent from the temporal test block has no subgroup-specific validation result.
+
+**Monte Carlo indeterminate:** a replication cap reached before the precision criterion produces `MC-indeterminate`.
+
+**Clamped/free-running conflict:** passing clamped replay and failing unclamped holdout means the conditional reconstruction calibrated, but the model is **not validated** for free-running use.
+
+**Marginal/joint conflict:** acceptable W1/KS margins but a material conditional or joint mismatch fails uses that depend on pathways/dependence.
+
+**Quantile-only evidence:** two-quantile references support fitted/synthetic scenario work, not empirical-distribution validation.
+
+These distinctions are more important for credibility than squeezing every case into binary pass/fail.
+
+## Method decisions and synthetic fixtures
+
+The resulting method-decision set contains 18 stable IDs (`MD-001` through `MD-018`). The most consequential are:
+
+| ID | Decision | Classification |
+|---|---|---|
+| `MD-002` | Fit primitives only from directly measuring data; no LOS-to-service inference | Proposed choice, source-backed |
+| `MD-004` | Censoring represented explicitly and fitted censor-aware | Proposed choice, source-backed |
+| `MD-005` | Competing exits validated jointly in incidence and timing | Proposed choice, source-backed |
+| `MD-006` | Preserve day clustering; test patient×day clustering when repeat attendance matters | CareOps inference from cluster methods |
+| `MD-007` | Chronological day-level train/validation/test with boundary censoring | Proposed policy |
+| `MD-008` | Clamped replay requires profile/grid identifiability; abstain on ridges | Central proposed change |
+| `MD-009` | Locked unclamped/free-running holdout is mandatory | Central proposed change |
+| `MD-010` | W1/KS retained as marginal diagnostics, not sole validation gates | Proposed change, source-backed |
+| `MD-011` | Prespecified conditional and joint checks added | Proposed change |
+| `MD-012` | CRN paired candidate comparisons | Proposed choice, source-backed |
+| `MD-013` | Sequential MC precision; indeterminate at cap | Proposed policy, source-backed method |
+| `MD-014` | Outer data-refit plus inner simulation uncertainty | Proposed choice, source-backed |
+| `MD-015` | Keep bounded grid; do not silently adopt complex optimiser | Recommended disposition |
+| `MD-017` | Two-quantile distributions are synthetic/fitted surrogates | Required provenance distinction |
+
+The 14 fixtures deliberately favour tiny, hand-checkable cases over realistic ED complexity. That is appropriate for testing a calibration/validation implementation: expected answers should be mechanically unambiguous before they are embedded in larger scenarios.
+
+Particularly high-value fixtures are `FX-001` censoring, `FX-003` cluster resampling, `FX-005/006` latent-time identifiability, `FX-007` joint-versus-marginal agreement, `FX-009` two-quantile provenance, `FX-010` CRN pairing, `FX-011` MC stopping, `FX-012` free-running queue behaviour and `FX-014` temporal-boundary censoring. None of these fixtures is evidence that the corresponding numerical values are suitable ED parameters; every fixture value is labelled **synthetic**.
+
+## Deliverables, conflicts and evidence-acquisition priorities
+
+### Downloadable artefacts
+
+The delivered files are machine-readable and all decisions are marked proposal-only rather than implemented.
+
+| File | Records | Purpose |
+|---|---:|---|
+| [method_decisions.csv](sandbox:/mnt/data/careops_partial_observation_validation/method_decisions.csv) | 18 | Stable `MD-*` choices, evidence class, rationale, sources, minimum data and abstention rules |
+| [fixture_proposals.csv](sandbox:/mnt/data/careops_partial_observation_validation/fixture_proposals.csv) | 14 | Hand-computable/synthetic `FX-*` fixtures with expected outcomes and range/provenance semantics |
+| [minimum_data_requirements.csv](sandbox:/mnt/data/careops_partial_observation_validation/minimum_data_requirements.csv) | 12 | Structural, identifiability and precision requirements plus failure action |
+| [source_list.csv](sandbox:/mnt/data/careops_partial_observation_validation/source_list.csv) | 19 | Exact DOI/URL, publication/observation dates where known, page/field location, sample/population, access/licence information and transfer notes |
+| [validation_protocol.yaml](sandbox:/mnt/data/careops_partial_observation_validation/validation_protocol.yaml) | 1 protocol | Machine-readable proposed workflow, leakage gates, metric roles, MC policy, uncertainty and abstention states |
+| [manifest.json](sandbox:/mnt/data/careops_partial_observation_validation/manifest.json) | 5 listed artefacts | Record counts, SHA-256 digests, research date, repository revision and attachment-status note |
+
+[Download the complete research bundle](sandbox:/mnt/data/careops_partial_observation_validation_bundle.zip)
+
+The source list records unknown sample sizes, observation periods or licence variants as unknown/not extracted rather than reconstructing them from secondary references. It records source locations such as abstract/page ranges or repository path, and flags when an oncology or generic statistical method is being transferred to ED modelling.
+
+### Conflicts and unresolved questions
+
+The largest unresolved issue is **what the unavailable calibration specification actually clamps**. If only arrivals and genuinely exogenous observations are clamped, the identifiability concern is narrower. If downstream starts, finishes or route anchors are imposed, several proposed latent primitives may be weakly or wholly unidentified. The supplied summary is insufficient to decide that parameter by parameter.
+
+A second unresolved issue is **what data will exist at primitive resolution**. The methodological literature offers sound ways to fit censored and competing time-to-event data, but none permits primitive task times to be recovered uniquely from arbitrary aggregate LOS statistics. ED calibration publications have attempted indirect recovery of missing service parameters with simulation optimisation, but those are model-dependent inverse problems, not a licence to relabel inferred primitives as observed. citeturn12search1turn13search0turn13search1
+
+A third issue is **patient/day dependence**. Day-level blocking is a defensible default inference from shared operational conditions, while two-way patient/day resampling becomes relevant only if longitudinal identifiers demonstrate non-negligible repeat-patient dependence. The generic cluster-bootstrap evidence does not determine the magnitude of either effect in the target ED data. citeturn11search0turn11search7
+
+A fourth is the **acceptance-loss function**. No literature-derived universal W1, KS, energy-distance or LOS-error threshold is appropriate. The project needs use-specific tolerances before the test period is opened. NIST's KS limitations make p-value-driven thresholding particularly unattractive here. citeturn12search5turn12search7
+
+A fifth is **data non-stationarity**. A chronological holdout intentionally reveals temporal drift rather than averaging it away. Failure after a regime change may indicate a transfer limitation rather than an implementation bug; either way, randomising old and new days together would hide rather than solve the issue. citeturn11search1turn11search5
+
+### Prioritised evidence acquisition
+
+The highest-priority acquisition is the actual **calibration/parameter specification with field-level clamping rules**. For each proposed parameter, construct a dependency table showing which observed timestamps enter its objective and which remain free. Run `FX-005/006`-style parameter-recovery profiles before fitting real ED data. This determines whether walking and task components are separately estimable.
+
+Next is a **primitive observability inventory** for the generic/public-data ED profile: source field, event semantic, timestamp resolution, censoring status, competing termination types, missingness category, day identifier, pseudonymous patient identifier, observation period, and licence. Parameters unsupported by this inventory should remain unknown or explicitly synthetic rather than being reverse-engineered from LOS.
+
+Third is an **untouched temporal holdout plan** established before calibration. It should specify the cut dates, administrative-censoring rule at each boundary, prespecified conditional slices, intended-use tolerances and what constitutes a consumed test set. The default 60/20/20 split in the YAML is only a policy placeholder; actual cut points should be selected to preserve temporal ordering, coverage and precision.
+
+Fourth is a **censoring/competing-risk audit**: counts and proportions by cause, time block and intended fitting stratum; censor reasons; follow-up mechanism; and evidence for whether censoring is plausibly administrative versus informative. The published DES studies show that performance can change materially with censoring type and severity. fileciteturn7file0L1-L3 fileciteturn8file0L1-L3
+
+Fifth is a **repeat-attendance and day-clustering analysis** sufficient to choose day-only versus patient×day uncertainty resampling. Cluster-aware validation should then be tested against the deterministic synthetic fixture before it is trusted on empirical data. citeturn11search0turn11search7
+
+Sixth is a **locked free-running baseline** before any attempt to improve the optimiser. The baseline should demonstrate that bounded-grid candidates can be paired with CRN, that candidate differences achieve adequate MC precision, and that the holdout pipeline detects the deliberately wrong models in the synthetic suite. CRN has strong methodological support for comparative precision, while sequential-width methods provide a natural stopping rule. citeturn10search5turn10search1turn13search10
+
+Only after those items should a more complex calibration optimiser be reconsidered. Existing ED work demonstrates that simulation-based optimisation is feasible, but the evidence does not overcome the more fundamental partial-observation and identifiability problems that the proposed Kairos protocol must solve first. citeturn12search1turn13search0turn13search1

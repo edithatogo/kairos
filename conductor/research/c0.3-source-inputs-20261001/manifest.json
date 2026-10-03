@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "purpose": "Immutable local input snapshot for C0.3.sources; transcribed research sources, not recovered originals.",
+  "base_kairos_commit": "07204ec810483e238813f7dc441e032db13e8815",
+  "files": [
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/c0.2-contract.md",
+      "sha256": "38a4e963ce0191d84e92ec8d0e87aa68cc75c79e5b93a2458e56b7412603540c",
+      "bytes": 14946
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/calibration-v1.schema.json",
+      "sha256": "8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842",
+      "bytes": 51036
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-12-01-table.txt",
+      "sha256": "677abb5d85cd0cd27c712500cbd243bdb6dd8bb5012a97abccaaf33ca5832582",
+      "bytes": 2759
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-12-02-table.txt",
+      "sha256": "7d641211794d2f1d8a42cb2e1ccbeb931d28381e2d2d805bfc673c5bec311c17",
+      "bytes": 1728
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-12-03-table.txt",
+      "sha256": "e008cc74caffad8350e78b419bf4c7bbc59cc5637ff223172be56fdd64b69d8e",
+      "bytes": 1519
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-12-04-table.txt",
+      "sha256": "b32313b618dabd263bc3a0c23b519c516e5353e4ea597575aa79f628a07d6290",
+      "bytes": 1362
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-12.md.txt",
+      "sha256": "1a4def94c97f137b9d6283b26629cb38157dbb7f4ffc9f1cceceef2384d8a9a6",
+      "bytes": 40460
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-28-02-table.txt",
+      "sha256": "b9c008013cc16de699a314b6b38a0b412780133776efaf256015ce7a42610e08",
+      "bytes": 2480
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-30-01-table.txt",
+      "sha256": "adac2c30f2520022e321580730189b0c8ffeb1b2a4fdf6e06469fa54bfd9f324",
+      "bytes": 1018
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-30-02-table.txt",
+      "sha256": "0c384812e4e75135d67f3ca17b6500cd61f37abe3a3c4b47957802ed85608178",
+      "bytes": 471
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-30-03-table.txt",
+      "sha256": "0ca4586bfedaf3962c3951bd199ab14cced876e41dd64ee3347552df947a35f3",
+      "bytes": 1620
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-30-04-fenced.txt",
+      "sha256": "45f40605c2719b76edc25ded9282cf6d74ec5dc3d9711d2d4071cd405e6a0c63",
+      "bytes": 145
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-30-05-table.txt",
+      "sha256": "45797ae0cb7e7202589665523df227c5a29a332655658a785c38135ff6ae3ff4",
+      "bytes": 1899
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-30.md.txt",
+      "sha256": "95d4dd3fef0bc5dc28f34384a802272ca92023729c567f3565125ddb3d8cd592",
+      "bytes": 26609
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-6-01-table.txt",
+      "sha256": "d66e6e0b5a352c922e1cce309f3f52f8ac7b88c329ce8dc89d9f28c568fb3ce7",
+      "bytes": 768
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-6-02-table.txt",
+      "sha256": "5217e39b3a6f5562458ff77eecd4881c9d2aebe60e64cd360f16c2f9943e4159",
+      "bytes": 996
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-6-03-table.txt",
+      "sha256": "19b7040caa57f7f49cf5a0ee80da1e677799782004b72efde32055e56b9390bd",
+      "bytes": 1095
+    },
+    {
+      "path": "conductor/research/c0.3-source-inputs-20261001/report-6.md.txt",
+      "sha256": "255858dec6c96078a854fc79d704e5fdae262b6ccb5be28ede02fe580d1eddb4",
+      "bytes": 27534
+    }
+  ]
+}

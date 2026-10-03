@@ -1,0 +1,149 @@
+# Missing DES primitive inputs and reusable public ED examples for CareOps Sim
+
+## Scope and research method
+
+**Research date:** 27 September 2026, Australia/Brisbane.
+
+This review was deliberately bounded to emergency-department inputs that can inform a generic/public-data experimental profile now, while preserving a later, separate Cairns/Queensland profile. I searched for primary time-motion and direct-observation studies, original DES publications and repositories, official Australian/Queensland datasets and specifications, and reusable public event datasets. Australian and Queensland evidence was prioritised; international evidence was retained only where it filled a material gap or supplied a particularly reusable example. Reviews, whole-hospital models, detailed surgery/birthing/outpatient/waitlist pathways, spatial walking parameters and staff-utility coefficients were excluded.
+
+The prompt referred to attached reports, bundles and a parameter-track specification, but no retrievable attachment source was available in this session. **I did not inspect or attribute evidence to those files.** They should therefore be reconciled separately against the stable candidate IDs in the delivered files.
+
+The main inclusion rule was semantic rather than merely numerical: a value had to identify what clock interval or active task it measures. In particular, ED waiting time, length of stay and bed-occupancy “service time” were **not** converted into primitive clinician service times. Values whose fitted family was published without all required shape/end-point parameters were retained as incomplete evidence rather than reconstructed. Synthetic repository defaults were labelled **synthetic**, and elicited model assumptions were not relabelled as observations.
+
+The Australian evidence base is useful but incomplete. The strongest directly usable primitive evidence I found is a Melbourne observational study of 42 ED interns across three teaching hospitals, comprising 390.8 observer-hours over August–December 2006. The study timed discrete activities by stopwatch and reported episode counts and mean durations; when activities were simultaneous, only the principal activity was recorded. citeturn27search0 A second Australian consultant workflow study provides strong evidence about concurrency and task density, but its category totals should not be divided by counts to manufacture service-time distributions because overlapping activities generated more than 60 activity-minutes per clock-hour and session-end activities were censored.
+
+## Evidence for primitive inputs
+
+### Australian active-work anchors
+
+Zhu et al. provide the best immediately reusable Australian **mean anchors** located in this search. They are observed means, not fitted distributions. Among the entries extracted from their task table are senior-ED-staff consultation **1.8 min, n=878**; patient/family liaison **5.2 min, n=372**; clinical-note documentation **11.0 min, n=242**; diagnostic planning/ordering **1.0 min, n=316**; ECG interpretation **0.8 min, n=199**; plain-radiograph interpretation **1.6 min, n=147**; CT/other-imaging interpretation **4.7 min, n=27**; composite clinical examination **2.1 min, n=1,025**; history directly from the patient **6.9 min, n=325**; IV cannulation/phlebotomy **0.7 min, n=305**; arterial puncture/blood gas sampling **1.5 min, n=50**; handover **13.1 min, n=53**; and procedure preparation/clean-up **4.0 min, n=98**. These are recorded in `des_evidence.csv` with their episode counts, semantics and transfer caveats. The study population, period and observational design are directly reported by the primary MJA source. citeturn27search0
+
+These values are appropriate for a generic experimental profile only in a constrained sense: they can anchor a mean or deterministic test case, but **they do not establish a Gamma, lognormal, Weibull or other stochastic family, tail, empirical range, parameter uncertainty or calibration bound**. Choosing such a family around one of these means would therefore be a **synthetic/model assumption**, not an empirical fit. The principal-activity-only observation rule also means they cannot identify concurrent resource occupation faithfully. citeturn27search0
+
+The most directly relevant Australian triage study is Gerdtz and Bucknall's structured observation of **26 triage nurses and 404 triage occasions** in an adult metropolitan Melbourne ED. Its stated aims explicitly include the duration of triage decision-making for ATS categories 2–5. I could verify the study design and sample from the primary Wiley record, but could not reliably recover its ATS-specific numeric duration table in this session; consequently **no triage-duration value from this study has been fabricated or entered into `des_evidence.csv`**. DOI: `10.1046/j.1365-2648.2001.01871.x`; source URL: `https://onlinelibrary.wiley.com/doi/full/10.1046/j.1365-2648.2001.01871.x`. citeturn28search9turn28search13
+
+This makes ATS-conditioned triage duration one of the most important remaining acquisition targets. Administrative intervals such as arrival-to-clinical-care should not be substituted for active triage work.
+
+### Cleaning, handover and consultation response
+
+A Canadian tertiary-ED bed-turnaround audit provides unusually clean process semantics. Mean total turnaround was **48 minutes**, decomposed in its Figure 2 into **13 min notification**, **9 min environmental cleaning**, and **26 min clean-bed idle time**. The paper defines cleaning as changing sheets, sanitising surfaces and emptying refuse. Only the 9-minute component is active environmental-services cleaning; notification and idle time are queue/process delays. The audit-level sample size and an empirical cleaning distribution were not reported in the material retrieved, so 9 minutes is an **international observed mean anchor**, not a generic empirical distribution. DOI: `10.1136/bmjquality.u206156.w2532`; the article is CC BY-NC 2.0. citeturn28search15 fileciteturn11file0L3-L3
+
+This also resolves an apparent conflict with the Australian intern study: its **4.0-minute “preparation/clean-up for procedures”** is a clinician procedural task, whereas the Canadian **9-minute bed-space cleaning** is environmental-services turnaround. They should be separate DES work items, not pooled estimates.
+
+For specialist response, Vosk's primary observational study analysed **199 consultation forms from 21 staff physicians**. Mean first-page-to-telephone-response was **8±6 min**; first-page-to-ED-arrival was **17±10 min for emergency**, **50±41 min for urgent**, and **41±23 min for non-urgent** consultations. These are **waiting/response delays**, not active specialist consultation durations, and no fitted distribution family was provided. The study is from a 1998 US community hospital, making transfer to contemporary Queensland weak; I therefore classify these as sensitivity anchors rather than baseline parameters. DOI: `10.1016/S0196-0644(98)70035-6`. fileciteturn10file0L1-L3
+
+Queensland-specific handover literature was found but did not yield a reusable duration distribution from the material retrieved. Tobiano et al.'s ED-to-inpatient handover quality-improvement study reports a structured three-step process; Blyth et al. examined medical shift handover in Queensland. Their retrieved abstracts do not justify assigning a numeric service distribution. fileciteturn6file0L1-L3 fileciteturn6file2L1-L3 The older Australian multicentre study by Ye et al. observed **914 patient handovers across 60 sessions**, but likewise does not provide an executable handover-duration distribution in the retrieved abstract. fileciteturn6file1L1-L3
+
+### Interruptions, multitasking and coupled clinical work
+
+Nymoen et al.'s open WOMBAT study directly observed **31 physicians for 91.4 hours** in an Oslo ED. It recorded interruptions and multitasking explicitly. The overall interruption rate was **4.0/hour (95% CI 3.6–4.4)**; multitasking occupied **17.4% of drug-related task time** and **9.8% of non-drug-related task time**; examination represented **5.6%** of observation time. The fragmented process of obtaining/documenting medication lists consumed **7.8 min per physician-hour (95% CI 7.2–8.6)**. These are useful behaviour/workload evidence, but they are not task episode distributions and should not be transformed into them by dividing aggregate task-hours by counts. The article is CC BY 4.0. fileciteturn5file0L1-L3
+
+This matters for Kairos's proposed `Suspend/Abort/Restart` semantics. The empirical literature clearly supports the existence of interruptions, task switching and overlapping work, but the sources reviewed do **not** identify task-specific probabilities of suspension versus restart versus abandonment, nor resumption-latency distributions. Therefore the evidence supports retaining explicit interruption semantics in the design, but **does not justify silently selecting a particular pre-emption policy**.
+
+Lim et al. provide a complementary DES example of interaction between an attending physician and a delegate. Their Hamilton, Ontario model used **15,196 administrative encounters** and a small **n=85 time-motion sample**. Published process means include triage **10 min**, registration **2 min**, bedside-nurse assessment **10 min**, blood draw **4 min**, discharge work **10 min**, physician treatment **9 min for high-acuity and 4 min for low-acuity patients**, physician/delegate consultation **4.5 min**, and radiology **9 min**. Arena fitting selected Poisson, lognormal, beta or triangular families depending on the task, but Table 1 does **not** publish the full shape/end-point parameters needed to reproduce most fits. I therefore preserved the published family and mean while marking the parameterisation **incomplete**, rather than solving for parameters that the paper does not identify. DOI: `10.1186/1472-6947-13-59`. fileciteturn13file0L1-L3
+
+The same study is important architecturally: explicitly modelling physician–delegate consultation substantially changed simulated resource utilisation and low-acuity flow. That is evidence that coupled staff interactions can matter. It is **not**, however, sufficient evidence to silently adopt atomic multi-resource bundles in CareOps Sim. A defensible present choice is to keep the existing one-resource-per-work-item proposal and represent such interactions explicitly in the route/event logic where possible, while retaining atomic bundles as a reviewed future extension if later observation shows that simultaneous seizure is essential. fileciteturn12file0L1-L3
+
+## Public datasets and reusable model examples
+
+### Australian and Queensland administrative data
+
+AIHW's 2024–25 emergency-department release reports **9.1 million public-hospital ED presentations nationally**. This is excellent Australian evidence for macro activity, case-mix marginals and validation targets, but the public release is aggregate rather than an unrestricted patient-event log. It therefore cannot identify a patient-level non-stationary arrival process, joint ATS/age/diagnosis/arrival-mode dependencies, or primitive clinician task durations. citeturn27search5turn27search43
+
+The corresponding NAPEDC national minimum data specification is nevertheless valuable for the CareOps event schema because it defines Australian ED episode concepts and administrative time/status fields. Its semantics should be mapped into the proposed Macro/Micro ingestion layer rather than interpreted as active work durations. Official specification: `https://meteor.aihw.gov.au/content/775643/Print`. citeturn27search22
+
+Queensland Health's Emergency Data Collection is substantially more valuable for the later Cairns profile. The current Data Services Branch catalogue lists presentation date/time, triage date/time, service-commencement date/time, episode-end date/time, physical-departure date/time, triage category, arrival transport mode and episode-end status among commonly requested EDC elements. The collection is available for linkage from **1 July 2008**, with an indicated latency of about three months; exact date/time fields require justification and data access is controlled through the approved DSB process. citeturn27search2turn27search42turn27search25turn27search26
+
+That is enough to support a clear evidence boundary:
+
+| Need | Public Australian data now | Later Queensland/Cairns route |
+|---|---|---|
+| Annual/monthly arrival volume and broad case mix | **Yes** — AIHW aggregates | Validate/refine with EDC |
+| Patient-level interarrival process | **No open national event file** | EDC timestamps |
+| Joint ATS × arrival mode × diagnosis × disposition | Public marginals only | EDC extract |
+| Did-not-wait/other episode-end state modelling | Aggregate/status semantics available | Patient-level EDC required for patience analysis |
+| Active triage/assessment/review duration | **No** — admin clocks are insufficient | Direct time-motion needed even with EDC |
+| Staff/resource calendar | **No executable public Cairns roster found** | HHS roster/service-calendar acquisition |
+
+The critical point is that EDC can calibrate **patient flow clocks**, but an arrival-to-service or service-to-end interval should not be interpreted as uninterrupted staff service.
+
+### MIMIC-IV-ED
+
+MIMIC-IV-ED v2.2 is the strongest reusable patient-level public research asset found for event-pipeline development. Version 2.2 was released on **5 January 2023**, DOI `10.13026/5ntk-km72`, and is distributed by PhysioNet under credentialed-access requirements. It contains more than 400,000 ED stays and supports patient-level arrivals, case-mix variables, dispositions and timestamped clinical events. It is suitable for building and testing patient-level event ingestion and for methodological work on abandonment-like dispositions, but its US case mix and ESI context impose strong transfer limits. citeturn28search2turn28search3
+
+A particularly important limitation is that its triage table does not provide a true active-triage start/stop interval. It should therefore **not** be used to infer triage work duration. The open MIMIC-IV-ED Demo v2.2, DOI `10.13026/jzz5-vs76`, is preferable for unrestricted ingestion/schema tests, but its small selected sample should not be fitted as though representative of an ED population. citeturn28search0turn28search1
+
+### Reusable DES repositories and published fits
+
+The inspected `pythonhealthdatascience/stars-treat-simmer` repository provides a useful public mechanical example. At pinned revision `161fa56392a836f1b3f6f32b448ae18ef29c9972`, the code defines an exponential triage mean of **3 min**; registration lognormal with arithmetic mean **5 min** and SD `sqrt(2)`; examination Normal with mean **16 min** and variance **3**; trauma stabilisation exponential mean **90 min**; trauma treatment lognormal mean **30 min**, SD **2**; and non-trauma treatment lognormal mean **13.3 min**, SD `sqrt(2)`. It also exposes constant resource-count defaults. The repository's code licence is MIT. fileciteturn3file0L2-L5 fileciteturn4file0L2-L13
+
+All of those defaults are marked **synthetic** in the delivered evidence file. I also calculated the exact log-scale `mu`/`sigma` corresponding to the repository's own arithmetic-moment conversion formula; those transformations are recorded explicitly in `des_evidence.csv`. They are useful for cross-language regression tests when reproducing the R implementation in Rust, but **none is evidence of a plausible Australian ED range**. Sampling calls in the repository confirm use of `rlnorm` for the lognormal treatment process and `rnorm(mean, sqrt(var))` for examination. fileciteturn9file0L1-L28
+
+Laker et al.'s Flex Track study is valuable for a different reason. It fitted patient-arrival and bed-occupancy distributions to **70,625 usable ED records** from an original 82,523 encounters. Arrivals were modelled as a non-stationary Poisson process stratified by ESI/day/time. Its triage lognormal of arithmetic mean **8 min**, SD **4 min** was selected following clinician discussion/model testing, so I label it **elicited**, not fitted. Its ESI/disposition “service times” are fitted lognormals, but the paper defines service from **bed placement until ED exit**, encompassing evaluation, therapies and disposition. These are therefore aggregate bed-occupancy distributions, not primitive active assessment times. DOI: `10.1016/j.annemergmed.2014.05.031`. fileciteturn8file0L1-L3
+
+The fitted Flex Track distributions are retained in `des_evidence.csv` solely as macro occupancy/validation comparators. For example, the published arithmetic mean/SD are **487/480 min for ESI-2 admitted**, **333/266 for ESI-2 discharged**, **577/439 for ESI-3 admitted**, **263/230 for ESI-3 discharged**, **573/441 for ESI-4 admitted**, **123/108 for ESI-4 discharged**, and **91/97 for ESI-5 overall**. The file gives exact algebraic log-scale conversions but explicitly blocks their use as primitive clinician service times. fileciteturn8file0L3-L3
+
+No Australian public executable staff roster/resource calendar comparable to what is required for CareOps was identified. International simulation examples can demonstrate calendar mechanics, but actual doctor, nurse, clerical, diagnostic and cleaning capacities by hour/day should remain a policy assumption until local roster evidence is acquired.
+
+## Implications for the generic CareOps profile and Kairos
+
+The evidence supports a **two-layer generic profile rather than a falsely complete calibrated profile**.
+
+The first layer can be evidence-backed immediately: Australian arrival/case-mix marginals from AIHW; Australian observed mean anchors for history, examination, diagnostics interpretation, documentation, handover and common bedside procedures; explicit interruption/multitasking mechanisms; and well-defined administrative episode/status semantics. citeturn27search0turn27search5turn27search22
+
+The second layer must be explicitly assumption-labelled: distribution shapes around most Australian task means, active ATS-conditioned triage distributions, reassessment processes, local consultation response, bed-cleaning tails, resource calendars, diagnostic turnaround decompositions and abandonment patience. A synthetic mechanics profile can use STARS-style distributions or another deliberately simple family, provided every such choice remains labelled **synthetic/policy** and is not presented as an empirical interval.
+
+A useful implementation distinction for the proposed parameter track is therefore:
+
+| Candidate type | Generic profile now? | Appropriate use |
+|---|---:|---|
+| Australian observed task mean with known semantics | **Yes, cautiously** | Mean anchor, deterministic test or centre of an explicitly assumed distribution |
+| Full empirical fitted distribution with compatible semantics | **Yes**, subject to transfer review | Direct stochastic input |
+| International mean±SD, no fitted family | **Sensitivity only** | External anchor; do not invent family |
+| Aggregate bed occupancy / LOS distribution | **No as primitive** | Macro validation or occupancy comparison |
+| Open-repository synthetic default | **Yes, synthetic only** | Engine/regression/mechanics profile |
+| Aggregate Australian activity/case mix | **Yes** | Arrival/case-mix marginals and validation |
+| Administrative service-start/end interval | **No as active work** | Flow/validation clocks |
+| Missing distribution or local calendar | **No empirical claim** | Explicit assumption or evidence-acquisition item |
+
+This evidence does **not** justify changing the core Kairos/KairoECS architecture. In particular, nothing found challenges one authoritative state and clock or deterministic event/seed contracts. Interruption studies support explicit state transitions but do not identify enough task-level transition probabilities to redefine `Suspend/Abort/Restart`. Physician–delegate interaction studies identify a real coupled-resource issue, but the evidence is not sufficient to silently overturn the present one-resource-per-work-item proposal or to declare atomic bundles implemented. fileciteturn5file0L3-L3 fileciteturn13file0L3-L3
+
+The proposed calibration separation also remains appropriate. Administrative event streams can constrain arrival processes, route frequencies, queue delays, episode endpoints and aggregate occupancy, whereas direct observation is still needed for many active-work primitives. Keeping clamped replay distinct from unclamped prediction is particularly important where timestamp data describe flow intervals but not the actual service effort embedded inside them. This is an inference from the semantic gaps across the reviewed sources, not a claim that the proposed calibration machinery is already implemented.
+
+## Conflicts, unresolved questions and evidence acquisition
+
+Several numerical sources appear contradictory until provenance and semantics are separated.
+
+**Triage is the clearest example.** STARS uses a **synthetic exponential mean 3 min**; Flex Track uses an **elicited lognormal mean 8 min/SD 4**; Lim reports a **10-min process mean with a Poisson family** from a Canadian model; the Australian Gerdtz study actually observed ATS triage but its numeric table was not recoverable here. These values should not be averaged. fileciteturn3file0L2-L5 fileciteturn8file0L3-L3 fileciteturn13file0L3-L3 citeturn28search9
+
+Likewise, the **4-minute Australian procedure preparation/clean-up**, **9-minute Canadian bed cleaning**, and **26-minute clean-bed idle interval** are three different processes. Consultation also needs two clocks: active clinician-to-clinician consultation work, for which Australian intern evidence gives a 1.8-minute senior-ED-staff interaction mean, versus specialist response waiting, for which the old US study reports tens of minutes. citeturn27search0 fileciteturn11file0L3-L3 fileciteturn10file0L3-L3
+
+Abandonment remains materially underidentified. Lim publishes a piecewise LWBS probability schedule by wait-duration bin, but the source does not establish enough about its derivation/censoring to treat it as a transferable empirical patience law. Australian administrative specifications identify episode-end semantics, and Queensland EDC can potentially supply patient-level presentation and end times, but public aggregate data cannot estimate a competing-risk patience distribution by ATS, clock time and crowding. fileciteturn13file0L3-L3 citeturn27search22turn27search2
+
+The highest-priority acquisition sequence is therefore:
+
+**First priority — Australian primitive service evidence.** Obtain the full Gerdtz/Bucknall triage-duration results and the underlying IHACPA *Emergency Care Clinician Time Consensus Study Report*. IHACPA confirms that the clinician-time study formed part of Australia's emergency-care costing/classification work, but I was unable to inspect the report attachment itself, so no values from it were used. Official landing page: `https://www.ihacpa.gov.au/resources/emergency-care-clinician-time-consensus-study-report`. citeturn27search3turn27search4turn27search7
+
+**Second priority — contemporary local observation.** Measure ATS-conditioned triage, initial assessment, reassessment, common specimen/procedure tasks, handover and bed cleaning with explicit start/stop semantics, concurrency and interruption tagging. The observation schema should record whether an interruption suspends, terminates or restarts the original task, because existing workflow studies establish interruptions but do not identify those transition probabilities. fileciteturn5file0L3-L3
+
+**Third priority — Queensland administrative event data.** Seek an EDC extract for patient-level arrival, triage, service commencement, episode end/departure, ATS, arrival mode and end status. This would address Cairns/Queensland arrivals, joint case mix and abandonment timing while preserving the distinction between administrative flow clocks and primitive active work. citeturn27search2turn27search25turn27search26
+
+**Fourth priority — local operational systems.** Acquire staff rosters/service calendars, switchboard or electronic-consult timestamps, LIS/RIS order/collection/acquisition/result times, and environmental-services bed-state logs. These are the most direct routes to the presently missing resource calendars, consultation response and diagnostic/cleaning decompositions.
+
+Until those acquisitions occur, `unresolved_inputs.csv` deliberately leaves scenario ranges, empirical ranges, uncertainty and calibration bounds as **unknown** where the evidence does not identify them. No generic “±20%” or similar range has been invented.
+
+## Delivered files and provenance
+
+The machine-readable delivery contains **63 evidence records, 17 asset records, 14 prioritised unresolved-input records and 19 source records**. Stable identifiers use the `DES-E###`, `ASSET-###`, `UNR-###` and `SRC-###` namespaces. The manifest records row counts and SHA-256 hashes for the CSV outputs.
+
+| File | Records | Purpose |
+|---|---:|---|
+| [des_evidence.csv](sandbox:/mnt/data/careops_ed_des_research_2026-09-27/des_evidence.csv) | 63 | Numeric candidate inputs/targets with provenance class, semantics, units, parameterisation, support, uncertainty, transfer limits and generic-profile disposition |
+| [asset_inventory.csv](sandbox:/mnt/data/careops_ed_des_research_2026-09-27/asset_inventory.csv) | 17 | Studies, datasets and repositories, including access/licence, raw-data availability and reuse limits |
+| [unresolved_inputs.csv](sandbox:/mnt/data/careops_ed_des_research_2026-09-27/unresolved_inputs.csv) | 14 | Remaining primitive/semantic gaps with prioritised acquisition actions |
+| [source_list.csv](sandbox:/mnt/data/careops_ed_des_research_2026-09-27/source_list.csv) | 19 | Exact titles, DOI/URL, publication/observation dates, sample/population, licence/access, source location and inspection status |
+| [manifest.json](sandbox:/mnt/data/careops_ed_des_research_2026-09-27/manifest.json) | 1 | Delivery manifest, scope, evidence-label vocabulary, record counts and hashes |
+
+The source list includes exact primary URLs and DOI strings rather than citation tokens alone. Important source revisions are pinned where possible; notably the STARS repository is recorded at commit `161fa56392a836f1b3f6f32b448ae18ef29c9972`. fileciteturn3file0L2-L6
+
+The resulting evidence boundary is fairly sharp: **CareOps Sim can build a defensible generic experimental ED profile now, but not a defensible fully empirical primitive-service profile.** Australian active-task means, national aggregate demand/case mix, interruption evidence, official event semantics and open synthetic model examples are available now. Full ATS-conditioned service distributions, reassessment, local diagnostic-task decomposition, resource calendars, consultation response, cleaning tails and abandonment patience require either direct observation, controlled Queensland data or an explicitly labelled assumption.

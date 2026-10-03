@@ -1,0 +1,10 @@
+| C0 concept | FHIR/AU candidate | Assessment |
+|---|---|---|
+| Episode identifier | `Encounter.identifier` | **Exact** at standards-semantic level |
+| Subject | `Encounter.subject` → Patient | **Partial** because source identifier/pseudonymisation policy is local |
+| Event occurrence | event-specific `Encounter.period`, `statusHistory.period`, `location.period` | **Partial**; there is no universal atomic Encounter event-time field |
+| Recorded time | linked `AuditEvent.recorded` | **Partial**; only when a corresponding audit event/source audit record exists |
+| Physical location | `Encounter.location.location` | **Exact** semantically |
+| Location interval | `Encounter.location.period` | **Exact** semantically when the location represents the required physical granularity |
+| ED episode end | `Encounter.period.end` and/or terminal status history | **Partial** |
+| Physical departure | final relevant ED `Encounter.location.period.end` | **Partial**, requiring an explicit ED-location boundary/profile |

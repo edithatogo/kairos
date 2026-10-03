@@ -1,0 +1,16 @@
+| Component | Current candidate observed on 27 Sep 2026 | Kairos inspected state | Compatibility decision |
+|---|---|---|---|
+| Rust | **1.98.1**, 3 Sep 2026 | manifest MSRV 1.76; toolchain floats stable | Add 1.98.1/current stable lane, **retain actual 1.76 acceptance** unless MSRV is formally changed. citeturn21search2 |
+| cargo-nextest | **0.9.145**, 16 Sep 2026 | pinned 0.9.133 | Candidate update after trial; no automatic upgrade. |
+| cargo-deny | **0.20.2**, 9 Jul 2026 | pinned 0.18.9 in core; unversioned install in policy | Candidate update plus full `advisories bans licenses sources` execution after config-compatibility trial. |
+| cargo-audit | **0.22.2**, 5 Jun 2026 | pinned 0.22.1 in core; unversioned in policy | Minor candidate update; retain as defence in depth. |
+| cargo-hack | **0.6.45**, 30 May 2026 | not observed | Suitable feature-matrix candidate after execution trial. fileciteturn27file0L1-L2 |
+| cargo-msrv | **0.19.3**, 25 Mar 2026 | not observed | Useful diagnostic, but cannot replace actually compiling/testing on 1.76. |
+| cargo-semver-checks | **0.50.0**, 1 Aug 2026 | not observed | Introduce only once a legitimate public/release baseline exists. fileciteturn28file0L1-L2 |
+| cargo-fuzz | **0.13.2**, 9 Jun 2026 | unpinned `cargo install cargo-fuzz` | Pin only after trial; more importantly, fix the toolchain to nightly. |
+| cargo-mutants | **27.1.0**, 2 Jun 2026 | not observed | Scheduled candidate; establish a measured baseline before blocking. |
+| proptest | **1.11.0** | not observed | **Do not adopt blindly**: published `rust-version` is 1.85, above Kairos MSRV 1.76. |
+| actionlint | **1.7.12**, 30 Mar 2026 | `go run ...@v1.7.7` | Upgrade candidate; install by reproducible mechanism rather than a mutable tag. |
+| zizmor CLI | **1.30.1**, 9 Sep 2026 | action wrapper annotated v0.5.3 | Evaluate current action/CLI pair; do not assume wrapper version maps directly to CLI version. fileciteturn26file0L1-L2 |
+| Syft | **1.52.0**, 17 Sep 2026 | installed through pinned Anchore action | Candidate current SBOM engine; current release publishes checksums/signatures. fileciteturn29file0L1-L2 |
+| arrow-rs | **60.0.0**, published 15 Sep 2026; tag commit `ef1fa157977633f0ba21aa921f9ef3d5c669235b` | no Arrow dependency | **Not compatible with present MSRV policy:** 60.0.0 raises MSRV to Rust 1.88. fileciteturn19file0L1-L2 fileciteturn20file0L1-L12 |

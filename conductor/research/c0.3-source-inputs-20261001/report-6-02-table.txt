@@ -1,0 +1,10 @@
+| Candidate type | Generic profile now? | Appropriate use |
+|---|---:|---|
+| Australian observed task mean with known semantics | **Yes, cautiously** | Mean anchor, deterministic test or centre of an explicitly assumed distribution |
+| Full empirical fitted distribution with compatible semantics | **Yes**, subject to transfer review | Direct stochastic input |
+| International mean±SD, no fitted family | **Sensitivity only** | External anchor; do not invent family |
+| Aggregate bed occupancy / LOS distribution | **No as primitive** | Macro validation or occupancy comparison |
+| Open-repository synthetic default | **Yes, synthetic only** | Engine/regression/mechanics profile |
+| Aggregate Australian activity/case mix | **Yes** | Arrival/case-mix marginals and validation |
+| Administrative service-start/end interval | **No as active work** | Flow/validation clocks |
+| Missing distribution or local calendar | **No empirical claim** | Explicit assumption or evidence-acquisition item |

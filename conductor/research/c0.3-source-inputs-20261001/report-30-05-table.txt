@@ -1,0 +1,10 @@
+| Deliverable | Records | Contents |
+|---|---:|---|
+| [minimal_event_crosswalk.csv](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/minimal_event_crosswalk.csv) | **44** | Eleven provisional C0 fields × four source families, with stable mapping IDs, exact/partial/unavailable classification, units, origin, evidence status, transformations and transfer limitations |
+| [source_version_manifest.csv](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/source_version_manifest.csv) | **20** | Version-pinned sources, exact URLs, DOI status, publication/release and observation/implementation periods, field locations, population/scope, sample-size status, access/licence status and revisions |
+| [c0_provisional_field_dictionary.yaml](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/c0_provisional_field_dictionary.yaml) | **11 fields** | Candidate C0 field definitions, explicitly marked provisional/policy |
+| [synthetic_positive_examples.jsonl](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/synthetic_positive_examples.jsonl) | **6** | Positive synthetic event examples, including episode-end-before-departure boarding |
+| [synthetic_negative_examples.jsonl](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/synthetic_negative_examples.jsonl) | **6** | Negative semantic/transformation examples with violation codes |
+| [source_list.csv](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/source_list.csv) | **20** | Compact source list with exact URLs and version/revision information |
+| [manifest.json](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/manifest.json) | **7 file entries** | File names, record counts, byte sizes and SHA-256 digests |
+| [README.md](sandbox:/mnt/data/careops_minimal_event_crosswalk_2026-09-27/README.md) | **1** | Status, classification vocabulary and transformation cautions |
