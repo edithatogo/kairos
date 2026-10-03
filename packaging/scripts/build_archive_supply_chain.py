@@ -176,7 +176,7 @@ def _generate(source: Path, output: Path, commit: str, acquisition: Path, syft: 
             temporary = Path(temporary)
             config = temporary / 'syft.yaml'
             config.write_text('check-for-app-update: false\nparallelism: 2\ncache:\n  dir: ""\n  ttl: 0\njavascript:\n  search-remote-licenses: false\npython:\n  search-remote-licenses: false\ngolang:\n  search-local-mod-cache-licenses: false\n  search-remote-licenses: false\n  use-packages-lib: false\n')
-            env = {'PATH': '/usr/bin:/bin', 'HOME': str(temporary), 'TMPDIR': str(temporary)}
+            env = {'PATH': '/usr/bin:/bin', 'TMPDIR': str(temporary)}
             for row in index['artifacts']:
                 short = hashlib.sha256(row['path'].encode()).hexdigest()[:24]
                 tree = temporary / short
@@ -220,7 +220,7 @@ def _generate(source: Path, output: Path, commit: str, acquisition: Path, syft: 
         validator.validate(sbom)
         (output / 'sbom.spdx.json').write_text(json.dumps(sbom, indent=2, sort_keys=True) + '\n')
         statement = {'_type': 'https://in-toto.io/Statement/v1', 'subject': [{'name': r['path'], 'digest': {'sha256': r['sha256']}} for r in manifest['artifacts']], 'predicateType': 'https://slsa.dev/provenance/v1', 'predicate': {'buildDefinition': {'buildType': BUILD_TYPE, 'externalParameters': {'source_commit': commit, 'original_run_id': acq.get('run_id')}, 'resolvedDependencies': [{'uri': 'https://github.com/edithatogo/kairos/actions/runs/' + str(acq.get('run_id')), 'digest': {'sha256': acq['artifact_digest'][7:]}}, {'uri': 'ARCHIVE-INDEX.json', 'digest': {'sha256': digest(source / 'ARCHIVE-INDEX.json')}}]}, 'runDetails': {'builder': {'id': BUILDER_ID}, 'metadata': {'startedOn': started, 'finishedOn': now}}}}
-        source_identities = {name: digest(Path(__file__).with_name(name)) for name in ('build_archive_supply_chain.py', 'build_archive_release_manifest.py', 'build_package_archive_bundle.py')}
+        source_identities = {name: digest(Path(__file__).with_name(name)) for name in ('build_archive_supply_chain.py', 'build_archive_release_manifest.py', 'build_package_archive_bundle.py', 'acquire_package_archive_bundle.py')}
         runtime = {'python': sys.version, 'jsonschema': importlib.metadata.version('jsonschema')}
         dependencies = statement['predicate']['buildDefinition']['resolvedDependencies']
         for name in ('ARCHIVE-INDEX.json', 'BUILD-RECEIPT.json', 'acquisition.json'):

@@ -429,4 +429,22 @@ class SupplyChainTests(unittest.TestCase):
             self.assertFalse(output.exists())
 
 
+    def test_scanner_environment_and_acquisition_helper_identity(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            fixture = make_fixture(root)
+            output = root / "evidence"
+            with patch.object(module.subprocess, "run", wraps=module.subprocess.run) as calls:
+                generate(fixture, output)
+            self.assertEqual(len(calls.call_args_list), 8)
+            for call in calls.call_args_list:
+                self.assertNotIn("HOME", call.kwargs["env"])
+            coverage = json.loads((output / "SBOM-COVERAGE.json").read_text())
+            helper = "acquire_package_archive_bundle.py"
+            expected = sha256(REPO_ROOT / "packaging/scripts" / helper)
+            self.assertEqual(coverage["source_identities"][helper], expected)
+            provenance = json.loads((output / "provenance.json").read_text())
+            dependencies = provenance["predicate"]["buildDefinition"]["resolvedDependencies"]
+            self.assertIn({"uri": "packaging/scripts/" + helper, "digest": {"sha256": expected}}, dependencies)
+
 if __name__ == "__main__": unittest.main()
