@@ -32,7 +32,8 @@ The Starlight configuration uses:
 
 - `starlight-versions` for the `R2 Preview` / `R1 Archive` version switcher.
 - `starlight-links-validator` for Starlight-aware internal link validation.
-- `starlight-llms-txt` for `llms.txt`, `llms-full.txt`, and
+- the local `kairoecs-llms-txt` integration, derived from pinned MIT-licensed
+  `starlight-llms-txt` source, for `llms.txt`, `llms-full.txt`, and
   `llms-small.txt`.
 - `starlight-plugin-icons` for richer Starlight icon affordances.
 - `kairoecs-starlight-polyglot`, the local polyglot plugin that marks the
