@@ -957,6 +957,16 @@ impl FlowRuntime {
             next_lease: 0,
         }
     }
+    /// Require registration before any successful task or actor-domain creation.
+    /// Historical context metadata keeps this phase closed after work cleanup.
+    /// Existing registration methods retain their individual-key semantics.
+    pub fn ensure_pre_work_registration(&self) -> Result<(), FlowError> {
+        self.check_running()?;
+        if !self.context_types.is_empty() {
+            return Err(FlowError::InvalidWork);
+        }
+        Ok(())
+    }
     pub fn budget_snapshot(&self) -> FlowBudgetSnapshot {
         FlowBudgetSnapshot {
             tick: self.budget_tick,
