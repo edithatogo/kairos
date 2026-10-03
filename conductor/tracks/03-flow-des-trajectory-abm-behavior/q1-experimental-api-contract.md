@@ -97,3 +97,9 @@ Q1 allocation records store lease, request, owner, optional work, priority,
 granted_at, segment_started_at, and completion_at=None for manual leases. The
 active ECS component is indexed by LeaseId; resource inspection returns canonical
 allocation records as well as existing lease IDs. Q3 owns timed completion dates.
+
+Q1 declarative AcquireBuilder borrows &mut FlowRuntime, stores resource,
+optional owner/work and time defaulting to current tick; owner(), at(), for_work()
+only set fields. submit() with missing owner returns InvalidState before any
+request/entity/event mutation, otherwise calls the same checked submit path.
+Priority/preemption/deadline/handler builder extensions remain Q2–Q4.
