@@ -126,3 +126,11 @@ Phase closeout evidence refreshed on 2026-05-10:
   closeout commit and push.
 - Next-phase decision: Track 30 is `Done`. Reopen only for a scoped support
   matrix change, runner coverage promotion, or version-drop policy update.
+
+## Scoped stable-channel reconciliation — 2026-10-03
+
+Official source: `https://static.rust-lang.org/dist/channel-rust-stable.toml`, manifest dated 2026-10-01, Rust 1.99.0 (b940084d7 2026-09-28), SHA-256 `ce6dddc886364f8d786514771212cebe9b731ba82d6b859951c6b0ccc516b6a2`. Hosted PR195 installed 1.99 but expected 1.98. The current-stable row, workflow prefix and static validator now agree on 1.99. Rust 1.76 MSRV, beta lane, package manifests and rust-toolchain.toml remain unchanged. The matrix header date remains the last full multi-language refresh; only this Rust row is refreshed here.
+
+On base `34a680cdb738b5e855bac9b821f9adae8c805ed9`, from `/private/tmp/kairos-rust-stable-matrix-20261003`, the static validator passes; actual isolated Rust1.99.0 passes the 1.99 check; actual Rust1.98.1 is rejected with the expected mismatch. actionlint and diff checks pass. Rust1.99 uses isolated `/private/tmp/kairos-rust-matrix-toolchains-20261003`; no shared toolchain defaults changed. Exact commands, environments, exits and logs: `/tmp/rust-matrix-command-receipts.json`. Context was bounded to 24KB; the workflow was inspected separately after the combined packet exceeded budget. A negative attempt using only RUSTUP_TOOLCHAIN did not select the intended compiler on this host; the recorded negative check uses its actual bin directory explicitly.
+
+Narrow CHANGELOG handoff to Track16 records this current-stable observation; no minimum version change or supported-version removal. Hosted checks are still required before merge. No Track30 phase advance or full release qualification is claimed. npm security integration remains with the active parallel owner.

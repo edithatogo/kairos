@@ -27,7 +27,7 @@ Last updated: 2026-05-07.
 | Command | Result | Evidence |
 |---|---|---|
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` | Pass | Static matrix, workflow trigger, and gate checks passed locally on 2026-05-07. |
-| `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedPrefix 1.98` | Pass | GitHub Actions installs the current stable Rust channel and validates it against the live 1.98 release line. |
+| `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedPrefix 1.99` | Pass | Verified 2026-10-03 on isolated actual Rust 1.99.0 and the PR196 GitHub Actions stable lane at head 5159655; exact local receipts are in the scoped reconciliation below. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedPrefix 3.13` | Pass | Local `python --version` reports Python 3.13.x and matches the expected prefix. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem node -ExpectedPrefix 24` | Pass | Local Node reports 24.x. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem dotnet -ExpectedPrefix 11.0` | Pass | Local .NET reports 11.0; the machine currently defaults to preview, not the stable 10.0 SDK lane. |
@@ -38,3 +38,11 @@ Last updated: 2026-05-07.
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
+
+## Scoped stable-channel reconciliation — 2026-10-03
+
+Official source: `https://static.rust-lang.org/dist/channel-rust-stable.toml`, manifest dated 2026-10-01, Rust 1.99.0 (b940084d7 2026-09-28), SHA-256 `ce6dddc886364f8d786514771212cebe9b731ba82d6b859951c6b0ccc516b6a2`. Hosted PR195 installed 1.99 but expected 1.98. The current-stable row, workflow prefix and static validator now agree on 1.99. Rust 1.76 MSRV, beta lane, package manifests and rust-toolchain.toml remain unchanged. The matrix header date remains the last full multi-language refresh; only this Rust row is refreshed here.
+
+On base `34a680cdb738b5e855bac9b821f9adae8c805ed9`, from `/private/tmp/kairos-rust-stable-matrix-20261003`, the static validator passes; actual isolated Rust1.99.0 passes the 1.99 check; actual Rust1.98.1 is rejected with the expected mismatch. actionlint and diff checks pass. Rust1.99 uses isolated `/private/tmp/kairos-rust-matrix-toolchains-20261003`; no shared toolchain defaults changed. Exact commands, environments, exits and logs: `/tmp/rust-matrix-command-receipts.json`. Context was bounded to 24KB; the workflow was inspected separately after the combined packet exceeded budget. A negative attempt using only RUSTUP_TOOLCHAIN did not select the intended compiler on this host; the recorded negative check uses its actual bin directory explicitly.
+
+Narrow CHANGELOG handoff to Track16 records this current-stable observation; no minimum version change or supported-version removal. Hosted checks are still required before merge. No Track30 phase advance or full release qualification is claimed. npm security integration remains with the active parallel owner.
