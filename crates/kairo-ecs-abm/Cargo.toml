@@ -11,3 +11,4 @@ kairo-ecs-types = { path = "../kairo-ecs-types" , version = "=0.0.0" }
 kairo-ecs-core = { path = "../kairo-ecs-core" , version = "=0.0.0" }
 kairo-ecs-state = { path = "../kairo-ecs-state" , version = "=0.0.0" }
 kairo-ecs-rng = { path = "../kairo-ecs-rng" , version = "=0.0.0" }
+kairo-ecs-des = { path = "../kairo-ecs-des", version = "=0.1.0" }

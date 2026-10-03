@@ -633,6 +633,7 @@ name = "kairo-ecs-abm"
 version = "0.1.0"
 dependencies = [
  "kairo-ecs-core",
+ "kairo-ecs-des",
  "kairo-ecs-rng",
  "kairo-ecs-state",
  "kairo-ecs-types",
