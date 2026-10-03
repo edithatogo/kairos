@@ -1,7 +1,7 @@
 {
   "id": "EXC-199",
-  "status": "proposed_pending_owner_decision",
-  "classification": "temporary_operational_exception_pending_owner_classification",
+  "status": "approved",
+  "classification": "temporary_operational_exception",
   "pr": "https://github.com/edithatogo/kairos/pull/199",
   "source_commit": "0a3b86aa33d1f158eaca2855e0e503cdac6e08ef",
   "control": "bootstrap npm moderate audit in Package Dry Runs",
@@ -53,19 +53,19 @@
     "other_pull_requests"
   ],
   "approvals": {
-    "security_owner": null,
-    "release_owner": null,
-    "classification_accepted": false,
-    "approved_at": null,
-    "approval_evidence": null
+    "security_owner": "human sole maintainer (this chat; repository account edithatogo)",
+    "release_owner": "human sole maintainer (this chat; repository account edithatogo)",
+    "classification_accepted": true,
+    "approved_at": "2026-10-04T01:35:30+10:00",
+    "approval_evidence": "Human user messages in this chat: \u201cI approve\u201d in response to the explicit request for both the EXC-199 temporary operational exception and Track 49 production scheduling; after clarification, the user confirmed \u201cBoth\u201d. Recorded 2026-10-04T01:35:30+10:00 Brisbane time. This records approval of the temporary operational classification only; implementation and hosted verification remain separate gates."
   },
   "follow_up": "EXC-199-http-cache-decision.md",
-  "activation": "not_implemented; raw audit remains a strict failing gate pending owner decision and a separately reviewed implementation",
+  "activation": "exact-scope PR199 selection is implemented, but this approved record is blocked from classifying non-clean findings until corrected proof bytes and a separate accepted mitigation review/scope record are supplied",
   "required_pull_request": 199,
   "scope_matching": "required_pull_request AND allowed_context AND exact repository/head_ref; conjunction only",
   "repository": "edithatogo/kairos",
   "head_ref": "codex/kairos-track48-optimistic-runtime",
-  "scope": "The pinned scripts/bootstrap-node-tools npm dependency tree for PR #199 development integration and its alpha/beta package dry runs only, subject to explicit owner approval and a separately reviewed activation change.",
+  "scope": "The exact pinned scripts/bootstrap-node-tools npm dependency tree for PR #199 development integration and its alpha/beta package dry runs. The risk classification is approved, but non-clean findings remain blocked until corrected proof bytes are independently reviewed and separately accepted.",
   "approval_gates": {
     "security_owner": "explicit human approval required",
     "release_owner": "explicit human approval required",
@@ -114,5 +114,10 @@
       "metadata_sha256": "2df41a4349f4dc63e0a2bc0ac62ee896a2b3d27f3407f1442caf2f3765127e17"
     }
   },
-  "decision": "pending; this record proposes a narrowly scoped exception for review but grants no authorization"
+  "decision": "human approved the temporary operational classification; activation is blocked by the documented stale-fallback mitigation gap",
+  "mitigation_review_status": "blocked_stale_fallback_gap",
+  "mitigation_review_blockers": [
+    "The prior behavior suite does not cover RFC cache directives and may permit stale fallback for no-store, no-cache, private/shared, proxy-revalidate, cookies, and must-revalidate responses.",
+    "Revalidation fallback does not establish matching URL, method, Host, or Vary state before reuse."
+  ]
 }
