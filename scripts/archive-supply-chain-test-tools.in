@@ -1,0 +1,2 @@
+# Focused test lock; package code imports stdlib tomllib, so use Python >=3.11.
+jsonschema==4.26.0
