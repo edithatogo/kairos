@@ -126,3 +126,8 @@ Phase closeout evidence refreshed on 2026-05-10:
   closeout commit and push.
 - Next-phase decision: Track 30 is `Done`. Reopen only for a scoped support
   matrix change, runner coverage promotion, or version-drop policy update.
+
+
+## C1 shared temporal helper prerequisite (2026-10-04)
+
+No manifest, lock, dependency or support-floor change. Actual Arrow 1.76/current qualification remains required; no current result or floor waiver is inferred. See `../../design/calibration/c1-shared-temporal-helper-v1.md`. This is a scoped development extension; historical closeout evidence remains unchanged.

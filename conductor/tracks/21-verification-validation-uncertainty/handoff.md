@@ -136,3 +136,8 @@ Add reference-data validation evidence and quantitative uncertainty artifacts be
   the closeout commit was recorded and pushed.
 - next-phase decision: Track 21 is `Done`; keep public VVUQ claims bounded to
   the fixture-backed note and its explicit evidence boundary.
+
+
+## C1 shared temporal helper prerequisite (2026-10-04)
+
+Consume the role-preserving helper under ADR-0005; pure calibration remains Arrow-free. Mapping/count/schema and full C1 joins are pending. See `../../design/calibration/c1-shared-temporal-helper-v1.md`. This is a scoped development extension; historical closeout evidence remains unchanged.

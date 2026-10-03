@@ -159,3 +159,8 @@ This intake accepts only the architecture and surface classification. Concrete
 Flow symbols still require Q0.2/Q0.3 contracts and symbol-level review before
 implementation is released. The new API remains under release hold. This note
 does not close Track 25 or replace its remaining phase gates.
+
+
+## C1 shared temporal helper prerequisite (2026-10-04)
+
+Approved internal experimental direction adds KnowledgeAvailable to a public enum; exhaustive matches require migration. Release hold remains; no universal nonbreaking or external-owner claim. See `../../design/calibration/c1-shared-temporal-helper-v1.md`. This is a scoped development extension; historical closeout evidence remains unchanged.

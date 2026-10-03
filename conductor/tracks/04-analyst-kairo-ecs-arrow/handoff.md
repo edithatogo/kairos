@@ -89,3 +89,8 @@ The compile-only resolver trial above is retained as historical evidence for its
 Destination-local verification on macOS aarch64 passed `cargo test --locked --offline -p kairo-ecs-arrow-io --no-default-features --features ipc,parquet` on Rust/Cargo 1.88.0 and 1.98.1: 27 unit tests and 1 interoperability test passed on each toolchain. PyArrow 25.0.1 `generate.py --check` and `--check-rust` on both fresh Rust output sets passed. The root `deny.toml` carries only the exact `tiny-keccak =2.0.2` CC0-1.0 exception from the separately reviewed policy trial. The joined package-scoped `cargo-deny 0.20.2` `licenses` check passed after adopting those exact bytes; advisory and source checks were not run.
 
 These results are local package evidence. They do not close the Track 04 phase, establish hosted CI or cross-host qualification, or replace pending advisory/source and broader release gates.
+
+
+## C1 shared temporal helper prerequisite (2026-10-04)
+
+Own the bounded temporal extraction and six-family fixture; preserve existing wrapper precedence and all legacy schemas. No implementation or test pass is recorded here. See `../../design/calibration/c1-shared-temporal-helper-v1.md`. This is a scoped development extension; historical closeout evidence remains unchanged.
