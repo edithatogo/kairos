@@ -10,9 +10,13 @@ The [reviewed contract](optimistic-runtime-contract.md) defines the complete
 local interface. [Held-out runtime tests](../../crates/kairo-ecs-pdes/tests/optimistic_runtime_heldout.rs)
 and [bitset/model tests](../../crates/kairo-ecs-pdes/tests/optimistic_bitset_heldout.rs)
 provide executable model and routing examples. At integrated source `3cd6d56`,
-all 15 held-out tests passed independently on Rust 1.98.1 and 1.76.0;
-the combined `pdes,time-warp` crate lane passed 94 tests. Benchmarks, workspace
-and hosted checks have their own evidence gates. No distributed acceptance or
+all 15 held-out tests and the combined 94-test `pdes,time-warp` crate lane
+passed under the actual Homebrew Rust 1.99 compiler. Their original pinned
+compiler labels were withdrawn after compiler-path verification. At `7a432ab`,
+the explicitly bound Rust 1.98.1 workspace lane passed all 458 tests, core line
+coverage (92.59%), formatting, Clippy, rustdoc and Rust security checks.
+Rust 1.76 verification and corrected benchmark provenance have separate gates;
+hosted checks remain pending. No distributed acceptance or
 Track48 Done follows from these local results.
 
 ## Model contract
@@ -79,9 +83,9 @@ CPU execution, MPI/gRPC rollback, distributed GVT, or a general scaling benefit.
 The [distributed handoff proposal](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/distributed-interface-handoff.md)
 retains those acceptance requirements and grants no Track49 dispatch.
 
-## Accepted local smoke measurements
+## Historical local smoke measurements: compiler metadata superseded
 
-Source `ec9828e`, Rust1.98.1, fixed seed482027; one warmup and five alternating repeats. Median run-call durations:
+Source `ec9828e`, actual Homebrew Rust 1.99.0 (the recorded Rust 1.98.1 label was incorrect), fixed seed482027; one warmup and five alternating repeats. Median run-call durations:
 
 | Traffic / LPs | Conservative ms | Optimistic ms | Committed events | Extra executions | Replay executions |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -91,3 +95,5 @@ Source `ec9828e`, Rust1.98.1, fixed seed482027; one warmup and five alternating 
 | dense / 8 | 107.950417 | 1.826667 | 292 | 431 | 240 |
 
 [Raw results and source binding](../../benches/pdes/evidence/track48-ec9828e/time_warp_evidence.json) preserve every sample. The lightweight model and conservative thread/null-message work make these fixture-specific durations; they do not establish a general performance advantage. Setup, validation/extraction and fossil collection are excluded from both timing intervals. Dense fixtures require substantially more rollback/replay in this model.
+
+These raw files are preserved unchanged for audit. A compiler-bound collector rerun is required before accepting pinned-toolchain benchmark evidence.
