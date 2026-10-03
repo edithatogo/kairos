@@ -92,3 +92,8 @@ promised. Keys validate context typing only, not executable handler registration
 Wrong context type and stale WorkId return InvalidWork without mutation; &C does
 not prohibit user context interior mutability. Exact RNG/order/Arrow/bindings
 unchanged. Timed work and handler dispatch remain Q3/Q4 qualification.
+
+Q1 allocation records store lease, request, owner, optional work, priority,
+granted_at, segment_started_at, and completion_at=None for manual leases. The
+active ECS component is indexed by LeaseId; resource inspection returns canonical
+allocation records as well as existing lease IDs. Q3 owns timed completion dates.
