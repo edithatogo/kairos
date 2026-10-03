@@ -159,3 +159,8 @@ Regression command: `pwsh -NoProfile -ExecutionPolicy Bypass -File tests/test_tr
 - pushed ref: pending until the reconciliation commit is pushed.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: pending until after push.
 - Next-phase decision: Track 15 is Done in the registry and narrative; production publishing remains blocked until registry/name/toolchain evidence and release-manager approval are recorded.
+
+
+## Release archive upload requirement — 2026-10-04
+
+Coordinator handoff to Track13 CI ownership: the final release dry-run archive upload now fails when `dist/` is missing and requests 90-day retention, matching retained package archive evidence. Permissions, dry-run boundary and evidence validators remain unchanged. Targeted actionlint and whitespace checks qualify configuration only; actual release archives, hosted upload and standalone attestation artifact acquisition remain separate gates. An initial proposed duplicate-path correction was rejected by its exact source precondition before any writes: adjacent outputs had been misread as one workflow. No duplicate path exists in release.yml.

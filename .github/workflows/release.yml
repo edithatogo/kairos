@@ -80,3 +80,5 @@ jobs:
         with:
           name: kairo-ecs-release-${{ github.event.inputs.version }}
           path: dist/
+          if-no-files-found: error
+          retention-days: 90
