@@ -832,7 +832,7 @@ entries:
     git_status: "Measured source and evidence pushed with remote SHA verified; portable Linux metadata and acceptance follow-ups require exact-head hosted review"
     commit_sha: "45f01c49be1d15cefb64ad48e59ee0a7e4146b3e"
     pushed_ref: "origin/codex/kairos-implementation-programme"
-    next_phase_decision: "Track 47 is In Review. Hold for a published fixed npm dependency and all exact-head hosted checks; final acceptance and merge must precede Track 48."
+    next_phase_decision: "Track 47 is In Review. Human approved narrowly scoped EXC-193; complete classifier/runner regression checks and all exact-head hosted checks. Final acceptance and merge must precede Track 48."
   - track_id: "48"
     phase: "track-creation"
     state: pending

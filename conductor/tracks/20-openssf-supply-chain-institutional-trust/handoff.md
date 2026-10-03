@@ -128,3 +128,10 @@ Prepared a pending exception record, immutable raw audit baseline and decision/a
 Preparation validation limitation: the existing Track 20 trust validator fails on its literal Renovate preset expectation, while the unchanged Renovate config inherits github>edithatogo/renovate-config. EXC-193 does not waive this separate mismatch. Exact proposal hashes and finding graph were checked independently.
 
 EXC-193 activation: human approval received in this chat, with the sole maintainer acting in both security/release-owner roles. Approved operational classification and expiry are recorded; immutable acceptance anchors and raw-artifact runner are implemented. Independent classifier tests, integration and exact-head hosted verification remain pending, so no passing gate or merge is claimed yet.
+
+
+## Approved EXC-193 activation preparation
+
+The human sole maintainer approved EXC-193 in the current chat, acting in both security and release owner roles. This supersedes the earlier requirement to wait exclusively for a published fixed version. The narrowly bound exception permits PR #193 development integration and alpha/beta package dry runs only, until 2026-10-10T00:00:00+10:00. RC, 1.0 and publication remain excluded.
+
+The runner verifies immutable proof hashes and both installed patched copies, executes mitigation checks, retains raw audit stdout/stderr/exit and applies the exact advisory graph classifier. Initial local execution at 750a8d2 returned approved_temporary_exception with raw audit exit 1; this is no claim of a clean audit. Eleven local filesystem/context negative controls passed. Independent integrated tests exposed a Python test descriptor binding error; correction and fresh final-head execution are pending. Tracked runner adversarial tests and hosted verification are also pending. No merge or completed hosted gate is claimed here.

@@ -17,6 +17,7 @@ on:
       - 'scripts/bootstrap-node-tools/run_npm_audit_gate.py'
       - 'conductor/tracks/20-openssf-supply-chain-institutional-trust/exceptions/**'
       - 'tests/test_npm_audit_exception.py'
+      - 'tests/test_npm_audit_runner.py'
       - 'tests/test_http_cache_patch.py'
       - 'tests/http-cache-security-regression.mjs'
       - 'scripts/bootstrap.sh'
@@ -148,6 +149,7 @@ jobs:
           npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools
           python3 scripts/bootstrap-node-tools/apply_http_cache_fix.py scripts/bootstrap-node-tools/node_modules
           python3 -m unittest discover -s tests -p test_npm_audit_exception.py -v
+          python3 -m unittest discover -s tests -p test_npm_audit_runner.py -v
           python3 scripts/bootstrap-node-tools/run_npm_audit_gate.py
           node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js help >/dev/null
           node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js audit signatures --prefix scripts/bootstrap-node-tools

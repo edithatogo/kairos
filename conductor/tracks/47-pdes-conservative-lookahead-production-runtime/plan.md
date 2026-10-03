@@ -81,3 +81,5 @@ in the handoff; status advancement remains coordinated with the root ledgers.
 Raw capture task 3.2 is now evidenced by the remotely verified `45f01c49be1d15cefb64ad48e59ee0a7e4146b3e` host bundle and registered manifest. Hosted checks, push closeout and final acceptance remain pending.
 
 Hosted acceptance is blocked by the unchanged npm audit gate for GHSA-ch52-4w7c-c8xp (no published fixed dependency). Fifteen workflow runs passed on PR head `2502a4c`; follow-up review fixes require fresh hosted checks. Task 5.3 and track acceptance remain incomplete.
+
+The human-approved EXC-193 now provides a bounded alternative to waiting for an official cache dependency release. Final local regression tests, exact-head hosted Actions and clean Git closeout remain required before Task 5.3 or track acceptance is complete.
