@@ -114,7 +114,7 @@ function assertContent(failures) {
     "@astrojs/starlight",
     "starlight-versions",
     "starlight-links-validator",
-    "llms.txt",
+    "kairoecs-llms-txt",
     "starlight-plugin-icons",
     "kairoecs-starlight-polyglot",
   ]) {
