@@ -125,3 +125,21 @@ Validation on the candidate source: `npm test` passed (2 files, 8 tests), `npm r
 - Accepted fixes: central tracking was moved back to `In Review` to match the blocked commit/push evidence.
 - Closeout evidence: pushed commit `42f3fd4c0b802b0c83a8f8e6f38a445a9e00fb1c` on `origin/main` records the reconciled review/status evidence.
 - Next-phase decision: Track 09 is `Done`. Optional `wasm-export`/wasm-pack validation remains future toolchain work because the `wasm-bindgen` feature path still depends on local Windows linker setup.
+
+## Retained development-tool floor reconciliation — 2026-10-03
+
+Recovered the narrow manifest-floor portion of legacy `1f7f7ed` from the retained Vitest worktrees against current main `34a680cdb738b5e855bac9b821f9adae8c805ed9`. Both package manifest and lock root now declare `^4.1.11`, matching the already reviewed installed Vitest 4.1.11 and template pin. The entire resolved dependency graph and integrity values are unchanged; old branch lockfiles and Vite versions were not replayed. This does not qualify future compatible versions or change a runtime API.
+
+Bounded Track 09 developer-tool change; the changelog note is the Track 16 documentation handoff. No CI, Rust API/ABI, Wasm packaging, release or publication-policy changes. Historical track completion is unchanged. No new behavior test is needed for a metadata-only floor alignment: existing build, typecheck and binding tests are the affected executable checks.
+
+Local working directory `/private/tmp/kairos-vitest-floor-closeout-20261003`: Node 26.10.0 and npm 11.19.1. This Node host is outside the binding's declared >=22 <25 support range; these local results are corroboration only, not support qualification. Exact-head hosted supported-node binding checks remain required before merge.
+
+Historical precommit checks (uncommitted candidate; corroboration only, superseded by the committed-source and exact-head hosted checks below): `npm ci --ignore-scripts --prefix bindings/typescript`, `npm run build --prefix bindings/typescript`, `npm run typecheck --prefix bindings/typescript`, `npm test --prefix bindings/typescript` (8 tests), `npm audit --prefix bindings/typescript --json` (0 vulnerabilities), and `git diff --check`: exit 0. Logs and command/cwd/exit receipts are retained at `/tmp/vitest-floor-command-receipts.json` and `/tmp/vitest-floor-verified-*.log`. No simulation seed applies.
+
+## PR195 approval and refreshed security gate — 2026-10-04
+
+Human sole maintainer approved EXC-195 for this development PR only, retaining the EXC-193 verified source patch, raw advisory graph, expiry and release/publication exclusions. Refreshed accepted main includes PR193 and PR198. The Vitest dependency graph is unchanged. All 22 local classifier/runner/scope tests passed; local simulated PR195 gate and exact-head Actions require separate receipts. No release or package publication is authorized.
+
+Committed-source validation at `53a78eb189ee8039284748d47a79c3b973a6fcd4` in `/private/tmp/kairos-vitest-floor-closeout-20261003`: Node26.10.0/npm12.1.0; `npm run build --prefix bindings/typescript`, `npm run typecheck --prefix bindings/typescript`, `npm test --prefix bindings/typescript` each exited0 (8 tests). Local Node26 remains outside supported binding range, so these are corroboration. All22 local audit tests and the simulated PR195 gate passed on the same runner/classifier source committed in658dffb; source code is unchanged in53a78eb. No simulation seed applies.
+
+Hosted Package Dry Runs37133757648 at exact head53a78eb passed, including the approved EXC195 gate and package archives. Downloaded `kairos-bootstrap-npm-audit` receipt retains actual toolchain/commands, source hashes and raw audit exit1; this is temporary exception acceptance, not a clean scan. Final-head full hosted checks and independent review remain required after this documentation-only correction.

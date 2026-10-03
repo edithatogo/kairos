@@ -1,4 +1,4 @@
-"""Fail-closed policy classifier for the EXC-193 npm audit record.
+"""Fail-closed policy classifier for the EXC-193 and EXC-195 npm audit records.
 
 This module is pure: callers supply the parsed report, policy record, context,
 and PR number. It never reads files, contacts a registry, or changes raw audit
@@ -16,7 +16,7 @@ from typing import Any
 _BASELINE_FINGERPRINT = (
     "0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8"
 )
-_REQUIRED_PR = 193
+_APPROVED_SCOPES = {"EXC-193": (193, frozenset({"development_pr_193", "alpha_package_dry_run", "beta_package_dry_run"})), "EXC-195": (195, frozenset({"development_pr_195"}))}
 _ALLOWED_CONTEXTS = frozenset(
     {"development_pr_193", "alpha_package_dry_run", "beta_package_dry_run"}
 )
@@ -158,10 +158,14 @@ def _validate_approval(policy: dict[str, Any], context: str, pull_request: int, 
     if approved_at >= expires_at:
         _reject("approval must precede expiry")
 
-    if isinstance(pull_request, bool) or not isinstance(pull_request, int) or pull_request != _REQUIRED_PR:
+    scope = _APPROVED_SCOPES.get(policy.get("id"))
+    if scope is None:
+        _reject("unknown exception identity")
+    required_number, approved_contexts = scope
+    if isinstance(pull_request, bool) or not isinstance(pull_request, int) or pull_request != required_number:
         _reject("the actual pull request must be EXC-193's required PR")
     required_pr = policy.get("required_pull_request")
-    if isinstance(required_pr, bool) or not isinstance(required_pr, int) or required_pr != _REQUIRED_PR:
+    if isinstance(required_pr, bool) or not isinstance(required_pr, int) or required_pr != required_number:
         _reject("the policy's required pull request is invalid")
     if not isinstance(context, str):
         _reject("context must be a string")
@@ -169,7 +173,7 @@ def _validate_approval(policy: dict[str, Any], context: str, pull_request: int, 
     excluded = policy.get("excluded_contexts")
     if not isinstance(allowed, list) or not isinstance(excluded, list):
         _reject("policy context scope is malformed")
-    if context not in _ALLOWED_CONTEXTS or context not in allowed or context in _EXCLUDED_CONTEXTS or context in excluded:
+    if context not in approved_contexts or context not in allowed or context in _EXCLUDED_CONTEXTS or context in excluded:
         _reject("context is outside the conjunctive EXC-193 scope")
 
 def classify(
