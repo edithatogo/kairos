@@ -127,6 +127,16 @@ fn nested_suspend_cycles_and_live_progress_inspection() -> Result<(), FlowError>
         .owner(owner)
         .at(t(2))
         .submit()?;
+    // The low request's grant cleared its waiting deadline, but the already
+    // scheduled deadline token remains a visible stale no-op at tick 1.
+    let stale_deadline = flow
+        .step()?
+        .expect("cleared low-work deadline token remains visible at tick 1");
+    assert_eq!(stale_deadline.at, t(1));
+    assert!(stale_deadline.records.is_empty());
+    assert_eq!(flow.request(low_request)?.state, RequestState::Active);
+    assert_eq!(flow.request(inspection)?.state, RequestState::Pending);
+
     let inspection_dispatch = flow
         .step()?
         .expect("independent inspection request should dispatch at tick 2");
@@ -141,7 +151,7 @@ fn nested_suspend_cycles_and_live_progress_inspection() -> Result<(), FlowError>
     assert_eq!(first.remaining, d(8));
     assert_eq!(second, first);
 
-    let mut dispatches = vec![low_grant, inspection_dispatch];
+    let mut dispatches = vec![low_grant, stale_deadline, inspection_dispatch];
     dispatches.extend(run_to_empty(&mut flow)?);
     assert_dispatch_invariants(&dispatches);
     let all_records = records(&dispatches);
@@ -684,7 +694,27 @@ fn eligible_waiter_scan_skips_a_then_b_preempts_and_a_gets_next_unit() -> Result
         5,
         LifecycleTransition::Granted
     ));
-    assert_eq!(flow.request(request_a)?.state, RequestState::Active);
+    assert!(has_transition_at(
+        &all_records,
+        request_a,
+        6,
+        LifecycleTransition::Completed
+    ));
+    assert_eq!(
+        all_records
+            .iter()
+            .filter(|record| {
+                record.request == request_a && record.transition == LifecycleTransition::Completed
+            })
+            .count(),
+        1
+    );
+    assert_eq!(flow.request(request_a)?.state, RequestState::Completed);
+    let progress = flow.work_progress(waiter_a)?;
+    assert_eq!(progress.state, WorkState::Completed);
+    assert_eq!(progress.useful_elapsed, d(1));
+    assert_eq!(progress.cumulative_busy, d(1));
+    assert_eq!(progress.remaining, d(0));
     Ok(())
 }
 
