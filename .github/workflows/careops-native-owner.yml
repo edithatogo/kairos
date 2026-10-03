@@ -11,6 +11,8 @@ on:
       - 'crates/kairo-ecs-rng/**'
       - 'crates/kairo-ecs-des/**'
       - 'crates/kairo-ecs-abm/**'
+      - 'crates/kairo-ecs-arrow/**'
+      - 'crates/kairo-ecs-calibration/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
       - '.github/workflows/careops-native-owner.yml'
@@ -36,13 +38,24 @@ jobs:
         with:
           persist-credentials: false
       - name: Install reviewed Rust 1.98.1
-        run: rustup toolchain install 1.98.1 --profile minimal
+        run: |
+          mkdir -p .artifacts/ci/native
+          set -o pipefail
+          rustup toolchain install 1.98.1 --profile minimal 2>&1 | tee .artifacts/ci/native/install.log
       - name: Verify actual native host and source
         env:
           EXPECTED_OS: ${{ matrix.os }}
         run: |
+          set -o pipefail
+          exec > >(tee -a .artifacts/ci/native/install.log) 2>&1
           git rev-parse HEAD
-          rustc +1.98.1 -vV
+          task_rustc="$(rustup which --toolchain 1.98.1 rustc)"
+          "$task_rustc" -vV
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            "$task_rustc" -vV | grep -Fx 'host: aarch64-apple-darwin'
+          else
+            "$task_rustc" -vV | grep -Fx 'host: x86_64-unknown-linux-gnu'
+          fi
           uname -a
           if [ "$EXPECTED_OS" = macos-15 ]; then
             test "$(uname -m)" = arm64
@@ -53,12 +66,32 @@ jobs:
         run: |
           mkdir -p .artifacts/ci/native
           set -o pipefail
-          cargo +1.98.1 test --locked -p kairo-ecs-core -p kairo-ecs-types -p kairo-ecs-state -p kairo-ecs-rng -p kairo-ecs-des -p kairo-ecs-abm 2>&1 | tee .artifacts/ci/native/owner.log
+          task_rustc="$(rustup which --toolchain 1.98.1 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
+          cargo test --locked -p kairo-ecs-core -p kairo-ecs-types -p kairo-ecs-state -p kairo-ecs-rng -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow -p kairo-ecs-calibration 2>&1 | tee .artifacts/ci/native/owner.log
+      - name: Test optional calibration package floor
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          set -o pipefail
+          rustup toolchain install 1.88.0 --profile minimal 2>&1 | tee .artifacts/ci/native/calibration-install.log
+          task_rustc="$(rustup which --toolchain 1.88.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
+          rustc -vV | tee .artifacts/ci/native/calibration-floor.log
+          grep -Fx 'release: 1.88.0' .artifacts/ci/native/calibration-floor.log
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            grep -Fx 'host: aarch64-apple-darwin' .artifacts/ci/native/calibration-floor.log
+          else
+            grep -Fx 'host: x86_64-unknown-linux-gnu' .artifacts/ci/native/calibration-floor.log
+          fi
+          cargo test --locked -p kairo-ecs-calibration 2>&1 | tee -a .artifacts/ci/native/calibration-floor.log
       - name: Retain bounded failure log
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: careops-owner-failure-${{ matrix.os }}
-          path: .artifacts/ci/native/owner.log
+          path: .artifacts/ci/native/
           retention-days: 7
-          if-no-files-found: error
+          if-no-files-found: ignore
