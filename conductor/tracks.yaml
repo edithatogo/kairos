@@ -72,7 +72,7 @@ tracks:
     status: Done
     # Done refers to the historical minimal DES/ABM slice.
     # Experimental Q3 development source 4289603 is qualified; Q4/Q5 remain pending.
-    # Governance strict clean-tree qualification and parent phase closeout remain pending.
+    # Q3 development extension strict gate qualified at a91f038; parent acceptance is controlled by its exact-head receipt.
     owner: des-api-agent + abm-api-agent
     depends_on: ["01", "26"]
     owned_paths:

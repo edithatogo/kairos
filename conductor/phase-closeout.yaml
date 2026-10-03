@@ -73,13 +73,14 @@ entries:
     phase: "historical-minimal-closeout-with-qualified-Q3-development-extension"
     state: closed
     review_command: "$conductor-review; root scoped Q3 review, Track 01 state/RNG and Track 25 migration disposition"
-    review_result: "Historical minimal slice at 6b5176b781b80267ab4a620d205a2a137fdce4f5 on origin/codex/careops-resource-lifecycle is preserved verbatim in handoff.md. Source 4289603 adds reviewed timed runtime and a 576-case seeded model; owner run 37121692873 confirms property execution on both hosts. Actual PowerShell 7.6.6 phase validator passed with exit 0, zero errors and zero warnings. Governance diff and strict clean-tree gate remain pending. Closed denotes the historical minimal slice, not Q4/Q5 or release acceptance."
+    review_result: "Historical minimal slice at 6b5176b781b80267ab4a620d205a2a137fdce4f5 on origin/codex/careops-resource-lifecycle is preserved verbatim in handoff.md. Source 4289603 adds reviewed timed runtime and a 576-case seeded model; owner run 37121692873 confirms property execution on both hosts. Actual PowerShell 7.6.6 phase validator passed with exit 0, zero errors and zero warnings. Root accepted governance source a91f038 and its actual strict clean-tree result: exit 0, zero errors. This entry records the qualified a91f038 antecedent; successor metadata heads require external phase/strict/owner receipts before parent acceptance. Closed denotes the historical minimal slice, not Q4/Q5 or release acceptance."
     fixes_applied: true
     validation_commands:
       - "/private/tmp/careops-q3-pwsh-7.6.6/.artifacts/pwsh/runtime/pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-    git_status: "Qualified source 4289603 is committed and pushed; governance diff is uncommitted under review; strict command is specified in handoff.md and remains pending"
-    commit_sha: "42896037a7fac793f63d2f8867584f4faeb0b78e"
-    pushed_ref: "origin/codex/careops-q3-seeded-cycle-property"
+      - "/private/tmp/careops-q3-pwsh-7.6.6/.artifacts/pwsh/runtime/pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
+    git_status: "Qualified antecedent a91f0389574e97d030dc85a9b362ef84a162c3d3 is committed/pushed and strict gate passed; successor-head cleanliness and qualification are established by external exact-head receipts"
+    commit_sha: "a91f0389574e97d030dc85a9b362ef84a162c3d3"
+    pushed_ref: "origin/codex/careops-q3-upstream-governance"
     next_phase_decision: "Do not advance parent Q4 until governance review, actual phase and strict clean-tree gates, exact-head owner CI and parent Q3 closeout are accepted. Q4/Q5 and release hold remain."
   - track_id: "04"
     phase: "track-closeout"

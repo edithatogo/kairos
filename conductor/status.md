@@ -607,10 +607,12 @@ Actual phase validator command from this governance checkout:
 /private/tmp/careops-q3-pwsh-7.6.6/.artifacts/pwsh/runtime/pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1
 ~~~
 
-It passed using verified PowerShell 7.6.6, exit 0, zero errors and zero warnings. Strict clean-tree command remains pending until root approves a commit and nonforce push:
+It passed using verified PowerShell 7.6.6, exit 0, zero errors and zero warnings. The strict clean-tree command below executed successfully at committed and pushed governance source a91f0389574e97d030dc85a9b362ef84a162c3d3:
 
 ~~~text
 /private/tmp/careops-q3-pwsh-7.6.6/.artifacts/pwsh/runtime/pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree
 ~~~
 
-Logs remain outside this source checkout. After strict proof, a bounded metadata follow-up will record the actual command, commit/ref and receipt in place of pending language. The final committed/pushed metadata head must pass phase and strict validators again. Owner CI then qualifies that exact head before a new parent pin and Q3 closeout review. Parent Q4 cannot advance before these gates are accepted.
+Actual strict result at a91f0389574e97d030dc85a9b362ef84a162c3d3: exit 0, zero errors; source clean before and after, all 34 closed/legacy entries have valid containing refs. Pushed ref: origin/codex/careops-q3-upstream-governance. Strict log SHA256: 5c81e061076443e943135183da6a1801315f53c466aaae9be3f425882bac5ad7; receipt SHA256: 539b432febd1f3213e31f0b197c1d8e018820e15b47049939edc3a1c8daad547. Root independently accepted this proof. Owner run 37123219231 succeeded at the same exact commit on both hosts.
+
+Logs remain outside this source checkout. This entry records the actual qualified a91f038 antecedent. Any successor metadata head requires externally retained phase, strict clean-tree and detailed two-host owner receipts before parent acceptance. The parent acceptance receipt controls Q3 closeout and Q4 entry; this child record does not advance the parent. Q4/Q5 scope and the release hold remain unchanged.

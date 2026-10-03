@@ -7,7 +7,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 00 | Project Foundation, Governance & Naming | Done | `foundation-agent` | See `conductor/tracks/00-*/spec.md` |
 | 01 | The Heart: kairo-ecs-core & kairo-ecs-state | Done | `core-scheduler-agent + ecs-agent + contracts-agent` | See `conductor/tracks/01-*/spec.md` |
 | 02 | The Bridge: kairo-ecs-ffi, UniFFI & Diplomat | Done | `ffi-agent + uniffi-agent + diplomat-agent` | See `conductor/tracks/02-*/spec.md` |
-| 03 | The Flow: DES Trajectory API & ABM Behavior API (historical minimal slice; Q3 development extension qualified; Q4/Q5 pending) | Done | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
+| 03 | The Flow: DES Trajectory API & ABM Behavior API (historical minimal slice; Q3 development extension and a91f038 strict gate qualified; parent acceptance controlled by its exact-head receipt; Q4/Q5 pending) | Done | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
 | 04 | The Analyst: kairo-ecs-arrow | Done | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
 | 05 | The Window: kairo-ecs-viz | Done | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
 | 06 | Python Binding 3.10-3.14 | Done | `python-agent` | See `conductor/tracks/06-*/spec.md` |
