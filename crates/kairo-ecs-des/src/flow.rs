@@ -42,6 +42,8 @@ pub enum FlowError {
     InvalidState,
     #[error("invalid work")]
     InvalidWork,
+    #[error("actor already has a domain context")]
+    DuplicateActorDomainContext,
     #[error("reserved Flow event kind")]
     ReservedEventKind,
     #[error("unregistered domain event")]
@@ -649,6 +651,11 @@ struct Notification {
     origin: EventId,
     ordinal: u32,
 }
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum WorkRole {
+    Task,
+    ActorDomain { actor: EntityId, kind: EventKind },
+}
 struct WorkContext<C>(C);
 fn cleanup_context<C: 'static>(registry: &mut ComponentRegistry, id: EntityId) {
     registry.remove::<WorkContext<C>>(id);
@@ -875,6 +882,7 @@ pub struct FlowRuntime {
     requests: BTreeSet<RequestId>,
     actors: BTreeSet<EntityId>,
     works: BTreeMap<WorkId, WorkDescriptor>,
+    actor_domains: BTreeMap<EntityId, WorkId>,
     context_types: BTreeMap<String, TypeId>,
     handlers: BTreeMap<String, HandlerDescriptor>,
     continuations: BTreeMap<String, ContinuationDescriptor>,
@@ -920,6 +928,7 @@ impl FlowRuntime {
             requests: BTreeSet::new(),
             actors: BTreeSet::new(),
             works: BTreeMap::new(),
+            actor_domains: BTreeMap::new(),
             context_types: BTreeMap::new(),
             handlers: BTreeMap::new(),
             continuations: BTreeMap::new(),
@@ -1087,6 +1096,7 @@ impl FlowRuntime {
             },
         );
         let _ = self.registry.insert(id.0, WorkContext(context));
+        let _ = self.registry.insert(id.0, WorkRole::Task);
         self.context_types
             .insert(registration.to_owned(), TypeId::of::<C>());
         let _ = self.registry.insert(id.0, WorkProgress::new(duration));
@@ -1100,6 +1110,111 @@ impl FlowRuntime {
             },
         );
         Ok(id)
+    }
+    pub fn create_actor_domain_context<C: 'static>(
+        &mut self,
+        actor: EntityId,
+        registration: &str,
+        kind: EventKind,
+        context: C,
+    ) -> Result<WorkId, FlowError> {
+        self.check_running()?;
+        Self::check_domain_kind(kind)?;
+        self.actor(actor)?;
+        self.validate_context::<C>(registration)?;
+        let descriptor = self
+            .domain_hooks
+            .get(&(registration.to_owned(), kind))
+            .ok_or(FlowError::UnregisteredDomainEvent)?;
+        if descriptor.context_type != TypeId::of::<C>()
+            || !matches!(descriptor.invoke, DomainInvocation::View(_))
+        {
+            return Err(FlowError::InvalidWork);
+        }
+        if self.actor_domains.contains_key(&actor) {
+            self.actor_domain_context(actor)?;
+            return Err(FlowError::DuplicateActorDomainContext);
+        }
+        // A missing index may not conceal an already-owned carrier.
+        if self.works.keys().any(|id| {
+            matches!(self.registry.get::<WorkRole>(id.0), Some(WorkRole::ActorDomain { actor: owner, .. }) if *owner == actor)
+        }) {
+            return Err(FlowError::InvalidWork);
+        }
+        if self.created >= OPERATION_CAP {
+            return Err(FlowError::CounterOverflow);
+        }
+        // All rejection paths precede create_work's one real entity allocation.
+        // Remaining role/index writes cannot fail under these checked invariants.
+        let work = self.create_work(actor, SimDuration::ZERO, registration, context)?;
+        let _ = self
+            .registry
+            .insert(work.0, WorkRole::ActorDomain { actor, kind });
+        self.actor_domains.insert(actor, work);
+        Ok(work)
+    }
+    pub fn actor_domain_context(&self, actor: EntityId) -> Result<WorkId, FlowError> {
+        self.actor(actor)?;
+        let work = *self
+            .actor_domains
+            .get(&actor)
+            .ok_or(FlowError::InvalidWork)?;
+        if !matches!(self.validated_work_role(work), Ok(WorkRole::ActorDomain { actor: owner, .. }) if owner == actor)
+            || !self
+                .works
+                .get(&work)
+                .is_some_and(|d| (d.context_present)(&self.registry, work.0))
+        {
+            return Err(FlowError::InvalidWork);
+        }
+        Ok(work)
+    }
+    fn validated_work_role(&self, work: WorkId) -> Result<WorkRole, FlowError> {
+        let spec = self.work(work).map_err(|_| FlowError::InvalidState)?;
+        let role = *self
+            .registry
+            .get::<WorkRole>(work.0)
+            .ok_or(FlowError::InvalidState)?;
+        match role {
+            WorkRole::Task => {
+                if self.actor_domains.values().any(|id| *id == work) {
+                    return Err(FlowError::InvalidState);
+                }
+            }
+            WorkRole::ActorDomain { actor, kind } => {
+                let descriptor = self
+                    .domain_hooks
+                    .get(&(spec.context_type_key.clone(), kind))
+                    .ok_or(FlowError::InvalidState)?;
+                if spec.owner != actor
+                    || spec.original_duration != SimDuration::ZERO
+                    || spec.request.is_some()
+                    || self.actor_domains.get(&actor) != Some(&work)
+                    || self
+                        .actor_domains
+                        .iter()
+                        .any(|(owner, id)| *id == work && *owner != actor)
+                    || !self
+                        .registry
+                        .get::<WorkProgress>(work.0)
+                        .is_some_and(|p| p.state == WorkState::Pending)
+                    || !matches!(descriptor.invoke, DomainInvocation::View(_))
+                    || self.context_types.get(&spec.context_type_key)
+                        != Some(&descriptor.context_type)
+                {
+                    return Err(FlowError::InvalidState);
+                }
+            }
+        }
+        Ok(role)
+    }
+    fn check_work_domain_kind(&self, work: WorkId, kind: EventKind) -> Result<(), FlowError> {
+        match self.validated_work_role(work)? {
+            WorkRole::ActorDomain { kind: bound, .. } if kind != bound => {
+                Err(FlowError::InvalidWork)
+            }
+            _ => Ok(()),
+        }
     }
     pub fn register_work_handlers<C: 'static>(
         &mut self,
@@ -1229,6 +1344,7 @@ impl FlowRuntime {
         Self::check_domain_kind(kind)?;
         let spec = self.work(work)?;
         self.actor(spec.owner)?;
+        self.check_work_domain_kind(work, kind)?;
         let descriptor = self
             .domain_hooks
             .get(&(spec.context_type_key, kind))
@@ -1424,6 +1540,13 @@ impl FlowRuntime {
         let mut spec = match work {
             Some(id) => {
                 let spec = self.work(id)?;
+                if self
+                    .validated_work_role(id)
+                    .map_err(|_| FlowError::InvalidWork)?
+                    != WorkRole::Task
+                {
+                    return Err(FlowError::InvalidWork);
+                }
                 if spec.owner != owner || spec.request.is_some() {
                     return Err(FlowError::InvalidWork);
                 };
@@ -1638,6 +1761,9 @@ impl FlowRuntime {
                 .map(PreparedDelivery::Notification),
             Command::Domain(work, kind) => match self.domain_delivery(work, kind) {
                 Ok(delivery) => delivery,
+                // Structural role/index corruption rejects before consuming the head.
+                // Ordinary absent descriptors remain consumed semantic errors.
+                Err(FlowError::InvalidState) => return Err(FlowError::InvalidState),
                 Err(error) => {
                     outcome.error = Some(error);
                     None
@@ -1847,6 +1973,13 @@ impl FlowRuntime {
                         }
                         let work_spec = if let Some(work) = spec.work {
                             let work_spec = self.work(work)?;
+                            if self
+                                .validated_work_role(work)
+                                .map_err(|_| FlowError::InvalidWork)?
+                                != WorkRole::Task
+                            {
+                                return Err(FlowError::InvalidWork);
+                            }
                             let descriptor = self.works.get(&work).ok_or(FlowError::InvalidWork)?;
                             if work_spec.owner != spec.owner
                                 || work_spec.request.is_some()
@@ -1942,6 +2075,7 @@ impl FlowRuntime {
                         Self::check_domain_kind(*kind)?;
                         let spec = self.work(*work)?;
                         self.actor(spec.owner)?;
+                        self.check_work_domain_kind(*work, *kind)?;
                         let h = self
                             .domain_hooks
                             .get(&(spec.context_type_key, *kind))
@@ -2165,11 +2299,21 @@ impl FlowRuntime {
             return Ok(None);
         }
         let Some(spec) = self.registry.get::<WorkSpec>(work.0) else {
+            // A live carrier cannot lose its authoritative metadata and become
+            // a stale Task event. Either ownership witness retains this head.
+            if matches!(
+                self.registry.get::<WorkRole>(work.0),
+                Some(WorkRole::ActorDomain { .. })
+            ) || self.actor_domains.values().any(|carrier| *carrier == work)
+            {
+                return Err(FlowError::InvalidState);
+            }
             return Ok(None);
         };
         if !self.actors.contains(&spec.owner) || !self.world.is_alive(spec.owner) {
             return Ok(None);
         }
+        self.check_work_domain_kind(work, kind)?;
         let h = self
             .domain_hooks
             .get(&(spec.context_type_key.clone(), kind))
@@ -2813,9 +2957,19 @@ impl FlowRuntime {
         }
         if let Some(owner) = remove_actor {
             self.actor(owner)?;
+            if let Some(carrier) = self.actor_domains.get(&owner) {
+                if !removed_works.iter().any(|(work, _)| work == carrier)
+                    || !matches!(self.validated_work_role(*carrier), Ok(WorkRole::ActorDomain { actor, .. }) if actor == owner)
+                {
+                    return Err(FlowError::InvalidState);
+                }
+            }
             cleanup_ids.insert(owner);
         }
         for (work, descriptor) in &removed_works {
+            if self.validated_work_role(*work).is_err() {
+                return Err(FlowError::InvalidState);
+            }
             if !self.world.is_alive(work.0)
                 || !(descriptor.context_present)(&self.registry, work.0)
                 || !self
@@ -2926,9 +3080,11 @@ impl FlowRuntime {
             (cleanup.cleanup)(&mut self.registry, work.0);
             self.registry.remove::<WorkProgress>(work.0);
             self.registry.remove::<WorkSpec>(work.0);
+            self.registry.remove::<WorkRole>(work.0);
             self.world.despawn(work.0);
         }
         if let Some(id) = remove_actor {
+            self.actor_domains.remove(&id);
             self.actors.remove(&id);
             self.world.despawn(id);
             self.pending_releases.retain(|lease| {
@@ -5066,5 +5222,327 @@ mod domain_view_private_tests {
         assert_eq!(capture!(f), before);
         assert_eq!(f.work_context::<Rc<Cell<u32>>>(work).unwrap().get(), 0);
         assert_eq!(calls.get(), 0);
+    }
+}
+
+#[cfg(test)]
+mod actor_domain_private_tests {
+    use super::*;
+    use std::{cell::Cell, rc::Rc};
+    const KIND: EventKind = EventKind::custom(7510);
+    fn callback<'a>(
+        c: &'a mut Rc<Cell<u32>>,
+        _: &'a FlowCallbackSnapshot,
+        _: FlowWorldView<'a>,
+        _: &'a mut FlowCommandSink,
+    ) {
+        c.set(c.get() + 1);
+    }
+    fn setup() -> (FlowRuntime, EntityId, WorkId, Rc<Cell<u32>>) {
+        let mut f = FlowRuntime::new();
+        f.register_domain_view_hook("carrier", KIND, callback)
+            .unwrap();
+        let actor = f.spawn_actor().unwrap();
+        let calls: Rc<Cell<u32>> = Rc::new(Cell::new(0));
+        let work = f
+            .create_actor_domain_context(actor, "carrier", KIND, calls.clone())
+            .unwrap();
+        (f, actor, work, calls)
+    }
+    macro_rules! capture {
+        ($f:expr) => {
+            (
+                (
+                    $f.scheduler.peek_next(),
+                    $f.scheduler.stats(),
+                    $f.budget_snapshot(),
+                    $f.world.snapshot(),
+                ),
+                (
+                    $f.created,
+                    $f.destroyed,
+                    $f.scheduled,
+                    $f.next_admission,
+                    $f.next_lease,
+                    $f.next_batch_identity,
+                ),
+                (
+                    $f.commands.keys().copied().collect::<Vec<_>>(),
+                    $f.actors.clone(),
+                    $f.works.len(),
+                    $f.actor_domains.clone(),
+                    $f.notifications.len(),
+                    $f.pending_releases.clone(),
+                ),
+            )
+        };
+    }
+    #[test]
+    fn carrier_creation_counter_overflow_has_no_partial_entity_or_index() {
+        let (mut f, _, _, calls) = setup();
+        let actor = f.spawn_actor().unwrap();
+        f.created = OPERATION_CAP;
+        let before = capture!(f);
+        assert_eq!(
+            f.create_actor_domain_context(actor, "carrier", KIND, calls.clone()),
+            Err(FlowError::CounterOverflow)
+        );
+        assert_eq!(capture!(f), before);
+        assert!(!f.actor_domains.contains_key(&actor));
+        assert_eq!(calls.get(), 0);
+    }
+    #[test]
+    fn carrier_creation_orphan_and_task_index_reject_atomically() {
+        for orphan in [false, true] {
+            let (mut f, actor, work, calls) = setup();
+            if orphan {
+                f.actor_domains.remove(&actor);
+            } else {
+                let _ = f.registry.insert(work.0, WorkRole::Task);
+            }
+            let before = capture!(f);
+            assert_eq!(
+                f.create_actor_domain_context(actor, "carrier", KIND, calls.clone()),
+                Err(FlowError::InvalidWork)
+            );
+            assert_eq!(capture!(f), before);
+            assert_eq!(calls.get(), 0);
+        }
+    }
+    #[test]
+    fn carrier_corrupt_role_index_and_metadata_retain_domain_head() {
+        for fault in 0..7 {
+            let (mut f, actor, work, calls) = setup();
+            f.schedule_domain(work, KIND, SimTime::from_ticks(3), 0)
+                .unwrap();
+            match fault {
+                0 => {
+                    f.registry.remove::<WorkRole>(work.0);
+                }
+                1 => {
+                    f.actor_domains.remove(&actor);
+                }
+                2 => {
+                    let other = f.spawn_actor().unwrap();
+                    f.actor_domains.insert(other, work);
+                }
+                3 => {
+                    f.registry
+                        .store_mut::<WorkSpec>()
+                        .unwrap()
+                        .get_mut(work.0)
+                        .unwrap()
+                        .original_duration = SimDuration::from_ticks(1);
+                }
+                4 => {
+                    f.registry
+                        .store_mut::<WorkProgress>()
+                        .unwrap()
+                        .get_mut(work.0)
+                        .unwrap()
+                        .state = WorkState::Completed;
+                }
+                5 => {
+                    f.domain_hooks.remove(&("carrier".into(), KIND));
+                }
+                _ => {
+                    f.context_types
+                        .insert("carrier".into(), TypeId::of::<u32>());
+                }
+            }
+            let before = capture!(f);
+            assert_eq!(
+                f.step().unwrap_err(),
+                FlowError::InvalidState,
+                "fault {fault}"
+            );
+            assert_eq!(capture!(f), before);
+            assert_eq!(calls.get(), 0);
+        }
+    }
+    #[test]
+    fn carrier_missing_context_is_consumed_stale_not_structural_error() {
+        let (mut f, _, work, calls) = setup();
+        f.schedule_domain(work, KIND, SimTime::from_ticks(3), 0)
+            .unwrap();
+        f.registry.remove::<WorkContext<Rc<Cell<u32>>>>(work.0);
+        let d = f.step().unwrap().unwrap();
+        assert!(d.error.is_none() && d.records.is_empty() && d.callback_batches.is_empty());
+        assert_eq!(calls.get(), 0);
+        assert_eq!(f.next_batch_identity, 0);
+        assert!(f.step().unwrap().is_none());
+    }
+    #[test]
+    fn carrier_batch_counter_overflow_reserves_nothing() {
+        let (mut f, _, work, calls) = setup();
+        let mut sink = FlowCommandSink::new(7, FlowCallbackConfig::default());
+        sink.emit(FlowOwnedCommand::Domain {
+            work,
+            kind: KIND,
+            at: SimTime::from_ticks(4),
+            scheduler_priority: 0,
+        })
+        .unwrap();
+        f.scheduled = OPERATION_CAP;
+        let before = capture!(f);
+        assert_eq!(
+            f.plan_callback_batch(&sink, f.scheduler.stats().scheduled_events)
+                .err()
+                .unwrap()
+                .error,
+            FlowError::CounterOverflow
+        );
+        assert_eq!(capture!(f), before);
+        assert_eq!(calls.get(), 0);
+    }
+    #[test]
+    fn carrier_cleanup_corruption_retains_despawn_head_and_context() {
+        for fault in 0..5 {
+            let (mut f, actor, work, calls) = setup();
+            f.despawn_actor(actor).unwrap();
+            match fault {
+                0 => {
+                    f.registry.remove::<WorkRole>(work.0);
+                }
+                1 => {
+                    f.actor_domains.remove(&actor);
+                }
+                2 => {
+                    f.registry.remove::<WorkSpec>(work.0);
+                }
+                3 => {
+                    f.registry.remove::<WorkContext<Rc<Cell<u32>>>>(work.0);
+                }
+                _ => {
+                    let other = f.spawn_actor().unwrap();
+                    let task = f
+                        .create_work(other, SimDuration::ZERO, "carrier", calls.clone())
+                        .unwrap();
+                    f.actor_domains.insert(actor, task);
+                }
+            }
+            let before = capture!(f);
+            assert_eq!(
+                f.step().unwrap_err(),
+                FlowError::InvalidState,
+                "fault {fault}"
+            );
+            assert_eq!(capture!(f), before);
+            assert!(f.world.is_alive(actor) && f.world.is_alive(work.0));
+            assert_eq!(calls.get(), 0);
+        }
+    }
+    #[test]
+    fn carrier_aggregate_cleanup_overflow_retains_exact_head() {
+        let (mut f, actor, work, calls) = setup();
+        let task = f
+            .create_work(actor, SimDuration::ZERO, "carrier", calls.clone())
+            .unwrap();
+        f.despawn_actor(actor).unwrap();
+        f.destroyed = OPERATION_CAP - 2;
+        let before = capture!(f);
+        assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
+        assert_eq!(capture!(f), before);
+        assert!(f.world.is_alive(actor) && f.world.is_alive(work.0) && f.world.is_alive(task.0));
+        assert_eq!(calls.get(), 0);
+    }
+    #[test]
+    fn carrier_cleanup_counts_actor_and_each_owned_work_once() {
+        let (mut f, actor, work, calls) = setup();
+        let task = f
+            .create_work(actor, SimDuration::ZERO, "carrier", calls.clone())
+            .unwrap();
+        f.despawn_actor(actor).unwrap();
+        let before = f.destroyed;
+        f.step().unwrap().unwrap();
+        assert_eq!(f.destroyed, before + 3);
+        assert!(!f.actor_domains.contains_key(&actor));
+        for id in [actor, work.0, task.0] {
+            assert!(!f.world.is_alive(id));
+        }
+        assert_eq!(calls.get(), 0);
+    }
+
+    #[test]
+    fn carrier_missing_spec_with_either_ownership_witness_retains_exact_head() {
+        for witness in 0..3 {
+            let (mut f, actor, work, calls) = setup();
+            f.schedule_domain(work, KIND, SimTime::from_ticks(3), 0)
+                .unwrap();
+            f.registry.remove::<WorkSpec>(work.0);
+            if witness == 1 {
+                f.actor_domains.remove(&actor);
+            }
+            if witness == 2 {
+                f.registry.remove::<WorkRole>(work.0);
+            }
+            let before = capture!(f);
+            assert_eq!(f.step().unwrap_err(), FlowError::InvalidState);
+            assert_eq!(capture!(f), before);
+            assert_eq!(calls.get(), 0);
+            assert_eq!(
+                f.registry
+                    .get::<WorkContext<Rc<Cell<u32>>>>(work.0)
+                    .unwrap()
+                    .0
+                    .get(),
+                0
+            );
+        }
+    }
+    #[test]
+    fn task_missing_spec_remains_consumed_stale() {
+        let (mut f, actor, _, calls) = setup();
+        let task = f
+            .create_work(actor, SimDuration::ZERO, "carrier", calls.clone())
+            .unwrap();
+        f.schedule_domain(task, KIND, SimTime::from_ticks(3), 0)
+            .unwrap();
+        f.registry.remove::<WorkSpec>(task.0);
+        let d = f.step().unwrap().unwrap();
+        assert!(d.error.is_none() && d.records.is_empty() && d.callback_batches.is_empty());
+        assert_eq!(calls.get(), 0);
+        assert!(f.step().unwrap().is_none());
+    }
+    #[test]
+    fn carrier_active_resource_cleanup_overflow_retains_allocation_queue_and_progress() {
+        let (mut f, actor, carrier, calls) = setup();
+        let resource = f.create_resource(1).unwrap();
+        let task = f
+            .create_work(actor, SimDuration::from_ticks(10), "carrier", calls.clone())
+            .unwrap();
+        let active = f
+            .acquire(resource)
+            .owner(actor)
+            .timed_work(task)
+            .submit()
+            .unwrap();
+        f.step().unwrap().unwrap();
+        assert_eq!(f.request(active).unwrap().state, RequestState::Active);
+        let waiter = f.spawn_actor().unwrap();
+        let queued = f.submit(resource, waiter, SimTime::ZERO).unwrap();
+        f.step().unwrap().unwrap();
+        assert_eq!(f.request(queued).unwrap().state, RequestState::Queued);
+        let lease = f.request(active).unwrap().lease.unwrap();
+        f.despawn_actor(actor).unwrap();
+        f.destroyed = OPERATION_CAP - 2;
+        let before = capture!(f);
+        let capacity = f.resource(resource).unwrap();
+        let active_before = f.request(active).unwrap().clone();
+        let queued_before = f.request(queued).unwrap().clone();
+        let task_spec = f.work(task).unwrap();
+        let task_progress = f.work_progress(task).unwrap();
+        let carrier_progress = f.work_progress(carrier).unwrap();
+        assert_eq!(f.step().unwrap_err(), FlowError::CounterOverflow);
+        assert_eq!(capture!(f), before);
+        assert_eq!(f.resource(resource).unwrap(), capacity);
+        assert_eq!(f.request(active).unwrap(), active_before);
+        assert_eq!(f.request(queued).unwrap(), queued_before);
+        assert_eq!(f.request(active).unwrap().lease, Some(lease));
+        assert_eq!(f.work(task).unwrap(), task_spec);
+        assert_eq!(f.work_progress(task).unwrap(), task_progress);
+        assert_eq!(f.work_progress(carrier).unwrap(), carrier_progress);
+        assert_eq!(calls.get(), 0);
+        assert!(f.world.is_alive(actor) && f.world.is_alive(task.0) && f.world.is_alive(carrier.0));
     }
 }
