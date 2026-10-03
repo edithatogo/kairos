@@ -1,0 +1,107 @@
+{
+  "empty_schema": {
+    "fields": [],
+    "metadata": {
+      "kairos.fixture.contract": "recordbatch-v1",
+      "kairos.fixture.name": "interop-probe.v1",
+      "kairos.fixture.synthetic": "true"
+    }
+  },
+  "fixture_version": 1,
+  "generator": {
+    "pyarrow": "25.0.1"
+  },
+  "ipc_batch_counts": {
+    "empty_schema": 0,
+    "mixed": 2,
+    "typed_empty": 0,
+    "typed_zero_row_batch": 1
+  },
+  "logical_rows": [
+    {
+      "nullable_fixed16_hex": null,
+      "nullable_text": null,
+      "signed_i32": -7,
+      "synthetic_label": "synthetic-a",
+      "ticks_u128_decimal": "0",
+      "ticks_u128_le_hex": "00000000000000000000000000000000"
+    },
+    {
+      "nullable_fixed16_hex": "00000000000000000000000000000000",
+      "nullable_text": "",
+      "signed_i32": 0,
+      "synthetic_label": "é-二",
+      "ticks_u128_decimal": "1",
+      "ticks_u128_le_hex": "01000000000000000000000000000000"
+    },
+    {
+      "nullable_fixed16_hex": "000102030405060708090a0b0c0d0e0f",
+      "nullable_text": "München/東京",
+      "signed_i32": 19,
+      "synthetic_label": "synthetic-c",
+      "ticks_u128_decimal": "340282366920938463463374607431768211455",
+      "ticks_u128_le_hex": "ffffffffffffffffffffffffffffffff"
+    }
+  ],
+  "parquet_row_groups": {
+    "mixed": 2,
+    "typed_empty": 1
+  },
+  "schema": {
+    "fields": [
+      {
+        "metadata": {},
+        "name": "signed_i32",
+        "nullable": false,
+        "type": "int32"
+      },
+      {
+        "metadata": {},
+        "name": "nullable_text",
+        "nullable": true,
+        "type": "string"
+      },
+      {
+        "metadata": {
+          "role": "opaque-synthetic-bytes"
+        },
+        "name": "nullable_fixed16",
+        "nullable": true,
+        "type": "fixed_size_binary[16]"
+      },
+      {
+        "metadata": {
+          "encoding": "little-endian-u128",
+          "unit": "ns"
+        },
+        "name": "ticks_u128_le",
+        "nullable": false,
+        "type": "fixed_size_binary[16]"
+      },
+      {
+        "metadata": {},
+        "name": "synthetic_label",
+        "nullable": false,
+        "type": "string"
+      }
+    ],
+    "metadata": {
+      "kairos.fixture.contract": "recordbatch-v1",
+      "kairos.fixture.name": "interop-probe.v1",
+      "kairos.fixture.synthetic": "true"
+    }
+  },
+  "sha256": {
+    "empty_schema.ipc_file": "ae7f8b5623c0e1d73201aa1a511268f4a52709510de4d6561e88cbe7f2ce0e14",
+    "empty_schema.ipc_stream": "27fb93d59c4e358eaa76afd3188f0dee8d684fb8ec604c08465140e213f8620b",
+    "mixed.ipc_file": "9e65576a51579b22f80271387ff027b5ea377fee59415ac9c31aa87f342b968f",
+    "mixed.ipc_stream": "202cd8c8bd7d10a1c3089ec885552e2aa7fcdb5ae30c2894f5b882c8f7f2cf88",
+    "mixed.parquet": "d6b752b19c72af22be698b31e6fbffd3ff58aa792c194d958a1a3544f8b32d90",
+    "typed_empty.ipc_file": "99c5a65af48128419824d78f88270e7892583f06109cd151d73b5612471a1a13",
+    "typed_empty.ipc_stream": "60ce006e9d31cd34a0748c3f75be669c2fd2761f61e389231445ff6415f2c597",
+    "typed_empty.parquet": "5b08f0924ea3f3e862aace6ce273513d74ce5fbdaea757067957685826a206de",
+    "typed_zero_row_batch.ipc_file": "4b50fbc5ae9790bcce72193abe0c151751f3a5a8fa2c0b2efd63f621c5c3ce3f",
+    "typed_zero_row_batch.ipc_stream": "d36eaf8711af4427681bd1274fbd97a2ac1cdca6ae1a73150ac258522fb80e64"
+  },
+  "synthetic_only": true
+}

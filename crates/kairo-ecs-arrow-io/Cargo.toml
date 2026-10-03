@@ -1,0 +1,20 @@
+[package]
+name = "kairo-ecs-arrow-io"
+version = "0.1.0"
+edition.workspace = true
+rust-version = "1.88"
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = []
+ipc = ["dep:arrow-array", "dep:arrow-schema", "dep:arrow-ipc"]
+parquet = ["dep:arrow-array", "dep:arrow-schema", "dep:parquet", "dep:bytes"]
+
+[dependencies]
+arrow-array = { version = "=60.0.0", optional = true, default-features = false }
+arrow-schema = { version = "=60.0.0", optional = true, default-features = false }
+arrow-ipc = { version = "=60.0.0", optional = true, default-features = false }
+parquet = { version = "=60.0.0", optional = true, default-features = false, features = ["arrow"] }
+bytes = { version = "=1.12.1", optional = true }
+thiserror = "=2.0.20"

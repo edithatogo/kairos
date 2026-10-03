@@ -11,6 +11,7 @@ members = [
   "crates/kairo-ecs-uniffi",
   "crates/kairo-ecs-diplomat",
   "crates/kairo-ecs-arrow",
+  "crates/kairo-ecs-arrow-io",
   "crates/kairo-ecs-calibration",
   "crates/kairo-ecs-bench",
   "crates/kairo-ecs-cli",
