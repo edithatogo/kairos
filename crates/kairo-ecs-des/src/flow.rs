@@ -7,7 +7,7 @@ use kairo_ecs_types::{
 };
 use std::any::{Any, TypeId};
 use std::collections::{BTreeMap, BTreeSet};
-use std::num::NonZeroU64;
+use std::num::{NonZeroU64, NonZeroUsize};
 
 /// Generational resource identity.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -42,6 +42,14 @@ pub enum FlowError {
     InvalidState,
     #[error("invalid work")]
     InvalidWork,
+    #[error("reserved Flow event kind")]
+    ReservedEventKind,
+    #[error("unregistered domain event")]
+    UnregisteredDomainEvent,
+    #[error("invalid callback command ticket")]
+    InvalidCommandTicket,
+    #[error("callback command batch limit exceeded")]
+    CallbackBatchLimitExceeded,
     #[error("same-tick transition budget exceeded at {at_ticks} (limit {limit})")]
     SameTickBudgetExceeded { at_ticks: u128, limit: u64 },
     #[error("Flow run is halted")]
@@ -233,6 +241,248 @@ impl WorkProgress {
         Ok(())
     }
 }
+/// Immutable positive per-callback command bound, selected before execution.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct FlowCallbackConfig {
+    pub max_callback_commands: NonZeroUsize,
+}
+impl Default for FlowCallbackConfig {
+    fn default() -> Self {
+        Self {
+            max_callback_commands: NonZeroUsize::new(1024).unwrap(),
+        }
+    }
+}
+/// Restricted delivery callback; no runtime, scheduler or registry is exposed.
+type FlowCallback<C> = fn(&mut C, &FlowCallbackSnapshot, &mut FlowCommandSink);
+pub struct FlowContinuations<C> {
+    pub on_resume: Option<FlowCallback<C>>,
+    pub on_restart: Option<FlowCallback<C>>,
+    pub on_abort: Option<FlowCallback<C>>,
+    pub on_cancel: Option<FlowCallback<C>>,
+    pub on_complete: Option<FlowCallback<C>>,
+}
+impl<C> Default for FlowContinuations<C> {
+    fn default() -> Self {
+        Self {
+            on_resume: None,
+            on_restart: None,
+            on_abort: None,
+            on_cancel: None,
+            on_complete: None,
+        }
+    }
+}
+impl<C> FlowContinuations<C> {
+    fn select(&self, transition: LifecycleTransition) -> Option<FlowCallback<C>> {
+        match transition {
+            LifecycleTransition::Resumed => self.on_resume,
+            LifecycleTransition::Restarted => self.on_restart,
+            LifecycleTransition::Aborted => self.on_abort,
+            LifecycleTransition::Cancelled => self.on_cancel,
+            LifecycleTransition::Completed => self.on_complete,
+            _ => None,
+        }
+    }
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FlowCallbackSnapshot {
+    pub delivery: ScheduledEventPreview,
+    pub origin: EventId,
+    pub origin_ordinal: Option<u32>,
+    pub work: WorkId,
+    pub cause: FlowCallbackCause,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum FlowCallbackCause {
+    Work {
+        transition: LifecycleTransition,
+        progress: WorkProgress,
+    },
+    Domain {
+        kind: EventKind,
+    },
+}
+/// Issued only by a live callback sink, scoped to its nonreused batch identity.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct FlowCommandTicket {
+    batch: u64,
+    index: usize,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum FlowRequestRef {
+    Existing(RequestId),
+    Submitted(FlowCommandTicket),
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FlowAcquireCommand {
+    pub resource: ResourceId,
+    pub owner: EntityId,
+    pub work: Option<WorkId>,
+    pub at: SimTime,
+    pub priority_level: i32,
+    pub deadline: Option<SimTime>,
+    pub scheduler_priority: i32,
+    pub timed: bool,
+    pub can_preempt: bool,
+    pub preemptible: Option<PreemptionStrategy>,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum FlowOwnedCommand {
+    Acquire(FlowAcquireCommand),
+    Release {
+        lease: LeaseId,
+        at: SimTime,
+    },
+    Cancel {
+        request: FlowRequestRef,
+        at: SimTime,
+        scheduler_priority: i32,
+    },
+    Reprioritize {
+        request: FlowRequestRef,
+        level: i32,
+        at: SimTime,
+        scheduler_priority: i32,
+    },
+    Domain {
+        work: WorkId,
+        kind: EventKind,
+        at: SimTime,
+        scheduler_priority: i32,
+    },
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FlowCommandAdmission {
+    pub ticket: FlowCommandTicket,
+    pub event: EventId,
+    pub request: Option<RequestId>,
+    pub deadline_event: Option<EventId>,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FlowBatchRejection {
+    pub failed_ticket: Option<FlowCommandTicket>,
+    pub error: FlowError,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum FlowBatchReceipt {
+    Accepted(Vec<FlowCommandAdmission>),
+    Rejected(FlowBatchRejection),
+}
+/// Append-only, bounded command collection. Only runtime delivery creates a sink.
+pub struct FlowCommandSink {
+    batch: u64,
+    config: FlowCallbackConfig,
+    commands: Vec<FlowOwnedCommand>,
+    next_index: usize,
+    poison: Option<FlowError>,
+}
+impl FlowCommandSink {
+    fn new(batch: u64, config: FlowCallbackConfig) -> Self {
+        Self {
+            batch,
+            config,
+            commands: Vec::new(),
+            next_index: 0,
+            poison: None,
+        }
+    }
+    pub fn emit(&mut self, command: FlowOwnedCommand) -> Result<FlowCommandTicket, FlowError> {
+        if let Some(error) = self.poison {
+            return Err(error);
+        }
+        if self.commands.len() >= self.config.max_callback_commands.get() {
+            self.poison = Some(FlowError::CallbackBatchLimitExceeded);
+            return Err(FlowError::CallbackBatchLimitExceeded);
+        }
+        let next = match self.next_index.checked_add(1) {
+            Some(next) => next,
+            None => {
+                self.poison = Some(FlowError::CounterOverflow);
+                return Err(FlowError::CounterOverflow);
+            }
+        };
+        // Bound requested vector growth by the configured command count.
+        if self.commands.len() == self.commands.capacity() {
+            let remaining = self.config.max_callback_commands.get() - self.commands.len();
+            self.commands
+                .reserve_exact(remaining.min(self.commands.len().max(1)));
+        }
+        let ticket = FlowCommandTicket {
+            batch: self.batch,
+            index: self.next_index,
+        };
+        self.commands.push(command);
+        self.next_index = next;
+        Ok(ticket)
+    }
+}
+
+type ContinuationBridge =
+    fn(&mut ComponentRegistry, EntityId, &FlowCallbackSnapshot, &mut FlowCommandSink, &dyn Any);
+struct ContinuationDescriptor {
+    context_type: TypeId,
+    present: fn(&dyn Any, LifecycleTransition) -> bool,
+    invoke: ContinuationBridge,
+    context_present: fn(&ComponentRegistry, EntityId) -> bool,
+    callbacks: Box<dyn Any>,
+}
+fn continuation_present<C: 'static>(callbacks: &dyn Any, transition: LifecycleTransition) -> bool {
+    callbacks
+        .downcast_ref::<FlowContinuations<C>>()
+        .expect("validated continuation type")
+        .select(transition)
+        .is_some()
+}
+fn invoke_continuation<C: 'static>(
+    registry: &mut ComponentRegistry,
+    entity: EntityId,
+    snapshot: &FlowCallbackSnapshot,
+    sink: &mut FlowCommandSink,
+    callbacks: &dyn Any,
+) {
+    let callback = match &snapshot.cause {
+        FlowCallbackCause::Work { transition, .. } => callbacks
+            .downcast_ref::<FlowContinuations<C>>()
+            .expect("validated continuation type")
+            .select(*transition),
+        FlowCallbackCause::Domain { .. } => None,
+    };
+    if let Some(callback) = callback {
+        if let Some(context) = registry
+            .store_mut::<WorkContext<C>>()
+            .and_then(|store| store.get_mut(entity))
+        {
+            callback(&mut context.0, snapshot, sink);
+        }
+    }
+}
+struct DomainCallback<C>(FlowCallback<C>);
+struct DomainDescriptor {
+    context_type: TypeId,
+    invoke: ContinuationBridge,
+    context_present: fn(&ComponentRegistry, EntityId) -> bool,
+    callback: Box<dyn Any>,
+}
+fn invoke_domain<C: 'static>(
+    registry: &mut ComponentRegistry,
+    entity: EntityId,
+    snapshot: &FlowCallbackSnapshot,
+    sink: &mut FlowCommandSink,
+    callback: &dyn Any,
+) {
+    let callback = callback
+        .downcast_ref::<DomainCallback<C>>()
+        .expect("validated domain context type")
+        .0;
+    if let Some(context) = registry
+        .store_mut::<WorkContext<C>>()
+        .and_then(|store| store.get_mut(entity))
+    {
+        callback(&mut context.0, snapshot, sink);
+    }
+}
+
 pub struct WorkHandlers<C> {
     pub on_resume: Option<fn(&mut C, &WorkProgress)>,
     pub on_restart: Option<fn(&mut C, &WorkProgress)>,
@@ -328,8 +578,14 @@ struct WorkDescriptor {
     restart_present: fn(&ComponentRegistry, EntityId) -> bool,
     prepare: Option<fn(&ComponentRegistry, EntityId) -> Box<dyn PreparedContext>>,
 }
+#[derive(Clone, Copy, Debug)]
+enum NotificationKind {
+    Legacy,
+    Continuation,
+}
 #[derive(Clone, Debug)]
 struct Notification {
+    kind: NotificationKind,
     work: WorkId,
     transition: LifecycleTransition,
     progress: WorkProgress,
@@ -382,6 +638,7 @@ pub struct FlowDispatch {
     pub at: SimTime,
     pub records: Vec<LifecycleRecord>,
     pub error: Option<FlowError>,
+    pub callback_batches: Vec<FlowBatchReceipt>,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FlowRun {
@@ -400,6 +657,61 @@ enum Command {
     Reprioritize(RequestId, i32),
     Completion(RequestId, LeaseId, u64, SimTime),
     Notify,
+    Domain(WorkId, EventKind),
+}
+#[derive(Clone, Copy)]
+enum BatchRequest {
+    Existing(RequestId),
+    Acquire(usize),
+}
+enum BatchCommand {
+    Acquire {
+        spec: FlowAcquireCommand,
+        work_spec: Option<WorkSpec>,
+    },
+    Release {
+        lease: LeaseId,
+        at: SimTime,
+    },
+    Cancel {
+        request: BatchRequest,
+        at: SimTime,
+        priority: i32,
+    },
+    Reprioritize {
+        request: BatchRequest,
+        level: i32,
+        at: SimTime,
+        priority: i32,
+    },
+    Domain {
+        work: WorkId,
+        kind: EventKind,
+        at: SimTime,
+        priority: i32,
+    },
+}
+struct BatchAdmissionPlan {
+    batch: u64,
+    commands: Vec<BatchCommand>,
+    created: u64,
+    scheduled: u64,
+}
+
+enum PreparedDelivery {
+    Notification(Notification),
+    Domain { work: WorkId, kind: EventKind },
+}
+impl PreparedDelivery {
+    fn needs_batch(&self) -> bool {
+        !matches!(
+            self,
+            Self::Notification(Notification {
+                kind: NotificationKind::Legacy,
+                ..
+            })
+        )
+    }
 }
 #[derive(Clone)]
 struct ResourceStage {
@@ -494,6 +806,8 @@ impl AcquireBuilder<'_> {
 /// All runtime resource changes occur only at command dispatch boundaries.
 pub struct FlowRuntime {
     config: FlowConfig,
+    callback_config: FlowCallbackConfig,
+    next_batch_identity: u64,
     budget_tick: Option<SimTime>,
     budget_consumed: u64,
     budget_halt: Option<FlowBudgetHalt>,
@@ -506,6 +820,8 @@ pub struct FlowRuntime {
     works: BTreeMap<WorkId, WorkDescriptor>,
     context_types: BTreeMap<String, TypeId>,
     handlers: BTreeMap<String, HandlerDescriptor>,
+    continuations: BTreeMap<String, ContinuationDescriptor>,
+    domain_hooks: BTreeMap<(String, EventKind), DomainDescriptor>,
     notifications: BTreeMap<EventId, Notification>,
     commands: BTreeMap<EventId, Command>,
     pending_releases: BTreeSet<LeaseId>,
@@ -530,8 +846,13 @@ impl FlowRuntime {
         Self::with_config(FlowConfig::default())
     }
     pub fn with_config(config: FlowConfig) -> Self {
+        Self::with_configs(config, FlowCallbackConfig::default())
+    }
+    pub fn with_configs(config: FlowConfig, callback_config: FlowCallbackConfig) -> Self {
         Self {
             config,
+            callback_config,
+            next_batch_identity: 0,
             budget_tick: None,
             budget_consumed: 0,
             budget_halt: None,
@@ -544,6 +865,8 @@ impl FlowRuntime {
             works: BTreeMap::new(),
             context_types: BTreeMap::new(),
             handlers: BTreeMap::new(),
+            continuations: BTreeMap::new(),
+            domain_hooks: BTreeMap::new(),
             notifications: BTreeMap::new(),
             commands: BTreeMap::new(),
             pending_releases: BTreeSet::new(),
@@ -629,21 +952,38 @@ impl FlowRuntime {
         at: SimTime,
         priority: i32,
     ) -> Result<(), FlowError> {
+        self.schedule_command(command, at, priority).map(|_| ())
+    }
+    fn schedule_command(
+        &mut self,
+        command: Command,
+        at: SimTime,
+        priority: i32,
+    ) -> Result<EventId, FlowError> {
         self.check_schedule(at)?;
+        self.scheduler
+            .stats()
+            .scheduled_events
+            .checked_add(1)
+            .filter(|n| *n <= OPERATION_CAP)
+            .ok_or(FlowError::CounterOverflow)?;
         let event = self.scheduler.schedule(ScheduleRequest {
             at,
             priority,
             entity: None,
-            kind: EventKind::custom(match command {
-                Command::Deadline(_) => FLOW_WAITING_DEADLINE_EVENT_KIND,
-                Command::Completion(..) => FLOW_TIMED_COMPLETION_EVENT_KIND,
-                Command::Notify => FLOW_WORK_NOTIFICATION_EVENT_KIND,
-                _ => FLOW_COMMAND_DISPATCH_EVENT_KIND,
-            }),
+            kind: match command {
+                Command::Domain(_, kind) => kind,
+                _ => EventKind::custom(match command {
+                    Command::Deadline(_) => FLOW_WAITING_DEADLINE_EVENT_KIND,
+                    Command::Completion(..) => FLOW_TIMED_COMPLETION_EVENT_KIND,
+                    Command::Notify => FLOW_WORK_NOTIFICATION_EVENT_KIND,
+                    _ => FLOW_COMMAND_DISPATCH_EVENT_KIND,
+                }),
+            },
         });
         self.scheduled += 1;
         self.commands.insert(event, command);
-        Ok(())
+        Ok(event)
     }
     pub fn acquire(&mut self, resource: ResourceId) -> AcquireBuilder<'_> {
         let at = self.now();
@@ -709,11 +1049,8 @@ impl FlowRuntime {
         registration: &str,
         handlers: WorkHandlers<C>,
     ) -> Result<(), FlowError> {
-        self.check_running()?;
-        if registration.trim().is_empty()
-            || self.context_types.contains_key(registration)
-            || self.handlers.contains_key(registration)
-        {
+        self.check_registration::<C>(registration)?;
+        if self.handlers.contains_key(registration) {
             return Err(FlowError::InvalidWork);
         }
         self.handlers.insert(
@@ -727,6 +1064,91 @@ impl FlowRuntime {
             },
         );
         Ok(())
+    }
+    fn check_registration<C: 'static>(&self, registration: &str) -> Result<(), FlowError> {
+        self.check_running()?;
+        self.validate_context::<C>(registration)?;
+        if self.context_types.contains_key(registration) {
+            return Err(FlowError::InvalidWork);
+        }
+        Ok(())
+    }
+    fn check_domain_kind(kind: EventKind) -> Result<(), FlowError> {
+        if (FLOW_COMMAND_DISPATCH_EVENT_KIND..=FLOW_WORK_NOTIFICATION_EVENT_KIND)
+            .contains(&kind.code())
+        {
+            return Err(FlowError::ReservedEventKind);
+        }
+        Ok(())
+    }
+    pub fn register_work_continuations<C: 'static>(
+        &mut self,
+        registration: &str,
+        callbacks: FlowContinuations<C>,
+    ) -> Result<(), FlowError> {
+        self.check_registration::<C>(registration)?;
+        if self.continuations.contains_key(registration) {
+            return Err(FlowError::InvalidWork);
+        }
+        self.continuations.insert(
+            registration.to_owned(),
+            ContinuationDescriptor {
+                context_type: TypeId::of::<C>(),
+                present: continuation_present::<C>,
+                invoke: invoke_continuation::<C>,
+                context_present: |registry, entity| {
+                    registry.get::<WorkContext<C>>(entity).is_some()
+                },
+                callbacks: Box::new(callbacks),
+            },
+        );
+        Ok(())
+    }
+    pub fn register_domain_hook<C: 'static>(
+        &mut self,
+        registration: &str,
+        kind: EventKind,
+        callback: FlowCallback<C>,
+    ) -> Result<(), FlowError> {
+        self.check_running()?;
+        Self::check_domain_kind(kind)?;
+        self.check_registration::<C>(registration)?;
+        let key = (registration.to_owned(), kind);
+        if self.domain_hooks.contains_key(&key) {
+            return Err(FlowError::InvalidWork);
+        }
+        self.domain_hooks.insert(
+            key,
+            DomainDescriptor {
+                context_type: TypeId::of::<C>(),
+                invoke: invoke_domain::<C>,
+                context_present: |registry, entity| {
+                    registry.get::<WorkContext<C>>(entity).is_some()
+                },
+                callback: Box::new(DomainCallback(callback)),
+            },
+        );
+        Ok(())
+    }
+    pub fn schedule_domain(
+        &mut self,
+        work: WorkId,
+        kind: EventKind,
+        at: SimTime,
+        priority: i32,
+    ) -> Result<EventId, FlowError> {
+        self.check_running()?;
+        Self::check_domain_kind(kind)?;
+        let spec = self.work(work)?;
+        self.actor(spec.owner)?;
+        let descriptor = self
+            .domain_hooks
+            .get(&(spec.context_type_key, kind))
+            .ok_or(FlowError::UnregisteredDomainEvent)?;
+        if !(descriptor.context_present)(&self.registry, work.0) {
+            return Err(FlowError::InvalidWork);
+        }
+        self.schedule_command(Command::Domain(work, kind), at, priority)
     }
     pub fn create_restartable_work<T: 'static, C: 'static>(
         &mut self,
@@ -772,6 +1194,14 @@ impl FlowRuntime {
                 .handlers
                 .get(registration)
                 .is_some_and(|h| h.context_type != TypeId::of::<C>())
+            || self
+                .continuations
+                .get(registration)
+                .is_some_and(|h| h.context_type != TypeId::of::<C>())
+            || self
+                .domain_hooks
+                .iter()
+                .any(|((key, _), h)| key == registration && h.context_type != TypeId::of::<C>())
         {
             return Err(FlowError::InvalidWork);
         }
@@ -790,20 +1220,40 @@ impl FlowRuntime {
         transition: LifecycleTransition,
         progress: &WorkProgress,
         outcome: &FlowDispatch,
-    ) -> Option<Notification> {
-        let spec = self.registry.get::<WorkSpec>(work.0)?;
-        let h = self.handlers.get(&spec.context_type_key)?;
-        (h.present)(h.handlers.as_ref(), transition).then(|| Notification {
-            work,
-            transition,
-            progress: progress.clone(),
-            origin: outcome.event,
-            ordinal: outcome
-                .records
-                .last()
-                .expect("transition recorded")
-                .transition_ordinal,
-        })
+    ) -> Vec<Notification> {
+        let Some(spec) = self.registry.get::<WorkSpec>(work.0) else {
+            return Vec::new();
+        };
+        let mut notifications = Vec::new();
+        let mut append = |kind| {
+            notifications.push(Notification {
+                kind,
+                work,
+                transition,
+                progress: progress.clone(),
+                origin: outcome.event,
+                ordinal: outcome
+                    .records
+                    .last()
+                    .expect("transition recorded")
+                    .transition_ordinal,
+            })
+        };
+        if self
+            .handlers
+            .get(&spec.context_type_key)
+            .is_some_and(|h| (h.present)(h.handlers.as_ref(), transition))
+        {
+            append(NotificationKind::Legacy);
+        }
+        if self
+            .continuations
+            .get(&spec.context_type_key)
+            .is_some_and(|h| (h.present)(h.callbacks.as_ref(), transition))
+        {
+            append(NotificationKind::Continuation);
+        }
+        notifications
     }
     pub fn work(&self, id: WorkId) -> Result<WorkSpec, FlowError> {
         if !self.works.contains_key(&id) || !self.world.is_alive(id.0) {
@@ -1084,17 +1534,35 @@ impl FlowRuntime {
             at: preview.at,
             records: Vec::new(),
             error: None,
+            callback_batches: Vec::new(),
         };
-        let plan = if matches!(command, Command::Notify) {
+        let plan = if matches!(command, Command::Notify | Command::Domain(..)) {
             None
         } else {
-            self.plan(command.clone(), &mut outcome)?
+            self.plan(command, &mut outcome)?
         };
-        let delivery = if matches!(command, Command::Notify) {
-            self.notifications
+        let delivery = match command {
+            Command::Notify => self
+                .notifications
                 .get(&preview.id)
                 .filter(|n| self.notification_deliverable(n))
                 .cloned()
+                .map(PreparedDelivery::Notification),
+            Command::Domain(work, kind) => match self.domain_delivery(work, kind) {
+                Ok(delivery) => delivery,
+                Err(error) => {
+                    outcome.error = Some(error);
+                    None
+                }
+            },
+            _ => None,
+        };
+        let next_batch = if delivery.as_ref().is_some_and(PreparedDelivery::needs_batch) {
+            Some(
+                self.next_batch_identity
+                    .checked_add(1)
+                    .ok_or(FlowError::CounterOverflow)?,
+            )
         } else {
             None
         };
@@ -1137,32 +1605,481 @@ impl FlowRuntime {
         self.budget_consumed = total;
         if matches!(command, Command::Notify) {
             self.notifications.remove(&preview.id);
-            if let Some(n) = delivery {
-                let _causal_origin = (n.origin, n.ordinal);
-                let spec = self
-                    .registry
-                    .get::<WorkSpec>(n.work.0)
-                    .expect("validated notification work");
-                let h = &self.handlers[&spec.context_type_key];
-                (h.invoke)(
-                    &mut self.registry,
-                    n.work.0,
-                    &n.progress,
-                    n.transition,
-                    h.handlers.as_ref(),
-                );
+        }
+        if let Some(delivery) = delivery {
+            match delivery {
+                PreparedDelivery::Notification(n) if matches!(n.kind, NotificationKind::Legacy) => {
+                    let spec = self
+                        .registry
+                        .get::<WorkSpec>(n.work.0)
+                        .expect("validated notification work");
+                    let h = &self.handlers[&spec.context_type_key];
+                    (h.invoke)(
+                        &mut self.registry,
+                        n.work.0,
+                        &n.progress,
+                        n.transition,
+                        h.handlers.as_ref(),
+                    );
+                }
+                delivery => {
+                    let batch = self.next_batch_identity;
+                    self.next_batch_identity = next_batch.expect("preflighted batch identity");
+                    let mut sink = FlowCommandSink::new(batch, self.callback_config);
+                    match delivery {
+                        PreparedDelivery::Notification(n) => {
+                            let key = self
+                                .registry
+                                .get::<WorkSpec>(n.work.0)
+                                .expect("validated continuation work")
+                                .context_type_key
+                                .clone();
+                            let snapshot = FlowCallbackSnapshot {
+                                delivery: preview,
+                                origin: n.origin,
+                                origin_ordinal: Some(n.ordinal),
+                                work: n.work,
+                                cause: FlowCallbackCause::Work {
+                                    transition: n.transition,
+                                    progress: n.progress,
+                                },
+                            };
+                            let h = &self.continuations[&key];
+                            (h.invoke)(
+                                &mut self.registry,
+                                n.work.0,
+                                &snapshot,
+                                &mut sink,
+                                h.callbacks.as_ref(),
+                            );
+                        }
+                        PreparedDelivery::Domain { work, kind } => {
+                            let key = self
+                                .registry
+                                .get::<WorkSpec>(work.0)
+                                .expect("validated domain work")
+                                .context_type_key
+                                .clone();
+                            let snapshot = FlowCallbackSnapshot {
+                                delivery: preview,
+                                origin: preview.id,
+                                origin_ordinal: None,
+                                work,
+                                cause: FlowCallbackCause::Domain { kind },
+                            };
+                            let h = &self.domain_hooks[&(key, kind)];
+                            (h.invoke)(
+                                &mut self.registry,
+                                work.0,
+                                &snapshot,
+                                &mut sink,
+                                h.callback.as_ref(),
+                            );
+                        }
+                    }
+                    // Validate the entire emitted batch after this once-only delivery.
+                    // Rejection retains context effects and consumes no command IDs.
+                    outcome
+                        .callback_batches
+                        .push(self.admit_callback_batch(sink));
+                }
             }
         }
         Ok(Some(outcome))
     }
-    fn notification_deliverable(&self, n: &Notification) -> bool {
-        self.registry.get::<WorkSpec>(n.work.0).is_some_and(|spec| {
-            self.world.is_alive(spec.owner)
-                && self.handlers.get(&spec.context_type_key).is_some_and(|h| {
-                    (h.present)(h.handlers.as_ref(), n.transition)
-                        && (h.context_present)(&self.registry, n.work.0)
-                })
+    fn batch_request(
+        &self,
+        reference: &FlowRequestRef,
+        batch: u64,
+        position: usize,
+        commands: &[FlowOwnedCommand],
+    ) -> Result<BatchRequest, FlowError> {
+        match reference {
+            FlowRequestRef::Existing(id) => {
+                if terminal(self.request(*id)?.state) {
+                    return Err(FlowError::TerminalRequest);
+                }
+                Ok(BatchRequest::Existing(*id))
+            }
+            FlowRequestRef::Submitted(ticket) => {
+                if ticket.batch != batch
+                    || ticket.index >= position
+                    || !matches!(
+                        commands.get(ticket.index),
+                        Some(FlowOwnedCommand::Acquire(_))
+                    )
+                {
+                    return Err(FlowError::InvalidCommandTicket);
+                }
+                Ok(BatchRequest::Acquire(ticket.index))
+            }
+        }
+    }
+    fn plan_callback_batch(
+        &self,
+        sink: &FlowCommandSink,
+        scheduler_scheduled: u64,
+    ) -> Result<BatchAdmissionPlan, FlowBatchRejection> {
+        if let Some(error) = sink.poison {
+            return Err(FlowBatchRejection {
+                failed_ticket: None,
+                error,
+            });
+        }
+        let mut commands = Vec::with_capacity(sink.commands.len());
+        let mut associated = BTreeSet::new();
+        let mut releases = self.pending_releases.clone();
+        let mut created = self.created;
+        let mut event_count = 0u64;
+        for (position, command) in sink.commands.iter().enumerate() {
+            let ticket = FlowCommandTicket {
+                batch: sink.batch,
+                index: position,
+            };
+            let validated = (|| -> Result<BatchCommand, FlowError> {
+                self.check_running()?;
+                let (command, at, needed) = match command {
+                    FlowOwnedCommand::Acquire(spec) => {
+                        self.actor(spec.owner)?;
+                        self.resource(spec.resource)?;
+                        if (spec.timed && spec.work.is_none())
+                            || (spec.preemptible.is_some() && (!spec.timed || spec.work.is_none()))
+                        {
+                            return Err(FlowError::InvalidWork);
+                        }
+                        let work_spec = if let Some(work) = spec.work {
+                            let work_spec = self.work(work)?;
+                            let descriptor = self.works.get(&work).ok_or(FlowError::InvalidWork)?;
+                            if work_spec.owner != spec.owner
+                                || work_spec.request.is_some()
+                                || !associated.insert(work)
+                                || !(descriptor.context_present)(&self.registry, work.0)
+                            {
+                                return Err(FlowError::InvalidWork);
+                            }
+                            if spec.preemptible == Some(PreemptionStrategy::Restart)
+                                && (descriptor.prepare.is_none()
+                                    || !(descriptor.restart_present)(&self.registry, work.0))
+                            {
+                                return Err(FlowError::InvalidWork);
+                            }
+                            Some(work_spec)
+                        } else {
+                            None
+                        };
+                        created = created
+                            .checked_add(1)
+                            .filter(|n| *n <= OPERATION_CAP)
+                            .ok_or(FlowError::CounterOverflow)?;
+                        let needed =
+                            1 + u64::from(spec.deadline.is_some_and(|deadline| deadline > spec.at));
+                        (
+                            BatchCommand::Acquire {
+                                spec: spec.clone(),
+                                work_spec,
+                            },
+                            spec.at,
+                            needed,
+                        )
+                    }
+                    FlowOwnedCommand::Release { lease, at } => {
+                        let request = self.request(lease.request)?;
+                        if request.state != RequestState::Active
+                            || request.lease != Some(*lease)
+                            || !releases.insert(*lease)
+                        {
+                            return Err(FlowError::InvalidLease);
+                        }
+                        (
+                            BatchCommand::Release {
+                                lease: *lease,
+                                at: *at,
+                            },
+                            *at,
+                            1,
+                        )
+                    }
+                    FlowOwnedCommand::Cancel {
+                        request,
+                        at,
+                        scheduler_priority,
+                    } => {
+                        let request =
+                            self.batch_request(request, sink.batch, position, &sink.commands)?;
+                        (
+                            BatchCommand::Cancel {
+                                request,
+                                at: *at,
+                                priority: *scheduler_priority,
+                            },
+                            *at,
+                            1,
+                        )
+                    }
+                    FlowOwnedCommand::Reprioritize {
+                        request,
+                        level,
+                        at,
+                        scheduler_priority,
+                    } => {
+                        let request =
+                            self.batch_request(request, sink.batch, position, &sink.commands)?;
+                        (
+                            BatchCommand::Reprioritize {
+                                request,
+                                level: *level,
+                                at: *at,
+                                priority: *scheduler_priority,
+                            },
+                            *at,
+                            1,
+                        )
+                    }
+                    FlowOwnedCommand::Domain {
+                        work,
+                        kind,
+                        at,
+                        scheduler_priority,
+                    } => {
+                        Self::check_domain_kind(*kind)?;
+                        let spec = self.work(*work)?;
+                        self.actor(spec.owner)?;
+                        let h = self
+                            .domain_hooks
+                            .get(&(spec.context_type_key, *kind))
+                            .ok_or(FlowError::UnregisteredDomainEvent)?;
+                        if !(h.context_present)(&self.registry, work.0) {
+                            return Err(FlowError::InvalidWork);
+                        }
+                        (
+                            BatchCommand::Domain {
+                                work: *work,
+                                kind: *kind,
+                                at: *at,
+                                priority: *scheduler_priority,
+                            },
+                            *at,
+                            1,
+                        )
+                    }
+                };
+                if at < self.now() {
+                    return Err(FlowError::PastCommand);
+                }
+                event_count = event_count
+                    .checked_add(needed)
+                    .ok_or(FlowError::CounterOverflow)?;
+                self.scheduled
+                    .checked_add(event_count)
+                    .filter(|n| *n <= OPERATION_CAP)
+                    .ok_or(FlowError::CounterOverflow)?;
+                scheduler_scheduled
+                    .checked_add(event_count)
+                    .filter(|n| *n <= OPERATION_CAP)
+                    .ok_or(FlowError::CounterOverflow)?;
+                Ok(command)
+            })()
+            .map_err(|error| FlowBatchRejection {
+                failed_ticket: Some(ticket),
+                error,
+            })?;
+            commands.push(validated);
+        }
+        Ok(BatchAdmissionPlan {
+            batch: sink.batch,
+            commands,
+            created,
+            scheduled: self.scheduled + event_count,
         })
+    }
+    fn admit_callback_batch(&mut self, sink: FlowCommandSink) -> FlowBatchReceipt {
+        match self.plan_callback_batch(&sink, self.scheduler.stats().scheduled_events) {
+            Ok(plan) => FlowBatchReceipt::Accepted(self.commit_callback_batch(plan)),
+            Err(rejection) => FlowBatchReceipt::Rejected(rejection),
+        }
+    }
+    fn commit_callback_batch(&mut self, plan: BatchAdmissionPlan) -> Vec<FlowCommandAdmission> {
+        let mut requests = Vec::with_capacity(plan.commands.len());
+        let mut receipts = Vec::with_capacity(plan.commands.len());
+        for (position, command) in plan.commands.into_iter().enumerate() {
+            let mut request_id = None;
+            let mut deadline_event = None;
+            let (command, at, priority) = match command {
+                BatchCommand::Acquire {
+                    spec,
+                    mut work_spec,
+                } => {
+                    // World is private and lifetime created/despawn counters are capped.
+                    // No prospective allocator ID or public-ingress mutation loop is used.
+                    let id = RequestId(self.world.spawn());
+                    self.created += 1;
+                    let request = ResourceRequest {
+                        resource: spec.resource,
+                        owner: spec.owner,
+                        state: RequestState::Pending,
+                        admission_sequence: None,
+                        lease: None,
+                        priority_level: spec.priority_level,
+                        work: spec.work,
+                        submitted_at: spec.at,
+                        deadline: spec.deadline,
+                        timed: spec.timed,
+                        can_preempt: spec.can_preempt,
+                        preemptible: spec.preemptible,
+                    };
+                    assert!(
+                        self.registry.insert(id.0, request),
+                        "preflighted fresh request generation"
+                    );
+                    self.requests.insert(id);
+                    if let (Some(work), Some(work_spec)) = (spec.work, work_spec.as_mut()) {
+                        work_spec.request = Some(id);
+                        assert!(
+                            self.registry.insert(work.0, work_spec.clone()),
+                            "preflighted live work metadata"
+                        );
+                    }
+                    request_id = Some(id);
+                    // Primary precedes its deadline in admission order, matching public ingress.
+                    let event = self.commit_batch_event(
+                        Command::Submit(id),
+                        spec.at,
+                        spec.scheduler_priority,
+                    );
+                    if let Some(deadline) = spec.deadline.filter(|deadline| *deadline > spec.at) {
+                        deadline_event =
+                            Some(self.commit_batch_event(Command::Deadline(id), deadline, 0));
+                    }
+                    requests.push(Some(id));
+                    receipts.push(FlowCommandAdmission {
+                        ticket: FlowCommandTicket {
+                            batch: plan.batch,
+                            index: position,
+                        },
+                        event,
+                        request: request_id,
+                        deadline_event,
+                    });
+                    continue;
+                }
+                BatchCommand::Release { lease, at } => {
+                    self.pending_releases.insert(lease);
+                    (Command::Release(lease), at, 0)
+                }
+                BatchCommand::Cancel {
+                    request,
+                    at,
+                    priority,
+                } => (
+                    Command::Cancel(Self::resolve_batch_request(request, &requests)),
+                    at,
+                    priority,
+                ),
+                BatchCommand::Reprioritize {
+                    request,
+                    level,
+                    at,
+                    priority,
+                } => (
+                    Command::Reprioritize(Self::resolve_batch_request(request, &requests), level),
+                    at,
+                    priority,
+                ),
+                BatchCommand::Domain {
+                    work,
+                    kind,
+                    at,
+                    priority,
+                } => (Command::Domain(work, kind), at, priority),
+            };
+            let event = self.commit_batch_event(command, at, priority);
+            requests.push(None);
+            receipts.push(FlowCommandAdmission {
+                ticket: FlowCommandTicket {
+                    batch: plan.batch,
+                    index: position,
+                },
+                event,
+                request: request_id,
+                deadline_event,
+            });
+        }
+        assert_eq!(self.created, plan.created, "aggregate creation preflight");
+        assert_eq!(self.scheduled, plan.scheduled, "aggregate event preflight");
+        receipts
+    }
+    fn resolve_batch_request(request: BatchRequest, requests: &[Option<RequestId>]) -> RequestId {
+        match request {
+            BatchRequest::Existing(id) => id,
+            BatchRequest::Acquire(index) => {
+                requests[index].expect("preflighted earlier acquired request")
+            }
+        }
+    }
+    fn commit_batch_event(&mut self, command: Command, at: SimTime, priority: i32) -> EventId {
+        // Every scheduler call is owned by this facade. Validated lifetime counts
+        // bound index, sequence and generation before the first batch mutation.
+        let kind = match command {
+            Command::Domain(_, kind) => kind,
+            Command::Deadline(_) => EventKind::custom(FLOW_WAITING_DEADLINE_EVENT_KIND),
+            _ => EventKind::custom(FLOW_COMMAND_DISPATCH_EVENT_KIND),
+        };
+        let event = self.scheduler.schedule(ScheduleRequest {
+            at,
+            priority,
+            entity: None,
+            kind,
+        });
+        self.scheduled += 1;
+        self.commands.insert(event, command);
+        event
+    }
+
+    fn notification_deliverable(&self, n: &Notification) -> bool {
+        self.works.contains_key(&n.work)
+            && self.world.is_alive(n.work.0)
+            && self.registry.get::<WorkSpec>(n.work.0).is_some_and(|spec| {
+                self.actors.contains(&spec.owner)
+                    && self.world.is_alive(spec.owner)
+                    && match n.kind {
+                        NotificationKind::Legacy => {
+                            self.handlers.get(&spec.context_type_key).is_some_and(|h| {
+                                (h.present)(h.handlers.as_ref(), n.transition)
+                                    && (h.context_present)(&self.registry, n.work.0)
+                            })
+                        }
+                        NotificationKind::Continuation => self
+                            .continuations
+                            .get(&spec.context_type_key)
+                            .is_some_and(|h| {
+                                (h.present)(h.callbacks.as_ref(), n.transition)
+                                    && (h.context_present)(&self.registry, n.work.0)
+                            }),
+                    }
+            })
+    }
+    fn domain_delivery(
+        &self,
+        work: WorkId,
+        kind: EventKind,
+    ) -> Result<Option<PreparedDelivery>, FlowError> {
+        if !self.works.contains_key(&work) || !self.world.is_alive(work.0) {
+            return Ok(None);
+        }
+        let Some(spec) = self.registry.get::<WorkSpec>(work.0) else {
+            return Ok(None);
+        };
+        if !self.actors.contains(&spec.owner) || !self.world.is_alive(spec.owner) {
+            return Ok(None);
+        }
+        let h = self
+            .domain_hooks
+            .get(&(spec.context_type_key.clone(), kind))
+            .ok_or(FlowError::UnregisteredDomainEvent)?;
+        if !(h.context_present)(&self.registry, work.0) {
+            return Ok(None);
+        }
+        Ok(Some(PreparedDelivery::Domain { work, kind }))
     }
     fn plan(
         &self,
@@ -1258,7 +2175,7 @@ impl FlowRuntime {
                 .map(|r| BTreeSet::from([r.resource]))
                 .unwrap_or_default(),
             Command::Capacity(id, _) | Command::Remove(id) => BTreeSet::from([id]),
-            Command::Notify => BTreeSet::new(),
+            Command::Notify | Command::Domain(..) => BTreeSet::new(),
             Command::Despawn(owner) => requests
                 .values()
                 .filter(|r| r.owner == owner && !terminal(r.state))
@@ -1320,6 +2237,14 @@ impl FlowRuntime {
                     progress.get_mut(&work).ok_or(FlowError::InvalidState)?,
                     lease,
                 )?;
+                for n in self.notification(
+                    work,
+                    LifecycleTransition::Completed,
+                    &progress[&work],
+                    outcome,
+                ) {
+                    tokens.push((Command::Notify, outcome.at, Some(n)));
+                }
                 affected.insert(*id);
             }
         }
@@ -1434,7 +2359,7 @@ impl FlowRuntime {
                         affected.insert(request.resource);
                         record(outcome, *id, request)?;
                         if let Some(work) = request.work {
-                            if let Some(n) = self.notification(
+                            for n in self.notification(
                                 work,
                                 LifecycleTransition::Cancelled,
                                 &progress[&work],
@@ -1446,7 +2371,7 @@ impl FlowRuntime {
                     }
                     remove_actor = Some(owner);
                 }
-                Command::Notify => return Err(FlowError::InvalidState),
+                Command::Notify | Command::Domain(..) => return Err(FlowError::InvalidState),
                 Command::Completion(..) => {
                     // Validated before staging; due-boundary processing completed it.
                 }
@@ -1476,7 +2401,7 @@ impl FlowRuntime {
                     affected.insert(request.resource);
                     record(outcome, id, request)?;
                     if let Some(work) = request.work {
-                        if let Some(n) = self.notification(
+                        for n in self.notification(
                             work,
                             LifecycleTransition::Cancelled,
                             &progress[&work],
@@ -1607,7 +2532,7 @@ impl FlowRuntime {
                             victim_request.state = RequestState::Aborted;
                             p.state = WorkState::Aborted;
                             record(outcome, victim, victim_request)?;
-                            if let Some(n) =
+                            for n in
                                 self.notification(work, LifecycleTransition::Aborted, p, outcome)
                             {
                                 tokens.push((Command::Notify, outcome.at, Some(n)));
@@ -1720,8 +2645,7 @@ impl FlowRuntime {
                 record_transition(outcome, request_id, request, transition)?;
                 if request.timed {
                     let work = request.work.ok_or(FlowError::InvalidState)?;
-                    if let Some(n) = self.notification(work, transition, &progress[&work], outcome)
-                    {
+                    for n in self.notification(work, transition, &progress[&work], outcome) {
                         tokens.push((Command::Notify, outcome.at, Some(n)));
                     }
                     if completion_at == Some(outcome.at) {
@@ -1733,6 +2657,14 @@ impl FlowRuntime {
                             progress.get_mut(&work).ok_or(FlowError::InvalidState)?,
                             lease,
                         )?;
+                        for n in self.notification(
+                            work,
+                            LifecycleTransition::Completed,
+                            &progress[&work],
+                            outcome,
+                        ) {
+                            tokens.push((Command::Notify, outcome.at, Some(n)));
+                        }
                     }
                 }
             }
@@ -2216,6 +3148,7 @@ mod tests {
             at: ticks(at),
             records: Vec::new(),
             error: None,
+            callback_batches: Vec::new(),
         };
         if let Some(plan) = f.plan(command, &mut outcome)? {
             f.commit_plan(plan);
@@ -3147,5 +4080,763 @@ mod same_tick_budget_private {
             assert_eq!(f.request(q).unwrap().state, RequestState::Active);
             assert_eq!(f.registry.get::<WorkProgress>(w.0), Some(&progress));
         }
+    }
+}
+
+#[cfg(test)]
+mod continuation_private {
+    use super::*;
+    use std::cell::Cell;
+    use std::rc::Rc;
+
+    const DOMAIN: EventKind = EventKind::custom(7100);
+    fn time(n: u128) -> SimTime {
+        SimTime::from_ticks(n)
+    }
+    fn duration(n: u128) -> SimDuration {
+        SimDuration::from_ticks(n)
+    }
+    #[derive(Clone, Copy)]
+    enum Mode {
+        Empty,
+        Pair(bool),
+        Duplicate,
+        Past,
+        ReleasePair,
+    }
+    #[derive(Clone)]
+    struct Probe {
+        mode: Mode,
+        owner: EntityId,
+        resource: ResourceId,
+        targets: [WorkId; 2],
+        lease: Option<LeaseId>,
+        calls: u32,
+        generation: u32,
+        tickets: Vec<FlowCommandTicket>,
+        progress: Vec<WorkProgress>,
+        origin: Option<EventId>,
+        ordinal: Option<u32>,
+    }
+    fn acquire(probe: &Probe, target: usize, deadline: Option<SimTime>) -> FlowOwnedCommand {
+        FlowOwnedCommand::Acquire(FlowAcquireCommand {
+            resource: probe.resource,
+            owner: probe.owner,
+            work: Some(probe.targets[target]),
+            at: time(1),
+            priority_level: 0,
+            deadline,
+            scheduler_priority: 0,
+            timed: true,
+            can_preempt: false,
+            preemptible: None,
+        })
+    }
+    fn callback(probe: &mut Probe, snapshot: &FlowCallbackSnapshot, sink: &mut FlowCommandSink) {
+        probe.calls += 1;
+        probe.origin = Some(snapshot.origin);
+        probe.ordinal = snapshot.origin_ordinal;
+        if let FlowCallbackCause::Work { progress, .. } = &snapshot.cause {
+            probe.progress.push(progress.clone());
+        }
+        match probe.mode {
+            Mode::Empty => {}
+            Mode::Pair(deadline) => {
+                let first = acquire(probe, 0, None);
+                let second = acquire(probe, 1, deadline.then(|| time(2)));
+                probe.tickets.push(sink.emit(first).unwrap());
+                probe.tickets.push(sink.emit(second).unwrap());
+            }
+            Mode::Duplicate => {
+                for _ in 0..2 {
+                    let command = acquire(probe, 0, None);
+                    probe.tickets.push(sink.emit(command).unwrap());
+                }
+            }
+            Mode::Past => {
+                probe.tickets.push(
+                    sink.emit(FlowOwnedCommand::Domain {
+                        work: snapshot.work,
+                        kind: DOMAIN,
+                        at: time(0),
+                        scheduler_priority: 0,
+                    })
+                    .unwrap(),
+                );
+            }
+            Mode::ReleasePair => {
+                for _ in 0..2 {
+                    probe.tickets.push(
+                        sink.emit(FlowOwnedCommand::Release {
+                            lease: probe.lease.unwrap(),
+                            at: time(2),
+                        })
+                        .unwrap(),
+                    );
+                }
+            }
+        }
+    }
+    fn setup(mode: Mode, limit: u64, complete: bool) -> (FlowRuntime, WorkId) {
+        let mut f = FlowRuntime::with_config(FlowConfig {
+            max_same_tick_flow_transitions: NonZeroU64::new(limit).unwrap(),
+        });
+        let owner = f.spawn_actor().unwrap();
+        let resource = f.create_resource(1).unwrap();
+        let targets = [
+            f.create_work(owner, duration(2), "first", ()).unwrap(),
+            f.create_work(owner, duration(3), "second", ()).unwrap(),
+        ];
+        f.register_domain_hook::<Probe>("probe", DOMAIN, callback)
+            .unwrap();
+        if complete {
+            f.register_work_continuations(
+                "probe",
+                FlowContinuations {
+                    on_complete: Some(callback),
+                    ..FlowContinuations::default()
+                },
+            )
+            .unwrap();
+        }
+        let probe = Probe {
+            mode,
+            owner,
+            resource,
+            targets,
+            lease: None,
+            calls: 0,
+            generation: 0,
+            tickets: vec![],
+            progress: vec![],
+            origin: None,
+            ordinal: None,
+        };
+        let work = f.create_work(owner, duration(1), "probe", probe).unwrap();
+        (f, work)
+    }
+    fn rejected(dispatch: &FlowDispatch, error: FlowError, ticket: Option<FlowCommandTicket>) {
+        assert!(dispatch.error.is_none());
+        assert_eq!(dispatch.callback_batches.len(), 1);
+        match &dispatch.callback_batches[0] {
+            FlowBatchReceipt::Rejected(r) => {
+                assert_eq!(r.error, error);
+                assert_eq!(r.failed_ticket, ticket);
+            }
+            FlowBatchReceipt::Accepted(_) => panic!("expected atomic rejection"),
+        }
+    }
+    fn pending_unchanged(f: &mut FlowRuntime, error: FlowError) {
+        let preview = f.scheduler.peek_next();
+        let stats = f.scheduler.stats();
+        let budget = f.budget_snapshot();
+        let commands = f.commands.len();
+        let notifications = f.notifications.len();
+        let world = f.world.snapshot();
+        assert_eq!(f.step().unwrap_err(), error);
+        assert_eq!(f.scheduler.peek_next(), preview);
+        assert_eq!(f.scheduler.stats(), stats);
+        assert_eq!(f.budget_snapshot(), budget);
+        assert_eq!(f.commands.len(), commands);
+        assert_eq!(f.notifications.len(), notifications);
+        assert_eq!(f.world.snapshot(), world);
+    }
+    #[test]
+    fn batch_identity_overflow_retains_head_context_and_budget() {
+        let (mut f, work) = setup(Mode::Empty, 10, false);
+        f.schedule_domain(work, DOMAIN, time(1), 0).unwrap();
+        f.next_batch_identity = u64::MAX;
+        pending_unchanged(&mut f, FlowError::CounterOverflow);
+        assert_eq!(f.work_context::<Probe>(work).unwrap().calls, 0);
+        assert_eq!(f.next_batch_identity, u64::MAX);
+    }
+    #[test]
+    fn second_acquire_entity_counter_overflow_rolls_back_every_reservation() {
+        let (mut f, work) = setup(Mode::Pair(false), 10, false);
+        let targets = f.work_context::<Probe>(work).unwrap().targets;
+        f.schedule_domain(work, DOMAIN, time(1), 0).unwrap();
+        let actual_created = f.created;
+        f.created = OPERATION_CAP - 1;
+        let world = f.world.snapshot();
+        let requests = f.requests.clone();
+        let reservations = f.pending_releases.clone();
+        let scheduled = f.scheduled;
+        let dispatch = f.step().unwrap().unwrap();
+        let probe = f.work_context::<Probe>(work).unwrap();
+        rejected(
+            &dispatch,
+            FlowError::CounterOverflow,
+            Some(probe.tickets[1]),
+        );
+        assert_eq!(probe.calls, 1);
+        assert_eq!(f.world.snapshot(), world);
+        assert_eq!(f.requests, requests);
+        assert_eq!(f.pending_releases, reservations);
+        assert_eq!(f.created, OPERATION_CAP - 1);
+        assert_eq!(f.scheduled, scheduled);
+        assert_eq!(f.next_batch_identity, 1);
+        for target in targets {
+            assert_eq!(f.work(target).unwrap().request, None);
+        }
+        f.created = actual_created;
+        let owner = f.work_context::<Probe>(work).unwrap().owner;
+        let resource = f.work_context::<Probe>(work).unwrap().resource;
+        let q = f.submit_work(resource, owner, targets[0], time(2)).unwrap();
+        let (mut control, cw) = setup(Mode::Empty, 10, false);
+        control.schedule_domain(cw, DOMAIN, time(1), 0).unwrap();
+        control.step().unwrap();
+        let c = control.work_context::<Probe>(cw).unwrap();
+        let (r, o, target) = (c.resource, c.owner, c.targets[0]);
+        let expected = control.submit_work(r, o, target, time(2)).unwrap();
+        assert_eq!(q, expected);
+        assert_eq!(
+            f.scheduler.peek_next().unwrap().id,
+            control.scheduler.peek_next().unwrap().id
+        );
+    }
+    #[test]
+    fn second_command_scheduler_and_deadline_counter_overflow_has_no_partial_ids() {
+        let (mut f, work) = setup(Mode::Pair(true), 10, false);
+        f.schedule_domain(work, DOMAIN, time(1), 0).unwrap();
+        f.scheduled = OPERATION_CAP - 2;
+        let world = f.world.snapshot();
+        let created = f.created;
+        let requests = f.requests.clone();
+        let dispatch = f.step().unwrap().unwrap();
+        let probe = f.work_context::<Probe>(work).unwrap();
+        rejected(
+            &dispatch,
+            FlowError::CounterOverflow,
+            Some(probe.tickets[1]),
+        );
+        assert_eq!(f.world.snapshot(), world);
+        assert_eq!(f.created, created);
+        assert_eq!(f.requests, requests);
+        assert_eq!(f.scheduled, OPERATION_CAP - 2);
+        // This is explicit pure-helper counter injection, not mutation of core-private Scheduler fields.
+        let (f, work) = setup(Mode::Empty, 10, false);
+        let probe = f.work_context::<Probe>(work).unwrap();
+        let mut sink = FlowCommandSink::new(17, FlowCallbackConfig::default());
+        sink.emit(acquire(probe, 0, None)).unwrap();
+        let bad = sink.emit(acquire(probe, 1, Some(time(2)))).unwrap();
+        let world = f.world.snapshot();
+        let stats = f.scheduler.stats();
+        let rejection = match f.plan_callback_batch(&sink, OPERATION_CAP - 2) {
+            Err(r) => r,
+            Ok(_) => panic!("pure counter boundary must reject"),
+        };
+        assert_eq!(rejection.error, FlowError::CounterOverflow);
+        assert_eq!(rejection.failed_ticket, Some(bad));
+        assert_eq!(f.world.snapshot(), world);
+        assert_eq!(f.scheduler.stats(), stats);
+        assert!(f.requests.is_empty());
+    }
+    #[test]
+    fn batch_time_and_foreign_forward_non_acquire_ticket_rejection_is_atomic() {
+        let (mut f, work) = setup(Mode::Past, 10, false);
+        f.schedule_domain(work, DOMAIN, time(1), 0).unwrap();
+        let world = f.world.snapshot();
+        let scheduled = f.scheduled;
+        let dispatch = f.step().unwrap().unwrap();
+        let ticket = f.work_context::<Probe>(work).unwrap().tickets[0];
+        rejected(&dispatch, FlowError::PastCommand, Some(ticket));
+        assert_eq!(f.world.snapshot(), world);
+        assert_eq!(f.scheduled, scheduled);
+        for invalid in 0..3 {
+            let (mut f, work) = setup(Mode::Empty, 10, false);
+            f.schedule_domain(work, DOMAIN, time(1), 0).unwrap();
+            let probe = f.work_context::<Probe>(work).unwrap();
+            let mut sink = FlowCommandSink::new(9, FlowCallbackConfig::default());
+            let bad = match invalid {
+                0 => {
+                    sink.emit(acquire(probe, 0, None)).unwrap();
+                    sink.emit(FlowOwnedCommand::Cancel {
+                        request: FlowRequestRef::Submitted(FlowCommandTicket {
+                            batch: 8,
+                            index: 0,
+                        }),
+                        at: time(1),
+                        scheduler_priority: 0,
+                    })
+                    .unwrap()
+                }
+                1 => {
+                    let bad = sink
+                        .emit(FlowOwnedCommand::Cancel {
+                            request: FlowRequestRef::Submitted(FlowCommandTicket {
+                                batch: 9,
+                                index: 1,
+                            }),
+                            at: time(1),
+                            scheduler_priority: 0,
+                        })
+                        .unwrap();
+                    sink.emit(acquire(probe, 0, None)).unwrap();
+                    bad
+                }
+                _ => {
+                    let first = sink
+                        .emit(FlowOwnedCommand::Domain {
+                            work,
+                            kind: DOMAIN,
+                            at: time(1),
+                            scheduler_priority: 0,
+                        })
+                        .unwrap();
+                    sink.emit(FlowOwnedCommand::Cancel {
+                        request: FlowRequestRef::Submitted(first),
+                        at: time(1),
+                        scheduler_priority: 0,
+                    })
+                    .unwrap()
+                }
+            };
+            let world = f.world.snapshot();
+            let preview = f.scheduler.peek_next();
+            let stats = f.scheduler.stats();
+            let created = f.created;
+            match f.admit_callback_batch(sink) {
+                FlowBatchReceipt::Rejected(r) => {
+                    assert_eq!(r.error, FlowError::InvalidCommandTicket);
+                    assert_eq!(r.failed_ticket, Some(bad));
+                }
+                _ => panic!("invalid reference"),
+            }
+            assert_eq!(f.world.snapshot(), world);
+            assert_eq!(f.scheduler.peek_next(), preview);
+            assert_eq!(f.scheduler.stats(), stats);
+            assert_eq!(f.created, created);
+            assert!(f.requests.is_empty());
+        }
+    }
+    #[test]
+    fn second_release_duplicate_reservation_rejection_restores_pending_set() {
+        let (mut f, work) = setup(Mode::ReleasePair, 10, false);
+        let c = f.work_context::<Probe>(work).unwrap();
+        let (owner, resource) = (c.owner, c.resource);
+        let q = f.submit(resource, owner, time(0)).unwrap();
+        f.step().unwrap();
+        let lease = f.request(q).unwrap().lease.unwrap();
+        f.registry
+            .store_mut::<WorkContext<Probe>>()
+            .unwrap()
+            .get_mut(work.0)
+            .unwrap()
+            .0
+            .lease = Some(lease);
+        f.schedule_domain(work, DOMAIN, time(1), 0).unwrap();
+        let reservations = f.pending_releases.clone();
+        let scheduled = f.scheduled;
+        let dispatch = f.step().unwrap().unwrap();
+        let probe = f.work_context::<Probe>(work).unwrap();
+        rejected(&dispatch, FlowError::InvalidLease, Some(probe.tickets[1]));
+        assert_eq!(probe.calls, 1);
+        assert_eq!(f.pending_releases, reservations);
+        assert_eq!(f.scheduled, scheduled);
+        assert_eq!(f.request(q).unwrap().lease, Some(lease));
+        f.release(lease, time(2)).unwrap();
+        assert!(f.pending_releases.contains(&lease));
+    }
+    fn old_count(context: &mut u32, _: &WorkProgress) {
+        *context += 1;
+    }
+    fn new_count(context: &mut u32, _: &FlowCallbackSnapshot, _: &mut FlowCommandSink) {
+        *context += 1;
+    }
+    fn rc_count(context: &mut Rc<Cell<u32>>, _: &FlowCallbackSnapshot, _: &mut FlowCommandSink) {
+        context.set(context.get() + 1);
+    }
+    fn old_rc_count(context: &mut Rc<Cell<u32>>, _: &WorkProgress) {
+        context.set(context.get() + 1);
+    }
+    fn rc_factory(template: &Rc<Cell<u32>>) -> Rc<Cell<u32>> {
+        template.set(template.get() + 1);
+        template.clone()
+    }
+    #[test]
+    fn legacy_and_continuation_tokens_aggregate_overflow_before_factory_or_cleanup() {
+        for cleanup in [false, true] {
+            let mut f = FlowRuntime::new();
+            let owner = f.spawn_actor().unwrap();
+            let r = f.create_resource(1).unwrap();
+            f.register_work_handlers(
+                "both",
+                WorkHandlers {
+                    on_cancel: Some(old_count),
+                    ..WorkHandlers::default()
+                },
+            )
+            .unwrap();
+            f.register_work_continuations(
+                "both",
+                FlowContinuations {
+                    on_cancel: Some(new_count),
+                    ..FlowContinuations::default()
+                },
+            )
+            .unwrap();
+            let work = f.create_work(owner, duration(10), "both", 0u32).unwrap();
+            let q = f.acquire(r).owner(owner).timed_work(work).submit().unwrap();
+            f.step().unwrap();
+            if cleanup {
+                f.despawn_actor(owner).unwrap();
+            } else {
+                f.cancel(q, time(1)).unwrap();
+            }
+            f.scheduled = OPERATION_CAP - 1;
+            let world = f.world.snapshot();
+            let progress = f.work_progress(work).unwrap();
+            pending_unchanged(&mut f, FlowError::CounterOverflow);
+            assert_eq!(f.world.snapshot(), world);
+            assert_eq!(f.work_progress(work).unwrap(), progress);
+            assert_eq!(*f.work_context::<u32>(work).unwrap(), 0);
+            assert_eq!(f.request(q).unwrap().state, RequestState::Active);
+        }
+        let mut f = FlowRuntime::new();
+        let owner = f.spawn_actor().unwrap();
+        let r = f.create_resource(1).unwrap();
+        let calls = Rc::new(Cell::new(0));
+        f.register_work_handlers(
+            "restart",
+            WorkHandlers {
+                on_restart: Some(old_rc_count),
+                ..WorkHandlers::default()
+            },
+        )
+        .unwrap();
+        f.register_work_continuations(
+            "restart",
+            FlowContinuations {
+                on_restart: Some(rc_count),
+                ..FlowContinuations::default()
+            },
+        )
+        .unwrap();
+        let low = f
+            .create_restartable_work(owner, duration(5), "restart", calls.clone(), rc_factory)
+            .unwrap();
+        let low_q = f
+            .acquire(r)
+            .owner(owner)
+            .timed_work(low)
+            .priority(9)
+            .preemptible(PreemptionStrategy::Restart)
+            .submit()
+            .unwrap();
+        f.step().unwrap();
+        let urgent = f.create_work(owner, duration(1), "urgent", ()).unwrap();
+        f.acquire(r)
+            .owner(owner)
+            .at(time(1))
+            .timed_work(urgent)
+            .priority(1)
+            .can_preempt(true)
+            .submit()
+            .unwrap();
+        f.step().unwrap();
+        assert_eq!(calls.get(), 1);
+        f.scheduled = OPERATION_CAP - 2;
+        pending_unchanged(&mut f, FlowError::CounterOverflow);
+        assert_eq!(calls.get(), 1);
+        assert_eq!(f.request(low_q).unwrap().state, RequestState::Suspended);
+    }
+    #[test]
+    fn cap_poison_overrides_later_validation_and_never_grows_vector() {
+        let (mut f, work) = setup(Mode::Empty, 10, false);
+        let stats = f.scheduler.stats();
+        let world = f.world.snapshot();
+        let mut sink = FlowCommandSink::new(
+            0,
+            FlowCallbackConfig {
+                max_callback_commands: NonZeroUsize::new(2).unwrap(),
+            },
+        );
+        sink.emit(FlowOwnedCommand::Domain {
+            work,
+            kind: DOMAIN,
+            at: time(1),
+            scheduler_priority: 0,
+        })
+        .unwrap();
+        sink.emit(FlowOwnedCommand::Domain {
+            work,
+            kind: EventKind::custom(4000),
+            at: time(1),
+            scheduler_priority: 0,
+        })
+        .unwrap();
+        for _ in 0..3 {
+            assert_eq!(
+                sink.emit(FlowOwnedCommand::Domain {
+                    work,
+                    kind: DOMAIN,
+                    at: time(1),
+                    scheduler_priority: 0
+                })
+                .unwrap_err(),
+                FlowError::CallbackBatchLimitExceeded
+            );
+        }
+        assert_eq!(sink.commands.len(), 2);
+        assert_eq!(sink.next_index, 2);
+        match f.admit_callback_batch(sink) {
+            FlowBatchReceipt::Rejected(r) => {
+                assert_eq!(r.error, FlowError::CallbackBatchLimitExceeded);
+                assert_eq!(r.failed_ticket, None);
+            }
+            _ => panic!("poison ignored"),
+        }
+        assert_eq!(f.scheduler.stats(), stats);
+        assert_eq!(f.world.snapshot(), world);
+        let mut sink = FlowCommandSink::new(0, FlowCallbackConfig::default());
+        sink.next_index = usize::MAX;
+        for _ in 0..2 {
+            assert_eq!(
+                sink.emit(FlowOwnedCommand::Domain {
+                    work,
+                    kind: DOMAIN,
+                    at: time(1),
+                    scheduler_priority: 0
+                })
+                .unwrap_err(),
+                FlowError::CounterOverflow
+            );
+        }
+        assert!(sink.commands.is_empty());
+        assert_eq!(sink.poison, Some(FlowError::CounterOverflow));
+    }
+    #[test]
+    fn stale_context_or_work_delivery_zero_cost_and_unregistered_domain_defensive_error() {
+        for absent in 0..5 {
+            let (mut f, work) = setup(Mode::Empty, 1, false);
+            f.schedule_domain(work, DOMAIN, time(1), 0).unwrap();
+            f.schedule_domain(work, DOMAIN, time(1), 0).unwrap();
+            f.step().unwrap();
+            assert_eq!(f.budget_consumed, 1);
+            let owner = f.work(work).unwrap().owner;
+            match absent {
+                0 => {
+                    f.registry.remove::<WorkContext<Probe>>(work.0);
+                }
+                1 => {
+                    f.world.despawn(work.0);
+                }
+                2 => {
+                    f.works.remove(&work);
+                }
+                3 => {
+                    f.world.despawn(owner);
+                }
+                _ => {
+                    f.domain_hooks.remove(&("probe".to_owned(), DOMAIN));
+                }
+            }
+            let d = f.step().unwrap().unwrap();
+            assert!(d.records.is_empty());
+            assert!(d.callback_batches.is_empty());
+            assert_eq!(f.budget_consumed, 1);
+            assert!(f.budget_halt.is_none());
+            assert_eq!(
+                d.error,
+                if absent == 4 {
+                    Some(FlowError::UnregisteredDomainEvent)
+                } else {
+                    None
+                }
+            );
+            if absent != 0 {
+                assert_eq!(
+                    f.registry
+                        .get::<WorkContext<Probe>>(work.0)
+                        .unwrap()
+                        .0
+                        .calls,
+                    1
+                );
+            }
+        }
+        let mut f = FlowRuntime::with_config(FlowConfig {
+            max_same_tick_flow_transitions: NonZeroU64::new(2).unwrap(),
+        });
+        let owner = f.spawn_actor().unwrap();
+        let r = f.create_resource(1).unwrap();
+        let calls: Rc<Cell<u32>> = Rc::new(Cell::new(0));
+        f.register_domain_hook("stale", DOMAIN, rc_count).unwrap();
+        f.register_work_continuations(
+            "stale",
+            FlowContinuations {
+                on_cancel: Some(rc_count),
+                ..FlowContinuations::default()
+            },
+        )
+        .unwrap();
+        let work = f
+            .create_work(owner, duration(10), "stale", calls.clone())
+            .unwrap();
+        let q = f.acquire(r).owner(owner).timed_work(work).submit().unwrap();
+        f.step().unwrap();
+        f.schedule_domain(work, DOMAIN, time(1), -1).unwrap();
+        f.cancel(q, time(1)).unwrap();
+        f.step().unwrap();
+        f.step().unwrap();
+        assert_eq!(f.budget_consumed, 2);
+        assert_eq!(calls.get(), 1);
+        f.registry.remove::<WorkContext<Rc<Cell<u32>>>>(work.0);
+        let d = f.step().unwrap().unwrap();
+        assert!(d.records.is_empty());
+        assert!(d.callback_batches.is_empty());
+        assert_eq!(f.budget_consumed, 2);
+        assert_eq!(calls.get(), 1);
+    }
+    fn probe_factory(template: &(Rc<Cell<u32>>, Probe)) -> Probe {
+        template.0.set(template.0.get() + 1);
+        let mut probe = template.1.clone();
+        probe.generation = template.0.get();
+        probe
+    }
+    #[test]
+    fn completed_context_snapshot_and_restart_factory_nonrollback_delivery() {
+        let (mut f, work) = setup(Mode::Duplicate, 100, true);
+        let c = f.work_context::<Probe>(work).unwrap();
+        let (owner, r) = (c.owner, c.resource);
+        f.acquire(r).owner(owner).timed_work(work).submit().unwrap();
+        f.step().unwrap();
+        let complete = f.step().unwrap().unwrap();
+        let notify = f.step().unwrap().unwrap();
+        let c = f.work_context::<Probe>(work).unwrap();
+        rejected(&notify, FlowError::InvalidWork, Some(c.tickets[1]));
+        assert_eq!(c.calls, 1);
+        assert_eq!(c.origin, Some(complete.event));
+        assert_eq!(c.ordinal, Some(0));
+        assert_eq!(c.progress[0].state, WorkState::Completed);
+        assert_eq!(c.progress[0].cumulative_busy, duration(1));
+        assert!(f.step().unwrap().is_none());
+        let mut f = FlowRuntime::new();
+        let owner = f.spawn_actor().unwrap();
+        let r = f.create_resource(1).unwrap();
+        let targets = [
+            f.create_work(owner, duration(2), "target-a", ()).unwrap(),
+            f.create_work(owner, duration(2), "target-b", ()).unwrap(),
+        ];
+        f.register_work_continuations(
+            "restart-probe",
+            FlowContinuations {
+                on_restart: Some(callback),
+                ..FlowContinuations::default()
+            },
+        )
+        .unwrap();
+        let counter = Rc::new(Cell::new(0));
+        let seed = Probe {
+            mode: Mode::Duplicate,
+            owner,
+            resource: r,
+            targets,
+            lease: None,
+            calls: 0,
+            generation: 0,
+            tickets: vec![],
+            progress: vec![],
+            origin: None,
+            ordinal: None,
+        };
+        let work = f
+            .create_restartable_work(
+                owner,
+                duration(5),
+                "restart-probe",
+                (counter.clone(), seed),
+                probe_factory,
+            )
+            .unwrap();
+        let q = f
+            .acquire(r)
+            .owner(owner)
+            .timed_work(work)
+            .priority(9)
+            .preemptible(PreemptionStrategy::Restart)
+            .submit()
+            .unwrap();
+        f.step().unwrap();
+        let urgent = f.create_work(owner, duration(1), "urgent", ()).unwrap();
+        f.acquire(r)
+            .owner(owner)
+            .at(time(1))
+            .timed_work(urgent)
+            .priority(1)
+            .can_preempt(true)
+            .submit()
+            .unwrap();
+        f.step().unwrap();
+        let restart = f.step().unwrap().unwrap();
+        assert_eq!(restart.at, time(2));
+        let notify = f.step().unwrap().unwrap();
+        let c = f.work_context::<Probe>(work).unwrap();
+        rejected(&notify, FlowError::PastCommand, Some(c.tickets[0]));
+        assert_eq!(counter.get(), 2);
+        assert_eq!(c.generation, 2);
+        assert_eq!(c.calls, 1);
+        assert_eq!(c.origin, Some(restart.event));
+        assert_eq!(c.ordinal, Some(1));
+        assert_eq!(c.progress[0].state, WorkState::Active);
+        assert_eq!(c.progress[0].cumulative_busy, duration(1));
+        assert_eq!(c.progress[0].remaining, duration(5));
+        let stale = f.step().unwrap().unwrap();
+        assert_eq!(stale.at, time(5));
+        assert!(stale.records.is_empty());
+        assert_eq!(f.work_context::<Probe>(work).unwrap().calls, 1);
+        let done = f.step().unwrap().unwrap();
+        assert_eq!(done.at, time(7));
+        assert_eq!(f.request(q).unwrap().state, RequestState::Completed);
+        assert_eq!(counter.get(), 2);
+    }
+    #[test]
+    fn committed_batch_receipt_actual_event_and_deadline_order() {
+        let (mut f, work) = setup(Mode::Pair(true), 100, false);
+        f.schedule_domain(work, DOMAIN, time(1), 0).unwrap();
+        let delivery = f.step().unwrap().unwrap();
+        let (first, second, deadline, qa, qb) = match &delivery.callback_batches[0] {
+            FlowBatchReceipt::Accepted(v) => {
+                assert_eq!(v.len(), 2);
+                assert_eq!(v[0].event, EventId::new(1, 1));
+                assert_eq!(v[1].event, EventId::new(2, 2));
+                assert_eq!(v[0].deadline_event, None);
+                assert_eq!(v[1].deadline_event, Some(EventId::new(3, 3)));
+                (
+                    v[0].event,
+                    v[1].event,
+                    v[1].deadline_event.unwrap(),
+                    v[0].request.unwrap(),
+                    v[1].request.unwrap(),
+                )
+            }
+            _ => panic!("valid planned pair"),
+        };
+        assert_eq!(f.request(qa).unwrap().state, RequestState::Pending);
+        assert_eq!(f.request(qb).unwrap().state, RequestState::Pending);
+        let d = f.step().unwrap().unwrap();
+        assert_eq!(d.event, first);
+        assert_eq!(
+            d.records.iter().map(|r| r.transition).collect::<Vec<_>>(),
+            vec![LifecycleTransition::Queued, LifecycleTransition::Granted]
+        );
+        let d = f.step().unwrap().unwrap();
+        assert_eq!(d.event, second);
+        assert_eq!(
+            d.records.iter().map(|r| r.transition).collect::<Vec<_>>(),
+            vec![LifecycleTransition::Queued]
+        );
+        let d = f.step().unwrap().unwrap();
+        assert_eq!(d.event, deadline);
+        assert_eq!(d.at, time(2));
+        assert_eq!(
+            d.records.iter().map(|r| r.transition).collect::<Vec<_>>(),
+            vec![LifecycleTransition::TimedOut]
+        );
+        let d = f.step().unwrap().unwrap();
+        assert_eq!(d.at, time(3));
+        assert_eq!(f.request(qa).unwrap().state, RequestState::Completed);
+        assert_eq!(f.request(qb).unwrap().state, RequestState::TimedOut);
+        assert!(f.step().unwrap().is_none());
     }
 }
