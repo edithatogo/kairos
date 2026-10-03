@@ -1,0 +1,8 @@
+{
+  "head": "7a432ab46c3bfa5f3917f1cce0f4545fac39f649",
+  "command": "PATH=/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin:$PATH RUSTC=/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc RUSTDOC=/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc RUSTUP_TOOLCHAIN=1.76.0 CARGO_NET_OFFLINE=true cargo test -p kairo-ecs-pdes --all-targets --all-features --locked",
+  "log": "artifacts/track48-explicit-msrv/test-cargo-1.76.log",
+  "status": "interrupted by SIGINT before bench target completed; no whole-command pass claimed",
+  "reason": "--all-targets launched benches/production.rs; switched to requested all-tests lane without benchmark targets",
+  "observed": "Rust 1.76 unit and integration test suites had reported passing before bench target launch; command remained incomplete"
+}

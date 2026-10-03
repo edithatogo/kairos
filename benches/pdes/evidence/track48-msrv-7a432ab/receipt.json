@@ -1,0 +1,87 @@
+{
+  "head": "7a432ab46c3bfa5f3917f1cce0f4545fac39f649",
+  "working_directory": "/private/tmp/kairos-track48-optimistic",
+  "tracked_checkout_status": "clean",
+  "source_head_sha256": {
+    "Cargo.toml": "183584f511603be2d573072f66a97eff936238fde31a0b7bbde12c1d815499d2",
+    "Cargo.lock": "2c47e509672c3ff89b5b2bccd42b5cd3258389a69edb67a156a910ffc74f979a",
+    "crates/kairo-ecs-pdes/Cargo.toml": "75acfa36b9deed08213aa8658648c3f87234a974b6aceb0a18bc0e2677174329",
+    "crates/kairo-ecs-pdes/src/lib.rs": "abe10eab1ee5aae614505d926ac0c8d68b1df28c37903ed53b429de79f65cc10",
+    "crates/kairo-ecs-pdes/src/optimistic.rs": "f728d1338ed6846d3da6f4f86734347e5cd8a041efb2b1b5f0271f98d2ea1b89",
+    "crates/kairo-ecs-pdes/src/generation_bitset.rs": "eb8a15153ac95666a3962e895ea6bfbbeb738191fc4b7a83c763ed00ae725a90",
+    "crates/kairo-ecs-pdes/tests/optimistic_runtime.rs": "b910c0dcb23de87f39f36eb83089430a3e2b639fa1b62eb199873893db4fc2f3",
+    "crates/kairo-ecs-pdes/tests/optimistic_runtime_heldout.rs": "cfe8bfbc659cc77c654fb9982be0129c50d9fbda923df4780c3d56816da0ae89",
+    "crates/kairo-ecs-pdes/tests/optimistic_bitset_heldout.rs": "116f0beaae1a6ba3d79cf54fefb2a44f3616c31fe2ba5e5bc81f8db8bcad0972",
+    "crates/kairo-ecs-pdes/tests/track47_conservative_runtime.rs": "f17b07f8d6f559b6ce81b8e8b5583f14b587de475f73e561439d4acfc50ce943",
+    "crates/kairo-ecs-pdes/tests/track48_rollback_regressions.rs": "a841c06bf8c5ac0dd8834de8639000c126c9af212a04bc9206a10cff41472788"
+  },
+  "claim_input_sha256": {
+    "AGENTS.md": "e594bd57dfd8b2257fa89cf21510a0658d1356569d42f2f8ecd607607053d5a5",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/agent-contract.md": "de4a60b34fc45d300af9a5a4019591f9a5834599a67ac2b11f37591f5cfe81fc",
+    "docs/pdes/optimistic-runtime-contract.md": "0b82848eb7e2937bf03788b4f70e7deeb998bf48161fbc6197ecc61fd00eabd1"
+  },
+  "cargo_1_76": {
+    "path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo",
+    "version": "cargo 1.76.0 (c84b36747 2024-01-18)"
+  },
+  "rustc_1_76": {
+    "path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc",
+    "version_verbose": "rustc 1.76.0 (07dca489a 2024-02-04)\nbinary: rustc\ncommit-hash: 07dca489ac2d933c78d3c5158e3f43beefeb02ce\ncommit-date: 2024-02-04\nhost: aarch64-apple-darwin\nrelease: 1.76.0\nLLVM version: 17.0.6",
+    "sha256": "e586e78466e2baca360fdc6f29007d2215a40a39dda99935dda887b850010153"
+  },
+  "rustdoc_1_76": {
+    "path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc",
+    "version": "rustdoc 1.76.0 (07dca489a 2024-02-04)",
+    "sha256": "ef0748426bbc98a393768dd04b55eab77ac1e7db8a37fcc81c5be836655467a7"
+  },
+  "cargo_rustc_info": {
+    "path": "artifacts/track48-explicit-msrv/target-tests-1.76/.rustc_info.json",
+    "sha256": "4950cd0d80e24e6c5de2d881e2e254ff9406a6b4390a2a8c012922c6d5db477e",
+    "fingerprint": 7280844259240485481,
+    "reported_rustc": "rustc 1.76.0 (07dca489a 2024-02-04)\nbinary: rustc\ncommit-hash: 07dca489ac2d933c78d3c5158e3f43beefeb02ce\ncommit-date: 2024-02-04\nhost: aarch64-apple-darwin\nrelease: 1.76.0\nLLVM version: 17.0.6",
+    "reported_sysroot_block": "___\nlib___.rlib\nlib___.dylib\nlib___.dylib\nlib___.a\nlib___.dylib\n/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin\noff\npacked\nunpacked\n___\ndebug_assertions\npanic=\"unwind\"\nproc_macro\ntarget_arch=\"aarch64\"\ntarget_endian=\"little\"\ntarget_env=\"\"\ntarget_family=\"unix\"\ntarget_feature=\"aes\"\ntarget_feature=\"crc\"\ntarget_feature=\"dit\"\ntarget_feature=\"dotprod\"\ntarget_feature=\"dpb\"\ntarget_feature=\"dpb2\"\ntarget_feature=\"fcma\"\ntarget_feature=\"fhm\"\ntarget_feature=\"flagm\"\ntarget_feature=\"fp16\"\ntarget_feature=\"frintts\"\ntarget_feature=\"jsconv\"\ntarget_feature=\"lor\"\ntarget_feature=\"lse\"\ntarget_feature=\"neon\"\ntarget_feature=\"paca\"\ntarget_feature=\"pacg\"\ntarget_feature=\"pan\"\ntarget_feature=\"pmuv3\"\ntarget_feature=\"ras\"\ntarget_feature=\"rcpc\"\ntarget_feature=\"rcpc2\"\ntarget_feature=\"rdm\"\ntarget_feature=\"sb\"\ntarget_feature=\"sha2\"\ntarget_feature=\"sha3\"\ntarget_feature=\"ssbs\"\ntarget_feature=\"vh\"\ntarget_has_atomic=\"128\"\ntarget_has_atomic=\"16\"\ntarget_has_atomic=\"32\"\ntarget_has_atomic=\"64\"\ntarget_has_atomic=\"8\"\ntarget_has_atomic=\"ptr\"\ntarget_os=\"macos\"\ntarget_pointer_width=\"64\"\ntarget_vendor=\"apple\"\nunix"
+  },
+  "environment": {
+    "PATH_prefix": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin",
+    "RUSTC": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc",
+    "RUSTDOC": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc",
+    "RUSTUP_TOOLCHAIN": "1.76.0",
+    "CARGO_NET_OFFLINE": "true"
+  },
+  "commands": [
+    {
+      "command": "PATH=\"/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin:$PATH\" RUSTC=\"/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc\" RUSTDOC=\"/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc\" RUSTUP_TOOLCHAIN=1.76.0 CARGO_NET_OFFLINE=true CARGO_TARGET_DIR=artifacts/track48-explicit-msrv/target-tests-1.76 /Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo test -p kairo-ecs-pdes --features pdes,time-warp --locked",
+      "cargo": "Cargo 1.76.0",
+      "rustc": "rustc 1.76.0 (07dca489a 2024-02-04)",
+      "exit": 0,
+      "log": "artifacts/track48-explicit-msrv/test-cargo-1.76-targeted.log",
+      "target_dir": "artifacts/track48-explicit-msrv/target-tests-1.76",
+      "log_sha256": "c9bca00d9a453414809181c1950294a4189169afd601ce77d77350dfd3078b01"
+    },
+    {
+      "command": "PATH=\"/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin:$PATH\" RUSTC=\"/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc\" RUSTDOC=\"/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc\" RUSTUP_TOOLCHAIN=1.76.0 CARGO_NET_OFFLINE=true CARGO_TARGET_DIR=artifacts/track48-explicit-msrv/target-cargo-1.76 /Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo test -p kairo-ecs-pdes --all-targets --all-features --locked",
+      "cargo": "Cargo 1.76.0",
+      "status": "interrupted by SIGINT when production bench target launched; not a completed test pass",
+      "log": "artifacts/track48-explicit-msrv/test-cargo-1.76.log",
+      "interruption_receipt": "artifacts/track48-explicit-msrv/all-targets-interruption.json"
+    },
+    {
+      "command": "PATH=\"/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin:$PATH\" RUSTC=\"/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc\" RUSTDOC=\"/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc\" RUSTUP_TOOLCHAIN=1.76.0 CARGO_NET_OFFLINE=true CARGO_TARGET_DIR=artifacts/track48-explicit-msrv/target /opt/homebrew/bin/cargo test -p kairo-ecs-pdes --all-targets --all-features --locked",
+      "cargo": "Homebrew Cargo 1.99.0",
+      "rustc": "rustc 1.76.0 (07dca489a 2024-02-04)",
+      "exit": 101,
+      "log": "artifacts/track48-explicit-msrv/test.log",
+      "result": "Cargo 1.99 emitted --check-cfg; rustc 1.76 rejected it without -Z unstable-options; not a crate-source failure"
+    }
+  ],
+  "outcome": "matching Cargo 1.76/Rustc 1.76 targeted pdes,time-warp package test suite passed; read-only evidence only",
+  "attempt_log_sha256": {
+    "artifacts/track48-explicit-msrv/test-cargo-1.76-targeted.log": "c9bca00d9a453414809181c1950294a4189169afd601ce77d77350dfd3078b01",
+    "artifacts/track48-explicit-msrv/test-cargo-1.76.log": "f1f4f25eb8479b6922c57eb47b2240a178633d396bbcf1a29366dbce2681a1e6",
+    "artifacts/track48-explicit-msrv/test.log": "b487c9f807fb58e01e8382006ae286b46d1d3ed8b1b2369931d1068c75de58f2"
+  },
+  "receipt_artifact_sha256": {
+    "artifacts/track48-explicit-msrv/all-targets-interruption.json": "012c9b9f77a7eb7eb5c44d2391acf254c64622b5e1f604df4d78a36831817b9a",
+    "artifacts/track48-explicit-msrv/toolchain.json": "6f446ee5b3f7a51feebe0162ed81f0a5bfb4a64042e57fc03488b3883fd7a156"
+  }
+}

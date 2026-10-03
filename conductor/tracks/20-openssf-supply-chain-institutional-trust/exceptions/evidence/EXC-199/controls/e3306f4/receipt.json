@@ -1,0 +1,68 @@
+{
+  "source": "e3306f4ca3e560b81725a1b07a275d98643caefe",
+  "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+  "checks": [
+    {
+      "label": "patch-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_http_cache_patch.py",
+        "-v"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "122f7d4c33c514b66511afcd26b70ee87dabbc73fbbf4066ee45d01cc8749673"
+    },
+    {
+      "label": "resolution",
+      "argv": [
+        "node",
+        "scripts/bootstrap-node-tools/validate_npm_cli.mjs"
+      ],
+      "exit": 0,
+      "stdout_sha256": "1c9defa7cd77e48f778b7650cba91941cb124138a512901a43bd0edd6eb5ed9e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "behavior-top",
+      "argv": [
+        "node",
+        "tests/http-cache-security-regression.mjs"
+      ],
+      "exit": 0,
+      "stdout_sha256": "6f96f35580b655b8b801055955203c3393b8ed633ee3872eaa7fa95df17d949e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "behavior-npm",
+      "argv": [
+        "node",
+        "tests/http-cache-security-regression.mjs",
+        "scripts/bootstrap-node-tools/node_modules/npm/node_modules/http-cache-semantics/index.js"
+      ],
+      "exit": 0,
+      "stdout_sha256": "6f96f35580b655b8b801055955203c3393b8ed633ee3872eaa7fa95df17d949e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "signatures",
+      "argv": [
+        "node",
+        "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+        "audit",
+        "signatures",
+        "--prefix",
+        "scripts/bootstrap-node-tools"
+      ],
+      "exit": 0,
+      "stdout_sha256": "7ba2d2ab1168d6c9e170cd08c524138336f45e930fdc6eea61d9eafb5f3d8c05",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

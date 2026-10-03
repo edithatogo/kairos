@@ -1,0 +1,92 @@
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.21
+   Compiling serde_json v1.0.151
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-types)
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.0
+   Compiling kairo-ecs-core v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-core)
+   Compiling kairo-ecs-pdes v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-pdes)
+error[E0432]: unresolved imports `kairo_ecs_pdes::LogicalEventId`, `kairo_ecs_pdes::OptimisticError`, `kairo_ecs_pdes::OptimisticLimits`, `kairo_ecs_pdes::OptimisticMessage`, `kairo_ecs_pdes::OptimisticMessageKind`, `kairo_ecs_pdes::OptimisticProcess`, `kairo_ecs_pdes::OptimisticRuntime`, `kairo_ecs_pdes::OptimisticStateError`
+  --> crates/kairo-ecs-pdes/tests/optimistic_runtime.rs:4:5
+   |
+ 4 |     LogicalEventId, LpId, OptimisticError, OptimisticLimits, OptimisticMessage,
+   |     ^^^^^^^^^^^^^^        ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^ no `OptimisticMessage` in the root
+   |     |                     |                |
+   |     |                     |                no `OptimisticLimits` in the root
+   |     |                     no `OptimisticError` in the root
+   |     no `LogicalEventId` in the root
+ 5 |     OptimisticMessageKind, OptimisticProcess, OptimisticRuntime, OptimisticStateError,
+   |     ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^ no `OptimisticStateError` in the root
+   |     |                      |                  |
+   |     |                      |                  no `OptimisticRuntime` in the root
+   |     |                      no `OptimisticProcess` in the root
+   |     no `OptimisticMessageKind` in the root
+   |
+note: found an item that was configured out
+  --> crates/kairo-ecs-pdes/src/lib.rs:19:5
+   |
+17 | #[cfg(feature = "time-warp")]
+   |       --------------------- the item is gated behind the `time-warp` feature
+18 | pub use optimistic::{
+19 |     LogicalEventId, OptimisticError, OptimisticEventOrderKey, OptimisticFossilReport,
+   |     ^^^^^^^^^^^^^^
+note: found an item that was configured out
+  --> crates/kairo-ecs-pdes/src/lib.rs:19:21
+   |
+17 | #[cfg(feature = "time-warp")]
+   |       --------------------- the item is gated behind the `time-warp` feature
+18 | pub use optimistic::{
+19 |     LogicalEventId, OptimisticError, OptimisticEventOrderKey, OptimisticFossilReport,
+   |                     ^^^^^^^^^^^^^^^
+note: found an item that was configured out
+  --> crates/kairo-ecs-pdes/src/lib.rs:20:5
+   |
+17 | #[cfg(feature = "time-warp")]
+   |       --------------------- the item is gated behind the `time-warp` feature
+...
+20 |     OptimisticLimits, OptimisticMessage, OptimisticMessageKind, OptimisticProcess,
+   |     ^^^^^^^^^^^^^^^^
+note: found an item that was configured out
+  --> crates/kairo-ecs-pdes/src/lib.rs:20:23
+   |
+17 | #[cfg(feature = "time-warp")]
+   |       --------------------- the item is gated behind the `time-warp` feature
+...
+20 |     OptimisticLimits, OptimisticMessage, OptimisticMessageKind, OptimisticProcess,
+   |                       ^^^^^^^^^^^^^^^^^
+note: found an item that was configured out
+  --> crates/kairo-ecs-pdes/src/lib.rs:20:42
+   |
+17 | #[cfg(feature = "time-warp")]
+   |       --------------------- the item is gated behind the `time-warp` feature
+...
+20 |     OptimisticLimits, OptimisticMessage, OptimisticMessageKind, OptimisticProcess,
+   |                                          ^^^^^^^^^^^^^^^^^^^^^
+note: found an item that was configured out
+  --> crates/kairo-ecs-pdes/src/lib.rs:20:65
+   |
+17 | #[cfg(feature = "time-warp")]
+   |       --------------------- the item is gated behind the `time-warp` feature
+...
+20 |     OptimisticLimits, OptimisticMessage, OptimisticMessageKind, OptimisticProcess,
+   |                                                                 ^^^^^^^^^^^^^^^^^
+note: found an item that was configured out
+  --> crates/kairo-ecs-pdes/src/lib.rs:21:28
+   |
+17 | #[cfg(feature = "time-warp")]
+   |       --------------------- the item is gated behind the `time-warp` feature
+...
+21 |     OptimisticRunProgress, OptimisticRuntime, OptimisticRuntimeReport, OptimisticStateError,
+   |                            ^^^^^^^^^^^^^^^^^
+note: found an item that was configured out
+  --> crates/kairo-ecs-pdes/src/lib.rs:21:72
+   |
+17 | #[cfg(feature = "time-warp")]
+   |       --------------------- the item is gated behind the `time-warp` feature
+...
+21 |     OptimisticRunProgress, OptimisticRuntime, OptimisticRuntimeReport, OptimisticStateError,
+   |                                                                        ^^^^^^^^^^^^^^^^^^^^
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `kairo-ecs-pdes` (test "optimistic_runtime") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

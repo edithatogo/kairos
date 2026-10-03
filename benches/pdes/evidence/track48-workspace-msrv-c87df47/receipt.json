@@ -1,0 +1,48 @@
+{
+  "source_head": "c87df4770877da36fdb5ce0507eb2e45c4073522",
+  "source_state_before_build": "clean tracked/untracked Git status",
+  "source_hashes": {
+    "Cargo.lock": "2c47e509672c3ff89b5b2bccd42b5cd3258389a69edb67a156a910ffc74f979a",
+    "Cargo.toml": "183584f511603be2d573072f66a97eff936238fde31a0b7bbde12c1d815499d2",
+    "rust-toolchain.toml": "8a7c4635d5100b3006ddc92cffe0a579f4c326b651d95d1fe956094675484716"
+  },
+  "command": "cargo check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked",
+  "resolved_toolchain": {
+    "cargo_path": "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo",
+    "cargo_sha256": "bdb93a31345287f3dc0841af1e0a59de07cf840a764740d9c739a29c6a89baeb",
+    "cargo_version": "cargo 1.76.0 (c84b36747 2024-01-18)",
+    "rustc_path": "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc",
+    "rustc_sha256": "e586e78466e2baca360fdc6f29007d2215a40a39dda99935dda887b850010153",
+    "rustc_verbose": "rustc 1.76.0 (07dca489a 2024-02-04)\nbinary: rustc\ncommit-hash: 07dca489ac2d933c78d3c5158e3f43beefeb02ce\ncommit-date: 2024-02-04\nhost: aarch64-apple-darwin\nrelease: 1.76.0\nLLVM version: 17.0.6",
+    "rustdoc_path": "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc",
+    "rustdoc_sha256": "ef0748426bbc98a393768dd04b55eab77ac1e7db8a37fcc81c5be836655467a7",
+    "rustdoc_version": "rustdoc 1.76.0 (07dca489a 2024-02-04)",
+    "cargo_rustc_sysroot_from_info": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin",
+    "cargo_realpath": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo",
+    "rustc_realpath": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc",
+    "rustdoc_realpath": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc"
+  },
+  "environment": {
+    "RUSTUP_TOOLCHAIN": "1.76.0",
+    "RUSTC": "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc",
+    "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc",
+    "CARGO_TARGET_DIR": "/private/tmp/kairos-track48-optimistic/artifacts/track48-workspace-msrv/target-retry",
+    "PATH_prefix": "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin"
+  },
+  "exit_status": 0,
+  "log": {
+    "path": "/private/tmp/kairos-track48-optimistic/artifacts/track48-workspace-msrv/cargo-check.log",
+    "sha256": "4777c823552013181a42e33738e61a59888adad703fce4ea4b8e768904cfe53c"
+  },
+  "rustc_info": {
+    "path": "/private/tmp/kairos-track48-optimistic/artifacts/track48-workspace-msrv/target-retry/.rustc_info.json",
+    "sha256": "583c96493aa78965f50eb22919f77faca9381026075fb9206f4ae57a668fc34b",
+    "rustc_verbose_output_present": true,
+    "rustc_sysroot_output_present": true
+  },
+  "toolchain_capture": {
+    "path": "/private/tmp/kairos-track48-optimistic/artifacts/track48-workspace-msrv/toolchain.txt",
+    "sha256": "b69fa7dd9bf79031f63e46db3fb7e27eb1fe614fcc5df1a2b75579a187d0c2f5"
+  },
+  "attempt_note": "The first run emitted Finished but a zsh wrapper could not assign its reserved variable `status`, so its process exit was not recorded. A second run used bash, a fresh target-retry directory, and captured exit 0; this receipt describes only that independently captured run."
+}

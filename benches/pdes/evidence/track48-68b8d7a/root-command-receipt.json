@@ -1,0 +1,35 @@
+[
+  {
+    "command": [
+      "python3",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "benches/pdes",
+      "-p",
+      "test_collect_time_warp_evidence.py",
+      "-v"
+    ],
+    "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+    "head": "68b8d7a311b7acaa099a0f1c4aec4933f4b98a23",
+    "exit_code": 0,
+    "duration_seconds": 1.6756908893585205,
+    "log": "collector-tests.log",
+    "log_sha256": "0d14701b5ed8f4f289dcbe3bb6c321ce749d0942bd564978c04de287f36d8c4d"
+  },
+  {
+    "command": [
+      "python3",
+      "-B",
+      "benches/pdes/collect_time_warp_evidence.py"
+    ],
+    "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+    "head": "68b8d7a311b7acaa099a0f1c4aec4933f4b98a23",
+    "exit_code": 0,
+    "duration_seconds": 13.924909114837646,
+    "log": "strict-collector.log",
+    "log_sha256": "16dce9bafa1840f300dad6545acfd0f60f73b6a01df75c3f9f11926a53641054"
+  }
+]

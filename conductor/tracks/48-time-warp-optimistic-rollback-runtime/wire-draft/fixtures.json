@@ -1,0 +1,194 @@
+{
+  "status": "draft_reference_only",
+  "seed": null,
+  "messages": {
+    "old": {
+      "kind": "positive",
+      "source_lp": 0,
+      "dest_lp": 1,
+      "tick": "10",
+      "logical_id": {
+        "kind": "root",
+        "source_lp": 0,
+        "sequence": "1"
+      },
+      "authority_epoch": "7",
+      "incarnation": "1",
+      "payload_hex": "00ff80"
+    },
+    "replacement": {
+      "kind": "positive",
+      "source_lp": 0,
+      "dest_lp": 2,
+      "tick": "12",
+      "logical_id": {
+        "kind": "root",
+        "source_lp": 0,
+        "sequence": "1"
+      },
+      "authority_epoch": "7",
+      "incarnation": "2",
+      "payload_hex": "8000"
+    },
+    "old_anti": {
+      "kind": "anti",
+      "source_lp": 0,
+      "dest_lp": 1,
+      "tick": "10",
+      "logical_id": {
+        "kind": "root",
+        "source_lp": 0,
+        "sequence": "1"
+      },
+      "authority_epoch": "7",
+      "incarnation": "1",
+      "payload_hex": "00ff80"
+    },
+    "new_epoch": {
+      "kind": "positive",
+      "source_lp": 0,
+      "dest_lp": 1,
+      "tick": "10",
+      "logical_id": {
+        "kind": "root",
+        "source_lp": 0,
+        "sequence": "1"
+      },
+      "authority_epoch": "8",
+      "incarnation": "1",
+      "payload_hex": "00ff80"
+    },
+    "child10": {
+      "kind": "positive",
+      "source_lp": 1,
+      "dest_lp": 1,
+      "tick": "30",
+      "logical_id": {
+        "kind": "output",
+        "parent": {
+          "tick": "10",
+          "source_lp": 0,
+          "logical_id": {
+            "kind": "root",
+            "source_lp": 0,
+            "sequence": "2"
+          }
+        },
+        "ordinal": 0
+      },
+      "authority_epoch": "7",
+      "incarnation": "1",
+      "payload_hex": "00ff80"
+    },
+    "child20": {
+      "kind": "positive",
+      "source_lp": 1,
+      "dest_lp": 1,
+      "tick": "30",
+      "logical_id": {
+        "kind": "output",
+        "parent": {
+          "tick": "20",
+          "source_lp": 0,
+          "logical_id": {
+            "kind": "root",
+            "source_lp": 0,
+            "sequence": "2"
+          }
+        },
+        "ordinal": 0
+      },
+      "authority_epoch": "7",
+      "incarnation": "1",
+      "payload_hex": "00ff80"
+    },
+    "large_u64": {
+      "kind": "positive",
+      "source_lp": 0,
+      "dest_lp": 1,
+      "tick": "18446744073709551615",
+      "logical_id": {
+        "kind": "root",
+        "source_lp": 0,
+        "sequence": "18446744073709551615"
+      },
+      "authority_epoch": "7",
+      "incarnation": "18446744073709551615",
+      "payload_hex": "00ff80"
+    }
+  },
+  "delivery_cases": [
+    {
+      "name": "replacement_before_old_anti",
+      "steps": [
+        "old",
+        "replacement",
+        "old_anti"
+      ],
+      "outcomes": [
+        "pending",
+        "pending",
+        "canceled"
+      ],
+      "pending": [
+        "replacement"
+      ]
+    },
+    {
+      "name": "anti_before_positive",
+      "steps": [
+        "old_anti",
+        "old",
+        "old_anti"
+      ],
+      "outcomes": [
+        "canceled",
+        "annihilated",
+        "canceled"
+      ],
+      "pending": []
+    },
+    {
+      "name": "duplicate_positive_rejected",
+      "steps": [
+        "old",
+        "old"
+      ],
+      "outcomes": [
+        "pending",
+        "rejected"
+      ],
+      "pending": [
+        "old"
+      ]
+    },
+    {
+      "name": "restart_epoch_isolation",
+      "steps": [
+        "old",
+        "new_epoch",
+        "old_anti"
+      ],
+      "outcomes": [
+        "pending",
+        "pending",
+        "canceled"
+      ],
+      "pending": [
+        "new_epoch"
+      ]
+    }
+  ],
+  "ordering": [
+    "child10",
+    "child20"
+  ],
+  "gvt_categories": [
+    "queued_positive",
+    "queued_anti",
+    "replay",
+    "staged",
+    "in_flight_positive",
+    "in_flight_anti"
+  ]
+}

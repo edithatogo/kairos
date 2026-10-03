@@ -1,0 +1,3 @@
+# Actual Rust1.76 MSRV evidence
+
+Source7a432ab; matching Cargo/rustc/rustdoc1.76, absolute compiler paths and fresh target. The targeted pdes,time-warp lane passed94 tests and doc tests. Independent review verified source blob hashes, compiler-cache identity and successful log. Earlier incompatible Cargo1.99 invocation and interrupted all-target benchmark run are retained as unsuccessful attempts in the receipt; their original logs remain in the originating ignored artifact folder. Original wrapper-labelled1.76 results compiled with1.99 and are not MSRV proof. No distributed or hosted acceptance follows from this local lane.

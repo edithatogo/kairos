@@ -1,0 +1,235 @@
+{
+  "evidence_kind": "proposed EXC-199 supporting evidence; source captures are separate runs/commits",
+  "audit_run": {
+    "source_commit": "0a3b86aa33d1f158eaca2855e0e503cdac6e08ef",
+    "exit": 1,
+    "argv": [
+      "node",
+      "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+      "audit",
+      "--prefix",
+      "scripts/bootstrap-node-tools",
+      "--audit-level=moderate",
+      "--json"
+    ],
+    "raw_audit_sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c",
+    "raw_audit_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vulnerabilities_sha256": "0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8",
+    "finding_counts": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 19,
+      "critical": 0,
+      "total": 19
+    },
+    "source_receipt_sha256": "d4cc08801bd54596061fcf3114916a33a076d7ff780b188889d66fa20447b7ca"
+  },
+  "hosted_pr199_attempt": {
+    "associated_pr_head": "0a3b86aa33d1f158eaca2855e0e503cdac6e08ef",
+    "source_commit_in_runner_receipt": "not recorded",
+    "raw_audit_status": "not_executed",
+    "runner_error": "unapproved PR source",
+    "runner_receipt_sha256": "fa3c7a7fa82e15eb35fa1df9d42b6cc4fcb0b317f6e36302353385743c3439d5",
+    "npm_log_sha256": "8037fa26ded0763877bae390b2a37280c6d71da2ee648909bf085bad939e8ca7"
+  },
+  "compensating_controls": {
+    "source_commit": "e3306f4ca3e560b81725a1b07a275d98643caefe",
+    "source_receipt_sha256": "30cd4fe16c177dc58270bc09083a9cade4bf8d7f4010872dcc58d6efbfc4c08c",
+    "checks": [
+      {
+        "label": "patch-tests",
+        "argv": [
+          "python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_http_cache_patch.py",
+          "-v"
+        ],
+        "exit": 0,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "122f7d4c33c514b66511afcd26b70ee87dabbc73fbbf4066ee45d01cc8749673"
+      },
+      {
+        "label": "resolution",
+        "argv": [
+          "node",
+          "scripts/bootstrap-node-tools/validate_npm_cli.mjs"
+        ],
+        "exit": 0,
+        "stdout_sha256": "1c9defa7cd77e48f778b7650cba91941cb124138a512901a43bd0edd6eb5ed9e",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "label": "behavior-top",
+        "argv": [
+          "node",
+          "tests/http-cache-security-regression.mjs"
+        ],
+        "exit": 0,
+        "stdout_sha256": "6f96f35580b655b8b801055955203c3393b8ed633ee3872eaa7fa95df17d949e",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "label": "behavior-npm",
+        "argv": [
+          "node",
+          "tests/http-cache-security-regression.mjs",
+          "scripts/bootstrap-node-tools/node_modules/npm/node_modules/http-cache-semantics/index.js"
+        ],
+        "exit": 0,
+        "stdout_sha256": "6f96f35580b655b8b801055955203c3393b8ed633ee3872eaa7fa95df17d949e",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "label": "signatures",
+        "argv": [
+          "node",
+          "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+          "audit",
+          "signatures",
+          "--prefix",
+          "scripts/bootstrap-node-tools"
+        ],
+        "exit": 0,
+        "stdout_sha256": "7ba2d2ab1168d6c9e170cd08c524138336f45e930fdc6eea61d9eafb5f3d8c05",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  "copies": [
+    {
+      "path": "audit/pr199-0a3b86a/raw-audit.json",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-blockers/raw-audit.json",
+      "sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c",
+      "bytes": 8209,
+      "byte_identical": true
+    },
+    {
+      "path": "audit/pr199-0a3b86a/raw-audit.stderr",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-blockers/raw-audit.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "byte_identical": true
+    },
+    {
+      "path": "audit/pr199-0a3b86a/receipt.json",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-blockers/receipt.json",
+      "sha256": "d4cc08801bd54596061fcf3114916a33a076d7ff780b188889d66fa20447b7ca",
+      "bytes": 370,
+      "byte_identical": true
+    },
+    {
+      "path": "hosted-pr199-0a3b86a/npm.log",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-blockers/npm.log",
+      "sha256": "8037fa26ded0763877bae390b2a37280c6d71da2ee648909bf085bad939e8ca7",
+      "bytes": 12264,
+      "byte_identical": true
+    },
+    {
+      "path": "hosted-pr199-0a3b86a/npm.log.stderr",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-blockers/npm.log.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "byte_identical": true
+    },
+    {
+      "path": "hosted-pr199-0a3b86a/runner-receipt.json",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-blockers/hosted-audit/receipt.json",
+      "sha256": "fa3c7a7fa82e15eb35fa1df9d42b6cc4fcb0b317f6e36302353385743c3439d5",
+      "bytes": 371,
+      "byte_identical": true
+    },
+    {
+      "path": "controls/e3306f4/receipt.json",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-controls/receipt.json",
+      "sha256": "30cd4fe16c177dc58270bc09083a9cade4bf8d7f4010872dcc58d6efbfc4c08c",
+      "bytes": 2163,
+      "byte_identical": true
+    },
+    {
+      "path": "controls/e3306f4/patch-tests.stdout",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-controls/patch-tests.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "byte_identical": true
+    },
+    {
+      "path": "controls/e3306f4/patch-tests.stderr",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-controls/patch-tests.stderr",
+      "sha256": "122f7d4c33c514b66511afcd26b70ee87dabbc73fbbf4066ee45d01cc8749673",
+      "bytes": 1073,
+      "byte_identical": true
+    },
+    {
+      "path": "controls/e3306f4/resolution.stdout",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-controls/resolution.stdout",
+      "sha256": "1c9defa7cd77e48f778b7650cba91941cb124138a512901a43bd0edd6eb5ed9e",
+      "bytes": 61,
+      "byte_identical": true
+    },
+    {
+      "path": "controls/e3306f4/resolution.stderr",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-controls/resolution.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "byte_identical": true
+    },
+    {
+      "path": "controls/e3306f4/behavior-top.stdout",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-controls/behavior-top.stdout",
+      "sha256": "6f96f35580b655b8b801055955203c3393b8ed633ee3872eaa7fa95df17d949e",
+      "bytes": 49,
+      "byte_identical": true
+    },
+    {
+      "path": "controls/e3306f4/behavior-top.stderr",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-controls/behavior-top.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "byte_identical": true
+    },
+    {
+      "path": "controls/e3306f4/behavior-npm.stdout",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-controls/behavior-npm.stdout",
+      "sha256": "6f96f35580b655b8b801055955203c3393b8ed633ee3872eaa7fa95df17d949e",
+      "bytes": 49,
+      "byte_identical": true
+    },
+    {
+      "path": "controls/e3306f4/behavior-npm.stderr",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-controls/behavior-npm.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "byte_identical": true
+    },
+    {
+      "path": "controls/e3306f4/signatures.stdout",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-controls/signatures.stdout",
+      "sha256": "7ba2d2ab1168d6c9e170cd08c524138336f45e930fdc6eea61d9eafb5f3d8c05",
+      "bytes": 180,
+      "byte_identical": true
+    },
+    {
+      "path": "controls/e3306f4/signatures.stderr",
+      "source_artifact_path": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr199-controls/signatures.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "byte_identical": true
+    }
+  ],
+  "preparation_runtime_metadata": {
+    "path": "preparation/node-npm-versions.txt",
+    "source_artifact_path": "artifacts/track48-exc199-preparation/node-npm-versions.txt",
+    "sha256": "2df41a4349f4dc63e0a2bc0ac62ee896a2b3d27f3407f1442caf2f3765127e17",
+    "bytes": 514,
+    "byte_identical": true,
+    "measured_at_utc": "2026-10-03T12:42:07Z",
+    "measurement_source_head": "be54595e3fad310f952389520632cf9af6900e92",
+    "measurement_scope": "Preparation-time metadata only; not retroactive runtime metadata for audit/control captures."
+  }
+}

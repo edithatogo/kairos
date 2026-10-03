@@ -1,0 +1,88 @@
+npm-package	npm pack dry run	﻿2026-10-03T12:25:59.3322086Z ##[group]Run mkdir -p artifacts/npm-audit-gate
+npm-package	npm pack dry run	2026-10-03T12:25:59.3322688Z ^[[36;1mmkdir -p artifacts/npm-audit-gate^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3323016Z ^[[36;1mpython3 - <<'PYTHON'^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3323267Z ^[[36;1mimport json^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3323510Z ^[[36;1mfrom pathlib import Path^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3324316Z ^[[36;1mPath("artifacts/npm-audit-gate/receipt.json").write_text(json.dumps({"classification": "failed", "raw_audit": {"status": "not_executed"}, "reason": "preparation or tests have not completed"}))^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3325368Z ^[[36;1mPYTHON^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3325715Z ^[[36;1mpython3 scripts/bootstrap-node-tools/prepare_npm_cli.py --check^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3326235Z ^[[36;1mnpm ci --ignore-scripts --prefix scripts/bootstrap-node-tools^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3326928Z ^[[36;1mpython3 scripts/bootstrap-node-tools/apply_http_cache_fix.py scripts/bootstrap-node-tools/node_modules^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3327601Z ^[[36;1mpython3 -m unittest discover -s tests -p test_npm_audit_exception.py -v^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3328178Z ^[[36;1mpython3 -m unittest discover -s tests -p test_npm_audit_runner.py -v^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3328671Z ^[[36;1mpython3 scripts/bootstrap-node-tools/run_npm_audit_gate.py^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3329215Z ^[[36;1mnode scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js help >/dev/null^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3329987Z ^[[36;1mnode scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js audit signatures --prefix scripts/bootstrap-node-tools^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3330883Z ^[[36;1mtest -f bindings/typescript/package.json^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3331245Z ^[[36;1mtest -f bindings/typescript/tsconfig.json^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3331572Z ^[[36;1mtest -d bindings/typescript/src^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3331860Z ^[[36;1mcd bindings/typescript^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3332122Z ^[[36;1mnpm ci --ignore-scripts^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3332378Z ^[[36;1mnpm run build^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3332757Z ^[[36;1m# Build once explicitly; ignore scripts prevents npm pack lifecycle rebuilds.^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3333273Z ^[[36;1mmkdir -p "$GITHUB_WORKSPACE/dist/packages/typescript"^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3333827Z ^[[36;1mnpm pack --ignore-scripts --pack-destination "$GITHUB_WORKSPACE/dist/packages/typescript"^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3334303Z ^[[36;1mcd "$GITHUB_WORKSPACE"^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3335386Z ^[[36;1mpython3 packaging/scripts/write_package_build_receipt.py --ecosystem typescript --archive-dir dist/packages/typescript --source-commit "$GITHUB_SHA" --command 'npm ci --ignore-scripts; npm run build; npm pack --ignore-scripts' --toolchain "$(node --version); $(npm --version)"^[[0m
+npm-package	npm pack dry run	2026-10-03T12:25:59.3635486Z shell: /usr/bin/bash -e {0}
+npm-package	npm pack dry run	2026-10-03T12:25:59.3635903Z env:
+npm-package	npm pack dry run	2026-10-03T12:25:59.3636245Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.7/x64
+npm-package	npm pack dry run	2026-10-03T12:25:59.3636780Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib/pkgconfig
+npm-package	npm pack dry run	2026-10-03T12:25:59.3637289Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+npm-package	npm pack dry run	2026-10-03T12:25:59.3637748Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+npm-package	npm pack dry run	2026-10-03T12:25:59.3638241Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.7/x64
+npm-package	npm pack dry run	2026-10-03T12:25:59.3638703Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.7/x64/lib
+npm-package	npm pack dry run	2026-10-03T12:25:59.3639096Z ##[endgroup]
+npm-package	npm pack dry run	2026-10-03T12:26:01.4233251Z Prepared npm@12.1.0: /home/runner/work/kairos/kairos/scripts/bootstrap-node-tools/npm-patched.tgz
+npm-package	npm pack dry run	2026-10-03T12:26:01.4234773Z Source integrity: sha512-Fyhu62pNx70YCs/5+dEmJQTFVmSKwvo5CA0qvBkGDRpob42MJ6G2RQ2tdxeKM4nYnIZDqkYAxEgqtoejn9QGtQ==
+npm-package	npm pack dry run	2026-10-03T12:26:01.4236354Z Generated integrity: sha512-w+0BogHwY3qcQVi1bYGuiYgcS7x4JV+4emKbUZlafCsM5/YvZYH8ZSsJeCHuZngtBXxGh70prFbvJK+8pYxPEQ==
+npm-package	npm pack dry run	2026-10-03T12:26:01.4237568Z Lock integrity, fixed dependency versions, and embedded-package exclusion: PASS
+npm-package	npm pack dry run	2026-10-03T12:26:04.4086591Z 
+npm-package	npm pack dry run	2026-10-03T12:26:04.4087617Z added 77 packages, and audited 203 packages in 3s
+npm-package	npm pack dry run	2026-10-03T12:26:04.4088105Z 
+npm-package	npm pack dry run	2026-10-03T12:26:04.4088411Z 17 packages are looking for funding
+npm-package	npm pack dry run	2026-10-03T12:26:04.4089325Z   run `npm fund` for details
+npm-package	npm pack dry run	2026-10-03T12:26:04.4386570Z 
+npm-package	npm pack dry run	2026-10-03T12:26:04.4387252Z 19 high severity vulnerabilities
+npm-package	npm pack dry run	2026-10-03T12:26:04.4387518Z 
+npm-package	npm pack dry run	2026-10-03T12:26:04.4387759Z To address issues that do not require attention, run:
+npm-package	npm pack dry run	2026-10-03T12:26:04.4388112Z   npm audit fix
+npm-package	npm pack dry run	2026-10-03T12:26:04.4388238Z 
+npm-package	npm pack dry run	2026-10-03T12:26:04.4388438Z Some issues need review, and may require choosing
+npm-package	npm pack dry run	2026-10-03T12:26:04.4389194Z a different dependency.
+npm-package	npm pack dry run	2026-10-03T12:26:04.4390029Z 
+npm-package	npm pack dry run	2026-10-03T12:26:04.4390758Z Run `npm audit` for details.
+npm-package	npm pack dry run	2026-10-03T12:26:04.5769456Z scripts/bootstrap-node-tools/node_modules/http-cache-semantics/index.js: fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76
+npm-package	npm pack dry run	2026-10-03T12:26:04.5771806Z scripts/bootstrap-node-tools/node_modules/npm/node_modules/http-cache-semantics/index.js: fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76
+npm-package	npm pack dry run	2026-10-03T12:26:04.5773319Z LOCAL MITIGATION APPLIED; package identity remains http-cache-semantics@4.2.0
+npm-package	npm pack dry run	2026-10-03T12:26:04.8931698Z test_any_additional_advisory_at_any_severity_rejects (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_any_additional_advisory_at_any_severity_rejects) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.8959075Z test_approvals_require_named_owners_classification_and_evidence (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_approvals_require_named_owners_classification_and_evidence) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.8970953Z test_exact_approved_finding_graph_is_a_temporary_exception (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_exact_approved_finding_graph_is_a_temporary_exception) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.8976938Z test_leaf_advisory_identity_must_match_even_with_matching_fingerprint (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_leaf_advisory_identity_must_match_even_with_matching_fingerprint) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.8988562Z test_leaf_graph_node_severity_and_range_are_part_of_the_allowlist (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_leaf_graph_node_severity_and_range_are_part_of_the_allowlist) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.8993464Z test_leaf_package_cannot_carry_a_second_advisory (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_leaf_package_cannot_carry_a_second_advisory) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.9052258Z test_metadata_counts_must_agree_with_the_finding_graph (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_metadata_counts_must_agree_with_the_finding_graph) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.9078191Z test_non_one_audit_exit_and_boolean_exit_cannot_use_exception (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_non_one_audit_exit_and_boolean_exit_cannot_use_exception) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.9080315Z test_pending_expired_and_not_yet_effective_approvals_reject (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_pending_expired_and_not_yet_effective_approvals_reject) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.9082806Z test_policy_cannot_expand_its_allowed_contexts (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_policy_cannot_expand_its_allowed_contexts) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.9085401Z test_scan_errors_malformed_json_and_unsupported_schema_fail_closed (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_scan_errors_malformed_json_and_unsupported_schema_fail_closed) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.9109145Z test_scope_requires_both_the_bound_pr_and_an_allowed_context (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_scope_requires_both_the_bound_pr_and_an_allowed_context) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.9112565Z test_zero_finding_successful_audit_is_clean_without_approval (test_npm_audit_exception.NpmAuditExceptionPolicyTests.test_zero_finding_successful_audit_is_clean_without_approval) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:04.9113518Z 
+npm-package	npm pack dry run	2026-10-03T12:26:04.9113925Z ----------------------------------------------------------------------
+npm-package	npm pack dry run	2026-10-03T12:26:04.9114421Z Ran 13 tests in 0.038s
+npm-package	npm pack dry run	2026-10-03T12:26:04.9114606Z 
+npm-package	npm pack dry run	2026-10-03T12:26:04.9114712Z OK
+npm-package	npm pack dry run	2026-10-03T12:26:05.4945028Z test_dispatch_rejects_wrong_branch_and_fork_pull_request (test_npm_audit_runner.NpmAuditRunnerTests.test_dispatch_rejects_wrong_branch_and_fork_pull_request) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:05.4947020Z test_duplicate_json_keys_are_rejected (test_npm_audit_runner.NpmAuditRunnerTests.test_duplicate_json_keys_are_rejected) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:05.4981113Z test_exact_two_installed_copies_and_pinned_proofs_pass (test_npm_audit_runner.NpmAuditRunnerTests.test_exact_two_installed_copies_and_pinned_proofs_pass) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:05.5120074Z test_extra_copy_source_drift_identity_and_proof_removal_reject (test_npm_audit_runner.NpmAuditRunnerTests.test_extra_copy_source_drift_identity_and_proof_removal_reject) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:05.5197106Z test_main_retains_raw_failure_receipt_and_stdout_when_classification_fails (test_npm_audit_runner.NpmAuditRunnerTests.test_main_retains_raw_failure_receipt_and_stdout_when_classification_fails) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:05.5285394Z test_policy_hash_expiry_and_raw_argv_mutations_reject (test_npm_audit_runner.NpmAuditRunnerTests.test_policy_hash_expiry_and_raw_argv_mutations_reject) ... ok
+npm-package	npm pack dry run	2026-10-03T12:26:05.5286154Z 
+npm-package	npm pack dry run	2026-10-03T12:26:05.5286408Z ----------------------------------------------------------------------
+npm-package	npm pack dry run	2026-10-03T12:26:05.5286797Z Ran 6 tests in 0.038s
+npm-package	npm pack dry run	2026-10-03T12:26:05.5286951Z 
+npm-package	npm pack dry run	2026-10-03T12:26:05.5287040Z OK
+npm-package	npm pack dry run	2026-10-03T12:26:05.6149839Z npm audit gate failed: unapproved PR source
+npm-package	npm pack dry run	2026-10-03T12:26:05.6268915Z ##[error]Process completed with exit code 1.
