@@ -1,5 +1,7 @@
 #![forbid(unsafe_code)]
 
+pub mod trace_time;
+
 use kairo_ecs_types::{DispatchedEvent, EntityId, EventId};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
