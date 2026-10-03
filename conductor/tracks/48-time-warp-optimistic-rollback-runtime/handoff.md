@@ -1,6 +1,66 @@
 # Track 48 Handoff
 
-Last updated: 2026-06-24
+Last updated: 2026-10-03
+
+## Current local implementation and delivery boundary
+
+Track 48 remains **In Progress**. The accepted local implementation adds the
+`time-warp`-gated `OptimisticRuntime<P>` and PDES-owned `GenerationBitset` beside
+the compatible scaffold helper. Complete model snapshots, structural full-key
+ordering, surviving-input replay, recorded downstream-output anti-messages,
+exact source-scoped incarnation cancellation, checked token authority, bounded
+poison/failure handling and strictly-before-GVT fossil collection are implemented.
+No core, ECS, debug, MPI or gRPC crate was changed by this slice.
+
+The [API review](../../../docs/design/track48-api-review.md),
+[ADR](adr-production-runtime.md) and
+[contract](../../../docs/pdes/optimistic-runtime-contract.md) record preview
+compatibility, model ownership, rejected designs and local review limits.
+Fifteen held-out model/protocol tests and the combined 94-test crate lane passed
+at `3cd6d56`. A subsequent compiler audit found Homebrew Rust 1.99.0 in both
+independent Cargo target caches despite command wrappers labelled 1.98.1 and
+1.76.0. Those results establish behavioral passes under the actual compiler;
+they do **not** establish either claimed pinned toolchain or MSRV. Explicit
+compiler-path reruns remain required, and the original receipts remain historical.
+
+The source-bound sparse/dense benchmark at `ec9828e` has actual parity and five
+raw alternating repeats in
+`benches/pdes/evidence/track48-ec9828e/`. Its recorded wrapper toolchain metadata
+also needs actual Cargo-compiler reconciliation before a pinned-toolchain claim.
+The benchmark isolates runtime run calls and excludes setup, state/report
+extraction, validation and fossil collection. It is a small single-host fixture;
+no general speedup, simultaneous CPU execution or distributed proof is claimed.
+
+At delivery-review source `7a432ab`, the coordinator reports passing collector
+nine-case validation, local manifest, phase, DAG and strict-clean gates. Root
+`just ci` now passes with explicit Rust 1.98.1 PATH/RUSTC, matching LLVM tools
+and a fresh target: 458 tests, zero skipped, core coverage 512/553 (92.59%)
+against a 90% floor, formatting, all-target/all-feature Clippy and rustdoc with
+warnings denied, cargo-deny advisory/source checks and cargo-audit all pass.
+The coordinator's source-bound receipt/log are
+`artifacts/track48-final-validation/receipt-resolved-pinned.json` and
+`just-ci-resolved-pinned.log`. Earlier LLVM discovery/format failures remain
+failed attempts, not pinned workspace evidence. The actual Rust 1.76.0 crate
+rerun is pending. No hosted Actions pass, push or merge is inferred.
+A coordinator live-quality readback also reports a main-branch CodeQL/Scorecard
+failure for alert482, including GitHub-reviewed braces advisory
+`GHSA-vfj7-8cjw-p6xm` (affected<=3.0.3, no patched version in that readback),
+missing Codecov project status despite upload success, and Renovate refresh
+pending afterPR197. These are open cross-track/security evidence blockers;
+no alert dismissal, bypass or extension of PR193-only EXC-193 is authorized.
+The coordinator will reconcile global registry narratives and release notes in a
+separate owned packet after its CI lease ends.
+
+Live distributed rollback artifacts, cross-participant GVT and the Track 49
+integration gate remain required before Done. Track 49 still depends on
+Tracks 35, 47 and 48. The [distributed handoff](distributed-interface-handoff.md)
+is a proposal, with no production dispatch, dependency waiver or status advance.
+
+## Historical scaffold record — June 2026
+
+The following scaffold description and original commands record the earlier
+helper slice. They are not the current event-owned runtime capability statement
+or evidence of the resumed slice's compiler/hosted acceptance.
 
 ## Summary
 
@@ -131,7 +191,7 @@ optimistic safe-time execution, replay/redelivery semantics, benchmark evidence,
 distributed transport, and live HPC evidence are complete.
 
 
-## Resumed implementation — after Track 47 merge
+## Resumption history — after Track 47 merge
 
 PR #193 merged as fc2f7b7f8e24faef8d02e29aaaaaf64852945cf0 after all 19 exact-head workflow runs passed. Active branch is codex/kairos-track48-optimistic-runtime; parent checkout/pin remain outside this task. Architecture and ECS/trace reviews settled the bound contract in docs/pdes/optimistic-runtime-contract.md. No distributed/Done claim is made.
 
@@ -149,7 +209,7 @@ Retained limitations: post-first-event component writes are not transactional in
 
 The proposed distributed-interface-handoff.md is a draft only. No scheduling dependency, Track49 production authority, phase status, or live evidence gate has changed.
 
-## Integrated local optimistic driver — verification pending
+## Integration history — verification was pending at 3cd6d56
 
 Integrated worker0709f2f and independent test drafts c5ca802/d48ce2d/79d0cfe into 3cd6d56ed98d39d311fe19f4d88857f43bfe6da6. The driver owns replay queues, complete process snapshots, actual downstream send logs, exact source-scoped incarnation cancellation, structural ordering, checked validity epochs and bounded GVT/failure transitions. The bitset module is now exported under time-warp. This is local implementation, not distributed proof or a Done claim.
 
@@ -157,9 +217,9 @@ Worker exact-source native time-warp tests, Clippy and formatting pass on Rust1.
 
 Review fixes include global exact delivery metadata, legitimate changed replay metadata, preflighted batch epochs/capacities, canceled replay marker cleanup, and maximum-frontier GVT lag. Five private exhaustion/batch-transition tests supplement eight worker integration tests and fifteen independent state/RNG/bitset/replay/failure oracles. Recovery preserved the interrupted source in stash bbbf38f96f55a6c1dcf57af91f10ad0956eb5358; the restarted lease and final writer lease are released.
 
-## Independent local acceptance and benchmark
+## Local acceptance record and compiler-audit correction
 
-At3cd6d56, all15 reviewer-owned held-outs pass unchanged on Rust1.98.1 and1.76.0; combined pdes,time-warp lane94 tests pass. Independent source review accepts bounded local semantics with strict-future outputs, ancestry<=128, complete owned model snapshots, no external handler side effects and caller-proven GVT. Receipt/hashes: /private/tmp/kairos-track48-independent-runtime/artifacts/track48-independent-runtime/receipt.json.
+At `3cd6d56`, all 15 reviewer-owned held-outs passed unchanged under two nominal toolchain wrappers; the combined pdes,time-warp lane passed 94 tests. The later Cargo-cache audit identifies actual Rust 1.99.0 for both targets, withdrawing the pinned 1.98.1/MSRV 1.76.0 labels pending explicit compiler-path reruns. Independent source review accepts bounded local semantics with strict-future outputs, ancestry<=128, complete owned model snapshots, no external handler side effects and caller-proven GVT. Receipt/hashes: /private/tmp/kairos-track48-independent-runtime/artifacts/track48-independent-runtime/receipt.json.
 
 Benchmark integration ec9828e folds d1d1467/39a8e1. Review fixes isolate runtime run-call timing, define first-attempt/extra/replay counts, namespace committed IDs by actual source, validate fixed workloads and reject dirty/same-HEAD source edits. Nine collector negatives/tests pass; Rust1.98.1 and1.76.0 bench checks plus pinned Clippy pass. Root strict collector exit0 at clean ec9828e, with identical before/after source hashes; independent reviewer verifies artifact7c4b1e7a5de973fbbd7e7b5c1a6509d256785c7e3dc087008151b19321fe23e5. Canonical raw files retained in benches/pdes/evidence/track48-ec9828e/. One warmup and five alternating repeats per four cases; limits and excluded costs are explicit. These small single-host measurements do not prove general scaling, actual simultaneous CPU execution or distributed rollback.
 
