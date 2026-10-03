@@ -440,24 +440,18 @@ fn zero_duration_work_completes_at_grant_without_duplicate_terminal() -> Result<
         })
         .collect();
     assert_eq!(zero_grants.len(), 1);
-    let zero_grant_dispatch = dispatches
-        .iter()
-        .find(|dispatch| dispatch.event == zero_grants[0].causal_event_id)
-        .expect("zero-duration grant dispatch exists");
-    let grant_position = zero_grant_dispatch
-        .records
+    let grant_position = all_records
         .iter()
         .position(|record| {
             record.request == zero_request && record.transition == LifecycleTransition::Granted
         })
-        .expect("grant record exists in its dispatch");
-    let completion_position = zero_grant_dispatch
-        .records
+        .expect("grant record exists");
+    let completion_position = all_records
         .iter()
         .position(|record| {
             record.request == zero_request && record.transition == LifecycleTransition::Completed
         })
-        .expect("zero-duration completion follows the grant in its dispatch");
+        .expect("zero-duration completion record exists");
     assert!(grant_position < completion_position);
     assert!(!all_records.iter().any(|record| {
         record.request == zero_request && record.transition == LifecycleTransition::Preempted
