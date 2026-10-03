@@ -16,6 +16,8 @@ Format:
 
 ### Changed
 
+- Release artifact evidence can be derived from exact retained package archives: verified acquisition, archive-bound SPDX SBOMs, SHA-256 inventories and explicitly untrusted local copy provenance. Portable regression tests cover missing or inconsistent evidence; native build attestations remain pending.
+
 - Retained package archives support verification against an expected source commit before attestation, with artifact paths confined to the downloaded tree.
 
 - Release dry runs require the final `dist/` artifact upload to find files and retain the uploaded evidence for 90 days.
