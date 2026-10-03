@@ -423,7 +423,7 @@ fn zero_duration_work_completes_at_grant_without_duplicate_terminal() -> Result<
         .can_preempt(true)
         .submit()?;
 
-    let mut dispatches = run_to_empty(&mut flow)?;
+    let dispatches = run_to_empty(&mut flow)?;
     assert_dispatch_invariants(&dispatches);
     let all_records = records(&dispatches);
     let zero_terminal: Vec<_> = all_records

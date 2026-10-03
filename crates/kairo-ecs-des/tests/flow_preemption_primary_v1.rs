@@ -61,11 +61,19 @@ fn d(ticks: u64) -> SimDuration {
 }
 
 fn dispatch_all(flow: &mut FlowRuntime) -> Result<Vec<FlowDispatch>, FlowError> {
+    const MAX_DISPATCHES: usize = 1024;
     let mut dispatches = Vec::new();
-    while let Some(dispatch) = flow.step()? {
+    for _ in 0..MAX_DISPATCHES {
+        let Some(dispatch) = flow.step()? else {
+            return Ok(dispatches);
+        };
+        assert!(
+            dispatch.error.is_none(),
+            "dispatch reported an error: {dispatch:?}"
+        );
         dispatches.push(dispatch);
     }
-    Ok(dispatches)
+    panic!("dispatch budget exhausted after {MAX_DISPATCHES} scheduler steps");
 }
 
 fn all_records(dispatches: &[FlowDispatch]) -> Vec<&kairo_ecs_des::LifecycleRecord> {
