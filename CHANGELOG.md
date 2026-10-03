@@ -16,6 +16,8 @@ Format:
 
 ### Changed
 
+- Archive supply-chain regressions run in a focused workflow for relevant changes, using pinned Actions and hash-locked Python tools. Evidence generation isolates the scanner environment and records the retained acquisition helper source identity.
+
 - Release artifact evidence can be derived from exact retained package archives: verified acquisition, archive-bound SPDX SBOMs, SHA-256 inventories and explicitly untrusted local copy provenance. Portable regression tests cover missing or inconsistent evidence; native build attestations remain pending.
 
 - Retained package archives support verification against an expected source commit before attestation, with artifact paths confined to the downloaded tree.
