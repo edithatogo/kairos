@@ -140,3 +140,11 @@ Actual RED baseline at source fc2f7b7: Rust 1.98.1 compiled three regression tes
 GenerationBitset source eb8a15153ac95666a3962e895ea6bfbbeb738191fc4b7a83c763ed00ae725a90 integrated at b4be30d. Worker standalone 11 tests pass on Rust 1.98.1; independent reviewer also ran all 11 on Rust 1.76.0 and 1.98.1 with exit 0. Module exports/full crate integration remain pending. Construction/restore allocation paths are source-reviewed; allocation failure was not fault-injected. Snapshot cloning uses ordinary Vec clone; no blanket allocation-safe claim is made.
 
 The original Track 48/49 distributed acceptance cycle remains explicit. No Track 49 production dispatch or dependency change is authorized by this local packet. Current EXC-193 is PR #193-only; any future exception needs its own governed approval.
+
+## Independent legacy repair acceptance
+
+Legacy repair integrated from a71b654 as fd29a8382992356dff481b9647ab3c2f8b205a1c. Five fixed-fixture regressions failed before the repair and pass afterward. Independent reviewer reran all five on Rust 1.98.1 and 1.76.0, both exit 0; exact command/source/toolchain/log hashes are in local artifacts/track48-legacy-review/receipt.json. lib.rs SHA-256 d6a152d413e81fe90f83bc58fa1f6601c35d7890e6ef1438fa0a396245ab5589; regression source a841c06bf8c5ac0dd8834de8639000c126c9af212a04bc9206a10cff41472788. Independent source review found no blocker in the focused repair.
+
+Retained limitations: post-first-event component writes are not transactional initialization; checked stamp exhaustion panics under the legacy nonfallible API; diagnostic generations remain saturating; seed baselines/canceled IDs remain retained. The helper still uses tick-only ordering and input anti-history, without replay queues or downstream-send ownership. New production guarantees must come from the separately reviewed optimistic driver. A second worker check briefly surfaced eight token characters; its complete token was not saved and the lease is now released.
+
+The proposed distributed-interface-handoff.md is a draft only. No scheduling dependency, Track49 production authority, phase status, or live evidence gate has changed.

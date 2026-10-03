@@ -21,7 +21,7 @@ come from EXC-193, which applies only to PR #193.
 
 ## Wire requirements to review with distributed-agent
 
-Preserve RemoteEvent source LP, destination LP, tick and payload hash. Carry a
+Preserve RemoteEvent source LP, destination LP, tick and event_payload bytes. Evidence hashes remain separate metadata. Carry a
 separate full logical ordering identity and an exact delivery incarnation.
 Identity must retain full parent ordering keys and vector ordinals; it cannot be
 replaced by arrival order or a lossy hash. Bound causal ancestry to 128 and reject
