@@ -355,7 +355,9 @@ fn comparator_rejects_contract_mutations() {
     bad!(|x: &mut Value| x["cases"][0]["result"]["p_value"] = json!(0.5));
     bad!(|x: &mut Value| x["cases"][0]["result"]["unexpected"] = json!(1));
     bad!(|x: &mut Value| x["cases"][0]["id"] = x["cases"][1]["id"].clone());
-    bad!(|x: &mut Value| let _ = x["cases"].as_array_mut().unwrap().pop());
+    bad!(|x: &mut Value| {
+        let _ = x["cases"].as_array_mut().unwrap().pop();
+    });
     bad!(|x: &mut Value| x["cases"][0]["result"]["w1"] = json!(f64::NAN));
     bad!(|x: &mut Value| x["cases"][0]["result"]["ks_d"] = json!(2.0));
     bad!(|x: &mut Value| x["cases"][0]["result"]["w1"] = json!(-1.0));
