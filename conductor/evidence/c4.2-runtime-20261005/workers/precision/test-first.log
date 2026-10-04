@@ -1,0 +1,64 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling typenum v1.20.1
+   Compiling libc v0.2.186
+   Compiling autocfg v1.5.0
+   Compiling serde_core v1.0.228
+   Compiling thiserror v2.0.20
+   Compiling zmij v1.0.21
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-c42-precision-review-20261005/crates/kairo-ecs-types)
+   Compiling const-oid v0.10.2
+   Compiling serde_json v1.0.149
+   Compiling memchr v2.8.0
+   Compiling num-traits v0.2.19
+   Compiling itoa v1.0.18
+   Compiling cfg-if v1.0.4
+   Compiling kairo-ecs-rng v0.0.0 (/private/tmp/kairos-c42-precision-review-20261005/crates/kairo-ecs-rng)
+   Compiling cpufeatures v0.3.1
+   Compiling hybrid-array v0.4.15
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling syn v3.0.6
+   Compiling chrono v0.4.45
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling thiserror-impl v2.0.20
+   Compiling kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-c42-precision-review-20261005/crates/kairo-ecs-arrow)
+   Compiling kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c42-precision-review-20261005/crates/kairo-ecs-calibration)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.29s
+     Running tests/distance_c42.rs (.artifacts/c42-precision/target/debug/deps/distance_c42-6bf2497d64ce31f2)
+
+running 14 tests
+test deterministic_100k_point_shift_timing ... ignored, bounded synthetic distance timing receipt; coordinator executes once
+test both_empty_populations_are_empty ... ok
+test checked_arithmetic_overflow_is_invalid ... ok
+test exact_common_origin_offsets_are_checked_before_conversion ... ok
+test identical_populations_compute_zero_distances ... ok
+test malformed_weight_with_valid_origin_is_ordinary_invalid_precision ... FAILED
+test positive_rational_tick_scale_is_supported_exactly ... ok
+test scale_and_algorithm_weight_contract_are_enforced ... ok
+test signed_rational_supports_are_exactly_ordered ... ok
+test null_aligned_zero_weight_stays_in_count_and_adds_no_mass ... ok
+test tick_overflow_remains_rejected_precision ... ok
+test tied_weighted_support_permutation_is_bitwise_stable ... ok
+test ties_are_aggregated_before_cdf_updates ... ok
+test weighted_descriptive_uses_exact_per_side_normalization ... ok
+
+failures:
+
+---- malformed_weight_with_valid_origin_is_ordinary_invalid_precision stdout ----
+
+thread 'malformed_weight_with_valid_origin_is_ordinary_invalid_precision' (48558765) panicked at crates/kairo-ecs-calibration/tests/distance_c42.rs:246:5:
+assertion `left == right` failed
+  left: Rejected
+ right: NotApplicable
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    malformed_weight_with_valid_origin_is_ordinary_invalid_precision
+
+test result: FAILED. 12 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p kairo-ecs-calibration --test distance_c42`

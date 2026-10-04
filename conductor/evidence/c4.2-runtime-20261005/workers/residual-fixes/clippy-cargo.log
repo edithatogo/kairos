@@ -1,0 +1,61 @@
+    Checking kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c42-residual-fixes-20261005/crates/kairo-ecs-calibration)
+error: manual absolute difference pattern without using `abs_diff`
+   --> crates/kairo-ecs-calibration/src/metrics.rs:139:16
+    |
+139 |           } else if left >= right {
+    |  ________________^
+140 | |             left - right
+141 | |         } else {
+142 | |             right - left
+143 | |         };
+    | |_________^ help: replace with `abs_diff`: `left.abs_diff(right)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#manual_abs_diff
+    = note: `-D clippy::manual-abs-diff` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::manual_abs_diff)]`
+
+error: this `if` has identical blocks
+   --> crates/kairo-ecs-calibration/src/metrics.rs:146:51
+    |
+146 |           } else if self.negative == other.negative {
+    |  ___________________________________________________^
+147 | |             self.negative
+148 | |         } else if left >= right {
+    | |_________^
+    |
+note: same as this
+   --> crates/kairo-ecs-calibration/src/metrics.rs:148:33
+    |
+148 |           } else if left >= right {
+    |  _________________________________^
+149 | |             self.negative
+150 | |         } else {
+    | |_________^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#if_same_then_else
+    = note: `-D clippy::if-same-then-else` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::if_same_then_else)]`
+
+error: this `if` statement can be collapsed
+   --> crates/kairo-ecs-calibration/src/metrics.rs:372:5
+    |
+372 | /     if weighted {
+373 | |         if (!reference.is_empty() && normalize_weights(&mut reference).is_none())
+374 | |             || (!simulation.is_empty() && normalize_weights(&mut simulation).is_none())
+...   |
+378 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+    = note: `-D clippy::collapsible-if` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::collapsible_if)]`
+help: collapse nested if block
+    |
+372 ~     if weighted
+373 ~         && ((!reference.is_empty() && normalize_weights(&mut reference).is_none())
+374 ~             || (!simulation.is_empty() && normalize_weights(&mut simulation).is_none()))
+375 |         {
+376 |             return invalid(result_precision);
+377 ~         }
+    |
+
+error: could not compile `kairo-ecs-calibration` (lib) due to 3 previous errors

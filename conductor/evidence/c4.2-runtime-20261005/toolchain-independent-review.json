@@ -1,0 +1,9 @@
+{
+  "head": "f13e39f48a30f3562e16c7edb52a12f4399542c3",
+  "reviewer": "c42_distance",
+  "status": "pass",
+  "producer_source_sha256": "59070a5c5f7e95b3a3cd042d52f3b700c4aba848554564cbd40fee56b685b371",
+  "scope": "toolchain label observed from rustc; optional claim equal; current committed sourcebyte binding",
+  "tests_run_by_reviewer": false,
+  "previous_cohort_review_unchanged": true
+}

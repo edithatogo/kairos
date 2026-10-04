@@ -1,0 +1,13 @@
+{
+  "worker_stopped_confirmation": "Worker message stopped writes; no active residual cargo/command in processreadback",
+  "expired_claim": "569e97c0a7ef4bcab8a78a1f5c8ecb5e",
+  "new_claim": "7d715f750135412ea1f3db7d97dde830",
+  "stash_commit": "e823c2500c0a18f61586ddf5773e89ac7a3ef1a0",
+  "preserved_sha256": {
+    "crates/kairo-ecs-calibration/src/residuals.rs": "58360f5752a2606229ece69c0e70fa2aceee9654d75b0bcbd6a100f59deed0f5",
+    "crates/kairo-ecs-calibration/tests/residuals_c42.rs": "c89dbc7b8f9a20958e1c9e0851f942ff9edaabb214a930b3a650d74370f9530b"
+  },
+  "restoration_matches": true,
+  "deviation": "Worker continued one in-scope test assertion edit after failed check due shell semicolon; retained and requalified under fresh lease",
+  "ignored_outputs": "Earlier worker used default target; not harness-conformance proof; targeted finalqualification under declared artifacts required"
+}

@@ -1,0 +1,33 @@
+[
+  {
+    "id": "c42-toolchain-binding",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c42"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "d64e1b3318b9b6c4f31d9ee41c3075e4686ccac9",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/target"
+    },
+    "started_utc": "2026-10-04T23:36:03.251576+00:00",
+    "ended_utc": "2026-10-04T23:36:15.971662+00:00",
+    "duration_seconds": 12.71807249984704,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/tests/metrics_c42.rs": "ab00a3c48df57ddb97c9e78582c519e61b55d3587e9bfac49c6245b7078e14fc",
+      "crates/kairo-ecs-calibration/src/metrics.rs": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4"
+    },
+    "log": "c42-toolchain-binding.log",
+    "log_sha256": "48f4fcab02a6325c9066c5750755b7ed6ff9cb7618e1f9189999fe0fc2db3f07",
+    "interpretation": "ordinary gate"
+  }
+]

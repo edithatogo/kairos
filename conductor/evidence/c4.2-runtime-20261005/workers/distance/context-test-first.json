@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "task": "C4.2.distance.20261005",
+  "repository": "/private/tmp/kairos-c42-distance-20261005",
+  "head_sha": "5b7b567810e3e2311acd6bfbbb6a5301266c608f",
+  "git_status": "A crates/kairo-ecs-calibration/tests/distance_c42.rs",
+  "documents": [
+    {
+      "path": "crates/kairo-ecs-calibration/tests/distance_c42.rs",
+      "sha256": "63b2783e6b53037dca6ab55d874e150826e86dc8ddd5828b0a5c5db2675cc455",
+      "text": "#[path = \"../src/metrics.rs\"]\nmod metrics;\n\nuse metrics::{compare, MetricRequest, MetricStatus, Precision};\n\nfn req<'a>(reference: &'a [Option<&'a str>], simulation: &'a [Option<&'a str>]) -> MetricRequest<'a> {\n    MetricRequest {\n        reference,\n        simulation,\n        reference_weights: None,\n        simulation_weights: None,\n        algorithm_version: \"empirical_equal.v1\",\n        origin: None,\n        scale_ticks: \"1\",\n    }\n}\n\n#[test]\nfn identical_populations_compute_zero_distances() {\n    let result = compare(&req(&[Some(\"0\"), Some(\"1\")], &[Some(\"0\"), Some(\"1\")]));\n    assert_eq!(result.status, MetricStatus::Computed);\n    assert_eq!(result.w1, Some(0.0));\n    assert_eq!(result.ks_d, Some(0.0));\n    assert_eq!((result.reference_count, result.simulation_count), (2, 2));\n    assert_eq!(result.precision, Precision::NotApplicable);\n}\n\n#[test]\nfn ties_are_aggregated_before_cdf_updates() {\n    let result = compare(&req(&[Some(\"0\"), Some(\"0\"), Some(\"2\")], &[Some(\"0\"), Some(\"1\"), Some(\"1\")]));\n    assert_eq!(result.status, MetricStatus::Computed);\n    assert_eq!(result.w1, Some(2.0 / 3.0));\n    assert_eq!(result.ks_d, Some(1.0 / 3.0));\n}\n\n#[test]\nfn signed_rational_supports_are_exactly_ordered() {\n    let result = compare(&req(&[Some(\"-1/2\"), Some(\"1/2\")], &[Some(\"0\"), Some(\"1/3\")]));\n    assert_eq!(result.status, MetricStatus::Computed);\n    assert_eq!(result.ks_d, Some(0.5));\n}\n\n#[test]\nfn both_empty_populations_are_empty() {\n    let result = compare(&req(&[], &[]));\n    assert_eq!(result.status, MetricStatus::Empty);\n    assert_eq!((result.w1, result.ks_d), (None, None));\n}\n\n#[test]\nfn checked_arithmetic_overflow_is_invalid() {\n    let result = compare(&req(\n        &[Some(\"-170141183460469231731687303715884105728\")],\n        &[Some(\"170141183460469231731687303715884105727\")],\n    ));\n    assert_eq!(result.status, MetricStatus::Invalid);\n    assert_eq!((result.reference_count, result.simulation_count), (0, 0));\n    assert_eq!((result.w1, result.ks_d), (None, None));\n}\n"
+    }
+  ],
+  "authority": "Source material only; task approval, ownership and acceptance remain separate."
+}

@@ -1,0 +1,21 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.76s
+     Running tests/metrics_c42.rs (.artifacts/c42-cohorts/target/debug/deps/metrics_c42-101a09f99efa7747)
+
+running 1 test
+test default_actual_producer_executes_all_frozen_cases ... FAILED
+
+failures:
+
+---- default_actual_producer_executes_all_frozen_cases stdout ----
+
+thread 'default_actual_producer_executes_all_frozen_cases' (48690605) panicked at crates/kairo-ecs-calibration/tests/metrics_c42.rs:386:5:
+report commit must match executing Git HEAD; writing requires explicit binding
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    default_actual_producer_executes_all_frozen_cases
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.08s
+
+error: test failed, to rerun pass `-p kairo-ecs-calibration --test metrics_c42`

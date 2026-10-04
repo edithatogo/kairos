@@ -1,0 +1,33 @@
+{
+  "baseline": "a2cdeab33286e14db59f377449816702e79b2a6a",
+  "head": "f13e39f48a30f3562e16c7edb52a12f4399542c3",
+  "changed_paths": [
+    "conductor/design/calibration/c4.2-cohort-contract-v1.md",
+    "conductor/design/calibration/c4.2-runtime-contract-v1.md",
+    "crates/kairo-ecs-calibration/src/lib.rs",
+    "crates/kairo-ecs-calibration/src/metric_cohorts.rs",
+    "crates/kairo-ecs-calibration/src/metrics.rs",
+    "crates/kairo-ecs-calibration/src/residuals.rs",
+    "crates/kairo-ecs-calibration/tests/cohorts_c42.rs",
+    "crates/kairo-ecs-calibration/tests/distance_c42.rs",
+    "crates/kairo-ecs-calibration/tests/metrics_c42.rs",
+    "crates/kairo-ecs-calibration/tests/residuals_c42.rs"
+  ],
+  "protected_prefixes": [
+    "Cargo.toml",
+    "Cargo.lock",
+    ".github/",
+    "schemas/",
+    "crates/kairo-ecs-des/",
+    "crates/kairo-ecs-abm/",
+    "crates/kairo-ecs-arrow/",
+    "crates/kairo-ecs-arrow-io/",
+    "crates/kairo-ecs-core/",
+    "crates/kairo-ecs-state/",
+    "crates/kairo-ecs-rng/",
+    "conformance/c41/"
+  ],
+  "protected_unchanged": true,
+  "new_public_api": false,
+  "known_scope": "private calibration module plus tests/contracts; source review sees only pub(crate), moduleglue private"
+}

@@ -1,0 +1,86 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling typenum v1.20.1
+   Compiling autocfg v1.5.0
+   Compiling libc v0.2.186
+   Compiling thiserror v2.0.20
+   Compiling serde_core v1.0.228
+   Compiling zmij v1.0.21
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-c42-residual-fixes-20261005/crates/kairo-ecs-types)
+   Compiling const-oid v0.10.2
+   Compiling serde_json v1.0.149
+   Compiling cfg-if v1.0.4
+   Compiling memchr v2.8.0
+   Compiling itoa v1.0.18
+   Compiling kairo-ecs-rng v0.0.0 (/private/tmp/kairos-c42-residual-fixes-20261005/crates/kairo-ecs-rng)
+   Compiling num-traits v0.2.19
+   Compiling hybrid-array v0.4.15
+   Compiling cpufeatures v0.3.1
+   Compiling syn v3.0.6
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling chrono v0.4.45
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling thiserror-impl v2.0.20
+   Compiling kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-c42-residual-fixes-20261005/crates/kairo-ecs-arrow)
+   Compiling kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c42-residual-fixes-20261005/crates/kairo-ecs-calibration)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.45s
+     Running tests/residuals_c42.rs (.artifacts/c42-residual-fixes/target/debug/deps/residuals_c42-11203b933e5dedb9)
+
+running 22 tests
+test exact_residual_covers_full_u128_range ... ok
+test cohort_mismatch_is_invalid_across_prespecified_groups ... ok
+test exact_float_values_above_two_to_53_do_not_raise_rounding_flag ... ok
+test invalid_grouping_retains_raw_rows_and_counts ... ok
+test invalid_window_is_reported ... ok
+test contradictory_status_and_tick_inputs_are_invalid_and_retained ... ok
+test invalid_middle_pair_retains_full_batch_rows_counts_and_order ... FAILED
+test duplicate_logical_side_key_is_invalid_not_deduplicated ... ok
+test infeasible_valid_prediction_remains_in_error_summary ... ok
+test logical_key_requires_all_identity_strings_and_known_purpose ... ok
+test matched_rows_are_prediction_minus_observation_and_order_invariant ... ok
+test missing_censored_failed_and_infeasible_attempts_keep_diagnostics ... ok
+test missing_selection_time_does_not_fall_back_to_prediction ... ok
+test prespecified_empty_group_is_emitted ... ok
+test same_logical_key_in_different_groups_is_invalid_and_retained ... FAILED
+test simulation_failed_or_infeasible_rows_cannot_carry_observed_ticks ... FAILED
+test source_selection_times_must_match_within_pair ... ok
+test statuses_and_diagnostics_are_preserved_and_overlap ... ok
+test unsupported_provenance_is_unverified_and_retained ... ok
+test unclamped_attestation_and_tick_unit_are_required ... ok
+test window_is_half_open_on_selection_time ... ok
+test bounded_large_paired_cohort_keeps_complete_counts ... ok
+
+failures:
+
+---- invalid_middle_pair_retains_full_batch_rows_counts_and_order stdout ----
+
+thread 'invalid_middle_pair_retains_full_batch_rows_counts_and_order' (48624422) panicked at crates/kairo-ecs-calibration/tests/residuals_c42.rs:367:5:
+assertion `left == right` failed
+  left: 1
+ right: 3
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- same_logical_key_in_different_groups_is_invalid_and_retained stdout ----
+
+thread 'same_logical_key_in_different_groups_is_invalid_and_retained' (48624429) panicked at crates/kairo-ecs-calibration/tests/residuals_c42.rs:396:5:
+assertion failed: out.iter().all(|summary| summary.status == SummaryStatus::Invalid)
+
+---- simulation_failed_or_infeasible_rows_cannot_carry_observed_ticks stdout ----
+
+thread 'simulation_failed_or_infeasible_rows_cannot_carry_observed_ticks' (48624430) panicked at crates/kairo-ecs-calibration/tests/residuals_c42.rs:443:9:
+assertion `left == right` failed
+  left: Empty
+ right: Invalid
+
+
+failures:
+    invalid_middle_pair_retains_full_batch_rows_counts_and_order
+    same_logical_key_in_different_groups_is_invalid_and_retained
+    simulation_failed_or_infeasible_rows_cannot_carry_observed_ticks
+
+test result: FAILED. 19 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+error: test failed, to rerun pass `-p kairo-ecs-calibration --test residuals_c42`

@@ -1,0 +1,16 @@
+{
+  "lease_id": "5154388c252543099726ff7608e2ce20",
+  "owner": "c42-precision-review-worker",
+  "task": "C4.2.precision.20261005",
+  "worktree": "/private/tmp/kairos-c42-precision-review-20261005",
+  "paths": [
+    ".artifacts/c42-precision",
+    "crates/kairo-ecs-calibration/src/metrics.rs",
+    "crates/kairo-ecs-calibration/tests/distance_c42.rs"
+  ],
+  "base_sha": "25134e70a749b45a431ee05c598ae23c1ff53fa6",
+  "expires_at": 1791159688.905426,
+  "input_hashes": {
+    "conductor/design/calibration/c4.2-runtime-contract-v1.md": "67ac4a4b3652f007e1ff03b17d7550cae24499053d4366e0aa186272709a5774"
+  }
+}

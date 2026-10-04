@@ -1,0 +1,137 @@
+{
+  "runtime_local": [
+    {
+      "id": "c42-final-full-native",
+      "cwd": "/private/tmp/kairos-c42-20261005",
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration"
+      ],
+      "env": {
+        "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+      },
+      "inputs": [
+        "crates/kairo-ecs-calibration/src/lib.rs",
+        "crates/kairo-ecs-calibration/src/metrics.rs",
+        "crates/kairo-ecs-calibration/src/residuals.rs",
+        "crates/kairo-ecs-calibration/src/metric_cohorts.rs"
+      ]
+    },
+    {
+      "id": "c42-final-strict-clippy",
+      "cwd": "/private/tmp/kairos-c42-20261005",
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "env": {
+        "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+      },
+      "inputs": [
+        "crates/kairo-ecs-calibration/src/lib.rs",
+        "crates/kairo-ecs-calibration/src/metrics.rs",
+        "crates/kairo-ecs-calibration/src/residuals.rs",
+        "crates/kairo-ecs-calibration/src/metric_cohorts.rs"
+      ]
+    },
+    {
+      "id": "c42-final-workspace-format",
+      "cwd": "/private/tmp/kairos-c42-20261005",
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "env": {
+        "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+      },
+      "inputs": [
+        "crates/kairo-ecs-calibration/src/lib.rs",
+        "crates/kairo-ecs-calibration/src/metrics.rs",
+        "crates/kairo-ecs-calibration/src/residuals.rs",
+        "crates/kairo-ecs-calibration/src/metric_cohorts.rs"
+      ]
+    },
+    {
+      "id": "c42-floor-native",
+      "cwd": "/private/tmp/kairos-c42-20261005",
+      "argv": [
+        "rustup",
+        "run",
+        "1.88.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration"
+      ],
+      "env": {
+        "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target-floor"
+      },
+      "inputs": [
+        "crates/kairo-ecs-calibration/src/lib.rs",
+        "crates/kairo-ecs-calibration/src/metrics.rs",
+        "crates/kairo-ecs-calibration/src/residuals.rs",
+        "crates/kairo-ecs-calibration/src/metric_cohorts.rs"
+      ]
+    },
+    {
+      "id": "c42-synthetic-100k-timing",
+      "cwd": "/private/tmp/kairos-c42-20261005",
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--test",
+        "distance_c42",
+        "deterministic_100k_point_shift_timing",
+        "--",
+        "--ignored",
+        "--nocapture"
+      ],
+      "env": {
+        "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+      },
+      "inputs": [
+        "crates/kairo-ecs-calibration/src/metrics.rs",
+        "crates/kairo-ecs-calibration/tests/distance_c42.rs"
+      ],
+      "interpretation": "Single debug synthetic timing; not release performance or speedup evidence"
+    }
+  ],
+  "unchanged_core_compatibility": "exact-head existing hosted native-owner matrix; local frozen-source audit",
+  "oracle": "unchanged C4.1 Rust comparator and independent Fraction Python comparator on actual emitted report",
+  "negative_controls": [
+    "wrong commit claim",
+    "wrong toolchain claim",
+    "mutated actual metric output"
+  ],
+  "test_selection": "affected calibration package current+floor, strict affected package alltargets, synthetic metric benchmark once; unchanged parent harness runs after metadata/pin publication",
+  "parallel_scope": "numeric/residual/report workers disjoint; rootintegration/review/governance/pinserial"
+}

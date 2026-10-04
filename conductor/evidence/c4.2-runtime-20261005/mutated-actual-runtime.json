@@ -1,0 +1,1717 @@
+{
+  "cases": [
+    {
+      "id": "shift-1",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": 0.3333333333333333,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "999",
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "identical-1",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "ties-aggregate",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": 0.3333333333333333,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.6666666666666666,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "unequal-n",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "1"
+          }
+        },
+        "ks_d": 0.6666666666666666,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 1.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "weighted-basic",
+      "result": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": 0.5,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 1.0,
+        "warnings": [],
+        "weighting": "explicit"
+      }
+    },
+    {
+      "id": "weighted-zero",
+      "result": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": 1.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 2.0,
+        "warnings": [],
+        "weighting": "explicit"
+      }
+    },
+    {
+      "id": "duration-scaled",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": 0.3333333333333333,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "second",
+        "w1": 60.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "duration-minute",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": 0.3333333333333333,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "60",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 1.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "unsorted",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "4",
+          "cohort_total": "8",
+          "eligible": "8",
+          "excluded": "0",
+          "reference": "4",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "8",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "4",
+            "reference": "4"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "permuted",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "4",
+          "cohort_total": "8",
+          "eligible": "8",
+          "excluded": "0",
+          "reference": "4",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "8",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "4",
+            "reference": "4"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "symmetric",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "4",
+          "cohort_total": "8",
+          "eligible": "8",
+          "excluded": "0",
+          "reference": "4",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "8",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "4",
+            "reference": "4"
+          }
+        },
+        "ks_d": 0.25,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.5,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "fractional",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": 0.5,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.3333333333333333,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "signed-residual",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": 0.3333333333333333,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.6666666666666666,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "tail-180",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "5",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "5",
+            "reference": "1"
+          }
+        },
+        "ks_d": 0.2,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 180.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "empty-ref",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "1",
+          "eligible": "1",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "1",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "0"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "insufficient_data",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "empty-both",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "0",
+          "eligible": "0",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "0",
+            "reference": "0"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "empty",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "nonfinite-total-mass",
+      "result": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "2",
+            "reference": "2"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "4"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      }
+    },
+    {
+      "id": "null-points",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "3",
+          "eligible": "3",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "2"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "nan-value",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "inf-value",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "bad-weight-length",
+      "result": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "3",
+          "eligible": "3",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "2"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "3"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "2"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      }
+    },
+    {
+      "id": "negative-weight",
+      "result": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      }
+    },
+    {
+      "id": "zero-total-mass",
+      "result": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      }
+    },
+    {
+      "id": "coverage-censored",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "8",
+          "eligible": "6",
+          "excluded": "2",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "censor_subtypes": {
+            "interval": "0",
+            "left": "0",
+            "right": "1"
+          },
+          "overlap_counts": {
+            "infeasible_and_observed": "0"
+          },
+          "primary_dispositions": {
+            "censored": "1",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [
+          "right_censored_present"
+        ],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "coverage-missing",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "3",
+          "eligible": "3",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "censor_subtypes": {},
+          "overlap_counts": {},
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [
+          "missing_present"
+        ],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "coverage-failed",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "3",
+          "eligible": "2",
+          "excluded": "1",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "censor_subtypes": {},
+          "overlap_counts": {},
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "1",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "1",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [
+          "failed_present"
+        ],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "coverage-infeasible",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "censor_subtypes": {},
+          "overlap_counts": {
+            "infeasible_and_observed": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "1",
+            "missing": "0",
+            "observed": "1",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [
+          "infeasible_present"
+        ],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "no-observed",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "censor_subtypes": {},
+          "overlap_counts": {},
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "2",
+            "observed": "0",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "empty",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [
+          "no_observed_points"
+        ],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "large-common-origin",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": 0.5,
+        "p_value": null,
+        "precision": "exact_offsets",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 1.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "near-u128",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": 1.0,
+        "p_value": null,
+        "precision": "exact_offsets",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 1.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "common-origin-scaled",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": 0.5,
+        "p_value": null,
+        "precision": "exact_offsets",
+        "scale_ticks": "60",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 1.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "origin-null",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "5",
+          "eligible": "5",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "3"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "exact_offsets",
+        "scale_ticks": "60",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "weighted-null",
+      "result": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "5",
+          "eligible": "5",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "3"
+          }
+        },
+        "ks_d": 0.4,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.8,
+        "warnings": [],
+        "weighting": "explicit"
+      }
+    },
+    {
+      "id": "u128-overflow",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "rejected",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "precision-reject",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "2",
+            "reference": "2"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "4"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "rejected",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "nonfinite-weight",
+      "result": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      }
+    },
+    {
+      "id": "infeasible-warning-zero",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [
+          "infeasible_present"
+        ],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "censor-warning-zero",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [
+          "right_censored_present"
+        ],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "conditional-opposite",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "compared_variable": "Y",
+          "group_variable": "X",
+          "groups": [
+            {
+              "eligible_candidate": "1",
+              "eligible_reference": "1",
+              "group": "0",
+              "ks_d": "1",
+              "status": "ok",
+              "w1": "1"
+            },
+            {
+              "eligible_candidate": "1",
+              "eligible_reference": "1",
+              "group": "1",
+              "ks_d": "1",
+              "status": "ok",
+              "w1": "1"
+            },
+            {
+              "eligible_candidate": "0",
+              "eligible_reference": "0",
+              "group": "2",
+              "ks_d": null,
+              "status": "empty",
+              "w1": null
+            }
+          ],
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": 0.0,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.0,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "malformed-value",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    },
+    {
+      "id": "malformed-weight",
+      "result": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      }
+    },
+    {
+      "id": "common-origin-small-offset",
+      "result": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "3",
+          "eligible": "3",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "3",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "2"
+          }
+        },
+        "ks_d": 0.5,
+        "p_value": null,
+        "precision": "exact_offsets",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": 0.5,
+        "warnings": [],
+        "weighting": "equal"
+      }
+    }
+  ],
+  "fixture_sha256": "f2b35392e64245475d039d55761344eaeebd6cb0499342436c63840325ed0e6b",
+  "provenance": {
+    "algorithm_versions": [
+      "empirical_equal.v1",
+      "weighted_descriptive.v1"
+    ],
+    "kind": "runtime_candidate",
+    "producer_api": "tests/metrics_c42.rs::produce_candidate_report -> src/metrics.rs::compare",
+    "producer_commit": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "producer_source_sha256": "59070a5c5f7e95b3a3cd042d52f3b700c4aba848554564cbd40fee56b685b371",
+    "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28) (Homebrew)"
+  },
+  "schema_version": "c41.candidate.v1"
+}

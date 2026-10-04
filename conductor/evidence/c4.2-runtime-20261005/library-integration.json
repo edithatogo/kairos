@@ -1,0 +1,75 @@
+[
+  {
+    "id": "c42-full-native",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration"
+    ],
+    "env": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "inputs": [
+      "crates/kairo-ecs-calibration/src/lib.rs",
+      "crates/kairo-ecs-calibration/src/metrics.rs",
+      "crates/kairo-ecs-calibration/src/residuals.rs",
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs"
+    ]
+  },
+  {
+    "id": "c42-strict-clippy",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "clippy",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "env": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "inputs": [
+      "crates/kairo-ecs-calibration/src/lib.rs",
+      "crates/kairo-ecs-calibration/src/metrics.rs",
+      "crates/kairo-ecs-calibration/src/residuals.rs",
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs"
+    ]
+  },
+  {
+    "id": "c42-workspace-format",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "env": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "inputs": [
+      "crates/kairo-ecs-calibration/src/lib.rs",
+      "crates/kairo-ecs-calibration/src/metrics.rs",
+      "crates/kairo-ecs-calibration/src/residuals.rs",
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs"
+    ]
+  }
+]

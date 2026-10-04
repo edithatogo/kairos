@@ -1,0 +1,13 @@
+   Compiling kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c42-20261005/crates/kairo-ecs-calibration)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.87s
+     Running tests/metrics_c42.rs (.artifacts/c42-cohorts/target/debug/deps/metrics_c42-101a09f99efa7747)
+
+running 5 tests
+test optional_report_requires_committed_source_binding ... ok
+test actual_conditional_metric_exposes_opposite_dependence_and_keeps_empty_group ... ok
+test nulls_remain_missing_while_malformed_and_weight_errors_are_rejected ... ok
+test default_actual_producer_executes_all_frozen_cases ... ok
+test producer_output_is_invariant_to_removed_or_mutated_expected_values ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s
+

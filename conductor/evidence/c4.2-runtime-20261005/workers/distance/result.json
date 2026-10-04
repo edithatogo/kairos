@@ -1,0 +1,81 @@
+{
+  "task": "C4.2.distance.20261005",
+  "cwd": "/private/tmp/kairos-c42-distance-20261005",
+  "base_commit": "5b7b567810e3e2311acd6bfbbb6a5301266c608f",
+  "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+  "commands": [
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--test",
+        "distance_c42"
+      ],
+      "env": {
+        "CARGO_TARGET_DIR": ".artifacts/c42-distance/target"
+      },
+      "exit_status": 0,
+      "log": ".artifacts/c42-distance/distance_c42.log",
+      "log_sha256": "bc436b8a131d85165c5664540b6adcc64b50326b55b38708bf8fb641be5e1099"
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "rustfmt",
+        "--edition",
+        "2021",
+        "--check",
+        "crates/kairo-ecs-calibration/src/metrics.rs",
+        "crates/kairo-ecs-calibration/tests/distance_c42.rs"
+      ],
+      "exit_status": 0,
+      "log": ".artifacts/c42-distance/rustfmt.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_status": 0,
+      "log": ".artifacts/c42-distance/diff-check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--test",
+        "distance_c42"
+      ],
+      "exit_status": 101,
+      "meaning": "expected initial missing src/metrics.rs test-first red",
+      "log": ".artifacts/c42-distance/initial-missing-api.log",
+      "log_sha256": "02804a484fa5b7d75a564649e067d9dcdc93eeae475b5687e2469935efcaf298"
+    }
+  ],
+  "source_sha256": {
+    "crates/kairo-ecs-calibration/src/metrics.rs": "bf2b72f1f4938634ed1c57b7892c5a6bf90235f3f8fc9c5f59859d5b80f2186e",
+    "crates/kairo-ecs-calibration/tests/distance_c42.rs": "f5860a669c76a3853b20769b1ca6ab060a632692f3a9375a2bf0ac2c42e86f64"
+  },
+  "scope_check_receipt": ".artifacts/c42-distance/scope-check.json",
+  "ignored_performance_test": "not executed; coordinator to run once after integration",
+  "commit_sha": "739bc875fb26ed9007eee9ddac0d2f3935a4121b",
+  "working_tree_clean": true
+}
