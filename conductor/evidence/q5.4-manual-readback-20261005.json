@@ -1,0 +1,65 @@
+{
+  "head_sha": "eae890b0a2a3524a543ec4ee4aca61346e273b52",
+  "toolchain": {
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)"
+  },
+  "targeted_test_summaries": [
+    {
+      "test_binary": "flow_builder_migration_v1",
+      "summary": "6 passed, 0 failed"
+    },
+    {
+      "test_binary": "flow_determinism_conformance_v1",
+      "summary": "1 passed, 0 failed"
+    },
+    {
+      "test_binary": "flow_preemption_primary_v1",
+      "summary": "1 passed, 0 failed"
+    },
+    {
+      "test_binary": "q53_legacy_public_surface_v1",
+      "summary": "3 passed, 0 failed"
+    }
+  ],
+  "aggregate_digest_observed": "47cfb7dca4211252",
+  "aggregate_emissions": 12,
+  "each_emission_matches_expected": true,
+  "primary_preemption_fixture": {
+    "low_work_duration": 10,
+    "interruption_tick": 3,
+    "urgent_work_duration": 2,
+    "terminal_events": {
+      "Suspend": "Completed at tick 12",
+      "Restart": "Completed at tick 15",
+      "Abort": "Aborted at tick 3; no Completed transition"
+    }
+  },
+  "examples": {
+    "fifo": {
+      "exit_code": 0,
+      "stdout_exact_match": true,
+      "stdout_sha256": "2cfa1b2e5c45c69f4357e2684211f56a2a93bc38fdfc052e869869374e5b8dfa"
+    },
+    "staff": {
+      "exit_code": 0,
+      "stdout_exact_match": true,
+      "stdout_sha256": "b8a04dab35c43f37d8df3dd393b64c0e22b436f8737fda1431330c87b6fc8ff5",
+      "different_duration_note": "Its trace includes separate staff, bed and cleaning requests and ends normal_staff at tick 10; it is not the primary preemption fixture with low-work duration 10, interruption at 3, urgent duration 2."
+    }
+  },
+  "claim": {
+    "owned_path": ".artifacts/q54-manual",
+    "context_budget_bytes": 24000,
+    "context_hash": "beea71507c926b4509acc8a1ba8b75ff53276e224b8a60798c5fd1a235d91696",
+    "lease_record_sha256": "1b8b2cab6475f87a1a8da54d64da76eec226fb19939f1a917180a527364a213c",
+    "token_stored_outside_repository": true,
+    "token_mode": "0600"
+  },
+  "source_cleanliness": "git status remained clean; all generated files are ignored .artifacts outputs",
+  "limitations": [
+    "This is a targeted local manual replay only. It does not rerun full default/no-default suites, hosted exact-head checks, release/security gates, portable checkpoint, Metal/GPU, distributed, or clinical/MVP acceptance.",
+    "The deterministic fixture uses test-local generated inputs and does not qualify engine RNG, shared-runtime concurrency, cross-LP PDES or portable checkpointing.",
+    "Q53 tests compile retained legacy surfaces but are not a general semver proof."
+  ]
+}

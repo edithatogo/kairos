@@ -7,7 +7,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 00 | Project Foundation, Governance & Naming | Done | `foundation-agent` | See `conductor/tracks/00-*/spec.md` |
 | 01 | The Heart: kairo-ecs-core & kairo-ecs-state | Done | `core-scheduler-agent + ecs-agent + contracts-agent` | See `conductor/tracks/01-*/spec.md` |
 | 02 | The Bridge: kairo-ecs-ffi, UniFFI & Diplomat | Done | `ffi-agent + uniffi-agent + diplomat-agent` | See `conductor/tracks/02-*/spec.md` |
-| 03 | The Flow: DES Trajectory API & ABM Behavior API (historical minimal slice Done; Q3 provenance retained; Q4 bounded experimental development qualified at Rust 1.99.0 source S 1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6 only; Q5 and release open) | Done | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
+| 03 | The Flow: DES Trajectory API & ABM Behavior API (historical minimal slice Done; Q3 provenance retained; Q4 qualified at source S; Q5.1–Q5.3 bounded experimental development evidence at source `eae890b0a2a3524a543ec4ee4aca61346e273b52`; final Q5.4 parent review and release remain open) | Done | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
 | 04 | The Analyst: kairo-ecs-arrow (Done for historical R2 schema/versioning/roundtrip; Q4.3 lifecycle sidecar is qualified as a bounded Rust 1.99.0 development extension at source S 1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6; broader Arrow/release scope open) | Done | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
 | 05 | The Window: kairo-ecs-viz | Done | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
 | 06 | Python Binding 3.10-3.14 | Done | `python-agent` | See `conductor/tracks/06-*/spec.md` |
@@ -75,6 +75,10 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 ## Q4 canonical Rust 1.99 development qualification
 
 Track 03 and Track 04 have a bounded Q4 development qualification at tested source S `1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6` on `origin/codex/careops-q4-lifecycle`. Local Rust 1.99.0 gates, separate Rust 1.88.0 and Rust 1.76.0 compatibility checks, and exact-head native owner run https://github.com/edithatogo/kairos/actions/runs/37192093779 are recorded in `conductor/evidence/q4-development-source-qualification-20261004.json`. Existing Done labels still refer to the historical minimal Track 03 and R2 Track 04 slices. Parent pin integration remains pending; Q5, Track 22, Track 25, full C1/C2 and release holds remain open.
+
+## Q5 queue development qualification at source eae890b
+
+Q5.1 conformance, Q5.2 bounded queue benchmarks, and Q5.3 compatibility/migration were accepted for experimental development at `eae890b0a2a3524a543ec4ee4aca61346e273b52` on `origin/codex/careops-q53-compatibility`. Q5.2's 39 scenarios × five repeats included all thirteen 100,000-request cases; both isolated Ubuntu owner comparisons passed their recorded gates. The preserved initial local failures and source/binary-identical controls do not support a general speedup claim. Q5.3 is backed by development PR #218 and the source-bound parent evidence package; skipped checks are not passes. The independent parent reader completed 11 checks with three zero exits, replayed both exact examples byte-equal to their expected oracles, and verified twelve aggregate hash lines matching Q5.1 checksum `47cfb7dca4211252`. Receipt is slated for parent evidence path `conductor/evidence/q5.4-completion-20261005/manual-review.json`. Final Q5.4 parent acceptance awaits evidence integration and parent hosted acceptance. Track 03's historical Done label is unchanged; no Track 22 portability, Track 25 release approval, Metal/GPU, distributed Flow, clinical, MVP, security or release readiness follows.
 
 ## C1 scoped integrated qualification — 2026-10-05
 
