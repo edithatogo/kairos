@@ -40,11 +40,11 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - name: Install reviewed Rust 1.98.1
+      - name: Install reviewed Rust 1.99.0
         run: |
           mkdir -p .artifacts/ci/native
           set -o pipefail
-          rustup toolchain install 1.98.1 --profile minimal 2>&1 | tee .artifacts/ci/native/install.log
+          rustup toolchain install 1.99.0 --profile minimal 2>&1 | tee .artifacts/ci/native/install.log
       - name: Verify actual native host and source
         env:
           EXPECTED_OS: ${{ matrix.os }}
@@ -52,7 +52,7 @@ jobs:
           set -o pipefail
           exec > >(tee -a .artifacts/ci/native/install.log) 2>&1
           git rev-parse HEAD
-          task_rustc="$(rustup which --toolchain 1.98.1 rustc)"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
           "$task_rustc" -vV
           if [ "$EXPECTED_OS" = macos-15 ]; then
             "$task_rustc" -vV | grep -Fx 'host: aarch64-apple-darwin'
@@ -69,7 +69,7 @@ jobs:
         run: |
           mkdir -p .artifacts/ci/native
           set -o pipefail
-          task_rustc="$(rustup which --toolchain 1.98.1 rustc)"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
           task_bin="$(dirname "$task_rustc")"
           export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
           cargo test --locked -p kairo-ecs-core -p kairo-ecs-types -p kairo-ecs-state -p kairo-ecs-rng -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow -p kairo-ecs-calibration 2>&1 | tee .artifacts/ci/native/owner.log
@@ -92,26 +92,26 @@ jobs:
           cargo test --locked -p kairo-ecs-calibration 2>&1 | tee -a .artifacts/ci/native/calibration-floor.log
           rustc -vV | tee .artifacts/ci/native/resource-lifecycle-floor.log
           cargo test --locked -p kairo-ecs-arrow --features resource-lifecycle-io 2>&1 | tee -a .artifacts/ci/native/resource-lifecycle-floor.log
-      - name: Initialize Arrow IO Rust 1.98.1 evidence directory
-        run: mkdir -p ".artifacts/ci/arrow-io/1.98.1/${{ matrix.os }}"
+      - name: Initialize Arrow IO Rust 1.99.0 evidence directory
+        run: mkdir -p ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}"
       - name: Install pinned Python for Arrow IO interoperability
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.14.8'
-      - name: Test Arrow IO with Rust 1.98.1
+      - name: Test Arrow IO with Rust 1.99.0
         env:
           EXPECTED_OS: ${{ matrix.os }}
         run: |
           set -o pipefail
-          log_dir=".artifacts/ci/arrow-io/1.98.1/${EXPECTED_OS}"
+          log_dir=".artifacts/ci/arrow-io/1.99.0/${EXPECTED_OS}"
           mkdir -p "$log_dir"
-          task_rustc="$(rustup which --toolchain 1.98.1 rustc)"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
           task_bin="$(dirname "$task_rustc")"
-          task_cargo="$(rustup which --toolchain 1.98.1 cargo)"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
           export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
           "$task_cargo" -V | tee "$log_dir/toolchain.log"
           "$task_rustc" -vV | tee -a "$log_dir/toolchain.log"
-          grep -Fx 'release: 1.98.1' "$log_dir/toolchain.log"
+          grep -Fx 'release: 1.99.0' "$log_dir/toolchain.log"
           if [ "$EXPECTED_OS" = macos-15 ]; then
             grep -Fx 'host: aarch64-apple-darwin' "$log_dir/toolchain.log"
           else
@@ -138,8 +138,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: arrow-io-rust-1.98.1-${{ matrix.os }}
-          path: .artifacts/ci/arrow-io/1.98.1/${{ matrix.os }}/
+          name: arrow-io-rust-1.99.0-${{ matrix.os }}
+          path: .artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/
           retention-days: 7
           if-no-files-found: error
       - name: Retain bounded failure log
