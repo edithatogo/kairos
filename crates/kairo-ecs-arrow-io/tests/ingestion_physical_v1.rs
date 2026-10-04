@@ -14,10 +14,10 @@ use std::{
 };
 
 use arrow_array::RecordBatch;
-use arrow_schema::SchemaRef;
+use arrow_schema::{DataType, SchemaRef};
 use kairo_ecs_arrow_io::{
-    read_ipc_file, read_ipc_stream, read_parquet, write_ipc_file, write_ipc_stream, write_parquet,
-    IoLimits,
+    IoError, IoLimits, read_ipc_file, read_ipc_stream, read_parquet, write_ipc_file,
+    write_ipc_stream, write_parquet,
 };
 
 #[path = "support/calibration_physical_schema_v2.rs"]
@@ -74,13 +74,65 @@ fn input_path(directory: &Path, baseline: bool, record_type: &str, format: &str)
 
 fn read(path: &Path, format: &str, schema: SchemaRef) -> Vec<RecordBatch> {
     let bytes = fs::read(path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()));
+    read_bytes(&bytes, format, schema)
+        .unwrap_or_else(|error| panic!("decode {}: {error}", path.display()))
+}
+
+fn read_bytes(bytes: &[u8], format: &str, schema: SchemaRef) -> Result<Vec<RecordBatch>, IoError> {
     match format {
-        "ipc_file" => read_ipc_file(&bytes, schema, limits(100_000)),
-        "ipc_stream" => read_ipc_stream(&bytes, schema, limits(100_000)),
-        "parquet" => read_parquet(&bytes, schema, limits(100_000)),
+        "ipc_file" => read_ipc_file(bytes, schema, limits(100_000)),
+        "ipc_stream" => read_ipc_stream(bytes, schema, limits(100_000)),
+        "parquet" => read_parquet(bytes, schema, limits(100_000)),
         _ => unreachable!("known physical format"),
     }
-    .unwrap_or_else(|error| panic!("decode {}: {error}", path.display()))
+}
+
+fn changed_schemas(schema: &SchemaRef) -> Vec<SchemaRef> {
+    use frozen::{FieldChange, change_field, change_global_metadata};
+
+    let mut changes = vec![
+        change_field(
+            schema,
+            &["record_type"],
+            FieldChange::DataType(DataType::Binary),
+        ),
+        change_field(schema, &["schema_version"], FieldChange::Nullable(true)),
+        change_field(
+            schema,
+            &["record_type"],
+            FieldChange::Metadata("logical_path".to_string(), Some("wrong.path".to_string())),
+        ),
+        change_global_metadata(schema, "physical_version", Some("1")),
+        change_global_metadata(schema, "physical_version", Some("unknown")),
+        change_global_metadata(schema, "format", None),
+    ];
+
+    match schema.metadata().get("record_type").map(String::as_str) {
+        Some("trace_event.v1") => {
+            changes.push(change_field(
+                schema,
+                &["occurrence_time", "utc_i128_le"],
+                FieldChange::DataType(DataType::FixedSizeBinary(8)),
+            ));
+            changes.push(change_field(
+                schema,
+                &["occurrence_time", "utc_i128_le"],
+                FieldChange::Metadata("encoding".to_string(), Some("unsigned_i128_le".to_string())),
+            ));
+        }
+        Some("trace_exclusion.v1") => changes.push(change_field(
+            schema,
+            &["raw_time_values", "element", "key"],
+            FieldChange::DataType(DataType::LargeUtf8),
+        )),
+        Some("outcome_observation.v1") => changes.push(change_field(
+            schema,
+            &["lineage", "status"],
+            FieldChange::Nullable(true),
+        )),
+        _ => unreachable!("frozen schemas declare one of the physical record types"),
+    }
+    changes
 }
 
 fn row_batches(batches: &[RecordBatch]) -> Vec<RecordBatch> {
@@ -142,6 +194,17 @@ fn actual_physical_tables_roundtrip_across_formats_orders_and_layouts() {
         for format in FORMATS {
             let path = input_path(&input, baseline, record_type, format);
             let batches = read(&path, format, Arc::clone(&schema));
+            let bytes =
+                fs::read(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()));
+            for changed in changed_schemas(&schema) {
+                assert!(
+                    matches!(
+                        read_bytes(&bytes, format, changed),
+                        Err(IoError::SchemaMismatch)
+                    ),
+                    "{format} accepted changed frozen schema for {record_type}"
+                );
+            }
             source_layouts.push((format, batches));
         }
 
@@ -167,7 +230,9 @@ fn actual_physical_tables_roundtrip_across_formats_orders_and_layouts() {
                 assert_same_rows(
                     &decoded,
                     &source_layouts[0].1,
-                    &format!("Rust {format} writer/reader changed {record_type} payload at limit {batch_size}")
+                    &format!(
+                        "Rust {format} writer/reader changed {record_type} payload at limit {batch_size}"
+                    ),
                 );
             }
         }
