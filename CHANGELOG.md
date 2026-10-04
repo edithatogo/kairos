@@ -48,6 +48,8 @@ Format:
 
 ### Added
 
+- Bootstrap package dry runs use an integrity-pinned private cache fork and strict zero-finding npm audit, with retained source, license and regression evidence. Dependency review verifies private alias identity before applying the existing high-severity gate.
+
 - `kairo-ecs-pdes` adds a preview event-owned optimistic runtime and generation bitset behind `time-warp`, with deterministic replay, downstream cancellation, bounded progress, typed errors and local parity fixtures. Distributed rollback acceptance remains pending.
 
 - `kairo-ecs-pdes` adds a preview event-owned conservative runtime behind `pdes`, with per-LP state and queues, positive lookahead, scoped CPU workers, typed protocol errors, and a shared DES/ABM/mixed sequential-parity fixture. The existing callback scheduler remains compatible.
