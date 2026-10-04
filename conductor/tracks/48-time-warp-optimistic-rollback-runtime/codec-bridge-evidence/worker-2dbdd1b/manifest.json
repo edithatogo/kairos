@@ -1,0 +1,9 @@
+{
+  "unchanged_copies": {
+    "final-clippy.log": "7c26e88a7187c028709ae24f08fb7ebf313c34d7ab3935fa532218e694d71d9e",
+    "final-rustfmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "final-test.log": "a18ad16d51422875204b8fd86ae4ff7f90994eab283928a495f8ec7c77a2a2e1",
+    "rustc-info.json": "f22ce7ea6a1c1ca14a96ab0d20877c9fce1c0ceb81916b1148c02c4d589c4923",
+    "verification-receipt.json": "7edea193fb7e643f08d8ef964bf655891959c63b509743355253b1d6605d0cc7"
+  }
+}
