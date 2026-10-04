@@ -20,8 +20,11 @@ population conservation are checked before the completion manifest is published.
 
 `qualification.tar.gz` retains executed command/cwd/tool/source/input/output
 evidence, actual synthetic physical archives, logs and failed attempts.
-`acceptance.json` binds the exact unchanged Rust source at 943ed42 to the final
-encoder source; only the fixture encoder changed after Rust qualification.
+`acceptance.json` binds the unchanged production Rust source at 943ed42 to the final encoder.
+A subsequent test-only adapter change adds schema-mutation rejection assertions;
+matching Rust 1.99 Clippy with warnings denied and both actual physical layouts
+pass again. `adapter-ci-qualification.tar.gz` retains these commands, source
+hashes, outputs and failed attempts. No production ingestion source changed.
 Independent C0 schema/population checks reconcile 7 source candidates to
 6 events, 1 exclusion and 2 outcomes. No planned or ordinary ignored test is
 reported as passed.

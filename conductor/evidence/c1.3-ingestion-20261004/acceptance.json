@@ -2,14 +2,14 @@
   "status": "accepted-development",
   "reviewer": "root coordinator with independent Luna review",
   "qualified_rust_commit": "943ed42d0afc9d79752b314dddac097b4f114d0d",
-  "integrated_source_commit": "a43325de08c8d08efbd56c306859bbc161204520",
+  "integrated_source_commit": "e3c128e2c59e2788b26265470a585d0e0ff4a919",
   "source_sha256": {
     "crates/kairo-ecs-calibration/src/lib.rs": "aefaeef3ed6a22a50a72c52bb8f4a438494c2d1506155817556f20be9ad53d79",
     "crates/kairo-ecs-calibration/src/ingestion_normalize.rs": "cb09f92ea2fcd523e732e3263c830c163bd2511934ed461bf1a8b8347fdf28ea",
     "crates/kairo-ecs-calibration/src/ingestion_sort.rs": "5825a6734401eca2f5c079dafe35a9f20a81dfda49b1182ceb30548c207fb156",
     "crates/kairo-ecs-calibration/src/ingestion_validate.rs": "ada2db9b91c9f79b6a4d8ed7801075ca21fa5aa839209708e42e3c295d74a523",
     "crates/kairo-ecs-calibration/src/ingestion_pipeline.rs": "6af9f7b928e83634c189b16e7c33469abf0262b4fc7e887e1c16b59e915b9264",
-    "crates/kairo-ecs-arrow-io/tests/ingestion_physical_v1.rs": "94495c0472c8cedf2068a35495a89aa7038afd2e38742e6c8a073c22a53ec215",
+    "crates/kairo-ecs-arrow-io/tests/ingestion_physical_v1.rs": "16968d25f7ad82afdd6bc4af8aa5b973a85f74d742975bbf283d1e7490b9924e",
     "conformance/c13/interop.py": "4d1e93863cdba0e0a67dc7a14841e38a0bfc3f71fff8be5c23db86f619f63c1a",
     "conductor/design/calibration/c1.3-ingestion-contract-v1.md": "671558ccb7350f0690485203f9df6e1d2f58639a70881c41a3fb798de914a7de",
     "Cargo.lock": "711f5d19b22d454a394334402e5829ec8e0a0287f4febaef807767e1529bda8b"
@@ -61,7 +61,12 @@
   ],
   "artifacts": {
     "c0-validation.json": "740556298b71d9fb39636aa22e7dd6e7ece05da5fbbaf25ed7d25b6bef0ce9c0",
+    "adapter-ci-qualification.json": "8f277d369b50e62ca440246afdc2a885316df460c9224972b5585bf2b782e98f",
+    "adapter-ci-qualification.tar.gz": "c94fc669cb640abb1a729b49d085190cd2bfb61e9c44c247194ce15077ce0cae",
+    "README.md": "0418455abb480d5742e5aba5a93a1d1d5599bdeb9e1f6c8c5829a30635b1a7e4",
     "physical-qualification.json": "3fc5b6f143590ccbab5fb7cd2a3f620f4ad715ed776c5193aa78ef5de7a49993",
     "qualification.tar.gz": "bddb0b0594fe04a62a68d7325cdce60cfd774a226e3e0e056c3b51607ad33a35"
-  }
+  },
+  "qualified_adapter_commit": "f7ddfc7a299dfc0615562aafd94f78a36f3b5d0b",
+  "adapter_followup": "Schema-mutation rejection assertions use all helpers; matching Rust1.99 targeted Clippy -Dwarnings and both actual physical layouts pass. Production ingestion source is unchanged, so original two explicit re-ingestion runs remain applicable."
 }
