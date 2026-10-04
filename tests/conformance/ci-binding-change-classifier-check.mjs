@@ -68,3 +68,9 @@ try {
 }
 
 console.log('Binding change classifier checks passed.');
+
+const archiveEvidencePaths = ["packaging/scripts/acquire_package_archive_bundle.py", "tests/test_package_archive_acquisition.py", "packaging/scripts/build_archive_supply_chain.py", "tests/test_archive_supply_chain.py", "tests/test_archive_supply_chain_ci.py", "scripts/archive-supply-chain-test-tools.in", "scripts/archive-supply-chain-test-tools.lock"];
+for (const path of archiveEvidencePaths) assert.deepEqual(classifyBindingPaths([path]), lanes());
+assert.deepEqual(classifyBindingPaths(archiveEvidencePaths), lanes());
+assert.deepEqual(classifyBindingPaths([...archiveEvidencePaths,'bindings/python/source.py']), lanes('python'));
+for (const path of ['Cargo.lock','packaging/scripts/build_package_archive_bundle.py','scripts/validation/archive-evidence-ci-paths.mjs','tests/test_archive_supply_chain_new.py']) assert.deepEqual(classifyBindingPaths([...archiveEvidencePaths,path]), lanes(...BINDING_LANES));

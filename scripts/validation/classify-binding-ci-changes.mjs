@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { isArchiveEvidencePath } from './archive-evidence-ci-paths.mjs';
 
 export const BINDING_LANES = ['python', 'r', 'julia', 'typescript', 'csharp', 'go', 'gym'];
 
@@ -33,7 +34,7 @@ export function classifyBindingPaths(paths) {
 
   for (const path of paths) {
     if (typeof path !== 'string' || path.length === 0) return allLanes();
-    if (DOC_PATHS.some((pattern) => pattern.test(path))) continue;
+    if (isArchiveEvidencePath(path) || DOC_PATHS.some((pattern) => pattern.test(path))) continue;
     if (SHARED_PATHS.some((pattern) => pattern.test(path))) return allLanes();
 
     const lane = Object.entries(LANE_PATHS).find(([, pattern]) => pattern.test(path))?.[0];

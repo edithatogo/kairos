@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { isArchiveEvidencePath } from './archive-evidence-ci-paths.mjs';
 
 const RUST_RELEVANT_PATHS = [
   /\.rs$/,
@@ -28,7 +29,7 @@ export function requiresRustVerification(paths) {
   // Empty or unfamiliar change sets must run Rust verification. Only skip it
   // when every changed path is in a deliberately small, known unrelated set.
   if (paths.length === 0) return true;
-  return paths.some((path) => !KNOWN_NON_RUST_PATHS.some((pattern) => pattern.test(path))
+  return paths.some((path) => (!isArchiveEvidencePath(path) && !KNOWN_NON_RUST_PATHS.some((pattern) => pattern.test(path)))
     || RUST_RELEVANT_PATHS.some((pattern) => pattern.test(path)));
 }
 

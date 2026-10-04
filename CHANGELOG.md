@@ -16,6 +16,9 @@ Format:
 
 ### Changed
 
+- Archive-only evidence changes select the focused regression workflow while native, package producer and unknown changes retain existing checks. Main commits continue full native verification.
+- Retained archive acquisition can require a successful manual package run on main and verify that its source commit belongs to the observed main history before downloading.
+
 - Archive supply-chain regressions run in a focused workflow for relevant changes, using pinned Actions and hash-locked Python tools. Evidence generation isolates the scanner environment and records the retained acquisition helper source identity.
 
 - Release artifact evidence can be derived from exact retained package archives: verified acquisition, archive-bound SPDX SBOMs, SHA-256 inventories and explicitly untrusted local copy provenance. Portable regression tests cover missing or inconsistent evidence; native build attestations remain pending.
