@@ -22,3 +22,6 @@ mod trace_order;
     )
 )]
 mod trace_mapping;
+
+// Private bounded C1 source/timestamp normalization wrapper.
+mod ingestion_normalize;
