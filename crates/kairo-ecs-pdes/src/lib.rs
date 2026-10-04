@@ -16,9 +16,16 @@ pub use generation_bitset::{
 mod optimistic;
 #[cfg(feature = "time-warp")]
 pub use optimistic::{
-    LogicalEventId, OptimisticError, OptimisticEventOrderKey, OptimisticFossilReport,
-    OptimisticLimits, OptimisticMessage, OptimisticMessageKind, OptimisticProcess,
-    OptimisticRunProgress, OptimisticRuntime, OptimisticRuntimeReport, OptimisticStateError,
+    LogicalEventId, NativeAccountingAuthority, NativeAdmissionCapability,
+    NativeAdmissionMembership, NativeIntentKind, NativeIntentView, NativeOutboundSend,
+    NativeRetirementCapability, NativeRetirementEffect, NativeRetirementRequest,
+    NativeTransitionId, OptimisticAccountingSnapshot, OptimisticAuthority, OptimisticError,
+    OptimisticEventOrderKey, OptimisticFossilReport, OptimisticLimits, OptimisticMessage,
+    OptimisticMessageKind, OptimisticNativeCleanupFailure, OptimisticNativeCutFailure,
+    OptimisticNativeCutReport, OptimisticOutboundStatus, OptimisticOutboundView,
+    OptimisticOwnedFailurePhase, OptimisticOwnedOptions, OptimisticOwnedRunFailure,
+    OptimisticOwnedStep, OptimisticOwnedStepKind, OptimisticProcess, OptimisticRunProgress,
+    OptimisticRuntime, OptimisticRuntimeReport, OptimisticSendKey, OptimisticStateError,
     OptimisticStateToken, OptimisticTraceEntry,
 };
 

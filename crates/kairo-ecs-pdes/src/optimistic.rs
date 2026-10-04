@@ -13,6 +13,23 @@ use kairo_ecs_types::SimDuration;
 
 use super::{LpId, PartitionPlan, RemoteEvent, Tick};
 
+mod owned;
+mod owned_execution;
+mod owned_routing;
+pub use owned::{NativeAccountingAuthority, OptimisticOwnedOptions};
+use owned::{OwnedConstructionConfig, OwnedRuntimeState};
+pub use owned_execution::{
+    NativeIntentKind, NativeIntentView, NativeRetirementCapability, NativeRetirementEffect,
+    NativeRetirementRequest, NativeTransitionId, OptimisticNativeCleanupFailure,
+    OptimisticNativeCutFailure, OptimisticNativeCutReport, OptimisticOwnedFailurePhase,
+    OptimisticOwnedRunFailure, OptimisticOwnedStep, OptimisticOwnedStepKind,
+};
+pub use owned_routing::{
+    NativeAdmissionCapability, NativeAdmissionMembership, NativeOutboundSend,
+    OptimisticAccountingSnapshot, OptimisticOutboundStatus, OptimisticOutboundView,
+    OptimisticSendKey,
+};
+
 const MAX_CAUSAL_DEPTH: usize = 128;
 static NEXT_RUNTIME_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -100,6 +117,7 @@ pub enum OptimisticError {
         destination: LpId,
     },
     UnknownLogicalProcess(LpId),
+    ScopedAuthorityRequiresOwnedRuntime,
     RouteMissing {
         source: LpId,
         destination: LpId,
@@ -164,12 +182,104 @@ pub enum OptimisticError {
     IncarnationExhausted(LpId),
     RuntimeIdentityExhausted,
     EpochExhausted(LpId),
+    OwnedModeRequired,
+    OwnedRuntimeJoinIncomplete,
+    EmptyOwnedProcessSet,
+    GlobalLpLimitExceeded {
+        actual: usize,
+        limit: usize,
+    },
+    AuthoritySetMismatch {
+        missing: Vec<LpId>,
+        unexpected: Vec<LpId>,
+    },
+    EmissionEpochSetMismatch {
+        missing: Vec<LpId>,
+        unexpected: Vec<LpId>,
+    },
+    AuthorityModeMismatch(LpId),
+    AuthorityNamespaceMismatch {
+        lp_id: LpId,
+        expected: u128,
+        actual: u128,
+    },
+    EmissionEpochMismatch {
+        lp_id: LpId,
+        expected: u64,
+        actual: u64,
+    },
+    UnownedLogicalProcess(LpId),
+    NativePeersNotSealed,
+    NativePeerRegistrationClosed,
+    NativePeerCoverageIncomplete {
+        missing: Vec<LpId>,
+    },
+    NativePeerConfigurationMismatch,
+    NativePeerOwnershipOverlap(LpId),
+    UnregisteredNativeIssuer {
+        runtime_id: u64,
+        recovery_generation: u64,
+    },
+    NativeSendIssuerMismatch {
+        source_lp: LpId,
+    },
+    NativeAuthorityMismatch {
+        source_lp: LpId,
+        expected: OptimisticAuthority,
+        actual: OptimisticAuthority,
+    },
+    UnknownNativeSend,
+    ConflictingNativeReceipt,
+    TransitionLimitExceeded {
+        limit: usize,
+    },
+    OutboxLimitExceeded {
+        limit: usize,
+    },
+    ReceiptLimitExceeded {
+        limit: usize,
+    },
+    NativeAccountingUnavailable {
+        runtime_id: u64,
+    },
+    StaleNativeAccountingAuthority {
+        runtime_id: u64,
+        recovery_generation: u64,
+    },
+    AccountingRevisionExhausted,
+    VerifiedNativeAdmissionRequired,
+    NativeGroupCutRequired,
     SnapshotPanicked(LpId),
+    SnapshotClonePanicked(LpId),
+    SnapshotDropPanicked(LpId),
     RestorePanicked(LpId),
     HandlerPanicked(LpId),
     RestoreFailed {
         lp_id: LpId,
         reason: OptimisticStateError,
+    },
+    NativeTransitionIdentityExhausted {
+        runtime_id: u64,
+    },
+    UnknownNativeTransition,
+    ConflictingNativeTransition,
+    NativeTransitionFork,
+    NativeTransitionCycle,
+    NativeTransitionDependencyMissing,
+    NativeGroupParticipantDuplicate {
+        runtime_id: u64,
+    },
+    NativeGroupCoverageIncomplete {
+        missing: Vec<LpId>,
+        unexpected: Vec<LpId>,
+    },
+    NativeGroupIssuerMismatch {
+        participant_runtime_id: u64,
+        expected_runtime_id: u64,
+        actual_runtime_id: u64,
+    },
+    NativeGroupInputsOpen {
+        runtime_id: u64,
     },
     Poisoned,
 }
@@ -315,11 +425,27 @@ pub enum OptimisticMessageKind {
     Anti,
 }
 
+/// Declares the authority namespace carried by an optimistic envelope.
+///
+/// This metadata does not affect logical identity or ordering. Scoped values
+/// can be reconstructed, but the all-local runtime rejects them.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum OptimisticAuthority {
+    /// Legacy single-runtime scheduling and preview delivery.
+    LocalPreview,
+    /// A future owned runtime's simulation namespace and ownership epoch.
+    Scoped {
+        simulation_namespace: u128,
+        ownership_epoch: u64,
+    },
+}
+
 /// Transportable event envelope with an opaque logical ID and exact incarnation.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct OptimisticMessage {
     event: RemoteEvent,
     logical_id: LogicalEventId,
+    authority: OptimisticAuthority,
     incarnation: u64,
     kind: OptimisticMessageKind,
 }
@@ -331,9 +457,26 @@ impl OptimisticMessage {
         incarnation: u64,
         kind: OptimisticMessageKind,
     ) -> Self {
+        Self::new_with_authority(
+            event,
+            logical_id,
+            OptimisticAuthority::LocalPreview,
+            incarnation,
+            kind,
+        )
+    }
+
+    fn new_with_authority(
+        event: RemoteEvent,
+        logical_id: LogicalEventId,
+        authority: OptimisticAuthority,
+        incarnation: u64,
+        kind: OptimisticMessageKind,
+    ) -> Self {
         Self {
             event,
             logical_id,
+            authority,
             incarnation,
             kind,
         }
@@ -350,8 +493,33 @@ impl OptimisticMessage {
         incarnation: u64,
         kind: OptimisticMessageKind,
     ) -> Result<Self, OptimisticError> {
+        Self::try_from_authority_parts(
+            event,
+            logical_id,
+            OptimisticAuthority::LocalPreview,
+            incarnation,
+            kind,
+        )
+    }
+
+    /// Reconstructs an envelope with explicit authority metadata while
+    /// validating its complete logical ancestry. This does not authenticate
+    /// the sender or grant scoped execution authority.
+    pub fn try_from_authority_parts(
+        event: RemoteEvent,
+        logical_id: LogicalEventId,
+        authority: OptimisticAuthority,
+        incarnation: u64,
+        kind: OptimisticMessageKind,
+    ) -> Result<Self, OptimisticError> {
         OptimisticEventOrderKey::try_from_parts(event.tick, event.source_lp, logical_id.clone())?;
-        Ok(Self::new(event, logical_id, incarnation, kind))
+        Ok(Self::new_with_authority(
+            event,
+            logical_id,
+            authority,
+            incarnation,
+            kind,
+        ))
     }
 
     /// Returns the immutable model event, including its original payload bytes.
@@ -365,6 +533,10 @@ impl OptimisticMessage {
 
     pub fn incarnation(&self) -> u64 {
         self.incarnation
+    }
+
+    pub fn authority(&self) -> OptimisticAuthority {
+        self.authority
     }
 
     pub fn kind(&self) -> OptimisticMessageKind {
@@ -498,6 +670,7 @@ pub struct OptimisticStateToken {
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 struct DeliveryIdentity {
     source_lp: LpId,
+    authority: AuthorityStorageKey,
     logical_id: LogicalEventId,
     incarnation: u64,
 }
@@ -506,8 +679,48 @@ impl From<&OptimisticMessage> for DeliveryIdentity {
     fn from(message: &OptimisticMessage) -> Self {
         Self {
             source_lp: message.event.source_lp,
+            authority: AuthorityStorageKey::from(message.authority),
             logical_id: message.logical_id.clone(),
             incarnation: message.incarnation,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(super) enum AuthorityStorageKey {
+    LocalPreview,
+    Scoped {
+        simulation_namespace: u128,
+        ownership_epoch: u64,
+    },
+}
+
+impl From<OptimisticAuthority> for AuthorityStorageKey {
+    fn from(authority: OptimisticAuthority) -> Self {
+        match authority {
+            OptimisticAuthority::LocalPreview => Self::LocalPreview,
+            OptimisticAuthority::Scoped {
+                simulation_namespace,
+                ownership_epoch,
+            } => Self::Scoped {
+                simulation_namespace,
+                ownership_epoch,
+            },
+        }
+    }
+}
+
+impl From<AuthorityStorageKey> for OptimisticAuthority {
+    fn from(authority: AuthorityStorageKey) -> Self {
+        match authority {
+            AuthorityStorageKey::LocalPreview => Self::LocalPreview,
+            AuthorityStorageKey::Scoped {
+                simulation_namespace,
+                ownership_epoch,
+            } => Self::Scoped {
+                simulation_namespace,
+                ownership_epoch,
+            },
         }
     }
 }
@@ -524,7 +737,7 @@ type StagedEvent<S> = (LpId, ExecutedEvent<S>);
 
 #[derive(Debug, Default)]
 struct EventQueue {
-    values: BTreeMap<OptimisticEventOrderKey, BTreeMap<u64, OptimisticMessage>>,
+    values: BTreeMap<OptimisticEventOrderKey, BTreeMap<DeliveryIdentity, OptimisticMessage>>,
 }
 
 impl EventQueue {
@@ -533,29 +746,25 @@ impl EventQueue {
     }
 
     fn contains(&self, identity: &DeliveryIdentity) -> Option<&OptimisticMessage> {
-        self.values.values().find_map(|incarnations| {
-            incarnations
-                .get(&identity.incarnation)
-                .filter(|message| DeliveryIdentity::from(*message) == *identity)
-        })
+        self.values
+            .values()
+            .find_map(|incarnations| incarnations.get(identity))
     }
 
     fn insert(&mut self, message: OptimisticMessage) {
         self.values
             .entry(message.order_key())
             .or_default()
-            .insert(message.incarnation, message);
+            .insert(DeliveryIdentity::from(&message), message);
     }
 
     fn remove(&mut self, identity: &DeliveryIdentity) -> Option<OptimisticMessage> {
-        let key = self.values.iter().find_map(|(key, incarnations)| {
-            incarnations
-                .get(&identity.incarnation)
-                .filter(|message| DeliveryIdentity::from(*message) == *identity)
-                .map(|_| key.clone())
-        })?;
+        let key = self
+            .values
+            .iter()
+            .find_map(|(key, incarnations)| incarnations.get(identity).map(|_| key.clone()))?;
         let incarnations = self.values.get_mut(&key)?;
-        let removed = incarnations.remove(&identity.incarnation);
+        let removed = incarnations.remove(identity);
         if incarnations.is_empty() {
             self.values.remove(&key);
         }
@@ -633,6 +842,7 @@ pub struct OptimisticRuntime<P: OptimisticProcess> {
     last_horizon: Option<Tick>,
     initial_open: bool,
     poisoned: bool,
+    owned: Option<OwnedRuntimeState>,
 }
 
 impl<P: OptimisticProcess> OptimisticRuntime<P> {
@@ -692,11 +902,21 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             }
         }
         #[allow(deprecated)]
-        let runtime_id = NEXT_RUNTIME_ID
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |value| {
-                value.checked_add(1)
-            })
-            .map_err(|_| OptimisticError::RuntimeIdentityExhausted)?;
+        let mut candidate = NEXT_RUNTIME_ID.load(Ordering::Acquire);
+        let runtime_id = loop {
+            let successor = candidate
+                .checked_add(1)
+                .ok_or(OptimisticError::RuntimeIdentityExhausted)?;
+            match NEXT_RUNTIME_ID.compare_exchange_weak(
+                candidate,
+                successor,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            ) {
+                Ok(previous) => break previous,
+                Err(current) => candidate = current,
+            }
+        };
         let mut states = BTreeMap::new();
         for (lp_id, process) in processes {
             let snapshot = catch_unwind(AssertUnwindSafe(|| process.snapshot()))
@@ -728,7 +948,216 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             last_horizon: None,
             initial_open: true,
             poisoned: false,
+            owned: None,
         })
+    }
+
+    /// Creates a process-local issuer for only the supplied LP subset.
+    pub fn new_owned(
+        partition: PartitionPlan,
+        mut topology: BTreeMap<LpId, Vec<LpId>>,
+        owned_processes: BTreeMap<LpId, P>,
+        options: OptimisticOwnedOptions,
+    ) -> Result<Self, OptimisticError> {
+        validate_limits(options.local_limits)?;
+        if options.max_global_lps == 0
+            || options.max_outbox_entries == 0
+            || options.max_transition_entries == 0
+            || options.max_receipt_entries == 0
+        {
+            return Err(OptimisticError::InvalidLimits);
+        }
+        let global_ids = partition
+            .segments()
+            .iter()
+            .map(|segment| segment.id)
+            .collect::<BTreeSet<_>>();
+        let actual_global = global_ids.len();
+        if actual_global > options.max_global_lps {
+            return Err(OptimisticError::GlobalLpLimitExceeded {
+                actual: actual_global,
+                limit: options.max_global_lps,
+            });
+        }
+        if owned_processes.is_empty() {
+            return Err(OptimisticError::EmptyOwnedProcessSet);
+        }
+        if owned_processes.len() > options.local_limits.max_lps {
+            return Err(OptimisticError::InvalidLimits);
+        }
+        let owned_ids = owned_processes.keys().copied().collect::<BTreeSet<_>>();
+        let unexpected = owned_ids
+            .difference(&global_ids)
+            .copied()
+            .collect::<Vec<_>>();
+        if !unexpected.is_empty() {
+            return Err(OptimisticError::ProcessSetMismatch {
+                missing: Vec::new(),
+                unexpected,
+            });
+        }
+        validate_owned_topology(&global_ids, &mut topology)?;
+        validate_owned_map_keys(
+            &global_ids,
+            options.current_authorities.keys().copied().collect(),
+            true,
+        )?;
+        for (&lp_id, &authority) in &options.current_authorities {
+            match authority {
+                OptimisticAuthority::LocalPreview => {
+                    return Err(OptimisticError::AuthorityModeMismatch(lp_id));
+                }
+                OptimisticAuthority::Scoped {
+                    simulation_namespace,
+                    ..
+                } if simulation_namespace != options.simulation_namespace => {
+                    return Err(OptimisticError::AuthorityNamespaceMismatch {
+                        lp_id,
+                        expected: options.simulation_namespace,
+                        actual: simulation_namespace,
+                    });
+                }
+                OptimisticAuthority::Scoped { .. } => {}
+            }
+        }
+        validate_owned_map_keys(
+            &owned_ids,
+            options.emission_epochs.keys().copied().collect(),
+            false,
+        )?;
+        for &lp_id in &owned_ids {
+            let OptimisticAuthority::Scoped {
+                ownership_epoch, ..
+            } = options.current_authorities[&lp_id]
+            else {
+                unreachable!("authority map was validated above")
+            };
+            let actual = options.emission_epochs[&lp_id];
+            if actual != ownership_epoch {
+                return Err(OptimisticError::EmissionEpochMismatch {
+                    lp_id,
+                    expected: ownership_epoch,
+                    actual,
+                });
+            }
+        }
+
+        let mut candidate = NEXT_RUNTIME_ID.load(Ordering::Acquire);
+        let runtime_id = loop {
+            let successor = candidate
+                .checked_add(1)
+                .ok_or(OptimisticError::RuntimeIdentityExhausted)?;
+            match NEXT_RUNTIME_ID.compare_exchange_weak(
+                candidate,
+                successor,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            ) {
+                Ok(previous) => break previous,
+                Err(current) => candidate = current,
+            }
+        };
+        let mut states = BTreeMap::new();
+        for (lp_id, process) in owned_processes {
+            let snapshot = catch_unwind(AssertUnwindSafe(|| process.snapshot()))
+                .map_err(|_| OptimisticError::SnapshotPanicked(lp_id))?;
+            states.insert(
+                lp_id,
+                LogicalProcessState {
+                    process,
+                    _initial_snapshot: snapshot,
+                    positives: EventQueue::default(),
+                    antis: EventQueue::default(),
+                    history: Vec::new(),
+                    replay_pending: BTreeSet::new(),
+                    tombstones: BTreeMap::new(),
+                    epoch: 0,
+                    fossil_time: Tick::ZERO,
+                },
+            );
+        }
+        let owned = OwnedRuntimeState::new(
+            runtime_id,
+            OwnedConstructionConfig {
+                simulation_namespace: options.simulation_namespace,
+                owned_lps: owned_ids.iter().copied().collect(),
+                global_partition: partition,
+                global_topology: topology.clone(),
+                current_authorities: options.current_authorities.clone(),
+                emission_epochs: options.emission_epochs.clone(),
+            },
+            &options,
+        );
+        Ok(Self {
+            runtime_id,
+            topology,
+            processes: states,
+            next_incarnation: owned_ids.into_iter().map(|lp| (lp, Some(0))).collect(),
+            known_deliveries: BTreeMap::new(),
+            gvt: Tick::ZERO,
+            limits: options.local_limits,
+            counters: Counters::default(),
+            last_horizon: None,
+            initial_open: true,
+            poisoned: false,
+            owned: Some(owned),
+        })
+    }
+
+    pub fn native_accounting_authority(
+        &self,
+    ) -> Result<NativeAccountingAuthority, OptimisticError> {
+        self.ensure_healthy()?;
+        self.owned
+            .as_ref()
+            .map(OwnedRuntimeState::own_authority)
+            .ok_or(OptimisticError::OwnedModeRequired)
+    }
+
+    pub fn register_native_peer(
+        &mut self,
+        peer: NativeAccountingAuthority,
+    ) -> Result<(), OptimisticError> {
+        self.ensure_healthy()?;
+        self.owned
+            .as_mut()
+            .ok_or(OptimisticError::OwnedModeRequired)?
+            .register_peer(peer)
+    }
+
+    pub fn seal_native_peers(&mut self) -> Result<(), OptimisticError> {
+        self.ensure_healthy()?;
+        self.owned
+            .as_mut()
+            .ok_or(OptimisticError::OwnedModeRequired)?
+            .seal_peers()
+    }
+
+    pub fn close_initial_inputs(&mut self) -> Result<(), OptimisticError> {
+        self.ensure_healthy()?;
+        let initial_open = &mut self.initial_open;
+        self.owned
+            .as_mut()
+            .ok_or(OptimisticError::OwnedModeRequired)?
+            .close_initial_inputs(|| *initial_open = false)
+    }
+
+    pub fn native_peers_sealed(&self) -> Result<bool, OptimisticError> {
+        self.owned
+            .as_ref()
+            .map(OwnedRuntimeState::peers_sealed)
+            .ok_or(OptimisticError::OwnedModeRequired)
+    }
+
+    pub fn initial_inputs_closed(&self) -> bool {
+        !self.initial_open
+    }
+
+    pub fn accounting_revision(&self) -> Result<u64, OptimisticError> {
+        self.owned
+            .as_ref()
+            .map(OwnedRuntimeState::revision)
+            .ok_or(OptimisticError::OwnedModeRequired)
     }
 
     /// Adds an initial root event with a stable caller sequence. Root source is
@@ -741,6 +1170,9 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
         self.ensure_healthy()?;
         if !self.initial_open {
             return Err(OptimisticError::InitialSchedulingClosed);
+        }
+        if self.owned.is_some() {
+            return self.schedule_owned_root(stable_sequence, event);
         }
         self.validate_event(&event)?;
         self.validate_gvt(event.tick)?;
@@ -770,6 +1202,16 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     /// before changing any queue, token epoch, tombstone, or process state.
     pub fn receive(&mut self, message: OptimisticMessage) -> Result<(), OptimisticError> {
         self.ensure_healthy()?;
+        if self.owned.is_some() {
+            return match message.authority {
+                OptimisticAuthority::LocalPreview => Err(OptimisticError::AuthorityModeMismatch(
+                    message.event.source_lp,
+                )),
+                OptimisticAuthority::Scoped { .. } => {
+                    Err(OptimisticError::VerifiedNativeAdmissionRequired)
+                }
+            };
+        }
         self.validate_message(&message)?;
         self.validate_gvt(message.event.tick)?;
         self.validate_logical_event(&message)?;
@@ -867,6 +1309,13 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
                     requested: horizon,
                 });
             }
+        }
+        if let Some(owned) = &self.owned {
+            owned.require_sealed_live()?;
+            let _ = owned;
+            return self
+                .run_owned_until_with_budget(horizon, budget)
+                .map_err(|failure| failure.cause().clone());
         }
         self.last_horizon = Some(horizon);
         let mut budget_used = 0usize;
@@ -992,6 +1441,9 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     /// logical trace. Pending work, including anti-messages, bounds the floor.
     pub fn fossil_collect(&mut self, gvt: Tick) -> Result<OptimisticFossilReport, OptimisticError> {
         self.ensure_healthy()?;
+        if self.owned.is_some() {
+            return Err(OptimisticError::NativeGroupCutRequired);
+        }
         if gvt < self.gvt {
             return Err(OptimisticError::GvtRegression {
                 current: self.gvt,
@@ -1085,14 +1537,19 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             .map(LogicalProcessState::local_time)
             .max()
             .unwrap_or(Tick::ZERO);
+        // Blocked local replacements reserve pending capacity before entering a queue.
+        let reserved_pending = self
+            .owned
+            .as_ref()
+            .map_or(0, |owned| owned.execution().reserved_pending);
         OptimisticRuntimeReport {
             gvt: self.gvt,
             gvt_lag: maximum_local
                 .duration_since(self.gvt)
                 .unwrap_or(SimDuration::ZERO),
             logical_processes: self.processes.len(),
-            pending_events: self.total_pending(),
-            pending_positives: self.total_positives(),
+            pending_events: self.total_pending() + reserved_pending,
+            pending_positives: self.total_positives() + reserved_pending,
             pending_antis: self.total_antis(),
             replay_pending: self.total_replay_pending(),
             history_events: self.total_history(),
@@ -1125,6 +1582,18 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     /// Creates an opaque token for the current LP epoch.
     pub fn state_token(&self, lp_id: LpId) -> Result<OptimisticStateToken, OptimisticError> {
         self.ensure_healthy()?;
+        if let Some(owned) = &self.owned {
+            if !owned.owned_lps().contains(&lp_id)
+                && owned
+                    .own_authority()
+                    .global_partition()
+                    .segments()
+                    .iter()
+                    .any(|segment| segment.id == lp_id)
+            {
+                return Err(OptimisticError::UnownedLogicalProcess(lp_id));
+            }
+        }
         let state = self
             .processes
             .get(&lp_id)
@@ -1159,6 +1628,31 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
         }
     }
 
+    fn validate_owned_initial_event(&self, event: &RemoteEvent) -> Result<(), OptimisticError> {
+        let owned = self.owned.as_ref().expect("owned mode checked");
+        let authority = owned.own_authority();
+        if !authority
+            .global_partition()
+            .segments()
+            .iter()
+            .any(|segment| segment.id == event.dest_lp)
+        {
+            return Err(OptimisticError::UnknownLogicalProcess(event.dest_lp));
+        }
+        if event.source_lp != event.dest_lp
+            && !self
+                .topology
+                .get(&event.source_lp)
+                .is_some_and(|destinations| destinations.contains(&event.dest_lp))
+        {
+            return Err(OptimisticError::RouteMissing {
+                source: event.source_lp,
+                destination: event.dest_lp,
+            });
+        }
+        self.validate_gvt(event.tick)
+    }
+
     fn validate_event(&self, event: &RemoteEvent) -> Result<(), OptimisticError> {
         if !self.processes.contains_key(&event.source_lp) {
             return Err(OptimisticError::UnknownLogicalProcess(event.source_lp));
@@ -1181,6 +1675,9 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     }
 
     fn validate_message(&self, message: &OptimisticMessage) -> Result<(), OptimisticError> {
+        if matches!(message.authority, OptimisticAuthority::Scoped { .. }) {
+            return Err(OptimisticError::ScopedAuthorityRequiresOwnedRuntime);
+        }
         self.validate_event(&message.event)?;
         if let Some((root_source, _)) = message.logical_id.root_parts() {
             if root_source != message.event.source_lp {
@@ -1253,7 +1750,17 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     }
 
     fn ensure_pending_capacity(&self, additional: usize) -> Result<(), OptimisticError> {
-        if self.total_pending().saturating_add(additional) > self.limits.max_pending_events {
+        let reserved = self
+            .owned
+            .as_ref()
+            .map(|owned| owned.execution().reserved_pending)
+            .unwrap_or(0);
+        if self
+            .total_pending()
+            .saturating_add(reserved)
+            .saturating_add(additional)
+            > self.limits.max_pending_events
+        {
             Err(OptimisticError::PendingLimitExceeded {
                 limit: self.limits.max_pending_events,
             })
@@ -1800,6 +2307,14 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     }
 }
 
+impl<P: OptimisticProcess> Drop for OptimisticRuntime<P> {
+    fn drop(&mut self) {
+        if let Some(owned) = self.owned.as_mut() {
+            owned.invalidate_before_runtime_drop();
+        }
+    }
+}
+
 fn validate_limits(limits: OptimisticLimits) -> Result<(), OptimisticError> {
     if limits.max_lps == 0
         || limits.max_pending_events == 0
@@ -1811,6 +2326,62 @@ fn validate_limits(limits: OptimisticLimits) -> Result<(), OptimisticError> {
         || limits.max_causal_depth > MAX_CAUSAL_DEPTH
     {
         return Err(OptimisticError::InvalidLimits);
+    }
+    Ok(())
+}
+
+fn validate_owned_map_keys(
+    expected: &BTreeSet<LpId>,
+    actual: BTreeSet<LpId>,
+    authorities: bool,
+) -> Result<(), OptimisticError> {
+    if expected == &actual {
+        return Ok(());
+    }
+    let missing = expected.difference(&actual).copied().collect();
+    let unexpected = actual.difference(expected).copied().collect();
+    if authorities {
+        Err(OptimisticError::AuthoritySetMismatch {
+            missing,
+            unexpected,
+        })
+    } else {
+        Err(OptimisticError::EmissionEpochSetMismatch {
+            missing,
+            unexpected,
+        })
+    }
+}
+
+fn validate_owned_topology(
+    global_ids: &BTreeSet<LpId>,
+    topology: &mut BTreeMap<LpId, Vec<LpId>>,
+) -> Result<(), OptimisticError> {
+    for lp_id in global_ids {
+        if !topology.contains_key(lp_id) {
+            return Err(OptimisticError::MissingTopologyEntry(*lp_id));
+        }
+    }
+    for (&source, destinations) in topology.iter_mut() {
+        if !global_ids.contains(&source) {
+            return Err(OptimisticError::UnknownTopologySource(source));
+        }
+        let mut unique = BTreeSet::new();
+        for &destination in destinations.iter() {
+            if !global_ids.contains(&destination) {
+                return Err(OptimisticError::UnknownTopologyDestination {
+                    source,
+                    destination,
+                });
+            }
+            if source == destination || !unique.insert(destination) {
+                return Err(OptimisticError::DuplicateNeighbor {
+                    source,
+                    destination,
+                });
+            }
+        }
+        destinations.sort_unstable();
     }
     Ok(())
 }

@@ -1,0 +1,133 @@
+{
+  "command": [
+    "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo",
+    "test",
+    "-p",
+    "kairo-ecs-pdes",
+    "--features",
+    "pdes,time-warp",
+    "--locked",
+    "--test",
+    "optimistic_owned_execution",
+    "native_cut_failure_reports_all_already_poisoned_participants",
+    "--",
+    "--exact"
+  ],
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join",
+  "head": "73b625117dbcce5997244098441563c7531a30ca",
+  "tools": {
+    "cargo": {
+      "path": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo",
+      "resolved": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo",
+      "sha256": "6e17e865f3a20dd55a1d212f849f58b77124179f0de7c52973096d84ba34118d",
+      "version": "cargo 1.98.1 (797e8a9bc 2026-08-05)\nrelease: 1.98.1\ncommit-hash: 797e8a9bca276c1c9f9f738d2a20f484fa4eea9d\ncommit-date: 2026-08-05\nhost: aarch64-apple-darwin\nlibgit2: 1.9.4 (sys:0.21.0 vendored)\nlibcurl: 8.7.1 (sys:0.4.90+curl-8.21.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Mac OS 27.0.0 [64-bit]\n"
+    },
+    "rustc": {
+      "path": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustc",
+      "resolved": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustc",
+      "sha256": "766eda9d8f53afd6fc7f27b3cd2e444dd22afacb5afa710a5625fc8e45b8c941",
+      "version": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-apple-darwin\nrelease: 1.98.1\nLLVM version: 22.1.8\n"
+    },
+    "rustdoc": {
+      "path": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustdoc",
+      "resolved": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustdoc",
+      "sha256": "8ce1ae78157758d4d75eee1355ed333f27e903ab6b0904e09d326009b333c2ee",
+      "version": "rustdoc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustdoc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-apple-darwin\nrelease: 1.98.1\nLLVM version: 22.1.8\n"
+    },
+    "rustfmt": {
+      "path": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustfmt",
+      "resolved": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustfmt",
+      "sha256": "98e8da71078a8b5710f1818c98da25d92de162a122bd9a6db222ca929e545468",
+      "version": "rustfmt 1.9.0-stable (48a229ceae 2026-09-01)\n"
+    }
+  },
+  "inputs": {
+    "AGENTS.md": "e594bd57dfd8b2257fa89cf21510a0658d1356569d42f2f8ecd607607053d5a5",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/agent-contract.md": "de4a60b34fc45d300af9a5a4019591f9a5834599a67ac2b11f37591f5cfe81fc",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/owned-handler-retirement-leaf.md": "c7ca42d6ab4845d5eef4dcf9719b3c917cce8c65d389b57f162f50402a01f7a1",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/owned-handler-retirement-api.md": "f8c4e76b0c3c78b660ecefa814a627c7938d7562c21a70d4802ebdf043131456",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/owned-handler-retirement-dispatch.md": "410aa3c067435992ee28151f7846e64bcd2886648f82ea799d8e253fed6f8f26",
+    "Cargo.toml": "183584f511603be2d573072f66a97eff936238fde31a0b7bbde12c1d815499d2",
+    "Cargo.lock": "2c47e509672c3ff89b5b2bccd42b5cd3258389a69edb67a156a910ffc74f979a",
+    "crates/kairo-ecs-pdes/Cargo.toml": "75acfa36b9deed08213aa8658648c3f87234a974b6aceb0a18bc0e2677174329"
+  },
+  "before_sources": {
+    "Cargo.lock": "2c47e509672c3ff89b5b2bccd42b5cd3258389a69edb67a156a910ffc74f979a",
+    "Cargo.toml": "183584f511603be2d573072f66a97eff936238fde31a0b7bbde12c1d815499d2",
+    "crates/kairo-ecs-pdes/Cargo.toml": "75acfa36b9deed08213aa8658648c3f87234a974b6aceb0a18bc0e2677174329",
+    "crates/kairo-ecs-pdes/benches/production.rs": "acfddaa02aaf0a0baf0a148c7b6b45f8e102c79c22282ee8a8b706bb34606057",
+    "crates/kairo-ecs-pdes/benches/time_warp.rs": "2184c7dcb44fd5d7c9dd4fafcd1c7d97674b4ca5c6d9124c1bdb12d1afc1cb96",
+    "crates/kairo-ecs-pdes/src/conservative.rs": "5216d61e0ed131b7d72c3f4cfc30bfb79d3e4be63a47e3c80e38386cb27c2c36",
+    "crates/kairo-ecs-pdes/src/generation_bitset.rs": "eb8a15153ac95666a3962e895ea6bfbbeb738191fc4b7a83c763ed00ae725a90",
+    "crates/kairo-ecs-pdes/src/lib.rs": "b7ba58cf4844181c008175dc2371c0ce103d8ce5373fe6648acddf114394e68e",
+    "crates/kairo-ecs-pdes/src/optimistic/owned.rs": "2eb2db34ca65280d509b8c378a9b7eb235530243e933bfcfe6f1e6b9e456a689",
+    "crates/kairo-ecs-pdes/src/optimistic/owned_execution.rs": "3b6f8470bd70170068c74cc12252f68c80c3366edfdbcef301d725a476c4434c",
+    "crates/kairo-ecs-pdes/src/optimistic/owned_routing.rs": "0e69cf12c8f4e8ada560572d808622bf3eb8aa8c6b341df5cbfb0669a3288959",
+    "crates/kairo-ecs-pdes/src/optimistic.rs": "987b95690750060f353f14c2b93a140b279d6d2fd5ce38fa051e44098866f536",
+    "crates/kairo-ecs-pdes/tests/optimistic_authority_envelope.rs": "a929d454d9930b245d57b95fdc9af354c55cadf2db73ad71f58feecc7b343045",
+    "crates/kairo-ecs-pdes/tests/optimistic_authority_envelope_heldout.rs": "50da809739f82402ac47bd4952c87838eca5cfd8ef98be919e8b24f322b5ef6f",
+    "crates/kairo-ecs-pdes/tests/optimistic_bitset_heldout.rs": "116f0beaae1a6ba3d79cf54fefb2a44f3616c31fe2ba5e5bc81f8db8bcad0972",
+    "crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs": "50be18273bcc7db95a6ff1ff774d94bd70be4f8c9fec42b222e5e65718f112cf",
+    "crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs": "9e6142e7135f4bbf8f15a5c20fbb5bde552c0306c852975076aec38218a2d069",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_construction.rs": "523c06ddcc768d1f482c37735b8c6e80037a291b2745fcbe7be852100da403f4",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_construction_heldout.rs": "54f0700c03fab53a7876ea7f9bbae9364c0ceeec3b3bf4efc7b99f667daf0012",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_execution.rs": "acccb8bc4824d9e7e23b1432007c113def42db67110b05a3d045ceaaea4f73ea",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_execution_heldout.rs": "6a16ab9c60d29d780740275ecc47783f4a9200c0726c5a5c4d400b3920c2a8ac",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_root_routing.rs": "3586beeda4e6d4df8a2f8b9e4096eaf1d407bd6c7e9afa8d96c8ea4cf9a1c14b",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_root_routing_heldout.rs": "15f4de3365e5c799b456b09ecf547cdcaf01bc9c85cb7aa3e6d862a1ca4e7bd1",
+    "crates/kairo-ecs-pdes/tests/optimistic_runtime.rs": "23407dcec89ff09847338f989f481f73588fa2b920b4447097fe6dcc2517948e",
+    "crates/kairo-ecs-pdes/tests/optimistic_runtime_heldout.rs": "cfe8bfbc659cc77c654fb9982be0129c50d9fbda923df4780c3d56816da0ae89",
+    "crates/kairo-ecs-pdes/tests/production_parity.rs": "1e230a2de656665b8ebc7be5a0a8788cdc782adc46847969993c744cd70772b3",
+    "crates/kairo-ecs-pdes/tests/production_protocol.rs": "0348b74a239d267cb8e1dbe8948969f2646bea9d120171310dc6a18d091556c3",
+    "crates/kairo-ecs-pdes/tests/track47_conservative_runtime.rs": "f17b07f8d6f559b6ce81b8e8b5583f14b587de475f73e561439d4acfc50ce943",
+    "crates/kairo-ecs-pdes/tests/track48_rollback_regressions.rs": "a841c06bf8c5ac0dd8834de8639000c126c9af212a04bc9206a10cff41472788"
+  },
+  "after_sources": {
+    "Cargo.lock": "2c47e509672c3ff89b5b2bccd42b5cd3258389a69edb67a156a910ffc74f979a",
+    "Cargo.toml": "183584f511603be2d573072f66a97eff936238fde31a0b7bbde12c1d815499d2",
+    "crates/kairo-ecs-pdes/Cargo.toml": "75acfa36b9deed08213aa8658648c3f87234a974b6aceb0a18bc0e2677174329",
+    "crates/kairo-ecs-pdes/benches/production.rs": "acfddaa02aaf0a0baf0a148c7b6b45f8e102c79c22282ee8a8b706bb34606057",
+    "crates/kairo-ecs-pdes/benches/time_warp.rs": "2184c7dcb44fd5d7c9dd4fafcd1c7d97674b4ca5c6d9124c1bdb12d1afc1cb96",
+    "crates/kairo-ecs-pdes/src/conservative.rs": "5216d61e0ed131b7d72c3f4cfc30bfb79d3e4be63a47e3c80e38386cb27c2c36",
+    "crates/kairo-ecs-pdes/src/generation_bitset.rs": "eb8a15153ac95666a3962e895ea6bfbbeb738191fc4b7a83c763ed00ae725a90",
+    "crates/kairo-ecs-pdes/src/lib.rs": "b7ba58cf4844181c008175dc2371c0ce103d8ce5373fe6648acddf114394e68e",
+    "crates/kairo-ecs-pdes/src/optimistic/owned.rs": "2eb2db34ca65280d509b8c378a9b7eb235530243e933bfcfe6f1e6b9e456a689",
+    "crates/kairo-ecs-pdes/src/optimistic/owned_execution.rs": "3b6f8470bd70170068c74cc12252f68c80c3366edfdbcef301d725a476c4434c",
+    "crates/kairo-ecs-pdes/src/optimistic/owned_routing.rs": "0e69cf12c8f4e8ada560572d808622bf3eb8aa8c6b341df5cbfb0669a3288959",
+    "crates/kairo-ecs-pdes/src/optimistic.rs": "987b95690750060f353f14c2b93a140b279d6d2fd5ce38fa051e44098866f536",
+    "crates/kairo-ecs-pdes/tests/optimistic_authority_envelope.rs": "a929d454d9930b245d57b95fdc9af354c55cadf2db73ad71f58feecc7b343045",
+    "crates/kairo-ecs-pdes/tests/optimistic_authority_envelope_heldout.rs": "50da809739f82402ac47bd4952c87838eca5cfd8ef98be919e8b24f322b5ef6f",
+    "crates/kairo-ecs-pdes/tests/optimistic_bitset_heldout.rs": "116f0beaae1a6ba3d79cf54fefb2a44f3616c31fe2ba5e5bc81f8db8bcad0972",
+    "crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs": "50be18273bcc7db95a6ff1ff774d94bd70be4f8c9fec42b222e5e65718f112cf",
+    "crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs": "9e6142e7135f4bbf8f15a5c20fbb5bde552c0306c852975076aec38218a2d069",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_construction.rs": "523c06ddcc768d1f482c37735b8c6e80037a291b2745fcbe7be852100da403f4",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_construction_heldout.rs": "54f0700c03fab53a7876ea7f9bbae9364c0ceeec3b3bf4efc7b99f667daf0012",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_execution.rs": "acccb8bc4824d9e7e23b1432007c113def42db67110b05a3d045ceaaea4f73ea",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_execution_heldout.rs": "6a16ab9c60d29d780740275ecc47783f4a9200c0726c5a5c4d400b3920c2a8ac",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_root_routing.rs": "3586beeda4e6d4df8a2f8b9e4096eaf1d407bd6c7e9afa8d96c8ea4cf9a1c14b",
+    "crates/kairo-ecs-pdes/tests/optimistic_owned_root_routing_heldout.rs": "15f4de3365e5c799b456b09ecf547cdcaf01bc9c85cb7aa3e6d862a1ca4e7bd1",
+    "crates/kairo-ecs-pdes/tests/optimistic_runtime.rs": "23407dcec89ff09847338f989f481f73588fa2b920b4447097fe6dcc2517948e",
+    "crates/kairo-ecs-pdes/tests/optimistic_runtime_heldout.rs": "cfe8bfbc659cc77c654fb9982be0129c50d9fbda923df4780c3d56816da0ae89",
+    "crates/kairo-ecs-pdes/tests/production_parity.rs": "1e230a2de656665b8ebc7be5a0a8788cdc782adc46847969993c744cd70772b3",
+    "crates/kairo-ecs-pdes/tests/production_protocol.rs": "0348b74a239d267cb8e1dbe8948969f2646bea9d120171310dc6a18d091556c3",
+    "crates/kairo-ecs-pdes/tests/track47_conservative_runtime.rs": "f17b07f8d6f559b6ce81b8e8b5583f14b587de475f73e561439d4acfc50ce943",
+    "crates/kairo-ecs-pdes/tests/track48_rollback_regressions.rs": "a841c06bf8c5ac0dd8834de8639000c126c9af212a04bc9206a10cff41472788"
+  },
+  "seed": "fixed deterministic fixture seeds as source-bound",
+  "start": "2026-10-04T10:08:43.552308+00:00",
+  "end": "2026-10-04T10:08:53.923247+00:00",
+  "exit": 0,
+  "log_sha256": "0d228bb00340b6861944ffcc8910a445f092888b83991cc03c78ae75e6413826",
+  "cache_sha256": "2d7b8d00137e18469fe97f82ed262fe017041e4fff97db6be325cc04d5039952",
+  "compiler_caches": {
+    ".rustc_info.json": {
+      "copy": "cache-a9c02174caec.json",
+      "sha256": "2d7b8d00137e18469fe97f82ed262fe017041e4fff97db6be325cc04d5039952"
+    },
+    "llvm-cov-target/.rustc_info.json": {
+      "copy": "cache-3516e9330f14.json",
+      "sha256": "bc7c564ee07460bef9cf41ef02456d6054f0dffaa078614ba43cc2be9594a86d"
+    }
+  },
+  "source_unchanged": true
+}

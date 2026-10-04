@@ -1,0 +1,240 @@
+   Compiling unicode-ident v1.0.24
+   Compiling kairo-ecs-state v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-state)
+   Compiling kairo-ecs-core v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-core)
+   Compiling kairo-ecs-rng v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-rng)
+   Compiling cfg-if v1.0.4
+   Compiling libc v0.2.186
+   Compiling serde_core v1.0.229
+   Compiling utf8parse v0.2.2
+   Compiling crossbeam-utils v0.8.21
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling proc-macro2 v1.0.106
+   Compiling anstyle-parse v1.0.0
+   Compiling kairo-ecs-ffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-ffi)
+   Compiling anstyle-query v1.1.5
+   Compiling regex-syntax v0.8.10
+   Compiling colorchoice v1.0.5
+   Compiling anstyle v1.0.14
+   Compiling num-traits v0.2.19
+   Compiling quote v1.0.45
+   Compiling anstream v1.0.0
+   Compiling crossbeam-epoch v0.9.20
+   Compiling either v1.15.0
+   Compiling clap_lex v1.0.0
+   Compiling strsim v0.11.1
+   Compiling syn v2.0.117
+   Compiling syn v3.0.6
+   Compiling once_cell v1.21.4
+   Compiling crossbeam-deque v0.8.6
+   Compiling clap_builder v4.5.61
+   Compiling getrandom v0.3.4
+   Compiling plotters-backend v0.3.7
+   Compiling ciborium-io v0.2.2
+   Compiling rayon-core v1.13.0
+   Compiling rand_core v0.9.5
+   Compiling itertools v0.10.5
+   Compiling plotters-svg v0.3.7
+   Compiling wasm-bindgen-shared v0.2.120
+   Compiling same-file v1.0.6
+   Compiling cast v0.3.0
+   Compiling walkdir v2.5.0
+   Compiling plotters v0.3.7
+   Compiling rayon v1.12.0
+   Compiling is-terminal v0.4.17
+   Compiling anes v0.1.6
+   Compiling oorandom v11.1.5
+   Compiling rand_xorshift v0.4.0
+   Compiling rand v0.9.5
+   Compiling unarray v0.1.4
+   Compiling bitflags v2.13.2
+   Compiling serde_json v1.0.151
+   Compiling regex-automata v0.4.14
+   Compiling criterion-plot v0.5.0
+   Compiling kairo-ecs-mpi v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-mpi)
+   Compiling kairo-ecs-grpc v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-grpc)
+   Compiling kairo-ecs-cs-bridge v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-cs-bridge)
+   Compiling serde_derive v1.0.229
+   Compiling kairo-ecs-uniffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-uniffi)
+   Compiling kairo-ecs-diplomat v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-diplomat)
+   Compiling kairo-ecs-game-theory v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-game-theory)
+   Compiling kairo-ecs-bench v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-bench)
+   Compiling kairo-ecs-abm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-abm)
+   Compiling kairo-ecs-viz v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-viz)
+   Compiling wasm-bindgen-macro-support v0.2.120
+   Compiling kairo-ecs-des v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-des)
+   Compiling kairo-ecs-arrow v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-arrow)
+   Compiling regex v1.12.3
+   Compiling kairo-ecs-fmi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-fmi)
+   Compiling kairo-ecs-gpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-gpu)
+   Compiling kairo-ecs-ml v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-ml)
+   Compiling kairo-ecs-game-ontology v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-game-ontology)
+   Compiling kairo-ecs-streaming v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-streaming)
+   Compiling kairo-ecs-webgpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-webgpu)
+   Compiling zerocopy-derive v0.8.48
+   Compiling clap_derive v4.5.61
+   Compiling serde v1.0.229
+   Compiling zerocopy v0.8.48
+   Compiling wasm-bindgen-macro v0.2.120
+   Compiling tinytemplate v1.2.1
+   Compiling clap v4.5.61
+   Compiling wasm-bindgen v0.2.120
+   Compiling kairo-ecs-debug v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-debug)
+   Compiling kairo-ecs-wasm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-wasm)
+   Compiling half v2.7.1
+   Compiling ppv-lite86 v0.2.21
+   Compiling rand_chacha v0.9.0
+   Compiling ciborium-ll v0.2.2
+   Compiling proptest v1.11.0
+   Compiling ciborium v0.2.2
+   Compiling criterion v0.5.1
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.96s
+   Doc-tests kairo_ecs_abm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_arrow
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_bench
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_cs_bridge
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_debug
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_des
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_diplomat
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_ffi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_fmi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_game_ontology
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_game_theory
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_gpu
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_grpc
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_ml
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_mpi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_pdes
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_rng
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_state
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_streaming
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_types
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_uniffi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_viz
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_wasm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_webgpu
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

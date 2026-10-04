@@ -1,0 +1,17 @@
+test_cargo_wrapper_and_rustflags_configuration_fail_closed (test_collect_time_warp_evidence.EvidenceValidationTests.test_cargo_wrapper_and_rustflags_configuration_fail_closed) ... ok
+test_clean_source_receipt_and_ignored_artifacts (test_collect_time_warp_evidence.EvidenceValidationTests.test_clean_source_receipt_and_ignored_artifacts) ... ok
+test_dirty_untracked_source_is_rejected_with_attempt_receipt (test_collect_time_warp_evidence.EvidenceValidationTests.test_dirty_untracked_source_is_rejected_with_attempt_receipt) ... ok
+test_injected_path_compiler_drift_is_resolved_then_rejected_if_rebound (test_collect_time_warp_evidence.EvidenceValidationTests.test_injected_path_compiler_drift_is_resolved_then_rejected_if_rebound) ... ok
+test_nonempty_rustflags_environment_is_rejected_without_value_disclosure (test_collect_time_warp_evidence.EvidenceValidationTests.test_nonempty_rustflags_environment_is_rejected_without_value_disclosure) ... ok
+test_rejects_inconsistent_execution_accounting_and_malformed_counters (test_collect_time_warp_evidence.EvidenceValidationTests.test_rejects_inconsistent_execution_accounting_and_malformed_counters) ... ok
+test_rejects_missing_repeat_and_tampered_fixed_graph (test_collect_time_warp_evidence.EvidenceValidationTests.test_rejects_missing_repeat_and_tampered_fixed_graph) ... ok
+test_rejects_missing_rollback_stress_or_runtime_parity (test_collect_time_warp_evidence.EvidenceValidationTests.test_rejects_missing_rollback_stress_or_runtime_parity) ... ok
+test_rejects_wrong_seed_or_root_event_route (test_collect_time_warp_evidence.EvidenceValidationTests.test_rejects_wrong_seed_or_root_event_route) ... ok
+test_same_head_source_edit_during_run_is_rejected_and_recorded (test_collect_time_warp_evidence.EvidenceValidationTests.test_same_head_source_edit_during_run_is_rejected_and_recorded) ... ok
+test_tampered_workload_or_counters_saves_failed_attempt (test_collect_time_warp_evidence.EvidenceValidationTests.test_tampered_workload_or_counters_saves_failed_attempt) ... ok
+test_validates_fixed_workload_and_complete_profile_matrix (test_collect_time_warp_evidence.EvidenceValidationTests.test_validates_fixed_workload_and_complete_profile_matrix) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.941s
+
+OK
