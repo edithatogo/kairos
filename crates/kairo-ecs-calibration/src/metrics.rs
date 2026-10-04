@@ -283,11 +283,7 @@ fn invalid(precision: Precision) -> MetricResult {
 
 pub(crate) fn compare(request: &MetricRequest<'_>) -> MetricResult {
     let origin_requested = request.origin.is_some();
-    let precision = if origin_requested {
-        Precision::Rejected
-    } else {
-        Precision::NotApplicable
-    };
+    let precision = Precision::NotApplicable;
     let Some(scale) = Rat::parse(request.scale_ticks) else {
         return invalid(precision);
     };
@@ -330,23 +326,21 @@ pub(crate) fn compare(request: &MetricRequest<'_>) -> MetricResult {
     } else {
         None
     };
+    let preprocessing_precision = if origin_requested {
+        Precision::Rejected
+    } else {
+        Precision::NotApplicable
+    };
     let Some(mut reference) =
         parse_points(request.reference, ref_weights.as_deref(), origin, scale)
     else {
-        return invalid(precision);
+        return invalid(preprocessing_precision);
     };
     let Some(mut simulation) =
         parse_points(request.simulation, sim_weights.as_deref(), origin, scale)
     else {
-        return invalid(precision);
+        return invalid(preprocessing_precision);
     };
-    if sort_points(&mut reference, weighted).is_none()
-        || sort_points(&mut simulation, weighted).is_none()
-    {
-        return invalid(precision);
-    }
-    let ref_count = reference.len();
-    let sim_count = simulation.len();
     if origin_requested
         && (offsets_exact(&reference, scale).is_none()
             || offsets_exact(&simulation, scale).is_none())
@@ -358,6 +352,13 @@ pub(crate) fn compare(request: &MetricRequest<'_>) -> MetricResult {
     } else {
         Precision::NotApplicable
     };
+    if sort_points(&mut reference, weighted).is_none()
+        || sort_points(&mut simulation, weighted).is_none()
+    {
+        return invalid(result_precision);
+    }
+    let ref_count = reference.len();
+    let sim_count = simulation.len();
     if ref_count == 0 && sim_count == 0 {
         return MetricResult {
             status: MetricStatus::Empty,

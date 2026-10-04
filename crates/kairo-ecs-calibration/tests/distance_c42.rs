@@ -227,3 +227,41 @@ fn positive_rational_tick_scale_is_supported_exactly() {
     assert_eq!(result.w1, Some(2.0 / 3.0));
     assert_eq!(result.ks_d, Some(0.5));
 }
+
+#[test]
+fn malformed_weight_with_valid_origin_is_ordinary_invalid_precision() {
+    let reference = [Some("0")];
+    let simulation = [Some("1")];
+    let request = MetricRequest {
+        reference: &reference,
+        simulation: &simulation,
+        reference_weights: Some(&["bad-weight"]),
+        simulation_weights: Some(&["1"]),
+        algorithm_version: "weighted_descriptive.v1",
+        origin: Some("0"),
+        scale_ticks: "1",
+    };
+    let result = compare(&request);
+    assert_eq!(result.status, MetricStatus::Invalid);
+    assert_eq!(result.precision, Precision::NotApplicable);
+    assert_eq!((result.reference_count, result.simulation_count), (0, 0));
+}
+
+#[test]
+fn tick_overflow_remains_rejected_precision() {
+    let reference = [Some("340282366920938463463374607431768211456")];
+    let simulation = [Some("340282366920938463463374607431768211455")];
+    let request = MetricRequest {
+        reference: &reference,
+        simulation: &simulation,
+        reference_weights: None,
+        simulation_weights: None,
+        algorithm_version: "empirical_equal.v1",
+        origin: Some("0"),
+        scale_ticks: "1",
+    };
+    let result = compare(&request);
+    assert_eq!(result.status, MetricStatus::Invalid);
+    assert_eq!(result.precision, Precision::Rejected);
+    assert_eq!((result.reference_count, result.simulation_count), (0, 0));
+}
