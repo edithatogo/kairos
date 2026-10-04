@@ -399,3 +399,69 @@ fn despawn_directly_removes_all_owned_waiters_across_resources() {
     assert!(!flow.actors.contains(&owner));
     assert!(!flow.world.is_alive(owner));
 }
+
+#[test]
+fn despawn_rolls_back_earlier_resource_when_later_waiting_key_is_corrupt() {
+    let mut flow = FlowRuntime::new();
+    let owner = flow.spawn_actor().unwrap();
+    let first_resource = flow.create_resource(0).unwrap();
+    let second_resource = flow.create_resource(0).unwrap();
+    let first = queued_request(&mut flow, first_resource, owner, 2);
+    let second = queued_request(&mut flow, second_resource, owner, 2);
+    let corrupt = corrupt_waiting_key(&mut flow, second_resource, second);
+    assert!(
+        first < second,
+        "despawn visits requests in request-id order"
+    );
+
+    flow.despawn_actor(owner).unwrap();
+    let head = flow.scheduler.peek_next();
+    let stats = flow.scheduler.stats();
+    let first_request_before = flow.request(first).unwrap();
+    let second_request_before = flow.request(second).unwrap();
+    let first_resource_before = flow.resource(first_resource).unwrap();
+    let second_resource_before = flow.resource(second_resource).unwrap();
+    let first_queue_before = queue_keys(&flow, first_resource);
+    let second_queue_before = queue_keys(&flow, second_resource);
+    let counters_before = (
+        flow.scheduled,
+        flow.destroyed,
+        flow.next_admission,
+        flow.next_lease,
+    );
+    let commands_before = flow.commands.keys().copied().collect::<Vec<_>>();
+    let pending_despawns_before = flow.pending_despawns.clone();
+
+    assert_eq!(flow.step().unwrap_err(), FlowError::InvalidState);
+    assert_eq!(flow.scheduler.peek_next(), head);
+    assert_eq!(flow.scheduler.stats(), stats);
+    assert_eq!(flow.request(first).unwrap(), first_request_before);
+    assert_eq!(flow.request(second).unwrap(), second_request_before);
+    assert_eq!(
+        flow.resource(first_resource).unwrap(),
+        first_resource_before
+    );
+    assert_eq!(
+        flow.resource(second_resource).unwrap(),
+        second_resource_before
+    );
+    assert_eq!(queue_keys(&flow, first_resource), first_queue_before);
+    assert_eq!(queue_keys(&flow, second_resource), second_queue_before);
+    assert_eq!(queue_keys(&flow, second_resource), vec![corrupt]);
+    assert_eq!(
+        (
+            flow.scheduled,
+            flow.destroyed,
+            flow.next_admission,
+            flow.next_lease,
+        ),
+        counters_before
+    );
+    assert_eq!(
+        flow.commands.keys().copied().collect::<Vec<_>>(),
+        commands_before
+    );
+    assert_eq!(flow.pending_despawns, pending_despawns_before);
+    assert!(flow.actor(owner).is_ok());
+    assert!(flow.world.is_alive(owner));
+}
