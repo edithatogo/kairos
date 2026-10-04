@@ -568,21 +568,44 @@ fn finish_pairs(scan: &mut ScanState, policy: &ValidationPolicy) {
 }
 
 fn finish_cases(scan: &mut ScanState, policy: &ValidationPolicy) -> Result<(), String> {
-    let mut violations = Vec::<(String, &'static str)>::new();
-    for (case_key, case) in &scan.cases {
+    // Precompute the required anchors once. Rebuilding this set per occurrence
+    // multiplied temporary allocations by the number of occurrences.
+    let mut required: BTreeSet<&str> = policy.required_kinds.iter().map(String::as_str).collect();
+    for (before, after) in &policy.precedence {
+        required.insert(before);
+        required.insert(after);
+    }
+
+    let occurrence_count = scan.cases.values().try_fold(0usize, |sum, case| {
+        sum.checked_add(case.occurrences.len())
+            .ok_or("validation occurrence count overflow")
+    })?;
+    let checks_per_occurrence = required
+        .len()
+        .checked_add(policy.precedence.len())
+        .ok_or("validation work count overflow")?;
+    let validation_work = occurrence_count
+        .checked_mul(checks_per_occurrence)
+        .ok_or("validation work count overflow")?;
+    if validation_work > policy.bounds.max_state_entries {
+        return Err(format!(
+            "validation work limit exceeded ({})",
+            policy.bounds.max_state_entries
+        ));
+    }
+
+    // Each case can contribute at most one count for each diagnostic class.
+    // Aggregate flags per case, so memory remains O(number of cases), not
+    // O(number of occurrences × number of policy edges).
+    let ScanState { cases, report, .. } = scan;
+    for case in cases.values_mut() {
+        let (mut missing_anchor, mut duplicate_anchor, mut precedence_violation) =
+            (false, false, false);
         for occurrence in case.occurrences.values() {
-            let mut required: BTreeSet<&str> =
-                policy.required_kinds.iter().map(String::as_str).collect();
-            for (before, after) in &policy.precedence {
-                required.insert(before);
-                required.insert(after);
-            }
-            for kind in required {
+            for &kind in &required {
                 match occurrence.relevant_kinds.get(kind) {
-                    None => violations.push((case_key.clone(), "missing_required_anchor")),
-                    Some((count, _)) if *count != 1 => {
-                        violations.push((case_key.clone(), "duplicate_required_anchor"))
-                    }
+                    None => missing_anchor = true,
+                    Some((count, _)) if *count != 1 => duplicate_anchor = true,
                     _ => {}
                 }
             }
@@ -592,31 +615,29 @@ fn finish_cases(scan: &mut ScanState, policy: &ValidationPolicy) -> Result<(), S
                     occurrence.relevant_kinds.get(after),
                 ) {
                     if a > b {
-                        violations.push((case_key.clone(), "precedence_violation"));
+                        precedence_violation = true;
                     }
                 }
             }
         }
+        for (reason, present) in [
+            ("missing_required_anchor", missing_anchor),
+            ("duplicate_required_anchor", duplicate_anchor),
+            ("precedence_violation", precedence_violation),
+        ] {
+            if present && case.reasons.insert(reason.into()) {
+                *report.reasons.entry(reason.into()).or_default() += 1;
+            }
+        }
     }
-    for (case, reason) in violations {
-        scan.mark(&case, reason, false);
-    }
-    scan.report.invalid_cases = scan
-        .cases
-        .values()
-        .filter(|c| !c.reasons.is_empty())
-        .count() as u64;
-    scan.report.censored_cases = scan.cases.values().filter(|c| c.censored).count() as u64;
+    report.invalid_cases = cases.values().filter(|c| !c.reasons.is_empty()).count() as u64;
+    report.censored_cases = cases.values().filter(|c| c.censored).count() as u64;
     if policy.mode == ValidationMode::Exploratory {
         // Capacity conflicts are reported but remain in the valid stream.
-        for case in scan.cases.values_mut() {
+        for case in cases.values_mut() {
             case.reasons.remove("resource_overcapacity");
         }
-        scan.report.invalid_cases = scan
-            .cases
-            .values()
-            .filter(|c| !c.reasons.is_empty())
-            .count() as u64;
+        report.invalid_cases = cases.values().filter(|c| !c.reasons.is_empty()).count() as u64;
     }
     Ok(())
 }
@@ -1035,6 +1056,25 @@ mod tests {
         fs::write(&partial, b"{\"incomplete\":true}").unwrap();
         p.bounds.max_state_entries = 10;
         assert!(validate_file(&partial, &d.join("v"), &d.join("q"), &p).is_err());
+        let _ = fs::remove_dir_all(d);
+    }
+
+    #[test]
+    fn finalization_work_limit_rejects_before_materializing_occurrence_edge_violations() {
+        let d = temp();
+        let mut p = policy(ValidationMode::Quarantine);
+        p.required_kinds = vec!["arrive".into()];
+        p.precedence = vec![("begin".into(), "finish".into())];
+        p.bounds.max_state_entries = 15;
+        let rows: Vec<Value> = (0..6)
+            .map(|occ| event("case", occ, "arrive", occ as u128, None, None))
+            .collect();
+        let input = write_input(&d, &rows);
+        let error = validate_file(&input, &d.join("valid"), &d.join("quarantine"), &p)
+            .expect_err("policy-comparison work exceeds the explicit bound");
+        assert!(error.contains("validation work limit exceeded"));
+        assert!(!d.join("valid").exists());
+        assert!(!d.join("quarantine").exists());
         let _ = fs::remove_dir_all(d);
     }
 }
