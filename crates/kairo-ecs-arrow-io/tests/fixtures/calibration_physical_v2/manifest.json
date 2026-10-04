@@ -1,0 +1,6035 @@
+{
+  "actual_snapshot_sha256": "f71bc569c11253b9505ed4935cf001d49778b1b847af5e0c3b97c53e74b683cf",
+  "c0_validation": {
+    "file": "c0-validation.json",
+    "sha256": "754e85ceff580fd70f6891c9b1964e6c0d74b01f4eb0594112f68c5ccc46de74"
+  },
+  "consumer_commit": "658a7a845f117405a6c728c34279d8e1814ade82",
+  "files": {
+    "exclusion.ipc_file": "09abb1ff38b13d941ef868aed8cb6b8dde32615bbc98d290d031cd7df6e75895",
+    "exclusion.ipc_stream": "9a58c4e6bd7d4c9744cf4fb7bcf1098d91c9e754ccbb163f2e4f9d420549aff4",
+    "exclusion.parquet": "4318450a7059cf323c4bd62c56893c93f4462b30123b72f570bc2085627d624c",
+    "outcome.ipc_file": "b28623729090e94b24d51dfdccde7c4d08f6e65277a5fb4991d99e65c8a5bc13",
+    "outcome.ipc_stream": "5a4755ab0b2048ce4cdfe4a1acf349a3d9dfb3f98a09374c66012a65bc52575b",
+    "outcome.parquet": "b3fdda33d61b9a36e6b6c479f1ff1ce0cc1551be1a3720e9be5230a89f138fcd",
+    "trace.ipc_file": "b941f2d3d2b903cb50594d99bc9f9b04230a25f12e90321426beb78ad4beceab",
+    "trace.ipc_stream": "ce35e7a21eed11bd392940503559f205ebe053c519941c4cd9982d9e9fe96392",
+    "trace.parquet": "6f887c1d97b59c13ddf5f5bbc08f83f3e64a3e0a4b3fdc5b30d71d0dc9b02ea7"
+  },
+  "fixture_collection_not_dataset": true,
+  "physical_version": "2",
+  "pyarrow": "25.0.1",
+  "records": {
+    "outcome_observation.v1": [
+      {
+        "case_key": "c",
+        "censor_reason": "administrative_end",
+        "censor_status": "right",
+        "cluster_ids": [],
+        "dataset_id": "d",
+        "endpoint": "departure",
+        "event_cause": null,
+        "event_observed": false,
+        "event_time": null,
+        "last_observed": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:04Z",
+          "relative_ticks": "4000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:04Z"
+        },
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "record_type": "outcome_observation.v1",
+        "risk_start": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:00Z",
+          "relative_ticks": "0",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:00Z"
+        },
+        "schema_version": "calibration-v1"
+      },
+      {
+        "case_key": "c",
+        "censor_reason": null,
+        "censor_status": "not_censored",
+        "cluster_ids": [],
+        "dataset_id": "d",
+        "endpoint": "end",
+        "event_cause": "end",
+        "event_observed": true,
+        "event_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:10Z",
+          "relative_ticks": "10000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:10Z"
+        },
+        "last_observed": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:05Z",
+          "relative_ticks": "5000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:05Z"
+        },
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "record_type": "outcome_observation.v1",
+        "risk_start": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:00Z",
+          "relative_ticks": "0",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:00Z"
+        },
+        "schema_version": "calibration-v1"
+      },
+      {
+        "case_key": "c",
+        "censor_reason": null,
+        "censor_status": "not_censored",
+        "cluster_ids": [],
+        "dataset_id": "d",
+        "endpoint": "end",
+        "event_cause": "end",
+        "event_observed": true,
+        "event_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:20Z",
+          "relative_ticks": "20000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:20Z"
+        },
+        "last_observed": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:05Z",
+          "relative_ticks": "5000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:05Z"
+        },
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "record_type": "outcome_observation.v1",
+        "risk_start": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:00Z",
+          "relative_ticks": "0",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:00Z"
+        },
+        "schema_version": "calibration-v1"
+      },
+      {
+        "case_key": "c",
+        "censor_reason": "admin",
+        "censor_status": "right",
+        "cluster_ids": [],
+        "dataset_id": "d",
+        "endpoint": "endpoint",
+        "event_cause": null,
+        "event_observed": false,
+        "event_time": null,
+        "last_observed": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:02Z",
+          "relative_ticks": "2000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:02Z"
+        },
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "record_type": "outcome_observation.v1",
+        "risk_start": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:00Z",
+          "relative_ticks": "0",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:00Z"
+        },
+        "schema_version": "calibration-v1"
+      }
+    ],
+    "trace_event.v1": [
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "cohort": true,
+            "id": "e",
+            "seq": 1,
+            "span": {
+              "end_ticks": "2",
+              "start_ticks": "9"
+            }
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "cohort": true,
+            "id": "e",
+            "seq": 1,
+            "span": {
+              "end_ticks": null,
+              "start_ticks": "2"
+            }
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": {
+            "lineage": {
+              "derivation": null,
+              "evidence_ref": null,
+              "mapping_version": "m",
+              "status": "observed"
+            },
+            "raw": "2020-01-01T00:00:04Z",
+            "relative_ticks": "4000000000",
+            "source_offset_or_zone": "Z",
+            "source_precision": "second",
+            "tick_resolution": "1ns",
+            "utc": "2020-01-01T00:00:04Z"
+          },
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "feature": {
+              "available_at": {
+                "lineage": {
+                  "clock": "available",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:04Z",
+                "representation": "RFC3339"
+              },
+              "status": "unknown"
+            },
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": {
+            "lineage": {
+              "derivation": null,
+              "evidence_ref": null,
+              "mapping_version": "m",
+              "status": "observed"
+            },
+            "raw": "2020-01-01T00:00:05Z",
+            "relative_ticks": "5000000000",
+            "source_offset_or_zone": "Z",
+            "source_precision": "second",
+            "tick_resolution": "1ns",
+            "utc": "2020-01-01T00:00:05Z"
+          },
+          "status": "known"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "feature": {
+              "available_at": {
+                "lineage": {
+                  "clock": "available",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:05Z",
+                "representation": "RFC3339"
+              },
+              "status": "known"
+            },
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": {
+            "lineage": {
+              "derivation": null,
+              "evidence_ref": null,
+              "mapping_version": "m",
+              "status": "observed"
+            },
+            "raw": "2020-01-01T00:00:06Z",
+            "relative_ticks": "6000000000",
+            "source_offset_or_zone": "Z",
+            "source_precision": "second",
+            "tick_resolution": "1ns",
+            "utc": "2020-01-01T00:00:06Z"
+          },
+          "status": "known"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "feature": {
+              "available_at": {
+                "lineage": {
+                  "clock": "available",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:06Z",
+                "representation": "RFC3339"
+              },
+              "status": "known"
+            },
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:03Z",
+          "relative_ticks": "3000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:03Z"
+        },
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "msg": {
+              "lineage": {
+                "clock": "message",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:03Z",
+              "representation": "RFC3339"
+            },
+            "rec": {
+              "lineage": {
+                "clock": "source_recorded",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:02Z",
+              "representation": "RFC3339"
+            },
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:02Z",
+          "relative_ticks": "2000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:02Z"
+        },
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:00.123456789000Z",
+          "relative_ticks": "123456789",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:00.123456789Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "clock": "occurrence",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:00.123456789000Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "123456789",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:02Z",
+          "relative_ticks": "2000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:02Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "clock": "occurrence",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:02Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "2000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": "derived from source row",
+            "evidence_ref": "evidence:source",
+            "mapping_version": "m",
+            "status": "derived"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "derivation": "derived from source row",
+                "evidence_ref": "evidence:source",
+                "status": "derived"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": "derived from source row",
+            "evidence_ref": "evidence:source",
+            "mapping_version": "m",
+            "status": "derived"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "1",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": null,
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "1",
+              "representation": "relative_integer",
+              "unit": "s"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "1000",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": null,
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "1000",
+              "representation": "relative_integer",
+              "unit": "ms"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "1000000",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": null,
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "1000000",
+              "representation": "relative_integer",
+              "unit": "us"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "1000000000",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": null,
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "1000000000",
+              "representation": "relative_integer",
+              "unit": "ns"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "STRASSE",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "STRASSE",
+            "id": "third",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "third",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "Straße",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "Straße",
+            "id": "é",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "é",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "Straße",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "Straße",
+            "id": "é",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "é",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "STRASSE",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "STRASSE",
+            "id": "third",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "third",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "Straße",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "Straße",
+            "id": "é",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "é",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "Straße",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "Straße",
+            "id": "é",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "é",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "outcome": {
+              "censor_cause": "administrative_end",
+              "censor_status": "right",
+              "endpoint": "departure",
+              "event_clock": null,
+              "last_observed": {
+                "lineage": {
+                  "clock": "last",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:04Z",
+                "representation": "RFC3339"
+              },
+              "lineage": {
+                "status": "observed"
+              },
+              "risk_start": {
+                "lineage": {
+                  "clock": "risk",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:00Z",
+                "representation": "RFC3339"
+              }
+            },
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 4294967295,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 18446744073709551615
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 18446744073709551615,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "task_started",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": {
+            "lineage": {
+              "derivation": null,
+              "evidence_ref": null,
+              "mapping_version": "m",
+              "status": "observed"
+            },
+            "raw": "2020-01-01T00:00:05Z",
+            "relative_ticks": "5000000000",
+            "source_offset_or_zone": "Z",
+            "source_precision": "second",
+            "tick_resolution": "1ns",
+            "utc": "2020-01-01T00:00:05Z"
+          },
+          "status": "known"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time"
+        ],
+        "raw_event": {
+          "source_event_type": "TASK_STARTED",
+          "source_family": "generic",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "feature": {
+              "available_at": {
+                "lineage": {
+                  "clock": "available",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:05Z",
+                "representation": "RFC3339"
+              },
+              "status": "known"
+            },
+            "id": "e",
+            "outcome": {
+              "censor_cause": "end",
+              "censor_status": "not_censored",
+              "endpoint": "end",
+              "event_clock": {
+                "lineage": {
+                  "clock": "future",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:10Z",
+                "representation": "RFC3339"
+              },
+              "last_observed": {
+                "lineage": {
+                  "clock": "last",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:05Z",
+                "representation": "RFC3339"
+              },
+              "lineage": {
+                "status": "observed"
+              },
+              "risk_start": {
+                "lineage": {
+                  "clock": "risk",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:00Z",
+                "representation": "RFC3339"
+              }
+            },
+            "seq": 1,
+            "unrelated_standard_column": "retained raw evidence"
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "task_started",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": {
+            "lineage": {
+              "derivation": null,
+              "evidence_ref": null,
+              "mapping_version": "m",
+              "status": "observed"
+            },
+            "raw": "2020-01-01T00:00:05Z",
+            "relative_ticks": "5000000000",
+            "source_offset_or_zone": "Z",
+            "source_precision": "second",
+            "tick_resolution": "1ns",
+            "utc": "2020-01-01T00:00:05Z"
+          },
+          "status": "known"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time"
+        ],
+        "raw_event": {
+          "source_event_type": "TASK_STARTED",
+          "source_family": "generic",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "feature": {
+              "available_at": {
+                "lineage": {
+                  "clock": "available",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:05Z",
+                "representation": "RFC3339"
+              },
+              "status": "known"
+            },
+            "id": "e",
+            "outcome": {
+              "censor_cause": "end",
+              "censor_status": "not_censored",
+              "endpoint": "end",
+              "event_clock": {
+                "lineage": {
+                  "clock": "future",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:20Z",
+                "representation": "RFC3339"
+              },
+              "last_observed": {
+                "lineage": {
+                  "clock": "last",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:05Z",
+                "representation": "RFC3339"
+              },
+              "lineage": {
+                "status": "observed"
+              },
+              "risk_start": {
+                "lineage": {
+                  "clock": "risk",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:00Z",
+                "representation": "RFC3339"
+              }
+            },
+            "seq": 1,
+            "unrelated_standard_column": "retained raw evidence"
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "a",
+        "event_kind_rank": 1,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "A",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "at2": null,
+            "case": "c",
+            "id": "e",
+            "id1": "event-a",
+            "id2": "event-b",
+            "outcome": {
+              "censor_cause": "admin",
+              "censor_status": "right",
+              "endpoint": "endpoint",
+              "event_clock": null,
+              "last_observed": {
+                "lineage": {
+                  "clock": "last",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:02Z",
+                "representation": "RFC3339"
+              },
+              "lineage": {
+                "status": "observed"
+              },
+              "risk_start": {
+                "lineage": {
+                  "clock": "risk",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:00Z",
+                "representation": "RFC3339"
+              }
+            },
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "event-a",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "episode_end",
+        "event_kind_rank": 10,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "EPISODE_END",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "board": {
+              "lineage": {
+                "clock": "occurrence",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:02Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "end": {
+              "lineage": {
+                "clock": "occurrence",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "id": "e",
+            "id1": "e1",
+            "id2": "e2",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e1",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "boarding",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:02Z",
+          "relative_ticks": "2000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:02Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "BOARDING",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "board": {
+              "lineage": {
+                "clock": "occurrence",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:02Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "end": {
+              "lineage": {
+                "clock": "occurrence",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "id": "e",
+            "id1": "e1",
+            "id2": "e2",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "2000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e2",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "low",
+        "event_kind_rank": 9,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "LOW",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "id1": "high",
+            "id2": "low",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "low",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d",
+        "disposition": "unknown",
+        "event_kind": "high",
+        "event_kind_rank": 18446744073709551616,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "HIGH",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "id1": "high",
+            "id2": "low",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "high",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d1",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m1",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m1",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T01:00:01+01:00",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "+01:00",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T01:00:01+01:00",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e1",
+            "kind": "arrival",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e1",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m1",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m1",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m1",
+            "status": "unknown"
+          }
+        }
+      },
+      {
+        "actor_key": null,
+        "case_key": "c",
+        "dataset_id": "d1",
+        "disposition": "unknown",
+        "event_kind": "arrival",
+        "event_kind_rank": 2,
+        "knowledge_availability": {
+          "available_at": null,
+          "status": "unknown"
+        },
+        "location_key": null,
+        "mapping_version": "m1",
+        "message_created_time": null,
+        "occurrence": 0,
+        "occurrence_time": {
+          "lineage": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m1",
+            "status": "observed"
+          },
+          "raw": "2020-01-01T00:00:01Z",
+          "relative_ticks": "1000000000",
+          "source_offset_or_zone": "Z",
+          "source_precision": "second",
+          "tick_resolution": "1ns",
+          "utc": "2020-01-01T00:00:01Z"
+        },
+        "quality_flags": [
+          "optional_clock_absent:source_recorded_time",
+          "optional_clock_absent:message_created_time",
+          "optional_clock_absent:available_at"
+        ],
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e1",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "record_type": "trace_event.v1",
+        "relative_ticks": "1000000000",
+        "resource_key": null,
+        "schema_version": "calibration-v1",
+        "source_event_key": "e1",
+        "source_order": 1,
+        "source_recorded_time": null,
+        "time_lineage": {
+          "message_created": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m1",
+            "status": "unknown"
+          },
+          "occurrence": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m1",
+            "status": "observed"
+          },
+          "source_recorded": {
+            "derivation": null,
+            "evidence_ref": null,
+            "mapping_version": "m1",
+            "status": "unknown"
+          }
+        }
+      }
+    ],
+    "trace_exclusion.v1": [
+      {
+        "dataset_id": "d",
+        "detail": "occurrence time is absent",
+        "exclusion_reason": "missing_required_time",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": null,
+            "case": "c",
+            "feature": {
+              "available_at": {
+                "lineage": {
+                  "clock": "available",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:02Z",
+                "representation": "RFC3339"
+              },
+              "status": "known"
+            },
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": "2020-01-01T00:00:02Z",
+          "message_created_time": null,
+          "occurrence": null,
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "ambiguous local time",
+        "exclusion_reason": "ambiguous_dst_fold",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "unknown"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "classification": "fold",
+              "classification_provenance": "synthetic_classifier_control",
+              "lineage": {
+                "status": "unknown"
+              },
+              "precision": "second",
+              "raw": "2020-11-01 01:30",
+              "representation": "classified"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "2020-11-01 01:30",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "nonexistent local time",
+        "exclusion_reason": "nonexistent_dst_gap",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "unknown"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "classification": "gap",
+              "classification_provenance": "synthetic_classifier_control",
+              "lineage": {
+                "status": "unknown"
+              },
+              "precision": "second",
+              "raw": "2020-03-08 02:30",
+              "representation": "classified"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "2020-03-08 02:30",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "missing lineage status",
+        "exclusion_reason": "invalid_mapping",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "unknown"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": null,
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "2020-01-01T00:00:01Z",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "noncanonical RFC3339 spelling",
+        "exclusion_reason": "invalid_mapping",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "clock": "occurrence",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:00",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "2020-01-01T00:00:00",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "unknown offset",
+        "exclusion_reason": "missing_timezone",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "clock": "occurrence",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:00-00:00",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "2020-01-01T00:00:00-00:00",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "subnanosecond precision",
+        "exclusion_reason": "sub_nanosecond",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "clock": "occurrence",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:00.0000000001Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "2020-01-01T00:00:00.0000000001Z",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "noncanonical RFC3339 spelling",
+        "exclusion_reason": "invalid_mapping",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "clock": "occurrence",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-1-01T00:00:00Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "2020-1-01T00:00:00Z",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "lineage evidence_ref must be string or null",
+        "exclusion_reason": "invalid_mapping",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "derived"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "evidence_ref": 7,
+                "status": "derived"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "2020-01-01T00:00:01Z",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "lineage mapping_version mismatch",
+        "exclusion_reason": "invalid_mapping",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "mapping_version": "other",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "2020-01-01T00:00:01Z",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "origin addition overflow",
+        "exclusion_reason": "overflow",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "nanosecond",
+              "raw": "170141183460469231731687303715884105727",
+              "representation": "relative_integer",
+              "unit": "ns"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "170141183460469231731687303715884105727",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "unit multiplication overflow",
+        "exclusion_reason": "overflow",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "nanosecond",
+              "raw": "170141183460469231731687303715884105727",
+              "representation": "relative_integer",
+              "unit": "s"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "170141183460469231731687303715884105727",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "occurrence precedes origin",
+        "exclusion_reason": "pre_origin",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "-1",
+              "representation": "relative_integer",
+              "unit": "s"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "-1",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "normalized timestamp outside calendar range",
+        "exclusion_reason": "overflow",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "nanosecond",
+              "raw": "1",
+              "representation": "relative_integer",
+              "unit": "s"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "1",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "normalized timestamp outside calendar range",
+        "exclusion_reason": "overflow",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "observed"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "1",
+              "representation": "relative_integer",
+              "unit": "s"
+            },
+            "case": "c",
+            "id": "e",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": "1",
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e"
+      },
+      {
+        "dataset_id": "d",
+        "detail": "occurrence time is absent",
+        "exclusion_reason": "missing_required_time",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m",
+          "status": "unknown"
+        },
+        "mapping_version": "m",
+        "raw_event": {
+          "source_event_type": "B",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": {
+              "lineage": {
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339"
+            },
+            "at2": null,
+            "case": "c",
+            "id": "e",
+            "id1": "event-a",
+            "id2": "event-b",
+            "outcome": {
+              "censor_cause": "admin",
+              "censor_status": "right",
+              "endpoint": "endpoint",
+              "event_clock": null,
+              "last_observed": {
+                "lineage": {
+                  "clock": "last",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:02Z",
+                "representation": "RFC3339"
+              },
+              "lineage": {
+                "status": "observed"
+              },
+              "risk_start": {
+                "lineage": {
+                  "clock": "risk",
+                  "status": "observed"
+                },
+                "precision": "second",
+                "raw": "2020-01-01T00:00:00Z",
+                "representation": "RFC3339"
+              }
+            },
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": null,
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "event-b"
+      },
+      {
+        "dataset_id": "d1",
+        "detail": "occurrence time is absent",
+        "exclusion_reason": "missing_required_time",
+        "lineage": {
+          "derivation": null,
+          "evidence_ref": null,
+          "mapping_version": "m1",
+          "status": "unknown"
+        },
+        "mapping_version": "m1",
+        "raw_event": {
+          "source_event_type": "ARRIVAL",
+          "source_family": "fixture",
+          "source_fields": {
+            "at": null,
+            "case": "c",
+            "id": "e1",
+            "seq": 1
+          },
+          "source_record_id": null
+        },
+        "raw_time_values": {
+          "available_at": null,
+          "message_created_time": null,
+          "occurrence": null,
+          "source_recorded_time": null
+        },
+        "record_type": "trace_exclusion.v1",
+        "schema_version": "calibration-v1",
+        "source_event_key": "e1"
+      }
+    ]
+  },
+  "request_count": 51,
+  "requests": [
+    {
+      "case_key_field": "case",
+      "cohort_field": "cohort",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "interval_field": "span",
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "cohort": true,
+          "id": "e",
+          "seq": 1,
+          "span": {
+            "end_ticks": "2",
+            "start_ticks": "9"
+          }
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture",
+      "triage_field": "triage"
+    },
+    {
+      "case_key_field": "case",
+      "cohort_field": "cohort",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "interval_field": "span",
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "cohort": true,
+          "id": "e",
+          "seq": 1,
+          "span": {
+            "end_ticks": null,
+            "start_ticks": "2"
+          }
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture",
+      "triage_field": "triage"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "knowledge_field": "feature",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "prediction_cutoff": "2020-01-01T00:00:05Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "feature": {
+            "available_at": {
+              "lineage": {
+                "clock": "available",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:04Z",
+              "representation": "RFC3339"
+            },
+            "status": "unknown"
+          },
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "knowledge_field": "feature",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "prediction_cutoff": "2020-01-01T00:00:05Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "feature": {
+            "available_at": {
+              "lineage": {
+                "clock": "available",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:05Z",
+              "representation": "RFC3339"
+            },
+            "status": "known"
+          },
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "knowledge_field": "feature",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "prediction_cutoff": "2020-01-01T00:00:05Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "feature": {
+            "available_at": {
+              "lineage": {
+                "clock": "available",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:06Z",
+              "representation": "RFC3339"
+            },
+            "status": "known"
+          },
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "knowledge_field": "feature",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": null,
+          "case": "c",
+          "feature": {
+            "available_at": {
+              "lineage": {
+                "clock": "available",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:02Z",
+              "representation": "RFC3339"
+            },
+            "status": "known"
+          },
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "message_field": "msg",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "recorded_field": "rec",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "msg": {
+            "lineage": {
+              "clock": "message",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:03Z",
+            "representation": "RFC3339"
+          },
+          "rec": {
+            "lineage": {
+              "clock": "source_recorded",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:02Z",
+            "representation": "RFC3339"
+          },
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "MSH-7",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "MSH-7": {
+            "lineage": {
+              "clock": "occurrence",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "HL7_V2"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "recorded_field": "meta.lastUpdated",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "meta.lastUpdated": {
+            "lineage": {
+              "clock": "recorded",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "FHIR_AU"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "recorded_field": "meta.lastUpdated",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "FHIR_AU"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "classification": "fold",
+            "classification_provenance": "synthetic_classifier_control",
+            "lineage": {
+              "status": "unknown"
+            },
+            "precision": "second",
+            "raw": "2020-11-01 01:30",
+            "representation": "classified"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "classification": "gap",
+            "classification_provenance": "synthetic_classifier_control",
+            "lineage": {
+              "status": "unknown"
+            },
+            "precision": "second",
+            "raw": "2020-03-08 02:30",
+            "representation": "classified"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": null,
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "clock": "occurrence",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:00",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "clock": "occurrence",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:00-00:00",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "clock": "occurrence",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:00.0000000001Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "clock": "occurrence",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:00.123456789000Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "clock": "occurrence",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:02Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "clock": "occurrence",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-1-01T00:00:00Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "derivation": "derived from source row",
+              "evidence_ref": "evidence:source",
+              "status": "derived"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "evidence_ref": 7,
+              "status": "derived"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "mapping_version": "other",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "nanosecond",
+            "raw": "170141183460469231731687303715884105727",
+            "representation": "relative_integer",
+            "unit": "ns"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "nanosecond",
+            "raw": "170141183460469231731687303715884105727",
+            "representation": "relative_integer",
+            "unit": "s"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "-1",
+            "representation": "relative_integer",
+            "unit": "s"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "1",
+            "representation": "relative_integer",
+            "unit": "s"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "1000",
+            "representation": "relative_integer",
+            "unit": "ms"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "1000000",
+            "representation": "relative_integer",
+            "unit": "us"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "1000000000",
+            "representation": "relative_integer",
+            "unit": "ns"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "STRASSE",
+          "id": "third",
+          "seq": 1
+        },
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "Straße",
+          "id": "é",
+          "seq": 1
+        },
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "Straße",
+          "id": "é",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "Straße",
+          "id": "é",
+          "seq": 1
+        },
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "Straße",
+          "id": "é",
+          "seq": 1
+        },
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "STRASSE",
+          "id": "third",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": " ",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "outcome": {
+            "censor_cause": "administrative_end",
+            "censor_status": "right",
+            "endpoint": "departure",
+            "event_clock": null,
+            "last_observed": {
+              "lineage": {
+                "clock": "last",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:04Z",
+              "representation": "RFC3339"
+            },
+            "lineage": {
+              "status": "observed"
+            },
+            "risk_start": {
+              "lineage": {
+                "clock": "risk",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:00Z",
+              "representation": "RFC3339"
+            }
+          },
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        },
+        {
+          "at": {
+            "lineage": {
+              "clock": "occurrence",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:02Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": null,
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "9999-12-31T23:59:59Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "nanosecond",
+            "raw": "1",
+            "representation": "relative_integer",
+            "unit": "s"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "9999-12-31T23:59:59Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "1",
+            "representation": "relative_integer",
+            "unit": "s"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 4294967295,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": "184467440737095516150"
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 4294967295,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 18446744073709551615
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 4294967296,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "visit_end_datetime",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "seq": 1,
+          "visit_end_datetime": {
+            "lineage": {
+              "clock": "occurrence",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          }
+        }
+      ],
+      "shape": "wide",
+      "source_family": "OMOP"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "physical_departure",
+          "movement_evidence_field": "movement",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": null
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "msg_type": "ADT^A08",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_event_type_field": "msg_type",
+      "source_family": "ADT"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "task_started",
+          "knowledge_field": "feature",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "TASK_STARTED"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "prediction_cutoff": "2020-01-01T00:00:05Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "feature": {
+            "available_at": {
+              "lineage": {
+                "clock": "available",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:05Z",
+              "representation": "RFC3339"
+            },
+            "status": "known"
+          },
+          "id": "e",
+          "outcome": {
+            "censor_cause": "end",
+            "censor_status": "not_censored",
+            "endpoint": "end",
+            "event_clock": {
+              "lineage": {
+                "clock": "future",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:10Z",
+              "representation": "RFC3339"
+            },
+            "last_observed": {
+              "lineage": {
+                "clock": "last",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:05Z",
+              "representation": "RFC3339"
+            },
+            "lineage": {
+              "status": "observed"
+            },
+            "risk_start": {
+              "lineage": {
+                "clock": "risk",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:00Z",
+              "representation": "RFC3339"
+            }
+          },
+          "seq": 1,
+          "unrelated_standard_column": "retained raw evidence"
+        }
+      ],
+      "shape": "wide",
+      "source_family": "generic"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "task_started",
+          "knowledge_field": "feature",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "TASK_STARTED"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "prediction_cutoff": "2020-01-01T00:00:05Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "feature": {
+            "available_at": {
+              "lineage": {
+                "clock": "available",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:05Z",
+              "representation": "RFC3339"
+            },
+            "status": "known"
+          },
+          "id": "e",
+          "outcome": {
+            "censor_cause": "end",
+            "censor_status": "not_censored",
+            "endpoint": "end",
+            "event_clock": {
+              "lineage": {
+                "clock": "future",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:20Z",
+              "representation": "RFC3339"
+            },
+            "last_observed": {
+              "lineage": {
+                "clock": "last",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:05Z",
+              "representation": "RFC3339"
+            },
+            "lineage": {
+              "status": "observed"
+            },
+            "risk_start": {
+              "lineage": {
+                "clock": "risk",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:00Z",
+              "representation": "RFC3339"
+            }
+          },
+          "seq": 1,
+          "unrelated_standard_column": "retained raw evidence"
+        }
+      ],
+      "shape": "wide",
+      "source_family": "generic"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id1",
+          "kind": "a",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "1",
+          "source_event_type": "A"
+        },
+        {
+          "key_field": "id2",
+          "kind": "b",
+          "occurrence_field": "at2",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "B"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "at2": null,
+          "case": "c",
+          "id": "e",
+          "id1": "event-a",
+          "id2": "event-b",
+          "outcome": {
+            "censor_cause": "admin",
+            "censor_status": "right",
+            "endpoint": "endpoint",
+            "event_clock": null,
+            "last_observed": {
+              "lineage": {
+                "clock": "last",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:02Z",
+              "representation": "RFC3339"
+            },
+            "lineage": {
+              "status": "observed"
+            },
+            "risk_start": {
+              "lineage": {
+                "clock": "risk",
+                "status": "observed"
+              },
+              "precision": "second",
+              "raw": "2020-01-01T00:00:00Z",
+              "representation": "RFC3339"
+            }
+          },
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id1",
+          "kind": "episode_end",
+          "occurrence_field": "end",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "10",
+          "source_event_type": "EPISODE_END"
+        },
+        {
+          "key_field": "id2",
+          "kind": "boarding",
+          "occurrence_field": "board",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "BOARDING"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "board": {
+            "lineage": {
+              "clock": "occurrence",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:02Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "end": {
+            "lineage": {
+              "clock": "occurrence",
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "id": "e",
+          "id1": "e1",
+          "id2": "e2",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d",
+      "event_bindings": [
+        {
+          "key_field": "id1",
+          "kind": "high",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "18446744073709551616",
+          "source_event_type": "HIGH"
+        },
+        {
+          "key_field": "id2",
+          "kind": "low",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "9",
+          "source_event_type": "LOW"
+        }
+      ],
+      "mapping_version": "m",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e",
+          "id1": "high",
+          "id2": "low",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d1",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "event_kind_field": "kind",
+      "mapping_version": "m1",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T01:00:01+01:00",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e1",
+          "kind": "arrival",
+          "seq": 1
+        }
+      ],
+      "shape": "long",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d1",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m1",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": null,
+          "case": "c",
+          "id": "e1",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    },
+    {
+      "case_key_field": "case",
+      "dataset_id": "d1",
+      "event_bindings": [
+        {
+          "key_field": "id",
+          "kind": "arrival",
+          "occurrence_field": "at",
+          "occurrence_index": 0,
+          "order_field": "seq",
+          "rank": "2",
+          "source_event_type": "ARRIVAL"
+        }
+      ],
+      "mapping_version": "m1",
+      "origin_utc": "2020-01-01T00:00:00Z",
+      "profile_version": "c11.synthetic-map-v1",
+      "rows": [
+        {
+          "at": {
+            "lineage": {
+              "status": "observed"
+            },
+            "precision": "second",
+            "raw": "2020-01-01T00:00:01Z",
+            "representation": "RFC3339"
+          },
+          "case": "c",
+          "id": "e1",
+          "seq": 1
+        }
+      ],
+      "shape": "wide",
+      "source_family": "fixture"
+    }
+  ],
+  "row_contexts": {
+    "outcome_observation.v1": [
+      32,
+      43,
+      44,
+      45
+    ],
+    "trace_event.v1": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      6,
+      16,
+      17,
+      19,
+      25,
+      26,
+      27,
+      28,
+      29,
+      29,
+      29,
+      30,
+      30,
+      30,
+      32,
+      34,
+      39,
+      43,
+      44,
+      45,
+      46,
+      46,
+      47,
+      47,
+      48,
+      50
+    ],
+    "trace_exclusion.v1": [
+      5,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      18,
+      20,
+      21,
+      22,
+      23,
+      24,
+      36,
+      37,
+      45,
+      49
+    ]
+  },
+  "synthetic_only": true
+}

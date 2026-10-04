@@ -1,0 +1,51 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling autocfg v1.5.0
+   Compiling libm v0.2.16
+   Compiling zerocopy v0.8.48
+   Compiling cfg-if v1.0.4
+   Compiling libc v0.2.186
+   Compiling getrandom v0.3.4
+   Compiling version_check v0.9.5
+   Compiling core-foundation-sys v0.8.7
+   Compiling bytes v1.12.1
+   Compiling ahash v0.8.12
+   Compiling iana-time-zone v0.1.65
+   Compiling num-traits v0.2.19
+   Compiling arrow-schema v60.0.0
+   Compiling semver v1.0.28
+   Compiling once_cell v1.21.4
+   Compiling hashbrown v0.17.1
+   Compiling bitflags v2.13.2
+   Compiling rustc_version v0.4.1
+   Compiling thiserror v2.0.20
+   Compiling twox-hash v2.1.4
+   Compiling seq-macro v0.3.6
+   Compiling flatbuffers v25.12.19
+   Compiling base64 v0.23.1
+   Compiling syn v2.0.117
+   Compiling syn v3.0.6
+   Compiling num-integer v0.1.47
+   Compiling num-complex v0.4.6
+   Compiling chrono v0.4.45
+   Compiling num-bigint v0.5.1
+   Compiling thiserror-impl v2.0.20
+   Compiling zerocopy-derive v0.8.48
+   Compiling half v2.7.1
+   Compiling arrow-buffer v60.0.0
+   Compiling arrow-data v60.0.0
+   Compiling arrow-array v60.0.0
+   Compiling arrow-cmp v60.0.0
+   Compiling arrow-select v60.0.0
+   Compiling arrow-ipc v60.0.0
+   Compiling parquet v60.0.0
+   Compiling kairo-ecs-arrow-io v0.1.0 (/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/crates/kairo-ecs-arrow-io)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 26.34s
+     Running tests/calibration_physical_v2.rs (.artifacts/mvp/C1.1.formats.physical_interop_v2_20261004/target/debug/deps/calibration_physical_v2-36f58ea2da773642)
+
+running 1 test
+test actual_calibration_tables_roundtrip_with_schema_controls ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+
