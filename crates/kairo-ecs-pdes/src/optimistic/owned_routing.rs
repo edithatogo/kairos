@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::owned::with_live_authorities;
+use super::owned_execution::{IntentCohortKey, NativeIntentKind, NativeIntentRecord};
 use super::{
     AuthorityStorageKey, LogicalEventId, LpId, NativeAccountingAuthority, OptimisticAuthority,
     OptimisticError, OptimisticMessage, OptimisticMessageKind, OptimisticProcess,
@@ -77,6 +78,8 @@ pub struct OptimisticOutboundView {
     message: OptimisticMessage,
     issuer: NativeAccountingAuthority,
     status: OptimisticOutboundStatus,
+    intent_id: super::NativeTransitionId,
+    retirement_dependencies: Vec<super::NativeTransitionId>,
 }
 
 impl OptimisticOutboundView {
@@ -95,6 +98,14 @@ impl OptimisticOutboundView {
     pub fn status(&self) -> OptimisticOutboundStatus {
         self.status
     }
+
+    pub fn intent_id(&self) -> &super::NativeTransitionId {
+        &self.intent_id
+    }
+
+    pub fn retirement_dependencies(&self) -> &[super::NativeTransitionId] {
+        &self.retirement_dependencies
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -102,6 +113,7 @@ pub struct NativeOutboundSend {
     key: OptimisticSendKey,
     message: OptimisticMessage,
     issuer: NativeAccountingAuthority,
+    retirement_request: Option<super::NativeRetirementRequest>,
 }
 
 impl NativeOutboundSend {
@@ -115,6 +127,10 @@ impl NativeOutboundSend {
 
     pub fn issuer(&self) -> &NativeAccountingAuthority {
         &self.issuer
+    }
+
+    pub fn retirement_request(&self) -> Option<&super::NativeRetirementRequest> {
+        self.retirement_request.as_ref()
     }
 }
 
@@ -136,6 +152,24 @@ pub struct NativeAdmissionCapability {
 }
 
 impl NativeAdmissionCapability {
+    pub(super) fn new(
+        key: NativeSendId,
+        message: OptimisticMessage,
+        receiver: NativeAccountingAuthority,
+        sender: NativeAccountingAuthority,
+        recorded_revision: u64,
+        recorded_membership: NativeAdmissionMembership,
+    ) -> Self {
+        Self {
+            key: OptimisticSendKey { inner: key },
+            message,
+            receiver,
+            sender,
+            recorded_revision,
+            recorded_membership,
+        }
+    }
+
     pub fn key(&self) -> &OptimisticSendKey {
         &self.key
     }
@@ -173,6 +207,10 @@ pub struct OptimisticAccountingSnapshot {
     retirement_count: usize,
     reserved_receipt_count: usize,
     retained_receipt_count: usize,
+    source_intent_count: usize,
+    receiver_retirement_count: usize,
+    reserved_tombstone_count: usize,
+    reserved_pending_count: usize,
     local_minimum: Option<Tick>,
     outbound_minimum: Option<Tick>,
     minimum_obligation_tick: Option<Tick>,
@@ -210,6 +248,18 @@ impl OptimisticAccountingSnapshot {
     pub fn retained_receipt_count(&self) -> usize {
         self.retained_receipt_count
     }
+    pub fn source_intent_count(&self) -> usize {
+        self.source_intent_count
+    }
+    pub fn receiver_retirement_count(&self) -> usize {
+        self.receiver_retirement_count
+    }
+    pub fn reserved_tombstone_count(&self) -> usize {
+        self.reserved_tombstone_count
+    }
+    pub fn reserved_pending_count(&self) -> usize {
+        self.reserved_pending_count
+    }
     pub fn local_minimum(&self) -> Option<Tick> {
         self.local_minimum
     }
@@ -224,7 +274,7 @@ impl OptimisticAccountingSnapshot {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct OwnedRootRoutingState {
     pub roots: BTreeSet<RootCohortId>,
     pub outbox: BTreeMap<NativeSendId, OptimisticOutboundRecord>,
@@ -250,17 +300,39 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             if !owned.peers_sealed() {
                 return Err(OptimisticError::NativePeersNotSealed);
             }
-            Ok(owned
+            owned
                 .routing()
                 .outbox
                 .iter()
-                .map(|(id, record)| OptimisticOutboundView {
-                    key: OptimisticSendKey { inner: id.clone() },
-                    message: record.message.clone(),
-                    issuer: record.issuer.clone(),
-                    status: OptimisticOutboundStatus::Ready,
+                .map(|(id, record)| {
+                    let (intent_id, retirement_dependencies, _) =
+                        owned.execution().send_metadata(id)?;
+                    let current = owned
+                        .execution()
+                        .message_intents
+                        .get(id)
+                        .and_then(|key| owned.execution().intents.get(key))
+                        .is_some_and(|intent| intent.current);
+                    let status =
+                        if record.message.kind() == OptimisticMessageKind::Positive && !current {
+                            OptimisticOutboundStatus::RetiredPredecessorAwaitingAccounting
+                        } else if record.message.kind() == OptimisticMessageKind::Anti
+                            || retirement_dependencies.is_empty()
+                        {
+                            OptimisticOutboundStatus::Ready
+                        } else {
+                            OptimisticOutboundStatus::BlockedReplacement
+                        };
+                    Ok(OptimisticOutboundView {
+                        key: OptimisticSendKey { inner: id.clone() },
+                        message: record.message.clone(),
+                        issuer: record.issuer.clone(),
+                        status,
+                        intent_id,
+                        retirement_dependencies,
+                    })
                 })
-                .collect())
+                .collect()
         })
     }
 
@@ -275,16 +347,33 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             if !owned.peers_sealed() {
                 return Err(OptimisticError::NativePeersNotSealed);
             }
-            Ok(owned
+            owned
                 .routing()
                 .outbox
                 .iter()
-                .map(|(id, record)| NativeOutboundSend {
-                    key: OptimisticSendKey { inner: id.clone() },
-                    message: record.message.clone(),
-                    issuer: record.issuer.clone(),
+                .map(|(id, record)| {
+                    let (_, dependencies, retirement_request) =
+                        owned.execution().send_metadata(id)?;
+                    if record.message.kind() == OptimisticMessageKind::Positive
+                        && (!dependencies.is_empty()
+                            || !owned
+                                .execution()
+                                .message_intents
+                                .get(id)
+                                .and_then(|key| owned.execution().intents.get(key))
+                                .is_some_and(|intent| intent.current))
+                    {
+                        return Ok(None);
+                    }
+                    Ok(Some(NativeOutboundSend {
+                        key: OptimisticSendKey { inner: id.clone() },
+                        message: record.message.clone(),
+                        issuer: record.issuer.clone(),
+                        retirement_request,
+                    }))
                 })
-                .collect())
+                .collect::<Result<Vec<_>, OptimisticError>>()
+                .map(|sends| sends.into_iter().flatten().collect())
         })
     }
 
@@ -293,6 +382,15 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
         send: &NativeOutboundSend,
     ) -> Result<NativeAdmissionCapability, OptimisticError> {
         self.ensure_healthy()?;
+        if send.message.kind() == OptimisticMessageKind::Anti {
+            let request = send
+                .retirement_request()
+                .ok_or(OptimisticError::ConflictingNativeReceipt)?;
+            if request.predecessor_anti() != send.message() {
+                return Err(OptimisticError::ConflictingNativeReceipt);
+            }
+            return self.receive_native_retirement(request);
+        }
         let own_state = self
             .owned
             .as_ref()
@@ -397,18 +495,34 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             if !existing.sender.same_issuer(&send.issuer) || existing.message != *message {
                 return Err(OptimisticError::ConflictingNativeReceipt);
             }
-            let still_pending = self.processes.get(&event.dest_lp).is_some_and(|state| {
-                state
-                    .positives
-                    .contains(&identity)
-                    .is_some_and(|stored| stored == message)
-                    && self.known_deliveries.get(&identity) == Some(event)
+            let current_membership = self.processes.get(&event.dest_lp).and_then(|state| {
+                if state.positives.contains(&identity).is_some() {
+                    Some(NativeAdmissionMembership::Pending)
+                } else if state
+                    .history
+                    .iter()
+                    .any(|executed| DeliveryIdentity::from(&executed.message) == identity)
+                {
+                    Some(NativeAdmissionMembership::Executed)
+                } else if state.tombstones.contains_key(&identity) {
+                    Some(NativeAdmissionMembership::Tombstoned)
+                } else {
+                    None
+                }
             });
-            if !still_pending {
+            if current_membership.is_none() || self.known_deliveries.get(&identity) != Some(event) {
                 return Err(OptimisticError::ConflictingNativeReceipt);
             }
             return Ok(existing.clone());
         }
+        let cancellation_reservation = owned
+            .execution()
+            .receiver_retirements
+            .iter()
+            .find(|(_, record)| {
+                record.request.predecessor_positive() == message && record.applied.is_none()
+            })
+            .map(|(transition, _)| *transition);
         if let Some(existing) = self.known_deliveries.get(&identity) {
             if existing != event {
                 return Err(OptimisticError::ConflictingDelivery {
@@ -416,16 +530,27 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
                     incarnation: message.incarnation(),
                 });
             }
-            return Err(OptimisticError::DuplicatePositive {
-                source_lp,
-                incarnation: message.incarnation(),
-            });
+            if cancellation_reservation.is_none() {
+                return Err(OptimisticError::DuplicatePositive {
+                    source_lp,
+                    incarnation: message.incarnation(),
+                });
+            }
         }
         self.ensure_pending_capacity(1)?;
         let receipt_count = owned.routing().outbox.len()
             + owned.routing().completed.len()
-            + owned.routing().admissions.len();
-        if receipt_count >= owned.max_receipt_entries() {
+            + owned.routing().admissions.len()
+            + owned.execution().retained_receipt_count()
+            + owned.execution().reserved_receipts;
+        let uses_reserved_receipt = cancellation_reservation.is_some_and(|transition| {
+            owned
+                .execution()
+                .receiver_retirements
+                .get(&transition)
+                .is_some_and(|record| record.positive_readback_reserved)
+        });
+        if !uses_reserved_receipt && receipt_count >= owned.max_receipt_entries() {
             return Err(OptimisticError::ReceiptLimitExceeded {
                 limit: owned.max_receipt_entries(),
             });
@@ -448,16 +573,20 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
         process.epoch = next_epoch;
         process.positives.insert(message.clone());
         self.known_deliveries.insert(identity, event.clone());
-        self.owned
-            .as_mut()
-            .expect("owned mode checked")
-            .routing_mut()
-            .admissions
-            .insert(key, cap.clone());
-        self.owned
-            .as_mut()
-            .expect("owned mode checked")
-            .commit_revision(next_revision);
+        {
+            let owned = self.owned.as_mut().expect("owned mode checked");
+            owned.routing_mut().admissions.insert(key, cap.clone());
+            if uses_reserved_receipt {
+                let execution = owned.execution_mut();
+                execution.reserved_receipts = execution.reserved_receipts.saturating_sub(1);
+                execution
+                    .receiver_retirements
+                    .get_mut(&cancellation_reservation.expect("reservation preflighted"))
+                    .expect("retirement record retained")
+                    .positive_readback_reserved = false;
+            }
+            owned.commit_revision(next_revision);
+        }
         Ok(cap)
     }
 
@@ -493,11 +622,10 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             return Err(OptimisticError::NativeSendIssuerMismatch { source_lp });
         }
         let id = cap.key.inner.clone();
-        if NativeSendId::from(&cap.message) != id
-            || cap.message.kind() != OptimisticMessageKind::Positive
-        {
+        if NativeSendId::from(&cap.message) != id {
             return Err(OptimisticError::ConflictingNativeReceipt);
         }
+        self.validate_gvt(cap.message.event().tick)?;
         let receiver = owned.peers().into_iter().find(|peer| {
             peer.owned_lps()
                 .binary_search(&cap.message.event().dest_lp)
@@ -505,6 +633,30 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
         });
         if !receiver.is_some_and(|registered| registered.same_issuer(&cap.receiver)) {
             return Err(OptimisticError::NativeSendIssuerMismatch { source_lp });
+        }
+        if cap.message.kind() == OptimisticMessageKind::Anti
+            && own.same_issuer(&cap.sender)
+            && own.same_issuer(&cap.receiver)
+        {
+            let execution = owned.execution();
+            let transition = execution
+                .message_intents
+                .get(&id)
+                .ok_or(OptimisticError::UnknownNativeTransition)?;
+            let retirement = execution
+                .receiver_retirements
+                .get(transition)
+                .ok_or(OptimisticError::UnknownNativeTransition)?;
+            let expected = &retirement.anti_admission;
+            if expected.message != cap.message
+                || !expected.sender.same_issuer(&cap.sender)
+                || !expected.receiver.same_issuer(&cap.receiver)
+                || expected.recorded_revision != cap.recorded_revision
+                || expected.recorded_membership != cap.recorded_membership
+            {
+                return Err(OptimisticError::ConflictingNativeReceipt);
+            }
+            return Ok(());
         }
         if let Some(completed) = owned.routing().completed.get(&id) {
             return if completed.message == cap.message && completed.issuer.same_issuer(&cap.sender)
@@ -576,19 +728,99 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
                 .values()
                 .map(|record| record.message.event().tick)
                 .min();
-            let minimum_obligation_tick = local_minimum.into_iter().chain(outbound_minimum).min();
+            let execution = owned.execution();
+            let source_requests = execution
+                .intents
+                .values()
+                .filter(|intent| intent.request.is_some() && !intent.applied)
+                .count();
+            let shared_local_requests = execution
+                .receiver_retirements
+                .values()
+                .filter(|receiver| {
+                    receiver.applied.is_none()
+                        && receiver
+                            .request
+                            .sender()
+                            .same_issuer(receiver.request.old_receiver())
+                })
+                .count();
+            let retirement_count = source_requests
+                + execution
+                    .receiver_retirements
+                    .values()
+                    .filter(|receiver| receiver.applied.is_none())
+                    .count()
+                - shared_local_requests;
+            let mut blocked_count = 0;
+            let mut ready_positive_count = 0;
+            for (key, intent) in &execution.intents {
+                if intent.kind == NativeIntentKind::Present
+                    && intent.current
+                    && !execution.unresolved_dependencies(key)?.is_empty()
+                {
+                    blocked_count += 1;
+                }
+            }
+            for (id, record) in outbox {
+                if record.message.kind() == OptimisticMessageKind::Positive
+                    && execution.send_metadata(id)?.1.is_empty()
+                    && execution
+                        .message_intents
+                        .get(id)
+                        .and_then(|key| execution.intents.get(key))
+                        .is_some_and(|intent| intent.current)
+                {
+                    ready_positive_count += 1;
+                }
+            }
+            let minimum_obligation_tick = local_minimum
+                .into_iter()
+                .chain(outbound_minimum)
+                .chain(execution.intents.values().filter_map(|intent| {
+                    (intent.blocked_local && intent.current)
+                        .then(|| intent.message.as_ref().map(|message| message.event().tick))
+                        .flatten()
+                }))
+                .chain(execution.intents.values().filter_map(|record| {
+                    record
+                        .request
+                        .as_ref()
+                        .filter(|_| !record.applied)
+                        .map(|request| request.predecessor_positive().event().tick)
+                }))
+                .chain(
+                    execution
+                        .receiver_retirements
+                        .values()
+                        .filter_map(|record| {
+                            record
+                                .applied
+                                .is_none()
+                                .then_some(record.request.predecessor_positive().event().tick)
+                        }),
+                )
+                .min();
             Ok(OptimisticAccountingSnapshot {
                 revision: owned.revision(),
                 local_positive_count,
                 local_anti_count,
                 local_replay_count,
-                ready_positive_count: outbox.len(),
-                ready_anti_count: 0,
-                blocked_count: 0,
-                retirement_count: 0,
-                reserved_receipt_count: outbox.len(),
+                ready_positive_count,
+                ready_anti_count: outbox
+                    .values()
+                    .filter(|record| record.message.kind() == OptimisticMessageKind::Anti)
+                    .count(),
+                blocked_count,
+                retirement_count,
+                reserved_receipt_count: outbox.len() + execution.reserved_receipts,
                 retained_receipt_count: owned.routing().completed.len()
-                    + owned.routing().admissions.len(),
+                    + owned.routing().admissions.len()
+                    + execution.retained_receipt_count(),
+                source_intent_count: execution.intents.len(),
+                receiver_retirement_count: execution.receiver_retirements.len(),
+                reserved_tombstone_count: execution.reserved_tombstones,
+                reserved_pending_count: execution.reserved_pending,
                 local_minimum,
                 outbound_minimum,
                 minimum_obligation_tick,
@@ -649,7 +881,8 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
                     source_lp: event.source_lp,
                 });
             }
-            if owned.routing().roots.len() >= owned.max_transition_entries() {
+            let transition_count = owned.execution().transition_record_count();
+            if transition_count >= owned.max_transition_entries() {
                 return Err(OptimisticError::TransitionLimitExceeded {
                     limit: owned.max_transition_entries(),
                 });
@@ -663,7 +896,9 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             if remote {
                 let receipt_count = owned.routing().outbox.len()
                     + owned.routing().completed.len()
-                    + owned.routing().admissions.len();
+                    + owned.routing().admissions.len()
+                    + owned.execution().retained_receipt_count()
+                    + owned.execution().reserved_receipts;
                 if receipt_count >= owned.max_receipt_entries() {
                     return Err(OptimisticError::ReceiptLimitExceeded {
                         limit: owned.max_receipt_entries(),
@@ -720,11 +955,52 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             });
         }
         let next_incarnation = current_incarnation.checked_add(1);
+        let (transition_id, transition_key) = {
+            let execution = self
+                .owned
+                .as_mut()
+                .expect("owned mode checked")
+                .execution_mut();
+            let id = execution.mint_id(&issuer)?;
+            let key = id.key();
+            (id, key)
+        };
+        let cohort_key = IntentCohortKey {
+            source_lp: event.source_lp,
+            authority: AuthorityStorageKey::from(authority),
+            logical_id: message.logical_id().clone(),
+        };
+        let intent = NativeIntentRecord {
+            view_id: transition_id,
+            source_lp: event.source_lp,
+            authority,
+            logical_id: message.logical_id().clone(),
+            kind: NativeIntentKind::Present,
+            message: Some(message.clone()),
+            predecessor: None,
+            request: None,
+            current: true,
+            applied: false,
+            blocked_local: false,
+            local_pending_reserved: false,
+        };
         *self
             .next_incarnation
             .get_mut(&event.source_lp)
             .expect("source owned") = next_incarnation;
         self.known_deliveries.insert(identity, event.clone());
+        {
+            let execution = self
+                .owned
+                .as_mut()
+                .expect("owned mode checked")
+                .execution_mut();
+            execution
+                .message_intents
+                .insert(NativeSendId::from(&message), transition_key);
+            execution.intents.insert(transition_key, intent);
+            execution.heads.insert(cohort_key, transition_key);
+        }
         self.owned
             .as_mut()
             .expect("owned mode checked")

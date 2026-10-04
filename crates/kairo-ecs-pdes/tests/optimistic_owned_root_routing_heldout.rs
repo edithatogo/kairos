@@ -306,6 +306,7 @@ fn full_width_epoch_tick_and_root_id_survive_real_admission_and_guarded_run() {
     let receiver_before_accounting = receiver.accounting_snapshot().unwrap();
     let source_token = source.state_token(LP0).unwrap();
     let receiver_token = receiver.state_token(LP1).unwrap();
+    let untouched_receiver_token = receiver.state_token(LP2).unwrap();
 
     let returned = source
         .schedule_initial(u64::MAX, root_event.clone())
@@ -452,17 +453,59 @@ fn full_width_epoch_tick_and_root_id_survive_real_admission_and_guarded_run() {
     assert_eq!(observe(&receiver, &[LP1, LP2]), admitted_observation);
     assert_eq!(receiver.accounting_snapshot().unwrap(), admitted_accounting);
 
-    let before_guarded_run = observe(&receiver, &[LP1, LP2]);
+    let source_before_receiver_run = observe(&source, &[LP0]);
+    let receiver_admitted_token = receiver.state_token(LP1).unwrap();
+    let before_owned_run = observe(&receiver, &[LP1, LP2]);
+    let progress = receiver
+        .run_until_with_budget(Tick::from_ticks(u128::MAX), 10)
+        .unwrap();
+    assert_eq!(progress.budget_used, 1);
+    assert_eq!(progress.budget_remaining, 9);
+    assert_eq!(progress.pending_positives, 0);
+    assert_eq!(progress.pending_antis, 0);
+    assert_eq!(progress.replay_pending, 0);
+    assert!(progress.published_messages.is_empty());
+    let after_owned_run = observe(&receiver, &[LP1, LP2]);
     assert_eq!(
-        receiver.run_until_with_budget(Tick::from_ticks(u128::MAX), 10),
-        Err(OptimisticError::OwnedRuntimeJoinIncomplete)
+        after_owned_run.report.executions,
+        before_owned_run.report.executions + 1
     );
-    assert_eq!(observe(&receiver, &[LP1, LP2]), before_guarded_run);
+    assert_eq!(
+        after_owned_run.states[&LP1].value,
+        before_owned_run.states[&LP1].value
+    );
+    assert_ne!(
+        after_owned_run.states[&LP1].rng,
+        before_owned_run.states[&LP1].rng
+    );
+    assert_eq!(after_owned_run.pending[&LP1], Some(Vec::new()));
+    assert_eq!(after_owned_run.pending[&LP2], Some(Vec::new()));
+    assert_eq!(after_owned_run.states[&LP2], before_owned_run.states[&LP2]);
+    assert!(receiver.validate_state_token(untouched_receiver_token));
+    assert!(!receiver.validate_state_token(receiver_token));
+    assert!(!receiver.validate_state_token(receiver_admitted_token));
+    assert_eq!(observe(&source, &[LP0]), source_before_receiver_run);
+    let after_run_accounting = receiver.accounting_snapshot().unwrap();
+    let repeated_after_execution = receiver.admit_native(&send).unwrap();
+    assert_eq!(
+        repeated_after_execution.recorded_membership(),
+        capability.recorded_membership()
+    );
+    assert_eq!(
+        repeated_after_execution.recorded_revision(),
+        capability.recorded_revision()
+    );
+    assert_eq!(observe(&receiver, &[LP1, LP2]), after_owned_run);
+    assert_eq!(
+        receiver.accounting_snapshot().unwrap(),
+        after_run_accounting
+    );
+    let after_local_cut_rejection = observe(&receiver, &[LP1, LP2]);
     assert_eq!(
         receiver.fossil_collect(Tick::from_ticks(u128::MAX)),
         Err(OptimisticError::NativeGroupCutRequired)
     );
-    assert_eq!(observe(&receiver, &[LP1, LP2]), before_guarded_run);
+    assert_eq!(observe(&receiver, &[LP1, LP2]), after_local_cut_rejection);
 
     let before_source_close = observe(&source, &[LP0]);
     source.close_initial_inputs().unwrap();

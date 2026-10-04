@@ -14,9 +14,16 @@ use kairo_ecs_types::SimDuration;
 use super::{LpId, PartitionPlan, RemoteEvent, Tick};
 
 mod owned;
+mod owned_execution;
 mod owned_routing;
 pub use owned::{NativeAccountingAuthority, OptimisticOwnedOptions};
 use owned::{OwnedConstructionConfig, OwnedRuntimeState};
+pub use owned_execution::{
+    NativeIntentKind, NativeIntentView, NativeRetirementCapability, NativeRetirementEffect,
+    NativeRetirementRequest, NativeTransitionId, OptimisticNativeCleanupFailure,
+    OptimisticNativeCutFailure, OptimisticNativeCutReport, OptimisticOwnedFailurePhase,
+    OptimisticOwnedRunFailure, OptimisticOwnedStep, OptimisticOwnedStepKind,
+};
 pub use owned_routing::{
     NativeAdmissionCapability, NativeAdmissionMembership, NativeOutboundSend,
     OptimisticAccountingSnapshot, OptimisticOutboundStatus, OptimisticOutboundView,
@@ -243,11 +250,36 @@ pub enum OptimisticError {
     VerifiedNativeAdmissionRequired,
     NativeGroupCutRequired,
     SnapshotPanicked(LpId),
+    SnapshotClonePanicked(LpId),
+    SnapshotDropPanicked(LpId),
     RestorePanicked(LpId),
     HandlerPanicked(LpId),
     RestoreFailed {
         lp_id: LpId,
         reason: OptimisticStateError,
+    },
+    NativeTransitionIdentityExhausted {
+        runtime_id: u64,
+    },
+    UnknownNativeTransition,
+    ConflictingNativeTransition,
+    NativeTransitionFork,
+    NativeTransitionCycle,
+    NativeTransitionDependencyMissing,
+    NativeGroupParticipantDuplicate {
+        runtime_id: u64,
+    },
+    NativeGroupCoverageIncomplete {
+        missing: Vec<LpId>,
+        unexpected: Vec<LpId>,
+    },
+    NativeGroupIssuerMismatch {
+        participant_runtime_id: u64,
+        expected_runtime_id: u64,
+        actual_runtime_id: u64,
+    },
+    NativeGroupInputsOpen {
+        runtime_id: u64,
     },
     Poisoned,
 }
@@ -1260,7 +1292,10 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
         }
         if let Some(owned) = &self.owned {
             owned.require_sealed_live()?;
-            return Err(OptimisticError::OwnedRuntimeJoinIncomplete);
+            let _ = owned;
+            return self
+                .run_owned_until_with_budget(horizon, budget)
+                .map_err(|failure| failure.cause().clone());
         }
         self.last_horizon = Some(horizon);
         let mut budget_used = 0usize;
@@ -1690,7 +1725,17 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     }
 
     fn ensure_pending_capacity(&self, additional: usize) -> Result<(), OptimisticError> {
-        if self.total_pending().saturating_add(additional) > self.limits.max_pending_events {
+        let reserved = self
+            .owned
+            .as_ref()
+            .map(|owned| owned.execution().reserved_pending)
+            .unwrap_or(0);
+        if self
+            .total_pending()
+            .saturating_add(reserved)
+            .saturating_add(additional)
+            > self.limits.max_pending_events
+        {
             Err(OptimisticError::PendingLimitExceeded {
                 limit: self.limits.max_pending_events,
             })

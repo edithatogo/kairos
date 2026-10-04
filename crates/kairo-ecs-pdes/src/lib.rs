@@ -17,10 +17,14 @@ mod optimistic;
 #[cfg(feature = "time-warp")]
 pub use optimistic::{
     LogicalEventId, NativeAccountingAuthority, NativeAdmissionCapability,
-    NativeAdmissionMembership, NativeOutboundSend, OptimisticAccountingSnapshot,
-    OptimisticAuthority, OptimisticError, OptimisticEventOrderKey, OptimisticFossilReport,
-    OptimisticLimits, OptimisticMessage, OptimisticMessageKind, OptimisticOutboundStatus,
-    OptimisticOutboundView, OptimisticOwnedOptions, OptimisticProcess, OptimisticRunProgress,
+    NativeAdmissionMembership, NativeIntentKind, NativeIntentView, NativeOutboundSend,
+    NativeRetirementCapability, NativeRetirementEffect, NativeRetirementRequest,
+    NativeTransitionId, OptimisticAccountingSnapshot, OptimisticAuthority, OptimisticError,
+    OptimisticEventOrderKey, OptimisticFossilReport, OptimisticLimits, OptimisticMessage,
+    OptimisticMessageKind, OptimisticNativeCleanupFailure, OptimisticNativeCutFailure,
+    OptimisticNativeCutReport, OptimisticOutboundStatus, OptimisticOutboundView,
+    OptimisticOwnedFailurePhase, OptimisticOwnedOptions, OptimisticOwnedRunFailure,
+    OptimisticOwnedStep, OptimisticOwnedStepKind, OptimisticProcess, OptimisticRunProgress,
     OptimisticRuntime, OptimisticRuntimeReport, OptimisticSendKey, OptimisticStateError,
     OptimisticStateToken, OptimisticTraceEntry,
 };

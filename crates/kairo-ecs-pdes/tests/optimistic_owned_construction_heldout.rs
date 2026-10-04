@@ -379,15 +379,15 @@ fn disjoint_owners_seal_then_guard_mutations_without_remote_mirrors() {
     assert_eq!(accounting.retained_receipt_count(), 0);
 
     let before_sealed_run = observe(&first, &[LP0]);
-    assert_eq!(
-        first.run_until_with_budget(Tick::from_ticks(10), 0),
-        Err(OptimisticError::OwnedRuntimeJoinIncomplete)
-    );
-    // A rejected call must not store the horizon, even at budget zero.
-    assert_eq!(
-        first.run_until_with_budget(Tick::from_ticks(5), 0),
-        Err(OptimisticError::OwnedRuntimeJoinIncomplete)
-    );
+    let idle = first
+        .run_until_with_budget(Tick::from_ticks(10), 0)
+        .unwrap();
+    assert_eq!(idle.budget_used, 0);
+    assert_eq!(idle.budget_remaining, 0);
+    // A budget-zero call leaves the horizon open, so a lower idle horizon is valid.
+    let lower_idle = first.run_until_with_budget(Tick::from_ticks(5), 0).unwrap();
+    assert_eq!(lower_idle.budget_used, 0);
+    assert_eq!(lower_idle.budget_remaining, 0);
     assert_eq!(observe(&first, &[LP0]), before_sealed_run);
     assert_eq!(
         first.schedule_initial(4, event(LP1, LP0, 11)),

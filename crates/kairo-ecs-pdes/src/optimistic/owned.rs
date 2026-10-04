@@ -3,6 +3,7 @@ use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock, RwLockReadGuard, Weak};
 
+use super::owned_execution::OwnedExecutionState;
 use super::owned_routing::OwnedRootRoutingState;
 use super::{LpId, OptimisticAuthority, OptimisticError, OptimisticLimits, PartitionPlan};
 
@@ -130,6 +131,7 @@ pub(super) struct OwnedRuntimeState {
     initial_open: bool,
     revision: u64,
     routing: OwnedRootRoutingState,
+    execution: OwnedExecutionState,
 }
 
 pub(super) struct OwnedConstructionConfig {
@@ -176,6 +178,10 @@ impl OwnedRuntimeState {
             initial_open: true,
             revision: 0,
             routing: OwnedRootRoutingState::default(),
+            execution: OwnedExecutionState {
+                next_transition_sequence: Some(0),
+                ..OwnedExecutionState::default()
+            },
         }
     }
 
@@ -193,6 +199,10 @@ impl OwnedRuntimeState {
 
     pub(super) fn peers_sealed(&self) -> bool {
         self.sealed
+    }
+
+    pub(super) fn initial_inputs_open(&self) -> bool {
+        self.initial_open
     }
 
     pub(super) fn validate_live_peers(&self) -> Result<(), OptimisticError> {
@@ -332,6 +342,11 @@ impl OwnedRuntimeState {
         self.peers.clone()
     }
 
+    #[cfg(test)]
+    pub(super) fn exhaust_revision_for_test(&mut self) {
+        self.revision = u64::MAX;
+    }
+
     pub(super) fn next_revision_value(&self) -> Result<u64, OptimisticError> {
         self.next_revision()
     }
@@ -364,8 +379,20 @@ impl OwnedRuntimeState {
         &mut self.routing
     }
 
+    pub(super) fn execution(&self) -> &OwnedExecutionState {
+        &self.execution
+    }
+
+    pub(super) fn execution_mut(&mut self) -> &mut OwnedExecutionState {
+        &mut self.execution
+    }
+
     pub(super) fn commit_revision(&mut self, next: u64) {
         self.revision = next;
+    }
+
+    pub(super) fn close_initial_inputs_at_publication(&mut self) {
+        self.initial_open = false;
     }
 
     pub(super) fn invalidate_before_runtime_drop(&mut self) {

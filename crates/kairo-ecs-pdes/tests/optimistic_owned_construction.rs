@@ -363,10 +363,12 @@ fn guarded_owned_operations_and_raw_admission_preserve_observable_state() {
     assert_eq!(snapshot.revision(), 3);
     assert_eq!(runtime0.report(), before_schedule);
     assert_eq!(runtime0.pending_events(LpId(0)), before_queue);
-    assert_eq!(
-        runtime0.run_until_with_budget(Tick::from_ticks(4), 0),
-        Err(OptimisticError::OwnedRuntimeJoinIncomplete)
-    );
+    let idle = runtime0
+        .run_until_with_budget(Tick::from_ticks(4), 0)
+        .unwrap();
+    assert_eq!(idle.budget_used, 0);
+    assert!(idle.published_messages.is_empty());
+    assert!(!runtime0.initial_inputs_closed());
     assert_eq!(
         runtime0.receive(raw_message(OptimisticAuthority::LocalPreview)),
         Err(OptimisticError::AuthorityModeMismatch(LpId(0)))
