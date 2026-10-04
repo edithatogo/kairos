@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo",
+    "test",
+    "-p",
+    "kairo-ecs-pdes",
+    "--features",
+    "pdes,time-warp",
+    "--locked",
+    "--test",
+    "optimistic_codec_bridge_heldout"
+  ],
+  "cwd": "/private/tmp/kairos-track48-codec-bridge-heldout",
+  "base_sha": "a0ca7421235365021ebc900d1f3bd288905284a1",
+  "input_hashes": {
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/adr-codec-bridge.md": "5c16d20b396aaee7542bcfef13ec19867dacf3afb6c1de7ce3a39f2c6488139f",
+    "crates/kairo-ecs-pdes/tests/optimistic_runtime_heldout.rs": "cfe8bfbc659cc77c654fb9982be0129c50d9fbda923df4780c3d56816da0ae89"
+  },
+  "test_file_sha256": "9e6142e7135f4bbf8f15a5c20fbb5bde552c0306c852975076aec38218a2d069",
+  "exit": 101,
+  "log_path": "/private/tmp/kairos-track48-codec-bridge-heldout/artifacts/codec-bridge-heldout/initial-red-retry-1.log",
+  "log_bytes": 13663,
+  "log_sha256": "b4205100fbdb50bcbcea071906e3bb3ddb3d7433fb4c0a560c77a58cc9815368",
+  "toolchain_binding": {
+    "RUSTC": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustc",
+    "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustdoc",
+    "PATH_prefix": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin",
+    "CARGO_HOME": "/private/tmp/kairos-track48-codec-bridge-heldout/artifacts/codec-bridge-heldout/cargo-home",
+    "CARGO_TARGET_DIR": "/private/tmp/kairos-track48-codec-bridge-heldout/target/codec-bridge-heldout",
+    "wrappers_and_flags_cleared": true
+  }
+}

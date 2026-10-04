@@ -1,0 +1,725 @@
+cargo fmt --all --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+    Checking kairo-ecs-types v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-types)
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.21
+   Compiling serde_json v1.0.151
+    Checking itoa v1.0.18
+    Checking memchr v2.8.0
+    Checking cfg-if v1.0.4
+   Compiling libc v0.2.186
+   Compiling zerocopy v0.8.48
+   Compiling autocfg v1.5.0
+    Checking kairo-ecs-core v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-core)
+    Checking kairo-ecs-state v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-state)
+    Checking kairo-ecs-rng v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-rng)
+   Compiling serde v1.0.229
+    Checking regex-syntax v0.8.10
+   Compiling crossbeam-utils v0.8.21
+   Compiling num-traits v0.2.19
+    Checking utf8parse v0.2.2
+    Checking anstyle-parse v1.0.0
+   Compiling crossbeam-epoch v0.9.20
+    Checking anstyle v1.0.14
+    Checking is_terminal_polyfill v1.70.2
+    Checking anstyle-query v1.1.5
+    Checking colorchoice v1.0.5
+   Compiling heck v0.5.0
+    Checking anstream v1.0.0
+    Checking clap_lex v1.0.0
+    Checking strsim v0.11.1
+    Checking kairo-ecs-pdes v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-pdes)
+    Checking once_cell v1.21.4
+    Checking clap_builder v4.5.61
+   Compiling rayon-core v1.13.0
+    Checking either v1.15.0
+    Checking ciborium-io v0.2.2
+    Checking plotters-backend v0.3.7
+   Compiling syn v2.0.117
+   Compiling syn v3.0.6
+    Checking plotters-svg v0.3.7
+    Checking crossbeam-deque v0.8.6
+    Checking itertools v0.10.5
+    Checking cast v0.3.0
+    Checking same-file v1.0.6
+    Checking plotters v0.3.7
+    Checking is-terminal v0.4.17
+    Checking walkdir v2.5.0
+    Checking kairo-ecs-game-theory v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-game-theory)
+    Checking anes v0.1.6
+    Checking oorandom v11.1.5
+    Checking rayon v1.12.0
+   Compiling getrandom v0.3.4
+    Checking kairo-ecs-ffi v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-ffi)
+    Checking regex-automata v0.4.14
+   Compiling wasm-bindgen-shared v0.2.120
+   Compiling rustversion v1.0.22
+    Checking rand_core v0.9.5
+    Checking criterion-plot v0.5.0
+    Checking kairo-ecs-gpu v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-gpu)
+    Checking rand v0.9.5
+    Checking rand_xorshift v0.4.0
+    Checking bitflags v2.13.2
+   Compiling bumpalo v3.20.2
+    Checking unarray v0.1.4
+    Checking kairo-ecs-game-ontology v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-game-ontology)
+    Checking regex v1.12.3
+    Checking kairo-ecs-bench v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-bench)
+    Checking kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-arrow)
+    Checking kairo-ecs-fmi v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-fmi)
+    Checking kairo-ecs-abm v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-abm)
+    Checking kairo-ecs-des v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-des)
+    Checking kairo-ecs-viz v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-viz)
+    Checking kairo-ecs-webgpu v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-webgpu)
+    Checking kairo-ecs-ml v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-ml)
+    Checking kairo-ecs-streaming v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-streaming)
+   Compiling wasm-bindgen v0.2.120
+   Compiling serde_derive v1.0.229
+    Checking kairo-ecs-uniffi v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-uniffi)
+    Checking kairo-ecs-diplomat v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-diplomat)
+    Checking kairo-ecs-cs-bridge v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-cs-bridge)
+    Checking kairo-ecs-grpc v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-grpc)
+    Checking kairo-ecs-mpi v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-mpi)
+    Checking kairo-ecs-cli v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-cli)
+   Compiling wasm-bindgen-macro-support v0.2.120
+   Compiling zerocopy-derive v0.8.48
+   Compiling clap_derive v4.5.61
+    Checking tinytemplate v1.2.1
+    Checking clap v4.5.61
+   Compiling wasm-bindgen-macro v0.2.120
+    Checking kairo-ecs-debug v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-debug)
+    Checking kairo-ecs-wasm v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-wasm)
+    Checking half v2.7.1
+    Checking ppv-lite86 v0.2.21
+    Checking rand_chacha v0.9.0
+    Checking ciborium-ll v0.2.2
+    Checking proptest v1.11.0
+    Checking ciborium v0.2.2
+    Checking criterion v0.5.1
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 17.13s
+just test
+cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info
+info: cargo-llvm-cov currently setting cfg(coverage); you can opt-out it by passing --no-cfg-coverage
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-types)
+   Compiling unicode-ident v1.0.24
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.21
+   Compiling serde_json v1.0.151
+   Compiling memchr v2.8.0
+   Compiling itoa v1.0.18
+   Compiling cfg-if v1.0.4
+   Compiling libc v0.2.186
+   Compiling zerocopy v0.8.48
+   Compiling kairo-ecs-core v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-core)
+   Compiling kairo-ecs-state v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-state)
+   Compiling kairo-ecs-rng v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-rng)
+   Compiling autocfg v1.5.0
+   Compiling serde v1.0.229
+   Compiling regex-syntax v0.8.10
+   Compiling kairo-ecs-pdes v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-pdes)
+   Compiling crossbeam-utils v0.8.21
+   Compiling num-traits v0.2.19
+   Compiling utf8parse v0.2.2
+   Compiling syn v2.0.117
+   Compiling syn v3.0.6
+   Compiling crossbeam-epoch v0.9.20
+   Compiling anstyle-parse v1.0.0
+   Compiling kairo-ecs-ffi v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-ffi)
+   Compiling once_cell v1.21.4
+   Compiling colorchoice v1.0.5
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling anstyle v1.0.14
+   Compiling anstyle-query v1.1.5
+   Compiling anstream v1.0.0
+   Compiling strsim v0.11.1
+   Compiling either v1.15.0
+   Compiling rayon-core v1.13.0
+   Compiling heck v0.5.0
+   Compiling clap_lex v1.0.0
+   Compiling crossbeam-deque v0.8.6
+   Compiling kairo-ecs-game-theory v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-game-theory)
+   Compiling clap_builder v4.5.61
+   Compiling getrandom v0.3.4
+   Compiling ciborium-io v0.2.2
+   Compiling plotters-backend v0.3.7
+   Compiling plotters-svg v0.3.7
+   Compiling regex-automata v0.4.14
+   Compiling itertools v0.10.5
+   Compiling cast v0.3.0
+   Compiling serde_derive v1.0.229
+   Compiling same-file v1.0.6
+   Compiling rayon v1.12.0
+   Compiling walkdir v2.5.0
+   Compiling plotters v0.3.7
+   Compiling criterion-plot v0.5.0
+   Compiling is-terminal v0.4.17
+   Compiling regex v1.12.3
+   Compiling oorandom v11.1.5
+   Compiling anes v0.1.6
+   Compiling rand_core v0.9.5
+   Compiling wasm-bindgen-shared v0.2.120
+   Compiling rustversion v1.0.22
+   Compiling kairo-ecs-gpu v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-gpu)
+   Compiling rand_xorshift v0.4.0
+   Compiling rand v0.9.5
+   Compiling unarray v0.1.4
+   Compiling bumpalo v3.20.2
+   Compiling bitflags v2.13.2
+   Compiling wasm-bindgen-macro-support v0.2.120
+   Compiling kairo-ecs-game-ontology v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-game-ontology)
+   Compiling kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-arrow)
+   Compiling kairo-ecs-abm v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-abm)
+   Compiling kairo-ecs-des v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-des)
+   Compiling wasm-bindgen v0.2.120
+   Compiling kairo-ecs-fmi v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-fmi)
+   Compiling zerocopy-derive v0.8.48
+   Compiling clap_derive v4.5.61
+   Compiling kairo-ecs-viz v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-viz)
+   Compiling kairo-ecs-ml v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-ml)
+   Compiling kairo-ecs-webgpu v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-webgpu)
+   Compiling kairo-ecs-streaming v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-streaming)
+   Compiling kairo-ecs-grpc v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-grpc)
+   Compiling kairo-ecs-mpi v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-mpi)
+   Compiling kairo-ecs-diplomat v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-diplomat)
+   Compiling kairo-ecs-uniffi v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-uniffi)
+   Compiling kairo-ecs-cs-bridge v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-cs-bridge)
+   Compiling kairo-ecs-bench v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-bench)
+   Compiling clap v4.5.61
+   Compiling tinytemplate v1.2.1
+   Compiling kairo-ecs-debug v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-debug)
+   Compiling wasm-bindgen-macro v0.2.120
+   Compiling kairo-ecs-wasm v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-wasm)
+   Compiling half v2.7.1
+   Compiling ppv-lite86 v0.2.21
+   Compiling ciborium-ll v0.2.2
+   Compiling rand_chacha v0.9.0
+   Compiling ciborium v0.2.2
+   Compiling proptest v1.11.0
+   Compiling criterion v0.5.1
+   Compiling kairo-ecs-cli v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-cli)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 33.77s
+────────────
+ Nextest run ID cda4c616-e9dc-4564-a342-7f512ed3bcbd with nextest profile: default
+    Starting 467 tests across 73 binaries
+        PASS [   0.031s] (  1/467) kairo-ecs-abm::abm_behavior_update_v1 abm_behavior_update_v1_replays_entity_rng_streams
+        PASS [   0.029s] (  2/467) kairo-ecs-abm tests::behavior_simulation_updates_in_scheduler_order
+        PASS [   0.033s] (  3/467) kairo-ecs-abm::abm_behavior_update_v1 abm_behavior_update_v1_runs_updates_in_scheduler_order
+        PASS [   0.033s] (  4/467) kairo-ecs-abm tests::behavior_decision_can_despawn_agent
+        PASS [   0.041s] (  5/467) kairo-ecs-abm::abm_integration agent_with_components
+        PASS [   0.042s] (  6/467) kairo-ecs-abm tests::despawned_agent_future_events_do_not_update_behavior
+        PASS [   0.048s] (  7/467) kairo-ecs-abm tests::spawn_and_attach
+        PASS [   0.052s] (  8/467) kairo-ecs-abm tests::behavior_simulation_replays_entity_rng
+        PASS [   0.062s] (  9/467) kairo-ecs-abm tests::schedule_and_step
+        PASS [   0.064s] ( 10/467) kairo-ecs-abm tests::behavior_simulation_respects_event_budget
+        PASS [   0.032s] ( 11/467) kairo-ecs-arrow tests::dispatched_record_maps_core_event_fields
+        PASS [   0.033s] ( 12/467) kairo-ecs-arrow tests::event_log_batch_round_trips_smoke_bytes
+        PASS [   0.046s] ( 13/467) kairo-ecs-arrow tests::event_log_schema_matches_track_04_order
+        PASS [   0.059s] ( 14/467) kairo-ecs-abm::abm_integration schedule_and_dispatch
+        PASS [   0.060s] ( 15/467) kairo-ecs-abm::abm_integration multi_agent_scheduling
+        PASS [   0.050s] ( 16/467) kairo-ecs-arrow tests::previous_facade_still_flushes_records
+        PASS [   0.039s] ( 17/467) kairo-ecs-arrow tests::validation_rejects_incompatible_schema_version
+        PASS [   0.038s] ( 18/467) kairo-ecs-arrow::checkpoint_restart checkpoint_checksum_rejects_corrupted_record_fields
+        PASS [   0.045s] ( 19/467) kairo-ecs-arrow tests::smoke_bytes_preserve_escaped_strings_and_payload_ref
+        PASS [   0.043s] ( 20/467) kairo-ecs-arrow::checkpoint_restart checkpoint_manifest_file_writer_round_trips_and_rejects_bad_block_layout
+        PASS [   0.018s] ( 21/467) kairo-ecs-arrow::checkpoint_restart record_batch_declares_arrow_schema_and_contiguous_blocks
+        PASS [   0.019s] ( 22/467) kairo-ecs-arrow::checkpoint_restart record_batch_writes_contiguous_block_contract_to_path
+        PASS [   0.027s] ( 23/467) kairo-ecs-arrow::schema_compatibility checked_in_schema_json_matches_runtime_contract
+        PASS [   0.019s] ( 24/467) kairo-ecs-arrow::schema_compatibility event_log_schema_fingerprint_is_stable
+        PASS [   0.058s] ( 25/467) kairo-ecs-arrow::checkpoint_restart adios2_checkpoint_contract_records_format_and_checksum
+        PASS [   0.022s] ( 26/467) kairo-ecs-arrow::schema_compatibility event_log_schema_is_stable_for_binding_consumers
+        PASS [   0.058s] ( 27/467) kairo-ecs-arrow::checkpoint_restart checkpoint_manifest_round_trips_and_restores_final_tick
+        PASS [   0.018s] ( 28/467) kairo-ecs-bench tests::canonical_scenario_metadata_is_stable
+        PASS [   0.040s] ( 29/467) kairo-ecs-arrow::checkpoint_restart hdf5_checkpoint_contract_records_format_and_checksum
+        PASS [   0.023s] ( 30/467) kairo-ecs-arrow::schema_compatibility event_log_smoke_roundtrip_preserves_ordering_fields
+        PASS [   0.027s] ( 31/467) kairo-ecs-bench tests::smoke_helpers_are_aliases_and_callable
+        PASS [   0.023s] ( 32/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::load_scenario_reports_invalid_numeric_value
+        PASS [   0.033s] ( 33/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::load_scenario_parses_manifest_fields
+        PASS [   0.024s] ( 34/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::load_scenario_reports_missing_field
+        PASS [   0.027s] ( 35/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::load_scenario_reports_invalid_kind_order
+        PASS [   0.022s] ( 36/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::load_seed_manifest_reports_invalid_numeric_value
+        PASS [   0.022s] ( 37/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::test_validate_empty_expected_kind_order
+        PASS [   0.036s] ( 38/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::load_seed_manifest_reports_missing_field
+        PASS [   0.037s] ( 39/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::load_seed_manifest_parses_manifest_fields
+        PASS [   0.021s] ( 40/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::test_validate_mismatch_scenario_id
+        PASS [   0.019s] ( 41/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::test_validate_missing_fixture_path
+        PASS [   0.041s] ( 42/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::test_validate_mismatch_base_seed
+        PASS [   0.044s] ( 43/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::test_validate_mismatch_fixture_id
+        PASS [   0.037s] ( 44/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::test_validate_scenario_and_seed_success
+        PASS [   0.035s] ( 45/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::test_validate_seed_invalid_schema
+        PASS [   0.036s] ( 46/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::test_validate_scenario_invalid_schema
+        PASS [   0.038s] ( 47/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::test_validate_zero_max_events
+        PASS [   0.024s] ( 48/467) kairo-ecs-core tests::cancellation_rejects_unknown_and_dispatched_events
+        PASS [   0.027s] ( 49/467) kairo-ecs-cli::bin/kairo-ecs-cli scenario::tests::test_validate_zero_replications
+        PASS [   0.043s] ( 50/467) kairo-ecs-core tests::cancellation_skips_event_without_reordering_rest
+        PASS [   0.043s] ( 51/467) kairo-ecs-core tests::affinity_plan_is_opt_in_and_reversible_without_binding
+        PASS [   0.030s] ( 52/467) kairo-ecs-core tests::core_status_codes_match_the_ffi_contract
+        PASS [   0.024s] ( 53/467) kairo-ecs-core tests::facade_maps_cancellation_and_limit_statuses
+        PASS [   0.037s] ( 54/467) kairo-ecs-core tests::facade_reports_invalid_priority_without_scheduling
+        PASS [   0.042s] ( 55/467) kairo-ecs-core tests::dispatches_by_time_priority_then_sequence
+        PASS [   0.041s] ( 56/467) kairo-ecs-core tests::facade_exposes_scheduler_stats_snapshot
+        PASS [   0.049s] ( 57/467) kairo-ecs-core tests::event_pool_reuses_slots_without_global_lock_contract
+        PASS [   0.027s] ( 58/467) kairo-ecs-core tests::run_for_is_bounded
+        PASS [   0.062s] ( 59/467) kairo-ecs-core tests::facade_schedules_steps_and_exposes_status_codes
+        PASS [   0.046s] ( 60/467) kairo-ecs-core tests::numa_topology_reports_typed_unsupported_fallback
+        PASS [   0.049s] ( 61/467) kairo-ecs-core tests::run_for_with_zero_limit_reports_limit_reached
+        PASS [   0.062s] ( 62/467) kairo-ecs-core tests::recording_scheduler_exposes_cancel_run_and_state
+        PASS [   0.046s] ( 63/467) kairo-ecs-core tests::run_until_or_for_stops_on_bounds
+        PASS [   0.042s] ( 64/467) kairo-ecs-core tests::run_until_or_for_reports_limit_reached_when_event_budget_is_exhausted_first
+        PASS [   0.056s] ( 65/467) kairo-ecs-core tests::run_until_or_for_does_not_dispatch_past_time_limit_with_remaining_budget
+        PASS [   0.032s] ( 66/467) kairo-ecs-core tests::scheduler_stats_track_scheduled_cancelled_dispatched_and_pending
+        PASS [   0.022s] ( 67/467) kairo-ecs-core::conformance_fixtures conformance_zero_delay_guard
+        PASS [   0.038s] ( 68/467) kairo-ecs-core::conformance_fixtures conformance_cancellation
+        PASS [   0.025s] ( 69/467) kairo-ecs-core::conformance_fixtures conformance_rng_replay
+        PASS [   0.019s] ( 70/467) kairo-ecs-core::integration test_cancel_then_schedule
+        PASS [   0.042s] ( 71/467) kairo-ecs-core::conformance_fixtures conformance_deterministic_ordering
+        PASS [   0.025s] ( 72/467) kairo-ecs-core::integration test_empty_scheduler
+        PASS [   0.041s] ( 73/467) kairo-ecs-core::integration test_deterministic_replay
+        PASS [   0.028s] ( 74/467) kairo-ecs-core::integration test_run_for_bounds
+        PASS [   0.038s] ( 75/467) kairo-ecs-core::integration test_zero_delay_guard
+        PASS [   0.039s] ( 76/467) kairo-ecs-core::integration test_trace_recorder
+        PASS [   0.115s] ( 77/467) kairo-ecs-core tests::run_until_stops_at_time_limit
+        PASS [   0.035s] ( 78/467) kairo-ecs-debug tests::breakpoint_matches_event_kind
+        PASS [   0.045s] ( 79/467) kairo-ecs-core::scheduler_properties repeated_equal_priority_events_keep_their_insertion_sequence
+        PASS [   0.062s] ( 80/467) kairo-ecs-core::integration test_run_until_bounds
+        PASS [   0.040s] ( 81/467) kairo-ecs-debug tests::debugger_steps_back_and_goto_tick
+        PASS [   0.039s] ( 82/467) kairo-ecs-debug tests::line_encoding_declares_schema
+        PASS [   0.199s] ( 83/467) kairo-ecs-core tests::cancelled_future_event_does_not_force_limit_after_active_events_finish
+        PASS [   0.088s] ( 84/467) kairo-ecs-core::integration test_large_event_count
+        PASS [   0.020s] ( 85/467) kairo-ecs-debug tests::trace_line_validation_rejects_malformed_delta_fields
+        PASS [   0.038s] ( 86/467) kairo-ecs-debug tests::reconstruct_at_uses_latest_snapshot_and_only_later_deltas
+        PASS [   0.026s] ( 87/467) kairo-ecs-debug tests::trace_line_validation_rejects_malformed_custom_event_kind
+        PASS [   0.038s] ( 88/467) kairo-ecs-debug tests::replay_reconstructs_state_from_snapshot_and_deltas
+        PASS [   0.045s] ( 89/467) kairo-ecs-debug tests::trace_line_validation_accepts_encoded_trace
+        PASS [   0.040s] ( 90/467) kairo-ecs-des tests::des_context_creates
+        PASS [   0.041s] ( 91/467) kairo-ecs-debug tests::trace_line_validation_rejects_out_of_order_ticks
+        PASS [   0.038s] ( 92/467) kairo-ecs-des tests::resource_request_blocks
+        PASS [   0.037s] ( 93/467) kairo-ecs-des tests::schedule_and_step
+        PASS [   0.035s] ( 94/467) kairo-ecs-des tests::trajectory_reports_event_budget_limit
+        PASS [   0.041s] ( 95/467) kairo-ecs-des tests::trajectory_records_scheduler_order
+        PASS [   0.015s] ( 96/467) kairo-ecs-des::des_integration resource_queue_fifo
+        PASS [   0.078s] ( 97/467) kairo-ecs-debug tests::trace_line_validation_rejects_missing_or_unsupported_schema
+        PASS [   0.045s] ( 98/467) kairo-ecs-des::des_integration parallel_resources
+        PASS [   0.054s] ( 99/467) kairo-ecs-des::des_integration factory_bottleneck_smoke
+        PASS [   0.045s] (100/467) kairo-ecs-des::des_integration resource_not_found
+        PASS [   0.042s] (101/467) kairo-ecs-des::des_resource_queue_v1 des_resource_queue_v1_preserves_fifo_admission
+        PASS [   0.042s] (102/467) kairo-ecs-des::des_resource_queue_v1 des_resource_queue_v1_replays_fixed_tick_trajectory_order
+        PASS [   0.038s] (103/467) kairo-ecs-diplomat tests::diplomat_facade_uses_ffi_lifecycle
+        PASS [   0.033s] (104/467) kairo-ecs-diplomat tests::reexports_bridge_version
+        PASS [   0.027s] (105/467) kairo-ecs-ffi tests::canonical_header_matches_generated_surface
+        PASS [   0.022s] (106/467) kairo-ecs-ffi tests::engine_lifecycle_is_explicit
+        PASS [   0.027s] (107/467) kairo-ecs-ffi tests::panic_boundary_returns_panic_status
+        PASS [   0.017s] (108/467) kairo-ecs-ffi tests::schedule_and_step_through_bridge
+        PASS [   0.030s] (109/467) kairo-ecs-ffi tests::ffi_version_is_stable
+        PASS [   0.013s] (110/467) kairo-ecs-ffi::ffi_integration test_engine_double_free
+        PASS [   0.028s] (111/467) kairo-ecs-ffi::ffi_integration test_engine_create_free
+        PASS [   0.025s] (112/467) kairo-ecs-ffi::ffi_integration test_engine_reset
+        PASS [   0.016s] (113/467) kairo-ecs-ffi::ffi_integration test_run_for_limit
+        PASS [   0.035s] (114/467) kairo-ecs-ffi tests::zero_copy_layout_validation_rejects_misaligned_or_unowned_buffers
+        PASS [   0.027s] (115/467) kairo-ecs-ffi::ffi_integration test_error_message
+        PASS [   0.217s] (116/467) kairo-ecs-core::scheduler_properties generated_cancellations_remove_only_selected_events
+        PASS [   0.031s] (117/467) kairo-ecs-ffi::ffi_integration test_ffi_version
+        PASS [   0.027s] (118/467) kairo-ecs-ffi::ffi_integration test_run_until_or_for_applies_both_bounds
+        PASS [   0.034s] (119/467) kairo-ecs-ffi::ffi_integration test_run_until_limit
+        PASS [   0.219s] (120/467) kairo-ecs-core::scheduler_properties generated_events_follow_time_priority_and_insertion_order
+        PASS [   0.026s] (121/467) kairo-ecs-ffi::ffi_integration test_schedule_after_uses_current_time
+        PASS [   0.039s] (122/467) kairo-ecs-ffi::ffi_integration test_schedule_cancel
+        PASS [   0.025s] (123/467) kairo-ecs-fmi aas::descriptor::tests::to_json_escapes_control_characters_and_preserves_unicode
+        PASS [   0.027s] (124/467) kairo-ecs-fmi aas::descriptor::tests::rejects_duplicate_submodel_ids
+        PASS [   0.037s] (125/467) kairo-ecs-ffi::ffi_integration test_stats
+        PASS [   0.048s] (126/467) kairo-ecs-ffi::ffi_integration test_schedule_and_step
+        PASS [   0.050s] (127/467) kairo-ecs-ffi::ffi_integration test_schedule_ordering
+        PASS [   0.055s] (128/467) kairo-ecs-ffi::ffi_integration test_telemetry_flush
+        PASS [   0.043s] (129/467) kairo-ecs-fmi aas::submodel::tests::property_validation_rejects_empty_and_whitespace_only_fields
+        PASS [   0.026s] (130/467) kairo-ecs-fmi aas::submodel::tests::to_json_escapes_control_characters_and_preserves_unicode
+        PASS [   0.054s] (131/467) kairo-ecs-fmi aas::descriptor::tests::validates_nested_submodels
+        PASS [   0.033s] (132/467) kairo-ecs-fmi aas::submodel::tests::submodel_validation_accepts_empty_and_valid_property_lists
+        PASS [   0.026s] (133/467) kairo-ecs-fmi aas::submodel::tests::to_json_omits_absent_semantic_id_and_preserves_property_order
+        PASS [   0.061s] (134/467) kairo-ecs-fmi aas::submodel::tests::constructors_preserve_fields_and_with_property_appends_in_order
+        PASS [   0.052s] (135/467) kairo-ecs-fmi aas::submodel::tests::to_json_escapes_quotes_and_backslashes_in_all_serialized_string_fields
+        PASS [   0.048s] (136/467) kairo-ecs-fmi digital_twin::connector::tests::publishes_initial_values_and_delta_changes_only
+        PASS [   0.059s] (137/467) kairo-ecs-fmi aas::submodel::tests::submodel_validation_rejects_empty_fields_and_invalid_or_duplicate_properties
+        PASS [   0.032s] (138/467) kairo-ecs-fmi digital_twin::sync::tests::diff_preserves_unsorted_direct_snapshot_behavior
+        PASS [   0.043s] (139/467) kairo-ecs-fmi digital_twin::sync::tests::checked_snapshot_rejects_duplicate_keys
+        PASS [   0.052s] (140/467) kairo-ecs-fmi digital_twin::sync::tests::checked_apply_rejects_wrong_base_tick
+        PASS [   0.038s] (141/467) kairo-ecs-fmi export::model_description::tests::rejects_duplicate_value_references
+        PASS [   0.048s] (142/467) kairo-ecs-fmi digital_twin::sync::tests::snapshot_diff_apply_round_trips
+        PASS [   0.032s] (143/467) kairo-ecs-fmi export::model_description::tests::renders_fmi2_model_description_with_variables
+        PASS [   0.055s] (144/467) kairo-ecs-fmi digital_twin::sync::tests::diff_preserves_duplicate_key_behavior_for_direct_snapshots
+        PASS [   0.060s] (145/467) kairo-ecs-fmi digital_twin::connector::tests::rejects_invalid_publication_contracts
+        PASS [   0.034s] (146/467) kairo-ecs-fmi import::fmu_loader::tests::identifies_unpacked_fmu_layout
+        PASS [   0.034s] (147/467) kairo-ecs-fmi export::packager::tests::validates_written_unpacked_export_layout
+        PASS [   0.036s] (148/467) kairo-ecs-fmi export::model_description::tests::validates_generated_fmi2_xml_structure
+        PASS [   0.036s] (149/467) kairo-ecs-fmi import::fmu_loader::tests::rejects_existing_extraction_tree_and_destination_symlink
+        PASS [   0.030s] (150/467) kairo-ecs-fmi import::fmu_loader::tests::reports_missing_platform_binary_directory
+        PASS [   0.033s] (151/467) kairo-ecs-fmi import::fmu_loader::tests::rejects_model_description_without_fmi_version
+        PASS [   0.077s] (152/467) kairo-ecs-fmi::fmi2_lifecycle checked_constructor_rejects_null_component
+        PASS [   0.067s] (153/467) kairo-ecs-game-ontology::codegen rejects_names_without_a_namespace
+        PASS [   0.067s] (154/467) kairo-ecs-game-ontology::codegen rejects_properties_without_known_domain_classes
+        PASS [   0.092s] (155/467) kairo-ecs-game-ontology::normalization normalizes_classes_and_properties_deterministically
+        PASS [   0.106s] (156/467) kairo-ecs-game-ontology::codegen generation_is_deterministic_across_equivalent_sources
+        PASS [   0.100s] (157/467) kairo-ecs-game-ontology::jsonld_ingestion parses_jsonld_classes_and_properties
+        PASS [   0.124s] (158/467) kairo-ecs-fmi::fmi2_lifecycle fmi2_lifecycle_calls_are_ordered_and_cleanup_is_idempotent
+        PASS [   0.133s] (159/467) kairo-ecs-fmi::fmu_archive fmu_archive_extracts_stored_zip_and_validates_layout
+        PASS [   0.131s] (160/467) kairo-ecs-game-ontology::codegen regenerates_checked_in_golden_components
+        PASS [   0.068s] (161/467) kairo-ecs-game-ontology::turtle_ingestion parses_turtle_classes_and_properties
+        PASS [   0.086s] (162/467) kairo-ecs-game-ontology::normalization rejects_malformed_inputs
+        PASS [   0.062s] (163/467) kairo-ecs-game-theory::extensive_form_chance_solver chance_weighted_solver_aggregates_expected_payoffs_for_chance_root
+        PASS [   0.152s] (164/467) kairo-ecs-fmi::fmu_archive fmu_archive_rejects_path_traversal_entries
+        PASS [   0.035s] (165/467) kairo-ecs-game-theory::extensive_form_components extensive_form_components_validate_player_labels_probabilities_and_payoffs
+        PASS [   0.047s] (166/467) kairo-ecs-game-theory::extensive_form_chance_solver chance_weighted_solver_uses_chance_expectation_inside_decision_nodes
+        PASS [   0.038s] (167/467) kairo-ecs-game-theory::extensive_form_information_sets information_set_fixtures_group_nodes_with_matching_action_labels
+        PASS [   0.030s] (168/467) kairo-ecs-game-theory::extensive_form_information_sets information_set_fixtures_reject_inconsistent_action_labels
+        PASS [   0.020s] (169/467) kairo-ecs-game-theory::extensive_form_solver backward_induction_solves_nested_subgames_by_current_player
+        PASS [   0.022s] (170/467) kairo-ecs-game-theory::extensive_form_solver backward_induction_selects_best_root_action_for_active_player
+        PASS [   0.025s] (171/467) kairo-ecs-game-theory::extensive_form_solver backward_induction_preserves_first_best_action_on_ties
+        PASS [   0.034s] (172/467) kairo-ecs-game-theory::extensive_form_information_sets information_set_fixtures_reject_player_mismatch
+        PASS [   0.031s] (173/467) kairo-ecs-game-theory::extensive_form_topology topology_validation_rejects_child_cycles
+        PASS [   0.072s] (174/467) kairo-ecs-game-theory::extensive_form_components extensive_form_components_live_in_dense_component_stores
+        PASS [   0.032s] (175/467) kairo-ecs-game-theory::extensive_form_topology topology_validation_accepts_reachable_root_to_terminal_tree
+        PASS [   0.030s] (176/467) kairo-ecs-game-theory::extensive_form_topology topology_validation_rejects_missing_action_targets
+        PASS [   0.023s] (177/467) kairo-ecs-game-theory::extensive_form_topology topology_validation_rejects_terminal_nodes_without_terminal_utility
+        PASS [   0.023s] (178/467) kairo-ecs-game-theory::extensive_form_traversal traversal_paths_walk_to_terminals_in_edge_order
+        PASS [   0.028s] (179/467) kairo-ecs-game-theory::extensive_form_traversal traversal_reads_action_edges_from_child_entities
+        PASS [   0.019s] (180/467) kairo-ecs-game-theory::graph_relations descendant_traversal_stops_at_seen_entities
+        PASS [   0.026s] (181/467) kairo-ecs-game-theory::generated_components generated_components_are_constructible_with_entity_id_edges
+        PASS [   0.024s] (182/467) kairo-ecs-game-theory::graph_relations children_query_scans_flat_component_store
+        PASS [   0.093s] (183/467) kairo-ecs-game-theory::extensive_form_components extensive_form_components_store_flat_entity_id_data
+        PASS [   0.039s] (184/467) kairo-ecs-game-theory::extensive_form_traversal traversal_rejects_action_transition_target_mismatch
+        PASS [   0.021s] (185/467) kairo-ecs-game-theory::graph_relations relationship_components_store_entity_ids_as_copy_data
+        PASS [   0.034s] (186/467) kairo-ecs-game-theory::graph_relations relationship_components_live_in_dense_component_stores
+        PASS [   0.045s] (187/467) kairo-ecs-game-theory::graph_relations descendant_traversal_walks_entity_id_edges_without_recursion
+        PASS [   0.027s] (188/467) kairo-ecs-game-theory::normal_form best_response_solver_rejects_invalid_player_or_opponent_profile
+        PASS [   0.031s] (189/467) kairo-ecs-game-theory::normal_form best_response_solver_preserves_ties_in_strategy_order
+        PASS [   0.053s] (190/467) kairo-ecs-game-theory::graph_relations transition_query_reads_target_from_flat_component_store
+        PASS [   0.041s] (191/467) kairo-ecs-game-theory::normal_form best_response_solver_selects_maximum_utility_against_fixed_opponents
+        PASS [   0.032s] (192/467) kairo-ecs-game-theory::normal_form strict_dominance_solver_ignores_ties_and_rejects_invalid_player
+        PASS [   0.057s] (193/467) kairo-ecs-game-theory::normal_form pure_nash_solver_preserves_multiple_equilibria_in_profile_order
+        PASS [   0.062s] (194/467) kairo-ecs-game-theory::normal_form pure_nash_solver_finds_prisoners_dilemma_equilibrium
+        PASS [   0.043s] (195/467) kairo-ecs-game-theory::normal_form_components payoff_lookup_rejects_invalid_profile_or_player
+        PASS [   0.060s] (196/467) kairo-ecs-game-theory::normal_form strict_dominance_solver_finds_dominated_prisoners_dilemma_strategies
+        PASS [   0.049s] (197/467) kairo-ecs-game-theory::normal_form_components normal_form_components_preserve_shape_and_ordering
+        PASS [   0.045s] (198/467) kairo-ecs-game-theory::normal_form_components strategy_space_rejects_invalid_cardinality_and_names
+        PASS [   0.045s] (199/467) kairo-ecs-game-theory::normal_form_components payoff_matrix_rejects_wrong_payoff_count
+        PASS [   0.031s] (200/467) kairo-ecs-gpu buffer::tests::empty_buffer_is_rejected
+        PASS [   0.035s] (201/467) kairo-ecs-gpu backends::cuda_backend::tests::cuda_backend_reports_not_configured_without_cuda_bindings
+        PASS [   0.021s] (202/467) kairo-ecs-gpu buffer::tests::typed_buffer_tracks_item_and_byte_length
+        PASS [   0.046s] (203/467) kairo-ecs-game-theory::normal_form_components utility_rejects_non_finite_values
+        PASS [   0.024s] (204/467) kairo-ecs-gpu compute::tests::abm_execution_plan_tracks_state_and_transfers
+        PASS [   0.041s] (205/467) kairo-ecs-gpu compute::tests::abm_step_is_seed_reproducible
+        PASS [   0.035s] (206/467) kairo-ecs-gpu compute::tests::state_footprint_tracks_flat_buffer_bytes
+        PASS [   0.039s] (207/467) kairo-ecs-gpu compute::tests::des_execution_plan_accounts_for_event_roundtrip
+        PASS [   0.038s] (208/467) kairo-ecs-gpu compute::tests::dispatch_shape_uses_webgpu_safe_workgroups
+        PASS [   0.044s] (209/467) kairo-ecs-gpu compute::tests::des_execution_plan_budget_checks_include_event_transfer_pressure
+        PASS [   0.025s] (210/467) kairo-ecs-gpu::backend_initialization cuda_init_reports_runtime_unavailable_without_cpu_fallback
+        PASS [   0.032s] (211/467) kairo-ecs-gpu wgpu::backend::tests::wgpu_backend_reports_not_configured_without_device_dependencies
+        PASS [   0.039s] (212/467) kairo-ecs-gpu transfer::tests::checked_transfer_totals_report_overflow
+        PASS [   0.032s] (213/467) kairo-ecs-gpu transfer::tests::transfer_plan_separates_upload_and_download_totals
+        PASS [   0.031s] (214/467) kairo-ecs-gpu::backend_initialization backend_errors_distinguish_not_configured_from_no_device
+        PASS [   0.020s] (215/467) kairo-ecs-gpu::contract_slice backend_request_distinguishes_fallback_disabled_from_optional_unavailable
+        PASS [   0.026s] (216/467) kairo-ecs-gpu::contract_slice persistent_batch_dispatch_requires_resident_state
+        PASS [   0.035s] (217/467) kairo-ecs-gpu::contract_slice kernel_contract_names_dispatch_and_transient_uploads
+        PASS [   0.028s] (218/467) kairo-ecs-gpu::contract_smoke des_execution_plan_budget_api_includes_event_buffers
+        PASS [   0.042s] (219/467) kairo-ecs-gpu::contract_smoke execution_plans_are_public_and_backend_agnostic
+        PASS [   0.033s] (220/467) kairo-ecs-gpu::parity fixed_seed_abm_parity_harness_is_deterministic
+        PASS [   0.052s] (221/467) kairo-ecs-gpu::contract_slice persistent_session_batch_dispatch_matches_cpu_fallback_contract
+        PASS [   0.053s] (222/467) kairo-ecs-gpu::contract_slice persistent_device_memory_declares_resident_buffers
+        PASS [   0.027s] (223/467) kairo-ecs-gpu::parity_des cpu_des_error_does_not_partially_apply_events
+        PASS [   0.066s] (224/467) kairo-ecs-gpu::backend_initialization wgpu_init_reports_device_unavailable_without_cpu_fallback
+        PASS [   0.059s] (225/467) kairo-ecs-gpu::contract_smoke cpu_fallback_reports_explicit_capabilities
+        PASS [   0.040s] (226/467) kairo-ecs-gpu::persistent_memory persistent_des_error_does_not_partially_apply_events
+        PASS [   0.072s] (227/467) kairo-ecs-gpu::contract_smoke footprint_and_dispatch_contract_are_hardware_independent
+        PASS [   0.029s] (228/467) kairo-ecs-grpc tests::grpc_contract_envelopes_track_protocol_identity
+        PASS [   0.052s] (229/467) kairo-ecs-gpu::parity_des fixed_seed_des_parity_harness_applies_events_in_timestamp_order
+        PASS [   0.040s] (230/467) kairo-ecs-gpu::persistent_memory persistent_session_keeps_state_buffers_resident_across_mixed_ticks
+        PASS [   0.039s] (231/467) kairo-ecs-grpc tests::default_timeouts_keep_heartbeat_below_failure_timeout
+        PASS [   0.043s] (232/467) kairo-ecs-gpu::persistent_memory upload_once_reupload_is_counted_as_host_upload
+        PASS [   0.039s] (233/467) kairo-ecs-grpc tests::grpc_contract_rejects_empty_migration_id
+        PASS [   0.033s] (234/467) kairo-ecs-grpc tests::grpc_entity_migration_snapshot_preserves_generation_and_pending_events
+        PASS [   0.040s] (235/467) kairo-ecs-grpc tests::grpc_proto_contract_covers_generation_pending_events_heartbeats_and_antimessages
+        PASS [   0.024s] (236/467) kairo-ecs-grpc tests::heartbeat_classifier_marks_late_worker_failed
+        PASS [   0.025s] (237/467) kairo-ecs-grpc tests::grpc_two_process_launch_contract_requires_distinct_real_socket_endpoints
+        PASS [   0.038s] (238/467) kairo-ecs-grpc tests::local_smoke_validates_peers_and_timeout_config
+        PASS [   0.037s] (239/467) kairo-ecs-grpc tests::local_two_node_contract_proof_covers_event_migration_telemetry_and_failure
+        PASS [   0.042s] (240/467) kairo-ecs-grpc tests::migration_validator_rejects_empty_component_set
+        PASS [   0.043s] (241/467) kairo-ecs-grpc tests::peer_list_is_preserved
+        PASS [   0.057s] (242/467) kairo-ecs-grpc tests::migration_validator_accepts_complete_request
+        PASS [   0.044s] (243/467) kairo-ecs-grpc tests::protocol_emulator_uses_current_gvt_candidate_round
+        PASS [   0.047s] (244/467) kairo-ecs-grpc tests::retry_policy_rejects_zero_attempts_and_inverted_backoff
+        PASS [   0.040s] (245/467) kairo-ecs-grpc tests::transport_send_rejects_unknown_source_and_destination_mismatch
+        PASS [   0.099s] (246/467) kairo-ecs-grpc tests::protocol_emulator_includes_pending_event_timestamps_in_gvt_round
+        PASS [   0.064s] (247/467) kairo-ecs-ml tests::backend_status_reports_dependency_free_scaffold
+        PASS [   0.055s] (248/467) kairo-ecs-ml tests::metadata_rejects_blank_name_and_empty_shapes
+        PASS [   0.104s] (249/467) kairo-ecs-grpc tests::protocol_emulator_round_trips_null_messages
+        PASS [   0.033s] (250/467) kairo-ecs-ml tests::tensor_rejects_shape_mismatch
+        PASS [   0.082s] (251/467) kairo-ecs-grpc tests::transport_send_rejects_unknown_lp
+        PASS [   0.059s] (252/467) kairo-ecs-ml tests::ort_session_runs_shape_checked_inference
+        PASS [   0.056s] (253/467) kairo-ecs-ml tests::tensor_rejects_non_finite_values
+        PASS [   0.091s] (254/467) kairo-ecs-grpc tests::telemetry_batch_validator_requires_monotonic_tick_range
+        PASS [   0.022s] (255/467) kairo-ecs-ml tests::tensor_rejects_zero_dimension
+        PASS [   0.017s] (256/467) kairo-ecs-ml tests::tick_hook_rejects_bad_output_shape_after_predict
+        PASS [   0.022s] (257/467) kairo-ecs-ml tests::tick_hook_rejects_input_shape_before_predict
+        PASS [   0.028s] (258/467) kairo-ecs-ml tests::tick_hook_runs_matching_phase_only
+        PASS [   0.025s] (259/467) kairo-ecs-ml tests::try_register_validates_model_metadata_contract
+        PASS [   0.023s] (260/467) kairo-ecs-ml::feature_matrix featureless_session_reports_backend_not_configured
+        PASS [   0.025s] (261/467) kairo-ecs-ml::feature_matrix burn_feature_exposes_native_system_alias
+        PASS [   0.024s] (262/467) kairo-ecs-ml::feature_matrix featureless_session_rejects_input_shape_mismatch_before_inference
+        PASS [   0.032s] (263/467) kairo-ecs-ml::feature_matrix featureless_tick_hook_rejects_duplicate_model_registration
+        PASS [   0.041s] (264/467) kairo-ecs-ml tests::try_register_rejects_duplicate_model_name_and_version
+        PASS [   0.042s] (265/467) kairo-ecs-ml::feature_matrix featureless_tick_hook_runs_registered_model
+        PASS [   0.026s] (266/467) kairo-ecs-ml::feature_matrix onnx_feature_exposes_session_alias
+        PASS [   0.025s] (267/467) kairo-ecs-ml::feature_matrix tensorrt_feature_is_explicitly_contract_blocked
+        PASS [   0.029s] (268/467) kairo-ecs-mpi tests::local_two_rank_contract_proof_covers_event_migration_and_telemetry
+        PASS [   0.026s] (269/467) kairo-ecs-mpi tests::entity_migration_snapshot_preserves_generation_and_pending_events
+        PASS [   0.042s] (270/467) kairo-ecs-ml::feature_matrix gymnasium_feature_exposes_space_contract
+        PASS [   0.037s] (271/467) kairo-ecs-mpi tests::local_smoke_validates_rank_mapping_and_protocol_tags
+        PASS [   0.026s] (272/467) kairo-ecs-mpi tests::message_tags_are_stable
+        PASS [   0.020s] (273/467) kairo-ecs-mpi tests::mpi_multirank_launch_contract_requires_real_rank_count
+        PASS [   0.016s] (274/467) kairo-ecs-mpi tests::protocol_emulator_includes_pending_event_timestamps_in_gvt_round
+        PASS [   0.034s] (275/467) kairo-ecs-mpi tests::migration_validator_accepts_component_payloads
+        PASS [   0.025s] (276/467) kairo-ecs-mpi tests::migration_validator_rejects_self_migration
+        PASS [   0.195s] (277/467) kairo-ecs-grpc tests::peer_validator_rejects_duplicate_peer_ids
+        PASS [   0.028s] (278/467) kairo-ecs-mpi tests::mpi_contract_reserves_antimessage_tag_for_time_warp_rollbacks
+        PASS [   0.028s] (279/467) kairo-ecs-mpi tests::protocol_emulator_uses_current_gvt_candidate_round
+        PASS [   0.040s] (280/467) kairo-ecs-mpi tests::protocol_emulator_round_trips_event_messages
+        PASS [   0.025s] (281/467) kairo-ecs-mpi tests::telemetry_batch_validator_requires_ordered_non_empty_payload
+        PASS [   0.026s] (282/467) kairo-ecs-mpi tests::transport_contract_rejects_migration_without_payload_or_id
+        PASS [   0.022s] (283/467) kairo-ecs-mpi tests::transport_send_rejects_unknown_source_and_destination_mismatch
+        PASS [   0.036s] (284/467) kairo-ecs-mpi tests::rank_assignment_preserves_lp_mapping
+        PASS [   0.027s] (285/467) kairo-ecs-mpi tests::transport_contracts_use_stable_mpi_protocol_metadata
+        PASS [   0.023s] (286/467) kairo-ecs-pdes generation_bitset::tests::covers_word_edges_last_slot_and_first_invalid_slot
+        PASS [   0.031s] (287/467) kairo-ecs-pdes generation_bitset::tests::accepts_zero_and_max_capacity_and_rejects_oversized_capacity
+        PASS [   0.044s] (288/467) kairo-ecs-mpi tests::rank_validator_rejects_duplicate_lps
+        PASS [   0.035s] (289/467) kairo-ecs-mpi tests::transport_send_rejects_unknown_lp
+        PASS [   0.018s] (290/467) kairo-ecs-pdes generation_bitset::tests::duplicate_insert_is_rejected_without_changing_state_or_epoch
+        PASS [   0.019s] (291/467) kairo-ecs-pdes generation_bitset::tests::every_successful_insert_invalidates_prior_handles
+        PASS [   0.023s] (292/467) kairo-ecs-pdes generation_bitset::tests::epoch_exhaustion_leaves_insert_remove_and_restore_unchanged
+        PASS [   0.019s] (293/467) kairo-ecs-pdes generation_bitset::tests::instance_allocator_rejects_exhaustion_without_wrapping
+        PASS [   0.027s] (294/467) kairo-ecs-pdes generation_bitset::tests::identical_foreign_snapshot_restores_bits_without_transferring_authority
+        PASS [   0.023s] (295/467) kairo-ecs-pdes optimistic::tests::external_incarnation_and_epoch_exhaustion_reject_without_mutation
+        PASS [   0.023s] (296/467) kairo-ecs-pdes optimistic::tests::incarnation_exhaustion_in_middle_of_output_batch_poisons_before_publish
+        PASS [   0.033s] (297/467) kairo-ecs-pdes generation_bitset::tests::malformed_or_mismatched_snapshots_leave_state_unchanged
+        PASS [   0.026s] (298/467) kairo-ecs-pdes generation_bitset::tests::rejects_inactive_slot_and_foreign_instance_handles
+        PASS [   0.028s] (299/467) kairo-ecs-pdes generation_bitset::tests::restore_invalidates_all_handles_and_keeps_destination_identity
+        PASS [   0.028s] (300/467) kairo-ecs-pdes generation_bitset::tests::removal_and_reinsertion_never_revive_old_handles
+        PASS [   0.026s] (301/467) kairo-ecs-pdes optimistic::tests::output_batch_epoch_exhaustion_poisons_without_partial_publication
+        PASS [   0.034s] (302/467) kairo-ecs-pdes optimistic::tests::output_batch_reserves_one_epoch_per_destination_and_publishes_together
+        PASS [   0.036s] (303/467) kairo-ecs-pdes optimistic::tests::rollback_requeues_multiple_inputs_with_one_checked_epoch_reservation
+        PASS [   0.031s] (304/467) kairo-ecs-pdes tests::anti_after_fossil_collection_preserves_committed_floor
+        PASS [   0.033s] (305/467) kairo-ecs-pdes tests::partition_plan_assigns_entities_deterministically_by_entity_id
+        PASS [   0.034s] (306/467) kairo-ecs-pdes tests::conservative_frontier_waits_for_every_peer
+        PASS [   0.034s] (307/467) kairo-ecs-pdes tests::partitioned_reference_matches_sequential_final_state
+        PASS [   0.039s] (308/467) kairo-ecs-pdes tests::in_memory_gvt_includes_inflight_message_timestamps
+        PASS [   0.040s] (309/467) kairo-ecs-pdes tests::partition_plan_rejects_invalid_inputs
+        PASS [   0.053s] (310/467) kairo-ecs-pdes tests::conservative_validator_reports_parity_gvt_and_deadlock_evidence
+        PASS [   0.032s] (311/467) kairo-ecs-pdes tests::scheduler_never_moves_lp_time_backward
+        PASS [   0.050s] (312/467) kairo-ecs-pdes tests::scheduler_ignores_stale_null_safe_time_for_local_progress
+        PASS [   0.051s] (313/467) kairo-ecs-pdes tests::scheduler_rejects_duplicate_and_mismatched_lps
+        PASS [   0.044s] (314/467) kairo-ecs-pdes tests::scheduler_rejects_inbound_stragglers_before_local_time
+        PASS [   0.053s] (315/467) kairo-ecs-pdes tests::scheduler_rejects_overflowing_lookahead_before_remote_send
+        PASS [   0.051s] (316/467) kairo-ecs-pdes tests::scheduler_reports_stalled_lps_when_safe_time_blocks_progress
+        PASS [   0.058s] (317/467) kairo-ecs-pdes tests::scheduler_sends_events_and_null_messages
+        PASS [   0.062s] (318/467) kairo-ecs-pdes tests::scheduler_rejects_remote_events_before_declared_lookahead
+        PASS [   0.035s] (319/467) kairo-ecs-pdes tests::time_warp_fossil_collection_preserves_rollback_at_or_after_gvt
+        PASS [   0.027s] (320/467) kairo-ecs-pdes tests::time_warp_generation_token_rejects_stale_component_access
+        PASS [   0.058s] (321/467) kairo-ecs-pdes tests::time_warp_antimessage_cancels_matching_positive_event
+        PASS [   0.024s] (322/467) kairo-ecs-pdes tests::time_warp_rejects_pre_gvt_stragglers_and_gvt_regression
+        PASS [   0.037s] (323/467) kairo-ecs-pdes tests::time_warp_overhead_metrics_track_local_rollback_pressure
+        PASS [   0.036s] (324/467) kairo-ecs-pdes tests::time_warp_rejects_duplicate_positive_events_without_double_apply
+        PASS [   0.055s] (325/467) kairo-ecs-pdes tests::time_warp_fossil_collects_only_history_before_gvt
+        PASS [   0.028s] (326/467) kairo-ecs-pdes tests::time_warp_spike_documents_rollback_risk
+        PASS [   0.062s] (327/467) kairo-ecs-pdes tests::time_warp_state_save_restores_absent_component_after_rollback
+        PASS [   0.045s] (328/467) kairo-ecs-pdes::optimistic_bitset_heldout real_model_rollback_restores_membership_values_rng_without_reviving_handles
+        PASS [   0.055s] (329/467) kairo-ecs-pdes tests::validator_rejects_empty_or_degenerate_workloads
+        PASS [   0.082s] (330/467) kairo-ecs-pdes tests::time_warp_reports_cancellation_metadata_for_rollback_and_antimessage
+        PASS [   0.063s] (331/467) kairo-ecs-pdes tests::transport_rejects_unknown_destinations_and_sources
+        PASS [   0.066s] (332/467) kairo-ecs-pdes tests::time_warp_straggler_rolls_back_to_prior_checkpoint
+        PASS [   0.065s] (333/467) kairo-ecs-pdes tests::transport_round_trips_remote_events
+        PASS [   0.072s] (334/467) kairo-ecs-pdes::optimistic_bitset_heldout bitset_restore_error_prevents_publication_of_staged_model_values_and_rng
+        PASS [   0.023s] (335/467) kairo-ecs-pdes::optimistic_codec_bridge complete_ancestry_rejects_root_source_and_nonfuture_output_keys
+        PASS [   0.028s] (336/467) kairo-ecs-pdes::optimistic_codec_bridge bounded_ancestry_accepts_depth_128_and_rejects_a_129th_child
+        PASS [   0.028s] (337/467) kairo-ecs-pdes::optimistic_codec_bridge_heldout emitted_multigeneration_messages_rebuild_and_late_old_antis_match_reference
+        PASS [   0.035s] (338/467) kairo-ecs-pdes::optimistic_codec_bridge root_and_output_parts_roundtrip_full_native_ranges_and_message_kinds
+        PASS [   0.040s] (339/467) kairo-ecs-pdes::optimistic_codec_bridge_heldout conflicting_decoded_metadata_and_duplicate_positive_leave_receiver_unchanged
+        PASS [   0.044s] (340/467) kairo-ecs-pdes::optimistic_codec_bridge_heldout checked_bridge_preserves_full_ranges_and_rejects_invalid_structure
+        PASS [   0.018s] (341/467) kairo-ecs-pdes::optimistic_runtime gvt_lag_reports_leading_frontier_even_with_idle_logical_process
+        PASS [   0.020s] (342/467) kairo-ecs-pdes::optimistic_runtime invalid_post_handler_output_poisons_without_publishing_partial_batch
+        PASS [   0.030s] (343/467) kairo-ecs-pdes::optimistic_runtime child_identity_uses_parent_order_key_and_advances_causal_depth
+        PASS [   0.049s] (344/467) kairo-ecs-pdes::optimistic_runtime anti_after_positive_cancels_it_and_fossil_collection_prunes_replay_metadata
+        PASS [   0.050s] (345/467) kairo-ecs-pdes::optimistic_codec_bridge_heldout full_parent_key_order_is_stable_under_root_arrival_permutations
+        PASS [   0.038s] (346/467) kairo-ecs-pdes::optimistic_runtime anti_before_positive_tombstones_exact_delivery_and_preserves_replacement
+        PASS [   0.052s] (347/467) kairo-ecs-pdes::optimistic_codec_bridge_heldout state_changing_replay_survives_its_old_anti_after_public_reconstruction
+        PASS [   0.017s] (348/467) kairo-ecs-pdes::optimistic_runtime root_identity_is_explicit_and_initial_scheduling_closes_on_execution
+        PASS [   0.036s] (349/467) kairo-ecs-pdes::optimistic_runtime stale_tokens_budget_resumption_and_equal_gvt_are_checked
+        PASS [   0.041s] (350/467) kairo-ecs-pdes::optimistic_runtime structural_output_order_uses_full_parent_key_after_straggler_replay
+        PASS [   0.041s] (351/467) kairo-ecs-pdes::optimistic_runtime_heldout anti_before_positive_does_not_apply_and_duplicate_delivery_is_unchanged
+        PASS [   0.044s] (352/467) kairo-ecs-pdes::optimistic_runtime_heldout canceling_earlier_parent_retracts_descendants_and_replays_surviving_inputs
+        PASS [   0.021s] (353/467) kairo-ecs-pdes::optimistic_runtime_heldout invalid_complete_batch_and_handler_fault_publish_no_partial_outputs
+        PASS [   0.057s] (354/467) kairo-ecs-pdes::optimistic_runtime_heldout canceled_queued_replays_do_not_accumulate_across_fossil_cycles
+        PASS [   0.019s] (355/467) kairo-ecs-pdes::optimistic_runtime_heldout lp_state_tokens_are_runtime_bound_and_invalidated_by_mutation_and_restore
+        PASS [   0.061s] (356/467) kairo-ecs-pdes::optimistic_runtime_heldout conflicting_exact_delivery_across_destination_lps_is_rejected_unchanged
+        PASS [   0.059s] (357/467) kairo-ecs-pdes::optimistic_runtime_heldout equal_tick_reverse_source_and_sequence_arrival_matches_core_scheduler
+        PASS [   0.028s] (358/467) kairo-ecs-pdes::optimistic_runtime_heldout late_parent_children_same_tick_keep_structural_order_and_rng_state
+        PASS [   0.160s] (359/467) kairo-ecs-pdes::optimistic_codec_bridge actual_multi_emitter_outputs_and_their_antis_roundtrip_and_receive
+        PASS [   0.033s] (360/467) kairo-ecs-pdes::optimistic_runtime_heldout replacement_before_old_anti_survives_and_cascades_to_correct_final_state
+        PASS [   0.035s] (361/467) kairo-ecs-pdes::optimistic_runtime_heldout replayed_output_slot_can_change_payload_route_and_tick_without_identity_conflict
+        PASS [   0.024s] (362/467) kairo-ecs-pdes::production_protocol bounded_same_tick_chain_can_resume_without_corrupting_runtime
+        PASS [   0.040s] (363/467) kairo-ecs-pdes::optimistic_runtime_heldout snapshot_and_restore_faults_poison_without_publishing_replacement_outputs
+        PASS [   0.041s] (364/467) kairo-ecs-pdes::optimistic_runtime_heldout same_opaque_child_identity_from_distinct_emitters_cancels_independently
+        PASS [   0.052s] (365/467) kairo-ecs-pdes::optimistic_runtime_heldout work_at_gvt_remains_reversible_and_pre_floor_inputs_fail_unchanged
+        PASS [   0.045s] (366/467) kairo-ecs-pdes::production_protocol eligible_process_batches_run_concurrently_across_logical_processes
+        PASS [   0.038s] (367/467) kairo-ecs-pdes::production_protocol invalid_outbound_batch_is_rejected_and_runtime_is_poisoned
+        PASS [   0.043s] (368/467) kairo-ecs-pdes::production_protocol handler_panic_fails_closed_and_poisons_runtime
+        PASS [   0.060s] (369/467) kairo-ecs-pdes::production_protocol emitting_event_lookahead_overflow_is_typed_and_poisoning
+        PASS [   0.033s] (370/467) kairo-ecs-pdes::production_protocol null_bounds_are_exclusive_and_event_at_the_bound_waits
+        PASS [   0.046s] (371/467) kairo-ecs-pdes::production_protocol mixed_valid_and_invalid_outputs_commit_none_of_the_round
+        PASS [   0.417s] (372/467) kairo-ecs-pdes tests::scaling_smoke_samples_cover_required_lp_counts_without_speedup_claims
+        PASS [   0.047s] (373/467) kairo-ecs-pdes::production_protocol partition_process_sets_and_directed_routes_are_validated_before_execution
+        PASS [   0.106s] (374/467) kairo-ecs-pdes::production_protocol empty_cyclic_topology_advances_without_per_tick_rounds
+        PASS [   0.065s] (375/467) kairo-ecs-pdes::production_protocol outbound_metadata_and_overflow_fail_with_typed_errors
+        PASS [   0.053s] (376/467) kairo-ecs-pdes::production_protocol same_lp_followups_are_ordered_by_timestamp_before_existing_events
+        PASS [   0.050s] (377/467) kairo-ecs-pdes::production_protocol sparse_future_input_resumes_after_partial_horizon
+        PASS [   0.040s] (378/467) kairo-ecs-pdes::track47_conservative_runtime conservative_lookahead_rejects_early_remote_events_and_allows_boundary_events
+        PASS [   0.034s] (379/467) kairo-ecs-pdes::track47_conservative_runtime partition_plan_and_null_messages_preserve_safe_time_progression
+        PASS [   0.035s] (380/467) kairo-ecs-pdes::track48_rollback_regressions checkpoint_restore_does_not_revive_a_stale_initial_token
+        PASS [   0.043s] (381/467) kairo-ecs-pdes::track48_rollback_regressions component_token_from_another_runtime_is_stale
+        PASS [   0.052s] (382/467) kairo-ecs-pdes::track48_rollback_regressions anti_cancellation_rebuild_preserves_initial_component_seed
+        PASS [   0.032s] (383/467) kairo-ecs-pdes::track48_rollback_regressions rollback_before_first_checkpoint_preserves_initial_component_seed
+        PASS [   0.065s] (384/467) kairo-ecs-pdes::track47_conservative_runtime sequential_partitioned_parity_covers_des_abm_and_mixed_workloads
+        PASS [   0.038s] (385/467) kairo-ecs-pdes::track48_rollback_regressions rollback_recreation_does_not_resurrect_an_initial_generation_token
+        PASS [   0.031s] (386/467) kairo-ecs-rng tests::different_run_seeds_diverge
+        PASS [   0.032s] (387/467) kairo-ecs-rng tests::distinct_entity_inputs_diverge
+        PASS [   0.025s] (388/467) kairo-ecs-rng tests::entity_seed_is_reproducible
+        PASS [   0.046s] (389/467) kairo-ecs-rng tests::stream_replays_from_run_seed
+        PASS [   0.065s] (390/467) kairo-ecs-rng tests::entity_stream_replays_exactly
+        PASS [   0.051s] (391/467) kairo-ecs-state numa_tests::component_locality_plan_preserves_dense_order_and_node_hint
+        PASS [   0.049s] (392/467) kairo-ecs-state registry_insert_tests::insert_registers_missing_store_and_keeps_normal_behavior
+        PASS [   0.052s] (393/467) kairo-ecs-state registry_insert_tests::insert_returns_false_for_an_inconsistent_typed_store
+        PASS [   0.028s] (394/467) kairo-ecs-state tests::test_world_despawn
+        PASS [   0.026s] (395/467) kairo-ecs-state tests::test_world_with_capacity
+        PASS [   0.049s] (396/467) kairo-ecs-state tests::component_store_with_capacity_reserves_all_storage_vectors
+        PASS [   0.050s] (397/467) kairo-ecs-state tests::component_store_reserve_grows_all_storage_vectors_from_empty
+        PASS [   0.022s] (398/467) kairo-ecs-state tests::world_reserve_adds_capacity_after_entities_exist
+        PASS [   0.021s] (399/467) kairo-ecs-state tests::world_reserve_grows_all_storage_vectors_from_empty
+        PASS [   0.011s] (400/467) kairo-ecs-state::component_storage component_store_newer_generation_supersedes_stale_row
+        PASS [   0.011s] (401/467) kairo-ecs-state::component_storage component_registry_multi_type_and_remove
+        PASS [   0.014s] (402/467) kairo-ecs-state::component_storage component_store_replaces_same_entity_without_duplicate_row
+        PASS [   0.019s] (403/467) kairo-ecs-state::component_storage component_store_rejects_stale_generation_for_same_index
+        PASS [   0.020s] (404/467) kairo-ecs-state::component_storage world_entity_lifecycle_recycles_indices_and_rejects_stale_handles
+        PASS [   0.022s] (405/467) kairo-ecs-state::component_storage world_snapshot_is_deterministic_across_repeated_reads
+        PASS [   0.035s] (406/467) kairo-ecs-state::component_storage world_new_is_empty
+        PASS [   0.021s] (407/467) kairo-ecs-streaming tests::event_log_contract_rejects_missing_event_id
+        PASS [   0.031s] (408/467) kairo-ecs-streaming tests::event_log_contract_rejects_invalid_required_fields
+        PASS [   0.014s] (409/467) kairo-ecs-streaming tests::event_log_contract_rejects_wrong_schema_version
+        PASS [   0.013s] (410/467) kairo-ecs-streaming tests::event_log_message_exposes_arrow_contract_fields
+        PASS [   0.022s] (411/467) kairo-ecs-streaming tests::in_memory_sink_rejects_invalid_contract_message
+        PASS [   0.015s] (412/467) kairo-ecs-streaming tests::in_memory_stream_round_trips_messages
+        PASS [   0.017s] (413/467) kairo-ecs-streaming tests::in_memory_sink_rejects_time_regression_for_same_run
+        PASS [   0.023s] (414/467) kairo-ecs-streaming tests::in_memory_sink_rejects_sequence_regression_for_same_run
+        PASS [   0.016s] (415/467) kairo-ecs-streaming tests::pacing_contract_rejects_zero_tick_duration
+        PASS [   0.025s] (416/467) kairo-ecs-streaming::feature_matrix base_featureless_stream_contract_round_trips
+        PASS [   0.027s] (417/467) kairo-ecs-streaming::feature_matrix arrow_flight_feature_exposes_endpoint_type
+        PASS [   0.028s] (418/467) kairo-ecs-streaming::feature_matrix in_memory_adapter_enforces_event_log_contract
+        PASS [   0.020s] (419/467) kairo-ecs-streaming::feature_matrix in_memory_adapter_rejects_sequence_regression_per_run
+        PASS [   0.019s] (420/467) kairo-ecs-streaming::feature_matrix in_memory_adapter_rejects_time_regression_per_run
+        PASS [   0.059s] (421/467) kairo-ecs-streaming tests::snapshot_rejects_unknown_stream_name
+        PASS [   0.039s] (422/467) kairo-ecs-streaming::feature_matrix kafka_feature_exposes_adapter_type
+        PASS [   0.044s] (423/467) kairo-ecs-streaming::feature_matrix in_memory_adapter_rejects_unversioned_event_log_contract
+        PASS [   0.047s] (424/467) kairo-ecs-streaming::feature_matrix nats_feature_exposes_adapter_type
+        PASS [   0.034s] (425/467) kairo-ecs-streaming::feature_matrix snapshot_provider_filters_by_arrow_stream_name
+        PASS [   0.016s] (426/467) kairo-ecs-streaming::feature_matrix snapshot_provider_rejects_unknown_stream_name
+        PASS [   0.015s] (427/467) kairo-ecs-streaming::feature_matrix websocket_feature_exposes_adapter_type
+        PASS [   0.016s] (428/467) kairo-ecs-types tests::constructors_validate_wide_inputs
+        PASS [   0.027s] (429/467) kairo-ecs-types tests::handles_are_deterministically_ordered
+        PASS [   0.031s] (430/467) kairo-ecs-types tests::request_construction_validates_priority_range
+        PASS [   0.037s] (431/467) kairo-ecs-types tests::sim_time_checked_add_overflow_is_none
+        PASS [   0.044s] (432/467) kairo-ecs-types tests::schedule_request_and_dispatch_are_stable_and_ordered
+        PASS [   0.029s] (433/467) kairo-ecs-types tests::sim_time_uses_fixed_ticks
+        PASS [   0.020s] (434/467) kairo-ecs-types tests::step_outcome_accessors_work
+        PASS [   0.065s] (435/467) kairo-ecs-types tests::versioned_wrapper_carries_version_and_value
+        PASS [   0.063s] (436/467) kairo-ecs-uniffi tests::facade_schedules_and_steps
+        PASS [   0.061s] (437/467) kairo-ecs-uniffi tests::reexports_bridge_version
+        PASS [   0.090s] (438/467) kairo-ecs-viz tests::converts_dispatched_events_to_headless_markers
+        PASS [   0.030s] (439/467) kairo-ecs-viz tests::rejects_blank_entity_labels
+        PASS [   0.034s] (440/467) kairo-ecs-viz tests::default_renderer_status_is_headless_only
+        PASS [   0.039s] (441/467) kairo-ecs-viz tests::converts_world_snapshot_to_deterministic_headless_frame
+        PASS [   0.039s] (442/467) kairo-ecs-viz tests::renders_deterministic_headless_svg
+        PASS [   0.039s] (443/467) kairo-ecs-viz tests::renders_deterministic_headless_text
+        PASS [   0.035s] (444/467) kairo-ecs-viz tests::renders_formal_visualization_fixture_json
+        PASS [   0.032s] (445/467) kairo-ecs-viz tests::summarizes_frame_without_gui_dependencies
+        PASS [   0.016s] (446/467) kairo-ecs-wasm tests::default_build_exposes_track_04_schema_constant
+        PASS [   0.016s] (447/467) kairo-ecs-viz::feature_matrix empty_headless_frame_is_valid
+        PASS [   0.017s] (448/467) kairo-ecs-viz::feature_matrix renderer_feature_state_is_explicit
+        PASS [   0.431s] (449/467) kairo-ecs-state tests::component_store_reserve_adds_capacity_after_components_exist
+        PASS [   0.017s] (450/467) kairo-ecs-wasm tests::engine_wraps_ffi_scheduler_statuses
+        PASS [   0.017s] (451/467) kairo-ecs-webgpu adapter::tests::native_ci_reports_webgpu_unavailable
+        PASS [   0.034s] (452/467) kairo-ecs-wasm tests::explicit_free_is_idempotent_from_the_wrapper_surface
+        PASS [   0.054s] (453/467) kairo-ecs-webgpu bridge::tests::rejects_misaligned_wasm_offset
+        PASS [   0.049s] (454/467) kairo-ecs-webgpu bridge::tests::rejects_partial_elements
+        PASS [   0.055s] (455/467) kairo-ecs-webgpu bridge::tests::accepts_webgpu_aligned_buffer_descriptor
+        PASS [   0.028s] (456/467) kairo-ecs-webgpu::parity_webgpu browser_webgpu_dispatch_is_explicitly_unavailable_until_configured
+        PASS [   0.051s] (457/467) kairo-ecs-webgpu capability::tests::reports_cpu_fallback_until_browser_bindings_are_configured
+        PASS [   0.065s] (458/467) kairo-ecs-webgpu bridge::tests::rejects_zero_stride_without_panicking
+        PASS [   0.032s] (459/467) kairo-ecs-webgpu dispatch::tests::dispatch_uses_browser_safe_workgroup_size
+        PASS [   0.033s] (460/467) kairo-ecs-webgpu dispatch::tests::browser_dispatch_reports_backend_not_configured
+        PASS [   0.035s] (461/467) kairo-ecs-webgpu::parity_webgpu capability_metadata_identifies_fallback_parity_contract
+        PASS [   0.043s] (462/467) kairo-ecs-webgpu::parity_webgpu fixed_seed_reference_contract_matches_cpu_reference
+        PASS [   1.564s] (463/467) kairo-ecs-pdes tests::stress_reference_progresses_gvt_for_every_tick
+        PASS [   2.165s] (464/467) kairo-ecs-pdes::production_parity production_runtime_matches_core_scheduler_for_des_abm_and_mixed_models
+        PASS [   2.548s] (465/467) kairo-ecs-pdes::track47_conservative_runtime deadlock_stress_and_scaling_smoke_have_progress_without_speedup_claims
+        PASS [   3.970s] (466/467) kairo-ecs-pdes::production_protocol randomized_positive_lookahead_ring_progresses_through_ten_thousand_ticks
+        PASS [  10.555s] (467/467) kairo-ecs-pdes::production_protocol adversarial_minimum_lookahead_cycle_executes_every_tick_on_eight_lps
+────────────
+     Summary [  12.195s] 467 tests run: 467 passed, 0 skipped
+
+    Finished report saved to lcov.info
+node scripts/validation/check-core-coverage.mjs lcov.info
+kairo-ecs-core line coverage: 512/553 (92.59%); required 90%
+RUSTDOCFLAGS="-D warnings" cargo doc --workspace --all-features --no-deps
+    Checking kairo-ecs-types v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-types)
+    Checking once_cell v1.21.4
+ Documenting kairo-ecs-fmi v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-fmi)
+ Documenting kairo-ecs-gpu v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-gpu)
+ Documenting kairo-ecs-types v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-types)
+ Documenting kairo-ecs-ml v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-ml)
+ Documenting kairo-ecs-game-ontology v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-game-ontology)
+ Documenting kairo-ecs-webgpu v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-webgpu)
+ Documenting kairo-ecs-streaming v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-streaming)
+    Checking wasm-bindgen v0.2.120
+    Checking kairo-ecs-state v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-state)
+    Checking kairo-ecs-core v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-core)
+    Checking kairo-ecs-rng v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-rng)
+    Checking kairo-ecs-pdes v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-pdes)
+    Checking kairo-ecs-ffi v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-ffi)
+ Documenting kairo-ecs-diplomat v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-diplomat)
+ Documenting kairo-ecs-uniffi v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-uniffi)
+ Documenting kairo-ecs-cs-bridge v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-cs-bridge)
+ Documenting kairo-ecs-ffi v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-ffi)
+ Documenting kairo-ecs-grpc v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-grpc)
+ Documenting kairo-ecs-mpi v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-mpi)
+ Documenting kairo-ecs-bench v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-bench)
+ Documenting kairo-ecs-abm v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-abm)
+ Documenting kairo-ecs-des v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-des)
+ Documenting kairo-ecs-wasm v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-wasm)
+ Documenting kairo-ecs-cli v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-cli)
+ Documenting kairo-ecs-viz v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-viz)
+ Documenting kairo-ecs-game-theory v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-game-theory)
+ Documenting kairo-ecs-debug v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-debug)
+ Documenting kairo-ecs-core v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-core)
+ Documenting kairo-ecs-pdes v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-pdes)
+ Documenting kairo-ecs-rng v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-rng)
+ Documenting kairo-ecs-state v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-state)
+ Documenting kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-arrow)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.87s
+   Generated /private/tmp/kairos-track48-codec-bridge/target/codec-bridge-ci/doc/kairo_ecs_abm/index.html and 25 other files
+cargo deny check advisories sources
+advisories ok, sources ok
+cargo audit
+    Fetching advisory database from `https://github.com/RustSec/advisory-db.git`
+      Loaded 1290 security advisories (from /Users/doughnut/.cargo/advisory-db)
+    Updating crates.io index
+    Scanning Cargo.lock for vulnerabilities (117 crate dependencies)
