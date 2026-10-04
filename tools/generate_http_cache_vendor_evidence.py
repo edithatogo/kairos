@@ -200,7 +200,7 @@ def build_sbom(archive_sha: str = PATCHED_ARCHIVE_SHA256) -> dict[str, Any]:
         "licenses": [{"license": {"id": "BSD-2-Clause"}}],
         "hashes": [{"alg": "SHA-256", "content": archive_sha}],
         "externalReferences": [
-            {"type": "distribution", "url": "https://github.com/edithatogo/kairos/tree/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor"},
+            {"type": "distribution", "url": "file:vendor"},
             {"type": "issue-tracker", "url": GHSA_URL, "comment": "Upstream advisory remains open in the captured source snapshot; no public closure is claimed."},
         ],
         "pedigree": {
@@ -240,11 +240,11 @@ def _resolved_dependencies(members: dict[str, bytes], payload: dict[str, bytes],
         resource(UPSTREAM_TARBALL_URL, EVIDENCE_MEMBERS["registry/http-cache-semantics-4.2.0.tgz"], "http-cache-semantics-4.2.0.tgz"),
         resource(UPSTREAM_METADATA_URL, EVIDENCE_MEMBERS["registry/http-cache-semantics-4.2.0.json"], "http-cache-semantics@4.2.0 registry metadata"),
         resource(GHSA_URL, EVIDENCE_MEMBERS["advisories/GHSA-ch52-4w7c-c8xp.json"], "GHSA-ch52-4w7c-c8xp / CVE-2026-93748"),
-        resource("https://github.com/edithatogo/kairos/tree/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz", archive_sha, "private patched npm archive"),
+        resource("file:vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz", archive_sha, "private patched npm archive"),
         resource("file:vendor/http-cache-semantics-kairos-prototype/vendor-evidence-inputs.zip", evidence_sha, "frozen evidence source archive"),
     ]
     for filename in PACKAGE_FILES:
-        dependencies.append(resource(f"https://github.com/edithatogo/kairos/blob/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor/http-cache-semantics-kairos-prototype/{filename}", sha256(payload[filename]), filename))
+        dependencies.append(resource(f"file:vendor/http-cache-semantics-kairos-prototype/{filename}", sha256(payload[filename]), filename))
     for commit, url, digest in PATCHES:
         dependencies.append(resource(url, digest, f"patch {commit}"))
     source_urls = {

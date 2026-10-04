@@ -30,6 +30,16 @@ from generate_http_cache_vendor_evidence import (
 
 
 class VendorEvidenceTests(unittest.TestCase):
+    def test_local_package_provenance_locations_resolve_to_asserted_bytes(self):
+        statement = json.loads(self.outputs["provenance"])
+        dependencies = statement["predicate"]["buildDefinition"]["resolvedDependencies"]
+        local = [d for d in dependencies if d.get("uri", "").startswith("file:vendor/")]
+        self.assertEqual(len(local), 6)
+        for descriptor in local:
+            path = ROOT / descriptor["uri"].removeprefix("file:")
+            self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), descriptor["digest"]["sha256"])
+        self.assertNotIn("f3ad6da56a112fd5837ac2af67b66355e00dbc4f", self.outputs["provenance"].decode())
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.outputs = build_outputs()

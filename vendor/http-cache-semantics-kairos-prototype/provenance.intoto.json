@@ -17,10 +17,45 @@
         "archiveFormat": "USTAR inside gzip with zero timestamps and normalized ownership/mode",
         "evidenceZipFormat": "ZIP_STORED, lexicographic paths, 1980 timestamp, regular 0644 entries",
         "evidenceZipSha256": "1efb1d1bcf379111854e49e50b3371027bf422a529eadcd69efec4ccdcf3fab8",
-        "generatorSha256": "b11af92c080946f5ac2b5129aa671d956a114a930ed69b270b00db5f8297c3be",
-        "sbomSha256": "14ea21acb99347a9f3eed794193ad8b50eebe7ee6dcfc6bea62e9cd44810cae8"
+        "generatorSha256": "03b04f4bd9716f90fe2e4949b8a977d7d8e920be9df24fe554ca6249bbb616b3",
+        "sbomSha256": "99cb4b0d2b9e48db4289a04a1b3a24dec477999162cf0f5cd99e0097f4010768"
       },
       "resolvedDependencies": [
+        {
+          "digest": {
+            "sha256": "fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485"
+          },
+          "name": "private patched npm archive",
+          "uri": "file:vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz"
+        },
+        {
+          "digest": {
+            "sha256": "ab868ad5a2ef5068560d9cd3b2180ec63c140bb4c5cae1ba779d300a0ac74fa3"
+          },
+          "name": "LICENSE",
+          "uri": "file:vendor/http-cache-semantics-kairos-prototype/LICENSE"
+        },
+        {
+          "digest": {
+            "sha256": "0039d96fcc60d2065d2cdae27cc159c74e6fc7380a557d138f0c54695a06c01b"
+          },
+          "name": "README.md",
+          "uri": "file:vendor/http-cache-semantics-kairos-prototype/README.md"
+        },
+        {
+          "digest": {
+            "sha256": "ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46ca6620c"
+          },
+          "name": "index.js",
+          "uri": "file:vendor/http-cache-semantics-kairos-prototype/index.js"
+        },
+        {
+          "digest": {
+            "sha256": "0159915b5e6dac00760bf8ce50daebfcf441cbdb66ef6aa8f05017248b4ccb42"
+          },
+          "name": "package.json",
+          "uri": "file:vendor/http-cache-semantics-kairos-prototype/package.json"
+        },
         {
           "digest": {
             "sha256": "1efb1d1bcf379111854e49e50b3371027bf422a529eadcd69efec4ccdcf3fab8"
@@ -34,41 +69,6 @@
           },
           "name": "GHSA-ch52-4w7c-c8xp / CVE-2026-93748",
           "uri": "https://api.github.com/advisories/GHSA-ch52-4w7c-c8xp"
-        },
-        {
-          "digest": {
-            "sha256": "ab868ad5a2ef5068560d9cd3b2180ec63c140bb4c5cae1ba779d300a0ac74fa3"
-          },
-          "name": "LICENSE",
-          "uri": "https://github.com/edithatogo/kairos/blob/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor/http-cache-semantics-kairos-prototype/LICENSE"
-        },
-        {
-          "digest": {
-            "sha256": "0039d96fcc60d2065d2cdae27cc159c74e6fc7380a557d138f0c54695a06c01b"
-          },
-          "name": "README.md",
-          "uri": "https://github.com/edithatogo/kairos/blob/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor/http-cache-semantics-kairos-prototype/README.md"
-        },
-        {
-          "digest": {
-            "sha256": "ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46ca6620c"
-          },
-          "name": "index.js",
-          "uri": "https://github.com/edithatogo/kairos/blob/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor/http-cache-semantics-kairos-prototype/index.js"
-        },
-        {
-          "digest": {
-            "sha256": "0159915b5e6dac00760bf8ce50daebfcf441cbdb66ef6aa8f05017248b4ccb42"
-          },
-          "name": "package.json",
-          "uri": "https://github.com/edithatogo/kairos/blob/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor/http-cache-semantics-kairos-prototype/package.json"
-        },
-        {
-          "digest": {
-            "sha256": "fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485"
-          },
-          "name": "private patched npm archive",
-          "uri": "https://github.com/edithatogo/kairos/tree/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz"
         },
         {
           "digest": {
@@ -168,7 +168,7 @@
         },
         {
           "digest": {
-            "sha256": "14ea21acb99347a9f3eed794193ad8b50eebe7ee6dcfc6bea62e9cd44810cae8"
+            "sha256": "99cb4b0d2b9e48db4289a04a1b3a24dec477999162cf0f5cd99e0097f4010768"
           },
           "name": "CycloneDX BOM",
           "uri": "file:sbom.cdx.json"

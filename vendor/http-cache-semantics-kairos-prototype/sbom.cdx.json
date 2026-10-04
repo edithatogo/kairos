@@ -8,7 +8,7 @@
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://github.com/edithatogo/kairos/tree/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor"
+          "url": "file:vendor"
         },
         {
           "comment": "Upstream advisory remains open in the captured source snapshot; no public closure is claimed.",
