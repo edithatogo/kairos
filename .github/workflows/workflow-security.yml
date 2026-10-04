@@ -40,6 +40,7 @@ jobs:
           test -f .github/workflows/ci-policy.yml
           test -f .github/workflows/ci-skip-guard.yml
           test -f .github/workflows/cloud-smoke.yml
+          test -f .github/workflows/careops-native-owner.yml
           test -f .github/workflows/code-health.yml
           test -f .github/workflows/codeql.yml
           test -f .github/workflows/conductor-assessment-reminder.yml
@@ -94,6 +95,7 @@ jobs:
           test -f .github/workflows/ci-policy.yml
           test -f .github/workflows/ci-skip-guard.yml
           test -f .github/workflows/cloud-smoke.yml
+          test -f .github/workflows/careops-native-owner.yml
           test -f .github/workflows/code-health.yml
           test -f .github/workflows/codeql.yml
           test -f .github/workflows/conductor-assessment-reminder.yml
