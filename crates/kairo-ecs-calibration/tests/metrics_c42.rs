@@ -336,18 +336,36 @@ fn produce_case(case: &Value) -> Value {
 }
 
 fn rust_toolchain() -> String {
-    if let Ok(version) = std::env::var("C42_TOOLCHAIN") {
-        return version;
-    }
     let output = Command::new("rustc")
         .arg("--version")
         .output()
         .expect("rustc is available for producer provenance");
     assert!(output.status.success(), "read rustc version");
-    String::from_utf8(output.stdout)
+    let actual = String::from_utf8(output.stdout)
         .expect("rustc version output is utf8")
         .trim()
-        .to_owned()
+        .to_owned();
+    let claimed = std::env::var("C42_TOOLCHAIN").ok();
+    assert!(
+        valid_toolchain_binding(claimed.as_deref(), &actual),
+        "claimed toolchain must match executing rustc"
+    );
+    actual
+}
+
+fn valid_toolchain_binding(claimed: Option<&str>, actual: &str) -> bool {
+    !actual.is_empty() && claimed.is_none_or(|version| version == actual)
+}
+
+#[test]
+fn unrelated_toolchain_claim_is_rejected() {
+    assert!(!valid_toolchain_binding(Some("invented"), "rustc 1.99.0"));
+    assert!(valid_toolchain_binding(None, "rustc 1.99.0"));
+    assert!(valid_toolchain_binding(
+        Some("rustc 1.99.0"),
+        "rustc 1.99.0"
+    ));
+    assert!(!valid_toolchain_binding(None, ""));
 }
 
 fn producer_commit(write_report: bool) -> String {
