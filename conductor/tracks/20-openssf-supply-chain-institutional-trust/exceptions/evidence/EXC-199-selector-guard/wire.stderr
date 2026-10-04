@@ -1,0 +1,15 @@
+test_ancestry_128_boundary_and_ordinal_overflow (test_reference.WireDraftTests.test_ancestry_128_boundary_and_ordinal_overflow) ... ok
+test_conflicting_metadata_and_malformed_reject_unchanged (test_reference.WireDraftTests.test_conflicting_metadata_and_malformed_reject_unchanged) ... ok
+test_cyclic_or_unserializable_input_rejects_unchanged (test_reference.WireDraftTests.test_cyclic_or_unserializable_input_rejects_unchanged) ... ok
+test_declared_delivery_vectors (test_reference.WireDraftTests.test_declared_delivery_vectors) ... ok
+test_full_parent_key_and_actual_emitter_order (test_reference.WireDraftTests.test_full_parent_key_and_actual_emitter_order) ... ok
+test_gvt_all_categories_and_equality_fossil (test_reference.WireDraftTests.test_gvt_all_categories_and_equality_fossil) ... ok
+test_nested_nonfuture_and_deep_input_reject_without_mutation (test_reference.WireDraftTests.test_nested_nonfuture_and_deep_input_reject_without_mutation) ... ok
+test_oversized_scalar_before_mutation (test_reference.WireDraftTests.test_oversized_scalar_before_mutation) ... ok
+test_u64_and_payload_are_lossless (test_reference.WireDraftTests.test_u64_and_payload_are_lossless) ... ok
+test_zero_incarnation_matches_native_initial_delivery (test_reference.WireDraftTests.test_zero_incarnation_matches_native_initial_delivery) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.024s
+
+OK

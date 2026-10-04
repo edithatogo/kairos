@@ -1,0 +1,448 @@
+129 of 248 named cache-security/compatibility cases failed
+FAIL shared Set-Cookie without opt-in; stale-while-revalidate direct API; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL shared Set-Cookie without opt-in; stale-if-error status=500; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL shared Set-Cookie without opt-in; stale-if-error status=502; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL shared Set-Cookie without opt-in; stale-if-error status=503; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL shared Set-Cookie without opt-in; stale-if-error status=504; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL shared Set-Cookie without opt-in; stale-if-error status=undefined response; serialized=false: Missing expected exception.
+FAIL shared Set-Cookie without opt-in; stale-while-revalidate direct API; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL shared Set-Cookie without opt-in; stale-if-error status=500; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL shared Set-Cookie without opt-in; stale-if-error status=502; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL shared Set-Cookie without opt-in; stale-if-error status=503; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL shared Set-Cookie without opt-in; stale-if-error status=504; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL shared Set-Cookie without opt-in; stale-if-error status=undefined response; serialized=true: Missing expected exception.
+FAIL proxy-revalidate in a shared cache; stale-while-revalidate direct API; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL proxy-revalidate in a shared cache; stale-if-error status=500; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL proxy-revalidate in a shared cache; stale-if-error status=502; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL proxy-revalidate in a shared cache; stale-if-error status=503; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL proxy-revalidate in a shared cache; stale-if-error status=504; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL proxy-revalidate in a shared cache; stale-if-error status=undefined response; serialized=false: Missing expected exception.
+FAIL proxy-revalidate in a shared cache; stale-while-revalidate direct API; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL proxy-revalidate in a shared cache; stale-if-error status=500; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL proxy-revalidate in a shared cache; stale-if-error status=502; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL proxy-revalidate in a shared cache; stale-if-error status=503; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL proxy-revalidate in a shared cache; stale-if-error status=504; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL proxy-revalidate in a shared cache; stale-if-error status=undefined response; serialized=true: Missing expected exception.
+FAIL no-cache; stale-while-revalidate direct API; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-cache; stale-if-error status=500; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-cache; stale-if-error status=502; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-cache; stale-if-error status=503; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-cache; stale-if-error status=504; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-cache; stale-if-error status=undefined response; serialized=false: Missing expected exception.
+FAIL no-cache; stale-while-revalidate direct API; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-cache; stale-if-error status=500; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-cache; stale-if-error status=502; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-cache; stale-if-error status=503; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-cache; stale-if-error status=504; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-cache; stale-if-error status=undefined response; serialized=true: Missing expected exception.
+FAIL no-store; stale-while-revalidate direct API; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-store; stale-if-error status=500; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-store; stale-if-error status=502; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-store; stale-if-error status=503; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-store; stale-if-error status=504; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-store; stale-if-error status=undefined response; serialized=false: Missing expected exception.
+FAIL no-store; stale-while-revalidate direct API; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-store; stale-if-error status=500; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-store; stale-if-error status=502; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-store; stale-if-error status=503; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-store; stale-if-error status=504; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL no-store; stale-if-error status=undefined response; serialized=true: Missing expected exception.
+FAIL private response in a shared cache; stale-while-revalidate direct API; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL private response in a shared cache; stale-if-error status=500; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL private response in a shared cache; stale-if-error status=502; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL private response in a shared cache; stale-if-error status=503; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL private response in a shared cache; stale-if-error status=504; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL private response in a shared cache; stale-if-error status=undefined response; serialized=false: Missing expected exception.
+FAIL private response in a shared cache; stale-while-revalidate direct API; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL private response in a shared cache; stale-if-error status=500; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL private response in a shared cache; stale-if-error status=502; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL private response in a shared cache; stale-if-error status=503; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL private response in a shared cache; stale-if-error status=504; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL private response in a shared cache; stale-if-error status=undefined response; serialized=true: Missing expected exception.
+FAIL must-revalidate; stale-while-revalidate direct API; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL must-revalidate; stale-if-error status=500; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL must-revalidate; stale-if-error status=502; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL must-revalidate; stale-if-error status=503; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL must-revalidate; stale-if-error status=504; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL must-revalidate; stale-if-error status=undefined response; serialized=false: Missing expected exception.
+FAIL must-revalidate; stale-while-revalidate direct API; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL must-revalidate; stale-if-error status=500; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL must-revalidate; stale-if-error status=502; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL must-revalidate; stale-if-error status=503; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL must-revalidate; stale-if-error status=504; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL must-revalidate; stale-if-error status=undefined response; serialized=true: Missing expected exception.
+FAIL Vary: *; stale-while-revalidate direct API; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL Vary: *; stale-if-error status=500; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL Vary: *; stale-if-error status=502; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL Vary: *; stale-if-error status=503; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL Vary: *; stale-if-error status=504; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL Vary: *; stale-if-error status=undefined response; serialized=false: Missing expected exception.
+FAIL Vary: *; stale-while-revalidate direct API; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL Vary: *; stale-if-error status=500; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL Vary: *; stale-if-error status=502; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL Vary: *; stale-if-error status=503; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL Vary: *; stale-if-error status=504; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL Vary: *; stale-if-error status=undefined response; serialized=true: Missing expected exception.
+FAIL stale-if-error request URL mismatch; status=500; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request URL mismatch; status=502; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request URL mismatch; status=503; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request URL mismatch; status=504; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request URL mismatch; status=undefined response; serialized=false: Missing expected exception.
+FAIL stale-if-error request URL mismatch; status=500; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request URL mismatch; status=502; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request URL mismatch; status=503; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request URL mismatch; status=504; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request URL mismatch; status=undefined response; serialized=true: Missing expected exception.
+FAIL stale-if-error request method mismatch; status=500; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request method mismatch; status=502; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request method mismatch; status=503; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request method mismatch; status=504; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request method mismatch; status=undefined response; serialized=false: Missing expected exception.
+FAIL stale-if-error request method mismatch; status=500; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request method mismatch; status=502; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request method mismatch; status=503; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request method mismatch; status=504; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request method mismatch; status=undefined response; serialized=true: Missing expected exception.
+FAIL stale-if-error request Host mismatch; status=500; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Host mismatch; status=502; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Host mismatch; status=503; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Host mismatch; status=504; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Host mismatch; status=undefined response; serialized=false: Missing expected exception.
+FAIL stale-if-error request Host mismatch; status=500; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Host mismatch; status=502; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Host mismatch; status=503; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Host mismatch; status=504; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Host mismatch; status=undefined response; serialized=true: Missing expected exception.
+FAIL stale-if-error request Vary mismatch; status=500; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Vary mismatch; status=502; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Vary mismatch; status=503; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Vary mismatch; status=504; serialized=false: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Vary mismatch; status=undefined response; serialized=false: Missing expected exception.
+FAIL stale-if-error request Vary mismatch; status=500; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Vary mismatch; status=502; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Vary mismatch; status=503; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Vary mismatch; status=504; serialized=true: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error request Vary mismatch; status=undefined response; serialized=true: Missing expected exception.
+FAIL stale-if-error stored HEAD cannot satisfy GET; status=500: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error stored HEAD cannot satisfy GET; status=502: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error stored HEAD cannot satisfy GET; status=503: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error stored HEAD cannot satisfy GET; status=504: Expected values to be strictly equal:
+
+true !== false
+
+FAIL stale-if-error stored HEAD cannot satisfy GET; status=undefined response: Missing expected exception.

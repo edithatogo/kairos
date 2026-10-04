@@ -1,0 +1,5 @@
+# Accepted local Track48 benchmark smoke
+
+Source ec9828ebcfc86fd86ae9f512e02b252202965a8b, seed482027, Rust1.98.1. Strict collector returned0 with clean matching before/after HEADs and16 matching source hashes. Independent reviewer verified raw logs, output validation and source binding. Five alternating samples and one warmup per sparse/dense4/8-LP case are retained byte-for-byte here. The receipt retains original local paths; adjacent files are the canonical-byte copies.
+
+Timer covers only runtime run calls. Construction, scheduling, extraction/validation, logical-ID checks and fossil collection are excluded. Runtime model snapshots, replay, thread/null-message work and ordinary run-call bookkeeping are included. This is a tiny fixed-seed lightweight-handler ring benchmark on one host; it does not establish general speedup, simultaneous CPU execution, scaling, distributed rollback or Track48 Done. Preserve the source branch/reference after squash merge so this source commit remains directly reachable.

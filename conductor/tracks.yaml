@@ -704,6 +704,7 @@ tracks:
   - id: 48
     name: Time Warp Optimistic Rollback Runtime
     status: In Progress
+    # Reviewed local runtime; hosted/security and live distributed acceptance pending. Track49 dependency unchanged.
     owner: pdes-agent + timetravel-agent + ecs-agent
     depends_on: ["47"]
     owned_paths:
