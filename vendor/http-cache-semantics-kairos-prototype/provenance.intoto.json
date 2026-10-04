@@ -6,18 +6,19 @@
       "externalParameters": {
         "buildTypeMapping": "No external standard or consumer mapping is claimed.",
         "buildTypeStatus": "local-undocumented",
+        "historicalQualificationReceiptSha256": "41f2137e9dc6c12023e13eb55be32ef8588ceabd1a511423332f0d9ddf6372f1",
         "privatePackageName": "@careops/http-cache-semantics-kairos-prototype",
         "privatePackageVersion": "0.1.0",
         "publicAdvisoryClosure": "not claimed",
-        "qualificationReceiptSha256": "41f2137e9dc6c12023e13eb55be32ef8588ceabd1a511423332f0d9ddf6372f1",
+        "qualificationStatus": "historical receipt excludes local Connection parser hardening; fresh CI required",
         "upstreamPackage": "pkg:npm/http-cache-semantics@4.2.0"
       },
       "internalParameters": {
         "archiveFormat": "USTAR inside gzip with zero timestamps and normalized ownership/mode",
         "evidenceZipFormat": "ZIP_STORED, lexicographic paths, 1980 timestamp, regular 0644 entries",
         "evidenceZipSha256": "1efb1d1bcf379111854e49e50b3371027bf422a529eadcd69efec4ccdcf3fab8",
-        "generatorSha256": "fcabc9c4ab364559518a81dd2bd814e2cc1fc0a85a75e6138a71208b7ba733ad",
-        "sbomSha256": "203f274a7c7ed81d5d17228ffc9208f0030db14f163170ce3ea855ce804e751e"
+        "generatorSha256": "b11af92c080946f5ac2b5129aa671d956a114a930ed69b270b00db5f8297c3be",
+        "sbomSha256": "14ea21acb99347a9f3eed794193ad8b50eebe7ee6dcfc6bea62e9cd44810cae8"
       },
       "resolvedDependencies": [
         {
@@ -43,14 +44,14 @@
         },
         {
           "digest": {
-            "sha256": "b62d1afc909aee4ea09f534c4bf68396d0a70d5caa98ca5cb6ccd927cda8f797"
+            "sha256": "0039d96fcc60d2065d2cdae27cc159c74e6fc7380a557d138f0c54695a06c01b"
           },
           "name": "README.md",
           "uri": "https://github.com/edithatogo/kairos/blob/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor/http-cache-semantics-kairos-prototype/README.md"
         },
         {
           "digest": {
-            "sha256": "5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c"
+            "sha256": "ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46ca6620c"
           },
           "name": "index.js",
           "uri": "https://github.com/edithatogo/kairos/blob/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor/http-cache-semantics-kairos-prototype/index.js"
@@ -64,7 +65,7 @@
         },
         {
           "digest": {
-            "sha256": "fcea454fba559fbdf3eac56a5b92fca50f6ff1cd55a15d39d2d05f06c834e592"
+            "sha256": "fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485"
           },
           "name": "private patched npm archive",
           "uri": "https://github.com/edithatogo/kairos/tree/f3ad6da56a112fd5837ac2af67b66355e00dbc4f/vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz"
@@ -167,14 +168,14 @@
         },
         {
           "digest": {
-            "sha256": "203f274a7c7ed81d5d17228ffc9208f0030db14f163170ce3ea855ce804e751e"
+            "sha256": "14ea21acb99347a9f3eed794193ad8b50eebe7ee6dcfc6bea62e9cd44810cae8"
           },
           "name": "CycloneDX BOM",
           "uri": "file:sbom.cdx.json"
         }
       ],
       "metadata": {
-        "invocationId": "vendor-evidence-fcea454fba559fbd-1efb1d1bcf379111"
+        "invocationId": "vendor-evidence-fbd36545bda6d9cd-1efb1d1bcf379111"
       }
     }
   },
@@ -182,7 +183,7 @@
   "subject": [
     {
       "digest": {
-        "sha256": "fcea454fba559fbdf3eac56a5b92fca50f6ff1cd55a15d39d2d05f06c834e592"
+        "sha256": "fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485"
       },
       "name": "http-cache-semantics-kairos-prototype-0.1.0.tgz"
     }

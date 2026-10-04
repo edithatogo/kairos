@@ -17,6 +17,7 @@ on:
       - 'tests/test_strict_npm_audit_runner.py'
       - 'tests/test_strict_npm_audit_workflow.py'
       - 'tests/http-cache-private-vendor-regression.mjs'
+      - 'tests/http-cache-connection-regression.mjs'
       - 'vendor/http-cache-semantics-kairos-prototype/**'
       - 'vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz'
       - 'scripts/bootstrap-node-tools/apply_http_cache_fix.py'
@@ -173,6 +174,8 @@ jobs:
       - name: Run qualified 248-case private-vendor regression
         run: |
           "$KAIROS_NODE_BIN" tests/http-cache-private-vendor-regression.mjs scripts/bootstrap-node-tools/node_modules/http-cache-semantics/index.js
+      - name: Run Connection header hardening regression
+        run: '"$KAIROS_NODE_BIN" tests/http-cache-connection-regression.mjs scripts/bootstrap-node-tools/node_modules/http-cache-semantics/index.js'
       - name: Verify installed npm signatures
         run: |
           mkdir -p artifacts/npm-audit-gate

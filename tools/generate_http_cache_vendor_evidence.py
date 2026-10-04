@@ -30,7 +30,7 @@ PACKAGE_PURL = "pkg:npm/%40careops/http-cache-semantics-kairos-prototype@0.1.0"
 UPSTREAM_NAME = "http-cache-semantics"
 UPSTREAM_VERSION = "4.2.0"
 UPSTREAM_PURL = "pkg:npm/http-cache-semantics@4.2.0"
-PATCHED_ARCHIVE_SHA256 = "fcea454fba559fbdf3eac56a5b92fca50f6ff1cd55a15d39d2d05f06c834e592"
+PATCHED_ARCHIVE_SHA256 = "fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485"
 EVIDENCE_ZIP_SHA256 = "1efb1d1bcf379111854e49e50b3371027bf422a529eadcd69efec4ccdcf3fab8"
 QUALIFICATION_SHA256 = "41f2137e9dc6c12023e13eb55be32ef8588ceabd1a511423332f0d9ddf6372f1"
 GENERATOR_VERSION = "1.0.0"
@@ -38,9 +38,9 @@ VALIDATOR_DISTRIBUTIONS = {"jsonschema": "4.26.0", "attrs": "26.1.0", "jsonschem
 
 PACKAGE_FILES = {
     "package.json": "0159915b5e6dac00760bf8ce50daebfcf441cbdb66ef6aa8f05017248b4ccb42",
-    "index.js": "5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c",
+    "index.js": "ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46ca6620c",
     "LICENSE": "ab868ad5a2ef5068560d9cd3b2180ec63c140bb4c5cae1ba779d300a0ac74fa3",
-    "README.md": "b62d1afc909aee4ea09f534c4bf68396d0a70d5caa98ca5cb6ccd927cda8f797",
+    "README.md": "0039d96fcc60d2065d2cdae27cc159c74e6fc7380a557d138f0c54695a06c01b",
 }
 EVIDENCE_MEMBERS = {
     "NOTICE.txt": "bd0e6bf9cb98be89701849bec2058a3642f5da35d14c66db33e1532f292eeeb1",
@@ -275,7 +275,8 @@ def build_provenance(payload: dict[str, bytes], members: dict[str, bytes], archi
             "buildDefinition": {
                 "buildType": "urn:careops:build-type:private-npm-vendor-evidence:v1",
                 "externalParameters": {
-                    "qualificationReceiptSha256": QUALIFICATION_SHA256,
+                    "historicalQualificationReceiptSha256": QUALIFICATION_SHA256,
+                    "qualificationStatus": "historical receipt excludes local Connection parser hardening; fresh CI required",
                     "privatePackageName": PACKAGE_NAME,
                     "privatePackageVersion": PACKAGE_VERSION,
                     "upstreamPackage": UPSTREAM_PURL,

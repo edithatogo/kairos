@@ -5,9 +5,9 @@ from pathlib import Path
 import sys
 ROOT=Path(__file__).resolve().parents[1]
 PINS={
- 'scripts/bootstrap-node-tools/package-lock.json':'2b71e51a4afb43c8f88d07e477123d8e88ec000a17d7d860f57de9d2688c9682',
- 'vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz':'fcea454fba559fbdf3eac56a5b92fca50f6ff1cd55a15d39d2d05f06c834e592',
- 'vendor/http-cache-semantics-kairos-prototype/index.js':'5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c',
+ 'scripts/bootstrap-node-tools/package-lock.json':'3928f3049db0d21170bbf8fb564715eeb50d59f14b0a27ebcaa42381071b999e',
+ 'vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz':'fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485',
+ 'vendor/http-cache-semantics-kairos-prototype/index.js':'ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46ca6620c',
 }
 KNOWN={'GHSA-rc47-6667-2j5j','GHSA-ch52-4w7c-c8xp'}
 def private_identity(root):
@@ -21,6 +21,7 @@ def private_identity(root):
 def validate(pages,root=ROOT):
  if not isinstance(pages,list) or not pages or any(not isinstance(page,list) for page in pages):raise ValueError('missing paginated dependency response')
  rows=[row for page in pages for row in page];corrected=[]
+ if not rows:raise ValueError("empty dependency graph cannot establish review coverage")
  for row in rows:
   if not isinstance(row,dict) or row.get('change_type') not in ('added','removed'):raise ValueError('unknown dependency row')
   if row['change_type']=='removed':continue

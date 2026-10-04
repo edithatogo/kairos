@@ -8,7 +8,7 @@ ROW={'change_type':'added','manifest':'scripts/bootstrap-node-tools/package-lock
 class Tests(unittest.TestCase):
  def test_exact_alias_and_clean(self):
   self.assertEqual(len(m.validate([[ROW]])['corrected_identity_findings']),1)
-  self.assertEqual(m.validate([[]])['rows'],0)
+  with self.assertRaises(ValueError):m.validate([[]])
  def test_other_package_path_version_severity_advisory_reject(self):
   for key,value in [('manifest','website/package-lock.json'),('version','4.2.0'),('name','other'),('package_url','pkg:npm/http-cache-semantics'),('source_repository_url','https://github.com/kornelski/http-cache-semantics')]:
    r=copy.deepcopy(ROW);r[key]=value

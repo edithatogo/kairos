@@ -36,7 +36,7 @@ REMOVED_BUNDLES = (*PATCHED_DEPENDENCIES, "ip-address", "undici", "brace-expansi
 FIXED_DEPENDENCIES = {"ip-address": "10.7.1", "brace-expansion": "5.0.12"}
 HCS_ALIAS = "@careops/http-cache-semantics-kairos-prototype"
 HCS_ALIAS_VERSION = "0.1.0"
-HCS_INDEX_SHA256 = "5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c"
+HCS_INDEX_SHA256 = "ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46ca6620c"
 HCS_LICENSE_SHA256 = "ab868ad5a2ef5068560d9cd3b2180ec63c140bb4c5cae1ba779d300a0ac74fa3"
 MIN_UNDICI = (8, 4, 1)
 
@@ -188,7 +188,7 @@ def verify_hcs_vendor() -> tuple[str, str]:
         raise RuntimeError("local HCS vendor BSD license digest drifted")
     archive_data = archive_path.read_bytes()
     archive_integrity = sri(archive_data)
-    if hashlib.sha256(archive_data).hexdigest() != "fcea454fba559fbdf3eac56a5b92fca50f6ff1cd55a15d39d2d05f06c834e592":
+    if hashlib.sha256(archive_data).hexdigest() != "fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485":
         raise RuntimeError("local HCS vendor archive digest drifted")
     return "file:../../../../vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz", archive_integrity
 
@@ -217,7 +217,7 @@ def verify_lock(artifact_integrity: str) -> None:
         hcs_integrity, "BSD-2-Clause", False, False,
     ):
         raise RuntimeError("package-lock.json does not bind the exact local private HCS archive")
-    if hashlib.sha256(LOCK_PATH.read_bytes()).hexdigest() != "2b71e51a4afb43c8f88d07e477123d8e88ec000a17d7d860f57de9d2688c9682":
+    if hashlib.sha256(LOCK_PATH.read_bytes()).hexdigest() != "3928f3049db0d21170bbf8fb564715eeb50d59f14b0a27ebcaa42381071b999e":
         raise RuntimeError("package-lock.json differs from the reviewed lock graph")
     if npm_lock.get("version") != VERSION:
         raise RuntimeError("package-lock.json npm version does not match the upstream source pin")

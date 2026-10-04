@@ -16,9 +16,9 @@ ROOT = Path(__file__).resolve().parents[2]
 # A source change requires a reviewed update to this gate's binding.
 EXPECTED_SOURCE_SHA256 = {
     "scripts/bootstrap-node-tools/package.json": "4e8bf29c554e486e6ba942c452b7dc58ff0856f769bb52de2bbb2e65690c8628",
-    "scripts/bootstrap-node-tools/package-lock.json": "2b71e51a4afb43c8f88d07e477123d8e88ec000a17d7d860f57de9d2688c9682",
-    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "7dadc43d2a649c750fc18b17f3c290aef6c34c6d6116d44ec7ab5b99a36414f5",
-    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "1ee0b13cd81209f37c9677c7fec7f321505f776992c100681fc875d3789c97eb",
+    "scripts/bootstrap-node-tools/package-lock.json": "3928f3049db0d21170bbf8fb564715eeb50d59f14b0a27ebcaa42381071b999e",
+    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "2749d7c0e2e4ece4bff92a3ddef376f89203d91806ccb6620d88bdd4f452b29f",
+    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "f91c3049e700f0ae98270af9635e9c952e248ddfa7544873cd9ab32e84d8737e",
 }
 EXPECTED_NPM_CLI_SHA256 = "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7"
 SOURCE_COMMIT = "61b3fb601ef5d765df399c03e7b11fb03a2dbe74"
