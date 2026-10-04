@@ -18,6 +18,10 @@ on:
       - 'pnpm-lock.yaml'
       - 'yarn.lock'
       - '.github/workflows/**'
+      - 'scripts/bootstrap-node-tools/**'
+      - 'scripts/validate_dependency_identity.py'
+      - 'tests/test_dependency_identity.py'
+      - 'vendor/**'
 
 permissions:
   contents: read
@@ -32,8 +36,30 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with: { python-version: '3.14' }
+      - name: Test dependency identity control
+        run: python3 -m unittest discover -s tests -p test_dependency_identity.py -v
+      - name: Enforce high vulnerability threshold with pinned alias identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p artifacts/dependency-review
+          gh api --paginate --slurp "repos/$GH_REPO/dependency-graph/compare/$BASE_SHA...$HEAD_SHA" > artifacts/dependency-review/raw.json
+          python3 scripts/validate_dependency_identity.py artifacts/dependency-review/raw.json > artifacts/dependency-review/result.json
+      - name: Retain dependency identity evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dependency-identity-evidence
+          path: artifacts/dependency-review/
+          if-no-files-found: error
       - name: Dependency Review
         uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         with:
           fail-on-severity: high
+          vulnerability-check: false # Enforced above with exact private alias identity; license review remains enabled.
           comment-summary-in-pr: always

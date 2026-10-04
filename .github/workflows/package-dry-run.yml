@@ -13,6 +13,13 @@ on:
       - 'scripts/bootstrap-node-tools/package-lock.json'
       - 'scripts/bootstrap-node-tools/prepare_npm_cli.py'
       - 'scripts/bootstrap-node-tools/validate_npm_cli.mjs'
+      - 'scripts/bootstrap-node-tools/run_strict_npm_audit_gate.py'
+      - 'tests/test_strict_npm_audit_runner.py'
+      - 'tests/test_strict_npm_audit_workflow.py'
+      - 'tests/http-cache-private-vendor-regression.mjs'
+      - 'tests/http-cache-connection-regression.mjs'
+      - 'vendor/http-cache-semantics-kairos-prototype/**'
+      - 'vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz'
       - 'scripts/bootstrap-node-tools/apply_http_cache_fix.py'
       - 'scripts/bootstrap-node-tools/run_npm_audit_gate.py'
       - 'conductor/tracks/20-openssf-supply-chain-institutional-trust/exceptions/**'
@@ -20,6 +27,7 @@ on:
       - 'tests/test_npm_audit_runner.py'
       - 'tests/test_http_cache_patch.py'
       - 'tests/http-cache-security-regression.mjs'
+      - 'tests/http-cache-legacy-60-regression.mjs'
       - 'scripts/bootstrap.sh'
       - 'scripts/bootstrap-python-tools.lock'
       - 'scripts/package-python-tools.in'
@@ -137,22 +145,50 @@ jobs:
         with: { node-version: '22.22.2' }
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with: { python-version: '3.14' }
-      - name: npm pack dry run
+      - name: Create fail-closed npm audit marker
         run: |
           mkdir -p artifacts/npm-audit-gate
           python3 - <<'PYTHON'
           import json
           from pathlib import Path
-          Path("artifacts/npm-audit-gate/receipt.json").write_text(json.dumps({"classification": "failed", "raw_audit": {"status": "not_executed"}, "reason": "preparation or tests have not completed"}))
+          Path("artifacts/npm-audit-gate/receipt.json").write_text(json.dumps({"classification": "failed", "raw_audit": {"status": "not_executed"}, "record_kind": "initial_pre_run_fail_closed_marker", "reason": "preparation or tests have not completed"}, separators=(",", ":")) + "\n")
           PYTHON
-          python3 scripts/bootstrap-node-tools/prepare_npm_cli.py --check
-          npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools
-          python3 scripts/bootstrap-node-tools/apply_http_cache_fix.py scripts/bootstrap-node-tools/node_modules
-          python3 -m unittest discover -s tests -p test_npm_audit_exception.py -v
-          python3 -m unittest discover -s tests -p test_npm_audit_runner.py -v
-          python3 scripts/bootstrap-node-tools/run_npm_audit_gate.py
-          node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js help >/dev/null
-          node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js audit signatures --prefix scripts/bootstrap-node-tools
+      - name: Prepare pinned npm CLI
+        run: python3 scripts/bootstrap-node-tools/prepare_npm_cli.py --check
+      - name: Install locked bootstrap dependencies
+        run: npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools
+      - name: Test strict npm audit runner
+        run: python3 -m unittest discover -s tests -p test_strict_npm_audit_runner.py -v
+      - name: Test package workflow contract
+        run: python3 -m unittest discover -s tests -p test_strict_npm_audit_workflow.py -v
+      - name: Resolve and hash setup-node executable
+        run: |
+          set -eu
+          KAIROS_NODE_BIN="$(realpath "$(command -v node)")"
+          KAIROS_NODE_SHA256="$(sha256sum "$KAIROS_NODE_BIN" | awk '{print $1}')"
+          test -x "$KAIROS_NODE_BIN"
+          printf 'KAIROS_NODE_BIN=%s\nKAIROS_NODE_SHA256=%s\n' "$KAIROS_NODE_BIN" "$KAIROS_NODE_SHA256" >> "$GITHUB_ENV"
+      - name: Run preserved 60-case cache regression
+        run: |
+          "$KAIROS_NODE_BIN" tests/http-cache-legacy-60-regression.mjs
+      - name: Run qualified 248-case private-vendor regression
+        run: |
+          "$KAIROS_NODE_BIN" tests/http-cache-private-vendor-regression.mjs scripts/bootstrap-node-tools/node_modules/http-cache-semantics/index.js
+      - name: Run Connection header hardening regression
+        run: '"$KAIROS_NODE_BIN" tests/http-cache-connection-regression.mjs scripts/bootstrap-node-tools/node_modules/http-cache-semantics/index.js'
+      - name: Verify installed npm signatures
+        run: |
+          mkdir -p artifacts/npm-audit-gate
+          "$KAIROS_NODE_BIN" scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js audit signatures --prefix scripts/bootstrap-node-tools --registry=https://registry.npmjs.org/ --update-notifier=false > artifacts/npm-audit-gate/signatures.stdout 2> artifacts/npm-audit-gate/signatures.stderr
+      - name: Run strict private-tree npm audit
+        run: python3 scripts/bootstrap-node-tools/run_strict_npm_audit_gate.py --node-path "$KAIROS_NODE_BIN" --node-sha256 "$KAIROS_NODE_SHA256"
+      - name: Publish strict success receipt at root
+        if: success()
+        run: |
+          cp -- artifacts/npm-audit-gate/strict/receipt.json artifacts/npm-audit-gate/receipt.json
+          cmp -s artifacts/npm-audit-gate/strict/receipt.json artifacts/npm-audit-gate/receipt.json
+      - name: Build TypeScript package
+        run: |
           test -f bindings/typescript/package.json
           test -f bindings/typescript/tsconfig.json
           test -d bindings/typescript/src

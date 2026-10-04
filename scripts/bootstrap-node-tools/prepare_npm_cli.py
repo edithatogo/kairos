@@ -32,8 +32,12 @@ SOURCE_INTEGRITY = (
     "sha512-Fyhu62pNx70YCs/5+dEmJQTFVmSKwvo5CA0qvBkGDRpob42MJ6G2RQ2tdxeKM4nYnIZDqkYAxEgqtoejn9QGtQ=="
 )
 PATCHED_DEPENDENCIES = ("make-fetch-happen", "node-gyp")
-REMOVED_BUNDLES = (*PATCHED_DEPENDENCIES, "ip-address", "undici", "brace-expansion")
+REMOVED_BUNDLES = (*PATCHED_DEPENDENCIES, "ip-address", "undici", "brace-expansion", "http-cache-semantics")
 FIXED_DEPENDENCIES = {"ip-address": "10.7.1", "brace-expansion": "5.0.12"}
+HCS_ALIAS = "@careops/http-cache-semantics-kairos-prototype"
+HCS_ALIAS_VERSION = "0.1.0"
+HCS_INDEX_SHA256 = "ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46ca6620c"
+HCS_LICENSE_SHA256 = "ab868ad5a2ef5068560d9cd3b2180ec63c140bb4c5cae1ba779d300a0ac74fa3"
 MIN_UNDICI = (8, 4, 1)
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -155,6 +159,40 @@ def repack(source_data: bytes) -> bytes:
     return output_buffer.getvalue()
 
 
+def verify_hcs_vendor() -> tuple[str, str]:
+    repository_root = SCRIPT_DIR.parent.parent.resolve()
+    vendor_root = repository_root / "vendor"
+    vendor_dir = vendor_root / "http-cache-semantics-kairos-prototype"
+    archive_path = vendor_root / "http-cache-semantics-kairos-prototype-0.1.0.tgz"
+    if vendor_root.is_symlink() or vendor_dir.is_symlink() or archive_path.is_symlink():
+        raise RuntimeError("local HCS vendor paths must not be symlinks")
+    vendor_dir_real = vendor_dir.resolve(strict=True)
+    if not vendor_dir_real.is_relative_to(repository_root) or not vendor_dir_real.is_dir():
+        raise RuntimeError("local HCS vendor target must be an in-tree real directory")
+    manifest_path = vendor_dir_real / "package.json"
+    index_path = vendor_dir_real / "index.js"
+    license_path = vendor_dir_real / "LICENSE"
+    if any(path.is_symlink() or not path.is_file() for path in (manifest_path, index_path, license_path)):
+        raise RuntimeError("local HCS vendor manifest, source, and license must be regular files")
+    if not archive_path.is_file():
+        raise RuntimeError("local HCS vendor archive is missing or not a regular file")
+
+    vendor = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if (
+        vendor.get("name"), vendor.get("version"), vendor.get("private"), vendor.get("license")
+    ) != (HCS_ALIAS, HCS_ALIAS_VERSION, True, "BSD-2-Clause"):
+        raise RuntimeError("local HCS vendor identity, privacy, or license metadata drifted")
+    if hashlib.sha256(index_path.read_bytes()).hexdigest() != HCS_INDEX_SHA256:
+        raise RuntimeError("local HCS vendor index.js digest drifted")
+    if hashlib.sha256(license_path.read_bytes()).hexdigest() != HCS_LICENSE_SHA256:
+        raise RuntimeError("local HCS vendor BSD license digest drifted")
+    archive_data = archive_path.read_bytes()
+    archive_integrity = sri(archive_data)
+    if hashlib.sha256(archive_data).hexdigest() != "fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485":
+        raise RuntimeError("local HCS vendor archive digest drifted")
+    return "file:../../../../vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz", archive_integrity
+
+
 def verify_lock(artifact_integrity: str) -> None:
     package = json.loads(PACKAGE_PATH.read_text(encoding="utf-8"))
     lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
@@ -162,8 +200,25 @@ def verify_lock(artifact_integrity: str) -> None:
 
     if package.get("dependencies", {}).get("npm") != "file:./npm-patched.tgz":
         raise RuntimeError("package.json must depend on the generated npm-patched.tgz file")
-    if package.get("overrides") != FIXED_DEPENDENCIES:
-        raise RuntimeError("package.json security overrides do not match the expected fixed versions")
+    hcs_override, hcs_integrity = verify_hcs_vendor()
+    expected_overrides = {
+        **FIXED_DEPENDENCIES,
+        "http-cache-semantics": hcs_override,
+    }
+    if package.get("overrides") != expected_overrides:
+        raise RuntimeError("package.json security overrides do not match the frozen fixed versions and local HCS vendor")
+    hcs_lock = lock.get("packages", {}).get("node_modules/http-cache-semantics", {})
+    if (
+        hcs_lock.get("name"), hcs_lock.get("version"), hcs_lock.get("resolved"),
+        hcs_lock.get("integrity"), hcs_lock.get("license"), hcs_lock.get("link", False),
+        hcs_lock.get("inBundle", False),
+    ) != (
+        HCS_ALIAS, HCS_ALIAS_VERSION, "file:../../vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz",
+        hcs_integrity, "BSD-2-Clause", False, False,
+    ):
+        raise RuntimeError("package-lock.json does not bind the exact local private HCS archive")
+    if hashlib.sha256(LOCK_PATH.read_bytes()).hexdigest() != "3928f3049db0d21170bbf8fb564715eeb50d59f14b0a27ebcaa42381071b999e":
+        raise RuntimeError("package-lock.json differs from the reviewed lock graph")
     if npm_lock.get("version") != VERSION:
         raise RuntimeError("package-lock.json npm version does not match the upstream source pin")
     if npm_lock.get("resolved") != "file:npm-patched.tgz":
@@ -225,11 +280,13 @@ def verify_lock(artifact_integrity: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--check",
         action="store_true",
         help="verify source, generated bytes, embedded contents, and committed lock integrity",
     )
+    mode.add_argument("--write", action="store_true", help="write the deterministic local repack")
     args = parser.parse_args()
 
     try:
