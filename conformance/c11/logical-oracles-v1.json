@@ -32,7 +32,8 @@
     "fhir_meta_lastupdated_not_source_recorded",
     "hl7_msh7_not_occurrence",
     "a08_not_physical_movement",
-    "omop_visit_end_requires_lineage"
+    "omop_visit_end_requires_lineage",
+    "unit_common_instant_equivalence"
   ],
   "cases": [
     {
@@ -2768,15 +2769,340 @@
         },
         "synthetic_source_family": "OMOP"
       }
+    },
+    {
+      "case_id": "unit_common_instant_equivalence",
+      "raw_inputs": {
+        "origin": "2024-01-01T00:00:00Z",
+        "rows": [
+          {
+            "source_event_key": "common-second",
+            "source_unit": "second",
+            "source_relative_value": "9",
+            "raw_timestamp": "2024-01-01T00:00:09Z"
+          },
+          {
+            "source_event_key": "common-millisecond",
+            "source_unit": "millisecond",
+            "source_relative_value": "9000",
+            "raw_timestamp": "2024-01-01T00:00:09.000Z"
+          },
+          {
+            "source_event_key": "common-microsecond",
+            "source_unit": "microsecond",
+            "source_relative_value": "9000000",
+            "raw_timestamp": "2024-01-01T00:00:09.000000Z"
+          },
+          {
+            "source_event_key": "common-nanosecond",
+            "source_unit": "nanosecond",
+            "source_relative_value": "9000000000",
+            "raw_timestamp": "2024-01-01T00:00:09.000000000Z"
+          }
+        ]
+      },
+      "expected": {
+        "classification": "accepted",
+        "records": [
+          {
+            "actor_key": null,
+            "case_key": "unit_common_instant_equivalence",
+            "dataset_id": "synthetic-c11-dataset-v1",
+            "disposition": "realized",
+            "event_kind": "task_started",
+            "event_kind_rank": 0,
+            "knowledge_availability": {
+              "available_at": null,
+              "status": "unknown"
+            },
+            "location_key": null,
+            "mapping_version": "synthetic-c11-map-v1",
+            "message_created_time": null,
+            "occurrence": 0,
+            "occurrence_time": {
+              "lineage": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "observed"
+              },
+              "raw": "2024-01-01T00:00:09Z",
+              "relative_ticks": "9000000000",
+              "source_offset_or_zone": "Z",
+              "source_precision": "second",
+              "tick_resolution": "1ns",
+              "utc": "2024-01-01T00:00:09Z"
+            },
+            "quality_flags": [],
+            "raw_event": {
+              "source_event_type": "task_started",
+              "source_family": "synthetic",
+              "source_fields": {
+                "case_id": "unit_common_instant_equivalence",
+                "raw_occurrence": "2024-01-01T00:00:09Z",
+                "source_unit": "second",
+                "source_relative_value": "9"
+              },
+              "source_record_id": null
+            },
+            "record_type": "trace_event.v1",
+            "relative_ticks": "9000000000",
+            "resource_key": null,
+            "schema_version": "calibration-v1",
+            "source_event_key": "common-second",
+            "source_order": 0,
+            "source_recorded_time": null,
+            "time_lineage": {
+              "message_created": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "unknown"
+              },
+              "occurrence": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "observed"
+              },
+              "source_recorded": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "unknown"
+              }
+            }
+          },
+          {
+            "actor_key": null,
+            "case_key": "unit_common_instant_equivalence",
+            "dataset_id": "synthetic-c11-dataset-v1",
+            "disposition": "realized",
+            "event_kind": "task_started",
+            "event_kind_rank": 0,
+            "knowledge_availability": {
+              "available_at": null,
+              "status": "unknown"
+            },
+            "location_key": null,
+            "mapping_version": "synthetic-c11-map-v1",
+            "message_created_time": null,
+            "occurrence": 0,
+            "occurrence_time": {
+              "lineage": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "observed"
+              },
+              "raw": "2024-01-01T00:00:09.000Z",
+              "relative_ticks": "9000000000",
+              "source_offset_or_zone": "Z",
+              "source_precision": "millisecond",
+              "tick_resolution": "1ns",
+              "utc": "2024-01-01T00:00:09Z"
+            },
+            "quality_flags": [],
+            "raw_event": {
+              "source_event_type": "task_started",
+              "source_family": "synthetic",
+              "source_fields": {
+                "case_id": "unit_common_instant_equivalence",
+                "raw_occurrence": "2024-01-01T00:00:09.000Z",
+                "source_unit": "millisecond",
+                "source_relative_value": "9000"
+              },
+              "source_record_id": null
+            },
+            "record_type": "trace_event.v1",
+            "relative_ticks": "9000000000",
+            "resource_key": null,
+            "schema_version": "calibration-v1",
+            "source_event_key": "common-millisecond",
+            "source_order": 1,
+            "source_recorded_time": null,
+            "time_lineage": {
+              "message_created": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "unknown"
+              },
+              "occurrence": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "observed"
+              },
+              "source_recorded": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "unknown"
+              }
+            }
+          },
+          {
+            "actor_key": null,
+            "case_key": "unit_common_instant_equivalence",
+            "dataset_id": "synthetic-c11-dataset-v1",
+            "disposition": "realized",
+            "event_kind": "task_started",
+            "event_kind_rank": 0,
+            "knowledge_availability": {
+              "available_at": null,
+              "status": "unknown"
+            },
+            "location_key": null,
+            "mapping_version": "synthetic-c11-map-v1",
+            "message_created_time": null,
+            "occurrence": 0,
+            "occurrence_time": {
+              "lineage": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "observed"
+              },
+              "raw": "2024-01-01T00:00:09.000000Z",
+              "relative_ticks": "9000000000",
+              "source_offset_or_zone": "Z",
+              "source_precision": "microsecond",
+              "tick_resolution": "1ns",
+              "utc": "2024-01-01T00:00:09Z"
+            },
+            "quality_flags": [],
+            "raw_event": {
+              "source_event_type": "task_started",
+              "source_family": "synthetic",
+              "source_fields": {
+                "case_id": "unit_common_instant_equivalence",
+                "raw_occurrence": "2024-01-01T00:00:09.000000Z",
+                "source_unit": "microsecond",
+                "source_relative_value": "9000000"
+              },
+              "source_record_id": null
+            },
+            "record_type": "trace_event.v1",
+            "relative_ticks": "9000000000",
+            "resource_key": null,
+            "schema_version": "calibration-v1",
+            "source_event_key": "common-microsecond",
+            "source_order": 2,
+            "source_recorded_time": null,
+            "time_lineage": {
+              "message_created": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "unknown"
+              },
+              "occurrence": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "observed"
+              },
+              "source_recorded": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "unknown"
+              }
+            }
+          },
+          {
+            "actor_key": null,
+            "case_key": "unit_common_instant_equivalence",
+            "dataset_id": "synthetic-c11-dataset-v1",
+            "disposition": "realized",
+            "event_kind": "task_started",
+            "event_kind_rank": 0,
+            "knowledge_availability": {
+              "available_at": null,
+              "status": "unknown"
+            },
+            "location_key": null,
+            "mapping_version": "synthetic-c11-map-v1",
+            "message_created_time": null,
+            "occurrence": 0,
+            "occurrence_time": {
+              "lineage": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "observed"
+              },
+              "raw": "2024-01-01T00:00:09.000000000Z",
+              "relative_ticks": "9000000000",
+              "source_offset_or_zone": "Z",
+              "source_precision": "nanosecond",
+              "tick_resolution": "1ns",
+              "utc": "2024-01-01T00:00:09Z"
+            },
+            "quality_flags": [],
+            "raw_event": {
+              "source_event_type": "task_started",
+              "source_family": "synthetic",
+              "source_fields": {
+                "case_id": "unit_common_instant_equivalence",
+                "raw_occurrence": "2024-01-01T00:00:09.000000000Z",
+                "source_unit": "nanosecond",
+                "source_relative_value": "9000000000"
+              },
+              "source_record_id": null
+            },
+            "record_type": "trace_event.v1",
+            "relative_ticks": "9000000000",
+            "resource_key": null,
+            "schema_version": "calibration-v1",
+            "source_event_key": "common-nanosecond",
+            "source_order": 3,
+            "source_recorded_time": null,
+            "time_lineage": {
+              "message_created": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "unknown"
+              },
+              "occurrence": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "observed"
+              },
+              "source_recorded": {
+                "derivation": null,
+                "evidence_ref": "synthetic-fixture",
+                "mapping_version": "synthetic-c11-map-v1",
+                "status": "unknown"
+              }
+            }
+          }
+        ],
+        "oracle": {
+          "common_relative_ticks": "9000000000",
+          "unit_values_must_match": true
+        }
+      },
+      "accounting": {
+        "source_rows": 4,
+        "candidate_units": 4,
+        "accepted_units": 4,
+        "excluded_units": 0,
+        "failed_units": 0,
+        "unresolved_units": 0
+      }
     }
   ],
   "companion_diagnostics": {
     "aggregate_counts": {
-      "accepted_units": 23,
-      "candidate_units": 41,
+      "accepted_units": 27,
+      "candidate_units": 45,
       "excluded_units": 8,
       "failed_units": 3,
-      "source_rows": 46,
+      "source_rows": 50,
       "unresolved_units": 7
     },
     "final_manifest_emitted": false,

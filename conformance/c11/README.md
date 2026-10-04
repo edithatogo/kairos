@@ -8,7 +8,7 @@ The checker pins the accepted schema digest and `jsonschema==4.26.0`, applies an
 
 ## Review index (all listed families are under 24 KB serialized individually)
 
-- Shape/clock/units/offset: wide-long equivalence, distinct clocks, ns/us/ms/s, explicit offset.
+- Shape/clock/units/offset: wide-long equivalence, distinct clocks, ns/us/ms/s, a common-instant unit-equivalence control, explicit offset.
 - Precision/timezone: minute-only/date-only profile exclusions, separate pre-resolved-minute helper boundary, preclassified missing-zone/fold/gap.
 - Invalid time/identity: sub-nanosecond, pre-origin, relative-u128 overflow raw text; duplicate/missing identity dataset failures without invented exclusion keys.
 - Ordering/interval/event semantics: source-backed same-time rank/order, reversed/open intervals, distinct episode end, boarding, and later physical departure.

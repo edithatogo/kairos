@@ -8,7 +8,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 EXPECTED_JSONSCHEMA="4.26.0"
 EXPECTED_SCHEMA_SHA256="8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842"
-REQUIRED_CASES={"shape_wide_equivalent","shape_long_equivalent","three_clock_roles","unit_nanosecond","unit_microsecond","unit_millisecond","unit_second","explicit_offset_positive","minute_only_profile_excluded","date_only_excluded","preresolved_minute_helper_limit","naive_local_missing_zone","ny_fold_preclassified","ny_gap_preclassified","subnanosecond_raw","pre_origin_raw","u128_overflow_raw_ns","duplicate_source_event_key_dataset_failure","missing_source_event_key_dataset_failure","stable_equal_time_order","reversed_interval_invalid","open_interval","boarding_after_episode_end","missing_triage_denominator","right_censor_retained","knowledge_cutoff_equal_eligible","knowledge_after_cutoff_ineligible","knowledge_unknown_ineligible","fhir_meta_lastupdated_not_source_recorded","hl7_msh7_not_occurrence","a08_not_physical_movement","omop_visit_end_requires_lineage"}
+REQUIRED_CASES={"unit_common_instant_equivalence","shape_wide_equivalent","shape_long_equivalent","three_clock_roles","unit_nanosecond","unit_microsecond","unit_millisecond","unit_second","explicit_offset_positive","minute_only_profile_excluded","date_only_excluded","preresolved_minute_helper_limit","naive_local_missing_zone","ny_fold_preclassified","ny_gap_preclassified","subnanosecond_raw","pre_origin_raw","u128_overflow_raw_ns","duplicate_source_event_key_dataset_failure","missing_source_event_key_dataset_failure","stable_equal_time_order","reversed_interval_invalid","open_interval","boarding_after_episode_end","missing_triage_denominator","right_censor_retained","knowledge_cutoff_equal_eligible","knowledge_after_cutoff_ineligible","knowledge_unknown_ineligible","fhir_meta_lastupdated_not_source_recorded","hl7_msh7_not_occurrence","a08_not_physical_movement","omop_visit_end_requires_lineage"}
 UNIT_EXPECTATIONS={"unit_nanosecond":("2024-01-01T00:00:00.000000007Z",7,"nanosecond"),"unit_microsecond":("2024-01-01T00:00:00.000123Z",123000,"microsecond"),"unit_millisecond":("2024-01-01T00:00:00.456Z",456000000,"millisecond"),"unit_second":("2024-01-01T00:00:09Z",9000000000,"second")}
 EXCLUSION_REASONS={"minute_only_profile_excluded":"date_only_or_coarse_precision","date_only_excluded":"date_only_or_coarse_precision","naive_local_missing_zone":"missing_timezone","ny_fold_preclassified":"ambiguous_dst_fold","ny_gap_preclassified":"nonexistent_dst_gap","subnanosecond_raw":"sub_nanosecond","pre_origin_raw":"pre_origin","u128_overflow_raw_ns":"overflow"}
 SEMANTIC_DECISIONS={"fhir_meta_lastupdated_not_source_recorded":"meta.lastUpdated is resource update time, neither source_recorded_time nor occurrence_time","hl7_msh7_not_occurrence":"MSH-7 is message creation time, not occurrence","a08_not_physical_movement":"A08 code alone does not prove physical movement","omop_visit_end_requires_lineage":"OMOP visit end without ETL lineage is not observed physical departure"}
@@ -246,6 +246,20 @@ def check_document(doc,schema,validator):
     if triage["raw_inputs"].get("cohort_rows")!=triage["accounting"]["source_rows"] or triage["raw_inputs"].get("triage_rows",0)>=triage["raw_inputs"].get("cohort_rows",0): errors.append("triage denominator raw counts")
     overflow=by_id["u128_overflow_raw_ns"]; overflow_raw=overflow["raw_inputs"]
     if overflow_raw.get("raw_encoding")!="decimal relative nanoseconds from origin" or overflow_raw.get("origin")!="2024-01-01T00:00:00Z" or overflow_raw.get("raw_timestamp")!=str(U128_MAX+1) or int(overflow["expected"]["records"][0]["raw_time_values"]["occurrence"])<=U128_MAX: errors.append("relative-u128 overflow literal/basis")
+    common=by_id["unit_common_instant_equivalence"]
+    units={"second":1_000_000_000,"millisecond":1_000_000,"microsecond":1_000,"nanosecond":1}
+    source=common["raw_inputs"]["rows"]
+    if len(source)!=4 or {row.get("source_unit") for row in source}!=set(units): errors.append("common-instant unit coverage")
+    for row,record in zip(source,common["expected"]["records"]):
+        unit=row.get("source_unit"); value=row.get("source_relative_value")
+        if unit not in units or not isinstance(value,str) or not value.isascii() or not value.isdigit() or int(value)*units[unit]!=9_000_000_000:
+            errors.append("common-instant integer unit conversion")
+        if record["relative_ticks"]!="9000000000" or record["occurrence_time"]["utc"]!="2024-01-01T00:00:09Z" or record["occurrence_time"]["raw"]!=row.get("raw_timestamp") or record["source_event_key"]!=row.get("source_event_key") or record["occurrence_time"]["source_precision"]!=unit:
+            errors.append("common-instant raw/normalized unit binding")
+        evidence=record["raw_event"]["source_fields"]
+        if evidence.get("source_unit")!=unit or evidence.get("source_relative_value")!=value or evidence.get("raw_occurrence")!=row.get("raw_timestamp"):
+            errors.append("common-instant retained raw unit evidence")
+    if len(common["expected"]["records"])!=4: errors.append("common-instant expected row coverage")
     return errors
 
 def mutation_probes(doc,schema,validator):
@@ -255,6 +269,8 @@ def mutation_probes(doc,schema,validator):
         if not check_document(candidate,schema,validator): raise AssertionError(f"fixture mutation not detected: {name}")
         probes.append({"name":name,"detected":True})
     for name,mutate in (
+        ("common_instant_retained_unit_drift",lambda d:next(c for c in d["cases"] if c["case_id"]=="unit_common_instant_equivalence")["expected"]["records"][1]["raw_event"]["source_fields"].__setitem__("source_relative_value","999999")),
+        ("common_instant_unit_value_drift",lambda d:next(c for c in d["cases"] if c["case_id"]=="unit_common_instant_equivalence")["raw_inputs"]["rows"][1].__setitem__("source_relative_value","9001")),
         ("retained_raw_normalized_time_mismatch",lambda d:next(c for c in d["cases"] if c["case_id"]=="stable_equal_time_order")["expected"]["records"][0]["occurrence_time"].__setitem__("raw","2024-01-01T00:00:09Z")),
         ("changed_expected_tick",lambda d:d["cases"][3]["expected"]["records"][0].__setitem__("relative_ticks","8")),
         ("top_occurrence_tick_mismatch",lambda d:d["cases"][3]["expected"]["records"][0]["occurrence_time"].__setitem__("relative_ticks","8")),
