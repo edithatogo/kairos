@@ -1,0 +1,3 @@
+# One independently reviewed public source-integrity fingerprint.
+# Scope and recomputation: Track49 secret-scan-false-positive-20261004.md
+ffb788b9107ae2c9a6b0bdc2d767faebdde1ac80:conductor/tracks/49-distributed-mpi-grpc-state-synchronization/joint-interface-freeze-packet-20261004.json:generic-api-key:15
