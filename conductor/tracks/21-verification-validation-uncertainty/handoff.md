@@ -153,3 +153,15 @@ checks and two expected conditional skips. Final governance successor requires
 fresh phase, strict-clean and exact-head owner CI before parent pin acceptance.
 This supplements existing owner scope; C2, public API review, release and clinical
 validation remain open. Historical Track 04/21 closure remains unchanged.
+
+
+## C4.1 bounded fixture preparation — 2026-10-05
+
+Accepted experimental fixture/test source `6a17578a16d4bb13969961dfd116b3afaf7c8c6c`
+adds generic `conformance/c41` and one private calibration integration test.
+42 fixtures, exact/pinned independent references, 8 native and 10 Python tests
+qualify fixture preparation only. Missing/runtime-mock reports fail the opt-in
+C4.2 gate. See [retained review and evidence](../../evidence/c4.1-preparation-20261005/README.md).
+Track 21 owns semantics and Track 12 the references; this does not advance an
+upstream phase or change historical registry/ledger status. C4.2 runtime,
+C4.3 sidecars and C4.4/C-04 acceptance remain open; no release claim follows.

@@ -1,0 +1,36 @@
+{
+  "scope": "C4.1 fixture-first preparation only",
+  "source_commit": "6a17578a16d4bb13969961dfd116b3afaf7c8c6c",
+  "independent_reviewer_role": "statistical/contract read-only reviewer",
+  "requested_worker_model": "gpt-6-luna",
+  "served_model_attestation": false,
+  "decision": "accepted",
+  "resolved_findings": [
+    "fractional rational parsing and exact1/3,1/2 result",
+    "null point population counts",
+    "C0.2 empty status and test ok/computed mapping",
+    "invalid attempted versus used counts",
+    "same-unit physical scaling",
+    "mock/runtime report segregation",
+    "aligned weights and null origin composition"
+  ],
+  "contract_sha256": {
+    "conductor/design/calibration/c4.1-fixture-clarifications-v1.md": "ae441c6e5ebce28ba90b4bdd3160244ccdb33178ff2d77d2e59840786bf5526f",
+    "conductor/design/calibration/c4.1-fixture-contract-v1.md": "2f7a4666d923e4dfc44cdd93e28c2fd69a89ba053df423a3f6c003dd7a356185",
+    "conductor/design/calibration/c4.1-invalid-runtime-clarifications-v1.md": "40c8bb3bdae7884d648471be15912e81b0384419d3ad902f0f5a02e57ba50beb",
+    "conductor/design/calibration/c4.1-status-unit-clarifications-v1.md": "0974bbb64bd1be4a609961f59c139658f7758d366366797f6b9529344cdb964e"
+  },
+  "file_sha256": {
+    "conformance/c41/fixtures.json": "f2b35392e64245475d039d55761344eaeebd6cb0499342436c63840325ed0e6b",
+    "conformance/c41/generate_reference.py": "59e8732737c58974031aeb8128950209b203eb98fc2b3b0b6f9a1a6d48bbd695",
+    "conformance/c41/reference.json": "ed62cdcd376c3f6ea073263d94555832650264f96caafaf22313c92ede62beeb",
+    "conformance/c41/test_reference.py": "7d3793bc966d37631c7cd9108dc3e9721f41c787017a2f1f10cd39ddb2eb8552",
+    "crates/kairo-ecs-calibration/tests/metrics_c41.rs": "1f328d402820ea2d851b4031a7f62663cc27212a4e1466ca31cb61b1a4dcb084"
+  },
+  "reviewer_did_not_execute_tests": true,
+  "coordinator_independent_quantile_cases": 28,
+  "coordinator_executed_tests_recorded_separately": true,
+  "no_remaining_in_scope_concrete_defect": true,
+  "c42_runtime_implementation": false,
+  "c04_acceptance": false
+}
