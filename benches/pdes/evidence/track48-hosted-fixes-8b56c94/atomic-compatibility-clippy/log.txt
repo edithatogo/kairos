@@ -1,0 +1,100 @@
+    Checking kairo-ecs-types v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-types)
+   Compiling serde_core v1.0.229
+   Compiling unicode-ident v1.0.24
+   Compiling proc-macro2 v1.0.106
+   Compiling zmij v1.0.21
+   Compiling quote v1.0.45
+   Compiling serde_json v1.0.151
+    Checking memchr v2.8.0
+    Checking itoa v1.0.18
+    Checking cfg-if v1.0.4
+   Compiling libc v0.2.186
+   Compiling zerocopy v0.8.48
+   Compiling autocfg v1.5.0
+   Compiling serde v1.0.229
+    Checking kairo-ecs-core v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-core)
+    Checking kairo-ecs-state v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-state)
+    Checking kairo-ecs-rng v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-rng)
+    Checking kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-pdes)
+   Compiling num-traits v0.2.19
+    Checking regex-syntax v0.8.10
+   Compiling crossbeam-utils v0.8.21
+    Checking utf8parse v0.2.2
+   Compiling crossbeam-epoch v0.9.20
+    Checking anstyle-parse v1.0.0
+    Checking colorchoice v1.0.5
+    Checking anstyle v1.0.14
+    Checking anstyle-query v1.1.5
+    Checking is_terminal_polyfill v1.70.2
+    Checking strsim v0.11.1
+    Checking anstream v1.0.0
+   Compiling heck v0.5.0
+    Checking clap_lex v1.0.0
+    Checking either v1.15.0
+    Checking once_cell v1.21.4
+    Checking clap_builder v4.5.61
+   Compiling rayon-core v1.13.0
+    Checking ciborium-io v0.2.2
+    Checking plotters-backend v0.3.7
+   Compiling syn v2.0.117
+   Compiling syn v3.0.6
+    Checking plotters-svg v0.3.7
+    Checking itertools v0.10.5
+    Checking same-file v1.0.6
+    Checking crossbeam-deque v0.8.6
+    Checking cast v0.3.0
+    Checking walkdir v2.5.0
+    Checking plotters v0.3.7
+    Checking is-terminal v0.4.17
+    Checking kairo-ecs-game-theory v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-game-theory)
+    Checking oorandom v11.1.5
+    Checking anes v0.1.6
+   Compiling getrandom v0.3.4
+    Checking kairo-ecs-ffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-ffi)
+    Checking rayon v1.12.0
+   Compiling wasm-bindgen-shared v0.2.120
+    Checking regex-automata v0.4.14
+    Checking criterion-plot v0.5.0
+   Compiling rustversion v1.0.22
+    Checking kairo-ecs-gpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-gpu)
+    Checking rand_core v0.9.5
+    Checking unarray v0.1.4
+    Checking rand v0.9.5
+    Checking rand_xorshift v0.4.0
+   Compiling bumpalo v3.20.2
+    Checking bitflags v2.13.2
+    Checking kairo-ecs-game-ontology v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-game-ontology)
+    Checking regex v1.12.3
+    Checking kairo-ecs-bench v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-bench)
+    Checking kairo-ecs-arrow v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-arrow)
+    Checking kairo-ecs-fmi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-fmi)
+    Checking kairo-ecs-abm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-abm)
+    Checking kairo-ecs-des v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-des)
+    Checking kairo-ecs-viz v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-viz)
+    Checking kairo-ecs-streaming v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-streaming)
+    Checking kairo-ecs-webgpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-webgpu)
+    Checking kairo-ecs-ml v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-ml)
+   Compiling serde_derive v1.0.229
+   Compiling wasm-bindgen v0.2.120
+    Checking kairo-ecs-cs-bridge v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-cs-bridge)
+    Checking kairo-ecs-diplomat v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-diplomat)
+    Checking kairo-ecs-uniffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-uniffi)
+    Checking kairo-ecs-mpi v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-mpi)
+    Checking kairo-ecs-grpc v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-grpc)
+    Checking kairo-ecs-cli v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-cli)
+   Compiling wasm-bindgen-macro-support v0.2.120
+   Compiling zerocopy-derive v0.8.48
+   Compiling clap_derive v4.5.61
+    Checking tinytemplate v1.2.1
+    Checking clap v4.5.61
+    Checking kairo-ecs-debug v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-debug)
+   Compiling wasm-bindgen-macro v0.2.120
+    Checking kairo-ecs-wasm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-wasm)
+    Checking half v2.7.1
+    Checking ppv-lite86 v0.2.21
+    Checking rand_chacha v0.9.0
+    Checking ciborium-ll v0.2.2
+    Checking proptest v1.11.0
+    Checking ciborium v0.2.2
+    Checking criterion v0.5.1
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 23.10s

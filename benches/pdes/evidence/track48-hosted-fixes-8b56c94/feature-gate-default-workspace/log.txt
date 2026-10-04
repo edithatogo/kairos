@@ -1,0 +1,1028 @@
+   Compiling kairo-ecs-types v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-types)
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.0
+   Compiling cfg-if v1.0.4
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.21
+   Compiling libc v0.2.186
+   Compiling syn v2.0.117
+   Compiling regex-syntax v0.8.10
+   Compiling num-traits v0.2.19
+   Compiling utf8parse v0.2.2
+   Compiling anstyle-parse v1.0.0
+   Compiling kairo-ecs-core v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-core)
+   Compiling kairo-ecs-state v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-state)
+   Compiling kairo-ecs-rng v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-rng)
+   Compiling kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-pdes)
+   Compiling kairo-ecs-ffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-ffi)
+   Compiling crossbeam-utils v0.8.21
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling colorchoice v1.0.5
+   Compiling anstyle v1.0.14
+   Compiling anstyle-query v1.1.5
+   Compiling strsim v0.11.1
+   Compiling anstream v1.0.0
+   Compiling crossbeam-epoch v0.9.20
+   Compiling either v1.15.0
+   Compiling clap_lex v1.0.0
+   Compiling plotters-backend v0.3.7
+   Compiling clap_builder v4.5.61
+   Compiling crossbeam-deque v0.8.6
+   Compiling ciborium-io v0.2.2
+   Compiling kairo-ecs-game-theory v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-game-theory)
+   Compiling itertools v0.10.5
+   Compiling plotters-svg v0.3.7
+   Compiling rayon-core v1.13.0
+   Compiling same-file v1.0.6
+   Compiling cast v0.3.0
+   Compiling walkdir v2.5.0
+   Compiling getrandom v0.3.4
+   Compiling regex-automata v0.4.14
+   Compiling rayon v1.12.0
+   Compiling plotters v0.3.7
+   Compiling is-terminal v0.4.17
+   Compiling anes v0.1.6
+   Compiling serde_json v1.0.151
+   Compiling serde v1.0.229
+   Compiling oorandom v11.1.5
+   Compiling once_cell v1.21.4
+   Compiling criterion-plot v0.5.0
+   Compiling rand_core v0.9.5
+   Compiling kairo-ecs-gpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-gpu)
+   Compiling rand v0.9.5
+   Compiling rand_xorshift v0.4.0
+   Compiling bitflags v2.13.2
+   Compiling unarray v0.1.4
+   Compiling tinytemplate v1.2.1
+   Compiling kairo-ecs-game-ontology v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-game-ontology)
+   Compiling zerocopy-derive v0.8.48
+   Compiling clap_derive v4.5.61
+   Compiling kairo-ecs-arrow v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-arrow)
+   Compiling regex v1.12.3
+   Compiling kairo-ecs-abm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-abm)
+   Compiling kairo-ecs-des v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-des)
+   Compiling kairo-ecs-fmi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-fmi)
+   Compiling kairo-ecs-viz v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-viz)
+   Compiling kairo-ecs-webgpu v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-webgpu)
+   Compiling kairo-ecs-ml v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-ml)
+   Compiling kairo-ecs-streaming v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-streaming)
+   Compiling kairo-ecs-wasm v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-wasm)
+   Compiling kairo-ecs-grpc v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-grpc)
+   Compiling kairo-ecs-mpi v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-mpi)
+   Compiling kairo-ecs-uniffi v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-uniffi)
+   Compiling kairo-ecs-diplomat v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-diplomat)
+   Compiling kairo-ecs-cs-bridge v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-cs-bridge)
+   Compiling kairo-ecs-bench v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-bench)
+   Compiling zerocopy v0.8.48
+   Compiling clap v4.5.61
+   Compiling kairo-ecs-debug v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-debug)
+   Compiling kairo-ecs-cli v0.1.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-cli)
+   Compiling half v2.7.1
+   Compiling ppv-lite86 v0.2.21
+   Compiling rand_chacha v0.9.0
+   Compiling ciborium-ll v0.2.2
+   Compiling proptest v1.11.0
+   Compiling ciborium v0.2.2
+   Compiling criterion v0.5.1
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 28.02s
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_abm-6608dc2827f5b3eb)
+
+running 7 tests
+test tests::behavior_decision_can_despawn_agent ... ok
+test tests::behavior_simulation_replays_entity_rng ... ok
+test tests::behavior_simulation_respects_event_budget ... ok
+test tests::behavior_simulation_updates_in_scheduler_order ... ok
+test tests::despawned_agent_future_events_do_not_update_behavior ... ok
+test tests::schedule_and_step ... ok
+test tests::spawn_and_attach ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/abm_behavior_update_v1.rs (target/owned-native-join/1.99.0/debug/deps/abm_behavior_update_v1-be9fb7559c371ab1)
+
+running 2 tests
+test abm_behavior_update_v1_replays_entity_rng_streams ... ok
+test abm_behavior_update_v1_runs_updates_in_scheduler_order ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/abm_integration.rs (target/owned-native-join/1.99.0/debug/deps/abm_integration-273d79e4e4844c66)
+
+running 3 tests
+test multi_agent_scheduling ... ok
+test agent_with_components ... ok
+test schedule_and_dispatch ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_arrow-aa169a21b959fb1a)
+
+running 6 tests
+test tests::dispatched_record_maps_core_event_fields ... ok
+test tests::event_log_batch_round_trips_smoke_bytes ... ok
+test tests::event_log_schema_matches_track_04_order ... ok
+test tests::previous_facade_still_flushes_records ... ok
+test tests::smoke_bytes_preserve_escaped_strings_and_payload_ref ... ok
+test tests::validation_rejects_incompatible_schema_version ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/checkpoint_restart.rs (target/owned-native-join/1.99.0/debug/deps/checkpoint_restart-bda6b7ed15460012)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/schema_compatibility.rs (target/owned-native-join/1.99.0/debug/deps/schema_compatibility-d6ed6812417a8b59)
+
+running 4 tests
+test checked_in_schema_json_matches_runtime_contract ... ok
+test event_log_schema_is_stable_for_binding_consumers ... ok
+test event_log_smoke_roundtrip_preserves_ordering_fields ... ok
+test event_log_schema_fingerprint_is_stable ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_bench-2b4c3c110e6a2f08)
+
+running 2 tests
+test tests::canonical_scenario_metadata_is_stable ... ok
+test tests::smoke_helpers_are_aliases_and_callable ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_cli-6ae82df21b124874)
+
+running 17 tests
+test scenario::tests::load_scenario_reports_invalid_numeric_value ... ok
+test scenario::tests::test_validate_empty_expected_kind_order ... ok
+test scenario::tests::load_scenario_reports_invalid_kind_order ... ok
+test scenario::tests::test_validate_mismatch_base_seed ... ok
+test scenario::tests::load_scenario_reports_missing_field ... ok
+test scenario::tests::test_validate_mismatch_fixture_id ... ok
+test scenario::tests::load_seed_manifest_reports_invalid_numeric_value ... ok
+test scenario::tests::load_scenario_parses_manifest_fields ... ok
+test scenario::tests::load_seed_manifest_reports_missing_field ... ok
+test scenario::tests::test_validate_missing_fixture_path ... ok
+test scenario::tests::test_validate_scenario_and_seed_success ... ok
+test scenario::tests::test_validate_scenario_invalid_schema ... ok
+test scenario::tests::test_validate_seed_invalid_schema ... ok
+test scenario::tests::test_validate_zero_max_events ... ok
+test scenario::tests::test_validate_zero_replications ... ok
+test scenario::tests::load_seed_manifest_parses_manifest_fields ... ok
+test scenario::tests::test_validate_mismatch_scenario_id ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_core-0dd6494b8955aa06)
+
+running 17 tests
+test tests::cancellation_rejects_unknown_and_dispatched_events ... ok
+test tests::cancellation_skips_event_without_reordering_rest ... ok
+test tests::cancelled_future_event_does_not_force_limit_after_active_events_finish ... ok
+test tests::dispatches_by_time_priority_then_sequence ... ok
+test tests::core_status_codes_match_the_ffi_contract ... ok
+test tests::facade_exposes_scheduler_stats_snapshot ... ok
+test tests::facade_maps_cancellation_and_limit_statuses ... ok
+test tests::facade_reports_invalid_priority_without_scheduling ... ok
+test tests::recording_scheduler_exposes_cancel_run_and_state ... ok
+test tests::facade_schedules_steps_and_exposes_status_codes ... ok
+test tests::run_for_with_zero_limit_reports_limit_reached ... ok
+test tests::run_until_or_for_does_not_dispatch_past_time_limit_with_remaining_budget ... ok
+test tests::run_for_is_bounded ... ok
+test tests::run_until_or_for_reports_limit_reached_when_event_budget_is_exhausted_first ... ok
+test tests::run_until_stops_at_time_limit ... ok
+test tests::run_until_or_for_stops_on_bounds ... ok
+test tests::scheduler_stats_track_scheduled_cancelled_dispatched_and_pending ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/conformance_fixtures.rs (target/owned-native-join/1.99.0/debug/deps/conformance_fixtures-3eb6f6fb14a81662)
+
+running 4 tests
+test conformance_rng_replay ... ok
+test conformance_deterministic_ordering ... ok
+test conformance_cancellation ... ok
+test conformance_zero_delay_guard ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/integration.rs (target/owned-native-join/1.99.0/debug/deps/integration-7be2f236699d663e)
+
+running 8 tests
+test test_cancel_then_schedule ... ok
+test test_deterministic_replay ... ok
+test test_empty_scheduler ... ok
+test test_trace_recorder ... ok
+test test_zero_delay_guard ... ok
+test test_run_for_bounds ... ok
+test test_run_until_bounds ... ok
+test test_large_event_count ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/scheduler_properties.rs (target/owned-native-join/1.99.0/debug/deps/scheduler_properties-498c375923179fcd)
+
+running 3 tests
+test repeated_equal_priority_events_keep_their_insertion_sequence ... ok
+test generated_events_follow_time_priority_and_insertion_order ... ok
+test generated_cancellations_remove_only_selected_events ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_cs_bridge-d43b2b63a361bb1f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_debug-316a9d4ee841bdde)
+
+running 10 tests
+test tests::line_encoding_declares_schema ... ok
+test tests::replay_reconstructs_state_from_snapshot_and_deltas ... ok
+test tests::reconstruct_at_uses_latest_snapshot_and_only_later_deltas ... ok
+test tests::trace_line_validation_accepts_encoded_trace ... ok
+test tests::trace_line_validation_rejects_malformed_custom_event_kind ... ok
+test tests::trace_line_validation_rejects_malformed_delta_fields ... ok
+test tests::trace_line_validation_rejects_out_of_order_ticks ... ok
+test tests::trace_line_validation_rejects_missing_or_unsupported_schema ... ok
+test tests::breakpoint_matches_event_kind ... ok
+test tests::debugger_steps_back_and_goto_tick ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_debug-9ff13595749ca949)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_des-6b04e644b55a3879)
+
+running 5 tests
+test tests::resource_request_blocks ... ok
+test tests::schedule_and_step ... ok
+test tests::des_context_creates ... ok
+test tests::trajectory_records_scheduler_order ... ok
+test tests::trajectory_reports_event_budget_limit ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/des_integration.rs (target/owned-native-join/1.99.0/debug/deps/des_integration-26898f5f67433f61)
+
+running 4 tests
+test parallel_resources ... ok
+test resource_not_found ... ok
+test resource_queue_fifo ... ok
+test factory_bottleneck_smoke ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/des_resource_queue_v1.rs (target/owned-native-join/1.99.0/debug/deps/des_resource_queue_v1-e3c00e0155f3f9fa)
+
+running 2 tests
+test des_resource_queue_v1_preserves_fifo_admission ... ok
+test des_resource_queue_v1_replays_fixed_tick_trajectory_order ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_diplomat-913366aa0c1c66aa)
+
+running 2 tests
+test tests::reexports_bridge_version ... ok
+test tests::diplomat_facade_uses_ffi_lifecycle ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_ffi-04edec42805880db)
+
+running 5 tests
+test tests::ffi_version_is_stable ... ok
+test tests::canonical_header_matches_generated_surface ... ok
+test tests::engine_lifecycle_is_explicit ... ok
+test tests::schedule_and_step_through_bridge ... ok
+test tests::panic_boundary_returns_panic_status ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/ffi_integration.rs (target/owned-native-join/1.99.0/debug/deps/ffi_integration-da94e27dfbb67d32)
+
+running 14 tests
+test test_engine_create_free ... ok
+test test_engine_double_free ... ok
+test test_engine_reset ... ok
+test test_error_message ... ok
+test test_ffi_version ... ok
+test test_run_for_limit ... ok
+test test_run_until_limit ... ok
+test test_run_until_or_for_applies_both_bounds ... ok
+test test_schedule_after_uses_current_time ... ok
+test test_schedule_and_step ... ok
+test test_schedule_cancel ... ok
+test test_schedule_ordering ... ok
+test test_stats ... ok
+test test_telemetry_flush ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_fmi-4e80fb8499f5020e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fmi2_lifecycle.rs (target/owned-native-join/1.99.0/debug/deps/fmi2_lifecycle-86b156c69dd9682e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fmu_archive.rs (target/owned-native-join/1.99.0/debug/deps/fmu_archive-80ce05e1b06c7c75)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_game_ontology-43221a0c88affb0a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/codegen.rs (target/owned-native-join/1.99.0/debug/deps/codegen-1c959e44129823ac)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/jsonld_ingestion.rs (target/owned-native-join/1.99.0/debug/deps/jsonld_ingestion-6dec94f1f4c56000)
+
+running 1 test
+test parses_jsonld_classes_and_properties ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/normalization.rs (target/owned-native-join/1.99.0/debug/deps/normalization-dd5ad6814b33790c)
+
+running 2 tests
+test normalizes_classes_and_properties_deterministically ... ok
+test rejects_malformed_inputs ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/turtle_ingestion.rs (target/owned-native-join/1.99.0/debug/deps/turtle_ingestion-5734068119f6ad98)
+
+running 1 test
+test parses_turtle_classes_and_properties ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_game_theory-7c6048bf0741908c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extensive_form_chance_solver.rs (target/owned-native-join/1.99.0/debug/deps/extensive_form_chance_solver-a2ec59684547e52d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extensive_form_components.rs (target/owned-native-join/1.99.0/debug/deps/extensive_form_components-f7403a8508e60ee1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extensive_form_information_sets.rs (target/owned-native-join/1.99.0/debug/deps/extensive_form_information_sets-c3a4ce5f8b87d1be)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extensive_form_solver.rs (target/owned-native-join/1.99.0/debug/deps/extensive_form_solver-91a650e24a991459)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extensive_form_topology.rs (target/owned-native-join/1.99.0/debug/deps/extensive_form_topology-a3b68b833bb44870)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/extensive_form_traversal.rs (target/owned-native-join/1.99.0/debug/deps/extensive_form_traversal-1f08249dc1f1b9e7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/generated_components.rs (target/owned-native-join/1.99.0/debug/deps/generated_components-ed8add37a7a12b9d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/graph_relations.rs (target/owned-native-join/1.99.0/debug/deps/graph_relations-1c794f7f8e2ffabb)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/normal_form.rs (target/owned-native-join/1.99.0/debug/deps/normal_form-369a99c2b85e89a4)
+
+running 7 tests
+test best_response_solver_preserves_ties_in_strategy_order ... ok
+test best_response_solver_rejects_invalid_player_or_opponent_profile ... ok
+test best_response_solver_selects_maximum_utility_against_fixed_opponents ... ok
+test pure_nash_solver_finds_prisoners_dilemma_equilibrium ... ok
+test pure_nash_solver_preserves_multiple_equilibria_in_profile_order ... ok
+test strict_dominance_solver_finds_dominated_prisoners_dilemma_strategies ... ok
+test strict_dominance_solver_ignores_ties_and_rejects_invalid_player ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/normal_form_components.rs (target/owned-native-join/1.99.0/debug/deps/normal_form_components-dcf03e19fd20207a)
+
+running 5 tests
+test payoff_lookup_rejects_invalid_profile_or_player ... ok
+test payoff_matrix_rejects_wrong_payoff_count ... ok
+test normal_form_components_preserve_shape_and_ordering ... ok
+test strategy_space_rejects_invalid_cardinality_and_names ... ok
+test utility_rejects_non_finite_values ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_gpu-59eb16bc4b935584)
+
+running 10 tests
+test buffer::tests::empty_buffer_is_rejected ... ok
+test buffer::tests::typed_buffer_tracks_item_and_byte_length ... ok
+test compute::tests::abm_execution_plan_tracks_state_and_transfers ... ok
+test compute::tests::abm_step_is_seed_reproducible ... ok
+test compute::tests::des_execution_plan_accounts_for_event_roundtrip ... ok
+test compute::tests::des_execution_plan_budget_checks_include_event_transfer_pressure ... ok
+test compute::tests::dispatch_shape_uses_webgpu_safe_workgroups ... ok
+test transfer::tests::checked_transfer_totals_report_overflow ... ok
+test compute::tests::state_footprint_tracks_flat_buffer_bytes ... ok
+test transfer::tests::transfer_plan_separates_upload_and_download_totals ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/backend_initialization.rs (target/owned-native-join/1.99.0/debug/deps/backend_initialization-4913b03e267ad99f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/contract_slice.rs (target/owned-native-join/1.99.0/debug/deps/contract_slice-ae8a1449d63f58da)
+
+running 5 tests
+test backend_request_distinguishes_fallback_disabled_from_optional_unavailable ... ok
+test kernel_contract_names_dispatch_and_transient_uploads ... ok
+test persistent_batch_dispatch_requires_resident_state ... ok
+test persistent_device_memory_declares_resident_buffers ... ok
+test persistent_session_batch_dispatch_matches_cpu_fallback_contract ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/contract_smoke.rs (target/owned-native-join/1.99.0/debug/deps/contract_smoke-3d79296d8cd57bb0)
+
+running 4 tests
+test cpu_fallback_reports_explicit_capabilities ... ok
+test execution_plans_are_public_and_backend_agnostic ... ok
+test footprint_and_dispatch_contract_are_hardware_independent ... ok
+test des_execution_plan_budget_api_includes_event_buffers ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/parity.rs (target/owned-native-join/1.99.0/debug/deps/parity-dd86fbda0a2e4a85)
+
+running 1 test
+test fixed_seed_abm_parity_harness_is_deterministic ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/parity_des.rs (target/owned-native-join/1.99.0/debug/deps/parity_des-9ebe5f8843264866)
+
+running 2 tests
+test fixed_seed_des_parity_harness_applies_events_in_timestamp_order ... ok
+test cpu_des_error_does_not_partially_apply_events ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/persistent_memory.rs (target/owned-native-join/1.99.0/debug/deps/persistent_memory-13e1baa1efc742b5)
+
+running 3 tests
+test persistent_des_error_does_not_partially_apply_events ... ok
+test upload_once_reupload_is_counted_as_host_upload ... ok
+test persistent_session_keeps_state_buffers_resident_across_mixed_ticks ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_grpc-d91bf92702359a4c)
+
+running 20 tests
+test tests::default_timeouts_keep_heartbeat_below_failure_timeout ... ok
+test tests::grpc_contract_envelopes_track_protocol_identity ... ok
+test tests::grpc_contract_rejects_empty_migration_id ... ok
+test tests::grpc_entity_migration_snapshot_preserves_generation_and_pending_events ... ok
+test tests::grpc_proto_contract_covers_generation_pending_events_heartbeats_and_antimessages ... ok
+test tests::heartbeat_classifier_marks_late_worker_failed ... ok
+test tests::migration_validator_accepts_complete_request ... ok
+test tests::grpc_two_process_launch_contract_requires_distinct_real_socket_endpoints ... ok
+test tests::local_two_node_contract_proof_covers_event_migration_telemetry_and_failure ... ok
+test tests::local_smoke_validates_peers_and_timeout_config ... ok
+test tests::migration_validator_rejects_empty_component_set ... ok
+test tests::peer_list_is_preserved ... ok
+test tests::peer_validator_rejects_duplicate_peer_ids ... ok
+test tests::protocol_emulator_includes_pending_event_timestamps_in_gvt_round ... ok
+test tests::protocol_emulator_round_trips_null_messages ... ok
+test tests::protocol_emulator_uses_current_gvt_candidate_round ... ok
+test tests::transport_send_rejects_unknown_lp ... ok
+test tests::telemetry_batch_validator_requires_monotonic_tick_range ... ok
+test tests::transport_send_rejects_unknown_source_and_destination_mismatch ... ok
+test tests::retry_policy_rejects_zero_attempts_and_inverted_backoff ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_ml-bfe73da25ca793d6)
+
+running 11 tests
+test tests::tensor_rejects_zero_dimension ... ok
+test tests::backend_status_reports_dependency_free_scaffold ... ok
+test tests::ort_session_runs_shape_checked_inference ... ok
+test tests::tensor_rejects_shape_mismatch ... ok
+test tests::metadata_rejects_blank_name_and_empty_shapes ... ok
+test tests::tick_hook_rejects_input_shape_before_predict ... ok
+test tests::tick_hook_runs_matching_phase_only ... ok
+test tests::tensor_rejects_non_finite_values ... ok
+test tests::tick_hook_rejects_bad_output_shape_after_predict ... ok
+test tests::try_register_validates_model_metadata_contract ... ok
+test tests::try_register_rejects_duplicate_model_name_and_version ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/feature_matrix.rs (target/owned-native-join/1.99.0/debug/deps/feature_matrix-2318bd13c9f319e5)
+
+running 4 tests
+test featureless_session_rejects_input_shape_mismatch_before_inference ... ok
+test featureless_session_reports_backend_not_configured ... ok
+test featureless_tick_hook_rejects_duplicate_model_registration ... ok
+test featureless_tick_hook_runs_registered_model ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_mpi-3080e755128dbd67)
+
+running 18 tests
+test tests::message_tags_are_stable ... ok
+test tests::entity_migration_snapshot_preserves_generation_and_pending_events ... ok
+test tests::migration_validator_rejects_self_migration ... ok
+test tests::protocol_emulator_includes_pending_event_timestamps_in_gvt_round ... ok
+test tests::local_smoke_validates_rank_mapping_and_protocol_tags ... ok
+test tests::local_two_rank_contract_proof_covers_event_migration_and_telemetry ... ok
+test tests::mpi_multirank_launch_contract_requires_real_rank_count ... ok
+test tests::mpi_contract_reserves_antimessage_tag_for_time_warp_rollbacks ... ok
+test tests::protocol_emulator_round_trips_event_messages ... ok
+test tests::migration_validator_accepts_component_payloads ... ok
+test tests::protocol_emulator_uses_current_gvt_candidate_round ... ok
+test tests::rank_assignment_preserves_lp_mapping ... ok
+test tests::rank_validator_rejects_duplicate_lps ... ok
+test tests::telemetry_batch_validator_requires_ordered_non_empty_payload ... ok
+test tests::transport_contract_rejects_migration_without_payload_or_id ... ok
+test tests::transport_contracts_use_stable_mpi_protocol_metadata ... ok
+test tests::transport_send_rejects_unknown_lp ... ok
+test tests::transport_send_rejects_unknown_source_and_destination_mismatch ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_pdes-a55558c73c3fe18c)
+
+running 20 tests
+test tests::partition_plan_rejects_invalid_inputs ... ok
+test tests::scheduler_never_moves_lp_time_backward ... ok
+test tests::partition_plan_assigns_entities_deterministically_by_entity_id ... ok
+test tests::conservative_frontier_waits_for_every_peer ... ok
+test tests::scheduler_rejects_duplicate_and_mismatched_lps ... ok
+test tests::in_memory_gvt_includes_inflight_message_timestamps ... ok
+test tests::scheduler_ignores_stale_null_safe_time_for_local_progress ... ok
+test tests::conservative_validator_reports_parity_gvt_and_deadlock_evidence ... ok
+test tests::partitioned_reference_matches_sequential_final_state ... ok
+test tests::scheduler_rejects_inbound_stragglers_before_local_time ... ok
+test tests::scheduler_rejects_overflowing_lookahead_before_remote_send ... ok
+test tests::scheduler_rejects_remote_events_before_declared_lookahead ... ok
+test tests::scheduler_reports_stalled_lps_when_safe_time_blocks_progress ... ok
+test tests::scheduler_sends_events_and_null_messages ... ok
+test tests::time_warp_spike_documents_rollback_risk ... ok
+test tests::transport_rejects_unknown_destinations_and_sources ... ok
+test tests::validator_rejects_empty_or_degenerate_workloads ... ok
+test tests::transport_round_trips_remote_events ... ok
+test tests::scaling_smoke_samples_cover_required_lp_counts_without_speedup_claims ... ok
+test tests::stress_reference_progresses_gvt_for_every_tick ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.65s
+
+     Running tests/optimistic_authority_envelope.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_authority_envelope-ca0266d2f7234b0d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_authority_envelope_heldout.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_authority_envelope_heldout-1ab487ebff4d8b4f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_bitset_heldout.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_bitset_heldout-a690e841e35e4a70)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_codec_bridge.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_codec_bridge-5006a16eb2990d2b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_codec_bridge_heldout.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_codec_bridge_heldout-5cb72a989dab8ed4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_construction.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_owned_construction-dcd56b1f350cedd3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_construction_heldout.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_owned_construction_heldout-6d05160fae64ec72)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_execution.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_owned_execution-2657759dbaf2021e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_execution_heldout.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_owned_execution_heldout-9a8b65e9ad3a76dc)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_root_routing.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_owned_root_routing-35aacac0e9b5825e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_root_routing_heldout.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_owned_root_routing_heldout-34cf768c16a2f6d6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_runtime.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_runtime-30beb021a575b25a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_runtime_heldout.rs (target/owned-native-join/1.99.0/debug/deps/optimistic_runtime_heldout-bc7c215f65fdd4f5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/production_parity.rs (target/owned-native-join/1.99.0/debug/deps/production_parity-4f5fa267347029f8)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/production_protocol.rs (target/owned-native-join/1.99.0/debug/deps/production_protocol-b6964b7a814c7763)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/track47_conservative_runtime.rs (target/owned-native-join/1.99.0/debug/deps/track47_conservative_runtime-f1292d4489f3f709)
+
+running 4 tests
+test partition_plan_and_null_messages_preserve_safe_time_progression ... ok
+test conservative_lookahead_rejects_early_remote_events_and_allows_boundary_events ... ok
+test sequential_partitioned_parity_covers_des_abm_and_mixed_workloads ... ok
+test deadlock_stress_and_scaling_smoke_have_progress_without_speedup_claims ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.75s
+
+     Running tests/track48_rollback_regressions.rs (target/owned-native-join/1.99.0/debug/deps/track48_rollback_regressions-4371fa9bc0c6de9a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_rng-9ba8bdcfb5702227)
+
+running 5 tests
+test tests::different_run_seeds_diverge ... ok
+test tests::distinct_entity_inputs_diverge ... ok
+test tests::entity_seed_is_reproducible ... ok
+test tests::entity_stream_replays_exactly ... ok
+test tests::stream_replays_from_run_seed ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_state-d3c6348f43c789f1)
+
+running 9 tests
+test registry_insert_tests::insert_registers_missing_store_and_keeps_normal_behavior ... ok
+test registry_insert_tests::insert_returns_false_for_an_inconsistent_typed_store ... ok
+test tests::component_store_reserve_adds_capacity_after_components_exist ... ok
+test tests::component_store_reserve_grows_all_storage_vectors_from_empty ... ok
+test tests::component_store_with_capacity_reserves_all_storage_vectors ... ok
+test tests::test_world_despawn ... ok
+test tests::test_world_with_capacity ... ok
+test tests::world_reserve_adds_capacity_after_entities_exist ... ok
+test tests::world_reserve_grows_all_storage_vectors_from_empty ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/component_storage.rs (target/owned-native-join/1.99.0/debug/deps/component_storage-41a792b9a6d5e6d3)
+
+running 7 tests
+test component_store_newer_generation_supersedes_stale_row ... ok
+test component_store_replaces_same_entity_without_duplicate_row ... ok
+test component_registry_multi_type_and_remove ... ok
+test world_new_is_empty ... ok
+test world_snapshot_is_deterministic_across_repeated_reads ... ok
+test world_entity_lifecycle_recycles_indices_and_rejects_stale_handles ... ok
+test component_store_rejects_stale_generation_for_same_index ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_streaming-7e7881dda7ef58eb)
+
+running 10 tests
+test tests::in_memory_sink_rejects_invalid_contract_message ... ok
+test tests::event_log_contract_rejects_invalid_required_fields ... ok
+test tests::event_log_contract_rejects_wrong_schema_version ... ok
+test tests::in_memory_sink_rejects_sequence_regression_for_same_run ... ok
+test tests::pacing_contract_rejects_zero_tick_duration ... ok
+test tests::in_memory_stream_round_trips_messages ... ok
+test tests::snapshot_rejects_unknown_stream_name ... ok
+test tests::event_log_message_exposes_arrow_contract_fields ... ok
+test tests::in_memory_sink_rejects_time_regression_for_same_run ... ok
+test tests::event_log_contract_rejects_missing_event_id ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/feature_matrix.rs (target/owned-native-join/1.99.0/debug/deps/feature_matrix-75ba76cf8c8a46e8)
+
+running 7 tests
+test in_memory_adapter_rejects_unversioned_event_log_contract ... ok
+test snapshot_provider_rejects_unknown_stream_name ... ok
+test in_memory_adapter_enforces_event_log_contract ... ok
+test base_featureless_stream_contract_round_trips ... ok
+test snapshot_provider_filters_by_arrow_stream_name ... ok
+test in_memory_adapter_rejects_time_regression_per_run ... ok
+test in_memory_adapter_rejects_sequence_regression_per_run ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_types-59d61be888462e49)
+
+running 8 tests
+test tests::constructors_validate_wide_inputs ... ok
+test tests::sim_time_checked_add_overflow_is_none ... ok
+test tests::step_outcome_accessors_work ... ok
+test tests::sim_time_uses_fixed_ticks ... ok
+test tests::versioned_wrapper_carries_version_and_value ... ok
+test tests::handles_are_deterministically_ordered ... ok
+test tests::request_construction_validates_priority_range ... ok
+test tests::schedule_request_and_dispatch_are_stable_and_ordered ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_uniffi-94d59205819def12)
+
+running 2 tests
+test tests::reexports_bridge_version ... ok
+test tests::facade_schedules_and_steps ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_viz-05e50f1cf52afd8d)
+
+running 8 tests
+test tests::renders_deterministic_headless_text ... ok
+test tests::default_renderer_status_is_headless_only ... ok
+test tests::rejects_blank_entity_labels ... ok
+test tests::renders_deterministic_headless_svg ... ok
+test tests::renders_formal_visualization_fixture_json ... ok
+test tests::summarizes_frame_without_gui_dependencies ... ok
+test tests::converts_world_snapshot_to_deterministic_headless_frame ... ok
+test tests::converts_dispatched_events_to_headless_markers ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/feature_matrix.rs (target/owned-native-join/1.99.0/debug/deps/feature_matrix-e3f579620bd937ec)
+
+running 2 tests
+test renderer_feature_state_is_explicit ... ok
+test empty_headless_frame_is_valid ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_wasm-5e27221d2eca47b6)
+
+running 3 tests
+test tests::default_build_exposes_track_04_schema_constant ... ok
+test tests::explicit_free_is_idempotent_from_the_wrapper_surface ... ok
+test tests::engine_wraps_ffi_scheduler_statuses ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (target/owned-native-join/1.99.0/debug/deps/kairo_ecs_webgpu-28f9a9c107f11f7a)
+
+running 8 tests
+test bridge::tests::rejects_partial_elements ... ok
+test bridge::tests::rejects_misaligned_wasm_offset ... ok
+test adapter::tests::native_ci_reports_webgpu_unavailable ... ok
+test bridge::tests::accepts_webgpu_aligned_buffer_descriptor ... ok
+test bridge::tests::rejects_zero_stride_without_panicking ... ok
+test capability::tests::reports_cpu_fallback_until_browser_bindings_are_configured ... ok
+test dispatch::tests::browser_dispatch_reports_backend_not_configured ... ok
+test dispatch::tests::dispatch_uses_browser_safe_workgroup_size ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/parity_webgpu.rs (target/owned-native-join/1.99.0/debug/deps/parity_webgpu-09d239ac33f0a88d)
+
+running 3 tests
+test browser_webgpu_dispatch_is_explicitly_unavailable_until_configured ... ok
+test capability_metadata_identifies_fallback_parity_contract ... ok
+test fixed_seed_reference_contract_matches_cpu_reference ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_abm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_arrow
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_bench
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_cs_bridge
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_debug
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_des
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_diplomat
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_ffi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_fmi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_game_ontology
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_game_theory
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_gpu
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_grpc
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_ml
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_mpi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_pdes
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_rng
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_state
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_streaming
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_types
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_uniffi
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_viz
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_wasm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_webgpu
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

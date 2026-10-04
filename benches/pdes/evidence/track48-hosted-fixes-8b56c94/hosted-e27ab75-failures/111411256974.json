@@ -1,0 +1,137 @@
+{
+  "job": {
+    "id": 111411256974,
+    "run_id": 37193767577,
+    "workflow_name": "Validate Conductor",
+    "head_branch": "codex/track48-owned-runtime-join",
+    "run_url": "https://api.github.com/repos/edithatogo/kairos/actions/runs/37193767577",
+    "run_attempt": 1,
+    "node_id": "CR_kwDOSUo43s8AAAAZ8KDejg",
+    "head_sha": "e27ab751da8013aa120089bf218af2055a5929f8",
+    "url": "https://api.github.com/repos/edithatogo/kairos/actions/jobs/111411256974",
+    "html_url": "https://github.com/edithatogo/kairos/actions/runs/37193767577/job/111411256974",
+    "status": "completed",
+    "conclusion": "failure",
+    "created_at": "2026-10-04T09:56:53Z",
+    "started_at": "2026-10-04T09:56:55Z",
+    "completed_at": "2026-10-04T09:57:38Z",
+    "name": "validate (ubuntu-latest)",
+    "steps": [
+      {
+        "name": "Set up job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 1,
+        "started_at": "2026-10-04T09:56:56Z",
+        "completed_at": "2026-10-04T09:56:56Z"
+      },
+      {
+        "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 2,
+        "started_at": "2026-10-04T09:56:56Z",
+        "completed_at": "2026-10-04T09:56:58Z"
+      },
+      {
+        "name": "Validate conductor setup",
+        "status": "completed",
+        "conclusion": "failure",
+        "number": 3,
+        "started_at": "2026-10-04T09:56:58Z",
+        "completed_at": "2026-10-04T09:57:36Z"
+      },
+      {
+        "name": "Validate conductor DAG",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 4,
+        "started_at": "2026-10-04T09:57:36Z",
+        "completed_at": "2026-10-04T09:57:36Z"
+      },
+      {
+        "name": "Validate conductor artifacts",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 5,
+        "started_at": "2026-10-04T09:57:36Z",
+        "completed_at": "2026-10-04T09:57:36Z"
+      },
+      {
+        "name": "Validate conductor phase gates",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 6,
+        "started_at": "2026-10-04T09:57:36Z",
+        "completed_at": "2026-10-04T09:57:36Z"
+      },
+      {
+        "name": "Validate Track 13 metadata alignment",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 7,
+        "started_at": "2026-10-04T09:57:36Z",
+        "completed_at": "2026-10-04T09:57:36Z"
+      },
+      {
+        "name": "Validate free compute blocker routes",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 8,
+        "started_at": "2026-10-04T09:57:36Z",
+        "completed_at": "2026-10-04T09:57:36Z"
+      },
+      {
+        "name": "Test HPC evidence capture utility",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 9,
+        "started_at": "2026-10-04T09:57:36Z",
+        "completed_at": "2026-10-04T09:57:36Z"
+      },
+      {
+        "name": "Test Windows linker resolution diagnostic",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 10,
+        "started_at": "2026-10-04T09:57:36Z",
+        "completed_at": "2026-10-04T09:57:36Z"
+      },
+      {
+        "name": "Validate track coverage",
+        "status": "completed",
+        "conclusion": "skipped",
+        "number": 11,
+        "started_at": "2026-10-04T09:57:36Z",
+        "completed_at": "2026-10-04T09:57:36Z"
+      },
+      {
+        "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 22,
+        "started_at": "2026-10-04T09:57:36Z",
+        "completed_at": "2026-10-04T09:57:36Z"
+      },
+      {
+        "name": "Complete job",
+        "status": "completed",
+        "conclusion": "success",
+        "number": 23,
+        "started_at": "2026-10-04T09:57:36Z",
+        "completed_at": "2026-10-04T09:57:36Z"
+      }
+    ],
+    "check_run_url": "https://api.github.com/repos/edithatogo/kairos/check-runs/111411256974",
+    "labels": [
+      "ubuntu-latest"
+    ],
+    "runner_id": 1000529442,
+    "runner_name": "GitHub Actions 1000529442",
+    "runner_group_id": 0,
+    "runner_group_name": "GitHub Actions"
+  },
+  "capture_exit": 0,
+  "log_sha256": "99c24cbaf44ab22763cfe779a2d71ca52f60dc96b0e8699e498544aea374132b",
+  "capture_stderr": ""
+}

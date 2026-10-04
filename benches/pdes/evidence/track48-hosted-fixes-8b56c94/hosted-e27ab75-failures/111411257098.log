@@ -1,0 +1,570 @@
+﻿2026-10-04T09:56:58.6513360Z Current runner version: '2.337.0'
+2026-10-04T09:56:58.6535898Z ##[group]Runner Image Provisioner
+2026-10-04T09:56:58.6536769Z Hosted Compute Agent
+2026-10-04T09:56:58.6537370Z Version: 20260901.588
+2026-10-04T09:56:58.6537992Z Commit: f88ec8081b781fac6c440065ac7ff9e710ce3d0b
+2026-10-04T09:56:58.6538691Z Build Date: 2026-09-01T19:56:44Z
+2026-10-04T09:56:58.6540386Z Worker ID: {c669a522-ffd8-4e25-b11b-3f0b274e838c}
+2026-10-04T09:56:58.6541204Z Azure Region: westcentralus
+2026-10-04T09:56:58.6541775Z ##[endgroup]
+2026-10-04T09:56:58.6543324Z ##[group]Operating System
+2026-10-04T09:56:58.6544103Z Microsoft Windows Server 2025
+2026-10-04T09:56:58.6544848Z 10.0.26100
+2026-10-04T09:56:58.6545543Z Datacenter
+2026-10-04T09:56:58.6546269Z ##[endgroup]
+2026-10-04T09:56:58.6546919Z ##[group]Runner Image
+2026-10-04T09:56:58.6547735Z Image: windows-2025-vs2026
+2026-10-04T09:56:58.6548519Z Version: 20260925.250.1
+2026-10-04T09:56:58.6550834Z Included Software: https://github.com/actions/runner-images/blob/win25-vs2026/20260925.250/images/windows/Windows2025-VS2026-Readme.md
+2026-10-04T09:56:58.6553318Z Image Release: https://github.com/actions/runner-images/releases/tag/win25-vs2026%2F20260925.250
+2026-10-04T09:56:58.6554782Z ##[endgroup]
+2026-10-04T09:56:58.6556369Z ##[group]GITHUB_TOKEN Permissions
+2026-10-04T09:56:58.6559159Z Contents: read
+2026-10-04T09:56:58.6560362Z Metadata: read
+2026-10-04T09:56:58.6561148Z ##[endgroup]
+2026-10-04T09:56:58.6563760Z Secret source: Actions
+2026-10-04T09:56:58.6565035Z Cache mode: write
+2026-10-04T09:56:58.6565928Z Prepare workflow directory
+2026-10-04T09:56:58.6998746Z Prepare all required actions
+2026-10-04T09:56:58.7046607Z Getting action download info
+2026-10-04T09:56:59.0035508Z Download action repository 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-04T09:56:59.2281700Z Complete job name: validate (windows-latest)
+2026-10-04T09:56:59.3921676Z ##[group]Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+2026-10-04T09:56:59.3923325Z with:
+2026-10-04T09:56:59.3923834Z   fetch-depth: 0
+2026-10-04T09:56:59.3924426Z   persist-credentials: false
+2026-10-04T09:56:59.3925044Z   repository: edithatogo/kairos
+2026-10-04T09:56:59.3928933Z   token: ***
+2026-10-04T09:56:59.3929442Z   ssh-strict: true
+2026-10-04T09:56:59.3929920Z   ssh-user: git
+2026-10-04T09:56:59.3930826Z   clean: true
+2026-10-04T09:56:59.3931336Z   sparse-checkout-cone-mode: true
+2026-10-04T09:56:59.3931920Z   fetch-tags: false
+2026-10-04T09:56:59.3932415Z   show-progress: true
+2026-10-04T09:56:59.3932939Z   lfs: false
+2026-10-04T09:56:59.3933418Z   submodules: false
+2026-10-04T09:56:59.3933919Z   set-safe-directory: true
+2026-10-04T09:56:59.3934512Z   allow-unsafe-pr-checkout: false
+2026-10-04T09:56:59.3935418Z ##[endgroup]
+2026-10-04T09:56:59.5443444Z Syncing repository: edithatogo/kairos
+2026-10-04T09:56:59.5445376Z ##[group]Getting Git version info
+2026-10-04T09:56:59.5446053Z Working directory is 'D:\a\kairos\kairos'
+2026-10-04T09:56:59.6375299Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-04T09:57:00.0194151Z git version 2.55.0.windows.5
+2026-10-04T09:57:00.0243346Z ##[endgroup]
+2026-10-04T09:57:00.0259844Z Temporarily overriding HOME='D:\a\_temp\d49f9da4-825a-4453-80d1-9a49dcc63e5b' before making global git config changes
+2026-10-04T09:57:00.0261226Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-04T09:57:00.0269582Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\kairos\kairos
+2026-10-04T09:57:00.0938700Z Deleting the contents of 'D:\a\kairos\kairos'
+2026-10-04T09:57:00.0944717Z ##[group]Determining repository object format
+2026-10-04T09:57:00.0946494Z ##[endgroup]
+2026-10-04T09:57:00.0954546Z ##[group]Initializing the repository
+2026-10-04T09:57:00.0955557Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\kairos\kairos
+2026-10-04T09:57:00.1990002Z Initialized empty Git repository in D:/a/kairos/kairos/.git/
+2026-10-04T09:57:00.2051934Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/edithatogo/kairos
+2026-10-04T09:57:00.2761178Z ##[endgroup]
+2026-10-04T09:57:00.2762822Z ##[group]Disabling automatic garbage collection
+2026-10-04T09:57:00.2770414Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+2026-10-04T09:57:00.3046897Z ##[endgroup]
+2026-10-04T09:57:00.3049459Z ##[group]Setting up auth
+2026-10-04T09:57:00.3051102Z Removing SSH command configuration
+2026-10-04T09:57:00.3058896Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T09:57:00.3336114Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T09:57:01.7484301Z Removing HTTP extra header
+2026-10-04T09:57:01.7495198Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T09:57:01.7797007Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T09:57:02.2964636Z Removing includeIf entries pointing to credentials config files
+2026-10-04T09:57:02.2974693Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T09:57:02.3258650Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T09:57:02.8695961Z [command]"C:\Program Files\Git\bin\git.exe" config --file D:\a\_temp\git-credentials-fb62aaff-3b57-4983-97a0-bd8c41a15681.config http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+2026-10-04T09:57:02.8988214Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/kairos/kairos/.git.path D:\a\_temp\git-credentials-fb62aaff-3b57-4983-97a0-bd8c41a15681.config
+2026-10-04T09:57:02.9309561Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:D:/a/kairos/kairos/.git/worktrees/*.path D:\a\_temp\git-credentials-fb62aaff-3b57-4983-97a0-bd8c41a15681.config
+2026-10-04T09:57:02.9647534Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-fb62aaff-3b57-4983-97a0-bd8c41a15681.config
+2026-10-04T09:57:02.9925622Z [command]"C:\Program Files\Git\bin\git.exe" config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-fb62aaff-3b57-4983-97a0-bd8c41a15681.config
+2026-10-04T09:57:03.0204300Z ##[endgroup]
+2026-10-04T09:57:03.0205380Z ##[group]Fetching the repository
+2026-10-04T09:57:03.0217567Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +fb51687183fdd2143b9efa7bdf55efa4534858a9:refs/remotes/pull/207/merge
+2026-10-04T09:57:04.9050461Z From https://github.com/edithatogo/kairos
+2026-10-04T09:57:04.9051694Z  * [new branch]      add-aas-submodel-tests-8044836234156683543 -> origin/add-aas-submodel-tests-8044836234156683543
+2026-10-04T09:57:04.9053449Z  * [new branch]      add-operator-tests-1315397981313794934   -> origin/add-operator-tests-1315397981313794934
+2026-10-04T09:57:04.9054841Z  * [new branch]      add-render-status-patch-tests-5535142990044158541 -> origin/add-render-status-patch-tests-5535142990044158541
+2026-10-04T09:57:04.9055825Z  * [new branch]      add-reserve-tests-7279322269424063457    -> origin/add-reserve-tests-7279322269424063457
+2026-10-04T09:57:04.9057013Z  * [new branch]      add-with-property-test-13984961057632908815 -> origin/add-with-property-test-13984961057632908815
+2026-10-04T09:57:04.9058794Z  * [new branch]      archive-track-37-5197961009675887091     -> origin/archive-track-37-5197961009675887091
+2026-10-04T09:57:04.9059649Z  * [new branch]      chore/conductor-track-40-archive-15173907922938650583 -> origin/chore/conductor-track-40-archive-15173907922938650583
+2026-10-04T09:57:04.9060848Z  * [new branch]      code-health/kairo-ecs-debug-error-handling-15002756592131855331 -> origin/code-health/kairo-ecs-debug-error-handling-15002756592131855331
+2026-10-04T09:57:04.9062276Z  * [new branch]      code-health/remove-unused-import-scheduler-15375556411864671823 -> origin/code-health/remove-unused-import-scheduler-15375556411864671823
+2026-10-04T09:57:04.9063482Z  * [new branch]      codex/c11-logical-reviewed-20261004      -> origin/codex/c11-logical-reviewed-20261004
+2026-10-04T09:57:04.9064291Z  * [new branch]      codex/c11-source-transport-20261004      -> origin/codex/c11-source-transport-20261004
+2026-10-04T09:57:04.9065027Z  * [new branch]      codex/careops-c1-arrow-io-qualification  -> origin/codex/careops-c1-arrow-io-qualification
+2026-10-04T09:57:04.9065812Z  * [new branch]      codex/careops-c1-carrier-serial-join     -> origin/codex/careops-c1-carrier-serial-join
+2026-10-04T09:57:04.9066569Z  * [new branch]      codex/careops-c1-shared-temporal-helper  -> origin/codex/careops-c1-shared-temporal-helper
+2026-10-04T09:57:04.9067264Z  * [new branch]      codex/careops-c1-utc-codec               -> origin/codex/careops-c1-utc-codec
+2026-10-04T09:57:04.9067919Z  * [new branch]      codex/careops-calibration-seed           -> origin/codex/careops-calibration-seed
+2026-10-04T09:57:04.9068600Z  * [new branch]      codex/careops-d2-native-owner-ci         -> origin/codex/careops-d2-native-owner-ci
+2026-10-04T09:57:04.9069251Z  * [new branch]      codex/careops-q0-reviewed-pin            -> origin/codex/careops-q0-reviewed-pin
+2026-10-04T09:57:04.9070516Z  * [new branch]      codex/careops-q3-qualified-timed-runtime -> origin/codex/careops-q3-qualified-timed-runtime
+2026-10-04T09:57:04.9071344Z  * [new branch]      codex/careops-q3-seeded-cycle-property   -> origin/codex/careops-q3-seeded-cycle-property
+2026-10-04T09:57:04.9072151Z  * [new branch]      codex/careops-q3-upstream-governance     -> origin/codex/careops-q3-upstream-governance
+2026-10-04T09:57:04.9073272Z  * [new branch]      codex/careops-q4-builder-migration       -> origin/codex/careops-q4-builder-migration
+2026-10-04T09:57:04.9074146Z  * [new branch]      codex/careops-q4-carrier-qualification   -> origin/codex/careops-q4-carrier-qualification
+2026-10-04T09:57:04.9074924Z  * [new branch]      codex/careops-q4-despawn-c1-join         -> origin/codex/careops-q4-despawn-c1-join
+2026-10-04T09:57:04.9075584Z  * [new branch]      codex/careops-q4-lifecycle               -> origin/codex/careops-q4-lifecycle
+2026-10-04T09:57:04.9076261Z  * [new branch]      codex/careops-q4-same-tick-budget        -> origin/codex/careops-q4-same-tick-budget
+2026-10-04T09:57:04.9076956Z  * [new branch]      codex/careops-q4-scheduler-preview       -> origin/codex/careops-q4-scheduler-preview
+2026-10-04T09:57:04.9077693Z  * [new branch]      codex/careops-q4-shared-abm-adapter      -> origin/codex/careops-q4-shared-abm-adapter
+2026-10-04T09:57:04.9078477Z  * [new branch]      codex/careops-q4-typed-continuations-runtime -> origin/codex/careops-q4-typed-continuations-runtime
+2026-10-04T09:57:04.9079418Z  * [new branch]      codex/careops-q4-world-view-qualification -> origin/codex/careops-q4-world-view-qualification
+2026-10-04T09:57:04.9080337Z  * [new branch]      codex/careops-resource-lifecycle         -> origin/codex/careops-resource-lifecycle
+2026-10-04T09:57:04.9081334Z  * [new branch]      codex/careops-trace-time-signed-span     -> origin/codex/careops-trace-time-signed-span
+2026-10-04T09:57:04.9082769Z  * [new branch]      codex/conductor-pinned-submodule         -> origin/codex/conductor-pinned-submodule
+2026-10-04T09:57:04.9083737Z  * [new branch]      codex/d12-bench-lock-msrv                -> origin/codex/d12-bench-lock-msrv
+2026-10-04T09:57:04.9085012Z  * [new branch]      codex/exact-archive-supply-chain-20261004 -> origin/codex/exact-archive-supply-chain-20261004
+2026-10-04T09:57:04.9086157Z  * [new branch]      codex/http-cache-vendor-artifact-20261004 -> origin/codex/http-cache-vendor-artifact-20261004
+2026-10-04T09:57:04.9087395Z  * [new branch]      codex/kairos-conductor-archive-44-10219247317652937778 -> origin/codex/kairos-conductor-archive-44-10219247317652937778
+2026-10-04T09:57:04.9088585Z  * [new branch]      codex/kairos-game-theory-ontology-track  -> origin/codex/kairos-game-theory-ontology-track
+2026-10-04T09:57:04.9089660Z  * [new branch]      codex/pr107-notebook-hardening           -> origin/codex/pr107-notebook-hardening
+2026-10-04T09:57:04.9091097Z  * [new branch]      codex/pr108-operator-hardening           -> origin/codex/pr108-operator-hardening
+2026-10-04T09:57:04.9092240Z  * [new branch]      codex/pr55-python-ci-sync                -> origin/codex/pr55-python-ci-sync
+2026-10-04T09:57:04.9093225Z  * [new branch]      codex/python-future-import-cleanup       -> origin/codex/python-future-import-cleanup
+2026-10-04T09:57:04.9094183Z  * [new branch]      codex/python-ruff-ci-fix                 -> origin/codex/python-ruff-ci-fix
+2026-10-04T09:57:04.9095214Z  * [new branch]      codex/track48-owned-runtime-join         -> origin/codex/track48-owned-runtime-join
+2026-10-04T09:57:04.9096597Z  * [new branch]      codex/verify-retained-archive-acquisition -> origin/codex/verify-retained-archive-acquisition
+2026-10-04T09:57:04.9097836Z  * [new branch]      conductor-close-reviewed-tracks-20260510 -> origin/conductor-close-reviewed-tracks-20260510
+2026-10-04T09:57:04.9099061Z  * [new branch]      finalize-track-41-18131747858812849833   -> origin/finalize-track-41-18131747858812849833
+2026-10-04T09:57:04.9100490Z  * [new branch]      fix-test-validate-experiment-11464930661688791749 -> origin/fix-test-validate-experiment-11464930661688791749
+2026-10-04T09:57:04.9101840Z  * [new branch]      fix-test-validate-experiment-16049368315743057362 -> origin/fix-test-validate-experiment-16049368315743057362
+2026-10-04T09:57:04.9103027Z  * [new branch]      fix-unused-import-14632446271913566861   -> origin/fix-unused-import-14632446271913566861
+2026-10-04T09:57:04.9104184Z  * [new branch]      fix-unwrap-kairo-ecs-debug-100161319189561979 -> origin/fix-unwrap-kairo-ecs-debug-100161319189561979
+2026-10-04T09:57:04.9105323Z  * [new branch]      fix/notebook-exec-vuln-267145330570298086 -> origin/fix/notebook-exec-vuln-267145330570298086
+2026-10-04T09:57:04.9106389Z  * [new branch]      implement-track-42-14783421450761550254  -> origin/implement-track-42-14783421450761550254
+2026-10-04T09:57:04.9107239Z  * [new branch]      jules-11124820578012117765-2e1f8941      -> origin/jules-11124820578012117765-2e1f8941
+2026-10-04T09:57:04.9108073Z  * [new branch]      jules-13757758151400988409-044c9f57      -> origin/jules-13757758151400988409-044c9f57
+2026-10-04T09:57:04.9108711Z  * [new branch]      jules-1389693299836412152-5d3f7ba9       -> origin/jules-1389693299836412152-5d3f7ba9
+2026-10-04T09:57:04.9109482Z  * [new branch]      jules-1479123384974132723-cac0ff08       -> origin/jules-1479123384974132723-cac0ff08
+2026-10-04T09:57:04.9110212Z  * [new branch]      jules-149509285585734092-08b6cffe        -> origin/jules-149509285585734092-08b6cffe
+2026-10-04T09:57:04.9111046Z  * [new branch]      jules-15527768560972319235-50da5a40      -> origin/jules-15527768560972319235-50da5a40
+2026-10-04T09:57:04.9111688Z  * [new branch]      jules-15583402711060162874-875bd850      -> origin/jules-15583402711060162874-875bd850
+2026-10-04T09:57:04.9112310Z  * [new branch]      jules-16323689108729912257-d069528f      -> origin/jules-16323689108729912257-d069528f
+2026-10-04T09:57:04.9112963Z  * [new branch]      jules-16431146833191455435-fbb21a6a      -> origin/jules-16431146833191455435-fbb21a6a
+2026-10-04T09:57:04.9113603Z  * [new branch]      jules-16565807452995437048-8fdd7e34      -> origin/jules-16565807452995437048-8fdd7e34
+2026-10-04T09:57:04.9114420Z  * [new branch]      jules-16773227777738116051-ed92bc3f      -> origin/jules-16773227777738116051-ed92bc3f
+2026-10-04T09:57:04.9115101Z  * [new branch]      jules-16939900181978290506-f7359327      -> origin/jules-16939900181978290506-f7359327
+2026-10-04T09:57:04.9115724Z  * [new branch]      jules-17181400726793808969-d57ce9d7      -> origin/jules-17181400726793808969-d57ce9d7
+2026-10-04T09:57:04.9116706Z  * [new branch]      jules-17410419371938621530-703181dc      -> origin/jules-17410419371938621530-703181dc
+2026-10-04T09:57:04.9117354Z  * [new branch]      jules-18268056361979009937-ff663654      -> origin/jules-18268056361979009937-ff663654
+2026-10-04T09:57:04.9118033Z  * [new branch]      jules-3071188164979369655-ac49128f       -> origin/jules-3071188164979369655-ac49128f
+2026-10-04T09:57:04.9118683Z  * [new branch]      jules-3943331029981878453-32899136       -> origin/jules-3943331029981878453-32899136
+2026-10-04T09:57:04.9119353Z  * [new branch]      jules-4389042813390359307-75b2d0ec       -> origin/jules-4389042813390359307-75b2d0ec
+2026-10-04T09:57:04.9120008Z  * [new branch]      jules-5530922236826134281-a27f2ea8       -> origin/jules-5530922236826134281-a27f2ea8
+2026-10-04T09:57:04.9120703Z  * [new branch]      jules-5658149426426727283-b0caf8fd       -> origin/jules-5658149426426727283-b0caf8fd
+2026-10-04T09:57:04.9121612Z  * [new branch]      jules-7270122939819876434-b99cfdbc       -> origin/jules-7270122939819876434-b99cfdbc
+2026-10-04T09:57:04.9122253Z  * [new branch]      jules-7823756430656047901-7c075938       -> origin/jules-7823756430656047901-7c075938
+2026-10-04T09:57:04.9122870Z  * [new branch]      jules-9769858206885967073-48634788       -> origin/jules-9769858206885967073-48634788
+2026-10-04T09:57:04.9123563Z  * [new branch]      jules-9825693646249783921-a4172c07       -> origin/jules-9825693646249783921-a4172c07
+2026-10-04T09:57:04.9124324Z  * [new branch]      jules-9946098283451657227-a24fa5e2       -> origin/jules-9946098283451657227-a24fa5e2
+2026-10-04T09:57:04.9125120Z  * [new branch]      jules-fix-dom-xss-website-search-12222075917108380877 -> origin/jules-fix-dom-xss-website-search-12222075917108380877
+2026-10-04T09:57:04.9126036Z  * [new branch]      jules-test-kairoecs-operator-17048397886576656618 -> origin/jules-test-kairoecs-operator-17048397886576656618
+2026-10-04T09:57:04.9126916Z  * [new branch]      kairo-ecs-debug-error-handling-5817677649458904300 -> origin/kairo-ecs-debug-error-handling-5817677649458904300
+2026-10-04T09:57:04.9127692Z  * [new branch]      main                                     -> origin/main
+2026-10-04T09:57:04.9128408Z  * [new branch]      optimize-sync-performance-17631949908452878318 -> origin/optimize-sync-performance-17631949908452878318
+2026-10-04T09:57:04.9129240Z  * [new branch]      optimize-twin-state-diff-16860874242063503218 -> origin/optimize-twin-state-diff-16860874242063503218
+2026-10-04T09:57:04.9130046Z  * [new branch]      perf/optimize-sync-apply-1275035387395885640 -> origin/perf/optimize-sync-apply-1275035387395885640
+2026-10-04T09:57:04.9130841Z  * [new branch]      remove-unused-annotations-10545561639732753848 -> origin/remove-unused-annotations-10545561639732753848
+2026-10-04T09:57:04.9131578Z  * [new branch]      renovate/github-actions                  -> origin/renovate/github-actions
+2026-10-04T09:57:04.9132218Z  * [new branch]      renovate/npm-astro-vulnerability         -> origin/renovate/npm-astro-vulnerability
+2026-10-04T09:57:04.9133118Z  * [new branch]      renovate/npm-vitest-vulnerability        -> origin/renovate/npm-vitest-vulnerability
+2026-10-04T09:57:04.9133802Z  * [new branch]      renovate/python-packages                 -> origin/renovate/python-packages
+2026-10-04T09:57:04.9134487Z  * [new branch]      renovate/rust-patch-and-minor-dependencies -> origin/renovate/rust-patch-and-minor-dependencies
+2026-10-04T09:57:04.9135247Z  * [new branch]      simplify-run-17721496472898320981        -> origin/simplify-run-17721496472898320981
+2026-10-04T09:57:04.9136934Z  * [new branch]      test-aas-submodel-new-7864427336340704672 -> origin/test-aas-submodel-new-7864427336340704672
+2026-10-04T09:57:04.9137693Z  * [new branch]      test-aas-submodel-new-9033270302657356574 -> origin/test-aas-submodel-new-9033270302657356574
+2026-10-04T09:57:04.9138654Z  * [new branch]      test-improvement-aas-submodel-validate-16352111261861400842 -> origin/test-improvement-aas-submodel-validate-16352111261861400842
+2026-10-04T09:57:04.9139537Z  * [new branch]      test-kairoecs-operator-3591865039723610617 -> origin/test-kairoecs-operator-3591865039723610617
+2026-10-04T09:57:04.9140518Z  * [new branch]      test/aas-property-validate-17109126646488440455 -> origin/test/aas-property-validate-17109126646488440455
+2026-10-04T09:57:04.9142007Z  * [new branch]      testing/scenario-load-seed-manifest-8999743549407576480 -> origin/testing/scenario-load-seed-manifest-8999743549407576480
+2026-10-04T09:57:04.9144246Z  * [new branch]      🧹-simplify-unescape_cell-6516245907514166575 -> origin/🧹-simplify-unescape_cell-6516245907514166575
+2026-10-04T09:57:04.9145292Z  * [new ref]         fb51687183fdd2143b9efa7bdf55efa4534858a9 -> pull/207/merge
+2026-10-04T09:57:04.9147540Z ##[endgroup]
+2026-10-04T09:57:04.9148184Z ##[group]Determining the checkout info
+2026-10-04T09:57:04.9148919Z ##[endgroup]
+2026-10-04T09:57:04.9149432Z [command]"C:\Program Files\Git\bin\git.exe" sparse-checkout disable
+2026-10-04T09:57:04.9535530Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset-all extensions.worktreeConfig
+2026-10-04T09:57:04.9833452Z ##[group]Checking out the ref
+2026-10-04T09:57:04.9834118Z [command]"C:\Program Files\Git\bin\git.exe" checkout --progress --force refs/remotes/pull/207/merge
+2026-10-04T09:57:05.3469428Z Note: switching to 'refs/remotes/pull/207/merge'.
+2026-10-04T09:57:05.3470051Z 
+2026-10-04T09:57:05.3471761Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-04T09:57:05.3472572Z changes and commit them, and you can discard any commits you make in this
+2026-10-04T09:57:05.3473643Z state without impacting any branches by switching back to a branch.
+2026-10-04T09:57:05.3507616Z 
+2026-10-04T09:57:05.3508943Z If you want to create a new branch to retain commits you create, you may
+2026-10-04T09:57:05.3509524Z do so (now or later) by using -c with the switch command. Example:
+2026-10-04T09:57:05.3509872Z 
+2026-10-04T09:57:05.3510084Z   git switch -c <new-branch-name>
+2026-10-04T09:57:05.3510409Z 
+2026-10-04T09:57:05.3510671Z Or undo this operation with:
+2026-10-04T09:57:05.3510886Z 
+2026-10-04T09:57:05.3511003Z   git switch -
+2026-10-04T09:57:05.3511197Z 
+2026-10-04T09:57:05.3511495Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-04T09:57:05.3512098Z 
+2026-10-04T09:57:05.3513104Z HEAD is now at fb51687 Merge e27ab751da8013aa120089bf218af2055a5929f8 into 1afe522239087d2a7a92caa352ffd19a4fd1b254
+2026-10-04T09:57:05.3601497Z ##[endgroup]
+2026-10-04T09:57:05.3997457Z [command]"C:\Program Files\Git\bin\git.exe" log -1 --format=%H
+2026-10-04T09:57:05.4247976Z fb51687183fdd2143b9efa7bdf55efa4534858a9
+2026-10-04T09:57:05.4288000Z ##[group]Removing auth
+2026-10-04T09:57:05.4288844Z Removing SSH command configuration
+2026-10-04T09:57:05.4295662Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T09:57:05.4576407Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T09:57:05.9735246Z Removing HTTP extra header
+2026-10-04T09:57:05.9743911Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T09:57:06.0026416Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T09:57:06.5259465Z Removing includeIf entries pointing to credentials config files
+2026-10-04T09:57:06.5269055Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T09:57:06.5516415Z includeif.gitdir:D:/a/kairos/kairos/.git.path
+2026-10-04T09:57:06.5517299Z includeif.gitdir:D:/a/kairos/kairos/.git/worktrees/*.path
+2026-10-04T09:57:06.5518857Z includeif.gitdir:/github/workspace/.git.path
+2026-10-04T09:57:06.5519699Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-04T09:57:06.5574819Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/kairos/kairos/.git.path
+2026-10-04T09:57:06.5811843Z D:\a\_temp\git-credentials-fb62aaff-3b57-4983-97a0-bd8c41a15681.config
+2026-10-04T09:57:06.5857163Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/kairos/kairos/.git.path D\:\\a\\_temp\\git\-credentials\-fb62aaff\-3b57\-4983\-97a0\-bd8c41a15681\.config
+2026-10-04T09:57:06.6177015Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:D:/a/kairos/kairos/.git/worktrees/*.path
+2026-10-04T09:57:06.6421531Z D:\a\_temp\git-credentials-fb62aaff-3b57-4983-97a0-bd8c41a15681.config
+2026-10-04T09:57:06.6462641Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:D:/a/kairos/kairos/.git/worktrees/*.path D\:\\a\\_temp\\git\-credentials\-fb62aaff\-3b57\-4983\-97a0\-bd8c41a15681\.config
+2026-10-04T09:57:06.6739274Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-04T09:57:06.6969617Z /github/runner_temp/git-credentials-fb62aaff-3b57-4983-97a0-bd8c41a15681.config
+2026-10-04T09:57:06.7013915Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-fb62aaff\-3b57\-4983\-97a0\-bd8c41a15681\.config
+2026-10-04T09:57:06.7298305Z [command]"C:\Program Files\Git\bin\git.exe" config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-04T09:57:06.7536215Z /github/runner_temp/git-credentials-fb62aaff-3b57-4983-97a0-bd8c41a15681.config
+2026-10-04T09:57:06.7582645Z [command]"C:\Program Files\Git\bin\git.exe" config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-fb62aaff\-3b57\-4983\-97a0\-bd8c41a15681\.config
+2026-10-04T09:57:06.7872409Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T09:57:07.3400292Z Removing credentials config 'D:\a\_temp\git-credentials-fb62aaff-3b57-4983-97a0-bd8c41a15681.config'
+2026-10-04T09:57:07.3414523Z ##[endgroup]
+2026-10-04T09:57:07.3785247Z ##[group]Run pwsh -NoProfile -File scripts/validate_conductor_setup.ps1
+2026-10-04T09:57:07.3786031Z [36;1mpwsh -NoProfile -File scripts/validate_conductor_setup.ps1[0m
+2026-10-04T09:57:07.4567193Z shell: C:\Program Files\PowerShell\7\pwsh.EXE -command ". '{0}'"
+2026-10-04T09:57:07.4568003Z ##[endgroup]
+2026-10-04T09:57:08.5931243Z Track no-skip claim validation passed.
+2026-10-04T09:57:08.6075842Z === Validate Conductor Phase Gates ===
+2026-10-04T09:57:08.7133736Z 
+2026-10-04T09:57:08.7148313Z 0 error(s), 0 warning(s)
+2026-10-04T09:57:08.7166278Z Conductor phase gate validation passed.
+2026-10-04T09:57:08.7287326Z === Validate Conductor Git Closeout ===
+2026-10-04T09:57:12.3332707Z 14 error(s)
+2026-10-04T09:57:12.3419344Z [
+2026-10-04T09:57:12.3419990Z   "Track 32 ledger commit does not exist locally: e2fa23dee20611ea7f6206a7302535fb43f971d6",
+2026-10-04T09:57:12.3421021Z   "Track 33 ledger commit does not exist locally: 66e91d71b24aab5ca59d34e187b7a026e5ccdc01",
+2026-10-04T09:57:12.3421836Z   "Track 34 ledger commit does not exist locally: 190758d27ad9e38c9e3404c969ce817237dd2491",
+2026-10-04T09:57:12.3422775Z   "Track 35 ledger commit does not exist locally: aaf9646b447d6f3d55582919ddb73f07ff9155c3",
+2026-10-04T09:57:12.3423366Z   "Track 39 ledger commit does not exist locally: 9238d682902fa90a52d32bdb209574927f816d97",
+2026-10-04T09:57:12.3423954Z   "Track 45 ledger commit does not exist locally: c1ae99b516db2c7375508ff0b02d5536f385ecff",
+2026-10-04T09:57:12.3424528Z   "Track 44 ledger commit does not exist locally: 9478a9a0e88842800a30fd4233ca7a337f87bf84",
+2026-10-04T09:57:12.3425139Z   "Track 46 ledger commit does not exist locally: 1c26a05af951ba8492a059aecb7e40fcdeb9bd6a",
+2026-10-04T09:57:12.3425738Z   "Track 42 ledger commit does not exist locally: b6012d86056076c269d27e7df8111a5b5c7890fb",
+2026-10-04T09:57:12.3426355Z   "Track 43 ledger commit does not exist locally: 5c007d1499503bb17e46c9ca869c9d3d621e756a",
+2026-10-04T09:57:12.3426929Z   "Track 47 ledger commit does not exist locally: 8a6bf6673e6f4a8226408550b4c7ec11b32fb347",
+2026-10-04T09:57:12.3427507Z   "Track 54 ledger commit does not exist locally: e969bbef99836253d361bfb4c7546f583c74d002",
+2026-10-04T09:57:12.3428062Z   "Track 56 ledger commit does not exist locally: 0238fc11ef7a179bbb2f2bf8090a1747f803e915",
+2026-10-04T09:57:12.3428665Z   "Track 57 ledger commit does not exist locally: 0238fc11ef7a179bbb2f2bf8090a1747f803e915"
+2026-10-04T09:57:12.3429110Z ]
+2026-10-04T09:57:26.4945627Z     Updating crates.io index
+2026-10-04T09:57:27.5511492Z  Downloading crates ...
+2026-10-04T09:57:27.8544219Z   Downloaded cfg-if v1.0.4
+2026-10-04T09:57:27.9066493Z   Downloaded anstyle-wincon v3.0.11
+2026-10-04T09:57:27.9359192Z   Downloaded windows-link v0.2.1
+2026-10-04T09:57:28.0275008Z   Downloaded rand_xorshift v0.4.0
+2026-10-04T09:57:28.0364536Z   Downloaded is_terminal_polyfill v1.70.2
+2026-10-04T09:57:28.0441264Z   Downloaded same-file v1.0.6
+2026-10-04T09:57:28.0649889Z   Downloaded once_cell_polyfill v1.70.2
+2026-10-04T09:57:28.0732826Z   Downloaded plotters-svg v0.3.7
+2026-10-04T09:57:28.0811674Z   Downloaded utf8parse v0.2.2
+2026-10-04T09:57:28.0894270Z   Downloaded plotters-backend v0.3.7
+2026-10-04T09:57:28.1328570Z   Downloaded anstyle-query v1.1.5
+2026-10-04T09:57:28.1470970Z   Downloaded heck v0.5.0
+2026-10-04T09:57:28.1599550Z   Downloaded is-terminal v0.4.17
+2026-10-04T09:57:28.1673393Z   Downloaded unarray v0.1.4
+2026-10-04T09:57:28.1848993Z   Downloaded clap_lex v1.0.0
+2026-10-04T09:57:28.1932907Z   Downloaded colorchoice v1.0.5
+2026-10-04T09:57:28.2011058Z   Downloaded itoa v1.0.18
+2026-10-04T09:57:28.2149885Z   Downloaded ciborium-ll v0.2.2
+2026-10-04T09:57:28.2355441Z   Downloaded cast v0.3.0
+2026-10-04T09:57:28.2467725Z   Downloaded ciborium-io v0.2.2
+2026-10-04T09:57:28.2533151Z   Downloaded winapi-util v0.1.11
+2026-10-04T09:57:28.2648131Z   Downloaded anes v0.1.6
+2026-10-04T09:57:28.2974750Z   Downloaded anstream v1.0.0
+2026-10-04T09:57:28.3192206Z   Downloaded anstyle v1.0.14
+2026-10-04T09:57:28.3327987Z   Downloaded criterion-plot v0.5.0
+2026-10-04T09:57:28.3488921Z   Downloaded strsim v0.11.1
+2026-10-04T09:57:28.3588340Z   Downloaded walkdir v2.5.0
+2026-10-04T09:57:28.3793611Z   Downloaded rand_core v0.9.5
+2026-10-04T09:57:28.3950879Z   Downloaded oorandom v11.1.5
+2026-10-04T09:57:28.4020861Z   Downloaded ppv-lite86 v0.2.21
+2026-10-04T09:57:28.4146837Z   Downloaded either v1.15.0
+2026-10-04T09:57:28.4295709Z   Downloaded crossbeam-deque v0.8.6
+2026-10-04T09:57:28.4396456Z   Downloaded anstyle-parse v1.0.0
+2026-10-04T09:57:28.4544747Z   Downloaded rand_chacha v0.9.0
+2026-10-04T09:57:28.4642003Z   Downloaded tinytemplate v1.2.1
+2026-10-04T09:57:28.4850412Z   Downloaded quote v1.0.45
+2026-10-04T09:57:28.5136577Z   Downloaded zmij v1.0.21
+2026-10-04T09:57:28.5319831Z   Downloaded autocfg v1.5.0
+2026-10-04T09:57:28.5550429Z   Downloaded once_cell v1.21.4
+2026-10-04T09:57:28.5804361Z   Downloaded crossbeam-epoch v0.9.20
+2026-10-04T09:57:28.6004774Z   Downloaded crossbeam-utils v0.8.21
+2026-10-04T09:57:28.6314510Z   Downloaded ciborium v0.2.2
+2026-10-04T09:57:28.6523002Z   Downloaded half v2.7.1
+2026-10-04T09:57:28.6738259Z   Downloaded serde_core v1.0.229
+2026-10-04T09:57:28.6947462Z   Downloaded bitflags v2.13.2
+2026-10-04T09:57:28.7606769Z   Downloaded clap v4.5.61
+2026-10-04T09:57:28.8731929Z   Downloaded clap_derive v4.5.61
+2026-10-04T09:57:28.8903632Z   Downloaded getrandom v0.3.4
+2026-10-04T09:57:28.9263422Z   Downloaded unicode-ident v1.0.24
+2026-10-04T09:57:28.9530009Z   Downloaded proc-macro2 v1.0.106
+2026-10-04T09:57:28.9823033Z   Downloaded rayon-core v1.13.0
+2026-10-04T09:57:29.0173024Z   Downloaded serde_derive v1.0.229
+2026-10-04T09:57:29.0505074Z   Downloaded aho-corasick v1.1.4
+2026-10-04T09:57:29.1718808Z   Downloaded serde v1.0.229
+2026-10-04T09:57:29.2067144Z   Downloaded zerocopy-derive v0.8.48
+2026-10-04T09:57:29.9677152Z   Downloaded num-traits v0.2.19
+2026-10-04T09:57:29.9989747Z   Downloaded memchr v2.8.0
+2026-10-04T09:57:30.0474032Z   Downloaded rand v0.9.5
+2026-10-04T09:57:30.1744224Z   Downloaded itertools v0.10.5
+2026-10-04T09:57:30.2961857Z   Downloaded criterion v0.5.1
+2026-10-04T09:57:30.3701220Z   Downloaded plotters v0.3.7
+2026-10-04T09:57:30.4685598Z   Downloaded regex v1.12.3
+2026-10-04T09:57:30.5362060Z   Downloaded serde_json v1.0.151
+2026-10-04T09:57:30.6103921Z   Downloaded rayon v1.12.0
+2026-10-04T09:57:30.7146843Z   Downloaded clap_builder v4.5.61
+2026-10-04T09:57:30.7824347Z   Downloaded proptest v1.11.0
+2026-10-04T09:57:31.4472884Z   Downloaded zerocopy v0.8.48
+2026-10-04T09:57:33.1117828Z   Downloaded syn v2.0.117
+2026-10-04T09:57:33.5146479Z   Downloaded syn v3.0.6
+2026-10-04T09:57:33.8512521Z   Downloaded regex-syntax v0.8.10
+2026-10-04T09:57:34.4938389Z   Downloaded regex-automata v0.4.14
+2026-10-04T09:57:35.0652169Z   Downloaded windows-sys v0.61.2
+2026-10-04T09:57:36.6549619Z    Compiling kairo-ecs-types v0.0.0 (D:\a\kairos\kairos\crates\kairo-ecs-types)
+2026-10-04T09:57:36.6551804Z    Compiling serde_core v1.0.229
+2026-10-04T09:57:36.6552465Z    Compiling zmij v1.0.21
+2026-10-04T09:57:36.6552844Z    Compiling serde_json v1.0.151
+2026-10-04T09:57:45.6613484Z    Compiling kairo-ecs-core v0.0.0 (D:\a\kairos\kairos\crates\kairo-ecs-core)
+2026-10-04T09:57:47.0646886Z    Compiling memchr v2.8.0
+2026-10-04T09:57:48.5983859Z    Compiling itoa v1.0.18
+2026-10-04T09:57:48.9423492Z    Compiling kairo-ecs-state v0.0.0 (D:\a\kairos\kairos\crates\kairo-ecs-state)
+2026-10-04T09:57:49.2884264Z    Compiling kairo-ecs-rng v0.0.0 (D:\a\kairos\kairos\crates\kairo-ecs-rng)
+2026-10-04T09:57:49.4090784Z    Compiling proc-macro2 v1.0.106
+2026-10-04T09:57:49.9534021Z    Compiling quote v1.0.45
+2026-10-04T09:57:50.0002496Z    Compiling unicode-ident v1.0.24
+2026-10-04T09:57:50.1821547Z    Compiling kairo-ecs-pdes v0.0.0 (D:\a\kairos\kairos\crates\kairo-ecs-pdes)
+2026-10-04T09:57:50.3064002Z    Compiling cfg-if v1.0.4
+2026-10-04T09:57:50.3561043Z    Compiling zerocopy v0.8.48
+2026-10-04T09:57:50.9094834Z    Compiling windows-link v0.2.1
+2026-10-04T09:57:50.9622633Z    Compiling windows-sys v0.61.2
+2026-10-04T09:57:51.8154301Z    Compiling syn v2.0.117
+2026-10-04T09:57:51.9725576Z    Compiling autocfg v1.5.0
+2026-10-04T09:57:52.5120046Z    Compiling num-traits v0.2.19
+2026-10-04T09:57:52.5852114Z    Compiling syn v3.0.6
+2026-10-04T09:57:52.8944700Z    Compiling serde v1.0.229
+2026-10-04T09:57:53.4939313Z    Compiling regex-syntax v0.8.10
+2026-10-04T09:57:55.4497267Z    Compiling crossbeam-utils v0.8.21
+2026-10-04T09:57:55.8086214Z    Compiling crossbeam-epoch v0.9.20
+2026-10-04T09:57:56.0592821Z    Compiling serde_derive v1.0.229
+2026-10-04T09:57:56.0794749Z    Compiling utf8parse v0.2.2
+2026-10-04T09:57:56.1868842Z    Compiling once_cell_polyfill v1.70.2
+2026-10-04T09:57:56.2978141Z    Compiling anstyle v1.0.14
+2026-10-04T09:57:56.5695617Z    Compiling anstyle-wincon v3.0.11
+2026-10-04T09:57:56.9762231Z    Compiling anstyle-parse v1.0.0
+2026-10-04T09:57:57.2208306Z    Compiling zerocopy-derive v0.8.48
+2026-10-04T09:57:58.0385929Z    Compiling anstyle-query v1.1.5
+2026-10-04T09:57:58.2674213Z    Compiling kairo-ecs-ffi v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-ffi)
+2026-10-04T09:57:58.6213207Z    Compiling colorchoice v1.0.5
+2026-10-04T09:57:58.7163601Z    Compiling is_terminal_polyfill v1.70.2
+2026-10-04T09:57:58.7873328Z    Compiling anstream v1.0.0
+2026-10-04T09:57:59.3481749Z    Compiling strsim v0.11.1
+2026-10-04T09:57:59.8000170Z    Compiling rayon-core v1.13.0
+2026-10-04T09:57:59.9678856Z    Compiling clap_lex v1.0.0
+2026-10-04T09:57:59.9982813Z    Compiling heck v0.5.0
+2026-10-04T09:58:00.2768474Z    Compiling either v1.15.0
+2026-10-04T09:58:00.3270312Z    Compiling clap_derive v4.5.61
+2026-10-04T09:58:00.6158940Z    Compiling clap_builder v4.5.61
+2026-10-04T09:58:01.3371406Z    Compiling crossbeam-deque v0.8.6
+2026-10-04T09:58:01.5445862Z    Compiling winapi-util v0.1.11
+2026-10-04T09:58:01.8649568Z    Compiling plotters-backend v0.3.7
+2026-10-04T09:58:02.2473665Z    Compiling ciborium-io v0.2.2
+2026-10-04T09:58:02.3169644Z    Compiling getrandom v0.3.4
+2026-10-04T09:58:02.6565210Z    Compiling kairo-ecs-game-theory v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-game-theory)
+2026-10-04T09:58:02.9600654Z    Compiling plotters-svg v0.3.7
+2026-10-04T09:58:03.2299562Z    Compiling clap v4.5.61
+2026-10-04T09:58:03.2915700Z    Compiling same-file v1.0.6
+2026-10-04T09:58:03.5489609Z    Compiling itertools v0.10.5
+2026-10-04T09:58:04.7786348Z    Compiling regex-automata v0.4.14
+2026-10-04T09:58:05.0150663Z    Compiling half v2.7.1
+2026-10-04T09:58:05.3168902Z    Compiling cast v0.3.0
+2026-10-04T09:58:05.4620143Z    Compiling ciborium-ll v0.2.2
+2026-10-04T09:58:05.5989951Z    Compiling criterion-plot v0.5.0
+2026-10-04T09:58:05.7181346Z    Compiling ciborium v0.2.2
+2026-10-04T09:58:06.3398229Z    Compiling rayon v1.12.0
+2026-10-04T09:58:06.6245824Z    Compiling walkdir v2.5.0
+2026-10-04T09:58:07.2130139Z    Compiling regex v1.12.3
+2026-10-04T09:58:07.9212517Z    Compiling plotters v0.3.7
+2026-10-04T09:58:08.2860789Z    Compiling tinytemplate v1.2.1
+2026-10-04T09:58:09.1282644Z    Compiling is-terminal v0.4.17
+2026-10-04T09:58:09.3172291Z    Compiling anes v0.1.6
+2026-10-04T09:58:09.4194698Z    Compiling oorandom v11.1.5
+2026-10-04T09:58:09.4730675Z    Compiling once_cell v1.21.4
+2026-10-04T09:58:09.5370678Z    Compiling rand_core v0.9.5
+2026-10-04T09:58:09.5682578Z    Compiling ppv-lite86 v0.2.21
+2026-10-04T09:58:09.5982444Z    Compiling kairo-ecs-gpu v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-gpu)
+2026-10-04T09:58:09.7983650Z    Compiling criterion v0.5.1
+2026-10-04T09:58:09.8575661Z    Compiling rand v0.9.5
+2026-10-04T09:58:10.0925455Z    Compiling rand_chacha v0.9.0
+2026-10-04T09:58:10.4592018Z    Compiling rand_xorshift v0.4.0
+2026-10-04T09:58:10.5180283Z    Compiling unarray v0.1.4
+2026-10-04T09:58:10.6018973Z    Compiling bitflags v2.13.2
+2026-10-04T09:58:10.6036875Z    Compiling kairo-ecs-game-ontology v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-game-ontology)
+2026-10-04T09:58:10.6119064Z    Compiling kairo-ecs-arrow v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-arrow)
+2026-10-04T09:58:10.8735827Z    Compiling proptest v1.11.0
+2026-10-04T09:58:11.3587703Z    Compiling kairo-ecs-abm v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-abm)
+2026-10-04T09:58:11.5215401Z    Compiling kairo-ecs-des v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-des)
+2026-10-04T09:58:11.6207095Z    Compiling kairo-ecs-fmi v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-fmi)
+2026-10-04T09:58:11.8046491Z    Compiling kairo-ecs-debug v0.0.0 (D:\a\kairos\kairos\crates\kairo-ecs-debug)
+2026-10-04T09:58:11.8554485Z    Compiling kairo-ecs-viz v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-viz)
+2026-10-04T09:58:12.7001413Z    Compiling kairo-ecs-ml v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-ml)
+2026-10-04T09:58:13.4268134Z    Compiling kairo-ecs-streaming v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-streaming)
+2026-10-04T09:58:13.5410822Z    Compiling kairo-ecs-webgpu v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-webgpu)
+2026-10-04T09:58:13.9548162Z    Compiling kairo-ecs-wasm v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-wasm)
+2026-10-04T09:58:14.1766411Z    Compiling kairo-ecs-cs-bridge v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-cs-bridge)
+2026-10-04T09:58:14.2365087Z    Compiling kairo-ecs-uniffi v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-uniffi)
+2026-10-04T09:58:14.3814897Z    Compiling kairo-ecs-diplomat v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-diplomat)
+2026-10-04T09:58:14.4499280Z    Compiling kairo-ecs-mpi v0.0.0 (D:\a\kairos\kairos\crates\kairo-ecs-mpi)
+2026-10-04T09:58:14.4921672Z    Compiling kairo-ecs-grpc v0.0.0 (D:\a\kairos\kairos\crates\kairo-ecs-grpc)
+2026-10-04T09:58:15.5305259Z    Compiling kairo-ecs-bench v0.1.0 (D:\a\kairos\kairos\crates\kairo-ecs-bench)
+2026-10-04T09:58:26.5337102Z error[E0432]: unresolved imports `kairo_ecs_pdes::LogicalEventId`, `kairo_ecs_pdes::OptimisticAuthority`, `kairo_ecs_pdes::OptimisticError`, `kairo_ecs_pdes::OptimisticLimits`, `kairo_ecs_pdes::OptimisticMessage`, `kairo_ecs_pdes::OptimisticMessageKind`, `kairo_ecs_pdes::OptimisticOutboundStatus`, `kairo_ecs_pdes::OptimisticOwnedOptions`, `kairo_ecs_pdes::OptimisticProcess`, `kairo_ecs_pdes::OptimisticRuntime`, `kairo_ecs_pdes::OptimisticRuntimeReport`, `kairo_ecs_pdes::OptimisticStateError`, `kairo_ecs_pdes::OptimisticStateToken`
+2026-10-04T09:58:26.5342373Z   --> crates\kairo-ecs-pdes\tests\optimistic_owned_construction_heldout.rs:6:5
+2026-10-04T09:58:26.5344842Z    |
+2026-10-04T09:58:26.5346014Z  6 |     LogicalEventId, LpId, OptimisticAuthority, OptimisticError, OptimisticLimits,
+2026-10-04T09:58:26.5379530Z    |     ^^^^^^^^^^^^^^        ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^ no `OptimisticLimits` in the root
+2026-10-04T09:58:26.5381119Z    |     |                     |                    |
+2026-10-04T09:58:26.5382451Z    |     |                     |                    no `OptimisticError` in the root
+2026-10-04T09:58:26.5387432Z    |     |                     no `OptimisticAuthority` in the root
+2026-10-04T09:58:26.5388453Z    |     no `LogicalEventId` in the root
+2026-10-04T09:58:26.5389421Z  7 |     OptimisticMessage, OptimisticMessageKind, OptimisticOutboundStatus, OptimisticOwnedOptions,
+2026-10-04T09:58:26.5418733Z    |     ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^ no `OptimisticOwnedOptions` in the root
+2026-10-04T09:58:26.5420106Z    |     |                  |                      |
+2026-10-04T09:58:26.5421224Z    |     |                  |                      no `OptimisticOutboundStatus` in the root
+2026-10-04T09:58:26.5453604Z    |     |                  no `OptimisticMessageKind` in the root
+2026-10-04T09:58:26.5455054Z    |     no `OptimisticMessage` in the root
+2026-10-04T09:58:26.5456289Z  8 |     OptimisticProcess, OptimisticRuntime, OptimisticRuntimeReport, OptimisticStateError,
+2026-10-04T09:58:26.5518909Z    |     ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5521703Z    |     |                  |
+2026-10-04T09:58:26.5535276Z    |     |                  no `OptimisticRuntime` in the root
+2026-10-04T09:58:26.5555784Z    |     no `OptimisticProcess` in the root
+2026-10-04T09:58:26.5586329Z  9 |     OptimisticStateToken, PartitionPlan, RemoteEvent, Tick,
+2026-10-04T09:58:26.5628525Z    |     ^^^^^^^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5629382Z    |
+2026-10-04T09:58:26.5632134Z note: found an item that was configured out
+2026-10-04T09:58:26.5633087Z   --> crates\kairo-ecs-pdes\src\lib.rs:19:5
+2026-10-04T09:58:26.5634346Z    |
+2026-10-04T09:58:26.5634939Z 17 | #[cfg(feature = "time-warp")]
+2026-10-04T09:58:26.5635821Z    |       --------------------- the item is gated behind the `time-warp` feature
+2026-10-04T09:58:26.5636735Z 18 | pub use optimistic::{
+2026-10-04T09:58:26.5637638Z 19 |     LogicalEventId, NativeAccountingAuthority, NativeAdmissionCapability,
+2026-10-04T09:58:26.5638544Z    |     ^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5639148Z note: found an item that was configured out
+2026-10-04T09:58:26.5640318Z   --> crates\kairo-ecs-pdes\src\lib.rs:22:55
+2026-10-04T09:58:26.5640995Z    |
+2026-10-04T09:58:26.5641538Z 17 | #[cfg(feature = "time-warp")]
+2026-10-04T09:58:26.5642313Z    |       --------------------- the item is gated behind the `time-warp` feature
+2026-10-04T09:58:26.5643071Z ...
+2026-10-04T09:58:26.5643948Z 22 |     NativeTransitionId, OptimisticAccountingSnapshot, OptimisticAuthority, OptimisticError,
+2026-10-04T09:58:26.5644966Z    |                                                       ^^^^^^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5645724Z note: found an item that was configured out
+2026-10-04T09:58:26.5646445Z   --> crates\kairo-ecs-pdes\src\lib.rs:22:76
+2026-10-04T09:58:26.5647054Z    |
+2026-10-04T09:58:26.5647536Z 17 | #[cfg(feature = "time-warp")]
+2026-10-04T09:58:26.5648297Z    |       --------------------- the item is gated behind the `time-warp` feature
+2026-10-04T09:58:26.5649029Z ...
+2026-10-04T09:58:26.5649856Z 22 |     NativeTransitionId, OptimisticAccountingSnapshot, OptimisticAuthority, OptimisticError,
+2026-10-04T09:58:26.5650919Z    |                                                                            ^^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5651639Z note: found an item that was configured out
+2026-10-04T09:58:26.5652403Z   --> crates\kairo-ecs-pdes\src\lib.rs:23:54
+2026-10-04T09:58:26.5653029Z    |
+2026-10-04T09:58:26.5654226Z 17 | #[cfg(feature = "time-warp")]
+2026-10-04T09:58:26.5655076Z    |       --------------------- the item is gated behind the `time-warp` feature
+2026-10-04T09:58:26.5655853Z ...
+2026-10-04T09:58:26.5656662Z 23 |     OptimisticEventOrderKey, OptimisticFossilReport, OptimisticLimits, OptimisticMessage,
+2026-10-04T09:58:26.5657605Z    |                                                      ^^^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5658306Z note: found an item that was configured out
+2026-10-04T09:58:26.5658999Z   --> crates\kairo-ecs-pdes\src\lib.rs:23:72
+2026-10-04T09:58:26.5659637Z    |
+2026-10-04T09:58:26.5660191Z 17 | #[cfg(feature = "time-warp")]
+2026-10-04T09:58:26.5661002Z    |       --------------------- the item is gated behind the `time-warp` feature
+2026-10-04T09:58:26.5661703Z ...
+2026-10-04T09:58:26.5662495Z 23 |     OptimisticEventOrderKey, OptimisticFossilReport, OptimisticLimits, OptimisticMessage,
+2026-10-04T09:58:26.5663478Z    |                                                                        ^^^^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5664339Z note: found an item that was configured out
+2026-10-04T09:58:26.5665073Z   --> crates\kairo-ecs-pdes\src\lib.rs:24:5
+2026-10-04T09:58:26.5665705Z    |
+2026-10-04T09:58:26.5666219Z 17 | #[cfg(feature = "time-warp")]
+2026-10-04T09:58:26.5666911Z    |       --------------------- the item is gated behind the `time-warp` feature
+2026-10-04T09:58:26.5667663Z ...
+2026-10-04T09:58:26.5668445Z 24 |     OptimisticMessageKind, OptimisticNativeCleanupFailure, OptimisticNativeCutFailure,
+2026-10-04T09:58:26.5670568Z    |     ^^^^^^^^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5671261Z note: found an item that was configured out
+2026-10-04T09:58:26.5674198Z   --> crates\kairo-ecs-pdes\src\lib.rs:25:32
+2026-10-04T09:58:26.5675057Z    |
+2026-10-04T09:58:26.5675590Z 17 | #[cfg(feature = "time-warp")]
+2026-10-04T09:58:26.5676323Z    |       --------------------- the item is gated behind the `time-warp` feature
+2026-10-04T09:58:26.5677083Z ...
+2026-10-04T09:58:26.5677911Z 25 |     OptimisticNativeCutReport, OptimisticOutboundStatus, OptimisticOutboundView,
+2026-10-04T09:58:26.5678800Z    |                                ^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5679483Z note: found an item that was configured out
+2026-10-04T09:58:26.5680202Z   --> crates\kairo-ecs-pdes\src\lib.rs:26:34
+2026-10-04T09:58:26.5680841Z    |
+2026-10-04T09:58:26.5681336Z 17 | #[cfg(feature = "time-warp")]
+2026-10-04T09:58:26.5682089Z    |       --------------------- the item is gated behind the `time-warp` feature
+2026-10-04T09:58:26.5682814Z ...
+2026-10-04T09:58:26.5683942Z 26 |     OptimisticOwnedFailurePhase, OptimisticOwnedOptions, OptimisticOwnedRunFailure,
+2026-10-04T09:58:26.5685159Z    |                                  ^^^^^^^^^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5685840Z note: found an item that was configured out
+2026-10-04T09:58:26.5686564Z   --> crates\kairo-ecs-pdes\src\lib.rs:27:51
+2026-10-04T09:58:26.5687183Z    |
+2026-10-04T09:58:26.5687683Z 17 | #[cfg(feature = "time-warp")]
+2026-10-04T09:58:26.5688466Z    |       --------------------- the item is gated behind the `time-warp` feature
+2026-10-04T09:58:26.5689167Z ...
+2026-10-04T09:58:26.5690012Z 27 |     OptimisticOwnedStep, OptimisticOwnedStepKind, OptimisticProcess, OptimisticRunProgress,
+2026-10-04T09:58:26.5690994Z    |                                                   ^^^^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5691688Z note: found an item that was configured out
+2026-10-04T09:58:26.5692383Z   --> crates\kairo-ecs-pdes\src\lib.rs:28:5
+2026-10-04T09:58:26.5693024Z    |
+2026-10-04T09:58:26.5693730Z 17 | #[cfg(feature = "time-warp")]
+2026-10-04T09:58:26.5695355Z    |       --------------------- the item is gated behind the `time-warp` feature
+2026-10-04T09:58:26.5696539Z ...
+2026-10-04T09:58:26.5697371Z 28 |     OptimisticRuntime, OptimisticRuntimeReport, OptimisticSendKey, OptimisticStateError,
+2026-10-04T09:58:26.5698897Z    |     ^^^^^^^^^^^^^^^^^
+2026-10-04T09:58:26.5699353Z 
+2026-10-04T09:58:26.8118261Z For more information about this error, try `rustc --explain E0432`.
+2026-10-04T09:58:26.8229565Z error: could not compile `kairo-ecs-pdes` (test "optimistic_owned_construction_heldout") due to 1 previous error
+2026-10-04T09:58:26.8233271Z warning: build failed, waiting for other jobs to finish...
+2026-10-04T09:58:28.2583099Z [31;1mException: [0mD:\a\kairos\kairos\scripts\validate_conductor_setup.ps1:30[0m
+2026-10-04T09:58:28.2583874Z [31;1m[0m[36;1mLine |[0m
+2026-10-04T09:58:28.2585079Z [31;1m[0m[36;1m[36;1m  30 | [0m         [36;1mthrow "Cargo workspace tests failed with exit code $LASTEXITC[0m …[0m
+2026-10-04T09:58:28.2586171Z [31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+2026-10-04T09:58:28.2587225Z [31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mCargo workspace tests failed with exit code 101[0m
+2026-10-04T09:58:28.3816984Z ##[error]Process completed with exit code 1.
+2026-10-04T09:58:28.4113365Z Post job cleanup.
+2026-10-04T09:58:28.5835469Z [command]"C:\Program Files\Git\bin\git.exe" version
+2026-10-04T09:58:28.6115613Z git version 2.55.0.windows.5
+2026-10-04T09:58:28.6192059Z Temporarily overriding HOME='D:\a\_temp\6e9e06b3-51cf-4e60-b32a-59e04717276a' before making global git config changes
+2026-10-04T09:58:28.6193561Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-04T09:58:28.6204233Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\kairos\kairos
+2026-10-04T09:58:28.6528441Z Removing SSH command configuration
+2026-10-04T09:58:28.6538453Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+2026-10-04T09:58:28.6827965Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+2026-10-04T09:58:29.2238252Z Removing HTTP extra header
+2026-10-04T09:58:29.2249347Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-04T09:58:29.2561826Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+2026-10-04T09:58:29.7595460Z Removing includeIf entries pointing to credentials config files
+2026-10-04T09:58:29.7609596Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-04T09:58:29.7897069Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+2026-10-04T09:58:30.3247794Z Cleaning up orphan processes
+2026-10-04T09:58:30.4095345Z Terminate orphan process: pid (9124) (vctip)
