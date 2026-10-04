@@ -6,6 +6,9 @@
 //! into a counted trace exclusion; an ambiguous value is never replaced with an
 //! invented instant. This is separate from the legacy `event_log.v1` smoke API.
 
+/// Lossless normalized UTC storage companions; source parsing stays separate.
+pub mod utc_codec;
+
 /// Stable reason codes for rejecting temporal or source-semantic input.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
 pub enum TemporalError {
