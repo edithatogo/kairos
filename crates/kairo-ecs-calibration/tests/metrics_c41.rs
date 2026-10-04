@@ -26,7 +26,7 @@ const RESULT_KEYS: &[&str] = &[
 fn fixture_bytes() -> Vec<u8> {
     fs::read(
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../..")
+            .join("../..")
             .join(FIXTURE_PATH),
     )
     .expect("C4.1 fixture file must be integrated at conformance/c41/fixtures.json")
@@ -254,6 +254,41 @@ fn compare_report(fx: &Value, report: &Value, bytes_hash: &str) -> Result<(), St
     }
     Ok(())
 }
+fn compare_runtime_report(fx: &Value, report: &Value, hash: &str) -> Result<(), String> {
+    let p = report
+        .get("provenance")
+        .and_then(Value::as_object)
+        .ok_or("provenance")?;
+    if p.get("kind").and_then(Value::as_str) != Some("runtime_candidate") {
+        return Err("runtime gate rejects comparator mocks".into());
+    }
+    let commit = p
+        .get("producer_commit")
+        .and_then(Value::as_str)
+        .ok_or("producer_commit")?;
+    if commit.len() != 40 || !commit.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return Err("runtime producer requires exact commit".into());
+    }
+    if p.get("producer_api")
+        .and_then(Value::as_str)
+        .filter(|s| !s.trim().is_empty())
+        .is_none()
+    {
+        return Err("runtime producer API binding required".into());
+    }
+    compare_report(fx, report, hash)
+}
+#[test]
+fn runtime_gate_rejects_mock_and_missing_producer_binding() {
+    let fx = fixtures();
+    let mock = mock_report(&fx);
+    let hash = fixture_sha();
+    assert!(compare_runtime_report(&fx, &mock, &hash).is_err());
+    let mut unbound = mock.clone();
+    unbound["provenance"]["kind"] = json!("runtime_candidate");
+    unbound["provenance"]["producer_commit"] = json!("a".repeat(40));
+    assert!(compare_runtime_report(&fx, &unbound, &hash).is_err());
+}
 fn mock_report(fx: &Value) -> Value {
     let cases: Vec<Value> = fx["cases"]
         .as_array()
@@ -478,5 +513,6 @@ fn c42_candidate_report() {
         .expect("set C41_CANDIDATE_REPORT to an actual C4.2 candidate report");
     let bytes = fs::read(path).expect("read actual candidate report");
     let report: Value = serde_json::from_slice(&bytes).expect("candidate report JSON");
-    compare_report(&fixtures(), &report, &fixture_sha()).expect("C4.2 candidate report conforms");
+    compare_runtime_report(&fixtures(), &report, &fixture_sha())
+        .expect("C4.2 candidate report conforms");
 }
