@@ -1,3 +1,5 @@
+#![cfg(feature = "time-warp")]
+
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
