@@ -902,11 +902,21 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             }
         }
         #[allow(deprecated)]
-        let runtime_id = NEXT_RUNTIME_ID
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |value| {
-                value.checked_add(1)
-            })
-            .map_err(|_| OptimisticError::RuntimeIdentityExhausted)?;
+        let mut candidate = NEXT_RUNTIME_ID.load(Ordering::Acquire);
+        let runtime_id = loop {
+            let successor = candidate
+                .checked_add(1)
+                .ok_or(OptimisticError::RuntimeIdentityExhausted)?;
+            match NEXT_RUNTIME_ID.compare_exchange_weak(
+                candidate,
+                successor,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            ) {
+                Ok(previous) => break previous,
+                Err(current) => candidate = current,
+            }
+        };
         let mut states = BTreeMap::new();
         for (lp_id, process) in processes {
             let snapshot = catch_unwind(AssertUnwindSafe(|| process.snapshot()))
@@ -1032,11 +1042,21 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             }
         }
 
-        let runtime_id = NEXT_RUNTIME_ID
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |value| {
-                value.checked_add(1)
-            })
-            .map_err(|_| OptimisticError::RuntimeIdentityExhausted)?;
+        let mut candidate = NEXT_RUNTIME_ID.load(Ordering::Acquire);
+        let runtime_id = loop {
+            let successor = candidate
+                .checked_add(1)
+                .ok_or(OptimisticError::RuntimeIdentityExhausted)?;
+            match NEXT_RUNTIME_ID.compare_exchange_weak(
+                candidate,
+                successor,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            ) {
+                Ok(previous) => break previous,
+                Err(current) => candidate = current,
+            }
+        };
         let mut states = BTreeMap::new();
         for (lp_id, process) in owned_processes {
             let snapshot = catch_unwind(AssertUnwindSafe(|| process.snapshot()))
