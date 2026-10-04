@@ -9,7 +9,7 @@ from typing import Any
 import pyarrow as pa
 
 FORMAT = "careops.calibration.physical"
-PHYSICAL_VERSION = "1"
+PHYSICAL_VERSION = "2"
 LOGICAL_SCHEMA_SHA256 = "8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842"
 U128_MAX = (1 << 128) - 1
 I128_MIN, I128_MAX = -(1 << 127), (1 << 127) - 1
@@ -94,7 +94,10 @@ TRACE_EXCLUSION_SCHEMA = _schema("trace_exclusion.v1", [
     _field("record_type", pa.string(), False), _field("schema_version", pa.string(), False),
     _field("dataset_id", pa.string(), False), _field("mapping_version", pa.string(), False),
     _field("source_event_key", pa.string(), False), _field("raw_event", _raw_event(), False),
-    _field("raw_time_values", pa.map_(pa.string(), pa.string()), False),
+    _field("raw_time_values", pa.list_(pa.field("element", pa.struct([
+        _field("key", pa.string(), False, "raw_time_values.@key"),
+        _field("value", pa.string(), True, "raw_time_values.@value"),
+    ]), nullable=False)), False, encoding="sorted_unique_entries_v2"),
     _field("exclusion_reason", pa.string(), False), _field("lineage", _lineage("lineage"), False),
     _field("detail", pa.string()),
 ])
@@ -324,6 +327,11 @@ def _decode_time(value: Any, path: str, absent: set[str]) -> dict[str, Any] | No
 
 
 def _encode_value(value: Any, dtype: pa.DataType, path: str, absent: set[str]) -> Any:
+    if path == "raw_time_values":
+        if not isinstance(value, dict) or any(not isinstance(k, str) or
+                v is not None and not isinstance(v, str) for k, v in value.items()):
+            raise ValueError("raw_time_values must map strings to nullable strings")
+        return [{"key": k, "value": value[k]} for k in sorted(value)]
     if pa.types.is_struct(dtype):
         if value is None:
             return None
@@ -378,6 +386,16 @@ def _encode_value(value: Any, dtype: pa.DataType, path: str, absent: set[str]) -
 
 
 def _decode_value(value: Any, dtype: pa.DataType, path: str, absent: set[str]) -> Any:
+    if path == "raw_time_values":
+        if not isinstance(value, list) or any(not isinstance(entry, dict) or
+                set(entry) != {"key", "value"} or not isinstance(entry["key"], str) or
+                entry["value"] is not None and not isinstance(entry["value"], str)
+                for entry in value):
+            raise ValueError("raw_time_values entries must have typed key/value fields")
+        keys = [entry["key"] for entry in value]
+        if keys != sorted(set(keys)):
+            raise ValueError("raw_time_values keys must be sorted and unique")
+        return {entry["key"]: entry["value"] for entry in value}
     if pa.types.is_struct(dtype):
         if value is None:
             return None
