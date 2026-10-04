@@ -111,6 +111,13 @@ impl ScanState {
             *self.report.reasons.entry(reason.to_owned()).or_default() += 1;
         }
         state.censored |= censored;
+        if reason.contains("occupancy")
+            || reason == "missing_resource_key"
+            || reason == "missing_location_key"
+            || reason == "missing_or_invalid_capacity"
+        {
+            self.report.resource_feasible = false;
+        }
     }
 }
 
@@ -619,7 +626,7 @@ fn validate_policy(policy: &ValidationPolicy) -> Result<(), String> {
     if b.max_cases == 0 || b.max_state_entries == 0 || b.max_record_bytes == 0 {
         return Err("validation bounds must be nonzero".into());
     }
-    if b.max_record_bytes.checked_add(1).is_none() {
+    if b.max_record_bytes.checked_add(2).is_none() {
         return Err("max_record_bytes is too large".into());
     }
     if policy.declared_kinds.len() > b.max_state_entries
@@ -648,33 +655,38 @@ fn validate_policy(policy: &ValidationPolicy) -> Result<(), String> {
         }
         edges.entry(a).or_default().push(b);
     }
-    let mut done = BTreeSet::new();
-    let mut visiting = BTreeSet::new();
-    fn visit<'a>(
-        n: &'a str,
-        edges: &BTreeMap<&'a str, Vec<&'a str>>,
-        visiting: &mut BTreeSet<&'a str>,
-        done: &mut BTreeSet<&'a str>,
-    ) -> bool {
-        if done.contains(n) {
-            return true;
+    let mut indegree: BTreeMap<&str, usize> = policy
+        .declared_kinds
+        .iter()
+        .map(|k| (k.as_str(), 0))
+        .collect();
+    let mut unique_edges = BTreeSet::new();
+    for (a, b) in &policy.precedence {
+        if !unique_edges.insert((a, b)) {
+            return Err("duplicate precedence edge".into());
         }
-        if !visiting.insert(n) {
-            return false;
-        }
-        for next in edges.get(n).into_iter().flatten() {
-            if !visit(next, edges, visiting, done) {
-                return false;
+        let count = indegree
+            .get_mut(b.as_str())
+            .ok_or("undeclared edge endpoint")?;
+        *count = count.checked_add(1).ok_or("precedence count overflow")?;
+    }
+    let mut ready: BTreeSet<&str> = indegree
+        .iter()
+        .filter_map(|(k, n)| (*n == 0).then_some(*k))
+        .collect();
+    let mut visited = 0usize;
+    while let Some(kind) = ready.pop_first() {
+        visited = visited.checked_add(1).ok_or("precedence count overflow")?;
+        for after in edges.get(kind).into_iter().flatten() {
+            let n = indegree.get_mut(after).ok_or("undeclared edge endpoint")?;
+            *n = n.checked_sub(1).ok_or("precedence count underflow")?;
+            if *n == 0 {
+                ready.insert(after);
             }
         }
-        visiting.remove(n);
-        done.insert(n);
-        true
     }
-    for kind in &policy.declared_kinds {
-        if !visit(kind, &edges, &mut visiting, &mut done) {
-            return Err("precedence graph contains a cycle".into());
-        }
+    if visited != policy.declared_kinds.len() {
+        return Err("precedence graph contains a cycle".into());
     }
     let mut occupied_kinds = BTreeSet::new();
     let mut pairs = BTreeSet::new();

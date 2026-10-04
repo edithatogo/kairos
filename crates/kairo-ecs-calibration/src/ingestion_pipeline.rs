@@ -14,6 +14,7 @@ pub(crate) struct PipelineConfig {
     pub(crate) normalization: Limits,
     pub(crate) sorting: SortLimits,
     pub(crate) validation: ValidationPolicy,
+    pub(crate) evidence: Value,
 }
 struct BundleGuard {
     path: PathBuf,
@@ -39,6 +40,25 @@ pub(crate) fn ingest<I>(
 where
     I: Iterator<Item = Result<Vec<Value>, String>>,
 {
+    for (name, width) in [("engine_commit", 40), ("cargo_lock_sha256", 64)] {
+        let raw = config.evidence[name]
+            .as_str()
+            .ok_or("build evidence is required")?;
+        if raw.len() != width
+            || !raw
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        {
+            return Err("invalid build evidence hash".into());
+        }
+    }
+    if config.evidence["toolchain"]
+        .as_str()
+        .is_none_or(|s| s.trim().is_empty())
+        || !config.evidence["features"].is_array()
+    {
+        return Err("toolchain and feature evidence required".into());
+    }
     if inputs.is_empty() {
         return Err("input evidence is required".into());
     }
@@ -173,7 +193,7 @@ where
             return Err("input evidence changed during ingestion".into());
         }
     }
-    let manifest = json!({"manifest_version":"c1.ingestion.v1","privacy":"local-only; publish only reviewed synthetic evidence","serialization":"serde-json-btree-ndjson-v1","logical_schema":"calibration-v1","physical_schema_version":2,"dataset_id":template["dataset_id"],"mapping_version":template["mapping_version"],"mapping_sha256":normalizer.mapping_hash(),"inputs":input_evidence,"origin_utc":template["origin_utc"],"tick_resolution":"1ns","rounding":"reject unrepresentable precision; preserve source precision","ordering":"c0.six-field-v1","source_rows":counts.source_rows,"candidate_units":counts.candidate_units,"mapper_accepted_units":counts.accepted_units,"mapper_excluded_units":counts.excluded_units,"failed_units":counts.failed_units,"unresolved_units":counts.unresolved_units,"candidate_conservation":true,"cohort_denominator":counts.cohort_denominator,"missing_triage":counts.missing_triage,"outcomes":outcome_count,"censor_status_counts":censor_counts,"validation":{"input_events":validation.input_events,"valid_events":validation.valid_events,"quarantined_events":validation.quarantined_events,"invalid_cases":validation.invalid_cases,"censored_cases":validation.censored_cases,"reasons":validation.reasons,"resource_feasible":validation.resource_feasible,"input_sha256":validation.input_sha256},"sort":{"version":"bounded-c0-runs-v1","rows":sort.rows,"runs":sort.runs,"merge_passes":sort.merge_passes,"max_run_rows":config.sorting.max_run_rows,"max_run_bytes":config.sorting.max_run_bytes,"max_record_bytes":config.sorting.max_record_bytes,"merge_fan_in":config.sorting.merge_fan_in},"normalization_limits":{"max_chunk_rows":config.normalization.max_chunk_rows,"max_chunk_bytes":config.normalization.max_chunk_bytes,"max_identities":config.normalization.max_identities},"populations":populations});
+    let manifest = json!({"manifest_version":"c1.ingestion.v1","execution":config.evidence,"validation_policy_sha256":policy_hash(&config.validation)?,"reason_count_unit":"case","privacy":"local-only; publish only reviewed synthetic evidence","serialization":"serde-json-btree-ndjson-v1","logical_schema":"calibration-v1","physical_schema_version":2,"dataset_id":template["dataset_id"],"mapping_version":template["mapping_version"],"mapping_sha256":normalizer.mapping_hash(),"inputs":input_evidence,"origin_utc":template["origin_utc"],"tick_resolution":"1ns","rounding":"reject unrepresentable precision; preserve source precision","ordering":"c0.six-field-v1","source_rows":counts.source_rows,"candidate_units":counts.candidate_units,"mapper_accepted_units":counts.accepted_units,"mapper_excluded_units":counts.excluded_units,"failed_units":counts.failed_units,"unresolved_units":counts.unresolved_units,"candidate_conservation":true,"cohort_denominator":counts.cohort_denominator,"missing_triage":counts.missing_triage,"outcomes":outcome_count,"censor_status_counts":censor_counts,"validation":{"input_events":validation.input_events,"valid_events":validation.valid_events,"quarantined_events":validation.quarantined_events,"invalid_cases":validation.invalid_cases,"censored_cases":validation.censored_cases,"reasons":validation.reasons,"resource_feasible":validation.resource_feasible,"input_sha256":validation.input_sha256},"sort":{"version":"bounded-c0-runs-v1","rows":sort.rows,"runs":sort.runs,"merge_passes":sort.merge_passes,"max_run_rows":config.sorting.max_run_rows,"max_run_bytes":config.sorting.max_run_bytes,"max_record_bytes":config.sorting.max_record_bytes,"merge_fan_in":config.sorting.merge_fan_in},"normalization_limits":{"max_chunk_rows":config.normalization.max_chunk_rows,"max_chunk_bytes":config.normalization.max_chunk_bytes,"max_identities":config.normalization.max_identities},"populations":populations});
     for name in [
         "unsorted.ndjson",
         "unsorted-exclusions.ndjson",
@@ -189,6 +209,20 @@ where
     marker.get_ref().sync_all().map_err(|e| e.to_string())?;
     guard.complete = true;
     Ok(manifest)
+}
+fn policy_hash(p: &ValidationPolicy) -> Result<String, String> {
+    let capacities: Vec<Value> = p
+        .capacities
+        .iter()
+        .map(|((r, l), c)| json!([r, l, c]))
+        .collect();
+    let value = json!({"mode":format!("{:?}",p.mode),"declared_kinds":p.declared_kinds,"required_kinds":p.required_kinds,"precedence":p.precedence,"occupancy_pairs":p.occupancy_pairs,"capacities":capacities,"window":p.window.map(|(a,b)|[a.to_string(),b.to_string()]),"bounds":{"max_cases":p.bounds.max_cases,"max_state_entries":p.bounds.max_state_entries,"max_record_bytes":p.bounds.max_record_bytes}});
+    Ok(
+        Sha256::digest(serde_json::to_vec(&value).map_err(|e| e.to_string())?)
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect(),
+    )
 }
 fn check_counts(c: Counts) -> Result<(), String> {
     if c.accepted_units
@@ -226,7 +260,13 @@ pub(crate) fn fingerprint(path: &Path) -> Result<(String, u64), String> {
         hash.update(&buf[..n]);
         bytes = bytes.checked_add(n as u64).ok_or("file size overflow")?;
     }
-    Ok((format!("{:x}", hash.finalize()), bytes))
+    Ok((
+        hash.finalize()
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>(),
+        bytes,
+    ))
 }
 pub(crate) struct Lines {
     reader: BufReader<File>,
@@ -322,8 +362,26 @@ mod tests {
         rows.push(json!({"case":"E","id":"excluded-missing","seq":6,"kind":"arrival","at":null}));
         (template, rows)
     }
+    fn build_evidence() -> Value {
+        let cwd = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let result = std::process::Command::new("git")
+            .args(["-C", cwd.to_str().unwrap(), "rev-parse", "HEAD"])
+            .output()
+            .unwrap();
+        assert!(result.status.success());
+        let commit = String::from_utf8(result.stdout).unwrap().trim().to_owned();
+        let result =
+            std::process::Command::new(std::env::var_os("RUSTC").unwrap_or_else(|| "rustc".into()))
+                .arg("--version")
+                .output()
+                .unwrap();
+        assert!(result.status.success());
+        let lock = fingerprint(&cwd.join("../../Cargo.lock")).unwrap().0;
+        json!({"engine_commit":commit,"cargo_lock_sha256":lock,"toolchain":String::from_utf8(result.stdout).unwrap().trim(),"features":[],"scope":"local test build; exact source hashes retained in command receipt"})
+    }
     fn config(run_rows: usize) -> PipelineConfig {
         PipelineConfig {
+            evidence: build_evidence(),
             normalization: Limits {
                 max_chunk_rows: 100,
                 max_chunk_bytes: 1 << 20,
@@ -472,10 +530,10 @@ mod tests {
         fs::remove_dir_all(root).unwrap();
     }
     #[test]
+    #[ignore = "requires actual transported source rows and original manifest"]
     fn transported_source_rows_use_the_same_actual_pipeline() {
-        let Some(path) = std::env::var_os("KAIROS_C13_SOURCE_ROWS") else {
-            return;
-        };
+        let path = std::env::var_os("KAIROS_C13_SOURCE_ROWS")
+            .expect("actual transported source rows required");
         let root = root();
         let path = PathBuf::from(path);
         let rows: Vec<Value> = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
