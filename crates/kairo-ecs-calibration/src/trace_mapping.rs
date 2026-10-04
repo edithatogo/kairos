@@ -177,18 +177,18 @@ fn map_inner(req: &Value) -> Result<Value, String> {
         }
     }
     if !issues.is_empty() {
-        return Ok(result(
-            rows.len(),
-            n,
-            0,
-            0,
-            n,
-            0,
-            vec![],
-            vec![],
-            issues,
-            "failed",
-        ));
+        return Ok(result(ResultParts {
+            rows: rows.len(),
+            candidates: n,
+            accepted: 0,
+            excluded: 0,
+            failed: n,
+            unresolved: 0,
+            records: vec![],
+            outcomes: vec![],
+            diagnostics: issues,
+            classification: "failed",
+        }));
     }
     let mut ordered: Vec<(TraceOrderKeyV1, Value)> = Vec::new();
     let mut exclusions = Vec::new();
@@ -267,25 +267,30 @@ fn map_inner(req: &Value) -> Result<Value, String> {
             Ok(Some(v)) => v,
             Ok(None) => {
                 excluded += 1;
-                exclusions.push(exclusion(
-                    req,
+                exclusions.push(exclusion(ExclusionContext {
+                    request: req,
                     row,
-                    b,
-                    case,
+                    binding: b,
                     key,
-                    order,
-                    "missing_required_time",
-                    "occurrence time is absent",
-                    rawtimes,
+                    reason: "missing_required_time",
+                    detail: "occurrence time is absent",
+                    raw_times: rawtimes,
                     lineage,
-                ));
+                }));
                 continue;
             }
             Err(e) => {
                 excluded += 1;
-                exclusions.push(exclusion(
-                    req, row, b, case, key, order, e.code, &e.detail, rawtimes, lineage,
-                ));
+                exclusions.push(exclusion(ExclusionContext {
+                    request: req,
+                    row,
+                    binding: b,
+                    key,
+                    reason: e.code,
+                    detail: &e.detail,
+                    raw_times: rawtimes,
+                    lineage,
+                }));
                 continue;
             }
         };
@@ -340,22 +345,29 @@ fn map_inner(req: &Value) -> Result<Value, String> {
         }
         if let Some(e) = failure {
             excluded += 1;
-            exclusions.push(exclusion(
-                req, row, b, case, key, order, e.code, &e.detail, rawtimes, lineage,
-            ));
+            exclusions.push(exclusion(ExclusionContext {
+                request: req,
+                row,
+                binding: b,
+                key,
+                reason: e.code,
+                detail: &e.detail,
+                raw_times: rawtimes,
+                lineage,
+            }));
             continue;
         }
         let before_unresolved = unresolved;
-        let knowledge = knowledge_value(
-            ro,
-            b,
-            obj,
-            &optional,
-            &mut unresolved,
-            &mut diagnostics,
-            ri,
-            row,
-        )?;
+        let knowledge = knowledge_value(KnowledgeContext {
+            row: ro,
+            binding: b,
+            request: obj,
+            optional: &optional,
+            unresolved: &mut unresolved,
+            diagnostics: &mut diagnostics,
+            row_index: ri,
+            raw_row: row,
+        })?;
         if unresolved > before_unresolved {
             continue;
         }
@@ -397,18 +409,18 @@ fn map_inner(req: &Value) -> Result<Value, String> {
     } else {
         "partially_excluded"
     };
-    let mut out = result(
-        rows.len(),
-        n,
+    let mut out = result(ResultParts {
+        rows: rows.len(),
+        candidates: n,
         accepted,
         excluded,
-        0,
+        failed: 0,
         unresolved,
         records,
         outcomes,
         diagnostics,
-        class,
-    );
+        classification: class,
+    });
     let cohort_field = obj.get("cohort_field").and_then(Value::as_str);
     let triage_field = obj.get("triage_field").and_then(Value::as_str);
     let denominator = cohort_field
@@ -919,18 +931,27 @@ fn disposition(row: &Map<String, Value>, req: &Map<String, Value>) -> Value {
         _ => json!("unknown"),
     }
 }
-fn exclusion(
-    req: &Value,
-    row: &Value,
-    b: &Binding,
-    _case: &str,
-    key: &str,
-    _order: u64,
-    reason: &str,
-    detail: &str,
+struct ExclusionContext<'a> {
+    request: &'a Value,
+    row: &'a Value,
+    binding: &'a Binding,
+    key: &'a str,
+    reason: &'a str,
+    detail: &'a str,
     raw_times: Map<String, Value>,
-    lineage_map: Map<String, Value>,
-) -> Value {
+    lineage: Map<String, Value>,
+}
+fn exclusion(context: ExclusionContext<'_>) -> Value {
+    let ExclusionContext {
+        request: req,
+        row,
+        binding: b,
+        key,
+        reason,
+        detail,
+        raw_times,
+        lineage: lineage_map,
+    } = context;
     let reason = match reason {
         "ambiguous_dst_fold" | "ambiguous_local_time" => "ambiguous_dst_fold",
         "nonexistent_dst_gap" | "nonexistent_local_time" => "nonexistent_dst_gap",
@@ -982,16 +1003,27 @@ fn exclusion(
     let lin = json!({"status":status,"mapping_version":mv,"evidence_ref":evidence,"derivation":derivation});
     json!({"record_type":"trace_exclusion.v1","schema_version":"calibration-v1","dataset_id":req["dataset_id"],"mapping_version":req["mapping_version"],"source_event_key":key,"raw_event":raw_event(req,row,b,req.as_object().unwrap()),"raw_time_values":raw,"exclusion_reason":reason,"lineage":lin,"detail":detail})
 }
-fn knowledge_value(
-    row: &Map<String, Value>,
-    b: &Binding,
-    req: &Map<String, Value>,
-    optional: &Map<String, Value>,
-    unresolved: &mut usize,
-    diags: &mut Vec<Value>,
-    ri: usize,
-    rawrow: &Value,
-) -> Result<Value, String> {
+struct KnowledgeContext<'a> {
+    row: &'a Map<String, Value>,
+    binding: &'a Binding,
+    request: &'a Map<String, Value>,
+    optional: &'a Map<String, Value>,
+    unresolved: &'a mut usize,
+    diagnostics: &'a mut Vec<Value>,
+    row_index: usize,
+    raw_row: &'a Value,
+}
+fn knowledge_value(context: KnowledgeContext<'_>) -> Result<Value, String> {
+    let KnowledgeContext {
+        row,
+        binding: b,
+        request: req,
+        optional,
+        unresolved,
+        diagnostics: diags,
+        row_index: ri,
+        raw_row: rawrow,
+    } = context;
     let Some(f) = &b.knowledge else {
         return Ok(json!({"status":"unknown","available_at":null}));
     };
@@ -1106,7 +1138,8 @@ fn capture_actual(request: &Value, result: &Value) -> std::io::Result<()> {
         path::PathBuf,
         sync::{Mutex, OnceLock},
     };
-    static CAPTURE: OnceLock<Mutex<BTreeMap<Vec<u8>, (Value, Value)>>> = OnceLock::new();
+    type CapturedRequests = BTreeMap<Vec<u8>, (Value, Value)>;
+    static CAPTURE: OnceLock<Mutex<CapturedRequests>> = OnceLock::new();
     let Ok(path) = std::env::var("KAIROS_C11_MAPPER_OUTFILE") else {
         return Ok(());
     };
@@ -1131,7 +1164,7 @@ fn capture_actual(request: &Value, result: &Value) -> std::io::Result<()> {
     fs::rename(temp, target)?;
     Ok(())
 }
-fn result(
+struct ResultParts<'a> {
     rows: usize,
     candidates: usize,
     accepted: usize,
@@ -1141,8 +1174,21 @@ fn result(
     records: Vec<Value>,
     outcomes: Vec<Value>,
     diagnostics: Vec<Value>,
-    classification: &str,
-) -> Value {
+    classification: &'a str,
+}
+fn result(parts: ResultParts<'_>) -> Value {
+    let ResultParts {
+        rows,
+        candidates,
+        accepted,
+        excluded,
+        failed,
+        unresolved,
+        records,
+        outcomes,
+        diagnostics,
+        classification,
+    } = parts;
     json!({"classification":classification,"records":records,"outcomes":outcomes,"diagnostics":diagnostics,"accounting":{"source_rows":rows,"candidate_units":candidates,"accepted_units":accepted,"excluded_units":excluded,"failed_units":failed,"unresolved_units":unresolved,"candidate_conservation":candidates==accepted+excluded+failed+unresolved,"cohort_denominator":rows,"missing_triage":0}})
 }
 
