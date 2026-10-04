@@ -1,6 +1,6 @@
 # Bounded owned-construction and live-peer foundation
 
-Status: precise proposed dispatch contract, based on qualified architecture review at90dfbc5 and independent liveness objections on4 October2026; exact-document independent acceptance remains required. Native baseline is8150585e765ac69a701cfdbd4ed9dfd1ccbf6eff; actual dispatch binds the later contract commit with unchanged native files. This is an intermediate implementation leaf toward full Track48/49, not an enabled-owned-execution or final PR acceptance.
+Status: accepted bounded foundation after qualified architecture and independent fixture review of25b51d9 on4 October2026. Architecture-requested immutable configuration getters were applied atc658ac4, and the explicit epoch comparison below resolves the independent reviewer wording request. Coordinator accepts only this exact guarded foundation; later joins remain mandatory. Native baseline is8150585e765ac69a701cfdbd4ed9dfd1ccbf6eff; actual dispatch binds the later contract commit with unchanged native files. This is an intermediate implementation leaf toward full Track48/49, not an enabled-owned-execution or final PR acceptance.
 
 ## Ownership and implementation boundary
 
@@ -53,7 +53,7 @@ Validate all configuration before model snapshot capture or issuer publication. 
 
 Preserve existing complete global topology checks: missing entries, unknown source/destination and duplicate neighbor/self-loop reject using existing errors. Sort validated neighbor vectors for canonical comparison. Preserve the entire global partition rather than rebuilding a subset partition.
 
-current_authorities keys equal global LP keys exactly; mismatch returns AuthoritySetMismatch{missing,unexpected}, sorted. Every value must be Scoped: otherwise AuthorityModeMismatch(lp). Namespace mismatch returns AuthorityNamespaceMismatch{lp_id,expected,actual}. Zero/MAX namespace and ownership epochs are valid. emission_epochs keys exactly equal owned keys: EmissionEpochSetMismatch{missing,unexpected}; values equal configured owned epochs: EmissionEpochMismatch{lp_id,expected,actual}. No numeric authority winner or receiver-emitter advancement.
+current_authorities keys equal global LP keys exactly; mismatch returns AuthoritySetMismatch{missing,unexpected}, sorted. Every value must be Scoped: otherwise AuthorityModeMismatch(lp). Namespace mismatch returns AuthorityNamespaceMismatch{lp_id,expected,actual}. Zero/MAX namespace and ownership epochs are valid. emission_epochs keys exactly equal owned keys: EmissionEpochSetMismatch{missing,unexpected}; For each owned LP, emission_epochs[lp] must equal current_authorities[lp].ownership_epoch; otherwise EmissionEpochMismatch{lp_id,expected:configured ownership_epoch,actual:emission_epochs[lp]}. No numeric authority winner or receiver-emitter advancement.
 
 New exact OptimisticError variants:
 
