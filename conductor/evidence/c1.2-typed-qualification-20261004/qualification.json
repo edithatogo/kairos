@@ -1,0 +1,88 @@
+{
+  "status": "accepted_local_C1.2_qualification",
+  "reviewer": "root coordinator; independent Luna schema and dependency/legacy reviews",
+  "integration_source": "88d599daea8c633cd2da6b346014de59a5ec4c01",
+  "independent_schema_commit": "f3db825375568e4cd7e49c8e2cfb5e46a618191a",
+  "lint_commit": "ac7e9cb89aae3e2243976c9fad4c1921502e403e",
+  "legacy_byte_guard_commit": "9e896a7e5ef147e0068d0c9efde143bebc864035",
+  "physical_version": "2",
+  "logical_schema_sha256": "8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842",
+  "qualification": [
+    "Rust1.88/1.99 none/ipc/parquet/both8locked/offline dependencybuilds",
+    "Defaultlegacy23tests pass on1.76/1.99; additionalbyteguard1pass each",
+    "IPC-only1pass,Parquet-only1pass,both2pass on1.88; independentPyArrow25.0.1 exact9file readback",
+    "Integrated1.99both2pass plusindependentPyArrow25.0.1 exact9file readback",
+    "IO floor1.88genericlibrary27tests;current1.99Clippylib noallow/suppression"
+  ],
+  "legacy_golden_sha256": "3928adcb2a84bfb0521c267cc834534693ee2acaa8ab7a080523dc20491163ac",
+  "feature_isolation": "noArrow/Parquet indefaultIO/defaultlegacy/core/DESdependencytrees; manifests/lock unchanged",
+  "source_hashes": {
+    "Cargo.lock": "711f5d19b22d454a394334402e5829ec8e0a0287f4febaef807767e1529bda8b",
+    "crates/kairo-ecs-arrow/Cargo.toml": "6190b39b70ffffd6ff75a5905e4c46d03fc8993c775be59f2c70739151098143",
+    "crates/kairo-ecs-arrow-io/Cargo.toml": "ca6d504b69a02eefa4ef300a2f1cbe53c11a3e7afc788c20e3ce60497ba19612",
+    "crates/kairo-ecs-arrow-io/tests/calibration_physical_v2.rs": "9c01255e28039ba52ea06d7c0ac77b03f62b676c522633e23121e5ddd50c5917",
+    "crates/kairo-ecs-arrow-io/tests/support/calibration_physical_schema_v2.rs": "4f48216948b365d286e11e15fc4a428b3c0ce9730ba23dea0f14da21ac016989",
+    "conformance/c11/physical_schema.py": "acbde880d03f89df8f556cdd50dc2f49141aa86b9d854ad9fcd9117211a06f44"
+  },
+  "limitations": [
+    "Synthetic/local typedphysicalv2 qualification; notstableAPI,realclinical feed,IANAresolver,C1.3orfullC1/release",
+    "IOencoded/output/consumedrow bounds; nohostiledecoderpeak-memoryisolationclaim",
+    "Newheadhostedchecks andparentpin/catalog integrationseparate; predecessor62f20dc hostednative11jobs passed atmerge-refbcfc70ac3dbf05a9ebc510f3f15106f553440f7a"
+  ],
+  "seed": "not applicable; deterministicfixedsyntheticinputs",
+  "retained_files": "retained-files.json",
+  "corrections": "Independent fullschema test caught shorttime_lineagewrappermetadata path mismatch; correctedRustdeclaration only. FrozeninputbytesandPythoncontractunchanged.",
+  "postproof_format_only": {
+    "source_base": "c7ff74d3c3312b8b0df49e75ec5c3bc2d0927ae5",
+    "before": "9c01255e28039ba52ea06d7c0ac77b03f62b676c522633e23121e5ddd50c5917",
+    "after": "e847c44ed1aaa1bdaaab42e72b2537dca147dc0dd3dcf0654f52647ddfe59087",
+    "reason": "Rust2021 importordering; identicalimportset, no runtimechange",
+    "verification": [
+      {
+        "argv": [
+          "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+          "fmt",
+          "--package",
+          "kairo-ecs-arrow-io",
+          "--check"
+        ],
+        "cwd": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos",
+        "exit": 0,
+        "log": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.format_edition_20261004/fmt.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "argv": [
+          "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+          "test",
+          "--locked",
+          "--offline",
+          "-p",
+          "kairo-ecs-arrow-io",
+          "--no-default-features",
+          "--features",
+          "ipc,parquet",
+          "--test",
+          "calibration_physical_v2"
+        ],
+        "cwd": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos",
+        "exit": 0,
+        "log": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.format_edition_20261004/native.log",
+        "sha256": "36ae8197f2e8bbcb29196fd6e218f9591d0fe64297c69da64e49cd061ccaebb0"
+      },
+      {
+        "argv": [
+          "/private/tmp/kairos-c1-ci-python-qualify-20261004/.artifacts/c1-ci-python-qualification/venv-attempt2/bin/python",
+          "-B",
+          "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py",
+          "--check-rust",
+          ".artifacts/mvp/C1.2.parquet.format_edition_20261004/both-output"
+        ],
+        "cwd": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos",
+        "exit": 0,
+        "log": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.format_edition_20261004/pyarrow.log",
+        "sha256": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114"
+      }
+    ]
+  }
+}

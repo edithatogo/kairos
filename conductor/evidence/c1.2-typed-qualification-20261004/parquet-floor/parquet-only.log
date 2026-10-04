@@ -1,0 +1,15 @@
+    Blocking waiting for file lock on package cache
+   Compiling base64 v0.23.1
+   Compiling twox-hash v2.1.4
+   Compiling seq-macro v0.3.6
+   Compiling arrow-ipc v60.0.0
+   Compiling parquet v60.0.0
+   Compiling kairo-ecs-arrow-io v0.1.0 (/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/crates/kairo-ecs-arrow-io)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 18.63s
+     Running tests/calibration_physical_v2.rs (.artifacts/mvp/C1.2.ipc.typed_readers_20261004/target/debug/deps/calibration_physical_v2-38a9f01a7f0a06c9)
+
+running 1 test
+test actual_parquet_tables_use_full_frozen_schema_and_roundtrip ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
+

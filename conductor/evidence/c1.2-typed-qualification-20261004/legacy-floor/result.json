@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "packet_id": "C1.2.deps.legacy_floor_20261004",
+  "instance_id": "legacy_floor_20261004",
+  "status": "ready_for_review",
+  "base_commit": "62f20dc68f81fc639786ee22c21b2c709c7f9393",
+  "changed_paths": [],
+  "claim": {
+    "lease_id": "ba5cb0736da943279e89563806726ac0",
+    "input_hashes": {
+      "crates/kairo-ecs-arrow/Cargo.toml": "6190b39b70ffffd6ff75a5905e4c46d03fc8993c775be59f2c70739151098143",
+      "conductor/design/calibration/c1-recordbatch-io-v1.md": "2854aff0be65914e1b0b16e6caa46122ea640b959632d95030edbdce83958449"
+    }
+  },
+  "verification": [
+    {
+      "argv": [
+        "env",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR=.artifacts/mvp/C1.2.deps.legacy_floor_20261004/target-1.76",
+        "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow",
+        "--no-default-features"
+      ],
+      "cwd": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos",
+      "exit_code": 0,
+      "test_counts": "23 passed; 0 failed; lifecycle feature integration 0 tests; 0 doctests",
+      "toolchain": "cargo 1.76.0 (c84b36747 2024-01-18); rustc 1.76.0 (07dca489a 2024-02-04), aarch64-apple-darwin",
+      "logs": {
+        ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/cargo-1.76.txt": "82f61754fa2eb314e2ea780db609c51960f4463ad7bf20b807c93935425eed97",
+        ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/rustc-1.76.txt": "d095f5da3121dca63a155e46c677e24e7a1dc9865be711d8a558a0c63618f0ac",
+        ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/test-1.76.log": "e0cfb2bea3d7d8722acbebefc64e22f70b15fc4f5ca92d719083e216110848e5"
+      }
+    },
+    {
+      "argv": [
+        "env",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR=.artifacts/mvp/C1.2.deps.legacy_floor_20261004/target-1.99",
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow",
+        "--no-default-features"
+      ],
+      "cwd": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos",
+      "exit_code": 0,
+      "test_counts": "23 passed; 0 failed; lifecycle feature integration 0 tests; 0 doctests",
+      "toolchain": "cargo 1.99.0 (5f94df478 2026-08-27); rustc 1.99.0 (b940084d7 2026-09-28), aarch64-apple-darwin",
+      "logs": {
+        ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/cargo-1.99.txt": "1f88eaf7fe1aaec83184752cf4c944cd22f00184136ff36a3e4c318cc60ef566",
+        ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/rustc-1.99.txt": "352d6857968e80a6357a926ac685b9b07f77c479aaafde33e73a53945e802909",
+        ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/test-1.99.log": "0c7c2a5f00b408e600b7a01983f0c44c2981626e8d2bab561d67d21c13584c08"
+      }
+    }
+  ],
+  "baseline_bytes_proposal": {
+    "baseline_commit": "4c065e7",
+    "sample": "EventLogRecord::dispatched(\"run-1\", sample_event())",
+    "bytes_utf8": "stream=kairo_ecs.event_log.v1;schema_version=1\nschema_version\trun_id\tevent_id_hex\tentity_id_hex\ttime_ticks_le_hex\ttime_scale\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref\n1\trun-1\t010000000000000002000000\t050000000000000006000000\t0a000000000000000000000000000000\tticks\t-3\t4\tcustom:7\tdispatched\t\n",
+    "byte_length": 296,
+    "sha256": "3928adcb2a84bfb0521c267cc834534693ee2acaa8ab7a080523dc20491163ac",
+    "terminator": "single LF after final row",
+    "source_diff": "Between 4c065e7 and this base, crates/kairo-ecs-arrow/src/lib.rs only adds trace_time and cfg-gated resource_lifecycle module lines; legacy serializer and tests unchanged."
+  },
+  "no_source_changes": true,
+  "seed": "not applicable; deterministic legacy tests",
+  "artifacts": [
+    {
+      "path": ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/cargo-1.76.txt",
+      "sha256": "82f61754fa2eb314e2ea780db609c51960f4463ad7bf20b807c93935425eed97"
+    },
+    {
+      "path": ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/rustc-1.76.txt",
+      "sha256": "d095f5da3121dca63a155e46c677e24e7a1dc9865be711d8a558a0c63618f0ac"
+    },
+    {
+      "path": ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/test-1.76.log",
+      "sha256": "e0cfb2bea3d7d8722acbebefc64e22f70b15fc4f5ca92d719083e216110848e5"
+    },
+    {
+      "path": ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/cargo-1.99.txt",
+      "sha256": "1f88eaf7fe1aaec83184752cf4c944cd22f00184136ff36a3e4c318cc60ef566"
+    },
+    {
+      "path": ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/rustc-1.99.txt",
+      "sha256": "352d6857968e80a6357a926ac685b9b07f77c479aaafde33e73a53945e802909"
+    },
+    {
+      "path": ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/test-1.99.log",
+      "sha256": "0c7c2a5f00b408e600b7a01983f0c44c2981626e8d2bab561d67d21c13584c08"
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "packet_id": "C1.2.parquet.typed_readers_20261004",
+  "status": "ready_for_review",
+  "base_commit": "f3db825375568e4cd7e49c8e2cfb5e46a618191a",
+  "ipc_source_commit": "f3db825375568e4cd7e49c8e2cfb5e46a618191a",
+  "source_sha256": {
+    "crates/kairo-ecs-arrow-io/tests/calibration_physical_v2.rs": "9c01255e28039ba52ea06d7c0ac77b03f62b676c522633e23121e5ddd50c5917",
+    "crates/kairo-ecs-arrow-io/tests/support/calibration_physical_schema_v2.rs": "4f48216948b365d286e11e15fc4a428b3c0ce9730ba23dea0f14da21ac016989"
+  },
+  "prerequisite_ipc_result_sha256": "299bbb7db62eae03f43a66068ca9c4b8530adbe16aae474fa52c89a2f54e0327",
+  "toolchain": {
+    "cargo_path": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo",
+    "rustc_path": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustc",
+    "rustc_version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+    "rustdoc_path": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustdoc",
+    "rustdoc_version": "rustdoc 1.88.0 (6b00bc388 2025-06-23)"
+  },
+  "target_directory": ".artifacts/mvp/C1.2.ipc.typed_readers_20261004/target",
+  "commands": [
+    {
+      "argv": ["/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo", "test", "--locked", "--offline", "-p", "kairo-ecs-arrow-io", "--no-default-features", "--features", "parquet", "--test", "calibration_physical_v2"],
+      "cwd": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos",
+      "environment": {
+        "RUSTC": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR": ".artifacts/mvp/C1.2.ipc.typed_readers_20261004/target",
+        "KAIROS_C11_PHYSICAL_OUTDIR": ".artifacts/mvp/C1.2.parquet.typed_readers_20261004/parquet-output"
+      },
+      "exit_code": 0,
+      "result": "1 passed; 0 failed",
+      "log": ".artifacts/mvp/C1.2.parquet.typed_readers_20261004/parquet-only.log",
+      "log_sha256": "1586627de1a1bae48f6dc85f199922969d59372a32411f4c124ab010594d2fc4"
+    },
+    {
+      "argv": ["/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo", "test", "--locked", "--offline", "-p", "kairo-ecs-arrow-io", "--no-default-features", "--features", "ipc,parquet", "--test", "calibration_physical_v2"],
+      "cwd": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos",
+      "environment": {
+        "RUSTC": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR": ".artifacts/mvp/C1.2.ipc.typed_readers_20261004/target",
+        "KAIROS_C11_PHYSICAL_OUTDIR": ".artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output"
+      },
+      "exit_code": 0,
+      "result": "2 passed; 0 failed",
+      "log": ".artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-features.log",
+      "log_sha256": "41eb73b0d3e6180d1870338c1d451718e14a60a28a6a0aa55682d5a046c81cea"
+    },
+    {
+      "argv": ["/private/tmp/kairos-c1-ci-python-qualify-20261004/.artifacts/c1-ci-python-qualification/venv-attempt2/bin/python", "-B", "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py", "--check-rust", ".artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output"],
+      "cwd": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos",
+      "expected_pyarrow": "25.0.1",
+      "exit_code": 0,
+      "result": "PASS: 3 physical tables, 9 files, exact schema/metadata and logical payloads",
+      "log": ".artifacts/mvp/C1.2.parquet.typed_readers_20261004/pyarrow-readback.log",
+      "log_sha256": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114"
+    }
+  ],
+  "outputs": {
+    "parquet_only": {
+      "directory": ".artifacts/mvp/C1.2.parquet.typed_readers_20261004/parquet-output",
+      "files": {
+        "exclusion.parquet": {"bytes": 44777, "sha256": "684883b46342fd43ebb35e9b2c1c669a0b954f9e9d320e75b9d586dc826ee391"},
+        "outcome.parquet": {"bytes": 32005, "sha256": "4e03b6a272b51a3305bebe42cd90b2645c6d41a02fb4b02e3907fc95cd00201a"},
+        "trace.parquet": {"bytes": 275095, "sha256": "040d4323252011869122dd3382184ca8165d7927316cfbb9f292974b3788fcd6"}
+      }
+    },
+    "both_features": {
+      "directory": ".artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output",
+      "files": {
+        "exclusion.ipc_file": {"bytes": 55842, "sha256": "640136a4802a9787d5ccf606f1d2e1ec3f08dce195bb808031874b21c833ae98"},
+        "exclusion.ipc_stream": {"bytes": 52360, "sha256": "36c5ac3308e6288680b304b3eb259c489146948ec4abf46beca1e05632c5f5c6"},
+        "exclusion.parquet": {"bytes": 44777, "sha256": "684883b46342fd43ebb35e9b2c1c669a0b954f9e9d320e75b9d586dc826ee391"},
+        "outcome.ipc_file": {"bytes": 40194, "sha256": "adceb3f9545fed1619f0681e9137972092ceb5ec47aec61861ce165170b0c4fd"},
+        "outcome.ipc_stream": {"bytes": 32136, "sha256": "024ce1ac8bbbed5c5f69e11afe284991b21822f84e5cbca52ced98588f44b0a3"},
+        "outcome.parquet": {"bytes": 32005, "sha256": "4e03b6a272b51a3305bebe42cd90b2645c6d41a02fb4b02e3907fc95cd00201a"},
+        "trace.ipc_file": {"bytes": 333874, "sha256": "8dee67c77da0ad2ad454ffd7182ff728e31100a8076d16e91c9d40a43a05594a"},
+        "trace.ipc_stream": {"bytes": 319816, "sha256": "b0dc7febd83b95d4a946f5cf2898297d1ab69ee064ff7395b76d8e3d31bb689d"},
+        "trace.parquet": {"bytes": 275095, "sha256": "040d4323252011869122dd3382184ca8165d7927316cfbb9f292974b3788fcd6"}
+      }
+    }
+  },
+  "limitations": ["This receipt covers Parquet-only and combined-feature fixture qualification plus PyArrow readback. It does not claim whole-workspace, broader C1.2, MSRV on other targets, clinical, or release acceptance."]
+}

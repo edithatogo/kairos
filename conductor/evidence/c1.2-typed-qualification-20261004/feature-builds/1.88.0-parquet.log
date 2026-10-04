@@ -1,0 +1,7 @@
+    Checking base64 v0.23.1
+    Checking twox-hash v2.1.4
+   Compiling seq-macro v0.3.6
+    Checking arrow-ipc v60.0.0
+    Checking parquet v60.0.0
+    Checking kairo-ecs-arrow-io v0.1.0 (/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/crates/kairo-ecs-arrow-io)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.10s

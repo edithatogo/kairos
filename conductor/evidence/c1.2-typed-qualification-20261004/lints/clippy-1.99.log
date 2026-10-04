@@ -1,0 +1,65 @@
+cwd=/private/tmp/careops-c12-lint-parent-20261004/libs/kairos
+62f20dc68f81fc639786ee22c21b2c709c7f9393
+rustc 1.99.0 (b940084d7 2026-09-28)
+binary: rustc
+commit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4
+commit-date: 2026-09-28
+host: aarch64-apple-darwin
+release: 1.99.0
+LLVM version: 23.1.1
+cargo 1.99.0 (5f94df478 2026-08-27)
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling autocfg v1.5.0
+   Compiling libm v0.2.16
+   Compiling zerocopy v0.8.48
+    Checking cfg-if v1.0.4
+   Compiling libc v0.2.186
+   Compiling version_check v0.9.5
+   Compiling getrandom v0.3.4
+    Checking core-foundation-sys v0.8.7
+    Checking bytes v1.12.1
+    Checking iana-time-zone v0.1.65
+    Checking arrow-schema v60.0.0
+   Compiling semver v1.0.28
+   Compiling ahash v0.8.12
+   Compiling num-traits v0.2.19
+    Checking once_cell v1.21.4
+   Compiling rustc_version v0.4.1
+    Checking hashbrown v0.17.1
+    Checking bitflags v2.13.2
+   Compiling thiserror v2.0.20
+   Compiling flatbuffers v25.12.19
+    Checking twox-hash v2.1.4
+   Compiling seq-macro v0.3.6
+    Checking base64 v0.23.1
+   Compiling syn v2.0.117
+   Compiling syn v3.0.6
+    Checking num-integer v0.1.47
+    Checking chrono v0.4.45
+    Checking num-complex v0.4.6
+    Checking num-bigint v0.5.1
+   Compiling thiserror-impl v2.0.20
+   Compiling zerocopy-derive v0.8.48
+    Checking half v2.7.1
+    Checking arrow-buffer v60.0.0
+    Checking arrow-data v60.0.0
+    Checking arrow-array v60.0.0
+    Checking arrow-cmp v60.0.0
+    Checking arrow-select v60.0.0
+    Checking arrow-ipc v60.0.0
+    Checking parquet v60.0.0
+    Checking kairo-ecs-arrow-io v0.1.0 (/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/crates/kairo-ecs-arrow-io)
+error: variable does not need to be mutable
+  --> crates/kairo-ecs-arrow-io/src/parquet.rs:41:9
+   |
+41 |     let mut reader = builder.with_batch_size(limits.max_batch_rows).build()?;
+   |         ----^^^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `-D unused-mut` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(unused_mut)]`
+
+error: could not compile `kairo-ecs-arrow-io` (lib) due to 1 previous error

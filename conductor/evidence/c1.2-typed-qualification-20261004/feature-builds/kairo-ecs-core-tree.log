@@ -1,0 +1,40 @@
+kairo-ecs-core v0.0.0 (/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/crates/kairo-ecs-core)
+└── kairo-ecs-types v0.0.0 (/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/crates/kairo-ecs-types)
+[dev-dependencies]
+├── kairo-ecs-rng v0.0.0 (/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/crates/kairo-ecs-rng)
+│   └── kairo-ecs-types v0.0.0 (/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/crates/kairo-ecs-types)
+├── kairo-ecs-types v0.0.0 (/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/crates/kairo-ecs-types)
+├── proptest v1.11.0
+│   ├── bitflags v2.13.2
+│   ├── num-traits v0.2.19
+│   │   [build-dependencies]
+│   │   └── autocfg v1.5.0
+│   ├── rand v0.9.5
+│   │   └── rand_core v0.9.5
+│   │       └── getrandom v0.3.4
+│   │           ├── cfg-if v1.0.4
+│   │           └── libc v0.2.186
+│   ├── rand_chacha v0.9.0
+│   │   ├── ppv-lite86 v0.2.21
+│   │   │   └── zerocopy v0.8.48
+│   │   └── rand_core v0.9.5 (*)
+│   ├── rand_xorshift v0.4.0
+│   │   └── rand_core v0.9.5 (*)
+│   ├── regex-syntax v0.8.10
+│   └── unarray v0.1.4
+├── serde v1.0.228
+│   ├── serde_core v1.0.228
+│   └── serde_derive v1.0.228 (proc-macro)
+│       ├── proc-macro2 v1.0.106
+│       │   └── unicode-ident v1.0.24
+│       ├── quote v1.0.45
+│       │   └── proc-macro2 v1.0.106 (*)
+│       └── syn v2.0.117
+│           ├── proc-macro2 v1.0.106 (*)
+│           ├── quote v1.0.45 (*)
+│           └── unicode-ident v1.0.24
+└── serde_json v1.0.149
+    ├── itoa v1.0.18
+    ├── memchr v2.8.0
+    ├── serde_core v1.0.228
+    └── zmij v1.0.21

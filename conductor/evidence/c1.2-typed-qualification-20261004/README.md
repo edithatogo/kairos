@@ -1,0 +1,7 @@
+# C1.2 typed physical qualification
+
+Local task proof freezes all nested types, nullability, field/global metadata and format version independently in Rust. Feature-only tests reject physical schema drift, truncated files and configured input/output/row/batch/column bounds. Parquet one-row decoding preserves complete rows. The same frozen Python schema independently reads all nine newly Rust-written files on the IO floor and current toolchain.
+
+`qualification.json` records exact sources, cases and limits. `retained-files.json` hashes every copied original receipt/log and 18 actual floor/current Rust artifacts. Each receipt retains original command, cwd, environment/toolchain and original source/artifact location. Sources and binary fixtures are synthetic. Source joins do not count as runtime tests. Failed attempts are retained, not overwritten or relabelled as passes. The standalone legacy byte test freezes the pre-feature custom format and passes at Rust1.76/1.99 without Arrow dependencies.
+
+Legacy smoke bytes remain custom, never IPC. Physicalv1 is rejected; v2 changes its typed raw-time map layout explicitly. This is local development qualification; final hosted head and parent catalog/pin integration, normalization/C1.3 and full phase/release acceptance are separate. Raw log bytes—including blank EOF lines—are preserved; code/docs whitespace checks exclude only retained rawlog files.

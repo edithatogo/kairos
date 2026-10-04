@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "packet_id": "C1.2.ipc.typed_readers_20261004",
+  "status": "ready_for_review",
+  "base_commit": "62f20dc68f81fc639786ee22c21b2c709c7f9393",
+  "branch": "codex/c12-qualification-20261004",
+  "scope": [
+    "crates/kairo-ecs-arrow-io/tests/calibration_physical_v2.rs",
+    "crates/kairo-ecs-arrow-io/tests/support/calibration_physical_schema_v2.rs"
+  ],
+  "source_sha256": {
+    "crates/kairo-ecs-arrow-io/tests/calibration_physical_v2.rs": "9c01255e28039ba52ea06d7c0ac77b03f62b676c522633e23121e5ddd50c5917",
+    "crates/kairo-ecs-arrow-io/tests/support/calibration_physical_schema_v2.rs": "4f48216948b365d286e11e15fc4a428b3c0ce9730ba23dea0f14da21ac016989"
+  },
+  "toolchain": {
+    "cargo_path": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo",
+    "rustc_path": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustc",
+    "rustc_version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+    "rustdoc_path": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustdoc",
+    "rustdoc_version": "rustdoc 1.88.0 (6b00bc388 2025-06-23)",
+    "rustfmt_path": "/opt/homebrew/bin/rustfmt",
+    "rustfmt_version": "rustfmt 1.10.0"
+  },
+  "commands": [
+    {
+      "argv": ["/opt/homebrew/bin/cargo", "+1.88.0", "test", "--locked", "--offline", "-p", "kairo-ecs-arrow-io", "--no-default-features", "--features", "ipc", "--test", "calibration_physical_v2"],
+      "cwd": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos",
+      "exit_code": 101,
+      "log": ".artifacts/mvp/C1.2.ipc.typed_readers_20261004/ipc-only.log",
+      "log_sha256": "b17e8945e6009300bcbd48ebbf1c7717596832895a3eca6cbb60cc916c46e272",
+      "note": "Invocation did not reach compilation: Homebrew Cargo does not implement the rustup +toolchain selector."
+    },
+    {
+      "argv": ["/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo", "test", "--locked", "--offline", "-p", "kairo-ecs-arrow-io", "--no-default-features", "--features", "ipc", "--test", "calibration_physical_v2"],
+      "cwd": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos",
+      "exit_code": 101,
+      "log": ".artifacts/mvp/C1.2.ipc.typed_readers_20261004/ipc-only-attempt2.log",
+      "log_sha256": "9c1fc4b7a08886b66321f87f91f8a79d5d4b53ef526597e6b6021563767e9423",
+      "note": "Independent schema assertion exposed three time_lineage wrapper logical_path defaults; corrected to the frozen Python declaration."
+    },
+    {
+      "argv": ["/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo", "test", "--locked", "--offline", "-p", "kairo-ecs-arrow-io", "--no-default-features", "--features", "ipc", "--test", "calibration_physical_v2"],
+      "cwd": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos",
+      "environment": {
+        "RUSTC": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR": ".artifacts/mvp/C1.2.ipc.typed_readers_20261004/target",
+        "KAIROS_C11_PHYSICAL_OUTDIR": ".artifacts/mvp/C1.2.ipc.typed_readers_20261004/ipc-output"
+      },
+      "exit_code": 0,
+      "result": "1 passed; 0 failed",
+      "log": ".artifacts/mvp/C1.2.ipc.typed_readers_20261004/ipc-only-attempt3.log",
+      "log_sha256": "fff34c1ea25de0eb079e6b1538cc8b48c0429f901047c681c72fc6fea4a4d8ad"
+    }
+  ],
+  "ipc_outputs": {
+    "directory": ".artifacts/mvp/C1.2.ipc.typed_readers_20261004/ipc-output",
+    "files": {
+      "exclusion.ipc_file": {"bytes": 55842, "sha256": "640136a4802a9787d5ccf606f1d2e1ec3f08dce195bb808031874b21c833ae98"},
+      "exclusion.ipc_stream": {"bytes": 52360, "sha256": "36c5ac3308e6288680b304b3eb259c489146948ec4abf46beca1e05632c5f5c6"},
+      "outcome.ipc_file": {"bytes": 40194, "sha256": "adceb3f9545fed1619f0681e9137972092ceb5ec47aec61861ce165170b0c4fd"},
+      "outcome.ipc_stream": {"bytes": 32136, "sha256": "024ce1ac8bbbed5c5f69e11afe284991b21822f84e5cbca52ced98588f44b0a3"},
+      "trace.ipc_file": {"bytes": 333874, "sha256": "8dee67c77da0ad2ad454ffd7182ff728e31100a8076d16e91c9d40a43a05594a"},
+      "trace.ipc_stream": {"bytes": 319816, "sha256": "b0dc7febd83b95d4a946f5cf2898297d1ab69ee064ff7395b76d8e3d31bb689d"}
+    }
+  },
+  "coverage": {
+    "fixture_rows": {"trace_event.v1": 31, "trace_exclusion.v1": 17, "outcome_observation.v1": 4},
+    "controls": ["full declared schema equality", "wrong scalar and nested types", "declared nullability", "global and nested metadata including physical version 1", "truncated IPC file and stream", "input bytes", "total rows", "batch rows", "batch count", "column count", "output bytes", "payload parity"]
+  },
+  "parquet": "not run; held for sequential IPC review and separate coordinator dispatch",
+  "limitations": ["This receipt covers IPC-only physical v2 fixture tests; it does not qualify Parquet, C1.2 as a whole, the workspace, or release readiness."]
+}
