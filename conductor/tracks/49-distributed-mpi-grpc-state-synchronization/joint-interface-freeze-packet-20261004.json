@@ -1,0 +1,193 @@
+{
+  "schema": "kairos.joint-interface-freeze-preparation.v1",
+  "task": "Track49 joint external-accounting contract freeze",
+  "status": "Proposed; independent joint review required",
+  "base_sha": "55fd635095483ada776ab1e1264b901991853f03",
+  "human_authority": "conditional renewed initial-phase entry; ADR renewal",
+  "authority_record": "conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-entry-renewal-20261004.md",
+  "authority_record_sha256": "3fec3e8c5825e6a94a082a96de7b4c18c21cf2baad8b161f2f07efd6c4522cbc",
+  "input_sha256": {
+    "AGENTS.md": "e594bd57dfd8b2257fa89cf21510a0658d1356569d42f2f8ecd607607053d5a5",
+    "Cargo.toml": "183584f511603be2d573072f66a97eff936238fde31a0b7bbde12c1d815499d2",
+    "Cargo.lock": "2c47e509672c3ff89b5b2bccd42b5cd3258389a69edb67a156a910ffc74f979a",
+    "conductor/tracks.yaml": "0d7cf4b4c535633d73a7701c46dcc277a528a461f6f73726e55c628270d338f8",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/external-accounting-interface-proposal-20261004.md": "05c6a4a4b2433c22b359b2f7571cc36b24fd6727d489c0645646ae4ad8f43ae9",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/owned-handler-retirement-api.md": "f8c4e76b0c3c78b660ecefa814a627c7938d7562c21a70d4802ebdf043131456",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/owned-native-acceptance-20261004.md": "2ed1e8498d703ef2305742af83cd47e7163399f8481845351f12f5b8d62d02d9",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/agent-contract.md": "de4a60b34fc45d300af9a5a4019591f9a5834599a67ac2b11f37591f5cfe81fc",
+    "conductor/tracks/49-distributed-mpi-grpc-state-synchronization/spec.md": "770369a86756b626666349080e282a2f3187f1590c6c4f90bc509e51dc98325a",
+    "conductor/tracks/49-distributed-mpi-grpc-state-synchronization/agent-contract.md": "f09c91b86464fa91733eff39d0a092747c58ad0459da55fdea6d02578f555c7c",
+    "crates/kairo-ecs-pdes/src/optimistic/owned.rs": "2eb2db34ca65280d509b8c378a9b7eb235530243e933bfcfe6f1e6b9e456a689",
+    "crates/kairo-ecs-pdes/src/optimistic/owned_execution.rs": "3b6f8470bd70170068c74cc12252f68c80c3366edfdbcef301d725a476c4434c",
+    "crates/kairo-ecs-grpc/Cargo.toml": "f19f6a3c27269afc404fc6b076191efa205a4c6eaf3920136da1b863f211c92b",
+    "crates/kairo-ecs-mpi/Cargo.toml": "92efb389f257d673bb9e1a9cfcd6a92ef23a58e5da79a030962410cbd6b17fac",
+    "conductor/tracks/29-wave-manager-execution-gatekeeper/validate-wave-gates.ps1": "d7da72d979c4974c1380ccc2b54d4526d4218f054052031df68e224946366637"
+  },
+  "native_merge": "55fd635095483ada776ab1e1264b901991853f03",
+  "mode": "design-only",
+  "production_dispatch_ready": false,
+  "source_context_budget_bytes": 24000,
+  "source_context_policy": "Read selected contracts separately; reject oversize rather than truncate. Do not serialize all inputs into one context.",
+  "owned_design_outputs": [
+    "docs/distributed/external-accounting-v1.md",
+    "conductor/tracks/49-distributed-mpi-grpc-state-synchronization/joint-interface-freeze-review-20261004.md"
+  ],
+  "protected_paths": [
+    "crates/",
+    "Cargo.toml",
+    "Cargo.lock",
+    ".github/",
+    "conductor/tracks.yaml",
+    "conductor/tracks.md",
+    "conductor/status.md",
+    "conductor/phase-closeout.yaml",
+    "parent repository and libs/kairos pin"
+  ],
+  "review_roles": [
+    "PDES semantic owner",
+    "distributed owner",
+    "security/dependency reviewer"
+  ],
+  "decisions_to_freeze": [
+    "Exact external constructor/mode, adapter signatures, opaque local verified handles and typed failures; no native proof serialization",
+    "Canonical record kinds/bytes/domain separation/full-width identity and ancestry/payload/bounds; immutable session/membership/fences",
+    "Fixed audited verifier/journal and durable admission/effect/retirement/release transaction ownership; authenticated issuer assertion versus local durable readback",
+    "Complete model/RNG/generation/history/queues/graphs/receipts/root reservation/checkpoint/WAL and restart/migration fencing",
+    "Pause/prepare/common durable commit, frozen revisions/channel frontier reconciliation, crash recovery and strict GVT/equality/proof retention",
+    "Pinned signature/hash/TLS/serialization/storage/transport dependencies, MSRV compatibility, test trust provisioning and separate production credentials authority"
+  ],
+  "acceptance_oracles": [
+    "Every engine operation defines actual atomic durable fact and externally verifiable evidence; retries allocate no duplicate effects/capacity",
+    "Crash before/after each fact commit has deterministic recovery; old session/fence traffic rejects while retained authorized historical facts permit exact retries",
+    "Cut covers complete fixed membership and all captured positive/anti/control channels and blocked/retained obligations; no unilateral floor",
+    "Native fullwidth identity and ancestry, old30/new25 protection, equality, lostACK and real reduced fanout retained",
+    "No public constructor/callerbool/arbitrary verifier/native pointer witness can mint remote accounting proof",
+    "First code leaves stay nondispatchable until APIs/dependencies/targets/commands/exclusive claims are resolved; manifests serialized"
+  ],
+  "first_leaf_definitions": [
+    {
+      "leaf": "engine external adapter and portable checkpoint contract",
+      "owner": "Track48 PDES",
+      "parallel_after_freeze": "canonical codec",
+      "max_owned_paths": 5,
+      "dispatch_ready": false
+    },
+    {
+      "leaf": "canonical authenticated record codec",
+      "owner": "Track49 distributed",
+      "parallel_after_freeze": "engine adapter/checkpoint",
+      "max_owned_paths": 5,
+      "dispatch_ready": false
+    },
+    {
+      "leaf": "dependency manifest/lock integration",
+      "owner": "serialized coordinator plus security/dependency review",
+      "parallel_after_freeze": null,
+      "dispatch_ready": false
+    },
+    {
+      "leaf": "verifier/journal/recovery join",
+      "owner": "joint PDES/distributed",
+      "after": [
+        "engine adapter/checkpoint",
+        "canonical codec",
+        "dependency integration"
+      ],
+      "dispatch_ready": false
+    },
+    {
+      "leaf": "live grpc2 then mpi2/4 and distributed cut/migration acceptance",
+      "owner": "Track49 distributed plus PDES acceptance",
+      "after": [
+        "verifier/journal/recovery"
+      ],
+      "dispatch_ready": false
+    }
+  ],
+  "resolved_design_checks": [
+    {
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_conductor_phase_gates.ps1"
+      ],
+      "expected_exit": 0
+    },
+    {
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "conductor/tracks/29-wave-manager-execution-gatekeeper/validate-wave-gates.ps1",
+        "-TrackId",
+        "49"
+      ],
+      "expected_exit": 1,
+      "expected_issues": [
+        "direct-dependency-not-done48",
+        "transitive-dependency-not-done48"
+      ],
+      "meaning": "Retained raw failure only; no disposition ingestion"
+    },
+    {
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_conductor_git_closeout.ps1",
+        "-RequireCleanWorkingTree"
+      ],
+      "expected_exit": 0,
+      "when": "after commit"
+    }
+  ],
+  "raw_dependency_results": {
+    "35": {
+      "command": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "conductor/tracks/29-wave-manager-execution-gatekeeper/validate-wave-gates.ps1",
+        "-TrackId",
+        "35"
+      ],
+      "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-track49-external-freeze-20261004",
+      "head": "55fd635095483ada776ab1e1264b901991853f03",
+      "exit": 0,
+      "log_sha256": "9b5ad1013aec067f2f0478ce9153ab83cc8d6987240be0099cd630b663d06291",
+      "expected": "Preserve actual result; renewal only49->48 chain, no unrelated waiver."
+    },
+    "47": {
+      "command": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "conductor/tracks/29-wave-manager-execution-gatekeeper/validate-wave-gates.ps1",
+        "-TrackId",
+        "47"
+      ],
+      "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-track49-external-freeze-20261004",
+      "head": "55fd635095483ada776ab1e1264b901991853f03",
+      "exit": 0,
+      "log_sha256": "b50d61ca92a91a878772c34f02df1032b78d3c128cc56c329c27a6fb79e8a172",
+      "expected": "Preserve actual result; renewal only49->48 chain, no unrelated waiver."
+    },
+    "49": {
+      "command": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "conductor/tracks/29-wave-manager-execution-gatekeeper/validate-wave-gates.ps1",
+        "-TrackId",
+        "49"
+      ],
+      "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-track49-external-freeze-20261004",
+      "head": "55fd635095483ada776ab1e1264b901991853f03",
+      "exit": 1,
+      "log_sha256": "3c5d00a05f230811c1e1156a7f64e7a0b3cc1e085291eb5346f1ff97b1cf2611",
+      "expected": "Preserve actual result; renewal only49->48 chain, no unrelated waiver."
+    }
+  },
+  "parent_reconciliation": "Separate coordinator task; preserve qualifiedQ5.1 source and fresh active owners before any pin merge."
+}
