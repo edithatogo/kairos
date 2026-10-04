@@ -1,0 +1,226 @@
+{
+  "feature-builds/1.88.0-ipc_parquet.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/1.88.0-ipc_parquet.log",
+    "sha256": "157b9301f4d103581abc7d3ae370c6184bf590347816bea50a6501928e791442"
+  },
+  "feature-builds/kairo-ecs-arrow-io-tree.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/kairo-ecs-arrow-io-tree.log",
+    "sha256": "7b03c55d46a5ef9fd292e043dd35a75915c556a170db1749f45c6bb46b4929c3"
+  },
+  "feature-builds/1.88.0-parquet.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/1.88.0-parquet.log",
+    "sha256": "14083463757a5be8e1ad77a99a03cf2b7bca44cbe0ed555911cefe316330710a"
+  },
+  "feature-builds/result.json": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/result.json",
+    "sha256": "0b2a33b181d914b6c5512a4c5ec48039ceaa15a82cc72792ea7600ded32212f6"
+  },
+  "feature-builds/1.88.0-ipc.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/1.88.0-ipc.log",
+    "sha256": "d83fbec1df2e93a4efb1ab1f80071e9b685bf37d149bc4de8c7d0e2540cdab1c"
+  },
+  "feature-builds/kairo-ecs-des-tree.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/kairo-ecs-des-tree.log",
+    "sha256": "1d2b970a8b53a38cec347f60e02bdae5fae3567987fc9c2c11d4b5b9702cc45b"
+  },
+  "feature-builds/kairo-ecs-arrow-tree.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/kairo-ecs-arrow-tree.log",
+    "sha256": "ac56d53b6e8142dd8731b7215da328e45395a8b39bd5b38c0058259cbe00cbd5"
+  },
+  "feature-builds/1.99.0-ipc.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/1.99.0-ipc.log",
+    "sha256": "b792e9922b009aca30472d632ebd3532c47fb2d98923b9c547efef57979fc09b"
+  },
+  "feature-builds/kairo-ecs-core-tree.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/kairo-ecs-core-tree.log",
+    "sha256": "32763b6456ceedc058ab7b9b366a56a15a64fb97efc912a745a0bcaafe709b41"
+  },
+  "feature-builds/1.99.0-none.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/1.99.0-none.log",
+    "sha256": "8df9e57118b0fa19e036207da03d62da540f519474426574606fab0b5aa50c5b"
+  },
+  "feature-builds/1.99.0-ipc_parquet.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/1.99.0-ipc_parquet.log",
+    "sha256": "157b9301f4d103581abc7d3ae370c6184bf590347816bea50a6501928e791442"
+  },
+  "feature-builds/1.88.0-none.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/1.88.0-none.log",
+    "sha256": "1c84409db787c8551acf52ce203c255a51faaa16928030970a23429b16e9a369"
+  },
+  "feature-builds/1.99.0-parquet.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.feature_review_20261004/1.99.0-parquet.log",
+    "sha256": "e0655dc8d1b08a7ebfffdf8cce180e5b2a3721da8cd53c55bffc96ba54b05288"
+  },
+  "ipc-floor/ipc-only.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.ipc.typed_readers_20261004/ipc-only.log",
+    "sha256": "b17e8945e6009300bcbd48ebbf1c7717596832895a3eca6cbb60cc916c46e272"
+  },
+  "ipc-floor/result.json": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.ipc.typed_readers_20261004/result.json",
+    "sha256": "299bbb7db62eae03f43a66068ca9c4b8530adbe16aae474fa52c89a2f54e0327"
+  },
+  "ipc-floor/ipc-only-attempt3.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.ipc.typed_readers_20261004/ipc-only-attempt3.log",
+    "sha256": "fff34c1ea25de0eb079e6b1538cc8b48c0429f901047c681c72fc6fea4a4d8ad"
+  },
+  "ipc-floor/ipc-only-attempt2.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.ipc.typed_readers_20261004/ipc-only-attempt2.log",
+    "sha256": "9c1fc4b7a08886b66321f87f91f8a79d5d4b53ef526597e6b6021563767e9423"
+  },
+  "parquet-floor/result.json": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/result.json",
+    "sha256": "790e0c945ce75a240036355fba5ae539717c1273cf35d33f6b2cb5e5567332b2"
+  },
+  "parquet-floor/both-features.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-features.log",
+    "sha256": "41eb73b0d3e6180d1870338c1d451718e14a60a28a6a0aa55682d5a046c81cea"
+  },
+  "parquet-floor/pyarrow-readback.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/pyarrow-readback.log",
+    "sha256": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114"
+  },
+  "parquet-floor/parquet-only.log": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/parquet-only.log",
+    "sha256": "1586627de1a1bae48f6dc85f199922969d59372a32411f4c124ab010594d2fc4"
+  },
+  "current-joined/pyarrow.log": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/pyarrow.log",
+    "sha256": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114"
+  },
+  "current-joined/result.json": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/result.json",
+    "sha256": "e6f2d9548d9bc63f9b37cc0ba9dab25da735434c2fa50ad53f905c57616e90c8"
+  },
+  "current-joined/native.log": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/native.log",
+    "sha256": "834e1fcb0fd4f042e360d78f61908d1f4228cb6006e819ede918a94d5ecf8de3"
+  },
+  "lints/test-1.88.log": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.current_lints_20261004/test-1.88.log",
+    "sha256": "609878d74c1f259beb28b4efe3bef91e826e1098b586ada73209d62fd5eef2d7"
+  },
+  "lints/result.json": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.current_lints_20261004/result.json",
+    "sha256": "7f85df1d7a61fcfe9a5b92069ddacdc8c79fd0bb3dfe75892251f3fba10a2225"
+  },
+  "lints/clippy-1.99-attempt2.log": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.current_lints_20261004/clippy-1.99-attempt2.log",
+    "sha256": "2197e1fdfd9827e95057cd74182abbc5e7e2fb7b0d73a286d20d0e39056bbe01"
+  },
+  "lints/clippy-1.99.log": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.current_lints_20261004/clippy-1.99.log",
+    "sha256": "05cddd91fd3dc8bc42f3bd887546fe621cef3ee94c9ce954f9751adee2617a83"
+  },
+  "legacy-floor/result.json": {
+    "source": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.legacy_floor_20261004/result.json",
+    "sha256": "e3721ff4ccea369e79a40e2b871e57df30278d01cb5bc1055a44cfc603c8e5ff"
+  },
+  "legacy-floor/logs/test-1.76.log": {
+    "source": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/test-1.76.log",
+    "sha256": "e0cfb2bea3d7d8722acbebefc64e22f70b15fc4f5ca92d719083e216110848e5"
+  },
+  "legacy-floor/logs/test-1.99.log": {
+    "source": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/test-1.99.log",
+    "sha256": "0c7c2a5f00b408e600b7a01983f0c44c2981626e8d2bab561d67d21c13584c08"
+  },
+  "legacy-floor/logs/rustc-1.76.txt": {
+    "source": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/rustc-1.76.txt",
+    "sha256": "d095f5da3121dca63a155e46c677e24e7a1dc9865be711d8a558a0c63618f0ac"
+  },
+  "legacy-floor/logs/rustc-1.99.txt": {
+    "source": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/rustc-1.99.txt",
+    "sha256": "352d6857968e80a6357a926ac685b9b07f77c479aaafde33e73a53945e802909"
+  },
+  "legacy-floor/logs/cargo-1.76.txt": {
+    "source": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/cargo-1.76.txt",
+    "sha256": "82f61754fa2eb314e2ea780db609c51960f4463ad7bf20b807c93935425eed97"
+  },
+  "legacy-floor/logs/cargo-1.99.txt": {
+    "source": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.legacy_floor_20261004/logs/cargo-1.99.txt",
+    "sha256": "1f88eaf7fe1aaec83184752cf4c944cd22f00184136ff36a3e4c318cc60ef566"
+  },
+  "rust-floor/exclusion.ipc_stream": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output/exclusion.ipc_stream",
+    "sha256": "36c5ac3308e6288680b304b3eb259c489146948ec4abf46beca1e05632c5f5c6"
+  },
+  "rust-floor/exclusion.ipc_file": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output/exclusion.ipc_file",
+    "sha256": "640136a4802a9787d5ccf606f1d2e1ec3f08dce195bb808031874b21c833ae98"
+  },
+  "rust-floor/trace.ipc_stream": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output/trace.ipc_stream",
+    "sha256": "b0dc7febd83b95d4a946f5cf2898297d1ab69ee064ff7395b76d8e3d31bb689d"
+  },
+  "rust-floor/trace.parquet": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output/trace.parquet",
+    "sha256": "040d4323252011869122dd3382184ca8165d7927316cfbb9f292974b3788fcd6"
+  },
+  "rust-floor/outcome.parquet": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output/outcome.parquet",
+    "sha256": "4e03b6a272b51a3305bebe42cd90b2645c6d41a02fb4b02e3907fc95cd00201a"
+  },
+  "rust-floor/trace.ipc_file": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output/trace.ipc_file",
+    "sha256": "8dee67c77da0ad2ad454ffd7182ff728e31100a8076d16e91c9d40a43a05594a"
+  },
+  "rust-floor/outcome.ipc_file": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output/outcome.ipc_file",
+    "sha256": "adceb3f9545fed1619f0681e9137972092ceb5ec47aec61861ce165170b0c4fd"
+  },
+  "rust-floor/outcome.ipc_stream": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output/outcome.ipc_stream",
+    "sha256": "024ce1ac8bbbed5c5f69e11afe284991b21822f84e5cbca52ced98588f44b0a3"
+  },
+  "rust-floor/exclusion.parquet": {
+    "source": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.typed_readers_20261004/both-output/exclusion.parquet",
+    "sha256": "684883b46342fd43ebb35e9b2c1c669a0b954f9e9d320e75b9d586dc826ee391"
+  },
+  "rust-current/exclusion.ipc_stream": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/both-output/exclusion.ipc_stream",
+    "sha256": "36c5ac3308e6288680b304b3eb259c489146948ec4abf46beca1e05632c5f5c6"
+  },
+  "rust-current/exclusion.ipc_file": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/both-output/exclusion.ipc_file",
+    "sha256": "640136a4802a9787d5ccf606f1d2e1ec3f08dce195bb808031874b21c833ae98"
+  },
+  "rust-current/trace.ipc_stream": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/both-output/trace.ipc_stream",
+    "sha256": "b0dc7febd83b95d4a946f5cf2898297d1ab69ee064ff7395b76d8e3d31bb689d"
+  },
+  "rust-current/trace.parquet": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/both-output/trace.parquet",
+    "sha256": "040d4323252011869122dd3382184ca8165d7927316cfbb9f292974b3788fcd6"
+  },
+  "rust-current/outcome.parquet": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/both-output/outcome.parquet",
+    "sha256": "4e03b6a272b51a3305bebe42cd90b2645c6d41a02fb4b02e3907fc95cd00201a"
+  },
+  "rust-current/trace.ipc_file": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/both-output/trace.ipc_file",
+    "sha256": "8dee67c77da0ad2ad454ffd7182ff728e31100a8076d16e91c9d40a43a05594a"
+  },
+  "rust-current/outcome.ipc_file": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/both-output/outcome.ipc_file",
+    "sha256": "adceb3f9545fed1619f0681e9137972092ceb5ec47aec61861ce165170b0c4fd"
+  },
+  "rust-current/outcome.ipc_stream": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/both-output/outcome.ipc_stream",
+    "sha256": "024ce1ac8bbbed5c5f69e11afe284991b21822f84e5cbca52ced98588f44b0a3"
+  },
+  "rust-current/exclusion.parquet": {
+    "source": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/both-output/exclusion.parquet",
+    "sha256": "684883b46342fd43ebb35e9b2c1c669a0b954f9e9d320e75b9d586dc826ee391"
+  },
+  "legacy-byte-guard/result.json": {
+    "source": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.legacy.frozen_bytes_20261004/result.json",
+    "sha256": "881096ac4d53d1c1756f8f6642a4f22863357c99a637c8569d3d66c9d1f02c1d"
+  },
+  "legacy-byte-guard/logs/rust-1.99.log": {
+    "source": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.legacy.frozen_bytes_20261004/logs/rust-1.99.log",
+    "sha256": "840accd998f4af65b970f082235f223257d5a5523ff585e92e578d02941d1022"
+  },
+  "legacy-byte-guard/logs/rust-1.76.log": {
+    "source": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.legacy.frozen_bytes_20261004/logs/rust-1.76.log",
+    "sha256": "3877333caf7cd5a8d8a9dd8cbbc18f8b10d22e74c06dfc132153b42359e1fad5"
+  }
+}

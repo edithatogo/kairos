@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "packet_id": "C1.2.deps.current_lints_20261004",
+  "instance_id": "current_lints_20261004",
+  "attempt_id": "de8c94e8-a49f-4ef3-a269-e412b32fb059",
+  "status": "ready_for_review",
+  "base_commit": "62f20dc68f81fc639786ee22c21b2c709c7f9393",
+  "commit": "ac7e9cb89aae3e2243976c9fad4c1921502e403e",
+  "working_directory": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos",
+  "recorded_at_utc": "2026-10-04T12:09:28.649371+00:00",
+  "context_hashes": {
+    ".artifacts/mvp/C1.2.deps.current_lints_20261004/context.md": "7f8dab67f81b1e2b80fc77a20c407f33f9ca8a37e0776d49fac903c3dd589778",
+    "conductor/design/calibration/c1-recordbatch-io-v1.md": "2854aff0be65914e1b0b16e6caa46122ea640b959632d95030edbdce83958449"
+  },
+  "changes": [
+    {
+      "path": "crates/kairo-ecs-arrow-io/src/ipc.rs",
+      "sha256": "cab45c8554ffab9f01236055e231e369a20fa03df8e7fcb9f0ac602269f140d9"
+    },
+    {
+      "path": "crates/kairo-ecs-arrow-io/src/parquet.rs",
+      "sha256": "bdd6f7c7e163a44261e6e3529a775ca9791fcc1849b78752f57f298f11adf6d0"
+    },
+    {
+      "path": "crates/kairo-ecs-arrow-io/src/limits.rs",
+      "sha256": "e135f3eecc9c98e19bfd1b2f8a4d4453b2e07d64f119388bdfe0b4b242abb7a2"
+    }
+  ],
+  "verification": [
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "clippy",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--all-features",
+        "--lib",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "env": {
+        "RUSTC": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.current_lints_20261004/target-1.99"
+      },
+      "exit_code": 1,
+      "note": "First run identified unused mut on Parquet reader; corrected in-scope.",
+      "log": ".artifacts/mvp/C1.2.deps.current_lints_20261004/clippy-1.99.log",
+      "log_sha256": "05cddd91fd3dc8bc42f3bd887546fe621cef3ee94c9ce954f9751adee2617a83"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "clippy",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--all-features",
+        "--lib",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "env": {
+        "RUSTC": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.current_lints_20261004/target-1.99"
+      },
+      "exit_code": 0,
+      "log": ".artifacts/mvp/C1.2.deps.current_lints_20261004/clippy-1.99-attempt2.log",
+      "log_sha256": "2197e1fdfd9827e95057cd74182abbc5e7e2fb7b0d73a286d20d0e39056bbe01"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--all-features",
+        "--lib"
+      ],
+      "env": {
+        "RUSTC": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.current_lints_20261004/target-1.88"
+      },
+      "exit_code": 0,
+      "summary": "27 passed, 0 failed",
+      "log": ".artifacts/mvp/C1.2.deps.current_lints_20261004/test-1.88.log",
+      "log_sha256": "609878d74c1f259beb28b4efe3bef91e826e1098b586ada73209d62fd5eef2d7"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "toolchains": [
+    {
+      "rustc": "1.99.0 (b940084d7 2026-09-28)",
+      "cargo": "1.99.0 (5f94df478 2026-08-27)",
+      "host": "aarch64-apple-darwin"
+    },
+    {
+      "rustc": "1.88.0 (6b00bc388 2025-06-23)",
+      "cargo": "1.88.0 (873a06493 2025-05-10)",
+      "host": "aarch64-apple-darwin"
+    }
+  ],
+  "correction_attempts": 1,
+  "seed": null,
+  "limitations": [
+    "Hosted qualification not asserted; coordinator review remains required."
+  ]
+}

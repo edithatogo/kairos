@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- Experimental calibration physical schema v2 qualification now freezes every nested Arrow type, nullability and metadata field, exercises IPC and Parquet separately at the Rust 1.88 floor, and retains exact PyArrow readback evidence. Legacy telemetry remains a custom smoke format with its own Rust 1.76 compatibility qualification.
+
 - Security reporting guidance now links to the repository's verified private vulnerability reporting route and explains coordinated public disclosure.
 - Scheduler property, bounded fuzz, mutation, and core-coverage gates, with one instrumented workspace test pass and selected GitHub Actions publishers.
 - Read-only `just quality-drift` receipt for live branch rules, Actions permissions, Renovate, Codecov, and exact-default-commit check results.

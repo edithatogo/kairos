@@ -1,0 +1,190 @@
+{
+  "status": "ready_for_review",
+  "base": "62f20dc68f81fc639786ee22c21b2c709c7f9393",
+  "cwd": "/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos",
+  "verification": [
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo",
+        "check",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--no-default-features"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/1.88.0-none.log",
+      "sha256": "1c84409db787c8551acf52ce203c255a51faaa16928030970a23429b16e9a369"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo",
+        "check",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--no-default-features",
+        "--features",
+        "ipc"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/1.88.0-ipc.log",
+      "sha256": "d83fbec1df2e93a4efb1ab1f80071e9b685bf37d149bc4de8c7d0e2540cdab1c"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo",
+        "check",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--no-default-features",
+        "--features",
+        "parquet"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/1.88.0-parquet.log",
+      "sha256": "14083463757a5be8e1ad77a99a03cf2b7bca44cbe0ed555911cefe316330710a"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo",
+        "check",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--no-default-features",
+        "--features",
+        "ipc,parquet"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/1.88.0-ipc_parquet.log",
+      "sha256": "157b9301f4d103581abc7d3ae370c6184bf590347816bea50a6501928e791442"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "check",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--no-default-features"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/1.99.0-none.log",
+      "sha256": "8df9e57118b0fa19e036207da03d62da540f519474426574606fab0b5aa50c5b"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "check",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--no-default-features",
+        "--features",
+        "ipc"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/1.99.0-ipc.log",
+      "sha256": "b792e9922b009aca30472d632ebd3532c47fb2d98923b9c547efef57979fc09b"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "check",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--no-default-features",
+        "--features",
+        "parquet"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/1.99.0-parquet.log",
+      "sha256": "e0655dc8d1b08a7ebfffdf8cce180e5b2a3721da8cd53c55bffc96ba54b05288"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "check",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--no-default-features",
+        "--features",
+        "ipc,parquet"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/1.99.0-ipc_parquet.log",
+      "sha256": "157b9301f4d103581abc7d3ae370c6184bf590347816bea50a6501928e791442"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "tree",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--no-default-features"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/kairo-ecs-arrow-io-tree.log",
+      "sha256": "7b03c55d46a5ef9fd292e043dd35a75915c556a170db1749f45c6bb46b4929c3"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "tree",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow",
+        "--no-default-features"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/kairo-ecs-arrow-tree.log",
+      "sha256": "ac56d53b6e8142dd8731b7215da328e45395a8b39bd5b38c0058259cbe00cbd5"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "tree",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-core",
+        "--no-default-features"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/kairo-ecs-core-tree.log",
+      "sha256": "32763b6456ceedc058ab7b9b366a56a15a64fb97efc912a745a0bcaafe709b41"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "tree",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-des",
+        "--no-default-features"
+      ],
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.deps.feature_review_20261004/kairo-ecs-des-tree.log",
+      "sha256": "1d2b970a8b53a38cec347f60e02bdae5fae3567987fc9c2c11d4b5b9702cc45b"
+    }
+  ],
+  "input_hashes": {
+    "crates/kairo-ecs-arrow-io/Cargo.toml": "ca6d504b69a02eefa4ef300a2f1cbe53c11a3e7afc788c20e3ce60497ba19612"
+  }
+}
