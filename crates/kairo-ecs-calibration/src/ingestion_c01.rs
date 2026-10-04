@@ -853,6 +853,8 @@ fn actual_transport_matrix_impl() {
         .unwrap();
     let mut ledger = std::io::BufWriter::new(ledger);
     let mut cache: Vec<CachedExecution> = Vec::new();
+    let mut representative_classes: BTreeSet<(String, Vec<u8>)> = BTreeSet::new();
+    let mut representatives = Vec::new();
     let mut actual_executions = 0usize;
     let mut point_count = 0usize;
     let mut checked_alias_sources = 0usize;
@@ -1001,6 +1003,34 @@ fn actual_transport_matrix_impl() {
                 let receipt = json!({"execution_id":id,"profile":profile_name,"source_ndjson_sha256":ndjson_sha,"source_ndjson_bytes":ndjson.len(),"semantic_counts":semantic_counts(&manifest),"populations":actual_stats,"diagnostics":diagnostic_receipt(&output),"sort_report":manifest["sort"],"exact_bytes_equal_baseline":true});
                 write_json(&executions.join(format!("manifest-{id}.json")), &manifest);
                 write_json(&executions.join(format!("receipt-{id}.json")), &receipt);
+                if representative_classes.insert((profile_name.to_owned(), ndjson.clone())) {
+                    let representative = result.join("representatives").join(&id);
+                    fs::create_dir_all(&representative).unwrap();
+                    for (_, filename) in POPULATIONS {
+                        fs::copy(output.join(filename), representative.join(filename))
+                            .unwrap_or_else(|error| panic!("retain {filename}: {error}"));
+                    }
+                    fs::copy(
+                        output.join("diagnostics.ndjson"),
+                        representative.join("diagnostics.ndjson"),
+                    )
+                    .unwrap_or_else(|error| panic!("retain diagnostics: {error}"));
+                    let provenance = json!({
+                        "execution_id":id,
+                        "profile":profile_name,
+                        "source_ndjson_sha256":ndjson_sha,
+                        "source_ndjson_bytes":ndjson.len(),
+                        "source_array_sha256":actual_sha,
+                        "transport_bundle_path":bundle["path"],
+                        "manifest_path":format!("executions/manifest-{id}.json"),
+                        "receipt_path":format!("executions/receipt-{id}.json"),
+                        "representative_directory":format!("representatives/{id}"),
+                        "populations":actual_stats,
+                        "diagnostics":diagnostic_receipt(&output)
+                    });
+                    write_json(&representative.join("representative.json"), &provenance);
+                    representatives.push(provenance);
+                }
                 fs::remove_dir_all(&output).unwrap();
                 fs::remove_file(source_path).unwrap();
                 actual_executions += 1;
@@ -1047,6 +1077,10 @@ fn actual_transport_matrix_impl() {
     );
     let all_alias_sources_checked = checked_alias_sources == point_count - actual_executions;
     assert!(all_alias_sources_checked);
+    write_json(
+        &result.join("representative-index.json"),
+        &json!({"schema_version":"c01.transport-representatives.v1","representatives":representatives}),
+    );
     write_json(
         &result.join("actual-matrix-summary.json"),
         &json!({"schema_version":"c01.transport-rust-matrix.v1","index_sha256":sha256(&index_bytes),"transport_bundles":bundles.len(),"matrix_points":point_count,"actual_executions":actual_executions,"aliases":point_count-actual_executions,"checked_alias_sources":checked_alias_sources,"distinct_profile_input_fingerprints":distinct_inputs.len(),"cache_key":"exact profile + exact ordered NDJSON bytes + frozen template bytes + frozen config bytes + validation policy bytes + chunk/run-row/run-byte limits + same code/toolchain evidence","profiles":PROFILES,"all_alias_source_sha_and_byte_length_match":all_alias_sources_checked}),
