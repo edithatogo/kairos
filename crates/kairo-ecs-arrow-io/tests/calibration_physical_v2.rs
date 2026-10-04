@@ -46,7 +46,7 @@ fn rows(batches: &[RecordBatch]) -> Vec<RecordBatch> {
 }
 
 fn variants(schema: &SchemaRef) -> Vec<SchemaRef> {
-    use frozen::{FieldChange, change_field, change_global_metadata};
+    use frozen::{change_field, change_global_metadata, FieldChange};
 
     let mut variants = vec![
         change_field(
