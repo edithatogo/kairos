@@ -16,8 +16,8 @@ use std::{
 use arrow_array::RecordBatch;
 use arrow_schema::{DataType, SchemaRef};
 use kairo_ecs_arrow_io::{
-    IoError, IoLimits, read_ipc_file, read_ipc_stream, read_parquet, write_ipc_file,
-    write_ipc_stream, write_parquet,
+    read_ipc_file, read_ipc_stream, read_parquet, write_ipc_file, write_ipc_stream, write_parquet,
+    IoError, IoLimits,
 };
 
 #[path = "support/calibration_physical_schema_v2.rs"]
@@ -88,7 +88,7 @@ fn read_bytes(bytes: &[u8], format: &str, schema: SchemaRef) -> Result<Vec<Recor
 }
 
 fn changed_schemas(schema: &SchemaRef) -> Vec<SchemaRef> {
-    use frozen::{FieldChange, change_field, change_global_metadata};
+    use frozen::{change_field, change_global_metadata, FieldChange};
 
     let mut changes = vec![
         change_field(
