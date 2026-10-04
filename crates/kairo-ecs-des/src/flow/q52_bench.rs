@@ -125,15 +125,15 @@ fn measure_rekey_cancel(n: usize, tied: bool, repeat: usize) {
         keys.push(key);
     }
     let started = Instant::now();
-    for index in 0..n {
-        let old = keys[index];
+    for key_slot in &mut keys {
+        let old = *key_slot;
         let new = PriorityKey {
             level: old.level.saturating_add(1),
             ..old
         };
         black_box(queue.requests.remove(&old));
         black_box(queue.requests.insert(new));
-        keys[index] = new;
+        *key_slot = new;
         black_box(queue.requests.remove(&new));
     }
     let elapsed_ns = started.elapsed().as_nanos();
@@ -241,6 +241,9 @@ fn measure_production_retain_rekey_cancel(n: usize, tied: bool, repeat: usize) {
     ));
 }
 
+// The comparison counter is interior instrumentation only; Ord reads only the
+// immutable (level, sequence, id) tuple, so mutating this Cell cannot affect key order.
+#[allow(clippy::mutable_key_type)]
 fn counted_comparisons(n: usize, tied: bool) -> (u64, u64) {
     let comparisons = Rc::new(Cell::new(0));
     let mut queue = BTreeSet::new();
@@ -260,8 +263,8 @@ fn counted_comparisons(n: usize, tied: bool) -> (u64, u64) {
         keys.push(key);
     }
     comparisons.set(0); // setup excluded from counted operation totals
-    for index in 0..n {
-        let old = &keys[index];
+    for key_slot in &mut keys {
+        let old = &*key_slot;
         assert!(queue.remove(old));
         let new = CountedKey {
             level: old.level.saturating_add(1),
@@ -270,7 +273,7 @@ fn counted_comparisons(n: usize, tied: bool) -> (u64, u64) {
             comparisons: comparisons.clone(),
         };
         assert!(queue.insert(new.clone()));
-        keys[index] = new.clone();
+        *key_slot = new.clone();
         assert!(queue.remove(&new));
     }
     assert!(queue.is_empty());
