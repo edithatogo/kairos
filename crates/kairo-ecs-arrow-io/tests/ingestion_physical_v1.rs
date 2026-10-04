@@ -21,7 +21,6 @@ use kairo_ecs_arrow_io::{
 };
 
 #[path = "support/calibration_physical_schema_v2.rs"]
-#[allow(dead_code)]
 mod frozen;
 
 const FORMATS: [&str; 3] = ["ipc_file", "ipc_stream", "parquet"];
@@ -29,7 +28,7 @@ const OUTPUT_BATCH_SIZES: [usize; 3] = [1, 2, 3];
 
 fn input_dir() -> (PathBuf, bool) {
     match env::var_os("KAIROS_C13_PHYSICAL_INDIR") {
-        Some(path) => (PathBuf::from(path), true),
+        Some(path) => (PathBuf::from(path), false),
         None => (
             PathBuf::from(env!("CARGO_MANIFEST_DIR"))
                 .join("tests/fixtures/calibration_physical_v2"),
