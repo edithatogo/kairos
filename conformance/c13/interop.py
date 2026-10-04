@@ -146,7 +146,7 @@ def write_arrow(table: pa.Table, path: Path, fmt: str, batch_rows: int, row_grou
                 with ipc.new_stream(sink, table.schema) as writer:
                     writer.write_table(table, max_chunksize=batch_rows)
             elif fmt == "parquet":
-                parquet.write_table(table, sink, row_group_size=row_group_rows)
+                parquet.write_table(table, sink, row_group_size=row_group_rows, compression="NONE")
             else:
                 raise ValueError(f"unsupported physical format {fmt}")
     except FileExistsError as exc:
