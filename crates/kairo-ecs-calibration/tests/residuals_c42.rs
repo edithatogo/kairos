@@ -180,7 +180,7 @@ fn prespecified_empty_group_is_emitted() {
     let group = GroupKey {
         strata: vec![("site".into(), "north".into())],
     };
-    let out = summarize(&[], &[group.clone()], None);
+    let out = summarize(&[], std::slice::from_ref(&group), None);
     assert_eq!(out[0].group, group);
     assert_eq!(out[0].status, SummaryStatus::Empty);
     assert_eq!(out[0].counts, Counts::default());
@@ -333,5 +333,161 @@ fn invalid_grouping_retains_raw_rows_and_counts() {
     assert_eq!(invalid.status, SummaryStatus::Invalid);
     assert_eq!(invalid.counts.raw_reference, 1);
     assert_eq!(invalid.counts.unmatched, 1);
+    assert_eq!(invalid.rows.len(), 1);
+}
+
+#[test]
+fn invalid_middle_pair_retains_full_batch_rows_counts_and_order() {
+    let mut rows = Vec::new();
+    for case in ["a", "b", "c"] {
+        rows.push(row(
+            Side::Reference,
+            case,
+            OutcomeStatus::Observed,
+            Some(10),
+            None,
+        ));
+        let mut sim = row(
+            Side::Simulation,
+            case,
+            OutcomeStatus::Predicted,
+            None,
+            Some(12),
+        );
+        if case == "b" {
+            sim.observed_ticks = Some(11);
+        }
+        rows.push(sim);
+    }
+    let forward = summarize(&rows, &[], None);
+    rows.reverse();
+    let reverse = summarize(&rows, &[], None);
+    assert_eq!(forward, reverse);
+    assert_eq!(forward[0].status, SummaryStatus::Invalid);
+    assert_eq!(forward[0].counts.raw_reference, 3);
+    assert_eq!(forward[0].counts.raw_simulation, 3);
+    assert_eq!(forward[0].counts.unmatched, 6);
+    assert_eq!(forward[0].rows.len(), 3);
+    assert!(forward[0]
+        .rows
+        .iter()
+        .all(|pair| pair.reference.len() == 1 && pair.simulation.len() == 1));
+}
+
+#[test]
+fn same_logical_key_in_different_groups_is_invalid_and_retained() {
+    let mut reference = row(Side::Reference, "x", OutcomeStatus::Observed, Some(1), None);
+    let mut simulation = row(
+        Side::Simulation,
+        "x",
+        OutcomeStatus::Predicted,
+        None,
+        Some(2),
+    );
+    reference.group = GroupKey {
+        strata: vec![("site".into(), "north".into())],
+    };
+    simulation.group = GroupKey {
+        strata: vec![("site".into(), "south".into())],
+    };
+    let groups = [reference.group.clone(), simulation.group.clone()];
+    let out = summarize(&[reference, simulation], &groups, None);
+    assert_eq!(out.len(), 2);
+    assert!(out
+        .iter()
+        .all(|summary| summary.status == SummaryStatus::Invalid));
+    assert_eq!(
+        out.iter().map(|summary| summary.rows.len()).sum::<usize>(),
+        2
+    );
+    assert_eq!(
+        out.iter()
+            .map(|summary| summary.counts.unmatched)
+            .sum::<usize>(),
+        2
+    );
+}
+
+#[test]
+fn simulation_failed_or_infeasible_rows_cannot_carry_observed_ticks() {
+    let mut failed = row(
+        Side::Simulation,
+        "failed",
+        OutcomeStatus::Failed,
+        Some(3),
+        None,
+    );
+    let mut infeasible_without_prediction = row(
+        Side::Simulation,
+        "inf-none",
+        OutcomeStatus::Infeasible,
+        Some(3),
+        None,
+    );
+    let mut infeasible_with_prediction = row(
+        Side::Simulation,
+        "inf-point",
+        OutcomeStatus::Infeasible,
+        Some(3),
+        Some(4),
+    );
+    failed.prediction_unclamped = false;
+    infeasible_without_prediction.prediction_unclamped = false;
+    infeasible_with_prediction.prediction_unclamped = true;
+    for item in [
+        failed,
+        infeasible_without_prediction,
+        infeasible_with_prediction,
+    ] {
+        let out = summarize(&[item], &[], None);
+        assert_eq!(out[0].status, SummaryStatus::Invalid);
+        assert_eq!(out[0].counts.raw_simulation, 1);
+        assert_eq!(out[0].rows.len(), 1);
+    }
+}
+
+#[test]
+fn bounded_large_paired_cohort_keeps_complete_counts() {
+    const N: usize = 1024;
+    let mut rows = Vec::with_capacity(N * 2);
+    for i in 0..N {
+        let case = format!("case-{i:04}");
+        rows.push(row(
+            Side::Reference,
+            &case,
+            OutcomeStatus::Observed,
+            Some(i as u128),
+            None,
+        ));
+        rows.push(row(
+            Side::Simulation,
+            &case,
+            OutcomeStatus::Predicted,
+            None,
+            Some(i as u128 + 1),
+        ));
+    }
+    let out = summarize(&rows, &[], None);
+    assert_eq!(out[0].status, SummaryStatus::Computed);
+    assert_eq!(out[0].counts.reference, N);
+    assert_eq!(out[0].counts.simulation, N);
+    assert_eq!(out[0].counts.matched, N);
+    assert_eq!(out[0].rows.len(), N);
+}
+
+#[test]
+fn unknown_row_group_is_retained_when_other_groups_are_declared() {
+    let declared = GroupKey {
+        strata: vec![("site".into(), "north".into())],
+    };
+    let unknown = GroupKey {
+        strata: vec![("site".into(), "south".into())],
+    };
+    let mut reference = row(Side::Reference, "x", OutcomeStatus::Observed, Some(1), None);
+    reference.group = unknown.clone();
+    let out = summarize(&[reference], std::slice::from_ref(&declared), None);
+    let invalid = out.iter().find(|summary| summary.group == unknown).unwrap();
+    assert_eq!(invalid.status, SummaryStatus::Invalid);
+    assert_eq!(invalid.counts.raw_reference, 1);
     assert_eq!(invalid.rows.len(), 1);
 }

@@ -202,6 +202,7 @@ impl Compensated {
 }
 
 type PairMap = BTreeMap<LogicalKey, (Vec<Row>, Vec<Row>)>;
+type InvalidGroupMap = BTreeMap<GroupKey, (Counts, PairMap)>;
 type Cohort = (String, String, String, String, String, String, String);
 
 pub(crate) fn summarize(
@@ -222,8 +223,10 @@ pub(crate) fn summarize(
             .any(|r| !groups.contains(&r.group) || !r.group.valid())
         || window.is_some_and(|w| w.start >= w.end_exclusive);
 
+    // Build pairs once in logical-key order. Every input row remains in the
+    // pair until batch validation has finished, including duplicate sides.
+    let mut by_key: PairMap = BTreeMap::new();
     let mut cohort: Option<Cohort> = None;
-    let mut seen = BTreeSet::new();
     for row in rows {
         let c = (
             row.key.study_id.clone(),
@@ -239,32 +242,23 @@ pub(crate) fn summarize(
         } else {
             cohort = Some(c);
         }
-        if !row.key.valid() || row.tick_unit != "nanosecond" {
+        if !row.key.valid() || row.tick_unit != "nanosecond" || !row_coherent(row) {
             invalid = true;
         }
-        if row.side == Side::Simulation
-            && row.predicted_ticks.is_some()
-            && !row.prediction_unclamped
-        {
+        let pair = by_key.entry(row.key.clone()).or_default();
+        let (own, other) = match row.side {
+            Side::Reference => (&mut pair.0, &pair.1),
+            Side::Simulation => (&mut pair.1, &pair.0),
+        };
+        if !own.is_empty() {
             invalid = true;
         }
-        if !seen.insert((row.key.clone(), row.side)) {
+        if other.first().is_some_and(|existing| {
+            existing.group != row.group || existing.source_time != row.source_time
+        }) {
             invalid = true;
         }
-    }
-    let by_key: BTreeSet<LogicalKey> = rows.iter().map(|row| row.key.clone()).collect();
-    for key in &by_key {
-        let ref_row = rows
-            .iter()
-            .find(|r| r.key == *key && r.side == Side::Reference);
-        let sim_row = rows
-            .iter()
-            .find(|r| r.key == *key && r.side == Side::Simulation);
-        if let (Some(r), Some(s)) = (ref_row, sim_row) {
-            if r.source_time != s.source_time {
-                invalid = true;
-            }
-        }
+        own.push(row.clone());
     }
     if invalid {
         return invalid_summaries(rows, &groups, window);
@@ -275,21 +269,47 @@ pub(crate) fn summarize(
         .cloned()
         .map(|g| (g, BTreeMap::new()))
         .collect();
-    for row in rows {
-        let pair = grouped
-            .get_mut(&row.group)
+    for (key, (reference, simulation)) in by_key {
+        let group = reference
+            .first()
+            .or_else(|| simulation.first())
             .unwrap()
-            .entry(row.key.clone())
-            .or_default();
-        match row.side {
-            Side::Reference => pair.0.push(row.clone()),
-            Side::Simulation => pair.1.push(row.clone()),
-        }
+            .group
+            .clone();
+        grouped
+            .get_mut(&group)
+            .unwrap()
+            .insert(key, (reference, simulation));
     }
     grouped
         .into_iter()
         .map(|(group, pairs)| summarize_group(group, pairs, window))
         .collect()
+}
+
+fn row_coherent(row: &Row) -> bool {
+    match (
+        row.side,
+        row.status,
+        row.observed_ticks,
+        row.predicted_ticks,
+    ) {
+        (Side::Reference, OutcomeStatus::Observed, Some(_), None) => true,
+        (Side::Reference, OutcomeStatus::Missing | OutcomeStatus::Censored, None, None) => true,
+        (Side::Reference, OutcomeStatus::Failed, _, None) => true,
+        (Side::Simulation, OutcomeStatus::Predicted, None, Some(_)) => row.prediction_unclamped,
+        (Side::Simulation, OutcomeStatus::Infeasible, None, Some(_)) => row.prediction_unclamped,
+        (
+            Side::Simulation,
+            OutcomeStatus::Infeasible
+            | OutcomeStatus::Failed
+            | OutcomeStatus::Missing
+            | OutcomeStatus::Censored,
+            None,
+            None,
+        ) => !row.prediction_unclamped,
+        _ => false,
+    }
 }
 
 fn empty_summary(group: GroupKey, status: SummaryStatus) -> Summary {
@@ -317,46 +337,49 @@ fn invalid_summaries(
     if targets.is_empty() {
         targets.insert(GroupKey::default());
     }
-    targets
+    let mut grouped: InvalidGroupMap = targets
         .into_iter()
-        .map(|group| {
-            let mut counts = Counts::default();
-            let mut map: BTreeMap<LogicalKey, (Vec<Row>, Vec<Row>)> = BTreeMap::new();
-            for row in rows.iter().filter(|r| r.group == group) {
-                let pair = map.entry(row.key.clone()).or_default();
-                match row.side {
-                    Side::Reference => {
-                        pair.0.push(row.clone());
-                        counts.raw_reference += 1;
-                    }
-                    Side::Simulation => {
-                        pair.1.push(row.clone());
-                        counts.raw_simulation += 1;
-                    }
-                }
-                if row.excluded
-                    || window.is_some_and(|w| {
-                        row.source_time
-                            .is_none_or(|t| t < w.start || t >= w.end_exclusive)
-                    })
-                {
-                    counts.excluded += 1;
-                }
-                if window.is_some() && row.source_time.is_none() {
-                    counts.missing_time += 1;
-                }
-                match row.status {
-                    OutcomeStatus::Censored => counts.censored += 1,
-                    OutcomeStatus::Missing => counts.missing += 1,
-                    OutcomeStatus::Failed => counts.failed += 1,
-                    OutcomeStatus::Infeasible => counts.infeasible += 1,
-                    _ => {}
-                }
-                if row.infeasible && row.status != OutcomeStatus::Infeasible {
-                    counts.infeasible += 1;
-                }
-                counts.unmatched += 1;
+        .map(|group| (group, (Counts::default(), BTreeMap::new())))
+        .collect();
+    for row in rows {
+        let (counts, map) = grouped.get_mut(&row.group).unwrap();
+        let pair = map.entry(row.key.clone()).or_default();
+        match row.side {
+            Side::Reference => {
+                pair.0.push(row.clone());
+                counts.raw_reference += 1;
             }
+            Side::Simulation => {
+                pair.1.push(row.clone());
+                counts.raw_simulation += 1;
+            }
+        }
+        if row.excluded
+            || window.is_some_and(|w| {
+                row.source_time
+                    .is_none_or(|t| t < w.start || t >= w.end_exclusive)
+            })
+        {
+            counts.excluded += 1;
+        }
+        if window.is_some() && row.source_time.is_none() {
+            counts.missing_time += 1;
+        }
+        match row.status {
+            OutcomeStatus::Censored => counts.censored += 1,
+            OutcomeStatus::Missing => counts.missing += 1,
+            OutcomeStatus::Failed => counts.failed += 1,
+            OutcomeStatus::Infeasible => counts.infeasible += 1,
+            _ => {}
+        }
+        if row.infeasible && row.status != OutcomeStatus::Infeasible {
+            counts.infeasible += 1;
+        }
+        counts.unmatched += 1;
+    }
+    grouped
+        .into_iter()
+        .map(|(group, (counts, map))| {
             let rows = map
                 .into_iter()
                 .map(|(key, (mut reference, mut simulation))| {
@@ -378,6 +401,7 @@ fn invalid_summaries(
         })
         .collect()
 }
+
 fn summarize_group(group: GroupKey, pairs: PairMap, window: Option<Window>) -> Summary {
     let mut counts = Counts::default();
     let mut output = Vec::new();
@@ -388,75 +412,42 @@ fn summarize_group(group: GroupKey, pairs: PairMap, window: Option<Window>) -> S
         let s = simulation.first();
         counts.raw_reference += reference.len();
         counts.raw_simulation += simulation.len();
-        let mut valid_point = |row: &Row| {
-            let time_eligible = window.is_none_or(|w| {
-                row.source_time
-                    .is_some_and(|t| w.start <= t && t < w.end_exclusive)
-            });
-            let included = !row.excluded && time_eligible && row.provenance_supported;
-            if !row.provenance_supported {
-                unverified = true;
-            }
-            if row.excluded || !time_eligible {
-                counts.excluded += 1;
-            }
-            if window.is_some() && row.source_time.is_none() {
-                counts.missing_time += 1;
-            }
-            if row.infeasible || row.status == OutcomeStatus::Infeasible {
-                counts.infeasible += 1;
-            }
-            match row.status {
-                OutcomeStatus::Censored => counts.censored += 1,
-                OutcomeStatus::Missing => counts.missing += 1,
-                OutcomeStatus::Failed => counts.failed += 1,
-                _ => {}
-            }
-            let point = match (
-                row.side,
-                row.status,
-                row.observed_ticks,
-                row.predicted_ticks,
-            ) {
-                (Side::Reference, OutcomeStatus::Observed, Some(_), None) => true,
-                (Side::Simulation, OutcomeStatus::Predicted, None, Some(_)) => true,
-                (Side::Simulation, OutcomeStatus::Infeasible, _, Some(_)) => true,
-                (Side::Reference, OutcomeStatus::Missing | OutcomeStatus::Censored, None, None) => {
-                    false
+        let mut eligible = [false; 2];
+        for (index, records) in [&reference, &simulation].into_iter().enumerate() {
+            if let Some(row) = records.first() {
+                if !row.provenance_supported {
+                    unverified = true;
                 }
-                (
-                    Side::Simulation,
-                    OutcomeStatus::Missing | OutcomeStatus::Censored,
-                    None,
-                    None,
-                ) => false,
-                (Side::Reference, OutcomeStatus::Failed, _, None) => false,
-                (Side::Simulation, OutcomeStatus::Failed | OutcomeStatus::Infeasible, _, None) => {
-                    false
+                let time_eligible = window.is_none_or(|w| {
+                    row.source_time
+                        .is_some_and(|t| w.start <= t && t < w.end_exclusive)
+                });
+                if row.excluded || !time_eligible {
+                    counts.excluded += 1;
                 }
-                _ => return Err(()),
-            };
-            Ok(point && included)
-        };
-        let re = match r {
-            Some(row) => valid_point(row),
-            None => Ok(false),
-        };
-        let se = match s {
-            Some(row) => valid_point(row),
-            None => Ok(false),
-        };
-        let eligible = match (re, se) {
-            (Ok(a), Ok(b)) => [a, b],
-            _ => {
-                return invalid_summaries(
-                    &[reference, simulation].concat(),
-                    &[group.clone()].into_iter().collect(),
-                    window,
-                )
-                .remove(0);
+                if window.is_some() && row.source_time.is_none() {
+                    counts.missing_time += 1;
+                }
+                if row.infeasible || row.status == OutcomeStatus::Infeasible {
+                    counts.infeasible += 1;
+                }
+                match row.status {
+                    OutcomeStatus::Censored => counts.censored += 1,
+                    OutcomeStatus::Missing => counts.missing += 1,
+                    OutcomeStatus::Failed => counts.failed += 1,
+                    _ => {}
+                }
+                let has_point = match (row.side, row.status) {
+                    (Side::Reference, OutcomeStatus::Observed) => true,
+                    (Side::Simulation, OutcomeStatus::Predicted | OutcomeStatus::Infeasible) => {
+                        row.predicted_ticks.is_some()
+                    }
+                    _ => false,
+                };
+                eligible[index] =
+                    has_point && !row.excluded && time_eligible && row.provenance_supported;
             }
-        };
+        }
         if eligible[0] {
             counts.reference += 1;
         }
