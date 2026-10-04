@@ -265,3 +265,12 @@ Independent read-only review accepted draft source3008b288 on 3 October2026 afte
 ## Approved conditional Track49 entry — 4 October2026
 
 The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
+
+
+## Codec bridge prerequisite — 4 October 2026
+
+PR199 merged normally as786f50b after exact reviewed-head52d8 checks; the merged tree equals that head. Current [entry readback](codec-bridge-entry/receipt.json) retains live GitHub merge/check evidence. No protection bypass or whole-track completion occurred.
+
+Architecture and independent hostile-input roles accepted the [codec ADR](adr-codec-bridge.md). Luna's scoped worker2dbdd1b adds the three public bridge methods and four integration fixtures; root c19fbf4 integrates the exact source/test blobs. Independent architecture source/receipt review accepts this bounded local prerequisite. Explicit1.98.1 worker98 tests, Clippy/format and matching1.76.0 root98 tests pass; canonical [provenance](codec-bridge-evidence/README.md) retains actual source hashes, compiler caches, logs and earlier failed fixture/format attempts. Independent held-out fixture acceptance, final combined/full checks, PR creation and exact-head hosted acceptance remain pending.
+
+The public runtime contract and API compatibility assessment now document the additive alpha bridge and native u128 preservation. Preparing the next real distributed steps revealed two additional native prerequisites: [source authority identity](authority-identity-design-candidates.md) and [owned-process/accounted outbox routing](owned-outbox-design-prerequisite.md). Epoch must reach native cancellation/queue identity, and remote positives/antis must remain accounted until durable admission. Observer copies and local all-LP execution cannot substitute for real transport. These are proposal records, not new native interfaces or dispatch authority. Track48 remains In Progress; Track29 conjunctive conditional entry and other dependencies remain unchanged. EXC199 is not approval for a new PR's audit gate.

@@ -44,3 +44,29 @@ Model snapshots save values, RNG and bitset.snapshot(); restoration preflights b
 Use noncommutative/state-dependent models: equal-tick reverse arrival; parents 10/20 emitting digits at 30 yield 12 under every arrival/replay permutation; canceled original child cannot survive replacement; anti-after-replacement and anti-before-positive; earlier input cancellation recomputes dependent sends; initial/RNG restoration; component/runtime/LP token isolation; GVT equality vs pre-floor rejection; repeated one-step budgets equal an uninterrupted run; complete-batch invalid output and panic/restore failure publish nothing and poison. Compare final state and committed logical trace to an independent sequential reference using actual core Scheduler where applicable. Attempt counts/incarnations are speculative metadata and may differ.
 
 Local implementation tests and benchmarks are required before a phase PR. Track 48 remains In Progress until live distributed rollback evidence involving Track 49 exists. Current scheduling dependencies form a cycle: an explicitly accepted phase/interface handoff is required before Track 49 production dispatch. Drafting its wire tests is already permitted; no dependency bypass or Done claim is introduced here. EXC-193 covers only PR #193 and cannot authorize this branch's future npm gate.
+
+
+## Checked codec bridge — alpha preview
+
+The [codec bridge ADR](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/adr-codec-bridge.md) adds three pure methods under `time-warp`:
+
+```rust
+LogicalEventId::output_parts(&self)
+    -> Option<(&OptimisticEventOrderKey, u32)>;
+OptimisticEventOrderKey::try_from_parts(tick, source_lp, logical_id)
+    -> Result<Self, OptimisticError>;
+OptimisticMessage::try_from_parts(event, logical_id, incarnation, kind)
+    -> Result<Self, OptimisticError>;
+```
+
+Together with `root_parts`, `root` and checked `child`, a codec can inspect and rebuild every ancestry node bottom-up, then reconstruct an exact positive or anti envelope. Checked reconstruction validates the entire ancestry iteratively: root source matches its ordering-key emitter; every output tick is strictly greater than its parent; depth128 is accepted and129 rejected. Output emitter may differ from parent emitter and root origin. All payload/destination fields, u32 ordinals, u64 sequences/incarnations and full native u128 ticks are preserved; incarnation and kind do not alter logical ordering. Native Tick must never be silently narrowed to the draft wire fixture's u64 range.
+
+The native [integration fixture](../../crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs) decomposes actual emitted multi-generation envelopes and reconstructs exact messages, including antis, with boundary and rejection tests. Reproduce its four cases with matching explicitly bound Cargo/rustc/rustdoc:
+
+```sh
+cargo test -p kairo-ecs-pdes --features pdes,time-warp --locked --test optimistic_codec_bridge
+```
+
+Expected output: four passing tests. The [source-bound evidence](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/codec-bridge-evidence/README.md) records98 crate tests plus Clippy/format under explicit1.98.1 and98 crate tests under matching1.76.0. Independent held-out acceptance and hosted/new-PR checks remain separate.
+
+This bridge is a representation API, not a wire decoder or accounted transport admission. `receive` retains topology, route, configured limits, GVT and duplicate/conflict checks. Raw-byte/allocation bounds, duplicate-field parsing, source authorization, durable persistence and ACK semantics belong to the reviewed transport. Native delivery identity currently omits authority epoch, and published_messages copies already-local deliveries: the [authority decision candidates](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/authority-identity-design-candidates.md) and [owned/outbox prerequisite](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/owned-outbox-design-prerequisite.md) must be resolved before production distributed admission. No transport-only epoch, socket response or observer copy discharges those requirements.
