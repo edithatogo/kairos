@@ -86,7 +86,7 @@ tracks:
       - abm-fixture
   - id: 04
     name: The Analyst - kairo-ecs-arrow
-    status: Done
+    status: Done # C1 scoped supplement: evidence/c1.4-integrated-20261005; historical closure unchanged.
     # Historical R2 Done status is preserved; Q4.3 is a bounded Rust 1.99.0 development qualification at source S 1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6.
     owner: arrow-agent
     depends_on: ["01", "12", "26"]
@@ -312,7 +312,7 @@ tracks:
       - vulnerability-policy
   - id: 21
     name: Verification, Validation & Uncertainty
-    status: Done
+    status: Done # C1 scoped supplement: evidence/c1.4-integrated-20261005; historical closure unchanged.
     owner: vv-uq-agent
     depends_on: ["01", "04", "12"]
     owned_paths:

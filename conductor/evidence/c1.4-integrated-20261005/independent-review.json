@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "reviewer": "/root/c13_contract_review",
+  "model": "gpt-6-luna",
+  "disposition": "accept_bounded_synthetic_C1_readback",
+  "remaining_findings": [],
+  "runtime_source": "7f72b7d9a9b6ae62e481a59b2cc04ce37da0a4a5",
+  "worker_source": "39b65f0927a32dd6d7c4bd27a6b28358134da837",
+  "verifier_sha256": "00e2957ead8cf0da57b053328b3d0888a40fd5dfcd2a6982b8854be1d7149fa0",
+  "report_sha256": "4e8287cae3c9db3f85c72ce184f706ee8aab2da91182dbcee7dd35c9341446ce",
+  "receipt_sha256": "bbbac41cd457b98ada18b160bbc71666bfe5539c7eaa2209a20670a78cdb4ca5",
+  "count_report_sha256": "5cec3d2a6c04f981f3c6f1a6e17a99cc9209e9c9ece6847a675689a818cbc99d",
+  "fresh_inventory_sha256": "1e4124b2d262b560a17e19b0aa98cee4f6cb6993a5324afc8081e96260ec1655",
+  "all_three_exact_receipts_exit_zero": true,
+  "reviewed_corrections": [
+    "UTC logical mapping and duplicate binary skip",
+    "generic nested null/empty baseline and absent-only schema traversal",
+    "actual stale checkout HEAD distinct from CLI/inventory mismatch"
+  ],
+  "archive_review": "Coordinator verified all 1969 member hashes; independent reviewer reviewed exact extracted reports, not final archive",
+  "limitations": [
+    "synthetic readback only",
+    "parent C1.4 acceptance requires final governance gates and exact-head CI",
+    "public API and release acceptance separate"
+  ]
+}

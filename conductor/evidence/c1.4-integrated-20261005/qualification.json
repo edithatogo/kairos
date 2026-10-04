@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "scope": "C1 synthetic development phase qualification",
+  "runtime_source": "7f72b7d9a9b6ae62e481a59b2cc04ce37da0a4a5",
+  "integrated_source": "87d591c484bc937f7536a0e700b1400968b9549a",
+  "runtime_preservation_files": 90,
+  "archive_sha256": "1955ee5a36dc190cf83e7af308c0231a3aed92a4f0e17b0604b108b6ca013a03",
+  "archive_members": 1969,
+  "archive_bytes": 5509128,
+  "independent_files": 666,
+  "c01_actual_transport_runs": 108,
+  "c01_byte_equivalent_aliases": 3780,
+  "c01_matrix_points": 3888,
+  "actual_mapper_requests": 51,
+  "negative_controls": 11,
+  "status": "independently_reviewed_synthetic_runtime_qualification",
+  "parent_acceptance": "requires final governance successor phase/strict-clean/exact-head CI",
+  "holds": [
+    "C2",
+    "public calibration API",
+    "clinical validation",
+    "release",
+    "Q5.3",
+    "Q5.4"
+  ]
+}

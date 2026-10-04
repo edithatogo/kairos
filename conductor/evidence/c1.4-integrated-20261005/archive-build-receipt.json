@@ -1,0 +1,27 @@
+{
+  "argv": [
+    "python3",
+    "/private/tmp/kairos-c14-integrated-20261005/.artifacts/c14-governance/build_retained_archive.py"
+  ],
+  "cwd": "/private/tmp/kairos-c14-integrated-20261005",
+  "head": "87d591c484bc937f7536a0e700b1400968b9549a",
+  "start": 1791135574.8005419,
+  "end": 1791135580.557281,
+  "exit_code": 0,
+  "runtime_tested_source": "7f72b7d9a9b6ae62e481a59b2cc04ce37da0a4a5",
+  "accepted_Q5_2_source": "8daa0978578b8a5b5b6427e84db1a3e6c54a1123",
+  "archive_sha256": "1955ee5a36dc190cf83e7af308c0231a3aed92a4f0e17b0604b108b6ca013a03",
+  "archive_bytes": 5509128,
+  "members": 1969,
+  "all_member_hashes_verified": true,
+  "excluded_operational_files": [],
+  "cache_directories_excluded": [
+    ".astro",
+    ".git",
+    "__pycache__",
+    "build",
+    "node_modules",
+    "target*",
+    "venv*"
+  ]
+}
