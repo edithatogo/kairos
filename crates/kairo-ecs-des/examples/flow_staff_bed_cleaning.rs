@@ -5,10 +5,15 @@ use kairo_ecs_des::{
 use kairo_ecs_types::{SimDuration, SimTime};
 
 const STAFF_RESOURCE_LABEL: &str = "Staff-A-duty";
+const BED_RESOURCE_LABEL: &str = "Bed-A";
+const CLEANING_RESOURCE_LABEL: &str = "Cleaning";
 const CASE_ID: &str = "q4.synthetic";
 const STAFF_ACTOR: &str = "Staff-A";
 const NORMAL_LABEL: &str = "normal_staff";
 const URGENT_LABEL: &str = "urgent_staff";
+const PATIENT_A_LABEL: &str = "patient_a_bed";
+const PATIENT_B_LABEL: &str = "patient_b_bed";
+const CLEANING_LABEL: &str = "cleaning";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RunMode {
@@ -20,7 +25,6 @@ pub enum RunMode {
 pub enum TaskPhase {
     NormalIntake,
     UrgentInterruption,
-    #[allow(dead_code)]
     Cleaning,
 }
 
@@ -94,9 +98,18 @@ fn staff_context(task_label: &'static str, phase: TaskPhase) -> FixtureContext {
     }
 }
 
+fn cleaning_context() -> FixtureContext {
+    FixtureContext {
+        case_id: CASE_ID,
+        actor_label: "Cleaner-A",
+        task_label: CLEANING_LABEL,
+        phase: TaskPhase::Cleaning,
+    }
+}
+
 fn append_dispatch(
     flow: &FlowRuntime,
-    resource_id: ResourceId,
+    resources: &[(ResourceId, &'static str)],
     dispatch: kairo_ecs_des::FlowDispatch,
     output: &mut WorkflowOutput,
 ) -> Result<(), FlowError> {
@@ -104,24 +117,26 @@ fn append_dispatch(
         return Err(error);
     }
     output.records.extend(dispatch.records);
-    let resource = flow.resource(resource_id)?;
-    output.boundaries.push(BoundarySnapshot {
-        label: STAFF_RESOURCE_LABEL,
-        at: dispatch.at,
-        total: resource.total,
-        available: resource.available,
-        active: resource.active.len(),
-        queued: resource.queued.len(),
-    });
-    if resource.active.len() + resource.available as usize != resource.total as usize {
-        return Err(FlowError::InvalidState);
+    for (resource_id, label) in resources {
+        let resource = flow.resource(*resource_id)?;
+        if resource.active.len() + resource.available as usize != resource.total as usize {
+            return Err(FlowError::InvalidState);
+        }
+        output.boundaries.push(BoundarySnapshot {
+            label,
+            at: dispatch.at,
+            total: resource.total,
+            available: resource.available,
+            active: resource.active.len(),
+            queued: resource.queued.len(),
+        });
     }
     Ok(())
 }
 
 fn collect_one(
     flow: &mut FlowRuntime,
-    resource_id: ResourceId,
+    resources: &[(ResourceId, &'static str)],
     output: &mut WorkflowOutput,
     use_run_for: bool,
 ) -> Result<bool, FlowError> {
@@ -131,21 +146,34 @@ fn collect_one(
         flow.step()?
     };
     if let Some(dispatch) = dispatch {
-        append_dispatch(flow, resource_id, dispatch, output)?;
+        append_dispatch(flow, resources, dispatch, output)?;
         Ok(true)
     } else {
         Ok(false)
     }
 }
 
+fn collect_required(
+    flow: &mut FlowRuntime,
+    resources: &[(ResourceId, &'static str)],
+    output: &mut WorkflowOutput,
+    use_run_for: bool,
+    expected_tick: u128,
+) -> Result<(), FlowError> {
+    if !collect_one(flow, resources, output, use_run_for)? || flow.now() != time(expected_tick) {
+        return Err(FlowError::InvalidState);
+    }
+    Ok(())
+}
+
 fn drain(
     flow: &mut FlowRuntime,
-    resource_id: ResourceId,
+    resources: &[(ResourceId, &'static str)],
     output: &mut WorkflowOutput,
     use_run_for: bool,
 ) -> Result<(), FlowError> {
     for _ in 0..128 {
-        if !collect_one(flow, resource_id, output, use_run_for)? {
+        if !collect_one(flow, resources, output, use_run_for)? {
             return Ok(());
         }
     }
@@ -160,26 +188,39 @@ fn assert_context(flow: &FlowRuntime, work: StaffWork) -> Result<(), FlowError> 
     Ok(())
 }
 
-fn assert_staff_capacity_drained(
+fn assert_resources_drained(
     flow: &FlowRuntime,
-    resource: kairo_ecs_des::ResourceId,
+    resources: &[(ResourceId, &'static str)],
 ) -> Result<(), FlowError> {
-    let snapshot = flow.resource(resource)?;
-    if snapshot.total != 1
-        || snapshot.available != 1
-        || !snapshot.active.is_empty()
-        || !snapshot.queued.is_empty()
-    {
-        return Err(FlowError::InvalidState);
+    for (resource_id, _) in resources {
+        let snapshot = flow.resource(*resource_id)?;
+        if snapshot.available != snapshot.total
+            || !snapshot.active.is_empty()
+            || !snapshot.queued.is_empty()
+        {
+            return Err(FlowError::InvalidState);
+        }
     }
     Ok(())
 }
 
-/// Run the public-API staff interruption workflow in one live FlowRuntime.
+/// Run the staged public-API staff, bed and cleaning workflow in one live FlowRuntime.
 pub fn run(mode: RunMode) -> Result<WorkflowOutput, FlowError> {
+    let use_run_for = mode == RunMode::PausedAtBoundaries;
     let mut flow = FlowRuntime::new();
     let staff_actor = flow.spawn_actor()?;
+    let patient_a_actor = flow.spawn_actor()?;
+    let patient_b_actor = flow.spawn_actor()?;
+    let cleaner_actor = flow.spawn_actor()?;
     let staff_resource = flow.create_resource(1)?;
+    let bed_resource = flow.create_resource(1)?;
+    let cleaning_resource = flow.create_resource(1)?;
+    let resources = [
+        (staff_resource, STAFF_RESOURCE_LABEL),
+        (bed_resource, BED_RESOURCE_LABEL),
+        (cleaning_resource, CLEANING_RESOURCE_LABEL),
+    ];
+
     let normal_context = staff_context(NORMAL_LABEL, TaskPhase::NormalIntake);
     let normal_work = flow.create_work(
         staff_actor,
@@ -207,16 +248,24 @@ pub fn run(mode: RunMode) -> Result<WorkflowOutput, FlowError> {
         terminal: Vec::new(),
         boundaries: Vec::new(),
     };
-    let dispatched = collect_one(
-        &mut flow,
-        staff_resource,
-        &mut output,
-        mode == RunMode::PausedAtBoundaries,
-    )?;
-    if !dispatched || flow.now() != time(0) {
+    collect_required(&mut flow, &resources, &mut output, use_run_for, 0)?;
+    assert_context(&flow, normal)?;
+
+    let patient_a_at = flow.now();
+    let patient_a_request = flow
+        .acquire(bed_resource)
+        .owner(patient_a_actor)
+        .priority(10)
+        .at(patient_a_at)
+        .submit()?;
+    collect_required(&mut flow, &resources, &mut output, use_run_for, 0)?;
+    let patient_a_lease = flow
+        .request(patient_a_request)?
+        .lease
+        .ok_or(FlowError::InvalidState)?;
+    if flow.request(patient_a_request)?.state != RequestState::Active {
         return Err(FlowError::InvalidState);
     }
-    assert_context(&flow, normal)?;
 
     let urgent_context = staff_context(URGENT_LABEL, TaskPhase::UrgentInterruption);
     let urgent_work = flow.create_work(
@@ -239,50 +288,119 @@ pub fn run(mode: RunMode) -> Result<WorkflowOutput, FlowError> {
         context: urgent_context,
     };
 
-    match mode {
-        RunMode::Continuous => {
-            drain(&mut flow, staff_resource, &mut output, false)?;
-        }
-        RunMode::PausedAtBoundaries => {
-            if !collect_one(&mut flow, staff_resource, &mut output, true)? || flow.now() != time(3)
-            {
-                return Err(FlowError::InvalidState);
-            }
-            if flow.request(normal.request)?.state != RequestState::Suspended {
-                return Err(FlowError::InvalidState);
-            }
-            assert_context(&flow, normal)?;
-            assert_context(&flow, urgent)?;
-            let suspended = flow.work_progress(normal.work)?;
-            if suspended.state != WorkState::Suspended
-                || suspended.useful_elapsed != duration(3)
-                || suspended.remaining != duration(5)
-                || suspended.cumulative_busy != duration(3)
-            {
-                return Err(FlowError::InvalidState);
-            }
-
-            if !collect_one(&mut flow, staff_resource, &mut output, true)? || flow.now() != time(5)
-            {
-                return Err(FlowError::InvalidState);
-            }
-            if flow.request(normal.request)?.state != RequestState::Active
-                || flow.request(urgent.request)?.state != RequestState::Completed
-            {
-                return Err(FlowError::InvalidState);
-            }
-            assert_context(&flow, normal)?;
-            assert_context(&flow, urgent)?;
-            let resumed = flow.work_progress(normal.work)?;
-            if resumed.state != WorkState::Active || resumed.remaining != duration(5) {
-                return Err(FlowError::InvalidState);
-            }
-
-            drain(&mut flow, staff_resource, &mut output, true)?;
-        }
+    collect_required(&mut flow, &resources, &mut output, use_run_for, 3)?;
+    if flow.request(normal.request)?.state != RequestState::Suspended {
+        return Err(FlowError::InvalidState);
+    }
+    assert_context(&flow, normal)?;
+    assert_context(&flow, urgent)?;
+    let suspended = flow.work_progress(normal.work)?;
+    if suspended.state != WorkState::Suspended
+        || suspended.useful_elapsed != duration(3)
+        || suspended.remaining != duration(5)
+        || suspended.cumulative_busy != duration(3)
+    {
+        return Err(FlowError::InvalidState);
+    }
+    if flow.resource(bed_resource)?.active.first().copied() != Some(patient_a_lease) {
+        return Err(FlowError::InvalidState);
     }
 
-    assert_staff_capacity_drained(&flow, staff_resource)?;
+    collect_required(&mut flow, &resources, &mut output, use_run_for, 5)?;
+    if flow.request(normal.request)?.state != RequestState::Active
+        || flow.request(urgent.request)?.state != RequestState::Completed
+    {
+        return Err(FlowError::InvalidState);
+    }
+    assert_context(&flow, normal)?;
+    assert_context(&flow, urgent)?;
+    let resumed = flow.work_progress(normal.work)?;
+    if resumed.state != WorkState::Active || resumed.remaining != duration(5) {
+        return Err(FlowError::InvalidState);
+    }
+
+    let cleaning_context = cleaning_context();
+    let cleaning_work = flow.create_work(
+        cleaner_actor,
+        duration(2),
+        "q4.synthetic.cleaning",
+        cleaning_context,
+    )?;
+    let cleaning_at = flow.now();
+    let cleaning_request = flow
+        .acquire(cleaning_resource)
+        .owner(cleaner_actor)
+        .timed_work(cleaning_work)
+        .priority(10)
+        .at(cleaning_at)
+        .submit()?;
+    collect_required(&mut flow, &resources, &mut output, use_run_for, 5)?;
+    if flow.request(cleaning_request)?.state != RequestState::Active
+        || flow.resource(bed_resource)?.active.first().copied() != Some(patient_a_lease)
+    {
+        return Err(FlowError::InvalidState);
+    }
+    if *flow.work_context::<FixtureContext>(cleaning_work)? != cleaning_context {
+        return Err(FlowError::InvalidState);
+    }
+
+    let patient_b_request = flow
+        .acquire(bed_resource)
+        .owner(patient_b_actor)
+        .priority(10)
+        .at(time(6))
+        .submit()?;
+    collect_required(&mut flow, &resources, &mut output, use_run_for, 6)?;
+    let bed_at_six = flow.resource(bed_resource)?;
+    if flow.request(patient_b_request)?.state != RequestState::Queued
+        || bed_at_six.active.first().copied() != Some(patient_a_lease)
+        || bed_at_six.available != 0
+        || bed_at_six.queued != [patient_b_request]
+    {
+        return Err(FlowError::InvalidState);
+    }
+
+    collect_required(&mut flow, &resources, &mut output, use_run_for, 7)?;
+    if flow.request(cleaning_request)?.state != RequestState::Completed
+        || flow.work_progress(cleaning_work)?.state != WorkState::Completed
+        || *flow.work_context::<FixtureContext>(cleaning_work)? != cleaning_context
+    {
+        return Err(FlowError::InvalidState);
+    }
+    let bed_before_release = flow.resource(bed_resource)?;
+    if bed_before_release.available != 0
+        || bed_before_release.active.first().copied() != Some(patient_a_lease)
+        || flow.request(patient_b_request)?.state != RequestState::Queued
+    {
+        return Err(FlowError::InvalidState);
+    }
+
+    flow.release(patient_a_lease, flow.now())?;
+    collect_required(&mut flow, &resources, &mut output, use_run_for, 7)?;
+    if flow.request(patient_a_request)?.state != RequestState::Released
+        || flow.request(patient_b_request)?.state != RequestState::Active
+    {
+        return Err(FlowError::InvalidState);
+    }
+    let patient_b_lease = flow
+        .request(patient_b_request)?
+        .lease
+        .ok_or(FlowError::InvalidState)?;
+    let bed_after_first_release = flow.resource(bed_resource)?;
+    if bed_after_first_release.available != 0
+        || bed_after_first_release.active.first().copied() != Some(patient_b_lease)
+    {
+        return Err(FlowError::InvalidState);
+    }
+
+    flow.release(patient_b_lease, flow.now())?;
+    collect_required(&mut flow, &resources, &mut output, use_run_for, 7)?;
+    if flow.request(patient_b_request)?.state != RequestState::Released {
+        return Err(FlowError::InvalidState);
+    }
+    drain(&mut flow, &resources, &mut output, use_run_for)?;
+    assert_resources_drained(&flow, &resources)?;
+
     output.requests = vec![
         NamedRequest {
             label: NORMAL_LABEL,
@@ -291,6 +409,18 @@ pub fn run(mode: RunMode) -> Result<WorkflowOutput, FlowError> {
         NamedRequest {
             label: URGENT_LABEL,
             request: urgent.request,
+        },
+        NamedRequest {
+            label: PATIENT_A_LABEL,
+            request: patient_a_request,
+        },
+        NamedRequest {
+            label: PATIENT_B_LABEL,
+            request: patient_b_request,
+        },
+        NamedRequest {
+            label: CLEANING_LABEL,
+            request: cleaning_request,
         },
     ];
     output.contexts = vec![
@@ -301,6 +431,10 @@ pub fn run(mode: RunMode) -> Result<WorkflowOutput, FlowError> {
         NamedContext {
             label: URGENT_LABEL,
             context: *flow.work_context::<FixtureContext>(urgent.work)?,
+        },
+        NamedContext {
+            label: CLEANING_LABEL,
+            context: *flow.work_context::<FixtureContext>(cleaning_work)?,
         },
     ];
     output.terminal = vec![
@@ -314,10 +448,33 @@ pub fn run(mode: RunMode) -> Result<WorkflowOutput, FlowError> {
             request: flow.request(urgent.request)?.state,
             work: Some(flow.work_progress(urgent.work)?.state),
         },
+        TerminalState {
+            label: PATIENT_A_LABEL,
+            request: flow.request(patient_a_request)?.state,
+            work: None,
+        },
+        TerminalState {
+            label: PATIENT_B_LABEL,
+            request: flow.request(patient_b_request)?.state,
+            work: None,
+        },
+        TerminalState {
+            label: CLEANING_LABEL,
+            request: flow.request(cleaning_request)?.state,
+            work: Some(flow.work_progress(cleaning_work)?.state),
+        },
     ];
-    if output.terminal.iter().any(|state| {
-        state.request != RequestState::Completed || state.work != Some(WorkState::Completed)
-    }) {
+    if output.terminal[0].request != RequestState::Completed
+        || output.terminal[0].work != Some(WorkState::Completed)
+        || output.terminal[1].request != RequestState::Completed
+        || output.terminal[1].work != Some(WorkState::Completed)
+        || output.terminal[2].request != RequestState::Released
+        || output.terminal[2].work.is_some()
+        || output.terminal[3].request != RequestState::Released
+        || output.terminal[3].work.is_some()
+        || output.terminal[4].request != RequestState::Completed
+        || output.terminal[4].work != Some(WorkState::Completed)
+    {
         return Err(FlowError::InvalidState);
     }
     Ok(output)
@@ -329,14 +486,16 @@ fn main() -> Result<(), FlowError> {
     let paused = run(RunMode::PausedAtBoundaries)?;
     assert_eq!(continuous, paused);
     for record in &continuous.records {
+        let label = continuous
+            .requests
+            .iter()
+            .find(|named| named.request == record.request)
+            .map(|named| named.label)
+            .unwrap_or("unknown");
         println!(
             "t={} {} {:?} priority={} queue={} active={}",
             record.at.ticks(),
-            if continuous.requests[0].request == record.request {
-                NORMAL_LABEL
-            } else {
-                URGENT_LABEL
-            },
+            label,
             record.transition,
             record.snapshot.priority_level,
             record.snapshot.queue_len,
