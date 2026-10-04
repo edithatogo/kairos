@@ -1,0 +1,471 @@
+{
+  "schema_version": 1,
+  "kind": "q4_bounded_development_source_qualification",
+  "status": "accepted_at_tested_source_S",
+  "recorded_at": "2026-10-04",
+  "source": {
+    "sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+    "branch": "origin/codex/careops-q4-lifecycle",
+    "toolchain": "Rust 1.99.0",
+    "host": "aarch64-apple-darwin",
+    "key_file_sha256": {
+      "crates/kairo-ecs-des/src/flow.rs": "ecb0bc547ec2803fb69a9c59515df9099e9dddca51c7b9cdee9d8c58fd1b989e",
+      "crates/kairo-ecs-des/tests/flow_lifecycle_snapshot_v1.rs": "8d5c266eb52e89239e962e8217cd2b83a20e56a79eab34566c9c4a9073ac6f21",
+      "crates/kairo-ecs-des/tests/flow_lifecycle_v1.rs": "bd2c0d0eb15b029b28cf98e8ca306114d2701b79db66fae7723095f98440be05",
+      "crates/kairo-ecs-des/tests/flow_staff_bed_cleaning_v1.rs": "784a87a0804421f107f92dc83a68b8f8be814fe6640f9746893793fd4e9a492a",
+      "crates/kairo-ecs-des/examples/flow_staff_bed_cleaning.rs": "948eb07532d7c8fcc78dd632f04ea5f404ae83c624aa0863cc733c0d8a24a879",
+      "crates/kairo-ecs-arrow/src/resource_lifecycle.rs": "a49e01a194dcd44e3ddbd98fcfcc79f2a3181c1642da35ee00ab9da7495ce890",
+      "crates/kairo-ecs-arrow/tests/resource_lifecycle_v1.rs": "8b7926992511f6cd6cdcee009027f7f47ec66403a906f05860a323cfb6864a37"
+    }
+  },
+  "historical_predecessor": {
+    "source_sha": "b6671d75b77e2e98f4cd63dd6a73d7472c00ceb7",
+    "receipts": [
+      {
+        "path": ".artifacts/q4-phase/source-qualification.json",
+        "sha256": "0706c828d5b0a1b37c8cd77916c40681afbc701718915d9e11c85995cc3266f2"
+      },
+      {
+        "path": ".artifacts/q4-phase/q4_4-accepted-source.json",
+        "sha256": "c7dfaa02829dcd3cb3e1c481611921535e64b0c46ac90943b8dc2ef072ba3a3b"
+      }
+    ],
+    "note": "Preserved historical Q4/1.98.1 evidence; not rewritten."
+  },
+  "local_gates": {
+    "receipt_path": ".artifacts/q4-phase/rust199/local-gates.json",
+    "receipt_sha256": "b549bc3a6c5889831c1509aa7985e704250de50c78e0f16ab109747827d40a76",
+    "source_state_sha256": "97df4b616b2fa0a680b59c8720fa31929e0ff6ad0341efe6af13ef39db497eaf",
+    "gates": [
+      {
+        "name": "q4_4_runnable_example_rust_199",
+        "command": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo run --locked --offline -p kairo-ecs-des --example flow_staff_bed_cleaning",
+        "cwd": "/private/tmp/careops-q4-completion/libs/kairos",
+        "toolchain": "1.99.0",
+        "host": "aarch64-apple-darwin",
+        "source_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+        "exit_code": 0,
+        "log_path": ".artifacts/q4-phase/rust199/q4_4_runnable_example_rust_199.log",
+        "log_sha256": "77763d371e561ea69505339608373be1a84203af74f5dd19895c8caa2edf9876",
+        "passed_tests": 0
+      },
+      {
+        "name": "format",
+        "command": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo fmt --all -- --check",
+        "cwd": "/private/tmp/careops-q4-completion/libs/kairos",
+        "toolchain": "1.99.0",
+        "host": "aarch64-apple-darwin",
+        "source_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+        "exit_code": 0,
+        "log_path": ".artifacts/q4-phase/rust199/format.log",
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "passed_tests": 0
+      },
+      {
+        "name": "scoped_strict_clippy",
+        "command": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo clippy --locked --offline -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow --features resource-lifecycle-io --all-targets --no-deps -- -D warnings",
+        "cwd": "/private/tmp/careops-q4-completion/libs/kairos",
+        "toolchain": "1.99.0",
+        "host": "aarch64-apple-darwin",
+        "source_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+        "exit_code": 0,
+        "log_path": ".artifacts/q4-phase/rust199/scoped_strict_clippy.log",
+        "log_sha256": "a7642a0867425c6137f6fda230ee0c5445d5148745ccd7b4f5b0b4f2b4540d91",
+        "passed_tests": 0
+      },
+      {
+        "name": "q4_3_encoder_tests",
+        "command": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow --features resource-lifecycle-io",
+        "cwd": "/private/tmp/careops-q4-completion/libs/kairos",
+        "toolchain": "1.99.0",
+        "host": "aarch64-apple-darwin",
+        "source_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+        "exit_code": 0,
+        "log_path": ".artifacts/q4-phase/rust199/q4_3_encoder_tests.log",
+        "log_sha256": "3a125df6e55fa637dee032322940ec7b0ca87f1b2c0447f7a46e639cd37a17f7",
+        "passed_tests": 224
+      },
+      {
+        "name": "q4_3_lifecycle_ipc_rust_188",
+        "command": "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow --features resource-lifecycle-io",
+        "cwd": "/private/tmp/careops-q4-completion/libs/kairos",
+        "toolchain": "1.88.0",
+        "host": "aarch64-apple-darwin",
+        "source_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+        "exit_code": 0,
+        "log_path": ".artifacts/q4-phase/rust199/q4_3_lifecycle_ipc_rust_188.log",
+        "log_sha256": "790f95dee6fb4aeefdeba0a242f4aefbf7d741f385d9ed356b6ddf3eb74bae45",
+        "passed_tests": 224
+      },
+      {
+        "name": "q4_3_arrow_default_rust_176",
+        "command": "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo test --locked -p kairo-ecs-arrow",
+        "cwd": "/private/tmp/careops-q4-completion/libs/kairos",
+        "toolchain": "1.76.0",
+        "host": "aarch64-apple-darwin",
+        "source_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+        "exit_code": 0,
+        "log_path": ".artifacts/q4-phase/rust199/q4_3_arrow_default_rust_176.log",
+        "log_sha256": "57610e1bcecd6f3ed86291d24aea9f22ae6da39d692af4c47b44f465a22f2f19",
+        "passed_tests": 23
+      },
+      {
+        "name": "native_owner_local",
+        "command": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-core -p kairo-ecs-types -p kairo-ecs-state -p kairo-ecs-rng -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow -p kairo-ecs-calibration",
+        "cwd": "/private/tmp/careops-q4-completion/libs/kairos",
+        "toolchain": "1.99.0",
+        "host": "aarch64-apple-darwin",
+        "source_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+        "exit_code": 0,
+        "log_path": ".artifacts/q4-phase/rust199/native_owner_local.log",
+        "log_sha256": "8e15fab0b6561e4dca89c6be2ae9ca33881ca1e423df88fb3400df4df7ef9a8b",
+        "passed_tests": 293
+      },
+      {
+        "name": "des_release",
+        "command": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-des --release",
+        "cwd": "/private/tmp/careops-q4-completion/libs/kairos",
+        "toolchain": "1.99.0",
+        "host": "aarch64-apple-darwin",
+        "source_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+        "exit_code": 0,
+        "log_path": ".artifacts/q4-phase/rust199/des_release.log",
+        "log_sha256": "1bbd1fe8ea6ca076dba8cc729698ad8090dd47a14b988c3038337183beaef5d0",
+        "passed_tests": 174
+      },
+      {
+        "name": "phase",
+        "command": "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1",
+        "cwd": "/private/tmp/careops-q4-completion/libs/kairos",
+        "toolchain": "PowerShell7.6.6",
+        "host": "aarch64-apple-darwin",
+        "source_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+        "exit_code": 0,
+        "log_path": ".artifacts/q4-phase/rust199/phase.log",
+        "log_sha256": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2",
+        "passed_tests": 0
+      },
+      {
+        "name": "dag",
+        "command": "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1",
+        "cwd": "/private/tmp/careops-q4-completion/libs/kairos",
+        "toolchain": "PowerShell7.6.6",
+        "host": "aarch64-apple-darwin",
+        "source_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+        "exit_code": 0,
+        "log_path": ".artifacts/q4-phase/rust199/dag.log",
+        "log_sha256": "1b6c16661033b4e48f46dba859451989697ae70fb9781bc42e78673960a0508a",
+        "passed_tests": 0
+      },
+      {
+        "name": "strict_clean",
+        "command": "pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree",
+        "cwd": "/private/tmp/careops-q4-completion/libs/kairos",
+        "toolchain": "PowerShell7.6.6",
+        "host": "aarch64-apple-darwin",
+        "source_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+        "exit_code": 0,
+        "log_path": ".artifacts/q4-phase/rust199/strict_clean.log",
+        "log_sha256": "5c81e061076443e943135183da6a1801315f53c466aaae9be3f425882bac5ad7",
+        "passed_tests": 0
+      }
+    ]
+  },
+  "hosted_owner": {
+    "run_id": "37192093779",
+    "run_url": "https://github.com/edithatogo/kairos/actions/runs/37192093779",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6",
+    "receipt_path": ".artifacts/q4-phase/rust199/owner-run.json",
+    "receipt_sha256": "34c7734f8657f011bdf193b49380f2e1774df32dfc2e6d97efbc607998513df4",
+    "job_count": 11,
+    "jobs": [
+      {
+        "name": "Native owner (macos-15)",
+        "conclusion": "success",
+        "url": "https://github.com/edithatogo/kairos/actions/runs/37192093779/job/111406258590"
+      },
+      {
+        "name": "Native owner (ubuntu-24.04)",
+        "conclusion": "success",
+        "url": "https://github.com/edithatogo/kairos/actions/runs/37192093779/job/111406258689"
+      },
+      {
+        "name": "Arrow IO Rust 1.88 (ubuntu-24.04, parquet)",
+        "conclusion": "success",
+        "url": "https://github.com/edithatogo/kairos/actions/runs/37192093779/job/111406258729"
+      },
+      {
+        "name": "Arrow IO Rust 1.88 (macos-15, ipc)",
+        "conclusion": "success",
+        "url": "https://github.com/edithatogo/kairos/actions/runs/37192093779/job/111406258768"
+      },
+      {
+        "name": "Arrow IO Rust 1.88 (macos-15, none)",
+        "conclusion": "success",
+        "url": "https://github.com/edithatogo/kairos/actions/runs/37192093779/job/111406258791"
+      },
+      {
+        "name": "Arrow IO Rust 1.88 (ubuntu-24.04, ipc)",
+        "conclusion": "success",
+        "url": "https://github.com/edithatogo/kairos/actions/runs/37192093779/job/111406258811"
+      },
+      {
+        "name": "Arrow IO Rust 1.88 (macos-15, both)",
+        "conclusion": "success",
+        "url": "https://github.com/edithatogo/kairos/actions/runs/37192093779/job/111406258817"
+      },
+      {
+        "name": "Arrow IO Rust 1.88 (ubuntu-24.04, none)",
+        "conclusion": "success",
+        "url": "https://github.com/edithatogo/kairos/actions/runs/37192093779/job/111406258838"
+      },
+      {
+        "name": "Arrow IO Rust 1.88 (macos-15, parquet)",
+        "conclusion": "success",
+        "url": "https://github.com/edithatogo/kairos/actions/runs/37192093779/job/111406258862"
+      },
+      {
+        "name": "Arrow IO Rust 1.88 (ubuntu-24.04, both)",
+        "conclusion": "success",
+        "url": "https://github.com/edithatogo/kairos/actions/runs/37192093779/job/111406258863"
+      },
+      {
+        "name": "Native and Arrow IO required",
+        "conclusion": "success",
+        "url": "https://github.com/edithatogo/kairos/actions/runs/37192093779/job/111406594181"
+      }
+    ]
+  },
+  "hosted_artifacts": {
+    "manifest_path": ".artifacts/q4-phase/rust199/ci-artifacts-manifest.json",
+    "manifest_sha256": "8f0c0259fbb58196604b77133c9725f3594bb40820bfd5c829ddb3d7ae32eaac",
+    "items": [
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-both/fixtures.log",
+        "sha256": "0ac7a995610c2616d51b4d20d9e4ad663a430ed303b588e11e11f8ad0b293f6b"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-both/pyarrow-readback.log",
+        "sha256": "19ca198b4840ebaf415d6a2c099f37e6e7e99135e07f973aa4abf6dad2ed4f5c"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-both/python.log",
+        "sha256": "18da7104d4b26692456b7969682a4b9ecc6ec9f5ae34f44b4065c6994c590f77"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-both/rust-output/rust.ipc_file",
+        "sha256": "fd32f976422560484f1ab2f80ef37db66b2d9aea29ee2011adfbe04bae781440"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-both/rust-output/rust.ipc_stream",
+        "sha256": "f3b73e23c945622f170779f1a9e37303ba8dee92a05e6be2fe0f8e5b24fe9b34"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-both/rust-output/rust.parquet",
+        "sha256": "ab7e6d91b4819ea22d2fa59c5a6442dc17bcc71348fd5af171ec1d7cf41dc637"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-both/test.log",
+        "sha256": "15b63c1b00d217c843ebcdcc0017a35be707d9afb5363749a96624c48a5fe1ee"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-both/toolchain.log",
+        "sha256": "307f57733e5878ab34aaaf78d5e421143ae9bc91f68cd80b636f86f55d42cf85"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-ipc/test.log",
+        "sha256": "33d548d816dc4ec9552ab0c00f05f0e8111b46b9bdd7c843d6b78e2673cb6c01"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-ipc/toolchain.log",
+        "sha256": "307f57733e5878ab34aaaf78d5e421143ae9bc91f68cd80b636f86f55d42cf85"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-none/test.log",
+        "sha256": "cf01acc8ff2829b7b7b94e1f3f0277cfe335698a857603c698cd1ebd1079afe0"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-none/toolchain.log",
+        "sha256": "307f57733e5878ab34aaaf78d5e421143ae9bc91f68cd80b636f86f55d42cf85"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-parquet/test.log",
+        "sha256": "f347329161eff06e3677085a169cf1ffb133dfff1aca10eba25e2d0791779cb1"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-macos-15-parquet/toolchain.log",
+        "sha256": "307f57733e5878ab34aaaf78d5e421143ae9bc91f68cd80b636f86f55d42cf85"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-both/fixtures.log",
+        "sha256": "0ac7a995610c2616d51b4d20d9e4ad663a430ed303b588e11e11f8ad0b293f6b"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-both/pyarrow-readback.log",
+        "sha256": "19ca198b4840ebaf415d6a2c099f37e6e7e99135e07f973aa4abf6dad2ed4f5c"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-both/python.log",
+        "sha256": "dcacf3ec20d06fa0ea271fdd342e604fe7d40cc04a755ae2a16c3312c1bea032"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-both/rust-output/rust.ipc_file",
+        "sha256": "fd32f976422560484f1ab2f80ef37db66b2d9aea29ee2011adfbe04bae781440"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-both/rust-output/rust.ipc_stream",
+        "sha256": "f3b73e23c945622f170779f1a9e37303ba8dee92a05e6be2fe0f8e5b24fe9b34"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-both/rust-output/rust.parquet",
+        "sha256": "ab7e6d91b4819ea22d2fa59c5a6442dc17bcc71348fd5af171ec1d7cf41dc637"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-both/test.log",
+        "sha256": "d7b4f7e0b307f0c09bb6e4e9972d78daa67589997c4aa288f0320b80649daaef"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-both/toolchain.log",
+        "sha256": "6b1c4a62e1e66ecac98be6ba613efecfa2911ee6415f3c95c76d49490eded8c0"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-ipc/test.log",
+        "sha256": "9c6806104877edd8b1e4db7d67e96c5849b55bb5908e3009c89c3c45393e2946"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-ipc/toolchain.log",
+        "sha256": "6b1c4a62e1e66ecac98be6ba613efecfa2911ee6415f3c95c76d49490eded8c0"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-none/test.log",
+        "sha256": "4e9a43fc4613e3867efa4a15620a72cbbab743227d2846da162d2d756c7882ff"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-none/toolchain.log",
+        "sha256": "6b1c4a62e1e66ecac98be6ba613efecfa2911ee6415f3c95c76d49490eded8c0"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-parquet/test.log",
+        "sha256": "155e4bf21ca33e50cae45b135fc08d93e3e2b7064180c937a1665adc6ccaf373"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.88.0-ubuntu-24.04-parquet/toolchain.log",
+        "sha256": "6b1c4a62e1e66ecac98be6ba613efecfa2911ee6415f3c95c76d49490eded8c0"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-macos-15/fixtures.log",
+        "sha256": "0ac7a995610c2616d51b4d20d9e4ad663a430ed303b588e11e11f8ad0b293f6b"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-macos-15/pyarrow-readback.log",
+        "sha256": "19ca198b4840ebaf415d6a2c099f37e6e7e99135e07f973aa4abf6dad2ed4f5c"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-macos-15/python.log",
+        "sha256": "d37d6365dfe3950a6bdf8d1487bdae245772e52d2f0921d60c87dcf6cd6a7dec"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-macos-15/resource-lifecycle.log",
+        "sha256": "ad540f6b4617938effee5665f9751491781c5a416c140a55dbc427b3422f21d1"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-macos-15/rust-output/rust.ipc_file",
+        "sha256": "fd32f976422560484f1ab2f80ef37db66b2d9aea29ee2011adfbe04bae781440"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-macos-15/rust-output/rust.ipc_stream",
+        "sha256": "f3b73e23c945622f170779f1a9e37303ba8dee92a05e6be2fe0f8e5b24fe9b34"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-macos-15/rust-output/rust.parquet",
+        "sha256": "ab7e6d91b4819ea22d2fa59c5a6442dc17bcc71348fd5af171ec1d7cf41dc637"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-macos-15/test.log",
+        "sha256": "3fbf596750b22a01d0a3d72c57bdc82715f5eddce61b3b9757dcd76840ca8e66"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-macos-15/toolchain.log",
+        "sha256": "56872e508539df408c932f1c2558218816e54f3b54be9d23b61855f4c9601d85"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-ubuntu-24.04/fixtures.log",
+        "sha256": "0ac7a995610c2616d51b4d20d9e4ad663a430ed303b588e11e11f8ad0b293f6b"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-ubuntu-24.04/pyarrow-readback.log",
+        "sha256": "19ca198b4840ebaf415d6a2c099f37e6e7e99135e07f973aa4abf6dad2ed4f5c"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-ubuntu-24.04/python.log",
+        "sha256": "eb5cd85ef626faf8cac27ea92311f73c4682160c780bcb612d74c99d449990e1"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-ubuntu-24.04/resource-lifecycle.log",
+        "sha256": "8df41c4fbae74c5962eb55448549617a20c46274677042eaef5b371f4463219c"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-ubuntu-24.04/rust-output/rust.ipc_file",
+        "sha256": "fd32f976422560484f1ab2f80ef37db66b2d9aea29ee2011adfbe04bae781440"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-ubuntu-24.04/rust-output/rust.ipc_stream",
+        "sha256": "f3b73e23c945622f170779f1a9e37303ba8dee92a05e6be2fe0f8e5b24fe9b34"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-ubuntu-24.04/rust-output/rust.parquet",
+        "sha256": "ab7e6d91b4819ea22d2fa59c5a6442dc17bcc71348fd5af171ec1d7cf41dc637"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-ubuntu-24.04/test.log",
+        "sha256": "5f794677a0ce0d902fff05ea80414181facc8926011b86f26b60cbbe41544679"
+      },
+      {
+        "path": ".artifacts/q4-phase/rust199/ci-artifacts/arrow-io-rust-1.99.0-ubuntu-24.04/toolchain.log",
+        "sha256": "923cbb5a8ef3f50b769357a8b4720497674cfd2f2a83b2f453753444d73d7399"
+      }
+    ]
+  },
+  "independent_review": {
+    "path": "/tmp/q45-rust199-source-review.json",
+    "sha256": "a7170c9211ae5b285734415ad40d5d6390f129180fb9e291779a4eaef9c925a2",
+    "disposition": "exact_head_source_gates_verified; historical_source_S_remains_accepted; governance_G_and_parent_pin_integration_still_pending",
+    "review": "Independent read-only Q4 Rust 1.99 exact-head qualification review"
+  },
+  "reviewer_refs": [
+    "/tmp/q45-rust199-source-review.json"
+  ],
+  "independent_review_sha256": "a7170c9211ae5b285734415ad40d5d6390f129180fb9e291779a4eaef9c925a2",
+  "release_warning": "rust-objcopy debug-info stripping emitted SIGABRT/missing libLLVM warnings; cargo exit0 and174tests passed; stripped packaging is not qualified",
+  "scope": [
+    "staged per-transition lifecycle snapshots",
+    "opt-in resource_lifecycle.v1",
+    "synthetic public-API staff/bed/cleaning workflow",
+    "Arrow IO lifecycle sidecar"
+  ],
+  "compatibility": {
+    "canonical_stable": "1.99.0",
+    "optional_arrow_io_floor": "1.88.0",
+    "default_arrow_floor": "1.76.0",
+    "source_compatibility": "experimental; LifecycleRecord.snapshot adds source-breaking fields for exhaustive struct literals"
+  },
+  "local_warning": "DES release test suite exited 0 with 174 passed, but the retained log records rust-objcopy debug-stripping SIGABRT warnings; do not claim stripping succeeded or describe the release artifact as clean-stripped.",
+  "frozen_fixture": {
+    "path": "crates/kairo-ecs-des/tests/flow_staff_bed_cleaning_v1.rs",
+    "sha256": "784a87a0804421f107f92dc83a68b8f8be814fe6640f9746893793fd4e9a492a",
+    "result": "unchanged approved fixture"
+  },
+  "boundaries": {
+    "parent_pin_integration": "pending",
+    "governance_successor_G": "requires fresh phase validation, strict clean-tree validation, and exact-head native owner CI before parent acceptance",
+    "historical_track_03_minimal_done": "preserved",
+    "historical_track_04_r2_done": "preserved",
+    "q5": "open",
+    "track_22_portable_checkpoint": "open/deferred",
+    "track_25_compatibility": "open",
+    "full_c1_c2": "open",
+    "release": "open"
+  }
+}

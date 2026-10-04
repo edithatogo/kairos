@@ -7,8 +7,8 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 00 | Project Foundation, Governance & Naming | Done | `foundation-agent` | See `conductor/tracks/00-*/spec.md` |
 | 01 | The Heart: kairo-ecs-core & kairo-ecs-state | Done | `core-scheduler-agent + ecs-agent + contracts-agent` | See `conductor/tracks/01-*/spec.md` |
 | 02 | The Bridge: kairo-ecs-ffi, UniFFI & Diplomat | Done | `ffi-agent + uniffi-agent + diplomat-agent` | See `conductor/tracks/02-*/spec.md` |
-| 03 | The Flow: DES Trajectory API & ABM Behavior API (historical minimal slice Done; Q3 provenance retained; Q4 bounded experimental development qualified at tested source S only; Q5 and release open) | Done | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
-| 04 | The Analyst: kairo-ecs-arrow (Done for historical R2 schema/versioning/roundtrip; Q4.3 lifecycle sidecar is a bounded development extension; broader Arrow/release scope open) | Done | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
+| 03 | The Flow: DES Trajectory API & ABM Behavior API (historical minimal slice Done; Q3 provenance retained; Q4 bounded experimental development qualified at Rust 1.99.0 source S 1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6 only; Q5 and release open) | Done | `des-api-agent + abm-api-agent` | See `conductor/tracks/03-*/spec.md` |
+| 04 | The Analyst: kairo-ecs-arrow (Done for historical R2 schema/versioning/roundtrip; Q4.3 lifecycle sidecar is qualified as a bounded Rust 1.99.0 development extension at source S 1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6; broader Arrow/release scope open) | Done | `arrow-agent` | See `conductor/tracks/04-*/spec.md` |
 | 05 | The Window: kairo-ecs-viz | Done | `viz-agent` | See `conductor/tracks/05-*/spec.md` |
 | 06 | Python Binding 3.10-3.14 | Done | `python-agent` | See `conductor/tracks/06-*/spec.md` |
 | 07 | R Binding | Done | `r-agent` | See `conductor/tracks/07-*/spec.md` |
@@ -71,3 +71,7 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 - GitHub automation, dependency review, scorecard, SBOM, and release workflows already exist under `.github/`; registry publication manifests are now owned by Track 42, cloud/HPC publication manifests by Track 43, and production publication by the Track 44 health gate.
 - Tracks 34, 35, and 38 are release-critical for distributed simulation, FMI digital-twin, and PDES infrastructure.
 - Tracks 32, 33, 36, 37, 39, 40, and 41 are non-release-critical (enhancement only).
+
+## Q4 canonical Rust 1.99 development qualification
+
+Track 03 and Track 04 have a bounded Q4 development qualification at tested source S `1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6` on `origin/codex/careops-q4-lifecycle`. Local Rust 1.99.0 gates, separate Rust 1.88.0 and Rust 1.76.0 compatibility checks, and exact-head native owner run https://github.com/edithatogo/kairos/actions/runs/37192093779 are recorded in `conductor/evidence/q4-development-source-qualification-20261004.json`. Existing Done labels still refer to the historical minimal Track 03 and R2 Track 04 slices. Parent pin integration remains pending; Q5, Track 22, Track 25, full C1/C2 and release holds remain open.

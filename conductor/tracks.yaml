@@ -72,7 +72,7 @@ tracks:
     status: Done
     # Historical minimal/R2 Done status is preserved; Q4 is a bounded experimental development qualification.
     # Done refers to the historical minimal DES/ABM slice.
-    # Experimental Q3 development source 4289603 is qualified; Q4/Q5 remain pending.
+    # Q4 bounded development source S 1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6 is qualified at Rust 1.99.0; Q5 remains open.
     # Q3 development extension strict gate qualified at a91f038; parent acceptance is controlled by its exact-head receipt.
     owner: des-api-agent + abm-api-agent
     depends_on: ["01", "26"]
@@ -87,7 +87,7 @@ tracks:
   - id: 04
     name: The Analyst - kairo-ecs-arrow
     status: Done
-    # Historical R2 Done status is preserved; Q4.3 lifecycle sidecar is a bounded development extension.
+    # Historical R2 Done status is preserved; Q4.3 is a bounded Rust 1.99.0 development qualification at source S 1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6.
     owner: arrow-agent
     depends_on: ["01", "12", "26"]
     owned_paths:

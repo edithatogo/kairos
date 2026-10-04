@@ -131,3 +131,9 @@ Exact source-S owner CI: https://github.com/edithatogo/kairos/actions/runs/37190
 The sidecar is a 27-field typed Arrow RecordBatch from immutable captured records. `resource-lifecycle` and separate `resource-lifecycle-io` are opt-in; Arrow 60 feature tests require Rust 1.88, while default telemetry retains Rust 1.76. Batch validation preserves caller order and validates keys/contiguous ordinals within a batch only. `event_log.v1` remains unchanged by verified source/schema hashes in the Q4 receipt. No whole-run writer, stable API approval, portable checkpoint codec, clinical meaning, or release readiness is claimed.
 
 `LifecycleRecord.snapshot` remains experimental and source-breaking for exhaustive struct literals. Parent pin integration is pending. Any governance successor G must pass fresh phase validation, strict clean-tree validation and exact-head native owner CI before parent acceptance; this entry records no such G result.
+
+## Q4 canonical Rust 1.99 successor qualification at source S
+
+The earlier Q4.3/1.98.1 result at b6671d75b77e2e98f4cd63dd6a73d7472c00ceb7 remains above as historical provenance. The lifecycle sidecar is qualified as a bounded development extension at tested clean source S 1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6 on `origin/codex/careops-q4-lifecycle`; local Rust 1.99.0, optional Rust 1.88.0 and default Rust 1.76.0 gates, plus exact two-host owner run https://github.com/edithatogo/kairos/actions/runs/37192093779, are bound by `conductor/evidence/q4-development-source-qualification-20261004.json`.
+
+Track 04 remains Done only for its historical R2 schema/versioning/roundtrip scope. This does not complete the broader Arrow track, stable API, C1/C2, Track 22 portability or release. Parent pin integration is pending; successor G requires fresh phase/strict/exact-head owner evidence.

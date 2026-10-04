@@ -281,3 +281,9 @@ Exact source-S owner CI: https://github.com/edithatogo/kairos/actions/runs/37190
 Scope: staged per-transition typed lifecycle records; synthetic public-API staff/bed/cleaning example; four accepted staff fixtures preserved; manual Bed-A lease retained through timed cleaning; Patient-B queued during cleaning and granted only after caller release; continuous and paused output compared on the same live runtime. No clinical rules, atomic multi-resource grant, portable checkpoint/restore, or cross-process replay are claimed.
 
 `LifecycleRecord.snapshot` is experimental and source-breaking for downstream exhaustive struct literals. Track 25 review/migration and release holds remain. Parent pin integration is pending. Any governance successor G must pass fresh phase validation, strict clean-tree validation and exact-head native owner CI before the parent accepts G; this entry records no such G result.
+
+## Q4 canonical Rust 1.99 successor qualification at source S
+
+The earlier Q4/1.98.1 result at b6671d75b77e2e98f4cd63dd6a73d7472c00ceb7 is retained above as historical provenance. Canonical-stable qualification is now bound to tested clean source S 1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6 on `origin/codex/careops-q4-lifecycle`, using Rust 1.99.0 for the flow example, full scoped Q4 tests, strict Clippy, format and release checks; Arrow optional and default floors were separately checked at Rust 1.88.0 and 1.76.0. The exact two-host owner run (https://github.com/edithatogo/kairos/actions/runs/37192093779) and local commands/log digests are recorded in `conductor/evidence/q4-development-source-qualification-20261004.json`.
+
+This qualifies only bounded Q4 development at S. It preserves historical minimal Track 03 Done; it does not complete Q5 or release readiness. Parent pin integration remains pending. Any governance successor G needs fresh phase, strict clean-tree and exact-head owner CI before parent acceptance.
