@@ -12,7 +12,6 @@ done
 python -m pip install --require-hashes -r scripts/bootstrap-python-tools.lock || true
 python3 scripts/bootstrap-node-tools/prepare_npm_cli.py --check
 npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools
-python3 scripts/bootstrap-node-tools/apply_http_cache_fix.py scripts/bootstrap-node-tools/node_modules
 node scripts/bootstrap-node-tools/validate_npm_cli.mjs
 node scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js --prefix website ci || true
 printf '\nKairoECS bootstrap complete. Run: just dev-validate\n'

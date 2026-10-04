@@ -1,0 +1,10 @@
+   Compiling zmij v1.0.21
+   Compiling serde_core v1.0.229
+   Compiling kairo-ecs-types v0.0.0 (/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/crates/kairo-ecs-types)
+   Compiling serde_json v1.0.151
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.0
+   Compiling kairo-ecs-core v0.0.0 (/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/crates/kairo-ecs-core)
+   Compiling kairo-ecs-pdes v0.0.0 (/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/crates/kairo-ecs-pdes)
+    Finished `bench` profile [optimized] target(s) in 10.55s
+     Running benches/time_warp.rs (artifacts/track48-benchmark/target/release/deps/time_warp-7af276444d1c49e3)

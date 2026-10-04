@@ -1,0 +1,95 @@
+[
+  {
+    "command": [
+      "cargo",
+      "check",
+      "--benches",
+      "-p",
+      "kairo-ecs-pdes",
+      "--features",
+      "pdes,time-warp",
+      "--locked"
+    ],
+    "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+    "head": "c87df4770877da36fdb5ce0507eb2e45c4073522",
+    "exit_code": 0,
+    "duration_seconds": 4.815047979354858,
+    "log": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr-preparation/gate-0.log",
+    "log_sha256": "7e11cc24e51a913f6fefbfe1c66b40ae324df33cf0111302935a111e4b1d777b"
+  },
+  {
+    "command": [
+      "python3",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "benches/pdes",
+      "-p",
+      "test_collect_time_warp_evidence.py",
+      "-v"
+    ],
+    "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+    "head": "c87df4770877da36fdb5ce0507eb2e45c4073522",
+    "exit_code": 0,
+    "duration_seconds": 1.5617430210113525,
+    "log": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr-preparation/gate-1.log",
+    "log_sha256": "98196880b111b8c1d948717283dc7d26e79a4a5fb9b6e35709fb637e68dbb61e"
+  },
+  {
+    "command": [
+      "node",
+      "scripts/validation/validate-hpc-parity-evidence.mjs"
+    ],
+    "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+    "head": "c87df4770877da36fdb5ce0507eb2e45c4073522",
+    "exit_code": 0,
+    "duration_seconds": 0.2204439640045166,
+    "log": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr-preparation/gate-2.log",
+    "log_sha256": "8999d16607e5f78003e4ab2e7477dcad1a87e9af95aca1ee6e4a75d29fe64879"
+  },
+  {
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "scripts/validate_conductor_phase_gates.ps1"
+    ],
+    "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+    "head": "c87df4770877da36fdb5ce0507eb2e45c4073522",
+    "exit_code": 0,
+    "duration_seconds": 1.870723009109497,
+    "log": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr-preparation/gate-3.log",
+    "log_sha256": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2"
+  },
+  {
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "scripts/validate_conductor_dag.ps1"
+    ],
+    "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+    "head": "c87df4770877da36fdb5ce0507eb2e45c4073522",
+    "exit_code": 0,
+    "duration_seconds": 1.3646979331970215,
+    "log": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr-preparation/gate-4.log",
+    "log_sha256": "86958ef5f8bd039b9c2c96df9e29c17f71a5f3846b1e9e16d2cedf2abda01962"
+  },
+  {
+    "command": [
+      "pwsh",
+      "-NoProfile",
+      "-File",
+      "scripts/validate_conductor_git_closeout.ps1",
+      "-RequireCleanWorkingTree"
+    ],
+    "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+    "head": "c87df4770877da36fdb5ce0507eb2e45c4073522",
+    "exit_code": 0,
+    "duration_seconds": 12.26003098487854,
+    "log": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-pr-preparation/gate-5.log",
+    "log_sha256": "5c81e061076443e943135183da6a1801315f53c466aaae9be3f425882bac5ad7"
+  }
+]

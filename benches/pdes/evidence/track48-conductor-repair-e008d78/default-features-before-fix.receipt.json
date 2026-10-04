@@ -1,0 +1,25 @@
+{
+  "command": "CARGO_TARGET_DIR=artifacts/track48-conductor-repair/target test -p kairo-ecs-pdes --locked",
+  "cwd": "/private/tmp/kairos-track48-pr199-ci-gates",
+  "head": "e3306f4ca3e560b81725a1b07a275d98643caefe",
+  "feature_set": "default (no package features requested)",
+  "toolchain": {
+    "cargo_path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo",
+    "cargo_version": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+    "cargo_sha256": "6e17e865f3a20dd55a1d212f849f58b77124179f0de7c52973096d84ba34118d",
+    "rustc_path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustc",
+    "rustc_version": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-apple-darwin\nrelease: 1.98.1\nLLVM version: 22.1.8",
+    "rustc_sha256": "766eda9d8f53afd6fc7f27b3cd2e444dd22afacb5afa710a5625fc8e45b8c941",
+    "rustup_toolchain": "1.98.1"
+  },
+  "inputs_sha256": {
+    "crates/kairo-ecs-pdes/tests/optimistic_runtime.rs": "b910c0dcb23de87f39f36eb83089430a3e2b639fa1b62eb199873893db4fc2f3",
+    "crates/kairo-ecs-pdes/Cargo.toml": "75acfa36b9deed08213aa8658648c3f87234a974b6aceb0a18bc0e2677174329",
+    "Cargo.lock": "2c47e509672c3ff89b5b2bccd42b5cd3258389a69edb67a156a910ffc74f979a"
+  },
+  "exit_status": 101,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "cbf597408253f8cb8a1f8841271bd17c3f8dd14aa5235a6a056209bc63488bfa",
+  "git_status_before": "",
+  "failure_expected": true
+}

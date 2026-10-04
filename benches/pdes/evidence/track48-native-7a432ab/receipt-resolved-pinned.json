@@ -1,0 +1,23 @@
+{
+  "command": [
+    "just",
+    "ci"
+  ],
+  "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+  "head": "7a432ab46c3bfa5f3917f1cce0f4545fac39f649",
+  "tools": {
+    "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)"
+  },
+  "environment": {
+    "RUSTC": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustc",
+    "CARGO_TARGET_DIR": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/track48-final-validation/target-pinned",
+    "CARGO_INCREMENTAL": "0",
+    "LLVM_COV": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/llvm-cov",
+    "LLVM_PROFDATA": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/llvm-profdata",
+    "RUSTUP_TOOLCHAIN": "1.98.1"
+  },
+  "exit_code": 0,
+  "duration_seconds": 115.85623502731323,
+  "log_sha256": "1512af0eb93c132f03805297981a75ea73db233036d6f23dc5c7d18932985208"
+}

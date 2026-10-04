@@ -1,0 +1,43 @@
+    Checking kairo-ecs-types v0.0.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-types)
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+    Checking utf8parse v0.2.2
+    Checking anstyle-query v1.1.5
+    Checking anstyle v1.0.14
+    Checking colorchoice v1.0.5
+    Checking is_terminal_polyfill v1.70.2
+    Checking strsim v0.11.1
+    Checking clap_lex v1.0.0
+   Compiling heck v0.5.0
+    Checking kairo-ecs-ml v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-ml)
+    Checking kairo-ecs-core v0.0.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-core)
+    Checking kairo-ecs-state v0.0.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-state)
+    Checking kairo-ecs-rng v0.0.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-rng)
+    Checking anstyle-parse v1.0.0
+    Checking kairo-ecs-pdes v0.0.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-pdes)
+    Checking kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-arrow)
+    Checking kairo-ecs-webgpu v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-webgpu)
+    Checking kairo-ecs-fmi v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-fmi)
+    Checking kairo-ecs-game-theory v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-game-theory)
+    Checking anstream v1.0.0
+    Checking kairo-ecs-ffi v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-ffi)
+    Checking kairo-ecs-cli v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-cli)
+    Checking kairo-ecs-abm v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-abm)
+    Checking kairo-ecs-bench v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-bench)
+    Checking clap_builder v4.5.61
+    Checking kairo-ecs-uniffi v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-uniffi)
+    Checking kairo-ecs-cs-bridge v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-cs-bridge)
+    Checking kairo-ecs-diplomat v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-diplomat)
+    Checking kairo-ecs-des v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-des)
+    Checking kairo-ecs-viz v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-viz)
+    Checking kairo-ecs-game-ontology v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-game-ontology)
+    Checking kairo-ecs-streaming v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-streaming)
+    Checking kairo-ecs-gpu v0.1.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-gpu)
+   Compiling syn v2.0.117
+    Checking kairo-ecs-mpi v0.0.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-mpi)
+    Checking kairo-ecs-grpc v0.0.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-grpc)
+   Compiling clap_derive v4.5.61
+    Checking clap v4.5.61
+    Checking kairo-ecs-debug v0.0.0 (/private/tmp/kairos-track48-optimistic/crates/kairo-ecs-debug)
+    Finished dev [unoptimized + debuginfo] target(s) in 6.34s

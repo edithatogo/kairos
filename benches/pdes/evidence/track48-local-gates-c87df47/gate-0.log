@@ -1,0 +1,6 @@
+   Compiling serde_core v1.0.229
+    Checking kairo-ecs-types v0.0.0 (/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/crates/kairo-ecs-types)
+    Checking kairo-ecs-core v0.0.0 (/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/crates/kairo-ecs-core)
+    Checking kairo-ecs-pdes v0.0.0 (/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/crates/kairo-ecs-pdes)
+    Checking serde_json v1.0.151
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.78s

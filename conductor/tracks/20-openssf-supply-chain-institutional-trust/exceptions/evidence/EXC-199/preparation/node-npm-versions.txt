@@ -1,0 +1,10 @@
+measured_at_utc=2026-10-03T12:42:07Z
+cwd=/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme
+source_head=be54595e3fad310f952389520632cf9af6900e92
+node_path=/opt/homebrew/bin/node
+v26.10.0
+npm_cli_path=scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js
+12.1.0
+node_realpath=/opt/homebrew/Cellar/node/26.10.0_1/bin/node
+node_sha256=d4cd917f05a5730ffda8a203e32fb8f9b70f79213fff1fafb045e438db8a6c06
+npm_cli_sha256=8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7

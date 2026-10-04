@@ -93,3 +93,11 @@ pushed ref: `origin/codex/kairos-hpc-parity-wave`
 Next-phase decision: Track 49 stays In Progress. Continue with real `rsmpi`,
 `tonic`/`prost`, spawned process tests, byte-level migration restore, and live
 MPI/gRPC evidence before In Review.
+
+## Approved conditional Track49 entry — 4 October2026
+
+The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
+
+## First production packet preparation — 4 October 2026
+
+See `first-production-leaf-preparation-20261004.md`. Read-only preparation identifies a Track48 validated codec-bridge prerequisite and unimplemented authority-epoch/durable-admission requirements. Keep bridge ownership separate from Track49 transport work; no production dispatch, protobuf freeze or live runtime acceptance follows from this note. Rebind/review/reserve only after the conditional entry requirements are satisfied.

@@ -1,0 +1,38 @@
+{
+  "command": "cargo test -p kairo-ecs-pdes --features time-warp --locked",
+  "cwd": "/private/tmp/kairos-track48-pr199-ci-gates",
+  "head": "be54595e3fad310f952389520632cf9af6900e92",
+  "feature_set": "time-warp",
+  "cargo_path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo",
+  "cargo_version": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+  "cargo_sha256": "6e17e865f3a20dd55a1d212f849f58b77124179f0de7c52973096d84ba34118d",
+  "rustc_path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustc",
+  "rustc_version": "rustc 1.98.1 (48a229cea 2026-09-01)",
+  "rustc_sha256": "766eda9d8f53afd6fc7f27b3cd2e444dd22afacb5afa710a5625fc8e45b8c941",
+  "rustdoc_path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustdoc",
+  "rustdoc_version": "rustdoc 1.98.1 (48a229cea 2026-09-01)",
+  "rustdoc_sha256": "8ce1ae78157758d4d75eee1355ed333f27e903ab6b0904e09d326009b333c2ee",
+  "rustup_toolchain": "1.98.1",
+  "target_dir": "/private/tmp/kairos-track48-pr199-ci-gates/artifacts/track48-conductor-repair/target",
+  "input_sha256": {
+    "crates/kairo-ecs-pdes/tests/optimistic_runtime.rs": "23407dcec89ff09847338f989f481f73588fa2b920b4447097fe6dcc2517948e",
+    ".github/workflows/validate-conductor.yml": "126ef807658ba8590c31fd9faea455bccdd9d811e02b69cfa11dfb8fadaf910b",
+    "conductor/tracks/13-ci-cd-quality-supply-chain/handoff.md": "df09eff9b45c91d2aa2e8701c6c03cdf9b51164e97cda86d0b0342271af6d2a8",
+    "Cargo.lock": "2c47e509672c3ff89b5b2bccd42b5cd3258389a69edb67a156a910ffc74f979a",
+    "Cargo.toml": "183584f511603be2d573072f66a97eff936238fde31a0b7bbde12c1d815499d2"
+  },
+  "exit_status": 0,
+  "stdout_sha256": "64c3269114baa1eddf0e0b695e0c9406a9dbc243fb1c6796722535dd66d3211c",
+  "stderr_sha256": "281bbca342433e3ef16ef9cf4be1291d845041519e31ca928a6f36cdfb4dab84",
+  "test_summary": [
+    "test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.84s",
+    "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.72s",
+    "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+    "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s"
+  ]
+}

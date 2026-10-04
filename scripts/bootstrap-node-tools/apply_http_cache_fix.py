@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Apply the local http-cache-semantics source mitigation to an installed npm tree.
+"""Apply a composed local http-cache-semantics source mitigation to an npm tree.
 
-This is a local source mitigation based on upstream PR #58, not an official
-patched release. It keeps the registry package name and version unchanged.
-The original and candidate index.js SHA-256 values are pinned below; the
-upstream BSD-2-Clause license remains in the package archive.
+This composes upstream PR #58 and the stale-fallback fixes from PR #1; it is
+not an official patched release. It keeps the registry package name and
+version unchanged. The original, intermediate, and candidate index.js
+SHA-256 values are pinned below; the upstream BSD-2-Clause license remains in
+the package archive.
 """
 
 # Original source-fragment license (BSD-2-Clause):
@@ -29,14 +30,18 @@ import stat
 import tempfile
 
 
-UPSTREAM_COMMIT = "14a8c2ad51740dc39bf3e8f1a11c845a5003f217"
+UPSTREAM_COMMITS = (
+    "14a8c2ad51740dc39bf3e8f1a11c845a5003f217",
+    "101a9e9a5b9aba5750a74b8f659c5646e90a962f",
+)
 
 PACKAGE_NAME = "http-cache-semantics"
 PACKAGE_VERSION = "4.2.0"
 SOURCE_SHA256 = "01b7d66c854b2fe53ac05c98feb6e0d64722ab8898a778e2d2426a8b468d178f"
-PATCHED_SHA256 = "fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76"
+PR58_PATCHED_SHA256 = "fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76"
+PATCHED_SHA256 = "5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c"
 
-# Exact source fragments from the hash-pinned release and upstream PR commit.
+# Exact source fragments from the hash-pinned release and upstream PR commits.
 OLD_EVALUATE = b"""        // In all circumstances, a cache MUST NOT ignore the must-revalidate directive
         if (this._rescc['must-revalidate']) {
 """
@@ -85,9 +90,43 @@ NEW_MAX_AGE_GUARD = b"""        if (this._requiresRevalidation()) {
             return 0;
         }
 """
+OLD_VARY_MAX_AGE_GUARD = b"""        if (this._resHeaders.vary === '*') {
+            return 0;
+        }
+
+"""
+OLD_NO_CACHE_REVALIDATION = b"""            this._rescc['no-cache'] ||
+"""
+NEW_NO_CACHE_REVALIDATION = b"""            this._rescc['no-cache'] ||
+            this._resHeaders.vary === '*' ||
+"""
 OLD_PROXY_REVALIDATE = b"""            if (this._rescc['proxy-revalidate']) {
                 return 0;
             }
+"""
+OLD_STALE_IF_ERROR = b"""        return this.maxAge() + toNumberOrZero(this._rescc['stale-if-error']) > this.age();
+"""
+NEW_STALE_IF_ERROR = b"""        return (
+            !this._requiresRevalidation() &&
+            !this._rescc['must-revalidate'] &&
+            this.maxAge() + toNumberOrZero(this._rescc['stale-if-error']) > this.age()
+        );
+"""
+OLD_STALE_WHILE_REVALIDATE = b"""        return swr > 0 && this.maxAge() + swr > this.age();
+"""
+NEW_STALE_WHILE_REVALIDATE = b"""        return (
+            !this._requiresRevalidation() &&
+            !this._rescc['must-revalidate'] &&
+            swr > 0 && this.maxAge() + swr > this.age()
+        );
+"""
+OLD_REVALIDATED_POLICY = b"""        if (this._useStaleIfError() && isErrorResponse(response)) {
+"""
+NEW_REVALIDATED_POLICY = b"""        if (
+            this._requestMatches(request, true) &&
+            this._useStaleIfError() &&
+            isErrorResponse(response)
+        ) {
 """
 
 
@@ -102,17 +141,55 @@ def replace_once(source: bytes, old: bytes, new: bytes, description: str) -> byt
     return source.replace(old, new, 1)
 
 
-def patched_source(source: bytes) -> bytes:
-    digest = sha256(source)
-    if digest == PATCHED_SHA256:
-        return source
-    if digest != SOURCE_SHA256:
-        raise ValueError(f"unexpected index.js SHA-256: {digest}")
-
+def pr58_source(source: bytes) -> bytes:
     result = replace_once(source, OLD_EVALUATE, NEW_EVALUATE, "request revalidation guard")
     result = replace_once(result, OLD_MAX_AGE_DOC, NEW_REVALIDATION_HELPER, "revalidation helper insertion")
     result = replace_once(result, OLD_MAX_AGE_GUARD, NEW_MAX_AGE_GUARD, "max-age guard")
     result = replace_once(result, OLD_PROXY_REVALIDATE, b"", "proxy-revalidate max-age guard")
+    return result
+
+
+def composed_source(source: bytes) -> bytes:
+    result = replace_once(source, OLD_VARY_MAX_AGE_GUARD, b"", "Vary max-age guard")
+    result = replace_once(
+        result,
+        OLD_NO_CACHE_REVALIDATION,
+        NEW_NO_CACHE_REVALIDATION,
+        "Vary revalidation guard",
+    )
+    result = replace_once(
+        result,
+        OLD_STALE_IF_ERROR,
+        NEW_STALE_IF_ERROR,
+        "stale-if-error reuse guard",
+    )
+    result = replace_once(
+        result,
+        OLD_STALE_WHILE_REVALIDATE,
+        NEW_STALE_WHILE_REVALIDATE,
+        "stale-while-revalidate reuse guard",
+    )
+    result = replace_once(
+        result,
+        OLD_REVALIDATED_POLICY,
+        NEW_REVALIDATED_POLICY,
+        "stale-if-error request matching guard",
+    )
+    return result
+
+
+def patched_source(source: bytes) -> bytes:
+    digest = sha256(source)
+    if digest == PATCHED_SHA256:
+        return source
+    if digest == SOURCE_SHA256:
+        result = pr58_source(source)
+    elif digest == PR58_PATCHED_SHA256:
+        result = source
+    else:
+        raise ValueError(f"unexpected index.js SHA-256: {digest}")
+
+    result = composed_source(result)
     result_hash = sha256(result)
     if result_hash != PATCHED_SHA256:
         raise ValueError(f"patched output SHA-256 mismatch: {result_hash}")

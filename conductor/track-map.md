@@ -58,7 +58,7 @@ KairoECS uses Conductor tracks as independently reviewable units of work. The ro
 | 45 | Astro/Starlight Docs Platform and Polyglot Experience | Active docs platform SOTA gate | docs-platform-agent + docs-agent + ci-agent | After docs quality and code health |
 | 46 | HPC Parity Charter, Baselines & Evidence Gates | Shared live-proof charter for Tracks 47-55 | benchmark-agent + interop-agent + redteam-agent + wave-manager-agent | Starts the HPC parity wave |
 | 47 | PDES Conservative Lookahead Production Runtime | Accepted event-owned single-host conservative runtime and live CPU evidence; final metadata checks and merge pending | pdes-agent + performance-agent | After Track 34 scaffold and Track 46 charter |
-| 48 | Time Warp Optimistic Rollback Runtime | Optimistic rollback, anti-messages, fossil collection | pdes-agent + timetravel-agent + ecs-agent | After Track 47 LP contract |
+| 48 | Time Warp Optimistic Rollback Runtime | Reviewed local replay/cancellation/bitset; distributed acceptance pending | pdes-agent + timetravel-agent + ecs-agent | Track47 merged; Track49 dispatch still requires explicit phase decision |
 | 49 | Distributed MPI/gRPC State Synchronization | Real MPI/gRPC transports and distributed state sync | distributed-agent + pdes-agent | After Tracks 35, 47, and 48 |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | hwloc, affinity, arenas, zero-copy FFI layout | core-scheduler-agent + ecs-agent + ffi-agent | After Tracks 01, 02, and 46 |
 | 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | Real Arrow/HDF5/ADIOS2 checkpoint and restart | arrow-agent + cloud-agent + performance-agent | After Tracks 04, 39, and 46 |
@@ -478,3 +478,7 @@ flowchart LR
   60 Normal-Form Multi-Game Runtime and Solvers
   61 Extensive-Form Graph-ECS Runtime and Certification
 ```
+
+## Approved conditional Track49 entry — 4 October2026
+
+The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.

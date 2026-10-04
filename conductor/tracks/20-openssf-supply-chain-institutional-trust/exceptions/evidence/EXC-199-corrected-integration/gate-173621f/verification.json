@@ -1,0 +1,78 @@
+{
+  "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+  "commit": "173621fb334f6c99844f5638e018597a74dd056a",
+  "started_at": "2026-10-04T00:59:50.842380+00:00",
+  "commands": [
+    {
+      "label": "classifier",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_npm_audit_exception.py",
+        "-v"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "f068d757e5692abcf5e3a887a6e4f70861e59c94179e692bad9426ba1430f617"
+    },
+    {
+      "label": "runner",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_npm_audit_runner.py",
+        "-v"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "498fe312ecdb72b43821666db9fae6d5222a7d0e505b4e097db434d38253b0ce"
+    },
+    {
+      "label": "phase",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_conductor_phase_gates.ps1"
+      ],
+      "exit": 0,
+      "stdout_sha256": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "dag",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_conductor_dag.ps1"
+      ],
+      "exit": 0,
+      "stdout_sha256": "86958ef5f8bd039b9c2c96df9e29c17f71a5f3846b1e9e16d2cedf2abda01962",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "actual-gate",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "scripts/bootstrap-node-tools/run_npm_audit_gate.py",
+        "--report-dir",
+        "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/exc199-active-integration/actual-gate"
+      ],
+      "exit": 0,
+      "stdout_sha256": "1dc06517a47af11e552788f061793363789b773d605b8eb4d5224c53d07ef383",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "finished_at": "2026-10-04T01:00:01.926639+00:00"
+}

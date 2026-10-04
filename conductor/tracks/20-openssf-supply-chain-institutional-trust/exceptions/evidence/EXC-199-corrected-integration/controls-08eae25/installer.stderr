@@ -1,0 +1,14 @@
+test_patches_atomically_preserves_mode_and_is_idempotent (test_http_cache_patch.HttpCachePatchTests.test_patches_atomically_preserves_mode_and_is_idempotent) ... ok
+test_rejects_package_directory_symlink (test_http_cache_patch.HttpCachePatchTests.test_rejects_package_directory_symlink) ... ok
+test_rejects_patched_output_hash_mismatch (test_http_cache_patch.HttpCachePatchTests.test_rejects_patched_output_hash_mismatch) ... ok
+test_rejects_source_drift_without_writing (test_http_cache_patch.HttpCachePatchTests.test_rejects_source_drift_without_writing) ... ok
+test_rejects_symlinked_source (test_http_cache_patch.HttpCachePatchTests.test_rejects_symlinked_source) ... ok
+test_rejects_unknown_intermediate_source_without_writing (test_http_cache_patch.HttpCachePatchTests.test_rejects_unknown_intermediate_source_without_writing) ... ok
+test_rejects_wrong_package_identity_without_writing (test_http_cache_patch.HttpCachePatchTests.test_rejects_wrong_package_identity_without_writing) ... ok
+test_upgrades_released_and_exact_pr58_sources_and_is_idempotent (test_http_cache_patch.HttpCachePatchTests.test_upgrades_released_and_exact_pr58_sources_and_is_idempotent) ... ok
+test_validates_all_packages_before_first_write (test_http_cache_patch.HttpCachePatchTests.test_validates_all_packages_before_first_write) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.018s
+
+OK

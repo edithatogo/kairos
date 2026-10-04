@@ -152,3 +152,37 @@ Reviewed PR head `8a6bf6673e6f4a8226408550b4c7ec11b32fb347`: all 19 triggered Gi
 Independent security reviewer inspected the downloaded hosted audit artifact (`artifacts/exc193-hosted/37096693640`) and actual job logs: Node 22.22.2, npm 12.1.0, seven patcher checks, both 60-case behavior suites, 13 classifier tests, six runner tests, consumer resolution and 194 registry signatures pass. The raw scan exits 1 with exact baseline stdout hash e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c and empty stderr. Classification is approved_temporary_exception under the human-approved record. Actual PR merge-checkout commit is 3307d279b931f8d72a17d9831039f073bbfd92ef; it corresponds to this head and main 11164f6. No clean-audit claim is made.
 
 Track 47 implementation is accepted and marked Done. Final metadata-head Actions and actual merge remain required before Track 48 begins. EXC-193 expires 2026-10-10T00:00:00+10:00 and does not authorize another PR, RC/1.0 or publication. The prior Renovate trust-validator mismatch remains outside the exception; this closeout does not claim a broader trust/release qualification.
+
+## EXC-199 initial activation blocker — 4 October 2026 (superseded below)
+
+The human sole maintainer approved the temporary operational classification for EXC-199 on 4 October 2026, acting in both security-owner and release-owner roles. Approval evidence and the exact PR #199 branch/repository/context allowlist are recorded in `exceptions/EXC-199-http-cache.json`. EXC-193's record and bounded PR #193 scope remain unchanged.
+
+At this point in the work, an independent adversarial review found stale cache fallback behavior not covered by the prior 60-case suite: stale-on-error/stale-while-revalidate may reuse responses with restrictive cache directives or credentials, and revalidation fallback does not establish matching URL, method, Host, or Vary state. The then-current controls were not sufficient mitigation evidence for PR #199. The record temporarily retained the approved risk classification but set `mitigation_review_status` to `blocked_stale_fallback_gap`; the runner retained raw audit artifacts and failed non-clean PR #199 findings. A clean raw audit remained a strict pass without using the exception. The later approved amendment and source binding are recorded below.
+
+Focused verification on base `967ee22be9f7ac783daeed12315131da577331a7` passed 17 classifier tests and 11 runner tests. Runner verification used a read-only copy of the already-installed root cache package files (index SHA-256 `fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76`, package metadata SHA-256 `bee0609d5ab09a590afe0e1209d3702b0afb0a3c158492f90902a724d889d22b`) in ignored test artifacts; no dependency installation occurred. Tests cover unchanged EXC-193 classification, exact PR/repository/ref mapping, local unknown/main branch rejection, preserved raw audit bytes when blocked EXC-199 classification fails, clean scan without waiver, and immutable source/evidence/runtime metadata drift.
+
+At that earlier point, EXC-199 remained blocked for non-clean findings. Reopening required corrected proof bytes, independent review of stale fallback cases, an immutable evidence record, and separate human acceptance of the mitigation and scope. The original proposal approval alone did not satisfy those gates or establish hosted success.
+
+## EXC199 corrected proof binding approved — 4 October 2026
+
+The human approved the exact corrected source amendment (`exceptions/EXC-199-mitigation-amendment.json`). At that point, the reviewed source `2efedc5` and its new proof hashes were queued for binding only to EXC-199. EXC-193 historical authority remained unchanged and could not apply to changed proof bytes. The raw 19-high audit stayed retained. Independent review, actual controls, and hosted exact-head acceptance remained separate gates before merge. No production Track 49 dispatch or release/publication waiver was established.
+
+## EXC199 corrected source binding implemented — 4 October 2026
+
+The selector and runner now bind EXC199 to mitigation source `2efedc5` and
+patched index SHA-256
+`5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c`, with
+all five corrected proof hashes and the separately approved source-binding
+amendment. The runner verifies the amendment record, its immutable manifest and
+all 17 evidence copies. EXC193's record and old pins are unchanged; a source
+tree carrying the corrected EXC199 bytes fails EXC193 proof verification.
+Tests distinguish the clean strict-audit path from non-clean exception
+classification, and retain raw audit evidence on failures. Root-run local
+controls and hosted exact-head results remain separate acceptance evidence;
+the earlier hosted attempt remains `not_executed`. The exception still expires
+at 00:00 Brisbane time on 2026-10-10 and has no RC, release, or publication
+scope.
+
+## Corrected EXC199 local activation acceptance — 4 October 2026
+
+Independent review accepted d544a49 and integrated173621f. See `exceptions/evidence/EXC-199-corrected-integration/gate-173621f/README.md`:18classifier/17runner tests, phase/DAG and actual wrapper pass; raw executed exit1/19high/e5f332 remain retained. Source amendment was explicitly approved by the human and effective-time/expiry boundaries are tested on the unchanged policy. Historical EXC193 authority is unchanged and fails against these corrected source bytes. Exact-head hosted checks and normal PR199 merge remain pending; no advisory closure or Track49 production dispatch is claimed.

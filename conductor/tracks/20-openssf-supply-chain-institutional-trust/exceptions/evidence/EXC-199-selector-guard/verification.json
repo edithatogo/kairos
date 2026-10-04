@@ -1,0 +1,95 @@
+{
+  "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+  "commit": "d38da5bfd42ce73370d0defe63873ac51a7d3468",
+  "started_at": "2026-10-03T16:13:48.193976+00:00",
+  "commands": [
+    {
+      "label": "classifier",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_npm_audit_exception.py",
+        "-v"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e2cbf97836df17a39afe84a75826b7ec3535dedf8fccc11e963f58661b1619a3"
+    },
+    {
+      "label": "runner",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_npm_audit_runner.py",
+        "-v"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "376716a87a646d68d5723d3e18e037b2fb19c1396f77265b5662e03ca196a215"
+    },
+    {
+      "label": "wire",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "conductor/tracks/48-time-warp-optimistic-rollback-runtime/wire-draft",
+        "-p",
+        "test_reference.py",
+        "-v"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "de60fac0c94c42b510830496c3729d408c9c0697ce526ea9635e32003f247741"
+    },
+    {
+      "label": "phase",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_conductor_phase_gates.ps1"
+      ],
+      "exit": 0,
+      "stdout_sha256": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "dag",
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_conductor_dag.ps1"
+      ],
+      "exit": 0,
+      "stdout_sha256": "86958ef5f8bd039b9c2c96df9e29c17f71a5f3846b1e9e16d2cedf2abda01962",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "actual-gate",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "scripts/bootstrap-node-tools/run_npm_audit_gate.py",
+        "--report-dir",
+        "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme/artifacts/exc199-final-verification/actual-gate"
+      ],
+      "exit": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "ed4038180123a982fbdc923a62c8c479fb1db36c3fc95f904d12477dc6b6fe76"
+    }
+  ],
+  "finished_at": "2026-10-03T16:13:56.790009+00:00"
+}
