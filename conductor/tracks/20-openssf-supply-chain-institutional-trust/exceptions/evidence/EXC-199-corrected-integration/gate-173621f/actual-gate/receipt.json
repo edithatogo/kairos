@@ -1,0 +1,122 @@
+{
+  "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+  "started_at": "2026-10-04T00:59:55.593703+00:00",
+  "classification": "approved_temporary_exception",
+  "raw_audit": {
+    "status": "executed",
+    "argv": [
+      "node",
+      "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+      "audit",
+      "--prefix",
+      "scripts/bootstrap-node-tools",
+      "--audit-level=moderate",
+      "--json"
+    ],
+    "exit": 1,
+    "stdout_sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "checks": [
+    {
+      "argv": [
+        "node",
+        "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+        "audit",
+        "--prefix",
+        "scripts/bootstrap-node-tools",
+        "--audit-level=moderate",
+        "--json"
+      ],
+      "exit": 1,
+      "stdout_sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_http_cache_patch.py",
+        "-v"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e300d0aa7c010108d49bae25dadb7fb056ae1859e9ccf195eb7285237ee1187e"
+    },
+    {
+      "argv": [
+        "node",
+        "scripts/bootstrap-node-tools/validate_npm_cli.mjs"
+      ],
+      "exit": 0,
+      "stdout_sha256": "1c9defa7cd77e48f778b7650cba91941cb124138a512901a43bd0edd6eb5ed9e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "node",
+        "tests/http-cache-security-regression.mjs"
+      ],
+      "exit": 0,
+      "stdout_sha256": "c3c4115264b07a153dd70cf21e09aac0718e36d5199e8630d62a02558be776d7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "node",
+        "tests/http-cache-security-regression.mjs",
+        "scripts/bootstrap-node-tools/node_modules/npm/node_modules/http-cache-semantics/index.js"
+      ],
+      "exit": 0,
+      "stdout_sha256": "c3c4115264b07a153dd70cf21e09aac0718e36d5199e8630d62a02558be776d7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout_sha256": "510734775b8bc8f762a1e5bdb144a2bbc76c4c981a4a50b1bcd9d594c292b18c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout_sha256": "627f6ca108adf23b6145e0857385dc2525db71ab9ed8b058367b160ee3935e46",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "node",
+        "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout_sha256": "a712c758275b460d18fa77a26ed3589689bb3f69dcc1ea99b913e32db92a5cd2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "exception_scope": {
+    "status": "approved_exact_scope"
+  },
+  "exception_id": "EXC-199",
+  "repository": "edithatogo/kairos",
+  "pull_request": 199,
+  "head_ref": "codex/kairos-track48-optimistic-runtime",
+  "context": "development_pr_199",
+  "policy_sha256": "aa7f45487764f103e78126b7279eee132cb40d0cdbd0445d606902a34e9d8ba4",
+  "node-version": "v26.10.0",
+  "commit": "173621fb334f6c99844f5638e018597a74dd056a",
+  "npm-version": "12.1.0",
+  "finished_at": "2026-10-04T01:00:01.919296+00:00"
+}

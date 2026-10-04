@@ -182,3 +182,7 @@ controls and hosted exact-head results remain separate acceptance evidence;
 the earlier hosted attempt remains `not_executed`. The exception still expires
 at 00:00 Brisbane time on 2026-10-10 and has no RC, release, or publication
 scope.
+
+## Corrected EXC199 local activation acceptance — 4 October 2026
+
+Independent review accepted d544a49 and integrated173621f. See `exceptions/evidence/EXC-199-corrected-integration/gate-173621f/README.md`:18classifier/17runner tests, phase/DAG and actual wrapper pass; raw executed exit1/19high/e5f332 remain retained. Source amendment was explicitly approved by the human and effective-time/expiry boundaries are tested on the unchanged policy. Historical EXC193 authority is unchanged and fails against these corrected source bytes. Exact-head hosted checks and normal PR199 merge remain pending; no advisory closure or Track49 production dispatch is claimed.
