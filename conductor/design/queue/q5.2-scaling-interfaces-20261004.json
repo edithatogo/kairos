@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "task": "Q5.2.scaling.pure-overlays",
+  "source_base": "76d72981d7d99fa9cd39236359bcfc5f16e18f85",
+  "status": "review_required_before_dispatch",
+  "scope": "Private std-only helper modules. No Flow integration, public API, dependency, CI or acceptance changes. Coordinator reviews interfaces before writer dispatch.",
+  "context_budget_bytes": 24000,
+  "shared_rules": [
+    "Rust 1.99.0, edition 2021. Preserve read-only authoritative base. Clone snapshots contain changed records/keys only.",
+    "Private advisory claim; one commit; check before mutation and commit; release immediately. Never print private lease tokens.",
+    "Record exact commands, source head, toolchain, input/log hashes and exit statuses in ignored owned artifact path. No hosted or full Flow acceptance claim."
+  ],
+  "leaves": [
+    {
+      "id": "Q5.2.overlay.queue",
+      "owned_paths": [
+        "crates/kairo-ecs-des/src/flow/queue_delta.rs",
+        ".artifacts/q52-queue-delta"
+      ],
+      "interface": "QueueDelta<a,K: Ord+Clone> borrows &a BTreeSet<K>. new, contains, insert(K)->bool, remove(&K)->bool, iter()->sorted borrowed keys, len()->usize; Clone snapshots delta only. export()->owned QueueChanges<K>; QueueChanges::preflight(&BTreeSet<K>)->Result<(),DeltaError> checks all removed present and added absent; apply(&mut BTreeSet<K>)->Result<(),DeltaError> preflights every key before mutation. Remove/reinsert original key cancels delta; insert/remove new key cancels delta. Never clone/materialize full base during update/snapshot/iteration; final caller collection for tests is permitted. Define a simple private DeltaError. No explicit lifetimes leaked publicly from crate.",
+      "tests": [
+        "Independent BTreeSet baseline across deterministic mixed operations, removal/reinsertion/rekey, extremes and equal keys.",
+        "Ordered lazy iterator equivalence, clone/rollback independence, unchanged base, atomic failed apply when base changed, successful apply equivalence.",
+        "Clone-count probe verifies snapshot cost proportional to delta even with large base; no wall-clock assertions."
+      ],
+      "commands": [
+        "rustup run 1.99.0 rustc --edition 2021 --test -D warnings crates/kairo-ecs-des/src/flow/queue_delta.rs -o .artifacts/q52-queue-delta/tests",
+        ".artifacts/q52-queue-delta/tests",
+        "rustup run 1.99.0 rustfmt --edition 2021 --check crates/kairo-ecs-des/src/flow/queue_delta.rs"
+      ]
+    },
+    {
+      "id": "Q5.2.overlay.records",
+      "owned_paths": [
+        "crates/kairo-ecs-des/src/flow/record_delta.rs",
+        ".artifacts/q52-record-delta"
+      ],
+      "interface": "RecordDelta<a,K: Ord+Clone,V:Clone> borrows &a dyn Fn(&K)->Option<&a V>, stores writes in BTreeMap<K,V>. new, get(&K)->Option<&V>, get_mut(&K)->Option<&mut V> lazily clones first mutable access, insert(K,V) records an owned write; changed_ids()->sorted borrowed keys, into_writes()->BTreeMap<K,V>. Clone copies only writes and lookup reference. No remove (Flow terminal records remain retained), no iteration over entire authoritative registry, no full registry export or unsafe. insert returns no previous value, avoiding unnecessary clone. Missing base get_mut returns None.",
+      "tests": [
+        "Read-through with independent baseline, clone-on-first-write and no clone on reads/repeated mutation, sorted changed IDs, insert absent and existing keys.",
+        "Snapshot/rollback preserving independent boundary delta, unchanged authoritative base, exact owned writes and no borrowed values in export.",
+        "Clone-count probe with large read-only registry proving delta-sized snapshots."
+      ],
+      "commands": [
+        "rustup run 1.99.0 rustc --edition 2021 --test -D warnings crates/kairo-ecs-des/src/flow/record_delta.rs -o .artifacts/q52-record-delta/tests",
+        ".artifacts/q52-record-delta/tests",
+        "rustup run 1.99.0 rustfmt --edition 2021 --check crates/kairo-ecs-des/src/flow/record_delta.rs"
+      ]
+    }
+  ],
+  "context_inputs": {
+    "AGENTS.md": "f1e9c7076e13e6d83de2759434dde92119426250dd880770ae6d661be29b2b35",
+    "conductor/design/queue/q5.1-conformance-20261004.md": "ac3f4f69011b60a7e92335520914c9f1a8358d186ccf0764f2159a63deb3a715"
+  },
+  "deferred": "One serial owner integrates modules, causal closure, deadline index and ordered replacement after independent utility reviews and fresh exact-source packets. These pure tests cannot close Q5.2."
+}
