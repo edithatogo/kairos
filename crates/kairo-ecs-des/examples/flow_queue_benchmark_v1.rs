@@ -244,6 +244,74 @@ fn request_counts(runtime: &FlowRuntime, requests: &[RequestId]) -> Result<(usiz
     }
     Ok((requests.len(), terminal))
 }
+fn validate_scenario_counts(
+    args: &Args,
+    stats: &Stats,
+    retained_requests: usize,
+    terminal_requests: usize,
+    retained_works: usize,
+    work_counts: &[usize; 5],
+) -> Result<(), String> {
+    let n = args.n;
+    let capacity_slots = args.resources * args.capacity as usize;
+    let (events, records, requests, terminal, works, expected_work_counts) = match args.scenario {
+        Scenario::Churn => (
+            capacity_slots + 2 * n,
+            n + 2 * capacity_slots + n / 2,
+            capacity_slots + n,
+            n - n / 2,
+            0,
+            [0; 5],
+        ),
+        Scenario::Interruptions => (
+            args.capacity as usize + 2 * n,
+            2 * args.capacity as usize + 5 * n,
+            args.capacity as usize + n,
+            n,
+            args.capacity as usize + n,
+            [0, args.capacity as usize, 0, n, 0],
+        ),
+        _ => (
+            n + capacity_slots,
+            n + 2 * capacity_slots,
+            n + capacity_slots,
+            0,
+            0,
+            [0; 5],
+        ),
+    };
+    if stats.events != events || stats.records != records {
+        return Err(format!(
+            "scenario lifecycle mismatch: events={}, expected {events}; records={}, expected {records}",
+            stats.events, stats.records
+        ));
+    }
+    if retained_requests != requests || terminal_requests != terminal || retained_works != works {
+        return Err(format!(
+            "scenario retained-state mismatch: requests={retained_requests}/{requests}, terminal={terminal_requests}/{terminal}, works={retained_works}/{works}"
+        ));
+    }
+    if *work_counts != expected_work_counts {
+        return Err(format!(
+            "scenario work-state mismatch: got {work_counts:?}, expected {expected_work_counts:?}"
+        ));
+    }
+    let (preemptions, resumptions, completions) = if args.scenario == Scenario::Interruptions {
+        (n, n, n)
+    } else {
+        (0, 0, 0)
+    };
+    if (stats.preemptions, stats.resumptions, stats.completions)
+        != (preemptions, resumptions, completions)
+    {
+        return Err(format!(
+            "scenario interruption mismatch: preemptions/resumptions/completions={}/{}/{}, expected {preemptions}/{resumptions}/{completions}",
+            stats.preemptions, stats.resumptions, stats.completions
+        ));
+    }
+    Ok(())
+}
+
 fn execute(args: Args) -> Result<(), String> {
     eprintln!("Q52_PHASE=setup");
     let setup_start = Instant::now();
@@ -331,6 +399,17 @@ fn execute(args: Args) -> Result<(), String> {
         drain(&mut flow, initial_dispatch_limit, &mut stats)?;
     }
     let initial_dispatch_ns = dispatch_start.elapsed().as_nanos();
+    if !interruption {
+        let active_slots = args.resources * args.capacity as usize;
+        let expected_events = args.n + active_slots;
+        let expected_records = args.n + 2 * active_slots;
+        if stats.events != expected_events || stats.records != expected_records {
+            return Err(format!(
+                "initial admission lifecycle mismatch: events={}, expected {expected_events}; records={}, expected {expected_records}",
+                stats.events, stats.records
+            ));
+        }
+    }
 
     let mut occupancy = if interruption {
         let measured = check_occupancy(&flow, &resources, args.capacity, 0)?;
@@ -421,6 +500,14 @@ fn execute(args: Args) -> Result<(), String> {
         };
         work_counts[slot] += 1;
     }
+    validate_scenario_counts(
+        &args,
+        &stats,
+        retained_requests,
+        terminal_requests,
+        works.len(),
+        &work_counts,
+    )?;
     let total_dispatch_ns = initial_dispatch_ns + churn_dispatch_ns;
     let seconds = total_dispatch_ns as f64 / 1_000_000_000.0;
     let events_per_second = stats.events as f64 / seconds;
