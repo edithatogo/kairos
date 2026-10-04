@@ -33,6 +33,26 @@ def trace_event():
 
 
 class PhysicalSchemaTests(unittest.TestCase):
+    def test_available_at_lineage_status_has_its_own_enum(self):
+        for status in ("known", "not_yet_known", "unknown"):
+            for clock_status in ("observed", "derived", "unknown"):
+                row = trace_event()
+                clock = time_value()
+                clock["lineage"]["status"] = clock_status
+                row["knowledge_availability"] = {"status": status, "available_at": clock}
+                self.assertEqual(decode_row(encode_row(row), "trace_event.v1"), row)
+
+    def test_availability_and_lineage_status_domains_cannot_cross(self):
+        row = trace_event()
+        row["knowledge_availability"]["status"] = "observed"
+        with self.assertRaises(ValueError):
+            encode_row(row)
+        row = trace_event()
+        row["knowledge_availability"]["available_at"] = time_value()
+        row["knowledge_availability"]["available_at"]["lineage"]["status"] = "known"
+        with self.assertRaises(ValueError):
+            encode_row(row)
+
     def test_exact_table_metadata_and_clock_types(self):
         for schema, record_type in ((TRACE_EVENT_SCHEMA, "trace_event.v1"),
                                     (TRACE_EXCLUSION_SCHEMA, "trace_exclusion.v1"),
