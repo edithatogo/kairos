@@ -351,17 +351,6 @@ fn rust_toolchain() -> String {
 }
 
 fn producer_commit(write_report: bool) -> String {
-    if let Ok(commit) = std::env::var("C42_PRODUCER_COMMIT") {
-        assert!(
-            is_commit(&commit),
-            "C42_PRODUCER_COMMIT must be forty hex digits"
-        );
-        return commit;
-    }
-    assert!(
-        !write_report,
-        "set C42_PRODUCER_COMMIT to the committed report producer source"
-    );
     let output = Command::new("git")
         .args(["rev-parse", "HEAD"])
         .output()
@@ -375,11 +364,55 @@ fn producer_commit(write_report: bool) -> String {
         is_commit(&commit),
         "producer commit must be forty hex digits"
     );
+    let claimed = std::env::var("C42_PRODUCER_COMMIT").ok();
+    assert!(
+        valid_commit_binding(claimed.as_deref(), &commit, write_report),
+        "report commit must match executing Git HEAD; writing requires explicit binding"
+    );
+    if write_report {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        for (path, included) in [
+            (
+                "crates/kairo-ecs-calibration/tests/metrics_c42.rs",
+                include_bytes!("metrics_c42.rs").as_slice(),
+            ),
+            (
+                "crates/kairo-ecs-calibration/src/metrics.rs",
+                include_bytes!("../src/metrics.rs").as_slice(),
+            ),
+        ] {
+            let tracked = Command::new("git")
+                .current_dir(&repo)
+                .args(["show", &format!("HEAD:{path}")])
+                .output()
+                .expect("read committed producer source");
+            assert!(tracked.status.success(), "producer source is committed");
+            assert_eq!(
+                tracked.stdout, included,
+                "executed producer bytes must match HEAD:{path}"
+            );
+        }
+    }
     commit
 }
 
 fn is_commit(value: &str) -> bool {
     value.len() == 40 && value.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
+fn valid_commit_binding(claimed: Option<&str>, head: &str, write_report: bool) -> bool {
+    is_commit(head) && claimed.map_or(!write_report, |value| value == head)
+}
+
+#[test]
+fn unrelated_or_absent_commit_claim_cannot_bind_written_report() {
+    let head = "1111111111111111111111111111111111111111";
+    let other = "2222222222222222222222222222222222222222";
+    assert!(!valid_commit_binding(Some(other), head, true));
+    assert!(!valid_commit_binding(None, head, true));
+    assert!(!valid_commit_binding(Some("invalid"), head, false));
+    assert!(valid_commit_binding(Some(head), head, true));
+    assert!(valid_commit_binding(None, head, false));
 }
 
 fn produce_candidate_report(fixtures: &Value, fixture_hash: &str, write_report: bool) -> Value {
