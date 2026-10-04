@@ -1,6 +1,6 @@
 # ADR: scoped native authority and owned optimistic delivery
 
-Status: proposed for architecture and independent adversarial review, 4 October 2026. Source baseline: merged codec bridge `1afe522239087d2a7a92caa352ffd19a4fd1b254`. Track48 remains In Progress. This contract describes the required native path toward faithful Track49 delivery; it does not grant production transport, persistence, release or dependency waivers.
+Status: architecture and independent adversarial reviewers accepted the initial representation/rejection leaf on 4 October 2026. Retirement-barrier direction accepted; enabled owned/receipt/recovery API contracts remain proposed until their separate joint review. Source baseline: merged codec bridge `1afe522239087d2a7a92caa352ffd19a4fd1b254`. Track48 remains In Progress. This contract describes the required native path toward faithful Track49 delivery; it does not grant production transport, persistence, release or dependency waivers.
 
 ## Decision and compatibility
 
@@ -8,9 +8,9 @@ Use native scoped delivery authority and genuinely disjoint owned-process runtim
 
 `OptimisticAuthority` is a public immutable Copy/Debug/Eq/PartialEq enum with `LocalPreview` and `Scoped { simulation_namespace: u128, ownership_epoch: u64 }`. Zero/MAX values are valid representations. Durable namespace/epoch uniqueness and activation fencing are Track49 responsibilities. The actual source LP stays separate. No authority value, incarnation or arrival order may select the executable winner of a logical occurrence or enter logical ancestry/order keys.
 
-Existing native constructors and internally emitted legacy messages retain LocalPreview semantics. Add `OptimisticMessage::authority() -> OptimisticAuthority` and checked `try_from_authority_parts(event, logical_id, authority, incarnation, kind) -> Result<Self, OptimisticError>`. Reconstruction validates complete bounded ancestry and retains exact native u128 tick, source/destination, payload, sequence/ordinal, authority, incarnation and kind. It authenticates nothing. Clone and as_anti preserve authority.
+Existing native constructors and internally emitted legacy messages retain LocalPreview semantics. Add `OptimisticMessage::authority() -> OptimisticAuthority` and checked `try_from_authority_parts(event, logical_id, authority, incarnation, kind) -> Result<Self, OptimisticError>`. Reconstruction validates complete bounded ancestry and retains exact native u128 tick, source/destination, payload, sequence/ordinal, authority, incarnation and kind. It authenticates nothing. Clone and as_anti preserve authority. Envelope equality includes authority; logical order keys exclude it. The new typed error variant intentionally expands the exhaustive OptimisticError enum and can require downstream exhaustive matches to be updated. This is accepted only for the current time-warp alpha preview, not a claim of nonbreaking stable compatibility.
 
-The initial representation leaf rejects every Scoped positive or anti at the existing all-local runtime receive boundary with `OptimisticError::ScopedAuthorityRequiresOwnedRuntime`, before changing queue/history/model/RNG/tokens/tombstones/counters/GVT or allocation. It does not propagate scoped identity into executable indexes or enable scoped admission. There is no claim of ownership, fencing or multi-authority cancellation from that leaf.
+The initial representation leaf rejects every Scoped positive or anti at the existing all-local runtime receive boundary with `OptimisticError::ScopedAuthorityRequiresOwnedRuntime`, before changing queue/history/model/RNG/tokens/tombstones/counters/GVT or allocation. Preserve existing ensure_healthy/Poisoned precedence; place the scoped guard first within validate_message. It does not propagate scoped identity into executable indexes or enable scoped admission. There is no claim of ownership, fencing or multi-authority cancellation from that leaf.
 
 ## Owned execution and exact identity
 
