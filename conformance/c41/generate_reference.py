@@ -88,11 +88,20 @@ def fnum(v: str) -> float:
 
 
 def validate_input(inp: dict) -> None:
+    if inp.get("algorithm_version") not in (
+        "empirical_equal.v1",
+        "weighted_descriptive.v1",
+    ):
+        raise ValueError("unknown algorithm_version")
     if "reference_origin" in inp or "candidate_origin" in inp:
         raise ValueError("independent origins are forbidden")
     if "origin" in inp and inp["origin"] is not None:
         origin = int(inp["origin"])
-        ticks = inp.get("reference", []) + inp.get("candidate", [])
+        ticks = [
+            v
+            for v in inp.get("reference", []) + inp.get("candidate", [])
+            if v is not None
+        ]
         if origin < 0 or any(int(v) < origin or int(v) > U128_MAX for v in ticks):
             raise ValueError("origin/ticks outside common unsigned u128 scope")
     if q(inp["scale_ticks"]) <= 0:
@@ -106,34 +115,62 @@ def classify(case: dict) -> tuple[str, str | None, str | None, str, list[str]]:
     inp = case["input"]
     left, right = inp.get("reference", []), inp.get("candidate", [])
     algo = inp["algorithm_version"]
-    precision = "not_applicable"
+    precision = "exact_offsets" if inp.get("origin") is not None else "not_applicable"
     warnings = list(inp.get("coverage_warnings", []))
     try:
         validate_input(inp)
+        raw_left, raw_right = left, right
+        lweights = rweights = None
+        if algo == "weighted_descriptive.v1":
+            raw_lw = inp.get("reference_weights", [])
+            raw_rw = inp.get("candidate_weights", [])
+            if len(raw_lw) != len(raw_left) or len(raw_rw) != len(raw_right):
+                raise ValueError("weight length mismatch")
+            lweights, rweights = [q(v) for v in raw_lw], [q(v) for v in raw_rw]
+            if any(w < 0 for w in lweights + rweights):
+                raise ValueError("negative weight")
+            if any(not math.isfinite(fnum(v)) for v in raw_lw + raw_rw):
+                raise ValueError("nonfinite weight")
         if inp.get("origin") is not None:
-            precision = "exact_offsets"
             origin = int(inp["origin"])
-            offsets = [int(v) - origin for v in left + right]
-            if (
-                origin < 0
-                or origin > U128_MAX
-                or any(int(v) < origin or int(v) > U128_MAX for v in left + right)
+            ticks = [v for v in left + right if v is not None]
+            if origin > U128_MAX or any(
+                int(v) < origin or int(v) > U128_MAX for v in ticks
             ):
                 raise OverflowError
+            offsets = [None if v is None else int(v) - origin for v in left + right]
             # float conversion is accepted only if it preserves the exact integer offset.
-            if any(int(float(x)) != x for x in offsets):
+            if any(x is not None and int(float(x)) != x for x in offsets):
                 return "invalid", None, None, "rejected", warnings
             scale = q(inp["scale_ticks"])
             if scale <= 0:
                 raise ValueError("scale_ticks must be positive")
-            left = [serial(Fraction(int(v) - origin, 1) / scale) for v in left]
-            right = [serial(Fraction(int(v) - origin, 1) / scale) for v in right]
+            converted = [
+                None if x is None else serial(Fraction(x, 1) / scale) for x in offsets
+            ]
+            left, right = converted[: len(raw_left)], converted[len(raw_left) :]
         # Null observations are excluded from point support and accounted as missing.
-        left = [v for v in left if v is not None]
-        right = [v for v in right if v is not None]
+        left_mask = [v is not None for v in left]
+        right_mask = [v is not None for v in right]
+        left = [v for v, keep in zip(left, left_mask) if keep]
+        right = [v for v, keep in zip(right, right_mask) if keep]
+        if lweights is not None and rweights is not None:
+            lweights = [w for w, keep in zip(lweights, left_mask) if keep]
+            rweights = [w for w, keep in zip(rweights, right_mask) if keep]
         lq, rq = [q(v) for v in left], [q(v) for v in right]
         if any(not math.isfinite(fnum(v)) for v in left + right):
             raise ValueError("nonfinite")
+        if lweights is not None and rweights is not None:
+            for support, weights in ((lq, lweights), (rq, rweights)):
+                if not support:
+                    continue
+                total = sum(weights)
+                try:
+                    finite_total = math.isfinite(float(total))
+                except OverflowError:
+                    finite_total = False
+                if not finite_total or total <= 0:
+                    raise ValueError("nonpositive or nonfinite eligible weight mass")
     except (ValueError, OverflowError, TypeError, ZeroDivisionError):
         return (
             "invalid",
@@ -147,17 +184,6 @@ def classify(case: dict) -> tuple[str, str | None, str | None, str, list[str]]:
     if not lq or not rq:
         return "insufficient_data", None, None, precision, warnings
     if algo == "weighted_descriptive.v1":
-        try:
-            lweights = [q(v) for v in inp["reference_weights"]]
-            rweights = [q(v) for v in inp["candidate_weights"]]
-            if not math.isfinite(float(sum(lweights))) or not math.isfinite(
-                float(sum(rweights))
-            ):
-                return "invalid", None, None, precision, warnings
-        except (ValueError, KeyError, ZeroDivisionError):
-            return "invalid", None, None, precision, warnings
-        except OverflowError:
-            return "invalid", None, None, precision, warnings
         try:
             w, d = exact_metric(lq, rq, lweights, rweights)
         except ValueError:
@@ -265,12 +291,6 @@ def make_fixture(case: dict) -> dict:
         result["diagnostic"]["group_variable"] = group_key
         result["diagnostic"]["compared_variable"] = value_key
         result["diagnostic"]["groups"] = rows
-    if missing_nulls:
-        result["diagnostic"] = result.get("diagnostic", {})
-        result["diagnostic"]["raw_population_counts"] = {
-            "reference": str(len(raw_left)),
-            "candidate": str(len(raw_right)),
-        }
     if any(k in supplied for k in ("censor_subtypes", "overlap_counts")):
         result["diagnostic"] = result.get("diagnostic", {})
         result["diagnostic"]["overlap_counts"] = supplied.get("overlap_counts", {})
@@ -309,8 +329,24 @@ def scipy_crosschecks(fixtures: dict) -> list[dict]:
         if not all(math.isfinite(x) for x in a + b):
             continue
         weighted = inp["algorithm_version"] == "weighted_descriptive.v1"
-        lw = [float(q(v)) for v in inp["reference_weights"]] if weighted else None
-        rw = [float(q(v)) for v in inp["candidate_weights"]] if weighted else None
+        lw = (
+            [
+                float(q(w))
+                for x, w in zip(inp["reference"], inp["reference_weights"])
+                if x is not None
+            ]
+            if weighted
+            else None
+        )
+        rw = (
+            [
+                float(q(w))
+                for x, w in zip(inp["candidate"], inp["candidate_weights"])
+                if x is not None
+            ]
+            if weighted
+            else None
+        )
         w = wasserstein_distance(a, b, u_weights=lw, v_weights=rw)
         tol_w = 1e-12 * max(1.0, float(q(inp["scale_ticks"])))
         if abs(float(w) - float(q(c["expected"]["w1"]))) > tol_w:

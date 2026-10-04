@@ -6,7 +6,7 @@ reference, not a production metric implementation. The frozen semantics are in
 unit and count clarifications are separate integration inputs and do not alter
 that contract's bound input hash.
 
-`fixtures.json` contains 40 cases. `generate_reference.py` recomputes every
+`fixtures.json` contains 42 cases. `generate_reference.py` recomputes every
 rational result with Python `Fraction`, checks serialized expectations, and
 separately compares supported equal and weighted cases with SciPy's floating
 Wasserstein statistic. Unweighted cases also crosscheck KS. These are numeric
@@ -39,6 +39,8 @@ rejected_input. Invalid results have zero used reference/candidate points;
 attempted and raw support totals remain in diagnostics. Censor subtype and
 overlap diagnostics are non-additive. `unmatched` is zero and marked not
 applicable for these unpaired descriptive fixtures.
+Null supports and their aligned weights are validated at raw input length,
+then excluded together; valid point counts and eligible weighted mass omit them.
 
 Supports are already expressed in the declared unit. Matched minute and second
 fixtures use the same one-second tick basis: the minute fixture has

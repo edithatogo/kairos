@@ -173,6 +173,23 @@ class ReferenceTests(unittest.TestCase):
         self.assertEqual(by_id["empty-both"]["status"], "empty")
         self.assertEqual(by_id["no-observed"]["status"], "empty")
         self.assertEqual(by_id["null-points"]["status"], "ok")
+        self.assertEqual(by_id["origin-null"]["status"], "ok")
+        origin_null = next(c for c in FIXTURES["cases"] if c["id"] == "origin-null")
+        self.assertEqual(origin_null["expected"]["counts"]["reference"], "2")
+        self.assertEqual(origin_null["expected"]["counts"]["candidate"], "2")
+        self.assertEqual(
+            origin_null["expected"]["diagnostic"]["primary_dispositions"]["missing"],
+            "1",
+        )
+        weighted_null = next(c for c in FIXTURES["cases"] if c["id"] == "weighted-null")
+        self.assertEqual(weighted_null["expected"]["status"], "ok")
+        self.assertEqual(weighted_null["expected"]["counts"]["reference"], "2")
+        self.assertEqual(
+            weighted_null["expected"]["diagnostic"]["primary_dispositions"]["missing"],
+            "1",
+        )
+        self.assertEqual(weighted_null["expected"]["w1"], "4/5")
+        self.assertEqual(weighted_null["expected"]["ks_d"], "2/5")
         for case_id in (
             "nan-value",
             "inf-value",
@@ -183,6 +200,7 @@ class ReferenceTests(unittest.TestCase):
             "precision-reject",
         ):
             self.assertEqual(by_id[case_id]["status"], "invalid", case_id)
+        self.assertEqual(by_id["u128-overflow"]["precision"], "rejected")
         self.assertEqual(by_id["near-u128"]["precision"], "exact_offsets")
         self.assertEqual(by_id["common-origin-scaled"]["w1"], "1")
         for c in FIXTURES["cases"]:
@@ -225,6 +243,49 @@ class ReferenceTests(unittest.TestCase):
                 [60 * Fraction(v) for v in min_case["input"][side]],
                 [Fraction(v) for v in sec_case["input"][side]],
             )
+
+    def test_weight_validation_precedes_empty_population_and_unknown_algorithm(self):
+        empty = next(c for c in FIXTURES["cases"] if c["id"] == "empty-both")
+        malformed = copy.deepcopy(empty)
+        malformed["input"].update(
+            {
+                "algorithm_version": "weighted_descriptive.v1",
+                "reference": [None],
+                "candidate": [None],
+                "reference_weights": ["-1"],
+                "candidate_weights": ["1"],
+            }
+        )
+        self.assertEqual(ref.classify(malformed)[0], "invalid")
+        wrong_length = copy.deepcopy(empty)
+        wrong_length["input"].update(
+            {
+                "algorithm_version": "weighted_descriptive.v1",
+                "reference_weights": ["1"],
+                "candidate_weights": [],
+            }
+        )
+        self.assertEqual(ref.classify(wrong_length)[0], "invalid")
+        malformed["input"]["reference_weights"] = ["Infinity"]
+        self.assertEqual(ref.classify(malformed)[0], "invalid")
+        all_null_zero_mass = copy.deepcopy(malformed)
+        all_null_zero_mass["input"]["reference_weights"] = ["0"]
+        all_null_zero_mass["input"]["candidate_weights"] = ["0"]
+        self.assertEqual(ref.classify(all_null_zero_mass)[0], "empty")
+        unknown = copy.deepcopy(
+            next(c for c in FIXTURES["cases"] if c["id"] == "shift-1")
+        )
+        unknown["input"]["algorithm_version"] = "silent-fallback.v1"
+        self.assertEqual(ref.classify(unknown)[0], "invalid")
+
+    def test_weighted_null_crosscheck_uses_aligned_nonnull_weights(self):
+        reference = json.loads((HERE / "reference.json").read_text())
+        crosscheck = next(
+            x for x in reference["scipy_crosschecks"] if x["id"] == "weighted-null"
+        )
+        self.assertAlmostEqual(crosscheck["scipy_w1"], 0.8, places=14)
+        self.assertNotIn("scipy_ks_d", crosscheck)
+        self.assertNotIn("p_value", crosscheck)
 
     def test_coverage_is_additive_primary_and_retains_overlaps(self):
         for case_id in (
