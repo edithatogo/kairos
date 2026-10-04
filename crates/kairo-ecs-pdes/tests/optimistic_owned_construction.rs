@@ -347,14 +347,22 @@ fn guarded_owned_operations_and_raw_admission_preserve_observable_state() {
     runtime0.register_native_peer(authority1.clone()).unwrap();
     runtime1.register_native_peer(authority0).unwrap();
     runtime0.seal_native_peers().unwrap();
-    let before = runtime0.report();
+    let before_schedule = runtime0.report();
     let before_queue = runtime0.pending_events(LpId(0));
     let before_value = runtime0.process_at(LpId(0)).unwrap().value;
     let token = runtime0.state_token(LpId(0)).unwrap();
-    assert_eq!(
-        runtime0.schedule_initial(3, event(0, 1)),
-        Err(OptimisticError::OwnedRuntimeJoinIncomplete)
-    );
+    let scheduled = runtime0.schedule_initial(3, event(0, 1)).unwrap();
+    assert_eq!(scheduled.event(), &event(0, 1));
+    assert_eq!(runtime0.outbound_pending().unwrap().len(), 1);
+    assert_eq!(runtime0.ready_native_sends().unwrap().len(), 1);
+    let after_schedule = runtime0.report();
+    let after_queue = runtime0.pending_events(LpId(0));
+    let snapshot = runtime0.accounting_snapshot().unwrap();
+    assert_eq!(snapshot.ready_positive_count(), 1);
+    assert_eq!(snapshot.reserved_receipt_count(), 1);
+    assert_eq!(snapshot.revision(), 3);
+    assert_eq!(runtime0.report(), before_schedule);
+    assert_eq!(runtime0.pending_events(LpId(0)), before_queue);
     assert_eq!(
         runtime0.run_until_with_budget(Tick::from_ticks(4), 0),
         Err(OptimisticError::OwnedRuntimeJoinIncomplete)
@@ -374,11 +382,11 @@ fn guarded_owned_operations_and_raw_admission_preserve_observable_state() {
         runtime0.fossil_collect(Tick::ZERO),
         Err(OptimisticError::NativeGroupCutRequired)
     );
-    assert_eq!(runtime0.report(), before);
-    assert_eq!(runtime0.pending_events(LpId(0)), before_queue);
+    assert_eq!(runtime0.report(), after_schedule);
+    assert_eq!(runtime0.pending_events(LpId(0)), after_queue);
     assert_eq!(runtime0.process_at(LpId(0)).unwrap().value, before_value);
     assert!(runtime0.validate_state_token(token));
-    assert_eq!(runtime0.accounting_revision().unwrap(), 2);
+    assert_eq!(runtime0.accounting_revision().unwrap(), 3);
 }
 
 #[test]

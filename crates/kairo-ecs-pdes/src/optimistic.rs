@@ -14,8 +14,14 @@ use kairo_ecs_types::SimDuration;
 use super::{LpId, PartitionPlan, RemoteEvent, Tick};
 
 mod owned;
+mod owned_routing;
 pub use owned::{NativeAccountingAuthority, OptimisticOwnedOptions};
 use owned::{OwnedConstructionConfig, OwnedRuntimeState};
+pub use owned_routing::{
+    NativeAdmissionCapability, NativeAdmissionMembership, NativeOutboundSend,
+    OptimisticAccountingSnapshot, OptimisticOutboundStatus, OptimisticOutboundView,
+    OptimisticSendKey,
+};
 
 const MAX_CAUSAL_DEPTH: usize = 128;
 static NEXT_RUNTIME_ID: AtomicU64 = AtomicU64::new(1);
@@ -203,6 +209,32 @@ pub enum OptimisticError {
     },
     NativePeerConfigurationMismatch,
     NativePeerOwnershipOverlap(LpId),
+    UnregisteredNativeIssuer {
+        runtime_id: u64,
+        recovery_generation: u64,
+    },
+    NativeSendIssuerMismatch {
+        source_lp: LpId,
+    },
+    NativeAuthorityMismatch {
+        source_lp: LpId,
+        expected: OptimisticAuthority,
+        actual: OptimisticAuthority,
+    },
+    UnknownNativeSend,
+    ConflictingNativeReceipt,
+    TransitionLimitExceeded {
+        limit: usize,
+    },
+    OutboxLimitExceeded {
+        limit: usize,
+    },
+    ReceiptLimitExceeded {
+        limit: usize,
+    },
+    NativeAccountingUnavailable {
+        runtime_id: u64,
+    },
     StaleNativeAccountingAuthority {
         runtime_id: u64,
         recovery_generation: u64,
@@ -606,6 +638,7 @@ pub struct OptimisticStateToken {
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 struct DeliveryIdentity {
     source_lp: LpId,
+    authority: AuthorityStorageKey,
     logical_id: LogicalEventId,
     incarnation: u64,
 }
@@ -614,8 +647,48 @@ impl From<&OptimisticMessage> for DeliveryIdentity {
     fn from(message: &OptimisticMessage) -> Self {
         Self {
             source_lp: message.event.source_lp,
+            authority: AuthorityStorageKey::from(message.authority),
             logical_id: message.logical_id.clone(),
             incarnation: message.incarnation,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub(super) enum AuthorityStorageKey {
+    LocalPreview,
+    Scoped {
+        simulation_namespace: u128,
+        ownership_epoch: u64,
+    },
+}
+
+impl From<OptimisticAuthority> for AuthorityStorageKey {
+    fn from(authority: OptimisticAuthority) -> Self {
+        match authority {
+            OptimisticAuthority::LocalPreview => Self::LocalPreview,
+            OptimisticAuthority::Scoped {
+                simulation_namespace,
+                ownership_epoch,
+            } => Self::Scoped {
+                simulation_namespace,
+                ownership_epoch,
+            },
+        }
+    }
+}
+
+impl From<AuthorityStorageKey> for OptimisticAuthority {
+    fn from(authority: AuthorityStorageKey) -> Self {
+        match authority {
+            AuthorityStorageKey::LocalPreview => Self::LocalPreview,
+            AuthorityStorageKey::Scoped {
+                simulation_namespace,
+                ownership_epoch,
+            } => Self::Scoped {
+                simulation_namespace,
+                ownership_epoch,
+            },
         }
     }
 }
@@ -632,7 +705,7 @@ type StagedEvent<S> = (LpId, ExecutedEvent<S>);
 
 #[derive(Debug, Default)]
 struct EventQueue {
-    values: BTreeMap<OptimisticEventOrderKey, BTreeMap<u64, OptimisticMessage>>,
+    values: BTreeMap<OptimisticEventOrderKey, BTreeMap<DeliveryIdentity, OptimisticMessage>>,
 }
 
 impl EventQueue {
@@ -641,29 +714,25 @@ impl EventQueue {
     }
 
     fn contains(&self, identity: &DeliveryIdentity) -> Option<&OptimisticMessage> {
-        self.values.values().find_map(|incarnations| {
-            incarnations
-                .get(&identity.incarnation)
-                .filter(|message| DeliveryIdentity::from(*message) == *identity)
-        })
+        self.values
+            .values()
+            .find_map(|incarnations| incarnations.get(identity))
     }
 
     fn insert(&mut self, message: OptimisticMessage) {
         self.values
             .entry(message.order_key())
             .or_default()
-            .insert(message.incarnation, message);
+            .insert(DeliveryIdentity::from(&message), message);
     }
 
     fn remove(&mut self, identity: &DeliveryIdentity) -> Option<OptimisticMessage> {
-        let key = self.values.iter().find_map(|(key, incarnations)| {
-            incarnations
-                .get(&identity.incarnation)
-                .filter(|message| DeliveryIdentity::from(*message) == *identity)
-                .map(|_| key.clone())
-        })?;
+        let key = self
+            .values
+            .iter()
+            .find_map(|(key, incarnations)| incarnations.get(identity).map(|_| key.clone()))?;
         let incarnations = self.values.get_mut(&key)?;
-        let removed = incarnations.remove(&identity.incarnation);
+        let removed = incarnations.remove(identity);
         if incarnations.is_empty() {
             self.values.remove(&key);
         }
@@ -1014,12 +1083,11 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
 
     pub fn close_initial_inputs(&mut self) -> Result<(), OptimisticError> {
         self.ensure_healthy()?;
+        let initial_open = &mut self.initial_open;
         self.owned
             .as_mut()
             .ok_or(OptimisticError::OwnedModeRequired)?
-            .close_initial_inputs()?;
-        self.initial_open = false;
-        Ok(())
+            .close_initial_inputs(|| *initial_open = false)
     }
 
     pub fn native_peers_sealed(&self) -> Result<bool, OptimisticError> {
@@ -1051,13 +1119,8 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
         if !self.initial_open {
             return Err(OptimisticError::InitialSchedulingClosed);
         }
-        if let Some(owned) = &self.owned {
-            owned.require_sealed_live()?;
-            if !owned.owned_lps().contains(&event.source_lp) {
-                return Err(OptimisticError::UnownedLogicalProcess(event.source_lp));
-            }
-            self.validate_owned_initial_event(&event)?;
-            return Err(OptimisticError::OwnedRuntimeJoinIncomplete);
+        if self.owned.is_some() {
+            return self.schedule_owned_root(stable_sequence, event);
         }
         self.validate_event(&event)?;
         self.validate_gvt(event.tick)?;
@@ -2171,6 +2234,14 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
                     .map(|message| message.event.tick)
             })
             .min()
+    }
+}
+
+impl<P: OptimisticProcess> Drop for OptimisticRuntime<P> {
+    fn drop(&mut self) {
+        if let Some(owned) = self.owned.as_mut() {
+            owned.invalidate_before_runtime_drop();
+        }
     }
 }
 
