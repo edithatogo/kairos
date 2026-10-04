@@ -25,3 +25,6 @@ mod trace_mapping;
 
 // Private bounded C1 source/timestamp normalization wrapper.
 mod ingestion_normalize;
+
+// Private experimental validation over sorted calibration records.
+mod ingestion_validate;
