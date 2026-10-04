@@ -283,3 +283,221 @@ fn count_lines(path: &Path, cap: usize) -> Result<u64, String> {
         n.checked_add(1).ok_or_else(|| "row count overflow".into())
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ingestion_validate::{ValidationBounds, ValidationMode};
+    use std::collections::{BTreeMap, BTreeSet};
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    fn root() -> PathBuf {
+        let p = std::env::temp_dir().join(format!(
+            "kairos-c13-pipeline-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, Ordering::Relaxed)
+        ));
+        fs::create_dir(&p).unwrap();
+        p
+    }
+    fn clock(second: u64) -> Value {
+        json!({"raw":format!("2020-01-01T00:00:{second:02}Z"),"representation":"RFC3339","precision":"second","lineage":{"status":"observed"}})
+    }
+    fn source() -> (Value, Vec<Value>) {
+        let bindings:Vec<Value>=[("arrival","ARRIVAL",0),("bed_entered","BED_ENTERED",1),("physical_departure","PHYSICAL_DEPARTURE",2)].into_iter().map(|(kind,ty,rank)|json!({"source_event_type":ty,"kind":kind,"rank":rank.to_string(),"occurrence_index":0,"occurrence_field":"at","key_field":"id","order_field":"seq"})).collect();
+        let template = json!({"profile_version":"c11.synthetic-map-v1","dataset_id":"synthetic-c13","mapping_version":"synthetic-map-v1","origin_utc":"2020-01-01T00:00:00Z","case_key_field":"case","source_family":"fixture","shape":"long","event_kind_field":"kind","resource_key_field":"resource","location_key_field":"location","event_bindings":bindings,"rows":[]});
+        let mut rows = Vec::new();
+        for (case, times) in [("Z", [0, 1, 4]), ("A", [2, 4, 7])] {
+            for (kind, second) in ["arrival", "bed_entered", "physical_departure"]
+                .into_iter()
+                .zip(times)
+            {
+                let mut row = json!({"case":case,"id":format!("{case}-{kind}"),"seq":rows.len(),"kind":kind,"at":clock(second),"resource":"bed-1","location":"zone-1"});
+                if kind == "physical_departure" {
+                    row["outcome"] = json!({"endpoint":"departure","risk_start":clock(times[0]),"last_observed":clock(second),"event_clock":if case=="A"{Value::Null}else{clock(second)},"censor_cause":if case=="A"{"window_end"}else{"departed"},"censor_status":if case=="A"{"right"}else{"not_censored"},"lineage":{"status":"observed"}});
+                }
+                rows.push(row);
+            }
+        }
+        rows.push(json!({"case":"E","id":"excluded-missing","seq":6,"kind":"arrival","at":null}));
+        (template, rows)
+    }
+    fn config(run_rows: usize) -> PipelineConfig {
+        PipelineConfig {
+            normalization: Limits {
+                max_chunk_rows: 100,
+                max_chunk_bytes: 1 << 20,
+                max_identities: 100,
+            },
+            sorting: SortLimits {
+                max_run_rows: run_rows,
+                max_run_bytes: 1 << 20,
+                max_record_bytes: 1 << 16,
+                merge_fan_in: 2,
+            },
+            validation: ValidationPolicy {
+                mode: ValidationMode::Strict,
+                declared_kinds: BTreeSet::from([
+                    "arrival".into(),
+                    "bed_entered".into(),
+                    "physical_departure".into(),
+                ]),
+                required_kinds: vec![
+                    "arrival".into(),
+                    "bed_entered".into(),
+                    "physical_departure".into(),
+                ],
+                precedence: vec![
+                    ("arrival".into(), "bed_entered".into()),
+                    ("bed_entered".into(), "physical_departure".into()),
+                ],
+                occupancy_pairs: vec![("bed_entered".into(), "physical_departure".into())],
+                capacities: BTreeMap::from([(("bed-1".into(), "zone-1".into()), 1)]),
+                window: Some((0, 10_000_000_000)),
+                bounds: ValidationBounds {
+                    max_cases: 100,
+                    max_state_entries: 1000,
+                    max_record_bytes: 1 << 16,
+                },
+            },
+        }
+    }
+    #[test]
+    fn actual_source_pipeline_hashes_survive_chunks_spills_permutations_and_counts_reconcile() {
+        let root = root();
+        let (template, rows) = source();
+        let input = root.join("source.json");
+        fs::write(&input, serde_json::to_vec(&rows).unwrap()).unwrap();
+        let mut hashes = Vec::new();
+        for (index, (chunk, run, reverse)) in [(1, 1, false), (2, 2, true), (7, 100, false)]
+            .into_iter()
+            .enumerate()
+        {
+            let mut physical = rows.clone();
+            if reverse {
+                physical.reverse();
+            }
+            let output = root.join(format!("layout-{index}"));
+            let chunks = physical.chunks(chunk).map(|r| Ok(r.to_vec()));
+            let manifest = ingest(
+                template.clone(),
+                chunks,
+                &config(run),
+                std::slice::from_ref(&input),
+                &output,
+            )
+            .unwrap();
+            assert_eq!(manifest["source_rows"], 7);
+            assert_eq!(manifest["candidate_units"], 7);
+            assert_eq!(manifest["mapper_accepted_units"], 6);
+            assert_eq!(manifest["mapper_excluded_units"], 1);
+            assert_eq!(manifest["outcomes"], 2);
+            assert_eq!(manifest["validation"]["valid_events"], 6);
+            assert_eq!(manifest["validation"]["resource_feasible"], true);
+            assert_eq!(manifest["censor_status_counts"]["right"], 1);
+            assert_eq!(manifest["censor_status_counts"]["not_censored"], 1);
+            hashes.push(manifest["populations"].clone());
+            assert!(!output.join("scratch").exists());
+            if index == 0 {
+                if let Some(target) = std::env::var_os("KAIROS_C13_CAPTURE_DIR") {
+                    let target = PathBuf::from(target);
+                    fs::create_dir_all(&target).unwrap();
+                    for file in [
+                        "events.ndjson",
+                        "exclusions.ndjson",
+                        "outcomes.ndjson",
+                        "manifest.json",
+                    ] {
+                        fs::copy(output.join(file), target.join(file)).unwrap();
+                    }
+                    fs::write(
+                        target.join("template.json"),
+                        serde_json::to_vec(&template).unwrap(),
+                    )
+                    .unwrap();
+                    fs::write(
+                        target.join("source.json"),
+                        serde_json::to_vec(&rows).unwrap(),
+                    )
+                    .unwrap();
+                }
+            }
+        }
+        assert_eq!(hashes[0], hashes[1]);
+        assert_eq!(hashes[0], hashes[2]);
+        // No source keys, paths or raw source fields in the local manifest.
+        let text = fs::read_to_string(root.join("layout-0/manifest.json")).unwrap();
+        assert!(!text.contains("excluded-missing"));
+        assert!(!text.contains("source.json"));
+        assert!(!text.contains("raw_event"));
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn errors_remove_only_new_bundle_and_missing_evidence_never_succeeds() {
+        let root = root();
+        let (template, rows) = source();
+        let input = root.join("source.json");
+        fs::write(&input, serde_json::to_vec(&rows).unwrap()).unwrap();
+        let output = root.join("failed");
+        let bad = vec![Ok(vec![rows[0].clone()]), Ok(vec![rows[0].clone()])];
+        assert!(ingest(
+            template.clone(),
+            bad.into_iter(),
+            &config(1),
+            std::slice::from_ref(&input),
+            &output
+        )
+        .is_err());
+        assert!(!output.exists());
+        assert!(ingest(
+            template.clone(),
+            std::iter::empty(),
+            &config(1),
+            &[],
+            &output
+        )
+        .is_err());
+        assert!(!output.exists());
+        fs::create_dir(&output).unwrap();
+        fs::write(output.join("keep"), b"untouched").unwrap();
+        assert!(ingest(
+            template,
+            rows.chunks(1).map(|r| Ok(r.to_vec())),
+            &config(1),
+            std::slice::from_ref(&input),
+            &output
+        )
+        .is_err());
+        assert_eq!(fs::read(output.join("keep")).unwrap(), b"untouched");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn transported_source_rows_use_the_same_actual_pipeline() {
+        let Some(path) = std::env::var_os("KAIROS_C13_SOURCE_ROWS") else {
+            return;
+        };
+        let root = root();
+        let path = PathBuf::from(path);
+        let rows: Vec<Value> = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        let (template, _) = source();
+        let output = root.join("reingested");
+        let manifest = ingest(
+            template,
+            rows.chunks(2).map(|r| Ok(r.to_vec())),
+            &config(1),
+            std::slice::from_ref(&path),
+            &output,
+        )
+        .unwrap();
+        let expected: Value = serde_json::from_slice(
+            &fs::read(
+                std::env::var_os("KAIROS_C13_EXPECTED_MANIFEST")
+                    .expect("transport reingestion requires original actual manifest"),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(manifest["populations"], expected["populations"]);
+        fs::remove_dir_all(root).unwrap();
+    }
+}
