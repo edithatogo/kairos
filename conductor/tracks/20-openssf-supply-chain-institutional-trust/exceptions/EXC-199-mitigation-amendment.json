@@ -1,6 +1,6 @@
 {
   "id": "EXC-199-mitigation-amendment",
-  "status": "proposed_pending_human_scope_amendment",
+  "status": "approved_pending_reviewed_integration",
   "classification_authority": "Human explicitly approved temporary operational EXC199 classification on4October2026; this does not authorize changed proof bytes",
   "required_pull_request": 199,
   "repository": "edithatogo/kairos",
@@ -46,12 +46,12 @@
   "behavior_cases_per_copy": 248,
   "installer_tests": 9,
   "scope_amendment_approval": {
-    "security_owner": null,
-    "release_owner": null,
-    "approved_at": null,
-    "approval_evidence": null
+    "security_owner": "human sole maintainer (this chat; repository account edithatogo)",
+    "release_owner": "human sole maintainer (this chat; repository account edithatogo)",
+    "approved_at": "2026-10-04T10:39:27.598427+10:00",
+    "approval_evidence": "Human user replied “I approve” to the explicit source-binding amendment question for corrected mitigation commit2efedc5ea04c1caf26a200bd2450e9e38426e8fe and patched index5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c. Scope and expiry unchanged; no RC/1.0/publication/website/other PR or tree approval. Timestamp records receipt of this decision, not a claimed message-send time."
   },
-  "activation": "blocked until human scope amendment, reviewed integration and exact-head hosted gates",
+  "activation": "approved source binding; activation requires reviewed integration and exact-head hosted gates",
   "evidence_manifest": "evidence/EXC-199-amendment/manifest.json",
   "website_note": "Third-copy behavior diagnostic is outside the EXC199 bootstrap-only exception; no website waiver",
   "reason": "old locally mitigated source fails129of248 stale-fallback controls; stronger source changes four approved proof files and patch hash"

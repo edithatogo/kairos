@@ -1,6 +1,6 @@
 # EXC-199: corrected-mitigation scope amendment proposed
 
-Status: pending a new human source-binding decision. The human approved the EXC199 temporary operational classification and Track49 conditional scheduling on 4 October2026. That authority is recorded and is not being requested again. The changed mitigation fingerprints below are not covered by the old source-bound approval.
+Status: human source-binding amendment approved; reviewed integration and hosted acceptance remain pending. The human approved the EXC199 temporary operational classification and Track49 conditional scheduling on 4 October2026. That authority is recorded and is not being requested again. The changed mitigation fingerprints below are not covered by the old source-bound approval.
 
 The old mitigation allows restricted responses through stale-if-error/stale-while-revalidate fallback paths, including request-mismatch revalidation. Independent expanded checks now fail129 of248 cases against its fc7b3f source. Actual EXC199 activation must remain blocked_stale_fallback_gap; do not use the old60-case pass as adequate mitigation proof.
 
@@ -15,3 +15,7 @@ Reviewable details: [amendment JSON](EXC-199-mitigation-amendment.json), [raw ev
 ## Why a new decision is necessary
 
 The approved EXC199 decision explicitly expires when dependency/patch/proof bytes change. These are substantive safety changes, not merely new labels for old evidence. Security-owner and release-owner human approval of the changed exact bindings is required by Track20 policy; independent review verifies the candidate but cannot grant that approval.
+
+## Human decision — 4 October 2026
+
+The human explicitly replied “I approve” to the source-binding amendment question in this chat. The security/release-owner decision is recorded in the JSON at 2026-10-04T10:39:27.598427+10:00. Exact corrected fingerprints, PR199-only development/alpha/beta bootstrap scope and expiry remain unchanged. This authorizes reviewed integration; it does not claim active classification, hosted success, merge or Track49 dispatch. The strict migration being prepared in a parallel chat is independent work and is not included in this approval.
