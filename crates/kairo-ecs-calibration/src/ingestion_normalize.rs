@@ -3,7 +3,7 @@ use super::{
     trace_mapping,
     trace_order::{EventKindRank, TraceOrderKeyV1},
 };
-use serde_json::{json, Value};
+use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 
@@ -114,8 +114,8 @@ impl Normalizer {
         {
             return Err("candidate fanout exceeds remaining identity limit".into());
         }
-        let (candidate_count, keys, outcome_keys) = preflight(&self.template, &rows)?;
-        if candidate_count
+        let preflight = preflight(&self.template, &rows)?;
+        if preflight.candidate_count
             > self
                 .limits
                 .max_identities
@@ -126,23 +126,31 @@ impl Normalizer {
         let identities = self
             .source_keys
             .len()
-            .checked_add(keys.len())
+            .checked_add(preflight.source_keys.len())
             .ok_or("identity count overflow")?;
         if identities > self.limits.max_identities {
             return Err("dataset identity limit exceeded".into());
         }
-        if keys.iter().any(|k| self.source_keys.contains(k)) {
+        if preflight
+            .source_keys
+            .iter()
+            .any(|k| self.source_keys.contains(k))
+        {
             return Err("duplicate source-event key across chunks".into());
         }
         let outcome_count = self
             .outcome_keys
             .len()
-            .checked_add(outcome_keys.len())
+            .checked_add(preflight.outcome_keys.len())
             .ok_or("outcome identity count overflow")?;
         if outcome_count > self.limits.max_identities {
             return Err("dataset outcome identity limit exceeded".into());
         }
-        if outcome_keys.iter().any(|k| self.outcome_keys.contains(k)) {
+        if preflight
+            .outcome_keys
+            .iter()
+            .any(|k| self.outcome_keys.contains(k))
+        {
             return Err("duplicate outcome identity across chunks".into());
         }
         let mut request = self.template.clone();
@@ -161,7 +169,7 @@ impl Normalizer {
         let ac = &mapped["accounting"];
         let mut next = self.counts;
         next.source_rows = add(next.source_rows, rows.len())?;
-        next.candidate_units = add(next.candidate_units, candidate_count)?;
+        next.candidate_units = add(next.candidate_units, preflight.candidate_count)?;
         next.accepted_units = next
             .accepted_units
             .checked_add(field_u64(ac, "accepted_units")?)
@@ -215,8 +223,8 @@ impl Normalizer {
             .ok_or("mapper diagnostics missing")?
             .clone();
         self.counts = next;
-        self.source_keys.extend(keys);
-        self.outcome_keys.extend(outcome_keys);
+        self.source_keys.extend(preflight.source_keys);
+        self.outcome_keys.extend(preflight.outcome_keys);
         Ok(result)
     }
     pub(crate) fn counts(&self) -> Counts {
@@ -287,10 +295,12 @@ fn validate_envelope(t: &Value) -> Result<(), String> {
     }
     Ok(())
 }
-fn preflight(
-    t: &Value,
-    rows: &[Value],
-) -> Result<(usize, BTreeSet<String>, BTreeSet<(String, String)>), String> {
+struct Preflight {
+    candidate_count: usize,
+    source_keys: BTreeSet<String>,
+    outcome_keys: BTreeSet<(String, String)>,
+}
+fn preflight(t: &Value, rows: &[Value]) -> Result<Preflight, String> {
     let o = t.as_object().ok_or("invalid envelope")?;
     let bindings = o["event_bindings"].as_array().ok_or("invalid bindings")?;
     let shape = o["shape"].as_str().ok_or("invalid shape")?;
@@ -351,7 +361,11 @@ fn preflight(
             }
         }
     }
-    Ok((count, keys, outcomes))
+    Ok(Preflight {
+        candidate_count: count,
+        source_keys: keys,
+        outcome_keys: outcomes,
+    })
 }
 fn add(a: u64, b: usize) -> Result<u64, String> {
     a.checked_add(u64::try_from(b).map_err(|_| "counter conversion overflow")?)
@@ -413,6 +427,7 @@ pub(crate) fn order_key(v: &Value) -> Result<TraceOrderKeyV1, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
     fn clock(raw: &str) -> Value {
         json!({"raw":raw,"representation":"RFC3339","precision":"second","lineage":{"status":"observed"}})
     }
