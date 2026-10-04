@@ -1,0 +1,382 @@
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "@npmcli/arborist": {
+      "name": "@npmcli/arborist",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@npmcli/metavuln-calculator",
+        "npm-registry-fetch",
+        "pacote"
+      ],
+      "effects": [
+        "libnpmdiff",
+        "libnpmexec",
+        "libnpmfund",
+        "libnpmpack",
+        "npm"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/npm/node_modules/@npmcli/arborist"
+      ],
+      "fixAvailable": false
+    },
+    "@npmcli/metavuln-calculator": {
+      "name": "@npmcli/metavuln-calculator",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "pacote"
+      ],
+      "effects": [
+        "@npmcli/arborist",
+        "npm"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/npm/node_modules/@npmcli/metavuln-calculator"
+      ],
+      "fixAvailable": false
+    },
+    "@sigstore/sign": {
+      "name": "@sigstore/sign",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "make-fetch-happen"
+      ],
+      "effects": [
+        "sigstore"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/npm/node_modules/@sigstore/sign"
+      ],
+      "fixAvailable": false
+    },
+    "http-cache-semantics": {
+      "name": "http-cache-semantics",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1240991,
+          "name": "http-cache-semantics",
+          "dependency": "http-cache-semantics",
+          "title": "http-cache-semantics max-stale handling can disclose cross-user cached responses",
+          "url": "https://github.com/advisories/GHSA-ch52-4w7c-c8xp",
+          "severity": "high",
+          "cwe": [
+            "CWE-524"
+          ],
+          "cvss": {
+            "score": 7.5,
+            "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+          },
+          "range": "<=4.2.0"
+        }
+      ],
+      "effects": [
+        "make-fetch-happen"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/http-cache-semantics"
+      ],
+      "fixAvailable": false
+    },
+    "libnpmaccess": {
+      "name": "libnpmaccess",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "npm-registry-fetch"
+      ],
+      "effects": [
+        "npm"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/npm/node_modules/libnpmaccess"
+      ],
+      "fixAvailable": false
+    },
+    "libnpmdiff": {
+      "name": "libnpmdiff",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@npmcli/arborist",
+        "pacote"
+      ],
+      "effects": [
+        "npm"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/npm/node_modules/libnpmdiff"
+      ],
+      "fixAvailable": false
+    },
+    "libnpmexec": {
+      "name": "libnpmexec",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@npmcli/arborist",
+        "pacote"
+      ],
+      "effects": [
+        "npm"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/npm/node_modules/libnpmexec"
+      ],
+      "fixAvailable": false
+    },
+    "libnpmfund": {
+      "name": "libnpmfund",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@npmcli/arborist"
+      ],
+      "effects": [
+        "npm"
+      ],
+      "range": ">=1.1.0",
+      "nodes": [
+        "node_modules/npm/node_modules/libnpmfund"
+      ],
+      "fixAvailable": false
+    },
+    "libnpmorg": {
+      "name": "libnpmorg",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "npm-registry-fetch"
+      ],
+      "effects": [
+        "npm"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/npm/node_modules/libnpmorg"
+      ],
+      "fixAvailable": false
+    },
+    "libnpmpack": {
+      "name": "libnpmpack",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@npmcli/arborist",
+        "pacote"
+      ],
+      "effects": [
+        "npm"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/npm/node_modules/libnpmpack"
+      ],
+      "fixAvailable": false
+    },
+    "libnpmpublish": {
+      "name": "libnpmpublish",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "npm-registry-fetch",
+        "sigstore"
+      ],
+      "effects": [
+        "npm"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/npm/node_modules/libnpmpublish"
+      ],
+      "fixAvailable": false
+    },
+    "libnpmsearch": {
+      "name": "libnpmsearch",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "npm-registry-fetch"
+      ],
+      "effects": [
+        "npm"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/npm/node_modules/libnpmsearch"
+      ],
+      "fixAvailable": false
+    },
+    "libnpmteam": {
+      "name": "libnpmteam",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "npm-registry-fetch"
+      ],
+      "effects": [
+        "npm"
+      ],
+      "range": "*",
+      "nodes": [
+        "node_modules/npm/node_modules/libnpmteam"
+      ],
+      "fixAvailable": false
+    },
+    "make-fetch-happen": {
+      "name": "make-fetch-happen",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "http-cache-semantics"
+      ],
+      "effects": [
+        "@sigstore/sign",
+        "npm",
+        "npm-registry-fetch"
+      ],
+      "range": ">=2.1.0",
+      "nodes": [
+        "node_modules/make-fetch-happen"
+      ],
+      "fixAvailable": false
+    },
+    "npm": {
+      "name": "npm",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        "@npmcli/arborist",
+        "@npmcli/metavuln-calculator",
+        "libnpmaccess",
+        "libnpmdiff",
+        "libnpmexec",
+        "libnpmfund",
+        "libnpmorg",
+        "libnpmpack",
+        "libnpmpublish",
+        "libnpmsearch",
+        "libnpmteam",
+        "make-fetch-happen",
+        "npm-profile",
+        "npm-registry-fetch",
+        "pacote"
+      ],
+      "effects": [],
+      "range": ">=5.9.0-next.0",
+      "nodes": [
+        "node_modules/npm"
+      ],
+      "fixAvailable": false
+    },
+    "npm-profile": {
+      "name": "npm-profile",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "npm-registry-fetch"
+      ],
+      "effects": [
+        "npm"
+      ],
+      "range": ">=4.0.0",
+      "nodes": [
+        "node_modules/npm/node_modules/npm-profile"
+      ],
+      "fixAvailable": false
+    },
+    "npm-registry-fetch": {
+      "name": "npm-registry-fetch",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "make-fetch-happen"
+      ],
+      "effects": [
+        "@npmcli/arborist",
+        "libnpmaccess",
+        "libnpmorg",
+        "libnpmpublish",
+        "libnpmsearch",
+        "libnpmteam",
+        "npm",
+        "npm-profile",
+        "pacote"
+      ],
+      "range": ">=0.0.1",
+      "nodes": [
+        "node_modules/npm/node_modules/npm-registry-fetch"
+      ],
+      "fixAvailable": false
+    },
+    "pacote": {
+      "name": "pacote",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "npm-registry-fetch",
+        "sigstore"
+      ],
+      "effects": [
+        "@npmcli/arborist",
+        "@npmcli/metavuln-calculator",
+        "libnpmdiff",
+        "libnpmexec",
+        "libnpmpack",
+        "npm"
+      ],
+      "range": ">=9.0.0",
+      "nodes": [
+        "node_modules/npm/node_modules/pacote"
+      ],
+      "fixAvailable": false
+    },
+    "sigstore": {
+      "name": "sigstore",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@sigstore/sign"
+      ],
+      "effects": [
+        "libnpmpublish",
+        "pacote"
+      ],
+      "range": ">=1.9.0",
+      "nodes": [
+        "node_modules/npm/node_modules/sigstore"
+      ],
+      "fixAvailable": false
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 19,
+      "critical": 0,
+      "total": 19
+    },
+    "dependencies": {
+      "prod": 182,
+      "dev": 0,
+      "optional": 4,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 185
+    }
+  }
+}

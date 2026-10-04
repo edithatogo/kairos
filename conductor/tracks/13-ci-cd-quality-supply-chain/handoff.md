@@ -236,3 +236,26 @@ The package dry-run now prepares the locally repacked, registry-integrity-pinned
 CodeQL and Scorecard wait for SARIF processing, then call the shared organization gate pinned to `c3e51f894a500198e67c864a1f0c460ba72e12cd`. High/critical alerts matching the analyzed commit fail the action; API errors fail closed. No repository-local alert enforcement script is retained. The metadata validator guards processing order and SHA pinning. Hosted exact-head and post-merge evidence remain required.
 
 Local evidence (2026-10-01, base `063e95491e54dbc23e79d017bb50c7ea16e123bc`): Track13 metadata, Track07-13 and Track12-20 conformance, actionlint for both workflows, and diff whitespace checks passed. The exact pinned upstream Python script was fetched to a temporary file and executed with mocked alert API responses: high and critical exit 1; medium, empty and another commit exit 0; API failure exits 1; pagination traverses all mock pages. No synthetic alerts were published.
+
+## 2026-10-03 PR #199 Conductor validation repair
+
+PR #199's hosted run `37122830207` failed for two independent reasons. Ubuntu's
+`cargo test --workspace` compiled `optimistic_runtime.rs` with default features,
+although its imports are available only with `time-warp`; that integration test
+now has a crate-level feature gate. Windows' shallow checkout omitted historical
+ledger commit objects, correctly triggering 48 git-closeout errors;
+`validate-conductor.yml` now requests `fetch-depth: 0`. No ledger entries or
+validators were changed or skipped. The test gate is a Track48 dependency on
+Track13's workflow and is recorded here under the Track13 workflow contract.
+
+Local verification at `be54595e3fad310f952389520632cf9af6900e92`, with explicitly
+bound Rust 1.98.1 Cargo/rustc/rustdoc, passed: `cargo test --workspace --locked`
+(305 tests across 96 targets), `cargo test -p kairo-ecs-pdes --features
+time-warp --locked` (79 tests), `pwsh -NoProfile -File
+scripts/validate_conductor_setup.ps1 -SkipCargo`, `actionlint
+.github/workflows/validate-conductor.yml`, and
+`node scripts/validation/validate-track13-metadata.mjs`. The pre-fix default
+PDES package test reproduced the missing-import failure (exit 101) at
+`e3306f4ca3e560b81725a1b07a275d98643caefe`. Receipts and logs are local under
+`artifacts/track48-conductor-repair/`. The original hosted run remains failed;
+exact-head hosted rerun evidence is pending, so no hosted pass is claimed.

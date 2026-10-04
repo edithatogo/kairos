@@ -25,3 +25,8 @@ kairo-ecs-core = { path = "../kairo-ecs-core" }
 name = "production"
 harness = false
 required-features = ["pdes"]
+
+[[bench]]
+name = "time_warp"
+harness = false
+required-features = ["pdes", "time-warp"]

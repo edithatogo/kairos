@@ -31,6 +31,8 @@ Format:
 
 ### Fixed
 
+- The `kairo-ecs-pdes` TimeWarp helper now restores initialized state during rollback and rejects stale or foreign cell handles without changing diagnostic generation counts.
+
 - Website documentation builds verify a checksum-bound local cache-semantics mitigation and run installed-package security regressions before building; registry advisories remain open.
 - Website LLMS exports now use a local MIT-attributed renderer, removing the `starlight-llms-txt` braces/micromatch dependency path; hosted Node 24 Docs Quality runs its four-case contract test.
 
@@ -45,6 +47,8 @@ Format:
 - Bootstrap npm tooling now locks ip-address 10.7.1 and brace-expansion 5.0.12 outside npm’s embedded bundle, rejecting vulnerable bundled copies.
 
 ### Added
+
+- `kairo-ecs-pdes` adds a preview event-owned optimistic runtime and generation bitset behind `time-warp`, with deterministic replay, downstream cancellation, bounded progress, typed errors and local parity fixtures. Distributed rollback acceptance remains pending.
 
 - `kairo-ecs-pdes` adds a preview event-owned conservative runtime behind `pdes`, with per-LP state and queues, positive lookahead, scoped CPU workers, typed protocol errors, and a shared DES/ABM/mixed sequential-parity fixture. The existing callback scheduler remains compatible.
 - Offline Kubernetes experiment rendering rejects non-integer parallelism instead of silently coercing values that violate the CRD.

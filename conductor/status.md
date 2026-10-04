@@ -2,7 +2,7 @@
 
 ## Track 47 implementation accepted - 2026-10-03
 
-Track 47 is Done for the event-owned single-host conservative runtime. Actual core Scheduler parity, typed protocol errors, 8-LP 10,000-tick progress, full local native CI and immutable five-repeat 4/8/16/32-LP CPU measurements are accepted. All 19 hosted workflow runs passed at `8a6bf6673e6f4a8226408550b4c7ec11b32fb347`; strict clean Git closeout passed. Human-approved EXC-193 permits only the exact retained raw cache advisory after verified source mitigation for PR #193 development/alpha-beta dry runs, expiring 00:00 Brisbane 10 October. RC, 1.0, publication and other PRs remain excluded. Final closeout metadata requires fresh head checks before merge; Track 48 waits for actual merge. No speedup or distributed HPC certification is claimed.
+Track 47 is Done for the event-owned single-host conservative runtime. Actual core Scheduler parity, typed protocol errors, 8-LP 10,000-tick progress, full local native CI and immutable five-repeat 4/8/16/32-LP CPU measurements are accepted. All 19 final hosted workflow runs passed at `3f6efb8bc5d4e7ec1c54872356e167bede53b1f9`; strict clean Git closeout passed. Human-approved EXC-193 permits only the exact retained raw cache advisory after verified source mitigation for PR #193 development/alpha-beta dry runs, expiring 00:00 Brisbane 10 October. RC, 1.0, publication and other PRs remain excluded. PR #193 merged normally as `fc2f7b7f8e24faef8d02e29aaaaaf64852945cf0` on 2026-10-03; Track 48 local implementation proceeded after that verified merge. No speedup or distributed HPC certification is claimed.
 
 ## Track 42 Archive Review - 2026-06-25
 
@@ -213,14 +213,7 @@ Tracks 46-55 were added on 2026-06-19 as the production HPC parity wave. They
 make the live-proof gap explicit rather than marking the current scaffolds
 complete. Track 46 is now `In Review` with a machine-readable evidence schema,
 scaffold/live-HPC template manifests, and an executable claim-boundary validator.
-Track 47 is `In Progress` with the first conservative lookahead enforcement
-slice in `kairo-ecs-pdes`. Track 48 is `In Progress` with a `time-warp`
-feature-gated local rollback, anti-message, generation guard, monotonic-GVT
-fossil collection, pre-GVT rejection, duplicate-positive rejection, and
-overhead/rollback-pressure counter slice in `kairo-ecs-pdes`; production
-optimistic scheduling, replay/redelivery semantics, downstream-output
-anti-messages, benchmarks, distributed transport, and live evidence remain
-incomplete.
+Track 47 is `Done` for the accepted single-host conservative runtime (PR #193 merged). Track 48 remains `In Progress`: its new event-owned optimistic runtime now implements deterministic replay, recorded downstream cancellation, bounded progress, typed failure/poisoning, GVT fossil collection and generational membership restoration. Explicitly bound Rust 1.98.1 workspace CI passed 458 tests with 92.59% core line coverage at `7a432ab`. Earlier pinned compiler labels were withdrawn after actual Rust 1.99 compiler discovery; matching1.76 PDES94 tests and compiler-bound benchmark at68b8d7a are accepted. Hosted/security gates and live Track49 distributed rollback acceptance remain pending. No Track49 dependency change or Track48 Done follows from this local implementation.
 Track 49 is `In Progress` with a first MPI/gRPC launch-contract and migration
 metadata baseline in `kairo-ecs-mpi` and `kairo-ecs-grpc`. Track 50 is `In
 Progress` with a first `numa` feature-gated topology, affinity, event-pool,
@@ -694,3 +687,6 @@ The archive does not claim runtime HPC parity. Production PDES, Time Warp, MPI/g
 Track 54 is archived as Done only for the repo-side blocked-scope runtime-evidence gate. The local validator, blocked Docker/Kubernetes/Slurm/AWS/GCP/Azure scopes, negative missing-checksum fixture, registry readiness gate, and Conductor validators pass, and the registry still reports `production_claim_status: blocked`.
 
 The archive does not claim production cloud/HPC runtime acceptance. Docker image execution, Kubernetes server-side validation, Slurm jobs, AWS/GCP/Azure Batch canaries, real Track 49 MPI runtime paths, real Track 52 GPU runtime paths, and release-manager runtime approval remain incomplete before any production runtime claim.
+## Approved conditional Track49 entry — 4 October2026
+
+The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.

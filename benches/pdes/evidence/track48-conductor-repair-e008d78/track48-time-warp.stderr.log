@@ -1,0 +1,11 @@
+   Compiling kairo-ecs-pdes v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-pdes)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.77s
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_pdes-a94347d9b89c18ab)
+     Running tests/optimistic_bitset_heldout.rs (artifacts/track48-conductor-repair/target/debug/deps/optimistic_bitset_heldout-918a69fb0d93d55b)
+     Running tests/optimistic_runtime.rs (artifacts/track48-conductor-repair/target/debug/deps/optimistic_runtime-a35c197562719270)
+     Running tests/optimistic_runtime_heldout.rs (artifacts/track48-conductor-repair/target/debug/deps/optimistic_runtime_heldout-a0508884e72cd9eb)
+     Running tests/production_parity.rs (artifacts/track48-conductor-repair/target/debug/deps/production_parity-21c3c55abe4b1af2)
+     Running tests/production_protocol.rs (artifacts/track48-conductor-repair/target/debug/deps/production_protocol-d8cc798cc5604751)
+     Running tests/track47_conservative_runtime.rs (artifacts/track48-conductor-repair/target/debug/deps/track47_conservative_runtime-0c6c80dc094bfc7b)
+     Running tests/track48_rollback_regressions.rs (artifacts/track48-conductor-repair/target/debug/deps/track48_rollback_regressions-6257a68ed7494898)
+   Doc-tests kairo_ecs_pdes

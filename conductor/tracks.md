@@ -52,7 +52,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 45 | Astro/Starlight Docs Platform and Polyglot Experience | Done | `docs-platform-agent + docs-agent + ci-agent` | See `conductor/tracks/45-*/spec.md` |
 | 46 | HPC Parity Charter, Baselines & Evidence Gates | Done | `benchmark-agent + interop-agent + redteam-agent + wave-manager-agent` | See `conductor/tracks/46-*/spec.md` |
 | 47 | PDES Conservative Lookahead Production Runtime | Done | `pdes-agent + performance-agent` | See `conductor/tracks/47-*/spec.md` |
-| 48 | Time Warp Optimistic Rollback Runtime | In Progress | `pdes-agent + timetravel-agent + ecs-agent` | See `conductor/tracks/48-*/spec.md` |
+| 48 | Time Warp Optimistic Rollback Runtime | In Progress | `pdes-agent + timetravel-agent + ecs-agent` | Local runtime reviewed; compiler-bound evidence accepted; hosted/distributed gates pending. See `conductor/tracks/48-*/handoff.md`. |
 | 49 | Distributed MPI/gRPC State Synchronization | In Progress | `distributed-agent + pdes-agent` | See `conductor/tracks/49-*/spec.md` |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | In Progress | `core-scheduler-agent + ecs-agent + ffi-agent` | See `conductor/tracks/50-*/spec.md` |
 | 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | In Progress | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
@@ -89,3 +89,7 @@ Machine-readable track metadata is maintained in `conductor/tracks.yaml`.
 - Tracks 32, 33, 36, 37, 39, 40, and 41 are non-release-critical (enhancement only).
 - Tracks 46-55 are release-gating for any production HPC parity claim. They do not mark existing scaffold tracks complete; they define the live-proof layer for PDES, Time Warp, MPI/gRPC, NUMA, parallel I/O, GPU, FMI, Slurm/cloud runtime acceptance, and weak/strong scaling certification.
 - Tracks 56-61 are release-gating for any public open-game-theory ontology, graph-relational ECS, or multi-game solver claim. They require task-level commits, phase review/push closeouts, and GitHub Actions review before any track can move beyond `In Review`.
+
+## Approved conditional Track49 entry — 4 October2026
+
+The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.

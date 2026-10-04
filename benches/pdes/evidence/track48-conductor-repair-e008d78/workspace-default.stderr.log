@@ -1,0 +1,187 @@
+   Compiling kairo-ecs-rng v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-rng)
+   Compiling kairo-ecs-state v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-state)
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.229
+   Compiling cfg-if v1.0.4
+   Compiling libc v0.2.186
+   Compiling zerocopy v0.8.48
+   Compiling autocfg v1.5.0
+   Compiling serde v1.0.229
+   Compiling regex-syntax v0.8.10
+   Compiling crossbeam-utils v0.8.21
+   Compiling num-traits v0.2.19
+   Compiling utf8parse v0.2.2
+   Compiling crossbeam-epoch v0.9.20
+   Compiling anstyle-parse v1.0.0
+   Compiling kairo-ecs-ffi v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-ffi)
+   Compiling anstyle-query v1.1.5
+   Compiling colorchoice v1.0.5
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling anstyle v1.0.14
+   Compiling strsim v0.11.1
+   Compiling anstream v1.0.0
+   Compiling heck v0.5.0
+   Compiling rayon-core v1.13.0
+   Compiling clap_lex v1.0.0
+   Compiling either v1.15.0
+   Compiling syn v2.0.117
+   Compiling syn v3.0.6
+   Compiling clap_builder v4.5.61
+   Compiling crossbeam-deque v0.8.6
+   Compiling ciborium-io v0.2.2
+   Compiling plotters-backend v0.3.7
+   Compiling getrandom v0.3.4
+   Compiling kairo-ecs-game-theory v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-game-theory)
+   Compiling plotters-svg v0.3.7
+   Compiling regex-automata v0.4.14
+   Compiling itertools v0.10.5
+   Compiling cast v0.3.0
+   Compiling same-file v1.0.6
+   Compiling walkdir v2.5.0
+   Compiling rayon v1.12.0
+   Compiling plotters v0.3.7
+   Compiling is-terminal v0.4.17
+   Compiling anes v0.1.6
+   Compiling once_cell v1.21.4
+   Compiling oorandom v11.1.5
+   Compiling rand_core v0.9.5
+   Compiling kairo-ecs-gpu v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-gpu)
+   Compiling rand v0.9.5
+   Compiling serde_json v1.0.151
+   Compiling criterion-plot v0.5.0
+   Compiling rand_xorshift v0.4.0
+   Compiling regex v1.12.3
+   Compiling bitflags v2.13.2
+   Compiling unarray v0.1.4
+   Compiling kairo-ecs-game-ontology v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-game-ontology)
+   Compiling serde_derive v1.0.229
+   Compiling kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-arrow)
+   Compiling kairo-ecs-abm v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-abm)
+   Compiling kairo-ecs-des v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-des)
+   Compiling kairo-ecs-fmi v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-fmi)
+   Compiling kairo-ecs-viz v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-viz)
+   Compiling kairo-ecs-webgpu v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-webgpu)
+   Compiling kairo-ecs-streaming v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-streaming)
+   Compiling kairo-ecs-ml v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-ml)
+   Compiling kairo-ecs-wasm v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-wasm)
+   Compiling kairo-ecs-cs-bridge v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-cs-bridge)
+   Compiling kairo-ecs-uniffi v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-uniffi)
+   Compiling kairo-ecs-diplomat v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-diplomat)
+   Compiling zerocopy-derive v0.8.48
+   Compiling clap_derive v4.5.61
+   Compiling kairo-ecs-mpi v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-mpi)
+   Compiling kairo-ecs-grpc v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-grpc)
+   Compiling kairo-ecs-bench v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-bench)
+   Compiling kairo-ecs-pdes v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-pdes)
+   Compiling clap v4.5.61
+   Compiling kairo-ecs-debug v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-debug)
+   Compiling tinytemplate v1.2.1
+   Compiling kairo-ecs-cli v0.1.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-cli)
+   Compiling half v2.7.1
+   Compiling ppv-lite86 v0.2.21
+   Compiling ciborium-ll v0.2.2
+   Compiling rand_chacha v0.9.0
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-types)
+   Compiling ciborium v0.2.2
+   Compiling proptest v1.11.0
+   Compiling criterion v0.5.1
+   Compiling kairo-ecs-core v0.0.0 (/private/tmp/kairos-track48-pr199-ci-gates/crates/kairo-ecs-core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 28.11s
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_abm-f5c5464b21e6b047)
+     Running tests/abm_behavior_update_v1.rs (artifacts/track48-conductor-repair/target/debug/deps/abm_behavior_update_v1-b6d5c21b0eb1fade)
+     Running tests/abm_integration.rs (artifacts/track48-conductor-repair/target/debug/deps/abm_integration-177d2a358ff3cccc)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_arrow-8de33905c2a6a997)
+     Running tests/checkpoint_restart.rs (artifacts/track48-conductor-repair/target/debug/deps/checkpoint_restart-50034e92e79c6bd2)
+     Running tests/schema_compatibility.rs (artifacts/track48-conductor-repair/target/debug/deps/schema_compatibility-2e714a6386651d24)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_bench-1147b303eb6d54b6)
+     Running unittests src/main.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_cli-044e392746dd4ed3)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_core-cbdc976cecaf63fb)
+     Running tests/conformance_fixtures.rs (artifacts/track48-conductor-repair/target/debug/deps/conformance_fixtures-32fce92e2b0109ff)
+     Running tests/integration.rs (artifacts/track48-conductor-repair/target/debug/deps/integration-7aea380c4e0ac537)
+     Running tests/scheduler_properties.rs (artifacts/track48-conductor-repair/target/debug/deps/scheduler_properties-2928ade0947ae565)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_cs_bridge-6d0f7569a4f6d183)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_debug-91892d0ff6b5b1ff)
+     Running unittests src/main.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_debug-a19a4b56590c01d6)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_des-5a09e56aa107c68f)
+     Running tests/des_integration.rs (artifacts/track48-conductor-repair/target/debug/deps/des_integration-f1d17500c84cf02e)
+     Running tests/des_resource_queue_v1.rs (artifacts/track48-conductor-repair/target/debug/deps/des_resource_queue_v1-8d479a50808241d8)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_diplomat-fd6b9f67f9bec9a2)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_ffi-277781cd33eef47a)
+     Running tests/ffi_integration.rs (artifacts/track48-conductor-repair/target/debug/deps/ffi_integration-2e54c4c2a440b1b8)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_fmi-16c1e8f56128c408)
+     Running tests/fmi2_lifecycle.rs (artifacts/track48-conductor-repair/target/debug/deps/fmi2_lifecycle-de88f2a4ee13e2ff)
+     Running tests/fmu_archive.rs (artifacts/track48-conductor-repair/target/debug/deps/fmu_archive-13506e579b4ea12a)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_game_ontology-c810e7f3fa791645)
+     Running tests/codegen.rs (artifacts/track48-conductor-repair/target/debug/deps/codegen-7b493ec075d4589f)
+     Running tests/jsonld_ingestion.rs (artifacts/track48-conductor-repair/target/debug/deps/jsonld_ingestion-bd2c28b442a16779)
+     Running tests/normalization.rs (artifacts/track48-conductor-repair/target/debug/deps/normalization-113f61363fba1978)
+     Running tests/turtle_ingestion.rs (artifacts/track48-conductor-repair/target/debug/deps/turtle_ingestion-78e1acaad0571350)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_game_theory-8c533384c3862ece)
+     Running tests/extensive_form_chance_solver.rs (artifacts/track48-conductor-repair/target/debug/deps/extensive_form_chance_solver-9c51f8e446e73a1c)
+     Running tests/extensive_form_components.rs (artifacts/track48-conductor-repair/target/debug/deps/extensive_form_components-f10ea442a07e0754)
+     Running tests/extensive_form_information_sets.rs (artifacts/track48-conductor-repair/target/debug/deps/extensive_form_information_sets-15a1b6b6929ff6c7)
+     Running tests/extensive_form_solver.rs (artifacts/track48-conductor-repair/target/debug/deps/extensive_form_solver-b56e662c487a7dd3)
+     Running tests/extensive_form_topology.rs (artifacts/track48-conductor-repair/target/debug/deps/extensive_form_topology-deb07b1e170d68dc)
+     Running tests/extensive_form_traversal.rs (artifacts/track48-conductor-repair/target/debug/deps/extensive_form_traversal-33684b3ecba96fa0)
+     Running tests/generated_components.rs (artifacts/track48-conductor-repair/target/debug/deps/generated_components-43955963f26c8d64)
+     Running tests/graph_relations.rs (artifacts/track48-conductor-repair/target/debug/deps/graph_relations-20c23b00c81d8045)
+     Running tests/normal_form.rs (artifacts/track48-conductor-repair/target/debug/deps/normal_form-ed198ceaad256ee2)
+     Running tests/normal_form_components.rs (artifacts/track48-conductor-repair/target/debug/deps/normal_form_components-44745ec5982759cb)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_gpu-de0ee5b01ca9eaf8)
+     Running tests/backend_initialization.rs (artifacts/track48-conductor-repair/target/debug/deps/backend_initialization-2c6533b038e39505)
+     Running tests/contract_slice.rs (artifacts/track48-conductor-repair/target/debug/deps/contract_slice-dbdec52c09124b18)
+     Running tests/contract_smoke.rs (artifacts/track48-conductor-repair/target/debug/deps/contract_smoke-09f846fd4c0b440b)
+     Running tests/parity.rs (artifacts/track48-conductor-repair/target/debug/deps/parity-a016c36038b3b100)
+     Running tests/parity_des.rs (artifacts/track48-conductor-repair/target/debug/deps/parity_des-be7ab6e819d8b5bc)
+     Running tests/persistent_memory.rs (artifacts/track48-conductor-repair/target/debug/deps/persistent_memory-c2d8eb393c0aad65)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_grpc-3926fffe8c5206e8)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_ml-06e47f75770eb0a5)
+     Running tests/feature_matrix.rs (artifacts/track48-conductor-repair/target/debug/deps/feature_matrix-e1c850da6fc91ee4)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_mpi-cfc233623f9fac7c)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_pdes-13c9c4b2751ce10d)
+     Running tests/optimistic_bitset_heldout.rs (artifacts/track48-conductor-repair/target/debug/deps/optimistic_bitset_heldout-01d92704c8992b85)
+     Running tests/optimistic_runtime.rs (artifacts/track48-conductor-repair/target/debug/deps/optimistic_runtime-5108706ad8979690)
+     Running tests/optimistic_runtime_heldout.rs (artifacts/track48-conductor-repair/target/debug/deps/optimistic_runtime_heldout-2cc502c2ccbff0a4)
+     Running tests/production_parity.rs (artifacts/track48-conductor-repair/target/debug/deps/production_parity-dd182d4322c3d15f)
+     Running tests/production_protocol.rs (artifacts/track48-conductor-repair/target/debug/deps/production_protocol-ee07356b391a3029)
+     Running tests/track47_conservative_runtime.rs (artifacts/track48-conductor-repair/target/debug/deps/track47_conservative_runtime-5b9ab633b21ec0a6)
+     Running tests/track48_rollback_regressions.rs (artifacts/track48-conductor-repair/target/debug/deps/track48_rollback_regressions-d58425e72226d2fd)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_rng-250fab06d0744864)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_state-23f63b122c3c9c49)
+     Running tests/component_storage.rs (artifacts/track48-conductor-repair/target/debug/deps/component_storage-e267ca68ba1a5fd2)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_streaming-57a658516fdad9c5)
+     Running tests/feature_matrix.rs (artifacts/track48-conductor-repair/target/debug/deps/feature_matrix-d652f90a70dfdccd)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_types-dfcc0fea50fd9685)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_uniffi-4938ba90d11c6a42)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_viz-b31fe53a7f0d0d4c)
+     Running tests/feature_matrix.rs (artifacts/track48-conductor-repair/target/debug/deps/feature_matrix-0a6ee74000cc7d76)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_wasm-d749a7a9c054bd57)
+     Running unittests src/lib.rs (artifacts/track48-conductor-repair/target/debug/deps/kairo_ecs_webgpu-30fa72c7ecb92839)
+     Running tests/parity_webgpu.rs (artifacts/track48-conductor-repair/target/debug/deps/parity_webgpu-1d3f5580a4a31b44)
+   Doc-tests kairo_ecs_abm
+   Doc-tests kairo_ecs_arrow
+   Doc-tests kairo_ecs_bench
+   Doc-tests kairo_ecs_core
+   Doc-tests kairo_ecs_cs_bridge
+   Doc-tests kairo_ecs_debug
+   Doc-tests kairo_ecs_des
+   Doc-tests kairo_ecs_diplomat
+   Doc-tests kairo_ecs_ffi
+   Doc-tests kairo_ecs_fmi
+   Doc-tests kairo_ecs_game_ontology
+   Doc-tests kairo_ecs_game_theory
+   Doc-tests kairo_ecs_gpu
+   Doc-tests kairo_ecs_grpc
+   Doc-tests kairo_ecs_ml
+   Doc-tests kairo_ecs_mpi
+   Doc-tests kairo_ecs_pdes
+   Doc-tests kairo_ecs_rng
+   Doc-tests kairo_ecs_state
+   Doc-tests kairo_ecs_streaming
+   Doc-tests kairo_ecs_types
+   Doc-tests kairo_ecs_uniffi
+   Doc-tests kairo_ecs_viz
+   Doc-tests kairo_ecs_wasm
+   Doc-tests kairo_ecs_webgpu

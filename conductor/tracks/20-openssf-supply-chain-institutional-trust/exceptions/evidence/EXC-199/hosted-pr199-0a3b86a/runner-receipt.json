@@ -1,0 +1,12 @@
+{
+  "cwd": "/home/runner/work/kairos/kairos",
+  "started_at": "2026-10-03T12:26:05.613879+00:00",
+  "classification": "failed",
+  "raw_audit": {
+    "status": "not_executed"
+  },
+  "checks": [],
+  "policy_sha256": "52b441437ef8a962cb761d25fede81ce04a0c07ead1aced02ab05606969fe917",
+  "error": "unapproved PR source",
+  "finished_at": "2026-10-03T12:26:05.614807+00:00"
+}

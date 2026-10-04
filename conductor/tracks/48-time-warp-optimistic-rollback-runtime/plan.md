@@ -1,5 +1,15 @@
 # Track 48 Plan: Time Warp Optimistic Rollback Runtime
 
+## Current delivery boundary
+
+The June scaffold checkboxes below are historical task records. The resumed
+local event-owned implementation, 15 held-outs, combined 94-test crate lane,
+sparse/dense raw benchmark and public API review are recorded in `handoff.md`.
+Compiler audit invalidates the earlier nominal 1.98.1/1.76.0 labels; explicit
+compiler-path Rust1.76 rerun remains pending. Explicit pinned Rust1.98 root just ci now passes (458 tests, coverage92.59%, fmt/Clippy/rustdoc/deny/audit). Local phase/manifest/DAG/clean
+checks passed at7a432ab, as reported by the coordinator. Current work does not
+mark a phase or Track48 Done, authorize Track49, or waive distributed acceptance.
+
 ## Phase 0 - TDD baseline
 
 - [x] Task 0.1: Add failing two-LP causality violation tests.
@@ -61,3 +71,7 @@ phase begins:
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 8. Advance only after there is no in-scope unstaged or untracked work except
    documented draft satellites.
+
+## Review fixes — bounded delivery packet
+
+- [~] Record current local capability, compiler-label correction and public API assessment in review-report.md and docs/design/track48-api-review.md; coordinator integration and remaining gates stay pending.

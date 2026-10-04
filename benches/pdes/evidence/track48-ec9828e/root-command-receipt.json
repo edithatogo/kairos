@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "python3",
+    "-B",
+    "benches/pdes/collect_time_warp_evidence.py"
+  ],
+  "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+  "commit": "ec9828ebcfc86fd86ae9f512e02b252202965a8b",
+  "exit_code": 0,
+  "duration_seconds": 9.74,
+  "log_sha256": "16dce9bafa1840f300dad6545acfd0f60f73b6a01df75c3f9f11926a53641054"
+}

@@ -1,0 +1,123 @@
+{
+  "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+  "started_at": "2026-10-03T16:13:51.773688+00:00",
+  "classification": "failed",
+  "raw_audit": {
+    "status": "executed",
+    "argv": [
+      "node",
+      "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+      "audit",
+      "--prefix",
+      "scripts/bootstrap-node-tools",
+      "--audit-level=moderate",
+      "--json"
+    ],
+    "exit": 1,
+    "stdout_sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "checks": [
+    {
+      "argv": [
+        "node",
+        "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+        "audit",
+        "--prefix",
+        "scripts/bootstrap-node-tools",
+        "--audit-level=moderate",
+        "--json"
+      ],
+      "exit": 1,
+      "stdout_sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_http_cache_patch.py",
+        "-v"
+      ],
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "f755f9961642d41d2cce1b5fcc5bd31a8f151b234240802aa302b8532879c56f"
+    },
+    {
+      "argv": [
+        "node",
+        "scripts/bootstrap-node-tools/validate_npm_cli.mjs"
+      ],
+      "exit": 0,
+      "stdout_sha256": "1c9defa7cd77e48f778b7650cba91941cb124138a512901a43bd0edd6eb5ed9e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "node",
+        "tests/http-cache-security-regression.mjs"
+      ],
+      "exit": 0,
+      "stdout_sha256": "6f96f35580b655b8b801055955203c3393b8ed633ee3872eaa7fa95df17d949e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "node",
+        "tests/http-cache-security-regression.mjs",
+        "scripts/bootstrap-node-tools/node_modules/npm/node_modules/http-cache-semantics/index.js"
+      ],
+      "exit": 0,
+      "stdout_sha256": "6f96f35580b655b8b801055955203c3393b8ed633ee3872eaa7fa95df17d949e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout_sha256": "510734775b8bc8f762a1e5bdb144a2bbc76c4c981a4a50b1bcd9d594c292b18c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout_sha256": "272261940ca6106406f8ba2caefde3df60b1549aa77e4d6cf6ac9c80ca14d2eb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "node",
+        "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout_sha256": "a712c758275b460d18fa77a26ed3589689bb3f69dcc1ea99b913e32db92a5cd2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "exception_scope": {
+    "status": "approved_exact_scope"
+  },
+  "exception_id": "EXC-199",
+  "repository": "edithatogo/kairos",
+  "pull_request": 199,
+  "head_ref": "codex/kairos-track48-optimistic-runtime",
+  "context": "development_pr_199",
+  "policy_sha256": "dca9fc017ce6aa9b59f4b6d8693b26012239e0fd1d1ef1eb97ec6fcd9b794626",
+  "node-version": "v26.10.0",
+  "commit": "d38da5bfd42ce73370d0defe63873ac51a7d3468",
+  "npm-version": "12.1.0",
+  "error": "EXC-199 mitigation review is blocked by the stale-fallback gap",
+  "finished_at": "2026-10-03T16:13:56.777962+00:00"
+}

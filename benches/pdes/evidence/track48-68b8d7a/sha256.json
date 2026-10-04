@@ -1,0 +1,10 @@
+{
+  "root-command-receipt.json": "cebf5a3b297b3d1afc55738d10cd23b7015f46675cd1ee77b6de8b9a9849b0d5",
+  "time_warp_attempt.json": "9c778dc913c591b2d6105d1c817bae6fc9e67056452391e64dd6b8d178b5e9bd",
+  "cargo-rustc-info.json": "ad9317532af056b5b9f8b15e9d00db53c53d84764b0b2ead58b93cbece3206b9",
+  "strict-collector.log": "16dce9bafa1840f300dad6545acfd0f60f73b6a01df75c3f9f11926a53641054",
+  "collector-tests.log": "0d14701b5ed8f4f289dcbe3bb6c321ce749d0942bd564978c04de287f36d8c4d",
+  "time_warp.stderr.log": "17e0d6f6ff37d8abbfd671d5ee5bf926bad2ace35cd0a15ea5fc470772fba586",
+  "time_warp.stdout.json": "310031017aeaeb0c297415cdc45d61fe3efb5b301e5ad74386886c177ec293dc",
+  "time_warp_evidence.json": "e7d08f74b0c448cac281cd95199e24cf9d34218a303a80ad0a66f8e1323cbc8c"
+}

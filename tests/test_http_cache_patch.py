@@ -30,7 +30,21 @@ def fixture_source() -> bytes:
 """ + patcher.OLD_MAX_AGE_GUARD + b"""        if (this._resHeaders.vary === '*') {
             return 0;
         }
+
 """ + patcher.OLD_PROXY_REVALIDATE + b"""        return 10;
+    }
+
+    _useStaleIfError() {
+""" + patcher.OLD_STALE_IF_ERROR + b"""    }
+
+    useStaleWhileRevalidate() {
+        const swr = toNumberOrZero(this._rescc['stale-while-revalidate']);
+""" + patcher.OLD_STALE_WHILE_REVALIDATE + b"""    }
+
+    revalidatedPolicy(request, response) {
+        this._assertRequestHasHeaders(request);
+""" + patcher.OLD_REVALIDATED_POLICY + b"""            return { policy: this, modified: false, matches: true };
+        }
     }
 }
 """
@@ -39,36 +53,20 @@ def fixture_source() -> bytes:
 class HttpCachePatchTests(unittest.TestCase):
     def setUp(self) -> None:
         self.original_source_sha = patcher.SOURCE_SHA256
+        self.original_pr58_sha = patcher.PR58_PATCHED_SHA256
         self.original_patched_sha = patcher.PATCHED_SHA256
         self.source = fixture_source()
         # Unit tests use a compact offline source fixture; full released and PR
         # sources are separately checked against their immutable SHA-256 pins.
         patcher.SOURCE_SHA256 = hashlib.sha256(self.source).hexdigest()
-        self.patched = patcher.replace_once(
-            self.source,
-            patcher.OLD_EVALUATE,
-            patcher.NEW_EVALUATE,
-            "request revalidation guard",
-        )
-        self.patched = patcher.replace_once(
-            self.patched,
-            patcher.OLD_MAX_AGE_DOC,
-            patcher.NEW_REVALIDATION_HELPER,
-            "revalidation helper insertion",
-        )
-        self.patched = patcher.replace_once(
-            self.patched,
-            patcher.OLD_MAX_AGE_GUARD,
-            patcher.NEW_MAX_AGE_GUARD,
-            "max-age guard",
-        )
-        self.patched = patcher.replace_once(
-            self.patched, patcher.OLD_PROXY_REVALIDATE, b"", "proxy-revalidate max-age guard"
-        )
+        self.pr58_source = patcher.pr58_source(self.source)
+        patcher.PR58_PATCHED_SHA256 = hashlib.sha256(self.pr58_source).hexdigest()
+        self.patched = patcher.composed_source(self.pr58_source)
         patcher.PATCHED_SHA256 = hashlib.sha256(self.patched).hexdigest()
 
     def tearDown(self) -> None:
         patcher.SOURCE_SHA256 = self.original_source_sha
+        patcher.PR58_PATCHED_SHA256 = self.original_pr58_sha
         patcher.PATCHED_SHA256 = self.original_patched_sha
 
     @staticmethod
@@ -105,6 +103,22 @@ class HttpCachePatchTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "unexpected index.js SHA-256"):
                 patcher.patch_tree(root)
             self.assertEqual(source_path.read_bytes(), original)
+
+    def test_upgrades_released_and_exact_pr58_sources_and_is_idempotent(self) -> None:
+        self.assertEqual(patcher.patched_source(self.source), self.patched)
+        self.assertEqual(patcher.patched_source(self.pr58_source), self.patched)
+        self.assertEqual(patcher.patched_source(self.patched), self.patched)
+
+    def test_rejects_unknown_intermediate_source_without_writing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "node_modules"
+            package = self.make_package(root)
+            source_path = package / "index.js"
+            intermediate = self.pr58_source + b"// unknown modification\n"
+            source_path.write_bytes(intermediate)
+            with self.assertRaisesRegex(ValueError, "unexpected index.js SHA-256"):
+                patcher.patch_tree(root)
+            self.assertEqual(source_path.read_bytes(), intermediate)
 
     def test_rejects_patched_output_hash_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

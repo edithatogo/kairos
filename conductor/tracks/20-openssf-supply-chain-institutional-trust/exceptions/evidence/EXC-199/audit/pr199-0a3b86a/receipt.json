@@ -1,0 +1,14 @@
+{
+  "source": "0a3b86aa33d1f158eaca2855e0e503cdac6e08ef",
+  "cwd": "/Users/doughnut/Documents/careops-sim/.worktrees/kairos-implementation-programme",
+  "argv": [
+    "node",
+    "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js",
+    "audit",
+    "--prefix",
+    "scripts/bootstrap-node-tools",
+    "--audit-level=moderate",
+    "--json"
+  ],
+  "exit": 1
+}

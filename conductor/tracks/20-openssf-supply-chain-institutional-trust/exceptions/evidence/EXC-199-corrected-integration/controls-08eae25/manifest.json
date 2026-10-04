@@ -1,0 +1,65 @@
+{
+  "source_commit": "08eae25c86c2c87a0d98c2aa606e81a9c9714420",
+  "files": [
+    {
+      "path": "apply.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "apply.stdout",
+      "sha256": "e29c9ecd9d28cba131cff14cfaa62b450032250c7b613a51d2f17cbe98a1da81"
+    },
+    {
+      "path": "behavior-npm.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "behavior-npm.stdout",
+      "sha256": "c3c4115264b07a153dd70cf21e09aac0718e36d5199e8630d62a02558be776d7"
+    },
+    {
+      "path": "behavior-top.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "behavior-top.stdout",
+      "sha256": "c3c4115264b07a153dd70cf21e09aac0718e36d5199e8630d62a02558be776d7"
+    },
+    {
+      "path": "installer.stderr",
+      "sha256": "e300d0aa7c010108d49bae25dadb7fb056ae1859e9ccf195eb7285237ee1187e"
+    },
+    {
+      "path": "installer.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw-audit.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw-audit.stdout",
+      "sha256": "e5f3325920245649ca0d2af6122dc9175c2d337972620a43883be34e59a37a2c"
+    },
+    {
+      "path": "receipt.json",
+      "sha256": "804d8cb3729887fc7848da989676e57882ea83bab4c37127f40a6974e0a4d2c9"
+    },
+    {
+      "path": "resolution.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "resolution.stdout",
+      "sha256": "1c9defa7cd77e48f778b7650cba91941cb124138a512901a43bd0edd6eb5ed9e"
+    },
+    {
+      "path": "signatures.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "signatures.stdout",
+      "sha256": "7ba2d2ab1168d6c9e170cd08c524138336f45e930fdc6eea61d9eafb5f3d8c05"
+    }
+  ]
+}
