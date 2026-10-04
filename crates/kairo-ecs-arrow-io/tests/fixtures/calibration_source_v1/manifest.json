@@ -1,0 +1,397 @@
+{
+  "scope": "test-local raw source fixtures; not the normalized calibration schema",
+  "pyarrow_version": "25.0.1",
+  "schema_metadata": {
+    "kairos.fixture.contract": "recordbatch-v1",
+    "kairos.fixture.name": "calibration-raw-source.v1",
+    "kairos.fixture.precision-scope": "reported-source-precision-only; not inferred from clock text",
+    "kairos.fixture.schema-scope": "raw-source-input-only; not normalized calibration schema",
+    "kairos.fixture.synthetic": "true"
+  },
+  "binary_sha256": {
+    "wide.ipc_file": "a8edba97f09bcf2535b449b47da78259a999293bd68c27d034040f70f4dd838f",
+    "wide.ipc_stream": "1d5a86171eb56ead29b744ed8eed1b0c28981052cc172b77b26bb81d3591e8a4",
+    "wide.parquet": "857ea0dc3c30e8351fe32ad7cb70d75e6a70e5261c07d951125999d0c72fa633",
+    "long.ipc_file": "cf278c912394ed297d96205aa6111b8ca689422c24b63e14605358ddc31e858e",
+    "long.ipc_stream": "0a8b82c6583895e9b1b418189af361b816703c73e6c73ac185be848767cc704f",
+    "long.parquet": "b8f2506d2e96d0bcf53ec5eade8712558efc7ce89639102e10dfd02e4d048fb2"
+  },
+  "precision_scope": "occurrence_precision and triage_precision are independent source annotations; values describe reported source precision only and are not inferred from the raw clock text",
+  "raw_clock_cases": {
+    "ambiguous_fold_literal": {
+      "source_row_id": "arrival-001",
+      "timezone_name": "America/New_York",
+      "naive_local_at": "2024-11-03T01:30:00.123456789123",
+      "offset_clock_literal": "2024-11-03T01:30:00.123456789123-04:00"
+    },
+    "nonexistent_gap_literal": {
+      "source_row_id": "arrival-002",
+      "timezone_name": "America/New_York",
+      "naive_local_at": "2024-03-10T02:30:00"
+    },
+    "raw_units_are_not_inferred": true
+  },
+  "profiles": {
+    "wide": {
+      "description": "one physical row per arrival, including raw arrival and triage fields",
+      "fields": [
+        {
+          "name": "source_row_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "encounter_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "event_occurred_at",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "event_recorded_at",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "triage_at",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "departure_admin_at",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "departure_physical_at",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "timezone_name",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "naive_local_at",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "occurrence_precision",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "triage_precision",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "canonical_rank",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "relative_elapsed_ns",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "cohort_denominator",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "triage_denominator",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "future_outcome",
+          "type": "string",
+          "nullable": true
+        },
+        {
+          "name": "duplicate_external_id",
+          "type": "string",
+          "nullable": true
+        }
+      ],
+      "rows": [
+        [
+          "arrival-001",
+          "enc-001",
+          "2024-11-03T01:30:00.123456789123-04:00",
+          "2024-11-03T01:30:05.000000000001-04:00",
+          "2024-11-03T01:42:00-04:00",
+          "2024-11-03T03:10:00-05:00",
+          "2024-11-03T03:17:00-05:00",
+          "America/New_York",
+          "2024-11-03T01:30:00.123456789123",
+          "sub-nanosecond",
+          "second",
+          "18446744073709551616",
+          "18446744073709551616",
+          null,
+          "",
+          "positive synthetic",
+          "dup-7"
+        ],
+        [
+          "arrival-002",
+          "enc-002",
+          "1900-01-01T00:00:00.000000001Z",
+          null,
+          "2024-03-10T02:30:00",
+          "2024-03-10T02:31:00",
+          null,
+          "America/New_York",
+          "2024-03-10T02:30:00",
+          "nanosecond",
+          "minute",
+          "7",
+          null,
+          "0",
+          null,
+          null,
+          "dup-7"
+        ]
+      ]
+    },
+    "long": {
+      "description": "one physical row per source entity and raw field/value pair",
+      "fields": [
+        {
+          "name": "source_row_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "source_entity",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "field_name",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "field_value",
+          "type": "string",
+          "nullable": true
+        }
+      ],
+      "rows": [
+        [
+          "arrival-001",
+          "arrival",
+          "source_row_id",
+          "arrival-001"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "encounter_id",
+          "enc-001"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "event_occurred_at",
+          "2024-11-03T01:30:00.123456789123-04:00"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "event_recorded_at",
+          "2024-11-03T01:30:05.000000000001-04:00"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "triage_at",
+          "2024-11-03T01:42:00-04:00"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "departure_admin_at",
+          "2024-11-03T03:10:00-05:00"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "departure_physical_at",
+          "2024-11-03T03:17:00-05:00"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "timezone_name",
+          "America/New_York"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "naive_local_at",
+          "2024-11-03T01:30:00.123456789123"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "occurrence_precision",
+          "sub-nanosecond"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "triage_precision",
+          "second"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "canonical_rank",
+          "18446744073709551616"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "relative_elapsed_ns",
+          "18446744073709551616"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "cohort_denominator",
+          null
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "triage_denominator",
+          ""
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "future_outcome",
+          "positive synthetic"
+        ],
+        [
+          "arrival-001",
+          "arrival",
+          "duplicate_external_id",
+          "dup-7"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "source_row_id",
+          "arrival-002"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "encounter_id",
+          "enc-002"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "event_occurred_at",
+          "1900-01-01T00:00:00.000000001Z"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "event_recorded_at",
+          null
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "triage_at",
+          "2024-03-10T02:30:00"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "departure_admin_at",
+          "2024-03-10T02:31:00"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "departure_physical_at",
+          null
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "timezone_name",
+          "America/New_York"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "naive_local_at",
+          "2024-03-10T02:30:00"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "occurrence_precision",
+          "nanosecond"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "triage_precision",
+          "minute"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "canonical_rank",
+          "7"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "relative_elapsed_ns",
+          null
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "cohort_denominator",
+          "0"
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "triage_denominator",
+          null
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "future_outcome",
+          null
+        ],
+        [
+          "arrival-002",
+          "arrival",
+          "duplicate_external_id",
+          "dup-7"
+        ]
+      ]
+    }
+  }
+}
