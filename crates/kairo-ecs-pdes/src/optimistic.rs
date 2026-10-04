@@ -100,6 +100,7 @@ pub enum OptimisticError {
         destination: LpId,
     },
     UnknownLogicalProcess(LpId),
+    ScopedAuthorityRequiresOwnedRuntime,
     RouteMissing {
         source: LpId,
         destination: LpId,
@@ -315,11 +316,27 @@ pub enum OptimisticMessageKind {
     Anti,
 }
 
+/// Declares the authority namespace carried by an optimistic envelope.
+///
+/// This metadata does not affect logical identity or ordering. Scoped values
+/// can be reconstructed, but the all-local runtime rejects them.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum OptimisticAuthority {
+    /// Legacy single-runtime scheduling and preview delivery.
+    LocalPreview,
+    /// A future owned runtime's simulation namespace and ownership epoch.
+    Scoped {
+        simulation_namespace: u128,
+        ownership_epoch: u64,
+    },
+}
+
 /// Transportable event envelope with an opaque logical ID and exact incarnation.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct OptimisticMessage {
     event: RemoteEvent,
     logical_id: LogicalEventId,
+    authority: OptimisticAuthority,
     incarnation: u64,
     kind: OptimisticMessageKind,
 }
@@ -331,9 +348,26 @@ impl OptimisticMessage {
         incarnation: u64,
         kind: OptimisticMessageKind,
     ) -> Self {
+        Self::new_with_authority(
+            event,
+            logical_id,
+            OptimisticAuthority::LocalPreview,
+            incarnation,
+            kind,
+        )
+    }
+
+    fn new_with_authority(
+        event: RemoteEvent,
+        logical_id: LogicalEventId,
+        authority: OptimisticAuthority,
+        incarnation: u64,
+        kind: OptimisticMessageKind,
+    ) -> Self {
         Self {
             event,
             logical_id,
+            authority,
             incarnation,
             kind,
         }
@@ -350,8 +384,33 @@ impl OptimisticMessage {
         incarnation: u64,
         kind: OptimisticMessageKind,
     ) -> Result<Self, OptimisticError> {
+        Self::try_from_authority_parts(
+            event,
+            logical_id,
+            OptimisticAuthority::LocalPreview,
+            incarnation,
+            kind,
+        )
+    }
+
+    /// Reconstructs an envelope with explicit authority metadata while
+    /// validating its complete logical ancestry. This does not authenticate
+    /// the sender or grant scoped execution authority.
+    pub fn try_from_authority_parts(
+        event: RemoteEvent,
+        logical_id: LogicalEventId,
+        authority: OptimisticAuthority,
+        incarnation: u64,
+        kind: OptimisticMessageKind,
+    ) -> Result<Self, OptimisticError> {
         OptimisticEventOrderKey::try_from_parts(event.tick, event.source_lp, logical_id.clone())?;
-        Ok(Self::new(event, logical_id, incarnation, kind))
+        Ok(Self::new_with_authority(
+            event,
+            logical_id,
+            authority,
+            incarnation,
+            kind,
+        ))
     }
 
     /// Returns the immutable model event, including its original payload bytes.
@@ -365,6 +424,10 @@ impl OptimisticMessage {
 
     pub fn incarnation(&self) -> u64 {
         self.incarnation
+    }
+
+    pub fn authority(&self) -> OptimisticAuthority {
+        self.authority
     }
 
     pub fn kind(&self) -> OptimisticMessageKind {
@@ -1181,6 +1244,9 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     }
 
     fn validate_message(&self, message: &OptimisticMessage) -> Result<(), OptimisticError> {
+        if matches!(message.authority, OptimisticAuthority::Scoped { .. }) {
+            return Err(OptimisticError::ScopedAuthorityRequiresOwnedRuntime);
+        }
         self.validate_event(&message.event)?;
         if let Some((root_source, _)) = message.logical_id.root_parts() {
             if root_source != message.event.source_lp {
