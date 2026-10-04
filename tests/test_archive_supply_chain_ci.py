@@ -21,6 +21,8 @@ EXPECTED_PATHS = {
     "tests/test_archive_supply_chain.py",
     "tests/test_archive_supply_chain_ci.py",
     "tests/test_package_archive_acquisition.py",
+    "packaging/scripts/install_syft_linux.py",
+    "tests/test_install_syft_linux.py",
     "tests/fixtures/archive-supply-chain/**",
 }
 EXPECTED_ACTIONS = [
@@ -30,6 +32,7 @@ EXPECTED_ACTIONS = [
 EXPECTED_TEST_COMMANDS = [
     "python -m unittest discover -s tests -p 'test_archive_supply_chain*.py' -v",
     "python -m unittest discover -s tests -p 'test_package_archive_acquisition.py' -v",
+    "python -m unittest discover -s tests -p 'test_install_syft_linux.py' -v",
 ]
 EXPECTED_RUN_COMMANDS = [
     "python -m pip install --require-hashes -r scripts/archive-supply-chain-test-tools.lock",
@@ -142,6 +145,8 @@ class ArchiveSupplyChainWorkflowContractTests(unittest.TestCase):
             (self.workflow.replace("  workflow_dispatch:\n", "  workflow_dispatch:\n  workflow_run:\n", 1), self.ci_policy, self.workflow_security, self.track13_validator),
             (self.workflow.replace(EXPECTED_ACTIONS[0], "actions/checkout@main", 1), self.ci_policy, self.workflow_security, self.track13_validator),
             (self.workflow.replace("      - 'packaging/scripts/acquire_package_archive_bundle.py'\n", "", 1), self.ci_policy, self.workflow_security, self.track13_validator),
+            (self.workflow.replace("      - 'packaging/scripts/install_syft_linux.py'\n", "", 1), self.ci_policy, self.workflow_security, self.track13_validator),
+            (self.workflow.replace("      - 'tests/test_install_syft_linux.py'\n", "", 1), self.ci_policy, self.workflow_security, self.track13_validator),
             (
                 self.workflow.replace(
                     "      - name: Test bounded package archive acquisition\n",
