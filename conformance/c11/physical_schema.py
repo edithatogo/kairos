@@ -226,7 +226,7 @@ def _validate_scalar(value: Any, dtype: pa.DataType, path: str) -> Any:
                                  "missing_required_time", "invalid_mapping", "other"},
             "censor_status": {"not_censored", "left", "right", "interval", "unknown", "missing"},
         }
-        if path.startswith("knowledge_availability.") and key == "status":
+        if path == "knowledge_availability.status":
             enums["status"] = {"known", "not_yet_known", "unknown"}
         elif key == "status":
             enums["status"] = {"observed", "derived", "defaulted", "unknown"}
