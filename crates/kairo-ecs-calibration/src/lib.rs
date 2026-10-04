@@ -18,3 +18,7 @@ mod ingestion_validate;
 // Private C1 ingestion stages; public API review remains separate.
 mod ingestion_pipeline;
 mod ingestion_sort;
+
+// Exact C-01 invariance qualification over private ingestion interfaces.
+#[cfg(test)]
+mod ingestion_c01;
