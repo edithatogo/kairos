@@ -349,6 +349,131 @@ pub(crate) fn fingerprint(path: &Path) -> Result<(String, u64), String> {
         bytes,
     ))
 }
+fn strict_json_value(raw: &[u8]) -> Result<Value, String> {
+    let mut scanner = StrictJsonScanner { raw, pos: 0 };
+    scanner.value(0)?;
+    scanner.whitespace();
+    if scanner.pos != raw.len() {
+        return Err("trailing source JSON data".into());
+    }
+    serde_json::from_slice(raw).map_err(|e| e.to_string())
+}
+struct StrictJsonScanner<'a> {
+    raw: &'a [u8],
+    pos: usize,
+}
+impl StrictJsonScanner<'_> {
+    fn whitespace(&mut self) {
+        while self.raw.get(self.pos).is_some_and(u8::is_ascii_whitespace) {
+            self.pos += 1;
+        }
+    }
+    fn value(&mut self, depth: usize) -> Result<(), String> {
+        if depth > 128 {
+            return Err("source JSON nesting exceeds limit".into());
+        }
+        self.whitespace();
+        match self.raw.get(self.pos).copied() {
+            Some(b'{') => self.object(depth + 1),
+            Some(b'[') => self.array(depth + 1),
+            Some(b'"') => {
+                self.string()?;
+                Ok(())
+            }
+            Some(_) => {
+                let start = self.pos;
+                while self.raw.get(self.pos).is_some_and(|b| {
+                    !matches!(*b, b',' | b']' | b'}' | b' ' | b'\t' | b'\r' | b'\n')
+                }) {
+                    self.pos += 1;
+                }
+                if self.pos == start {
+                    return Err("invalid source JSON value".into());
+                }
+                Ok(())
+            }
+            None => Err("missing source JSON value".into()),
+        }
+    }
+    fn object(&mut self, depth: usize) -> Result<(), String> {
+        self.pos += 1;
+        self.whitespace();
+        if self.raw.get(self.pos) == Some(&b'}') {
+            self.pos += 1;
+            return Ok(());
+        }
+        let mut keys = std::collections::BTreeSet::new();
+        loop {
+            self.whitespace();
+            if self.raw.get(self.pos) != Some(&b'"') {
+                return Err("source JSON object key must be a string".into());
+            }
+            let key = self.string()?;
+            if !keys.insert(key) {
+                return Err("duplicate source JSON object key".into());
+            }
+            self.whitespace();
+            if self.raw.get(self.pos) != Some(&b':') {
+                return Err("source JSON object key lacks colon".into());
+            }
+            self.pos += 1;
+            self.value(depth)?;
+            self.whitespace();
+            match self.raw.get(self.pos) {
+                Some(b',') => self.pos += 1,
+                Some(b'}') => {
+                    self.pos += 1;
+                    return Ok(());
+                }
+                _ => return Err("invalid source JSON object separator".into()),
+            }
+        }
+    }
+    fn array(&mut self, depth: usize) -> Result<(), String> {
+        self.pos += 1;
+        self.whitespace();
+        if self.raw.get(self.pos) == Some(&b']') {
+            self.pos += 1;
+            return Ok(());
+        }
+        loop {
+            self.value(depth)?;
+            self.whitespace();
+            match self.raw.get(self.pos) {
+                Some(b',') => self.pos += 1,
+                Some(b']') => {
+                    self.pos += 1;
+                    return Ok(());
+                }
+                _ => return Err("invalid source JSON array separator".into()),
+            }
+        }
+    }
+    fn string(&mut self) -> Result<String, String> {
+        let start = self.pos;
+        self.pos += 1;
+        loop {
+            match self.raw.get(self.pos) {
+                Some(b'"') => {
+                    self.pos += 1;
+                    return serde_json::from_slice(&self.raw[start..self.pos])
+                        .map_err(|e| e.to_string());
+                }
+                Some(b'\\') => {
+                    self.pos = self
+                        .pos
+                        .checked_add(2)
+                        .ok_or("source JSON string offset overflow")?;
+                    if self.pos > self.raw.len() {
+                        return Err("truncated source JSON escape".into());
+                    }
+                }
+                Some(_) => self.pos += 1,
+                None => return Err("unterminated source JSON string".into()),
+            }
+        }
+    }
+}
 struct SourceLines {
     reader: BufReader<File>,
     cap: usize,
@@ -416,7 +541,7 @@ impl Iterator for SourceLines {
             self.failed = true;
             return Some(Err("empty source NDJSON row".into()));
         }
-        let value: Result<Value, String> = serde_json::from_slice(&raw).map_err(|e| e.to_string());
+        let value: Result<Value, String> = strict_json_value(&raw);
         if value.as_ref().is_ok_and(|v| !v.is_object()) {
             self.failed = true;
             return Some(Err("source NDJSON rows must be JSON objects".into()));
@@ -717,6 +842,38 @@ mod tests {
         fs::write(output.join("keep"), b"untouched").unwrap();
         assert!(ingest(template, &config(1), std::slice::from_ref(&input), &output).is_err());
         assert_eq!(fs::read(output.join("keep")).unwrap(), b"untouched");
+        fs::remove_dir_all(root).unwrap();
+    }
+    #[test]
+    fn rejects_duplicate_top_level_and_nested_json_members_before_value_collapse() {
+        let root = root();
+        let (template, _) = source();
+        for (name, line) in [
+            (
+                "top",
+                r#"{"case":"c","id":"first","id":"second","seq":0,"kind":"arrival","at":null}"#,
+            ),
+            (
+                "nested",
+                r#"{"case":"c","id":"nested","seq":0,"kind":"arrival","at":null,"source_fields":{"status":"x","sta\u0074us":"y"}}"#,
+            ),
+        ] {
+            let input = root.join(format!("{name}.ndjson"));
+            fs::write(&input, format!("{line}\n")).unwrap();
+            let output = root.join(format!("{name}-output"));
+            let error = ingest(
+                template.clone(),
+                &config(1),
+                std::slice::from_ref(&input),
+                &output,
+            )
+            .unwrap_err();
+            assert!(
+                error.contains("duplicate source JSON object key"),
+                "{name} should reject duplicate keys specifically, got {error}"
+            );
+            assert!(!output.exists(), "failed bundle must be removed");
+        }
         fs::remove_dir_all(root).unwrap();
     }
     #[test]
