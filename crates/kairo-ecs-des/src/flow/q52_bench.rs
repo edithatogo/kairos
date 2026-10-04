@@ -1,6 +1,9 @@
 //! Q5.2 private-kernel measurements. These are test-only and do not define a
 //! production benchmark API or a canonical Track 12 scenario.
-use super::{select_replacement, ClaimQueue, PriorityKey, RequestId};
+use super::{
+    remove_waiting_request, select_replacement, ClaimQueue, PriorityKey, RequestId, RequestState,
+    ResourceRequest,
+};
 use crate::preemption::{select_victim, HolderCandidate, WaitingCandidate};
 use crate::Resource;
 use kairo_ecs_types::{EntityId, SimDuration, SimTime};
@@ -182,7 +185,7 @@ fn ceil_log2(value: usize) -> u32 {
     usize::BITS - value.saturating_sub(1).leading_zeros()
 }
 
-fn measure_production_retain_rekey_cancel(n: usize, tied: bool, repeat: usize) {
+fn measure_legacy_retain_baseline_rekey_cancel(n: usize, tied: bool, repeat: usize) {
     let mut base = ClaimQueue::<PriorityKey>::default();
     let mut keys = Vec::with_capacity(n);
     for index in 0..n {
@@ -190,8 +193,9 @@ fn measure_production_retain_rekey_cancel(n: usize, tied: bool, repeat: usize) {
         base.requests.insert(key);
         keys.push(key);
     }
-    // Keep occupancy fixed: clone/setup is outside each timed command. This is
-    // the production retain predicate used by Command::Reprioritize and Cancel.
+    // Historical baseline only: commit bcb11cd used retain-based queue removal.
+    // Current production uses remove_waiting_request, measured separately below.
+    // Keep occupancy fixed: clone/setup is outside each timed command.
     let commands_per_repeat = 100usize.min(n);
     let mut command_rows = Vec::with_capacity(commands_per_repeat);
     let mut retain_visits = 0u64;
@@ -231,11 +235,96 @@ fn measure_production_retain_rekey_cancel(n: usize, tied: bool, repeat: usize) {
         .collect::<Vec<_>>()
         .join(",");
     json_row(&format!(
-        "\"scenario\":\"production_retain_rekey_cancel_50_50\",\"n\":{n},\"priority_shape\":\"{}\",\"repeat\":{repeat},\"occupancy_before_each_op\":{n},\"commands_requested\":{commands_per_repeat},\"commands_completed\":{},\"reprioritize_commands\":{},\"cancel_commands\":{},\"derived_expected_retain_predicate_visits\":{retain_visits},\"elapsed_ns_sum\":{total_elapsed_ns},\"ops\":{commands_per_repeat},\"ns_per_command_mean\":{:.4},\"ns_per_command_p50\":{p50_ns},\"ns_per_command_p95\":{p95_ns},\"sample_elapsed_ns\":[{samples}],\"commands_per_second_mean\":{:.4},\"timed_operations\":\"production_retain_predicate_plus_reprioritize_insert_or_cancel\",\"setup_clone_excluded\":true,\"status\":\"complete\"",
+        "\"scenario\":\"legacy_algorithm_baseline_bcb11cd_retain_rekey_cancel_50_50\",\"algorithm_source_commit\":\"bcb11cd61bc38b4813815f574a6a051f3b9e8faf\",\"n\":{n},\"priority_shape\":\"{}\",\"repeat\":{repeat},\"occupancy_before_each_op\":{n},\"commands_requested\":{commands_per_repeat},\"commands_completed\":{},\"reprioritize_commands\":{},\"cancel_commands\":{},\"derived_expected_retain_predicate_visits\":{retain_visits},\"elapsed_ns_sum\":{total_elapsed_ns},\"ops\":{commands_per_repeat},\"ns_per_command_mean\":{:.4},\"ns_per_command_p50\":{p50_ns},\"ns_per_command_p95\":{p95_ns},\"sample_elapsed_ns\":[{samples}],\"commands_per_second_mean\":{:.4},\"timed_operations\":\"historical_retain_predicate_plus_reprioritize_insert_or_cancel\",\"setup_clone_excluded\":true,\"status\":\"complete\"",
         if tied { "tied" } else { "mixed" },
         command_rows.len(),
         command_rows.iter().filter(|(kind, _)| *kind == "reprioritize").count(),
         command_rows.iter().filter(|(kind, _)| *kind == "cancel").count(),
+        total_elapsed_ns as f64 / command_rows.len() as f64,
+        command_rows.len() as f64 * 1_000_000_000.0 / total_elapsed_ns.max(1) as f64
+    ));
+}
+
+fn measure_actual_remove_waiting_rekey_cancel(n: usize, tied: bool, repeat: usize) {
+    let mut base = ClaimQueue::<PriorityKey>::default();
+    let mut keys = Vec::with_capacity(n);
+    for index in 0..n {
+        let key = priority_key(index, tied);
+        base.requests.insert(key);
+        keys.push(key);
+    }
+    // A fresh clone per command keeps occupancy fixed and clone/setup outside
+    // the timer while exercising the current private helper and exact rekey.
+    let commands_per_repeat = 100usize.min(n);
+    let mut command_rows = Vec::with_capacity(commands_per_repeat);
+    for sample in 0..commands_per_repeat {
+        let is_reprioritize = sample % 2 == 0;
+        let key = keys[sample / 2];
+        let mut queue = base.clone();
+        let mut request = ResourceRequest {
+            resource: super::ResourceId(EntityId::new(0, 0)),
+            owner: EntityId::new(0, 0),
+            state: RequestState::Queued,
+            admission_sequence: Some(key.enqueue_sequence),
+            lease: None,
+            priority_level: key.level,
+            work: None,
+            submitted_at: SimTime::from_ticks(0),
+            deadline: None,
+            timed: false,
+            can_preempt: false,
+            preemptible: None,
+        };
+        let started = Instant::now();
+        let result = remove_waiting_request(&mut queue, key.request, &request);
+        if is_reprioritize {
+            let new_level = key.level.saturating_add(1);
+            request.priority_level = new_level;
+            let reinserted = queue.requests.insert(PriorityKey {
+                level: new_level,
+                enqueue_sequence: key.enqueue_sequence,
+                request: key.request,
+            });
+            black_box(reinserted);
+        } else {
+            request.state = RequestState::Cancelled;
+        }
+        let elapsed_ns = started.elapsed().as_nanos();
+        result.expect("current private waiting-removal helper");
+        if is_reprioritize {
+            assert_eq!(request.admission_sequence, Some(key.enqueue_sequence));
+            assert_eq!(queue.requests.len(), n);
+            assert!(queue.requests.contains(&PriorityKey {
+                level: request.priority_level,
+                enqueue_sequence: key.enqueue_sequence,
+                request: key.request,
+            }));
+            command_rows.push(("reprioritize", elapsed_ns));
+        } else {
+            assert_eq!(request.state, RequestState::Cancelled);
+            assert_eq!(queue.requests.len(), n - 1);
+            assert!(!queue.requests.contains(&key));
+            command_rows.push(("cancel", elapsed_ns));
+        }
+    }
+    let mut elapsed_values: Vec<u128> = command_rows.iter().map(|(_, ns)| *ns).collect();
+    elapsed_values.sort_unstable();
+    let total_elapsed_ns: u128 = elapsed_values.iter().sum();
+    let p50_ns = elapsed_values[elapsed_values.len() / 2];
+    let p95_ns = elapsed_values[(elapsed_values.len() * 95).div_ceil(100).saturating_sub(1)];
+    let samples = elapsed_values
+        .iter()
+        .map(u128::to_string)
+        .collect::<Vec<_>>()
+        .join(",");
+    json_row(&format!(
+        "\"scenario\":\"actual_remove_waiting_request_rekey_cancel_50_50\",\"n\":{n},\"priority_shape\":\"{}\",\"repeat\":{repeat},\"occupancy_before_each_op\":{n},\"commands_requested\":{commands_per_repeat},\"commands_completed\":{},\"reprioritize_commands\":{},\"cancel_commands\":{},\"removed_keys\":{},\"reinserted_keys\":{},\"elapsed_ns_sum\":{total_elapsed_ns},\"ops\":{commands_per_repeat},\"ns_per_command_mean\":{:.4},\"ns_per_command_p50\":{p50_ns},\"ns_per_command_p95\":{p95_ns},\"sample_elapsed_ns\":[{samples}],\"commands_per_second_mean\":{:.4},\"timed_operations\":\"current_private_remove_waiting_request_plus_exact_rekey_insert_or_cancel_state\",\"admission_sequence_preserved\":true,\"setup_clone_excluded\":true,\"status\":\"complete\"",
+        if tied { "tied" } else { "mixed" },
+        command_rows.len(),
+        command_rows.iter().filter(|(kind, _)| *kind == "reprioritize").count(),
+        command_rows.iter().filter(|(kind, _)| *kind == "cancel").count(),
+        command_rows.len(),
+        command_rows.iter().filter(|(kind, _)| *kind == "reprioritize").count(),
         total_elapsed_ns as f64 / command_rows.len() as f64,
         command_rows.len() as f64 * 1_000_000_000.0 / total_elapsed_ns.max(1) as f64
     ));
@@ -424,6 +513,42 @@ fn q52_kernel_correctness_small() {
     assert!(queue.requests.remove(&second));
     assert!(queue.requests.is_empty());
 
+    // Exercise the current private removal helper and preserve the original
+    // admission sequence when the waiting key is reprioritized.
+    let mut helper_queue = ClaimQueue::<PriorityKey>::default();
+    let helper_old = PriorityKey {
+        level: 7,
+        enqueue_sequence: 44,
+        request: request_id(44),
+    };
+    assert!(helper_queue.requests.insert(helper_old));
+    let mut helper_request = ResourceRequest {
+        resource: super::ResourceId(EntityId::new(0, 0)),
+        owner: EntityId::new(0, 0),
+        state: RequestState::Queued,
+        admission_sequence: Some(44),
+        lease: None,
+        priority_level: 7,
+        work: None,
+        submitted_at: SimTime::from_ticks(0),
+        deadline: None,
+        timed: false,
+        can_preempt: false,
+        preemptible: None,
+    };
+    assert!(remove_waiting_request(&mut helper_queue, helper_old.request, &helper_request).is_ok());
+    helper_request.priority_level = -2;
+    let helper_new = PriorityKey {
+        level: helper_request.priority_level,
+        enqueue_sequence: helper_request.admission_sequence.unwrap(),
+        request: helper_old.request,
+    };
+    assert!(helper_queue.requests.insert(helper_new));
+    assert_eq!(helper_new.enqueue_sequence, helper_old.enqueue_sequence);
+    assert!(helper_queue.requests.contains(&helper_new));
+    assert!(remove_waiting_request(&mut helper_queue, helper_old.request, &helper_request).is_ok());
+    assert!(helper_queue.requests.is_empty());
+
     let mut mixed = ClaimQueue::<PriorityKey>::default();
     let mixed_keys = [
         PriorityKey {
@@ -522,8 +647,10 @@ fn benchmark_q52_measurements() {
             measure_priority_fifo(n, false, repeat);
             measure_rekey_cancel(n, true, repeat);
             measure_rekey_cancel(n, false, repeat);
-            measure_production_retain_rekey_cancel(n, true, repeat);
-            measure_production_retain_rekey_cancel(n, false, repeat);
+            measure_legacy_retain_baseline_rekey_cancel(n, true, repeat);
+            measure_legacy_retain_baseline_rekey_cancel(n, false, repeat);
+            measure_actual_remove_waiting_rekey_cancel(n, true, repeat);
+            measure_actual_remove_waiting_rekey_cancel(n, false, repeat);
         }
         for tied in [true, false] {
             let (comparisons, ops) = counted_comparisons(n, tied);
