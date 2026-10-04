@@ -8,7 +8,7 @@
 | Affected root | `crates/kairo-ecs-pdes` |
 | Surface family | `rust_api` |
 | Current status / release stage | Opt-in feature preview / alpha |
-| Compatibility level | Compatible additive API; focused legacy defect repairs |
+| Compatibility level | Additive driver; intentional alpha exhaustive-error-enum expansion |
 | Decision | Accepted for bounded local implementation; distributed/release acceptance pending |
 
 This review uses the [API design form](../api/api-review-template.md) and
@@ -33,7 +33,7 @@ are unchanged.
 
 | Surface | Current root | Change type | Breaking? | Maturity / notes |
 |---|---|---|---|---|
-| Rust API | `crates/kairo-ecs-pdes` | Additive driver and bitset; helper defect repair | No source break | Feature preview; new driver ordering is explicit |
+| Rust API | `crates/kairo-ecs-pdes` | Additive driver/bitset/authority metadata; helper repairs; new error variant | Exhaustive OptimisticError matches may require edits | Feature preview; scoped metadata does not enable owned execution |
 | C ABI | `include/kairo_ecs.h` | None | No | Existing maturity unchanged |
 | Arrow schema | `schemas/arrow/event_log_v1.schema.json` | None | No | Existing maturity unchanged |
 | Host APIs | Existing binding roots | None | No | No adapter or package pin change |
@@ -41,12 +41,11 @@ are unchanged.
 
 The new driver supplies its own full-key ordering; it does not alter core
 scheduler ordering, `SimTime` representation or `RemoteEvent`. No root is
-renamed, split, merged or removed. Existing consumers need no source edits.
+renamed, split, merged or removed. Existing consumers that exhaustively match OptimisticError must handle the new ScopedAuthorityRequiresOwnedRuntime variant.
 Legacy rollback now preserves initialized components and rejects stale tokens
 that previously revived; callers relying on those defects observe corrected
 behavior. Legacy logical-generation diagnostics remain compatible, and the
-helper still has scaffold input-anti/tick-order semantics. No migration guide is
-required for this additive alpha preview; beta/stable promotion requires a fresh
+helper still has scaffold input-anti/tick-order semantics. The authority-envelope alpha migration is to update exhaustive error matches; beta/stable promotion requires a fresh
 review if consumer edits, deterministic shared outputs or protected roots change.
 
 ## Memory ownership
@@ -145,3 +144,12 @@ Compatibility level: additive compatible local alpha API. No human release-manag
 
 
 Codec bridge combined local acceptance: integrated b8ff195 passes all five independent held-outs on explicitly bound Rust1.98.1 and1.76.0; the independent reviewer verifies source, raw log and actual compiler-cache hashes. Matching1.98.1/LLVM22.1.8 `just ci` passes467 tests, zero skipped, core coverage512/553 (92.59%) and fmt/Clippy/rustdoc/deny/audit. Architecture role independently accepts source/code/docs provenance. Canonical codec-bridge-evidence records preserve these actual snapshots. Hosted/new-PR, authority/fencing, owned/outbox, durable admission and actual distributed gates remain pending; Track48 stays In Progress.
+
+
+## Authority-envelope extension — 4 October 2026
+
+The accepted [authority leaf](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/authority-envelope-leaf.md) adds immutable LocalPreview/Scoped authority metadata, a checked reconstruction constructor and a getter. Namespace/tick retain all u128 bits; epoch/incarnation retain all u64 bits. Equality includes authority; execution order excludes authority, incarnation and kind. Clone and anti conversion preserve the entire envelope. Raw scoped metadata authenticates no sender and the existing all-local runtime rejects it before mutation, retaining Poisoned precedence.
+
+Source integration is 5f1df83f648b470591104db3d8ea7e393f88a918. The coordinator's actual Rust1.76 crate lane passed107 tests against that committed source. Independent fixture integration8150585 then passed all five held-outs separately on actual Rust1.98.1 and1.76.0 with fresh targets. The source/tool/cache/log-bound local receipts are artifacts/authority-envelope-msrv/receipt.json and artifacts/authority-envelope-green/receipt.json. Held-outs include depth128 acceptance/depth129 rejection, nested emitter ancestry, full-width values, positive/anti rejection across legacy lifecycle states, no emitter-counter mutation and poisoned-runtime precedence. The original missing-API RED evidence remains distinct.
+
+The new public error variant is intentionally source-breaking for exhaustive downstream matches in this opt-in alpha surface. No non_exhaustive attribute or unrelated error masks that limitation. No C ABI, Arrow, host-binding, shared published fixture or stable compatibility claim changes. Owned runtime, retained outbox, retirement capabilities and group fossil collection remain separate proposed APIs; this extension does not enable them or close Track48/49. Combined workspace CI, hosted checks and normal merge are separate delivery gates.
