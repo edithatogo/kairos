@@ -17,6 +17,7 @@ Format:
 ### Added
 
 - Experimental calibration physical schema v2 qualification now freezes every nested Arrow type, nullability and metadata field, exercises IPC and Parquet separately at the Rust 1.88 floor, and retains exact PyArrow readback evidence. Legacy telemetry remains a custom smoke format with its own Rust 1.76 compatibility qualification.
+- Supplementary `kairo-ecs-des` queue, victim-selection and FlowRuntime benchmark harnesses record deterministic inputs, outcome checks, process memory and release-build provenance. Representative 100,000-request Flow scaling remains unresolved; these development measurements do not establish release or performance acceptance.
 
 - Security reporting guidance now links to the repository's verified private vulnerability reporting route and explains coordinated public disclosure.
 - Scheduler property, bounded fuzz, mutation, and core-coverage gates, with one instrumented workspace test pass and selected GitHub Actions publishers.
@@ -75,6 +76,8 @@ Format:
 - CI and bootstrap Python tools now install from SHA-256 hash-locked requirement files; the npm CLI and Mermaid CLI use committed integrity-locked package files, and NuGet packaging uses locked restore.
 
 ### Fixed
+
+- `kairo-ecs-des` waiting-claim cancellation, reprioritization, despawn and replacement use exact priority keys rather than scanning to delete a request; corrupt keys reject atomically, preserving independent lifecycle ordering.
 
 - Python's optional Arrow extra now requires PyArrow 14.0.2 or later to exclude releases affected by an upstream Arrow reader security advisory.
 - Upgrade Astro to 7.3.5 and its Starlight integration/plugins to security-compatible releases, fixing the critical Astro image-optimization remote-code-execution alert.
