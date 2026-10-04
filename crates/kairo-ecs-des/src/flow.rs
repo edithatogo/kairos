@@ -159,6 +159,35 @@ impl<K: Ord> Default for ClaimQueue<K> {
         }
     }
 }
+
+fn waiting_key_for(
+    request: RequestId,
+    value: &ResourceRequest,
+) -> Result<Option<PriorityKey>, FlowError> {
+    match value.state {
+        RequestState::Queued | RequestState::Suspended => Ok(Some(PriorityKey {
+            level: value.priority_level,
+            enqueue_sequence: value.admission_sequence.ok_or(FlowError::InvalidState)?,
+            request,
+        })),
+        RequestState::Pending | RequestState::Active => Ok(None),
+        _ => Err(FlowError::InvalidState),
+    }
+}
+
+fn remove_waiting_request(
+    queue: &mut ClaimQueue,
+    request: RequestId,
+    value: &ResourceRequest,
+) -> Result<(), FlowError> {
+    if let Some(key) = waiting_key_for(request, value)? {
+        if !queue.requests.remove(&key) {
+            return Err(FlowError::InvalidState);
+        }
+    }
+    Ok(())
+}
+
 /// Opaque work identity; owned context is live in-process state only.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct WorkId(EntityId);
@@ -2725,7 +2754,7 @@ impl FlowRuntime {
                         let resource = resources
                             .get_mut(&request.resource)
                             .ok_or(FlowError::InvalidResource)?;
-                        resource.queue.requests.retain(|q| q.request != *id);
+                        remove_waiting_request(&mut resource.queue, *id, request)?;
                         let causal_lease = request.lease;
                         if let Some(lease) = causal_lease {
                             resource.active.leases.remove(&lease);
@@ -2774,7 +2803,7 @@ impl FlowRuntime {
                     let resource = resources
                         .get_mut(&request.resource)
                         .ok_or(FlowError::InvalidResource)?;
-                    resource.queue.requests.retain(|k| k.request != id);
+                    remove_waiting_request(&mut resource.queue, id, request)?;
                     let causal_lease = request.lease;
                     if let Some(lease) = causal_lease {
                         resource.active.leases.remove(&lease);
@@ -2815,19 +2844,21 @@ impl FlowRuntime {
                     let resource = resources
                         .get_mut(&request.resource)
                         .ok_or(FlowError::InvalidResource)?;
+                    let old_waiting_key = waiting_key_for(id, request)?;
+                    if let Some(key) = old_waiting_key {
+                        if !resource.queue.requests.remove(&key) {
+                            return Err(FlowError::InvalidState);
+                        }
+                    }
                     request.priority_level = level;
-                    if matches!(
-                        request.state,
-                        RequestState::Queued | RequestState::Suspended
-                    ) {
-                        resource.queue.requests.retain(|k| k.request != id);
-                        resource.queue.requests.insert(PriorityKey {
+                    if let Some(old_key) = old_waiting_key {
+                        if !resource.queue.requests.insert(PriorityKey {
                             level,
-                            enqueue_sequence: request
-                                .admission_sequence
-                                .ok_or(FlowError::InvalidState)?,
+                            enqueue_sequence: old_key.enqueue_sequence,
                             request: id,
-                        });
+                        }) {
+                            return Err(FlowError::InvalidState);
+                        }
                     }
                     if let Some(lease) = request.lease {
                         resource
@@ -2981,15 +3012,17 @@ impl FlowRuntime {
                             });
                         }
                     }
-                    resource
-                        .queue
-                        .requests
-                        .iter()
-                        .find(|key| key.request == incoming)
-                        .copied()
+                    let incoming_request =
+                        requests.get(&incoming).ok_or(FlowError::InvalidState)?;
+                    Some(
+                        waiting_key_for(incoming, incoming_request)?
+                            .ok_or(FlowError::InvalidState)?,
+                    )
                 };
                 let Some(key) = key else { break };
-                resource.queue.requests.remove(&key);
+                if !resource.queue.requests.remove(&key) {
+                    return Err(FlowError::InvalidState);
+                }
                 let request_id = key.request;
                 let request = requests
                     .get_mut(&request_id)
@@ -3407,6 +3440,9 @@ fn complete_timed(
 
 #[cfg(test)]
 mod q52_bench;
+
+#[cfg(test)]
+mod q52_key_removal_tests;
 
 #[cfg(test)]
 mod tests {
