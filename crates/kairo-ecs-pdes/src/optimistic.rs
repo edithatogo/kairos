@@ -1517,14 +1517,19 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             .map(LogicalProcessState::local_time)
             .max()
             .unwrap_or(Tick::ZERO);
+        // Blocked local replacements reserve pending capacity before entering a queue.
+        let reserved_pending = self
+            .owned
+            .as_ref()
+            .map_or(0, |owned| owned.execution().reserved_pending);
         OptimisticRuntimeReport {
             gvt: self.gvt,
             gvt_lag: maximum_local
                 .duration_since(self.gvt)
                 .unwrap_or(SimDuration::ZERO),
             logical_processes: self.processes.len(),
-            pending_events: self.total_pending(),
-            pending_positives: self.total_positives(),
+            pending_events: self.total_pending() + reserved_pending,
+            pending_positives: self.total_positives() + reserved_pending,
             pending_antis: self.total_antis(),
             replay_pending: self.total_replay_pending(),
             history_events: self.total_history(),
