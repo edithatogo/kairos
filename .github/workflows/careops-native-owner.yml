@@ -146,7 +146,7 @@ jobs:
           name: q51-conformance-${{ matrix.os }}
           path: .artifacts/ci/q51/
           retention-days: 7
-          if-no-files-found: ignore
+          if-no-files-found: error
       - name: Test Arrow IO with Rust 1.99.0
         env:
           EXPECTED_OS: ${{ matrix.os }}
@@ -198,7 +198,7 @@ jobs:
           name: careops-owner-failure-${{ matrix.os }}
           path: .artifacts/ci/native/
           retention-days: 7
-          if-no-files-found: ignore
+          if-no-files-found: error
 
   arrow-io-floor:
     name: Arrow IO Rust 1.88 (${{ matrix.os }}, ${{ matrix.features }})
