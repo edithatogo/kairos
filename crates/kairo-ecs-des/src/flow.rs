@@ -3406,6 +3406,9 @@ fn complete_timed(
 }
 
 #[cfg(test)]
+mod q52_bench;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     #[test]
