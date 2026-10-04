@@ -70,6 +70,7 @@ tracks:
   - id: 03
     name: The Flow - DES Trajectory API and ABM Behavior API
     status: Done
+    # Historical minimal/R2 Done status is preserved; Q4 is a bounded experimental development qualification.
     # Done refers to the historical minimal DES/ABM slice.
     # Experimental Q3 development source 4289603 is qualified; Q4/Q5 remain pending.
     # Q3 development extension strict gate qualified at a91f038; parent acceptance is controlled by its exact-head receipt.
@@ -86,6 +87,7 @@ tracks:
   - id: 04
     name: The Analyst - kairo-ecs-arrow
     status: Done
+    # Historical R2 Done status is preserved; Q4.3 lifecycle sidecar is a bounded development extension.
     owner: arrow-agent
     depends_on: ["01", "12", "26"]
     owned_paths:

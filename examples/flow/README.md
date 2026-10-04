@@ -59,3 +59,22 @@ scheduler priority, deadlines, rejected admissions and pausing at a dispatch
 boundary in the same runtime. This example uses manual leases only. It does not
 implement a shared ABM adapter, lifecycle telemetry or portable checkpoints.
 The public Flow API is experimental and retains its compatibility/release holds.
+
+## Q4 staged staff, bed, and cleaning example (experimental)
+
+The runnable [synthetic public-API staff/bed/cleaning example](../../crates/kairo-ecs-des/examples/flow_staff_bed_cleaning.rs) stages the capacity-one staff claim before a separate bed claim. Urgent work suspends and resumes typed in-memory context. Patient-A's manual Bed-A lease remains held during a separate timed cleaning claim; Patient-B queues while cleaning and receives the bed only after the caller releases Patient-A's lease. The example uses no clinical rules or atomic multi-resource grant. The integration fixture compares continuous execution with pause/continue in the same live runtime; this is not portable checkpoint/restore or cross-process parity.
+
+Q4 development source S: `b6671d75b77e2e98f4cd63dd6a73d7472c00ceb7`. Accepted source receipts: `.artifacts/q4-phase/source-qualification.json` (SHA-256 `0706c828d5b0a1b37c8cd77916c40681afbc701718915d9e11c85995cc3266f2`); exact owner run: https://github.com/edithatogo/kairos/actions/runs/37190690669. Parent pin integration is pending. A governance successor G requires fresh phase, strict clean-tree and exact-head native owner gates before parent acceptance.
+
+`LifecycleRecord.snapshot` is experimental and source-breaking for exhaustive struct literals; migration and Track 25/release holds remain. `resource-lifecycle` and `resource-lifecycle-io` are optional; Arrow 60 feature tests use Rust 1.88 while default telemetry remains Rust 1.76. Full C1/C2, Q5, Track 22 portable checkpoint and release qualification are not claimed.
+
+### Run and migration notes
+
+```sh
+cargo run --locked -p kairo-ecs-des --example flow_staff_bed_cleaning
+cargo test --locked -p kairo-ecs-arrow --features resource-lifecycle-io
+```
+
+Use the pinned native developer toolchain for the example; the optional Arrow 60 path requires Rust 1.88 or later. Resource priorities belong to each claim and do not change scheduler priorities. Strict priority provides no starvation guarantee; the example makes staged one-resource claims and does not provide a deadlock-free multi-resource acquisition API.
+
+Consumers of runtime-produced lifecycle records can read the new immutable `snapshot` field. Downstream exhaustive `LifecycleRecord` literals must supply that field and use the captured transition values; reconstructing them from the final World would erase intermediate queue, allocation and progress states. The `resource_lifecycle.v1` encoder validates contiguous per-event ordinals and uniqueness within the supplied batch, preserves input order, and does not provide a whole-run uniqueness writer. These changes remain experimental until Track 25/Q5 compatibility and release gates close.

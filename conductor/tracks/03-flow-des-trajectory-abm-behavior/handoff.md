@@ -250,3 +250,34 @@ Copied verbatim from the qualified predecessor; these commands/results are histo
     pushed_ref: "origin/codex/careops-resource-lifecycle"
     next_phase_decision: "Manual resource slice only; parent acceptance follows owner CI; Q2-Q4 remain pending."
 ~~~
+
+### Preserved pre-Q4 phase-closeout row — Track 03 (verbatim)
+
+Copied before the ledger row is updated; this block retains historical phase provenance.
+
+~~~yaml
+  - track_id: "03"
+    phase: "historical-minimal-closeout-with-qualified-Q3-development-extension"
+    state: closed
+    review_command: "$conductor-review; root scoped Q3 review, Track 01 state/RNG and Track 25 migration disposition"
+    review_result: "Historical minimal slice at 6b5176b781b80267ab4a620d205a2a137fdce4f5 on origin/codex/careops-resource-lifecycle is preserved verbatim in handoff.md. Source 4289603 adds reviewed timed runtime and a 576-case seeded model; owner run 37121692873 confirms property execution on both hosts. Actual PowerShell 7.6.6 phase validator passed with exit 0, zero errors and zero warnings. Root accepted governance source a91f038 and its actual strict clean-tree result: exit 0, zero errors. This entry records the qualified a91f038 antecedent; successor metadata heads require external phase/strict/owner receipts before parent acceptance. Closed denotes the historical minimal slice, not Q4/Q5 or release acceptance."
+    fixes_applied: true
+    validation_commands:
+      - "/private/tmp/careops-q3-pwsh-7.6.6/.artifacts/pwsh/runtime/pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "/private/tmp/careops-q3-pwsh-7.6.6/.artifacts/pwsh/runtime/pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree"
+    git_status: "Qualified antecedent a91f0389574e97d030dc85a9b362ef84a162c3d3 is committed/pushed and strict gate passed; successor-head cleanliness and qualification are established by external exact-head receipts"
+    commit_sha: "a91f0389574e97d030dc85a9b362ef84a162c3d3"
+    pushed_ref: "origin/codex/careops-q3-upstream-governance"
+    next_phase_decision: "Do not advance parent Q4 until governance review, actual phase and strict clean-tree gates, exact-head owner CI and parent Q3 closeout are accepted. Q4/Q5 and release hold remain."
+~~~
+
+## Q4 experimental Flow development qualification at source S
+
+This qualifies the bounded Q4 development source only at tested Kairos commit `b6671d75b77e2e98f4cd63dd6a73d7472c00ceb7` on `origin/codex/careops-q4-lifecycle`. It preserves Track 03's historical minimal Done slice and Q3 provenance; it does not close all Track 03, Q5, or release work.
+
+Qualification receipt: `.artifacts/q4-phase/source-qualification.json` SHA-256 `0706c828d5b0a1b37c8cd77916c40681afbc701718915d9e11c85995cc3266f2`. Local gates: q4_4_runnable_example_rust_198: `/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo run --locked --offline -p kairo-ecs-des --example flow_staff_bed_cleaning` exit 0 (1.98.1, aarch64-apple-darwin, log SHA-256 e399267bc794272ed08c33d9898f928befbfe76587359644c3dabce4d04cc475); q4_3_encoder_tests: `/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow --features resource-lifecycle-io` exit 0 (1.98.1, aarch64-apple-darwin, log SHA-256 20e7e5935a3422e345a36b8cd862f1b7d73cf601b97580d69e8df9c36ce8975b); q4_3_lifecycle_ipc_rust_188: `/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow --features resource-lifecycle-io` exit 0 (1.88.0, aarch64-apple-darwin, log SHA-256 7764b2aa01e43f501b4744a78d65696187ed6147a9ff36221961af19a2909d38); q4_3_arrow_default_rust_176: `/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo test --locked -p kairo-ecs-arrow` exit 0 (1.76.0, aarch64-apple-darwin, log SHA-256 7433738978a37b6f2c6ba8ad3c51d756fa9b784b68b6a8a95d8f186c217ebb05); q4_4_fixture_rust_198: `/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow --features resource-lifecycle-io` exit 0 (1.98.1, aarch64-apple-darwin, log SHA-256 20e7e5935a3422e345a36b8cd862f1b7d73cf601b97580d69e8df9c36ce8975b); q4_4_fixture_rust_188: `/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow --features resource-lifecycle-io` exit 0 (1.88.0, aarch64-apple-darwin, log SHA-256 7764b2aa01e43f501b4744a78d65696187ed6147a9ff36221961af19a2909d38).
+Exact source-S owner CI: https://github.com/edithatogo/kairos/actions/runs/37190690669 — success on aarch64-apple-darwin, x86_64-unknown-linux-gnu.
+
+Scope: staged per-transition typed lifecycle records; synthetic public-API staff/bed/cleaning example; four accepted staff fixtures preserved; manual Bed-A lease retained through timed cleaning; Patient-B queued during cleaning and granted only after caller release; continuous and paused output compared on the same live runtime. No clinical rules, atomic multi-resource grant, portable checkpoint/restore, or cross-process replay are claimed.
+
+`LifecycleRecord.snapshot` is experimental and source-breaking for downstream exhaustive struct literals. Track 25 review/migration and release holds remain. Parent pin integration is pending. Any governance successor G must pass fresh phase validation, strict clean-tree validation and exact-head native owner CI before the parent accepts G; this entry records no such G result.

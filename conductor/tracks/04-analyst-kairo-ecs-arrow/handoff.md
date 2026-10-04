@@ -94,3 +94,40 @@ These results are local package evidence. They do not close the Track 04 phase, 
 ## C1 shared temporal helper prerequisite (2026-10-04)
 
 Own the bounded temporal extraction and six-family fixture; preserve existing wrapper precedence and all legacy schemas. No implementation or test pass is recorded here. See `../../design/calibration/c1-shared-temporal-helper-v1.md`. This is a scoped development extension; historical closeout evidence remains unchanged.
+
+### Preserved pre-Q4 phase-closeout row — Track 04 (verbatim)
+
+Copied before the ledger row is updated; this block retains the historical R2 closeout and C1 evidence boundary.
+
+~~~yaml
+  - track_id: "04"
+    phase: "track-closeout"
+    state: closed
+    review_command: "$conductor-review"
+    review_result: "Track 04 advanced to Done after review found no in-scope correctness findings and the Arrow schema-versioning gate was hardened with runtime schema fingerprint and checked-in JSON schema alignment tests."
+    fixes_applied: true
+    validation_commands:
+      - "cargo test -p kairo-ecs-arrow --test schema_compatibility"
+      - "cargo +stable-x86_64-pc-windows-gnu fmt --package kairo-ecs-arrow --check"
+      - "cargo +stable-x86_64-pc-windows-gnu check -p kairo-ecs-arrow --examples"
+      - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-arrow --test schema_compatibility"
+      - "cargo +stable-x86_64-pc-windows-gnu test -p kairo-ecs-arrow"
+      - "cargo +stable-x86_64-pc-windows-gnu run -p kairo-ecs-arrow --example telemetry_event_log_roundtrip"
+      - "pwsh -NoProfile -File scripts/validate_conductor_setup.ps1 -SkipCargo"
+      - "pwsh -NoProfile -File scripts/validate_track_coverage.ps1 -SkipCargo"
+    git_status: "dirty: local Track 04 closeout edits plus unrelated in-flight edits outside Track 04"
+    commit_sha: "6808d6c0cc1e669eb83a56fe0a71ccb9b6720452"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 04 is Done for the dependency-light R2 schema-versioning and roundtrip surface; full Arrow IPC/Parquet and OpenTelemetry export remain future Track 04 work."
+~~~
+
+## Q4.3 experimental resource lifecycle sidecar qualification at source S
+
+This qualifies only the `resource_lifecycle.v1` development extension at tested Kairos commit `b6671d75b77e2e98f4cd63dd6a73d7472c00ceb7` on `origin/codex/careops-q4-lifecycle`. Track 04's historical Done status remains the dependency-light R2 schema/versioning/roundtrip slice; broader Track 04 work and release gates remain open.
+
+Qualification receipt: `.artifacts/q4-phase/source-qualification.json` SHA-256 `0706c828d5b0a1b37c8cd77916c40681afbc701718915d9e11c85995cc3266f2`. Local gates: q4_4_runnable_example_rust_198: `/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo run --locked --offline -p kairo-ecs-des --example flow_staff_bed_cleaning` exit 0 (1.98.1, aarch64-apple-darwin, log SHA-256 e399267bc794272ed08c33d9898f928befbfe76587359644c3dabce4d04cc475); q4_3_encoder_tests: `/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow --features resource-lifecycle-io` exit 0 (1.98.1, aarch64-apple-darwin, log SHA-256 20e7e5935a3422e345a36b8cd862f1b7d73cf601b97580d69e8df9c36ce8975b); q4_3_lifecycle_ipc_rust_188: `/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow --features resource-lifecycle-io` exit 0 (1.88.0, aarch64-apple-darwin, log SHA-256 7764b2aa01e43f501b4744a78d65696187ed6147a9ff36221961af19a2909d38); q4_3_arrow_default_rust_176: `/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo test --locked -p kairo-ecs-arrow` exit 0 (1.76.0, aarch64-apple-darwin, log SHA-256 7433738978a37b6f2c6ba8ad3c51d756fa9b784b68b6a8a95d8f186c217ebb05); q4_4_fixture_rust_198: `/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow --features resource-lifecycle-io` exit 0 (1.98.1, aarch64-apple-darwin, log SHA-256 20e7e5935a3422e345a36b8cd862f1b7d73cf601b97580d69e8df9c36ce8975b); q4_4_fixture_rust_188: `/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo test --locked --offline -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow --features resource-lifecycle-io` exit 0 (1.88.0, aarch64-apple-darwin, log SHA-256 7764b2aa01e43f501b4744a78d65696187ed6147a9ff36221961af19a2909d38).
+Exact source-S owner CI: https://github.com/edithatogo/kairos/actions/runs/37190690669 — success on aarch64-apple-darwin, x86_64-unknown-linux-gnu.
+
+The sidecar is a 27-field typed Arrow RecordBatch from immutable captured records. `resource-lifecycle` and separate `resource-lifecycle-io` are opt-in; Arrow 60 feature tests require Rust 1.88, while default telemetry retains Rust 1.76. Batch validation preserves caller order and validates keys/contiguous ordinals within a batch only. `event_log.v1` remains unchanged by verified source/schema hashes in the Q4 receipt. No whole-run writer, stable API approval, portable checkpoint codec, clinical meaning, or release readiness is claimed.
+
+`LifecycleRecord.snapshot` remains experimental and source-breaking for exhaustive struct literals. Parent pin integration is pending. Any governance successor G must pass fresh phase validation, strict clean-tree validation and exact-head native owner CI before parent acceptance; this entry records no such G result.
