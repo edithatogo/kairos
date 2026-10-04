@@ -125,3 +125,11 @@ Validation on the candidate source: `npm test` passed (2 files, 8 tests), `npm r
 - Accepted fixes: central tracking was moved back to `In Review` to match the blocked commit/push evidence.
 - Closeout evidence: pushed commit `42f3fd4c0b802b0c83a8f8e6f38a445a9e00fb1c` on `origin/main` records the reconciled review/status evidence.
 - Next-phase decision: Track 09 is `Done`. Optional `wasm-export`/wasm-pack validation remains future toolchain work because the `wasm-bindgen` feature path still depends on local Windows linker setup.
+
+## Development-tool floor reconciliation — 2026-10-04
+
+The binding manifest and lock root now declare `^4.1.11`, matching the already reviewed installed Vitest 4.1.11 and template. Resolved dependency versions and integrity fields are unchanged. This is a Track 09 development-tool metadata update; it changes no Rust API/ABI or simulation behavior.
+
+Refreshed against accepted main `10e67d8e2c44eabed2e5b001547afd6ce772a132` after PR203 merged. The obsolete PR195 audit exception, policy changes and scope test have been removed; the accepted strict private-tree audit and dependency controls are retained byte-for-byte. This change grants no release or publication authority.
+
+Earlier local build, typecheck and eight binding tests on Node26.10.0 passed but are corroboration only, because declared support is Node >=22 <25. Final committed-source local receipts and exact-head hosted supported-node checks are required before merge and are retained in the closeout evidence.

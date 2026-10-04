@@ -48,6 +48,8 @@ Format:
 
 ### Added
 
+- TypeScript binding development installs now declare the same Vitest 4.1.11 minimum already used by the reviewed lockfile and template.
+
 - Bootstrap package dry runs use an integrity-pinned private cache fork and strict zero-finding npm audit, with retained source, license and regression evidence. Dependency review verifies private alias identity before applying the existing high-severity gate.
 
 - `kairo-ecs-pdes` adds a preview event-owned optimistic runtime and generation bitset behind `time-warp`, with deterministic replay, downstream cancellation, bounded progress, typed errors and local parity fixtures. Distributed rollback acceptance remains pending.
