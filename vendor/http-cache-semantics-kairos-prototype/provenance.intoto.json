@@ -1,0 +1,191 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "predicate": {
+    "buildDefinition": {
+      "buildType": "urn:careops:build-type:private-npm-vendor-evidence:v1",
+      "externalParameters": {
+        "buildTypeMapping": "No external standard or consumer mapping is claimed.",
+        "buildTypeStatus": "local-undocumented",
+        "historicalQualificationReceiptSha256": "41f2137e9dc6c12023e13eb55be32ef8588ceabd1a511423332f0d9ddf6372f1",
+        "privatePackageName": "@careops/http-cache-semantics-kairos-prototype",
+        "privatePackageVersion": "0.1.0",
+        "publicAdvisoryClosure": "not claimed",
+        "qualificationStatus": "historical receipt excludes local Connection parser hardening; fresh CI required",
+        "upstreamPackage": "pkg:npm/http-cache-semantics@4.2.0"
+      },
+      "internalParameters": {
+        "archiveFormat": "USTAR inside gzip with zero timestamps and normalized ownership/mode",
+        "evidenceZipFormat": "ZIP_STORED, lexicographic paths, 1980 timestamp, regular 0644 entries",
+        "evidenceZipSha256": "1efb1d1bcf379111854e49e50b3371027bf422a529eadcd69efec4ccdcf3fab8",
+        "generatorSha256": "03b04f4bd9716f90fe2e4949b8a977d7d8e920be9df24fe554ca6249bbb616b3",
+        "sbomSha256": "99cb4b0d2b9e48db4289a04a1b3a24dec477999162cf0f5cd99e0097f4010768"
+      },
+      "resolvedDependencies": [
+        {
+          "digest": {
+            "sha256": "fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485"
+          },
+          "name": "private patched npm archive",
+          "uri": "file:vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz"
+        },
+        {
+          "digest": {
+            "sha256": "ab868ad5a2ef5068560d9cd3b2180ec63c140bb4c5cae1ba779d300a0ac74fa3"
+          },
+          "name": "LICENSE",
+          "uri": "file:vendor/http-cache-semantics-kairos-prototype/LICENSE"
+        },
+        {
+          "digest": {
+            "sha256": "0039d96fcc60d2065d2cdae27cc159c74e6fc7380a557d138f0c54695a06c01b"
+          },
+          "name": "README.md",
+          "uri": "file:vendor/http-cache-semantics-kairos-prototype/README.md"
+        },
+        {
+          "digest": {
+            "sha256": "ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46ca6620c"
+          },
+          "name": "index.js",
+          "uri": "file:vendor/http-cache-semantics-kairos-prototype/index.js"
+        },
+        {
+          "digest": {
+            "sha256": "0159915b5e6dac00760bf8ce50daebfcf441cbdb66ef6aa8f05017248b4ccb42"
+          },
+          "name": "package.json",
+          "uri": "file:vendor/http-cache-semantics-kairos-prototype/package.json"
+        },
+        {
+          "digest": {
+            "sha256": "1efb1d1bcf379111854e49e50b3371027bf422a529eadcd69efec4ccdcf3fab8"
+          },
+          "name": "frozen evidence source archive",
+          "uri": "file:vendor/http-cache-semantics-kairos-prototype/vendor-evidence-inputs.zip"
+        },
+        {
+          "digest": {
+            "sha256": "1871b8186dd10aa82aa211741c98a71e0209f328efe9a23aee1494f765c3a6e4"
+          },
+          "name": "GHSA-ch52-4w7c-c8xp / CVE-2026-93748",
+          "uri": "https://api.github.com/advisories/GHSA-ch52-4w7c-c8xp"
+        },
+        {
+          "digest": {
+            "sha256": "5c4868499d8c5eb55985b2515cc309d9ba3fed86a6f2070f4bcdc859e41f7c64"
+          },
+          "name": "patch 101a9e9a5b9aba5750a74b8f659c5646e90a962f",
+          "uri": "https://github.com/hellonewday/http-cache-semantics/commit/101a9e9a5b9aba5750a74b8f659c5646e90a962f.patch"
+        },
+        {
+          "digest": {
+            "sha256": "4f44c4381cc2ea7406e559152e031c397068547259d270a00ca3199a8cac25fc"
+          },
+          "name": "patch 14a8c2ad51740dc39bf3e8f1a11c845a5003f217",
+          "uri": "https://github.com/kornelski/http-cache-semantics/commit/14a8c2ad51740dc39bf3e8f1a11c845a5003f217.patch"
+        },
+        {
+          "digest": {
+            "sha256": "6c29f22a4a7385285c6f579ec9f33c5e989f00739d6b257243a0b082ec9447ae"
+          },
+          "name": "licenses/CycloneDX-Apache-2.0.txt",
+          "uri": "https://raw.githubusercontent.com/CycloneDX/specification/4b3f59453366e27c8073fd24e98bf21ef8892c8e/LICENSE"
+        },
+        {
+          "digest": {
+            "sha256": "df472ef4aaf593904c479293723a1a5c191d6672715c93b3c0b5c318f3914221"
+          },
+          "name": "schemas/cyclonedx/1.7/bom-1.7.schema.json",
+          "uri": "https://raw.githubusercontent.com/CycloneDX/specification/4b3f59453366e27c8073fd24e98bf21ef8892c8e/schema/bom-1.7.schema.json"
+        },
+        {
+          "digest": {
+            "sha256": "018ea7f78b5208ec647cfd10f669cc9c26aba6aceb79c4da7f9c0ef4c99b60de"
+          },
+          "name": "schemas/cyclonedx/1.7/cryptography-defs.schema.json",
+          "uri": "https://raw.githubusercontent.com/CycloneDX/specification/4b3f59453366e27c8073fd24e98bf21ef8892c8e/schema/cryptography-defs.schema.json"
+        },
+        {
+          "digest": {
+            "sha256": "8bae002c25e723db7ee1f26afde680ae1a2b1a8f6b4b4b0fd65dc3becb090aae"
+          },
+          "name": "schemas/cyclonedx/1.7/jsf-0.82.schema.json",
+          "uri": "https://raw.githubusercontent.com/CycloneDX/specification/4b3f59453366e27c8073fd24e98bf21ef8892c8e/schema/jsf-0.82.schema.json"
+        },
+        {
+          "digest": {
+            "sha256": "54a6288292bc6c90b0d3952f5f939f17436fa76704ffe68a46e5b78539c7cc1b"
+          },
+          "name": "schemas/cyclonedx/1.7/spdx.schema.json",
+          "uri": "https://raw.githubusercontent.com/CycloneDX/specification/4b3f59453366e27c8073fd24e98bf21ef8892c8e/schema/spdx.schema.json"
+        },
+        {
+          "digest": {
+            "sha256": "f40b1d00369c21b963293189b4617b5de439a11858541c07c620984634fb63b7"
+          },
+          "name": "licenses/SLSA-Community-Specification-1.0.md",
+          "uri": "https://raw.githubusercontent.com/slsa-framework/slsa/19e4e2f005f871270c4f555fc47afecfb37f3efe/LICENSE.md"
+        },
+        {
+          "digest": {
+            "sha256": "0ddd00372622d1c04f71d1fb2666579af089eb733c9c5d838d158489b2ea6145"
+          },
+          "name": "schemas/slsa/1.2/provenance.cue",
+          "uri": "https://raw.githubusercontent.com/slsa-framework/slsa/19e4e2f005f871270c4f555fc47afecfb37f3efe/docs/spec/v1.2/schema/provenance.cue"
+        },
+        {
+          "digest": {
+            "sha256": "f57454db8ab2d06a4baabbfb7c70ad4181a00b7ee0efebcdffa9ba313bd80eb7"
+          },
+          "name": "http-cache-semantics-4.2.0.tgz",
+          "uri": "https://registry.npmjs.org/http-cache-semantics/-/http-cache-semantics-4.2.0.tgz"
+        },
+        {
+          "digest": {
+            "sha256": "1813cd94a97f5329db475853f0bf0b532bffb9905592eea8a080f593503ad8a3"
+          },
+          "name": "http-cache-semantics@4.2.0 registry metadata",
+          "uri": "https://registry.npmjs.org/http-cache-semantics/4.2.0"
+        }
+      ]
+    },
+    "runDetails": {
+      "builder": {
+        "builderDependencies": [],
+        "id": "urn:careops:local-untrusted-builder:vendor-evidence",
+        "version": {
+          "generator": "1.0.0",
+          "profile": "local-unsigned-evidence"
+        }
+      },
+      "byproducts": [
+        {
+          "digest": {
+            "sha256": "1efb1d1bcf379111854e49e50b3371027bf422a529eadcd69efec4ccdcf3fab8"
+          },
+          "name": "evidence input archive",
+          "uri": "file:vendor-evidence-inputs.zip"
+        },
+        {
+          "digest": {
+            "sha256": "99cb4b0d2b9e48db4289a04a1b3a24dec477999162cf0f5cd99e0097f4010768"
+          },
+          "name": "CycloneDX BOM",
+          "uri": "file:sbom.cdx.json"
+        }
+      ],
+      "metadata": {
+        "invocationId": "vendor-evidence-fbd36545bda6d9cd-1efb1d1bcf379111"
+      }
+    }
+  },
+  "predicateType": "https://slsa.dev/provenance/v1",
+  "subject": [
+    {
+      "digest": {
+        "sha256": "fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485"
+      },
+      "name": "http-cache-semantics-kairos-prototype-0.1.0.tgz"
+    }
+  ]
+}

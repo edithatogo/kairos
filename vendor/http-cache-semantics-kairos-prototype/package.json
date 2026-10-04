@@ -1,0 +1,19 @@
+{
+  "name": "@careops/http-cache-semantics-kairos-prototype",
+  "version": "0.1.0",
+  "description": "Private CareOps prototype fork of http-cache-semantics; never publish.",
+  "main": "index.js",
+  "types": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "files": [
+    "index.js"
+  ],
+  "author": "Kornel Lesiński <npms2@geekhood.net> (https://kornel.ski/)",
+  "license": "BSD-2-Clause",
+  "devDependencies": {
+    "mocha": "^11.0"
+  },
+  "private": true
+}

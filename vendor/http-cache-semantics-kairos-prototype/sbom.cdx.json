@@ -1,0 +1,120 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [],
+  "metadata": {
+    "component": {
+      "bom-ref": "pkg:npm/%40careops/http-cache-semantics-kairos-prototype@0.1.0",
+      "description": "Private CareOps prototype fork; not an upstream release.",
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "file:vendor"
+        },
+        {
+          "comment": "Upstream advisory remains open in the captured source snapshot; no public closure is claimed.",
+          "type": "issue-tracker",
+          "url": "https://api.github.com/advisories/GHSA-ch52-4w7c-c8xp"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-2-Clause"
+          }
+        }
+      ],
+      "name": "@careops/http-cache-semantics-kairos-prototype",
+      "pedigree": {
+        "ancestors": [
+          {
+            "bom-ref": "pkg:npm/http-cache-semantics@4.2.0",
+            "externalReferences": [
+              {
+                "type": "distribution",
+                "url": "https://registry.npmjs.org/http-cache-semantics/-/http-cache-semantics-4.2.0.tgz"
+              }
+            ],
+            "licenses": [
+              {
+                "license": {
+                  "id": "BSD-2-Clause"
+                }
+              }
+            ],
+            "name": "http-cache-semantics",
+            "purl": "pkg:npm/http-cache-semantics@4.2.0",
+            "type": "library",
+            "version": "4.2.0"
+          }
+        ],
+        "commits": [
+          {
+            "message": "Upstream pull request patch applied to private prototype",
+            "uid": "101a9e9a5b9aba5750a74b8f659c5646e90a962f",
+            "url": "https://github.com/hellonewday/http-cache-semantics/commit/101a9e9a5b9aba5750a74b8f659c5646e90a962f.patch"
+          },
+          {
+            "message": "Upstream pull request patch applied to private prototype",
+            "uid": "14a8c2ad51740dc39bf3e8f1a11c845a5003f217",
+            "url": "https://github.com/kornelski/http-cache-semantics/commit/14a8c2ad51740dc39bf3e8f1a11c845a5003f217.patch"
+          }
+        ],
+        "notes": "Derived from http-cache-semantics 4.2.0. This private patched fork retains the upstream identity and does not imply an upstream release or public advisory closure.",
+        "patches": [
+          {
+            "diff": {
+              "url": "https://github.com/hellonewday/http-cache-semantics/commit/101a9e9a5b9aba5750a74b8f659c5646e90a962f.patch"
+            },
+            "type": "unofficial"
+          },
+          {
+            "diff": {
+              "url": "https://github.com/kornelski/http-cache-semantics/commit/14a8c2ad51740dc39bf3e8f1a11c845a5003f217.patch"
+            },
+            "type": "unofficial"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "careops:upstream-advisory",
+          "value": "GHSA-ch52-4w7c-c8xp"
+        },
+        {
+          "name": "careops:upstream-cve",
+          "value": "CVE-2026-93748"
+        },
+        {
+          "name": "careops:upstream-affected-range",
+          "value": "<= 4.2.0"
+        },
+        {
+          "name": "careops:public-advisory-closure",
+          "value": "not claimed"
+        }
+      ],
+      "purl": "pkg:npm/%40careops/http-cache-semantics-kairos-prototype@0.1.0",
+      "scope": "required",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    "tools": {
+      "components": [
+        {
+          "name": "careops-vendor-evidence-generator",
+          "type": "application",
+          "version": "1.0.0"
+        }
+      ]
+    }
+  },
+  "serialNumber": "urn:uuid:fc25a2bb-c0c8-52bf-96d5-ac94670a5ab9",
+  "specVersion": "1.7",
+  "version": 1
+}
