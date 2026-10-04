@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "Q5.2.scaling.ordered-selector.utility",
+  "status": "review_required",
+  "source_preparation_base": "eea466f2ac06798a5886c6cdd0718640d95c8efd",
+  "included_reviewed_causal_queue_commit": "9914a6d9649d5fb4916c08305c2444e5d4e5afad",
+  "model": "gpt-6-luna",
+  "context_budget_bytes": 24000,
+  "owned_paths": [
+    "crates/kairo-ecs-des/src/preemption.rs",
+    "crates/kairo-ecs-des/src/flow/q52_bench.rs",
+    ".artifacts/q52-ordered-selector"
+  ],
+  "readonly_context": [
+    "AGENTS.md",
+    "conductor/design/queue/q5.2-ordered-selector-context-20261004.md",
+    "conductor/design/queue/q5.2-ordered-selector-20261004.json"
+  ],
+  "source_sha256": {
+    "crates/kairo-ecs-des/src/preemption.rs": "e2526578ec47f1ecedabc7bab8d02110ba16ea647adef375558b27a983fe9ff8",
+    "crates/kairo-ecs-des/src/flow/q52_bench.rs": "f8edd81727710e09283d347df86d6a30956bd78a23df36170ab67e1ef0471e5a"
+  },
+  "context_sha256": "a6c64e251d2a65689abff06c3c5b33f5e8bfe5ac3ac9119c0d84a737f8d74df5",
+  "scope": "Pure private ordered replacement selector plus explicit current sorting reference/candidate kernel measurements. No Flow caller integration, ECS cache, public API, dependency, canonical fixture or threshold changes. New helper cfg(test) until separately reviewed caller integration.",
+  "interface": "#[cfg(test)] pub(crate) fn select_ordered_replacement<Id:Copy+Ord,I:IntoIterator<Item=WaitingCandidate<Id>>>(now:SimTime,ordered_waiters:I,holders:&[HolderCandidate<Id>])->Option<(Id,Id)>",
+  "algorithm": [
+    "Find globally worst eligible holder once: timed,preemptible,remaining>0,Some(completion)>now; max tuple(priority_level,original_admission_sequence,id). If none, return before constructing/consuming waiter iterator.",
+    "Input iterator is already sorted by (priority_level,original_admission_sequence,id). Iterate lazily; if waiter priority >= worst priority returnNone (remaining sorted priorities cannot preempt). Otherwise skip can_preempt false, return first can_preempt true with worst holder ID. No waiter Vec/clone/sort. Worstcase O(H+W) time, O(1) extra memory. Do not claim all mixed-mode workloads are constant cost.",
+    "Proof: for any incoming priority, either global worst is not strictly worse (no holder eligible for that incoming), or it is the same maximum selected by existing select_victim. Existing sorted first-admissible waiter rule follows unchanged. Retain old sorting selector as independent reference for tests/historical measurements."
+  ],
+  "tests": [
+    "Compare new sorted-iterator output with existing original sorting selector over deterministic grids including varied/tied/extreme priorities, different admissions/IDs, holder input permutations, incoming can_preempt false/true, zero remaining, due/equal/missing completion, untimed and nonpreemptible holders.",
+    "Lazy iterator probe/panic verifies no consumption when no eligible holders; priority cutoff stops after first equal/worse waiter; first eligible incoming tie tuple wins. Include no-waiters and all-nonpreempting sorted waiters.",
+    "No unstable-ID Ord/Eq or fabricated complexity oracle; counters are untimed independent iterator probes."
+  ],
+  "benchmark_steps": [
+    "Append ordered helper rows for W10/1000/100000, H1/10/100 and five repeats. Modes matched, equal-priority no match, ineligible holders, all-nonpreempting waiters with eligible worse holders. Pre-sort fixture outside timer, sorted-input production contract explicit.",
+    "Timed batches include loop costs and report exact calls, elapsed ns, ns/call, verified expected pair. An untimed iterator probe records actually yielded waiter count; production timing has no counting instrumentation. Constants MAX_CALLS=1000000, MAX_CALIBRATION_ATTEMPTS=5, MIN_BATCH_NS=1000000. Initial calls = clamp(1000000 / max(1,H+yielded_waiters),1,MAX_CALLS). Run at most five calibration batches, doubling calls with saturation at MAX_CALLS; stop at MIN_BATCH_NS, cap, or no increase. Retain each attempt, calls and elapsed. Unresolved sub-millisecond batches are exploratory, with no precision claim.",
+    "Keep existing sorting selector rows labelled as the current production sorting reference because Flow still calls it. Label new candidate rows ordered_selector_kernel_not_flow_integrated. Compare only matched shapes/modes. Defer historical_sorting_reference relabelling until a separately reviewed Flow caller switch. Metadata states measurements exclude fixture creation/sorting/holder construction; no end-to-end speedup claim.",
+    "Do not modify production_select_victim semantics in this leaf; final caller integration must reconcile remaining production/historical benchmark labels."
+  ],
+  "commands": [
+    "rustup run 1.99.0 cargo test -p kairo-ecs-des --locked --target-dir .artifacts/q52-ordered-selector/target",
+    "rustup run 1.99.0 cargo test -p kairo-ecs-des --release --locked --target-dir .artifacts/q52-ordered-selector/target",
+    "rustup run 1.99.0 cargo clippy -p kairo-ecs-des --all-targets --locked --target-dir .artifacts/q52-ordered-selector/target -- -D warnings",
+    "rustup run 1.99.0 cargo fmt --all -- --check",
+    "Q52_QUEUE_SIZE=10 rustup run 1.99.0 cargo test -p kairo-ecs-des --lib --release --locked --target-dir .artifacts/q52-ordered-selector/target benchmark_q52_measurements -- --ignored --nocapture --test-threads=1",
+    "Q52_QUEUE_SIZE=1000 rustup run 1.99.0 cargo test -p kairo-ecs-des --lib --release --locked --target-dir .artifacts/q52-ordered-selector/target benchmark_q52_measurements -- --ignored --nocapture --test-threads=1",
+    "Q52_QUEUE_SIZE=100000 rustup run 1.99.0 cargo test -p kairo-ecs-des --lib --release --locked --target-dir .artifacts/q52-ordered-selector/target benchmark_q52_measurements -- --ignored --nocapture --test-threads=1",
+    "git diff --check"
+  ],
+  "harness": "Private qualified helper/safe adapter; readonly packet/excerpts as claim inputs, hash-check sources beforewriting; no editable source frozen as immutable input. Exact boundedcontext check before allocation. One commit, separate successful scopecheck beforecommit, immediate release. Preserve all actual attempt logs, commit/toolchain/cwd/exit/input/source/output hashes. No tokens printed. No performance/Flow/Q5.2 acceptance claim.",
+  "review_corrections": [
+    "Numeric calibration caps and finite attempts",
+    "Current production reference labels retained until caller integration",
+    "Explicit measurement commands for all three queue sizes"
+  ]
+}

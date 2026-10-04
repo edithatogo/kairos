@@ -1,5 +1,5 @@
 //! Experimental, single-world Flow facade. No portable checkpoint promise.
-use crate::preemption::{select_replacement, HolderCandidate, WaitingCandidate};
+use crate::preemption::{select_ordered_replacement, HolderCandidate, WaitingCandidate};
 use kairo_ecs_core::{ScheduledEventPreview, Scheduler, SchedulerStats};
 use kairo_ecs_state::{ComponentRegistry, World};
 use kairo_ecs_types::{
@@ -8,6 +8,17 @@ use kairo_ecs_types::{
 use std::any::{Any, TypeId};
 use std::collections::{BTreeMap, BTreeSet};
 use std::num::{NonZeroU64, NonZeroUsize};
+
+mod record_delta;
+use record_delta::RecordDelta;
+mod queue_delta;
+use queue_delta::{QueueChanges, QueueDelta};
+mod deadline_index;
+use deadline_index::{DeadlineKey, OwnedDeadlineChanges, WaitingDeadlineIndex};
+mod preempting_index;
+use preempting_index::{OwnedPreemptingChanges, PreemptingWaiters};
+#[cfg(test)]
+mod q52_preempting_index_tests;
 
 /// Generational resource identity.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -159,6 +170,51 @@ impl<K: Ord> Default for ClaimQueue<K> {
         }
     }
 }
+
+fn waiting_key_for(
+    request: RequestId,
+    value: &ResourceRequest,
+) -> Result<Option<PriorityKey>, FlowError> {
+    match value.state {
+        RequestState::Queued | RequestState::Suspended => Ok(Some(PriorityKey {
+            level: value.priority_level,
+            enqueue_sequence: value.admission_sequence.ok_or(FlowError::InvalidState)?,
+            request,
+        })),
+        RequestState::Pending | RequestState::Active => Ok(None),
+        _ => Err(FlowError::InvalidState),
+    }
+}
+
+trait WaitingQueue {
+    fn remove_waiting_key(&mut self, key: &PriorityKey) -> bool;
+}
+
+impl WaitingQueue for ClaimQueue {
+    fn remove_waiting_key(&mut self, key: &PriorityKey) -> bool {
+        self.requests.remove(key)
+    }
+}
+
+impl WaitingQueue for QueueDelta<'_, PriorityKey> {
+    fn remove_waiting_key(&mut self, key: &PriorityKey) -> bool {
+        self.remove(key)
+    }
+}
+
+fn remove_waiting_request<Q: WaitingQueue>(
+    queue: &mut Q,
+    request: RequestId,
+    value: &ResourceRequest,
+) -> Result<(), FlowError> {
+    if let Some(key) = waiting_key_for(request, value)? {
+        if !queue.remove_waiting_key(&key) {
+            return Err(FlowError::InvalidState);
+        }
+    }
+    Ok(())
+}
+
 /// Opaque work identity; owned context is live in-process state only.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct WorkId(EntityId);
@@ -829,13 +885,199 @@ impl PreparedDelivery {
     }
 }
 #[derive(Clone)]
-struct ResourceStage {
+struct ResourceStage<'a> {
     capacity: ResourceCapacity,
-    queue: ClaimQueue,
+    queue: QueueDelta<'a, PriorityKey>,
+    deadline: QueueDelta<'a, DeadlineKey>,
+    deadline_expected_len: usize,
+    preempting: QueueDelta<'a, PriorityKey>,
+    preempting_expected_len: usize,
     active: ActiveAllocations,
 }
+struct OwnedResourceStage {
+    capacity: ResourceCapacity,
+    queue: QueueChanges<PriorityKey>,
+    deadline: OwnedDeadlineChanges,
+    preempting: OwnedPreemptingChanges,
+    active: ActiveAllocations,
+}
+impl ResourceStage<'_> {
+    fn insert_deadline(&mut self, key: DeadlineKey) -> Result<(), FlowError> {
+        if !self.deadline.insert(key) {
+            return Err(FlowError::InvalidState);
+        }
+        self.deadline_expected_len = self
+            .deadline_expected_len
+            .checked_add(1)
+            .ok_or(FlowError::CounterOverflow)?;
+        if self.deadline.len() != self.deadline_expected_len
+            || self.deadline_expected_len > self.queue.len()
+        {
+            return Err(FlowError::InvalidState);
+        }
+        Ok(())
+    }
+
+    fn remove_deadline(&mut self, key: &DeadlineKey) -> Result<(), FlowError> {
+        if !self.deadline.remove(key) {
+            return Err(FlowError::InvalidState);
+        }
+        self.deadline_expected_len = self
+            .deadline_expected_len
+            .checked_sub(1)
+            .ok_or(FlowError::InvalidState)?;
+        if self.deadline.len() != self.deadline_expected_len {
+            return Err(FlowError::InvalidState);
+        }
+        Ok(())
+    }
+
+    fn insert_preempting(&mut self, key: PriorityKey) -> Result<(), FlowError> {
+        if !self.preempting.insert(key) {
+            return Err(FlowError::InvalidState);
+        }
+        self.preempting_expected_len = self
+            .preempting_expected_len
+            .checked_add(1)
+            .ok_or(FlowError::CounterOverflow)?;
+        if self.preempting.len() != self.preempting_expected_len
+            || self.preempting_expected_len > self.queue.len()
+        {
+            return Err(FlowError::InvalidState);
+        }
+        Ok(())
+    }
+
+    fn remove_preempting(&mut self, key: &PriorityKey) -> Result<(), FlowError> {
+        if !self.preempting.remove(key) {
+            return Err(FlowError::InvalidState);
+        }
+        self.preempting_expected_len = self
+            .preempting_expected_len
+            .checked_sub(1)
+            .ok_or(FlowError::InvalidState)?;
+        if self.preempting.len() != self.preempting_expected_len {
+            return Err(FlowError::InvalidState);
+        }
+        Ok(())
+    }
+}
+fn remove_waiting_deadline(
+    resource: &mut ResourceStage<'_>,
+    id: RequestId,
+    request: &ResourceRequest,
+) -> Result<(), FlowError> {
+    match request.state {
+        RequestState::Queued => {
+            if let Some(deadline) = request.deadline {
+                let key = waiting_key_for(id, request)?.ok_or(FlowError::InvalidState)?;
+                if !resource.queue.contains(&key) {
+                    return Err(FlowError::InvalidState);
+                }
+                resource.remove_deadline(&(deadline, key))?;
+            }
+        }
+        RequestState::Active | RequestState::Suspended if request.deadline.is_some() => {
+            return Err(FlowError::InvalidState);
+        }
+        RequestState::Pending | RequestState::Active | RequestState::Suspended => {
+            if let (Some(deadline), Some(sequence)) = (request.deadline, request.admission_sequence)
+            {
+                let key = PriorityKey {
+                    level: request.priority_level,
+                    enqueue_sequence: sequence,
+                    request: id,
+                };
+                if resource.deadline.contains(&(deadline, key)) {
+                    return Err(FlowError::InvalidState);
+                }
+            }
+        }
+        _ => {
+            if let (Some(deadline), Some(sequence)) = (request.deadline, request.admission_sequence)
+            {
+                let key = PriorityKey {
+                    level: request.priority_level,
+                    enqueue_sequence: sequence,
+                    request: id,
+                };
+                if resource.deadline.contains(&(deadline, key)) {
+                    return Err(FlowError::InvalidState);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn remove_waiting_preempting(
+    resource: &mut ResourceStage<'_>,
+    id: RequestId,
+    request: &ResourceRequest,
+) -> Result<(), FlowError> {
+    match request.state {
+        RequestState::Queued | RequestState::Suspended => {
+            let key = waiting_key_for(id, request)?.ok_or(FlowError::InvalidState)?;
+            let cached = resource.preempting.contains(&key);
+            if request.can_preempt {
+                if !cached || !resource.queue.contains(&key) {
+                    return Err(FlowError::InvalidState);
+                }
+                resource.remove_preempting(&key)?;
+            } else if cached {
+                return Err(FlowError::InvalidState);
+            }
+        }
+        _ => {
+            if let Some(sequence) = request.admission_sequence {
+                let key = PriorityKey {
+                    level: request.priority_level,
+                    enqueue_sequence: sequence,
+                    request: id,
+                };
+                if resource.preempting.contains(&key) {
+                    return Err(FlowError::InvalidState);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn first_preempting_waiter(
+    resource_id: ResourceId,
+    resource: &ResourceStage<'_>,
+    requests: &RecordDelta<'_, RequestId, ResourceRequest>,
+) -> Result<Option<WaitingCandidate<RequestId>>, FlowError> {
+    if resource.preempting_expected_len != resource.preempting.len()
+        || resource.preempting_expected_len > resource.queue.len()
+    {
+        return Err(FlowError::InvalidState);
+    }
+    let Some(key) = resource.preempting.iter().next().copied() else {
+        return Ok(None);
+    };
+    let request = requests.get(&key.request).ok_or(FlowError::InvalidState)?;
+    if request.resource != resource_id
+        || !matches!(
+            request.state,
+            RequestState::Queued | RequestState::Suspended
+        )
+        || !request.can_preempt
+        || waiting_key_for(key.request, request)? != Some(key)
+        || !resource.queue.contains(&key)
+    {
+        return Err(FlowError::InvalidState);
+    }
+    Ok(Some(WaitingCandidate {
+        id: key.request,
+        priority_level: key.level,
+        original_admission_sequence: key.enqueue_sequence,
+        can_preempt: true,
+    }))
+}
 struct DispatchPlan {
-    resources: BTreeMap<ResourceId, ResourceStage>,
+    resources: BTreeMap<ResourceId, OwnedResourceStage>,
     requests: BTreeMap<RequestId, ResourceRequest>,
     progress: BTreeMap<WorkId, WorkProgress>,
     tokens: Vec<(Command, SimTime, Option<Notification>)>,
@@ -1051,6 +1293,8 @@ impl FlowRuntime {
         let _ = self
             .registry
             .insert(id.0, ClaimQueue::<PriorityKey>::default());
+        let _ = self.registry.insert(id.0, WaitingDeadlineIndex::default());
+        let _ = self.registry.insert(id.0, PreemptingWaiters::default());
         let _ = self.registry.insert(id.0, ActiveAllocations::default());
         self.resources.insert(id);
         Ok(id)
@@ -2461,49 +2705,10 @@ impl FlowRuntime {
                 return Ok(None);
             }
         }
-        // Stage all affected ECS values. No writes until every derived transition
-        // and counter/despawn reservation succeeds. Q5 measures this baseline cost.
-        let mut resources: BTreeMap<ResourceId, ResourceStage> = self
-            .resources
-            .iter()
-            .map(|id| {
-                (
-                    *id,
-                    ResourceStage {
-                        capacity: self.registry.get::<ResourceCapacity>(id.0).unwrap().clone(),
-                        queue: self.registry.get::<ClaimQueue>(id.0).unwrap().clone(),
-                        active: self
-                            .registry
-                            .get::<ActiveAllocations>(id.0)
-                            .unwrap()
-                            .clone(),
-                    },
-                )
-            })
-            .collect();
-        let mut requests: BTreeMap<RequestId, ResourceRequest> = self
-            .requests
-            .iter()
-            .map(|id| {
-                (
-                    *id,
-                    self.registry.get::<ResourceRequest>(id.0).unwrap().clone(),
-                )
-            })
-            .collect();
-        let mut progress: BTreeMap<WorkId, WorkProgress> = self
-            .works
-            .keys()
-            .map(|w| {
-                (
-                    *w,
-                    self.registry
-                        .get::<WorkProgress>(w.0)
-                        .expect("owned progress")
-                        .clone(),
-                )
-            })
-            .collect();
+        let request_lookup = |id: &RequestId| self.registry.get::<ResourceRequest>(id.0);
+        let mut requests = RecordDelta::new(&request_lookup);
+        let progress_lookup = |work: &WorkId| self.registry.get::<WorkProgress>(work.0);
+        let mut progress = RecordDelta::new(&progress_lookup);
         let mut tokens: Vec<(Command, SimTime, Option<Notification>)> = Vec::new();
         let mut factories: Vec<WorkId> = Vec::new();
         let mut affected = BTreeSet::new();
@@ -2527,30 +2732,152 @@ impl FlowRuntime {
                 .unwrap_or_default(),
             Command::Capacity(id, _) | Command::Remove(id) => BTreeSet::from([id]),
             Command::Notify | Command::Domain(..) => BTreeSet::new(),
-            Command::Despawn(owner) => requests
-                .values()
-                .filter(|r| r.owner == owner && !terminal(r.state))
-                .map(|r| r.resource)
+            Command::Despawn(owner) => self
+                .requests
+                .iter()
+                .filter_map(|id| {
+                    requests
+                        .get(id)
+                        .filter(|r| r.owner == owner && !terminal(r.state))
+                        .map(|r| r.resource)
+                })
                 .collect(),
         };
+        // Only causally targeted resources are staged. Untouched queues remain
+        // borrowed from the authoritative registry through QueueDelta.
+        let mut resources: BTreeMap<ResourceId, ResourceStage<'_>> = BTreeMap::new();
+        for id in &boundary_targets {
+            if !self.resources.contains(id) {
+                continue;
+            }
+            let capacity = self
+                .registry
+                .get::<ResourceCapacity>(id.0)
+                .ok_or(FlowError::InvalidState)?
+                .clone();
+            let queue = self
+                .registry
+                .get::<ClaimQueue>(id.0)
+                .ok_or(FlowError::InvalidState)?;
+            let deadline = self
+                .registry
+                .get::<WaitingDeadlineIndex>(id.0)
+                .ok_or(FlowError::InvalidState)?;
+            if deadline.expected_len != deadline.entries.len()
+                || deadline.expected_len > queue.requests.len()
+            {
+                return Err(FlowError::InvalidState);
+            }
+            let preempting = self
+                .registry
+                .get::<PreemptingWaiters>(id.0)
+                .ok_or(FlowError::InvalidState)?;
+            if preempting.expected_len != preempting.keys.len()
+                || preempting.expected_len > queue.requests.len()
+            {
+                return Err(FlowError::InvalidState);
+            }
+            let active = self
+                .registry
+                .get::<ActiveAllocations>(id.0)
+                .ok_or(FlowError::InvalidState)?
+                .clone();
+            resources.insert(
+                *id,
+                ResourceStage {
+                    capacity,
+                    queue: QueueDelta::new(&queue.requests),
+                    deadline: QueueDelta::new(&deadline.entries),
+                    deadline_expected_len: deadline.expected_len,
+                    preempting: QueueDelta::new(&preempting.keys),
+                    preempting_expected_len: preempting.expected_len,
+                    active,
+                },
+            );
+        }
+        if let Command::Deadline(id) = command {
+            if let Some(request) = requests.get(&id) {
+                match request.state {
+                    RequestState::Queued => {
+                        if let Some(deadline) = request.deadline {
+                            let key =
+                                waiting_key_for(id, request)?.ok_or(FlowError::InvalidState)?;
+                            if let Some(resource) = resources.get(&request.resource) {
+                                let indexed = (deadline, key);
+                                if !resource.deadline.contains(&indexed)
+                                    || !resource.queue.contains(&key)
+                                {
+                                    return Err(FlowError::InvalidState);
+                                }
+                            }
+                        }
+                    }
+                    RequestState::Active | RequestState::Suspended
+                        if request.deadline.is_some() =>
+                    {
+                        return Err(FlowError::InvalidState);
+                    }
+                    RequestState::Pending
+                    | RequestState::Active
+                    | RequestState::Suspended
+                    | RequestState::Released
+                    | RequestState::Cancelled
+                    | RequestState::TimedOut
+                    | RequestState::Completed
+                    | RequestState::Aborted => {
+                        if let (Some(deadline), Some(sequence)) =
+                            (request.deadline, request.admission_sequence)
+                        {
+                            let key = PriorityKey {
+                                level: request.priority_level,
+                                enqueue_sequence: sequence,
+                                request: id,
+                            };
+                            if resources.get(&request.resource).is_some_and(|resource| {
+                                resource.deadline.contains(&(deadline, key))
+                            }) {
+                                return Err(FlowError::InvalidState);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if let Command::Completion(id, ..) = command {
+            if let Some(request) = requests.get(&id) {
+                if let Some(resource) = resources.get_mut(&request.resource) {
+                    remove_waiting_deadline(resource, id, request)?;
+                    remove_waiting_preempting(resource, id, request)?;
+                }
+            }
+        }
         // Deadline is a waiting boundary independent of token insertion order.
         for (resource_id, resource) in &mut resources {
             if !boundary_targets.contains(resource_id) {
                 continue;
             }
-            let expired: Vec<_> = resource
-                .queue
-                .requests
+            let mut expired: Vec<_> = resource
+                .deadline
                 .iter()
-                .filter(|key| {
-                    requests
-                        .get(&key.request)
-                        .is_some_and(|r| r.deadline.is_some_and(|at| at <= outcome.at))
-                })
+                .take_while(|(deadline, _)| *deadline <= outcome.at)
                 .copied()
                 .collect();
-            for key in expired {
-                resource.queue.requests.remove(&key);
+            expired.sort_by_key(|(_, key)| *key);
+            for (deadline, key) in expired {
+                let request = requests.get(&key.request).ok_or(FlowError::InvalidState)?;
+                if request.resource != *resource_id
+                    || request.state != RequestState::Queued
+                    || request.deadline != Some(deadline)
+                    || waiting_key_for(key.request, request)? != Some(key)
+                    || !resource.queue.contains(&key)
+                {
+                    return Err(FlowError::InvalidState);
+                }
+                remove_waiting_preempting(resource, key.request, request)?;
+                if !resource.queue.remove(&key) {
+                    return Err(FlowError::InvalidState);
+                }
+                resource.remove_deadline(&(deadline, key))?;
                 let r = requests
                     .get_mut(&key.request)
                     .ok_or(FlowError::InvalidState)?;
@@ -2598,7 +2925,7 @@ impl FlowRuntime {
                 for n in self.notification(
                     work,
                     LifecycleTransition::Completed,
-                    &progress[&work],
+                    progress.get(&work).expect("completed work progress"),
                     outcome,
                 ) {
                     tokens.push((Command::Notify, outcome.at, Some(n)));
@@ -2641,11 +2968,20 @@ impl FlowRuntime {
                         return Ok(());
                     }
                     request.state = RequestState::Queued;
-                    resource.queue.requests.insert(PriorityKey {
+                    let key = PriorityKey {
                         level: request.priority_level,
                         enqueue_sequence: request.admission_sequence.unwrap(),
                         request: id,
-                    });
+                    };
+                    if !resource.queue.insert(key) {
+                        return Err(FlowError::InvalidState);
+                    }
+                    if let Some(deadline) = request.deadline {
+                        resource.insert_deadline((deadline, key))?;
+                    }
+                    if request.can_preempt {
+                        resource.insert_preempting(key)?;
+                    }
                     affected.insert(request.resource);
                     record(
                         outcome,
@@ -2666,6 +3002,8 @@ impl FlowRuntime {
                     let resource = resources
                         .get_mut(&request.resource)
                         .ok_or(FlowError::InvalidResource)?;
+                    remove_waiting_deadline(resource, lease.request, request)?;
+                    remove_waiting_preempting(resource, lease.request, request)?;
                     if request.timed {
                         let p = progress
                             .get_mut(&request.work.ok_or(FlowError::InvalidState)?)
@@ -2701,31 +3039,54 @@ impl FlowRuntime {
                     if !resources.contains_key(&id) {
                         return Err(FlowError::InvalidResource);
                     }
-                    if requests.values().any(|r| {
-                        r.resource == id
-                            && matches!(
-                                r.state,
-                                RequestState::Pending
-                                    | RequestState::Queued
-                                    | RequestState::Active
-                                    | RequestState::Suspended
-                            )
+                    if self.requests.iter().any(|request_id| {
+                        requests.get(request_id).is_some_and(|r| {
+                            r.resource == id
+                                && matches!(
+                                    r.state,
+                                    RequestState::Pending
+                                        | RequestState::Queued
+                                        | RequestState::Active
+                                        | RequestState::Suspended
+                                )
+                        })
                     }) {
                         return Err(FlowError::ResourceInUse);
+                    }
+                    let staged = resources.get(&id).ok_or(FlowError::InvalidState)?;
+                    if staged.deadline_expected_len != staged.deadline.len()
+                        || staged.deadline_expected_len > staged.queue.len()
+                        || staged.preempting_expected_len != staged.preempting.len()
+                        || staged.preempting_expected_len > staged.queue.len()
+                        || staged.queue.len() != 0
+                        || staged.deadline.len() != 0
+                        || staged.preempting.len() != 0
+                    {
+                        return Err(FlowError::InvalidState);
                     }
                     resources.remove(&id);
                     remove_resource = Some(id);
                 }
                 Command::Despawn(owner) => {
                     self.actor(owner)?;
-                    for (id, request) in &mut requests {
-                        if request.owner != owner || terminal(request.state) {
-                            continue;
-                        }
+                    let despawn_requests: Vec<_> = self
+                        .requests
+                        .iter()
+                        .filter(|id| {
+                            requests.get(id).is_some_and(|request| {
+                                request.owner == owner && !terminal(request.state)
+                            })
+                        })
+                        .copied()
+                        .collect();
+                    for id in despawn_requests {
+                        let request = requests.get_mut(&id).ok_or(FlowError::InvalidState)?;
                         let resource = resources
                             .get_mut(&request.resource)
                             .ok_or(FlowError::InvalidResource)?;
-                        resource.queue.requests.retain(|q| q.request != *id);
+                        remove_waiting_deadline(resource, id, request)?;
+                        remove_waiting_preempting(resource, id, request)?;
+                        remove_waiting_request(&mut resource.queue, id, request)?;
                         let causal_lease = request.lease;
                         if let Some(lease) = causal_lease {
                             resource.active.leases.remove(&lease);
@@ -2740,7 +3101,7 @@ impl FlowRuntime {
                         affected.insert(request.resource);
                         record(
                             outcome,
-                            *id,
+                            id,
                             request,
                             resource,
                             snapshot_progress(request, &progress),
@@ -2750,7 +3111,7 @@ impl FlowRuntime {
                             for n in self.notification(
                                 work,
                                 LifecycleTransition::Cancelled,
-                                &progress[&work],
+                                progress.get(&work).expect("cancelled work progress"),
                                 outcome,
                             ) {
                                 tokens.push((Command::Notify, outcome.at, Some(n)));
@@ -2774,7 +3135,9 @@ impl FlowRuntime {
                     let resource = resources
                         .get_mut(&request.resource)
                         .ok_or(FlowError::InvalidResource)?;
-                    resource.queue.requests.retain(|k| k.request != id);
+                    remove_waiting_deadline(resource, id, request)?;
+                    remove_waiting_preempting(resource, id, request)?;
+                    remove_waiting_request(&mut resource.queue, id, request)?;
                     let causal_lease = request.lease;
                     if let Some(lease) = causal_lease {
                         resource.active.leases.remove(&lease);
@@ -2800,7 +3163,7 @@ impl FlowRuntime {
                         for n in self.notification(
                             work,
                             LifecycleTransition::Cancelled,
-                            &progress[&work],
+                            progress.get(&work).expect("cancelled work progress"),
                             outcome,
                         ) {
                             tokens.push((Command::Notify, outcome.at, Some(n)));
@@ -2815,19 +3178,30 @@ impl FlowRuntime {
                     let resource = resources
                         .get_mut(&request.resource)
                         .ok_or(FlowError::InvalidResource)?;
+                    remove_waiting_deadline(resource, id, request)?;
+                    remove_waiting_preempting(resource, id, request)?;
+                    let old_waiting_key = waiting_key_for(id, request)?;
+                    if let Some(key) = old_waiting_key {
+                        if !resource.queue.remove(&key) {
+                            return Err(FlowError::InvalidState);
+                        }
+                    }
                     request.priority_level = level;
-                    if matches!(
-                        request.state,
-                        RequestState::Queued | RequestState::Suspended
-                    ) {
-                        resource.queue.requests.retain(|k| k.request != id);
-                        resource.queue.requests.insert(PriorityKey {
+                    if let Some(old_key) = old_waiting_key {
+                        let new_key = PriorityKey {
                             level,
-                            enqueue_sequence: request
-                                .admission_sequence
-                                .ok_or(FlowError::InvalidState)?,
+                            enqueue_sequence: old_key.enqueue_sequence,
                             request: id,
-                        });
+                        };
+                        if !resource.queue.insert(new_key) {
+                            return Err(FlowError::InvalidState);
+                        }
+                        if let Some(deadline) = request.deadline {
+                            resource.insert_deadline((deadline, new_key))?;
+                        }
+                        if request.can_preempt {
+                            resource.insert_preempting(new_key)?;
+                        }
                     }
                     if let Some(lease) = request.lease {
                         resource
@@ -2864,25 +3238,17 @@ impl FlowRuntime {
             let resource = resources.get_mut(&id).ok_or(FlowError::InvalidState)?;
             loop {
                 let key = if resource.active.leases.len() < resource.capacity.total as usize {
-                    resource.queue.requests.iter().next().copied()
+                    resource.queue.iter().next().copied()
                 } else {
-                    let waiters: Vec<_> = resource
-                        .queue
-                        .requests
-                        .iter()
-                        .map(|key| WaitingCandidate {
-                            id: key.request,
-                            priority_level: key.level,
-                            original_admission_sequence: key.enqueue_sequence,
-                            can_preempt: requests[&key.request].can_preempt,
-                        })
-                        .collect();
+                    let Some(waiter) = first_preempting_waiter(id, resource, &requests)? else {
+                        break;
+                    };
                     let holders: Vec<_> = resource
                         .active
                         .leases
                         .values()
                         .map(|a| {
-                            let request = &requests[&a.request];
+                            let request = requests.get(&a.request).expect("active request exists");
                             HolderCandidate {
                                 id: a.request,
                                 priority_level: a.priority_level,
@@ -2900,12 +3266,14 @@ impl FlowRuntime {
                         })
                         .collect();
                     let Some((incoming, victim)) =
-                        select_replacement(outcome.at, &waiters, &holders)
+                        select_ordered_replacement(outcome.at, std::iter::once(waiter), &holders)
                     else {
                         break;
                     };
                     let victim_request =
                         requests.get_mut(&victim).ok_or(FlowError::InvalidState)?;
+                    remove_waiting_deadline(resource, victim, victim_request)?;
+                    remove_waiting_preempting(resource, victim, victim_request)?;
                     let work = victim_request.work.ok_or(FlowError::InvalidState)?;
                     let p = progress.get_mut(&work).ok_or(FlowError::InvalidState)?;
                     p.checkpoint(outcome.at)?;
@@ -2963,34 +3331,51 @@ impl FlowRuntime {
                             p.useful_elapsed = SimDuration::ZERO;
                             p.remaining = p.original_duration;
                             p.restart_pending = true;
-                            resource.queue.requests.insert(PriorityKey {
+                            let key = PriorityKey {
                                 level: victim_request.priority_level,
                                 enqueue_sequence: victim_request
                                     .admission_sequence
                                     .ok_or(FlowError::InvalidState)?,
                                 request: victim,
-                            });
+                            };
+                            if !resource.queue.insert(key) {
+                                return Err(FlowError::InvalidState);
+                            }
+                            if victim_request.can_preempt {
+                                resource.insert_preempting(key)?;
+                            }
                         }
                         PreemptionStrategy::Suspend => {
-                            resource.queue.requests.insert(PriorityKey {
+                            let key = PriorityKey {
                                 level: victim_request.priority_level,
                                 enqueue_sequence: victim_request
                                     .admission_sequence
                                     .ok_or(FlowError::InvalidState)?,
                                 request: victim,
-                            });
+                            };
+                            if !resource.queue.insert(key) {
+                                return Err(FlowError::InvalidState);
+                            }
+                            if victim_request.can_preempt {
+                                resource.insert_preempting(key)?;
+                            }
                         }
                     }
-                    resource
-                        .queue
-                        .requests
-                        .iter()
-                        .find(|key| key.request == incoming)
-                        .copied()
+                    let incoming_request =
+                        requests.get(&incoming).ok_or(FlowError::InvalidState)?;
+                    Some(
+                        waiting_key_for(incoming, incoming_request)?
+                            .ok_or(FlowError::InvalidState)?,
+                    )
                 };
                 let Some(key) = key else { break };
-                resource.queue.requests.remove(&key);
                 let request_id = key.request;
+                let request = requests.get(&request_id).ok_or(FlowError::InvalidState)?;
+                remove_waiting_deadline(resource, request_id, request)?;
+                remove_waiting_preempting(resource, request_id, request)?;
+                if !resource.queue.remove(&key) {
+                    return Err(FlowError::InvalidState);
+                }
                 let request = requests
                     .get_mut(&request_id)
                     .ok_or(FlowError::InvalidState)?;
@@ -3075,7 +3460,12 @@ impl FlowRuntime {
                 )?;
                 if request.timed {
                     let work = request.work.ok_or(FlowError::InvalidState)?;
-                    for n in self.notification(work, transition, &progress[&work], outcome) {
+                    for n in self.notification(
+                        work,
+                        transition,
+                        progress.get(&work).expect("active work progress"),
+                        outcome,
+                    ) {
                         tokens.push((Command::Notify, outcome.at, Some(n)));
                     }
                     if completion_at == Some(outcome.at) {
@@ -3090,7 +3480,7 @@ impl FlowRuntime {
                         for n in self.notification(
                             work,
                             LifecycleTransition::Completed,
-                            &progress[&work],
+                            progress.get(&work).expect("completed work progress"),
                             outcome,
                         ) {
                             tokens.push((Command::Notify, outcome.at, Some(n)));
@@ -3099,18 +3489,19 @@ impl FlowRuntime {
                 }
             }
         }
-        let removed_works: Vec<_> = self
-            .works
-            .iter()
-            .filter(|(id, _)| {
-                remove_actor.is_some_and(|owner| {
+        let removed_works: Vec<_> = if let Some(owner) = remove_actor {
+            self.works
+                .iter()
+                .filter(|(id, _)| {
                     self.registry
                         .get::<WorkSpec>(id.0)
                         .is_some_and(|spec| spec.owner == owner)
                 })
-            })
-            .map(|(id, cleanup)| (*id, *cleanup))
-            .collect();
+                .map(|(id, cleanup)| (*id, *cleanup))
+                .collect()
+        } else {
+            Vec::new()
+        };
         let work_despawns =
             u64::try_from(removed_works.len()).map_err(|_| FlowError::CounterOverflow)?;
         let despawns = u64::from(remove_resource.is_some())
@@ -3185,10 +3576,75 @@ impl FlowRuntime {
                 return Err(FlowError::InvalidState);
             }
         }
+        let mut owned_resources = BTreeMap::new();
+        for (id, resource) in resources {
+            let queue = resource.queue.export();
+            let base = self
+                .registry
+                .get::<ClaimQueue>(id.0)
+                .ok_or(FlowError::InvalidState)?;
+            queue
+                .preflight(&base.requests)
+                .map_err(|_| FlowError::InvalidState)?;
+            if resource.deadline.len() != resource.deadline_expected_len
+                || resource.deadline_expected_len > resource.queue.len()
+            {
+                return Err(FlowError::InvalidState);
+            }
+            let deadline_changes = resource.deadline.export();
+            let deadline_base = self
+                .registry
+                .get::<WaitingDeadlineIndex>(id.0)
+                .ok_or(FlowError::InvalidState)?;
+            if deadline_base.expected_len != deadline_base.entries.len()
+                || deadline_base.expected_len > base.requests.len()
+            {
+                return Err(FlowError::InvalidState);
+            }
+            deadline_changes
+                .preflight(&deadline_base.entries)
+                .map_err(|_| FlowError::InvalidState)?;
+            if resource.preempting.len() != resource.preempting_expected_len
+                || resource.preempting_expected_len > resource.queue.len()
+            {
+                return Err(FlowError::InvalidState);
+            }
+            let preempting_changes = resource.preempting.export();
+            let preempting_base = self
+                .registry
+                .get::<PreemptingWaiters>(id.0)
+                .ok_or(FlowError::InvalidState)?;
+            if preempting_base.expected_len != preempting_base.keys.len()
+                || preempting_base.expected_len > base.requests.len()
+            {
+                return Err(FlowError::InvalidState);
+            }
+            preempting_changes
+                .preflight(&preempting_base.keys)
+                .map_err(|_| FlowError::InvalidState)?;
+            owned_resources.insert(
+                id,
+                OwnedResourceStage {
+                    capacity: resource.capacity,
+                    queue,
+                    deadline: OwnedDeadlineChanges {
+                        old_expected_len: deadline_base.expected_len,
+                        new_expected_len: resource.deadline_expected_len,
+                        changes: deadline_changes,
+                    },
+                    preempting: OwnedPreemptingChanges {
+                        old_expected_len: preempting_base.expected_len,
+                        new_expected_len: resource.preempting_expected_len,
+                        changes: preempting_changes,
+                    },
+                    active: resource.active,
+                },
+            );
+        }
         Ok(Some(DispatchPlan {
-            resources,
-            requests,
-            progress,
+            resources: owned_resources,
+            requests: requests.into_writes(),
+            progress: progress.into_writes(),
             tokens,
             factories,
             removed_works,
@@ -3215,6 +3671,42 @@ impl FlowRuntime {
             admission,
             lease_revision,
         } = plan;
+        let queue_preflight_failures: Vec<_> = resources
+            .iter()
+            .filter_map(|(id, resource)| {
+                let Some(base) = self.registry.get::<ClaimQueue>(id.0) else {
+                    return Some(*id);
+                };
+                let Some(deadline) = self.registry.get::<WaitingDeadlineIndex>(id.0) else {
+                    return Some(*id);
+                };
+                let Some(preempting) = self.registry.get::<PreemptingWaiters>(id.0) else {
+                    return Some(*id);
+                };
+                let valid = resource.queue.preflight(&base.requests).is_ok()
+                    && deadline.expected_len == resource.deadline.old_expected_len
+                    && deadline.expected_len == deadline.entries.len()
+                    && deadline.expected_len <= base.requests.len()
+                    && resource
+                        .deadline
+                        .changes
+                        .preflight(&deadline.entries)
+                        .is_ok()
+                    && preempting.expected_len == resource.preempting.old_expected_len
+                    && preempting.expected_len == preempting.keys.len()
+                    && preempting.expected_len <= base.requests.len()
+                    && resource
+                        .preempting
+                        .changes
+                        .preflight(&preempting.keys)
+                        .is_ok();
+                (!valid).then_some(*id)
+            })
+            .collect();
+        assert!(
+            queue_preflight_failures.is_empty(),
+            "queue delta changed after plan preflight"
+        );
         let prepared: Vec<_> = factories
             .into_iter()
             .map(|w| {
@@ -3226,9 +3718,59 @@ impl FlowRuntime {
             .collect();
         // Commit after the complete plan validates.
         for (id, resource) in resources {
-            let _ = self.registry.insert(id.0, resource.capacity);
-            let _ = self.registry.insert(id.0, resource.queue);
-            let _ = self.registry.insert(id.0, resource.active);
+            let OwnedResourceStage {
+                capacity,
+                queue,
+                deadline,
+                preempting,
+                active,
+            } = resource;
+            let _ = self.registry.insert(id.0, capacity);
+            let queue_store = self
+                .registry
+                .store_mut::<ClaimQueue>()
+                .expect("preflighted queue component store");
+            let base_queue = queue_store
+                .get_mut(id.0)
+                .expect("preflighted queue component");
+            queue
+                .apply(&mut base_queue.requests)
+                .expect("queue changeset remains preflighted");
+            let deadline_store = self
+                .registry
+                .store_mut::<WaitingDeadlineIndex>()
+                .expect("preflighted deadline index component store");
+            let base_deadline = deadline_store
+                .get_mut(id.0)
+                .expect("preflighted deadline index component");
+            deadline
+                .changes
+                .apply(&mut base_deadline.entries)
+                .expect("deadline changeset remains preflighted");
+            base_deadline.expected_len = deadline.new_expected_len;
+            assert_eq!(
+                base_deadline.expected_len,
+                base_deadline.entries.len(),
+                "preflighted deadline count witness"
+            );
+            let preempting_store = self
+                .registry
+                .store_mut::<PreemptingWaiters>()
+                .expect("preflighted preempting index component store");
+            let base_preempting = preempting_store
+                .get_mut(id.0)
+                .expect("preflighted preempting index component");
+            preempting
+                .changes
+                .apply(&mut base_preempting.keys)
+                .expect("preempting changeset remains preflighted");
+            base_preempting.expected_len = preempting.new_expected_len;
+            assert_eq!(
+                base_preempting.expected_len,
+                base_preempting.keys.len(),
+                "preflighted preempting count witness"
+            );
+            let _ = self.registry.insert(id.0, active);
         }
         for (id, request) in requests {
             let _ = self.registry.insert(id.0, request);
@@ -3259,6 +3801,8 @@ impl FlowRuntime {
         if let Some(id) = remove_resource {
             self.registry.remove::<ResourceCapacity>(id.0);
             self.registry.remove::<ClaimQueue>(id.0);
+            self.registry.remove::<WaitingDeadlineIndex>(id.0);
+            self.registry.remove::<PreemptingWaiters>(id.0);
             self.registry.remove::<ActiveAllocations>(id.0);
             self.resources.remove(&id);
             self.world.despawn(id.0);
@@ -3303,7 +3847,7 @@ fn checked_ordinal(length: usize) -> Result<u32, FlowError> {
 
 fn snapshot_progress<'a>(
     request: &ResourceRequest,
-    progress: &'a BTreeMap<WorkId, WorkProgress>,
+    progress: &'a RecordDelta<'_, WorkId, WorkProgress>,
 ) -> Option<&'a WorkProgress> {
     request
         .timed
@@ -3315,7 +3859,7 @@ fn record(
     outcome: &mut FlowDispatch,
     id: RequestId,
     request: &ResourceRequest,
-    resource: &ResourceStage,
+    resource: &ResourceStage<'_>,
     progress: Option<&WorkProgress>,
     causal_lease: Option<LeaseId>,
 ) -> Result<(), FlowError> {
@@ -3340,7 +3884,7 @@ fn record(
 }
 fn capture_snapshot(
     request: &ResourceRequest,
-    resource: &ResourceStage,
+    resource: &ResourceStage<'_>,
     progress: Option<&WorkProgress>,
     at: SimTime,
     causal_lease: Option<LeaseId>,
@@ -3351,8 +3895,7 @@ fn capture_snapshot(
         work: request.work,
         priority_level: request.priority_level,
         capacity: resource.capacity.total,
-        queue_len: u32::try_from(resource.queue.requests.len())
-            .map_err(|_| FlowError::CounterOverflow)?,
+        queue_len: u32::try_from(resource.queue.len()).map_err(|_| FlowError::CounterOverflow)?,
         active_count: u32::try_from(resource.active.leases.len())
             .map_err(|_| FlowError::CounterOverflow)?,
         strategy: request.preemptible,
@@ -3384,7 +3927,7 @@ fn record_transition(
 }
 fn complete_timed(
     outcome: &mut FlowDispatch,
-    resource: &mut ResourceStage,
+    resource: &mut ResourceStage<'_>,
     id: RequestId,
     request: &mut ResourceRequest,
     progress: &mut WorkProgress,
@@ -3404,6 +3947,18 @@ fn complete_timed(
     request.lease = None;
     record(outcome, id, request, resource, Some(progress), Some(lease))
 }
+
+#[cfg(test)]
+mod q52_bench;
+
+#[cfg(test)]
+mod q52_key_removal_tests;
+
+#[cfg(test)]
+mod q52_record_staging_tests;
+
+#[cfg(test)]
+mod q52_queue_staging_tests;
 
 #[cfg(test)]
 mod tests {
@@ -3768,6 +4323,31 @@ mod tests {
                 .unwrap()
                 .can_preempt = true;
         }
+        let waiting_keys: Vec<_> = highs
+            .iter()
+            .map(|q| {
+                waiting_key_for(*q, &f.request(*q).unwrap())
+                    .unwrap()
+                    .unwrap()
+            })
+            .collect();
+        {
+            let index = f
+                .registry
+                .store_mut::<PreemptingWaiters>()
+                .unwrap()
+                .get_mut(resource.0)
+                .unwrap();
+            for key in waiting_keys {
+                assert!(index.keys.insert(key));
+            }
+            index.expected_len = index.keys.len();
+        }
+        let preempting_before = f
+            .registry
+            .get::<PreemptingWaiters>(resource.0)
+            .unwrap()
+            .clone();
         f.next_lease = u64::MAX - 1;
         let before = f.resource(resource).unwrap();
         let progress: Vec<_> = works
@@ -3782,6 +4362,10 @@ mod tests {
         assert_eq!(f.scheduler.peek_next(), head);
         assert_eq!(f.scheduler.stats(), stats);
         assert_eq!(f.resource(resource).unwrap(), before);
+        assert_eq!(
+            f.registry.get::<PreemptingWaiters>(resource.0),
+            Some(&preempting_before)
+        );
         for (w, p) in works.iter().zip(progress) {
             assert_eq!(f.registry.get::<WorkProgress>(w.0), Some(&p));
         }
@@ -4568,6 +5152,9 @@ mod same_tick_budget_private {
         }
     }
 }
+
+#[cfg(test)]
+mod q52_deadline_index_tests;
 
 #[cfg(test)]
 mod continuation_private {
