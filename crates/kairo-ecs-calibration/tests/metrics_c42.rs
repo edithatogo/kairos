@@ -49,7 +49,13 @@ fn input_values<'a>(input: &'a Value, key: &str) -> Vec<Option<&'a str>> {
         .as_array()
         .unwrap_or_else(|| panic!("input.{key} must be an array"))
         .iter()
-        .map(|v| v.as_str())
+        .map(|v| {
+            if v.is_null() {
+                None
+            } else {
+                Some(string(v, key))
+            }
+        })
         .collect()
 }
 
@@ -138,22 +144,22 @@ fn primary_dispositions(input: &Value, result: &metrics::MetricResult) -> Map<St
         .get("counts")
         .and_then(|counts| counts.get("primary_dispositions"))
     {
-        return object(dispositions, "counts.primary_dispositions").clone();
+        let mut primary = object(dispositions, "counts.primary_dispositions").clone();
+        primary
+            .entry("rejected_input")
+            .or_insert_with(|| json!("0"));
+        return primary;
     }
 
     let raw_reference = raw_count(input, "reference");
     let raw_candidate = raw_count(input, "candidate");
     let raw_total = raw_reference + raw_candidate;
     let rejected = matches!(&result.status, MetricStatus::Invalid);
-    let missing = if rejected {
-        0
-    } else {
-        input_values(input, "reference")
-            .iter()
-            .chain(input_values(input, "candidate").iter())
-            .filter(|value| value.is_none())
-            .count()
-    };
+    let missing = input_values(input, "reference")
+        .iter()
+        .chain(input_values(input, "candidate").iter())
+        .filter(|value| value.is_none())
+        .count();
     let observed = if rejected {
         0
     } else {
@@ -166,7 +172,10 @@ fn primary_dispositions(input: &Value, result: &metrics::MetricResult) -> Map<St
         ("infeasible", 0),
         ("missing", missing),
         ("observed", observed),
-        ("rejected_input", if rejected { raw_total } else { 0 }),
+        (
+            "rejected_input",
+            if rejected { raw_total - missing } else { 0 },
+        ),
     ] {
         counts.insert(key.to_owned(), json!(value.to_string()));
     }
@@ -191,8 +200,8 @@ fn diagnostic(input: &Value, result: &metrics::MetricResult) -> Value {
         diagnostic.insert(
             "attempted_support_counts".into(),
             json!({
-                "candidate": raw_count(input, "candidate").to_string(),
-                "reference": raw_count(input, "reference").to_string()
+                "candidate": input_values(input, "candidate").iter().filter(|v| v.is_some()).count().to_string(),
+                "reference": input_values(input, "reference").iter().filter(|v| v.is_some()).count().to_string()
             }),
         );
     }
@@ -436,6 +445,61 @@ fn default_actual_producer_executes_all_frozen_cases() {
     assert_eq!(report["cases"].as_array().unwrap().len(), 42);
     assert_eq!(report["schema_version"], CANDIDATE_SCHEMA);
     assert_eq!(report["fixture_sha256"], sha256(&bytes));
+    // This independent assertion reads the oracle; the producer above cannot.
+    // Keep all 42 numeric and metadata regressions active in default hosted CI.
+    for (actual, fixture) in report["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .zip(fixtures["cases"].as_array().unwrap())
+    {
+        assert_eq!(actual["id"], fixture["id"]);
+        let expected = &fixture["expected"];
+        for key in [
+            "status",
+            "unit",
+            "scale_ticks",
+            "algorithm_version",
+            "counts",
+            "precision",
+            "weighting",
+            "warnings",
+            "p_value",
+            "diagnostic",
+        ] {
+            assert_eq!(
+                actual["result"][key], expected[key],
+                "{}: {key}",
+                fixture["id"]
+            );
+        }
+        for key in ["w1", "ks_d"] {
+            if expected[key].is_null() {
+                assert!(actual["result"][key].is_null());
+            } else {
+                let text = string(&expected[key], key);
+                let (n, d) = text.split_once('/').unwrap_or((text, "1"));
+                let oracle = n.parse::<f64>().unwrap() / d.parse::<f64>().unwrap();
+                let tolerance = if key == "w1" {
+                    1e-12
+                        * string(&expected["scale_ticks"], "scale")
+                            .parse::<f64>()
+                            .unwrap()
+                            .max(1.0)
+                } else {
+                    1e-12
+                };
+                let value = actual["result"][key]
+                    .as_f64()
+                    .expect("finite runtime value");
+                assert!(
+                    value.is_finite() && (value - oracle).abs() <= tolerance,
+                    "{}: {key}",
+                    fixture["id"]
+                );
+            }
+        }
+    }
 }
 
 #[test]
