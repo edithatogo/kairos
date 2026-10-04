@@ -16,6 +16,7 @@ Format:
 
 ### Added
 
+- C1.1 synthetic calibration logical fixtures cover exact integer clocks, source evidence, exclusions, chronology and prediction availability; the conformance workflow verifies their pinned-schema integrity with fail-closed mutation probes. Runtime mapping remains pending.
 - Security reporting guidance now links to the repository's verified private vulnerability reporting route and explains coordinated public disclosure.
 - Scheduler property, bounded fuzz, mutation, and core-coverage gates, with one instrumented workspace test pass and selected GitHub Actions publishers.
 - Read-only `just quality-drift` receipt for live branch rules, Actions permissions, Renovate, Codecov, and exact-default-commit check results.
