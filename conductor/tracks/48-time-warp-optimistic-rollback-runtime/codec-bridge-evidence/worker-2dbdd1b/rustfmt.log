@@ -1,0 +1,76 @@
+Diff in /private/tmp/kairos-track48-codec-bridge-impl/crates/kairo-ecs-pdes/src/optimistic.rs:350:
+         incarnation: u64,
+         kind: OptimisticMessageKind,
+     ) -> Result<Self, OptimisticError> {
+-        OptimisticEventOrderKey::try_from_parts(
+-            event.tick,
+-            event.source_lp,
+-            logical_id.clone(),
+-        )?;
++        OptimisticEventOrderKey::try_from_parts(event.tick, event.source_lp, logical_id.clone())?;
+         Ok(Self::new(event, logical_id, incarnation, kind))
+     }
+ 
+Diff in /private/tmp/kairos-track48-codec-bridge-impl/crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs:40:
+     let partition = PartitionPlan::from_entities(
+         3,
+         SimDuration::from_ticks(1),
+-        vec![EntityId::new(1, 0), EntityId::new(2, 0), EntityId::new(3, 0)],
++        vec![
++            EntityId::new(1, 0),
++            EntityId::new(2, 0),
++            EntityId::new(3, 0),
++        ],
+     )
+     .unwrap();
+     let topology = BTreeMap::from([
+Diff in /private/tmp/kairos-track48-codec-bridge-impl/crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs:77:
+     assert_eq!(root_id.root_parts(), Some((LpId(u32::MAX), u64::MAX)));
+     assert_eq!(root_id.output_parts(), None);
+     let root = OptimisticMessage::try_from_parts(
+-        event(LpId(u32::MAX), LpId(u32::MAX), u128::MAX - 1, &[0, 255, 17, 0]),
++        event(
++            LpId(u32::MAX),
++            LpId(u32::MAX),
++            u128::MAX - 1,
++            &[0, 255, 17, 0],
++        ),
+         root_id,
+         u64::MAX,
+         OptimisticMessageKind::Positive,
+Diff in /private/tmp/kairos-track48-codec-bridge-impl/crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs:86:
+     assert_eq!(root.event().tick.ticks(), u128::MAX - 1);
+     assert_eq!(root.event().event_payload, [0, 255, 17, 0]);
+     assert_eq!(root.incarnation(), u64::MAX);
+-    assert_eq!(root.order_key().logical_id().root_parts(), Some((LpId(u32::MAX), u64::MAX)));
++    assert_eq!(
++        root.order_key().logical_id().root_parts(),
++        Some((LpId(u32::MAX), u64::MAX))
++    );
+ 
+     let output_id = LogicalEventId::child(&root.order_key(), u32::MAX).unwrap();
+     let output = OptimisticMessage::try_from_parts(
+Diff in /private/tmp/kairos-track48-codec-bridge-impl/crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs:104:
+     let (parent, ordinal) = output.logical_id().output_parts().unwrap();
+     assert_eq!(parent, &root.order_key());
+     assert_eq!(ordinal, u32::MAX);
+-    assert_eq!(output.order_key().logical_id().output_parts(), Some((parent, ordinal)));
++    assert_eq!(
++        output.order_key().logical_id().output_parts(),
++        Some((parent, ordinal))
++    );
+ 
+     let positive = OptimisticMessage::try_from_parts(
+         output.event().clone(),
+Diff in /private/tmp/kairos-track48-codec-bridge-impl/crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs:259:
+     assert_eq!(key.logical_id().depth(), 128);
+     assert!(matches!(
+         LogicalEventId::child(&key, 129),
+-        Err(OptimisticError::CausalDepthExceeded { depth: 129, limit: 128 })
++        Err(OptimisticError::CausalDepthExceeded {
++            depth: 129,
++            limit: 128
++        })
+     ));
+ }
+ 
