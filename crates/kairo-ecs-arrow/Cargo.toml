@@ -6,8 +6,17 @@ license.workspace = true
 repository = "https://github.com/edithatogo/kairos"
 description = "Arrow telemetry and event log serialization for KairoECS"
 
+[features]
+default = []
+resource-lifecycle = ["dep:kairo-ecs-des", "dep:arrow-array", "dep:arrow-schema"]
+resource-lifecycle-io = ["resource-lifecycle", "dep:kairo-ecs-arrow-io"]
+
 [dependencies]
 thiserror = "=2.0.20"
+kairo-ecs-des = { path = "../kairo-ecs-des", version = "=0.1.0", optional = true }
+arrow-array = { version = "=60.0.0", optional = true, default-features = false }
+arrow-schema = { version = "=60.0.0", optional = true, default-features = false }
+kairo-ecs-arrow-io = { path = "../kairo-ecs-arrow-io", version = "=0.1.0", optional = true, default-features = false, features = ["ipc"] }
 kairo-ecs-types = { path = "../kairo-ecs-types" , version = "=0.0.0" }
 
 [[example]]

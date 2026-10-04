@@ -643,6 +643,10 @@ dependencies = [
 name = "kairo-ecs-arrow"
 version = "0.1.0"
 dependencies = [
+ "arrow-array",
+ "arrow-schema",
+ "kairo-ecs-arrow-io",
+ "kairo-ecs-des",
  "kairo-ecs-types",
  "thiserror",
 ]

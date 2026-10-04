@@ -90,6 +90,8 @@ jobs:
             grep -Fx 'host: x86_64-unknown-linux-gnu' .artifacts/ci/native/calibration-floor.log
           fi
           cargo test --locked -p kairo-ecs-calibration 2>&1 | tee -a .artifacts/ci/native/calibration-floor.log
+          rustc -vV | tee .artifacts/ci/native/resource-lifecycle-floor.log
+          cargo test --locked -p kairo-ecs-arrow --features resource-lifecycle-io 2>&1 | tee -a .artifacts/ci/native/resource-lifecycle-floor.log
       - name: Initialize Arrow IO Rust 1.98.1 evidence directory
         run: mkdir -p ".artifacts/ci/arrow-io/1.98.1/${{ matrix.os }}"
       - name: Install pinned Python for Arrow IO interoperability
@@ -127,6 +129,7 @@ jobs:
           mkdir -p "$output_dir"
           export KAIROS_INTEROP_OUTDIR="$output_dir"
           "$task_cargo" test --locked -p kairo-ecs-arrow-io --all-features 2>&1 | tee "$log_dir/test.log"
+          "$task_cargo" test --locked -p kairo-ecs-arrow --features resource-lifecycle-io 2>&1 | tee "$log_dir/resource-lifecycle.log"
           test -s "$output_dir/rust.ipc_file"
           test -s "$output_dir/rust.ipc_stream"
           test -s "$output_dir/rust.parquet"

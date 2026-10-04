@@ -75,7 +75,10 @@ jobs:
         run: rustup toolchain install 1.76.0 --profile minimal
       - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
       - name: Check workspace on Rust 1.76
-        run: cargo +1.76.0 check --workspace --exclude kairo-ecs-wasm --exclude kairo-ecs-calibration --exclude kairo-ecs-arrow-io --lib --bins --all-features --locked
+        run: cargo +1.76.0 check --workspace --exclude kairo-ecs-wasm --exclude kairo-ecs-calibration --exclude kairo-ecs-arrow-io --exclude kairo-ecs-arrow --lib --bins --all-features --locked
+
+      - name: Check default Arrow telemetry on Rust 1.76
+        run: cargo +1.76.0 check -p kairo-ecs-arrow --lib --locked
 
   rust-wasm-msrv:
     name: Rust Wasm MSRV 1.77

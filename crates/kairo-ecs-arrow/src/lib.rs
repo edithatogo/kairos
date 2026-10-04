@@ -2,6 +2,10 @@
 
 pub mod trace_time;
 
+/// Optional immutable Flow lifecycle RecordBatch conversion (Rust 1.88+).
+#[cfg(feature = "resource-lifecycle")]
+pub mod resource_lifecycle;
+
 use kairo_ecs_types::{DispatchedEvent, EntityId, EventId};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
