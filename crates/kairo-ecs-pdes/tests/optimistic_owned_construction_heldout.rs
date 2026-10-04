@@ -4,9 +4,9 @@ use std::sync::Arc;
 
 use kairo_ecs_pdes::{
     LogicalEventId, LpId, OptimisticAuthority, OptimisticError, OptimisticLimits,
-    OptimisticMessage, OptimisticMessageKind, OptimisticOwnedOptions, OptimisticProcess,
-    OptimisticRuntime, OptimisticRuntimeReport, OptimisticStateError, OptimisticStateToken,
-    PartitionPlan, RemoteEvent, Tick,
+    OptimisticMessage, OptimisticMessageKind, OptimisticOutboundStatus, OptimisticOwnedOptions,
+    OptimisticProcess, OptimisticRuntime, OptimisticRuntimeReport, OptimisticStateError,
+    OptimisticStateToken, PartitionPlan, RemoteEvent, Tick,
 };
 use kairo_ecs_types::{EntityId, SimDuration};
 
@@ -148,13 +148,18 @@ fn options_for(owned: &[LpId], namespace: u128) -> OptimisticOwnedOptions {
     }
 }
 
-fn processes(
-    owned: &[LpId],
-) -> (
+type ProcessBundle = (
     BTreeMap<LpId, Probe>,
     BTreeMap<LpId, Arc<AtomicUsize>>,
     BTreeMap<LpId, ProbeSnapshot>,
-) {
+);
+type RuntimeBundle = (
+    OptimisticRuntime<Probe>,
+    BTreeMap<LpId, Arc<AtomicUsize>>,
+    BTreeMap<LpId, ProbeSnapshot>,
+);
+
+fn processes(owned: &[LpId]) -> ProcessBundle {
     let mut values = BTreeMap::new();
     let mut calls = BTreeMap::new();
     let mut witnesses = BTreeMap::new();
@@ -172,11 +177,7 @@ fn make_runtime(
     partition: PartitionPlan,
     topology: BTreeMap<LpId, Vec<LpId>>,
     options: OptimisticOwnedOptions,
-) -> (
-    OptimisticRuntime<Probe>,
-    BTreeMap<LpId, Arc<AtomicUsize>>,
-    BTreeMap<LpId, ProbeSnapshot>,
-) {
+) -> RuntimeBundle {
     let (processes, calls, witnesses) = processes(owned);
     let runtime = OptimisticRuntime::new_owned(partition, topology, processes, options).unwrap();
     for calls_for_lp in calls.values() {
@@ -348,10 +349,36 @@ fn disjoint_owners_seal_then_guard_mutations_without_remote_mirrors() {
     assert!(first.validate_state_token(token));
 
     let before_sealed_guard = observe(&first, &[LP0]);
+    let scheduled_root = first.schedule_initial(2, event(LP0, LP1, 10)).unwrap();
+    assert_eq!(scheduled_root.event(), &event(LP0, LP1, 10));
+    assert_eq!(scheduled_root.logical_id().root_parts(), Some((LP0, 2)));
+    let outbound = first.outbound_pending().unwrap();
+    assert_eq!(outbound.len(), 1);
+    assert_eq!(outbound[0].status(), OptimisticOutboundStatus::Ready);
+    assert_eq!(outbound[0].message(), &scheduled_root);
+    let send = first.ready_native_sends().unwrap().pop().unwrap();
+    assert_eq!(send.message(), &scheduled_root);
+    let scheduled_observation = observe(&first, &[LP0]);
     assert_eq!(
-        first.schedule_initial(2, event(LP0, LP1, 10)),
-        Err(OptimisticError::OwnedRuntimeJoinIncomplete)
+        scheduled_observation.revision,
+        before_sealed_guard.revision + 1
     );
+    assert_eq!(scheduled_observation.states, before_sealed_guard.states);
+    assert_eq!(scheduled_observation.pending, before_sealed_guard.pending);
+    assert_eq!(scheduled_observation.tokens, before_sealed_guard.tokens);
+    assert_eq!(
+        scheduled_observation.report.logical_processes,
+        before_sealed_guard.report.logical_processes
+    );
+    assert!(first.process_at(LP1).is_none());
+    let accounting = first.accounting_snapshot().unwrap();
+    assert_eq!(accounting.revision(), scheduled_observation.revision);
+    assert_eq!(accounting.local_positive_count(), 0);
+    assert_eq!(accounting.ready_positive_count(), 1);
+    assert_eq!(accounting.reserved_receipt_count(), 1);
+    assert_eq!(accounting.retained_receipt_count(), 0);
+
+    let before_sealed_run = observe(&first, &[LP0]);
     assert_eq!(
         first.run_until_with_budget(Tick::from_ticks(10), 0),
         Err(OptimisticError::OwnedRuntimeJoinIncomplete)
@@ -361,17 +388,24 @@ fn disjoint_owners_seal_then_guard_mutations_without_remote_mirrors() {
         first.run_until_with_budget(Tick::from_ticks(5), 0),
         Err(OptimisticError::OwnedRuntimeJoinIncomplete)
     );
+    assert_eq!(observe(&first, &[LP0]), before_sealed_run);
     assert_eq!(
         first.schedule_initial(4, event(LP1, LP0, 11)),
         Err(OptimisticError::UnownedLogicalProcess(LP1))
     );
-    assert_eq!(observe(&first, &[LP0]), before_sealed_guard);
+    assert_eq!(observe(&first, &[LP0]), before_sealed_run);
 
     first.close_initial_inputs().unwrap();
     assert!(first.initial_inputs_closed());
-    assert_eq!(first.accounting_revision(), Ok(3));
+    assert_eq!(
+        first.accounting_revision(),
+        Ok(before_sealed_guard.revision + 2)
+    );
     first.close_initial_inputs().unwrap();
-    assert_eq!(first.accounting_revision(), Ok(3));
+    assert_eq!(
+        first.accounting_revision(),
+        Ok(before_sealed_guard.revision + 2)
+    );
     assert!(first.validate_state_token(token));
     assert_eq!(
         first.schedule_initial(3, event(LP0, LP1, 10)),
