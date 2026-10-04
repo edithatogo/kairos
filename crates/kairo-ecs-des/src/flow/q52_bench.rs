@@ -235,7 +235,7 @@ fn measure_legacy_retain_baseline_rekey_cancel(n: usize, tied: bool, repeat: usi
         .collect::<Vec<_>>()
         .join(",");
     json_row(&format!(
-        "\"scenario\":\"legacy_algorithm_baseline_bcb11cd_retain_rekey_cancel_50_50\",\"algorithm_source_commit\":\"bcb11cd61bc38b4813815f574a6a051f3b9e8faf\",\"n\":{n},\"priority_shape\":\"{}\",\"repeat\":{repeat},\"occupancy_before_each_op\":{n},\"commands_requested\":{commands_per_repeat},\"commands_completed\":{},\"reprioritize_commands\":{},\"cancel_commands\":{},\"derived_expected_retain_predicate_visits\":{retain_visits},\"elapsed_ns_sum\":{total_elapsed_ns},\"ops\":{commands_per_repeat},\"ns_per_command_mean\":{:.4},\"ns_per_command_p50\":{p50_ns},\"ns_per_command_p95\":{p95_ns},\"sample_elapsed_ns\":[{samples}],\"commands_per_second_mean\":{:.4},\"timed_operations\":\"historical_retain_predicate_plus_reprioritize_insert_or_cancel\",\"setup_clone_excluded\":true,\"status\":\"complete\"",
+        "\"scenario\":\"legacy_algorithm_baseline_bcb11cd_retain_rekey_cancel_50_50\",\"algorithm_source_commit\":\"bcb11cd61bc38b4813815f574a6a051f3b9e8faf\",\"n\":{n},\"priority_shape\":\"{}\",\"repeat\":{repeat},\"occupancy_before_each_op\":{n},\"commands_requested\":{commands_per_repeat},\"commands_completed\":{},\"reprioritize_commands\":{},\"cancel_commands\":{},\"derived_expected_retain_predicate_visits\":{retain_visits},\"elapsed_ns_sum\":{total_elapsed_ns},\"ops\":{commands_per_repeat},\"ns_per_command_mean\":{:.4},\"ns_per_command_p50\":{p50_ns},\"ns_per_command_p95\":{p95_ns},\"sample_elapsed_ns\":[{samples}],\"commands_per_second_mean\":{:.4},\"timed_operations\":\"historical_retain_predicate_plus_reprioritize_insert_or_cancel\",\"setup_clone_excluded\":true,\"exploratory_timer_overhead_unadjusted\":true,\"contract_timing_evidence\":false,\"status\":\"complete\"",
         if tied { "tied" } else { "mixed" },
         command_rows.len(),
         command_rows.iter().filter(|(kind, _)| *kind == "reprioritize").count(),
@@ -318,7 +318,7 @@ fn measure_actual_remove_waiting_rekey_cancel(n: usize, tied: bool, repeat: usiz
         .collect::<Vec<_>>()
         .join(",");
     json_row(&format!(
-        "\"scenario\":\"actual_remove_waiting_request_rekey_cancel_50_50\",\"n\":{n},\"priority_shape\":\"{}\",\"repeat\":{repeat},\"occupancy_before_each_op\":{n},\"commands_requested\":{commands_per_repeat},\"commands_completed\":{},\"reprioritize_commands\":{},\"cancel_commands\":{},\"removed_keys\":{},\"reinserted_keys\":{},\"elapsed_ns_sum\":{total_elapsed_ns},\"ops\":{commands_per_repeat},\"ns_per_command_mean\":{:.4},\"ns_per_command_p50\":{p50_ns},\"ns_per_command_p95\":{p95_ns},\"sample_elapsed_ns\":[{samples}],\"commands_per_second_mean\":{:.4},\"timed_operations\":\"current_private_remove_waiting_request_plus_exact_rekey_insert_or_cancel_state\",\"admission_sequence_preserved\":true,\"setup_clone_excluded\":true,\"status\":\"complete\"",
+        "\"scenario\":\"actual_remove_waiting_request_rekey_cancel_50_50\",\"n\":{n},\"priority_shape\":\"{}\",\"repeat\":{repeat},\"occupancy_before_each_op\":{n},\"commands_requested\":{commands_per_repeat},\"commands_completed\":{},\"reprioritize_commands\":{},\"cancel_commands\":{},\"removed_keys\":{},\"reinserted_keys\":{},\"elapsed_ns_sum\":{total_elapsed_ns},\"ops\":{commands_per_repeat},\"ns_per_command_mean\":{:.4},\"ns_per_command_p50\":{p50_ns},\"ns_per_command_p95\":{p95_ns},\"sample_elapsed_ns\":[{samples}],\"commands_per_second_mean\":{:.4},\"timed_operations\":\"current_private_remove_waiting_request_plus_exact_rekey_insert_or_cancel_state\",\"admission_sequence_preserved\":true,\"setup_clone_excluded\":true,\"exploratory_timer_overhead_unadjusted\":true,\"contract_timing_evidence\":false,\"status\":\"complete\"",
         if tied { "tied" } else { "mixed" },
         command_rows.len(),
         command_rows.iter().filter(|(kind, _)| *kind == "reprioritize").count(),
@@ -327,6 +327,116 @@ fn measure_actual_remove_waiting_rekey_cancel(n: usize, tied: bool, repeat: usiz
         command_rows.iter().filter(|(kind, _)| *kind == "reprioritize").count(),
         total_elapsed_ns as f64 / command_rows.len() as f64,
         command_rows.len() as f64 * 1_000_000_000.0 / total_elapsed_ns.max(1) as f64
+    ));
+}
+
+const BATCHED_ACTUAL_CYCLES: usize = 50_000;
+const BATCHED_HISTORICAL_CYCLES: usize = 50_000;
+const BATCHED_HISTORICAL_100K_CYCLES: usize = 100;
+const ACTUAL_REMOVAL_SOURCE_COMMIT: &str = "05b7822f0c69b9d36549130e228c01689b908a13";
+const HISTORICAL_RETAIN_SOURCE_COMMIT: &str = "bcb11cd61bc38b4813815f574a6a051f3b9e8faf";
+
+fn batched_historical_cycles(n: usize) -> usize {
+    if n == 100_000 {
+        BATCHED_HISTORICAL_100K_CYCLES
+    } else {
+        BATCHED_HISTORICAL_CYCLES
+    }
+}
+
+fn cycle_key_index(cycle: usize, n: usize) -> usize {
+    cycle.wrapping_mul(7_919) % n
+}
+
+fn measure_batched_actual_remove_rekey_restore(n: usize, tied: bool, repeat: usize) {
+    let mut queue = ClaimQueue::<PriorityKey>::default();
+    let mut keys = Vec::with_capacity(n);
+    for index in 0..n {
+        let key = priority_key(index, tied);
+        assert!(queue.requests.insert(key));
+        keys.push(key);
+    }
+    let base = queue.clone();
+    let mut request = ResourceRequest {
+        resource: super::ResourceId(EntityId::new(0, 0)),
+        owner: EntityId::new(0, 0),
+        state: RequestState::Queued,
+        admission_sequence: Some(0),
+        lease: None,
+        priority_level: keys[0].level,
+        work: None,
+        submitted_at: SimTime::from_ticks(0),
+        deadline: None,
+        timed: false,
+        can_preempt: false,
+        preemptible: None,
+    };
+    let cycles = BATCHED_ACTUAL_CYCLES;
+    let started = Instant::now();
+    for cycle in 0..cycles {
+        let old = keys[cycle_key_index(cycle, n)];
+        request.admission_sequence = Some(old.enqueue_sequence);
+        request.priority_level = old.level;
+        remove_waiting_request(&mut queue, old.request, &request)
+            .expect("actual old waiting key exists");
+
+        let changed = PriorityKey {
+            level: old.level.saturating_add(1),
+            ..old
+        };
+        request.priority_level = changed.level;
+        assert!(black_box(queue.requests.insert(changed)));
+        remove_waiting_request(&mut queue, old.request, &request)
+            .expect("actual rekeyed waiting key exists");
+
+        request.priority_level = old.level;
+        assert!(black_box(queue.requests.insert(old)));
+    }
+    let elapsed_ns = started.elapsed().as_nanos();
+    assert_eq!(queue.requests, base.requests);
+    black_box(&queue);
+    let primitive_ops = (cycles * 4) as u64;
+    let restoration_insert_count = cycles as u64;
+    json_row(&format!(
+        "\"scenario\":\"actual_helper_batched_reversible_rekey\",\"algorithm_source_commit\":\"{ACTUAL_REMOVAL_SOURCE_COMMIT}\",\"n\":{n},\"priority_shape\":\"{}\",\"repeat\":{repeat},\"cycles\":{cycles},\"operations\":{cycles},\"primitive_queue_mutations\":{primitive_ops},\"queue_mutations_per_cycle\":4,\"restoration_insert_count\":{restoration_insert_count},\"elapsed_ns\":{elapsed_ns},\"ns_per_primitive_op\":{:.4},\"derived_expected_helper_removals\":{},\"occupancy_at_cycle_boundaries\":{n},\"final_queue_matches_initial\":true,\"setup_and_verification_excluded\":true,\"timed_operations\":\"two_current_remove_waiting_request_calls_with_success_checks_plus_rekey_insert_and_restore_insert; reversible helper cycle, not a Cancel or Reprioritize command\",\"end_to_end_speedup_claim\":false,\"status\":\"complete\"",
+        if tied { "tied" } else { "mixed" },
+        elapsed_ns as f64 / primitive_ops as f64,
+        cycles * 2
+    ));
+}
+
+fn measure_batched_historical_retain_rekey_restore(n: usize, tied: bool, repeat: usize) {
+    let mut queue = ClaimQueue::<PriorityKey>::default();
+    let mut keys = Vec::with_capacity(n);
+    for index in 0..n {
+        let key = priority_key(index, tied);
+        assert!(queue.requests.insert(key));
+        keys.push(key);
+    }
+    let base = queue.clone();
+    let cycles = batched_historical_cycles(n);
+    let started = Instant::now();
+    for cycle in 0..cycles {
+        let old = keys[cycle_key_index(cycle, n)];
+        queue.requests.retain(|key| key.request != old.request);
+        let changed = PriorityKey {
+            level: old.level.saturating_add(1),
+            ..old
+        };
+        assert!(black_box(queue.requests.insert(changed)));
+        queue.requests.retain(|key| key.request != old.request);
+        assert!(black_box(queue.requests.insert(old)));
+    }
+    let elapsed_ns = started.elapsed().as_nanos();
+    assert_eq!(queue.requests, base.requests);
+    black_box(&queue);
+    let primitive_ops = (cycles * 4) as u64;
+    let restoration_insert_count = cycles as u64;
+    let predicate_visits = (cycles as u64).saturating_mul(2).saturating_mul(n as u64);
+    json_row(&format!(
+        "\"scenario\":\"historical_retain_batched_reversible_rekey\",\"algorithm_source_commit\":\"{HISTORICAL_RETAIN_SOURCE_COMMIT}\",\"n\":{n},\"priority_shape\":\"{}\",\"repeat\":{repeat},\"cycles\":{cycles},\"operations\":{cycles},\"primitive_queue_mutations\":{primitive_ops},\"queue_mutations_per_cycle\":4,\"restoration_insert_count\":{restoration_insert_count},\"elapsed_ns\":{elapsed_ns},\"ns_per_primitive_op\":{:.4},\"historical_retain_predicate_visits_exact\":{predicate_visits},\"historical_retain_predicate_visit_bound\":\"2*n*cycles\",\"occupancy_at_cycle_boundaries\":{n},\"final_queue_matches_initial\":true,\"setup_and_verification_excluded\":true,\"timed_operations\":\"two historical retain passes plus rekey insert and restore insert; reversible helper cycle, not a Cancel or Reprioritize command\",\"end_to_end_speedup_claim\":false,\"status\":\"complete\"",
+        if tied { "tied" } else { "mixed" },
+        elapsed_ns as f64 / primitive_ops as f64
     ));
 }
 
@@ -549,6 +659,39 @@ fn q52_kernel_correctness_small() {
     assert!(remove_waiting_request(&mut helper_queue, helper_old.request, &helper_request).is_ok());
     assert!(helper_queue.requests.is_empty());
 
+    let mut cycle_queue = ClaimQueue::<PriorityKey>::default();
+    for index in 0..3 {
+        assert!(cycle_queue.requests.insert(priority_key(index, false)));
+    }
+    let cycle_base = cycle_queue.clone();
+    let cycle_old = priority_key(1, false);
+    let mut cycle_request = ResourceRequest {
+        resource: super::ResourceId(EntityId::new(0, 0)),
+        owner: EntityId::new(0, 0),
+        state: RequestState::Queued,
+        admission_sequence: Some(cycle_old.enqueue_sequence),
+        lease: None,
+        priority_level: cycle_old.level,
+        work: None,
+        submitted_at: SimTime::from_ticks(0),
+        deadline: None,
+        timed: false,
+        can_preempt: false,
+        preemptible: None,
+    };
+    remove_waiting_request(&mut cycle_queue, cycle_old.request, &cycle_request).unwrap();
+    let cycle_new = PriorityKey {
+        level: cycle_old.level.saturating_add(1),
+        ..cycle_old
+    };
+    cycle_request.priority_level = cycle_new.level;
+    assert!(cycle_queue.requests.insert(cycle_new));
+    remove_waiting_request(&mut cycle_queue, cycle_old.request, &cycle_request).unwrap();
+    cycle_request.priority_level = cycle_old.level;
+    assert!(cycle_queue.requests.insert(cycle_old));
+    assert_eq!(cycle_request.priority_level, cycle_old.level);
+    assert_eq!(cycle_queue.requests, cycle_base.requests);
+
     let mut mixed = ClaimQueue::<PriorityKey>::default();
     let mixed_keys = [
         PriorityKey {
@@ -639,7 +782,7 @@ fn q52_kernel_correctness_small() {
 #[test]
 #[ignore = "explicit Q5.2 release measurement; emits supplementary raw rows"]
 fn benchmark_q52_measurements() {
-    println!("Q52_META {{\"schema_version\":1,\"benchmark\":\"supplementary_queue_kernel\",\"seed\":{INPUT_SEED},\"priority_generator\":\"splitmix64(seed + index * golden_ratio_constant) mod 101 minus 50\",\"repeats\":{REPEATS},\"queue_operation_mix\":\"one rekey plus one cancel per initial waiter; 50 percent rekey, 50 percent cancel requests\",\"queue_sizes_are_waiters\":true,\"setup_excluded\":true,\"canonical_thresholds_unchanged\":true}}");
+    println!("Q52_META {{\"schema_version\":1,\"benchmark\":\"supplementary_queue_kernel\",\"seed\":{INPUT_SEED},\"priority_generator\":\"splitmix64(seed + index * golden_ratio_constant) mod 101 minus 50\",\"repeats\":{REPEATS},\"queue_operation_mix\":\"one rekey plus one cancel per initial waiter; 50 percent rekey, 50 percent cancel requests\",\"queue_sizes_are_waiters\":true,\"single_operation_removal_rows_are_exploratory\":true,\"batched_actual_cycles_per_repeat\":50000,\"batched_historical_cycles_n_100000\":100,\"setup_excluded\":true,\"canonical_thresholds_unchanged\":true}}");
     for n in selected_queue_sizes() {
         for repeat in 1..=REPEATS {
             measure_legacy_fifo(n, repeat);
@@ -651,6 +794,10 @@ fn benchmark_q52_measurements() {
             measure_legacy_retain_baseline_rekey_cancel(n, false, repeat);
             measure_actual_remove_waiting_rekey_cancel(n, true, repeat);
             measure_actual_remove_waiting_rekey_cancel(n, false, repeat);
+            measure_batched_actual_remove_rekey_restore(n, true, repeat);
+            measure_batched_actual_remove_rekey_restore(n, false, repeat);
+            measure_batched_historical_retain_rekey_restore(n, true, repeat);
+            measure_batched_historical_retain_rekey_restore(n, false, repeat);
         }
         for tied in [true, false] {
             let (comparisons, ops) = counted_comparisons(n, tied);
