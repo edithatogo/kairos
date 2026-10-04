@@ -62,6 +62,7 @@ Admission capability is issued only by the actual receiver after exact native pe
 ## Cross-owner retirement barrier
 
 ```rust
+pending_native_retirement_requests(&self) -> Vec<NativeRetirementRequest>;
 receive_native_retirement(&mut self, request: &NativeRetirementRequest)
     -> Result<(), OptimisticError>;
 applied_native_retirements(&self) -> Vec<NativeRetirementCapability>;
@@ -73,7 +74,7 @@ Retirement requests and capabilities have private fields, immutable inspection a
 
 Receiver processing produces retirement capability only after old local effects are removed or were never applied, a tombstone prevents delayed reapplication, and all induced downstream antis are retained in accounted state. Queued anti admission, socket completion, timeout and positive admission capability cannot satisfy this transition. Retirement capability binds both exact envelopes, the actual old receiver/generation and accounting revision. Native capability is volatile; no descendant graph drain or crash-safe claim follows.
 
-Sender release verifies the complete bound transition and registered old receiver before making the successor publishable. Exact duplicate transition/receipt is idempotent; forks, cycles, unknown/skipped predecessor chains and mismatched metadata reject unchanged or remain explicitly bounded/accounted staging. Sender shutdown/timeout never releases replacement. Historical retries/antis require exact retained authorized records, not merely an epoch value. Unrecognized old-authority work is rejected. The immutable first implementation cannot rotate to a new epoch, reactivate recovered handles or accept reconstructed external receipts.
+Sender release verifies the complete bound transition and registered old receiver before making the successor publishable. Exact duplicate transition/receipt is idempotent; forks, cycles, unknown/skipped predecessor chains and mismatched metadata reject unchanged; unknown predecessor staging is disabled. Sender shutdown/timeout never releases replacement. Historical retries/antis require exact retained authorized records, not merely an epoch value. Unrecognized old-authority work is rejected. The immutable first implementation cannot rotate to a new epoch, reactivate recovered handles or accept reconstructed external receipts.
 
 ## Atomic bounds and local GVT
 
@@ -90,3 +91,27 @@ Snapshots report checked revision, local pending minima, ready/blocked remote ob
 5. Track49 real process/rank persistence/recovery/fencing and consistent cuts are mandatory later joins, not optional improvements or a local-capability serialization exercise.
 
 Before dispatch, joint review must settle accessor/status enum and exact typed errors, ticket/receipt capacity/revision reservations and duplicate/fossil retention policy. Current names are proposed. No executable owned writer packet is authorized by this draft.
+
+
+## Review revisions: chains and complete native cuts
+
+For a chain P → N1 → N2, release requires retirement of every retained predecessor dependency. An intermediate superseded blocked version never becomes ready, even briefly when P's receipt arrives. Retirement of never-applied N1 does not discharge still-active P. Requests returned by pending_native_retirement_requests are privately minted from retained actual transitions; callers cannot construct requests.
+
+Applied retirement atomically closes the exact predecessor positive and anti obligations, records their completion, and satisfies only the matching chain dependency. It releases the latest successor only when every ancestor dependency is satisfied. Reserve eventual completion/admission/retirement records before accepting work or mutating cancellation; exact duplicate readback consumes no new capacity or revision even when capacity is full.
+
+Owned fossil_collect rejects unchanged. The static native operation is:
+
+```rust
+fossil_collect_native_group(
+    participants: &mut [&mut OptimisticRuntime<P>],
+    gvt: Tick,
+) -> Result<Vec<OptimisticFossilReport>, OptimisticError>;
+```
+
+It exclusively borrows the complete sealed peer set, verifies exact live issuer/generation/configuration and LP coverage, closed initial-input admission, healthy states and all local, outbound, blocked and retirement obligations. It preflights every participant before modifying any, then applies one common floor atomically. Independently sampled minima and detached witnesses cannot authorize collection. A lost admission ACK retains the sender obligation and prevents receiver receipt/tombstone collection. Before the verified floor, exact retries return stable accounted capabilities without new allocation or revision. After the common floor strictly exceeds the relevant record tick, late tickets/capabilities reject with a typed pre-GVT result; equality remains reversible. No receipt-confirmation handshake is added. This proves a volatile native cut only; distributed cuts and durable recovery remain Track49 gates.
+
+Immutable inspection must expose issuer/generation, owned LP scope, exact send key/envelope, predecessor/successor, revision and status. Status distinguishes ready send, blocked replacement and retired predecessor awaiting accounting. Blocked inspection never contains a ready ticket. Snapshots separately count local runnable work and unresolved remote/control obligations; an empty local queue cannot certify completion.
+
+The typed error vocabulary still requires joint freeze: unsealed/overlapping/mismatched peers, unowned endpoint, raw scoped admission, authority mismatch, unlinked active cohort, unknown/mismatched receipt, missing/forked/cyclic transition, each capacity, revision exhaustion and pre-GVT late work. These added public enum variants intentionally limit alpha source compatibility for exhaustive downstream matches.
+
+Independent required oracles include backward receipt delivery through P → N1 → N2, lost ACK followed by attempted collection, late duplicates below/at the common floor, mixed routing capacity failure and revision overflow. Final native acceptance includes stragglers, suffix replay, retained antis and replacement release together. Routing-only commits are intermediate; unsupported stragglers or remote observer copies cannot substitute for the joined implementation.
