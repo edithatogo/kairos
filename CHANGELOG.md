@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- Experimental private C1 ingestion adapters now pass scoped CI lint qualification without promoting their API; dry-run package/workflow inventories and MSRV metadata match the optional calibration and Arrow IO lanes.
+
 - Experimental calibration physical schema v2 qualification now freezes every nested Arrow type, nullability and metadata field, exercises IPC and Parquet separately at the Rust 1.88 floor, and retains exact PyArrow readback evidence. Legacy telemetry remains a custom smoke format with its own Rust 1.76 compatibility qualification.
 - Supplementary `kairo-ecs-des` queue, victim-selection and FlowRuntime benchmark harnesses record deterministic inputs, outcome checks, process memory and release-build provenance. Representative 100,000-request Flow scaling remains unresolved; these development measurements do not establish release or performance acceptance.
 
