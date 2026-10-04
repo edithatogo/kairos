@@ -1,0 +1,413 @@
+{
+  "protocol": "mapper-cases-v1",
+  "oracle_provenance": "expected_output records were independently authored from the frozen raw mapping profile and the accepted calibration-v1 C0 schema, not captured from mapper execution. The Rust mapper never reads this file.",
+  "request_grammar": {
+    "required_envelope": [
+      "profile_version",
+      "dataset_id",
+      "mapping_version",
+      "origin_utc",
+      "case_key_field",
+      "source_family",
+      "shape",
+      "event_bindings",
+      "rows"
+    ],
+    "profile_version": "c11.synthetic-map-v1",
+    "shape": "wide expands ordered bindings; long requires event_kind_field and expands exactly the named binding",
+    "binding": {
+      "kind": "nonempty id",
+      "rank": "canonical ASCII unsigned decimal string",
+      "occurrence_index": "UInt32",
+      "occurrence_field": "row field",
+      "key_field": "row field",
+      "order_field": "UInt64 row field",
+      "source_event_type": "optional literal synthetic source label",
+      "recorded_field": "optional row field",
+      "message_field": "optional row field",
+      "knowledge_field": "optional row object with status and available_at",
+      "movement_evidence_field": "optional row field",
+      "interval_field": "optional row object with start_ticks and nullable end_ticks"
+    },
+    "clock": {
+      "raw": "nonempty RFC3339 string or canonical signed integer string",
+      "representation": "RFC3339 | relative_integer | classified (requires synthetic classifier provenance)",
+      "precision": "minute | second | millisecond | microsecond | nanosecond | other",
+      "lineage": "status; mapping_version is added from the declared profile mapping version; optional evidence_ref/derivation retained",
+      "unit": "s | ms | us | ns only for relative_integer"
+    },
+    "outcome": {
+      "required_fields": [
+        "endpoint",
+        "risk_start",
+        "last_observed",
+        "event_clock",
+        "censor_cause",
+        "censor_status",
+        "lineage"
+      ],
+      "rule": "Only explicit clocks map; right censoring has a required last_observed and null event_clock."
+    },
+    "output": "C0 trace_event/exclusion records and outcome_observation records; candidate accounting is event-only and conserves accepted+excluded+failed+unresolved units"
+  },
+  "raw_requests": [
+    {
+      "case_id": "wide_utc_positive",
+      "request": {
+        "profile_version": "c11.synthetic-map-v1",
+        "dataset_id": "d1",
+        "mapping_version": "m1",
+        "origin_utc": "2020-01-01T00:00:00Z",
+        "case_key_field": "case",
+        "source_family": "fixture",
+        "shape": "wide",
+        "event_bindings": [
+          {
+            "kind": "arrival",
+            "source_event_type": "ARRIVAL",
+            "rank": "2",
+            "occurrence_index": 0,
+            "occurrence_field": "at",
+            "key_field": "id",
+            "order_field": "seq"
+          }
+        ],
+        "rows": [
+          {
+            "case": "c",
+            "id": "e1",
+            "seq": 1,
+            "at": {
+              "raw": "2020-01-01T00:00:01Z",
+              "representation": "RFC3339",
+              "precision": "second",
+              "lineage": {
+                "status": "observed"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "long_equivalent_offset",
+      "request": {
+        "profile_version": "c11.synthetic-map-v1",
+        "dataset_id": "d1",
+        "mapping_version": "m1",
+        "origin_utc": "2020-01-01T00:00:00Z",
+        "case_key_field": "case",
+        "source_family": "fixture",
+        "shape": "long",
+        "event_kind_field": "kind",
+        "event_bindings": [
+          {
+            "kind": "arrival",
+            "source_event_type": "ARRIVAL",
+            "rank": "2",
+            "occurrence_index": 0,
+            "occurrence_field": "at",
+            "key_field": "id",
+            "order_field": "seq"
+          }
+        ],
+        "rows": [
+          {
+            "case": "c",
+            "id": "e1",
+            "seq": 1,
+            "kind": "arrival",
+            "at": {
+              "raw": "2020-01-01T01:00:01+01:00",
+              "representation": "RFC3339",
+              "precision": "second",
+              "lineage": {
+                "status": "observed"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "missing_required_occurrence",
+      "request": {
+        "profile_version": "c11.synthetic-map-v1",
+        "dataset_id": "d1",
+        "mapping_version": "m1",
+        "origin_utc": "2020-01-01T00:00:00Z",
+        "case_key_field": "case",
+        "source_family": "fixture",
+        "shape": "wide",
+        "event_bindings": [
+          {
+            "kind": "arrival",
+            "source_event_type": "ARRIVAL",
+            "rank": "2",
+            "occurrence_index": 0,
+            "occurrence_field": "at",
+            "key_field": "id",
+            "order_field": "seq"
+          }
+        ],
+        "rows": [
+          {
+            "case": "c",
+            "id": "e1",
+            "seq": 1,
+            "at": null
+          }
+        ]
+      }
+    }
+  ],
+  "expected_goldens": [
+    {
+      "case_id": "wide_utc_positive",
+      "expected_output": {
+        "records": [
+          {
+            "record_type": "trace_event.v1",
+            "schema_version": "calibration-v1",
+            "dataset_id": "d1",
+            "mapping_version": "m1",
+            "case_key": "c",
+            "source_event_key": "e1",
+            "occurrence": 0,
+            "event_kind": "arrival",
+            "event_kind_rank": 2,
+            "relative_ticks": "1000000000",
+            "source_order": 1,
+            "occurrence_time": {
+              "raw": "2020-01-01T00:00:01Z",
+              "utc": "2020-01-01T00:00:01Z",
+              "relative_ticks": "1000000000",
+              "source_precision": "second",
+              "source_offset_or_zone": "Z",
+              "tick_resolution": "1ns",
+              "lineage": {
+                "status": "observed",
+                "mapping_version": "m1",
+                "evidence_ref": null,
+                "derivation": null
+              }
+            },
+            "source_recorded_time": null,
+            "message_created_time": null,
+            "time_lineage": {
+              "occurrence": {
+                "status": "observed",
+                "mapping_version": "m1",
+                "evidence_ref": null,
+                "derivation": null
+              },
+              "source_recorded": {
+                "status": "unknown",
+                "mapping_version": "m1",
+                "evidence_ref": null,
+                "derivation": null
+              },
+              "message_created": {
+                "status": "unknown",
+                "mapping_version": "m1",
+                "evidence_ref": null,
+                "derivation": null
+              }
+            },
+            "resource_key": null,
+            "actor_key": null,
+            "location_key": null,
+            "disposition": "unknown",
+            "knowledge_availability": {
+              "status": "unknown",
+              "available_at": null
+            },
+            "raw_event": {
+              "source_family": "fixture",
+              "source_event_type": "ARRIVAL",
+              "source_record_id": null,
+              "source_fields": {
+                "case": "c",
+                "id": "e1",
+                "seq": 1,
+                "at": {
+                  "raw": "2020-01-01T00:00:01Z",
+                  "representation": "RFC3339",
+                  "precision": "second",
+                  "lineage": {
+                    "status": "observed"
+                  }
+                }
+              }
+            },
+            "quality_flags": [
+              "optional_clock_absent:source_recorded_time",
+              "optional_clock_absent:message_created_time",
+              "optional_clock_absent:available_at"
+            ]
+          }
+        ],
+        "accounting": {
+          "source_rows": 1,
+          "candidate_units": 1,
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0,
+          "candidate_conservation": true,
+          "cohort_denominator": 1,
+          "missing_triage": 0
+        }
+      }
+    },
+    {
+      "case_id": "long_equivalent_offset",
+      "expected_output": {
+        "records": [
+          {
+            "record_type": "trace_event.v1",
+            "schema_version": "calibration-v1",
+            "dataset_id": "d1",
+            "mapping_version": "m1",
+            "case_key": "c",
+            "source_event_key": "e1",
+            "occurrence": 0,
+            "event_kind": "arrival",
+            "event_kind_rank": 2,
+            "relative_ticks": "1000000000",
+            "source_order": 1,
+            "occurrence_time": {
+              "raw": "2020-01-01T01:00:01+01:00",
+              "utc": "2020-01-01T00:00:01Z",
+              "relative_ticks": "1000000000",
+              "source_precision": "second",
+              "source_offset_or_zone": "+01:00",
+              "tick_resolution": "1ns",
+              "lineage": {
+                "status": "observed",
+                "mapping_version": "m1",
+                "evidence_ref": null,
+                "derivation": null
+              }
+            },
+            "source_recorded_time": null,
+            "message_created_time": null,
+            "time_lineage": {
+              "occurrence": {
+                "status": "observed",
+                "mapping_version": "m1",
+                "evidence_ref": null,
+                "derivation": null
+              },
+              "source_recorded": {
+                "status": "unknown",
+                "mapping_version": "m1",
+                "evidence_ref": null,
+                "derivation": null
+              },
+              "message_created": {
+                "status": "unknown",
+                "mapping_version": "m1",
+                "evidence_ref": null,
+                "derivation": null
+              }
+            },
+            "resource_key": null,
+            "actor_key": null,
+            "location_key": null,
+            "disposition": "unknown",
+            "knowledge_availability": {
+              "status": "unknown",
+              "available_at": null
+            },
+            "raw_event": {
+              "source_family": "fixture",
+              "source_event_type": "ARRIVAL",
+              "source_record_id": null,
+              "source_fields": {
+                "case": "c",
+                "id": "e1",
+                "seq": 1,
+                "kind": "arrival",
+                "at": {
+                  "raw": "2020-01-01T01:00:01+01:00",
+                  "representation": "RFC3339",
+                  "precision": "second",
+                  "lineage": {
+                    "status": "observed"
+                  }
+                }
+              }
+            },
+            "quality_flags": [
+              "optional_clock_absent:source_recorded_time",
+              "optional_clock_absent:message_created_time",
+              "optional_clock_absent:available_at"
+            ]
+          }
+        ],
+        "accounting": {
+          "source_rows": 1,
+          "candidate_units": 1,
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0,
+          "candidate_conservation": true,
+          "cohort_denominator": 1,
+          "missing_triage": 0
+        }
+      }
+    },
+    {
+      "case_id": "missing_required_occurrence",
+      "expected_output": {
+        "records": [
+          {
+            "record_type": "trace_exclusion.v1",
+            "schema_version": "calibration-v1",
+            "dataset_id": "d1",
+            "mapping_version": "m1",
+            "source_event_key": "e1",
+            "raw_event": {
+              "source_family": "fixture",
+              "source_event_type": "ARRIVAL",
+              "source_record_id": null,
+              "source_fields": {
+                "case": "c",
+                "id": "e1",
+                "seq": 1,
+                "at": null
+              }
+            },
+            "raw_time_values": {
+              "available_at": null,
+              "message_created_time": null,
+              "occurrence": null,
+              "source_recorded_time": null
+            },
+            "exclusion_reason": "missing_required_time",
+            "lineage": {
+              "status": "unknown",
+              "mapping_version": "m1",
+              "evidence_ref": null,
+              "derivation": null
+            },
+            "detail": "occurrence time is absent"
+          }
+        ],
+        "accounting": {
+          "source_rows": 1,
+          "candidate_units": 1,
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0,
+          "candidate_conservation": true,
+          "cohort_denominator": 1,
+          "missing_triage": 0
+        }
+      }
+    }
+  ]
+}
