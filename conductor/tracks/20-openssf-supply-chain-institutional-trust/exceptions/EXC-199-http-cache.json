@@ -31,12 +31,12 @@
   "raw_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "file_sha256": {
     "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
-    "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "a928e08eacca08e497199ab58747ff751041643748a0f53ff988dbd7d2d0aa91",
-    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "3757fcb8d2bc16ba842cc5f3868c1f09de591ef50a599f56c83ab1d51397b9a4",
-    "tests/test_http_cache_patch.py": "542a970f0cf79242334b274cd93ec60ee32fb05b375d2302591cb822550479b9",
-    "tests/http-cache-security-regression.mjs": "298c3537d14c19afdc188cde554596d4f2fc4f95c56d387b79af9ab851f510b2"
+    "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "1745f11f6b2ae27c47ba00218970192ec0b0034d3d1467b524e411e2c3c9afa4",
+    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "68361630ff540c9e32e1e62417c805b54c35b57195f5108c7679b6ca4c15bcb8",
+    "tests/test_http_cache_patch.py": "4701a42699573255b6dac6c0815585137ac7e6132c8f2ebe3e7ddb95b9b0a641",
+    "tests/http-cache-security-regression.mjs": "05d4c9990c5dfc691798336443d28638a405a751076ae7147efc7a19a5392d9c"
   },
-  "patched_index_sha256": "fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76",
+  "patched_index_sha256": "5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c",
   "expires_at": "2026-10-10T00:00:00+10:00",
   "expires_on_stage_advance": true,
   "allowed_contexts": [
@@ -57,20 +57,21 @@
     "release_owner": "human sole maintainer (this chat; repository account edithatogo)",
     "classification_accepted": true,
     "approved_at": "2026-10-04T01:35:30+10:00",
-    "approval_evidence": "Human user messages in this chat: \u201cI approve\u201d in response to the explicit request for both the EXC-199 temporary operational exception and Track 49 production scheduling; after clarification, the user confirmed \u201cBoth\u201d. Recorded 2026-10-04T01:35:30+10:00 Brisbane time. This records approval of the temporary operational classification only; implementation and hosted verification remain separate gates."
+    "approval_evidence": "Human user messages in this chat: “I approve” in response to the explicit request for both the EXC-199 temporary operational exception and Track 49 production scheduling; after clarification, the user confirmed “Both”. Recorded 2026-10-04T01:35:30+10:00 Brisbane time. This records approval of the temporary operational classification only; implementation and hosted verification remain separate gates."
   },
   "follow_up": "EXC-199-http-cache-decision.md",
-  "activation": "exact-scope PR199 selection is implemented, but this approved record is blocked from classifying non-clean findings until corrected proof bytes and a separate accepted mitigation review/scope record are supplied",
+  "activation": "Corrected source binding is approved for the exact PR199 scope. The runner still retains the raw audit and requires live source proofs, all local controls and exact-head hosted checks; no release or publication scope is added.",
   "required_pull_request": 199,
   "scope_matching": "required_pull_request AND allowed_context AND exact repository/head_ref; conjunction only",
   "repository": "edithatogo/kairos",
   "head_ref": "codex/kairos-track48-optimistic-runtime",
-  "scope": "The exact pinned scripts/bootstrap-node-tools npm dependency tree for PR #199 development integration and its alpha/beta package dry runs. The risk classification is approved, but non-clean findings remain blocked until corrected proof bytes are independently reviewed and separately accepted.",
+  "scope": "The exact corrected, pinned scripts/bootstrap-node-tools npm dependency tree for PR #199 development integration and its alpha/beta package dry runs. The original temporary operational classification remains unchanged; only the reviewed corrected mitigation binding is added.",
   "approval_gates": {
     "security_owner": "explicit human approval required",
     "release_owner": "explicit human approval required",
     "classification": "temporary operational tooling limitation must be expressly accepted; AI review is not approval",
-    "activation": "separate implementation review and hosted exact-head checks required after approval"
+    "activation": "reviewed exact source integration, live proof verification, controls and hosted exact-head checks required; no RC/1.0/publication approval",
+    "source_binding_amendment": "human source-binding amendment approval recorded separately from the original classification approval"
   },
   "evidence": {
     "evidence_directory": "evidence/EXC-199/",
@@ -112,12 +113,54 @@
       "node": "v26.10.0",
       "npm_cli": "12.1.0",
       "metadata_sha256": "2df41a4349f4dc63e0a2bc0ac62ee896a2b3d27f3407f1442caf2f3765127e17"
+    },
+    "source_binding_amendment": {
+      "record": "EXC-199-mitigation-amendment.json",
+      "record_sha256": "b4818bfc43ad2f2061087735489ffbc488b3d42f30dd599f44a7787df2a3c212",
+      "evidence_manifest": "evidence/EXC-199-amendment/manifest.json",
+      "evidence_manifest_sha256": "e311be230541cc961c1428ab151f62a0a45baa01edacb97f9bbca04713e932e7",
+      "source_commit": "2efedc5ea04c1caf26a200bd2450e9e38426e8fe",
+      "patched_index_sha256": "5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c",
+      "file_sha256": {
+        "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
+        "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "1745f11f6b2ae27c47ba00218970192ec0b0034d3d1467b524e411e2c3c9afa4",
+        "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "68361630ff540c9e32e1e62417c805b54c35b57195f5108c7679b6ca4c15bcb8",
+        "tests/test_http_cache_patch.py": "4701a42699573255b6dac6c0815585137ac7e6132c8f2ebe3e7ddb95b9b0a641",
+        "tests/http-cache-security-regression.mjs": "05d4c9990c5dfc691798336443d28638a405a751076ae7147efc7a19a5392d9c"
+      },
+      "approval": {
+        "security_owner": "human sole maintainer (this chat; repository account edithatogo)",
+        "release_owner": "human sole maintainer (this chat; repository account edithatogo)",
+        "approved_at": "2026-10-04T10:39:27.598427+10:00",
+        "approval_evidence": "Human user replied “I approve” to the explicit source-binding amendment question for corrected mitigation commit2efedc5ea04c1caf26a200bd2450e9e38426e8fe and patched index5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c. Scope and expiry unchanged; no RC/1.0/publication/website/other PR or tree approval. Timestamp records receipt of this decision, not a claimed message-send time."
+      }
     }
   },
-  "decision": "human approved the temporary operational classification; activation is blocked by the documented stale-fallback mitigation gap",
-  "mitigation_review_status": "blocked_stale_fallback_gap",
-  "mitigation_review_blockers": [
-    "The prior behavior suite does not cover RFC cache directives and may permit stale fallback for no-store, no-cache, private/shared, proxy-revalidate, cookies, and must-revalidate responses.",
-    "Revalidation fallback does not establish matching URL, method, Host, or Vary state before reuse."
-  ]
+  "decision": "Human approved the temporary operational classification and separately approved the exact corrected PR199 source binding. The changed proof bytes are pinned below; raw audit findings remain visible and hosted acceptance remains required.",
+  "mitigation_review_status": "reviewed_corrected_source",
+  "mitigation_review_blockers": [],
+  "source_binding_amendment": {
+    "id": "EXC-199-mitigation-amendment",
+    "status": "human_approved",
+    "record": "EXC-199-mitigation-amendment.json",
+    "record_sha256": "b4818bfc43ad2f2061087735489ffbc488b3d42f30dd599f44a7787df2a3c212",
+    "evidence_manifest": "evidence/EXC-199-amendment/manifest.json",
+    "evidence_manifest_sha256": "e311be230541cc961c1428ab151f62a0a45baa01edacb97f9bbca04713e932e7",
+    "mitigation_source_commit": "2efedc5ea04c1caf26a200bd2450e9e38426e8fe",
+    "patched_index_sha256": "5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c",
+    "file_sha256": {
+      "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
+      "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "1745f11f6b2ae27c47ba00218970192ec0b0034d3d1467b524e411e2c3c9afa4",
+      "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "68361630ff540c9e32e1e62417c805b54c35b57195f5108c7679b6ca4c15bcb8",
+      "tests/test_http_cache_patch.py": "4701a42699573255b6dac6c0815585137ac7e6132c8f2ebe3e7ddb95b9b0a641",
+      "tests/http-cache-security-regression.mjs": "05d4c9990c5dfc691798336443d28638a405a751076ae7147efc7a19a5392d9c"
+    },
+    "review_status": "reviewed_corrected_source",
+    "owner_approval": {
+      "security_owner": "human sole maintainer (this chat; repository account edithatogo)",
+      "release_owner": "human sole maintainer (this chat; repository account edithatogo)",
+      "approved_at": "2026-10-04T10:39:27.598427+10:00",
+      "approval_evidence": "Human user replied “I approve” to the explicit source-binding amendment question for corrected mitigation commit2efedc5ea04c1caf26a200bd2450e9e38426e8fe and patched index5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c. Scope and expiry unchanged; no RC/1.0/publication/website/other PR or tree approval. Timestamp records receipt of this decision, not a claimed message-send time."
+    }
+  }
 }

@@ -43,7 +43,8 @@ runner = _load_runner()
 class NpmAuditRunnerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.policy = json.loads((EXCEPTIONS / "EXC-193-http-cache.json").read_text())
+        cls.policy = json.loads((EXCEPTIONS / "EXC-199-http-cache.json").read_text())
+        cls.exc193_policy = json.loads((EXCEPTIONS / "EXC-193-http-cache.json").read_text())
         fixture = os.environ.get("KAIROS_NPM_AUDIT_TEST_PACKAGE_SOURCE")
         cls.installed_package = (
             Path(fixture).resolve()
@@ -69,6 +70,14 @@ class NpmAuditRunnerTests(unittest.TestCase):
         if exception_id == "EXC-199":
             source_evidence = EXCEPTIONS / "evidence/EXC-199"
             shutil.copytree(source_evidence, exceptions / "evidence/EXC-199")
+            shutil.copyfile(
+                EXCEPTIONS / "EXC-199-mitigation-amendment.json",
+                exceptions / "EXC-199-mitigation-amendment.json",
+            )
+            shutil.copytree(
+                EXCEPTIONS / "evidence/EXC-199-amendment",
+                exceptions / "evidence/EXC-199-amendment",
+            )
         if self.installed_package is not None:
             tools = directory / "scripts/bootstrap-node-tools"
             for relative in runner.COPIES:
@@ -78,14 +87,14 @@ class NpmAuditRunnerTests(unittest.TestCase):
                 shutil.copyfile(self.installed_package / "package.json", package / "package.json")
         return directory
 
-    def test_exact_two_installed_copies_and_pinned_proofs_pass(self):
+    def test_exact_two_corrected_pr199_copies_and_proofs_pass(self):
         if self.installed_package is None:
             self.skipTest("installed npm dependency tree is absent; this task does not install packages")
         with tempfile.TemporaryDirectory() as temp:
             root = self.make_source_root(Path(temp))
             runner.verify_sources(root, copy.deepcopy(self.policy))
 
-    def test_extra_copy_source_drift_identity_and_proof_removal_reject(self):
+    def test_corrected_pr199_extra_copy_source_drift_identity_and_proof_removal_reject(self):
         if self.installed_package is None:
             self.skipTest("installed npm dependency tree is absent; this task does not install packages")
         cases = ("extra_copy", "source_drift", "identity_drift", "proof_removal", "manifest_removal")
@@ -118,6 +127,8 @@ class NpmAuditRunnerTests(unittest.TestCase):
             lambda policy: policy.__setitem__("patched_index_sha256", "0" * 64),
             lambda policy: policy.__setitem__("expires_at", "2027-10-10T00:00:00+10:00"),
             lambda policy: policy["raw_audit_command"].append("--ignore-scripts"),
+            lambda policy: policy["source_binding_amendment"].__setitem__("record_sha256", "0" * 64),
+            lambda policy: policy["source_binding_amendment"]["owner_approval"].__setitem__("approved_at", "2026-10-01T00:00:00+10:00"),
         )
         for mutate in mutations:
             with self.subTest(mutation=mutate), tempfile.TemporaryDirectory() as temp:
@@ -126,6 +137,12 @@ class NpmAuditRunnerTests(unittest.TestCase):
                 mutate(policy)
                 with self.assertRaises(ValueError):
                     runner.verify_sources(root, policy)
+
+    def test_exc193_historical_pins_cannot_bind_the_corrected_source_tree(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.make_source_root(Path(temp), self.exc193_policy)
+            with self.assertRaisesRegex(ValueError, "proof drift"):
+                runner.verify_sources(root, copy.deepcopy(self.exc193_policy))
 
     def test_duplicate_json_keys_are_rejected(self):
         with self.assertRaisesRegex(ValueError, "duplicate JSON key"):
@@ -263,6 +280,28 @@ class NpmAuditRunnerTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         runner.verify_exc199_evidence(damaged_root, policy)
 
+    def test_exc199_amendment_record_and_all_evidence_copies_are_pinned(self):
+        policy = json.loads((EXCEPTIONS / "EXC-199-http-cache.json").read_text())
+        with tempfile.TemporaryDirectory() as temp:
+            root = self.make_source_root(Path(temp), policy)
+            runner.verify_exc199_amendment_evidence(root, policy)
+            for relative in (
+                "EXC-199-mitigation-amendment.json",
+                "evidence/EXC-199-amendment/manifest.json",
+                "evidence/EXC-199-amendment/receipt.json",
+                "evidence/EXC-199-amendment/green-new-top.stdout",
+            ):
+                with self.subTest(relative=relative), tempfile.TemporaryDirectory() as damaged_temp:
+                    damaged_root = self.make_source_root(Path(damaged_temp), policy)
+                    target = (
+                        damaged_root
+                        / "conductor/tracks/20-openssf-supply-chain-institutional-trust/exceptions"
+                        / relative
+                    )
+                    target.write_bytes(target.read_bytes() + b"tampered")
+                    with self.assertRaises(ValueError):
+                        runner.verify_exc199_amendment_evidence(damaged_root, policy)
+
     def _run_main_with_fake_commands(
         self,
         raw_stdout: str,
@@ -312,15 +351,14 @@ class NpmAuditRunnerTests(unittest.TestCase):
             raw_stderr = (output / "raw-audit.stderr").read_bytes()
             return result, run.call_count, receipt, raw_bytes, raw_stderr, verify_sources.call_count
 
-    def test_main_retains_raw_audit_artifacts_when_approved_record_is_blocked(self):
+    def test_main_retains_raw_audit_artifacts_when_approved_record_is_used(self):
         report_path = EXCEPTIONS / "evidence/EXC-199/audit/pr199-0a3b86a/raw-audit.json"
         raw_stdout = report_path.read_text()
         result, run_count, receipt, raw_bytes, raw_stderr, proof_calls = self._run_main_with_fake_commands(raw_stdout, 1)
-        self.assertEqual(result, 1)
+        self.assertEqual(result, 0)
         self.assertEqual(run_count, 8)
         self.assertEqual(proof_calls, 1)
-        self.assertEqual(receipt["classification"], "failed")
-        self.assertIn("stale-fallback gap", receipt["error"])
+        self.assertEqual(receipt["classification"], "approved_temporary_exception")
         self.assertEqual(receipt["raw_audit"]["status"], "executed")
         self.assertEqual(receipt["raw_audit"]["exit"], 1)
         self.assertEqual(raw_bytes.decode(), raw_stdout)
