@@ -250,6 +250,15 @@ impl LogicalEventId {
             LogicalNode::Output { .. } => None,
         }
     }
+
+    /// Returns the complete parent ordering key and output ordinal for an
+    /// Output identity. Root identities have no parent or output ordinal.
+    pub fn output_parts(&self) -> Option<(&OptimisticEventOrderKey, u32)> {
+        match self.0.as_ref() {
+            LogicalNode::Root { .. } => None,
+            LogicalNode::Output { parent, ordinal } => Some((parent, *ordinal)),
+        }
+    }
 }
 
 /// Complete deterministic event ordering key `(tick, actual source, logical id)`.
@@ -267,6 +276,23 @@ impl OptimisticEventOrderKey {
             source_lp: event.source_lp,
             logical_id,
         }
+    }
+
+    /// Constructs an order key after validating its entire causal ancestry.
+    ///
+    /// This validates structural identity only. It does not admit an event to
+    /// a runtime or authenticate a transport sender.
+    pub fn try_from_parts(
+        tick: Tick,
+        source_lp: LpId,
+        logical_id: LogicalEventId,
+    ) -> Result<Self, OptimisticError> {
+        validate_complete_ancestry(tick, source_lp, &logical_id)?;
+        Ok(Self {
+            tick,
+            source_lp,
+            logical_id,
+        })
     }
 
     pub fn tick(&self) -> Tick {
@@ -313,6 +339,21 @@ impl OptimisticMessage {
         }
     }
 
+    /// Reconstructs a transport envelope while checking the complete logical
+    /// ancestry against the event's tick and actual source LP.
+    ///
+    /// A successful reconstruction does not authenticate the sender or bypass
+    /// the destination runtime's topology, GVT, capacity, or duplicate checks.
+    pub fn try_from_parts(
+        event: RemoteEvent,
+        logical_id: LogicalEventId,
+        incarnation: u64,
+        kind: OptimisticMessageKind,
+    ) -> Result<Self, OptimisticError> {
+        OptimisticEventOrderKey::try_from_parts(event.tick, event.source_lp, logical_id.clone())?;
+        Ok(Self::new(event, logical_id, incarnation, kind))
+    }
+
     /// Returns the immutable model event, including its original payload bytes.
     pub fn event(&self) -> &RemoteEvent {
         &self.event
@@ -339,6 +380,54 @@ impl OptimisticMessage {
         Self {
             kind: OptimisticMessageKind::Anti,
             ..self.clone()
+        }
+    }
+}
+
+/// Validates every key encoded by a logical identity without recursive calls.
+/// The walk is bounded before following more than the native depth limit.
+fn validate_complete_ancestry(
+    tick: Tick,
+    source_lp: LpId,
+    logical_id: &LogicalEventId,
+) -> Result<(), OptimisticError> {
+    let mut current_tick = tick;
+    let mut current_source = source_lp;
+    let mut current_id = logical_id;
+    let mut output_depth = 0usize;
+
+    loop {
+        match current_id.0.as_ref() {
+            LogicalNode::Root {
+                source_lp: declared,
+                ..
+            } => {
+                if *declared != current_source {
+                    return Err(OptimisticError::EnvelopeSourceMismatch {
+                        declared: *declared,
+                        actual: current_source,
+                    });
+                }
+                return Ok(());
+            }
+            LogicalNode::Output { parent, .. } => {
+                output_depth += 1;
+                if output_depth > MAX_CAUSAL_DEPTH {
+                    return Err(OptimisticError::CausalDepthExceeded {
+                        depth: output_depth,
+                        limit: MAX_CAUSAL_DEPTH,
+                    });
+                }
+                if current_tick <= parent.tick {
+                    return Err(OptimisticError::OutputNotStrictlyFuture {
+                        input_tick: parent.tick,
+                        output_tick: current_tick,
+                    });
+                }
+                current_tick = parent.tick;
+                current_source = parent.source_lp;
+                current_id = &parent.logical_id;
+            }
         }
     }
 }
