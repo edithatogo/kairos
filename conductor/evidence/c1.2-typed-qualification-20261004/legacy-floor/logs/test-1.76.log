@@ -1,0 +1,74 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling thiserror v2.0.20
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/crates/kairo-ecs-types)
+   Compiling syn v3.0.6
+   Compiling thiserror-impl v2.0.20
+   Compiling kairo-ecs-arrow v0.1.0 (/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/crates/kairo-ecs-arrow)
+    Finished test [unoptimized + debuginfo] target(s) in 6.41s
+     Running unittests src/lib.rs (.artifacts/mvp/C1.2.deps.legacy_floor_20261004/target-1.76/debug/deps/kairo_ecs_arrow-225e6064d54cc1c2)
+
+running 6 tests
+test tests::dispatched_record_maps_core_event_fields ... ok
+test tests::event_log_batch_round_trips_smoke_bytes ... ok
+test tests::event_log_schema_matches_track_04_order ... ok
+test tests::previous_facade_still_flushes_records ... ok
+test tests::smoke_bytes_preserve_escaped_strings_and_payload_ref ... ok
+test tests::validation_rejects_incompatible_schema_version ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/resource_lifecycle_v1.rs (.artifacts/mvp/C1.2.deps.legacy_floor_20261004/target-1.76/debug/deps/resource_lifecycle_v1-8f4a3abe75ec70d0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/schema_compatibility.rs (.artifacts/mvp/C1.2.deps.legacy_floor_20261004/target-1.76/debug/deps/schema_compatibility-e6c5c2de526403c9)
+
+running 4 tests
+test checked_in_schema_json_matches_runtime_contract ... ok
+test event_log_schema_fingerprint_is_stable ... ok
+test event_log_schema_is_stable_for_binding_consumers ... ok
+test event_log_smoke_roundtrip_preserves_ordering_fields ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/trace_time.rs (.artifacts/mvp/C1.2.deps.legacy_floor_20261004/target-1.76/debug/deps/trace_time-0b1045e19f194dc1)
+
+running 6 tests
+test occurrence_requires_the_right_clock_role_and_present_lineage ... ok
+test exclusions_and_explicit_lineage_have_standard_error_and_preserve_meaning ... ok
+test relative_ticks_are_exact_and_reject_pre_origin ... ok
+test unresolved_or_coarse_timestamps_are_exclusions_not_fabricated_ticks ... ok
+test valid_boarding_after_episode_end_is_not_rejected_as_reversed_location_time ... ok
+test minute_precision_is_retained_and_episode_end_does_not_imply_departure ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/trace_time_roles_v1.rs (.artifacts/mvp/C1.2.deps.legacy_floor_20261004/target-1.76/debug/deps/trace_time_roles_v1-b49fe2fa64fcc9be)
+
+running 6 tests
+test accepted_occurrence_projects_to_unchanged_wrapper_fields ... ok
+test each_role_retains_existing_exclusion_classification ... ok
+test every_role_has_exact_full_signed_span_and_origin ... ok
+test every_role_precision_and_lineage_is_preserved ... ok
+test shared_error_precedence_is_not_reordered ... ok
+test occurrence_wrapper_preserves_missing_and_role_precedence ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/trace_time_signed_span.rs (.artifacts/mvp/C1.2.deps.legacy_floor_20261004/target-1.76/debug/deps/trace_time_signed_span-c071063594affc6b)
+
+running 1 test
+test relative_ticks_accepts_full_ordered_signed_domain ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo-ecs-arrow
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

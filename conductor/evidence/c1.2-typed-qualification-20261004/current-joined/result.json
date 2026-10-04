@@ -1,0 +1,55 @@
+{
+  "status": "ready_for_review",
+  "base": "88d599daea8c633cd2da6b346014de59a5ec4c01",
+  "verification": [
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--no-default-features",
+        "--features",
+        "ipc,parquet",
+        "--test",
+        "calibration_physical_v2"
+      ],
+      "cwd": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos",
+      "env": {
+        "RUSTC": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.current_lints_20261004/target-1.99",
+        "KAIROS_C11_PHYSICAL_OUTDIR": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/both-output"
+      },
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.parquet.current_join_20261004/native.log",
+      "sha256": "834e1fcb0fd4f042e360d78f61908d1f4228cb6006e819ede918a94d5ecf8de3"
+    },
+    {
+      "argv": [
+        "/private/tmp/kairos-c1-ci-python-qualify-20261004/.artifacts/c1-ci-python-qualification/venv-attempt2/bin/python",
+        "-B",
+        "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py",
+        "--check-rust",
+        ".artifacts/mvp/C1.2.parquet.current_join_20261004/both-output"
+      ],
+      "cwd": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos",
+      "env": {
+        "RUSTC": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.deps.current_lints_20261004/target-1.99",
+        "KAIROS_C11_PHYSICAL_OUTDIR": "/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/.artifacts/mvp/C1.2.parquet.current_join_20261004/both-output"
+      },
+      "exit": 0,
+      "log": ".artifacts/mvp/C1.2.parquet.current_join_20261004/pyarrow.log",
+      "sha256": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114"
+    }
+  ],
+  "source_hashes": {
+    "conductor/design/calibration/c1-recordbatch-io-v1.md": "2854aff0be65914e1b0b16e6caa46122ea640b959632d95030edbdce83958449",
+    "crates/kairo-ecs-arrow-io/tests/calibration_physical_v2.rs": "9c01255e28039ba52ea06d7c0ac77b03f62b676c522633e23121e5ddd50c5917",
+    "crates/kairo-ecs-arrow-io/tests/support/calibration_physical_schema_v2.rs": "4f48216948b365d286e11e15fc4a428b3c0ce9730ba23dea0f14da21ac016989"
+  }
+}

@@ -1,0 +1,87 @@
+cwd=/private/tmp/careops-c12-lint-parent-20261004/libs/kairos
+62f20dc68f81fc639786ee22c21b2c709c7f9393
+rustc 1.88.0 (6b00bc388 2025-06-23)
+binary: rustc
+commit-hash: 6b00bc3880198600130e1cf62b8f8a93494488cc
+commit-date: 2025-06-23
+host: aarch64-apple-darwin
+release: 1.88.0
+LLVM version: 20.1.5
+cargo 1.88.0 (873a06493 2025-05-10)
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling autocfg v1.5.0
+   Compiling libm v0.2.16
+   Compiling zerocopy v0.8.48
+   Compiling cfg-if v1.0.4
+   Compiling libc v0.2.186
+   Compiling version_check v0.9.5
+   Compiling getrandom v0.3.4
+   Compiling core-foundation-sys v0.8.7
+   Compiling bytes v1.12.1
+   Compiling iana-time-zone v0.1.65
+   Compiling ahash v0.8.12
+   Compiling semver v1.0.28
+   Compiling num-traits v0.2.19
+   Compiling once_cell v1.21.4
+   Compiling arrow-schema v60.0.0
+   Compiling rustc_version v0.4.1
+   Compiling hashbrown v0.17.1
+   Compiling bitflags v2.13.2
+   Compiling thiserror v2.0.20
+   Compiling flatbuffers v25.12.19
+   Compiling base64 v0.23.1
+   Compiling seq-macro v0.3.6
+   Compiling twox-hash v2.1.4
+   Compiling syn v2.0.117
+   Compiling syn v3.0.6
+   Compiling num-integer v0.1.47
+   Compiling chrono v0.4.45
+   Compiling num-complex v0.4.6
+   Compiling num-bigint v0.5.1
+   Compiling thiserror-impl v2.0.20
+   Compiling zerocopy-derive v0.8.48
+   Compiling half v2.7.1
+   Compiling arrow-buffer v60.0.0
+   Compiling arrow-data v60.0.0
+   Compiling arrow-array v60.0.0
+   Compiling arrow-cmp v60.0.0
+   Compiling arrow-select v60.0.0
+   Compiling arrow-ipc v60.0.0
+   Compiling parquet v60.0.0
+   Compiling kairo-ecs-arrow-io v0.1.0 (/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/crates/kairo-ecs-arrow-io)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 43.31s
+     Running unittests src/lib.rs (.artifacts/mvp/C1.2.deps.current_lints_20261004/target-1.88/debug/deps/kairo_ecs_arrow_io-77cd9c2d9295ffe8)
+
+running 27 tests
+test error::tests::limit_error_keeps_the_named_limit ... ok
+test ipc::tests::field_metadata_mismatch_is_rejected ... ok
+test ipc::tests::file_and_stream_keep_typed_empty_schema ... ok
+test ipc::tests::malformed_and_truncated_inputs_are_errors_not_panics ... ok
+test ipc::tests::zero_row_batch_counts_toward_batch_limit ... ok
+test ipc::tests::file_batch_cap_is_checked_before_reading_batches ... ok
+test ipc::tests::column_cap_is_checked_for_file_stream_and_writer_paths ... ok
+test limits::tests::bounded_buffer_accepts_exact_limit_and_rejects_before_appending_past_it ... ok
+test limits::tests::checked_count_overflow_fails_closed ... ok
+test limits::tests::every_zero_cap_is_invalid ... ok
+test limits::tests::independent_input_column_batch_and_total_row_caps_are_enforced ... ok
+test ipc::tests::readers_reject_schema_mismatch_and_each_resource_limit ... ok
+test ipc::tests::writer_counts_zero_row_batches_too ... ok
+test ipc::tests::writers_reject_output_cap_before_returning_partial_bytes ... ok
+test ipc::tests::file_and_stream_round_trip_multiple_batches ... ok
+test parquet::tests::malformed_and_truncated_files_are_errors_not_panics ... ok
+test parquet::tests::parquet_footer_copies_sorted_global_schema_metadata ... ok
+test parquet::tests::caller_arrow_schema_metadata_round_trips_without_replacing_reserved_footer_value ... ok
+test parquet::tests::parquet_reader_restores_validated_schema_metadata_on_batches ... ok
+test parquet::tests::column_cap_is_checked_before_parquet_reader_or_writer_work ... ok
+test parquet::tests::parquet_round_trip_bounds_row_groups_and_rows ... ok
+test parquet::tests::parquet_empty_batch_list_preserves_schema ... ok
+test parquet::tests::field_metadata_mismatch_is_not_ignored ... ok
+test parquet::tests::max_batches_counts_returned_batches_across_row_groups ... ok
+test parquet::tests::schema_metadata_mismatch_is_not_ignored ... ok
+test parquet::tests::reader_enforces_encoded_bytes_rows_columns_and_schema ... ok
+test parquet::tests::writer_prevalidates_batches_and_caps_output ... ok
+
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+

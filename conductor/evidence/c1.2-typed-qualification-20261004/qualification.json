@@ -1,0 +1,35 @@
+{
+  "status": "accepted_local_C1.2_qualification",
+  "reviewer": "root coordinator; independent Luna schema and dependency/legacy reviews",
+  "integration_source": "88d599daea8c633cd2da6b346014de59a5ec4c01",
+  "independent_schema_commit": "f3db825375568e4cd7e49c8e2cfb5e46a618191a",
+  "lint_commit": "ac7e9cb89aae3e2243976c9fad4c1921502e403e",
+  "legacy_byte_guard_commit": "9e896a7e5ef147e0068d0c9efde143bebc864035",
+  "physical_version": "2",
+  "logical_schema_sha256": "8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842",
+  "qualification": [
+    "Rust1.88/1.99 none/ipc/parquet/both8locked/offline dependencybuilds",
+    "Defaultlegacy23tests pass on1.76/1.99; additionalbyteguard1pass each",
+    "IPC-only1pass,Parquet-only1pass,both2pass on1.88; independentPyArrow25.0.1 exact9file readback",
+    "Integrated1.99both2pass plusindependentPyArrow25.0.1 exact9file readback",
+    "IO floor1.88genericlibrary27tests;current1.99Clippylib noallow/suppression"
+  ],
+  "legacy_golden_sha256": "3928adcb2a84bfb0521c267cc834534693ee2acaa8ab7a080523dc20491163ac",
+  "feature_isolation": "noArrow/Parquet indefaultIO/defaultlegacy/core/DESdependencytrees; manifests/lock unchanged",
+  "source_hashes": {
+    "Cargo.lock": "711f5d19b22d454a394334402e5829ec8e0a0287f4febaef807767e1529bda8b",
+    "crates/kairo-ecs-arrow/Cargo.toml": "6190b39b70ffffd6ff75a5905e4c46d03fc8993c775be59f2c70739151098143",
+    "crates/kairo-ecs-arrow-io/Cargo.toml": "ca6d504b69a02eefa4ef300a2f1cbe53c11a3e7afc788c20e3ce60497ba19612",
+    "crates/kairo-ecs-arrow-io/tests/calibration_physical_v2.rs": "9c01255e28039ba52ea06d7c0ac77b03f62b676c522633e23121e5ddd50c5917",
+    "crates/kairo-ecs-arrow-io/tests/support/calibration_physical_schema_v2.rs": "4f48216948b365d286e11e15fc4a428b3c0ce9730ba23dea0f14da21ac016989",
+    "conformance/c11/physical_schema.py": "acbde880d03f89df8f556cdd50dc2f49141aa86b9d854ad9fcd9117211a06f44"
+  },
+  "limitations": [
+    "Synthetic/local typedphysicalv2 qualification; notstableAPI,realclinical feed,IANAresolver,C1.3orfullC1/release",
+    "IOencoded/output/consumedrow bounds; nohostiledecoderpeak-memoryisolationclaim",
+    "Newheadhostedchecks andparentpin/catalog integrationseparate; predecessor62f20dc hostednative11jobs passed atmerge-refbcfc70ac3dbf05a9ebc510f3f15106f553440f7a"
+  ],
+  "seed": "not applicable; deterministicfixedsyntheticinputs",
+  "retained_files": "retained-files.json",
+  "corrections": "Independent fullschema test caught shorttime_lineagewrappermetadata path mismatch; correctedRustdeclaration only. FrozeninputbytesandPythoncontractunchanged."
+}

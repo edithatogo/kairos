@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "packet_id": "C1.2.legacy.frozen_bytes_20261004",
+  "status": "ready_for_review",
+  "attempt_id": "frozen_bytes_20261004",
+  "model_candidate": "gpt-6-luna",
+  "repository": "libs/kairos",
+  "cwd": "/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos",
+  "base_commit": "62f20dc68f81fc639786ee22c21b2c709c7f9393",
+  "branch": "codex/c12-legacy-qualification-20261004",
+  "input_hashes": {
+    "crates/kairo-ecs-arrow/src/lib.rs": "2d12e6f1d4bff87f8903f9f28ba56d6b421267c3387b5aed5daad3de6f358415",
+    "crates/kairo-ecs-arrow/Cargo.toml": "6190b39b70ffffd6ff75a5905e4c46d03fc8993c775be59f2c70739151098143",
+    "conductor/design/calibration/c1-recordbatch-io-v1.md": "2854aff0be65914e1b0b16e6caa46122ea640b959632d95030edbdce83958449"
+  },
+  "changed_source": {
+    "path": "crates/kairo-ecs-arrow/tests/legacy_smoke_bytes_v1.rs",
+    "sha256": "0a72fbd136a3067ae7827e60b70b1313a30646f81c2da38ef0863d63d7089ca6",
+    "format_command": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustfmt --edition 2021 crates/kairo-ecs-arrow/tests/legacy_smoke_bytes_v1.rs"
+  },
+  "oracle": {
+    "frozen_format": "legacy custom smoke format",
+    "baseline_commit": "4c065e7",
+    "bytes": 296,
+    "sha256": "3928adcb2a84bfb0521c267cc834534693ee2acaa8ab7a080523dc20491163ac",
+    "terminator": "one LF",
+    "checks": ["exact serialization", "decode then exact re-serialization", "custom stream header", "not ARROW1", "not PAR1"]
+  },
+  "verification": [
+    {
+      "argv": ["/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo", "test", "--locked", "--offline", "-p", "kairo-ecs-arrow", "--no-default-features", "--test", "legacy_smoke_bytes_v1"],
+      "environment": {
+        "RUSTC": "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR": ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/target-1.76"
+      },
+      "toolchain": "cargo 1.76.0 (c84b36747 2024-01-18); rustc 1.76.0 (07dca489a 2024-02-04); aarch64-apple-darwin",
+      "exit_code": 0,
+      "tests": {"passed": 1, "failed": 0},
+      "log": ".artifacts/mvp/C1.2.legacy.frozen_bytes_20261004/logs/rust-1.76.log",
+      "log_sha256": "3877333caf7cd5a8d8a9dd8cbbc18f8b10d22e74c06dfc132153b42359e1fad5"
+    },
+    {
+      "argv": ["/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo", "test", "--locked", "--offline", "-p", "kairo-ecs-arrow", "--no-default-features", "--test", "legacy_smoke_bytes_v1"],
+      "environment": {
+        "RUSTC": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR": ".artifacts/mvp/C1.2.deps.legacy_floor_20261004/target-1.99"
+      },
+      "toolchain": "cargo 1.99.0 (5f94df478 2026-08-27); rustc 1.99.0 (b940084d7 2026-09-28); aarch64-apple-darwin",
+      "exit_code": 0,
+      "tests": {"passed": 1, "failed": 0},
+      "log": ".artifacts/mvp/C1.2.legacy.frozen_bytes_20261004/logs/rust-1.99.log",
+      "log_sha256": "840accd998f4af65b970f082235f223257d5a5523ff585e92e578d02941d1022"
+    }
+  ],
+  "scope": {
+    "production_edits": false,
+    "cargo_or_lock_edits": false,
+    "dependency_changes": false,
+    "arrow_dependency_added": false,
+    "test_scope": "single new legacy default-feature integration target only; no full suite rerun"
+  },
+  "commit": null
+}

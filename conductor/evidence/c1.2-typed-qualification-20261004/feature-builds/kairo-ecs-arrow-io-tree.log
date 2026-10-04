@@ -1,0 +1,11 @@
+kairo-ecs-arrow-io v0.1.0 (/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/crates/kairo-ecs-arrow-io)
+└── thiserror v2.0.20
+    └── thiserror-impl v2.0.20 (proc-macro)
+        ├── proc-macro2 v1.0.106
+        │   └── unicode-ident v1.0.24
+        ├── quote v1.0.45
+        │   └── proc-macro2 v1.0.106 (*)
+        └── syn v3.0.6
+            ├── proc-macro2 v1.0.106 (*)
+            ├── quote v1.0.45 (*)
+            └── unicode-ident v1.0.24

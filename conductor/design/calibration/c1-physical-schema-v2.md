@@ -1,6 +1,6 @@
 # C1 physical calibration schema v2
 
-Status: experimental physical v2 candidate, pending exact Python/Rust IPC file, IPC stream and Parquet qualification. This supersedes the rejected v1 map layout; no stable release or clinical-feed acceptance.
+Status: experimental physical v2, locally qualified against full independently declared Rust schemas on Rust1.88/1.99 and PyArrow25.0.1 IPC file/stream and Parquet readers. Evidence is retained in `conductor/evidence/c1.2-typed-qualification-20261004/`. This supersedes the rejected v1 map layout; no stable release or clinical-feed acceptance.
 
 ## Compatibility decision
 
