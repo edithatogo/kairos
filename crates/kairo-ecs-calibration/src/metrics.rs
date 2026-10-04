@@ -136,20 +136,15 @@ impl Rat {
         let right = other.numerator.checked_mul(right_factor)?;
         let numerator = if self.negative == other.negative {
             left.checked_add(right)?
-        } else if left >= right {
-            left - right
         } else {
-            right - left
+            left.abs_diff(right)
         };
-        let negative = if numerator == 0 {
-            false
-        } else if self.negative == other.negative {
-            self.negative
-        } else if left >= right {
-            self.negative
-        } else {
-            other.negative
-        };
+        let negative = numerator != 0
+            && (if left >= right {
+                self.negative
+            } else {
+                other.negative
+            });
         let denominator = self.denominator.checked_mul(left_factor)?;
         Self::new(negative, numerator, denominator)
     }
@@ -369,12 +364,11 @@ pub(crate) fn compare(request: &MetricRequest<'_>) -> MetricResult {
             precision: result_precision,
         };
     }
-    if weighted {
-        if (!reference.is_empty() && normalize_weights(&mut reference).is_none())
-            || (!simulation.is_empty() && normalize_weights(&mut simulation).is_none())
-        {
-            return invalid(result_precision);
-        }
+    if weighted
+        && ((!reference.is_empty() && normalize_weights(&mut reference).is_none())
+            || (!simulation.is_empty() && normalize_weights(&mut simulation).is_none()))
+    {
+        return invalid(result_precision);
     }
     if ref_count == 0 || sim_count == 0 {
         return MetricResult {
