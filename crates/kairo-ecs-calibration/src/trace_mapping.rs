@@ -1420,6 +1420,123 @@ mod tests {
         assert_eq!(x["last_observed"]["relative_ticks"], "4000000000");
     }
     #[test]
+    fn integer_units_are_exactly_equivalent_for_one_second() {
+        let mut ticks = Vec::new();
+        for (unit, raw) in [
+            ("s", "1"),
+            ("ms", "1000"),
+            ("us", "1000000"),
+            ("ns", "1000000000"),
+        ] {
+            let mut r = req();
+            r["rows"][0]["at"] = json!({"raw":raw,"representation":"relative_integer","precision":"second","unit":unit,"lineage":{"status":"observed"}});
+            ticks.push(map(&r)["records"][0]["relative_ticks"].clone());
+        }
+        assert!(ticks.iter().all(|v| v == "1000000000"));
+    }
+    #[test]
+    fn derived_lineage_is_retained_and_bad_lineage_becomes_safe_exclusion() {
+        let mut r = req();
+        r["rows"][0]["at"]["lineage"] = json!({"status":"derived","evidence_ref":"evidence:source","derivation":"derived from source row"});
+        let event = &map(&r)["records"][0];
+        assert_eq!(event["occurrence_time"]["lineage"]["status"], "derived");
+        assert_eq!(
+            event["occurrence_time"]["lineage"]["evidence_ref"],
+            "evidence:source"
+        );
+        assert_eq!(
+            event["occurrence_time"]["lineage"]["derivation"],
+            "derived from source row"
+        );
+        let bad = [
+            Value::Null,
+            json!({"status":"observed","mapping_version":"other"}),
+            json!({"status":"derived","evidence_ref":7}),
+        ];
+        for lineage in bad {
+            let mut x = req();
+            x["rows"][0]["at"]["lineage"] = lineage;
+            let m = map(&x);
+            let ex = &m["records"][0];
+            assert_eq!(ex["record_type"], "trace_exclusion.v1");
+            assert_eq!(ex["exclusion_reason"], "invalid_mapping");
+            assert!(ex["lineage"]["status"].is_string());
+            assert_eq!(
+                ex["raw_event"]["source_fields"]["at"]["lineage"],
+                x["rows"][0]["at"]["lineage"]
+            );
+        }
+    }
+    #[test]
+    fn addition_and_calendar_overflow_preserve_declared_clock_evidence() {
+        let mut r = req();
+        r["rows"][0]["at"] = json!({"raw":"170141183460469231731687303715884105727","representation":"relative_integer","precision":"nanosecond","unit":"ns","lineage":{"status":"observed"}});
+        let add = map(&r);
+        assert_eq!(add["records"][0]["exclusion_reason"], "overflow");
+        assert_eq!(
+            add["records"][0]["raw_event"]["source_fields"]["at"]["unit"],
+            "ns"
+        );
+        assert_eq!(r["origin_utc"], "2020-01-01T00:00:00Z");
+        r["origin_utc"] = json!("9999-12-31T23:59:59Z");
+        r["rows"][0]["at"] = json!({"raw":"1","representation":"relative_integer","precision":"second","unit":"s","lineage":{"status":"observed"}});
+        let cal = map(&r);
+        assert_eq!(cal["records"][0]["exclusion_reason"], "overflow");
+        assert_eq!(
+            cal["records"][0]["raw_event"]["source_fields"]["at"]["raw"],
+            "1"
+        );
+        assert_eq!(r["origin_utc"], "9999-12-31T23:59:59Z");
+    }
+    #[test]
+    fn wide_row_emits_one_outcome_even_if_event_is_excluded() {
+        let mut r = req();
+        r["event_bindings"] = json!([{ "source_event_type":"A","kind":"a","rank":"1","occurrence_index":0,"occurrence_field":"at","key_field":"id1","order_field":"seq"},{"source_event_type":"B","kind":"b","rank":"2","occurrence_index":0,"occurrence_field":"at2","key_field":"id2","order_field":"seq"}]);
+        r["rows"][0]["id1"] = json!("event-a");
+        r["rows"][0]["id2"] = json!("event-b");
+        r["rows"][0]["at2"] = Value::Null;
+        r["rows"][0]["outcome"] = json!({"endpoint":"endpoint","risk_start":clock("2020-01-01T00:00:00Z","risk"),"last_observed":clock("2020-01-01T00:00:02Z","last"),"event_clock":Value::Null,"censor_cause":"admin","censor_status":"right","lineage":{"status":"observed"}});
+        let m = map(&r);
+        assert_eq!(m["accounting"]["candidate_units"], 2);
+        assert_eq!(m["accounting"]["accepted_units"], 1);
+        assert_eq!(m["accounting"]["excluded_units"], 1);
+        assert_eq!(m["outcomes"].as_array().unwrap().len(), 1);
+        assert_eq!(m["accounting"]["candidate_conservation"], true);
+    }
+    #[test]
+    fn identities_keep_exact_unicode_case_and_ties_ignore_input_row_permutation() {
+        let mut r = req();
+        r["rows"][0]["case"] = json!("Straße");
+        r["rows"][0]["id"] = json!("é");
+        let mut second = r["rows"][0].clone();
+        second["id"] = json!("e\u{301}");
+        r["rows"].as_array_mut().unwrap().push(second);
+        let mut third = r["rows"][0].clone();
+        third["case"] = json!("STRASSE");
+        third["id"] = json!("third");
+        r["rows"].as_array_mut().unwrap().push(third);
+        let a = map(&r);
+        r["rows"].as_array_mut().unwrap().reverse();
+        let b = map(&r);
+        assert_eq!(a["records"], b["records"]);
+        assert_eq!(a["accounting"]["accepted_units"], 3);
+    }
+    #[test]
+    fn source_order_and_occurrence_limits_are_validated_before_clocks() {
+        let mut r = req();
+        r["rows"][0]["seq"] = json!(u64::MAX);
+        r["event_bindings"][0]["occurrence_index"] = json!(u32::MAX);
+        assert_eq!(map(&r)["accounting"]["accepted_units"], 1);
+        r["rows"][0]["seq"] = json!(u64::MAX.to_string() + "0");
+        let m = map(&r);
+        assert_eq!(m["accounting"]["failed_units"], 1);
+        assert_eq!(m["records"].as_array().unwrap().len(), 0);
+        r = req();
+        r["event_bindings"][0]["occurrence_index"] = json!(u64::from(u32::MAX) + 1);
+        let m = map(&r);
+        assert_eq!(m["accounting"]["failed_units"], 1);
+    }
+    #[test]
     fn wide_episode_end_does_not_infer_later_boarding_departure() {
         let mut r = req();
         r["event_bindings"] = json!([{ "source_event_type":"EPISODE_END","kind":"episode_end","rank":"10","occurrence_index":0,"occurrence_field":"end","key_field":"id1","order_field":"seq"},{"source_event_type":"BOARDING","kind":"boarding","rank":"2","occurrence_index":0,"occurrence_field":"board","key_field":"id2","order_field":"seq"}]);
