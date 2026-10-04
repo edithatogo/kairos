@@ -43,6 +43,17 @@ class Scoped195Tests(unittest.TestCase):
             with self.subTest(field=field), self.assertRaises(ValueError):
                 self.classify(policy=policy)
 
+    def test_approval_attestation_mutations_reject(self):
+        for field in ['security_owner','release_owner','approval_evidence','approved_at']:
+            policy=copy.deepcopy(self.policy)
+            policy['approvals'][field]='invented approval'
+            with self.subTest(field=field):
+                with self.assertRaises(ValueError):self.classify(policy=policy)
+                with self.assertRaises(ValueError):runner.verify_sources(ROOT,policy)
+        policy=copy.deepcopy(self.policy);policy['source_commit']='0'*40
+        with self.assertRaises(ValueError):self.classify(policy=policy)
+        with self.assertRaises(ValueError):runner.verify_sources(ROOT,policy)
+
     def test_event_scope(self):
         def event(number=195,branch='codex/vitest-floor-closeout-20261003',repo='edithatogo/kairos'):
             return {'repository':{'full_name':'edithatogo/kairos'},'pull_request':{'number':number,'head':{'ref':branch,'repo':{'full_name':repo}}}}

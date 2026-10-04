@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from typing import Any
 
 
+_PR195_APPROVAL_RECORD_HASH = "c0da78b6f0f4d92f452bb79c9cdc3378b9ba4881e00e74de15cf1917e85bdda2"
+
 _BASELINE_FINGERPRINT = (
     "0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8"
 )
@@ -132,6 +134,10 @@ def _validate_graph(vulnerabilities: dict[str, Any]) -> None:
         _reject("the graph must contain exactly one advisory leaf")
 
 def _validate_approval(policy: dict[str, Any], context: str, pull_request: int, now: datetime) -> None:
+    if policy.get("id") == "EXC-195":
+        record_hash = hashlib.sha256(json.dumps(policy, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        if record_hash != _PR195_APPROVAL_RECORD_HASH:
+            _reject("PR195 approval record changed; fresh human review required")
     if policy.get("status") != "approved":
         _reject("the exception is not approved")
     if policy.get("classification") != "temporary_operational_exception":

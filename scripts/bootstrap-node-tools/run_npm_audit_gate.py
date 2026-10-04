@@ -29,6 +29,7 @@ EXPECTED_FILE_HASHES = {'scripts/bootstrap-node-tools/package-lock.json': '3905b
 EXPECTED_AUDIT_COMMAND = ['node', 'scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js', 'audit', '--prefix', 'scripts/bootstrap-node-tools', '--audit-level=moderate', '--json']
 EXPECTED_PATCHED_HASH = 'fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76'
 EXPECTED_GRAPH_HASH = '0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8'
+EXPECTED_195_POLICY_HASH = "c0da78b6f0f4d92f452bb79c9cdc3378b9ba4881e00e74de15cf1917e85bdda2"
 EXPECTED_BRANCH = "codex/kairos-implementation-programme"
 APPROVED_BRANCHES = {"EXC-193": (193, EXPECTED_BRANCH), "EXC-195": (195, "codex/vitest-floor-closeout-20261003")}
 
@@ -81,6 +82,8 @@ def execution_context(policy):
     raise ValueError("exception cannot apply to this event or branch")
 
 def verify_sources(root, policy):
+    if policy.get("id") == "EXC-195" and digest(json.dumps(policy, sort_keys=True, separators=(",", ":")).encode()) != EXPECTED_195_POLICY_HASH:
+        raise ValueError("PR195 approval record changed")
     if policy["file_sha256"] != EXPECTED_FILE_HASHES:
         raise ValueError("approved source fingerprints changed")
     if policy["patched_index_sha256"] != EXPECTED_PATCHED_HASH:
