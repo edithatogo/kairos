@@ -13,6 +13,10 @@ use kairo_ecs_types::SimDuration;
 
 use super::{LpId, PartitionPlan, RemoteEvent, Tick};
 
+mod owned;
+pub use owned::{NativeAccountingAuthority, OptimisticOwnedOptions};
+use owned::{OwnedConstructionConfig, OwnedRuntimeState};
+
 const MAX_CAUSAL_DEPTH: usize = 128;
 static NEXT_RUNTIME_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -165,6 +169,47 @@ pub enum OptimisticError {
     IncarnationExhausted(LpId),
     RuntimeIdentityExhausted,
     EpochExhausted(LpId),
+    OwnedModeRequired,
+    OwnedRuntimeJoinIncomplete,
+    EmptyOwnedProcessSet,
+    GlobalLpLimitExceeded {
+        actual: usize,
+        limit: usize,
+    },
+    AuthoritySetMismatch {
+        missing: Vec<LpId>,
+        unexpected: Vec<LpId>,
+    },
+    EmissionEpochSetMismatch {
+        missing: Vec<LpId>,
+        unexpected: Vec<LpId>,
+    },
+    AuthorityModeMismatch(LpId),
+    AuthorityNamespaceMismatch {
+        lp_id: LpId,
+        expected: u128,
+        actual: u128,
+    },
+    EmissionEpochMismatch {
+        lp_id: LpId,
+        expected: u64,
+        actual: u64,
+    },
+    UnownedLogicalProcess(LpId),
+    NativePeersNotSealed,
+    NativePeerRegistrationClosed,
+    NativePeerCoverageIncomplete {
+        missing: Vec<LpId>,
+    },
+    NativePeerConfigurationMismatch,
+    NativePeerOwnershipOverlap(LpId),
+    StaleNativeAccountingAuthority {
+        runtime_id: u64,
+        recovery_generation: u64,
+    },
+    AccountingRevisionExhausted,
+    VerifiedNativeAdmissionRequired,
+    NativeGroupCutRequired,
     SnapshotPanicked(LpId),
     RestorePanicked(LpId),
     HandlerPanicked(LpId),
@@ -696,6 +741,7 @@ pub struct OptimisticRuntime<P: OptimisticProcess> {
     last_horizon: Option<Tick>,
     initial_open: bool,
     poisoned: bool,
+    owned: Option<OwnedRuntimeState>,
 }
 
 impl<P: OptimisticProcess> OptimisticRuntime<P> {
@@ -791,7 +837,207 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
             last_horizon: None,
             initial_open: true,
             poisoned: false,
+            owned: None,
         })
+    }
+
+    /// Creates a process-local issuer for only the supplied LP subset.
+    pub fn new_owned(
+        partition: PartitionPlan,
+        mut topology: BTreeMap<LpId, Vec<LpId>>,
+        owned_processes: BTreeMap<LpId, P>,
+        options: OptimisticOwnedOptions,
+    ) -> Result<Self, OptimisticError> {
+        validate_limits(options.local_limits)?;
+        if options.max_global_lps == 0
+            || options.max_outbox_entries == 0
+            || options.max_transition_entries == 0
+            || options.max_receipt_entries == 0
+        {
+            return Err(OptimisticError::InvalidLimits);
+        }
+        let global_ids = partition
+            .segments()
+            .iter()
+            .map(|segment| segment.id)
+            .collect::<BTreeSet<_>>();
+        let actual_global = global_ids.len();
+        if actual_global > options.max_global_lps {
+            return Err(OptimisticError::GlobalLpLimitExceeded {
+                actual: actual_global,
+                limit: options.max_global_lps,
+            });
+        }
+        if owned_processes.is_empty() {
+            return Err(OptimisticError::EmptyOwnedProcessSet);
+        }
+        if owned_processes.len() > options.local_limits.max_lps {
+            return Err(OptimisticError::InvalidLimits);
+        }
+        let owned_ids = owned_processes.keys().copied().collect::<BTreeSet<_>>();
+        let unexpected = owned_ids
+            .difference(&global_ids)
+            .copied()
+            .collect::<Vec<_>>();
+        if !unexpected.is_empty() {
+            return Err(OptimisticError::ProcessSetMismatch {
+                missing: Vec::new(),
+                unexpected,
+            });
+        }
+        validate_owned_topology(&global_ids, &mut topology)?;
+        validate_owned_map_keys(
+            &global_ids,
+            options.current_authorities.keys().copied().collect(),
+            true,
+        )?;
+        for (&lp_id, &authority) in &options.current_authorities {
+            match authority {
+                OptimisticAuthority::LocalPreview => {
+                    return Err(OptimisticError::AuthorityModeMismatch(lp_id));
+                }
+                OptimisticAuthority::Scoped {
+                    simulation_namespace,
+                    ..
+                } if simulation_namespace != options.simulation_namespace => {
+                    return Err(OptimisticError::AuthorityNamespaceMismatch {
+                        lp_id,
+                        expected: options.simulation_namespace,
+                        actual: simulation_namespace,
+                    });
+                }
+                OptimisticAuthority::Scoped { .. } => {}
+            }
+        }
+        validate_owned_map_keys(
+            &owned_ids,
+            options.emission_epochs.keys().copied().collect(),
+            false,
+        )?;
+        for &lp_id in &owned_ids {
+            let OptimisticAuthority::Scoped {
+                ownership_epoch, ..
+            } = options.current_authorities[&lp_id]
+            else {
+                unreachable!("authority map was validated above")
+            };
+            let actual = options.emission_epochs[&lp_id];
+            if actual != ownership_epoch {
+                return Err(OptimisticError::EmissionEpochMismatch {
+                    lp_id,
+                    expected: ownership_epoch,
+                    actual,
+                });
+            }
+        }
+
+        let runtime_id = NEXT_RUNTIME_ID
+            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |value| {
+                value.checked_add(1)
+            })
+            .map_err(|_| OptimisticError::RuntimeIdentityExhausted)?;
+        let mut states = BTreeMap::new();
+        for (lp_id, process) in owned_processes {
+            let snapshot = catch_unwind(AssertUnwindSafe(|| process.snapshot()))
+                .map_err(|_| OptimisticError::SnapshotPanicked(lp_id))?;
+            states.insert(
+                lp_id,
+                LogicalProcessState {
+                    process,
+                    _initial_snapshot: snapshot,
+                    positives: EventQueue::default(),
+                    antis: EventQueue::default(),
+                    history: Vec::new(),
+                    replay_pending: BTreeSet::new(),
+                    tombstones: BTreeMap::new(),
+                    epoch: 0,
+                    fossil_time: Tick::ZERO,
+                },
+            );
+        }
+        let owned = OwnedRuntimeState::new(
+            runtime_id,
+            OwnedConstructionConfig {
+                simulation_namespace: options.simulation_namespace,
+                owned_lps: owned_ids.iter().copied().collect(),
+                global_partition: partition,
+                global_topology: topology.clone(),
+                current_authorities: options.current_authorities.clone(),
+                emission_epochs: options.emission_epochs.clone(),
+            },
+            &options,
+        );
+        Ok(Self {
+            runtime_id,
+            topology,
+            processes: states,
+            next_incarnation: owned_ids.into_iter().map(|lp| (lp, Some(0))).collect(),
+            known_deliveries: BTreeMap::new(),
+            gvt: Tick::ZERO,
+            limits: options.local_limits,
+            counters: Counters::default(),
+            last_horizon: None,
+            initial_open: true,
+            poisoned: false,
+            owned: Some(owned),
+        })
+    }
+
+    pub fn native_accounting_authority(
+        &self,
+    ) -> Result<NativeAccountingAuthority, OptimisticError> {
+        self.ensure_healthy()?;
+        self.owned
+            .as_ref()
+            .map(OwnedRuntimeState::own_authority)
+            .ok_or(OptimisticError::OwnedModeRequired)
+    }
+
+    pub fn register_native_peer(
+        &mut self,
+        peer: NativeAccountingAuthority,
+    ) -> Result<(), OptimisticError> {
+        self.ensure_healthy()?;
+        self.owned
+            .as_mut()
+            .ok_or(OptimisticError::OwnedModeRequired)?
+            .register_peer(peer)
+    }
+
+    pub fn seal_native_peers(&mut self) -> Result<(), OptimisticError> {
+        self.ensure_healthy()?;
+        self.owned
+            .as_mut()
+            .ok_or(OptimisticError::OwnedModeRequired)?
+            .seal_peers()
+    }
+
+    pub fn close_initial_inputs(&mut self) -> Result<(), OptimisticError> {
+        self.ensure_healthy()?;
+        self.owned
+            .as_mut()
+            .ok_or(OptimisticError::OwnedModeRequired)?
+            .close_initial_inputs()?;
+        self.initial_open = false;
+        Ok(())
+    }
+
+    pub fn native_peers_sealed(&self) -> Result<bool, OptimisticError> {
+        self.owned
+            .as_ref()
+            .map(OwnedRuntimeState::peers_sealed)
+            .ok_or(OptimisticError::OwnedModeRequired)
+    }
+
+    pub fn initial_inputs_closed(&self) -> bool {
+        !self.initial_open
+    }
+
+    pub fn accounting_revision(&self) -> Result<u64, OptimisticError> {
+        self.owned
+            .as_ref()
+            .map(OwnedRuntimeState::revision)
+            .ok_or(OptimisticError::OwnedModeRequired)
     }
 
     /// Adds an initial root event with a stable caller sequence. Root source is
@@ -804,6 +1050,14 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
         self.ensure_healthy()?;
         if !self.initial_open {
             return Err(OptimisticError::InitialSchedulingClosed);
+        }
+        if let Some(owned) = &self.owned {
+            owned.require_sealed_live()?;
+            if !owned.owned_lps().contains(&event.source_lp) {
+                return Err(OptimisticError::UnownedLogicalProcess(event.source_lp));
+            }
+            self.validate_owned_initial_event(&event)?;
+            return Err(OptimisticError::OwnedRuntimeJoinIncomplete);
         }
         self.validate_event(&event)?;
         self.validate_gvt(event.tick)?;
@@ -833,6 +1087,16 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     /// before changing any queue, token epoch, tombstone, or process state.
     pub fn receive(&mut self, message: OptimisticMessage) -> Result<(), OptimisticError> {
         self.ensure_healthy()?;
+        if self.owned.is_some() {
+            return match message.authority {
+                OptimisticAuthority::LocalPreview => Err(OptimisticError::AuthorityModeMismatch(
+                    message.event.source_lp,
+                )),
+                OptimisticAuthority::Scoped { .. } => {
+                    Err(OptimisticError::VerifiedNativeAdmissionRequired)
+                }
+            };
+        }
         self.validate_message(&message)?;
         self.validate_gvt(message.event.tick)?;
         self.validate_logical_event(&message)?;
@@ -930,6 +1194,10 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
                     requested: horizon,
                 });
             }
+        }
+        if let Some(owned) = &self.owned {
+            owned.require_sealed_live()?;
+            return Err(OptimisticError::OwnedRuntimeJoinIncomplete);
         }
         self.last_horizon = Some(horizon);
         let mut budget_used = 0usize;
@@ -1055,6 +1323,9 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     /// logical trace. Pending work, including anti-messages, bounds the floor.
     pub fn fossil_collect(&mut self, gvt: Tick) -> Result<OptimisticFossilReport, OptimisticError> {
         self.ensure_healthy()?;
+        if self.owned.is_some() {
+            return Err(OptimisticError::NativeGroupCutRequired);
+        }
         if gvt < self.gvt {
             return Err(OptimisticError::GvtRegression {
                 current: self.gvt,
@@ -1188,6 +1459,18 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
     /// Creates an opaque token for the current LP epoch.
     pub fn state_token(&self, lp_id: LpId) -> Result<OptimisticStateToken, OptimisticError> {
         self.ensure_healthy()?;
+        if let Some(owned) = &self.owned {
+            if !owned.owned_lps().contains(&lp_id)
+                && owned
+                    .own_authority()
+                    .global_partition()
+                    .segments()
+                    .iter()
+                    .any(|segment| segment.id == lp_id)
+            {
+                return Err(OptimisticError::UnownedLogicalProcess(lp_id));
+            }
+        }
         let state = self
             .processes
             .get(&lp_id)
@@ -1220,6 +1503,31 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
         } else {
             Ok(())
         }
+    }
+
+    fn validate_owned_initial_event(&self, event: &RemoteEvent) -> Result<(), OptimisticError> {
+        let owned = self.owned.as_ref().expect("owned mode checked");
+        let authority = owned.own_authority();
+        if !authority
+            .global_partition()
+            .segments()
+            .iter()
+            .any(|segment| segment.id == event.dest_lp)
+        {
+            return Err(OptimisticError::UnknownLogicalProcess(event.dest_lp));
+        }
+        if event.source_lp != event.dest_lp
+            && !self
+                .topology
+                .get(&event.source_lp)
+                .is_some_and(|destinations| destinations.contains(&event.dest_lp))
+        {
+            return Err(OptimisticError::RouteMissing {
+                source: event.source_lp,
+                destination: event.dest_lp,
+            });
+        }
+        self.validate_gvt(event.tick)
     }
 
     fn validate_event(&self, event: &RemoteEvent) -> Result<(), OptimisticError> {
@@ -1877,6 +2185,62 @@ fn validate_limits(limits: OptimisticLimits) -> Result<(), OptimisticError> {
         || limits.max_causal_depth > MAX_CAUSAL_DEPTH
     {
         return Err(OptimisticError::InvalidLimits);
+    }
+    Ok(())
+}
+
+fn validate_owned_map_keys(
+    expected: &BTreeSet<LpId>,
+    actual: BTreeSet<LpId>,
+    authorities: bool,
+) -> Result<(), OptimisticError> {
+    if expected == &actual {
+        return Ok(());
+    }
+    let missing = expected.difference(&actual).copied().collect();
+    let unexpected = actual.difference(expected).copied().collect();
+    if authorities {
+        Err(OptimisticError::AuthoritySetMismatch {
+            missing,
+            unexpected,
+        })
+    } else {
+        Err(OptimisticError::EmissionEpochSetMismatch {
+            missing,
+            unexpected,
+        })
+    }
+}
+
+fn validate_owned_topology(
+    global_ids: &BTreeSet<LpId>,
+    topology: &mut BTreeMap<LpId, Vec<LpId>>,
+) -> Result<(), OptimisticError> {
+    for lp_id in global_ids {
+        if !topology.contains_key(lp_id) {
+            return Err(OptimisticError::MissingTopologyEntry(*lp_id));
+        }
+    }
+    for (&source, destinations) in topology.iter_mut() {
+        if !global_ids.contains(&source) {
+            return Err(OptimisticError::UnknownTopologySource(source));
+        }
+        let mut unique = BTreeSet::new();
+        for &destination in destinations.iter() {
+            if !global_ids.contains(&destination) {
+                return Err(OptimisticError::UnknownTopologyDestination {
+                    source,
+                    destination,
+                });
+            }
+            if source == destination || !unique.insert(destination) {
+                return Err(OptimisticError::DuplicateNeighbor {
+                    source,
+                    destination,
+                });
+            }
+        }
+        destinations.sort_unstable();
     }
     Ok(())
 }
