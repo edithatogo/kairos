@@ -20,6 +20,8 @@ on:
       - '.github/workflows/careops-native-owner.yml'
       - 'scripts/c1-arrow-io-python-tools.lock'
       - 'tests/conformance/queue_simpy_v1*'
+      - 'benches/queue/qualify_native_v1.py'
+      - 'benches/queue/test_qualify_native_v1.py'
 
 permissions:
   contents: read
@@ -291,16 +293,64 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
+  q52-native-regression:
+    name: Q5.2 canonical native regression (Ubuntu)
+    if: startsWith(github.head_ref || github.ref_name, 'codex/careops-q52')
+    needs: [native, arrow-io-floor]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Install pinned Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.14.8'
+      - name: Test Q5.2 qualifier without compiling
+        run: |
+          set -euo pipefail
+          mkdir -p .artifacts/ci/q52-native
+          python -m unittest discover -s benches/queue -p test_qualify_native_v1.py -v 2>&1 | tee .artifacts/ci/q52-native/qualification-tests.log
+          python -m py_compile benches/queue/qualify_native_v1.py benches/queue/test_qualify_native_v1.py 2>&1 | tee .artifacts/ci/q52-native/qualification-pycompile.log
+      - name: Compare accepted F and exact Q5.2 head
+        timeout-minutes: 25
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          RUN_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python benches/queue/qualify_native_v1.py --expected-head "$EXPECTED_HEAD" --run-sha "$RUN_SHA"
+      - name: Preserve Q5.2 native canonical evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: q52-native-canonical-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .artifacts/ci/q52-native/**
+            !.artifacts/ci/q52-native/target/**
+          retention-days: 7
+          if-no-files-found: warn
+
   native-required:
     name: Native and Arrow IO required
     if: always()
-    needs: [native, arrow-io-floor]
+    needs: [native, arrow-io-floor, q52-native-regression]
     runs-on: ubuntu-24.04
     steps:
       - name: Require native and every Arrow IO matrix child
         env:
           NATIVE_RESULT: ${{ needs.native.result }}
           ARROW_IO_RESULT: ${{ needs.arrow-io-floor.result }}
+          Q52_RESULT: ${{ needs.q52-native-regression.result }}
+          Q52_REQUIRED: ${{ startsWith(github.head_ref || github.ref_name, 'codex/careops-q52') }}
         run: |
           test "$NATIVE_RESULT" = success
           test "$ARROW_IO_RESULT" = success
+          if [ "$Q52_REQUIRED" = true ]; then
+            test "$Q52_RESULT" = success
+          else
+            test "$Q52_RESULT" = skipped
+          fi
