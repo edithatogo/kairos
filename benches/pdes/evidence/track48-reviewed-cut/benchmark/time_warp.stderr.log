@@ -1,0 +1,10 @@
+   Compiling zmij v1.0.21
+   Compiling serde_core v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling kairo-ecs-types v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-types)
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.0
+   Compiling kairo-ecs-core v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-core)
+   Compiling kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-pdes)
+    Finished `bench` profile [optimized] target(s) in 28.49s
+     Running benches/time_warp.rs (artifacts/owned-native-join/reviewed-cut-benchmark-raw/target/release/deps/time_warp-7af276444d1c49e3)

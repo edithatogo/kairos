@@ -1,0 +1,1871 @@
+{
+  "benchmark": {
+    "excluded_costs": [
+      "process construction",
+      "partition and topology construction",
+      "initial event scheduling",
+      "final state/report extraction",
+      "parity and logical ID validation",
+      "fossil collection"
+    ],
+    "profiles": [
+      {
+        "conservative_counters": {
+          "emitted_events": 4,
+          "null_messages": 920,
+          "processed_events": 36,
+          "remote_events": 4,
+          "rounds": 267,
+          "spawned_worker_cohort_max": 1
+        },
+        "conservative_ns": [
+          4615875,
+          8685125,
+          15734208,
+          4590333,
+          6049000
+        ],
+        "emit_percent": 10,
+        "expected_committed_events": 36,
+        "horizon": 230,
+        "input_events": [
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 0,
+            "source": 0,
+            "tick": 0,
+            "value": 312600655268205429
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 1,
+            "source": 0,
+            "tick": 4,
+            "value": 6461581782208540098
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 2,
+            "source": 0,
+            "tick": 8,
+            "value": 930539821221164398
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 3,
+            "source": 0,
+            "tick": 12,
+            "value": 3074700775207105063
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 4,
+            "source": 0,
+            "tick": 16,
+            "value": 5587191373820405169
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 5,
+            "source": 0,
+            "tick": 20,
+            "value": 13940110603535520275
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 6,
+            "source": 0,
+            "tick": 24,
+            "value": 9635407163374849498
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 7,
+            "source": 0,
+            "tick": 28,
+            "value": 1791902235398436588
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 8,
+            "source": 1,
+            "tick": 64,
+            "value": 8001539948718470946
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 9,
+            "source": 1,
+            "tick": 68,
+            "value": 265587677521424633
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 10,
+            "source": 1,
+            "tick": 72,
+            "value": 3136775726902626799
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 11,
+            "source": 1,
+            "tick": 76,
+            "value": 15693889923694023812
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 12,
+            "source": 1,
+            "tick": 80,
+            "value": 10046162031705521566
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 13,
+            "source": 1,
+            "tick": 84,
+            "value": 10034593993359857629
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 14,
+            "source": 1,
+            "tick": 88,
+            "value": 16715106224169074198
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 15,
+            "source": 1,
+            "tick": 92,
+            "value": 18131413667105786011
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 16,
+            "source": 2,
+            "tick": 128,
+            "value": 11929438391901706279
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 17,
+            "source": 2,
+            "tick": 132,
+            "value": 16388610041768596463
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 18,
+            "source": 2,
+            "tick": 136,
+            "value": 4850625959366724808
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 19,
+            "source": 2,
+            "tick": 140,
+            "value": 3113166371520241051
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 20,
+            "source": 2,
+            "tick": 144,
+            "value": 13995653548332006486
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 21,
+            "source": 2,
+            "tick": 148,
+            "value": 3751204063081014570
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 22,
+            "source": 2,
+            "tick": 152,
+            "value": 14930216172932411120
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 23,
+            "source": 2,
+            "tick": 156,
+            "value": 10665348155085708610
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 24,
+            "source": 3,
+            "tick": 192,
+            "value": 39467395036625642
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 25,
+            "source": 3,
+            "tick": 196,
+            "value": 18269980260214177466
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 26,
+            "source": 3,
+            "tick": 200,
+            "value": 16010480715514659455
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 27,
+            "source": 3,
+            "tick": 204,
+            "value": 1989915574857265259
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 28,
+            "source": 3,
+            "tick": 208,
+            "value": 16683833074498000665
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 29,
+            "source": 3,
+            "tick": 212,
+            "value": 8628308231466070456
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 30,
+            "source": 3,
+            "tick": 216,
+            "value": 18117796159402832913
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 31,
+            "source": 3,
+            "tick": 220,
+            "value": 6698278587681217468
+          }
+        ],
+        "lp_count": 4,
+        "max_hops": 8,
+        "optimistic_counters": {
+          "canceled_sends": 0,
+          "checkpoints_before_fossil": 40,
+          "committed_logical_ids": 36,
+          "executions": 46,
+          "extra_executions": 10,
+          "first_attempt_executions": 36,
+          "fossil_collected_checkpoints": 36,
+          "fossil_collected_events": 36,
+          "max_rollback_depth": 8,
+          "replay_executions": 10,
+          "rollback_attempts": 2,
+          "rolled_back_events": 10
+        },
+        "optimistic_ns": [
+          45959,
+          49292,
+          47375,
+          38458,
+          44750
+        ],
+        "parity": true,
+        "profile": "sparse",
+        "roots_per_lp": 8,
+        "seed": 482027
+      },
+      {
+        "conservative_counters": {
+          "emitted_events": 109,
+          "null_messages": 920,
+          "processed_events": 141,
+          "remote_events": 109,
+          "rounds": 372,
+          "spawned_worker_cohort_max": 1
+        },
+        "conservative_ns": [
+          29922542,
+          50100875,
+          37162083,
+          20769167,
+          45626917
+        ],
+        "emit_percent": 80,
+        "expected_committed_events": 141,
+        "horizon": 230,
+        "input_events": [
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 0,
+            "source": 0,
+            "tick": 0,
+            "value": 312600655268205429
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 1,
+            "source": 0,
+            "tick": 4,
+            "value": 6461581782208540098
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 2,
+            "source": 0,
+            "tick": 8,
+            "value": 930539821221164398
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 3,
+            "source": 0,
+            "tick": 12,
+            "value": 3074700775207105063
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 4,
+            "source": 0,
+            "tick": 16,
+            "value": 5587191373820405169
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 5,
+            "source": 0,
+            "tick": 20,
+            "value": 13940110603535520275
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 6,
+            "source": 0,
+            "tick": 24,
+            "value": 9635407163374849498
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 7,
+            "source": 0,
+            "tick": 28,
+            "value": 1791902235398436588
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 8,
+            "source": 1,
+            "tick": 64,
+            "value": 8001539948718470946
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 9,
+            "source": 1,
+            "tick": 68,
+            "value": 265587677521424633
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 10,
+            "source": 1,
+            "tick": 72,
+            "value": 3136775726902626799
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 11,
+            "source": 1,
+            "tick": 76,
+            "value": 15693889923694023812
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 12,
+            "source": 1,
+            "tick": 80,
+            "value": 10046162031705521566
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 13,
+            "source": 1,
+            "tick": 84,
+            "value": 10034593993359857629
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 14,
+            "source": 1,
+            "tick": 88,
+            "value": 16715106224169074198
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 15,
+            "source": 1,
+            "tick": 92,
+            "value": 18131413667105786011
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 16,
+            "source": 2,
+            "tick": 128,
+            "value": 11929438391901706279
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 17,
+            "source": 2,
+            "tick": 132,
+            "value": 16388610041768596463
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 18,
+            "source": 2,
+            "tick": 136,
+            "value": 4850625959366724808
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 19,
+            "source": 2,
+            "tick": 140,
+            "value": 3113166371520241051
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 20,
+            "source": 2,
+            "tick": 144,
+            "value": 13995653548332006486
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 21,
+            "source": 2,
+            "tick": 148,
+            "value": 3751204063081014570
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 22,
+            "source": 2,
+            "tick": 152,
+            "value": 14930216172932411120
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 23,
+            "source": 2,
+            "tick": 156,
+            "value": 10665348155085708610
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 24,
+            "source": 3,
+            "tick": 192,
+            "value": 39467395036625642
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 25,
+            "source": 3,
+            "tick": 196,
+            "value": 18269980260214177466
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 26,
+            "source": 3,
+            "tick": 200,
+            "value": 16010480715514659455
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 27,
+            "source": 3,
+            "tick": 204,
+            "value": 1989915574857265259
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 28,
+            "source": 3,
+            "tick": 208,
+            "value": 16683833074498000665
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 29,
+            "source": 3,
+            "tick": 212,
+            "value": 8628308231466070456
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 30,
+            "source": 3,
+            "tick": 216,
+            "value": 18117796159402832913
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 31,
+            "source": 3,
+            "tick": 220,
+            "value": 6698278587681217468
+          }
+        ],
+        "lp_count": 4,
+        "max_hops": 8,
+        "optimistic_counters": {
+          "canceled_sends": 105,
+          "checkpoints_before_fossil": 145,
+          "committed_logical_ids": 141,
+          "executions": 275,
+          "extra_executions": 134,
+          "first_attempt_executions": 183,
+          "fossil_collected_checkpoints": 141,
+          "fossil_collected_events": 141,
+          "max_rollback_depth": 6,
+          "replay_executions": 92,
+          "rollback_attempts": 80,
+          "rolled_back_events": 134
+        },
+        "optimistic_ns": [
+          622958,
+          582500,
+          619167,
+          581708,
+          832209
+        ],
+        "parity": true,
+        "profile": "dense",
+        "roots_per_lp": 8,
+        "seed": 482027
+      },
+      {
+        "conservative_counters": {
+          "emitted_events": 7,
+          "null_messages": 3888,
+          "processed_events": 71,
+          "remote_events": 7,
+          "rounds": 558,
+          "spawned_worker_cohort_max": 1
+        },
+        "conservative_ns": [
+          18422292,
+          27472333,
+          24564375,
+          9697417,
+          10904250
+        ],
+        "emit_percent": 10,
+        "expected_committed_events": 71,
+        "horizon": 486,
+        "input_events": [
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 0,
+            "source": 0,
+            "tick": 0,
+            "value": 312600655268205429
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 1,
+            "source": 0,
+            "tick": 4,
+            "value": 6461581782208540098
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 2,
+            "source": 0,
+            "tick": 8,
+            "value": 930539821221164398
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 3,
+            "source": 0,
+            "tick": 12,
+            "value": 3074700775207105063
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 4,
+            "source": 0,
+            "tick": 16,
+            "value": 5587191373820405169
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 5,
+            "source": 0,
+            "tick": 20,
+            "value": 13940110603535520275
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 6,
+            "source": 0,
+            "tick": 24,
+            "value": 9635407163374849498
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 7,
+            "source": 0,
+            "tick": 28,
+            "value": 1791902235398436588
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 8,
+            "source": 1,
+            "tick": 64,
+            "value": 8001539948718470946
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 9,
+            "source": 1,
+            "tick": 68,
+            "value": 265587677521424633
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 10,
+            "source": 1,
+            "tick": 72,
+            "value": 3136775726902626799
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 11,
+            "source": 1,
+            "tick": 76,
+            "value": 15693889923694023812
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 12,
+            "source": 1,
+            "tick": 80,
+            "value": 10046162031705521566
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 13,
+            "source": 1,
+            "tick": 84,
+            "value": 10034593993359857629
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 14,
+            "source": 1,
+            "tick": 88,
+            "value": 16715106224169074198
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 15,
+            "source": 1,
+            "tick": 92,
+            "value": 18131413667105786011
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 16,
+            "source": 2,
+            "tick": 128,
+            "value": 11929438391901706279
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 17,
+            "source": 2,
+            "tick": 132,
+            "value": 16388610041768596463
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 18,
+            "source": 2,
+            "tick": 136,
+            "value": 4850625959366724808
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 19,
+            "source": 2,
+            "tick": 140,
+            "value": 3113166371520241051
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 20,
+            "source": 2,
+            "tick": 144,
+            "value": 13995653548332006486
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 21,
+            "source": 2,
+            "tick": 148,
+            "value": 3751204063081014570
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 22,
+            "source": 2,
+            "tick": 152,
+            "value": 14930216172932411120
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 23,
+            "source": 2,
+            "tick": 156,
+            "value": 10665348155085708610
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 24,
+            "source": 3,
+            "tick": 192,
+            "value": 39467395036625642
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 25,
+            "source": 3,
+            "tick": 196,
+            "value": 18269980260214177466
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 26,
+            "source": 3,
+            "tick": 200,
+            "value": 16010480715514659455
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 27,
+            "source": 3,
+            "tick": 204,
+            "value": 1989915574857265259
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 28,
+            "source": 3,
+            "tick": 208,
+            "value": 16683833074498000665
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 29,
+            "source": 3,
+            "tick": 212,
+            "value": 8628308231466070456
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 30,
+            "source": 3,
+            "tick": 216,
+            "value": 18117796159402832913
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 31,
+            "source": 3,
+            "tick": 220,
+            "value": 6698278587681217468
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 32,
+            "source": 4,
+            "tick": 256,
+            "value": 4533303404759502259
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 33,
+            "source": 4,
+            "tick": 260,
+            "value": 15089698382680463244
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 34,
+            "source": 4,
+            "tick": 264,
+            "value": 16071951374871696292
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 35,
+            "source": 4,
+            "tick": 268,
+            "value": 55648727742885925
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 36,
+            "source": 4,
+            "tick": 272,
+            "value": 4174886823748815966
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 37,
+            "source": 4,
+            "tick": 276,
+            "value": 7027710478614382992
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 38,
+            "source": 4,
+            "tick": 280,
+            "value": 3010676190227887223
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 39,
+            "source": 4,
+            "tick": 284,
+            "value": 7033460659464469598
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 40,
+            "source": 5,
+            "tick": 320,
+            "value": 14786947978213829971
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 41,
+            "source": 5,
+            "tick": 324,
+            "value": 11488812227145780198
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 42,
+            "source": 5,
+            "tick": 328,
+            "value": 6637208022602724606
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 43,
+            "source": 5,
+            "tick": 332,
+            "value": 7058822434096197636
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 44,
+            "source": 5,
+            "tick": 336,
+            "value": 17528016010374604944
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 45,
+            "source": 5,
+            "tick": 340,
+            "value": 17912933491805251561
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 46,
+            "source": 5,
+            "tick": 344,
+            "value": 17730237408055756559
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 47,
+            "source": 5,
+            "tick": 348,
+            "value": 5318684834340453483
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 48,
+            "source": 6,
+            "tick": 384,
+            "value": 9970744592427459814
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 49,
+            "source": 6,
+            "tick": 388,
+            "value": 16361180121173626057
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 50,
+            "source": 6,
+            "tick": 392,
+            "value": 14552627991029762247
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 51,
+            "source": 6,
+            "tick": 396,
+            "value": 12684930747950948951
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 52,
+            "source": 6,
+            "tick": 400,
+            "value": 3255170984928473972
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 53,
+            "source": 6,
+            "tick": 404,
+            "value": 8346857360522713050
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 54,
+            "source": 6,
+            "tick": 408,
+            "value": 2673469882855493808
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 55,
+            "source": 6,
+            "tick": 412,
+            "value": 11310986244889361560
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 56,
+            "source": 7,
+            "tick": 448,
+            "value": 4052593565650739597
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 57,
+            "source": 7,
+            "tick": 452,
+            "value": 16483828344520833677
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 58,
+            "source": 7,
+            "tick": 456,
+            "value": 5731981759327487602
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 59,
+            "source": 7,
+            "tick": 460,
+            "value": 5357057578878186088
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 60,
+            "source": 7,
+            "tick": 464,
+            "value": 3386015073701554412
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 61,
+            "source": 7,
+            "tick": 468,
+            "value": 6342431781446729948
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 62,
+            "source": 7,
+            "tick": 472,
+            "value": 16877419859837249067
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 63,
+            "source": 7,
+            "tick": 476,
+            "value": 17166015483623277857
+          }
+        ],
+        "lp_count": 8,
+        "max_hops": 8,
+        "optimistic_counters": {
+          "canceled_sends": 1,
+          "checkpoints_before_fossil": 79,
+          "committed_logical_ids": 71,
+          "executions": 95,
+          "extra_executions": 24,
+          "first_attempt_executions": 72,
+          "fossil_collected_checkpoints": 71,
+          "fossil_collected_events": 71,
+          "max_rollback_depth": 8,
+          "replay_executions": 23,
+          "rollback_attempts": 8,
+          "rolled_back_events": 24
+        },
+        "optimistic_ns": [
+          88375,
+          68000,
+          88542,
+          78792,
+          90750
+        ],
+        "parity": true,
+        "profile": "sparse",
+        "roots_per_lp": 8,
+        "seed": 482027
+      },
+      {
+        "conservative_counters": {
+          "emitted_events": 228,
+          "null_messages": 3888,
+          "processed_events": 292,
+          "remote_events": 228,
+          "rounds": 709,
+          "spawned_worker_cohort_max": 2
+        },
+        "conservative_ns": [
+          59481375,
+          17793167,
+          74841709,
+          52037500,
+          87203292
+        ],
+        "emit_percent": 80,
+        "expected_committed_events": 292,
+        "horizon": 486,
+        "input_events": [
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 0,
+            "source": 0,
+            "tick": 0,
+            "value": 312600655268205429
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 1,
+            "source": 0,
+            "tick": 4,
+            "value": 6461581782208540098
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 2,
+            "source": 0,
+            "tick": 8,
+            "value": 930539821221164398
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 3,
+            "source": 0,
+            "tick": 12,
+            "value": 3074700775207105063
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 4,
+            "source": 0,
+            "tick": 16,
+            "value": 5587191373820405169
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 5,
+            "source": 0,
+            "tick": 20,
+            "value": 13940110603535520275
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 6,
+            "source": 0,
+            "tick": 24,
+            "value": 9635407163374849498
+          },
+          {
+            "destination": 0,
+            "remaining_hops": 8,
+            "root": 7,
+            "source": 0,
+            "tick": 28,
+            "value": 1791902235398436588
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 8,
+            "source": 1,
+            "tick": 64,
+            "value": 8001539948718470946
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 9,
+            "source": 1,
+            "tick": 68,
+            "value": 265587677521424633
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 10,
+            "source": 1,
+            "tick": 72,
+            "value": 3136775726902626799
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 11,
+            "source": 1,
+            "tick": 76,
+            "value": 15693889923694023812
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 12,
+            "source": 1,
+            "tick": 80,
+            "value": 10046162031705521566
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 13,
+            "source": 1,
+            "tick": 84,
+            "value": 10034593993359857629
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 14,
+            "source": 1,
+            "tick": 88,
+            "value": 16715106224169074198
+          },
+          {
+            "destination": 1,
+            "remaining_hops": 8,
+            "root": 15,
+            "source": 1,
+            "tick": 92,
+            "value": 18131413667105786011
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 16,
+            "source": 2,
+            "tick": 128,
+            "value": 11929438391901706279
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 17,
+            "source": 2,
+            "tick": 132,
+            "value": 16388610041768596463
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 18,
+            "source": 2,
+            "tick": 136,
+            "value": 4850625959366724808
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 19,
+            "source": 2,
+            "tick": 140,
+            "value": 3113166371520241051
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 20,
+            "source": 2,
+            "tick": 144,
+            "value": 13995653548332006486
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 21,
+            "source": 2,
+            "tick": 148,
+            "value": 3751204063081014570
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 22,
+            "source": 2,
+            "tick": 152,
+            "value": 14930216172932411120
+          },
+          {
+            "destination": 2,
+            "remaining_hops": 8,
+            "root": 23,
+            "source": 2,
+            "tick": 156,
+            "value": 10665348155085708610
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 24,
+            "source": 3,
+            "tick": 192,
+            "value": 39467395036625642
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 25,
+            "source": 3,
+            "tick": 196,
+            "value": 18269980260214177466
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 26,
+            "source": 3,
+            "tick": 200,
+            "value": 16010480715514659455
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 27,
+            "source": 3,
+            "tick": 204,
+            "value": 1989915574857265259
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 28,
+            "source": 3,
+            "tick": 208,
+            "value": 16683833074498000665
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 29,
+            "source": 3,
+            "tick": 212,
+            "value": 8628308231466070456
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 30,
+            "source": 3,
+            "tick": 216,
+            "value": 18117796159402832913
+          },
+          {
+            "destination": 3,
+            "remaining_hops": 8,
+            "root": 31,
+            "source": 3,
+            "tick": 220,
+            "value": 6698278587681217468
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 32,
+            "source": 4,
+            "tick": 256,
+            "value": 4533303404759502259
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 33,
+            "source": 4,
+            "tick": 260,
+            "value": 15089698382680463244
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 34,
+            "source": 4,
+            "tick": 264,
+            "value": 16071951374871696292
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 35,
+            "source": 4,
+            "tick": 268,
+            "value": 55648727742885925
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 36,
+            "source": 4,
+            "tick": 272,
+            "value": 4174886823748815966
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 37,
+            "source": 4,
+            "tick": 276,
+            "value": 7027710478614382992
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 38,
+            "source": 4,
+            "tick": 280,
+            "value": 3010676190227887223
+          },
+          {
+            "destination": 4,
+            "remaining_hops": 8,
+            "root": 39,
+            "source": 4,
+            "tick": 284,
+            "value": 7033460659464469598
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 40,
+            "source": 5,
+            "tick": 320,
+            "value": 14786947978213829971
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 41,
+            "source": 5,
+            "tick": 324,
+            "value": 11488812227145780198
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 42,
+            "source": 5,
+            "tick": 328,
+            "value": 6637208022602724606
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 43,
+            "source": 5,
+            "tick": 332,
+            "value": 7058822434096197636
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 44,
+            "source": 5,
+            "tick": 336,
+            "value": 17528016010374604944
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 45,
+            "source": 5,
+            "tick": 340,
+            "value": 17912933491805251561
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 46,
+            "source": 5,
+            "tick": 344,
+            "value": 17730237408055756559
+          },
+          {
+            "destination": 5,
+            "remaining_hops": 8,
+            "root": 47,
+            "source": 5,
+            "tick": 348,
+            "value": 5318684834340453483
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 48,
+            "source": 6,
+            "tick": 384,
+            "value": 9970744592427459814
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 49,
+            "source": 6,
+            "tick": 388,
+            "value": 16361180121173626057
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 50,
+            "source": 6,
+            "tick": 392,
+            "value": 14552627991029762247
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 51,
+            "source": 6,
+            "tick": 396,
+            "value": 12684930747950948951
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 52,
+            "source": 6,
+            "tick": 400,
+            "value": 3255170984928473972
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 53,
+            "source": 6,
+            "tick": 404,
+            "value": 8346857360522713050
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 54,
+            "source": 6,
+            "tick": 408,
+            "value": 2673469882855493808
+          },
+          {
+            "destination": 6,
+            "remaining_hops": 8,
+            "root": 55,
+            "source": 6,
+            "tick": 412,
+            "value": 11310986244889361560
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 56,
+            "source": 7,
+            "tick": 448,
+            "value": 4052593565650739597
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 57,
+            "source": 7,
+            "tick": 452,
+            "value": 16483828344520833677
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 58,
+            "source": 7,
+            "tick": 456,
+            "value": 5731981759327487602
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 59,
+            "source": 7,
+            "tick": 460,
+            "value": 5357057578878186088
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 60,
+            "source": 7,
+            "tick": 464,
+            "value": 3386015073701554412
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 61,
+            "source": 7,
+            "tick": 468,
+            "value": 6342431781446729948
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 62,
+            "source": 7,
+            "tick": 472,
+            "value": 16877419859837249067
+          },
+          {
+            "destination": 7,
+            "remaining_hops": 8,
+            "root": 63,
+            "source": 7,
+            "tick": 476,
+            "value": 17166015483623277857
+          }
+        ],
+        "lp_count": 8,
+        "max_hops": 8,
+        "optimistic_counters": {
+          "canceled_sends": 366,
+          "checkpoints_before_fossil": 300,
+          "committed_logical_ids": 292,
+          "executions": 723,
+          "extra_executions": 431,
+          "first_attempt_executions": 483,
+          "fossil_collected_checkpoints": 292,
+          "fossil_collected_events": 292,
+          "max_rollback_depth": 7,
+          "replay_executions": 240,
+          "rollback_attempts": 224,
+          "rolled_back_events": 431
+        },
+        "optimistic_ns": [
+          1944291,
+          1881250,
+          1940292,
+          1927584,
+          2134833
+        ],
+        "parity": true,
+        "profile": "dense",
+        "roots_per_lp": 8,
+        "seed": 482027
+      }
+    ],
+    "repetitions": 5,
+    "schema_version": "kairoecs.pdes.time_warp_benchmark.v1",
+    "seed": 482027,
+    "timed_boundary": "runtime_run_call",
+    "warmup_runs": 1
+  },
+  "command": [
+    "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo",
+    "bench",
+    "-p",
+    "kairo-ecs-pdes",
+    "--bench",
+    "time_warp",
+    "--features",
+    "pdes,time-warp"
+  ],
+  "compiler_provenance": {
+    "cargo_config_sha256": {},
+    "cargo_path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo",
+    "cargo_sha256": "6e17e865f3a20dd55a1d212f849f58b77124179f0de7c52973096d84ba34118d",
+    "cargo_verbose_version": "cargo 1.98.1 (797e8a9bc 2026-08-05)\nrelease: 1.98.1\ncommit-hash: 797e8a9bca276c1c9f9f738d2a20f484fa4eea9d\ncommit-date: 2026-08-05\nhost: aarch64-apple-darwin\nlibgit2: 1.9.4 (sys:0.21.0 vendored)\nlibcurl: 8.7.1 (sys:0.4.90+curl-8.21.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Mac OS 27.0.0 [64-bit]",
+    "cargo_version": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+    "cleared_empty_rustflags_environment": [],
+    "disabled_toolchain_environment": [],
+    "disabled_wrapper_environment": [],
+    "rustc_path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustc",
+    "rustc_sha256": "766eda9d8f53afd6fc7f27b3cd2e444dd22afacb5afa710a5625fc8e45b8c941",
+    "rustc_version": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-apple-darwin\nrelease: 1.98.1\nLLVM version: 22.1.8",
+    "rustup_path": "/opt/homebrew/Cellar/rustup/1.29.1/bin/rustup",
+    "source_root": "/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join",
+    "sysroot": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin",
+    "toolchain": "1.98.1",
+    "toolchain_bin": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin"
+  },
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join",
+  "execution_environment": {
+    "CARGO_TARGET_DIR": "artifacts/owned-native-join/reviewed-cut-benchmark-raw/target",
+    "PATH_first": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin",
+    "RUSTC": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustc",
+    "RUSTUP_TOOLCHAIN": "1.98.1"
+  },
+  "exit_code": 0,
+  "hardware": {
+    "cpu_model": "Apple M1 Max",
+    "logical_cpu_count": 10,
+    "machine": "arm64",
+    "release": "27.0.0",
+    "system": "Darwin"
+  },
+  "head_after": "35914c3d36f732b6161a9d7a908dbd56106f56a1",
+  "head_before": "35914c3d36f732b6161a9d7a908dbd56106f56a1",
+  "input_sha256": {
+    "dense-lp4": "ea7edf53b8a719fb8b9630919093bdd4bb256bc9fbfb68da58011d2128c99a19",
+    "dense-lp8": "4163d7d200b8f6e3fcd92b389f3c46acd6ca906b7ffde56ef9b4101eb7ee841a",
+    "sparse-lp4": "ea7edf53b8a719fb8b9630919093bdd4bb256bc9fbfb68da58011d2128c99a19",
+    "sparse-lp8": "4163d7d200b8f6e3fcd92b389f3c46acd6ca906b7ffde56ef9b4101eb7ee841a"
+  },
+  "schema_version": "kairoecs.pdes.time_warp_evidence.v1",
+  "source_sha256_after": {
+    ".gitignore": "f9046fb9617d1c871ca033cb2fc9805bc1dec5fe17dfdef90ff622fb09a0f13a",
+    "Cargo.lock": "2c47e509672c3ff89b5b2bccd42b5cd3258389a69edb67a156a910ffc74f979a",
+    "Cargo.toml": "183584f511603be2d573072f66a97eff936238fde31a0b7bbde12c1d815499d2",
+    "benches/pdes/collect_time_warp_evidence.py": "85eeed7170b4ef2a2f11ac4ea033b88625e9eba5764910479fa2fa104a998e81",
+    "benches/pdes/test_collect_time_warp_evidence.py": "0cc58a765f3ca55de969df711f26316774872566b368f5dbb03c35331c17eabd",
+    "crates/kairo-ecs-core/Cargo.toml": "6857b3ca7f7cf161e7563cab9818419e99fb04546864d32c86a316f12baeae07",
+    "crates/kairo-ecs-core/src/lib.rs": "f79bfc950a833e3ec90b2b5376023a581e423fe960d79488d8b5737ea9f5fb62",
+    "crates/kairo-ecs-pdes/Cargo.toml": "75acfa36b9deed08213aa8658648c3f87234a974b6aceb0a18bc0e2677174329",
+    "crates/kairo-ecs-pdes/benches/time_warp.rs": "2184c7dcb44fd5d7c9dd4fafcd1c7d97674b4ca5c6d9124c1bdb12d1afc1cb96",
+    "crates/kairo-ecs-pdes/src/conservative.rs": "5216d61e0ed131b7d72c3f4cfc30bfb79d3e4be63a47e3c80e38386cb27c2c36",
+    "crates/kairo-ecs-pdes/src/generation_bitset.rs": "eb8a15153ac95666a3962e895ea6bfbbeb738191fc4b7a83c763ed00ae725a90",
+    "crates/kairo-ecs-pdes/src/lib.rs": "b7ba58cf4844181c008175dc2371c0ce103d8ce5373fe6648acddf114394e68e",
+    "crates/kairo-ecs-pdes/src/optimistic.rs": "987b95690750060f353f14c2b93a140b279d6d2fd5ce38fa051e44098866f536",
+    "crates/kairo-ecs-pdes/src/optimistic/owned.rs": "2eb2db34ca65280d509b8c378a9b7eb235530243e933bfcfe6f1e6b9e456a689",
+    "crates/kairo-ecs-pdes/src/optimistic/owned_execution.rs": "3b6f8470bd70170068c74cc12252f68c80c3366edfdbcef301d725a476c4434c",
+    "crates/kairo-ecs-pdes/src/optimistic/owned_routing.rs": "0e69cf12c8f4e8ada560572d808622bf3eb8aa8c6b341df5cbfb0669a3288959",
+    "crates/kairo-ecs-types/Cargo.toml": "772abd5b321f6c5806a8dfcb6c53c6d633ed6fc4201070f5f8149a72315e0288",
+    "crates/kairo-ecs-types/src/lib.rs": "9613c19c885183844ab48c157c34e9df718fc3c01363e982a847fb3e8240542b",
+    "rust-toolchain.toml": "8a7c4635d5100b3006ddc92cffe0a579f4c326b651d95d1fe956094675484716"
+  },
+  "source_sha256_before": {
+    ".gitignore": "f9046fb9617d1c871ca033cb2fc9805bc1dec5fe17dfdef90ff622fb09a0f13a",
+    "Cargo.lock": "2c47e509672c3ff89b5b2bccd42b5cd3258389a69edb67a156a910ffc74f979a",
+    "Cargo.toml": "183584f511603be2d573072f66a97eff936238fde31a0b7bbde12c1d815499d2",
+    "benches/pdes/collect_time_warp_evidence.py": "85eeed7170b4ef2a2f11ac4ea033b88625e9eba5764910479fa2fa104a998e81",
+    "benches/pdes/test_collect_time_warp_evidence.py": "0cc58a765f3ca55de969df711f26316774872566b368f5dbb03c35331c17eabd",
+    "crates/kairo-ecs-core/Cargo.toml": "6857b3ca7f7cf161e7563cab9818419e99fb04546864d32c86a316f12baeae07",
+    "crates/kairo-ecs-core/src/lib.rs": "f79bfc950a833e3ec90b2b5376023a581e423fe960d79488d8b5737ea9f5fb62",
+    "crates/kairo-ecs-pdes/Cargo.toml": "75acfa36b9deed08213aa8658648c3f87234a974b6aceb0a18bc0e2677174329",
+    "crates/kairo-ecs-pdes/benches/time_warp.rs": "2184c7dcb44fd5d7c9dd4fafcd1c7d97674b4ca5c6d9124c1bdb12d1afc1cb96",
+    "crates/kairo-ecs-pdes/src/conservative.rs": "5216d61e0ed131b7d72c3f4cfc30bfb79d3e4be63a47e3c80e38386cb27c2c36",
+    "crates/kairo-ecs-pdes/src/generation_bitset.rs": "eb8a15153ac95666a3962e895ea6bfbbeb738191fc4b7a83c763ed00ae725a90",
+    "crates/kairo-ecs-pdes/src/lib.rs": "b7ba58cf4844181c008175dc2371c0ce103d8ce5373fe6648acddf114394e68e",
+    "crates/kairo-ecs-pdes/src/optimistic.rs": "987b95690750060f353f14c2b93a140b279d6d2fd5ce38fa051e44098866f536",
+    "crates/kairo-ecs-pdes/src/optimistic/owned.rs": "2eb2db34ca65280d509b8c378a9b7eb235530243e933bfcfe6f1e6b9e456a689",
+    "crates/kairo-ecs-pdes/src/optimistic/owned_execution.rs": "3b6f8470bd70170068c74cc12252f68c80c3366edfdbcef301d725a476c4434c",
+    "crates/kairo-ecs-pdes/src/optimistic/owned_routing.rs": "0e69cf12c8f4e8ada560572d808622bf3eb8aa8c6b341df5cbfb0669a3288959",
+    "crates/kairo-ecs-types/Cargo.toml": "772abd5b321f6c5806a8dfcb6c53c6d633ed6fc4201070f5f8149a72315e0288",
+    "crates/kairo-ecs-types/src/lib.rs": "9613c19c885183844ab48c157c34e9df718fc3c01363e982a847fb3e8240542b",
+    "rust-toolchain.toml": "8a7c4635d5100b3006ddc92cffe0a579f4c326b651d95d1fe956094675484716"
+  },
+  "status_after": "",
+  "status_before": "",
+  "stderr_path": "artifacts/owned-native-join/reviewed-cut-benchmark-raw/time_warp.stderr.log",
+  "stderr_sha256": "34bf0d755e0b2c4d9d47dfb139ed4b3069003d77f1b2af22d594a647467c4a7b",
+  "stdout_path": "artifacts/owned-native-join/reviewed-cut-benchmark-raw/time_warp.stdout.json",
+  "stdout_sha256": "dacf85799a4569bb8cd302711195f043f76d05ea656818cfe64ce79d9f61fe14",
+  "timing_claim_boundary": "single-host local runtime run-call comparison; worker cohorts are not a simultaneous CPU-execution measurement",
+  "toolchain": {
+    "cargo_config_sha256": {},
+    "cargo_path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/cargo",
+    "cargo_sha256": "6e17e865f3a20dd55a1d212f849f58b77124179f0de7c52973096d84ba34118d",
+    "cargo_verbose_version": "cargo 1.98.1 (797e8a9bc 2026-08-05)\nrelease: 1.98.1\ncommit-hash: 797e8a9bca276c1c9f9f738d2a20f484fa4eea9d\ncommit-date: 2026-08-05\nhost: aarch64-apple-darwin\nlibgit2: 1.9.4 (sys:0.21.0 vendored)\nlibcurl: 8.7.1 (sys:0.4.90+curl-8.21.0 system ssl:(SecureTransport) LibreSSL/3.3.6)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Mac OS 27.0.0 [64-bit]",
+    "cargo_version": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+    "cleared_empty_rustflags_environment": [],
+    "disabled_toolchain_environment": [],
+    "disabled_wrapper_environment": [],
+    "rustc_path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustc",
+    "rustc_sha256": "766eda9d8f53afd6fc7f27b3cd2e444dd22afacb5afa710a5625fc8e45b8c941",
+    "rustc_version": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-apple-darwin\nrelease: 1.98.1\nLLVM version: 22.1.8",
+    "rustup_path": "/opt/homebrew/Cellar/rustup/1.29.1/bin/rustup",
+    "source_root": "/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join",
+    "sysroot": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin",
+    "toolchain": "1.98.1",
+    "toolchain_bin": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.98.1-aarch64-apple-darwin/bin"
+  },
+  "validation_error": null
+}

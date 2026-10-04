@@ -1,0 +1,9 @@
+   Compiling kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-pdes)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.75s
+     Running tests/optimistic_owned_execution.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_owned_execution-f918f093f41eefb6)
+
+running 1 test
+test native_cut_failure_reports_all_already_poisoned_participants ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+

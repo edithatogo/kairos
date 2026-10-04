@@ -1,0 +1,34 @@
+   Compiling kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-pdes)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.89s
+     Running tests/optimistic_owned_execution.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_owned_execution-f918f093f41eefb6)
+
+running 1 test
+test native_cut_failure_reports_all_already_poisoned_participants ... FAILED
+
+failures:
+
+---- native_cut_failure_reports_all_already_poisoned_participants stdout ----
+
+thread 'native_cut_failure_reports_all_already_poisoned_participants' (46369870) panicked at crates/kairo-ecs-pdes/tests/optimistic_owned_execution.rs:167:9:
+assertion `left != right` failed: injected handler failure
+  left: 255
+ right: 255
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'native_cut_failure_reports_all_already_poisoned_participants' (46369870) panicked at crates/kairo-ecs-pdes/tests/optimistic_owned_execution.rs:167:9:
+assertion `left != right` failed: injected handler failure
+  left: 255
+ right: 255
+
+thread 'native_cut_failure_reports_all_already_poisoned_participants' (46369870) panicked at crates/kairo-ecs-pdes/tests/optimistic_owned_execution.rs:370:5:
+assertion `left == right` failed
+  left: []
+ right: [1, 3]
+
+
+failures:
+    native_cut_failure_reports_all_already_poisoned_participants
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p kairo-ecs-pdes --test optimistic_owned_execution`
