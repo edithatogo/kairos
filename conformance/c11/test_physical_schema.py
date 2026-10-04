@@ -2,6 +2,8 @@
 import unittest
 
 import pyarrow as pa
+import pyarrow.ipc as ipc
+import pyarrow.parquet as pq
 
 from physical_schema import (
     I128_MAX, I128_MIN, TRACE_EVENT_SCHEMA, TRACE_EXCLUSION_SCHEMA, OUTCOME_SCHEMA,
@@ -33,6 +35,26 @@ def trace_event():
 
 
 class PhysicalSchemaTests(unittest.TestCase):
+    def test_raw_time_map_has_exact_parquet_and_ipc_schema(self):
+        row = {"record_type": "trace_exclusion.v1", "schema_version": "calibration-v1",
+               "dataset_id": "d1", "mapping_version": "map-1", "source_event_key": "s2",
+               "raw_event": {"source_family": "synthetic", "source_event_type": "bad_time"},
+               "raw_time_values": {"occurred": None, "message": "unchanged raw"},
+               "exclusion_reason": "missing_timezone", "lineage": lineage()}
+        table = table_from_rows("trace_exclusion.v1", [row])
+        sink = pa.BufferOutputStream()
+        pq.write_table(table, sink, compression="NONE", use_compliant_nested_type=True)
+        restored = pq.read_table(pa.BufferReader(sink.getvalue()))
+        self.assertTrue(restored.schema.equals(TRACE_EXCLUSION_SCHEMA, check_metadata=True))
+        self.assertEqual(decode_row(restored.to_pylist()[0], "trace_exclusion.v1"), row)
+        for factory, reader in ((ipc.new_file, ipc.open_file), (ipc.new_stream, ipc.open_stream)):
+            sink = pa.BufferOutputStream()
+            with factory(sink, table.schema) as writer:
+                writer.write_table(table)
+            restored = reader(pa.BufferReader(sink.getvalue())).read_all()
+            self.assertTrue(restored.schema.equals(TRACE_EXCLUSION_SCHEMA, check_metadata=True))
+            self.assertEqual(decode_row(restored.to_pylist()[0], "trace_exclusion.v1"), row)
+
     def test_available_at_lineage_status_has_its_own_enum(self):
         for status in ("known", "not_yet_known", "unknown"):
             for clock_status in ("observed", "derived", "unknown"):
@@ -58,7 +80,7 @@ class PhysicalSchemaTests(unittest.TestCase):
                                     (TRACE_EXCLUSION_SCHEMA, "trace_exclusion.v1"),
                                     (OUTCOME_SCHEMA, "outcome_observation.v1")):
             self.assertEqual(schema.metadata[b"format"], b"careops.calibration.physical")
-            self.assertEqual(schema.metadata[b"physical_version"], b"1")
+            self.assertEqual(schema.metadata[b"physical_version"], b"2")
             self.assertEqual(schema.metadata[b"record_type"], record_type.encode())
             self.assertEqual(schema.field("relative_ticks").type, pa.binary(16)) if record_type == "trace_event.v1" else None
         self.assertEqual(TRACE_EVENT_SCHEMA.field("source_order").type, pa.uint64())
@@ -152,13 +174,13 @@ class PhysicalSchemaTests(unittest.TestCase):
                      "lineage": lineage(), "detail": None}
         outcome = {"record_type": "outcome_observation.v1", "schema_version": "calibration-v1",
                    "dataset_id": "d1", "case_key": "c1", "endpoint": "death", "risk_start": None,
-                   "last_observed": None, "event_observed": False, "event_time": None, "event_cause": None,
+                   "last_observed": time_value(), "event_observed": False, "event_time": None, "event_cause": None,
                    "censor_status": "right", "censor_reason": "end_of_followup", "cluster_ids": [],
                    "lineage": lineage()}
         for row in (exclusion, outcome):
             physical = encode_row(row)
             self.assertEqual(decode_row(physical, row["record_type"]), row)
-        self.assertEqual(TRACE_EXCLUSION_SCHEMA.field("raw_time_values").type, pa.map_(pa.string(), pa.string()))
+        self.assertEqual(TRACE_EXCLUSION_SCHEMA.field("raw_time_values").type, pa.list_(pa.field("element", pa.struct([pa.field("key", pa.string(), nullable=False), pa.field("value", pa.string())]), nullable=False)))
 
     def test_rejects_required_null_unknown_and_hidden_presence(self):
         row = trace_event()
@@ -185,7 +207,7 @@ class PhysicalSchemaTests(unittest.TestCase):
                "raw_time_values": {"occurred": None}, "exclusion_reason": "missing_timezone",
                "lineage": lineage()}
         physical = encode_row(row)
-        physical["raw_time_values"] = [("occurred", None), ("occurred", "duplicate")]
+        physical["raw_time_values"] = [{"key": "occurred", "value": None}, {"key": "occurred", "value": "duplicate"}]
         with self.assertRaisesRegex(ValueError, "sorted and unique"):
             decode_row(physical, "trace_exclusion.v1")
 
