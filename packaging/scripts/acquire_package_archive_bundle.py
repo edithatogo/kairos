@@ -18,7 +18,85 @@ WORKFLOW = ".github/workflows/package-dry-run.yml"
 MAX_BYTES = 2 * 1024 * 1024 * 1024
 MAX_MEMBERS = 10000
 
-def select_artifact(run: dict, inventory: dict, run_id: int, source_commit: str, head_commit: str | None = None, source_info: dict | None = None) -> dict:
+def validate_main_dispatch_run(run: dict, run_id: int) -> str:
+    """Return the source SHA only for an exact successful same-repository main dispatch."""
+    repository = run.get("repository")
+    head_repository = run.get("head_repository")
+    if type(run_id) is not int or run_id <= 0 or type(run.get("id")) is not int or run["id"] != run_id:
+        raise ValueError("selected workflow run ID differs")
+    if not isinstance(repository, dict) or not isinstance(head_repository, dict):
+        raise ValueError("selected workflow run lacks repository identity")
+    if repository.get("full_name") != REPOSITORY or head_repository.get("full_name") != REPOSITORY:
+        raise ValueError("main dispatch must originate in the expected repository")
+    repository_id = repository.get("id")
+    head_repository_id = head_repository.get("id")
+    if type(repository_id) is not int or repository_id <= 0 or type(head_repository_id) is not int or head_repository_id != repository_id:
+        raise ValueError("main dispatch repository IDs differ")
+    if run.get("path") != WORKFLOW or run.get("status") != "completed" or run.get("conclusion") != "success":
+        raise ValueError("expected successful completed package workflow")
+    if run.get("event") != "workflow_dispatch" or run.get("head_branch") != "main" or run.get("pull_requests") != []:
+        raise ValueError("source run must be a same-repository manual dispatch on main without PR identity")
+    source_commit = run.get("head_sha")
+    if not isinstance(source_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", source_commit):
+        raise ValueError("main dispatch head must be a full lowercase SHA")
+    return source_commit
+
+
+def validate_main_ancestry(source_commit: str, branch: dict, comparison: dict | None) -> dict:
+    """Validate branch and Compare API fields; bind the requested head through URL + branch readback."""
+    if not isinstance(source_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", source_commit):
+        raise ValueError("expected full lowercase source SHA")
+    if not isinstance(branch, dict) or branch.get("name") != "main":
+        raise ValueError("expected exact main branch response")
+    commit = branch.get("commit")
+    observed_main_sha = commit.get("sha") if isinstance(commit, dict) else None
+    if not isinstance(observed_main_sha, str) or not re.fullmatch(r"[0-9a-f]{40}", observed_main_sha):
+        raise ValueError("main branch response lacks a full lowercase commit SHA")
+    if source_commit == observed_main_sha:
+        if comparison is not None:
+            raise ValueError("identical source/main SHA must not require a compare response")
+        return {
+            "observed_branch": "main",
+            "source_sha": source_commit,
+            "observed_main_sha": observed_main_sha,
+            "compare_url": None,
+            "base_sha": source_commit,
+            "merge_base_sha": source_commit,
+            "status": "identical",
+            "ahead_by": 0,
+            "behind_by": 0,
+        }
+    expected_url = f"https://api.github.com/repos/{REPOSITORY}/compare/{source_commit}...{observed_main_sha}"
+    if not isinstance(comparison, dict) or comparison.get("url") != expected_url:
+        raise ValueError("compare response URL differs from exact source/main request")
+    base_commit = comparison.get("base_commit")
+    merge_base_commit = comparison.get("merge_base_commit")
+    if not isinstance(base_commit, dict) or base_commit.get("sha") != source_commit:
+        raise ValueError("compare base SHA differs from source")
+    if not isinstance(merge_base_commit, dict) or merge_base_commit.get("sha") != source_commit:
+        raise ValueError("source SHA is not the compare merge base")
+    ahead_by = comparison.get("ahead_by")
+    behind_by = comparison.get("behind_by")
+    if comparison.get("status") != "ahead" or type(ahead_by) is not int or ahead_by <= 0 or type(behind_by) is not int or behind_by != 0:
+        raise ValueError("main does not descend from source with valid compare counts")
+    return {
+        "observed_branch": "main",
+        "source_sha": source_commit,
+        "observed_main_sha": observed_main_sha,
+        "compare_url": expected_url,
+        "base_sha": base_commit["sha"],
+        "merge_base_sha": merge_base_commit["sha"],
+        "status": "ahead",
+        "ahead_by": ahead_by,
+        "behind_by": behind_by,
+    }
+
+
+def select_artifact(run: dict, inventory: dict, run_id: int, source_commit: str, head_commit: str | None = None, source_info: dict | None = None, *, require_main_dispatch: bool = False) -> dict:
+    if require_main_dispatch:
+        derived_source = validate_main_dispatch_run(run, run_id)
+        if source_commit != derived_source or head_commit is not None or source_info is not None:
+            raise ValueError("strict main selection must use the run-derived source SHA only")
     if not re.fullmatch(r"[0-9a-f]{40}", source_commit):
         raise ValueError("expected full lowercase source SHA")
     if run.get("id") != run_id or run.get("head_sha") != (head_commit or source_commit):
@@ -53,6 +131,8 @@ def select_artifact(run: dict, inventory: dict, run_id: int, source_commit: str,
     for key, expected in expected_ids.items():
         if type(expected) is not int or expected <= 0 or type(origin.get(key)) is not int or origin[key] != expected:
             raise ValueError("artifact origin run or repository differs")
+    if require_main_dispatch and origin.get("head_branch") != "main":
+        raise ValueError("artifact origin branch differs from main")
     if item.get("expired") is not False or not re.fullmatch(r"sha256:[0-9a-f]{64}", str(item.get("digest", ""))):
         raise ValueError("artifact expired or lacks SHA-256 identity")
     if type(item.get("id")) is not int or item["id"] <= 0:
@@ -146,16 +226,45 @@ def api(path: str) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-id", type=int, required=True)
-    parser.add_argument("--source-commit", required=True)
+    parser.add_argument("--source-commit", help="Exact built commit (required for historical/PR selection)")
     parser.add_argument("--head-commit", help="Explicit PR head; source commit remains exact built merge")
+    parser.add_argument("--require-main-dispatch", action="store_true",
+                        help="Select only a successful same-repository manual package run on main")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.run_id <= 0 or args.output.exists():
         parser.error("positive run ID and nonexistent output required")
+    if args.require_main_dispatch:
+        if args.source_commit is not None or args.head_commit is not None:
+            parser.error("main dispatch derives source SHA from the selected run; SHA overrides are forbidden")
+    elif args.source_commit is None:
+        parser.error("--source-commit is required unless --require-main-dispatch is selected")
     run = api(f"repos/{REPOSITORY}/actions/runs/{args.run_id}")
-    inventory = api(f"repos/{REPOSITORY}/actions/runs/{args.run_id}/artifacts?per_page=100")
-    source_info = api(f"repos/{REPOSITORY}/commits/{args.source_commit}") if run.get("event") == "pull_request" else None
-    item = select_artifact(run, inventory, args.run_id, args.source_commit, args.head_commit, source_info)
+    main_ancestry = None
+    if args.require_main_dispatch:
+        source_commit = validate_main_dispatch_run(run, args.run_id)
+        branch = api(f"repos/{REPOSITORY}/branches/main")
+        if not isinstance(branch, dict) or branch.get("name") != "main":
+            raise ValueError("expected exact main branch response")
+        branch_commit = branch.get("commit")
+        if not isinstance(branch_commit, dict):
+            raise ValueError("main branch response lacks a commit object")
+        comparison = None
+        observed_main = branch_commit.get("sha")
+        if not isinstance(observed_main, str) or not re.fullmatch(r"[0-9a-f]{40}", observed_main):
+            raise ValueError("main branch response lacks a full lowercase commit SHA")
+        if observed_main != source_commit:
+            comparison = api(f"repos/{REPOSITORY}/compare/{source_commit}...{observed_main}")
+        main_ancestry = validate_main_ancestry(source_commit, branch, comparison)
+        inventory = api(f"repos/{REPOSITORY}/actions/runs/{args.run_id}/artifacts?per_page=100")
+        source_info = None
+        item = select_artifact(run, inventory, args.run_id, source_commit,
+                               require_main_dispatch=True)
+    else:
+        source_commit = args.source_commit
+        inventory = api(f"repos/{REPOSITORY}/actions/runs/{args.run_id}/artifacts?per_page=100")
+        source_info = api(f"repos/{REPOSITORY}/commits/{source_commit}") if run.get("event") == "pull_request" else None
+        item = select_artifact(run, inventory, args.run_id, source_commit, args.head_commit, source_info)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=args.output.parent) as temp:
         temp = Path(temp)
@@ -170,16 +279,20 @@ def main() -> None:
         spec.loader.exec_module(module)
         module.verify(tree)
         index = json.loads((tree / "ARCHIVE-INDEX.json").read_text())
-        if index["source_commit"] != args.source_commit:
+        if index["source_commit"] != source_commit:
             raise ValueError("retained bundle has a different source SHA")
         # Evidence is a sibling: adding it inside the bundle would change its verified tree.
         receipt = args.output.with_name(args.output.name + ".acquisition.json")
         if receipt.exists():
             raise ValueError("acquisition receipt already exists")
-        receipt.write_text(json.dumps({"repository": REPOSITORY, "run_id": args.run_id,
-            "source_commit": args.source_commit, "head_commit": run["head_sha"], "build_commit_parents": source_info.get("parents", []) if source_info else [], "artifact_id": item["id"],
+        receipt_data = {"repository": REPOSITORY, "run_id": args.run_id,
+            "source_commit": source_commit, "head_commit": run["head_sha"], "build_commit_parents": source_info.get("parents", []) if source_info else [], "artifact_id": item["id"],
             "artifact_digest": item["digest"], "archive_index_sha256": hashlib.sha256((tree / "ARCHIVE-INDEX.json").read_bytes()).hexdigest(),
-            "scope": "verified acquisition; not original build provenance or release acceptance"}, indent=2) + "\n")
+            "scope": "verified acquisition; not original build provenance or release acceptance"}
+        if args.require_main_dispatch:
+            receipt_data["selection_policy"] = "same-repository-main-workflow-dispatch"
+            receipt_data["main_ancestry"] = main_ancestry
+        receipt.write_text(json.dumps(receipt_data, indent=2) + "\n")
         shutil.move(str(tree), args.output)
     print("verified exact-run package acquisition")
 if __name__ == "__main__":
