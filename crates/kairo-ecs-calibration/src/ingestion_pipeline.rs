@@ -28,18 +28,13 @@ impl Drop for BundleGuard {
     }
 }
 
-/// New private output directory; the manifest is its last completion marker.
-/// The outer source adapter supplies raw rows and the exact input files.
-pub(crate) fn ingest<I>(
+/// New private output directory; rows are decoded from the exact fingerprinted NDJSON inputs.
+pub(crate) fn ingest(
     template: Value,
-    chunks: I,
     config: &PipelineConfig,
     inputs: &[PathBuf],
     output: &Path,
-) -> Result<Value, String>
-where
-    I: Iterator<Item = Result<Vec<Value>, String>>,
-{
+) -> Result<Value, String> {
     for (name, width) in [("engine_commit", 40), ("cargo_lock_sha256", 64)] {
         let raw = config.evidence[name]
             .as_str()
@@ -86,29 +81,69 @@ where
     let mut diagnostics = writer(&output.join("diagnostics.ndjson"))?;
     let mut outcome_count = 0u64;
     let mut censor_counts = std::collections::BTreeMap::<String, u64>::new();
-    for rows in chunks {
-        let mapped = normalizer.push(rows?)?;
-        for row in mapped.events {
-            write_row(&mut events, &row)?;
+    let template_bytes = serde_json::to_vec(&template)
+        .map_err(|e| e.to_string())?
+        .len();
+    let mut actual_input_evidence = Vec::with_capacity(inputs.len());
+    for input in inputs {
+        let mut pending = Vec::new();
+        let mut pending_bytes = template_bytes;
+        let mut source_rows = SourceLines::open(input, config.normalization.max_chunk_bytes)?;
+        while let Some(decoded) = source_rows.next() {
+            let row = decoded?;
+            let row_bytes = serde_json::to_vec(&row).map_err(|e| e.to_string())?.len();
+            let next_bytes = pending_bytes
+                .checked_add(row_bytes)
+                .and_then(|n| n.checked_add(1))
+                .ok_or("chunk byte count overflow")?;
+            if !pending.is_empty()
+                && (pending.len() >= config.normalization.max_chunk_rows
+                    || next_bytes
+                        .checked_add(2)
+                        .ok_or("chunk byte count overflow")?
+                        > config.normalization.max_chunk_bytes)
+            {
+                map_chunk(
+                    &mut normalizer,
+                    std::mem::take(&mut pending),
+                    &mut events,
+                    &mut exclusions,
+                    &mut outcomes,
+                    &mut diagnostics,
+                    &mut outcome_count,
+                    &mut censor_counts,
+                )?;
+                pending_bytes = template_bytes;
+            }
+            let single_estimate = template_bytes
+                .checked_add(row_bytes)
+                .and_then(|n| n.checked_add(3))
+                .ok_or("chunk byte count overflow")?;
+            if pending.is_empty()
+                && (config.normalization.max_chunk_rows == 0
+                    || single_estimate > config.normalization.max_chunk_bytes)
+            {
+                return Err("source row cannot fit normalization chunk bounds".into());
+            }
+            pending_bytes = pending_bytes
+                .checked_add(row_bytes)
+                .and_then(|n| n.checked_add(1))
+                .ok_or("chunk byte count overflow")?;
+            pending.push(row);
         }
-        for row in mapped.exclusions {
-            write_row(&mut exclusions, &row)?;
+        if !pending.is_empty() {
+            map_chunk(
+                &mut normalizer,
+                pending,
+                &mut events,
+                &mut exclusions,
+                &mut outcomes,
+                &mut diagnostics,
+                &mut outcome_count,
+                &mut censor_counts,
+            )?;
         }
-        for row in mapped.outcomes {
-            outcome_count = outcome_count
-                .checked_add(1)
-                .ok_or("outcome count overflow")?;
-            let status = row["censor_status"]
-                .as_str()
-                .ok_or("outcome status missing")?
-                .to_owned();
-            let n = censor_counts.entry(status).or_default();
-            *n = n.checked_add(1).ok_or("censor count overflow")?;
-            write_row(&mut outcomes, &row)?;
-        }
-        for row in mapped.diagnostics {
-            write_row(&mut diagnostics, &row)?;
-        }
+        actual_input_evidence.push(source_rows.digest());
     }
     for w in [
         &mut events,
@@ -187,13 +222,17 @@ where
         return Err("artifact population counts do not reconcile".into());
     }
     // Verify exact source files did not change while their decoded rows were ingested.
-    for (path, prior) in inputs.iter().zip(&input_evidence) {
+    for (index, path) in inputs.iter().enumerate() {
         let (hash, bytes) = fingerprint(path)?;
-        if prior != &json!({"sha256":hash,"bytes":bytes}) {
-            return Err("input evidence changed during ingestion".into());
+        let prior = &input_evidence[index];
+        let actual = &actual_input_evidence[index];
+        if prior != &json!({"sha256":hash,"bytes":bytes})
+            || actual != &json!({"sha256":hash,"bytes":bytes})
+        {
+            return Err("input bytes read differ from fingerprinted source".into());
         }
     }
-    let manifest = json!({"manifest_version":"c1.ingestion.v1","execution":config.evidence,"validation_policy_sha256":policy_hash(&config.validation)?,"reason_count_unit":"case","privacy":"local-only; publish only reviewed synthetic evidence","serialization":"serde-json-btree-ndjson-v1","logical_schema":"calibration-v1","physical_schema_version":2,"dataset_id":template["dataset_id"],"mapping_version":template["mapping_version"],"mapping_sha256":normalizer.mapping_hash(),"inputs":input_evidence,"origin_utc":template["origin_utc"],"tick_resolution":"1ns","rounding":"reject unrepresentable precision; preserve source precision","ordering":"c0.six-field-v1","source_rows":counts.source_rows,"candidate_units":counts.candidate_units,"mapper_accepted_units":counts.accepted_units,"mapper_excluded_units":counts.excluded_units,"failed_units":counts.failed_units,"unresolved_units":counts.unresolved_units,"candidate_conservation":true,"cohort_denominator":counts.cohort_denominator,"missing_triage":counts.missing_triage,"outcomes":outcome_count,"censor_status_counts":censor_counts,"validation":{"input_events":validation.input_events,"valid_events":validation.valid_events,"quarantined_events":validation.quarantined_events,"invalid_cases":validation.invalid_cases,"censored_cases":validation.censored_cases,"reasons":validation.reasons,"resource_feasible":validation.resource_feasible,"input_sha256":validation.input_sha256},"sort":{"version":"bounded-c0-runs-v1","rows":sort.rows,"runs":sort.runs,"merge_passes":sort.merge_passes,"max_run_rows":config.sorting.max_run_rows,"max_run_bytes":config.sorting.max_run_bytes,"max_record_bytes":config.sorting.max_record_bytes,"merge_fan_in":config.sorting.merge_fan_in},"normalization_limits":{"max_chunk_rows":config.normalization.max_chunk_rows,"max_chunk_bytes":config.normalization.max_chunk_bytes,"max_identities":config.normalization.max_identities},"populations":populations});
+    let manifest = json!({"manifest_version":"c1.ingestion.v1","execution":config.evidence,"validation_policy_sha256":policy_hash(&config.validation)?,"reason_count_unit":"case","privacy":"local-only; publish only reviewed synthetic evidence","serialization":"serde-json-btree-ndjson-v1","source_format":"source-rows.ndjson-v1","logical_schema":"calibration-v1","physical_schema_version":2,"dataset_id":template["dataset_id"],"mapping_version":template["mapping_version"],"mapping_sha256":normalizer.mapping_hash(),"inputs":input_evidence,"origin_utc":template["origin_utc"],"tick_resolution":"1ns","rounding":"reject unrepresentable precision; preserve source precision","ordering":"c0.six-field-v1","source_rows":counts.source_rows,"candidate_units":counts.candidate_units,"mapper_accepted_units":counts.accepted_units,"mapper_excluded_units":counts.excluded_units,"failed_units":counts.failed_units,"unresolved_units":counts.unresolved_units,"candidate_conservation":true,"cohort_denominator":counts.cohort_denominator,"missing_triage":counts.missing_triage,"outcomes":outcome_count,"censor_status_counts":censor_counts,"validation":{"input_events":validation.input_events,"valid_events":validation.valid_events,"quarantined_events":validation.quarantined_events,"invalid_cases":validation.invalid_cases,"censored_cases":validation.censored_cases,"reasons":validation.reasons,"resource_feasible":validation.resource_feasible,"input_sha256":validation.input_sha256},"sort":{"version":"bounded-c0-runs-v1","rows":sort.rows,"runs":sort.runs,"merge_passes":sort.merge_passes,"max_run_rows":config.sorting.max_run_rows,"max_run_bytes":config.sorting.max_run_bytes,"max_record_bytes":config.sorting.max_record_bytes,"merge_fan_in":config.sorting.merge_fan_in},"normalization_limits":{"max_chunk_rows":config.normalization.max_chunk_rows,"max_chunk_bytes":config.normalization.max_chunk_bytes,"max_identities":config.normalization.max_identities},"populations":populations});
     for name in [
         "unsorted.ndjson",
         "unsorted-exclusions.ndjson",
@@ -209,6 +248,48 @@ where
     marker.get_ref().sync_all().map_err(|e| e.to_string())?;
     guard.complete = true;
     Ok(manifest)
+}
+fn map_chunk(
+    normalizer: &mut Normalizer,
+    rows: Vec<Value>,
+    events: &mut BufWriter<File>,
+    exclusions: &mut BufWriter<File>,
+    outcomes: &mut BufWriter<File>,
+    diagnostics: &mut BufWriter<File>,
+    outcome_count: &mut u64,
+    censor_counts: &mut std::collections::BTreeMap<String, u64>,
+) -> Result<(), String> {
+    let mapped = normalizer.push(rows)?;
+    for row in mapped.events {
+        write_row(events, &row)?;
+    }
+    for row in mapped.exclusions {
+        write_row(exclusions, &row)?;
+    }
+    for row in mapped.outcomes {
+        *outcome_count = outcome_count
+            .checked_add(1)
+            .ok_or("outcome count overflow")?;
+        let status = row["censor_status"]
+            .as_str()
+            .ok_or("outcome status missing")?
+            .to_owned();
+        let n = censor_counts.entry(status).or_default();
+        *n = n.checked_add(1).ok_or("censor count overflow")?;
+        write_row(outcomes, &row)?;
+    }
+    for row in mapped.diagnostics {
+        write_row(diagnostics, &row)?;
+    }
+    Ok(())
+}
+fn write_ndjson(path: &Path, rows: &[Value]) {
+    let mut bytes = Vec::new();
+    for row in rows {
+        serde_json::to_writer(&mut bytes, row).unwrap();
+        bytes.push(b'\n');
+    }
+    fs::write(path, bytes).unwrap();
 }
 fn policy_hash(p: &ValidationPolicy) -> Result<String, String> {
     let capacities: Vec<Value> = p
@@ -268,6 +349,84 @@ pub(crate) fn fingerprint(path: &Path) -> Result<(String, u64), String> {
         bytes,
     ))
 }
+struct SourceLines {
+    reader: BufReader<File>,
+    cap: usize,
+    read_limit: u64,
+    hash: Sha256,
+    bytes: u64,
+    failed: bool,
+}
+impl SourceLines {
+    fn open(path: &Path, cap: usize) -> Result<Self, String> {
+        if cap == 0 || cap.checked_add(2).is_none() {
+            return Err("invalid source row byte bound".into());
+        }
+        let read_limit = u64::try_from(cap.checked_add(2).ok_or("source row byte bound overflow")?)
+            .map_err(|_| "source row byte bound conversion overflow")?;
+        Ok(Self {
+            reader: BufReader::new(File::open(path).map_err(|e| e.to_string())?),
+            cap,
+            read_limit,
+            hash: Sha256::new(),
+            bytes: 0,
+            failed: false,
+        })
+    }
+    fn digest(&self) -> Value {
+        json!({"sha256":self.hash.clone().finalize().iter().map(|b|format!("{b:02x}")).collect::<String>(),"bytes":self.bytes})
+    }
+}
+impl Iterator for SourceLines {
+    type Item = Result<Value, String>;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.failed {
+            return None;
+        }
+        let mut raw = Vec::new();
+        let n = match self
+            .reader
+            .by_ref()
+            .take(self.read_limit)
+            .read_until(b'\n', &mut raw)
+        {
+            Ok(n) => n,
+            Err(e) => {
+                self.failed = true;
+                return Some(Err(e.to_string()));
+            }
+        };
+        if n == 0 {
+            return None;
+        }
+        self.hash.update(&raw);
+        self.bytes = match self.bytes.checked_add(n as u64) {
+            Some(n) => n,
+            None => {
+                self.failed = true;
+                return Some(Err("source byte count overflow".into()));
+            }
+        };
+        if raw.len() > self.cap + 1 || raw.last() != Some(&b'\n') {
+            self.failed = true;
+            return Some(Err("oversized or truncated source NDJSON row".into()));
+        }
+        raw.pop();
+        if raw.is_empty() {
+            self.failed = true;
+            return Some(Err("empty source NDJSON row".into()));
+        }
+        let value: Result<Value, String> = serde_json::from_slice(&raw).map_err(|e| e.to_string());
+        if value.as_ref().is_ok_and(|v| !v.is_object()) {
+            self.failed = true;
+            return Some(Err("source NDJSON rows must be JSON objects".into()));
+        }
+        if value.is_err() {
+            self.failed = true;
+        }
+        Some(value)
+    }
+}
 pub(crate) struct Lines {
     reader: BufReader<File>,
     cap: usize,
@@ -300,7 +459,11 @@ impl Iterator for Lines {
             return Some(Err("oversized or truncated NDJSON record".into()));
         }
         raw.pop();
-        let value = serde_json::from_slice(&raw).map_err(|e| e.to_string());
+        let value: Result<Value, String> = serde_json::from_slice(&raw).map_err(|e| e.to_string());
+        if value.as_ref().is_ok_and(|v| !v.is_object()) {
+            self.failed = true;
+            return Some(Err("source NDJSON rows must be JSON objects".into()));
+        }
         if value.is_err() {
             self.failed = true;
         }
@@ -436,15 +599,21 @@ mod tests {
                 physical.reverse();
             }
             let output = root.join(format!("layout-{index}"));
-            let chunks = physical.chunks(chunk).map(|r| Ok(r.to_vec()));
+            let actual_input = root.join(format!("source-{index}.ndjson"));
+            write_ndjson(&actual_input, &physical);
+            let mut cfg = config(run);
+            cfg.normalization.max_chunk_rows = chunk;
             let manifest = ingest(
                 template.clone(),
-                chunks,
-                &config(run),
-                std::slice::from_ref(&input),
+                &cfg,
+                std::slice::from_ref(&actual_input),
                 &output,
             )
             .unwrap();
+            let (actual_hash, actual_bytes) = fingerprint(&actual_input).unwrap();
+            assert_eq!(manifest["inputs"][0]["sha256"], actual_hash);
+            assert_eq!(manifest["inputs"][0]["bytes"], actual_bytes);
+            assert_eq!(manifest["source_format"], "source-rows.ndjson-v1");
             assert_eq!(manifest["source_rows"], 7);
             assert_eq!(manifest["candidate_units"], 7);
             assert_eq!(manifest["mapper_accepted_units"], 6);
@@ -495,37 +664,58 @@ mod tests {
         let root = root();
         let (template, rows) = source();
         let input = root.join("source.json");
-        fs::write(&input, serde_json::to_vec(&rows).unwrap()).unwrap();
+        write_ndjson(&input, &rows);
         let output = root.join("failed");
-        let bad = vec![Ok(vec![rows[0].clone()]), Ok(vec![rows[0].clone()])];
+        let duplicate = root.join("duplicate.ndjson");
+        write_ndjson(&duplicate, &[rows[0].clone(), rows[0].clone()]);
         assert!(ingest(
             template.clone(),
-            bad.into_iter(),
             &config(1),
-            std::slice::from_ref(&input),
+            std::slice::from_ref(&duplicate),
             &output
         )
         .is_err());
         assert!(!output.exists());
+        let unknown = root.join("unknown.ndjson");
+        let mut unknown_row = rows[0].clone();
+        unknown_row["kind"] = json!("not-declared");
+        write_ndjson(&unknown, &[unknown_row]);
+        let unknown_out = root.join("unknown-output");
         assert!(ingest(
             template.clone(),
-            std::iter::empty(),
             &config(1),
-            &[],
-            &output
+            std::slice::from_ref(&unknown),
+            &unknown_out
         )
         .is_err());
+        assert!(!unknown_out.exists());
+        let malformed = root.join("malformed.ndjson");
+        fs::write(&malformed, b"{not-json}\n").unwrap();
+        let malformed_out = root.join("malformed-output");
+        assert!(ingest(
+            template.clone(),
+            &config(1),
+            std::slice::from_ref(&malformed),
+            &malformed_out
+        )
+        .is_err());
+        assert!(!malformed_out.exists());
+        let non_object = root.join("non-object.ndjson");
+        fs::write(&non_object, b"null\n").unwrap();
+        let non_object_out = root.join("non-object-output");
+        assert!(ingest(
+            template.clone(),
+            &config(1),
+            std::slice::from_ref(&non_object),
+            &non_object_out
+        )
+        .is_err());
+        assert!(!non_object_out.exists());
+        assert!(ingest(template.clone(), &config(1), &[], &output).is_err());
         assert!(!output.exists());
         fs::create_dir(&output).unwrap();
         fs::write(output.join("keep"), b"untouched").unwrap();
-        assert!(ingest(
-            template,
-            rows.chunks(1).map(|r| Ok(r.to_vec())),
-            &config(1),
-            std::slice::from_ref(&input),
-            &output
-        )
-        .is_err());
+        assert!(ingest(template, &config(1), std::slice::from_ref(&input), &output).is_err());
         assert_eq!(fs::read(output.join("keep")).unwrap(), b"untouched");
         fs::remove_dir_all(root).unwrap();
     }
@@ -538,12 +728,13 @@ mod tests {
         let path = PathBuf::from(path);
         let rows: Vec<Value> = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
         let (template, _) = source();
+        let actual_ndjson = root.join("transported.ndjson");
+        write_ndjson(&actual_ndjson, &rows);
         let output = root.join("reingested");
         let manifest = ingest(
             template,
-            rows.chunks(2).map(|r| Ok(r.to_vec())),
             &config(1),
-            std::slice::from_ref(&path),
+            std::slice::from_ref(&actual_ndjson),
             &output,
         )
         .unwrap();
