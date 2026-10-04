@@ -12,6 +12,11 @@ use std::num::{NonZeroU64, NonZeroUsize};
 /// Generational resource identity.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct ResourceId(EntityId);
+impl ResourceId {
+    pub const fn entity_id(self) -> EntityId {
+        self.0
+    }
+}
 /// Capacity is ECS-owned; available capacity is always derived.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ResourceCapacity {
@@ -90,11 +95,24 @@ pub struct FlowBudgetSnapshot {
 /// Generational request identity retained after termination.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct RequestId(EntityId);
+impl RequestId {
+    pub const fn entity_id(self) -> EntityId {
+        self.0
+    }
+}
 /// Allocation identity; an old lease cannot release its replacement.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct LeaseId {
     request: RequestId,
     revision: u64,
+}
+impl LeaseId {
+    pub const fn request_id(self) -> RequestId {
+        self.request
+    }
+    pub const fn revision(self) -> u64 {
+        self.revision
+    }
 }
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RequestState {
@@ -144,6 +162,11 @@ impl<K: Ord> Default for ClaimQueue<K> {
 /// Opaque work identity; owned context is live in-process state only.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct WorkId(EntityId);
+impl WorkId {
+    pub const fn entity_id(self) -> EntityId {
+        self.0
+    }
+}
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct WorkSpec {
     pub owner: EntityId,
@@ -702,6 +725,21 @@ pub struct LifecycleRecord {
     pub causal_event_id: EventId,
     pub transition_ordinal: u32,
     pub transition: LifecycleTransition,
+    pub snapshot: LifecycleSnapshot,
+}
+/// Immutable, per-transition view of resource, request and timed-work state.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LifecycleSnapshot {
+    pub owner: EntityId,
+    pub work: Option<WorkId>,
+    pub priority_level: i32,
+    pub capacity: u32,
+    pub queue_len: u32,
+    pub active_count: u32,
+    pub strategy: Option<PreemptionStrategy>,
+    pub preemptor_request: Option<RequestId>,
+    pub causal_lease: Option<LeaseId>,
+    pub progress: Option<WorkProgress>,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FlowDispatch {
@@ -2517,7 +2555,14 @@ impl FlowRuntime {
                     .ok_or(FlowError::InvalidState)?;
                 r.state = RequestState::TimedOut;
                 r.deadline = None;
-                record(outcome, key.request, r)?;
+                record(
+                    outcome,
+                    key.request,
+                    r,
+                    resource,
+                    snapshot_progress(r, &progress),
+                    None,
+                )?;
                 affected.insert(*resource_id);
             }
         }
@@ -2584,7 +2629,14 @@ impl FlowRuntime {
                     if request.deadline.is_some_and(|at| at <= outcome.at) {
                         request.state = RequestState::TimedOut;
                         request.deadline = None;
-                        record(outcome, id, request)?;
+                        record(
+                            outcome,
+                            id,
+                            request,
+                            resource,
+                            snapshot_progress(request, &progress),
+                            None,
+                        )?;
                         return Ok(());
                     }
                     request.state = RequestState::Queued;
@@ -2594,7 +2646,14 @@ impl FlowRuntime {
                         request: id,
                     });
                     affected.insert(request.resource);
-                    record(outcome, id, request)?;
+                    record(
+                        outcome,
+                        id,
+                        request,
+                        resource,
+                        snapshot_progress(request, &progress),
+                        None,
+                    )?;
                 }
                 Command::Release(lease) => {
                     let request = requests
@@ -2613,13 +2672,21 @@ impl FlowRuntime {
                         p.checkpoint(outcome.at)?;
                         p.state = WorkState::Released;
                     }
+                    let causal_lease = request.lease;
                     if resource.active.leases.remove(&lease).is_none() {
                         return Err(FlowError::InvalidState);
                     }
                     request.state = RequestState::Released;
                     request.lease = None;
                     affected.insert(request.resource);
-                    record(outcome, lease.request, request)?;
+                    record(
+                        outcome,
+                        lease.request,
+                        request,
+                        resource,
+                        snapshot_progress(request, &progress),
+                        causal_lease,
+                    )?;
                 }
                 Command::Capacity(id, total) => {
                     let resource = resources.get_mut(&id).ok_or(FlowError::InvalidResource)?;
@@ -2658,7 +2725,8 @@ impl FlowRuntime {
                             .get_mut(&request.resource)
                             .ok_or(FlowError::InvalidResource)?;
                         resource.queue.requests.retain(|q| q.request != *id);
-                        if let Some(lease) = request.lease {
+                        let causal_lease = request.lease;
+                        if let Some(lease) = causal_lease {
                             resource.active.leases.remove(&lease);
                         }
                         if let Some(work) = request.work {
@@ -2669,7 +2737,14 @@ impl FlowRuntime {
                         request.state = RequestState::Cancelled;
                         request.lease = None;
                         affected.insert(request.resource);
-                        record(outcome, *id, request)?;
+                        record(
+                            outcome,
+                            *id,
+                            request,
+                            resource,
+                            snapshot_progress(request, &progress),
+                            causal_lease,
+                        )?;
                         if let Some(work) = request.work {
                             for n in self.notification(
                                 work,
@@ -2699,7 +2774,8 @@ impl FlowRuntime {
                         .get_mut(&request.resource)
                         .ok_or(FlowError::InvalidResource)?;
                     resource.queue.requests.retain(|k| k.request != id);
-                    if let Some(lease) = request.lease {
+                    let causal_lease = request.lease;
+                    if let Some(lease) = causal_lease {
                         resource.active.leases.remove(&lease);
                     }
                     if let Some(work) = request.work {
@@ -2711,7 +2787,14 @@ impl FlowRuntime {
                     request.lease = None;
                     request.deadline = None;
                     affected.insert(request.resource);
-                    record(outcome, id, request)?;
+                    record(
+                        outcome,
+                        id,
+                        request,
+                        resource,
+                        snapshot_progress(request, &progress),
+                        causal_lease,
+                    )?;
                     if let Some(work) = request.work {
                         for n in self.notification(
                             work,
@@ -2838,12 +2921,33 @@ impl FlowRuntime {
                         victim,
                         victim_request,
                         LifecycleTransition::Preempted,
+                        capture_snapshot(
+                            victim_request,
+                            resource,
+                            Some(p),
+                            outcome.at,
+                            Some(old_lease),
+                            Some(incoming),
+                        )?,
                     )?;
                     match victim_request.preemptible.ok_or(FlowError::InvalidState)? {
                         PreemptionStrategy::Abort => {
                             victim_request.state = RequestState::Aborted;
                             p.state = WorkState::Aborted;
-                            record(outcome, victim, victim_request)?;
+                            record_transition(
+                                outcome,
+                                victim,
+                                victim_request,
+                                LifecycleTransition::Aborted,
+                                capture_snapshot(
+                                    victim_request,
+                                    resource,
+                                    Some(p),
+                                    outcome.at,
+                                    Some(old_lease),
+                                    Some(incoming),
+                                )?,
+                            )?;
                             for n in
                                 self.notification(work, LifecycleTransition::Aborted, p, outcome)
                             {
@@ -2954,7 +3058,20 @@ impl FlowRuntime {
                 request.lease = Some(lease);
                 request.state = RequestState::Active;
                 request.deadline = None;
-                record_transition(outcome, request_id, request, transition)?;
+                record_transition(
+                    outcome,
+                    request_id,
+                    request,
+                    transition,
+                    capture_snapshot(
+                        request,
+                        resource,
+                        snapshot_progress(request, &progress),
+                        outcome.at,
+                        Some(lease),
+                        None,
+                    )?,
+                )?;
                 if request.timed {
                     let work = request.work.ok_or(FlowError::InvalidState)?;
                     for n in self.notification(work, transition, &progress[&work], outcome) {
@@ -3183,10 +3300,23 @@ fn checked_ordinal(length: usize) -> Result<u32, FlowError> {
     u32::try_from(length).map_err(|_| FlowError::CounterOverflow)
 }
 
+fn snapshot_progress<'a>(
+    request: &ResourceRequest,
+    progress: &'a BTreeMap<WorkId, WorkProgress>,
+) -> Option<&'a WorkProgress> {
+    request
+        .timed
+        .then(|| request.work.and_then(|work| progress.get(&work)))
+        .flatten()
+}
+
 fn record(
     outcome: &mut FlowDispatch,
     id: RequestId,
     request: &ResourceRequest,
+    resource: &ResourceStage,
+    progress: Option<&WorkProgress>,
+    causal_lease: Option<LeaseId>,
 ) -> Result<(), FlowError> {
     let transition = match request.state {
         RequestState::Queued => LifecycleTransition::Queued,
@@ -3199,13 +3329,43 @@ fn record(
         RequestState::Suspended => LifecycleTransition::Preempted,
         RequestState::Pending => return Err(FlowError::InvalidState),
     };
-    record_transition(outcome, id, request, transition)
+    record_transition(
+        outcome,
+        id,
+        request,
+        transition,
+        capture_snapshot(request, resource, progress, outcome.at, causal_lease, None)?,
+    )
+}
+fn capture_snapshot(
+    request: &ResourceRequest,
+    resource: &ResourceStage,
+    progress: Option<&WorkProgress>,
+    at: SimTime,
+    causal_lease: Option<LeaseId>,
+    preemptor_request: Option<RequestId>,
+) -> Result<LifecycleSnapshot, FlowError> {
+    Ok(LifecycleSnapshot {
+        owner: request.owner,
+        work: request.work,
+        priority_level: request.priority_level,
+        capacity: resource.capacity.total,
+        queue_len: u32::try_from(resource.queue.requests.len())
+            .map_err(|_| FlowError::CounterOverflow)?,
+        active_count: u32::try_from(resource.active.leases.len())
+            .map_err(|_| FlowError::CounterOverflow)?,
+        strategy: request.preemptible,
+        preemptor_request,
+        causal_lease,
+        progress: progress.map(|p| p.inspected(at)).transpose()?,
+    })
 }
 fn record_transition(
     outcome: &mut FlowDispatch,
     id: RequestId,
     request: &ResourceRequest,
     transition: LifecycleTransition,
+    snapshot: LifecycleSnapshot,
 ) -> Result<(), FlowError> {
     let ordinal = checked_ordinal(outcome.records.len())?;
     outcome.records.push(LifecycleRecord {
@@ -3217,6 +3377,7 @@ fn record_transition(
         causal_event_id: outcome.event,
         transition_ordinal: ordinal,
         transition,
+        snapshot,
     });
     Ok(())
 }
@@ -3240,7 +3401,7 @@ fn complete_timed(
     progress.state = WorkState::Completed;
     request.state = RequestState::Completed;
     request.lease = None;
-    record(outcome, id, request)
+    record(outcome, id, request, resource, Some(progress), Some(lease))
 }
 
 #[cfg(test)]
