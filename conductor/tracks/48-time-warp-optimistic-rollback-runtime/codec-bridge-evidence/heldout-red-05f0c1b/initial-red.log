@@ -1,0 +1,261 @@
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded serde_core v1.0.229
+  Downloaded itoa v1.0.18
+  Downloaded memchr v2.8.0
+  Downloaded zmij v1.0.21
+  Downloaded serde_json v1.0.151
+   Compiling zmij v1.0.21
+   Compiling serde_core v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-track48-codec-bridge-heldout/crates/kairo-ecs-types)
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.0
+   Compiling kairo-ecs-pdes v0.0.0 (/private/tmp/kairos-track48-codec-bridge-heldout/crates/kairo-ecs-pdes)
+   Compiling kairo-ecs-core v0.0.0 (/private/tmp/kairos-track48-codec-bridge-heldout/crates/kairo-ecs-core)
+warning: unused import: `BTreeSet`
+ --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:3:34
+  |
+3 | use std::collections::{BTreeMap, BTreeSet};
+  |                                  ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0599]: no method named `output_parts` found for reference `&LogicalEventId` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:221:32
+    |
+221 |     let (parent, ordinal) = id.output_parts().expect("non-root identity is an output");
+    |                                ^^^^^^^^^^^^
+    |
+help: there is a method `root_parts` with a similar name
+    |
+221 -     let (parent, ordinal) = id.output_parts().expect("non-root identity is an output");
+221 +     let (parent, ordinal) = id.root_parts().expect("non-root identity is an output");
+    |
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticEventOrderKey` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:241:42
+    |
+241 |                 OptimisticEventOrderKey::try_from_parts(parent_tick, parent_source, parent_id)
+    |                                          ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticEventOrderKey`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticMessage` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:250:24
+    |
+250 |     OptimisticMessage::try_from_parts(
+    |                        ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticMessage`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no method named `output_parts` found for reference `&LogicalEventId` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:263:24
+    |
+263 |         root_source(id.output_parts().unwrap().0.logical_id())
+    |                        ^^^^^^^^^^^^
+    |
+help: there is a method `root_parts` with a similar name
+    |
+263 -         root_source(id.output_parts().unwrap().0.logical_id())
+263 +         root_source(id.root_parts().unwrap().0.logical_id())
+    |
+
+error[E0599]: no method named `output_parts` found for reference `&LogicalEventId` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:293:37
+    |
+293 |         old_grandchild.logical_id().output_parts().unwrap();
+    |                                     ^^^^^^^^^^^^
+    |
+help: there is a method `root_parts` with a similar name
+    |
+293 -         old_grandchild.logical_id().output_parts().unwrap();
+293 +         old_grandchild.logical_id().root_parts().unwrap();
+    |
+
+error[E0599]: no method named `output_parts` found for reference `&LogicalEventId` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:389:65
+    |
+389 |     let (first_parent, first_ordinal) = forward[0].logical_id().output_parts().unwrap();
+    |                                                                 ^^^^^^^^^^^^
+    |
+help: there is a method `root_parts` with a similar name
+    |
+389 -     let (first_parent, first_ordinal) = forward[0].logical_id().output_parts().unwrap();
+389 +     let (first_parent, first_ordinal) = forward[0].logical_id().root_parts().unwrap();
+    |
+
+error[E0599]: no method named `output_parts` found for reference `&LogicalEventId` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:390:67
+    |
+390 |     let (second_parent, second_ordinal) = forward[1].logical_id().output_parts().unwrap();
+    |                                                                   ^^^^^^^^^^^^
+    |
+help: there is a method `root_parts` with a similar name
+    |
+390 -     let (second_parent, second_ordinal) = forward[1].logical_id().output_parts().unwrap();
+390 +     let (second_parent, second_ordinal) = forward[1].logical_id().root_parts().unwrap();
+    |
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticMessage` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:509:43
+    |
+509 |         let conflict = OptimisticMessage::try_from_parts(
+    |                                           ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticMessage`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0308]: mismatched types
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:520:39
+    |
+520 |         assert_eq!(receiver.report(), &report_before);
+    |                                       ^^^^^^^^^^^^^^ expected `OptimisticRuntimeReport`, found `&OptimisticRuntimeReport`
+    |
+help: consider removing the borrow
+    |
+520 -         assert_eq!(receiver.report(), &report_before);
+520 +         assert_eq!(receiver.report(), report_before);
+    |
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticEventOrderKey` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:543:34
+    |
+543 |         OptimisticEventOrderKey::try_from_parts(max_tick, max_lp, root_id.clone()).unwrap();
+    |                                  ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticEventOrderKey`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticMessage` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:544:35
+    |
+544 |     let root = OptimisticMessage::try_from_parts(
+    |                                   ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticMessage`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticMessage` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:562:46
+    |
+562 |     let same_order_anti = OptimisticMessage::try_from_parts(
+    |                                              ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticMessage`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticEventOrderKey` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:572:43
+    |
+572 |     let parent = OptimisticEventOrderKey::try_from_parts(
+    |                                           ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticEventOrderKey`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticMessage` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:579:37
+    |
+579 |     let output = OptimisticMessage::try_from_parts(
+    |                                     ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticMessage`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticEventOrderKey` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:603:34
+    |
+603 |         OptimisticEventOrderKey::try_from_parts(
+    |                                  ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticEventOrderKey`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticEventOrderKey` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:614:48
+    |
+614 |     let root_parent = OptimisticEventOrderKey::try_from_parts(
+    |                                                ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticEventOrderKey`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticMessage` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:623:32
+    |
+623 |             OptimisticMessage::try_from_parts(
+    |                                ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticMessage`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticEventOrderKey` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:633:34
+    |
+633 |         OptimisticEventOrderKey::try_from_parts(Tick::from_ticks(11), LpId(1), child_id.clone())
+    |                                  ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticEventOrderKey`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticEventOrderKey` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:637:34
+    |
+637 |         OptimisticEventOrderKey::try_from_parts(Tick::from_ticks(11), LpId(2), grandchild),
+    |                                  ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticEventOrderKey`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticEventOrderKey` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:641:47
+    |
+641 |     let max_parent = OptimisticEventOrderKey::try_from_parts(
+    |                                               ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticEventOrderKey`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticMessage` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:649:28
+    |
+649 |         OptimisticMessage::try_from_parts(
+    |                            ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticMessage`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticEventOrderKey` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:663:44
+    |
+663 |     let mut key = OptimisticEventOrderKey::try_from_parts(
+    |                                            ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticEventOrderKey`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticEventOrderKey` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:672:40
+    |
+672 |         key = OptimisticEventOrderKey::try_from_parts(Tick::from_ticks(depth), LpId(1), id.clone())
+    |                                        ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticEventOrderKey`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+error[E0599]: no associated function or constant named `try_from_parts` found for struct `OptimisticMessage` in the current scope
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge_heldout.rs:676:40
+    |
+676 |     let depth_128 = OptimisticMessage::try_from_parts(
+    |                                        ^^^^^^^^^^^^^^ associated function or constant not found in `OptimisticMessage`
+    |
+help: there is an associated function `try_from` with a similar name
+   --> /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library/core/src/convert/mod.rs:704:4
+
+Some errors have detailed explanations: E0308, E0599.
+For more information about an error, try `rustc --explain E0308`.
+warning: `kairo-ecs-pdes` (test "optimistic_codec_bridge_heldout") generated 1 warning
+error: could not compile `kairo-ecs-pdes` (test "optimistic_codec_bridge_heldout") due to 24 previous errors; 1 warning emitted

@@ -1,0 +1,121 @@
+{
+  "status": "ready_for_review",
+  "source_head": "a0ca7421235365021ebc900d1f3bd288905284a1",
+  "cwd": "/private/tmp/kairos-track48-codec-bridge-impl",
+  "toolchain": {
+    "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "rustdoc": "rustdoc 1.98.1 (48a229cea 2026-09-01)",
+    "rustfmt": "rustfmt 1.9.0-stable (48a229ceae 2026-09-01)"
+  },
+  "environment": {
+    "RUSTC": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustc",
+    "RUSTDOC": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin/rustdoc",
+    "RUSTUP_TOOLCHAIN": "1.98.1",
+    "CARGO_TARGET_DIR": "/private/tmp/kairos-track48-codec-bridge-impl/target/codec-bridge-implementation",
+    "PATH_prefix": "/Users/doughnut/.rustup/toolchains/1.98.1-aarch64-apple-darwin/bin"
+  },
+  "packet_sha256": "1dbe6fb73750dd57d8d0ad626b82ca250a9edf60caff69d7329a9900161077d8",
+  "input_sha256": {
+    "crates/kairo-ecs-pdes/src/optimistic.rs": "cb1254e5cc60bb1d856a051efe312d7025b56131233d4680a6054c16dee3d49f",
+    "crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs": "50be18273bcc7db95a6ff1ff774d94bd70be4f8c9fec42b222e5e65718f112cf",
+    "crates/kairo-ecs-pdes/src/lib.rs": "abe10eab1ee5aae614505d926ac0c8d68b1df28c37903ed53b429de79f65cc10",
+    "Cargo.lock": "2c47e509672c3ff89b5b2bccd42b5cd3258389a69edb67a156a910ffc74f979a",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/adr-codec-bridge.md": "5c16d20b396aaee7542bcfef13ec19867dacf3afb6c1de7ce3a39f2c6488139f",
+    "conductor/tracks/48-time-warp-optimistic-rollback-runtime/agent-contract.md": "de4a60b34fc45d300af9a5a4019591f9a5834599a67ac2b11f37591f5cfe81fc"
+  },
+  "rustc_info_sha256": "f22ce7ea6a1c1ca14a96ab0d20877c9fce1c0ceb81916b1148c02c4d589c4923",
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "kairo-ecs-pdes",
+        "--features",
+        "pdes,time-warp",
+        "--locked"
+      ],
+      "exit": 0,
+      "log": "final-test.log",
+      "log_sha256": "a18ad16d51422875204b8fd86ae4ff7f90994eab283928a495f8ec7c77a2a2e1",
+      "test_suites": 10,
+      "target_test_counts": [
+        47,
+        2,
+        4,
+        8,
+        13,
+        1,
+        14,
+        4,
+        5,
+        0
+      ],
+      "total_tests": 98,
+      "codec_bridge_tests": 4
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "kairo-ecs-pdes",
+        "--features",
+        "pdes,time-warp",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit": 0,
+      "log": "final-clippy.log",
+      "log_sha256": "7c26e88a7187c028709ae24f08fb7ebf313c34d7ab3935fa532218e694d71d9e"
+    },
+    {
+      "argv": [
+        "rustfmt",
+        "--edition",
+        "2021",
+        "--check",
+        "crates/kairo-ecs-pdes/src/optimistic.rs",
+        "crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs"
+      ],
+      "exit": 0,
+      "log": "final-rustfmt.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "prior_attempts": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "kairo-ecs-pdes",
+        "--features",
+        "pdes,time-warp",
+        "--locked"
+      ],
+      "exit": 101,
+      "log": "cargo-test.log",
+      "log_sha256": "13e5b28f0593eec92593a7e5b7c4cce9870eb969e5a8d50404711dd0fec78e5f",
+      "note": "initial fixture compile mismatch usize/u32; repaired before final successful command"
+    },
+    {
+      "argv": [
+        "rustfmt",
+        "--edition",
+        "2021",
+        "--check",
+        "crates/kairo-ecs-pdes/src/optimistic.rs",
+        "crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs"
+      ],
+      "exit": 1,
+      "log": "rustfmt.log",
+      "log_sha256": "6cf90a7d0834d0debb79a9255a6abd8abf301b70520e5842dfcd8655c3a5c3fc",
+      "note": "initial formatting differences; formatted and final check passes"
+    }
+  ]
+}

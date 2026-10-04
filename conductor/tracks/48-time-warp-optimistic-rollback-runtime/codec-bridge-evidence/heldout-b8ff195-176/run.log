@@ -1,0 +1,20 @@
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.21
+   Compiling serde_json v1.0.151
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-types)
+   Compiling memchr v2.8.0
+   Compiling itoa v1.0.18
+   Compiling kairo-ecs-core v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-core)
+   Compiling kairo-ecs-pdes v0.0.0 (/private/tmp/kairos-track48-codec-bridge/crates/kairo-ecs-pdes)
+    Finished test [unoptimized + debuginfo] target(s) in 8.18s
+     Running tests/optimistic_codec_bridge_heldout.rs (target/codec-bridge-heldout-176/debug/deps/optimistic_codec_bridge_heldout-439945d33a76e4e7)
+
+running 5 tests
+test checked_bridge_preserves_full_ranges_and_rejects_invalid_structure ... ok
+test conflicting_decoded_metadata_and_duplicate_positive_leave_receiver_unchanged ... ok
+test full_parent_key_order_is_stable_under_root_arrival_permutations ... ok
+test state_changing_replay_survives_its_old_anti_after_public_reconstruction ... ok
+test emitted_multigeneration_messages_rebuild_and_late_old_antis_match_reference ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+

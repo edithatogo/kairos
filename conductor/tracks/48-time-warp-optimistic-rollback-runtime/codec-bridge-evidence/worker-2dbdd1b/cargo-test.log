@@ -1,0 +1,29 @@
+   Compiling zmij v1.0.21
+   Compiling serde_core v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-track48-codec-bridge-impl/crates/kairo-ecs-types)
+   Compiling memchr v2.8.0
+   Compiling itoa v1.0.18
+   Compiling kairo-ecs-core v0.0.0 (/private/tmp/kairos-track48-codec-bridge-impl/crates/kairo-ecs-core)
+   Compiling kairo-ecs-pdes v0.0.0 (/private/tmp/kairos-track48-codec-bridge-impl/crates/kairo-ecs-pdes)
+error[E0308]: mismatched types
+   --> crates/kairo-ecs-pdes/tests/optimistic_codec_bridge.rs:41:9
+    |
+ 40 |     let partition = PartitionPlan::from_entities(
+    |                     ---------------------------- arguments to this function are incorrect
+ 41 |         lps.len(),
+    |         ^^^^^^^^^ expected `u32`, found `usize`
+    |
+note: associated function defined here
+   --> crates/kairo-ecs-pdes/src/lib.rs:517:12
+    |
+517 |     pub fn from_entities(
+    |            ^^^^^^^^^^^^^
+help: you can convert a `usize` to a `u32` and panic if the converted value doesn't fit
+    |
+ 41 |         lps.len().try_into().unwrap(),
+    |                  ++++++++++++++++++++
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `kairo-ecs-pdes` (test "optimistic_codec_bridge") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

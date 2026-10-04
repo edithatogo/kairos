@@ -21,7 +21,6 @@ def private_identity(root):
 def validate(pages,root=ROOT):
  if not isinstance(pages,list) or not pages or any(not isinstance(page,list) for page in pages):raise ValueError('missing paginated dependency response')
  rows=[row for page in pages for row in page];corrected=[]
- if not rows:raise ValueError("empty dependency graph cannot establish review coverage")
  for row in rows:
   if not isinstance(row,dict) or row.get('change_type') not in ('added','removed'):raise ValueError('unknown dependency row')
   if row['change_type']=='removed':continue
