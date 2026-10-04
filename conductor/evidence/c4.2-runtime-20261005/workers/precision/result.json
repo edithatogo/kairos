@@ -1,0 +1,84 @@
+{
+  "task": "C4.2.precision.20261005",
+  "cwd": "/private/tmp/kairos-c42-precision-review-20261005",
+  "base_commit": "25134e70a749b45a431ee05c598ae23c1ff53fa6",
+  "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "commands": [
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--test",
+        "distance_c42"
+      ],
+      "env": {
+        "CARGO_TARGET_DIR": ".artifacts/c42-precision/target"
+      },
+      "exit_status": 101,
+      "meaning": "test-first regression confirmed precision misclassification",
+      "log": ".artifacts/c42-precision/test-first.log",
+      "sha256": "01af3e9a1be77894abf699961801d22bf65313c0967ab6399b7e9677e4bf2467"
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--test",
+        "distance_c42"
+      ],
+      "env": {
+        "CARGO_TARGET_DIR": ".artifacts/c42-precision/target"
+      },
+      "exit_status": 0,
+      "log": ".artifacts/c42-precision/distance_c42.log",
+      "sha256": "8493a2409b98e161828a012e90d786836713accc16d4934f8919b5796d2c5125"
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "rustfmt",
+        "--edition",
+        "2021",
+        "--check",
+        "crates/kairo-ecs-calibration/src/metrics.rs",
+        "crates/kairo-ecs-calibration/tests/distance_c42.rs"
+      ],
+      "exit_status": 0,
+      "log": ".artifacts/c42-precision/rustfmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_status": 0,
+      "log": ".artifacts/c42-precision/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "source_sha256": {
+    "crates/kairo-ecs-calibration/src/metrics.rs": "82653d0bfa6b5df39934c9ac77b5ebe8af9776fb09ed6395e1388635de74ea99",
+    "crates/kairo-ecs-calibration/tests/distance_c42.rs": "d382f719e3dd77e1a37c0753947447a0ad556e3c58f92d56f2dcb1d2a8a6fa7e"
+  },
+  "context_snapshot": ".artifacts/c42-precision/context-final.json",
+  "scope_check": ".artifacts/c42-precision/scope-check.json",
+  "ignored_performance_test": "not executed",
+  "commit_sha": "7e7fff22d0fa6484ede03a67517d89680165b868",
+  "working_tree_clean": true
+}

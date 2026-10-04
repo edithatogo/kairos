@@ -1,0 +1,103 @@
+[
+  {
+    "id": "c42-actual-producer",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c42",
+      "default_actual_producer_executes_all_frozen_cases",
+      "--",
+      "--exact"
+    ],
+    "env": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target",
+      "C42_PRODUCER_COMMIT": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+      "C42_REPORT_PATH": ".artifacts/c42-report/actual-runtime.json"
+    },
+    "inputs": [
+      "crates/kairo-ecs-calibration/tests/metrics_c42.rs",
+      "crates/kairo-ecs-calibration/src/metrics.rs",
+      "conformance/c41/fixtures.json"
+    ]
+  },
+  {
+    "id": "c42-actual-c41-gate-1.99.0",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c41",
+      "c42_candidate_report",
+      "--",
+      "--ignored",
+      "--exact"
+    ],
+    "env": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target",
+      "C41_CANDIDATE_REPORT": "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json"
+    },
+    "inputs": [
+      "crates/kairo-ecs-calibration/tests/metrics_c41.rs",
+      "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json"
+    ]
+  },
+  {
+    "id": "c42-actual-c41-gate-1.88.0",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "rustup",
+      "run",
+      "1.88.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c41",
+      "c42_candidate_report",
+      "--",
+      "--ignored",
+      "--exact"
+    ],
+    "env": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target-floor",
+      "C41_CANDIDATE_REPORT": "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json"
+    },
+    "inputs": [
+      "crates/kairo-ecs-calibration/tests/metrics_c41.rs",
+      "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json"
+    ]
+  },
+  {
+    "id": "c42-independent-python-actual",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/private/tmp/careops-c42-20261005/.artifacts/c42/independent_actual_readback.py",
+      "/private/tmp/kairos-c42-20261005",
+      "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json",
+      "/private/tmp/careops-c42-20261005/.artifacts/c42/independent-actual-readback.json"
+    ],
+    "inputs": [
+      "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json",
+      "conformance/c41/test_reference.py",
+      "conformance/c41/generate_reference.py"
+    ]
+  }
+]

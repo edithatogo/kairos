@@ -1,0 +1,35 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling typenum v1.20.1
+   Compiling libc v0.2.186
+   Compiling autocfg v1.5.0
+   Compiling serde_core v1.0.228
+   Compiling thiserror v2.0.20
+   Compiling zmij v1.0.21
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-c42-residual-20261005/crates/kairo-ecs-types)
+   Compiling const-oid v0.10.2
+   Compiling serde_json v1.0.149
+   Compiling memchr v2.8.0
+   Compiling itoa v1.0.18
+   Compiling cfg-if v1.0.4
+   Compiling num-traits v0.2.19
+   Compiling kairo-ecs-rng v0.0.0 (/private/tmp/kairos-c42-residual-20261005/crates/kairo-ecs-rng)
+   Compiling cpufeatures v0.3.1
+   Compiling syn v3.0.6
+   Compiling hybrid-array v0.4.15
+   Compiling chrono v0.4.45
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling thiserror-impl v2.0.20
+   Compiling kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-c42-residual-20261005/crates/kairo-ecs-arrow)
+   Compiling kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c42-residual-20261005/crates/kairo-ecs-calibration)
+error: couldn't find file `crates/kairo-ecs-calibration/tests/../src/residuals.rs`
+ --> crates/kairo-ecs-calibration/tests/residuals_c42.rs:2:1
+  |
+2 | mod residuals;
+  | ^^^^^^^^^^^^^^
+
+error: could not compile `kairo-ecs-calibration` (test "residuals_c42") due to 1 previous error

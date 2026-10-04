@@ -1,0 +1,42 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling typenum v1.20.1
+   Compiling autocfg v1.5.0
+   Compiling libc v0.2.186
+   Compiling thiserror v2.0.20
+   Compiling zmij v1.0.21
+   Compiling serde_core v1.0.228
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-c42-20261005/crates/kairo-ecs-types)
+   Compiling serde_json v1.0.149
+   Compiling const-oid v0.10.2
+   Compiling cfg-if v1.0.4
+   Compiling num-traits v0.2.19
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.0
+   Compiling kairo-ecs-rng v0.0.0 (/private/tmp/kairos-c42-20261005/crates/kairo-ecs-rng)
+   Compiling hybrid-array v0.4.15
+   Compiling cpufeatures v0.3.1
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling syn v3.0.6
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling chrono v0.4.45
+   Compiling thiserror-impl v2.0.20
+   Compiling kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-c42-20261005/crates/kairo-ecs-arrow)
+   Compiling kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c42-20261005/crates/kairo-ecs-calibration)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 12.02s
+     Running tests/metrics_c42.rs (.artifacts/c42-report/target/debug/deps/metrics_c42-101a09f99efa7747)
+
+running 7 tests
+test optional_report_requires_committed_source_binding ... ok
+test unrelated_or_absent_commit_claim_cannot_bind_written_report ... ok
+test unrelated_toolchain_claim_is_rejected ... ok
+test nulls_remain_missing_while_malformed_and_weight_errors_are_rejected ... ok
+test actual_conditional_metric_exposes_opposite_dependence_and_keeps_empty_group ... ok
+test default_actual_producer_executes_all_frozen_cases ... ok
+test producer_output_is_invariant_to_removed_or_mutated_expected_values ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.28s
+

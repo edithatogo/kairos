@@ -1,0 +1,54 @@
+{
+  "status": "pass_local_integrated",
+  "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+  "source_sha256": {
+    "conductor/design/calibration/c4.2-cohort-contract-v1.md": "50010c7a47033d9675da5164d1bab2a1db8d276be22378e53dc443ca937e5e97",
+    "conductor/design/calibration/c4.2-runtime-contract-v1.md": "67ac4a4b3652f007e1ff03b17d7550cae24499053d4366e0aa186272709a5774",
+    "crates/kairo-ecs-calibration/src/lib.rs": "c04bf2fe5a2529969eaa95822649a18775525fa2e234603717bb0975a589eef7",
+    "crates/kairo-ecs-calibration/src/metric_cohorts.rs": "f62c6f3f2352dee945d769144b236805f512667e701f536cd6ca3003de004b20",
+    "crates/kairo-ecs-calibration/src/metrics.rs": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4",
+    "crates/kairo-ecs-calibration/src/residuals.rs": "1844042b8841340ea16eaa93da9d293ea3003d03bc49ed567df66ada9ca3cb8f",
+    "crates/kairo-ecs-calibration/tests/cohorts_c42.rs": "a2e862c9c2ba51742450e73d3a9dc9b2cdf91572a4f2e6e89f3a3e1fb4790aac",
+    "crates/kairo-ecs-calibration/tests/distance_c42.rs": "d382f719e3dd77e1a37c0753947447a0ad556e3c58f92d56f2dcb1d2a8a6fa7e",
+    "crates/kairo-ecs-calibration/tests/metrics_c42.rs": "ab00a3c48df57ddb97c9e78582c519e61b55d3587e9bfac49c6245b7078e14fc",
+    "crates/kairo-ecs-calibration/tests/residuals_c42.rs": "250dfe3f9fbb1bfccf35e1c7dca8cb394a061068092d36a96e71eff3d84be91d"
+  },
+  "independent_reviews": [
+    "source-independent-review.json",
+    "toolchain-independent-review.json",
+    "residual-fix-independent-review.json",
+    "pre-fix-independent-review.json"
+  ],
+  "coordinator": "root",
+  "counts": {
+    "c42-final-full-native": {
+      "passed": 119,
+      "ignored": 4
+    },
+    "c42-floor-native": {
+      "passed": 119,
+      "ignored": 4
+    }
+  },
+  "producer": "unchanged frozen C4.1 comparator on actual source-bound report; independent exact Fraction comparator passes42",
+  "reviewed_corrections": [
+    "permutationstable exact weightnormalization",
+    "origin precisionclassifications",
+    "raw/null/invalidcount distinctions",
+    "report commit/source/toolchainbinding",
+    "full-batch residualcoherence/diagnosticretention",
+    "pair groupandclockmismatch",
+    "ordered-map pairing avoidsquadraticscans"
+  ],
+  "public_api_gate": "still open; source private pub(crate) only",
+  "C4.3": "not implemented by this leaf",
+  "C4.4/C-04": "open",
+  "clinical_release": "not accepted",
+  "known_limits": [
+    "checked u128 rationalintermediates can reject representational/arithmetic overflow",
+    "residual bias/MAE/RMSE descriptive compensated binary64; exact sign/magnitude retained; approximateflag reports magnitude conversionloss only",
+    "single debug synthetic timing; no releasebenchmark/speedup claim",
+    "pre-existing floor C1 lint-expectation warnings retained",
+    "coordination deviations documented; no unattended harnesscompliance claim"
+  ]
+}

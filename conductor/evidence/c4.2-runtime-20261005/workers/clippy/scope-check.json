@@ -1,0 +1,15 @@
+{
+  "lease_id": "eb599c5608e14d7aa7e2f4d58a91fd97",
+  "owner": "c42-clippy-worker",
+  "task": "C4.2.strict-clippy.20261005",
+  "worktree": "/private/tmp/kairos-c42-clippy-fixes-20261005",
+  "paths": [
+    ".artifacts/c42-clippy",
+    "crates/kairo-ecs-calibration/src/metrics.rs"
+  ],
+  "base_sha": "2660b37fc8a03db72008bc364ce9ab9db0ebff49",
+  "expires_at": 1791160193.915371,
+  "input_hashes": {
+    "conductor/design/calibration/c4.2-runtime-contract-v1.md": "67ac4a4b3652f007e1ff03b17d7550cae24499053d4366e0aa186272709a5774"
+  }
+}

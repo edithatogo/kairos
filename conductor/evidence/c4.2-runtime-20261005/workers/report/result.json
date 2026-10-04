@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "task_id": "C4.2.report.20261005",
+  "base_commit": "5b7b567810e3e2311acd6bfbbb6a5301266c608f",
+  "worktree": "/private/tmp/kairos-c42-report-20261005",
+  "producer_source": {
+    "path": "crates/kairo-ecs-calibration/tests/metrics_c42.rs",
+    "sha256": "5242217e4d237c8ff23cb1e0f7a6a3a3eebe264b59550a619530e78dc0b1e370"
+  },
+  "fixture_input": {
+    "path": "conformance/c41/fixtures.json",
+    "sha256": "f2b35392e64245475d039d55761344eaeebd6cb0499342436c63840325ed0e6b",
+    "read_fields": "case.id and case.input only"
+  },
+  "contract": {
+    "path": "conductor/design/calibration/c4.2-runtime-contract-v1.md",
+    "sha256": "67ac4a4b3652f007e1ff03b17d7550cae24499053d4366e0aa186272709a5774"
+  },
+  "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "scoped_gates": [
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "rustfmt",
+        "--edition",
+        "2021",
+        "--config",
+        "skip_children=true",
+        "--check",
+        "crates/kairo-ecs-calibration/tests/metrics_c42.rs"
+      ],
+      "exit_code": 0,
+      "result": "pass"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "result": "pass"
+    }
+  ],
+  "deferred": [
+    {
+      "check": "compile/default producer/42-case actual report",
+      "reason": "src/metrics.rs is held in the numeric worker worktree and is not integrated at this checkout; coordinator owns integration runtime execution"
+    },
+    {
+      "check": "existing ignored c42_candidate_report comparator",
+      "reason": "requires report generated from integrated committed producer"
+    }
+  ],
+  "claim": {
+    "owner": "c42-runtime-report-worker",
+    "task": "C4.2.report.20261005",
+    "lease_id": "3418e3facf9a49ceab01cb2f91b42bce"
+  }
+}

@@ -1,0 +1,136 @@
+[
+  {
+    "id": "c42-actual-producer",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c42",
+      "default_actual_producer_executes_all_frozen_cases",
+      "--",
+      "--exact"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target",
+      "C42_PRODUCER_COMMIT": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+      "C42_REPORT_PATH": ".artifacts/c42-report/actual-runtime.json"
+    },
+    "started_utc": "2026-10-04T23:45:06.212138+00:00",
+    "ended_utc": "2026-10-04T23:45:07.996620+00:00",
+    "duration_seconds": 1.7838473331648856,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/tests/metrics_c42.rs": "ab00a3c48df57ddb97c9e78582c519e61b55d3587e9bfac49c6245b7078e14fc",
+      "crates/kairo-ecs-calibration/src/metrics.rs": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4",
+      "conformance/c41/fixtures.json": "f2b35392e64245475d039d55761344eaeebd6cb0499342436c63840325ed0e6b"
+    },
+    "log": "c42-actual-producer.log",
+    "log_sha256": "07b1cf6902216ae4ef34d178950956ec545edaa40095c9e1caf82056a54bcf55",
+    "interpretation": "ordinary gate"
+  },
+  {
+    "id": "c42-actual-c41-gate-1.99.0",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c41",
+      "c42_candidate_report",
+      "--",
+      "--ignored",
+      "--exact"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target",
+      "C41_CANDIDATE_REPORT": "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json"
+    },
+    "started_utc": "2026-10-04T23:45:08.035203+00:00",
+    "ended_utc": "2026-10-04T23:45:08.349449+00:00",
+    "duration_seconds": 0.3142425410915166,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/tests/metrics_c41.rs": "1f328d402820ea2d851b4031a7f62663cc27212a4e1466ca31cb61b1a4dcb084",
+      "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json": "1c8ebdb97b27459d221e509049f0e9ba44a247f9761647b77ee53158bc0d32ea"
+    },
+    "log": "c42-actual-c41-gate-1.99.0.log",
+    "log_sha256": "8ed3c85477f11c44de900e5a1057235b9bda2a395d29befd242fba674b99b4f4",
+    "interpretation": "ordinary gate"
+  },
+  {
+    "id": "c42-actual-c41-gate-1.88.0",
+    "argv": [
+      "rustup",
+      "run",
+      "1.88.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c41",
+      "c42_candidate_report",
+      "--",
+      "--ignored",
+      "--exact"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target-floor",
+      "C41_CANDIDATE_REPORT": "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json"
+    },
+    "started_utc": "2026-10-04T23:45:08.407038+00:00",
+    "ended_utc": "2026-10-04T23:45:08.864261+00:00",
+    "duration_seconds": 0.4572158330120146,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/tests/metrics_c41.rs": "1f328d402820ea2d851b4031a7f62663cc27212a4e1466ca31cb61b1a4dcb084",
+      "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json": "1c8ebdb97b27459d221e509049f0e9ba44a247f9761647b77ee53158bc0d32ea"
+    },
+    "log": "c42-actual-c41-gate-1.88.0.log",
+    "log_sha256": "e96a5a8e53bbb01ea73fc8b4520e82e29077fa17dee6ae4fa2ee660c2ca3410a",
+    "interpretation": "ordinary gate"
+  },
+  {
+    "id": "c42-independent-python-actual",
+    "argv": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "/private/tmp/careops-c42-20261005/.artifacts/c42/independent_actual_readback.py",
+      "/private/tmp/kairos-c42-20261005",
+      "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json",
+      "/private/tmp/careops-c42-20261005/.artifacts/c42/independent-actual-readback.json"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {},
+    "started_utc": "2026-10-04T23:45:08.891329+00:00",
+    "ended_utc": "2026-10-04T23:45:09.285061+00:00",
+    "duration_seconds": 0.39373299991711974,
+    "exit_status": 0,
+    "input_sha256": {
+      "/private/tmp/kairos-c42-20261005/.artifacts/c42-report/actual-runtime.json": "1c8ebdb97b27459d221e509049f0e9ba44a247f9761647b77ee53158bc0d32ea",
+      "conformance/c41/test_reference.py": "7d3793bc966d37631c7cd9108dc3e9721f41c787017a2f1f10cd39ddb2eb8552",
+      "conformance/c41/generate_reference.py": "59e8732737c58974031aeb8128950209b203eb98fc2b3b0b6f9a1a6d48bbd695"
+    },
+    "log": "c42-independent-python-actual.log",
+    "log_sha256": "458bb7e7950795316065305e0c9c4274a381b0c5a3eeb615e0267aa5abb70c18",
+    "interpretation": "ordinary gate"
+  }
+]

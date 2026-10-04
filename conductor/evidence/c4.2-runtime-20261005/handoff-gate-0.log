@@ -1,0 +1,13 @@
+{
+  "status": "ok",
+  "tracks": "21-27",
+  "checks": [
+    "track file coverage",
+    "VVUQ evidence boundary",
+    "scenario claim boundary",
+    "model-zoo docs sync",
+    "playground claim boundary",
+    "compatibility and standards release boundaries",
+    "DX fallback boundary"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "host": "macOS-27.0-arm64-arm-64bit",
+  "machine": "arm64",
+  "seed": "not applicable; fixed synthetic fixtures and deterministic 100000-point shift",
+  "versions": {
+    "current_rust": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1",
+    "floor_rust": "rustc 1.88.0 (6b00bc388 2025-06-23)\nbinary: rustc\ncommit-hash: 6b00bc3880198600130e1cf62b8f8a93494488cc\ncommit-date: 2025-06-23\nhost: aarch64-apple-darwin\nrelease: 1.88.0\nLLVM version: 20.1.5",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "python": "Python 3.14.8",
+    "powershell": "7.6.6",
+    "node": "v26.10.0"
+  }
+}

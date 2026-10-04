@@ -1,0 +1,21 @@
+{
+  "cwd": "/private/tmp/kairos-c42-20261005",
+  "head": "5b7b567810e3e2311acd6bfbbb6a5301266c608f",
+  "initial_system_cargo_attempt": "failed beforebuild due Homebrew cargo +toolchain unsupported; retained separately",
+  "actual_red_command": [
+    "rustup",
+    "run",
+    "1.99.0",
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "kairo-ecs-calibration",
+    "--test",
+    "cohorts_c42"
+  ],
+  "exit_status": 101,
+  "oracle": "requiredmetricsmoduleabsent",
+  "log_sha256": "c6be8efcb617800914256a23be80afbde771df64889f93ed83807f39a80efeb8",
+  "final_runtime": "pendingintegration"
+}

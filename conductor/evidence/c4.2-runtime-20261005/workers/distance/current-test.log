@@ -1,0 +1,28 @@
+   Compiling kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c42-distance-20261005/crates/kairo-ecs-calibration)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.13s
+     Running tests/distance_c42.rs (target/debug/deps/distance_c42-6bf2497d64ce31f2)
+
+running 5 tests
+test both_empty_populations_are_empty ... ok
+test checked_arithmetic_overflow_is_invalid ... FAILED
+test identical_populations_compute_zero_distances ... ok
+test ties_are_aggregated_before_cdf_updates ... ok
+test signed_rational_supports_are_exactly_ordered ... ok
+
+failures:
+
+---- checked_arithmetic_overflow_is_invalid stdout ----
+
+thread 'checked_arithmetic_overflow_is_invalid' (48444413) panicked at crates/kairo-ecs-calibration/tests/distance_c42.rs:65:5:
+assertion `left == right` failed
+  left: Computed
+ right: Invalid
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    checked_arithmetic_overflow_is_invalid
+
+test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p kairo-ecs-calibration --test distance_c42`

@@ -56,3 +56,10 @@ node scripts/validation/validate-tracks21-27.mjs
   `python conformance/c41/generate_reference.py --check`.
 - [Actual commands/versions/hashes and red controls](../../evidence/c4.1-preparation-20261005/README.md)
   qualify test preparation only. Production metric/sidecar/C-04 gates remain open.
+
+## C4.2 actual runtime qualification
+
+- `rustup run 1.99.0 cargo test --locked -p kairo-ecs-calibration`:119pass/4ignored; repeat on1.88floor passes.
+- `rustup run 1.99.0 cargo clippy --locked -p kairo-ecs-calibration --all-targets -- -D warnings` and workspace Rustfmt pass.
+- Actual `metrics_c42` report is source/commit/toolchain-bound; explicitly execute existing ignored `metrics_c41::c42_candidate_report` on both toolchains and independent exact Python comparator:42cases pass.
+- False commit/toolchain and mutated metric controls fail as required; explicit100000points/side debug timing passes. [Exact receipts](../../evidence/c4.2-runtime-20261005/README.md) preserve source and output hashes. Public API, Arrow sidecars and C-04 remain open.

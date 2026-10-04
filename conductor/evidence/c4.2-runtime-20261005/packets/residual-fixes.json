@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "packet_id": "C4.2.residual-fixes.20261005",
+  "task_id": "C4.2.residual-fixes.20261005",
+  "target_repository": "/private/tmp/kairos-c42-residual-fixes-20261005",
+  "base_commit": "2660b37fc8a03db72008bc364ce9ab9db0ebff49",
+  "branch": "codex/c42-residual-fixes-20261005",
+  "model_role": "worker",
+  "objective": "Correct C4.2 residual input validation and one-pass stable pairing on the integration head.",
+  "context_paths": [
+    "AGENTS.md",
+    "conductor/design/calibration/c4.2-runtime-contract-v1.md",
+    "crates/kairo-ecs-calibration/Cargo.toml",
+    "crates/kairo-ecs-calibration/src/residuals.rs",
+    "crates/kairo-ecs-calibration/tests/residuals_c42.rs"
+  ],
+  "input_sha256": {
+    "AGENTS.md": "f1e9c7076e13e6d83de2759434dde92119426250dd880770ae6d661be29b2b35",
+    "conductor/design/calibration/c4.2-runtime-contract-v1.md": "67ac4a4b3652f007e1ff03b17d7550cae24499053d4366e0aa186272709a5774",
+    "crates/kairo-ecs-calibration/Cargo.toml": "d6a92198037af8d5de50d835718b7ea955f6f41bc7a7b48388f44aa150a5904d",
+    "crates/kairo-ecs-calibration/src/residuals.rs": "41da72e534b9898db87e67fdd1b0571d6cc18816d059a26b41dc2f53197945a1",
+    "crates/kairo-ecs-calibration/tests/residuals_c42.rs": "c89dbc7b8f9a20958e1c9e0851f942ff9edaabb214a930b3a650d74370f9530b"
+  },
+  "write_paths": [
+    "crates/kairo-ecs-calibration/src/residuals.rs",
+    "crates/kairo-ecs-calibration/tests/residuals_c42.rs",
+    ".artifacts/c42-residual-fixes"
+  ],
+  "protected_paths": [
+    "Cargo.toml", "Cargo.lock", ".github", "schemas", "crates/kairo-ecs-des",
+    "crates/kairo-ecs-abm", "conformance/c41", "conductor/design/calibration/c4.2-runtime-contract-v1.md",
+    "crates/kairo-ecs-calibration/src/lib.rs", "crates/kairo-ecs-calibration/src/metrics.rs"
+  ],
+  "steps": [
+    "Add regression tests first and retain the actual red run.",
+    "Replace repeated full-row scans with one-pass BTreeMap pairing, validate complete input before summaries, and preserve all raw records/counts on invalid input.",
+    "Make only the two owned source/test changes; run exact scoped checks; record receipts; scope-check; one commit; release claim."
+  ],
+  "verification": [
+    {
+      "argv": ["rustup", "run", "1.99.0", "cargo", "test", "--manifest-path", "/private/tmp/kairos-c42-residual-fixes-20261005/Cargo.toml", "--locked", "-p", "kairo-ecs-calibration", "--test", "residuals_c42"],
+      "cwd": ".",
+      "env": {"CARGO_TARGET_DIR": ".artifacts/c42-residual-fixes/target"},
+      "expected_exit": 0,
+      "oracle": "Focused residual behavior including batch-invalid retention/permutation, cross-group duplicate key, wrong-side observed ticks, and a bounded large cohort."
+    },
+    {
+      "argv": ["rustup", "run", "1.99.0", "rustfmt", "--edition", "2021", "--check", "crates/kairo-ecs-calibration/src/residuals.rs", "crates/kairo-ecs-calibration/tests/residuals_c42.rs"],
+      "cwd": ".",
+      "expected_exit": 0
+    },
+    {"argv": ["git", "diff", "--check"], "cwd": ".", "expected_exit": 0}
+  ],
+  "acceptance": [
+    "One-pass O(n log n) logical pairing; no O(n squared) row lookup.",
+    "All whole-batch invalid conditions produce Invalid summaries retaining every raw row and diagnostic count.",
+    "Invalid same-key group/time/provenance/status combinations cannot become separate unmatched records.",
+    "No Cargo/dependency/public API/Arrow/schema/frozen fixture changes."
+  ],
+  "result_path": ".artifacts/c42-residual-fixes/result.json",
+  "context_budget_bytes": 42000,
+  "status": "prepared_for_coordinator_review"
+}

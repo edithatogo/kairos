@@ -1,0 +1,8 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running tests/metrics_c41.rs (.artifacts/c42-cohorts/target/debug/deps/metrics_c41-7bb0986451dc9a93)
+
+running 1 test
+test c42_candidate_report ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.01s
+

@@ -1,0 +1,11 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.16s
+     Running tests/cohorts_c42.rs (.artifacts/c42-cohorts/target/debug/deps/cohorts_c42-4e4dbb88d4f35487)
+
+running 4 tests
+test permutation_provenance_weight_and_window_negatives ... ok
+test source_window_and_empty_stratum_preserve_coverage ... ok
+test identities_duplicates_and_unknown_groups_fail_without_losing_attempts ... ok
+test nonpoint_outcomes_remain_counted_with_overlap ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

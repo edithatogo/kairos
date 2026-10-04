@@ -1,0 +1,115 @@
+{
+  "task": "C4.2.strict-clippy.20261005",
+  "cwd": "/private/tmp/kairos-c42-clippy-fixes-20261005",
+  "base_commit": "2660b37fc8a03db72008bc364ce9ab9db0ebff49",
+  "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "source_sha256": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4",
+  "results": [
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--test",
+        "distance_c42"
+      ],
+      "exit_status": 0,
+      "log": ".artifacts/c42-clippy/distance_c42.log",
+      "sha256": "aa498ae17b8d9c528223aef553b6c3dcff9b75a16a492db8f4f2079eee0445e1"
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--all-targets",
+        "--all-features",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_status": 101,
+      "note": "one unrelated clippy::cloned_ref_to_slice_refs at tests/residuals_c42.rs:183; no metrics.rs findings",
+      "log": ".artifacts/c42-clippy/strict-clippy.log",
+      "sha256": "52cfdd9f98f35937697a8da9331ecd54d22ae2aeda6f8986421383b8e0785936"
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--lib",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_status": 0,
+      "log": ".artifacts/c42-clippy/strict-clippy-lib.log",
+      "sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--test",
+        "distance_c42",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_status": 0,
+      "log": ".artifacts/c42-clippy/strict-clippy-distance.log",
+      "sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd"
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "rustfmt",
+        "--edition",
+        "2021",
+        "--check",
+        "crates/kairo-ecs-calibration/src/metrics.rs"
+      ],
+      "exit_status": 0,
+      "log": ".artifacts/c42-clippy/rustfmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_status": 0,
+      "log": ".artifacts/c42-clippy/diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "scope_check": ".artifacts/c42-clippy/scope-check.json",
+  "context": ".artifacts/c42-clippy/context.json",
+  "commit_sha": "fe7a1aafbf9ff870abf334dc661bbb895baa4384",
+  "working_tree_clean": true
+}

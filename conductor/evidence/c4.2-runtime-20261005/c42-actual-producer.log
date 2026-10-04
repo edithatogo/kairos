@@ -1,0 +1,10 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.23s
+     Running tests/metrics_c42.rs (.artifacts/c42-cohorts/target/debug/deps/metrics_c42-101a09f99efa7747)
+
+running 1 test
+test default_actual_producer_executes_all_frozen_cases ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.29s
+

@@ -1,0 +1,15 @@
+{
+  "task": "C4.2",
+  "parent_base": "867d7551e5e4c07f0a14d145540c5ffe627aeca6",
+  "child_base": "a2cdeab33286e14db59f377449816702e79b2a6a",
+  "contract_commit": "5b7b567",
+  "cohort_pending_commit": "a4d40af",
+  "worker_paths": [
+    "metrics.rs",
+    "residuals.rs",
+    "tests/metrics_c42.rs"
+  ],
+  "parallel_parent_writer": "D3.4 sharedstate/catalog lease; wait before metadata publication",
+  "status": "implementation_in_progress",
+  "runtime_gate": "pending actual producer"
+}

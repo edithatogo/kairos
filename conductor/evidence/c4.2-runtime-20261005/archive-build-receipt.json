@@ -1,0 +1,10 @@
+{
+  "artifact": "qualification.tar.gz",
+  "sha256": "3eb22beecb867000df5d60ff7cdbfb174db0d7a79c26ccda38902a055f251b89",
+  "compressed_bytes": 112379,
+  "member_count": 142,
+  "uncompressed_bytes": 632135,
+  "every_member_independently_read_back": true,
+  "deterministic_tar_gzip_metadata": true,
+  "excluded": "build caches, wheels, venv, private claims/tokens"
+}

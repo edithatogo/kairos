@@ -1,0 +1,20 @@
+   Compiling kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c42-residual-20261005/crates/kairo-ecs-calibration)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.19s
+     Running tests/residuals_c42.rs (target/debug/deps/residuals_c42-11203b933e5dedb9)
+
+running 12 tests
+test exact_residual_covers_full_u128_range ... ok
+test invalid_window_is_reported ... ok
+test infeasible_valid_prediction_remains_in_error_summary ... ok
+test matched_rows_are_prediction_minus_observation_and_order_invariant ... ok
+test prespecified_empty_group_is_emitted ... ok
+test missing_censored_failed_and_infeasible_attempts_keep_diagnostics ... ok
+test missing_selection_time_does_not_fall_back_to_prediction ... ok
+test statuses_and_diagnostics_are_preserved_and_overlap ... ok
+test duplicate_logical_side_key_is_invalid_not_deduplicated ... ok
+test exact_float_values_above_two_to_53_do_not_raise_rounding_flag ... ok
+test unsupported_provenance_is_unverified_and_retained ... ok
+test window_is_half_open_on_selection_time ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
