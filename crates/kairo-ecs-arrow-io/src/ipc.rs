@@ -122,7 +122,7 @@ where
 {
     let mut batches = Vec::new();
     let mut rows = 0usize;
-    while let Some(batch) = reader.next() {
+    for batch in reader.by_ref() {
         let batch = batch?;
         limits.check_batch(&batch, expected)?;
         let count = limits.next_batch_count(batches.len())?;

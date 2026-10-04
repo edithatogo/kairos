@@ -38,10 +38,10 @@ pub fn read_parquet(
 
     // Parquet record batches may span row-group boundaries. Enforce max_batches
     // against actual decoder output below, rather than estimating from groups.
-    let mut reader = builder.with_batch_size(limits.max_batch_rows).build()?;
+    let reader = builder.with_batch_size(limits.max_batch_rows).build()?;
     let mut batches = Vec::new();
     let mut rows = 0usize;
-    while let Some(batch) = reader.next() {
+    for batch in reader {
         let batch = batch?;
         let decoded_schema = batch.schema();
         if decoded_schema.fields() != validated_schema.fields()

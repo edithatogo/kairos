@@ -157,7 +157,7 @@ impl Write for BoundedBuffer {
         }
         self.bytes
             .try_reserve_exact(buffer.len())
-            .map_err(|error| io::Error::new(io::ErrorKind::Other, error))?;
+            .map_err(io::Error::other)?;
         self.bytes.extend_from_slice(buffer);
         Ok(buffer.len())
     }
