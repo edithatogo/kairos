@@ -25,9 +25,9 @@ _ADVISORY = {
 _SEVERITIES = ("info", "low", "moderate", "high", "critical")
 _COUNT_KEYS = frozenset((*_SEVERITIES, "total"))
 
-# These fingerprints pin the approved record bytes. EXC-199 is currently
-# blocked by an uncovered stale-fallback gap; changing its evidence or review
-# status requires a new record and a separate human decision.
+# These fingerprints pin each approved record independently. EXC-193 retains
+# its original source binding; EXC-199 carries the separately approved corrected
+# source amendment and cannot reuse the EXC-193 proof set.
 _POLICY_RECORDS: dict[str, dict[str, Any]] = {
     "EXC-193": {
         "policy_path": "EXC-193-http-cache.json",
@@ -38,18 +38,58 @@ _POLICY_RECORDS: dict[str, dict[str, Any]] = {
         "head_ref": "codex/kairos-implementation-programme",
         "allowed_contexts": frozenset({"development_pr_193", "alpha_package_dry_run", "beta_package_dry_run"}),
         "excluded_contexts": frozenset({"release_candidate", "1.0", "publication", "other_dependency_trees", "website_dependency_tree"}),
+        "patched_index_sha256": "fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76",
+        "file_sha256": {
+            "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
+            "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "a928e08eacca08e497199ab58747ff751041643748a0f53ff988dbd7d2d0aa91",
+            "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "3757fcb8d2bc16ba842cc5f3868c1f09de591ef50a599f56c83ab1d51397b9a4",
+            "tests/test_http_cache_patch.py": "542a970f0cf79242334b274cd93ec60ee32fb05b375d2302591cb822550479b9",
+            "tests/http-cache-security-regression.mjs": "298c3537d14c19afdc188cde554596d4f2fc4f95c56d387b79af9ab851f510b2",
+        },
         "mitigation_review_status": None,
     },
     "EXC-199": {
         "policy_path": "EXC-199-http-cache.json",
-        "record_sha256": "59d2612e08781cb218c29015d62986b6e41b6a56cf4f7dc7c97f6124736ce0fb",
-        "raw_record_sha256": "dca9fc017ce6aa9b59f4b6d8693b26012239e0fd1d1ef1eb97ec6fcd9b794626",
+        "record_sha256": "352f4dfc079355772ac1c92509158385e646f817b30148a2201bfd656c22d231",
+        "raw_record_sha256": "aa7f45487764f103e78126b7279eee132cb40d0cdbd0445d606902a34e9d8ba4",
         "required_pull_request": 199,
         "repository": "edithatogo/kairos",
         "head_ref": "codex/kairos-track48-optimistic-runtime",
         "allowed_contexts": frozenset({"development_pr_199", "alpha_package_dry_run", "beta_package_dry_run"}),
         "excluded_contexts": frozenset({"release_candidate", "1.0", "publication", "other_dependency_trees", "website_dependency_tree", "other_pull_requests"}),
-        "mitigation_review_status": "blocked_stale_fallback_gap",
+        "patched_index_sha256": "5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c",
+        "file_sha256": {
+            "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
+            "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "1745f11f6b2ae27c47ba00218970192ec0b0034d3d1467b524e411e2c3c9afa4",
+            "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "68361630ff540c9e32e1e62417c805b54c35b57195f5108c7679b6ca4c15bcb8",
+            "tests/test_http_cache_patch.py": "4701a42699573255b6dac6c0815585137ac7e6132c8f2ebe3e7ddb95b9b0a641",
+            "tests/http-cache-security-regression.mjs": "05d4c9990c5dfc691798336443d28638a405a751076ae7147efc7a19a5392d9c",
+        },
+        "source_binding_amendment": {
+            "id": "EXC-199-mitigation-amendment",
+            "status": "human_approved",
+            "record": "EXC-199-mitigation-amendment.json",
+            "record_sha256": "b4818bfc43ad2f2061087735489ffbc488b3d42f30dd599f44a7787df2a3c212",
+            "evidence_manifest": "evidence/EXC-199-amendment/manifest.json",
+            "evidence_manifest_sha256": "e311be230541cc961c1428ab151f62a0a45baa01edacb97f9bbca04713e932e7",
+            "mitigation_source_commit": "2efedc5ea04c1caf26a200bd2450e9e38426e8fe",
+            "patched_index_sha256": "5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c",
+            "file_sha256": {
+                "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
+                "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "1745f11f6b2ae27c47ba00218970192ec0b0034d3d1467b524e411e2c3c9afa4",
+                "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "68361630ff540c9e32e1e62417c805b54c35b57195f5108c7679b6ca4c15bcb8",
+                "tests/test_http_cache_patch.py": "4701a42699573255b6dac6c0815585137ac7e6132c8f2ebe3e7ddb95b9b0a641",
+                "tests/http-cache-security-regression.mjs": "05d4c9990c5dfc691798336443d28638a405a751076ae7147efc7a19a5392d9c",
+            },
+            "review_status": "reviewed_corrected_source",
+            "owner_approval": {
+                "security_owner": "human sole maintainer (this chat; repository account edithatogo)",
+                "release_owner": "human sole maintainer (this chat; repository account edithatogo)",
+                "approved_at": "2026-10-04T10:39:27.598427+10:00",
+                "approval_evidence": "Human user replied “I approve” to the explicit source-binding amendment question for corrected mitigation commit2efedc5ea04c1caf26a200bd2450e9e38426e8fe and patched index5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c. Scope and expiry unchanged; no RC/1.0/publication/website/other PR or tree approval. Timestamp records receipt of this decision, not a claimed message-send time."
+            }
+        },
+        "mitigation_review_status": "reviewed_corrected_source",
     },
 }
 
@@ -199,6 +239,23 @@ def _validate_approval(
         _reject("the exception has expired")
     if approved_at >= expires_at:
         _reject("approval must precede expiry")
+    if exception_id == "EXC-199":
+        amendment = policy.get("source_binding_amendment")
+        source_approval = amendment.get("owner_approval") if isinstance(amendment, dict) else None
+        if not isinstance(source_approval, dict):
+            _reject("source-binding amendment approval is missing")
+        for owner in ("security_owner", "release_owner"):
+            value = source_approval.get(owner)
+            if not isinstance(value, str) or not value.strip():
+                _reject(f"source-binding {owner} must be named")
+        source_evidence = source_approval.get("approval_evidence")
+        if not isinstance(source_evidence, str) or not source_evidence.strip():
+            _reject("source-binding approval evidence is required")
+        source_approved_at = _aware_time(source_approval.get("approved_at"), "source_binding_approved_at")
+        if source_approved_at > current:
+            _reject("source-binding approval is dated in the future")
+        if source_approved_at >= expires_at:
+            _reject("source-binding approval must precede expiry")
 
     if isinstance(pull_request, bool) or not isinstance(pull_request, int):
         _reject("actual pull request number must be an integer")
@@ -326,9 +383,12 @@ def classify(
             "--prefix", "scripts/bootstrap-node-tools", "--audit-level=moderate", "--json",
         ],
         "vulnerabilities_sha256": _GRAPH_FINGERPRINT,
-        "patched_index_sha256": "fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76",
+        "file_sha256": record["file_sha256"],
+        "patched_index_sha256": record["patched_index_sha256"],
         "expires_at": "2026-10-10T00:00:00+10:00",
     }
+    if exception_id == "EXC-199":
+        expected_fields["source_binding_amendment"] = record["source_binding_amendment"]
     for key, expected in expected_fields.items():
         if policy.get(key) != expected:
             _reject(f"immutable policy field drift: {key}")

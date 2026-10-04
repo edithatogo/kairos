@@ -275,18 +275,71 @@ class NpmAuditExceptionPolicyTests(unittest.TestCase):
         self.assert_rejected(policy=policy, pull_request=True)
 
 
-    def test_pr199_approved_classification_remains_blocked_by_stale_fallback_gap(self):
-        with self.assertRaisesRegex(ValueError, "stale-fallback gap"):
-            self.classifier(
-                copy.deepcopy(self.exc199_baseline),
-                1,
-                copy.deepcopy(self.exc199_policy),
-                "development_pr_199",
-                199,
-                now=self.now,
-                repository="edithatogo/kairos",
-                head_ref="codex/kairos-track48-optimistic-runtime",
+    def test_pr199_corrected_source_binding_accepts_only_exact_approved_scope(self):
+        for context in (
+            "development_pr_199",
+            "alpha_package_dry_run",
+            "beta_package_dry_run",
+        ):
+            with self.subTest(context=context):
+                self.assertEqual(
+                    self.classifier(
+                        copy.deepcopy(self.exc199_baseline), 1, copy.deepcopy(self.exc199_policy), context,
+                        199, now=self.now, repository="edithatogo/kairos",
+                        head_ref="codex/kairos-track48-optimistic-runtime",
+                    ),
+                    "approved_temporary_exception",
+                )
+        self.assertEqual(self.exc199_policy["approvals"]["approved_at"], "2026-10-04T01:35:30+10:00")
+        self.assertEqual(
+            self.exc199_policy["source_binding_amendment"]["owner_approval"]["approved_at"],
+            "2026-10-04T10:39:27.598427+10:00",
+        )
+
+    def test_pr199_source_binding_is_not_effective_before_its_approval_receipt(self):
+        source_approved_at = datetime.fromisoformat(
+            self.exc199_policy["source_binding_amendment"]["owner_approval"]["approved_at"]
+        )
+        original_now = self.now
+        try:
+            self.now = source_approved_at.replace(microsecond=source_approved_at.microsecond - 1)
+            self.assert_rejected(
+                policy=self.exc199_policy, context="development_pr_199", pull_request=199,
+                repository="edithatogo/kairos", head_ref="codex/kairos-track48-optimistic-runtime",
             )
+            self.now = source_approved_at
+            self.assertEqual(
+                self.classifier(
+                    copy.deepcopy(self.exc199_baseline), 1, copy.deepcopy(self.exc199_policy),
+                    "development_pr_199", 199, now=self.now, repository="edithatogo/kairos",
+                    head_ref="codex/kairos-track48-optimistic-runtime",
+                ),
+                "approved_temporary_exception",
+            )
+            self.now = datetime.fromisoformat(self.exc199_policy["expires_at"])
+            self.assert_rejected(
+                policy=self.exc199_policy, context="development_pr_199", pull_request=199,
+                repository="edithatogo/kairos", head_ref="codex/kairos-track48-optimistic-runtime",
+            )
+        finally:
+            self.now = original_now
+
+    def test_private_blocked_pr199_fixture_still_rejects_until_reviewed(self):
+        blocked = copy.deepcopy(self.exc199_policy)
+        blocked["mitigation_review_status"] = "blocked_stale_fallback_gap"
+        blocked["source_binding_amendment"]["review_status"] = "blocked_stale_fallback_gap"
+        canonical = json.dumps(blocked, sort_keys=True, separators=(",", ":")).encode()
+        record = copy.deepcopy(self.policy_module._POLICY_RECORDS["EXC-199"])
+        record["record_sha256"] = hashlib.sha256(canonical).hexdigest()
+        record["mitigation_review_status"] = "blocked_stale_fallback_gap"
+        record["source_binding_amendment"]["review_status"] = "blocked_stale_fallback_gap"
+        with mock.patch.dict(self.policy_module._POLICY_RECORDS, {"EXC-199": record}):
+            with self.assertRaisesRegex(ValueError, "stale-fallback gap"):
+                self.policy_module.classify(
+                    copy.deepcopy(self.exc199_baseline), 1, blocked, "development_pr_199", 199,
+                    now=self.now, repository="edithatogo/kairos",
+                    head_ref="codex/kairos-track48-optimistic-runtime",
+                )
 
     def test_pr199_requires_exact_repository_pr_ref_and_context(self):
         for repository, pull_request, head_ref, context in (
@@ -303,30 +356,20 @@ class NpmAuditExceptionPolicyTests(unittest.TestCase):
                         pull_request, now=self.now, repository=repository, head_ref=head_ref,
                     )
 
-    def test_hypothetical_reviewed_pr199_record_would_classify_only_with_exact_identity(self):
-        # This synthetic record is only a classifier positive fixture. It does
-        # not change the committed EXC-199 blocked status or its proof bytes.
-        candidate = copy.deepcopy(self.exc199_policy)
-        candidate["mitigation_review_status"] = "reviewed"
-        candidate["mitigation_review_evidence"] = "test fixture: future independent review accepted"
-        canonical = json.dumps(candidate, sort_keys=True, separators=(",", ":")).encode()
-        record = copy.deepcopy(self.policy_module._POLICY_RECORDS["EXC-199"])
-        record["record_sha256"] = hashlib.sha256(canonical).hexdigest()
-        record["mitigation_review_status"] = "reviewed"
-        with mock.patch.dict(self.policy_module._POLICY_RECORDS, {"EXC-199": record}):
-            result = self.policy_module.classify(
-                copy.deepcopy(self.exc199_baseline), 1, candidate, "development_pr_199", 199,
-                now=self.now, repository="edithatogo/kairos",
-                head_ref="codex/kairos-track48-optimistic-runtime",
-            )
-        self.assertEqual(result, "approved_temporary_exception")
-        self.assertEqual(self.exc199_policy["mitigation_review_status"], "blocked_stale_fallback_gap")
-
     def test_pr199_immutable_policy_or_evidence_fingerprint_mutation_rejects(self):
         for mutate in (
             lambda policy: policy.__setitem__("mitigation_review_status", "reviewed"),
             lambda policy: policy.__setitem__("vulnerabilities_sha256", "0" * 64),
             lambda policy: policy.__setitem__("expires_at", "2027-10-10T00:00:00+10:00"),
+            lambda policy: policy["source_binding_amendment"]["owner_approval"].__setitem__(
+                "approved_at", "2026-10-11T00:00:00+10:00"
+            ),
+            lambda policy: policy["source_binding_amendment"]["owner_approval"].__setitem__(
+                "security_owner", None
+            ),
+            lambda policy: policy["source_binding_amendment"]["owner_approval"].__setitem__("release_owner", None),
+            lambda policy: policy["source_binding_amendment"].__setitem__("status", "pending"),
+            lambda policy: policy["source_binding_amendment"].__setitem__("review_status", "blocked"),
         ):
             candidate = copy.deepcopy(self.exc199_policy)
             mutate(candidate)

@@ -40,14 +40,26 @@ EXPECTED_CONTEXTS_BY_PR = {
     193: frozenset({"development_pr_193", "alpha_package_dry_run", "beta_package_dry_run"}),
     199: frozenset({"development_pr_199", "alpha_package_dry_run", "beta_package_dry_run"}),
 }
-EXPECTED_FILE_HASHES = {
-    "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
-    "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "a928e08eacca08e497199ab58747ff751041643748a0f53ff988dbd7d2d0aa91",
-    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "3757fcb8d2bc16ba842cc5f3868c1f09de591ef50a599f56c83ab1d51397b9a4",
-    "tests/test_http_cache_patch.py": "542a970f0cf79242334b274cd93ec60ee32fb05b375d2302591cb822550479b9",
-    "tests/http-cache-security-regression.mjs": "298c3537d14c19afdc188cde554596d4f2fc4f95c56d387b79af9ab851f510b2",
+EXPECTED_FILE_HASHES_BY_EXCEPTION = {
+    "EXC-193": {
+        "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
+        "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "a928e08eacca08e497199ab58747ff751041643748a0f53ff988dbd7d2d0aa91",
+        "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "3757fcb8d2bc16ba842cc5f3868c1f09de591ef50a599f56c83ab1d51397b9a4",
+        "tests/test_http_cache_patch.py": "542a970f0cf79242334b274cd93ec60ee32fb05b375d2302591cb822550479b9",
+        "tests/http-cache-security-regression.mjs": "298c3537d14c19afdc188cde554596d4f2fc4f95c56d387b79af9ab851f510b2",
+    },
+    "EXC-199": {
+        "scripts/bootstrap-node-tools/package-lock.json": "3905b6f36ea3b5625667f3a40a829e8eb7a351f6ff074372863f02b1d2216552",
+        "scripts/bootstrap-node-tools/apply_http_cache_fix.py": "1745f11f6b2ae27c47ba00218970192ec0b0034d3d1467b524e411e2c3c9afa4",
+        "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "68361630ff540c9e32e1e62417c805b54c35b57195f5108c7679b6ca4c15bcb8",
+        "tests/test_http_cache_patch.py": "4701a42699573255b6dac6c0815585137ac7e6132c8f2ebe3e7ddb95b9b0a641",
+        "tests/http-cache-security-regression.mjs": "05d4c9990c5dfc691798336443d28638a405a751076ae7147efc7a19a5392d9c",
+    },
 }
-EXPECTED_PATCHED_HASH = "fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76"
+EXPECTED_PATCHED_HASH_BY_EXCEPTION = {
+    "EXC-193": "fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76",
+    "EXC-199": "5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c",
+}
 EXPECTED_GRAPH_HASH = "0b3e5f1d5f65b48f1a20618ba352e6f02529a134f62e0230126ac68c73b5fec8"
 EXPECTED_AUDIT_COMMAND = [
     "node", "scripts/bootstrap-node-tools/node_modules/npm/bin/npm-cli.js", "audit",
@@ -55,6 +67,8 @@ EXPECTED_AUDIT_COMMAND = [
 ]
 EXPECTED_EXC199_MANIFEST_SHA256 = "1f825f329e6419a02603173b434bcab2ace71a3d665e6a6ae596f72afd5812b3"
 EXPECTED_EXC199_RUNTIME_SHA256 = "2df41a4349f4dc63e0a2bc0ac62ee896a2b3d27f3407f1442caf2f3765127e17"
+EXPECTED_EXC199_AMENDMENT_SHA256 = "b4818bfc43ad2f2061087735489ffbc488b3d42f30dd599f44a7787df2a3c212"
+EXPECTED_EXC199_AMENDMENT_MANIFEST_SHA256 = "e311be230541cc961c1428ab151f62a0a45baa01edacb97f9bbca04713e932e7"
 
 
 def digest(data: bytes) -> str:
@@ -267,6 +281,88 @@ def verify_exc199_evidence(root: Path, policy: dict) -> None:
         raise ValueError("EXC-199 preparation runtime metadata values changed")
 
 
+def verify_exc199_amendment_evidence(root: Path, policy: dict) -> None:
+    exception_dir = root / "conductor/tracks/20-openssf-supply-chain-institutional-trust/exceptions"
+    amendment_path = exception_dir / "EXC-199-mitigation-amendment.json"
+    amendment_bytes = amendment_path.read_bytes()
+    if digest(amendment_bytes) != EXPECTED_EXC199_AMENDMENT_SHA256:
+        raise ValueError("EXC-199 source amendment record changed")
+    amendment = read_json(amendment_bytes.decode("utf-8"))
+    module = _policy_module()
+    record = module._POLICY_RECORDS.get("EXC-199")
+    binding = policy.get("source_binding_amendment")
+    if not isinstance(record, dict) or not isinstance(binding, dict):
+        raise ValueError("EXC-199 source amendment binding is missing")
+    if binding != record.get("source_binding_amendment"):
+        raise ValueError("EXC-199 source amendment binding differs from immutable classifier record")
+    if (
+        amendment.get("id") != binding.get("id")
+        or amendment.get("status") != "approved_pending_reviewed_integration"
+        or amendment.get("required_pull_request") != 199
+        or amendment.get("repository") != "edithatogo/kairos"
+        or amendment.get("head_ref") != "codex/kairos-track48-optimistic-runtime"
+        or amendment.get("mitigation_source_commit") != binding.get("mitigation_source_commit")
+        or amendment.get("patched_index_sha256") != binding.get("patched_index_sha256")
+        or amendment.get("file_sha256") != binding.get("file_sha256")
+        or amendment.get("scope_amendment_approval") != binding.get("owner_approval")
+        or policy.get("mitigation_review_status") != binding.get("review_status")
+        or policy.get("file_sha256") != binding.get("file_sha256")
+        or policy.get("patched_index_sha256") != binding.get("patched_index_sha256")
+    ):
+        raise ValueError("EXC-199 approved source amendment fields changed")
+    if (
+        amendment.get("vulnerabilities_sha256") != EXPECTED_GRAPH_HASH
+        or amendment.get("raw_audit_sha256") != policy.get("audit_baseline_sha256")
+        or amendment.get("raw_audit_exit") != 1
+        or amendment.get("finding_count") != 19
+        or amendment.get("expires_at") != policy.get("expires_at")
+        or amendment.get("allowed_contexts") != policy.get("allowed_contexts")
+        or amendment.get("excluded_contexts") != policy.get("excluded_contexts")
+    ):
+        raise ValueError("EXC-199 source amendment scope or audit binding changed")
+
+    manifest_relative = amendment.get("evidence_manifest")
+    if manifest_relative != binding.get("evidence_manifest"):
+        raise ValueError("EXC-199 source amendment evidence path changed")
+    manifest_path = exception_dir / manifest_relative
+    if manifest_path.is_symlink():
+        raise ValueError("EXC-199 source amendment manifest is a symlink")
+    manifest_bytes = manifest_path.read_bytes()
+    if (
+        digest(manifest_bytes) != EXPECTED_EXC199_AMENDMENT_MANIFEST_SHA256
+        or digest(manifest_bytes) != binding.get("evidence_manifest_sha256")
+    ):
+        raise ValueError("EXC-199 source amendment evidence manifest changed")
+    manifest = read_json(manifest_bytes.decode("utf-8"))
+    if not isinstance(manifest, dict) or len(manifest) != 17:
+        raise ValueError("EXC-199 source amendment evidence manifest is incomplete")
+    evidence_root = manifest_path.parent.resolve()
+    for name, expected in manifest.items():
+        relative = Path(name)
+        if not isinstance(name, str) or relative.is_absolute() or ".." in relative.parts:
+            raise ValueError("EXC-199 source amendment evidence path is unsafe")
+        path = manifest_path.parent / relative
+        try:
+            path.resolve().relative_to(evidence_root)
+        except ValueError:
+            raise ValueError(f"EXC-199 source amendment evidence path escapes its root: {name}") from None
+        if path.is_symlink() or not path.is_file():
+            raise ValueError(f"EXC-199 source amendment evidence file is missing or unsafe: {name}")
+        if not isinstance(expected, str) or digest(path.read_bytes()) != expected:
+            raise ValueError(f"EXC-199 source amendment evidence copy changed: {name}")
+
+    receipt = read_json((manifest_path.parent / "receipt.json").read_text())
+    expected_candidate_files = {
+        name: value for name, value in binding["file_sha256"].items()
+        if name != "scripts/bootstrap-node-tools/package-lock.json"
+    }
+    if (
+        receipt.get("candidate_head") != binding.get("mitigation_source_commit")
+        or receipt.get("candidate_file_sha256") != expected_candidate_files
+    ):
+        raise ValueError("EXC-199 source amendment receipt does not bind the approved candidate")
+
+
 def verify_sources(root: Path, policy: dict) -> None:
     module = _policy_module()
     exception_id = policy.get("id")
@@ -282,9 +378,13 @@ def verify_sources(root: Path, policy: dict) -> None:
     canonical = json.dumps(policy, sort_keys=True, separators=(",", ":")).encode("utf-8")
     if digest(canonical) != record["record_sha256"]:
         raise ValueError("approved exception record fingerprint changed")
-    if policy.get("file_sha256") != EXPECTED_FILE_HASHES:
+    expected_files = EXPECTED_FILE_HASHES_BY_EXCEPTION.get(exception_id)
+    expected_patch = EXPECTED_PATCHED_HASH_BY_EXCEPTION.get(exception_id)
+    if expected_files is None or expected_patch is None:
+        raise ValueError("no source proof pins are available for this exception")
+    if policy.get("file_sha256") != expected_files:
         raise ValueError("approved source fingerprints changed")
-    if policy.get("patched_index_sha256") != EXPECTED_PATCHED_HASH:
+    if policy.get("patched_index_sha256") != expected_patch:
         raise ValueError("approved patch hash changed")
     if policy.get("raw_audit_command") != EXPECTED_AUDIT_COMMAND:
         raise ValueError("raw audit command changed")
@@ -300,6 +400,7 @@ def verify_sources(root: Path, policy: dict) -> None:
             raise ValueError(f"proof drift: {name}")
     if exception_id == "EXC-199":
         verify_exc199_evidence(root, policy)
+        verify_exc199_amendment_evidence(root, policy)
 
     tools = root / "scripts/bootstrap-node-tools"
     modules = tools / "node_modules"
