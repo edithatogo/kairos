@@ -46,7 +46,7 @@ Use noncommutative/state-dependent models: equal-tick reverse arrival; parents 1
 Local implementation tests and benchmarks are required before a phase PR. Track 48 remains In Progress until live distributed rollback evidence involving Track 49 exists. Current scheduling dependencies form a cycle: an explicitly accepted phase/interface handoff is required before Track 49 production dispatch. Drafting its wire tests is already permitted; no dependency bypass or Done claim is introduced here. EXC-193 covers only PR #193 and cannot authorize this branch's future npm gate.
 
 
-## Checked codec bridge — alpha preview
+## Checked codec bridge alpha preview
 
 The [codec bridge ADR](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/adr-codec-bridge.md) adds three pure methods under `time-warp`:
 
