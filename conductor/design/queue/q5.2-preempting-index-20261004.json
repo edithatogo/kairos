@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "id": "Q5.2.scaling.preempting-waiter-index",
+  "status": "review_required",
+  "source_base_observed": "39d574272ac8c0ded0bb31919a6ee90d8bbd433a",
+  "source_sha256": {
+    "crates/kairo-ecs-des/src/flow.rs": "72312d81ef4c25d692eb87fdad26865d0cf7ad1fa3c62ea173aca64ce27021f0",
+    "crates/kairo-ecs-des/src/preemption.rs": "557ed9f03bb21c53a9647ced928ec738d8da9a28e13ce19039658562cf1e2dcf",
+    "crates/kairo-ecs-des/src/flow/q52_bench.rs": "0fb71c4610a9e823ef07a08db39cf9628cf4b6c985ec31ab53a5098189de7180",
+    "crates/kairo-ecs-des/src/flow/deadline_index.rs": "e6d998bff731b7dc2c378d0a4fdce35dcce3821bbbf6a59ae345bd831326c63b",
+    "crates/kairo-ecs-des/src/flow/queue_delta.rs": "62dc07598e4f12c2f6aed9fe896f82c749e654a82351316372489f0a450b8b8f"
+  },
+  "context_sha256": "38a8d9a172c9565191a47ba542326eabff630d83c5a56d96c731788df91537ed",
+  "dispatch_rule": "Exact source/context hashes and ownership must verify; independent packet review and separate explicit root dispatch approval required. Prepared packet is not execution authority.",
+  "objective": "Add a private derived index for currently preempting queued/suspended waiters so production victim replacement can select the first eligible waiter without globally projecting/sorting all waiters. Preserve existing scheduling semantics and failure atomicity.",
+  "scope": "Private Flow/ECS implementation, tests, benchmark-label correction, and owned evidence only. No public API, serialization/checkpoint format, generic queue redesign, dependency change, unrelated lifecycle refactor, or acceptance-gate change. The full 100k Flow case remains a blocker until actual integrated behavior is measured and accepted.",
+  "owned_paths": [
+    "crates/kairo-ecs-des/src/flow.rs",
+    "crates/kairo-ecs-des/src/preemption.rs",
+    "crates/kairo-ecs-des/src/flow/preempting_index.rs",
+    "crates/kairo-ecs-des/src/flow/q52_preempting_index_tests.rs",
+    "crates/kairo-ecs-des/src/flow/q52_bench.rs",
+    ".artifacts/q52-preempting-index"
+  ],
+  "readonly_inputs_to_bind_at_dispatch": [
+    "AGENTS.md",
+    "conductor/design/queue/q5.2-preempting-index-20261004.json",
+    "conductor/design/queue/q5.2-preempting-index-context-20261004.md"
+  ],
+  "proposed_private_component": {
+    "name": "PreemptingWaiters",
+    "placement": "Private ECS component attached to each resource entity at creation; removed with the resource.",
+    "fields": [
+      "keys: BTreeSet<PriorityKey>",
+      "expected_len: usize"
+    ],
+    "membership": "Exactly requests in Queued or Suspended state for that resource whose can_preempt is true. Pending/active requests are absent. PriorityKey ordering is the existing (priority_level, original_admission_sequence, request_id) ordering.",
+    "witness": "Validate expected_len == keys.len() and keys.len() <= primary waiting-queue len when staging a resource. This is a cardinality witness, not a claim to detect every untouched equal-cardinality corruption.",
+    "cache_validation": "Before using the first cached key, validate its request exists, names the resource, is Queued or Suspended, can_preempt is true, has the exact indexed PriorityKey, and is present in the primary waiting queue. Missing component for a registered resource is InvalidState before authoritative mutation. Preserve deadline-index validation/preflight as a paired derived-cache contract.",
+    "creation_removal": "Create empty component with resource; remove component with resource. Do not change public or serialized state."
+  },
+  "centralized_membership_transitions": [
+    "Successful Submit directly into queued waiting state with can_preempt=true: insert exact key.",
+    "Timeout, cancellation, despawn, or grant/removal from waiting queue: remove exact old key before changing/removing its indexed state; grant clears/removes waiting deadline/index as already contracted.",
+    "Queued reprioritization: remove old key, then insert new key preserving original admission sequence.",
+    "Victim remains absent from cache while Active. After Suspend/Restart requeues as Suspended, insert resulting exact key iff can_preempt=true. Abort never requeues/adds. Do not remove an active victim key that never existed.",
+    "Restart/requeue: insert iff resulting state is Queued or Suspended and can_preempt=true.",
+    "Abort/no-requeue and active rekey: do not add to waiting preemption index."
+  ],
+  "replacement_algorithm": [
+    "When primary queue has free capacity, retain existing ordinary grant selection/order; maintain both private indexes before state changes.",
+    "When full, read minimum PreemptingWaiters key. If empty, stop BEFORE constructing/projecting any holder candidates. For Some key validate request exists, resource matches, state Queued|Suspended, can_preempt=true, exact PriorityKey and primary queue membership; failures return InvalidState before authoritative mutation.",
+    "After validated first key, construct holders using existing allocation ordering and holder eligibility rules. Supply std::iter::once(validated WaitingCandidate) to production ordered helper. Cache minimum is legacy sort first preemption-capable waiter; if it cannot strictly outrank globally worst eligible holder, no later cached key can qualify. Keep worst-holder priority/admission/ID comparator unchanged.",
+    "Promote ordered helper to production. Keep old sorting selector and select_victim as cfg(test) independent references. No materialization/sorting of all waiting requests in Flow."
+  ],
+  "failure_atomicity": "All fallible cache, request, resource, queue, and capacity validation must finish for the full affected causal closure/group before authoritative mutation or event-head advancement. Any corrupt cache/key/queue returns InvalidState with authoritative state and externally visible head unchanged. Preserve current deadline paired-index preflight and group atomicity; do not turn derived-cache failure into partial queue/request/resource changes.",
+  "tests": [
+    "Unit test empty and populated index ordering; duplicate insert/remove behavior follows explicit invariants and cannot silently desynchronize expected_len.",
+    "Lifecycle table for create/remove resource; submit queued; pending-to-queued; queued reprioritize; queued cancel/despawn/timeout; grant; queued-to-suspended victim; restart/requeue; abort; active rekey. Verify exact membership and expected_len after each transition.",
+    "Differential deterministic grids against the old sorting selector: priority ties/extremes, admission-sequence/request-ID tie order, holder ties and permutations, can_preempt false, no eligible holders, no waiters, queued and suspended holders/waiters, due/equal/missing completion boundaries.",
+    "Prove empty-cache branch avoids holder projection using a directly tested private lazy closure helper if introduced, or a fixture with poisoned holder projection data plus empty cache that completes without evaluating it; avoid fabricated counters derived from formulas. Pure ordered helper no-eligible-holder iterator nonconsumption oracle remains.",
+    "Corruption matrix: missing component, wrong expected_len, oversized cache, first key missing request, wrong resource/state/can_preempt/key, absent primary queue membership, malformed paired deadline key. Each must fail InvalidState before commit/head change.",
+    "Multi-resource causal group failure where a later resource/key is corrupt after earlier resource work is staged; assert all authoritative resources, requests, queues, deadline/preemption indexes, and event head remain unchanged.",
+    "Active lease behavior: active request is never indexed; reprioritizing an active lease leaves lease/queue semantics unchanged and does not create membership."
+  ],
+  "benchmark_updates": {
+    "file": "crates/kairo-ecs-des/src/flow/q52_bench.rs",
+    "requirements": [
+      "After caller switch, old sorting-selector and select_victim rows become explicitly historical_sorting_reference/historical_victim_reference. Current ordered-helper rows become production_ordered_selector_kernel, still kernel-only and excluding index maintenance/holder projection. Do not label raw ordered-helper timing as complete indexed Flow path; full runtime matrix supplies that evidence.",
+      "Retain ordered-selector kernel rows as kernel-only diagnostics; do not present them as Flow end-to-end evidence.",
+      "Do not alter canonical Criterion harness, accepted baseline, threshold source, or claim speedup until the integrated full workload and baseline/current comparison run are complete."
+    ]
+  },
+  "validation": [
+    "rustup run 1.99.0 cargo test -p kairo-ecs-des --locked --target-dir .artifacts/q52-preempting-index/target",
+    "rustup run 1.99.0 cargo test -p kairo-ecs-des --release --locked --target-dir .artifacts/q52-preempting-index/target",
+    "rustup run 1.99.0 cargo clippy -p kairo-ecs-des --all-targets --locked --target-dir .artifacts/q52-preempting-index/target -- -D warnings",
+    "rustup run 1.99.0 cargo fmt --all -- --check",
+    "git diff --check"
+  ],
+  "deferred_acceptance_gates": [
+    "Do not run canonical native timing during implementation checks. At a later separately authorized quiescent gate, build/run all three default Criterion benches using owned CRITERION_HOME for output placement only, preserve settings, normalize exact six means, and compare accepted F against native current final.",
+    "Run the frozen Q5.2 39-case matrix separately; record the actual integrated 100k Flow result. Timeout remains an acceptance blocker and cannot be waived by primitive/kernel bounds or by narrowing Q-07 acceptance to kernel-only."
+  ],
+  "artifacts": "Record each exact command, cwd, full source HEAD, rustc/cargo, seed/input hashes, exit code, raw logs and hashes, normalized result hashes, test/coverage counts, and explicit non-claims under .artifacts/q52-preempting-index. Preserve failed logs; no fabricated timing or global-exclusive-host claim.",
+  "handoff": "Single writer and repository advisory claim required at dispatch. One scoped source commit, separate successful scope check immediately before commit, immediate claim release. Report full commit SHA, validation evidence, residual risks, and that Q5.2 acceptance remains unresolved until the integrated case/gates pass.",
+  "model": "gpt-6-luna",
+  "context_budget_bytes": 24000,
+  "included_reviewed_deadline_commit": "1731a2c6dbfed86172479ae51627f7e5d9d25c89",
+  "included_reviewed_ordered_commit": "5f120896c0671ebe33ad69e0d505590723f3d40a"
+}

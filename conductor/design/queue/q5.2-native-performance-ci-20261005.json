@@ -1,0 +1,78 @@
+{
+  "title": "Q5.2 isolated native canonical regression qualification",
+  "status": "reviewed_preparation_requires_root_dispatch",
+  "base_commit": "0944b8198e8208f7b2a016ad9774fbb91a895d5a",
+  "accepted_baseline_commit": "f18aba1f1930aec228e830c9e58c67e4081ac4bb",
+  "goal": "Qualify whether the observed canonical Criterion regressions persist under an isolated native CI runner. Preserve and report the existing local failures; never waive the 5%/3% thresholds or replace prior receipts.",
+  "scope": {
+    "owned_paths_only": [
+      ".github/workflows/careops-native-owner.yml",
+      "benches/queue/qualify_native_v1.py",
+      "benches/queue/test_qualify_native_v1.py"
+    ],
+    "out_of_scope": [
+      "benchmark implementations, sizes, seeds, Criterion defaults, thresholds, comparator behavior, Cargo manifests/lockfile, runtime implementation, Q5.2 acceptance status"
+    ],
+    "workflow_effect": "Add Ubuntu qualification job conditioned on codex/careops-q52 branch prefix. Existing aggregate depends on it and requires success for Q52; a skipped qualification job is permitted for other branches. Job waits for native+arrow-io-floor. The pinned F comparison is Q52-specific and must not become an unrelated C1 or future-track baseline.",
+    "workflow_triggers": "Add both new benches/queue Python paths to pull_request.paths. Existing Rust-owner path filters remain unchanged; changes to the workflow itself already trigger the workflow."
+  },
+  "ci_design": {
+    "runner": "ubuntu-24.04",
+    "timeout_minutes": 30,
+    "permissions": "contents: read",
+    "checkout": "Existing pinned checkout, fetch-depth:0, persist-credentials:false; ref github.event.pull_request.head.sha || github.sha; EXPECTED_HEAD uses same expression. Require actual current HEAD equals EXPECTED_HEAD; record both run head and actual producer head, source clean before/after.",
+    "toolchain": "Install and verify Rust 1.99.0; assert x86_64-unknown-linux-gnu. Use the existing pinned setup-python action at Python 3.14.8; no third-party Python packages.",
+    "baseline": "Hardcode accepted F f18aba1f1930aec228e830c9e58c67e4081ac4bb; create detached baseline worktree at .artifacts/ci/q52-native-baseline after full-depth checkout; verify its HEAD exactly equals F and its tracked worktree is clean. Place F and current target/output separately beneath the current checkout\u2019s .artifacts/ci/q52-native so the existing artifact upload preserves both.",
+    "artifacts": "Retain receipts, logs, normalized means/reports, raw Criterion output and source/binary hash maps under .artifacts/ci/q52-native via always upload. Targets remain owned local build outputs and are excluded from upload; no private lease/token files or complete source checkout uploaded.",
+    "serialization": "Single job; needs existing native and arrow-io-floor jobs. Within it, build F and current serially before any timed command, then execute only the six timed commands in the fixed interleaved sequence below. No matrix, parallel child commands, or concurrent managed compilation/timing. Use fixed explicit subdirectory per benchmark in CRITERION_HOME (criterion/<F|current>/<scheduler|state|hybrid>) so six mappings below resolve exactly. No environment timing overrides."
+  },
+  "commands": {
+    "build_each_checkout_before_timing": "rustup run 1.99.0 cargo bench --locked -p kairo-ecs-bench --no-run --target-dir ${GITHUB_WORKSPACE}/.artifacts/ci/q52-native/target/<F|current>",
+    "timed_command_template": "CRITERION_HOME=${GITHUB_WORKSPACE}/.artifacts/ci/q52-native/criterion/<F|current>/<scheduler|state|hybrid> rustup run 1.99.0 cargo bench --locked -p kairo-ecs-bench --bench <scheduler|state|hybrid> --target-dir ${GITHUB_WORKSPACE}/.artifacts/ci/q52-native/target/<F|current> -- --noplot",
+    "fixed_interleaving": [
+      "F:scheduler",
+      "current:scheduler",
+      "F:state",
+      "current:state",
+      "F:hybrid",
+      "current:hybrid"
+    ],
+    "criterion_settings": "Existing Criterion source defaults, including 100 samples/default warmup and measurement; --noplot and CRITERION_HOME change output behavior/location only. Do not pass sample-size, warmup, measurement-time, feature, or seed overrides."
+  },
+  "six_canonical_mappings": {
+    "schedule_1m_events": "scheduler/schedule_1m_events/schedule/new/estimates.json",
+    "pop_1m_events": "scheduler/pop_1m_events/pop/new/estimates.json",
+    "schedule_cancel_1m_mixed": "scheduler/schedule_cancel_1m_mixed/schedule_cancel_pop/new/estimates.json",
+    "create_1m_entities": "state/create_1m_entities/spawn/new/estimates.json",
+    "component_insert_1m": "state/component_insert_1m/insert/new/estimates.json",
+    "hybrid_des_abm_smoke_100k": "hybrid/hybrid_des_abm_smoke_100k/schedule_and_pop/new/estimates.json"
+  },
+  "qualification_script_requirements": [
+    "Pure Python standard library; validator must reject wrong accepted-F/current HEADs, missing or duplicate canonical IDs, missing/malformed/nonpositive Criterion mean point estimates, missing raw output, missing logs, nonzero commands, changed canonical benchmark definitions/settings/comparator/thresholds, dirty tracked source, and source drift during the run.",
+    "Capture argv, cwd, UTC start/finish, exit code, toolchain/host, current and F HEAD/status, hashes for Cargo inputs, all three benchmark sources, kairo-ecs-bench library, relevant core/state/types/rng package source files, benchmark manifest/smoke, threshold source, comparator, and each actual Running-line executable SHA256. Capture command-log SHA256 and raw Criterion estimates SHA256.",
+    "Permit and report expected source differences in benchmark dependency packages between accepted F and current; require benchmark definitions, harnesses, lock/manifests/toolchain, comparator, thresholds, smoke/manifest, seed/config inputs to match F exactly. Record both source hash maps so results stay source-bound.",
+    "Normalize exactly six Criterion mean.point_estimate values from nanoseconds/iteration to mean_seconds by division by 1e9; write baseline.json and current.json in comparator schema, retaining exact raw estimates and hashes.",
+    "Invoke unchanged benches/regression/compare.py with the frozen thresholds, baseline/current normalized files and report output. A threshold failure is a real job failure, but always preserve the complete evidence artifact; no acceptance waiver or source relabeling.",
+    "Tests use tempfile/mocked command/file inputs only; include valid six-ID result, wrong baseline/current SHA, missing/duplicate IDs, invalid means, altered threshold/harness hash, nonzero/missing command evidence, and hash/drift rejection. No compiler or Criterion execution in unit tests.",
+    "Reject boolean, NaN/infinite and nonpositive means. Verify executable paths from actual Cargo Running lines are regular files in declared target/release/deps and hash them; receipt normalization never substitutes expected timings. Preserve failure receipt for launch/build/parser/comparator errors; stop dependent commands after failure."
+  ],
+  "review_gate": {
+    "no_source_edit_or_ci_dispatch_until": [
+      "Coordinator review of this draft and exact worktree/base SHA",
+      "Independent review of scope, baseline provenance, serialization, source hash closure, and fail-closed behavior"
+    ],
+    "proposed_read_only_review_commands_after_implementation": [
+      "git status --short --untracked-files=all",
+      "git diff --check",
+      "git diff -- .github/workflows/careops-native-owner.yml benches/queue/qualify_native_v1.py benches/queue/test_qualify_native_v1.py",
+      "python3 -m unittest discover -s benches/queue -p 'test_qualify_native_v1.py' -v",
+      "python3 -m py_compile benches/queue/qualify_native_v1.py benches/queue/test_qualify_native_v1.py"
+    ],
+    "implementation_verification": "No native comparison is claimed until the GitHub Ubuntu job actually completes with qualified receipts and six canonical rows. Preserve original local comparisons (including later local rerun failures) as independent observations."
+  },
+  "source_sha256": {
+    ".github/workflows/careops-native-owner.yml": "352463542b65195c87fc91709f3bbc764c36fd9a10fcef1a8d7478bad2632b3e"
+  },
+  "context_budget_bytes": 24000,
+  "review_record": "Coordinator and independent reviewer approved corrected draft SHA2c7de9e569c3a1cb11fe6699c0539c53190c508413e5a152eb96a5f909b7ed71. Task authority requires fresh clean isolated worktree, valid claim/input snapshot and separate root dispatch."
+}

@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "id": "Q5.2.scaling.lazy-record-integration",
+  "status": "review_required",
+  "source_preparation_base": "f4a7d720564792fa26970ce20edf6f28219abf4d",
+  "record_helper_reviewed_commit": "cb4fd598f98eab613b34b10576ce019d7f5955cc",
+  "model": "gpt-6-luna",
+  "context_budget_bytes": 24000,
+  "owned_paths": [
+    "crates/kairo-ecs-des/src/flow.rs",
+    "crates/kairo-ecs-des/src/flow/record_delta.rs",
+    "crates/kairo-ecs-des/src/flow/q52_record_staging_tests.rs",
+    ".artifacts/q52-record-integration"
+  ],
+  "readonly_context": [
+    "AGENTS.md",
+    "conductor/design/queue/q5.2-record-integration-context-20261004.md",
+    "conductor/design/queue/q5.2-record-integration-20261004.json"
+  ],
+  "source_sha256": {
+    "crates/kairo-ecs-des/src/flow.rs": "31fc93ec48ea5c1cb8ac680d3a89621cbb04af5c1c7132e53c9ad9943842fe5d",
+    "crates/kairo-ecs-des/src/flow/record_delta.rs": "8ebac649b04257eaee5ee0684bfc73cba37402268b3776f4885e374f9c8be7c9"
+  },
+  "purpose": "Change requests and WorkProgress staging to read-through lazy deltas only. ResourceStage/whole queue copies, deadlines and selection remain unchanged in this leaf. No scaling acceptance claim.",
+  "steps": [
+    "Declare private record_delta child module and import RecordDelta. Replace only plan request/progress eager BTreeMaps with local lookup closures over registry and RecordDelta::new. DispatchPlan retains owned BTreeMap fields.",
+    "For Despawn boundary targets and Remove request scan, iterate self.requests IDs with read-through get. For Despawn explicit mutations, first collect matching IDs in sorted order from readonly lookup, then get_mut one by one. Preserve every cleanup/state/record notification and causal order; no global mutable iteration API.",
+    "Replace five progress indexing expressions and two request indexing expressions inside plan with get(...).expect with equivalent validated-invariant messages, or existing FlowError handling. Do not alter unrelated Vec request indexing in callback batches.",
+    "Change snapshot_progress private helper argument to &RecordDelta with reference lifetime returned tied to overlay borrow, not to lookup lifetime. Other helpers and resource representations stay unchanged.",
+    "Boundary clones/restore now snapshot lazy deltas. At successful plan export, use into_writes for requests/progress. Preserve ordinary explicit rejection boundary effects and structural InvalidState/CounterOverflow full rejection.",
+    "Tests-only RecordDelta insert/changed_ids may be #[cfg(test)] if strict dead_code gate flags them; required production new/get/get_mut/into_writes stay available. Do not globally allow warnings.",
+    "Add private q52_record_staging_tests module: inspect uncommitted plan with 1000 unrelated retained requests/works; assert owned request/progress write maps include exactly affected records, no untouched rows. Planning leaves registry/head/budget/counters unchanged until existing commit. Add explicit error after due boundary and structural rejection coverage or reuse existing authoritative tests with clear executed results.",
+    "One commit per fresh private advisory claim; readonly frozen packet/excerpts only as helper inputs. Editable sources must not be helper immutable inputs. Check source hashes before writing, context budget before allocation, scope before every write and precommit; separate calls, release immediately after commit. No token printing."
+  ],
+  "commands": [
+    "rustup run 1.99.0 cargo test -p kairo-ecs-des --locked --target-dir .artifacts/q52-record-integration/target",
+    "rustup run 1.99.0 cargo test -p kairo-ecs-des --release --locked --target-dir .artifacts/q52-record-integration/target",
+    "rustup run 1.99.0 cargo clippy -p kairo-ecs-des --all-targets --locked --target-dir .artifacts/q52-record-integration/target -- -D warnings",
+    "rustup run 1.99.0 cargo fmt --all -- --check",
+    "git diff --check"
+  ],
+  "receipt": "Retain every actual attempt with exact cwd/source head/toolchain/command/exit/input+source+log hashes. No fabricated or relabelled pass. Missing/hardware/hosted evidence remains unverified.",
+  "deferred": [
+    "Resource queue overlay and causal stage map integration",
+    "Waiting-deadline index",
+    "Ordered replacement selection",
+    "Immutable 39-case matrix and canonical upstream regression gates"
+  ],
+  "preparation_events": [
+    "Initial oversized flow.rs immutable-input claim rejected before acquisition; no source changed. Stale completed cherry-pick sequencer quit after clean source verification. Subsequent clean claim uses small readonly contract; full source hash and bounded excerpts bind source."
+  ],
+  "context_sha256": "d22e484c1d5a7f2c7e1b73a5678ed0d75e449c6785bdc32dd195b5d8d5cb6494"
+}

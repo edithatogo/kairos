@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "id": "Q5.2.scaling.deadline-index",
+  "status": "prepared",
+  "source_preparation_base": "9914a6d9649d5fb4916c08305c2444e5d4e5afad",
+  "reported_integration_base": "c9494e8",
+  "model": "gpt-6-luna",
+  "context_budget_bytes": 24000,
+  "owned_paths": [
+    "crates/kairo-ecs-des/src/flow.rs",
+    "crates/kairo-ecs-des/src/flow/deadline_index.rs",
+    "crates/kairo-ecs-des/src/flow/q52_deadline_index_tests.rs",
+    ".artifacts/q52-deadline-index"
+  ],
+  "readonly_context": [
+    "AGENTS.md",
+    "conductor/design/queue/q5.2-queue-integration-20261004.json",
+    "conductor/design/queue/q5.2-queue-integration-context-20261004.md",
+    "conductor/design/queue/q5.2-deadline-index-context-20261004.md"
+  ],
+  "source_sha256": {
+    "crates/kairo-ecs-des/src/flow.rs": "03e995ad1d212e326ffc99f11793a34faa252d0dc1e5716f4bd1c4513bc5340d",
+    "crates/kairo-ecs-des/src/flow/queue_delta.rs": "62dc07598e4f12c2f6aed9fe896f82c749e654a82351316372489f0a450b8b8f"
+  },
+  "readonly_sha256": {
+    "AGENTS.md": "f1e9c7076e13e6d83de2759434dde92119426250dd880770ae6d661be29b2b35",
+    "conductor/design/queue/q5.2-queue-integration-20261004.json": "c695e2aae6f375af1d56f3849dfd6849b69c93681ececc9ffefa1e7126c88b92",
+    "conductor/design/queue/q5.2-queue-integration-context-20261004.md": "62837a4ee9f0a960a27cd3ad85792912807f021e9dca3f40ffea1df76019cc1b"
+  },
+  "context_sha256": "8ece67be04b29638c35ae9a9392caf2aa12c4a2a0f2a04592dc11274ea254b16",
+  "scope": "Private per-resource waiting-deadline index integrated with existing causal resource staging and QueueDelta only. Preserve public ClaimQueue and current scheduler/error/rollback behavior. No replacement policy, public API, dependency, CI, or benchmark changes.",
+  "steps": [
+    "Before dispatch verify base and source hashes; obtain a fresh scoped claim for these paths. The current prepared draft grants no implementation authority. Use the selected context only; never treat source hashes as permission to edit.",
+    "Add a private WaitingDeadlineIndex resource component with entries BTreeSet<(SimTime, PriorityKey)> and expected_len: usize. Register/remove it with resource lifecycle. Keep ClaimQueue's public representation/API unchanged.",
+    "Extend private ResourceStage/owned plan staging with QueueDelta<(SimTime, PriorityKey)> and count witness. Stage only registered causal resource IDs; absent resource IDs still skip staging to preserve explicit error order. Missing index component or expected_len != entries.len() is InvalidState before scheduler head consumption. Require staged deadline cardinality == old expected_len and <= primary queue length; retain old expected count for grouped preflight and new staged count for apply.",
+    "Replace full waiting-queue deadline scan with inclusive due-prefix lookup (deadline <= outcome.at). For every due tuple validate request existence, resource, Queued state, exact deadline, derived PriorityKey, primary queue membership, and witness. Also validate an explicitly touched Deadline(id) tuple even when its deadline is future. Sort due tuples by PriorityKey within each ResourceId before processing, preserving current ResourceId-then-PriorityKey effects even when deadlines differ. Do not scan untouched requests/resources/index entries or claim complete integrity for untouched entries.",
+    "Maintain the index transactionally: queued finite-deadline Submit adds only after successful admission; already-due Submit is never indexed; due timeout removes and clears deadline; queued Cancel removes and clears; Despawn removes but preserves terminal request.deadline; queued Reprioritize replaces tuple with same deadline/new key; grant removes and permanently clears deadline. Pending Cancel is not indexed; preempted/restarted work must not restore a granted deadline.",
+    "Validate relevant touched entries before mutation. Touched Active/Suspended requests with Some(deadline) are InvalidState. Pending requests may carry Some(deadline) but are not indexed. Terminal requests can retain Some(deadline), notably after Despawn; do not reject that metadata, but never index terminal requests. Preserve ordinary terminal/invalid-lease error ordering and do not assert integrity over an unvisited causal tail. Preflight primary and deadline QueueChanges before plan export and group-wide at commit before factories/component writes. Include deadline deltas in snapshots/rollback: ordinary explicit rejection preserves independent due-boundary changes; structural InvalidState/CounterOverflow rejects the entire plan. Commit applies prevalidated deltas without a recoverable partial-write path.",
+    "For resource removal, after the existing ordinary ResourceInUse check, validate that both the primary queue and deadline index are consistently empty before deleting components. Preserve multi-resource failure atomicity.",
+    "Add focused tests for absent/wrong due and touched tuples, wrong expected_len, cardinality > primary queue length, and missing component; future explicit Deadline(id) validation; Pending metadata, touched Active/Suspended invalid metadata, Terminal retained metadata and non-membership; inclusive exact deadline; ResourceId then PriorityKey order across different deadlines; queued Cancel and Despawn; grant then preemption with no deadline restoration; consistent empty resource cleanup; and multi-resource failure atomicity. Retain existing deadline, ordinary-rejection boundary, overflow, cancellation/rekey, and Despawn rollback tests.",
+    "Do not alter queue_delta.rs or unrelated files. Record actual commands, cwd, HEAD, Rust toolchain, exit status, and artifact/input/log hashes under the owned artifact path. One scoped commit; run scope precommit check separately, then release immediately."
+  ],
+  "commands": [
+    "rustup run 1.99.0 cargo test -p kairo-ecs-des --locked --target-dir .artifacts/q52-deadline-index/target",
+    "rustup run 1.99.0 cargo test -p kairo-ecs-des --release --locked --target-dir .artifacts/q52-deadline-index/target",
+    "rustup run 1.99.0 cargo clippy -p kairo-ecs-des --all-targets --locked --target-dir .artifacts/q52-deadline-index/target -- -D warnings",
+    "rustup run 1.99.0 cargo fmt --all -- --check",
+    "git diff --check"
+  ],
+  "receipt": {
+    "preparation": {
+      "cwd": "/private/tmp/kairos-q52-queue-integration",
+      "head": "9914a6d9649d5fb4916c08305c2444e5d4e5afad",
+      "commands": [
+        {"argv": ["python3", "-m", "json.tool", "conductor/design/queue/q5.2-deadline-index-20261004.json"], "result": "exit 0"},
+        {"argv": ["git", "diff", "--check"], "result": "exit 0"},
+        {"argv": ["python3", "/private/tmp/careops-q52-integration/.artifacts/q52-integration/safe_session.py", "--root", "/private/tmp/kairos-q52-queue-integration", "--lease-file", "<private>", "--action", "check", "--paths", "conductor/design/queue/q5.2-deadline-index-20261004.json", "conductor/design/queue/q5.2-deadline-index-context-20261004.md"], "result": "exit 0; advisory scope check passed"}
+      ],
+      "context_sha256": "8ece67be04b29638c35ae9a9392caf2aa12c4a2a0f2a04592dc11274ea254b16",
+      "context_bytes": 4990,
+      "amendment": {
+        "change": "Added the four requested index-integrity, explicit future Deadline, request-state, and removal checks.",
+        "commands": [
+          {"argv": ["python3", "-m", "json.tool", "conductor/design/queue/q5.2-deadline-index-20261004.json"], "result": "exit 0"},
+          {"argv": ["git", "diff", "--check"], "result": "exit 0"},
+          {"argv": ["python3", "/private/tmp/careops-q52-integration/.artifacts/q52-integration/safe_session.py", "--root", "/private/tmp/kairos-q52-queue-integration", "--lease-file", "<private>", "--action", "check", "--paths", "conductor/design/queue/q5.2-deadline-index-20261004.json", "conductor/design/queue/q5.2-deadline-index-context-20261004.md"], "result": "exit 0; advisory scope check passed"}
+        ]
+      }
+    },
+    "future_gates": "Commands above are required future gates, not executed evidence. Preserve actual attempts and hashes. No performance, hosted, Q5.2, or release-acceptance claim."
+  },
+  "dispatch_gate": "Root explicit approval and independent review of this exact packet/context are required before implementation."
+}
