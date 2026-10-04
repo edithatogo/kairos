@@ -284,21 +284,6 @@ fn next_expected_ordinal(expected: u64, actual: u32) -> Option<u64> {
     (u64::from(actual) == expected).then(|| expected + 1)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::next_expected_ordinal;
-
-    #[test]
-    fn ordinal_validation_does_not_saturate_at_u32_max() {
-        let max = u32::MAX;
-        assert_eq!(
-            next_expected_ordinal(u64::from(max), max),
-            Some(u64::from(max) + 1)
-        );
-        assert_eq!(next_expected_ordinal(u64::from(max) + 1, max), None);
-    }
-}
-
 fn entity_bytes(index: u64, generation: u32) -> [u8; 12] {
     let mut bytes = [0; 12];
     bytes[..8].copy_from_slice(&index.to_le_bytes());
@@ -363,5 +348,20 @@ fn strategy_token(strategy: PreemptionStrategy) -> &'static str {
         PreemptionStrategy::Suspend => "suspend",
         PreemptionStrategy::Abort => "abort",
         PreemptionStrategy::Restart => "restart",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::next_expected_ordinal;
+
+    #[test]
+    fn ordinal_validation_does_not_saturate_at_u32_max() {
+        let max = u32::MAX;
+        assert_eq!(
+            next_expected_ordinal(u64::from(max), max),
+            Some(u64::from(max) + 1)
+        );
+        assert_eq!(next_expected_ordinal(u64::from(max) + 1, max), None);
     }
 }

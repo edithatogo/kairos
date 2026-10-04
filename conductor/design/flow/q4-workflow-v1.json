@@ -1,0 +1,118 @@
+{
+  "status": "accepted_scoped_development_contract",
+  "scope": "Q4.4 synthetic public-API workflow example and integration fixture only; no clinical policy, multi-resource atomic operation, portable checkpoint/restore, release, or full ED workflow claim.",
+  "basis": {
+    "plan": "conductor/tracks/des_queue_preemption_20260925/plan.md Q4.4 and Q4 exit same-runtime event-boundary parity",
+    "recipe": "conductor/execution/mvp/recipes.json Q4.4.staff -> Q4.4.bed -> Q4.4.join",
+    "api": "libs/kairos/crates/kairo-ecs-des/src/flow.rs public FlowRuntime, AcquireBuilder, typed create_work context, request/resource inspection, release, run_for/step"
+  },
+  "proposed_paths": {
+    "runnable_example": "libs/kairos/crates/kairo-ecs-des/examples/flow_staff_bed_cleaning.rs",
+    "integration_test": "libs/kairos/crates/kairo-ecs-des/tests/flow_staff_bed_cleaning_v1.rs",
+    "shared_execution": "Example owns pub fn run(mode: RunMode) -> Result<WorkflowOutput, FlowError>; integration test imports the same example source with #[path = \"../examples/flow_staff_bed_cleaning.rs\"] mod scenario and calls run(Continuous) and run(PausedAtBoundaries). The example main calls run(Continuous), so the user-facing runnable sample and assertions exercise identical setup, dispatch loop, caller actions, record projection, and conservation checks."
+  },
+  "fixture_entities_and_exact_aliases": {
+    "actors": {
+      "staff_a": "Staff-A",
+      "patient_a": "Patient-A",
+      "patient_b": "Patient-B",
+      "cleaner_a": "Cleaner-A"
+    },
+    "resources": {
+      "staff_resource": "Staff-A-duty capacity=1",
+      "bed_a": "Bed-A capacity=1",
+      "cleaning_resource": "Cleaning capacity=1"
+    },
+    "work": {
+      "normal_staff_work": "Normal-intake work duration 8 ticks",
+      "urgent_staff_work": "Urgent-interruption work duration 2 ticks",
+      "cleaning_work": "Bed-A cleaning work duration 2 ticks"
+    },
+    "requests": {
+      "normal_staff_request": "normal staff claim, priority 10, preemptible Suspend",
+      "urgent_staff_request": "urgent staff claim, priority 2, can_preempt true",
+      "patient_a_bed_request": "manual Bed-A claim, priority 10",
+      "cleaning_request": "timed cleaning-resource claim",
+      "patient_b_bed_request": "manual Bed-A claim submitted during cleaning, priority 10"
+    },
+    "identity_rule": "These are deterministic fixture aliases mapped to public generational IDs returned by FlowRuntime; do not hard-code raw ECS EntityId values or attach components directly. Keep care-related labels only in fixture data, not in Kairos policy."
+  },
+  "typed_context": "Register one concrete Rust FixtureContext type with case_id, actor_label, task_label, and phase enum. Attach it to normal and urgent staff work (and cleaning work if useful). On normal-work Suspend and Resume assert work_context::<FixtureContext>() retains the same case/task identity and expected phase; no clone/serialization/codec is used or implied.",
+  "exact_timeline_ticks": [
+    {
+      "tick": 0,
+      "actions": [
+        "Submit normal_staff_request on staff_resource for Staff-A, timed_work normal_staff_work, priority 10, preemptible Suspend; dispatch its grant first.",
+        "Only after the staff grant boundary, submit patient_a_bed_request on Bed-A for Patient-A as a separate manual one-resource claim; dispatch Bed-A grant and retain its LeaseId.",
+        "Assert Bed-A active=1/available=0 and Staff-A-duty active=1/available=0. The order explicitly stages staff then bed; there is no combined acquisition."
+      ],
+      "expected": "Normal staff Granted, then Patient-A Bed-A Granted; one active lease per capacity-one resource."
+    },
+    {
+      "tick": 3,
+      "actions": [
+        "Submit urgent_staff_request for Staff-A on staff_resource with timed_work urgent_staff_work, priority 2 and can_preempt=true."
+      ],
+      "expected": "Normal work Preempted with Suspend and 5 ticks remaining; urgent work Granted. Staff active count remains 1."
+    },
+    {
+      "tick": 5,
+      "actions": [
+        "Urgent work completes and normal work resumes with the original typed context and 5 ticks remaining.",
+        "Submit cleaning_request on the separate cleaning_resource for Cleaner-A with timed_work cleaning_work, duration 2. Keep Patient-A's manual Bed-A LeaseId active."
+      ],
+      "expected": "Urgent Completed; normal Resumed; Cleaner-A cleaning Granted; Bed-A remains active=1/available=0. No bed+cleaner atomic request."
+    },
+    {
+      "tick": 6,
+      "actions": [
+        "Submit patient_b_bed_request for Patient-B against Bed-A while Patient-A's lease is still held and cleaning is in progress."
+      ],
+      "expected": "Patient-B is Queued; Bed-A active=1/available=0; Patient-B is not Granted. Queue contains exactly patient_b_bed_request."
+    },
+    {
+      "tick": 7,
+      "actions": [
+        "Cleaning work completes. At that completion boundary, caller explicitly releases Patient-A's saved manual Bed-A lease at runtime.now(). Process the resulting release/arbitration event; capture Patient-B's grant. Then explicitly release Patient-B's manual lease at the same runtime time and process the release event to drain allocations."
+      ],
+      "expected": "Bed-A never has available capacity before Patient-A release. Patient-B Granted only after the release event at tick 7, then Released; final Bed-A active=0/available=1 and queue empty."
+    },
+    {
+      "tick": 10,
+      "actions": [
+        "Normal staff work completes after resuming its 5 remaining ticks; collect the final state and record output."
+      ],
+      "expected": "Normal work Completed once; Staff-A-duty active=0/available=1; all resources have zero active allocations and empty queues."
+    }
+  ],
+  "shared_run_output_contract": {
+    "run_modes": [
+      "Continuous",
+      "PausedAtBoundaries"
+    ],
+    "output": "WorkflowOutput contains canonical named event tuples (tick, alias, transition, ordinal, queue_len, active_count, capacity, progress projection), per-boundary resource snapshots, final request/work states, and final typed context values. It does not expose raw ECS attachment dumps.",
+    "continuous": "Drains the scheduled scenario while applying the documented caller actions exactly at t0 staff grant, t7 cleaner completion, and t7 Patient-B grant.",
+    "paused": "Uses FlowRuntime::run_for/step to stop before/after selected event boundaries (urgent eviction/grant, t6 queued Patient-B, t7 cleaning completion/grant); continues those exact live FlowRuntime instances and applies the same caller actions at the same boundaries. It never reconstructs state from a snapshot.",
+    "parity": "Integration test compares Continuous and PausedAtBoundaries WorkflowOutput exactly after mapping generational IDs to stable fixture aliases. Require equal timeline, lifecycle ordering/ordinals, resource snapshots, progress, terminal states, typed context, and final drained allocations. This is same-process same-runtime pause/continue only, not portable checkpoint or cross-process replay."
+  },
+  "must_hold_invariants": [
+    "At every inspected event boundary and after each explicit caller action, for each resource active_count <= capacity and available + active_count = capacity.",
+    "Bed-A occupancy starts only after Staff-A grant (separate staged claims), remains active through the entire cleaning interval [t5,t7], and Patient-B queues at t6 without grant.",
+    "At t7, the ordered causal sequence is cleaning Completed, Patient-A bed Released, Patient-B bed Granted, then Patient-B bed Released; no temporary available-bed gap permits an earlier grant.",
+    "Staff interruption uses only one staff unit; normal remaining duration is 5 at Suspend and is preserved at Resume; urgent work duration is 2; normal terminal completion is t10.",
+    "Every work/request uses at most one resource per request; no atomic multi-resource grant, implicit rollback, or clinical eligibility policy is included.",
+    "All times/durations are integer ticks; no RNG, wall clock, external input, or empirical parameter claim."
+  ],
+  "acceptance_limits": [
+    "This is Q4.4 example plus integration evidence; Q4.5 remains the separate phase review.",
+    "The example is a synthetic staged resource workflow, not a complete ED workflow, calibrated model, release qualification, stable API approval, or portable checkpoint demonstration.",
+    "Track 25 experimental/source compatibility hold remains."
+  ],
+  "reviewer": "root-coordinator",
+  "staff_leaf_scope": "Create shared example runner staff-only phase with identical typed context, priorities, interruption/resume timeline0/3/5/10; tests first; bed extension is separate next leaf",
+  "bed_leaf_scope": "Extend shared runner after accepted staff leaf with staged bed0, cleaning5-7, waiter6, releases7; tests first",
+  "raw_id_parity": "Compare raw LifecycleRecord vectors as well as projected aliases between deterministic equivalent setup runs; do not discard event IDs/ordinals or snapshots for same-runtime parity.",
+  "cleaning_orchestration_boundary": "Cleaning is an independent synthetic work resource. The caller retains manualBed-A lease until it observes cleaningCompleted; no automatic runtimecoupling between resources is implied.",
+  "context_lifetime": "CurrentFlow retains typedcontext after timed completion; assert unchangedcontext atSuspend,Resume,andterminal. Onlydespawnremovesit; no portability claim.",
+  "independent_review": "Q4.4 contract review accepted with cleaning-resource orchestration clarification; implementation and tests pending"
+}

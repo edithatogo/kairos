@@ -660,12 +660,13 @@ fn cleanup_restart<T: 'static, C: 'static>(registry: &mut ComponentRegistry, id:
     registry.remove::<RestartTemplate<T, C>>(id);
     cleanup_context::<C>(registry, id);
 }
+type PrepareContext = fn(&ComponentRegistry, EntityId) -> Box<dyn PreparedContext>;
 #[derive(Clone, Copy)]
 struct WorkDescriptor {
     cleanup: ContextCleanup,
     context_present: fn(&ComponentRegistry, EntityId) -> bool,
     restart_present: fn(&ComponentRegistry, EntityId) -> bool,
-    prepare: Option<fn(&ComponentRegistry, EntityId) -> Box<dyn PreparedContext>>,
+    prepare: Option<PrepareContext>,
 }
 #[derive(Clone, Copy, Debug)]
 enum NotificationKind {

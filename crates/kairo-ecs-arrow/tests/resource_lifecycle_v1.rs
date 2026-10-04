@@ -245,7 +245,7 @@ fn empty_batch_and_manual_work_nulls_are_typed_and_distinct_from_zero() {
         .iter()
         .find(|row| row.transition == T::Queued)
         .unwrap();
-    let batch = encode("  manual run  ", &[queued.clone()]).unwrap();
+    let batch = encode("  manual run  ", std::slice::from_ref(queued)).unwrap();
     assert_eq!(strings(&batch, 1).value(0), "  manual run  ");
     assert!(fixed(&batch, 9).is_null(0));
     assert!(batch.column(10).is_null(0));
@@ -302,7 +302,7 @@ fn every_column_maps_the_expected_source_value() {
         .unwrap()
         .clone();
     row.transition_ordinal = 0;
-    let batch = encode("mapping-run", &[row.clone()]).unwrap();
+    let batch = encode("mapping-run", std::slice::from_ref(&row)).unwrap();
     assert_eq!(batch.num_columns(), 27);
     assert_eq!(
         batch
@@ -445,7 +445,7 @@ fn every_column_maps_the_expected_source_value() {
         .unwrap()
         .clone();
     completed.transition_ordinal = 0;
-    let completed_batch = encode("completed-control", &[completed.clone()]).unwrap();
+    let completed_batch = encode("completed-control", std::slice::from_ref(&completed)).unwrap();
     assert!(completed_batch.column(10).is_null(0));
     assert_eq!(
         completed_batch
@@ -459,11 +459,11 @@ fn every_column_maps_the_expected_source_value() {
 
     let manual = manual_rows();
     let manual_queued = manual.iter().find(|r| r.transition == T::Queued).unwrap();
-    let manual_batch = encode("manual-null-control", &[manual_queued.clone()]).unwrap();
+    let manual_batch = encode("manual-null-control", std::slice::from_ref(manual_queued)).unwrap();
     assert!(manual_batch.column(10).is_null(0));
     assert!(manual_batch.column(11).is_null(0));
     let queued = records.iter().find(|r| r.transition == T::Queued).unwrap();
-    let queued_batch = encode("queued-null-control", &[queued.clone()]).unwrap();
+    let queued_batch = encode("queued-null-control", std::slice::from_ref(queued)).unwrap();
     assert!(queued_batch.column(10).is_null(0));
     assert!(queued_batch.column(11).is_null(0));
 }
@@ -487,7 +487,7 @@ fn engine_records_cover_every_enum_token_and_full_width_values() {
     progress.cumulative_busy = d(u128::MAX - 2);
     progress.attempt_revision = u64::MAX;
     progress.execution_revision = u64::MAX;
-    let batch = encode("  full-width  ", &[row.clone()]).unwrap();
+    let batch = encode("  full-width  ", std::slice::from_ref(&row)).unwrap();
     assert_eq!(
         fixed(&batch, 2).value(0),
         entity_bytes(EntityId::new(u64::MAX, u32::MAX))
@@ -588,17 +588,17 @@ fn engine_records_cover_every_enum_token_and_full_width_values() {
     let transition_values = strings(&batch, 12);
     let state_values = strings(&batch, 13);
     let strategy_values = strings(&batch, 14);
-    for i in 0..10 {
-        assert_eq!(transition_values.value(i), expected_transitions[i]);
+    for (i, expected) in expected_transitions.iter().enumerate() {
+        assert_eq!(transition_values.value(i), *expected);
     }
-    for i in 0..11 {
-        assert_eq!(state_values.value(i), expected_states[i]);
+    for (i, expected) in expected_states.iter().enumerate() {
+        assert_eq!(state_values.value(i), *expected);
     }
-    for i in 0..10 {
+    for (i, variant) in variants.iter().enumerate().take(10) {
         if i == 5 || i == 9 {
             assert_eq!(
                 fixed(&batch, 15).value(i),
-                entity_bytes(variants[i].request.entity_id())
+                entity_bytes(variant.request.entity_id())
             );
         } else {
             assert!(
@@ -699,9 +699,9 @@ fn bounded_arrowio_stream_and_file_roundtrip_preserve_all_columns_and_metadata()
         .iter()
         .all(|field| field.metadata().is_empty()));
 
-    let stream = write_ipc_stream(expected.clone(), &[batch.clone()], limits).unwrap();
+    let stream = write_ipc_stream(expected.clone(), std::slice::from_ref(&batch), limits).unwrap();
     let stream_batches = read_ipc_stream(&stream, expected.clone(), limits).unwrap();
-    let file = write_ipc_file(expected.clone(), &[batch.clone()], limits).unwrap();
+    let file = write_ipc_file(expected.clone(), std::slice::from_ref(&batch), limits).unwrap();
     let file_batches = read_ipc_file(&file, expected.clone(), limits).unwrap();
 
     for batches in [stream_batches, file_batches] {
