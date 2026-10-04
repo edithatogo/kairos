@@ -4,11 +4,7 @@
 //! not execute or claim conformance for a production metric implementation.
 use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    fs,
-    path::PathBuf,
-};
+use std::{collections::BTreeSet, fs, path::PathBuf};
 
 const FIXTURE_PATH: &str = "conformance/c41/fixtures.json";
 const CANDIDATE_SCHEMA: &str = "c41.candidate.v1";
@@ -39,7 +35,10 @@ fn fixtures() -> Value {
     serde_json::from_slice(&fixture_bytes()).expect("fixture JSON parses")
 }
 fn fixture_sha() -> String {
-    format!("{:x}", Sha256::digest(fixture_bytes()))
+    Sha256::digest(fixture_bytes())
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
 }
 fn obj<'a>(v: &'a Value, where_: &str) -> &'a Map<String, Value> {
     v.as_object()
@@ -356,7 +355,7 @@ fn comparator_rejects_contract_mutations() {
     bad!(|x: &mut Value| x["cases"][0]["result"]["p_value"] = json!(0.5));
     bad!(|x: &mut Value| x["cases"][0]["result"]["unexpected"] = json!(1));
     bad!(|x: &mut Value| x["cases"][0]["id"] = x["cases"][1]["id"].clone());
-    bad!(|x: &mut Value| x["cases"].pop());
+    bad!(|x: &mut Value| let _ = x["cases"].as_array_mut().unwrap().pop());
     bad!(|x: &mut Value| x["cases"][0]["result"]["w1"] = json!(f64::NAN));
     bad!(|x: &mut Value| x["cases"][0]["result"]["ks_d"] = json!(2.0));
     bad!(|x: &mut Value| x["cases"][0]["result"]["w1"] = json!(-1.0));
