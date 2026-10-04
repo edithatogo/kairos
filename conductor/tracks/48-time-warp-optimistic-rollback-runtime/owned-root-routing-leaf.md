@@ -1,6 +1,6 @@
 # Owned root routing and native admission join
 
-Status: proposed exact contract for joint review,4 October2026. Constructor source integration is a prerequisite and is not yet accepted; bind actual source only after its independent GREEN review. Architecture proposal readback2d0e1ee informs this draft. No source writer is dispatched by this document. Track48 remains In Progress and the whole native/distributed objective remains mandatory.
+Status: proposed exact contract for joint review,4 October2026. Constructor integration57cda4c is accepted with qualified source review and independently checked126-test GREEN on actualRust1.98.1 and1.76.0; bind actual dispatch base and file hashes after this contract review. Architecture proposal readback2d0e1ee informs this draft. No source writer is dispatched by this document. Track48 remains In Progress and the whole native/distributed objective remains mandatory.
 
 ## Scope and actual behavior
 
@@ -86,3 +86,10 @@ Use actual matching Rust1.98.1 and1.76.0 tools/targets/receipts; independently a
 Qualified architecture accepted the bounded direction atb690390 and confirmed this source-issuer receipt correction after the coordinator traced the A/A′ collision. Exact-document independent fixture review and accepted constructor integration remain prerequisites to dispatch.
 
 Independent fixture review ofb061c3a accepted exact sender/cache binding and requested explicit gate coverage for registration/seal/close. Those ownership-dependent operations are named above. The first constructor contract remains immutable and point-in-time; this later join upgrades its private synchronization before enabling admission.
+
+
+## Bounded ownership and constructor-test migration
+
+Implementation owns only crates/kairo-ecs-pdes/src/optimistic.rs, src/optimistic/owned.rs, src/optimistic/owned_routing.rs (new), src/lib.rs, tests/optimistic_owned_construction.rs and tests/optimistic_owned_root_routing.rs (new), all paths under crates/kairo-ecs-pdes. The six-file allowance keeps the existing guarded constructor fixture truthful while adding routing-specific behavior; no manifest/lock/CI/status/parent/legacy-fixture edits. Independent author exclusively owns tests/optimistic_owned_construction_heldout.rs and tests/optimistic_owned_root_routing_heldout.rs (new). Each worker has its own clean worktree and repository-wide disjoint claim. Private artifact/target paths are separately bound in dispatch. If this leaf is too large or an oracle is unresolved, stop for decomposition rather than invent semantics or broaden paths.
+
+Only constructor tests expecting schedule_initial to return OwnedRuntimeJoinIncomplete after successful sealing become obsolete. Their respective author changes that call to successful remote scheduling and asserts one actual source outbox obligation, one reserved receipt, source revision+1, unchanged owned process/model/RNG/queue/token and no remote process. Establish the new observation after successful scheduling before asserting unchanged guarded run/invalid-source calls. Closure expected revision also increases by that one scheduling transition; repeated closure remains unchanged. Retain all pre-seal, dropped issuer, wrong source, input-closed, raw positive/anti, handler-budget/horizon and fossil rejection oracles. The independent implementation writer cannot edit heldout tests. Original constructor RED/GREEN receipts remain immutable historical evidence; migrated fixtures receive new RED/GREEN proof and do not retroactively replace them.
