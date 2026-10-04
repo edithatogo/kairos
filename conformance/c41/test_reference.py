@@ -52,7 +52,9 @@ def compare_result(actual: dict, expected: dict) -> None:
             raise ValueError(f"outside tolerance: {key}")
 
 
-def compare_candidate(candidate: dict, fixtures: dict) -> None:
+def compare_candidate(
+    candidate: dict, fixtures: dict, *, self_test_mode: bool = False
+) -> None:
     if candidate.get("schema_version") != "c41.candidate.v1":
         raise ValueError("schema")
     if candidate.get("fixture_sha256") != ref.sha(HERE / "fixtures.json"):
@@ -67,8 +69,20 @@ def compare_candidate(candidate: dict, fixtures: dict) -> None:
         {c["input"]["algorithm_version"] for c in fixtures["cases"]}
     ):
         raise ValueError("algorithm versions")
-    if p.get("kind") not in ("runtime_candidate", "comparator_mock"):
-        raise ValueError("provenance kind")
+    kind = p.get("kind")
+    if self_test_mode:
+        if kind != "comparator_mock":
+            raise ValueError("self-test candidate must be labeled comparator_mock")
+    else:
+        if kind != "runtime_candidate":
+            raise ValueError("runtime candidate required")
+        if not isinstance(p.get("producer_api"), str) or not p["producer_api"].strip():
+            raise ValueError("producer API")
+        commit = p.get("producer_commit", "")
+        if len(commit) != 40 or any(
+            c not in "0123456789abcdef" for c in commit.lower()
+        ):
+            raise ValueError("producer commit")
     expected = {x["id"]: x["expected"] for x in fixtures["cases"]}
     rows = candidate.get("cases", [])
     ids = [x.get("id") for x in rows]
@@ -171,9 +185,46 @@ class ReferenceTests(unittest.TestCase):
             self.assertEqual(by_id[case_id]["status"], "invalid", case_id)
         self.assertEqual(by_id["near-u128"]["precision"], "exact_offsets")
         self.assertEqual(by_id["common-origin-scaled"]["w1"], "1")
-        duration = by_id["duration-scaled"]
-        self.assertEqual(duration["w1"], "60")
-        self.assertEqual(duration["ks_d"], "1/3")
+        for c in FIXTURES["cases"]:
+            if c["expected"]["status"] == "invalid":
+                self.assertEqual(c["expected"]["counts"]["reference"], "0", c["id"])
+                self.assertEqual(c["expected"]["counts"]["candidate"], "0", c["id"])
+                diagnostic = c["expected"]["diagnostic"]
+                primary = diagnostic["primary_dispositions"]
+                self.assertEqual(primary["observed"], "0", c["id"])
+                attempted = sum(
+                    map(int, diagnostic["attempted_support_counts"].values())
+                )
+                self.assertEqual(primary["rejected_input"], str(attempted), c["id"])
+                raw = sum(map(int, diagnostic["raw_input_counts"].values()))
+                self.assertEqual(raw, attempted + int(primary["missing"]), c["id"])
+                self.assertEqual(
+                    sum(map(int, primary.values())),
+                    int(c["expected"]["counts"]["eligible"]),
+                )
+            else:
+                self.assertEqual(
+                    c["expected"]["diagnostic"]["primary_dispositions"][
+                        "rejected_input"
+                    ],
+                    "0",
+                    c["id"],
+                )
+        seconds = by_id["duration-scaled"]
+        minutes = by_id["duration-minute"]
+        self.assertEqual(Fraction(seconds["w1"]) / Fraction(minutes["w1"]), 60)
+        self.assertEqual(seconds["ks_d"], minutes["ks_d"])
+        sec_case = next(c for c in FIXTURES["cases"] if c["id"] == "duration-scaled")
+        min_case = next(c for c in FIXTURES["cases"] if c["id"] == "duration-minute")
+        self.assertEqual(
+            int(min_case["input"]["scale_ticks"]),
+            60 * int(sec_case["input"]["scale_ticks"]),
+        )
+        for side in ("reference", "candidate"):
+            self.assertEqual(
+                [60 * Fraction(v) for v in min_case["input"][side]],
+                [Fraction(v) for v in sec_case["input"][side]],
+            )
 
     def test_coverage_is_additive_primary_and_retains_overlaps(self):
         for case_id in (
@@ -268,25 +319,41 @@ class ReferenceTests(unittest.TestCase):
                 for c in FIXTURES["cases"]
             ],
         }
-        compare_candidate(candidate, FIXTURES)
+        with self.assertRaises(ValueError):
+            compare_candidate(candidate, FIXTURES)
+        compare_candidate(candidate, FIXTURES, self_test_mode=True)
         bad = copy.deepcopy(candidate)
         bad["cases"].pop()
         with self.assertRaises(ValueError):
-            compare_candidate(bad, FIXTURES)
+            compare_candidate(bad, FIXTURES, self_test_mode=True)
         bad = copy.deepcopy(candidate)
         bad["cases"][0]["result"]["unit"] = "unknown"
         with self.assertRaises(ValueError):
-            compare_candidate(bad, FIXTURES)
+            compare_candidate(bad, FIXTURES, self_test_mode=True)
         bad = copy.deepcopy(candidate)
         bad["cases"][0]["result"]["unreviewed"] = True
         with self.assertRaises(ValueError):
-            compare_candidate(bad, FIXTURES)
+            compare_candidate(bad, FIXTURES, self_test_mode=True)
         bad = copy.deepcopy(candidate)
         bad["provenance"]["algorithm_versions"] = "mock"
         with self.assertRaises(ValueError):
-            compare_candidate(bad, FIXTURES)
+            compare_candidate(bad, FIXTURES, self_test_mode=True)
         bad = copy.deepcopy(candidate)
         bad["cases"][0]["result"]["w1"] = -1.0
+        with self.assertRaises(ValueError):
+            compare_candidate(bad, FIXTURES, self_test_mode=True)
+        bad = copy.deepcopy(candidate)
+        bad["provenance"].update({"kind": "runtime_candidate", "producer_api": ""})
+        with self.assertRaises(ValueError):
+            compare_candidate(bad, FIXTURES)
+        bad = copy.deepcopy(candidate)
+        bad["provenance"].update(
+            {
+                "kind": "runtime_candidate",
+                "producer_api": "candidate API",
+                "producer_commit": "mock",
+            }
+        )
         with self.assertRaises(ValueError):
             compare_candidate(bad, FIXTURES)
 

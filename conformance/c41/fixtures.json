@@ -18,7 +18,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "6"
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
           }
         },
         "ks_d": "1/3",
@@ -67,7 +72,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "6"
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
           }
         },
         "ks_d": "0",
@@ -116,7 +126,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "6"
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
           }
         },
         "ks_d": "1/3",
@@ -165,7 +180,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "4"
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "1"
           }
         },
         "ks_d": "2/3",
@@ -212,7 +232,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "4"
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
           }
         },
         "ks_d": "1/2",
@@ -267,7 +292,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "4"
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
           }
         },
         "ks_d": "1",
@@ -322,13 +352,18 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "6"
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
           }
         },
         "ks_d": "1/3",
         "p_value": null,
         "precision": "not_applicable",
-        "scale_ticks": "60",
+        "scale_ticks": "1",
         "status": "ok",
         "unit": "second",
         "w1": "60",
@@ -349,8 +384,62 @@
           "60",
           "120"
         ],
-        "scale_ticks": "60",
+        "scale_ticks": "1",
         "unit": "second"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": "1/3",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "60",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "1",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "duration_scaling",
+      "id": "duration-minute",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "1",
+          "2",
+          "3"
+        ],
+        "reference": [
+          "0",
+          "1",
+          "2"
+        ],
+        "scale_ticks": "60",
+        "unit": "minute"
       }
     },
     {
@@ -371,7 +460,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "8"
+            "observed": "8",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "4",
+            "reference": "4"
           }
         },
         "ks_d": "0",
@@ -422,7 +516,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "8"
+            "observed": "8",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "4",
+            "reference": "4"
           }
         },
         "ks_d": "0",
@@ -473,7 +572,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "8"
+            "observed": "8",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "4",
+            "reference": "4"
           }
         },
         "ks_d": "1/4",
@@ -524,7 +628,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "4"
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
           }
         },
         "ks_d": "1/2",
@@ -571,7 +680,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "6"
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
           }
         },
         "ks_d": "1/3",
@@ -620,7 +734,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "6"
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "5",
+            "reference": "1"
           }
         },
         "ks_d": "1/5",
@@ -669,7 +788,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "1"
+            "observed": "1",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "0"
           }
         },
         "ks_d": null,
@@ -712,7 +836,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "0"
+            "observed": "0",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "0",
+            "reference": "0"
           }
         },
         "ks_d": null,
@@ -739,21 +868,30 @@
       "expected": {
         "algorithm_version": "weighted_descriptive.v1",
         "counts": {
-          "candidate": "2",
+          "candidate": "0",
           "cohort_total": "4",
           "eligible": "4",
           "excluded": "0",
-          "reference": "2",
+          "reference": "0",
           "unmatched": "0",
           "unmatched_estimand": "not_applicable"
         },
         "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "2",
+            "reference": "2"
+          },
           "primary_dispositions": {
             "censored": "0",
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "4"
+            "observed": "0",
+            "rejected_input": "4"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
           }
         },
         "ks_d": null,
@@ -808,7 +946,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "1",
-            "observed": "2"
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "2"
           },
           "raw_population_counts": {
             "candidate": "1",
@@ -844,21 +987,30 @@
       "expected": {
         "algorithm_version": "empirical_equal.v1",
         "counts": {
-          "candidate": "1",
+          "candidate": "0",
           "cohort_total": "2",
           "eligible": "2",
           "excluded": "0",
-          "reference": "1",
+          "reference": "0",
           "unmatched": "0",
           "unmatched_estimand": "not_applicable"
         },
         "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
           "primary_dispositions": {
             "censored": "0",
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "2"
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": null,
@@ -889,21 +1041,30 @@
       "expected": {
         "algorithm_version": "empirical_equal.v1",
         "counts": {
-          "candidate": "1",
+          "candidate": "0",
           "cohort_total": "2",
           "eligible": "2",
           "excluded": "0",
-          "reference": "1",
+          "reference": "0",
           "unmatched": "0",
           "unmatched_estimand": "not_applicable"
         },
         "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
           "primary_dispositions": {
             "censored": "0",
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "2"
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": null,
@@ -934,21 +1095,30 @@
       "expected": {
         "algorithm_version": "weighted_descriptive.v1",
         "counts": {
-          "candidate": "1",
+          "candidate": "0",
           "cohort_total": "3",
           "eligible": "3",
           "excluded": "0",
-          "reference": "2",
+          "reference": "0",
           "unmatched": "0",
           "unmatched_estimand": "not_applicable"
         },
         "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "2"
+          },
           "primary_dispositions": {
             "censored": "0",
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "3"
+            "observed": "0",
+            "rejected_input": "3"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "2"
           }
         },
         "ks_d": null,
@@ -986,21 +1156,30 @@
       "expected": {
         "algorithm_version": "weighted_descriptive.v1",
         "counts": {
-          "candidate": "1",
+          "candidate": "0",
           "cohort_total": "2",
           "eligible": "2",
           "excluded": "0",
-          "reference": "1",
+          "reference": "0",
           "unmatched": "0",
           "unmatched_estimand": "not_applicable"
         },
         "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
           "primary_dispositions": {
             "censored": "0",
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "2"
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": null,
@@ -1037,21 +1216,30 @@
       "expected": {
         "algorithm_version": "weighted_descriptive.v1",
         "counts": {
-          "candidate": "1",
+          "candidate": "0",
           "cohort_total": "2",
           "eligible": "2",
           "excluded": "0",
-          "reference": "1",
+          "reference": "0",
           "unmatched": "0",
           "unmatched_estimand": "not_applicable"
         },
         "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
           "primary_dispositions": {
             "censored": "0",
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "2"
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": null,
@@ -1110,7 +1298,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "1",
-            "observed": "4"
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
           }
         },
         "ks_d": "0",
@@ -1183,7 +1376,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "1",
-            "observed": "2"
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": "0",
@@ -1247,7 +1445,12 @@
             "failed": "1",
             "infeasible": "0",
             "missing": "0",
-            "observed": "1"
+            "observed": "1",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": "0",
@@ -1313,7 +1516,12 @@
             "failed": "0",
             "infeasible": "1",
             "missing": "0",
-            "observed": "1"
+            "observed": "1",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": "0",
@@ -1379,7 +1587,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "2",
-            "observed": "0"
+            "observed": "0",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           },
           "raw_population_counts": {
             "candidate": "1",
@@ -1445,7 +1658,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "4"
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
           }
         },
         "ks_d": "1/2",
@@ -1493,7 +1711,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "2"
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": "1",
@@ -1539,7 +1762,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "4"
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
           }
         },
         "ks_d": "1/2",
@@ -1573,21 +1801,30 @@
       "expected": {
         "algorithm_version": "empirical_equal.v1",
         "counts": {
-          "candidate": "1",
+          "candidate": "0",
           "cohort_total": "2",
           "eligible": "2",
           "excluded": "0",
-          "reference": "1",
+          "reference": "0",
           "unmatched": "0",
           "unmatched_estimand": "not_applicable"
         },
         "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
           "primary_dispositions": {
             "censored": "0",
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "2"
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": null,
@@ -1619,21 +1856,30 @@
       "expected": {
         "algorithm_version": "empirical_equal.v1",
         "counts": {
-          "candidate": "2",
+          "candidate": "0",
           "cohort_total": "4",
           "eligible": "4",
           "excluded": "0",
-          "reference": "2",
+          "reference": "0",
           "unmatched": "0",
           "unmatched_estimand": "not_applicable"
         },
         "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "2",
+            "reference": "2"
+          },
           "primary_dispositions": {
             "censored": "0",
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "4"
+            "observed": "0",
+            "rejected_input": "4"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
           }
         },
         "ks_d": null,
@@ -1667,21 +1913,30 @@
       "expected": {
         "algorithm_version": "weighted_descriptive.v1",
         "counts": {
-          "candidate": "1",
+          "candidate": "0",
           "cohort_total": "2",
           "eligible": "2",
           "excluded": "0",
-          "reference": "1",
+          "reference": "0",
           "unmatched": "0",
           "unmatched_estimand": "not_applicable"
         },
         "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
           "primary_dispositions": {
             "censored": "0",
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "2"
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": null,
@@ -1732,7 +1987,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "4"
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
           }
         },
         "ks_d": "0",
@@ -1784,7 +2044,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "2"
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": "0",
@@ -1862,7 +2127,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "4"
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
           }
         },
         "ks_d": "0",
@@ -1924,21 +2194,30 @@
       "expected": {
         "algorithm_version": "empirical_equal.v1",
         "counts": {
-          "candidate": "1",
+          "candidate": "0",
           "cohort_total": "2",
           "eligible": "2",
           "excluded": "0",
-          "reference": "1",
+          "reference": "0",
           "unmatched": "0",
           "unmatched_estimand": "not_applicable"
         },
         "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
           "primary_dispositions": {
             "censored": "0",
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "2"
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": null,
@@ -1969,21 +2248,30 @@
       "expected": {
         "algorithm_version": "weighted_descriptive.v1",
         "counts": {
-          "candidate": "1",
+          "candidate": "0",
           "cohort_total": "2",
           "eligible": "2",
           "excluded": "0",
-          "reference": "1",
+          "reference": "0",
           "unmatched": "0",
           "unmatched_estimand": "not_applicable"
         },
         "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
           "primary_dispositions": {
             "censored": "0",
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "2"
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
           }
         },
         "ks_d": null,
@@ -2034,7 +2322,12 @@
             "failed": "0",
             "infeasible": "0",
             "missing": "0",
-            "observed": "3"
+            "observed": "3",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "2"
           }
         },
         "ks_d": "1/2",

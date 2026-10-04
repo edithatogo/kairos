@@ -180,9 +180,11 @@ def make_fixture(case: dict) -> dict:
     )
     missing_nulls = sum(v is None for v in raw_left + raw_right)
     supplied = inp.get("counts", {})
+    # Invalid candidates used no points; rejected and raw supports remain diagnostics.
+    used_left, used_right = (0, 0) if status == "invalid" else (nleft, nright)
     counts = {
-        "reference": str(nleft),
-        "candidate": str(nright),
+        "reference": str(used_left),
+        "candidate": str(used_right),
         "eligible": str(supplied.get("eligible", nleft + nright + missing_nulls)),
         "excluded": str(supplied.get("excluded", 0)),
         "unmatched": "0",
@@ -195,11 +197,12 @@ def make_fixture(case: dict) -> dict:
     primary = {
         k: str(supplied.get("primary_dispositions", {}).get(k, v))
         for k, v in {
-            "observed": nleft + nright,
+            "observed": 0 if status == "invalid" else nleft + nright,
             "censored": 0,
             "missing": missing_nulls,
             "failed": 0,
             "infeasible": 0,
+            "rejected_input": nleft + nright if status == "invalid" else 0,
         }.items()
     }
     result = {
@@ -218,6 +221,15 @@ def make_fixture(case: dict) -> dict:
         "p_value": None,
     }
     result["diagnostic"] = {"primary_dispositions": primary}
+    result["diagnostic"]["raw_input_counts"] = {
+        "reference": str(len(raw_left)),
+        "candidate": str(len(raw_right)),
+    }
+    if status == "invalid":
+        result["diagnostic"]["attempted_support_counts"] = {
+            "reference": str(nleft),
+            "candidate": str(nright),
+        }
     if "diagnostic" in inp:
         result["diagnostic"].update(inp["diagnostic"])
     grouped = inp.get("grouped_observations")
