@@ -48,6 +48,8 @@ pub enum ClockRole {
     Occurrence,
     SourceRecorded,
     MessageCreated,
+    /// Explicit time at which source information became available.
+    KnowledgeAvailable,
 }
 
 /// Declared source lineage. `Unknown` is an explicit value; absent lineage is
@@ -102,6 +104,17 @@ pub struct NormalizedOccurrence {
     pub lineage: Lineage,
 }
 
+/// Validated supplied timestamp, retaining its declared clock role.
+/// Optional absence remains the source adapter's responsibility.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct NormalizedTimestamp {
+    pub role: ClockRole,
+    pub utc_nanoseconds: i128,
+    pub relative_ticks: u128,
+    pub precision: SourcePrecision,
+    pub lineage: Lineage,
+}
+
 /// Convert resolved UTC nanoseconds to nonnegative ticks relative to origin.
 ///
 /// No rounding or saturation is permitted. Calendar/timezone resolution must
@@ -131,6 +144,27 @@ pub fn normalize_occurrence(
     if input.role != ClockRole::Occurrence {
         return TraceTimeResult::Excluded(TemporalError::ClockRoleMismatch);
     }
+    match normalize_timestamp(origin_utc_ns, input) {
+        TraceTimeResult::Accepted(timestamp) => TraceTimeResult::Accepted(NormalizedOccurrence {
+            utc_nanoseconds: timestamp.utc_nanoseconds,
+            relative_ticks: timestamp.relative_ticks,
+            precision: timestamp.precision,
+            lineage: timestamp.lineage,
+        }),
+        TraceTimeResult::Excluded(reason) => TraceTimeResult::Excluded(reason),
+    }
+}
+
+/// Validate a supplied timestamp without substituting or rejecting its role.
+///
+/// Preserves explicit source lineage and precision, including minute precision.
+/// Already-resolved UTC values use the same exact relative arithmetic as the
+/// required occurrence wrapper. Classified local/date/subnanosecond values
+/// remain exclusions; this function does not parse or resolve them.
+pub fn normalize_timestamp(
+    origin_utc_ns: i128,
+    input: TimestampInput,
+) -> TraceTimeResult<NormalizedTimestamp> {
     let Some(lineage) = input.lineage else {
         return TraceTimeResult::Excluded(TemporalError::MissingLineage);
     };
@@ -164,7 +198,8 @@ pub fn normalize_occurrence(
         Err(reason) => return TraceTimeResult::Excluded(reason),
     };
 
-    TraceTimeResult::Accepted(NormalizedOccurrence {
+    TraceTimeResult::Accepted(NormalizedTimestamp {
+        role: input.role,
         utc_nanoseconds,
         relative_ticks,
         precision: input.precision,
