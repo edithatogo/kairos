@@ -8,7 +8,10 @@ ROW={'change_type':'added','manifest':'scripts/bootstrap-node-tools/package-lock
 class Tests(unittest.TestCase):
  def test_exact_alias_and_clean(self):
   self.assertEqual(len(m.validate([[ROW]])['corrected_identity_findings']),1)
-  with self.assertRaises(ValueError):m.validate([[]])
+ def test_valid_empty_dependency_pages(self):
+  for pages in [[[]],[[],[]]]:
+   with self.subTest(pages=pages):
+    self.assertEqual(m.validate(pages),{'threshold':'high','corrected_identity_findings':[],'rows':0})
  def test_other_package_path_version_severity_advisory_reject(self):
   for key,value in [('manifest','website/package-lock.json'),('version','4.2.0'),('name','other'),('package_url','pkg:npm/http-cache-semantics'),('source_repository_url','https://github.com/kornelski/http-cache-semantics')]:
    r=copy.deepcopy(ROW);r[key]=value
@@ -17,7 +20,7 @@ class Tests(unittest.TestCase):
    r=copy.deepcopy(ROW);r['vulnerabilities'][0][key]=value
    with self.subTest(key=key),self.assertRaises(ValueError):m.validate([[r]])
  def test_graph_missing_and_source_drift_reject(self):
-  for bad in [None,[],[{}],[[{'change_type':'added'}]]]:
+  for bad in [None,[],[{}],[None],[[None]],[[{'change_type':'added'}]]]:
    with self.assertRaises(ValueError):m.validate(bad)
   with tempfile.TemporaryDirectory() as t:
    with self.assertRaises(OSError):m.validate([[ROW]],Path(t))
