@@ -48,3 +48,15 @@ test -f conformance/fixtures/README.md
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
+
+## C4.1 bounded fixture preparation
+
+- `cargo +1.99.0 test --locked -p kairo-ecs-calibration --test metrics_c41`:
+  eight comparator/fixture controls pass; one named future report test ignored.
+- Repeat on Rust 1.88 floor; explicit actual-output opt-in requires
+  `C41_CANDIDATE_REPORT` and rejects comparator mocks.
+- Pinned optional reference environment runs
+  `python -m unittest discover -s conformance/c41 -p 'test_*.py' -v` and
+  `python conformance/c41/generate_reference.py --check`.
+- [Actual commands/versions/hashes and red controls](../../evidence/c4.1-preparation-20261005/README.md)
+  qualify test preparation only. Production metric/sidecar/C-04 gates remain open.

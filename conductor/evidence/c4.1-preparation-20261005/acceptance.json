@@ -1,0 +1,63 @@
+{
+  "schema_version": "c41.preparation.acceptance.v1",
+  "status": "accepted_fixture_first",
+  "fixture_test_source": "6a17578a16d4bb13969961dfd116b3afaf7c8c6c",
+  "baseline": "8cd03c8f791ae58b33e5cc61b244071937a839ac",
+  "fixture_case_count": 42,
+  "case_status_counts": {
+    "ok": 28,
+    "insufficient_data": 1,
+    "empty": 2,
+    "invalid": 11
+  },
+  "scipy_crosscheck_count": 23,
+  "independent_quantile_case_count": 28,
+  "native_default": {
+    "passed": 8,
+    "ignored": 1,
+    "toolchains": [
+      "1.99.0",
+      "1.88.0"
+    ]
+  },
+  "python_tests_passed": 10,
+  "full_calibration_compatibility": {
+    "passed": 72,
+    "ignored": 3,
+    "source": "54089285b888b09ce665e0cede26b662b7e884e6",
+    "toolchains": [
+      "1.99.0",
+      "1.88.0"
+    ],
+    "fresh_final_fixture_tests_separate": true
+  },
+  "synthetic_seed": "not_applicable; deterministic analytic inputs",
+  "reference_environment": {
+    "python": "3.14.8",
+    "scipy": "1.18.1",
+    "numpy": "2.5.3",
+    "wheels": "CP314 macOS ARM; hashes independently matched official PyPI metadata"
+  },
+  "rust_clippy": "1.99 all calibration targets; -D warnings passed",
+  "formatting": "workspace rustfmt and Ruff0.16.6 passed",
+  "expected_red_controls": {
+    "missing_runtime_report": 101,
+    "mock_runtime_report": 101,
+    "c42_runtime_producer_available": false
+  },
+  "not_accepted": [
+    "C4.2 runtime metrics",
+    "C4.3 Arrow sidecars",
+    "C4.4 phase/C-04",
+    "clinical calibration",
+    "formal release"
+  ],
+  "hosted_delivery": "recorded separately after publishing governance successor",
+  "known_limits": [
+    "Optional Python wheel pin only reproduced on named macOS ARM host",
+    "Rust1.88 targeted integration build retains three pre-existing unfulfilled-lint-expectation warnings in unchanged C1 adapters",
+    "Structural candidate provenance alone is not authenticated runtime proof; future C4.2 requires independent producer/source/receipt review",
+    "One ignored receipt-path reservation deviation retained; final scoped rerun passed"
+  ],
+  "retained_logs": "exact argv/cwd/head/input/toolchain/exit/log hashes in receipts"
+}

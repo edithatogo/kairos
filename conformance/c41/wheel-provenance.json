@@ -1,0 +1,16 @@
+[
+  {
+    "filename": "numpy-2.5.3-cp314-cp314-macosx_14_0_arm64.whl",
+    "url": "https://files.pythonhosted.org/packages/94/75/4640d2d6e4b64a049e48425a82728a41ef4adb61332d2cba68055774878b/numpy-2.5.3-cp314-cp314-macosx_14_0_arm64.whl",
+    "sha256": "adc1ada2662f8a5f960b8a10d9986897e7499ef07e06d4cfe7197f8cce923c07",
+    "bytes": 5449793,
+    "metadata_url": "https://pypi.org/pypi/numpy/2.5.3/json"
+  },
+  {
+    "filename": "scipy-1.18.1-cp314-cp314-macosx_14_0_arm64.whl",
+    "url": "https://files.pythonhosted.org/packages/70/e8/6b0c288c50942d78193696c9f15f9a0874f5178aa0ddf40f83d9924b3e8d/scipy-1.18.1-cp314-cp314-macosx_14_0_arm64.whl",
+    "sha256": "011413b7426b75012840e35649e00fe0a2c3bae89fed433876e3a99251572efc",
+    "bytes": 20466839,
+    "metadata_url": "https://pypi.org/pypi/scipy/1.18.1/json"
+  }
+]

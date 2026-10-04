@@ -1,0 +1,9 @@
+{
+  "deviation": "One follow-up worker wrote receipt/log output outside its current advisory path reservation",
+  "affected_paths": "ignored .artifacts/c41-reference receipt/logs only",
+  "source_overlap_or_source_loss": false,
+  "disposition": "Further unclaimed writes stopped; original records preserved; final approved gates repeated under reserved conformance/c41 temporary receipt prefix; coordinator copied seven receipt/log files before the worker removed the temporary prefix",
+  "accepted_scoped_receipts": "reference-worker-final/result.json",
+  "private_lease_tokens_published": false,
+  "harness_model_or_agent_autonomy_qualification": false
+}

@@ -1,0 +1,2474 @@
+{
+  "cases": [
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": "1/3",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "1",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "shift",
+      "id": "shift-1",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "1",
+          "2",
+          "3"
+        ],
+        "reference": [
+          "0",
+          "1",
+          "2"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "identical",
+      "id": "identical-1",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "0",
+          "1",
+          "2"
+        ],
+        "reference": [
+          "0",
+          "1",
+          "2"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": "1/3",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "2/3",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "ties",
+      "id": "ties-aggregate",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "0",
+          "1",
+          "1"
+        ],
+        "reference": [
+          "0",
+          "0",
+          "2"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "1"
+          }
+        },
+        "ks_d": "2/3",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "1",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "unequal_populations",
+      "id": "unequal-n",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "0",
+          "1",
+          "2"
+        ],
+        "reference": [
+          "0"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": "1/2",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "1",
+        "warnings": [],
+        "weighting": "explicit"
+      },
+      "family": "weighted_variants",
+      "id": "weighted-basic",
+      "input": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "candidate": [
+          "1",
+          "3"
+        ],
+        "candidate_weights": [
+          "2",
+          "2"
+        ],
+        "reference": [
+          "0",
+          "2"
+        ],
+        "reference_weights": [
+          "1",
+          "3"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": "1",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "2",
+        "warnings": [],
+        "weighting": "explicit"
+      },
+      "family": "zero_weights",
+      "id": "weighted-zero",
+      "input": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "candidate": [
+          "0",
+          "2"
+        ],
+        "candidate_weights": [
+          "0",
+          "1"
+        ],
+        "reference": [
+          "0",
+          "2"
+        ],
+        "reference_weights": [
+          "1",
+          "0"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": "1/3",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "second",
+        "w1": "60",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "duration_scaling",
+      "id": "duration-scaled",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "60",
+          "120",
+          "180"
+        ],
+        "reference": [
+          "0",
+          "60",
+          "120"
+        ],
+        "scale_ticks": "1",
+        "unit": "second"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": "1/3",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "60",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "1",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "duration_scaling",
+      "id": "duration-minute",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "1",
+          "2",
+          "3"
+        ],
+        "reference": [
+          "0",
+          "1",
+          "2"
+        ],
+        "scale_ticks": "60",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "4",
+          "cohort_total": "8",
+          "eligible": "8",
+          "excluded": "0",
+          "reference": "4",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "8",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "4",
+            "reference": "4"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "unsorted_permuted_symmetric",
+      "id": "unsorted",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "1",
+          "3",
+          "2",
+          "0"
+        ],
+        "reference": [
+          "3",
+          "0",
+          "2",
+          "1"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "4",
+          "cohort_total": "8",
+          "eligible": "8",
+          "excluded": "0",
+          "reference": "4",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "8",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "4",
+            "reference": "4"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "unsorted_permuted_symmetric",
+      "id": "permuted",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "2",
+          "0",
+          "1",
+          "3"
+        ],
+        "reference": [
+          "0",
+          "2",
+          "3",
+          "1"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "4",
+          "cohort_total": "8",
+          "eligible": "8",
+          "excluded": "0",
+          "reference": "4",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "8",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "4",
+            "reference": "4"
+          }
+        },
+        "ks_d": "1/4",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "1/2",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "unsorted_permuted_symmetric",
+      "id": "symmetric",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "-2",
+          "-1",
+          "1",
+          "2"
+        ],
+        "reference": [
+          "-3",
+          "-1",
+          "1",
+          "3"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": "1/2",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "1/3",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "fractional_signed_residual",
+      "id": "fractional",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "0",
+          "1/3"
+        ],
+        "reference": [
+          "-1/2",
+          "1/2"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "3",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "3",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "3",
+            "reference": "3"
+          }
+        },
+        "ks_d": "1/3",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "2/3",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "fractional_signed_residual",
+      "id": "signed-residual",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "-3",
+          "-2",
+          "2"
+        ],
+        "reference": [
+          "-4",
+          "-2",
+          "1"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "5",
+          "cohort_total": "6",
+          "eligible": "6",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "6",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "5",
+            "reference": "1"
+          }
+        },
+        "ks_d": "1/5",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "180",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "tail_w1_180_d_1_5",
+      "id": "tail-180",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "900"
+        ],
+        "reference": [
+          "0"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "1",
+          "eligible": "1",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "1",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "0"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "insufficient_data",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "empty",
+      "id": "empty-ref",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "0"
+        ],
+        "reference": [],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "0",
+          "eligible": "0",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "0",
+            "reference": "0"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "empty",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "empty",
+      "id": "empty-both",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [],
+        "reference": [],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "2",
+            "reference": "2"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "4"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      },
+      "family": "weight_invalid",
+      "id": "nonfinite-total-mass",
+      "input": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "candidate": [
+          "0",
+          "1"
+        ],
+        "candidate_weights": [
+          "1",
+          "1"
+        ],
+        "reference": [
+          "0",
+          "1"
+        ],
+        "reference_weights": [
+          "1e308",
+          "1e308"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "3",
+          "eligible": "3",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "2"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "null_invalid",
+      "id": "null-points",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "0"
+        ],
+        "reference": [
+          "0",
+          null
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "nonfinite_invalid",
+      "id": "nan-value",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "0"
+        ],
+        "reference": [
+          "NaN"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "nonfinite_invalid",
+      "id": "inf-value",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "Infinity"
+        ],
+        "reference": [
+          "0"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "3",
+          "eligible": "3",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "2"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "3"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "2"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      },
+      "family": "weight_invalid",
+      "id": "bad-weight-length",
+      "input": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "candidate": [
+          "0"
+        ],
+        "candidate_weights": [
+          "1"
+        ],
+        "reference": [
+          "0",
+          "1"
+        ],
+        "reference_weights": [
+          "1"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      },
+      "family": "weight_invalid",
+      "id": "negative-weight",
+      "input": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "candidate": [
+          "1"
+        ],
+        "candidate_weights": [
+          "1"
+        ],
+        "reference": [
+          "0"
+        ],
+        "reference_weights": [
+          "-1"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      },
+      "family": "weight_invalid",
+      "id": "zero-total-mass",
+      "input": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "candidate": [
+          "1"
+        ],
+        "candidate_weights": [
+          "1"
+        ],
+        "reference": [
+          "0"
+        ],
+        "reference_weights": [
+          "0"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "8",
+          "eligible": "6",
+          "excluded": "2",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "censor_subtypes": {
+            "interval": "0",
+            "left": "0",
+            "right": "1"
+          },
+          "overlap_counts": {
+            "infeasible_and_observed": "0"
+          },
+          "primary_dispositions": {
+            "censored": "1",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [
+          "right_censored_present"
+        ],
+        "weighting": "equal"
+      },
+      "family": "coverage_censoring",
+      "id": "coverage-censored",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "5",
+          "5"
+        ],
+        "counts": {
+          "censor_subtypes": {
+            "interval": "0",
+            "left": "0",
+            "right": "1"
+          },
+          "eligible": "6",
+          "excluded": "2",
+          "overlap_counts": {
+            "infeasible_and_observed": "0"
+          },
+          "primary_dispositions": {
+            "censored": "1",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "4"
+          }
+        },
+        "coverage_warnings": [
+          "right_censored_present"
+        ],
+        "reference": [
+          "5",
+          "5"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "3",
+          "eligible": "3",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "censor_subtypes": {},
+          "overlap_counts": {},
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [
+          "missing_present"
+        ],
+        "weighting": "equal"
+      },
+      "family": "coverage_missing",
+      "id": "coverage-missing",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "5"
+        ],
+        "counts": {
+          "eligible": "3",
+          "excluded": "0",
+          "overlap_counts": {},
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "2"
+          }
+        },
+        "coverage_warnings": [
+          "missing_present"
+        ],
+        "reference": [
+          "5"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "3",
+          "eligible": "2",
+          "excluded": "1",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "censor_subtypes": {},
+          "overlap_counts": {},
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "1",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "1",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [
+          "failed_present"
+        ],
+        "weighting": "equal"
+      },
+      "family": "coverage_failed",
+      "id": "coverage-failed",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "5"
+        ],
+        "counts": {
+          "eligible": "2",
+          "excluded": "1",
+          "overlap_counts": {},
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "1",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "1"
+          }
+        },
+        "coverage_warnings": [
+          "failed_present"
+        ],
+        "reference": [
+          "5"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "censor_subtypes": {},
+          "overlap_counts": {
+            "infeasible_and_observed": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "1",
+            "missing": "0",
+            "observed": "1",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [
+          "infeasible_present"
+        ],
+        "weighting": "equal"
+      },
+      "family": "coverage_infeasible",
+      "id": "coverage-infeasible",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "5"
+        ],
+        "counts": {
+          "eligible": "2",
+          "excluded": "0",
+          "overlap_counts": {
+            "infeasible_and_observed": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "1",
+            "missing": "0",
+            "observed": "1"
+          }
+        },
+        "coverage_warnings": [
+          "infeasible_present"
+        ],
+        "reference": [
+          "5"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "censor_subtypes": {},
+          "overlap_counts": {},
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "2",
+            "observed": "0",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "empty",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [
+          "no_observed_points"
+        ],
+        "weighting": "equal"
+      },
+      "family": "no_observed",
+      "id": "no-observed",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          null
+        ],
+        "counts": {
+          "eligible": "2",
+          "excluded": "0",
+          "overlap_counts": {},
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "2",
+            "observed": "0"
+          }
+        },
+        "coverage_warnings": [
+          "no_observed_points"
+        ],
+        "reference": [
+          null
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": "1/2",
+        "p_value": null,
+        "precision": "exact_offsets",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "1",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "large_common_origin",
+      "id": "large-common-origin",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "9007199254740993",
+          "9007199254740995"
+        ],
+        "origin": "9007199254740992",
+        "reference": [
+          "9007199254740992",
+          "9007199254740994"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": "1",
+        "p_value": null,
+        "precision": "exact_offsets",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "1",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "near_u128_limit",
+      "id": "near-u128",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "340282366920938463463374607431768211455"
+        ],
+        "origin": "340282366920938463463374607431768211454",
+        "reference": [
+          "340282366920938463463374607431768211454"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": "1/2",
+        "p_value": null,
+        "precision": "exact_offsets",
+        "scale_ticks": "60",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "1",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "large_common_origin",
+      "id": "common-origin-scaled",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "9007199254741052",
+          "9007199254741112"
+        ],
+        "origin": "9007199254740992",
+        "reference": [
+          "9007199254740992",
+          "9007199254741052"
+        ],
+        "scale_ticks": "60",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "5",
+          "eligible": "5",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "3"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "exact_offsets",
+        "scale_ticks": "60",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "large_common_origin",
+      "id": "origin-null",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "9007199254740992",
+          "9007199254741052"
+        ],
+        "origin": "9007199254740992",
+        "reference": [
+          "9007199254740992",
+          null,
+          "9007199254741052"
+        ],
+        "scale_ticks": "60",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "5",
+          "eligible": "5",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "1",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "3"
+          }
+        },
+        "ks_d": "2/5",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "4/5",
+        "warnings": [],
+        "weighting": "explicit"
+      },
+      "family": "weighted_variants",
+      "id": "weighted-null",
+      "input": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "candidate": [
+          "0",
+          "2"
+        ],
+        "candidate_weights": [
+          "1",
+          "1"
+        ],
+        "reference": [
+          "0",
+          null,
+          "2"
+        ],
+        "reference_weights": [
+          "9",
+          "1000",
+          "1"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "rejected",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "u128_overflow",
+      "id": "u128-overflow",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "340282366920938463463374607431768211455"
+        ],
+        "origin": "0",
+        "reference": [
+          "340282366920938463463374607431768211456"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "2",
+            "reference": "2"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "4"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "rejected",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "precision_rejection",
+      "id": "precision-reject",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "9007199254740992",
+          "9007199254740992"
+        ],
+        "origin": "0",
+        "reference": [
+          "9007199254740992",
+          "9007199254740993"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      },
+      "family": "nonfinite_weight",
+      "id": "nonfinite-weight",
+      "input": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "candidate": [
+          "1"
+        ],
+        "candidate_weights": [
+          "1"
+        ],
+        "reference": [
+          "0"
+        ],
+        "reference_weights": [
+          "NaN"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [
+          "infeasible_present"
+        ],
+        "weighting": "equal"
+      },
+      "family": "coverage_infeasible",
+      "id": "infeasible-warning-zero",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "3",
+          "3"
+        ],
+        "coverage_warnings": [
+          "infeasible_present"
+        ],
+        "reference": [
+          "3",
+          "3"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "1",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "2",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [
+          "right_censored_present"
+        ],
+        "weighting": "equal"
+      },
+      "family": "coverage_censoring",
+      "id": "censor-warning-zero",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "3"
+        ],
+        "coverage_warnings": [
+          "right_censored_present"
+        ],
+        "reference": [
+          "3"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "2",
+          "cohort_total": "4",
+          "eligible": "4",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "compared_variable": "Y",
+          "group_variable": "X",
+          "groups": [
+            {
+              "eligible_candidate": "1",
+              "eligible_reference": "1",
+              "group": "0",
+              "ks_d": "1",
+              "status": "ok",
+              "w1": "1"
+            },
+            {
+              "eligible_candidate": "1",
+              "eligible_reference": "1",
+              "group": "1",
+              "ks_d": "1",
+              "status": "ok",
+              "w1": "1"
+            },
+            {
+              "eligible_candidate": "0",
+              "eligible_reference": "0",
+              "group": "2",
+              "ks_d": null,
+              "status": "empty",
+              "w1": null
+            }
+          ],
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "4",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "2",
+            "reference": "2"
+          }
+        },
+        "ks_d": "0",
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "0",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "conditional_group_opposite_dependence",
+      "id": "conditional-opposite",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "0",
+          "1"
+        ],
+        "grouped_observations": {
+          "candidate": [
+            {
+              "X": "0",
+              "Y": "1"
+            },
+            {
+              "X": "1",
+              "Y": "0"
+            }
+          ],
+          "compared_variable": "Y",
+          "group_variable": "X",
+          "prespecified_groups": [
+            "0",
+            "1",
+            "2"
+          ],
+          "reference": [
+            {
+              "X": "0",
+              "Y": "0"
+            },
+            {
+              "X": "1",
+              "Y": "1"
+            }
+          ]
+        },
+        "reference": [
+          "0",
+          "1"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "malformed_invalid",
+      "id": "malformed-value",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "0"
+        ],
+        "reference": [
+          "abc"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "counts": {
+          "candidate": "0",
+          "cohort_total": "2",
+          "eligible": "2",
+          "excluded": "0",
+          "reference": "0",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "attempted_support_counts": {
+            "candidate": "1",
+            "reference": "1"
+          },
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "0",
+            "rejected_input": "2"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "1"
+          }
+        },
+        "ks_d": null,
+        "p_value": null,
+        "precision": "not_applicable",
+        "scale_ticks": "1",
+        "status": "invalid",
+        "unit": "minute",
+        "w1": null,
+        "warnings": [],
+        "weighting": "explicit"
+      },
+      "family": "weight_invalid",
+      "id": "malformed-weight",
+      "input": {
+        "algorithm_version": "weighted_descriptive.v1",
+        "candidate": [
+          "1"
+        ],
+        "candidate_weights": [
+          "1"
+        ],
+        "reference": [
+          "0"
+        ],
+        "reference_weights": [
+          "nope"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    },
+    {
+      "expected": {
+        "algorithm_version": "empirical_equal.v1",
+        "counts": {
+          "candidate": "1",
+          "cohort_total": "3",
+          "eligible": "3",
+          "excluded": "0",
+          "reference": "2",
+          "unmatched": "0",
+          "unmatched_estimand": "not_applicable"
+        },
+        "diagnostic": {
+          "primary_dispositions": {
+            "censored": "0",
+            "failed": "0",
+            "infeasible": "0",
+            "missing": "0",
+            "observed": "3",
+            "rejected_input": "0"
+          },
+          "raw_input_counts": {
+            "candidate": "1",
+            "reference": "2"
+          }
+        },
+        "ks_d": "1/2",
+        "p_value": null,
+        "precision": "exact_offsets",
+        "scale_ticks": "1",
+        "status": "ok",
+        "unit": "minute",
+        "w1": "1/2",
+        "warnings": [],
+        "weighting": "equal"
+      },
+      "family": "large_common_origin",
+      "id": "common-origin-small-offset",
+      "input": {
+        "algorithm_version": "empirical_equal.v1",
+        "candidate": [
+          "340282366920938463463374607431768211451"
+        ],
+        "origin": "340282366920938463463374607431768211450",
+        "reference": [
+          "340282366920938463463374607431768211450",
+          "340282366920938463463374607431768211451"
+        ],
+        "scale_ticks": "1",
+        "unit": "minute"
+      }
+    }
+  ],
+  "provenance": {
+    "construction": "synthetic deterministic supports; no patient-derived identities or observations",
+    "contract": "conductor/design/calibration/c4.1-fixture-contract-v1.md",
+    "oracle": "Python Fraction support sweep, with pinned SciPy/NumPy floating crosschecks stored separately"
+  },
+  "schema_version": "c41.fixtures.v1"
+}
