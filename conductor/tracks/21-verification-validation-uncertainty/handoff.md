@@ -141,3 +141,15 @@ Add reference-data validation evidence and quantitative uncertainty artifacts be
 ## C1 shared temporal helper prerequisite (2026-10-04)
 
 Consume the role-preserving helper under ADR-0005; pure calibration remains Arrow-free. Mapping/count/schema and full C1 joins are pending. See `../../design/calibration/c1-shared-temporal-helper-v1.md`. This is a scoped development extension; historical closeout evidence remains unchanged.
+
+## C1 scoped integrated qualification — 2026-10-05
+
+C1.4 review uses runtime source `7f72b7d9a9b6ae62e481a59b2cc04ce37da0a4a5` and integrated source `87d591c484bc937f7536a0e700b1400968b9549a`.
+The [retained evidence](../../evidence/c1.4-integrated-20261005/README.md)
+contains fresh C-01 transport runs, independent IPC/Parquet readback and
+reconciled counts. The 90 C1 runtime files are byte-identical across these heads;
+accepted Q5.2 source is preserved. The integrated source has 48 successful hosted
+checks and two expected conditional skips. Final governance successor requires
+fresh phase, strict-clean and exact-head owner CI before parent pin acceptance.
+This supplements existing owner scope; C2, public API review, release and clinical
+validation remain open. Historical Track 04/21 closure remains unchanged.

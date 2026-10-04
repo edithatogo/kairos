@@ -628,3 +628,15 @@ Scope: staged lifecycle snapshots, opt-in `resource_lifecycle.v1`, and the synth
 Bounded experimental Q4 source S `1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6` is qualified on current stable Rust 1.99.0 by fresh local source-bound gates and exact-head two-host native owner run https://github.com/edithatogo/kairos/actions/runs/37192093779. Rust 1.88.0 optional lifecycle/Arrow IO and Rust 1.76.0 default Arrow results remain distinct compatibility-floor evidence. Detailed commands, test summaries, source hashes and hosted artifact hashes: `conductor/evidence/q4-development-source-qualification-20261004.json`.
 
 Historical Q4/1.98.1 source evidence remains unchanged. Parent pin integration is pending. Governance successor G requires fresh phase validation, strict clean-tree validation and exact-head owner CI before parent acceptance. Historical Track 03 minimal Done and Track 04 R2 Done scopes remain; Q5, Track 22 portability, Track 25 compatibility, full C1/C2 and release remain open.
+
+## C1 scoped integrated qualification — 2026-10-05
+
+C1.4 review uses runtime source `7f72b7d9a9b6ae62e481a59b2cc04ce37da0a4a5` and integrated source `87d591c484bc937f7536a0e700b1400968b9549a`.
+The [retained evidence](evidence/c1.4-integrated-20261005/README.md)
+contains fresh C-01 transport runs, independent IPC/Parquet readback and
+reconciled counts. The 90 C1 runtime files are byte-identical across these heads;
+accepted Q5.2 source is preserved. The integrated source has 48 successful hosted
+checks and two expected conditional skips. Final governance successor requires
+fresh phase, strict-clean and exact-head owner CI before parent pin acceptance.
+This supplements existing owner scope; C2, public API review, release and clinical
+validation remain open. Historical Track 04/21 closure remains unchanged.

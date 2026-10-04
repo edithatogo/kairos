@@ -302,9 +302,7 @@ pub(crate) fn validate_file(
         .count() as u64;
     scan.report.censored_cases = scan.cases.values().filter(|c| c.censored).count() as u64;
 
-    if let Err(e) = publish_exclusive(&valid_stage, valid) {
-        return Err(e);
-    }
+    publish_exclusive(&valid_stage, valid)?;
     if let Err(e) = publish_exclusive(&quarantine_stage, quarantine) {
         let _ = fs::remove_file(valid);
         return Err(e);
@@ -391,9 +389,10 @@ fn register_case_event(
                 case.censored = true;
             }
         }
-        if !case.occurrences.contains_key(&event.occurrence) {
-            case.occurrences
-                .insert(event.occurrence, OccurrenceState::default());
+        if let std::collections::btree_map::Entry::Vacant(entry) =
+            case.occurrences.entry(event.occurrence)
+        {
+            entry.insert(OccurrenceState::default());
             add_state = true;
         }
         if relevant {

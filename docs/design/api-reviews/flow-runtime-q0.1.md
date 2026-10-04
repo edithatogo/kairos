@@ -38,6 +38,6 @@ gates or mark the full Track 25 workstream complete.
 
 Independent read-only technical reviews assessed the current upstream source and
 Track 01/03/25 contracts. Their findings are recorded in the parent CareOps
-[`Q0.1 source and owner review`](../../../../conductor/evidence/q0.1-current-source-review-20260929.md).
+[`Q0.1 source and owner review`](https://github.com/edithatogo/careops-sim/blob/8a8f0cbf5dbf07b80b334e3cf194c3d0f58749a7/conductor/evidence/q0.1-current-source-review-20260929.md).
 Those technical reviews informed this disposition; they are not represented as
 Track 25 release signoffs.
