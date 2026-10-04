@@ -8,3 +8,13 @@ mod trace_order;
 
 // Private experimental C1 synthetic fixture adapter.
 mod trace_mapping;
+
+// Private bounded C1 source/timestamp normalization wrapper.
+mod ingestion_normalize;
+
+// Private experimental validation over sorted calibration records.
+mod ingestion_validate;
+
+// Private C1 ingestion stages; public API review remains separate.
+mod ingestion_pipeline;
+mod ingestion_sort;

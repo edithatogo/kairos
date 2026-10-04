@@ -1,0 +1,300 @@
+{
+  "artifacts_sha256": {
+    "clippy-1.99-final.log": "15f2ad11d45961cf0e7d198dc9c16f2229b7b1c240773d6323d96bfcbc4d27db",
+    "clippy-1.99-matched.log": "131169984561907fa89ddebfbcd6aaf1ea24a5bdf49e2c0e68deef9d856ca52e",
+    "clippy-1.99.log": "711348c5518c9b1c18986616d01feb34fcc899f52c8099f9d4bc4c8721572020",
+    "reingest-b1-g1-final.json": "427cd0ee608aac8a83f2e908a89ae2e7a60da12da8c7d49d1591ec7c44c90f7a",
+    "reingest-b1-g1.json": "427cd0ee608aac8a83f2e908a89ae2e7a60da12da8c7d49d1591ec7c44c90f7a",
+    "reingest-b2-g3-final.json": "427cd0ee608aac8a83f2e908a89ae2e7a60da12da8c7d49d1591ec7c44c90f7a",
+    "reingest-b2-g3.json": "427cd0ee608aac8a83f2e908a89ae2e7a60da12da8c7d49d1591ec7c44c90f7a",
+    "rust-b1-g1-final.log": "bd58b3d1ccdfe5f54f62f3a857570db9a159c33fdb0562b2c894951213da09fe",
+    "rust-b1-g1.log": "bcf20618fa25c3dac26d6a65196e0ddc92a4bbeca3e2709d0b7e8acee26f274d",
+    "rust-b1-g1/outcome_observation.v1.reversed.limit-1.ipc_file": "ca380dc17e2b9a7a16185ad46cfbec90aee091148e50f6d22cfd13959ce4fe5b",
+    "rust-b1-g1/outcome_observation.v1.reversed.limit-1.ipc_stream": "27811b8c4d9a6a2306d630036b623d3fa49ba0cccf3fa3fdfac1cce7b33e6430",
+    "rust-b1-g1/outcome_observation.v1.reversed.limit-1.parquet": "cf7580b11f7df7bc664fd8dc5abcc0d7eda5a978e29b6dc28837d88c59fdbb1c",
+    "rust-b1-g1/outcome_observation.v1.reversed.limit-2.ipc_file": "ca380dc17e2b9a7a16185ad46cfbec90aee091148e50f6d22cfd13959ce4fe5b",
+    "rust-b1-g1/outcome_observation.v1.reversed.limit-2.ipc_stream": "27811b8c4d9a6a2306d630036b623d3fa49ba0cccf3fa3fdfac1cce7b33e6430",
+    "rust-b1-g1/outcome_observation.v1.reversed.limit-2.parquet": "7aec2e3bc9fcdd4b5597d6666d26d7bfd2bd67cfb5838b99fb7cdc3b74686389",
+    "rust-b1-g1/outcome_observation.v1.reversed.limit-3.ipc_file": "ca380dc17e2b9a7a16185ad46cfbec90aee091148e50f6d22cfd13959ce4fe5b",
+    "rust-b1-g1/outcome_observation.v1.reversed.limit-3.ipc_stream": "27811b8c4d9a6a2306d630036b623d3fa49ba0cccf3fa3fdfac1cce7b33e6430",
+    "rust-b1-g1/outcome_observation.v1.reversed.limit-3.parquet": "7aec2e3bc9fcdd4b5597d6666d26d7bfd2bd67cfb5838b99fb7cdc3b74686389",
+    "rust-b1-g1/trace_event.v1.reversed.limit-1.ipc_file": "d16161594e2f23766e870ee9d2edae89d4b681e5f15cf135baf5fff1024dbcda",
+    "rust-b1-g1/trace_event.v1.reversed.limit-1.ipc_stream": "165b6dfee578f9555080049b26162a3d8cf4c357c1a1443f5fab22af556a7bf5",
+    "rust-b1-g1/trace_event.v1.reversed.limit-1.parquet": "f529cde8418eb74d60f24acbf5a487f784cb2f40269c2b920b176d7a7d6a7b84",
+    "rust-b1-g1/trace_event.v1.reversed.limit-2.ipc_file": "d16161594e2f23766e870ee9d2edae89d4b681e5f15cf135baf5fff1024dbcda",
+    "rust-b1-g1/trace_event.v1.reversed.limit-2.ipc_stream": "165b6dfee578f9555080049b26162a3d8cf4c357c1a1443f5fab22af556a7bf5",
+    "rust-b1-g1/trace_event.v1.reversed.limit-2.parquet": "7bb4ac66ef699902b382fd34b2894350ac657ad96ad4e2eb8f8ac01cfaa40df9",
+    "rust-b1-g1/trace_event.v1.reversed.limit-3.ipc_file": "d16161594e2f23766e870ee9d2edae89d4b681e5f15cf135baf5fff1024dbcda",
+    "rust-b1-g1/trace_event.v1.reversed.limit-3.ipc_stream": "165b6dfee578f9555080049b26162a3d8cf4c357c1a1443f5fab22af556a7bf5",
+    "rust-b1-g1/trace_event.v1.reversed.limit-3.parquet": "500d13604be46d1f43deeea28c9cdcd20bebf2125dd43009342070d168e87eda",
+    "rust-b1-g1/trace_exclusion.v1.reversed.limit-1.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+    "rust-b1-g1/trace_exclusion.v1.reversed.limit-1.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+    "rust-b1-g1/trace_exclusion.v1.reversed.limit-1.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f",
+    "rust-b1-g1/trace_exclusion.v1.reversed.limit-2.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+    "rust-b1-g1/trace_exclusion.v1.reversed.limit-2.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+    "rust-b1-g1/trace_exclusion.v1.reversed.limit-2.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f",
+    "rust-b1-g1/trace_exclusion.v1.reversed.limit-3.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+    "rust-b1-g1/trace_exclusion.v1.reversed.limit-3.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+    "rust-b1-g1/trace_exclusion.v1.reversed.limit-3.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f",
+    "rust-b2-g3-final.log": "9c3c0d9226bd1dc577fb9fd9316887cc1d038454a21d7ecf168982ed81a3651a",
+    "rust-b2-g3.log": "c4b51ac104fb18289c70f9921d631c3f0b09f79058613d5c4f3cf997609ce571",
+    "rust-b2-g3/outcome_observation.v1.reversed.limit-1.ipc_file": "d81bd848061a49e250a4ee9b134d4815b5af362a7f936d3d41c22e5fa16329f7",
+    "rust-b2-g3/outcome_observation.v1.reversed.limit-1.ipc_stream": "0904e4fceedbad2a2615e9c127438bc73e2857bedef3f4efa096ec0003e6a8b0",
+    "rust-b2-g3/outcome_observation.v1.reversed.limit-1.parquet": "0ae6e6de37e8cb83db5de3452b72265e3634a133ebc14d653312b870b6928345",
+    "rust-b2-g3/outcome_observation.v1.reversed.limit-2.ipc_file": "d81bd848061a49e250a4ee9b134d4815b5af362a7f936d3d41c22e5fa16329f7",
+    "rust-b2-g3/outcome_observation.v1.reversed.limit-2.ipc_stream": "0904e4fceedbad2a2615e9c127438bc73e2857bedef3f4efa096ec0003e6a8b0",
+    "rust-b2-g3/outcome_observation.v1.reversed.limit-2.parquet": "bb421f11e8ffa86a40eabaea96d8b73fa2f2d462ba1c5d71083263526a6e84a1",
+    "rust-b2-g3/outcome_observation.v1.reversed.limit-3.ipc_file": "d81bd848061a49e250a4ee9b134d4815b5af362a7f936d3d41c22e5fa16329f7",
+    "rust-b2-g3/outcome_observation.v1.reversed.limit-3.ipc_stream": "0904e4fceedbad2a2615e9c127438bc73e2857bedef3f4efa096ec0003e6a8b0",
+    "rust-b2-g3/outcome_observation.v1.reversed.limit-3.parquet": "bb421f11e8ffa86a40eabaea96d8b73fa2f2d462ba1c5d71083263526a6e84a1",
+    "rust-b2-g3/trace_event.v1.reversed.limit-1.ipc_file": "a43c1b2f52891020da02052b5d8241388459a79d0813231f4606f4af5d9de0d2",
+    "rust-b2-g3/trace_event.v1.reversed.limit-1.ipc_stream": "3b588a3728420ed8d9f9b54c29d3ca65fe393e2f9e0992d7c4114790e86556a2",
+    "rust-b2-g3/trace_event.v1.reversed.limit-1.parquet": "cdcb97b316705f4cf32cf0b7c6d9f899ae05f4c24dd8551ad5ebf01f82649616",
+    "rust-b2-g3/trace_event.v1.reversed.limit-2.ipc_file": "a43c1b2f52891020da02052b5d8241388459a79d0813231f4606f4af5d9de0d2",
+    "rust-b2-g3/trace_event.v1.reversed.limit-2.ipc_stream": "3b588a3728420ed8d9f9b54c29d3ca65fe393e2f9e0992d7c4114790e86556a2",
+    "rust-b2-g3/trace_event.v1.reversed.limit-2.parquet": "a26d50335d45db399656a885e59942938abd863c73cb86b3d32cb2d39a1cae88",
+    "rust-b2-g3/trace_event.v1.reversed.limit-3.ipc_file": "a43c1b2f52891020da02052b5d8241388459a79d0813231f4606f4af5d9de0d2",
+    "rust-b2-g3/trace_event.v1.reversed.limit-3.ipc_stream": "3b588a3728420ed8d9f9b54c29d3ca65fe393e2f9e0992d7c4114790e86556a2",
+    "rust-b2-g3/trace_event.v1.reversed.limit-3.parquet": "2d0ee16eb3c4569989a82992f7cdcfed2fba7e2b1400efc791a6112e55988f57",
+    "rust-b2-g3/trace_exclusion.v1.reversed.limit-1.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+    "rust-b2-g3/trace_exclusion.v1.reversed.limit-1.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+    "rust-b2-g3/trace_exclusion.v1.reversed.limit-1.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f",
+    "rust-b2-g3/trace_exclusion.v1.reversed.limit-2.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+    "rust-b2-g3/trace_exclusion.v1.reversed.limit-2.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+    "rust-b2-g3/trace_exclusion.v1.reversed.limit-2.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f",
+    "rust-b2-g3/trace_exclusion.v1.reversed.limit-3.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+    "rust-b2-g3/trace_exclusion.v1.reversed.limit-3.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+    "rust-b2-g3/trace_exclusion.v1.reversed.limit-3.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f",
+    "verify-b1-g1-final.json": "400b654fb5a2f7b674d08cbd13dc73fea837d54b4419ed766abf57e22016f460",
+    "verify-b1-g1.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "verify-b2-g3-final.json": "cc4baf7d9f90904a24358f08a19ee8e72e2668b070d4159fa8cab2bae8fd4dfe",
+    "verify-b2-g3.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "capture_engine_commit": "943ed42d0afc9d79752b314dddac097b4f114d0d",
+  "capture_manifest_sha256": "ad340e4e747c83594838be5b4bea2617b4dde2c691e3e58ad1bd989316973d43",
+  "classification": "C1.3_physical_adapter_schema_mutation_rejection_and_CI_clippy_fix",
+  "clippy_command": "PATH=<rustup-1.99-bin>:$PATH RUSTC=<rustup-1.99>/rustc RUSTDOC=<rustup-1.99>/rustdoc CARGO_TARGET_DIR=.artifacts/c13-ci-adapter-fix/target-1.99 cargo clippy --locked --offline -p kairo-ecs-arrow-io --no-default-features --features ipc,parquet --test ingestion_physical_v1 -- -D warnings",
+  "clippy_log_sha256": "15f2ad11d45961cf0e7d198dc9c16f2229b7b1c240773d6323d96bfcbc4d27db",
+  "clippy_status": "pass",
+  "failed_attempts": [
+    {
+      "command": "initial explicit Rust 1.99 cargo clippy with Homebrew clippy-driver selected from PATH",
+      "resolution": "prepend Rustup 1.99 bin directory to PATH and rerun",
+      "result": "E0514 incompatible rustc metadata because Homebrew clippy-driver and Rustup rustc were mixed"
+    },
+    {
+      "command": "matching Rustup Clippy first source run",
+      "resolution": "pass byte slice directly; rerun Clippy successfully",
+      "result": "-D warnings found three clippy::needless_borrow errors in read_bytes"
+    },
+    {
+      "command": "post-format Python verify using existing reconstructed JSON paths",
+      "resolution": "rerun with fresh *-final.json destinations; both passed",
+      "result": "verifier refused overwrite of existing output files"
+    }
+  ],
+  "first_toolchain_mismatch_log_sha256": "711348c5518c9b1c18986616d01feb34fcc899f52c8099f9d4bc4c8721572020",
+  "intermediate_clippy_lint_log_sha256": "131169984561907fa89ddebfbcd6aaf1ea24a5bdf49e2c0e68deef9d856ca52e",
+  "layouts": {
+    "batch1_rowgroup1": {
+      "input_directory": "/private/tmp/careops-c13-physical-qualified-20261004/.artifacts/c13-physical-qualified-v2/pyarrow-b1-g1",
+      "input_sha256": {
+        "outcome_observation.ipc_file": "d117d6c5bb70289cf0ba81a213943c35ec26f9e90f0170b4778721836d2b5666",
+        "outcome_observation.ipc_stream": "611695b28d9d3e24f0cf47b21bd0d29ff878f893a7d0aabf2453c9ff78edacb6",
+        "outcome_observation.parquet": "0b35c6206fc7b0a6764d41b85d896355717a255c0e542c7ec466d6a897b8465c",
+        "trace_event.ipc_file": "274ea22ec46f0b44f6e4ba9e43b7d6b46119802822ecf7e36ebc2030e2619cc9",
+        "trace_event.ipc_stream": "74af5597f059bffc4400389d7e1f456ea0d19b00aa6b438562a84275e617856a",
+        "trace_event.parquet": "0e284619a53fbd45cf46563eb4e0439d1e198cd6cb5d7c26849c648bad4cb4b3",
+        "trace_exclusion.ipc_file": "2b397bd3819c635f597fbc0bbf7e6ec94cc102c886e87890bf9ee68456b41384",
+        "trace_exclusion.ipc_stream": "0a77ce7967b5a77ba73edf00839f3073e9f3d98a6dd5c7fabf33f629d0357370",
+        "trace_exclusion.parquet": "907bf5d972ad1cfd4336f1ac2c0c9f27c658f81c11727febb2143d4883d10530"
+      },
+      "python_status": "pass",
+      "python_verify_log_sha256": "400b654fb5a2f7b674d08cbd13dc73fea837d54b4419ed766abf57e22016f460",
+      "record_rows": {
+        "outcome_observation.v1": {
+          "layouts": {
+            "limit-1.ipc_file": 2,
+            "limit-1.ipc_stream": 2,
+            "limit-1.parquet": 2,
+            "limit-2.ipc_file": 2,
+            "limit-2.ipc_stream": 2,
+            "limit-2.parquet": 2,
+            "limit-3.ipc_file": 2,
+            "limit-3.ipc_stream": 2,
+            "limit-3.parquet": 2
+          },
+          "rows": 2
+        },
+        "trace_event.v1": {
+          "layouts": {
+            "limit-1.ipc_file": 6,
+            "limit-1.ipc_stream": 6,
+            "limit-1.parquet": 6,
+            "limit-2.ipc_file": 6,
+            "limit-2.ipc_stream": 6,
+            "limit-2.parquet": 6,
+            "limit-3.ipc_file": 6,
+            "limit-3.ipc_stream": 6,
+            "limit-3.parquet": 6
+          },
+          "rows": 6
+        },
+        "trace_exclusion.v1": {
+          "layouts": {
+            "limit-1.ipc_file": 1,
+            "limit-1.ipc_stream": 1,
+            "limit-1.parquet": 1,
+            "limit-2.ipc_file": 1,
+            "limit-2.ipc_stream": 1,
+            "limit-2.parquet": 1,
+            "limit-3.ipc_file": 1,
+            "limit-3.ipc_stream": 1,
+            "limit-3.parquet": 1
+          },
+          "rows": 1
+        }
+      },
+      "rust_outputs_sha256": {
+        "outcome_observation.v1.reversed.limit-1.ipc_file": "ca380dc17e2b9a7a16185ad46cfbec90aee091148e50f6d22cfd13959ce4fe5b",
+        "outcome_observation.v1.reversed.limit-1.ipc_stream": "27811b8c4d9a6a2306d630036b623d3fa49ba0cccf3fa3fdfac1cce7b33e6430",
+        "outcome_observation.v1.reversed.limit-1.parquet": "cf7580b11f7df7bc664fd8dc5abcc0d7eda5a978e29b6dc28837d88c59fdbb1c",
+        "outcome_observation.v1.reversed.limit-2.ipc_file": "ca380dc17e2b9a7a16185ad46cfbec90aee091148e50f6d22cfd13959ce4fe5b",
+        "outcome_observation.v1.reversed.limit-2.ipc_stream": "27811b8c4d9a6a2306d630036b623d3fa49ba0cccf3fa3fdfac1cce7b33e6430",
+        "outcome_observation.v1.reversed.limit-2.parquet": "7aec2e3bc9fcdd4b5597d6666d26d7bfd2bd67cfb5838b99fb7cdc3b74686389",
+        "outcome_observation.v1.reversed.limit-3.ipc_file": "ca380dc17e2b9a7a16185ad46cfbec90aee091148e50f6d22cfd13959ce4fe5b",
+        "outcome_observation.v1.reversed.limit-3.ipc_stream": "27811b8c4d9a6a2306d630036b623d3fa49ba0cccf3fa3fdfac1cce7b33e6430",
+        "outcome_observation.v1.reversed.limit-3.parquet": "7aec2e3bc9fcdd4b5597d6666d26d7bfd2bd67cfb5838b99fb7cdc3b74686389",
+        "trace_event.v1.reversed.limit-1.ipc_file": "d16161594e2f23766e870ee9d2edae89d4b681e5f15cf135baf5fff1024dbcda",
+        "trace_event.v1.reversed.limit-1.ipc_stream": "165b6dfee578f9555080049b26162a3d8cf4c357c1a1443f5fab22af556a7bf5",
+        "trace_event.v1.reversed.limit-1.parquet": "f529cde8418eb74d60f24acbf5a487f784cb2f40269c2b920b176d7a7d6a7b84",
+        "trace_event.v1.reversed.limit-2.ipc_file": "d16161594e2f23766e870ee9d2edae89d4b681e5f15cf135baf5fff1024dbcda",
+        "trace_event.v1.reversed.limit-2.ipc_stream": "165b6dfee578f9555080049b26162a3d8cf4c357c1a1443f5fab22af556a7bf5",
+        "trace_event.v1.reversed.limit-2.parquet": "7bb4ac66ef699902b382fd34b2894350ac657ad96ad4e2eb8f8ac01cfaa40df9",
+        "trace_event.v1.reversed.limit-3.ipc_file": "d16161594e2f23766e870ee9d2edae89d4b681e5f15cf135baf5fff1024dbcda",
+        "trace_event.v1.reversed.limit-3.ipc_stream": "165b6dfee578f9555080049b26162a3d8cf4c357c1a1443f5fab22af556a7bf5",
+        "trace_event.v1.reversed.limit-3.parquet": "500d13604be46d1f43deeea28c9cdcd20bebf2125dd43009342070d168e87eda",
+        "trace_exclusion.v1.reversed.limit-1.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+        "trace_exclusion.v1.reversed.limit-1.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+        "trace_exclusion.v1.reversed.limit-1.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f",
+        "trace_exclusion.v1.reversed.limit-2.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+        "trace_exclusion.v1.reversed.limit-2.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+        "trace_exclusion.v1.reversed.limit-2.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f",
+        "trace_exclusion.v1.reversed.limit-3.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+        "trace_exclusion.v1.reversed.limit-3.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+        "trace_exclusion.v1.reversed.limit-3.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f"
+      },
+      "rust_test_log_sha256": "bd58b3d1ccdfe5f54f62f3a857570db9a159c33fdb0562b2c894951213da09fe",
+      "transported_rows": 7,
+      "transported_source_sha256": "427cd0ee608aac8a83f2e908a89ae2e7a60da12da8c7d49d1591ec7c44c90f7a"
+    },
+    "batch2_rowgroup3_reversed": {
+      "input_directory": "/private/tmp/careops-c13-physical-qualified-20261004/.artifacts/c13-physical-qualified-v2/pyarrow-b2-g3",
+      "input_sha256": {
+        "outcome_observation.ipc_file": "9983b12c4007e588df11250196289b58715b0488a65c8dea2f31a105c9fbd8a1",
+        "outcome_observation.ipc_stream": "c696787dc47aed2168c86fb9fde0b61a5b76c507b33ed38dbbecc6da6577ee64",
+        "outcome_observation.parquet": "ae7f55dd81af0042a344beb26fa3dde38f6e75a005a3d8cdf32a6468ed8a446c",
+        "trace_event.ipc_file": "a88080c44b996dc7ecac8f361a51dd6de3886a0a51ae7c4a2e34d2713008795d",
+        "trace_event.ipc_stream": "5bcc2719e8eb9825f60303d0a66e68472af049ec80ddc185a25eda71cc07e5ee",
+        "trace_event.parquet": "248efa98595e1606f0ed50e6ff0b644c66d77ba329c3fc0dbe95ea2557e36480",
+        "trace_exclusion.ipc_file": "2b397bd3819c635f597fbc0bbf7e6ec94cc102c886e87890bf9ee68456b41384",
+        "trace_exclusion.ipc_stream": "0a77ce7967b5a77ba73edf00839f3073e9f3d98a6dd5c7fabf33f629d0357370",
+        "trace_exclusion.parquet": "907bf5d972ad1cfd4336f1ac2c0c9f27c658f81c11727febb2143d4883d10530"
+      },
+      "python_status": "pass",
+      "python_verify_log_sha256": "cc4baf7d9f90904a24358f08a19ee8e72e2668b070d4159fa8cab2bae8fd4dfe",
+      "record_rows": {
+        "outcome_observation.v1": {
+          "layouts": {
+            "limit-1.ipc_file": 2,
+            "limit-1.ipc_stream": 2,
+            "limit-1.parquet": 2,
+            "limit-2.ipc_file": 2,
+            "limit-2.ipc_stream": 2,
+            "limit-2.parquet": 2,
+            "limit-3.ipc_file": 2,
+            "limit-3.ipc_stream": 2,
+            "limit-3.parquet": 2
+          },
+          "rows": 2
+        },
+        "trace_event.v1": {
+          "layouts": {
+            "limit-1.ipc_file": 6,
+            "limit-1.ipc_stream": 6,
+            "limit-1.parquet": 6,
+            "limit-2.ipc_file": 6,
+            "limit-2.ipc_stream": 6,
+            "limit-2.parquet": 6,
+            "limit-3.ipc_file": 6,
+            "limit-3.ipc_stream": 6,
+            "limit-3.parquet": 6
+          },
+          "rows": 6
+        },
+        "trace_exclusion.v1": {
+          "layouts": {
+            "limit-1.ipc_file": 1,
+            "limit-1.ipc_stream": 1,
+            "limit-1.parquet": 1,
+            "limit-2.ipc_file": 1,
+            "limit-2.ipc_stream": 1,
+            "limit-2.parquet": 1,
+            "limit-3.ipc_file": 1,
+            "limit-3.ipc_stream": 1,
+            "limit-3.parquet": 1
+          },
+          "rows": 1
+        }
+      },
+      "rust_outputs_sha256": {
+        "outcome_observation.v1.reversed.limit-1.ipc_file": "d81bd848061a49e250a4ee9b134d4815b5af362a7f936d3d41c22e5fa16329f7",
+        "outcome_observation.v1.reversed.limit-1.ipc_stream": "0904e4fceedbad2a2615e9c127438bc73e2857bedef3f4efa096ec0003e6a8b0",
+        "outcome_observation.v1.reversed.limit-1.parquet": "0ae6e6de37e8cb83db5de3452b72265e3634a133ebc14d653312b870b6928345",
+        "outcome_observation.v1.reversed.limit-2.ipc_file": "d81bd848061a49e250a4ee9b134d4815b5af362a7f936d3d41c22e5fa16329f7",
+        "outcome_observation.v1.reversed.limit-2.ipc_stream": "0904e4fceedbad2a2615e9c127438bc73e2857bedef3f4efa096ec0003e6a8b0",
+        "outcome_observation.v1.reversed.limit-2.parquet": "bb421f11e8ffa86a40eabaea96d8b73fa2f2d462ba1c5d71083263526a6e84a1",
+        "outcome_observation.v1.reversed.limit-3.ipc_file": "d81bd848061a49e250a4ee9b134d4815b5af362a7f936d3d41c22e5fa16329f7",
+        "outcome_observation.v1.reversed.limit-3.ipc_stream": "0904e4fceedbad2a2615e9c127438bc73e2857bedef3f4efa096ec0003e6a8b0",
+        "outcome_observation.v1.reversed.limit-3.parquet": "bb421f11e8ffa86a40eabaea96d8b73fa2f2d462ba1c5d71083263526a6e84a1",
+        "trace_event.v1.reversed.limit-1.ipc_file": "a43c1b2f52891020da02052b5d8241388459a79d0813231f4606f4af5d9de0d2",
+        "trace_event.v1.reversed.limit-1.ipc_stream": "3b588a3728420ed8d9f9b54c29d3ca65fe393e2f9e0992d7c4114790e86556a2",
+        "trace_event.v1.reversed.limit-1.parquet": "cdcb97b316705f4cf32cf0b7c6d9f899ae05f4c24dd8551ad5ebf01f82649616",
+        "trace_event.v1.reversed.limit-2.ipc_file": "a43c1b2f52891020da02052b5d8241388459a79d0813231f4606f4af5d9de0d2",
+        "trace_event.v1.reversed.limit-2.ipc_stream": "3b588a3728420ed8d9f9b54c29d3ca65fe393e2f9e0992d7c4114790e86556a2",
+        "trace_event.v1.reversed.limit-2.parquet": "a26d50335d45db399656a885e59942938abd863c73cb86b3d32cb2d39a1cae88",
+        "trace_event.v1.reversed.limit-3.ipc_file": "a43c1b2f52891020da02052b5d8241388459a79d0813231f4606f4af5d9de0d2",
+        "trace_event.v1.reversed.limit-3.ipc_stream": "3b588a3728420ed8d9f9b54c29d3ca65fe393e2f9e0992d7c4114790e86556a2",
+        "trace_event.v1.reversed.limit-3.parquet": "2d0ee16eb3c4569989a82992f7cdcfed2fba7e2b1400efc791a6112e55988f57",
+        "trace_exclusion.v1.reversed.limit-1.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+        "trace_exclusion.v1.reversed.limit-1.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+        "trace_exclusion.v1.reversed.limit-1.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f",
+        "trace_exclusion.v1.reversed.limit-2.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+        "trace_exclusion.v1.reversed.limit-2.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+        "trace_exclusion.v1.reversed.limit-2.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f",
+        "trace_exclusion.v1.reversed.limit-3.ipc_file": "64fbac491dce070493e2eaa5572d9f4cabc0a913a7a88af581cbf7e5a039fca8",
+        "trace_exclusion.v1.reversed.limit-3.ipc_stream": "58a2cf3c6fa7246621a01b01d01d3566aa5a0e754989b2b93deed50937e25f6e",
+        "trace_exclusion.v1.reversed.limit-3.parquet": "929146a6f01e585b779cdc2dcec726fd54ea87dfa48d13e3a54089755025850f"
+      },
+      "rust_test_log_sha256": "9c3c0d9226bd1dc577fb9fd9316887cc1d038454a21d7ecf168982ed81a3651a",
+      "transported_rows": 7,
+      "transported_source_sha256": "427cd0ee608aac8a83f2e908a89ae2e7a60da12da8c7d49d1591ec7c44c90f7a"
+    }
+  },
+  "pipeline_reingestion": "Not rerun because ingestion_pipeline.rs hash is byte-identical to prior actual qualification (6af9f7b928e83634c189b16e7c33469abf0262b4fc7e887e1c16b59e915b9264); prior explicit transported-source reingestion evidence is retained in /private/tmp/careops-c13-physical-qualified-20261004/.artifacts/c13-physical-qualified-v2/qualification.json.",
+  "prior_C1_3_runtime_proof": "Actual-capture physical and pipeline proof at engine commit 943ed42 remains in the previous evidence receipt; schema-helper assertions do not modify runtime/pipeline sources.",
+  "schema_mutation_coverage": "For each of three record types and each of ipc_file, ipc_stream, parquet actual inputs: reject wrong top-level data type/nullability/field metadata, invalid or absent global metadata, and record-type-specific nested data type/nullability/metadata mutations using all frozen helper mutation functions.",
+  "source_sha256": {
+    "Cargo.lock": "711f5d19b22d454a394334402e5829ec8e0a0287f4febaef807767e1529bda8b",
+    "ingestion_physical_v1.rs": "16968d25f7ad82afdd6bc4af8aa5b973a85f74d742975bbf283d1e7490b9924e",
+    "ingestion_pipeline.rs": "6af9f7b928e83634c189b16e7c33469abf0262b4fc7e887e1c16b59e915b9264",
+    "interop.py": "4d1e93863cdba0e0a67dc7a14841e38a0bfc3f71fff8be5c23db86f619f63c1a",
+    "schema_helper": "4f48216948b365d286e11e15fc4a428b3c0ce9730ba23dea0f14da21ac016989"
+  },
+  "toolchain": {
+    "cargo": "cargo 1.99.0 (toolchain bin path)",
+    "clippy": "matched rustup 1.99 cargo-clippy/clippy-driver; PATH prefixed with /Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin",
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+  },
+  "worktree_base_head": "c052c66532faef4f57f405eeb9162e4a1870ac15"
+}
