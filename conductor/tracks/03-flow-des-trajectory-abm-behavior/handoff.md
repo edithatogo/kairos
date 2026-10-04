@@ -287,3 +287,17 @@ Scope: staged per-transition typed lifecycle records; synthetic public-API staff
 The earlier Q4/1.98.1 result at b6671d75b77e2e98f4cd63dd6a73d7472c00ceb7 is retained above as historical provenance. Canonical-stable qualification is now bound to tested clean source S 1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6 on `origin/codex/careops-q4-lifecycle`, using Rust 1.99.0 for the flow example, full scoped Q4 tests, strict Clippy, format and release checks; Arrow optional and default floors were separately checked at Rust 1.88.0 and 1.76.0. The exact two-host owner run (https://github.com/edithatogo/kairos/actions/runs/37192093779) and local commands/log digests are recorded in `conductor/evidence/q4-development-source-qualification-20261004.json`.
 
 This qualifies only bounded Q4 development at S. It preserves historical minimal Track 03 Done; it does not complete Q5 or release readiness. Parent pin integration remains pending. Any governance successor G needs fresh phase, strict clean-tree and exact-head owner CI before parent acceptance.
+
+## Q5.1 coordinated conformance slice
+
+Track03/12 own the test-only DES fixtures and optional reference tooling; Track13
+coordinates the native-owner CI addition. Clean source `32c10ff8ce999f1f193d9f3821416f66a57da9d4` passed
+214 core/DES debug tests, 175 DES release tests, strict scoped Clippy, formatting,
+8 comparator tests and a fresh hash-locked SimPy4.1.2 comparison (5 cases/29 rows).
+See `conductor/design/queue/q5.1-conformance-20261004.md` and the paired source
+verification receipt. Native fixture aggregate checksum is `47cfb7dca4211252`;
+full byte equality, expected strategy traces and interval accounting are the
+oracles. Existing ready fixture IDs/goldens remain unchanged. This does not
+close Q5 or reopen historical track completion; Q5.2–Q5.4 and existing holds remain.
+Exact-head Linux/macOS native-owner qualification and parent integration are
+controlled by the parent pin contract, not this antecedent source receipt.

@@ -1,0 +1,293 @@
+{
+  "schema_version": 1,
+  "task": "Q5.1",
+  "scope": "bounded native CPU conformance; Q5 remains open",
+  "source_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+  "source_sha256": {
+    "crates/kairo-ecs-des/tests/flow_determinism_conformance_v1.rs": "faeacd94b14fa9e9084cb10bd00594219bb1efa4c75ee54c77ce8d6e8a0d1953",
+    "crates/kairo-ecs-des/examples/flow_simpy_shared_v1.rs": "a22a109b2c024a3840d59bd723ef4dbcc315310d509933a4eeba01d099076205",
+    "tests/conformance/queue_simpy_v1.py": "8ce386a5159b0cf23bf0248668522342d602ea4ea5ce5ef0f1479a34ce9bc486",
+    "tests/conformance/queue_simpy_v1_test.py": "d8978707a372f62012104ac29a1fb24bd7640b5e7aff49d2a4f3e049ae545c4a",
+    "tests/conformance/queue_simpy_v1_requirements.txt": "65904915376648e0763e3ea8cc8bef3ed9213e99317466f55ecca58da9760ad8",
+    "crates/kairo-ecs-des/src/flow.rs": "ecb0bc547ec2803fb69a9c59515df9099e9dddca51c7b9cdee9d8c58fd1b989e",
+    "crates/kairo-ecs-des/src/preemption.rs": "e2526578ec47f1ecedabc7bab8d02110ba16ea647adef375558b27a983fe9ff8",
+    "crates/kairo-ecs-des/tests/flow_preemption_property_v1.rs": "d900dc3a9256794ea99822b2fd4f2362fb1bac9ac0ef802fca2ccaf7db71f904",
+    "Cargo.lock": "735729ea0b9c2bfa6beb6cf5921a4c3da3497741e28dc0e0f4d400dbb3bce5ab"
+  },
+  "commands": [
+    {
+      "name": "toolchain",
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "rustc",
+        "-vV"
+      ],
+      "cwd": "/private/tmp/careops-q51/libs/kairos",
+      "source_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+      "exit_code": 0,
+      "duration_seconds": 0.43,
+      "log": "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/toolchain.log",
+      "log_sha256": "352d6857968e80a6357a926ac685b9b07f77c479aaafde33e73a53945e802909"
+    },
+    {
+      "name": "debug-core-des",
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-core",
+        "-p",
+        "kairo-ecs-des",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "/private/tmp/careops-q51/libs/kairos",
+      "source_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+      "exit_code": 0,
+      "duration_seconds": 32.477,
+      "log": "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/debug-core-des.log",
+      "log_sha256": "68846553dac1f6c37efd2416ad3344407be0cfae0d48eddbdb53e0541b20b9dc"
+    },
+    {
+      "name": "release-des",
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-des",
+        "--release",
+        "--",
+        "--nocapture"
+      ],
+      "cwd": "/private/tmp/careops-q51/libs/kairos",
+      "source_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+      "exit_code": 0,
+      "duration_seconds": 25.02,
+      "log": "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/release-des.log",
+      "log_sha256": "ab6a3babb807e02f6767a4d0203e18ba46dee76467cb59d9e9bcc05c44088ff1"
+    },
+    {
+      "name": "clippy",
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "kairo-ecs-des",
+        "--all-targets",
+        "--no-deps",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": "/private/tmp/careops-q51/libs/kairos",
+      "source_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+      "exit_code": 0,
+      "duration_seconds": 2.858,
+      "log": "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/clippy.log",
+      "log_sha256": "e50e805b4548b8fa269730fef1ac43b32f6faacadb109452d21f45735ae5d63d"
+    },
+    {
+      "name": "format",
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "cwd": "/private/tmp/careops-q51/libs/kairos",
+      "source_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+      "exit_code": 0,
+      "duration_seconds": 0.871,
+      "log": "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/format.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "reference-rust",
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "run",
+        "--locked",
+        "-p",
+        "kairo-ecs-des",
+        "--example",
+        "flow_simpy_shared_v1"
+      ],
+      "cwd": "/private/tmp/careops-q51/libs/kairos",
+      "source_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+      "exit_code": 0,
+      "duration_seconds": 0.636,
+      "log": "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/reference-rust.log",
+      "log_sha256": "6115ea3d838a69542b73a2f55b2490811aec38e65bc441eaf69e7c2fe6832a29",
+      "output": {
+        "path": "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/rust.json",
+        "sha256": "3e1ec44ba1dd548e785903c7ac6a6784d04d283dd06fffc7e299e809298c40c1"
+      }
+    },
+    {
+      "name": "comparator-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/conformance",
+        "-p",
+        "queue_simpy_v1_test.py",
+        "-v"
+      ],
+      "cwd": "/private/tmp/careops-q51/libs/kairos",
+      "source_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+      "exit_code": 0,
+      "duration_seconds": 0.205,
+      "log": "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/comparator-tests.log",
+      "log_sha256": "dfdfc01570099a400e7d734e4f0dcbaa0e1576014c4627095ba89d834faf6724"
+    },
+    {
+      "name": "reference-venv",
+      "argv": [
+        "/Users/doughnut/.local/bin/python3.11",
+        "-m",
+        "venv",
+        "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/venv"
+      ],
+      "cwd": "/private/tmp/careops-q51/libs/kairos",
+      "source_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+      "exit_code": 0,
+      "duration_seconds": 4.326,
+      "log": "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/reference-venv.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "reference-install",
+      "argv": [
+        "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/venv/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--disable-pip-version-check",
+        "--no-input",
+        "--only-binary=:all:",
+        "--no-deps",
+        "--require-hashes",
+        "-r",
+        "tests/conformance/queue_simpy_v1_requirements.txt"
+      ],
+      "cwd": "/private/tmp/careops-q51/libs/kairos",
+      "source_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+      "exit_code": 0,
+      "duration_seconds": 0.927,
+      "log": "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/reference-install.log",
+      "log_sha256": "342f54d7916c7c19e46ec3c122e27be08eacf8bce11738b4e0b93b1de5d3f501"
+    },
+    {
+      "name": "reference-compare",
+      "argv": [
+        "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/venv/bin/python",
+        "tests/conformance/queue_simpy_v1.py",
+        "--rust-trace",
+        "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/rust.json",
+        "--output",
+        "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/comparison.json"
+      ],
+      "cwd": "/private/tmp/careops-q51/libs/kairos",
+      "source_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+      "exit_code": 0,
+      "duration_seconds": 0.202,
+      "log": "/private/tmp/careops-q51/libs/kairos/artifacts/q51-coordinator/reference-compare.log",
+      "log_sha256": "4a7703a40b132ee61da45376c938008c0b4d9195b39971fdb4b1b1e2ea5f2bfc"
+    }
+  ],
+  "test_counts": {
+    "debug_core_des": 214,
+    "release_des": 175,
+    "comparator_negative_and_positive": 8
+  },
+  "replication_fixture": {
+    "seeds": [
+      0,
+      1,
+      7,
+      42,
+      3735928559,
+      18446744073709551615,
+      305419896,
+      2882400001
+    ],
+    "strategies": [
+      "Suspend",
+      "Abort",
+      "Restart"
+    ],
+    "workers": [
+      1,
+      2,
+      4
+    ],
+    "batch_count": 12,
+    "canonical_bytes_equal": true,
+    "aggregate_fnv1a64": "47cfb7dca4211252",
+    "digest_scope": "non-security regression checksum; byte equality is authoritative"
+  },
+  "property_fixture": {
+    "seeds": [
+      0,
+      1,
+      7,
+      42,
+      3735928559,
+      18446744073709551615
+    ],
+    "cases_per_seed": 32,
+    "strategies": 3,
+    "oracle": "independent interrupted-interval model",
+    "debug_and_release": "passed"
+  },
+  "reference": {
+    "comparison_checkout_commit": "32c10ff8ce999f1f193d9f3821416f66a57da9d4",
+    "comparison_checkout_dirty": false,
+    "input_sha256": "0ae0da39a27d3b76562f6354466670214ea54ce5c3cbdbb5c4d2f79975151716",
+    "expected_events_sha256": "9574cd5f31ad7585a41bdede0aac74eacd907f32673e95a83082d662e2468016",
+    "kairos_events_sha256": "9574cd5f31ad7585a41bdede0aac74eacd907f32673e95a83082d662e2468016",
+    "simpy_events_sha256": "9574cd5f31ad7585a41bdede0aac74eacd907f32673e95a83082d662e2468016",
+    "rust_artifact_sha256": "3e1ec44ba1dd548e785903c7ac6a6784d04d283dd06fffc7e299e809298c40c1",
+    "simpy_version": "4.1.2",
+    "case_ids": [
+      "capacity_1",
+      "capacity_2",
+      "priority_fifo",
+      "queued_cancel",
+      "manual_release"
+    ]
+  },
+  "hosted_gate": "pending at this source verification record; parent exact-head owner contract controls qualified pin",
+  "limitations": [
+    "independent CPU replications only; no shared-runtime or PDES claim",
+    "public-field canonical encoding; private restart_pending is not externally readable",
+    "existing local fixtures govern preemption/deadline/tie/zero-time/cancellation semantics",
+    "no AllOf API or atomic multi-resource acquisition",
+    "Q5.2 benchmarks, Q5.3 compatibility and Q5.4 phase closeout remain open",
+    "Track22 portable restore, Track25 experimental snapshot API, website/security/release holds remain"
+  ]
+}

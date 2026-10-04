@@ -19,6 +19,7 @@ on:
       - '.github/workflows/ci-core.yml'
       - '.github/workflows/careops-native-owner.yml'
       - 'scripts/c1-arrow-io-python-tools.lock'
+      - 'tests/conformance/queue_simpy_v1*'
 
 permissions:
   contents: read
@@ -30,7 +31,7 @@ concurrency:
 jobs:
   native:
     name: Native owner (${{ matrix.os }})
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -98,6 +99,33 @@ jobs:
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: '3.14.8'
+      - name: Q5.1 deterministic queues and bounded SimPy reference
+        run: |
+          set -euo pipefail
+          # Only declared generated CI outputs are ignored; source changes remain visible.
+          printf '%s\n' '/.artifacts/ci/' >> "$(git rev-parse --git-path info/exclude)"
+          log_dir=".artifacts/ci/q51"
+          mkdir -p "$log_dir"
+          git rev-parse HEAD | tee "$log_dir/source.log"
+          rustup run 1.99.0 cargo -V | tee -a "$log_dir/source.log"
+          rustup run 1.99.0 rustc -vV | tee -a "$log_dir/source.log"
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-des --test flow_determinism_conformance_v1 --test flow_preemption_property_v1 -- --nocapture 2>&1 | tee "$log_dir/debug.log"
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-des --release -- --nocapture 2>&1 | tee "$log_dir/release.log"
+          rustup run 1.99.0 cargo run --locked -p kairo-ecs-des --example flow_simpy_shared_v1 > "$log_dir/rust.json" 2> "$log_dir/rust-emitter.log"
+          python -m unittest discover -s tests/conformance -p queue_simpy_v1_test.py -v 2>&1 | tee "$log_dir/comparator-tests.log"
+          reference_dir="$RUNNER_TEMP/q51-reference-python"
+          python -m venv "$reference_dir"
+          "$reference_dir/bin/python" --version | tee "$log_dir/reference-install.log"
+          "$reference_dir/bin/python" -m pip install --disable-pip-version-check --no-input --only-binary=:all: --no-deps --require-hashes -r tests/conformance/queue_simpy_v1_requirements.txt 2>&1 | tee -a "$log_dir/reference-install.log"
+          "$reference_dir/bin/python" tests/conformance/queue_simpy_v1.py --rust-trace "$log_dir/rust.json" --output "$log_dir/comparison.json" 2>&1 | tee "$log_dir/reference.log"
+      - name: Preserve Q5.1 conformance evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: q51-conformance-${{ matrix.os }}
+          path: .artifacts/ci/q51/
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Test Arrow IO with Rust 1.99.0
         env:
           EXPECTED_OS: ${{ matrix.os }}

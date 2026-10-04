@@ -119,3 +119,17 @@ No additional follow-up issues were recorded by this Conductor hygiene update.
 - Cleanup state: working tree was clean before the review closeout edits.
 - Commit SHA / pushed ref: Track 12 review-entry evidence remains the closed ledger commit `9f6dbf1970bf85304748ca68d21b54df87280de7` on `origin/main`; this review closeout updates local conductor status files.
 - Next-phase decision: Track 12 is `Done`.
+
+## Q5.1 coordinated conformance slice
+
+Track03/12 own the test-only DES fixtures and optional reference tooling; Track13
+coordinates the native-owner CI addition. Clean source `32c10ff8ce999f1f193d9f3821416f66a57da9d4` passed
+214 core/DES debug tests, 175 DES release tests, strict scoped Clippy, formatting,
+8 comparator tests and a fresh hash-locked SimPy4.1.2 comparison (5 cases/29 rows).
+See `conductor/design/queue/q5.1-conformance-20261004.md` and the paired source
+verification receipt. Native fixture aggregate checksum is `47cfb7dca4211252`;
+full byte equality, expected strategy traces and interval accounting are the
+oracles. Existing ready fixture IDs/goldens remain unchanged. This does not
+close Q5 or reopen historical track completion; Q5.2–Q5.4 and existing holds remain.
+Exact-head Linux/macOS native-owner qualification and parent integration are
+controlled by the parent pin contract, not this antecedent source receipt.
