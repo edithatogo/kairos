@@ -1091,10 +1091,17 @@ impl<P: OptimisticProcess> OptimisticRuntime<P> {
         participants: &mut [&mut OptimisticRuntime<P>],
         gvt: Tick,
     ) -> Result<OptimisticNativeCutReport, OptimisticNativeCutFailure> {
+        let mut poisoned_participants = participants
+            .iter()
+            .filter(|runtime| runtime.poisoned)
+            .map(|runtime| runtime.runtime_id)
+            .collect::<Vec<_>>();
+        poisoned_participants.sort_unstable();
+        poisoned_participants.dedup();
         let failure = |cause, failed_runtime_id| OptimisticNativeCutFailure {
             cause: Box::new(cause),
             failed_runtime_id,
-            poisoned_participants: Vec::new(),
+            poisoned_participants: poisoned_participants.clone(),
         };
         if participants.is_empty() {
             return Err(failure(OptimisticError::OwnedModeRequired, None));

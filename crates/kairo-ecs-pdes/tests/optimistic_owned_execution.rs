@@ -156,11 +156,15 @@ impl OptimisticProcess for Cascade {
         self.0.clone()
     }
     fn restore(&mut self, value: &Vec<u8>) -> Result<(), OptimisticStateError> {
+        if self.0.last() == Some(&255) {
+            return Err(OptimisticStateError::new("injected restore failure"));
+        }
         self.0.clone_from(value);
         Ok(())
     }
     fn on_event(&mut self, event: &RemoteEvent) -> Vec<RemoteEvent> {
         self.0.push(event.event_payload[0]);
+        assert_ne!(event.event_payload[0], 255, "injected handler failure");
         if event.event_payload[0] == 2 {
             vec![RemoteEvent {
                 source_lp: event.dest_lp,
@@ -333,4 +337,40 @@ fn suffix_control_and_executed_anti_are_each_one_atomic_budget_unit() {
             .map(|runtime| runtime.accounting_revision().unwrap())
             .collect::<Vec<_>>()
     );
+}
+
+#[test]
+fn native_cut_failure_reports_all_already_poisoned_participants() {
+    let mut group = cascade_group();
+    let ids = group
+        .iter()
+        .map(|runtime| runtime.native_accounting_authority().unwrap().runtime_id())
+        .collect::<Vec<_>>();
+    for index in [0, 2] {
+        group[index]
+            .schedule_initial(1, cascade_input(index as u32, index as u32, 5, 255))
+            .unwrap();
+    }
+    for runtime in &mut group {
+        runtime.close_initial_inputs().unwrap();
+    }
+    for index in [0, 2] {
+        let failure = group[index]
+            .run_owned_until_with_budget(Tick::from_ticks(10), 1)
+            .unwrap_err();
+        assert!(
+            matches!(failure.cause(), OptimisticError::RestoreFailed { lp_id, .. } if *lp_id == LpId(index as u32))
+        );
+    }
+    let failure = OptimisticRuntime::fossil_collect_native_group(
+        &mut group.iter_mut().rev().collect::<Vec<_>>(),
+        Tick::from_ticks(5),
+    )
+    .unwrap_err();
+    assert_eq!(failure.cause(), &OptimisticError::Poisoned);
+    assert_eq!(failure.failed_runtime_id(), Some(ids[0]));
+    assert_eq!(failure.poisoned_participants(), &[ids[0], ids[2]]);
+    assert!(group
+        .iter()
+        .all(|runtime| runtime.report().gvt == Tick::ZERO));
 }
