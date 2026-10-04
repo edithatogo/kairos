@@ -118,6 +118,26 @@ jobs:
           "$reference_dir/bin/python" --version | tee "$log_dir/reference-install.log"
           "$reference_dir/bin/python" -m pip install --disable-pip-version-check --no-input --only-binary=:all: --no-deps --require-hashes -r tests/conformance/queue_simpy_v1_requirements.txt 2>&1 | tee -a "$log_dir/reference-install.log"
           "$reference_dir/bin/python" tests/conformance/queue_simpy_v1.py --rust-trace "$log_dir/rust.json" --output "$log_dir/comparison.json" 2>&1 | tee "$log_dir/reference.log"
+      - name: Q5.2 supplementary queue benchmark checks
+        run: |
+          set -euo pipefail
+          log_dir=".artifacts/ci/q52"
+          mkdir -p "$log_dir"
+          git rev-parse HEAD | tee "$log_dir/source.log"
+          rustup run 1.99.0 rustc -vV | tee -a "$log_dir/source.log"
+          python -m unittest discover -s benches/queue -p test_run_v1.py -v 2>&1 | tee "$log_dir/collector-tests.log"
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-des --release benchmark_q52_measurements -- --ignored --nocapture 2>&1 | tee "$log_dir/kernel.log"
+          python benches/queue/run_v1.py --build --binary target/release/examples/flow_queue_benchmark_v1 --scenario churn --n 10 --resources 1 --capacity 1 --repeats 5 --timeout-seconds 30 --seed 42 --output-dir "$log_dir/runtime" 2>&1 | tee "$log_dir/runtime.log"
+          # This bounded smoke is correctness/provenance evidence; full local matrix
+          # and canonical upstream regression comparisons remain separate gates.
+      - name: Preserve Q5.2 supplementary benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: q52-queue-benchmarks-${{ matrix.os }}
+          path: .artifacts/ci/q52/
+          retention-days: 7
+          if-no-files-found: error
       - name: Preserve Q5.1 conformance evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
