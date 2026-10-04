@@ -1,0 +1,8 @@
+{
+  "status": "failed_before_cargo_launch",
+  "exit": 1,
+  "error": "FileNotFoundError: optional 1.76.0 rustfmt binary unavailable",
+  "collector_fix": "record missing optional formatter without blocking cargo test; no 1.76 formatting pass claimed",
+  "native_source": "9bf478ec653e607b34c90485f427e3d26eacb5e6",
+  "receipt": "none produced; no native test pass asserted"
+}

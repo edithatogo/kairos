@@ -1,0 +1,40 @@
+   Compiling kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-pdes)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.45s
+     Running tests/optimistic_owned_execution_heldout.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_owned_execution_heldout-e057eae913b363a4)
+
+running 18 tests
+test mixed_local_remote_fanout_capacity_failure_publishes_neither_half_of_actual_batch ... ok
+test native_group_cut_rejects_open_and_incomplete_participants_without_advancing_any_floor ... ok
+test first_rollback_candidate_preempts_the_rest_of_the_selected_positive_vector ... ok
+test budget_one_rollback_replays_the_same_seeded_state_and_committed_trace_as_all_local_control ... ok
+test group_cut_commits_common_floor_even_when_retired_snapshot_drop_panics ... ok
+test changed_destination_uses_reserved_local_slot_and_gvt_keeps_old30_tombstone_for_new25 ... FAILED
+test committed_anti_cleanup_failure_reports_its_published_descendant_anti_and_drop_peer ... ok
+test peer_drop_during_handler_revalidation_compensates_without_publishing_remote_output ... ok
+test executed_descendant_cascade_restores_each_owner_and_blocks_gvt_until_final_anti ... ok
+test restore_error_preserves_handler_trigger_and_restores_other_selected_lp ... ok
+test absent_replay_coalesces_one_retirement_and_reintroduction_waits_for_applied_proof ... ok
+test restore_panic_is_a_fatal_compensation_error_and_poison_is_global ... ok
+test local_self_retirement_uses_one_shared_receipt_and_applies_before_replay ... ok
+test selected_round_compensates_every_lp_when_a_later_handler_panics ... ok
+test snapshot_panic_poison_invalidates_every_owned_lp_before_handlers_publish ... ok
+test snapshot_callback_can_drop_registered_peer_without_holding_runtime_gate ... ok
+test reduced_fanout_two_to_one_retires_omitted_ordinal_and_real_descendant ... ok
+test replacement_n2_waits_for_both_real_receiver_retirements_in_both_proof_orders ... ok
+
+failures:
+
+---- changed_destination_uses_reserved_local_slot_and_gvt_keeps_old30_tombstone_for_new25 stdout ----
+
+thread 'changed_destination_uses_reserved_local_slot_and_gvt_keeps_old30_tombstone_for_new25' (46010017) panicked at crates/kairo-ecs-pdes/tests/optimistic_owned_execution_heldout.rs:1551:5:
+assertion `left == right` failed
+  left: 0
+ right: 1
+
+
+failures:
+    changed_destination_uses_reserved_local_slot_and_gvt_keeps_old30_tombstone_for_new25
+
+test result: FAILED. 17 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p kairo-ecs-pdes --test optimistic_owned_execution_heldout`

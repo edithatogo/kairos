@@ -39,3 +39,7 @@ During compiler-fix coordination, an expired worker lease was explicitly recover
 ## Final local gates and forward workspace MSRV
 
 At c87df47, pinned1.98 benchmark compilation,12 collector tests, local manifest, phase/DAG and strict clean Git checks pass; immutable copies are in benches/pdes/evidence/track48-local-gates-c87df47/. Matching absolute Cargo/rustc/rustdoc1.76 also passes locked all-feature workspace lib/bin check excluding Wasm; actual compiler cache and log verified in benches/pdes/evidence/track48-workspace-msrv-c87df47/. This forward evidence resolves current compiler compatibility without retrospectively asserting compiler identity for old wrapper-labelled Track47 MSRV receipts. No Windows, foreign-package or distributed proof is claimed.
+
+## Accepted owned native leaf — 4 October 2026
+
+The [current acceptance record](owned-native-acceptance-20261004.md) supersedes earlier pending local/compiler snapshots: source9bf478e passes166 PDES tests on each explicitly bound1.98.1/1.76.0 compiler; fullCI530/530,coverage92.59%,locked doctests,benchmark smoke/12 collector tests,manifest and local phase/clean gates pass. Original failed receipts remain historical. Track48 stays In Progress pending hosted native delivery and live distributed acceptance. Changed interface semantics expire the previous conditional Track49 entry disposition; fresh specific human disposition and reviewed production packet are required. Global status/phase files and parent pin remain with their current parallel owners.

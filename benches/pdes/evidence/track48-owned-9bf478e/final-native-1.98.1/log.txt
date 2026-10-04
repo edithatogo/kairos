@@ -1,0 +1,282 @@
+   Compiling kairo-ecs-pdes v0.0.0 (/Volumes/PortableSSD/codex-worktrees/kairos-track48-owned-runtime-join/crates/kairo-ecs-pdes)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 13.43s
+     Running unittests src/lib.rs (target/owned-native-join/1.98.1/debug/deps/kairo_ecs_pdes-809a2913278d4084)
+
+running 54 tests
+test generation_bitset::tests::instance_allocator_rejects_exhaustion_without_wrapping ... ok
+test generation_bitset::tests::every_successful_insert_invalidates_prior_handles ... ok
+test generation_bitset::tests::duplicate_insert_is_rejected_without_changing_state_or_epoch ... ok
+test generation_bitset::tests::accepts_zero_and_max_capacity_and_rejects_oversized_capacity ... ok
+test generation_bitset::tests::covers_word_edges_last_slot_and_first_invalid_slot ... ok
+test generation_bitset::tests::epoch_exhaustion_leaves_insert_remove_and_restore_unchanged ... ok
+test generation_bitset::tests::identical_foreign_snapshot_restores_bits_without_transferring_authority ... ok
+test generation_bitset::tests::rejects_inactive_slot_and_foreign_instance_handles ... ok
+test generation_bitset::tests::restore_invalidates_all_handles_and_keeps_destination_identity ... ok
+test generation_bitset::tests::malformed_or_mismatched_snapshots_leave_state_unchanged ... ok
+test generation_bitset::tests::removal_and_reinsertion_never_revive_old_handles ... ok
+test optimistic::tests::external_incarnation_and_epoch_exhaustion_reject_without_mutation ... ok
+test optimistic::owned_execution::private_tests::actual_self_cancellation_uses_one_bundle_and_promotes_reserved_local_successor_once ... ok
+test optimistic::owned_execution::private_tests::shadow_incarnation_and_id_batch_exhaustion_restore_without_allocator_leak ... ok
+test optimistic::owned_execution::private_tests::bounded_graph_rejects_missing_cycle_fork_and_cross_cohort ... ok
+test optimistic::owned_execution::private_tests::cut_retains_old30_new25_bundle_at26_and_equality_then_prunes_without_head_resurrection ... ok
+test optimistic::owned_execution::private_tests::epoch_headroom_rejects_before_snapshot_and_handler ... ok
+test optimistic::owned_execution::private_tests::pruning_rewires_surviving_parent_and_keeps_lifetime_root_reservation ... ok
+test optimistic::tests::incarnation_exhaustion_in_middle_of_output_batch_poisons_before_publish ... ok
+test optimistic::tests::output_batch_epoch_exhaustion_poisons_without_partial_publication ... ok
+test optimistic::owned_execution::private_tests::revision_exhaustion_rejects_before_callbacks_and_group_floor ... ok
+test tests::partition_plan_assigns_entities_deterministically_by_entity_id ... ok
+test optimistic::tests::output_batch_reserves_one_epoch_per_destination_and_publishes_together ... ok
+test optimistic::tests::rollback_requeues_multiple_inputs_with_one_checked_epoch_reservation ... ok
+test tests::anti_after_fossil_collection_preserves_committed_floor ... ok
+test tests::conservative_frontier_waits_for_every_peer ... ok
+test tests::in_memory_gvt_includes_inflight_message_timestamps ... ok
+test tests::partition_plan_rejects_invalid_inputs ... ok
+test tests::scheduler_ignores_stale_null_safe_time_for_local_progress ... ok
+test tests::scheduler_never_moves_lp_time_backward ... ok
+test tests::scheduler_rejects_duplicate_and_mismatched_lps ... ok
+test tests::scheduler_rejects_inbound_stragglers_before_local_time ... ok
+test tests::scheduler_rejects_overflowing_lookahead_before_remote_send ... ok
+test tests::scheduler_rejects_remote_events_before_declared_lookahead ... ok
+test tests::scheduler_reports_stalled_lps_when_safe_time_blocks_progress ... ok
+test tests::scheduler_sends_events_and_null_messages ... ok
+test tests::time_warp_fossil_collection_preserves_rollback_at_or_after_gvt ... ok
+test tests::time_warp_fossil_collects_only_history_before_gvt ... ok
+test tests::time_warp_antimessage_cancels_matching_positive_event ... ok
+test tests::time_warp_generation_token_rejects_stale_component_access ... ok
+test tests::time_warp_overhead_metrics_track_local_rollback_pressure ... ok
+test tests::time_warp_rejects_duplicate_positive_events_without_double_apply ... ok
+test tests::time_warp_rejects_pre_gvt_stragglers_and_gvt_regression ... ok
+test tests::partitioned_reference_matches_sequential_final_state ... ok
+test tests::conservative_validator_reports_parity_gvt_and_deadlock_evidence ... ok
+test tests::transport_round_trips_remote_events ... ok
+test tests::transport_rejects_unknown_destinations_and_sources ... ok
+test tests::validator_rejects_empty_or_degenerate_workloads ... ok
+test tests::time_warp_straggler_rolls_back_to_prior_checkpoint ... ok
+test tests::time_warp_state_save_restores_absent_component_after_rollback ... ok
+test tests::time_warp_reports_cancellation_metadata_for_rollback_and_antimessage ... ok
+test tests::time_warp_spike_documents_rollback_risk ... ok
+test tests::scaling_smoke_samples_cover_required_lp_counts_without_speedup_claims ... ok
+test tests::stress_reference_progresses_gvt_for_every_tick ... ok
+
+test result: ok. 54 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.72s
+
+     Running tests/optimistic_authority_envelope.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_authority_envelope-a51a4f1f920bbfc7)
+
+running 4 tests
+test authority_roundtrip_preserves_native_ranges_and_does_not_change_ordering ... ok
+test scoped_positive_and_anti_reject_before_any_all_local_runtime_mutation ... ok
+test legacy_constructors_and_runtime_outputs_remain_local_preview ... ok
+test rejected_scoped_max_incarnation_does_not_advance_legacy_emission_allocation ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_authority_envelope_heldout.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_authority_envelope_heldout-45a6c1f12cf2ae3d)
+
+running 5 tests
+test authority_constructor_preserves_full_nested_envelope_without_changing_order ... ok
+test scoped_positive_and_anti_reject_unchanged_across_legacy_lifecycle_states ... ok
+test legacy_emission_and_rollback_antis_remain_local_preview ... ok
+test rejected_scoped_max_incarnation_does_not_advance_legacy_emitter ... ok
+test poisoned_runtime_error_precedes_scoped_authority_rejection ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/optimistic_bitset_heldout.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_bitset_heldout-98a84088ab1bb43c)
+
+running 2 tests
+test bitset_restore_error_prevents_publication_of_staged_model_values_and_rng ... ok
+test real_model_rollback_restores_membership_values_rng_without_reviving_handles ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_codec_bridge.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_codec_bridge-b06617d4de3e3941)
+
+running 4 tests
+test bounded_ancestry_accepts_depth_128_and_rejects_a_129th_child ... ok
+test complete_ancestry_rejects_root_source_and_nonfuture_output_keys ... ok
+test root_and_output_parts_roundtrip_full_native_ranges_and_message_kinds ... ok
+test actual_multi_emitter_outputs_and_their_antis_roundtrip_and_receive ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_codec_bridge_heldout.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_codec_bridge_heldout-fecb9ab22d9b8e54)
+
+running 5 tests
+test conflicting_decoded_metadata_and_duplicate_positive_leave_receiver_unchanged ... ok
+test checked_bridge_preserves_full_ranges_and_rejects_invalid_structure ... ok
+test state_changing_replay_survives_its_old_anti_after_public_reconstruction ... ok
+test full_parent_key_order_is_stable_under_root_arrival_permutations ... ok
+test emitted_multigeneration_messages_rebuild_and_late_old_antis_match_reference ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_construction.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_owned_construction-2a241da81ad09a44)
+
+running 8 tests
+test configuration_rejects_incomplete_maps_and_partition_mismatch_before_snapshot ... ok
+test snapshots_only_real_owned_processes_and_capability_retains_immutable_full_config ... ok
+test topology_is_canonical_and_peer_configuration_includes_partition_and_lookahead ... ok
+test disjoint_live_peers_seal_close_and_retry_with_exact_checked_revisions ... ok
+test constructor_rejects_each_configuration_boundary_before_snapshot_capture ... ok
+test guarded_owned_operations_and_raw_admission_preserve_observable_state ... ok
+test overlap_and_dropped_peer_are_rejected_without_revision_change ... ok
+test overlapping_multi_lp_peer_reports_the_globally_first_lp ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_construction_heldout.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_owned_construction_heldout-3b3dbba4c8b0ed68)
+
+running 6 tests
+test peer_identity_uses_full_partition_and_canonical_topology_not_owner_subset ... ok
+test dropped_issuer_is_stale_before_or_after_seal_and_cannot_be_replaced ... ok
+test owned_raw_receive_and_legacy_issuer_remain_explicitly_gated ... ok
+test disjoint_owners_seal_then_guard_mutations_without_remote_mirrors ... ok
+test issuer_retry_overlap_and_peer_coverage_are_revision_checked ... ok
+test invalid_constructor_maps_topology_and_capacities_fail_before_snapshots ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_execution.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_owned_execution-f918f093f41eefb6)
+
+running 3 tests
+test suffix_control_and_executed_anti_are_each_one_atomic_budget_unit ... ok
+test invalid_staged_output_compensates_without_publishing_or_closing_inputs ... ok
+test owned_positive_round_publishes_local_children_after_complete_staging ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_execution_heldout.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_owned_execution_heldout-e057eae913b363a4)
+
+running 18 tests
+test native_group_cut_rejects_open_and_incomplete_participants_without_advancing_any_floor ... ok
+test peer_drop_during_handler_revalidation_compensates_without_publishing_remote_output ... ok
+test mixed_local_remote_fanout_capacity_failure_publishes_neither_half_of_actual_batch ... ok
+test first_rollback_candidate_preempts_the_rest_of_the_selected_positive_vector ... ok
+test budget_one_rollback_replays_the_same_seeded_state_and_committed_trace_as_all_local_control ... ok
+test local_self_retirement_uses_one_shared_receipt_and_applies_before_replay ... ok
+test changed_destination_uses_reserved_local_slot_and_gvt_keeps_old30_tombstone_for_new25 ... ok
+test executed_descendant_cascade_restores_each_owner_and_blocks_gvt_until_final_anti ... ok
+test absent_replay_coalesces_one_retirement_and_reintroduction_waits_for_applied_proof ... ok
+test restore_error_preserves_handler_trigger_and_restores_other_selected_lp ... ok
+test snapshot_callback_can_drop_registered_peer_without_holding_runtime_gate ... ok
+test reduced_fanout_two_to_one_retires_omitted_ordinal_and_real_descendant ... ok
+test group_cut_commits_common_floor_even_when_retired_snapshot_drop_panics ... ok
+test snapshot_panic_poison_invalidates_every_owned_lp_before_handlers_publish ... ok
+test committed_anti_cleanup_failure_reports_its_published_descendant_anti_and_drop_peer ... ok
+test restore_panic_is_a_fatal_compensation_error_and_poison_is_global ... ok
+test selected_round_compensates_every_lp_when_a_later_handler_panics ... ok
+test replacement_n2_waits_for_both_real_receiver_retirements_in_both_proof_orders ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/optimistic_owned_root_routing.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_owned_root_routing-efb9443fbc29741a)
+
+running 4 tests
+test local_roots_enqueue_once_and_remote_roots_cross_only_the_native_join ... ok
+test transition_reservations_are_shared_persistent_and_preflighted_before_other_bounds ... ok
+test identical_keys_from_a_recreated_issuer_cannot_reuse_or_poison_receipts ... ok
+test issuer_drop_race_is_atomic_and_drop_invalidates_before_process_destructor ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_owned_root_routing_heldout.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_owned_root_routing_heldout-5d5b31a4a45ee7b9)
+
+running 8 tests
+test local_root_is_enqueued_once_and_consumes_no_receipt_slot ... ok
+test sender_capabilities_are_root_specific_and_fresh_issuers_cannot_reuse_cached_receipts ... ok
+test actual_ticket_issuer_and_owned_destination_are_checked_before_receipt_cache ... ok
+test pending_bound_rejects_new_ticket_without_mutation_and_keeps_exact_retry ... ok
+test outbox_and_sender_receiver_receipt_bounds_preflight_then_exact_retry_at_capacity ... ok
+test transition_capacity_covers_local_and_remote_roots_and_survives_ack ... ok
+test full_width_epoch_tick_and_root_id_survive_real_admission_and_guarded_run ... ok
+test concurrent_drop_and_admission_publish_completely_or_reject_unchanged ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_runtime.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_runtime-ce6c26dfc0fe887c)
+
+running 8 tests
+test child_identity_uses_parent_order_key_and_advances_causal_depth ... ok
+test invalid_post_handler_output_poisons_without_publishing_partial_batch ... ok
+test stale_tokens_budget_resumption_and_equal_gvt_are_checked ... ok
+test gvt_lag_reports_leading_frontier_even_with_idle_logical_process ... ok
+test structural_output_order_uses_full_parent_key_after_straggler_replay ... ok
+test root_identity_is_explicit_and_initial_scheduling_closes_on_execution ... ok
+test anti_after_positive_cancels_it_and_fossil_collection_prunes_replay_metadata ... ok
+test anti_before_positive_tombstones_exact_delivery_and_preserves_replacement ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/optimistic_runtime_heldout.rs (target/owned-native-join/1.98.1/debug/deps/optimistic_runtime_heldout-2eb74add40126ea6)
+
+running 13 tests
+test canceling_earlier_parent_retracts_descendants_and_replays_surviving_inputs ... ok
+test canceled_queued_replays_do_not_accumulate_across_fossil_cycles ... ok
+test invalid_complete_batch_and_handler_fault_publish_no_partial_outputs ... ok
+test anti_before_positive_does_not_apply_and_duplicate_delivery_is_unchanged ... ok
+test equal_tick_reverse_source_and_sequence_arrival_matches_core_scheduler ... ok
+test replayed_output_slot_can_change_payload_route_and_tick_without_identity_conflict ... ok
+test conflicting_exact_delivery_across_destination_lps_is_rejected_unchanged ... ok
+test lp_state_tokens_are_runtime_bound_and_invalidated_by_mutation_and_restore ... ok
+test same_opaque_child_identity_from_distinct_emitters_cancels_independently ... ok
+test work_at_gvt_remains_reversible_and_pre_floor_inputs_fail_unchanged ... ok
+test snapshot_and_restore_faults_poison_without_publishing_replacement_outputs ... ok
+test replacement_before_old_anti_survives_and_cascades_to_correct_final_state ... ok
+test late_parent_children_same_tick_keep_structural_order_and_rng_state ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/production_parity.rs (target/owned-native-join/1.98.1/debug/deps/production_parity-548868a91e651c7d)
+
+running 1 test
+test production_runtime_matches_core_scheduler_for_des_abm_and_mixed_models ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.98s
+
+     Running tests/production_protocol.rs (target/owned-native-join/1.98.1/debug/deps/production_protocol-6b52375aca0da5ee)
+
+running 14 tests
+test outbound_metadata_and_overflow_fail_with_typed_errors ... ok
+test null_bounds_are_exclusive_and_event_at_the_bound_waits ... ok
+test emitting_event_lookahead_overflow_is_typed_and_poisoning ... ok
+test handler_panic_fails_closed_and_poisons_runtime ... ok
+test invalid_outbound_batch_is_rejected_and_runtime_is_poisoned ... ok
+test mixed_valid_and_invalid_outputs_commit_none_of_the_round ... ok
+test eligible_process_batches_run_concurrently_across_logical_processes ... ok
+test partition_process_sets_and_directed_routes_are_validated_before_execution ... ok
+test sparse_future_input_resumes_after_partial_horizon ... ok
+test bounded_same_tick_chain_can_resume_without_corrupting_runtime ... ok
+test same_lp_followups_are_ordered_by_timestamp_before_existing_events ... ok
+test empty_cyclic_topology_advances_without_per_tick_rounds ... ok
+test randomized_positive_lookahead_ring_progresses_through_ten_thousand_ticks ... ok
+test adversarial_minimum_lookahead_cycle_executes_every_tick_on_eight_lps ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.15s
+
+     Running tests/track47_conservative_runtime.rs (target/owned-native-join/1.98.1/debug/deps/track47_conservative_runtime-8cd6ba39bbde8e16)
+
+running 4 tests
+test conservative_lookahead_rejects_early_remote_events_and_allows_boundary_events ... ok
+test partition_plan_and_null_messages_preserve_safe_time_progression ... ok
+test sequential_partitioned_parity_covers_des_abm_and_mixed_workloads ... ok
+test deadlock_stress_and_scaling_smoke_have_progress_without_speedup_claims ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.35s
+
+     Running tests/track48_rollback_regressions.rs (target/owned-native-join/1.98.1/debug/deps/track48_rollback_regressions-9fa211afed48275e)
+
+running 5 tests
+test rollback_recreation_does_not_resurrect_an_initial_generation_token ... ok
+test component_token_from_another_runtime_is_stale ... ok
+test anti_cancellation_rebuild_preserves_initial_component_seed ... ok
+test rollback_before_first_checkpoint_preserves_initial_component_seed ... ok
+test checkpoint_restore_does_not_revive_a_stale_initial_token ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo_ecs_pdes
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

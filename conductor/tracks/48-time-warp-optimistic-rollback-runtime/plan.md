@@ -75,3 +75,7 @@ phase begins:
 ## Review fixes — bounded delivery packet
 
 - [~] Record current local capability, compiler-label correction and public API assessment in review-report.md and docs/design/track48-api-review.md; coordinator integration and remaining gates stay pending.
+
+## Accepted owned native leaf — 4 October 2026
+
+The [current acceptance record](owned-native-acceptance-20261004.md) supersedes earlier pending local/compiler snapshots: source9bf478e passes166 PDES tests on each explicitly bound1.98.1/1.76.0 compiler; fullCI530/530,coverage92.59%,locked doctests,benchmark smoke/12 collector tests,manifest and local phase/clean gates pass. Original failed receipts remain historical. Track48 stays In Progress pending hosted native delivery and live distributed acceptance. Changed interface semantics expire the previous conditional Track49 entry disposition; fresh specific human disposition and reviewed production packet are required. Global status/phase files and parent pin remain with their current parallel owners.
