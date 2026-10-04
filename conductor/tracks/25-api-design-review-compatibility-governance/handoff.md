@@ -164,3 +164,8 @@ does not close Track 25 or replace its remaining phase gates.
 ## C1 shared temporal helper prerequisite (2026-10-04)
 
 Approved internal experimental direction adds KnowledgeAvailable to a public enum; exhaustive matches require migration. Release hold remains; no universal nonbreaking or external-owner claim. See `../../design/calibration/c1-shared-temporal-helper-v1.md`. This is a scoped development extension; historical closeout evidence remains unchanged.
+
+
+## C1 UTC companion codec governance disposition (2026-10-04)
+
+Internally approved utc_codec namespace, five functions and exact error semantics. New UtcCodecError is #[non_exhaustive], requiring downstream wildcard matches. Dependency-free checked Gregorian arithmetic preserves the default floor; existing ClockRole exhaustive-match release hold remains. No stable API guarantee, release acceptance or external signature claimed. See `../../design/calibration/c1-utc-codec-v1.md`. Source dispatch, mapper integration and full C1 remain pending. Historical closeout evidence is preserved.

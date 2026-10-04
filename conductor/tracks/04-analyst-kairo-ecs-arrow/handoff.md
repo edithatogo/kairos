@@ -94,3 +94,8 @@ These results are local package evidence. They do not close the Track 04 phase, 
 ## C1 shared temporal helper prerequisite (2026-10-04)
 
 Own the bounded temporal extraction and six-family fixture; preserve existing wrapper precedence and all legacy schemas. No implementation or test pass is recorded here. See `../../design/calibration/c1-shared-temporal-helper-v1.md`. This is a scoped development extension; historical closeout evidence remains unchanged.
+
+
+## C1 UTC companion codec governance disposition (2026-10-04)
+
+Own the internally approved experimental public opt-in UTC codec and physical binary/text profile; no source/runtime qualification is claimed. See `../../design/calibration/c1-utc-codec-v1.md`. Source dispatch, mapper integration and full C1 remain pending. Historical closeout evidence is preserved.
