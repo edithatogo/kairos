@@ -26,6 +26,7 @@ on:
       - 'tests/test_npm_audit_runner.py'
       - 'tests/test_http_cache_patch.py'
       - 'tests/http-cache-security-regression.mjs'
+      - 'tests/http-cache-legacy-60-regression.mjs'
       - 'scripts/bootstrap.sh'
       - 'scripts/bootstrap-python-tools.lock'
       - 'scripts/package-python-tools.in'
@@ -168,7 +169,7 @@ jobs:
           printf 'KAIROS_NODE_BIN=%s\nKAIROS_NODE_SHA256=%s\n' "$KAIROS_NODE_BIN" "$KAIROS_NODE_SHA256" >> "$GITHUB_ENV"
       - name: Run preserved 60-case cache regression
         run: |
-          "$KAIROS_NODE_BIN" tests/http-cache-security-regression.mjs
+          "$KAIROS_NODE_BIN" tests/http-cache-legacy-60-regression.mjs
       - name: Run qualified 248-case private-vendor regression
         run: |
           "$KAIROS_NODE_BIN" tests/http-cache-private-vendor-regression.mjs scripts/bootstrap-node-tools/node_modules/http-cache-semantics/index.js

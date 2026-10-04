@@ -9,7 +9,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github/workflows/package-dry-run.yml"
 PRIVATE_FIXTURE = ROOT / "tests/http-cache-private-vendor-regression.mjs"
-LEGACY_FIXTURE = ROOT / "tests/http-cache-security-regression.mjs"
+LEGACY_FIXTURE = ROOT / "tests/http-cache-legacy-60-regression.mjs"
 PRIVATE_FIXTURE_SHA256 = "05d4c9990c5dfc691798336443d28638a405a751076ae7147efc7a19a5392d9c"
 LEGACY_FIXTURE_SHA256 = "298c3537d14c19afdc188cde554596d4f2fc4f95c56d387b79af9ab851f510b2"
 
@@ -34,7 +34,7 @@ class StrictNpmAuditWorkflowTests(unittest.TestCase):
             "vendor/http-cache-semantics-kairos-prototype/**",
             "vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz",
             "scripts/bootstrap-node-tools/package-lock.json",
-            "tests/http-cache-security-regression.mjs",
+            "tests/http-cache-legacy-60-regression.mjs",
         ):
             self.assertIn(f"      - '{path}'", self.text)
         self.assertIn("  workflow_dispatch:", self.text)
@@ -51,7 +51,7 @@ class StrictNpmAuditWorkflowTests(unittest.TestCase):
         self.assertIn('KAIROS_NODE_BIN="$(realpath "$(command -v node)")"', self.job)
         self.assertIn('KAIROS_NODE_SHA256="$(sha256sum "$KAIROS_NODE_BIN" | awk', self.job)
         self.assertIn('>> "$GITHUB_ENV"', self.job)
-        self.assertIn('run: |\n          "$KAIROS_NODE_BIN" tests/http-cache-security-regression.mjs', self.job)
+        self.assertIn('run: |\n          "$KAIROS_NODE_BIN" tests/http-cache-legacy-60-regression.mjs', self.job)
         self.assertIn('run: |\n          "$KAIROS_NODE_BIN" tests/http-cache-private-vendor-regression.mjs scripts/bootstrap-node-tools/node_modules/http-cache-semantics/index.js', self.job)
         self.assertIn('run: python3 scripts/bootstrap-node-tools/run_strict_npm_audit_gate.py --node-path "$KAIROS_NODE_BIN" --node-sha256 "$KAIROS_NODE_SHA256"', self.job)
 
