@@ -277,3 +277,8 @@ The public runtime contract and API compatibility assessment now document the ad
 
 
 Codec bridge combined local acceptance: integrated b8ff195 passes all five independent held-outs on explicitly bound Rust1.98.1 and1.76.0; the independent reviewer verifies source, raw log and actual compiler-cache hashes. Matching1.98.1/LLVM22.1.8 `just ci` passes467 tests, zero skipped, core coverage512/553 (92.59%) and fmt/Clippy/rustdoc/deny/audit. Architecture role independently accepts source/code/docs provenance. Canonical codec-bridge-evidence records preserve these actual snapshots. Hosted/new-PR, authority/fencing, owned/outbox, durable admission and actual distributed gates remain pending; Track48 stays In Progress.
+
+
+## Owned native constructor and root-routing local joins — 4 October 2026
+
+The [constructor foundation](owned-construction-evidence.md) and [owned root-routing leaf](owned-root-routing-evidence.md) are accepted locally. Root-routing source and independent fixtures are integrated unchanged at68c319791ab7a09e62289c6baad9c6f4216bab32; actual matching Rust1.98.1 and1.76.0 full-crate tests each pass138, zero failed/ignored, with formatting and strict all-target Clippy exit0. Independent source/oracle/provenance review verifies exact committed blobs and immutable cache-bound receipts. Earlier failures and cache supersession remain documented. Track48 stays In Progress. Full owned handler/straggler/replay/anti/retirement/group-cut implementation, fresh fullCI, hosted Actions and normal merge are required; Track49 durable real process/rank evidence and parent pin remain separate. [Handler transition design](owned-handler-transition-design.md) is still proposed, not dispatch authority.
