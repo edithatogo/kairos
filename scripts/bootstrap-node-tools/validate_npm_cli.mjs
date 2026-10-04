@@ -46,8 +46,8 @@ for (const consumer of [requireFromNpm, requireFromFetch]) {
   ].includes(cachePath), 'cache consumer must resolve an expected installed package path');
   assert.equal(consumer('http-cache-semantics/package.json').version, '4.2.0');
   assert.equal(createHash('sha256').update(readFileSync(cachePath)).digest('hex'),
-    'fc7b3f0265b7a7d0fee83bafa47186a66495720d3179801c2be3083de6d0cf76',
-    'npm consumers must resolve the reviewed local cache source mitigation');
+    '5942c6d3df40fce2151d8e409e7ad7e7c9c4a8ee09b7066072edf3a939fc589c',
+    'npm consumers must resolve the composed reviewed local cache source mitigation');
 }
 
 console.log(`npm ${npmPackage.version} resolves locked, top-level dependencies correctly`);
