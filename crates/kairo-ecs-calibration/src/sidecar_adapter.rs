@@ -580,6 +580,7 @@ fn validate_metric_inputs(input: &Input) -> Result<(), String> {
         return Err("metric spec has an empty or duplicate fixed cohort identity".into());
     }
     let mut mapped = BTreeMap::new();
+    let mut canonical_strata = BTreeSet::new();
     for group in &input.metric_strata {
         if !s.groups.contains(&group.group)
             || group.strata.get("candidate_id") != Some(&Value::String(b.candidate_id.clone()))
@@ -587,6 +588,9 @@ fn validate_metric_inputs(input: &Input) -> Result<(), String> {
             || mapped.insert(group.group.as_str(), &group.strata).is_some()
         {
             return Err("invalid fixed group-to-strata mapping".into());
+        }
+        if !canonical_strata.insert(canonical_json_value(&group.strata).to_string()) {
+            return Err("duplicate canonical strata mapping".into());
         }
     }
     if input
@@ -608,6 +612,22 @@ fn validate_metric_inputs(input: &Input) -> Result<(), String> {
         return Err("residual group has no explicit metric strata mapping".into());
     }
     Ok(())
+}
+
+fn canonical_json_value(value: &Value) -> Value {
+    match value {
+        Value::Object(object) => {
+            let mut keys: Vec<_> = object.keys().collect();
+            keys.sort_unstable();
+            let mut canonical = Map::new();
+            for key in keys {
+                canonical.insert(key.clone(), canonical_json_value(&object[key]));
+            }
+            Value::Object(canonical)
+        }
+        Value::Array(values) => Value::Array(values.iter().map(canonical_json_value).collect()),
+        scalar => scalar.clone(),
+    }
 }
 
 fn validate_metric_rows(rows: &[MetricRow], groups: &BTreeSet<&str>) -> Result<(), String> {

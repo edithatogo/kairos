@@ -402,6 +402,29 @@ fn c43_paired_metric_denominator_is_matched_pairs_and_manifest_keeps_cohort_coun
 }
 
 #[test]
+fn c43_duplicate_canonical_metric_strata_fail_closed_with_raw_cohorts() {
+    let mut i = fixture();
+    i.metric_strata[0].strata = json!({
+        "candidate_id": "candidate-a",
+        "coverage": "complete"
+    });
+    i.metric_spec.groups.push("alias".into());
+    i.metric_strata.push(GroupStratum {
+        group: "alias".into(),
+        // Same mapping, with object keys deliberately inserted in reverse order.
+        strata: json!({
+            "coverage": "complete",
+            "candidate_id": "candidate-a"
+        }),
+    });
+    let err = build_sidecars(&i).expect_err("ambiguous C0 strata mapping must fail closed");
+    assert!(err.reason.contains("duplicate canonical strata mapping"));
+    assert_eq!(err.metric_raw_rows.len(), 2);
+    assert_eq!(err.raw_diagnostics["metric_reference_raw_rows"], 1);
+    assert_eq!(err.raw_diagnostics["metric_simulation_raw_rows"], 1);
+}
+
+#[test]
 fn c43_structurally_invalid_metric_rows_fail_with_both_raw_cohorts() {
     let mut i = fixture();
     i.reference_metric

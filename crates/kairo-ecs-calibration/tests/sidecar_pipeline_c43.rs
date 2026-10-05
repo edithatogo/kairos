@@ -311,12 +311,7 @@ fn write_c44_case(root: &std::path::Path, name: &str, input: &Input) {
         })
         .collect();
     metric_groups.sort_by(|a, b| a["group"].as_str().cmp(&b["group"].as_str()));
-    let runs: Vec<_> = input.run_records.iter().map(|b| json!({
-        "run_id":b.run_id, "candidate_id":b.candidate_id, "dataset_id":b.dataset_id,
-        "scenario_id":b.scenario_id, "study_id":b.study_id, "replication_id":b.replication_id,
-        "seed_schedule_id":b.seed_schedule_id, "seed_map_ref":b.seed_map_ref,
-        "mapping_version":b.mapping_version, "parameter_hash":b.parameter_hash
-    })).collect();
+    let runs = source_run_records(input);
     fs::write(dir.join("source_manifest.json"), serde_json::to_vec(&json!({
         "runs":runs, "events":events, "source_rows":input.residual_rows.len(),
         "metric_reference_rows":input.reference_metric.rows.len(),
@@ -324,6 +319,26 @@ fn write_c44_case(root: &std::path::Path, name: &str, input: &Input) {
         "source_window":{"start_ticks":input.source_window.start.to_string(),
             "end_ticks":input.source_window.end_exclusive.to_string()}
     })).unwrap()).unwrap();
+}
+
+fn source_run_records(input: &Input) -> Vec<Value> {
+    let mut runs: Vec<_> = input
+        .run_records
+        .iter()
+        .map(|b| {
+            json!({
+                "run_id":b.run_id, "candidate_id":b.candidate_id, "dataset_id":b.dataset_id,
+                "scenario_id":b.scenario_id, "study_id":b.study_id, "replication_id":b.replication_id,
+                "seed_schedule_id":b.seed_schedule_id, "seed_map_ref":b.seed_map_ref,
+                "seed_map_version":b.seed_map_version,
+                "seed_contract_version":b.seed_contract_version,
+                "mapping_version":b.mapping_version, "fidelity":b.fidelity,
+                "parameter_hash":b.parameter_hash
+            })
+        })
+        .collect();
+    runs.sort_by(|a, b| a["run_id"].as_str().cmp(&b["run_id"].as_str()));
+    runs
 }
 
 fn write_c44_diagnostic_cases(input: &Input) {
@@ -508,12 +523,30 @@ fn c43_runtime_records_and_hashes_survive_permutation_and_physical_framing() {
         );
         fs::write(dir.join("event_log.smoke"), bytes).unwrap();
         let events: Vec<_> = x.events.iter().map(|e|json!({"run_id":e.run_id,"event_id":format!("event:{}:{}",e.event_id.index,e.event_id.generation),"time_ticks":e.time_ticks.to_string()})).collect();
-        let metric_groups: Vec<_> = x
+        let mut metric_groups: Vec<_> = x
             .metric_strata
             .iter()
             .map(|s| json!({"group":s.group,"strata":s.strata}))
             .collect();
-        fs::write(dir.join("source_manifest.json"),serde_json::to_vec(&json!({"runs":[{"run_id":"run-a","candidate_id":"candidate-a","dataset_id":"dataset","scenario_id":"scenario","study_id":"study","replication_id":"rep-1","seed_schedule_id":"schedule-v1","seed_map_ref":"map-v1","mapping_version":"mapping-v1","parameter_hash":"a".repeat(64)}],"events":events,"source_rows":x.residual_rows.len(),"metric_reference_rows":x.reference_metric.rows.len(),"metric_simulation_rows":x.simulation_metric.rows.len(),"metric_groups":metric_groups,"source_window":{"start_ticks":"0","end_ticks":"20"}})).unwrap()).unwrap();
+        metric_groups.sort_by(|a, b| a["group"].as_str().cmp(&b["group"].as_str()));
+        let source_manifest = json!({
+            "runs":source_run_records(&x), "events":events,
+            "source_rows":x.residual_rows.len(),
+            "metric_reference_rows":x.reference_metric.rows.len(),
+            "metric_simulation_rows":x.simulation_metric.rows.len(),
+            "metric_groups":metric_groups,
+            "source_window":{"start_ticks":"0","end_ticks":"20"}
+        });
+        assert_eq!(
+            source_manifest["runs"][0]["seed_contract_version"],
+            x.binding.seed_contract_version
+        );
+        assert_eq!(source_manifest["metric_groups"][0]["group"], "candidate-a");
+        fs::write(
+            dir.join("source_manifest.json"),
+            serde_json::to_vec(&source_manifest).unwrap(),
+        )
+        .unwrap();
         for chunk in [1, 2, 64] {
             let framed = dir.join(format!("framing-{chunk}"));
             for manifest in [
