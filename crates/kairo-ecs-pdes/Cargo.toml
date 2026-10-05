@@ -7,7 +7,7 @@ repository = "https://github.com/edithatogo/kairos"
 rust-version = "1.76"
 
 [dependencies]
-kairo-ecs-types = { path = "../kairo-ecs-types" }
+kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 
 [features]
 default = []
@@ -19,7 +19,7 @@ path = "src/lib.rs"
 
 [dev-dependencies]
 serde_json = "1"
-kairo-ecs-core = { path = "../kairo-ecs-core" }
+kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
 
 [[bench]]
 name = "production"

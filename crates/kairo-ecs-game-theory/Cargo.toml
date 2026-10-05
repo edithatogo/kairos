@@ -12,8 +12,8 @@ generated-components = []
 graph-relations = ["dep:kairo-ecs-state", "dep:kairo-ecs-types"]
 
 [dependencies]
-kairo-ecs-state = { path = "../kairo-ecs-state", optional = true }
-kairo-ecs-types = { path = "../kairo-ecs-types", optional = true }
+kairo-ecs-state = { path = "../kairo-ecs-state", version = "0.0.0", optional = true }
+kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0", optional = true }
 
 [[bench]]
 name = "normal_form"
