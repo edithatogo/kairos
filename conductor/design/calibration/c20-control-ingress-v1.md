@@ -1,6 +1,6 @@
 # C2.0 owned transit control ingress v1
 
-Status: proposed for independent test-interface review; runtime absent.
+Status: independently reviewed test-interface definition; runtime absent.
 Extends admission/transit contracts without changing their existing signatures.
 
 ## Constructibility gap
@@ -39,3 +39,8 @@ Tests schedule controls through this method, retain exact returned EventIds and
 assert actual dispatch identity, carrier progress and single arrival claim.
 Read-only submitted Service position remains unchanged. Complete checkpoint
 restoration and public API/native production feature gates stay open.
+
+Independent d35_evidence_review inspected the exact ownership/lineage rules
+at e77d623 and accepted the definition. Coordinator requires tests for exact
+control EventId matching, repeated/unowned dispatch rejection and unchanged
+bridge state after failed ingress. No runtime or public API acceptance follows.

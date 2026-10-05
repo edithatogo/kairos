@@ -91,9 +91,12 @@ def main() -> int:
         and all(declarations.values())
     )
 
+    injected_missing = []
     if not declarations["work_duration"] and not files_present["work_duration"]:
+        injected_missing.append("work_duration")
         lib_text += '\n#[cfg(test)]\n#[path = "work_duration.rs"]\nmod work_duration;\n'
     if not declarations["flow_bridge"] and not files_present["flow_bridge"]:
+        injected_missing.append("flow_bridge")
         lib_text += '\n#[cfg(test)]\n#[path = "flow_bridge.rs"]\nmod flow_bridge;\n'
     lib_text += '\n#[cfg(test)]\n#[path = "paired_flow_c20.rs"]\nmod paired_flow_c20;\n'
     lib_path.write_text(lib_text)
@@ -138,7 +141,14 @@ def main() -> int:
     )
     expected_missing = sorted(name for name, present in files_present.items() if not present)
     compiler_errors = re.findall(r"(?m)^error(?:\[[^\]]+\])?: (?!could not compile)(.+)$", proc.stdout)
-    only_missing_module_errors = bool(missing) and set(missing).issubset(expected_missing) and (
+    expected_first_missing = injected_missing[0] if injected_missing else None
+    missing_path_errno = None
+    if expected_first_missing is not None:
+        try:
+            (crate / "src" / f"{expected_first_missing}.rs").stat()
+        except OSError as error:
+            missing_path_errno = error.errno
+    only_missing_module_errors = missing == [expected_first_missing] and missing_path_errno == 2 and (
         len(compiler_errors) == len(missing)
         and all("couldn't find file" in message for message in compiler_errors)
     )
@@ -182,6 +192,10 @@ def main() -> int:
         "cargo_argv": argv,
         "cargo_cwd": str(DISPOSABLE),
         "cargo_exit_status": proc.returncode,
+        "expected_first_missing": expected_first_missing,
+        "missing_path_errno": missing_path_errno,
+        "missing_file_inventory": expected_missing,
+        "observed_missing_diagnostics": missing,
         "cargo_log": str(LOGS / "cargo-test.log"),
         "cargo_log_sha256": sha256(raw_log),
         "toolchain_log": str(LOGS / "toolchain.log"),
