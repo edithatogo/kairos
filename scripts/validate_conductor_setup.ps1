@@ -27,14 +27,17 @@ function Invoke-CargoWorkspaceTests {
     if (Test-WindowsHost) {
         $toolchain = "1.99.0-x86_64-pc-windows-gnu"
     } else {
-        $hostOutput = & rustup show host 2>$null
+        $hostOutput = & rustup show 2>$null
         if ($LASTEXITCODE -ne 0) {
-            throw "Unable to determine the current Rust host from rustup"
+            throw "Unable to read the rustup configuration needed to determine the current Rust host"
         }
-        $hostTriple = (@($hostOutput) -join "`n").Trim()
-        if ($hostTriple -notmatch '^[A-Za-z0-9_]+(?:-[A-Za-z0-9_]+)+$') {
-            throw "rustup returned an invalid host triple: $hostTriple"
+        $hostLines = @($hostOutput | Where-Object {
+            ([string]$_) -match '^Default host:\s+[A-Za-z0-9_]+(?:-[A-Za-z0-9_]+)+\s*$'
+        })
+        if ($hostLines.Count -ne 1) {
+            throw "rustup show must return exactly one valid Default host triple"
         }
+        $hostTriple = (([string]$hostLines[0]) -replace '^Default host:\s+', '').Trim()
         $toolchain = "1.99.0-$hostTriple"
     }
 
@@ -173,6 +176,16 @@ function Get-TrackIdsFromTracksYaml {
     return @($ids | Sort-Object -Unique)
 }
 
+function Invoke-SetupValidatorScript {
+    param([string]$Path)
+
+    $global:LASTEXITCODE = 0
+    & $Path
+    if ($global:LASTEXITCODE -ne 0) {
+        throw "Setup validator '$Path' failed with exit code $global:LASTEXITCODE"
+    }
+}
+
 $expectedTrackIds = @(Get-TrackIdsFromTracksYaml -Path "conductor/tracks.yaml")
 if ($expectedTrackIds.Count -eq 0) {
     throw "No track ids found in conductor/tracks.yaml"
@@ -205,9 +218,9 @@ foreach ($track in $trackDirs) {
     }
 }
 
-& (Join-Path $PSScriptRoot "validate_track_no_skip_claims.ps1")
-& (Join-Path $PSScriptRoot "validate_conductor_phase_gates.ps1")
-& (Join-Path $PSScriptRoot "validate_conductor_git_closeout.ps1")
+Invoke-SetupValidatorScript -Path (Join-Path $PSScriptRoot "validate_track_no_skip_claims.ps1")
+Invoke-SetupValidatorScript -Path (Join-Path $PSScriptRoot "validate_conductor_phase_gates.ps1")
+Invoke-SetupValidatorScript -Path (Join-Path $PSScriptRoot "validate_conductor_git_closeout.ps1")
 
 $workflowFiles = @(Get-ChildItem -LiteralPath ".github/workflows" -Filter "*.yml")
 $bootstrapAllowed = @(

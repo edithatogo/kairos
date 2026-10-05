@@ -13,7 +13,7 @@ if ($parseErrors.Count -gt 0) {
     throw "Setup validator has PowerShell parse errors: $($parseErrors -join '; ')"
 }
 
-foreach ($functionName in @("Test-RustupToolchainInstalled", "Invoke-CargoWorkspaceTests")) {
+foreach ($functionName in @("Test-RustupToolchainInstalled", "Invoke-CargoWorkspaceTests", "Invoke-SetupValidatorScript")) {
     $definitions = @($setupAst.FindAll({
         param($node)
         $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
@@ -35,8 +35,8 @@ function rustup {
     if ($arguments.Count -ge 2 -and $arguments[0] -eq "toolchain" -and $arguments[1] -eq "list") {
         return $script:MockState.Installed
     }
-    if ($arguments.Count -eq 2 -and $arguments[0] -eq "show" -and $arguments[1] -eq "host") {
-        return $script:MockState.Host
+    if ($arguments.Count -eq 1 -and $arguments[0] -eq "show") {
+        return $script:MockState.HostOutput
     }
     if ($arguments.Count -eq 4 -and $arguments[0] -eq "which" -and $arguments[1] -eq "--toolchain") {
         return $arguments[3]
@@ -89,6 +89,7 @@ function New-MockState {
     return [pscustomobject]@{
         Windows = $Windows
         Host = $HostTriple
+        HostOutput = @("Default host: $HostTriple", "rustup home: /mock/.rustup")
         Installed = $Installed
         CargoVersion = $CargoVersion
         RustcVersion = $RustcVersion
@@ -143,6 +144,7 @@ $script:MockState = New-MockState
 Set-TestEnvironment
 Invoke-CargoWorkspaceTests
 Assert-Equal $script:MockState.CargoTestCalls 1 "Native toolchain did not run Cargo exactly once"
+Assert-True ($script:MockState.RustupCalls -contains "show") "Native branch did not query rustup show"
 Assert-True ($script:MockState.RustupCalls -contains "which --toolchain 1.99.0-aarch64-apple-darwin cargo") "Native branch did not select the host's canonical 1.99.0 toolchain"
 Assert-Equal (@($script:MockState.CargoTestArgs) -join " ") "test --workspace --locked" "Cargo did not receive the locked workspace command"
 Assert-Equal $script:MockState.CargoEnvironment.RUSTUP_TOOLCHAIN "1.99.0-aarch64-apple-darwin" "Cargo did not receive the exact native toolchain"
@@ -150,6 +152,21 @@ Assert-Equal $script:MockState.CargoEnvironment.RUSTC "rustc" "Cargo did not rec
 Assert-Equal $script:MockState.CargoEnvironment.RUSTDOC "rustdoc" "Cargo did not receive the rustup-resolved rustdoc"
 Assert-Equal $script:MockState.CargoEnvironment.RUSTC_WRAPPER "" "RUSTC_WRAPPER was not cleared during Cargo"
 Assert-Equal $script:MockState.CargoEnvironment.RUSTC_WORKSPACE_WRAPPER "" "RUSTC_WORKSPACE_WRAPPER was not cleared during Cargo"
+Assert-TestEnvironmentRestored
+
+# Malformed rustup show output must fail before invoking Cargo or changing the caller environment.
+$script:MockState = New-MockState
+$script:MockState.HostOutput = @("rustup home: /mock/.rustup", "installed toolchains", "stable-aarch64-apple-darwin")
+Set-TestEnvironment
+Assert-Throws { Invoke-CargoWorkspaceTests } "Missing Default host line did not fail closed"
+Assert-Equal $script:MockState.CargoTestCalls 0 "Cargo ran without a validated rustup host"
+Assert-TestEnvironmentRestored
+
+$script:MockState = New-MockState
+$script:MockState.HostOutput += "Default host: x86_64-unknown-linux-gnu"
+Set-TestEnvironment
+Assert-Throws { Invoke-CargoWorkspaceTests } "Duplicate Default host lines did not fail closed"
+Assert-Equal $script:MockState.CargoTestCalls 0 "Cargo ran with ambiguous rustup host output"
 Assert-TestEnvironmentRestored
 
 # Windows must use GNU when present and fail closed instead of using an ambient/native alias.
@@ -239,6 +256,32 @@ foreach ($tableName in $expectedMise.Keys) {
         Assert-True $mise[$tableName].ContainsKey($key) "mise key $tableName.$key is missing"
         Assert-Equal $mise[$tableName][$key] $expectedMise[$tableName][$key] "mise value changed unexpectedly at $tableName.$key"
     }
+}
+
+$workflowPath = Join-Path $repoRoot ".github\workflows\validate-conductor.yml"
+$workflow = Get-Content -LiteralPath $workflowPath -Raw
+$setupIndex = $workflow.IndexOf("run: pwsh -NoProfile -File scripts/validate_conductor_setup.ps1", [StringComparison]::Ordinal)
+$linuxInstall = "rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy"
+$windowsInstall = "rustup toolchain install 1.99.0-x86_64-pc-windows-gnu --profile minimal --component rustfmt --component clippy"
+$linuxIndex = $workflow.IndexOf($linuxInstall, [StringComparison]::Ordinal)
+$windowsIndex = $workflow.IndexOf($windowsInstall, [StringComparison]::Ordinal)
+Assert-True ($setupIndex -gt 0 -and $linuxIndex -ge 0 -and $linuxIndex -lt $setupIndex) "Workflow did not install exact host Rust 1.99.0 before setup validation"
+Assert-True ($setupIndex -gt 0 -and $windowsIndex -ge 0 -and $windowsIndex -lt $setupIndex) "Workflow did not install exact Windows GNU Rust 1.99.0 before setup validation"
+
+$childDirectory = Join-Path ([IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString("N"))
+New-Item -ItemType Directory -Path $childDirectory | Out-Null
+try {
+    $successChild = Join-Path $childDirectory "success.ps1"
+    $failureChild = Join-Path $childDirectory "failure.ps1"
+    Set-Content -LiteralPath $successChild -Value "exit 0" -NoNewline
+    Set-Content -LiteralPath $failureChild -Value "exit 1" -NoNewline
+
+    Invoke-SetupValidatorScript -Path $successChild
+    Assert-Equal $global:LASTEXITCODE 0 "Successful child validator left a failing exit code"
+    Assert-Throws { Invoke-SetupValidatorScript -Path $failureChild } "Child validator exit 1 did not fail the parent setup validator"
+}
+finally {
+    Remove-Item -LiteralPath $childDirectory -Recurse -Force
 }
 
 Write-Host "Rust setup toolchain regression tests passed (mocked; no Rust process executed)."

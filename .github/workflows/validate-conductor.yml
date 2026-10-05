@@ -58,6 +58,14 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Install exact Rust 1.99.0 Linux toolchain
+        if: runner.os == 'Linux'
+        run: rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
+
+      - name: Install exact Rust 1.99.0 Windows GNU toolchain
+        if: runner.os == 'Windows'
+        run: rustup toolchain install 1.99.0-x86_64-pc-windows-gnu --profile minimal --component rustfmt --component clippy
+
       - name: Validate conductor setup
         run: pwsh -NoProfile -File scripts/validate_conductor_setup.ps1
 
