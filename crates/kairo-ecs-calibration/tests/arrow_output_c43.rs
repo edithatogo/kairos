@@ -1,3 +1,5 @@
+#![cfg(any(feature = "ipc", feature = "parquet"))]
+
 #[path = "../src/arrow_output.rs"]
 mod output;
 
@@ -97,6 +99,17 @@ fn c43_sort_uses_full_residual_identity_and_numeric_occurrence() {
     assert_eq!(decoded[0]["dataset_id"], json!("d"));
     assert_eq!(decoded[1]["occurrence"], json!(10));
     assert_eq!(decoded[2]["dataset_id"], json!("other-dataset"));
+}
+#[test]
+fn c43_residual_sort_uses_raw_string_order_for_escaped_ids() {
+    let mut escaped = residual();
+    escaped["dataset_id"] = json!("\n!");
+    let mut punctuation = residual();
+    punctuation["dataset_id"] = json!("!");
+    let batch = output::encode("calibration_residual.v1", &[punctuation, escaped]).unwrap();
+    let decoded = output::decode("calibration_residual.v1", &batch).unwrap();
+    assert_eq!(decoded[0]["dataset_id"], json!("\n!"));
+    assert_eq!(decoded[1]["dataset_id"], json!("!"));
 }
 #[test]
 fn c43_validates_frozen_keys_metric_semantics_and_decode_rows() {

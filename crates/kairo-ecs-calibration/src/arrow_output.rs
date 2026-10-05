@@ -675,7 +675,7 @@ fn sort_cmp(a: &Value, b: &Value, kind: &str) -> std::cmp::Ordering {
                 .unwrap()
                 .cmp(&canonical(&b[*key]).unwrap())
         } else {
-            a[*key].to_string().cmp(&b[*key].to_string())
+            a[*key].as_str().cmp(&b[*key].as_str())
         };
         if !ord.is_eq() {
             return ord;
