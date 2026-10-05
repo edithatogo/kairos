@@ -10,6 +10,7 @@ on:
       - '.github/workflows/docs.yml'
       - '.github/workflows/docs-quality.yml'
       - 'scripts/bootstrap-node-tools/apply_http_cache_fix.py'
+      - 'tests/test_website_cache_evidence.py'
       - 'tests/test_website_http_cache_patch.py'
       - 'tests/fixtures/http-cache-semantics-4.3.0.tgz'
       - 'tests/http-cache-security-regression.mjs'
