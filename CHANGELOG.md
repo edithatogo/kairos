@@ -18,6 +18,8 @@ Format:
 
 ### Changed
 
+- Rust CI skips exact allowlisted archive Python helper and test changes while retaining verification for Rust, shared workflows, schemas, locks, and unknown paths; archive validation remains required.
+
 - Release dry runs offer an explicit actual-package-archives profile that reacquires pinned producer and consumer evidence, requalifies native Linux scanner bytes, independently verifies exact archive output, and retains checksums and readback receipts; the legacy source inventory profile remains the default.
 
 - Archive release subjects require independently verified retained evidence and matching release source; native scanner receipts bind exact Darwin and Linux executable pins.
