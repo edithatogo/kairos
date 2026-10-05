@@ -34,6 +34,14 @@ BUILDER = "packaging/scripts/build_archive_evidence_expectations.py"
 SCHEMA = "tests/fixtures/archive-supply-chain/spdx-2.3/spdx-schema.json"
 SYFT_INSTALLER = "scripts/supply_chain/install_verified_syft.py"
 SYFT_DARWIN_LOCK = "scripts/supply_chain/syft-darwin-verifier.lock"
+SYFT_LINUX_LOCK = "scripts/supply_chain/syft-linux-verifier.lock"
+SYFT_LOCKS = {
+    "syft-darwin-verifier.lock": SYFT_DARWIN_LOCK,
+    "syft-linux-verifier.lock": SYFT_LINUX_LOCK,
+}
+SYFT_QUALIFICATION_LIMIT = (
+    "Native authenticated installation and version probe only; no package scan, release, or publication is represented."
+)
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
 MAX_JSON = 8 * 1024 * 1024
@@ -144,7 +152,7 @@ def trusted_blobs(root: Path, consumer_sha: str) -> tuple[dict[str, bytes], dict
     head = git(root, "rev-parse", "--verify", "HEAD", limit=128).decode("ascii", "strict").strip()
     if head != consumer_sha:
         fail("trusted consumer SHA differs from checkout HEAD")
-    paths = (*HELPERS, VERIFIER, BUILDER, SCHEMA, SYFT_INSTALLER, SYFT_DARWIN_LOCK)
+    paths = (*HELPERS, VERIFIER, BUILDER, SCHEMA, SYFT_INSTALLER, SYFT_DARWIN_LOCK, SYFT_LINUX_LOCK)
     blobs: dict[str, bytes] = {}
     hashes: dict[str, str] = {}
     for relative in paths:
@@ -224,7 +232,7 @@ def load_trusted_module(verifier: Any, blob: bytes, name: str, relative: str) ->
         exec(compile(blob, relative, "exec", dont_inherit=True), module.__dict__)
     except Exception as exc:
         sys.modules.pop(name, None)
-        raise InputError("trusted verifier blob could not be loaded") from exc
+        raise InputError("trusted source blob could not be loaded") from exc
     return module
 
 
@@ -264,7 +272,7 @@ def validate_bundle(verifier: Any, bundle: Path, sums_bytes: bytes, rows: list[d
     verifier.inspect_archive_rows(bundle, rows)
 
 
-def validate_syft(args: argparse.Namespace, hashes: dict[str, str]) -> dict[str, Any]:
+def validate_syft(args: argparse.Namespace, hashes: dict[str, str], installer: Any) -> dict[str, Any]:
     if not DIGEST_RE.fullmatch(args.syft_sha256) or not DIGEST_RE.fullmatch(args.syft_receipt_sha256):
         fail("Syft binary and receipt pins must be lowercase SHA-256")
     binary = read_nofollow(args.syft, 256 * 1024 * 1024, "Syft binary")
@@ -272,14 +280,38 @@ def validate_syft(args: argparse.Namespace, hashes: dict[str, str]) -> dict[str,
     if sha256(binary) != args.syft_sha256 or sha256(receipt_bytes) != args.syft_receipt_sha256:
         fail("Syft binary or receipt differs from caller pin")
     receipt = strict_json(receipt_bytes, "Syft qualification receipt")
-    target = "darwin-arm64"
-    if platform.system() != "Darwin" or platform.machine().lower() not in {"arm64", "aarch64"}:
-        fail("native Syft qualification is currently available only on Darwin arm64")
+    try:
+        target = installer.detect_target(platform.system(), platform.machine())
+    except (RuntimeError, KeyError, TypeError) as exc:
+        raise InputError("native Syft qualification is unavailable for this host") from exc
+    if not isinstance(target, dict):
+        fail("trusted installer target is invalid")
+    target_key = target.get("key")
+    target_platform = target.get("platform")
+    target_lock_name = target.get("verifier_lock")
+    lock_path = SYFT_LOCKS.get(target_lock_name) if isinstance(target_lock_name, str) else None
+    target_lock_sha = target.get("verifier_lock_sha256")
+    target_binary_sha = target.get("binary_sha256")
+    if (not isinstance(target_key, str) or not target_key
+            or not isinstance(target_platform, str) or not target_platform
+            or lock_path is None
+            or not isinstance(target_lock_sha, str) or not DIGEST_RE.fullmatch(target_lock_sha)
+            or not isinstance(target_binary_sha, str) or not DIGEST_RE.fullmatch(target_binary_sha)):
+        fail("trusted installer target lacks exact platform, binary, or verifier-lock pins")
+    if hashes.get(lock_path) != target_lock_sha:
+        fail("trusted target verifier lock differs from its Git blob")
+    if args.syft_sha256 != target_binary_sha:
+        fail("Syft binary pin differs from trusted installer target")
     if not isinstance(receipt, dict) or receipt.get("schema") != "kairos.verified-syft-installer.v1" or receipt.get("result") != "pass":
         fail("Syft receipt is not a passing qualified receipt")
-    if receipt.get("repository") != "anchore/syft" or receipt.get("ref") != "refs/heads/main" or receipt.get("target") != target or receipt.get("platform") != "darwin/arm64":
+    if (receipt.get("repository") != installer.REPOSITORY
+            or receipt.get("ref") != installer.WORKFLOW_REF
+            or receipt.get("target") != target_key
+            or receipt.get("platform") != target_platform):
         fail("Syft receipt platform or release identity is not the currently qualified target")
-    if receipt.get("binary_sha256") != args.syft_sha256 or receipt.get("version") != "1.54.0":
+    if (receipt.get("binary_sha256") != args.syft_sha256
+            or receipt.get("version") != installer.VERSION
+            or receipt.get("release_commit") != installer.RELEASE_COMMIT):
         fail("Syft receipt binary or version differs from explicit pin")
     version_probe = receipt.get("version_probe")
     if (not isinstance(version_probe, dict) or version_probe.get("application") != "syft"
@@ -290,22 +322,24 @@ def validate_syft(args: argparse.Namespace, hashes: dict[str, str]) -> dict[str,
     if receipt.get("installer_source_sha256") != hashes[SYFT_INSTALLER]:
         fail("Syft installer source differs from trusted checkout blob")
     verifier = receipt.get("verifier")
-    if not isinstance(verifier, dict) or verifier.get("lock_path") != "syft-darwin-verifier.lock" or verifier.get("lock_sha256") != hashes[SYFT_DARWIN_LOCK]:
+    if not isinstance(verifier, dict) or verifier.get("lock_path") != target_lock_name or verifier.get("lock_sha256") != hashes[lock_path]:
         fail("Syft verifier lock differs from trusted checkout blob")
-    if receipt.get("qualification_limit") != "Darwin arm64 has retained native evidence; Linux amd64 installation execution remains unqualified until a native Linux qualification is reviewed.":
-        fail("Syft qualification scope is not the reviewed Darwin-only scope")
-    # The upstream native installer verifier is not present in this trusted
-    # consumer revision. This checks immutable receipt and binary pins only.
-    return {"binary_sha256": args.syft_sha256, "receipt": receipt}
+    if receipt.get("qualification_limit") != SYFT_QUALIFICATION_LIMIT:
+        fail("Syft qualification scope differs from the trusted installer contract")
+    # A separate gate validates the upstream native receipt and signature. This
+    # builder checks its immutable receipt, target, source, lock, and binary pins
+    # but does not re-run that verifier or establish signature validity.
+    return {"binary_sha256": args.syft_sha256, "receipt": receipt, "target": target, "lock_path": lock_path}
 
 
 def derive(args: argparse.Namespace) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, str], dict[str, Any]]:
     root = checked_path(args.repository, "consumer checkout")
     blobs, hashes = trusted_blobs(root, args.trusted_consumer_sha)
     verifier = load_trusted_module(None, blobs[VERIFIER], "kairos_trusted_archive_verifier", VERIFIER)
+    installer = load_trusted_module(None, blobs[SYFT_INSTALLER], "kairos_trusted_syft_installer", SYFT_INSTALLER)
     acquisition_helper = load_trusted_module(verifier, blobs[HELPERS[3]], "kairos_trusted_archive_acquisition", HELPERS[3])
     provenance_helper = load_trusted_module(verifier, blobs[HELPERS[4]], "kairos_trusted_archive_provenance", HELPERS[4])
-    syft_qualification = validate_syft(args, hashes)
+    syft_qualification = validate_syft(args, hashes, installer)
     syft_sha = syft_qualification["binary_sha256"]
 
     acquisition = checked_path(args.acquisition_dir, "retained acquisition")
@@ -474,11 +508,12 @@ def main(argv: list[str] | None = None) -> int:
                 "binary_path": str(args.syft.absolute()),
                 "binary_sha256": syft_qualification["binary_sha256"],
                 "version": receipt["version"],
+                "target": syft_qualification["target"]["key"],
                 "platform": receipt["platform"],
                 "release_commit": receipt["release_commit"],
                 "installer_source_sha256": hashes[SYFT_INSTALLER],
-                "verifier_lock_path": SYFT_DARWIN_LOCK,
-                "verifier_lock_sha256": hashes[SYFT_DARWIN_LOCK],
+                "verifier_lock_path": syft_qualification["lock_path"],
+                "verifier_lock_sha256": hashes[syft_qualification["lock_path"]],
                 "status": "upstream native qualification receipt pinned; signature validation is a separate prerequisite",
             },
             "prepared_files": {name: sha256(data) for name, data in sorted(files.items())},

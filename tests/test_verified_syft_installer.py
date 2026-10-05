@@ -20,8 +20,12 @@ from scripts.supply_chain import install_verified_syft as syft
 
 class VerifiedSyftInstallerTests(unittest.TestCase):
     def test_only_native_linux_amd64_and_macos_arm64_targets_are_supported(self):
-        self.assertEqual(syft.detect_target("Darwin", "arm64")["asset"], "syft_1.54.0_darwin_arm64.tar.gz")
-        self.assertEqual(syft.detect_target("Linux", "x86_64")["asset"], "syft_1.54.0_linux_amd64.tar.gz")
+        darwin = syft.detect_target("Darwin", "arm64")
+        linux = syft.detect_target("Linux", "x86_64")
+        self.assertEqual(darwin["asset"], "syft_1.54.0_darwin_arm64.tar.gz")
+        self.assertEqual(darwin["binary_sha256"], "835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61")
+        self.assertEqual(linux["asset"], "syft_1.54.0_linux_amd64.tar.gz")
+        self.assertEqual(linux["binary_sha256"], "d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92")
         with self.assertRaisesRegex(RuntimeError, "unsupported host"):
             syft.detect_target("Darwin", "x86_64")
         with self.assertRaisesRegex(RuntimeError, "unsupported host"):
@@ -509,7 +513,7 @@ class VerifiedSyftInstallerTests(unittest.TestCase):
                                      f"https://github.com/anchore/syft/releases/download/{syft.RELEASE_TAG}/{asset}"])
             receipt = json.loads((root / "output/evidence/receipt.json").read_text(encoding="utf-8"))
             self.assertEqual(receipt["result"], "pass")
-            self.assertEqual(receipt["qualification_limit"].startswith("Darwin arm64"), True)
+            self.assertEqual(receipt["qualification_limit"], "Native authenticated installation and version probe only; no package scan, release, or publication is represented.")
             self.assertEqual(len(receipt["installer_source_sha256"]), 64)
             self.assertEqual(len(receipt["python_toolchain"]["executable_sha256"]), 64)
             self.assertNotIn("crypto_verified", receipt)

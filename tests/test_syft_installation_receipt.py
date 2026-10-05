@@ -33,6 +33,7 @@ class ReceiptValidatorTests(unittest.TestCase):
         (self.output / "bin").mkdir()
         self.source = b"trusted test installer source"
         self.lock = b"trusted test lock"
+        self.retained_linux_target = verifier.TARGETS["linux-amd64"]
         (self.repo / "scripts/supply_chain/install_verified_syft.py").write_bytes(self.source)
         (self.repo / "scripts/supply_chain/syft-linux-verifier.lock").write_bytes(self.lock)
         (self.output / "verifier.lock").write_bytes(self.lock)
@@ -50,7 +51,7 @@ class ReceiptValidatorTests(unittest.TestCase):
         (self.output / "downloads/syft-checksums.txt").write_bytes(b"checksums")
         (self.output / "downloads/syft-checksums.sigstore.json").write_bytes(b"bundle")
         (self.output / "bin/syft").write_bytes(self.binary)
-        target = ("linux/amd64", "syft_1.54.0_linux_amd64.tar.gz", sha(self.archive), None,
+        target = ("linux/amd64", "syft_1.54.0_linux_amd64.tar.gz", sha(self.archive), sha(self.binary),
                   "syft-linux-verifier.lock", sha(self.lock))
         self.pins = patch.multiple(verifier, TARGETS={"linux-amd64": target}, CHECKSUM_SHA256=sha(b"checksums"), BUNDLE_SHA256=sha(b"bundle"))
         self.pins.start()
@@ -123,6 +124,24 @@ class ReceiptValidatorTests(unittest.TestCase):
         report = verifier.validate(self.output, "linux-amd64", self.repo)
         self.assertEqual(report["result"], "pass")
         self.assertEqual(report["validated_commands"], 9)
+
+    def test_linux_binary_pin_matches_native_qualification_readback(self):
+        self.assertEqual(self.retained_linux_target[3], "d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92")
+
+    def test_rejects_binary_digest_that_differs_from_target_pin(self):
+        wrong = "0" * 64
+        self.receipt["binary_sha256"] = wrong
+        self.receipt["archive"]["binary_sha256"] = wrong
+        self.receipt["archive"]["members"]["syft"] = wrong
+        extraction_log = json.dumps({"binary": "syft", "archive": self.receipt["archive"]}, sort_keys=True).encode() + b"\n"
+        (self.output / "logs/07-extract-syft-archive.log").write_bytes(extraction_log)
+        command = self.receipt["commands"][7]
+        command["log_bytes"] = len(extraction_log)
+        command["log_sha256"] = sha(extraction_log)
+        command["stdout_sha256"] = sha(extraction_log)
+        self.write_receipt()
+        with self.assertRaisesRegex(ValueError, "pinned target"):
+            verifier.validate(self.output, "linux-amd64", self.repo)
 
     def test_workflow_requires_manual_main_and_serial_qualification(self):
         workflow = (ROOT / ".github/workflows/syft-linux-qualification.yml").read_text()
