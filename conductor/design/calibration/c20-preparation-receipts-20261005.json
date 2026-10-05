@@ -182,6 +182,10 @@
           "conformance/c20/flow_domain_plan_c20.rs",
           "conformance/c20/run_hook_red.py"
         ]
+      },
+      "verified_output_hashes": {
+        "stdout_path": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_path": "80fdb375b27a2cd4d2b8d5096d63af2b51feb7b3c53931ac0982b5a805a03eaa"
       }
     },
     {

@@ -31,8 +31,9 @@ were bounded and read-only when reviewing another writer's changes. Findings
 were corrected: undefined helper/arity, consuming Bound ownership, noncontractual
 observation equality, reversed urgency priority, missing Restart carrier and
 actor-binding oracles, cleared completion timestamp, repeated Pause receipt,
-postcommit runner base and filtered-test/summary mismatches. No objection remains
-on the final definitions or preemption runner. Reviews establish test intent;
+postcommit runner base and filtered-test/summary mismatches. Final evidence review found missing hook stdout/stderr hashes; both actual output
+files are now hashed in the companion record. No objection remains on the final
+definitions or preemption runner. Reviews establish test intent;
 missing APIs prevent typecheck and behavioral proof.
 
 ## Executed integrated checks
