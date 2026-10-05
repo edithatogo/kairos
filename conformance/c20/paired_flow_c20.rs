@@ -41,6 +41,7 @@ fn provider() -> IntrinsicWorkProvider {
 struct Scenario {
     flow: FlowRuntime,
     bound: BoundIntrinsicWork<Template, Context>,
+    owner: EntityId,
     carrier: EntityId,
     service_key: CalibrationStreamKey,
 }
@@ -50,7 +51,7 @@ fn scenario(mode: FidelityMode) -> Scenario {
     let owner = flow.spawn_actor().unwrap();
     let carrier = flow.spawn_actor().unwrap();
     let resource = flow.create_resource(1).unwrap();
-    flow.register_work_continuations(WORK_REGISTRATION, FlowContinuations::default())
+    flow.register_work_continuations(WORK_REGISTRATION, FlowContinuations::<Context>::default())
         .unwrap();
 
     let mut seeds = CalibrationSeedMap::new(1, "study-α", 1234).unwrap();
@@ -106,6 +107,7 @@ fn scenario(mode: FidelityMode) -> Scenario {
     Scenario {
         flow,
         bound,
+        owner,
         carrier,
         service_key,
     }
@@ -157,6 +159,22 @@ fn macro_and_explicit_zero_micro_pair_actual_provider_work_without_transit_event
     let macro_run = macro_case.flow.run_for(128).unwrap();
     let zero_micro_run = zero_micro_case.flow.run_for(128).unwrap();
 
+    assert!(macro_run
+        .dispatches
+        .iter()
+        .all(|dispatch| dispatch.callback_batches.is_empty()));
+    assert!(zero_micro_run
+        .dispatches
+        .iter()
+        .all(|dispatch| dispatch.callback_batches.is_empty()));
+    assert!(macro_case
+        .flow
+        .actor_domain_context(macro_case.owner)
+        .is_err());
+    assert!(zero_micro_case
+        .flow
+        .actor_domain_context(zero_micro_case.owner)
+        .is_err());
     assert_eq!(macro_run.dispatches, zero_micro_run.dispatches);
     assert_eq!(
         macro_case.flow.work_progress(macro_work).unwrap(),
@@ -170,6 +188,22 @@ fn macro_and_explicit_zero_micro_pair_actual_provider_work_without_transit_event
     assert_eq!(progress.state, WorkState::Completed);
     assert_eq!(progress.original_duration, SimDuration::from_ticks(30));
     assert_eq!(progress.completion_at, Some(SimTime::from_ticks(30)));
+    assert_eq!(
+        macro_case
+            .flow
+            .work_context::<Context>(macro_work)
+            .unwrap()
+            .marker,
+        0xC20
+    );
+    assert_eq!(
+        zero_micro_case
+            .flow
+            .work_context::<Context>(zero_micro_work)
+            .unwrap()
+            .marker,
+        0xC20
+    );
     assert_eq!(
         macro_case.flow.request(macro_request).unwrap().state,
         RequestState::Completed
@@ -213,4 +247,6 @@ fn macro_and_explicit_zero_micro_pair_actual_provider_work_without_transit_event
     );
     assert_linked_request(&macro_case.flow, &macro_submitted);
     assert_linked_request(&zero_micro_case.flow, &zero_micro_submitted);
+    assert_eq!(macro_submitted.service_draw_position(), 1);
+    assert_eq!(zero_micro_submitted.service_draw_position(), 1);
 }
