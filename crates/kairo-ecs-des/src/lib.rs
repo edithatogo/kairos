@@ -10,6 +10,9 @@ mod fidelity;
 #[cfg(test)]
 mod fidelity_mode_c21;
 
+#[cfg(test)]
+mod fidelity_lineage_v1;
+
 mod preemption;
 
 use kairo_ecs_core::Scheduler;

@@ -1,9 +1,7 @@
-use kairo_ecs_des::{FlowRuntime, FlowRuntimeIdentity, PreemptionStrategy, WorkId, WorkState};
+use crate::{FlowRuntime, PreemptionStrategy, WorkId, WorkState};
 use kairo_ecs_types::{SimDuration, SimTime};
-#[allow(dead_code)] // This test covers the lineage subset of the private adapter.
-#[path = "../src/fidelity.rs"]
-mod fidelity;
-use fidelity::{FidelityAdapter, FidelityError, FidelityMode, FidelityPolicy};
+
+use crate::fidelity::{FidelityAdapter, FidelityError, FidelityMode, FidelityPolicy};
 
 fn work(flow: &mut FlowRuntime) -> WorkId {
     let owner = flow.spawn_actor().unwrap();
