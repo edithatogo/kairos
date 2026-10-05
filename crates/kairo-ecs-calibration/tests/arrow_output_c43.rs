@@ -24,7 +24,7 @@ fn metric() -> Value {
       "reference_count":1, "simulation_count":1, "excluded_count":0, "censored_count":0, "missing_count":0,
       "unmatched_count":0, "failed_count":0, "infeasible_count":0, "value":null, "status":"insufficient_data",
       "uncertainty":null, "provenance":{"dataset_id":"d","run_id":"r","mapping_version":"m",
-      "seed_schedule_id":null,"seed_map_ref":null,"seed_contract_version":null,"parameter_hash":null}
+      "seed_schedule_id":"sched","seed_map_ref":"map","seed_contract_version":"kairoecs.seed-purpose.v1","parameter_hash":null}
     })
 }
 #[test]
@@ -37,7 +37,7 @@ fn c43_schemas_preserve_empty_shapes_and_output_types() {
         "kairoecs.calibration.output"
     );
     assert_eq!(r.field(27).data_type(), &arrow_schema::DataType::Utf8);
-    assert_eq!(r.field(27).is_nullable(), false);
+    assert!(!r.field(27).is_nullable());
     assert_eq!(
         r.field(11).metadata().get("encoding").unwrap(),
         "unsigned_u128_le"
@@ -62,7 +62,7 @@ fn c43_roundtrips_full_width_ticks_nulls_and_canonical_strata() {
         ("calibration_residual.v1", residual()),
         ("calibration_metric.v1", metric()),
     ] {
-        let batch = output::encode(kind, &[row.clone()]).unwrap();
+        let batch = output::encode(kind, std::slice::from_ref(&row)).unwrap();
         let decoded = output::decode(kind, &batch).unwrap();
         assert_eq!(decoded, vec![row]);
     }
@@ -83,6 +83,53 @@ fn c43_rejects_inconsistent_residual_unknown_fields_and_duplicate_records() {
     bad_metric["uncertainty"] = json!({"method":"unknown"});
     assert!(output::encode("calibration_metric.v1", &[bad_metric]).is_err());
 }
+#[test]
+fn c43_sort_uses_full_residual_identity_and_numeric_occurrence() {
+    let mut a = residual();
+    a["occurrence"] = json!(10);
+    let mut b = residual();
+    b["occurrence"] = json!(2);
+    let mut c = b.clone();
+    c["dataset_id"] = json!("other-dataset");
+    let batch = output::encode("calibration_residual.v1", &[a, b, c]).unwrap();
+    let decoded = output::decode("calibration_residual.v1", &batch).unwrap();
+    assert_eq!(decoded[0]["occurrence"], json!(2));
+    assert_eq!(decoded[0]["dataset_id"], json!("d"));
+    assert_eq!(decoded[1]["occurrence"], json!(10));
+    assert_eq!(decoded[2]["dataset_id"], json!("other-dataset"));
+}
+#[test]
+fn c43_validates_frozen_keys_metric_semantics_and_decode_rows() {
+    let mut bad = residual();
+    bad["seed_purpose"] = json!("other");
+    assert!(output::encode("calibration_residual.v1", &[bad]).is_err());
+
+    let mut bad = metric();
+    bad["window"]["extra"] = json!(0);
+    assert!(output::encode("calibration_metric.v1", &[bad]).is_err());
+    let mut bad = metric();
+    bad["provenance"]["extra"] = json!(0);
+    assert!(output::encode("calibration_metric.v1", &[bad]).is_err());
+    let mut bad = metric();
+    bad["status"] = json!("computed");
+    assert!(output::encode("calibration_metric.v1", &[bad]).is_err());
+    let mut bad = metric();
+    bad["metric"] = json!("KS_D");
+    bad["units"] = json!("dimensionless");
+    bad["status"] = json!("computed");
+    bad["value"] = json!(1.1);
+    assert!(output::encode("calibration_metric.v1", &[bad]).is_err());
+    let mut bad = metric();
+    bad["provenance"]["seed_schedule_id"] = Value::Null;
+    bad["provenance"]["seed_map_ref"] = Value::Null;
+    assert!(output::encode("calibration_metric.v1", &[bad]).is_err());
+
+    let batch = output::encode("calibration_metric.v1", &[metric()]).unwrap();
+    let mut columns = batch.columns().to_vec();
+    columns[5] = std::sync::Arc::new(arrow_array::StringArray::from(vec!["{ \"a\":1}"]));
+    let malformed = arrow_array::RecordBatch::try_new(batch.schema(), columns).unwrap();
+    assert!(output::decode("calibration_metric.v1", &malformed).is_err());
+}
 #[cfg(all(feature = "ipc", feature = "parquet"))]
 #[test]
 fn c43_actual_ipc_file_stream_and_parquet_roundtrip() {
@@ -97,7 +144,7 @@ fn c43_actual_ipc_file_stream_and_parquet_roundtrip() {
         ("calibration_metric.v1", metric()),
     ] {
         let schema = output::schema(kind).unwrap();
-        let batch = output::encode(kind, &[row.clone()]).unwrap();
+        let batch = output::encode(kind, std::slice::from_ref(&row)).unwrap();
         let file =
             write_ipc_file(Arc::clone(&schema), std::slice::from_ref(&batch), limits).unwrap();
         let stream =

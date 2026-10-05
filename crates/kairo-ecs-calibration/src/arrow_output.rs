@@ -158,6 +158,17 @@ fn required<'a>(row: &'a Value, key: &str) -> Result<&'a Value, OutputError> {
     row.get(key)
         .ok_or_else(|| OutputError::Invalid(format!("missing {key}")))
 }
+fn exact_object(value: &Value, expected: &[&str], name: &str) -> Result<(), OutputError> {
+    let object = value
+        .as_object()
+        .ok_or_else(|| OutputError::Invalid(format!("{name} must be object")))?;
+    if object.len() != expected.len() || expected.iter().any(|key| !object.contains_key(*key)) {
+        return Err(OutputError::Invalid(format!(
+            "{name} fields do not match contract"
+        )));
+    }
+    Ok(())
+}
 fn flat_row(kind: &str, row: &Value) -> Result<Value, OutputError> {
     let mut x = row.clone();
     if kind == "calibration_metric.v1" {
@@ -216,12 +227,26 @@ fn validate(row: &Value, kind: &str, columns: &[Col]) -> Result<Value, OutputErr
     if obj.keys().any(|k| !allowed.contains(k.as_str())) {
         return Err(OutputError::Invalid("unknown logical field".into()));
     }
-    let allowed: HashSet<&str> = if kind == "calibration_metric.v1" {
-        R.iter().map(|c| c.name).collect()
-    } else {
-        HashSet::new()
-    };
-    let _ = allowed;
+    if kind == "calibration_metric.v1" {
+        exact_object(
+            required(row, "window")?,
+            &["start_ticks", "end_ticks"],
+            "window",
+        )?;
+        exact_object(
+            required(row, "provenance")?,
+            &[
+                "dataset_id",
+                "run_id",
+                "mapping_version",
+                "seed_schedule_id",
+                "seed_map_ref",
+                "seed_contract_version",
+                "parameter_hash",
+            ],
+            "provenance",
+        )?;
+    }
     let flat = flat_row(kind, row)?;
     let fo = flat.as_object().unwrap();
     for c in columns {
@@ -230,12 +255,12 @@ fn validate(row: &Value, kind: &str, columns: &[Col]) -> Result<Value, OutputErr
             .ok_or_else(|| OutputError::Invalid(format!("missing {}", c.name)))?;
         match c.kind {
             Kind::Str => {
-                if !v.as_str().is_some_and(|s| !s.is_empty()) {
+                if !v.as_str().is_some_and(|s| !s.trim().is_empty()) {
                     return Err(OutputError::Invalid(format!("{} must be string", c.name)));
                 }
             }
             Kind::NullableStr => {
-                if !v.is_null() && !v.as_str().is_some_and(|s| !s.is_empty()) {
+                if !v.is_null() && !v.as_str().is_some_and(|s| !s.trim().is_empty()) {
                     return Err(OutputError::Invalid(format!(
                         "{} must be string or null",
                         c.name
@@ -286,6 +311,8 @@ fn validate(row: &Value, kind: &str, columns: &[Col]) -> Result<Value, OutputErr
     }
     if kind == "calibration_residual.v1" {
         if !["ShadowAnchored", "FreeRunning"].contains(&fo["fidelity"].as_str().unwrap())
+            || !["service", "transit", "behavior", "calibration"]
+                .contains(&fo["seed_purpose"].as_str().unwrap())
             || ![
                 "not_censored",
                 "left",
@@ -412,10 +439,12 @@ fn validate(row: &Value, kind: &str, columns: &[Col]) -> Result<Value, OutputErr
                 "window must be nonempty half-open interval".into(),
             ));
         }
-        for key in ["provenance_parameter_hash"] {
-            if !fo[key].is_null() && !is_hash(fo[key].as_str().unwrap()) {
-                return Err(OutputError::Invalid(format!("invalid {key}")));
-            }
+        if !fo["provenance_parameter_hash"].is_null()
+            && !is_hash(fo["provenance_parameter_hash"].as_str().unwrap())
+        {
+            return Err(OutputError::Invalid(
+                "invalid provenance_parameter_hash".into(),
+            ));
         }
         if !fo["uncertainty"].is_null() {
             return Err(OutputError::Invalid(
@@ -425,6 +454,36 @@ fn validate(row: &Value, kind: &str, columns: &[Col]) -> Result<Value, OutputErr
         if fo["status"] != "computed" && !fo["value"].is_null() {
             return Err(OutputError::Invalid(
                 "noncomputed value must be null".into(),
+            ));
+        }
+        if fo["status"] == "computed" {
+            let value = fo["value"]
+                .as_f64()
+                .filter(|v| v.is_finite())
+                .ok_or_else(|| {
+                    OutputError::Invalid("computed metric requires finite value".into())
+                })?;
+            if matches!(fo["metric"].as_str(), Some("W1" | "KS_D"))
+                && (fo["reference_count"].as_u64() == Some(0)
+                    || fo["simulation_count"].as_u64() == Some(0))
+            {
+                return Err(OutputError::Invalid(
+                    "computed W1/KS_D requires nonempty cohorts".into(),
+                ));
+            }
+            if fo["metric"] == "KS_D" && !(0.0..=1.0).contains(&value) {
+                return Err(OutputError::Invalid("KS_D must be within [0,1]".into()));
+            }
+            if fo["metric"] == "W1" && value < 0.0 {
+                return Err(OutputError::Invalid("W1 must be nonnegative".into()));
+            }
+        }
+        if fo["provenance_seed_schedule_id"].is_null()
+            && (fo["simulation_count"].as_u64().unwrap_or(0) > 0
+                || fo["failed_count"].as_u64().unwrap_or(0) > 0)
+        {
+            return Err(OutputError::Invalid(
+                "seed provenance required for simulation attempts".into(),
             ));
         }
         if fo["metric"] == "KS_D" && fo["units"] != "dimensionless" {
@@ -461,7 +520,7 @@ fn parse_tick_str(s: &str) -> Result<u128, OutputError> {
     s.parse()
         .map_err(|_| OutputError::Invalid("u128 overflow".into()))
 }
-pub fn schema(kind: &str) -> Result<SchemaRef, OutputError> {
+pub(crate) fn schema(kind: &str) -> Result<SchemaRef, OutputError> {
     let (cols, record) = cols(kind)?;
     let mut fs = Vec::new();
     for c in cols {
@@ -504,7 +563,7 @@ pub fn schema(kind: &str) -> Result<SchemaRef, OutputError> {
         md.into_iter().collect::<std::collections::HashMap<_, _>>(),
     )))
 }
-pub fn encode(kind: &str, rows: &[Value]) -> Result<RecordBatch, OutputError> {
+pub(crate) fn encode(kind: &str, rows: &[Value]) -> Result<RecordBatch, OutputError> {
     let schema = schema(kind)?;
     let (cols, _) = cols(kind)?;
     let mut norm = rows
@@ -572,15 +631,17 @@ fn sort_cmp(a: &Value, b: &Value, kind: &str) -> std::cmp::Ordering {
     let keys: &[&str] = if kind == "calibration_residual.v1" {
         &[
             "study_id",
+            "dataset_id",
+            "scenario_id",
+            "seed_schedule_id",
             "replication_id",
             "case_key",
             "task_key",
             "occurrence",
             "endpoint",
-            "fidelity",
-            "seed_schedule_id",
             "seed_purpose",
             "seed_map_ref",
+            "mapping_version",
             "candidate_id",
             "run_id",
         ]
@@ -590,8 +651,14 @@ fn sort_cmp(a: &Value, b: &Value, kind: &str) -> std::cmp::Ordering {
             "strata",
             "window_start_ticks",
             "window_end_ticks",
+            "units",
             "provenance_dataset_id",
             "provenance_run_id",
+            "provenance_mapping_version",
+            "provenance_seed_schedule_id",
+            "provenance_seed_map_ref",
+            "provenance_seed_contract_version",
+            "provenance_parameter_hash",
             "metric",
             "algorithm_version",
         ]
@@ -617,7 +684,7 @@ fn sort_cmp(a: &Value, b: &Value, kind: &str) -> std::cmp::Ordering {
     std::cmp::Ordering::Equal
 }
 
-pub fn decode(kind: &str, batch: &RecordBatch) -> Result<Vec<Value>, OutputError> {
+pub(crate) fn decode(kind: &str, batch: &RecordBatch) -> Result<Vec<Value>, OutputError> {
     let expected = schema(kind)?;
     if batch.schema().as_ref() != expected.as_ref() {
         return Err(OutputError::SchemaMismatch);
@@ -636,21 +703,14 @@ pub fn decode(kind: &str, batch: &RecordBatch) -> Result<Vec<Value>, OutputError
                         .value(row)
                         .into(),
                 ),
-                Kind::NullableStr => a
-                    .as_any()
-                    .downcast_ref::<StringArray>()
-                    .unwrap()
-                    .is_null(row)
-                    .then_some(Value::Null)
-                    .unwrap_or_else(|| {
-                        Value::String(
-                            a.as_any()
-                                .downcast_ref::<StringArray>()
-                                .unwrap()
-                                .value(row)
-                                .into(),
-                        )
-                    }),
+                Kind::NullableStr => {
+                    let x = a.as_any().downcast_ref::<StringArray>().unwrap();
+                    if x.is_null(row) {
+                        Value::Null
+                    } else {
+                        Value::String(x.value(row).into())
+                    }
+                }
                 Kind::U32 => json!(a.as_any().downcast_ref::<UInt32Array>().unwrap().value(row)),
                 Kind::U64 => json!(a.as_any().downcast_ref::<UInt64Array>().unwrap().value(row)),
                 Kind::Bool => json!(
@@ -669,10 +729,17 @@ pub fn decode(kind: &str, batch: &RecordBatch) -> Result<Vec<Value>, OutputError
                         })?)
                     }
                 }
-                Kind::JsonObject => serde_json::from_str(
-                    a.as_any().downcast_ref::<StringArray>().unwrap().value(row),
-                )
-                .map_err(|e| OutputError::Invalid(e.to_string()))?,
+                Kind::JsonObject => {
+                    let text = a.as_any().downcast_ref::<StringArray>().unwrap().value(row);
+                    let value: Value = serde_json::from_str(text)
+                        .map_err(|e| OutputError::Invalid(e.to_string()))?;
+                    if !value.is_object() || canonical(&value)? != text {
+                        return Err(OutputError::Invalid(
+                            "strata must be canonical JSON object".into(),
+                        ));
+                    }
+                    value
+                }
                 Kind::Tick | Kind::NullableTick => {
                     let x = a
                         .as_any()
@@ -712,6 +779,21 @@ pub fn decode(kind: &str, batch: &RecordBatch) -> Result<Vec<Value>, OutputError
             obj.insert("provenance".into(), Value::Object(p));
         }
         out.push(Value::Object(obj));
+    }
+    let flat = out
+        .iter()
+        .map(|row| validate(row, kind, cols))
+        .collect::<Result<Vec<_>, _>>()?;
+    for pair in flat.windows(2) {
+        match sort_cmp(&pair[0], &pair[1], kind) {
+            std::cmp::Ordering::Equal => {
+                return Err(OutputError::Invalid("duplicate logical output key".into()));
+            }
+            std::cmp::Ordering::Greater => {
+                return Err(OutputError::Invalid("noncanonical output row order".into()));
+            }
+            std::cmp::Ordering::Less => {}
+        }
     }
     Ok(out)
 }
