@@ -98,3 +98,29 @@ python3 packaging/scripts/build_archive_evidence_expectations.py \
 The command reports the trusted verifier and schema hashes needed for the
 subsequent verifier invocation. That later verifier run, generator output,
 scanner execution, and release acceptance are separate evidence steps.
+
+## Retained actual qualification
+
+The reviewed consumer commit `854026c4ce7ea9c0829562c02243e53b11a3a511`
+prepared independent inputs before running the evidence generator. The actual
+producer was successful main package run
+[37318162611](https://github.com/edithatogo/kairos/actions/runs/37318162611),
+source `5bdc1b42d2e3ad4722f8317e19be92aef268f815`, artifact `11349051447`.
+Its retained original ZIP SHA-256 was
+`56c309e9264496c0a7ad6c8cfaa01ba301496a8f96d4ee3fa664bd52930fb8fe`.
+
+On Python 3.14.8 with native qualified Syft 1.54.0 Darwin arm64, all three
+commands completed with exit zero: input preparation, evidence generation and
+independent `kairos-archive-copy-evidence-v1` verification. The verifier accepted
+eight exact archives across seven ecosystems, nine SPDX documents and 44
+evidence files. The copy-provenance statement SHA-256 was
+`54ea68bf9a44892d7bd6a33182e9e178ada317e9428987a5088b961cddd9b1bd`.
+
+Executed argv, working directory, consumer identity, exit statuses and log hashes
+are retained under ignored `.artifacts/archive-full-main-qualified-order/` in the
+qualification worktree. The previous ordering mismatch and rejected result remain
+under `.artifacts/archive-full-main-evidence/` in the earlier consumer worktree;
+they are not counted as passing evidence. This qualification proves local copying
+consistency with independently pinned inputs. It does not prove original
+compilation attestation, signed provenance, a SLSA level, a hosted consumer run,
+release acceptance or publication.
