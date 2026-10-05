@@ -12,6 +12,7 @@ on:
       - '.github/actions/**'
       - '.github/workflows/archive-supply-chain-main.yml'
       - '.github/workflows/ci-bindings.yml'
+      - '.github/workflows/release.yml'
       - 'scripts/bootstrap-python-tools.lock'
       - 'Cargo.toml'
       - 'Cargo.lock'
@@ -261,6 +262,9 @@ jobs:
           python -m unittest discover -s tests -p test_prepare_verified_archive_release.py -v
           python -m unittest discover -s tests -p test_archive_supply_chain_main_workflow.py -v
           python -m unittest discover -s tests -p test_archive_consumer_evidence_acquisition.py -v
+          python -m unittest discover -s tests -p test_actual_archive_release_validation.py -v
+          python -m unittest discover -s tests -p test_mainline_archive_release_workflow.py -v
+          python -m unittest discover -s tests -p test_prepare_mainline_archive_release.py -v
 
   binding-ci:
     name: Binding CI

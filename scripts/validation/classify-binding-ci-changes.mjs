@@ -39,6 +39,11 @@ export const ARCHIVE_PATHS = [
   'tests/test_syft_installation_receipt.py',
   'packaging/scripts/acquire_archive_consumer_evidence.py',
   'tests/test_archive_consumer_evidence_acquisition.py',
+  'packaging/scripts/validate_actual_archive_release.py',
+  'tests/test_actual_archive_release_validation.py',
+  'tests/test_mainline_archive_release_workflow.py',
+  'packaging/scripts/prepare_mainline_archive_release.py',
+  'tests/test_prepare_mainline_archive_release.py',
 ];
 const ARCHIVE_PATH_SET = new Set(ARCHIVE_PATHS);
 
