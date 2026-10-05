@@ -165,6 +165,12 @@ Regression command: `pwsh -NoProfile -ExecutionPolicy Bypass -File tests/test_tr
 
 Coordinator handoff to Track13 CI ownership: the final release dry-run archive upload now fails when `dist/` is missing and requests 90-day retention, matching retained package archive evidence. Permissions, dry-run boundary and evidence validators remain unchanged. Targeted actionlint and whitespace checks qualify configuration only; actual release archives, hosted upload and standalone attestation artifact acquisition remain separate gates. An initial proposed duplicate-path correction was rejected by its exact source precondition before any writes: adjacent outputs had been misread as one workflow. No duplicate path exists in release.yml.
 
+## Exact archive acquisition verifier — 2026-10-04
+
+Coordinator prerequisite for Track20 attestation acquisition: `build_package_archive_bundle.py --verify-existing --output <downloaded-tree> --source-commit <expected-sha>` verifies retained archives without regenerating them and rejects a different source commit. Indexed paths must be canonical POSIX paths inside the tree without symlink ancestors. This does not acquire artifacts, generate SBOM/provenance or establish hosted attestation. Focused archive tests cover path rejection, seven-ecosystem checksums and tamper rejection.
+
+The stronger source-bound verifier was integrated in PR #231 (merge commit `5bdc1b42`). An independent retained-main acquisition and byte readback recorded in `docs/release/main-package-acquisition-20261005.md` (commit `0dbb1cd9`) confirmed successful same-repository `workflow_dispatch` run [37318162611](https://github.com/edithatogo/kairos/actions/runs/37318162611), with eight package archives across seven ecosystems. This is acquisition and consistency evidence only; full release, SBOM and provenance acceptance remain separate gates.
+
 ## Rust internal path dependency version alignment — 2026-10-05
 
 Added matching `version` requirements alongside every internal Rust `path`
