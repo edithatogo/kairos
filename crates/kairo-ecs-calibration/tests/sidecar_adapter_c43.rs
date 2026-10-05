@@ -208,6 +208,22 @@ fn c43_emits_c0_sidecars_from_kernels_and_joins_explicit_event() {
     assert_eq!(out.joins[0].probe_id.as_deref(), Some("probe-1"));
     let manifest = join_manifest_json(&out);
     assert_eq!(
+        manifest["metric_group_diagnostics"][0]["group"],
+        "candidate-a"
+    );
+    assert_eq!(
+        manifest["metric_group_diagnostics"][0]["strata"]["candidate_id"],
+        "candidate-a"
+    );
+    assert_eq!(
+        manifest["metric_group_diagnostics"][0]["reference_tie_count"],
+        0
+    );
+    assert_eq!(
+        manifest["metric_group_diagnostics"][0]["coverage_warnings"],
+        json!([])
+    );
+    assert_eq!(
         manifest["rows"][0]["event_id_le_hex"],
         "040000000000000002000000"
     );
@@ -386,6 +402,29 @@ fn c43_paired_metric_denominator_is_matched_pairs_and_manifest_keeps_cohort_coun
 }
 
 #[test]
+fn c43_duplicate_canonical_metric_strata_fail_closed_with_raw_cohorts() {
+    let mut i = fixture();
+    i.metric_strata[0].strata = json!({
+        "candidate_id": "candidate-a",
+        "coverage": "complete"
+    });
+    i.metric_spec.groups.push("alias".into());
+    i.metric_strata.push(GroupStratum {
+        group: "alias".into(),
+        // Same mapping, with object keys deliberately inserted in reverse order.
+        strata: json!({
+            "coverage": "complete",
+            "candidate_id": "candidate-a"
+        }),
+    });
+    let err = build_sidecars(&i).expect_err("ambiguous C0 strata mapping must fail closed");
+    assert!(err.reason.contains("duplicate canonical strata mapping"));
+    assert_eq!(err.metric_raw_rows.len(), 2);
+    assert_eq!(err.raw_diagnostics["metric_reference_raw_rows"], 1);
+    assert_eq!(err.raw_diagnostics["metric_simulation_raw_rows"], 1);
+}
+
+#[test]
 fn c43_structurally_invalid_metric_rows_fail_with_both_raw_cohorts() {
     let mut i = fixture();
     i.reference_metric
@@ -414,6 +453,10 @@ fn c43_input_permutation_preserves_logical_records_and_metric_bits() {
     assert_eq!(first.residuals, second.residuals);
     assert_eq!(first.metrics, second.metrics);
     assert_eq!(first.joins, second.joins);
+    assert_eq!(
+        join_manifest_json(&first)["metric_group_diagnostics"],
+        join_manifest_json(&second)["metric_group_diagnostics"]
+    );
     assert_eq!(first.raw_diagnostics, second.raw_diagnostics);
     assert_eq!(first.metric_raw_rows, second.metric_raw_rows);
 }

@@ -132,6 +132,30 @@ fn compare_input(input: &Value) -> metrics::MetricResult {
     })
 }
 
+#[test]
+fn c44_actual_producer_retains_exact_tie_diagnostics() {
+    let input = json!({
+        "reference": ["1/2", "0.5", "2"],
+        "candidate": ["0.5", "3"],
+        "algorithm_version": "empirical_equal.v1",
+        "scale_ticks": "1"
+    });
+    let result = compare_input(&input);
+    assert_eq!(result.status, MetricStatus::Computed);
+    assert_eq!(result.reference_count, 3);
+    assert_eq!(result.simulation_count, 2);
+    assert_eq!(result.reference_tie_count, Some(1));
+    assert_eq!(result.simulation_tie_count, Some(0));
+
+    let invalid = compare_input(&json!({
+        "reference": ["not-a-rational"], "candidate": ["1"],
+        "algorithm_version": "empirical_equal.v1", "scale_ticks": "1"
+    }));
+    assert_eq!(invalid.status, MetricStatus::Invalid);
+    assert_eq!(invalid.reference_tie_count, None);
+    assert_eq!(invalid.simulation_tie_count, None);
+}
+
 fn raw_count(input: &Value, key: &str) -> usize {
     input[key]
         .as_array()
