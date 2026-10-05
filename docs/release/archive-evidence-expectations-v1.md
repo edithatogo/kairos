@@ -129,3 +129,12 @@ they are not counted as passing evidence. This qualification proves local copyin
 consistency with independently pinned inputs. It does not prove original
 compilation attestation, signed provenance, a SLSA level, a hosted consumer run,
 release acceptance or publication.
+
+## Integrated native-input qualification
+
+The integrated builder was qualified with a fresh source-bound Darwin receipt
+and the actual release-subject adapter at consumer
+`419ac4291c763f6429a37e908d542294afc257d6`. See the single retained
+[actual qualification record](actual-archive-release-gate-v1.md#integrated-actual-qualification)
+for command results, archive counts, receipt pins and the release-source negative
+case. Hosted Linux qualification at the updated source remains a separate gate.

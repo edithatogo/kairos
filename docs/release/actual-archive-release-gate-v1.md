@@ -69,3 +69,31 @@ does not mean that release workflow gates, hosted CI, artifact upload, release
 approval, or publication have passed. Any later release workflow integration
 must keep the existing dry-run/publication gates and make this adapter a
 required step before evidence validation and upload.
+
+## Integrated actual qualification
+
+Consumer `419ac4291c763f6429a37e908d542294afc257d6` qualified the integrated
+input builder and release-subject adapter against producer run
+[37318162611](https://github.com/edithatogo/kairos/actions/runs/37318162611),
+artifact `11349051447`, source `5bdc1b42d2e3ad4722f8317e19be92aef268f815`.
+A fresh native Darwin Syft 1.54.0 installation at the reviewed installer source
+passed independent receipt validation. Installer source SHA-256:
+`6ac474f917222fc0ab42ad4d6c09092f4ab4a5395bbfaee526a1dbbd89b1944a`;
+receipt SHA-256:
+`fc8637abef8262e281219c0a24b984b22b5a244d21b2a5c9e32a7b9a02072a39`.
+
+On Python 3.14.8, fresh independent input preparation, eight actual package
+scans, full evidence verification and the actual release-subject adapter each
+completed with exit zero. The verifier accepted eight archives, seven ecosystems,
+nine SPDX documents and 44 evidence files. All eight prepared release archive
+copies were independently reconciled byte for byte with the verified evidence.
+An explicit different release source (`84523e8673b236474c2a43939fb776d669be2d19`)
+was rejected with `binding_source_mismatch` and exit one before output creation.
+
+Command argv, working directory, consumer, exit statuses, log hashes and output
+readback are retained in ignored `.artifacts/archive-native-actual-qualification/`
+in the qualification worktree. The prior adapter row-schema rejection remains
+in `.artifacts/archive-release-gate-reviewed/`; it is not a passing result.
+This local qualification does not establish a fresh hosted Linux receipt at
+the updated installer source, hosted archive consumer execution, release workflow
+integration, signed original-build provenance, release acceptance or publication.

@@ -16,6 +16,8 @@ Format:
 
 ### Changed
 
+- Archive release subjects require independently verified retained evidence and matching release source; native scanner receipts bind exact Darwin and Linux executable pins.
+
 - Archive evidence expectations are prepared independently from pinned acquisition records and qualified scanner bytes before scanning; the verifier rejects mismatched inputs.
 
 - Retained package acquisition can preserve the original artifact ZIP and native GitHub readbacks; archive evidence verifies exact successful main-dispatch lineage while preserving the existing PR evidence format.
