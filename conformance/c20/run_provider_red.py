@@ -41,6 +41,9 @@ EXPECTED_TESTS = {
 }
 
 
+EXPECTED_SEED_TESTS = {'seed_map::tests::length_framing_separates_ambiguous_concatenations', 'seed_map::tests::identity_validation_rejects_invalid_and_oversized_ids', 'seed_map::tests::normative_golden_bytes_digest_seed_and_draws_match', 'seed_map::tests::purpose_tags_are_exact_u32_little_endian_values', 'seed_map::tests::finite_registry_is_idempotent_for_same_identity_and_rejects_collision', 'seed_map::tests::unknown_snapshot_versions_and_seed_mismatch_fail_closed', 'seed_map::tests::overflow_does_not_advance_rng_or_draw_position', 'seed_map::tests::every_identity_field_and_root_seed_change_the_frame_and_derived_seed'}
+REQUIRED_TESTS = EXPECTED_TESTS | EXPECTED_SEED_TESTS
+
 def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -113,7 +116,7 @@ def main() -> int:
         and missing_source_error == "No such file or directory"
     )
     observed_test_results = re.findall(
-        r"^test ([A-Za-z0-9_]+) \.\.\. (ok|FAILED|ignored)$", result.stdout, re.MULTILINE
+        r"^test ([A-Za-z0-9_:]+) \.\.\. (ok|FAILED|ignored)$", result.stdout, re.MULTILINE
     )
     observed_counts = Counter(name for name, _status in observed_test_results)
     required_test_passes = {
@@ -121,7 +124,7 @@ def main() -> int:
         and (name, "ok") in observed_test_results
         and (name, "FAILED") not in observed_test_results
         and (name, "ignored") not in observed_test_results
-        for name in EXPECTED_TESTS
+        for name in REQUIRED_TESTS
     }
     summary = re.search(
         r"test result: ok\. (\d+) passed; 0 failed; 0 ignored; 0 measured; 0 filtered out;",
@@ -131,7 +134,7 @@ def main() -> int:
         result.returncode == 0
         and all(required_test_passes.values())
         and summary is not None
-        and int(summary.group(1)) >= len(EXPECTED_TESTS)
+        and int(summary.group(1)) >= len(REQUIRED_TESTS)
     )
     verified = expected_missing_api if expectation == "red" else green_verified
     receipt = {
@@ -142,7 +145,7 @@ def main() -> int:
         "claim": (
             "expected native missing-work_duration API red preparation only; not runtime pass or capability acceptance"
             if expectation == "red"
-            else "green mode requires all 14 named fixture tests to run and pass; fixture success is not capability acceptance"
+            else "green mode requires all 14 provider and 8 inherited seed tests to run and pass; fixture success is not capability acceptance"
         ),
         "base_commit": BASE_COMMIT,
         "committed_workspace": commit,
@@ -164,7 +167,7 @@ def main() -> int:
             "missing_api_compiler_diagnostic": missing_diagnostic.group(0) if missing_diagnostic else None,
             "missing_source_errno": missing_source_errno,
             "missing_source_error": missing_source_error,
-            "expected_test_names": sorted(EXPECTED_TESTS) if expectation == "green" else [],
+            "expected_test_names": sorted(REQUIRED_TESTS) if expectation == "green" else [],
             "observed_test_results": [
                 {"name": name, "status": status} for name, status in observed_test_results
             ],
