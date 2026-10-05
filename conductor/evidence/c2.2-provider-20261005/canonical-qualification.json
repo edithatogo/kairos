@@ -1,0 +1,53 @@
+{
+  "source": "a2b8f6c89ed84839d8590e2b938afcd6d4f919fe",
+  "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "commands": [
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": "/private/tmp/kairos-c22-provider-qualified-20261005",
+      "exit": 0,
+      "log": ".artifacts/c22-provider-qualification/clippy.log",
+      "sha256": "7b93d4456d867782898033f7faaf8caa8687203193f54dbf17319f950d3537e2"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--lib"
+      ],
+      "cwd": "/private/tmp/kairos-c22-provider-qualified-20261005",
+      "exit": 0,
+      "log": ".artifacts/c22-provider-qualification/native-unit.log",
+      "sha256": "be7d6acc9bc0ef85c76bfa10d9a82e3d5d2447c1e867c06c4d120babc351af67"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustfmt",
+        "--check",
+        "--config",
+        "skip_children=true",
+        "crates/kairo-ecs-calibration/src/seed_map.rs",
+        "crates/kairo-ecs-calibration/src/work_duration.rs",
+        "crates/kairo-ecs-calibration/src/lib.rs"
+      ],
+      "cwd": "/private/tmp/kairos-c22-provider-qualified-20261005",
+      "exit": 0,
+      "log": ".artifacts/c22-provider-qualification/format.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "acceptance": "pending independent combined review"
+}

@@ -1,0 +1,92 @@
+   Compiling typenum v1.20.1
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-c22-provider-qualified-20261005/crates/kairo-ecs-types)
+   Compiling const-oid v0.10.2
+   Compiling libc v0.2.186
+   Compiling zmij v1.0.21
+   Compiling serde_core v1.0.228
+   Compiling cfg-if v1.0.4
+   Compiling num-traits v0.2.19
+   Compiling memchr v2.8.0
+   Compiling thiserror v2.0.20
+   Compiling itoa v1.0.18
+   Compiling kairo-ecs-rng v0.0.0 (/private/tmp/kairos-c22-provider-qualified-20261005/crates/kairo-ecs-rng)
+   Compiling kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-c22-provider-qualified-20261005/crates/kairo-ecs-arrow)
+   Compiling chrono v0.4.45
+   Compiling cpufeatures v0.3.1
+   Compiling hybrid-array v0.4.15
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling serde_json v1.0.149
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c22-provider-qualified-20261005/crates/kairo-ecs-calibration)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.61s
+     Running unittests src/lib.rs (.artifacts/c22-provider-qualification/target/debug/deps/kairo_ecs_calibration-245ad9f8b75605ae)
+
+running 63 tests
+test ingestion_c01::actual_transport_matrix ... ignored, requires exact physical transport source index and result directory
+test ingestion_normalize::tests::enforces_nonzero_limits_fanout_and_actual_serialized_bytes ... ok
+test ingestion_normalize::tests::unknown_long_kind_and_outcome_duplicate_reject_transactionally ... ok
+test ingestion_pipeline::tests::transported_source_rows_use_the_same_actual_pipeline ... ignored, requires actual transported source rows and original manifest
+test ingestion_normalize::tests::order_key_projects_full_records_and_unbounded_decimal_rank ... ok
+test ingestion_normalize::tests::preserves_mapper_values_and_cumulative_partition_across_chunks ... ok
+test ingestion_normalize::tests::rejects_cross_chunk_duplicates_even_when_first_candidate_was_excluded ... ok
+test ingestion_validate::tests::bad_policy_caps_cycles_and_oversize_records_reject_without_outputs ... ok
+test ingestion_sort::tests::bounded_fanin_requires_multiple_merge_passes_and_handles_large_rank ... ok
+test ingestion_sort::tests::sink_failure_and_bad_limits_cleanup_workspace ... ok
+test ingestion_sort::tests::iterator_sink_oversize_invalid_key_and_temp_corruption_fail_with_cleanup ... ok
+test ingestion_validate::tests::finalization_work_limit_rejects_before_materializing_occurrence_edge_violations ... ok
+test ingestion_validate::tests::runtime_case_state_and_partial_line_bounds_fail_closed ... ok
+test ingestion_validate::tests::interleaved_cases_and_equal_precedence_are_valid ... ok
+test ingestion_validate::tests::reversed_precedence_quarantines_whole_interleaved_case ... ok
+test ingestion_sort::tests::actual_normalized_values_are_hash_identical_across_orders_and_run_layouts ... ok
+test ingestion_validate::tests::same_tick_exit_releases_before_c0_earlier_admission ... ok
+test seed_map::tests::finite_registry_is_idempotent_for_same_identity_and_rejects_collision ... ok
+test seed_map::tests::identity_validation_rejects_invalid_and_oversized_ids ... ok
+test seed_map::tests::length_framing_separates_ambiguous_concatenations ... ok
+test seed_map::tests::normative_golden_bytes_digest_seed_and_draws_match ... ok
+test seed_map::tests::overflow_does_not_advance_rng_or_draw_position ... ok
+test seed_map::tests::purpose_tags_are_exact_u32_little_endian_values ... ok
+test ingestion_validate::tests::strict_never_publishes_and_window_quarantines_whole_case ... ok
+test seed_map::tests::every_identity_field_and_root_seed_change_the_frame_and_derived_seed ... ok
+test seed_map::tests::rejected_sample_then_draw_position_overflow_preserves_owner ... ok
+test seed_map::tests::unknown_snapshot_versions_and_seed_mismatch_fail_closed ... ok
+test trace_mapping::tests::addition_and_calendar_overflow_preserve_declared_clock_evidence ... ok
+test trace_mapping::tests::classified_and_subnanosecond_reasons_are_c0_exclusions ... ok
+test trace_mapping::tests::derived_lineage_is_retained_and_bad_lineage_becomes_safe_exclusion ... ok
+test trace_mapping::tests::duplicate_and_missing_keys_fail_dataset ... ok
+test trace_mapping::tests::fixture_file_executes_raw_requests_and_exact_goldens_only ... ok
+test trace_mapping::tests::four_semantic_guards_are_unresolved_without_fabricated_events ... ok
+test ingestion_validate::tests::zero_duration_occupancy_is_allowed_and_does_not_consume_capacity ... ok
+test trace_mapping::tests::integer_units_are_exactly_equivalent_for_one_second ... ok
+test trace_mapping::tests::integer_clock_preorigin_and_overflow_are_exclusions ... ok
+test trace_mapping::tests::missing_occurrence_keeps_available_at_raw_time_c0_safe ... ok
+test trace_mapping::tests::knowledge_cutoff_equality_future_and_unknown_are_reported ... ok
+test trace_mapping::tests::identities_keep_exact_unicode_case_and_ties_ignore_input_row_permutation ... ok
+test trace_mapping::tests::observed_task_started_survives_and_future_outcome_cannot_change_knowledge ... ok
+test trace_mapping::tests::optional_clocks_are_role_normalized_and_distinct ... ok
+test trace_mapping::tests::outputs_full_c0_and_raw_mutation_changes_clock ... ok
+test trace_mapping::tests::ranks_above_u64_sort_numerically ... ok
+test ingestion_validate::tests::touching_intervals_are_feasible_and_overlaps_quarantine_both ... ok
+test trace_mapping::tests::reversed_open_intervals_and_cohort_denominator_are_diagnostic_only ... ok
+test trace_mapping::tests::right_censored_outcome_keeps_last_observed_separate ... ok
+test trace_mapping::tests::semantic_guards_emit_no_c0_records ... ok
+test trace_mapping::tests::signed_relative_helper_covers_full_i128_u128_domain ... ok
+test trace_mapping::tests::source_order_and_occurrence_limits_are_validated_before_clocks ... ok
+test trace_mapping::tests::timestamp_mutations_reject_unknown_offset_naive_and_noncanonical_but_allow_zero_tail ... ok
+test trace_order::tests::rank_comparison_is_numeric_without_fixed_width_conversion ... ok
+test trace_order::tests::rank_requires_canonical_ascii_unsigned_decimal ... ok
+test trace_mapping::tests::wide_episode_end_does_not_infer_later_boarding_departure ... ok
+test trace_order::tests::equal_keys_compare_equal_and_sorting_is_independent_of_all_permutations ... ok
+test trace_order::tests::order_tuple_uses_each_component_in_declared_precedence ... ok
+test trace_order::tests::text_order_is_unsigned_utf8_bytewise_without_normalization ... ok
+test trace_mapping::tests::wide_row_emits_one_outcome_even_if_event_is_excluded ... ok
+test work_duration::tests::sampled_duration_retains_opaque_identity_without_debug_leakage ... ok
+test ingestion_pipeline::tests::rejects_duplicate_top_level_and_nested_json_members_before_value_collapse ... ok
+test ingestion_c01::schema_valid_raw_marker_mutation_is_detected_by_exact_population_oracle ... ok
+test ingestion_pipeline::tests::errors_remove_only_new_bundle_and_missing_evidence_never_succeeds ... ok
+test ingestion_pipeline::tests::actual_source_pipeline_hashes_survive_chunks_spills_permutations_and_counts_reconcile ... ok
+test ingestion_c01::self_contained_three_profile_cartesian_matrix_has_exact_population_bytes ... ok
+
+test result: ok. 61 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 4.86s
+

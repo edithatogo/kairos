@@ -95,19 +95,13 @@ impl CalibrationSeedMap {
         task_key: &str,
         purpose: SeedPurpose,
     ) -> Result<CalibrationStream, CalibrationSeedError> {
-        validate_id("seed_schedule_id", seed_schedule_id)?;
-        validate_id("case_key", case_key)?;
-        validate_id("task_key", task_key)?;
-        let identity = SeedIdentity {
-            version: self.version,
-            root_seed: self.root_seed,
+        let identity = self.identity_for(
+            seed_schedule_id,
             replication_id,
-            study_id: self.study_id.clone(),
-            seed_schedule_id: seed_schedule_id.to_owned(),
-            case_key: case_key.to_owned(),
-            task_key: task_key.to_owned(),
+            case_key,
+            task_key,
             purpose,
-        };
+        )?;
         let seed = derive_seed(&identity)?;
         self.register_seed(seed, identity.clone())?;
         Ok(CalibrationStream {
@@ -117,6 +111,58 @@ impl CalibrationSeedMap {
             derived_seed: seed,
             stream: DeterministicStream::from_seed(seed),
             draw_position: 0,
+        })
+    }
+
+    /// Derive and register the expected identity without creating another
+    /// advancing stream. Repeated requests for the same identity are stable.
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "Opaque C2.2 expected keys are currently consumed by private provider code and tests"
+        )
+    )]
+    pub(crate) fn key_for(
+        &mut self,
+        seed_schedule_id: &str,
+        replication_id: u64,
+        case_key: &str,
+        task_key: &str,
+        purpose: SeedPurpose,
+    ) -> Result<CalibrationStreamKey, CalibrationSeedError> {
+        let identity = self.identity_for(
+            seed_schedule_id,
+            replication_id,
+            case_key,
+            task_key,
+            purpose,
+        )?;
+        let seed = derive_seed(&identity)?;
+        self.register_seed(seed, identity.clone())?;
+        Ok(CalibrationStreamKey { identity })
+    }
+
+    fn identity_for(
+        &self,
+        seed_schedule_id: &str,
+        replication_id: u64,
+        case_key: &str,
+        task_key: &str,
+        purpose: SeedPurpose,
+    ) -> Result<SeedIdentity, CalibrationSeedError> {
+        validate_id("seed_schedule_id", seed_schedule_id)?;
+        validate_id("case_key", case_key)?;
+        validate_id("task_key", task_key)?;
+        Ok(SeedIdentity {
+            version: self.version,
+            root_seed: self.root_seed,
+            replication_id,
+            study_id: self.study_id.clone(),
+            seed_schedule_id: seed_schedule_id.to_owned(),
+            case_key: case_key.to_owned(),
+            task_key: task_key.to_owned(),
+            purpose,
         })
     }
 
@@ -138,6 +184,12 @@ impl CalibrationSeedMap {
     }
 }
 
+/// Opaque expected identity for one logical calibration stream.
+#[derive(Clone, Eq, PartialEq)]
+pub(crate) struct CalibrationStreamKey {
+    identity: SeedIdentity,
+}
+
 /// Owned purpose stream with checked completed-draw accounting.
 pub struct CalibrationStream {
     identity: SeedIdentity,
@@ -157,6 +209,16 @@ impl CalibrationStream {
     /// advance this by exactly one.
     pub fn draw_position(&self) -> u64 {
         self.draw_position
+    }
+
+    pub(crate) fn key(&self) -> CalibrationStreamKey {
+        CalibrationStreamKey {
+            identity: self.identity.clone(),
+        }
+    }
+
+    pub(crate) fn purpose(&self) -> SeedPurpose {
+        self.identity.purpose
     }
 
     /// Advance one SplitMix64 transition. Counter overflow is detected before
@@ -229,9 +291,21 @@ impl CalibrationStreamSnapshot {
             draw_position: self.draw_position,
         })
     }
+
+    /// Restore only when every logical identity component matches the expected
+    /// owner, before applying the existing snapshot version and seed checks.
+    pub(crate) fn restore_for(
+        self,
+        expected: &CalibrationStreamKey,
+    ) -> Result<CalibrationStream, CalibrationSeedError> {
+        if self.identity != expected.identity {
+            return Err(CalibrationSeedError::InvalidSnapshot);
+        }
+        self.restore()
+    }
 }
 
-fn validate_id(field: &'static str, value: &str) -> Result<(), CalibrationSeedError> {
+pub(crate) fn validate_id(field: &'static str, value: &str) -> Result<(), CalibrationSeedError> {
     if value.is_empty()
         || value.len() > MAX_ID_BYTES
         || value.chars().any(is_contract_control)
@@ -486,6 +560,38 @@ mod tests {
         );
         assert_eq!(stream.draw_position, u64::MAX);
         assert_eq!(stream.stream.clone().into_inner(), state_before);
+    }
+
+    #[test]
+    fn rejected_sample_then_draw_position_overflow_preserves_owner() {
+        let mut map = CalibrationSeedMap::new(1, "study-α", 1234).unwrap();
+        let key = map
+            .key_for("reject-4", 7, "case-0001", "triage:1", SeedPurpose::Service)
+            .unwrap();
+        let mut owner = map
+            .stream_for("reject-4", 7, "case-0001", "triage:1", SeedPurpose::Service)
+            .unwrap();
+        let mut control = map
+            .stream_for("reject-4", 7, "case-0001", "triage:1", SeedPurpose::Service)
+            .unwrap();
+        owner.draw_position = u64::MAX - 1;
+        control.draw_position = u64::MAX - 1;
+        let state_before = owner.stream.clone().into_inner();
+        let distribution = crate::work_duration::IntrinsicDurationDistribution::weighted_ticks(
+            vec![(1, 0x8000_0000_0000_0001)],
+        )
+        .unwrap();
+
+        assert_eq!(
+            distribution.sample(&mut owner, &key),
+            Err(crate::work_duration::WorkDurationError::Seed(
+                CalibrationSeedError::DrawPositionOverflow
+            ))
+        );
+        assert_eq!(owner.draw_position, u64::MAX - 1);
+        assert_eq!(owner.stream.clone().into_inner(), state_before);
+        assert_eq!(owner.next_u64(), control.next_u64());
+        assert_eq!(owner.draw_position, u64::MAX);
     }
 
     #[test]
