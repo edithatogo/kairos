@@ -1,0 +1,394 @@
+   Compiling kairo-ecs-des v0.1.0 (/private/tmp/careops-c22-policy-20261005/libs/kairos/crates/kairo-ecs-des)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.52s
+     Running unittests src/lib.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/kairo_ecs_des-7ecf6e40e2cce029)
+
+running 135 tests
+test fidelity_mode_c21::policy_resolves_all_sixteen_scope_presence_masks ... ok
+test fidelity_mode_c21::entity_overrides_use_live_generational_flow_identities ... ok
+test fidelity_mode_c21::failed_missing_or_duplicate_admission_preserves_the_first_decision ... ok
+test fidelity_mode_c21::despawned_bound_work_fails_closed_without_consuming_pending_policy ... ok
+test fidelity_mode_c21::colliding_work_ids_cannot_cross_flow_runtime_instances ... ok
+test fidelity_mode_c21::boundary_checks_every_admitted_work_even_when_the_first_is_terminal ... ok
+test fidelity_mode_c21::version_missing_policy_and_subsystem_identity_are_checked ... ok
+test fidelity_mode_c21::active_and_suspended_work_cannot_be_admitted_and_failed_admission_does_not_bind ... ok
+test fidelity_mode_c21::actual_pending_active_and_suspended_work_block_policy_application ... ok
+test flow::actor_domain_private_tests::carrier_batch_counter_overflow_reserves_nothing ... ok
+test flow::actor_domain_private_tests::carrier_aggregate_cleanup_overflow_retains_exact_head ... ok
+test flow::actor_domain_private_tests::carrier_cleanup_counts_actor_and_each_owned_work_once ... ok
+test flow::actor_domain_private_tests::carrier_active_resource_cleanup_overflow_retains_allocation_queue_and_progress ... ok
+test flow::actor_domain_private_tests::carrier_creation_counter_overflow_has_no_partial_entity_or_index ... ok
+test flow::actor_domain_private_tests::carrier_creation_orphan_and_task_index_reject_atomically ... ok
+test flow::actor_domain_private_tests::carrier_missing_context_is_consumed_stale_not_structural_error ... ok
+test flow::actor_domain_private_tests::carrier_cleanup_corruption_retains_despawn_head_and_context ... ok
+test flow::actor_domain_private_tests::task_missing_spec_remains_consumed_stale ... ok
+test flow::actor_domain_private_tests::carrier_missing_spec_with_either_ownership_witness_retains_exact_head ... ok
+test fidelity_mode_c21::every_terminal_state_preserves_old_work_and_uses_replaced_policy_for_future_work ... ok
+test flow::actor_domain_private_tests::carrier_corrupt_role_index_and_metadata_retain_domain_head ... ok
+test flow::buffered_despawn_private_tests::despawn_aggregate_cleanup_overflow_retains_pending_reservation_and_exact_head ... ok
+test flow::buffered_despawn_private_tests::despawn_batch_time_counter_and_cap_failures_roll_back ... ok
+test flow::buffered_despawn_private_tests::despawn_batch_release_then_duplicate_rolls_back_all_reservations ... ok
+test flow::buffered_despawn_private_tests::despawn_batch_acquire_then_despawn_and_reverse_admit_atomically ... ok
+test flow::buffered_despawn_private_tests::despawn_direct_duplicate_reservation_preserves_first_event_and_actor ... ok
+test flow::buffered_despawn_private_tests::despawn_budget_fail_stop_retains_pending_head ... ok
+test flow::continuation_private::batch_identity_overflow_retains_head_context_and_budget ... ok
+test flow::buffered_despawn_private_tests::despawn_cleanup_invalidates_old_domain_completion_and_notification_without_callbacks ... ok
+test flow::continuation_private::cap_poison_overrides_later_validation_and_never_grows_vector ... ok
+test flow::continuation_private::batch_time_and_foreign_forward_non_acquire_ticket_rejection_is_atomic ... ok
+test flow::buffered_despawn_private_tests::despawn_metadata_and_notification_token_overflow_retains_pending_head ... ok
+test flow::continuation_private::committed_batch_receipt_actual_event_and_deadline_order ... ok
+test flow::continuation_private::second_command_scheduler_and_deadline_counter_overflow_has_no_partial_ids ... ok
+test flow::continuation_private::second_acquire_entity_counter_overflow_rolls_back_every_reservation ... ok
+test flow::continuation_private::completed_context_snapshot_and_restart_factory_nonrollback_delivery ... ok
+test flow::continuation_private::legacy_and_continuation_tokens_aggregate_overflow_before_factory_or_cleanup ... ok
+test flow::domain_view_private_tests::view_batch_identity_overflow_retains_exact_head_and_live_context ... ok
+test flow::continuation_private::second_release_duplicate_reservation_rejection_restores_pending_set ... ok
+test flow::domain_view_private_tests::view_budget_arithmetic_overflow_retains_exact_head_and_live_context ... ok
+test flow::domain_view_private_tests::view_missing_context_inspection_is_nonmutating_then_consumed_stale ... ok
+test flow::q52_bench::benchmark_q52_measurements ... ignored, explicit Q5.2 release measurement; emits supplementary raw rows
+test flow::domain_view_private_tests::view_missing_descriptor_preserves_consumed_semantic_error ... ok
+test flow::domain_view_private_tests::view_wrong_context_inspection_is_nonmutating_then_consumed_stale ... ok
+test flow::continuation_private::stale_context_or_work_delivery_zero_cost_and_unregistered_domain_defensive_error ... ok
+test flow::q52_deadline_index_tests::deadline_command_checks_future_tuple_and_component_witness ... ok
+test flow::q52_deadline_index_tests::due_prefix_restores_resource_then_priority_order_across_deadlines ... ok
+test flow::q52_deadline_index_tests::multi_resource_due_failure_keeps_authoritative_indexes_unchanged ... ok
+test flow::q52_deadline_index_tests::grant_and_preemption_do_not_restore_a_cleared_deadline ... ok
+test flow::q52_deadline_index_tests::resource_removal_checks_deadline_index_and_cleans_component ... ok
+test flow::q52_deadline_index_tests::touched_active_deadline_is_invalid_and_removal_requires_empty_indexes ... ok
+test flow::q52_deadline_index_tests::queued_deadline_tracks_rekey_cancel_and_inclusive_expiration ... ok
+test flow::q52_deadline_index_tests::pending_and_terminal_deadlines_are_not_indexed_or_rejected ... ok
+test flow::q52_key_removal_tests::active_reprioritize_updates_lease_without_queue_membership ... ok
+test flow::q52_key_removal_tests::despawn_rolls_back_earlier_resource_when_later_waiting_key_is_corrupt ... ok
+test flow::q52_key_removal_tests::despawn_directly_removes_all_owned_waiters_across_resources ... ok
+test flow::q52_key_removal_tests::pending_cancel_does_not_require_waiting_key ... ok
+test flow::q52_preempting_index_tests::active_reprioritization_keeps_the_request_out_of_the_waiter_index ... ok
+test flow::q52_key_removal_tests::queued_cancel_removes_exact_key_and_preserves_tied_peer_order ... ok
+test flow::q52_key_removal_tests::missing_or_wrong_waiting_keys_fail_cancel_reprioritize_and_despawn_atomically ... ok
+test flow::q52_key_removal_tests::queued_reprioritize_preserves_admission_sequence_and_tie_order ... ok
+test flow::q52_key_removal_tests::suspended_cancel_removes_its_key_and_preserves_urgent_lease ... ok
+test flow::q52_key_removal_tests::suspended_reprioritize_uses_original_admission_sequence_for_ties ... ok
+test flow::q52_preempting_index_tests::empty_cache_returns_before_poisoned_holder_projection_on_ordinary_submit ... ok
+test flow::q52_preempting_index_tests::first_cached_key_is_validated_against_request_and_primary_queue ... ok
+test flow::q52_key_removal_tests::wrong_waiting_key_fails_replacement_atomically ... ok
+test flow::q52_preempting_index_tests::first_cached_key_rejects_request_and_queue_corruption_matrix ... ok
+test flow::q52_preempting_index_tests::multi_resource_failure_rolls_back_earlier_preempting_index_changes ... ok
+test flow::q52_preempting_index_tests::component_count_and_deadline_pair_corruption_fail_before_head_mutation ... ok
+test flow::q52_preempting_index_tests::resource_creation_removal_and_pending_admission_track_exact_cache_membership ... ok
+test flow::q52_queue_staging_tests::despawn_corrupt_second_queue_rejects_without_mutating_first_or_runtime ... ok
+test flow::q52_queue_staging_tests::absent_remove_target_keeps_explicit_invalid_resource_error_order ... ok
+test flow::q52_queue_staging_tests::missing_component_on_registered_target_is_structural_before_planning ... ok
+test flow::q52_preempting_index_tests::victim_strategy_requeues_only_suspend_and_restart_preemptors ... ok
+test flow::q52_preempting_index_tests::timeout_despawn_and_grant_remove_waiting_preemptors ... ok
+test flow::q52_preempting_index_tests::runtime_cache_tracks_waiting_preemptors_and_excludes_active_requests ... ok
+test flow::queue_delta::tests::failed_apply_is_atomic_for_missing_remove_and_present_addition ... ok
+test flow::queue_delta::tests::export_preflight_and_apply_match_independent_baseline ... ok
+test flow::queue_delta::tests::tuple_key_rekey_preserves_tie_order_and_applies_export ... ok
+test flow::queue_delta::tests::equal_key_insert_remove_and_reinsert_cancel_the_delta ... ok
+test flow::record_delta::tests::clone_is_an_independent_snapshot_and_export_owns_exact_writes ... ok
+test flow::queue_delta::tests::mixed_operations_match_independent_btree_baseline_and_keep_base_unchanged ... ok
+test flow::queue_delta::tests::ordered_iterator_and_cloned_snapshot_are_independent ... ok
+test flow::q52_bench::q52_kernel_correctness_small ... ok
+test flow::record_delta::tests::mutable_lookup_clones_only_once_and_reads_clone_nothing ... ok
+test flow::record_delta::tests::insert_replaces_an_existing_base_key_without_mutating_the_base ... ok
+test flow::same_tick_budget_private::arithmetic_injections_preserve_real_head_and_all_admission_state ... ok
+test flow::record_delta::tests::readonly_registry_snapshots_clone_no_records ... ok
+test flow::record_delta::tests::reads_through_and_writes_are_boundary_local ... ok
+test flow::same_tick_budget_private::cleanup_and_budget_add_overflow_preserve_head ... ok
+test flow::same_tick_budget_private::cleanup_missing_typed_context_or_dead_work_is_rejected_before_consume ... ok
+test flow::same_tick_budget_private::missing_owner_context_or_handler_notification_is_zero_cost_at_limit ... ok
+test flow::same_tick_budget_private::private_release_due_boundary_budget_is_atomic_in_both_dispositions ... ok
+test flow::same_tick_budget_private::restart_factory_is_not_called_for_budget_rejected_resume ... ok
+test flow::tests::admission_counter_overflow_preserves_pending_request ... ok
+test flow::tests::capacity_growth_cannot_grant_at_deadline_in_either_token_order ... ok
+test flow::tests::counter_admission_rejection_has_no_partial_spawn ... ok
+test flow::same_tick_budget_private::zero_duration_admission_is_one_three_row_plan_or_retains_pending_command ... ok
+test flow::queue_delta::tests::snapshot_clone_cost_scales_with_delta_not_large_base ... ok
+test flow::tests::cleanup_preflights_all_owned_work_before_mutation ... ok
+test flow::tests::deadline_admission_reserves_both_tokens_before_work_association ... ok
+test flow::tests::grant_overflow_rejects_the_entire_capacity_command ... ok
+test flow::tests::invalid_timed_capabilities_reject_before_any_request_or_work_association ... ok
+test flow::tests::failed_release_preflight_preserves_lease_head_and_reservation ... ok
+test flow::tests::overflow_rejects_even_due_completion_boundary ... ok
+test flow::tests::rejected_release_preserves_due_completion_and_replacement_boundary ... ok
+test flow::tests::notification_budget_is_atomic_and_consumption_and_removed_context_are_once_only ... ok
+test flow::tests::restart_factory_waits_for_aggregate_preflight_and_attempt_overflow_is_atomic ... ok
+test flow::tests::stale_completion_cannot_process_same_tick_neighbor_or_mismatched_future_boundary ... ok
+test flow::tests::second_replacement_overflow_rolls_back_first_eviction ... ok
+test flow::tests::transition_ordinal_is_checked_uint32 ... ok
+test flow::tests::work_admission_counter_failure_preserves_both_associations ... ok
+test flow::tests::timed_owner_cleanup_overflow_preserves_all_live_context_and_progress ... ok
+test flow::tests::timed_preflight_failures_leave_holder_request_progress_and_queue_unchanged ... ok
+test preemption::tests::chooses_worst_priority_then_latest_original_admission_then_largest_id ... ok
+test preemption::tests::each_replacement_reselects_from_the_remaining_holder_projection ... ok
+test preemption::tests::excludes_untimed_nonpreemptible_zero_due_and_missing_completion_holders ... ok
+test preemption::tests::holder_iteration_permutations_select_the_same_victim ... ok
+test preemption::tests::ordered_selector_keeps_first_eligible_waiter_tie_and_worst_holder_tie ... ok
+test preemption::tests::ordered_selector_stops_at_equal_or_worse_priority_cutoff ... ok
+test preemption::tests::replacement_search_returns_none_when_no_waiter_has_a_victim ... ok
+test preemption::tests::ordered_selector_does_not_consume_waiters_without_eligible_holders ... ok
+test preemption::tests::priority_extremes_do_not_require_negation_or_overflow ... ok
+test tests::des_context_creates ... ok
+test preemption::tests::requires_preempting_incoming_claim_and_strictly_worse_holder ... ok
+test preemption::tests::scans_past_earlier_nonpreempting_waiter_and_sorts_waiter_order ... ok
+test tests::resource_request_blocks ... ok
+test tests::trajectory_reports_event_budget_limit ... ok
+test preemption::tests::ordered_selector_matches_sorting_reference_over_deterministic_grid ... ok
+test tests::schedule_and_step ... ok
+test tests::trajectory_records_scheduler_order ... ok
+test flow::tests::repeated_interruption_grid_preserves_effort_and_terminal_uniqueness ... ok
+test flow::q52_record_staging_tests::despawn_plan_stages_only_affected_records_with_many_unrelated_rows ... ok
+test flow::q52_queue_staging_tests::reprioritize_stages_one_large_target_queue_and_keeps_priority_order ... ok
+test flow::tests::bounded_generated_operations_preserve_capacity_and_membership ... ok
+
+test result: ok. 134 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.18s
+
+     Running tests/des_integration.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/des_integration-5a8b3198ba2e1aef)
+
+running 4 tests
+test resource_queue_fifo ... ok
+test factory_bottleneck_smoke ... ok
+test resource_not_found ... ok
+test parallel_resources ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/des_resource_queue_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/des_resource_queue_v1-00ac49d468aa4eb9)
+
+running 2 tests
+test des_resource_queue_v1_replays_fixed_tick_trajectory_order ... ok
+test des_resource_queue_v1_preserves_fifo_admission ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fidelity_lineage_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/fidelity_lineage_v1-77b27ce6d43127ec)
+
+running 3 tests
+test opaque_identity_survives_moves_and_clone_but_distinguishes_instances ... ok
+test failed_initial_admission_does_not_bind_a_runtime ... ok
+test foreign_terminal_work_never_bypasses_bound_live_work ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/flow_actor_domain_context_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_actor_domain_context_v1-f46c27cd6d5670c2)
+
+running 6 tests
+test carrier_requires_exact_view_registration_and_type_without_partial_association ... ok
+test carrier_is_pending_zero_duration_and_unique_across_registered_keys_and_kinds ... ok
+test ordinary_actor_cleanup_removes_carrier_index_and_old_update_is_stale ... ok
+test carrier_manual_and_timed_acquire_reject_but_normal_zero_duration_task_completes ... ok
+test direct_and_batch_carrier_domain_kind_is_bound_and_atomic ... ok
+test batch_manual_and_timed_carrier_acquire_reject_whole_batch_at_issued_ticket ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/flow_builder_migration_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_builder_migration_v1-00bb05ec82b0fe52)
+
+running 6 tests
+test failed_admission_preserves_association_and_full_public_scheduler_stats ... ok
+test defaults_and_explicit_policy_translate_to_request ... ok
+test deadline_at_completion_expires_without_replacement_grant_in_both_insertions ... ok
+test fifo_migration_keeps_label_order_and_teaches_buffered_lease_release ... ok
+test scheduler_admission_priority_is_distinct_from_resource_queue_priority ... ok
+test boundary_pause_retains_context_and_matches_uninterrupted_causal_records ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/flow_capacity_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_capacity_v1-aa15fbb14483f97e)
+
+running 5 tests
+test closed_resource_waits_then_capacity_growth_grants ... ok
+test partial_builder_rejects_before_allocating_request_or_event ... ok
+test dispatch_revalidates_capacity_change_without_partial_mutation ... ok
+test past_submission_has_no_partial_state_and_run_budget_preserves_work ... ok
+test shrink_and_busy_removal_are_transactional ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/flow_continuations_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_continuations_v1-a0d8a302152eb260)
+
+running 8 tests
+test defaults_preserve_flow_config_shape_and_require_no_context_default ... ok
+test callback_emitted_zero_duration_is_charged_on_its_later_dispatch ... ok
+test completion_stages_existing_b_work_with_real_receipts_and_causal_snapshot ... ok
+test local_ticket_resolves_pending_cancel_and_foreign_or_non_acquire_reject ... ok
+test rejected_batch_has_no_partial_association_but_keeps_context_effect ... ok
+test domain_context_and_reserved_ingress_are_explicit ... ok
+test legacy_first_coexistence_type_checks_and_exact_delivery_budget ... ok
+test ignored_poison_is_atomic_for_every_kind_and_default_cap_is_1024 ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/flow_determinism_conformance_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_determinism_conformance_v1-3f086d8114d19fd4)
+
+running 1 test
+test independent_replications_match_across_repeat_and_worker_schedules ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests/flow_errors_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_errors_v1-e595a922f9f8c3db)
+
+running 1 test
+test flow_errors_implement_standard_error_without_hidden_sources ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/flow_lifecycle_snapshot_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_lifecycle_snapshot_v1-806989c250a28ae2)
+
+running 8 tests
+test rejected_same_tick_plan_emits_no_partial_rows_or_state_changes ... ok
+test public_handle_getters_and_zero_duration_rows_capture_each_mutation ... ok
+test same_runtime_pause_preserves_canonical_lifecycle_snapshots ... ok
+test manual_and_actor_cleanup_rows_keep_null_work_or_pre_despawn_work_identity ... ok
+test abort_emits_preempted_removal_then_aborted_state_with_same_causal_lease ... ok
+test restart_snapshot_preserves_pre_reset_progress_and_records_new_attempt ... ok
+test release_and_cancel_snapshot_checkpointed_progress_and_removed_lease ... ok
+test suspend_snapshot_keeps_victim_lease_progress_and_preemptor_before_requeue ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/flow_lifecycle_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_lifecycle_v1-bac994d73fe9aac4)
+
+running 4 tests
+test admission_is_buffered_and_duplicate_release_cannot_free_twice ... ok
+test despawn_cancels_all_owned_work_before_granting_other_actors ... ok
+test stale_pending_admission_is_not_mistaken_for_idle ... ok
+test recycled_owner_never_releases_a_new_lease ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/flow_preemption_eligibility_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_preemption_eligibility_v1-c58c542c6567452f)
+
+running 8 tests
+test zero_duration_work_completes_at_grant_without_duplicate_terminal ... ok
+test nested_suspend_cycles_and_live_progress_inspection ... ok
+test eligible_waiter_scan_skips_a_then_b_preempts_and_a_gets_next_unit ... ok
+test equal_priority_missing_capability_and_nonpreemptible_holder_are_ineligible ... ok
+test active_inspection_at_due_tick_caps_effort_without_committing_completion ... ok
+test suspended_work_can_be_cancelled_without_later_resume ... ok
+test capacity_two_selects_latest_equal_priority_victim_then_next ... ok
+test completion_at_interruption_tick_wins_both_token_insertion_orders ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/flow_preemption_primary_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_preemption_primary_v1-7e8baf6081b5381b)
+
+running 1 test
+test timed_work_preemption_primary_oracle_for_all_strategies ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/flow_preemption_property_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_preemption_property_v1-016162ffdaea025f)
+
+running 1 test
+test seeded_timed_cycles_match_independent_interval_model_v1 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s
+
+     Running tests/flow_preemption_secondary_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_preemption_secondary_v1-32bc93a23d6af1c6)
+
+running 1 test
+test independent_timed_preemption_timeline_0_4_7 ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/flow_queue_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_queue_v1-69b86f39b62cc89d)
+
+running 8 tests
+test unrelated_resource_command_cannot_steal_timeout_causality ... ok
+test grant_clears_deadline_and_immediate_expiry_never_grants ... ok
+test timeout_evidence_survives_rejected_rekey_at_boundary ... ok
+test pending_cancel_has_one_terminal_transition_and_stale_tokens ... ok
+test equal_priority_reverse_command_insertion_and_active_rekey ... ok
+test deadline_expires_before_release_in_both_insertion_orders ... ok
+test priority_fifo_and_rekey_preserve_admission_sequence ... ok
+test cancellation_and_rekey_follow_scheduler_order_and_resubmission_is_new ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/flow_registration_phase_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_registration_phase_v1-456c22ccbb7b499c)
+
+running 5 tests
+test existing_domain_registration_semantics_remain_available ... ok
+test cleanup_does_not_reopen_registration_phase ... ok
+test failed_creation_does_not_close_registration_phase ... ok
+test successful_task_closes_global_registration_phase ... ok
+test actors_and_resources_do_not_close_registration_phase ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/flow_same_tick_budget_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_same_tick_budget_v1-a4fd7806e267327a)
+
+running 9 tests
+test defaults_and_constructor_only_override ... ok
+test delivered_cancel_notification_counts_once_after_terminal_commit ... ok
+test predicted_obsolete_completion_has_zero_cost_and_natural_tick_reset ... ok
+test timed_admission_uses_effective_dispatch_timestamp ... ok
+test due_boundary_and_rejected_cancel_eight_independent_ordering_cases ... ok
+test first_admission_overflow_retains_head_and_permanently_halts ... ok
+test exact_limit_and_normal_later_tick_reset_respect_max_events ... ok
+test blocked_notification_preserves_context_and_pending_token ... ok
+test release_and_replacement_are_one_atomic_budget_plan ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/flow_shared_domain_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_shared_domain_v1-c7a7ee2402755869)
+
+running 7 tests
+test duplicate_pending_despawn_is_explicit_while_actor_still_live ... ok
+test explicitly_registered_carrier_is_unique_per_actor_and_kind_bound ... ok
+test carrier_creation_registration_type_and_actor_failures_leave_no_association ... ok
+test same_batch_duplicate_despawn_rejects_atomically_at_second_ticket_but_context_changes_once ... ok
+test carrier_role_rejects_manual_and_timed_acquire_without_association ... ok
+test same_tick_update_and_despawn_priority_controls_live_delivery_without_competing_time ... ok
+test callback_actor_despawn_is_buffered_and_cleans_task_carrier_and_stale_update ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/flow_staff_bed_cleaning_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_staff_bed_cleaning_v1-76c6e6f38dd4ed6f)
+
+running 6 tests
+test staff_boundaries_preserve_capacity_and_finish_drained ... ok
+test continuous_and_paused_modes_match_raw_lifecycle_records ... ok
+test bed_capacity_context_terminal_state_and_paused_raw_parity_are_preserved ... ok
+test staged_bed_cleaning_keeps_patient_a_lease_until_ordered_release ... ok
+test named_staff_lifecycle_keeps_exact_urgent_suspend_timeline ... ok
+test named_staff_context_and_terminal_values_remain_typed ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/flow_work_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_work_v1-d03e1a641ea2314d)
+
+running 4 tests
+test work_owns_typed_context_and_rejects_wrong_types ... ok
+test manual_allocation_inspection_preserves_owner_work_and_grant_time ... ok
+test work_association_is_checked_and_not_implicitly_reused ... ok
+test actor_cleanup_drops_context_and_recycled_work_id_is_stale ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/flow_world_view_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/flow_world_view_v1-c2845fd14b0c6c2d)
+
+running 6 tests
+test view_registration_after_same_key_work_preserves_existing_gate ... ok
+test real_view_callback_preserves_atomic_batch_rejection_and_nonrollback_context ... ok
+test real_world_time_hrtb_and_deferred_command_delivery ... ok
+test reserved_kinds_and_public_wrong_context_reject_without_scheduling ... ok
+test legacy_view_descriptor_duplicates_both_orders_and_compatible_kind_coexistence ... ok
+test removed_work_view_event_is_consumed_stale_without_callback ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/q53_legacy_public_surface_v1.rs (.artifacts/mvp/C2.2.policy.mode_test_port/target/debug/deps/q53_legacy_public_surface_v1-f73a705b7ecf8e27)
+
+running 3 tests
+test legacy_context_public_fields_and_methods_remain_usable ... ok
+test legacy_resource_capacity_two_fifo_release_conserves_capacity ... ok
+test legacy_trajectory_accessors_preserve_dispatch_order_and_event_limit ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests kairo_ecs_des
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
