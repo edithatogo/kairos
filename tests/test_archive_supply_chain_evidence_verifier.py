@@ -183,7 +183,7 @@ class CompleteEvidenceFixture:
             _put(self.acquisition / "branch-main-readback.json", _json_bytes({"name": "main", "commit": {"sha": self.main_head_sha}}))
             if not identical:
                 _put(self.acquisition / "compare-main-readback.json", _json_bytes({
-                    "url": compare_url, "head_commit": {"sha": self.main_head_sha},
+                    "url": compare_url,
                     "base_commit": {"sha": self.commit}, "merge_base_commit": {"sha": self.commit},
                     "status": "ahead", "ahead_by": 1, "behind_by": 0,
                 }))
@@ -413,18 +413,31 @@ class ArchiveEvidenceVerifierTests(unittest.TestCase):
             self.assertEqual(len(parents), 1)
             self.assertNotEqual(parents[0]["sha"], fixture.commit)
 
-    def test_main_dispatch_ahead_case_binds_raw_compare_head_and_merge_base(self) -> None:
+    def test_main_dispatch_ahead_case_binds_native_compare_url_and_merge_base(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             fixture = CompleteEvidenceFixture(Path(temporary).resolve(), main_dispatch=True, main_head_sha="e" * 40)
             result = verifier.verify_profile(fixture.args())
             self.assertTrue(result["valid"])
             compare_path = fixture.acquisition / "compare-main-readback.json"
             compare = json.loads(compare_path.read_bytes())
-            compare["head_commit"]["sha"] = "f" * 40
+            self.assertNotIn("head_commit", compare)
+            compare["url"] = f"https://api.github.com/repos/edithatogo/kairos/compare/{fixture.commit}...{'f' * 40}"
             _put(compare_path, _json_bytes(compare))
             with self.assertRaises(verifier.VerificationFailure) as raised:
                 verifier.verify_profile(fixture.args())
-            self.assertEqual(raised.exception.code, "main_compare_head_binding")
+            self.assertEqual(raised.exception.code, "main_ancestry_admission")
+
+    def test_main_dispatch_ahead_compare_rejects_wrong_base_and_merge_base(self) -> None:
+        for key in ("base_commit", "merge_base_commit"):
+            with self.subTest(field=key), tempfile.TemporaryDirectory() as temporary:
+                fixture = CompleteEvidenceFixture(Path(temporary).resolve(), main_dispatch=True, main_head_sha="e" * 40)
+                compare_path = fixture.acquisition / "compare-main-readback.json"
+                compare = json.loads(compare_path.read_bytes())
+                compare[key]["sha"] = "f" * 40
+                _put(compare_path, _json_bytes(compare))
+                with self.assertRaises(verifier.VerificationFailure) as raised:
+                    verifier.verify_profile(fixture.args())
+                self.assertEqual(raised.exception.code, "main_ancestry_admission")
 
     def test_main_dispatch_admission_fields_fail_closed(self) -> None:
         mutations = (

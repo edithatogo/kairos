@@ -924,8 +924,6 @@ def validate_acquisition_records(acquisition: Path, binding: dict[str, Any], row
         else:
             comparison, data = load_json(helper, contained_file(acquisition, "compare-main-readback.json", "compare-main-readback.json"), "compare-main-readback.json")
             hashes["compare-main-readback.json"] = sha256_bytes(data)
-            if not isinstance(comparison, dict) or not isinstance(comparison.get("head_commit"), dict) or comparison["head_commit"].get("sha") != observed_main:
-                fail("main_compare_head_binding", "compare-main-readback.json")
         try:
             ancestry = acquisition_helper.validate_main_ancestry(commit, branch, comparison)
         except Exception:
