@@ -115,7 +115,7 @@ fn equal_distance_and_hop_count_use_lexicographic_full_edge_id_sequence() {
         1,
         vec![n(1), n(2), n(3), n(4)],
         vec![
-            e(90, 1, 4, 7, &["walk"]),
+            e(90, 1, 4, 8, &["walk"]),
             e(8, 1, 2, 3, &["walk"]),
             e(30, 2, 4, 4, &["walk"]),
             e(3, 1, 3, 3, &["walk"]),
@@ -225,10 +225,18 @@ fn accumulates_distance_in_u128_beyond_u64() {
 
 #[test]
 fn checked_tick_multiplication_overflow_is_reported() {
-    let graph =
-        TransitGraphV1::new(1, vec![n(1), n(2)], vec![e(1, 1, 2, u64::MAX, &["walk"])]).unwrap();
+    let graph = TransitGraphV1::new(
+        1,
+        vec![n(1), n(2), n(3), n(4)],
+        vec![
+            e(1, 1, 2, u64::MAX, &["walk"]),
+            e(2, 2, 3, u64::MAX, &["walk"]),
+            e(3, 3, 4, u64::MAX, &["walk"]),
+        ],
+    )
+    .unwrap();
     assert!(matches!(
-        graph.route(n(1), n(2), &profile("walk", 1), u64::MAX),
+        graph.route(n(1), n(4), &profile("walk", 1), u64::MAX),
         Err(TransitError::Overflow)
     ));
 }

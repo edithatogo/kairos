@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import os
@@ -20,6 +21,17 @@ DISPOSABLE = ARTIFACTS / "disposable"
 LOGS = ARTIFACTS / "logs"
 FIXTURE = ROOT / "conformance/c20/spatial_routes_c20.rs"
 RUNNER = ROOT / "conformance/c20/run_routes_red.py"
+TEST_NAMES = (
+    "rejects_invalid_version_graph_mode_speed_and_tick_rate",
+    "rejects_duplicate_edges_and_duplicate_allowed_modes",
+    "chooses_distance_then_hops_then_full_edge_id_sequence_and_ignores_zero_cycles",
+    "equal_distance_and_hop_count_use_lexicographic_full_edge_id_sequence",
+    "origin_equals_destination_is_empty_and_distinct_zero_route_is_valid",
+    "canonical_bytes_ignore_permutation_and_bind_sorted_modes",
+    "cumulative_ceiling_segment_increments_sum_to_total_duration",
+    "accumulates_distance_in_u128_beyond_u64",
+    "checked_tick_multiplication_overflow_is_reported",
+)
 
 
 def digest(path: Path) -> str:
@@ -35,6 +47,11 @@ def run(argv: list[str], *, env: dict[str, str] | None = None) -> subprocess.Com
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--expect", choices=("red", "green"), default="red", help="required native oracle result"
+    )
+    args = parser.parse_args()
     if git("status", "--porcelain", "--untracked-files=all"):
         raise RuntimeError("runner requires a committed, clean workspace")
     base = git("rev-parse", "HEAD")
@@ -119,21 +136,34 @@ def main() -> int:
     missing_module = proc.returncode == 101 and bool(
         re.search(r"error\[E0432\].*?unresolved import.*?kairo_ecs_abm::spatial", raw, re.S)
     )
-    if proc.returncode == 0:
-        status = "runtime_tests_passed"
-        oracle = "native route conformance executed successfully; this is local fixture evidence only"
-    elif missing_module:
+    named_tests_passed = all(
+        re.search(rf"(?m)^test {re.escape(name)} \.\.\. ok$", raw) for name in TEST_NAMES
+    )
+    summary_passed = bool(
+        re.search(rf"(?m)^test result: ok\. {len(TEST_NAMES)} passed; 0 failed; 0 ignored;", raw)
+    )
+    green = proc.returncode == 0 and named_tests_passed and summary_passed
+    if args.expect == "red" and missing_module:
         status = "expected_missing_spatial_api_red"
         oracle = "native Cargo test exited 101 with unresolved kairo_ecs_abm::spatial import"
+    elif args.expect == "green" and green:
+        status = "all_named_runtime_tests_passed"
+        oracle = f"all {len(TEST_NAMES)} named native tests passed; zero failed or ignored"
     else:
-        status = "unexpected_failure"
-        oracle = "failure did not match the specifically expected missing spatial API red"
+        status = "oracle_mismatch"
+        oracle = (
+            f"expected {args.expect}; exit={proc.returncode}, missing_spatial_api_red={missing_module}, "
+            f"all_named_tests_passed={named_tests_passed}, zero_ignored_summary={summary_passed}"
+        )
 
     result = {
         "schema_version": 1,
         "task": "C2.0.red-tests.routes",
         "status": status,
         "oracle": oracle,
+        "expected": args.expect,
+        "named_test_count": len(TEST_NAMES),
+        "named_test_results": {name: bool(re.search(rf"(?m)^test {re.escape(name)} \.\.\. ok$", raw)) for name in TEST_NAMES},
         "commit": base,
         "fixture_sha256": fixture_sha,
         "cargo_argv": argv,
@@ -146,7 +176,7 @@ def main() -> int:
     }
     (ARTIFACTS / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, indent=2))
-    return 0 if status in ("expected_missing_spatial_api_red", "runtime_tests_passed") else 1
+    return 0 if status in ("expected_missing_spatial_api_red", "all_named_runtime_tests_passed") else 1
 
 
 if __name__ == "__main__":
