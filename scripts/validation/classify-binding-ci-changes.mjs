@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 
 export const BINDING_LANES = ['python', 'r', 'julia', 'typescript', 'csharp', 'go', 'gym'];
 export const ARCHIVE_PATHS = [
+  '.github/workflows/archive-supply-chain-main.yml',
   'packaging/scripts/validate_archive_copy_provenance.py',
   'packaging/scripts/build_package_archive_bundle.py',
   'packaging/scripts/build_archive_supply_chain.py',
@@ -15,6 +16,7 @@ export const ARCHIVE_PATHS = [
   'tests/test_archive_copy_provenance.py',
   'tests/test_archive_release_manifest.py',
   'tests/test_archive_evidence_expectations.py',
+  'tests/test_archive_supply_chain_main_workflow.py',
   'tests/test_package_archive_acquisition.py',
   'tests/test_package_archive_bundle.py',
   'tests/test_prepare_verified_archive_release.py',

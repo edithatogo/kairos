@@ -216,6 +216,7 @@ for (const workflow of [
   'ci-bindings.yml',
   'ci-core.yml',
   'ci-policy.yml',
+  'archive-supply-chain-main.yml',
   'ci-skip-guard.yml',
   'code-health.yml',
   'codeql.yml',
