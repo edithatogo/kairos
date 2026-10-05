@@ -68,7 +68,12 @@ def safe_extract(archive_path: Path, destination: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--expect", choices=("red", "green"), default="red")
-    expectation = parser.parse_args().expect
+    parser.add_argument(
+        "--base", default="HEAD",
+        help="descendant commit to archive (default: current HEAD)",
+    )
+    options = parser.parse_args()
+    expectation = options.expect
     repository = Path(__file__).resolve().parents[2]
     artifact_root = repository / ".artifacts/mvp/C2.0.red-tests.transaction-hook"
     logs_root = artifact_root / "logs"
@@ -86,8 +91,24 @@ def main() -> int:
         ["git", "rev-parse", "HEAD"], cwd=repository, capture_output=True,
         text=True, check=False,
     )
-    if revision.returncode or revision.stdout.strip() != BASE_COMMIT:
-        raise RuntimeError(f"base drift: expected {BASE_COMMIT}, got {revision.stdout.strip()}")
+    if revision.returncode:
+        raise RuntimeError("cannot resolve current HEAD")
+    actual_head = revision.stdout.strip()
+    ancestry = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", BASE_COMMIT, options.base],
+        cwd=repository, capture_output=True, check=False,
+    )
+    if ancestry.returncode:
+        raise RuntimeError(
+            f"archive base must descend from packet base {BASE_COMMIT}: {options.base}"
+        )
+    archive_commit = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{options.base}^{{commit}}"],
+        cwd=repository, capture_output=True, text=True, check=False,
+    )
+    if archive_commit.returncode:
+        raise RuntimeError(f"cannot resolve archive base {options.base!r}")
+    archive_revision = archive_commit.stdout.strip()
     if sha256(repository / CONTRACT) != CONTRACT_SHA256:
         raise RuntimeError("accepted interface contract hash drift")
     if sha256(repository / FLOW_SOURCE) != FLOW_SHA256:
@@ -118,7 +139,7 @@ def main() -> int:
     archive_path = attempt_work / "source.tar"
     with archive_path.open("wb") as archive_file:
         archive = subprocess.run(
-            ["git", "archive", "--format=tar", BASE_COMMIT], cwd=repository,
+            ["git", "archive", "--format=tar", archive_revision], cwd=repository,
             stdout=archive_file, stderr=subprocess.PIPE, check=False,
         )
     (attempt_logs / "git-archive.stderr.bin").write_bytes(archive.stderr)
@@ -126,6 +147,10 @@ def main() -> int:
         raise RuntimeError(f"git archive failed: exit {archive.returncode}")
     source_root = attempt_work / "source"
     safe_extract(archive_path, source_root)
+    if sha256(source_root / CONTRACT) != CONTRACT_SHA256:
+        raise RuntimeError("archived interface contract hash drift")
+    if sha256(source_root / FLOW_SOURCE) != FLOW_SHA256:
+        raise RuntimeError("archived Flow source hash drift")
     destination = source_root / TEST_DESTINATION
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(repository / FIXTURE, destination)
@@ -194,7 +219,9 @@ def main() -> int:
             if expectation == "red"
             else "green compile and named tests observed; unverified pending independent review"
         ),
-        "base_commit": BASE_COMMIT,
+        "packet_base_commit": BASE_COMMIT,
+        "actual_head": actual_head,
+        "archive_commit": archive_revision,
         "attempt_id": attempt_id,
         "input_hashes": {
             str(CONTRACT): CONTRACT_SHA256,
