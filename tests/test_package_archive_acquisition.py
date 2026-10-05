@@ -518,6 +518,103 @@ class AcquisitionTests(unittest.TestCase):
         self.assertGreaterEqual(process.poll_count, 4)
         self.assertEqual(group_exists.call_count, 5)
 
+    def test_darwin_group_probe_requires_exact_dead_group_evidence(self):
+        from unittest.mock import patch
+        cases = [
+            (0, b'42 42 Z\n', b'', False),
+            (0, b'42 42 Z+\n43 42 Z\n', b'', False),
+            (0, b'', b'', False),
+            (1, b'', b'', False),
+            (0, b'42 42 S\n', b'', True),
+            (0, b'42 42 Z\n43 42 S+\n', b'', True),
+            (0, b'42 43 Z\n', b'', None),
+            (0, b'42 42 ?\n', b'', None),
+            (0, b'42 42 Z extra\n', b'', None),
+            (1, b'42 42 Z\n', b'', None),
+            (2, b'', b'', None),
+            (0, b'', b'failed', None),
+            (0, b'x' * 65537, b'', None),
+        ]
+        for code, stdout, stderr, expected in cases:
+            with self.subTest(code=code, stdout=stdout[:40]), patch.object(
+                    a, '_darwin_group_snapshot', return_value=(code, stdout, stderr)) as inspect:
+                self.assertIs(a._darwin_group_has_live_members(42), expected)
+                inspect.assert_called_once_with(42)
+        with patch.object(a, '_darwin_group_snapshot', return_value=None):
+            self.assertIsNone(a._darwin_group_has_live_members(42))
+
+    def test_darwin_group_snapshot_caps_both_pipes_and_reaps_probe(self):
+        import sys
+        from unittest.mock import patch
+        real_popen, real_read = a.subprocess.Popen, a.os.read
+        for channel in ('stdout', 'stderr'):
+            children, read_sizes = [], []
+            def start(argv, **kwargs):
+                self.assertEqual(argv, ['/bin/ps', '-o', 'pid=,pgid=,stat=', '-g', '42'])
+                child = real_popen([sys.executable, '-c',
+                                   f'import sys,time;sys.{channel}.buffer.write(b"x"*1000000);sys.{channel}.flush();time.sleep(2)'], **kwargs)
+                children.append(child)
+                return child
+            def read(fd, count):
+                data = real_read(fd, count)
+                read_sizes.append(len(data))
+                return data
+            with self.subTest(channel=channel), patch.object(a.subprocess, 'Popen', side_effect=start), \
+                 patch.object(a.os, 'read', side_effect=read), patch.object(a, 'DARWIN_GROUP_PROBE_BYTES', 32):
+                self.assertIsNone(a._darwin_group_snapshot(42))
+            self.assertLessEqual(sum(read_sizes), 33)
+            self.assertEqual(len(children), 1)
+            self.assertIsNotNone(children[0].poll())
+            self.assertTrue(children[0].stdout.closed and children[0].stderr.closed)
+        children = []
+        def stalled(argv, **kwargs):
+            child = real_popen([sys.executable, '-c', 'import time;time.sleep(2)'], **kwargs)
+            children.append(child)
+            return child
+        with patch.object(a.subprocess, 'Popen', side_effect=stalled), \
+             patch.object(a, 'DARWIN_GROUP_PROBE_SECONDS', 0.05):
+            self.assertIsNone(a._darwin_group_snapshot(42))
+        self.assertIsNotNone(children[0].poll())
+
+    def test_darwin_probe_reaps_when_child_disappears_before_kill(self):
+        import sys
+        from unittest.mock import Mock, patch
+        real_popen = a.subprocess.Popen
+        children = []
+        def start(argv, **kwargs):
+            child = real_popen([sys.executable, '-c', "import time;print('x'*10000,flush=True);time.sleep(2)"], **kwargs)
+            kill, wait = child.kill, child.wait
+            def disappeared():
+                kill()
+                wait(timeout=1)
+                raise ProcessLookupError('exited before signal')
+            child.kill = disappeared
+            child.wait = Mock(wraps=wait)
+            children.append(child)
+            return child
+        with patch.object(a.subprocess, 'Popen', side_effect=start), \
+             patch.object(a, 'DARWIN_GROUP_PROBE_BYTES', 32):
+            self.assertIsNone(a._darwin_group_snapshot(42))
+        children[0].wait.assert_called_once_with(timeout=1)
+        self.assertIsNotNone(children[0].poll())
+
+    def test_group_eperm_only_accepts_verified_dead_darwin_group(self):
+        from unittest.mock import patch
+        for platform, probe, expected in [('darwin', False, False), ('darwin', True, True),
+                                          ('darwin', None, True), ('linux', False, True)]:
+            with self.subTest(platform=platform, probe=probe), \
+                 patch.object(a.sys, 'platform', platform), \
+                 patch.object(a.os, 'killpg', side_effect=PermissionError), \
+                 patch.object(a, '_darwin_group_has_live_members', return_value=probe) as inspect:
+                self.assertIs(a._process_group_exists(42), expected)
+                self.assertEqual(inspect.call_count, 1 if platform == 'darwin' else 0)
+
+    def test_native_fast_overlimit_cleanup_preserves_original_failure(self):
+        import sys
+        for attempt in range(32):
+            with self.subTest(attempt=attempt), self.assertRaisesRegex(ValueError, 'byte limit'):
+                a._run_bounded_process([sys.executable, '-c', "print('x' * 1000)"], 32, 10)
+
     def test_cleanup_keeps_live_group_eperm_fail_closed(self):
         import signal
         from unittest.mock import patch

@@ -14,6 +14,7 @@ import selectors
 import signal
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import zipfile
@@ -149,17 +150,101 @@ def select_artifact(run: dict, inventory: dict, run_id: int, source_commit: str,
         raise ValueError("invalid artifact identity")
     return item
 
+DARWIN_GROUP_PROBE_SECONDS = 1
+DARWIN_GROUP_PROBE_BYTES = 65536
+
+
+def _darwin_group_snapshot(pid: int) -> tuple[int, bytes, bytes] | None:
+    """Capture only a bounded diagnostic from the system ps, without group recursion."""
+    process = None
+    selector = selectors.DefaultSelector()
+    buffers = [bytearray(), bytearray()]
+    try:
+        process = subprocess.Popen(
+            ['/bin/ps', '-o', 'pid=,pgid=,stat=', '-g', str(pid)],
+            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            bufsize=0,
+        )
+        deadline = time.monotonic() + DARWIN_GROUP_PROBE_SECONDS
+        for stream, buffer in zip((process.stdout, process.stderr), buffers):
+            os.set_blocking(stream.fileno(), False)
+            selector.register(stream, selectors.EVENT_READ, buffer)
+        while selector.get_map() or process.poll() is None:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return None
+            for key, _ in selector.select(min(remaining, 0.05)):
+                budget = DARWIN_GROUP_PROBE_BYTES - sum(map(len, buffers))
+                chunk = os.read(key.fd, min(8192, budget + 1))
+                if not chunk:
+                    selector.unregister(key.fileobj)
+                elif len(chunk) > budget:
+                    return None
+                else:
+                    key.data.extend(chunk)
+        return process.returncode, bytes(buffers[0]), bytes(buffers[1])
+    except (OSError, ValueError):
+        return None
+    finally:
+        selector.close()
+        cleanup_failed = False
+        if process is not None:
+            if process.poll() is None:
+                try:
+                    process.kill()  # Fixed system ps has no descendants; avoid recursive group probes.
+                except ProcessLookupError:
+                    pass
+                except OSError:
+                    cleanup_failed = True
+                try:
+                    process.wait(timeout=1)  # Also reap a child that exited before kill().
+                except (OSError, subprocess.TimeoutExpired):
+                    cleanup_failed = True
+            for stream in (process.stdout, process.stderr):
+                if stream is not None:
+                    stream.close()
+        if cleanup_failed:
+            return None
+
+
+def _darwin_group_has_live_members(pid: int) -> bool | None:
+    """Disambiguate Darwin EPERM for an exited group without accepting live groups."""
+    snapshot = _darwin_group_snapshot(pid)
+    if snapshot is None:
+        return None
+    code, stdout, stderr = snapshot
+    if (code not in (0, 1) or stderr or len(stdout) > DARWIN_GROUP_PROBE_BYTES
+            or (code == 1 and stdout.strip())):
+        return None
+    try:
+        rows = stdout.decode('ascii').splitlines()
+    except UnicodeDecodeError:
+        return None
+    for row in rows:
+        fields = row.split()
+        if (len(fields) != 3 or not fields[0].isdigit() or int(fields[0]) <= 0
+                or not fields[1].isdigit() or int(fields[1]) != pid
+                or re.fullmatch(r'[A-Za-z][A-Za-z+<>]*', fields[2]) is None):
+            return None
+        if not fields[2].startswith('Z'):
+            return True
+    # A zombie has already exited and cannot retain an open stdout pipe.
+    return False
+
+
 def _process_group_exists(pid: int) -> bool:
     try:
         os.killpg(pid, 0)
     except ProcessLookupError:
         return False
     except PermissionError:
+        if sys.platform == 'darwin' and _darwin_group_has_live_members(pid) is False:
+            return False
         return True
     return True
 
 def _signal_process_group(process: subprocess.Popen, signum: int) -> None:
-    """Signal the process group, accepting EPERM only after a reap proves it vanished."""
+    """Accept EPERM only after reaping and independently excluding live members."""
     process.poll()  # Reap an exited leader before signaling its former process group.
     try:
         os.killpg(process.pid, signum)
@@ -168,7 +253,8 @@ def _signal_process_group(process: subprocess.Popen, signum: int) -> None:
     except PermissionError:
         # macOS can report EPERM for a just-exited, not-yet-reaped group leader.
         # Only treat that race as gone after waitpid reaps the leader and a fresh
-        # killpg(pid, 0) independently confirms that no group remains.
+        # group probe independently excludes live members. Darwin can keep a
+        # reaped zombie visible to ps while killpg continues reporting EPERM.
         if process.poll() is None or _process_group_exists(process.pid):
             raise
 
