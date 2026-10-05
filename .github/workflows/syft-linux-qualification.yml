@@ -1,0 +1,69 @@
+name: Native Linux Syft qualification
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    name: Authenticate and qualify Syft on native Linux amd64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Enforce trusted event and release branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]
+          [[ "$GITHUB_REPOSITORY" == edithatogo/kairos ]]
+          [[ "$GITHUB_REF" == refs/heads/main ]]
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: 3.14.8
+          architecture: x64
+      - name: Require native Linux amd64 and pinned Python
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(uname -s)" == Linux ]]
+          [[ "$(uname -m)" == x86_64 ]]
+          python3 -B -c 'import sys; assert sys.version_info[:3] == (3, 14, 8), sys.version'
+      - name: Run receipt-validator negative tests
+        run: python3 -B -m unittest discover -s tests -p test_syft_installation_receipt.py -v
+      - name: Authenticate and install pinned Syft release
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$RUNNER_TEMP/syft-linux-amd64-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          [[ ! -e "$output" ]]
+          python3 -B scripts/supply_chain/install_verified_syft.py --output-dir "$output"
+      - name: Independently validate native installation evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$RUNNER_TEMP/syft-linux-amd64-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          python3 -B scripts/supply_chain/verify_syft_installation_receipt.py \
+            --target linux-amd64 --output-dir "$output" \
+            > "$output/evidence/validation-report.json"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: syft-linux-native-qualification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/syft-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}/evidence/receipt.json
+            ${{ runner.temp }}/syft-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}/evidence/validation-report.json
+            ${{ runner.temp }}/syft-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}/logs/*.log
+          if-no-files-found: error
+          retention-days: 90
