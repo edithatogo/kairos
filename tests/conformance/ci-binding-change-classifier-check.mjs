@@ -52,6 +52,11 @@ for (const [lane, path] of Object.entries({
   typescript: 'bindings/typescript/src/a.ts', csharp: 'bindings/csharp/a.cs', go: 'bindings/go/a.go', gym: 'python/kairo_gym/src/a.py',
 })) assert.deepEqual(classifyBindingPaths([ARCHIVE_PATHS[0], path]), routing([lane], true));
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_supply_chain.py', 'bindings/python/a.py']), routing(['python'], true));
+assert.deepEqual(classifyBindingPaths(['tests/test_archive_evidence_expectations.py']), routing([], true));
+assert.deepEqual(classifyBindingPaths(['tests/test_archive_evidence_expectations.py', 'bindings/python/a.py']), routing(['python'], true));
+assert.deepEqual(classifyBindingPaths(['bindings/python/a.py', 'tests/test_archive_evidence_expectations.py']), routing(['python'], true));
+assert.deepEqual(classifyBindingPaths(['tests/test_archive_evidence_expectations.py', 'README.md']), routing(BINDING_LANES, true));
+assert.deepEqual(classifyBindingPaths(['README.md', 'tests/test_archive_evidence_expectations.py']), routing(BINDING_LANES, true));
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_supply_chain.py', 'README.md']), routing(BINDING_LANES, true));
 assert.deepEqual(classifyBindingPaths(['README.md', 'tests/test_archive_supply_chain.py']), routing(BINDING_LANES, true));
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_supply_chain.py', '.github/workflows/ci-bindings.yml']), routing(BINDING_LANES, true));
@@ -129,6 +134,7 @@ assert.deepEqual(
   [...archiveJob.matchAll(/^\s+python -m unittest discover -s tests -p ([^ ]+) -v$/gm)].map((match) => match[1]),
   [
     'test_archive_supply_chain.py',
+    'test_archive_evidence_expectations.py',
     'test_archive_copy_provenance.py',
     'test_package_archive_acquisition.py',
     'test_archive_release_manifest.py',
@@ -137,7 +143,7 @@ assert.deepEqual(
     'test_verified_syft_installer.py',
     'test_syft_installation_receipt.py',
   ],
-  'archive lane must run all eight focused suites in order',
+  'archive lane must run all nine focused suites in order',
 );
 const aggregateJob = workflow.slice(workflow.indexOf('  binding-ci:\n'));
 const scriptMatch = aggregateJob.match(/        run: \|\n((?:          .*\n)+)/);

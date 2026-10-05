@@ -249,6 +249,7 @@ jobs:
       - name: Run archive validation suite
         run: |
           python -m unittest discover -s tests -p test_archive_supply_chain.py -v
+          python -m unittest discover -s tests -p test_archive_evidence_expectations.py -v
           python -m unittest discover -s tests -p test_archive_copy_provenance.py -v
           python -m unittest discover -s tests -p test_package_archive_acquisition.py -v
           python -m unittest discover -s tests -p test_archive_release_manifest.py -v
