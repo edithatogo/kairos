@@ -16,7 +16,7 @@ Format:
 
 ### Changed
 
-- CI updates the Rust tool installer and Node runtime used by package validation.
+- CI refreshes pinned action releases and package-validation runtimes while preserving compatibility floors.
 
 - Python package extras now pin Ruff 0.16.10 for tests and require Gymnasium 0.29.1 or newer for the `python/kairo_gym` optional integration.
 

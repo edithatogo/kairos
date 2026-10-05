@@ -89,7 +89,7 @@ if (!publishJob.includes("contents: write")) fail("publish job must grant conten
 if (!publishJob.includes("node scripts/release/publish-registry.mjs --mode publish")) {
   fail("publish job missing registry publish helper invocation");
 }
-if (!publishJob.includes("pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b")) {
+if (!publishJob.includes("pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33")) {
   fail("publish job missing pinned PyPI trusted-publisher action");
 }
 
