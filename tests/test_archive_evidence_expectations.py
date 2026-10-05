@@ -147,6 +147,21 @@ class ArchiveExpectationTests(unittest.TestCase):
             ).EXPECTED_BINDING_FIELDS))
             self.assertEqual(set(expected), {"archive_index_sha256", "source_commit", "original_run_id", "acquisition_artifact_id", "dependencies"})
             self.assertEqual(len(expected["dependencies"]), 12)
+            expected_dependency_order = [
+                f"https://github.com/edithatogo/kairos/actions/runs/{fixture.acq.run_id}",
+                "ARCHIVE-INDEX.json",
+                "build-inputs/ARCHIVE-INDEX.json",
+                "build-inputs/BUILD-RECEIPT.json",
+                "build-inputs/acquisition.json",
+                "packaging/scripts/build_archive_supply_chain.py",
+                "packaging/scripts/build_archive_release_manifest.py",
+                "packaging/scripts/build_package_archive_bundle.py",
+                "packaging/scripts/acquire_package_archive_bundle.py",
+                "packaging/scripts/validate_archive_copy_provenance.py",
+                "tool:syft",
+                "schema:spdx-2.3",
+            ]
+            self.assertEqual([item["id"] for item in expected["dependencies"]], expected_dependency_order)
             self.assertEqual(set(adapter), {"archive_count", "archive_index_sha256", "artifact_digest", "artifact_id", "derivation", "ecosystems", "repository", "run_id", "source_commit"})
             self.assertEqual(adapter["archive_count"], 7)
             self.assertEqual(adapter["derivation"]["status"], "derived local adapter receipt; not original acquisition history")

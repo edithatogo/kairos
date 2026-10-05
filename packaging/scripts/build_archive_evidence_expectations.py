@@ -395,7 +395,7 @@ def derive(args: argparse.Namespace) -> tuple[dict[str, Any], dict[str, Any], di
         "source_commit": args.source_commit,
         "original_run_id": args.run_id,
         "acquisition_artifact_id": args.artifact_id,
-        "dependencies": [{"id": key, "sha256": dependencies[key]} for key in sorted(dependencies)],
+        "dependencies": [{"id": key, "sha256": value} for key, value in dependencies.items()],
     }
     verifier.validate_expected_inputs(expected_inputs, binding)
     return binding, expected_inputs, acquisition_document, hashes, syft_qualification
