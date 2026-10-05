@@ -43,6 +43,10 @@ def validate(join: dict, source: dict, metrics: list, *, required: bool = False)
     require(list(definitions) == sorted(definitions), "noncanonical declared groups")
     require(len({json.dumps(s, sort_keys=True) for s in definitions.values()}) == len(definitions), "ambiguous strata")
     require([e.get("group") for e in entries if isinstance(e, dict)] == list(definitions), "group list mismatch")
+    source_runs = source.get("runs")
+    require(isinstance(source_runs, list) and bool(source_runs), "missing source runs")
+    run_ids = [r.get("run_id") for r in source_runs if isinstance(r, dict)]
+    require(len(run_ids) == len(source_runs) and len(set(run_ids)) == len(run_ids), "invalid/duplicate source run")
     window = source["source_window"]
     start, end = tick(window["start_ticks"]), tick(window["end_ticks"])
     require(start < end, "invalid source window")
@@ -72,11 +76,24 @@ def validate(join: dict, source: dict, metrics: list, *, required: bool = False)
         matched = [m for m in metrics if m.get("metric") in {"W1", "KS_D"} and m.get("strata") == e["strata"]]
         require(len(matched) == 2 and {m["metric"] for m in matched} == {"W1", "KS_D"}, "metric binding mismatch")
         require(status in {"computed", "empty", "insufficient_data", "invalid", "unverified"}, "invalid status")
+        def cohort_identity(m: dict) -> tuple:
+            return (m.get("endpoint"), m.get("strata"), m.get("window"), m.get("provenance"))
+        require(cohort_identity(matched[0]) == cohort_identity(matched[1]), "W1/KS endpoint or provenance mismatch")
+        provenance = matched[0].get("provenance")
+        require(isinstance(provenance, dict), "metric provenance must be an object")
+        bind_fields = ("dataset_id", "run_id", "mapping_version", "seed_schedule_id", "seed_map_ref",
+                       "parameter_hash", "seed_contract_version")
+        source_matches = [r for r in source_runs
+                          if all(field not in r or provenance.get(field) == r.get(field)
+                                 for field in bind_fields)]
+        require(len(source_matches) == 1, "metric provenance does not resolve to exactly one source run")
         for m in matched:
             require(m["status"] == status and m["window"] == window, "status/window mismatch")
             require(m["algorithm_version"] == "empirical_equal.v1" and m["uncertainty"] is None, "algorithm/inference mismatch")
             for side in ("reference", "simulation"):
                 require(count(e[f"{side}_count"]) == count(m[f"{side}_count"]), "sample count mismatch")
+                if status in {"invalid", "unverified"}:
+                    require(count(m[f"{side}_count"]) == 0, "invalid/unverified sample count must be zero")
         rows = [r for r in raw if r["group"] == group]
         selected = {"reference": [], "simulation": []}
         totals = dict.fromkeys(("excluded", "censored", "missing", "failed", "infeasible"), 0)
@@ -124,31 +141,129 @@ def validate(join: dict, source: dict, metrics: list, *, required: bool = False)
 
 
 def self_test() -> dict:
+    window = {"start_ticks": "0", "end_ticks": "10"}
     strata = {"candidate_id": "a"}
-    source = {"source_window": {"start_ticks": "0", "end_ticks": "10"}, "metric_groups": [{"group": "a", "strata": strata}], "metric_reference_rows": 3, "metric_simulation_rows": 1}
-    def row(side, key, value, outcome="Point"):
-        return dict(side=side, key=key, value=value, outcome=outcome, group="a", selection_time="1", weight=None, excluded=False, censored=False, missing=False, failed=False, infeasible=False)
-    join = {"metric_raw_records": [row("reference", "r1", "1/2"), row("reference", "r2", "0.5"), row("reference", "r3", None, "Censored"), row("simulation", "s1", "1")], "metric_group_diagnostics": [dict(group="a", strata=strata, status="computed", reference_count=2, simulation_count=1, reference_tie_count=1, simulation_tie_count=0, coverage_warnings=["censored_observations_present", "tied_observations_present", "uncensored_subset_no_survival_correction"])]}
-    metrics = [dict(metric=n, strata=strata, status="computed", window=source["source_window"], reference_count=2, simulation_count=1, excluded_count=0, censored_count=1, missing_count=0, failed_count=0, infeasible_count=0, unmatched_count=0, algorithm_version="empirical_equal.v1", uncertainty=None) for n in ("W1", "KS_D")]
-    validate(join, source, metrics, required=True)
+    run = {"run_id": "run-a", "dataset_id": "d", "mapping_version": "map-v1",
+           "seed_schedule_id": "sched-v1", "seed_map_ref": "seed-map-v1",
+           "parameter_hash": "a" * 64}
+    provenance = {k: run[k] for k in run if k != "parameter_hash"}
+    provenance.update(seed_contract_version="seed-v1", parameter_hash=run["parameter_hash"])
+
+    def row(side, key, value, *, outcome="Point", time="1", group="a", **flags):
+        result = dict(side=side, key=key, value=value, outcome=outcome, group=group,
+                      selection_time=time, weight=None, excluded=False, censored=False,
+                      missing=False, failed=False, infeasible=False)
+        result.update(flags)
+        return result
+
+    def fixture(rows, status, counts, ties, warnings, diag_counts=None):
+        diag_counts = diag_counts or dict(excluded=0, censored=0, missing=0, failed=0, infeasible=0)
+        source = {"source_window": window, "metric_groups": [{"group": "a", "strata": strata}],
+                  "metric_reference_rows": sum(r["side"] == "reference" for r in rows),
+                  "metric_simulation_rows": sum(r["side"] == "simulation" for r in rows), "runs": [run]}
+        join = {"metric_raw_records": rows, "metric_group_diagnostics": [dict(
+            group="a", strata=strata, status=status, reference_count=counts[0], simulation_count=counts[1],
+            reference_tie_count=ties[0], simulation_tie_count=ties[1], coverage_warnings=warnings)]}
+        metrics = []
+        for name in ("W1", "KS_D"):
+            metrics.append(dict(metric=name, endpoint="departure", strata=strata, window=window,
+                provenance=copy.deepcopy(provenance), status=status, reference_count=counts[0], simulation_count=counts[1],
+                excluded_count=diag_counts["excluded"], censored_count=diag_counts["censored"],
+                missing_count=diag_counts["missing"], failed_count=diag_counts["failed"],
+                infeasible_count=diag_counts["infeasible"], unmatched_count=0,
+                algorithm_version="empirical_equal.v1", uncertainty=None,
+                value=0.25 if status == "computed" else None))
+        return source, join, metrics
+
+    def accepted(name, source, join, metrics):
+        value = validate(join, source, metrics, required=True)
+        return {"case": name, "status": value["status"]}
+
+    positives = []
+    # Rational-equivalent reference supports tie exactly once; the cross-side 1/2 does not count.
+    rows = [row("reference", "r1", "1/2"), row("reference", "r2", "0.5"),
+            row("reference", "r3", "2"), row("simulation", "s1", "0.5"),
+            row("simulation", "s2", None, outcome="Censored")]
+    source, join, metrics = fixture(rows, "computed", (3, 1), (1, 0),
+        ["censored_observations_present", "tied_observations_present", "uncensored_subset_no_survival_correction"],
+        dict(excluded=0, censored=1, missing=0, failed=0, infeasible=0))
+    positives.append(accepted("computed_ties_cross_side_and_censoring", source, join, metrics))
+
+    source, join, metrics = fixture([], "empty", (0, 0), (0, 0), [])
+    positives.append(accepted("empty_declared_group", source, join, metrics))
+
+    rows = [row("reference", "r1", "2"), row("reference", "r2", "2")]
+    source, join, metrics = fixture(rows, "insufficient_data", (2, 0), (1, 0), ["tied_observations_present"])
+    positives.append(accepted("insufficient_population", source, join, metrics))
+
+    rows = [row("reference", "r1", "not-a-rational")]
+    source, join, metrics = fixture(rows, "invalid", (0, 0), (None, None), [])
+    positives.append(accepted("invalid_has_zero_counts_null_ties", source, join, metrics))
+
+    rows = [row("reference", "r1", "1"), row("reference", "r2", "1"),
+            row("simulation", "s1", None, outcome="Censored")]
+    source, join, metrics = fixture(rows, "unverified", (0, 0), (None, None),
+        ["censored_observations_present", "uncensored_subset_no_survival_correction"],
+        dict(excluded=0, censored=1, missing=0, failed=0, infeasible=0))
+    positives.append(accepted("unverified_null_ties_retains_raw_warnings", source, join, metrics))
+
+    rows = [row("reference", "r1", "1"), row("simulation", "s1", "2", time="10")]
+    source, join, metrics = fixture(rows, "insufficient_data", (1, 0), (0, 0),
+        ["excluded_observations_present"], dict(excluded=1, censored=0, missing=0, failed=0, infeasible=0))
+    positives.append(accepted("half_open_window_exclusion", source, join, metrics))
+
+    rows = [row("reference", "r1", "1"), row("simulation", "s1", None, outcome="Censored",
+             excluded=True, failed=True, infeasible=True)]
+    warnings = ["censored_observations_present", "excluded_observations_present",
+                "failed_outcomes_present", "infeasible_outcomes_present",
+                "uncensored_subset_no_survival_correction"]
+    source, join, metrics = fixture(rows, "insufficient_data", (1, 0), (0, 0), warnings,
+        dict(excluded=1, censored=1, missing=0, failed=1, infeasible=1))
+    positives.append(accepted("overlapping_raw_flags", source, join, metrics))
+
     controls = []
-    for field, value in (("reference_tie_count", 0), ("reference_tie_count", True), ("reference_count", 3), ("coverage_warnings", []), ("coverage_warnings", ["caller_invented"]), ("strata", {}), ("status", "invalid")):
-        changed = copy.deepcopy(join)
-        changed["metric_group_diagnostics"][0][field] = value
+    def rejected(name, source, join, metrics, mutate):
+        changed = copy.deepcopy((source, join, metrics))
+        mutate(*changed)
         try:
-            validate(changed, source, metrics, required=True)
+            validate(changed[1], changed[0], changed[2], required=True)
         except (ValueError, KeyError, TypeError):
-            controls.append(field)
+            controls.append(name)
         else:
-            raise AssertionError(f"mutated {field} accepted")
-    try:
-        validate({}, source, metrics, required=True)
-    except ValueError:
-        controls.append("missing_diagnostics")
-    else:
-        raise AssertionError("missing diagnostics accepted")
+            raise AssertionError(f"mutated {name} accepted")
+
+    source, join, metrics = fixture(
+        [row("reference", "r1", "1"), row("reference", "r2", "1"), row("simulation", "s1", "2")],
+        "computed", (2, 1), (1, 0), ["tied_observations_present"])
+    rejected("forged_tie_count", source, join, metrics,
+             lambda s, j, m: j["metric_group_diagnostics"][0].__setitem__("reference_tie_count", 0))
+    rejected("boolean_tie_count", source, join, metrics,
+             lambda s, j, m: j["metric_group_diagnostics"][0].__setitem__("reference_tie_count", True))
+    rejected("forged_coverage_warning", source, join, metrics,
+             lambda s, j, m: j["metric_group_diagnostics"][0].__setitem__("coverage_warnings", []))
+    rejected("endpoint_pair_mismatch", source, join, metrics,
+             lambda s, j, m: m[1].__setitem__("endpoint", "arrival"))
+    rejected("provenance_pair_mismatch", source, join, metrics,
+             lambda s, j, m: m[1]["provenance"].__setitem__("run_id", "other-run"))
+    rejected("source_run_provenance_mismatch", source, join, metrics,
+             lambda s, j, m: (m[0]["provenance"].__setitem__("run_id", "other-run"),
+                              m[1]["provenance"].__setitem__("run_id", "other-run")))
+    rejected("missing_declared_groups", source, join, metrics, lambda s, j, m: s.pop("metric_groups"))
+    rejected("missing_diagnostics", source, {"metric_raw_records": join["metric_raw_records"]}, metrics,
+             lambda s, j, m: None)
+
+    for status in ("invalid", "unverified"):
+        source, join, metrics = fixture([row("reference", "r1", "1")], status, (0, 0), (None, None), [])
+        positives.append(accepted(status + "_null_ties_zero_counts", source, join, metrics))
+        rejected(status + "_nonzero_sample_count", source, join, metrics,
+                 lambda s, j, m: (j["metric_group_diagnostics"][0].__setitem__("reference_count", 1),
+                                  [x.__setitem__("reference_count", 1) for x in m]))
+        rejected(status + "_non_null_tie_count", source, join, metrics,
+                 lambda s, j, m: j["metric_group_diagnostics"][0].__setitem__("reference_tie_count", 0))
+
     require(validate({}, {}, []) == {"status": "not_supplied"}, "legacy compatibility")
-    return {"status": "pass", "mutation_rejections": len(controls), "controls": controls}
+    return {"status": "pass", "positive_cases": positives,
+            "mutation_rejections": len(controls), "controls": controls}
 
 
 def main() -> int:
