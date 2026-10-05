@@ -1,0 +1,415 @@
+{
+  "schema_version": 1,
+  "source_commit": "4f0ca5c7e3e267fd4a5889ba8a643f228abcd147",
+  "qualification": "local test-definition and expected-red preparation only",
+  "runtime_acceptance": false,
+  "hosted_qualification": "pending",
+  "contracts": {
+    "conductor/design/calibration/c20-work-provider-v1.md": "51ac6dc6783c280368dfd4630e4c33c5d585bf4c9657484e5e6c4ccb5c541333",
+    "conductor/design/calibration/c20-admission-bridge-v1.md": "3a659df216fd1b035e0c561b5df566a73a34660289239dc947992502f36049f9",
+    "conductor/design/calibration/c20-transit-execution-v1.md": "40c8400a4030a836bcec41e18291cedc8ceee1dcab88fee43f88916863d0d491",
+    "conductor/design/calibration/c20-control-ingress-v1.md": "0ec1226036abd21b591fe40001a50486d9ec7752c879c13a65a9e57542bb879d",
+    "conductor/design/calibration/c20-submitted-observation-v1.md": "92d81a319c7fadb55963226593c9b53800e145c3dcde6e30dd1616da36c9a3bb",
+    "conductor/design/calibration/c20-provider-transit-contract-v1.md": "1e6c6247548642d0df8d3e238d8de8f93d7429845acd519e422c0e8471505d21"
+  },
+  "families": [
+    {
+      "family": "provider",
+      "receipt_sha256": "c3e64490bb7b749286f7a9ffbfb920115a1dc6756819946e9a173f7bd11751e0",
+      "receipt": {
+        "base_commit": "c6d914fff4527f9c415c45df42db509cfdc95342",
+        "claim": "expected native missing-work_duration API red preparation only; not runtime pass or capability acceptance",
+        "command": {
+          "argv": [
+            "rustup",
+            "run",
+            "1.99.0",
+            "cargo",
+            "test",
+            "--locked",
+            "-p",
+            "kairo-ecs-calibration",
+            "--test",
+            "work_duration_c20"
+          ],
+          "cargo_test_summary": null,
+          "cwd": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.provider/disposable",
+          "exit_status": 101,
+          "expected_exit_status": 101,
+          "expected_missing_api_signature": true,
+          "expected_test_names": [],
+          "green_oracle": null,
+          "log": ".artifacts/mvp/C2.0.red-tests.provider/logs/cargo-native-red.log",
+          "log_sha256": "fc7ef849b48b575a10d83f0ddbfd7f4667d9c79cd004adcdfea7bf75e849c66f",
+          "missing_api_compiler_diagnostic": "error: couldn't find file `crates/kairo-ecs-calibration/tests/../src/work_duration.rs`",
+          "missing_source_errno": 2,
+          "missing_source_error": "No such file or directory",
+          "observed_test_results": [],
+          "required_test_passes": {}
+        },
+        "committed_workspace": "4f0ca5c7e3e267fd4a5889ba8a643f228abcd147",
+        "expectation": "red",
+        "fixture": "conformance/c20/work_duration_c20.rs",
+        "fixture_sha256": "eba6baebe352c10cc1f235141178fede807c2d0560b46593c6a8a32ea78f0ad7",
+        "green_expectation_unverified": true,
+        "limitations": [
+          "The disposable archive overlays the actual fixture into the native calibration crate test target.",
+          "The nonzero native result is expected because work_duration.rs is absent; it is not behavioral qualification.",
+          "No live crate source, Cargo manifest, or lockfile was changed.",
+          "Runtime tests must be rerun after the reviewed provider implementation exists."
+        ],
+        "overlay_path": "crates/kairo-ecs-calibration/tests/work_duration_c20.rs",
+        "packet_id": "C2.0.red-tests.provider",
+        "task_status": "ready_for_review",
+        "toolchain": {
+          "path_prefix": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin",
+          "rustc": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+          "rustdoc": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+          "version": "1.99.0"
+        }
+      }
+    },
+    {
+      "family": "transaction-hook",
+      "receipt_sha256": "20cb9be09e68df2eb724452584e7ba9c577b66b670eff667b11e5ff90a1fd885",
+      "receipt": {
+        "schema_version": 1,
+        "packet_id": "C2.0.red-tests.transaction-hook",
+        "instance_id": "transaction-hook",
+        "status": "ready_for_review",
+        "expectation": "red",
+        "acceptance": "compile-red preparation only; no runtime behavior passed",
+        "packet_base_commit": "c6d914fff4527f9c415c45df42db509cfdc95342",
+        "actual_head": "4f0ca5c7e3e267fd4a5889ba8a643f228abcd147",
+        "archive_commit": "4f0ca5c7e3e267fd4a5889ba8a643f228abcd147",
+        "attempt_id": "20261005T034433.241343Z",
+        "input_hashes": {
+          "conductor/design/calibration/c20-transit-execution-v1.md": "40c8400a4030a836bcec41e18291cedc8ceee1dcab88fee43f88916863d0d491",
+          "crates/kairo-ecs-des/src/flow.rs": "dbcaa36a3314a2a8d6b73056b0bfea3dbc8bbff64e45e01fce8550c28f118e92"
+        },
+        "fixture_sha256": "3ed99f770d72c62c4bb6ed42b925a62b63ca469bc5262b9f6f568f7fe739d064",
+        "archive_sha256": "5e39d7cbddcf9eac38ccccbf83642d6ceb2931c0e867bc5bb9711cf3ab025200",
+        "toolchain": [
+          {
+            "name": "rustc-version",
+            "argv": [
+              "/opt/homebrew/bin/rustup",
+              "run",
+              "1.99.0",
+              "rustc",
+              "--version"
+            ],
+            "exit_code": 0,
+            "stdout": "rustc 1.99.0 (b940084d7 2026-09-28)"
+          },
+          {
+            "name": "cargo-version",
+            "argv": [
+              "/opt/homebrew/bin/rustup",
+              "run",
+              "1.99.0",
+              "cargo",
+              "--version"
+            ],
+            "exit_code": 0,
+            "stdout": "cargo 1.99.0 (5f94df478 2026-08-27)"
+          }
+        ],
+        "environment": {
+          "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+          "CARGO_TARGET_DIR": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.transaction-hook/disposable/20261005T034433.241343Z/target"
+        },
+        "cargo_expectation": {
+          "mode": "red",
+          "argv": [
+            "/opt/homebrew/bin/rustup",
+            "run",
+            "1.99.0",
+            "cargo",
+            "test",
+            "--manifest-path",
+            "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.transaction-hook/disposable/20261005T034433.241343Z/source/Cargo.toml",
+            "-p",
+            "kairo-ecs-des",
+            "--test",
+            "flow_domain_plan_c20",
+            "--locked",
+            "--no-run"
+          ],
+          "cwd": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.transaction-hook/disposable/20261005T034433.241343Z/source",
+          "exit_code": 101,
+          "stdout_path": ".artifacts/mvp/C2.0.red-tests.transaction-hook/logs/20261005T034433.241343Z/cargo-red.stdout.bin",
+          "stderr_path": ".artifacts/mvp/C2.0.red-tests.transaction-hook/logs/20261005T034433.241343Z/cargo-red.stderr.bin",
+          "diagnostic_markers": [
+            "register_domain_plan_hook",
+            "FlowDomainControl",
+            "schedule_domain_control",
+            "DomainControl"
+          ],
+          "passing_fixture_tests": []
+        },
+        "verification": [
+          {
+            "argv": [
+              "/opt/homebrew/bin/rustup",
+              "run",
+              "1.99.0",
+              "rustfmt",
+              "--check",
+              "--config",
+              "skip_children=true",
+              "conformance/c20/flow_domain_plan_c20.rs"
+            ],
+            "cwd": "/private/tmp/careops-c20-20261005/libs/kairos",
+            "exit_code": 0,
+            "stdout_path": ".artifacts/mvp/C2.0.red-tests.transaction-hook/logs/20261005T034433.241343Z/rustfmt.stdout.bin",
+            "stderr_path": ".artifacts/mvp/C2.0.red-tests.transaction-hook/logs/20261005T034433.241343Z/rustfmt.stderr.bin"
+          },
+          {
+            "argv": [
+              "git",
+              "diff",
+              "--check"
+            ],
+            "cwd": "/private/tmp/careops-c20-20261005/libs/kairos",
+            "exit_code": 0,
+            "stdout_path": ".artifacts/mvp/C2.0.red-tests.transaction-hook/logs/20261005T034433.241343Z/diff-check.stdout.bin",
+            "stderr_path": ".artifacts/mvp/C2.0.red-tests.transaction-hook/logs/20261005T034433.241343Z/diff-check.stderr.bin"
+          }
+        ],
+        "errors": [],
+        "scope": [
+          "conformance/c20/flow_domain_plan_c20.rs",
+          "conformance/c20/run_hook_red.py"
+        ]
+      }
+    },
+    {
+      "family": "routes",
+      "receipt_sha256": "dda960db19e7a8afbc94fe9fba779ee7109e3929fb242f98651a8153b3c0c63c",
+      "receipt": {
+        "schema_version": 1,
+        "task": "C2.0.red-tests.routes",
+        "status": "expected_missing_spatial_api_red",
+        "oracle": "native Cargo test exited 101 with unresolved kairo_ecs_abm::spatial import",
+        "expected": "red",
+        "named_test_count": 9,
+        "named_test_results": {
+          "rejects_invalid_version_graph_mode_speed_and_tick_rate": false,
+          "rejects_duplicate_edges_and_duplicate_allowed_modes": false,
+          "chooses_distance_then_hops_then_full_edge_id_sequence_and_ignores_zero_cycles": false,
+          "equal_distance_and_hop_count_use_lexicographic_full_edge_id_sequence": false,
+          "origin_equals_destination_is_empty_and_distinct_zero_route_is_valid": false,
+          "canonical_bytes_ignore_permutation_and_bind_sorted_modes": false,
+          "cumulative_ceiling_segment_increments_sum_to_total_duration": false,
+          "accumulates_distance_in_u128_beyond_u64": false,
+          "checked_tick_multiplication_overflow_is_reported": false
+        },
+        "commit": "4f0ca5c7e3e267fd4a5889ba8a643f228abcd147",
+        "fixture_sha256": "1ca26266d74bee8156f7262bc04c77ca344703b85eaa4249743101e8a9716de0",
+        "cargo_argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "kairo-ecs-abm",
+          "--test",
+          "spatial_routes_c20"
+        ],
+        "cargo_cwd": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/disposable",
+        "cargo_exit_status": 101,
+        "unexpected_errors": [],
+        "cargo_log": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/logs/cargo-test.log",
+        "cargo_log_sha256": "8952e7bdaf974dcbde0ffccdc9a8bdfab7ee16ea76a03aeb72947daa62deafe7",
+        "toolchain_log": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/logs/toolchain.log",
+        "commands_log": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/logs/commands.log"
+      }
+    },
+    {
+      "family": "paired-flow",
+      "receipt_sha256": "b65a43f099ea3a86ccd6bf245d43a1e551116393e2e078c31dfff8f943b5bc46",
+      "receipt": {
+        "schema_version": 1,
+        "task": "C2.0.red-tests.paired-flow",
+        "status": "expected_missing_production_module_red",
+        "oracle": "actual locked calibration test exited 101 with exact missing production module diagnostics",
+        "expected": "red",
+        "commit": "4f0ca5c7e3e267fd4a5889ba8a643f228abcd147",
+        "fixture_sha256": "75417d45a5c4f53e31529b6610500fd4909180019596498290ce7ac28b2355fc",
+        "cargo_argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "kairo-ecs-calibration",
+          "--lib"
+        ],
+        "cargo_cwd": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.paired-flow/disposable",
+        "cargo_exit_status": 101,
+        "expected_first_missing": "work_duration",
+        "missing_path_errno": 2,
+        "missing_file_inventory": [
+          "flow_bridge",
+          "work_duration"
+        ],
+        "observed_missing_diagnostics": [
+          "work_duration"
+        ],
+        "cargo_log": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.paired-flow/logs/cargo-test.log",
+        "cargo_log_sha256": "7c07dd75a8d7573632df64fb6859bde3a9850d181410b5e2a7d49dfb9bc18088",
+        "toolchain_log": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.paired-flow/logs/toolchain.log",
+        "runner_overlay": {
+          "fixture": "crates/kairo-ecs-calibration/src/paired_flow_c20.rs",
+          "module_files_present": {
+            "flow_bridge": false,
+            "work_duration": false
+          },
+          "module_declarations_present": {
+            "flow_bridge": false,
+            "work_duration": false
+          },
+          "flow_feature_present": false,
+          "des_dependency_present": false,
+          "abm_dependency_present": false,
+          "archive_hashes": {
+            "lib_before_overlay": "c04bf2fe5a2529969eaa95822649a18775525fa2e234603717bb0975a589eef7",
+            "manifest_before_overlay": "d6a92198037af8d5de50d835718b7ea955f6f41bc7a7b48388f44aa150a5904d",
+            "lock_before_overlay": "711f5d19b22d454a394334402e5829ec8e0a0287f4febaef807767e1529bda8b"
+          },
+          "manifest_lock_unchanged": true,
+          "lib_after_overlay_sha256": "4ebd5626d2d0c9757689aaa00fbee0eac197d8f1d6ccf60bcfc5c41238e78360"
+        }
+      }
+    },
+    {
+      "family": "paired-transit",
+      "receipt_sha256": "05dde8e846803b8c81269120e26b374e9ca6dc7879a53341226296ae64c11413",
+      "receipt": {
+        "schema_version": 1,
+        "task": "C2.0.red-tests.paired-transit",
+        "status": "expected_missing_production_module_red",
+        "oracle": "locked actual calibration crate exited 101 at the first exact absent production module path; other absent files are separately inventoried; no behavioral execution",
+        "expected": "red",
+        "commit": "4f0ca5c7e3e267fd4a5889ba8a643f228abcd147",
+        "fixture_sha256": "e1dd76b7481a8cb71f4a2b1b69144d172874c428e5cd4402adc6be9d184f47f9",
+        "cargo_argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "kairo-ecs-calibration",
+          "--lib"
+        ],
+        "cargo_cwd": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.paired-transit/disposable",
+        "cargo_exit_status": 101,
+        "cargo_log": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.paired-transit/logs/cargo-test.log",
+        "cargo_log_sha256": "77e2e328931997b7c1de5ab90e3f806bfa4f4fa4b6be90590ed5ff9909f865b8",
+        "toolchain_log": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.paired-transit/logs/toolchain.log",
+        "overlay": {
+          "module_files_present": {
+            "flow_bridge": false,
+            "work_duration": false
+          },
+          "module_declarations_present": {
+            "flow_bridge": false,
+            "work_duration": false
+          },
+          "expected_missing_files": [
+            "flow_bridge",
+            "work_duration"
+          ],
+          "first_expected_missing_file": "flow_bridge",
+          "flow_feature_present": false,
+          "des_dependency_present": false,
+          "abm_dependency_present": false,
+          "source_lib_overlay_sha256": "c149e082c87a3ae9d3ad5aa801a57aa0cb8091b1c2ee224b70749006c53416d0",
+          "manifest_sha256_before_after": [
+            "d6a92198037af8d5de50d835718b7ea955f6f41bc7a7b48388f44aa150a5904d",
+            "d6a92198037af8d5de50d835718b7ea955f6f41bc7a7b48388f44aa150a5904d"
+          ],
+          "lock_sha256_before_after": [
+            "711f5d19b22d454a394334402e5829ec8e0a0287f4febaef807767e1529bda8b",
+            "711f5d19b22d454a394334402e5829ec8e0a0287f4febaef807767e1529bda8b"
+          ]
+        }
+      }
+    },
+    {
+      "family": "paired-preemption",
+      "receipt_sha256": "324a091cd444e2c2d5ffa3ae9a85304a040c2d88baab2d561743b9c46b6a4bb7",
+      "receipt": {
+        "cargo_argv": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "kairo-ecs-calibration",
+          "--lib"
+        ],
+        "cargo_cwd": "/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.paired-preemption/disposable",
+        "cargo_exit_status": 101,
+        "cargo_log": ".artifacts/mvp/C2.0.red-tests.paired-preemption/logs/cargo-test.log",
+        "cargo_log_sha256": "c45d50e4d00b4a1700a55284e65d0d6b58c0630799e0ece3cccb1de094c75f91",
+        "claim": "parser-only missing-production-module preparation; no runtime acceptance",
+        "commit": "4f0ca5c7e3e267fd4a5889ba8a643f228abcd147",
+        "compiler_errors": [
+          "error: couldn't find file `crates/kairo-ecs-calibration/src/work_duration.rs`",
+          "error: could not compile `kairo-ecs-calibration` (lib test) due to 1 previous error"
+        ],
+        "expected": "red",
+        "expected_first_missing": "work_duration",
+        "expected_tests": [
+          "preemption_flow_c20::tests::restart_preemption_rebuilds_original_template_without_resampling_or_transit_reset",
+          "preemption_flow_c20::tests::suspend_preemption_resumes_remaining_work_and_preserves_completed_micro_transit"
+        ],
+        "fixture_sha256": "f7efdd8acc9828226e9675b9e692ecd23a2f197bfe3f911407bbf388c21ac476",
+        "flow_feature_and_des_abm_dependencies_present": false,
+        "frozen_input_hashes_verified": true,
+        "limitations": [
+          "Red is module-resolution preparation only, not runtime behavior.",
+          "A later green run must execute all lib tests and the two named fixtures without filtering or ignored tests.",
+          "C2.0/C2.1 runtime, transit, and checkpoint acceptance remain open."
+        ],
+        "lock_sha256_before_after": [
+          "711f5d19b22d454a394334402e5829ec8e0a0287f4febaef807767e1529bda8b",
+          "711f5d19b22d454a394334402e5829ec8e0a0287f4febaef807767e1529bda8b"
+        ],
+        "manifest_sha256_before_after": [
+          "d6a92198037af8d5de50d835718b7ea955f6f41bc7a7b48388f44aa150a5904d",
+          "d6a92198037af8d5de50d835718b7ea955f6f41bc7a7b48388f44aa150a5904d"
+        ],
+        "missing_file_inventory": [
+          "flow_bridge",
+          "work_duration"
+        ],
+        "missing_module_diagnostics": [
+          "work_duration"
+        ],
+        "missing_path_errno": 2,
+        "module_declarations_present": {
+          "flow_bridge": false,
+          "work_duration": false
+        },
+        "module_files_present": {
+          "flow_bridge": false,
+          "work_duration": false
+        },
+        "observed_tests": [],
+        "packet_base": "d20ec0356e3daa6973c0f382b079076af05cd4c3",
+        "production_ready": false,
+        "runner_sha256": "65385333b0da3b794246ab3d16c28df9066d02c69f83b1a8aa5d5fa5f804a5d0",
+        "schema_version": 1,
+        "status": "ready_for_review",
+        "summary": null,
+        "task": "C2.0.red-tests.paired-preemption",
+        "toolchain": {
+          "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+          "rustc_path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+          "rustdoc_path": "/Volumes/PortableSSD/toolchains/rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc"
+        },
+        "tree": "0063835c68b338d202a35cf47f7099b0e3f641a2"
+      }
+    }
+  ]
+}
