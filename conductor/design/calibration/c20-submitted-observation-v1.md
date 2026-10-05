@@ -1,6 +1,6 @@
 # C2.0 submitted Service observation v1 — additive interface
 
-Status: proposed for bounded independent review; no runtime acceptance.
+Status: independently reviewed test-interface definition; no runtime acceptance.
 Owners: Track21 stream/bridge, Track03 actual Flow, coordinator test definition.
 Extends `c20-admission-bridge-v1.md` without changing its existing signatures.
 
@@ -45,3 +45,7 @@ changed Cargo lock is permitted to satisfy runtime acceptance.
 All active paired workers are stopped at this contract barrier. Coordinator
 rebinds source/base/input hashes and bounded context after review before dispatch.
 Original Macro/Zero no-transit and preemption requirements remain unchanged.
+
+Independent d35_gate_review inspected the exact getter/ownership and red/green
+wiring definition at46694c0; no objection remains. Coordinator accepts this
+additive test definition only. Workers must rebind before resuming.
