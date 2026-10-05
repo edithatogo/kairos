@@ -189,6 +189,22 @@ fn macro_and_explicit_zero_micro_pair_actual_provider_work_without_transit_event
     assert_eq!(progress.original_duration, SimDuration::from_ticks(30));
     assert_eq!(progress.completion_at, Some(SimTime::from_ticks(30)));
     assert_eq!(
+        macro_case
+            .flow
+            .work_context::<Context>(macro_work)
+            .unwrap()
+            .marker,
+        0xC20
+    );
+    assert_eq!(
+        zero_micro_case
+            .flow
+            .work_context::<Context>(zero_micro_work)
+            .unwrap()
+            .marker,
+        0xC20
+    );
+    assert_eq!(
         macro_case.flow.request(macro_request).unwrap().state,
         RequestState::Completed
     );

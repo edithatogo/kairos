@@ -131,17 +131,25 @@ def main() -> int:
     missing = sorted(
         name
         for name in MISSING_MODULES
-        if re.search(rf"error\[E0583\]: .*{re.escape(name)}\.rs", proc.stdout)
+        if re.search(
+            rf"(?m)^error: couldn't find file `[^`]*{re.escape(name)}\.rs`$",
+            proc.stdout,
+        )
     )
     expected_missing = sorted(name for name, present in files_present.items() if not present)
-    only_missing_module_errors = bool(missing) and missing == expected_missing and not re.search(
-        r"error\[(?!E0583\])[A-Z0-9]+\]", proc.stdout
+    compiler_errors = re.findall(r"(?m)^error: (?!could not compile)(.+)$", proc.stdout)
+    only_missing_module_errors = bool(missing) and set(missing).issubset(expected_missing) and (
+        len(compiler_errors) == len(missing)
+        and all("couldn't find file" in message for message in compiler_errors)
     )
     green = bool(
         ready
         and proc.returncode == 0
         and re.search(rf"(?m)^test paired_flow_c20::{re.escape(TEST_MODULE)} \.\.\. ok$", proc.stdout)
-        and re.search(r"(?m)^test result: ok\. \d+ passed; 0 failed; 0 ignored;", proc.stdout)
+        and re.search(
+            r"(?m)^test result: ok\. \d+ passed; 0 failed; 0 ignored; 0 measured; 0 filtered out$",
+            proc.stdout,
+        )
     )
     red = proc.returncode == 101 and only_missing_module_errors
     if args.expect == "red" and red:
