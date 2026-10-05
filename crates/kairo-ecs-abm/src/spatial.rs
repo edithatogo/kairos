@@ -186,21 +186,35 @@ impl TransitGraphV1 {
             Vec::new()
         } else {
             let mut pending = BinaryHeap::new();
-            pending.push(Reverse(PathCandidate {
+            let initial = PathCandidate {
                 distance_mm: 0,
                 edge_ids: Vec::new(),
                 nodes: vec![origin],
                 edges: Vec::new(),
-            }));
+            };
+            let mut best = BTreeMap::new();
+            best.insert(origin, initial.clone());
+            pending.push(Reverse(initial));
             let mut winner = None;
             while let Some(Reverse(candidate)) = pending.pop() {
                 let last = *candidate.nodes.last().ok_or(TransitError::InvalidGraph)?;
+                // A label dominates every other route to this node under
+                // (distance, hops, edge IDs): appending the same suffix keeps
+                // that order. Any route returning to an earlier node contains
+                // a nonnegative cycle and is dominated by removing it (lower
+                // distance, or equal distance with fewer hops).
+                if best.get(&last) != Some(&candidate) {
+                    continue;
+                }
                 if last == destination {
                     winner = Some(candidate.edges);
                     break;
                 }
                 if let Some(outgoing) = adjacency.get(&last) {
                     for edge in outgoing {
+                        // A globally preferred route is simple: revisiting a
+                        // node can only add distance or, for a zero cycle,
+                        // preserve distance while adding hops.
                         if candidate.nodes.contains(&edge.to) {
                             continue;
                         }
@@ -213,7 +227,14 @@ impl TransitGraphV1 {
                         next.edge_ids.push(edge.id);
                         next.nodes.push(edge.to);
                         next.edges.push((*edge).clone());
-                        pending.push(Reverse(next));
+                        let improves = match best.get(&edge.to) {
+                            None => true,
+                            Some(known) => next.cmp(known) == Ordering::Less,
+                        };
+                        if improves {
+                            best.insert(edge.to, next.clone());
+                            pending.push(Reverse(next));
+                        }
                     }
                 }
             }
@@ -427,4 +448,111 @@ fn put_len(bytes: &mut Vec<u8>, len: usize) -> Result<(), TransitError> {
     let value = u64::try_from(len).map_err(|_| TransitError::Overflow)?;
     bytes.extend_from_slice(&value.to_le_bytes());
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1};
+
+    #[test]
+    fn zero_cycle_does_not_override_a_late_full_sequence_tie_break() {
+        let node = |value| NodeId::new(value);
+        let mode = MovementModeId::new("walk").unwrap();
+        let edge = |id, from, to| TransitEdge {
+            id: EdgeId::new(id),
+            from: node(from),
+            to: node(to),
+            length_mm: 0,
+            allowed_modes: vec![mode.clone()],
+        };
+        let graph = TransitGraphV1::new(
+            1,
+            (0..=6).map(node).collect(),
+            vec![
+                edge(50, 0, 1),
+                edge(90, 1, 2),
+                edge(70, 2, 3),
+                edge(40, 3, 4),
+                edge(4, 4, 6),
+                edge(30, 3, 5),
+                edge(99, 5, 6),
+                edge(0, 1, 0),
+            ],
+        )
+        .unwrap();
+        let route = graph
+            .route(
+                node(0),
+                node(6),
+                &MovementProfile::new("walk", 1).unwrap(),
+                1,
+            )
+            .unwrap();
+        let ids: Vec<_> = route
+            .segments()
+            .iter()
+            .map(|segment| segment.edge_id().value())
+            .collect();
+        assert_eq!(ids, vec![50, 90, 70, 30, 99]);
+    }
+
+    #[test]
+    fn dense_zero_cost_layers_choose_the_lexicographic_shortest_route() {
+        const LAYERS: u64 = 14;
+        let origin = NodeId::new(0);
+        let destination = NodeId::new(2 * LAYERS + 1);
+        let mut nodes = vec![origin, destination];
+        for layer in 0..LAYERS {
+            nodes.push(NodeId::new(2 * layer + 1));
+            nodes.push(NodeId::new(2 * layer + 2));
+        }
+
+        let mode = MovementModeId::new("walk").unwrap();
+        let mut edges = Vec::new();
+        let mut next_id = 1_u64;
+        let mut add_edge = |from, to| {
+            edges.push(TransitEdge {
+                id: EdgeId::new(next_id),
+                from: NodeId::new(from),
+                to: NodeId::new(to),
+                length_mm: 0,
+                allowed_modes: vec![mode.clone()],
+            });
+            next_id += 1;
+        };
+
+        add_edge(origin.value(), 1);
+        add_edge(origin.value(), 2);
+        for layer in 0..LAYERS - 1 {
+            let from = 2 * layer + 1;
+            let next = 2 * layer + 3;
+            add_edge(from, next);
+            add_edge(from, next + 1);
+            add_edge(from + 1, next);
+            add_edge(from + 1, next + 1);
+        }
+        add_edge(2 * LAYERS - 1, destination.value());
+        add_edge(2 * LAYERS, destination.value());
+        drop(add_edge);
+
+        let graph = TransitGraphV1::new(1, nodes, edges).unwrap();
+        let route = graph
+            .route(
+                origin,
+                destination,
+                &MovementProfile::new("walk", 1).unwrap(),
+                1,
+            )
+            .unwrap();
+        let actual: Vec<_> = route
+            .segments()
+            .iter()
+            .map(|segment| segment.edge_id().value())
+            .collect();
+        let mut expected = vec![1];
+        expected.extend((0..LAYERS - 1).map(|layer| 3 + 4 * layer));
+        expected.push(next_id - 2);
+        assert_eq!(actual, expected);
+        assert_eq!(route.segments().len(), usize::try_from(LAYERS + 1).unwrap());
+    }
 }
