@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import copy
 import hashlib
 import importlib.util
 import json
@@ -10,6 +12,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest import mock
+import zlib
 
 SCRIPT = Path(__file__).resolve().parents[1] / "packaging/scripts/prepare_mainline_archive_release.py"
 SPEC = importlib.util.spec_from_file_location("prepare_mainline_archive_release", SCRIPT)
@@ -20,6 +23,55 @@ SPEC.loader.exec_module(gate)
 
 SHA = "a" * 64
 COMMIT = "b" * 40
+
+NATIVE_SYFT_FIXTURE_SHA256 = "0a9b35fca967b6ecf130670c47b4e84331bbed1d7d7b76b81033561453752bc9"
+NATIVE_SYFT_FIXTURE_ZLIB_B64 = (
+    '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'
+    'HprMnINw9jrqs6Hyh4f/AvyTwMk='
+)
 
 
 def digest(data: bytes) -> str:
@@ -227,7 +279,7 @@ class MainlineArchivePreparationTests(unittest.TestCase):
         (base / "logs").mkdir()
         binary_sha = digest(b"trusted-linux-syft")
         output = f"/home/runner/work/_temp/{label}/syft-linux-amd64-1-1"
-        python = "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python"
+        python = "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python3"
         installer = "/home/runner/work/kairos/kairos/scripts/supply_chain/install_verified_syft.py"
         checksum = output + "/downloads/syft-checksums.txt"
         bundle = output + "/downloads/syft-checksums.sigstore.json"
@@ -282,7 +334,8 @@ class MainlineArchivePreparationTests(unittest.TestCase):
         command_rows[5]["stdout_sha256"] = digest(b"")
         command_rows[5]["stderr_sha256"] = digest((base / "logs/05-verify-signed-checksum-document.log").read_bytes())
         receipt = {**stable, "commands": command_rows, "events": [],
-                   "python_toolchain": {"version": "3.14.8", "path": f"/{label}/context"}}
+                   "python_toolchain": {"version": "3.14.8 (native fixture)",
+                                        "executable": "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python3.14"}}
         receipt_path = base / "evidence/receipt.json"
         receipt_bytes = json_bytes(receipt)
         receipt_path.write_bytes(receipt_bytes)
@@ -297,6 +350,43 @@ class MainlineArchivePreparationTests(unittest.TestCase):
         (base / "bin").mkdir()
         (base / "bin/syft").write_bytes(b"trusted-linux-syft")
         return base, report_path, receipt, report, receipt_bytes
+
+    def test_native_retained_syft_receipt_and_logs_are_self_contained_and_accepted(self) -> None:
+        canonical = zlib.decompress(base64.b64decode(NATIVE_SYFT_FIXTURE_ZLIB_B64))
+        self.assertEqual(digest(canonical), NATIVE_SYFT_FIXTURE_SHA256)
+        native = json.loads(canonical)
+        receipt = {key: native[key] for key in ("commands", "archive", "version_probe", "python_toolchain")}
+        self.assertEqual(receipt["commands"][0]["argv"][0],
+                         "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python3")
+        self.assertEqual(receipt["python_toolchain"]["executable"],
+                         "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python3.14")
+        with tempfile.TemporaryDirectory() as temp:
+            original = Path(temp).resolve()
+            (original / "logs").mkdir()
+            for name, content in native["logs"].items():
+                (original / "logs" / name).write_bytes(content.encode("utf-8"))
+            rows = gate.validate_original_syft_commands(original, receipt, run_id=37355352626, attempt=1)
+            self.assertEqual(len(rows), 9)
+            self.assertEqual([row["sha256"] for row in rows],
+                             [record["log_sha256"] for record in receipt["commands"]])
+            def replace_argv(value, indices, position, replacement):
+                for index in indices:
+                    value["commands"][index]["argv"][position] = replacement
+
+            for mutate in (
+                lambda value: replace_argv(value, (0, 1, 2, 6, 7), 0, "/opt/hostedtoolcache/Python/3.14.8/x64/bin/python-bogus"),
+                lambda value: replace_argv(value, (0, 1, 2, 6, 7), 0, "python3"),
+                lambda value: value["commands"][1]["argv"].__setitem__(0, "/usr/bin/python3"),
+                lambda value: value["python_toolchain"].__setitem__("executable", "/usr/bin/python3"),
+                lambda value: value["python_toolchain"].__setitem__("version", "3.13.0"),
+                lambda value: replace_argv(value, (0, 1, 6, 7), 1, "/tmp/../../scripts/supply_chain/install_verified_syft.py"),
+                lambda value: replace_argv(value, (0, 1, 6, 7), 1, "/tmp/\x00/scripts/supply_chain/install_verified_syft.py"),
+                lambda value: replace_argv(value, (0, 1, 6, 7), 1, "/tmp/other-installer.py"),
+            ):
+                changed = copy.deepcopy(receipt)
+                mutate(changed)
+                with self.subTest(command=changed["commands"][0]["argv"][:2]), self.assertRaises(gate.GateError):
+                    gate.validate_original_syft_commands(original, changed, run_id=37355352626, attempt=1)
 
     def test_original_and_fresh_syft_receipt_identity_allows_context_hash_difference(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
