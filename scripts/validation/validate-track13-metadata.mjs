@@ -341,6 +341,7 @@ requireTerms('.github/workflows/ci-bindings.yml', [
   'python -m pip install --require-hashes -r scripts/bootstrap-python-tools.lock',
   "python -m pip install --no-deps --no-build-isolation -e '.[test]'",
   'ruff check .',
+  'python -m unittest discover -s tests -p test_syft_installation_receipt.py -v',
 ]);
 requireTerms('bindings/python/pyproject.toml', ['ruff==0.16.10']);
 requireTerms('scripts/validation/check-core-coverage.mjs', ['kairo-ecs-core/src/', '90']);

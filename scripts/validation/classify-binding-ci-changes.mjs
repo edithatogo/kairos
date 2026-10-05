@@ -28,7 +28,9 @@ export const ARCHIVE_PATHS = [
   'scripts/supply_chain/install_verified_syft.py',
   'scripts/supply_chain/syft-darwin-verifier.lock',
   'scripts/supply_chain/syft-linux-verifier.lock',
+  'scripts/supply_chain/verify_syft_installation_receipt.py',
   'tests/test_verified_syft_installer.py',
+  'tests/test_syft_installation_receipt.py',
 ];
 const ARCHIVE_PATH_SET = new Set(ARCHIVE_PATHS);
 
