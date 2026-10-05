@@ -243,6 +243,11 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
             .phase(),
         TransitPhase::Paused
     );
+    let progress_before_repeated_pause = flow
+        .work_context::<TransitContext>(carrier_work)
+        .unwrap()
+        .progress_at(flow.now())
+        .unwrap();
 
     let unowned_event = flow
         .schedule_domain_control(
@@ -256,6 +261,25 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
     let unowned_pause = flow.step().unwrap().expect("external Flow control event");
     assert_eq!(unowned_pause.event, unowned_event);
     assert_invalid_dispatch(&flow, &mut bound, &unowned_pause);
+    assert!(matches!(
+        unowned_pause.callback_batches.as_slice(),
+        [kairo_ecs_des::FlowBatchReceipt::Rejected(rejection)]
+            if rejection.error == FlowError::InvalidState && rejection.failed_ticket.is_none()
+    ));
+    assert!(unowned_pause.records.is_empty());
+    assert_eq!(flow.work(work).unwrap().request, None);
+    assert!(flow.resource(resource).unwrap().queued.is_empty());
+    let progress_after_repeated_pause = flow
+        .work_context::<TransitContext>(carrier_work)
+        .unwrap()
+        .progress_at(flow.now())
+        .unwrap();
+    assert_eq!(progress_before_repeated_pause.phase, TransitPhase::Paused);
+    assert_eq!(progress_after_repeated_pause.phase, TransitPhase::Paused);
+    assert_eq!(
+        progress_after_repeated_pause,
+        progress_before_repeated_pause
+    );
     assert_eq!(
         flow.work_context::<TransitContext>(carrier_work)
             .unwrap()
