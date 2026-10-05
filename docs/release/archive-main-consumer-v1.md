@@ -59,6 +59,8 @@ Both artifacts have 30-day retention:
   full validation report, selected native acquisition records, and the Syft
   receipt, independent validation report and installation logs.
 
+The current producer includes Rust `kairo-ecs-types` and six binding ecosystems;
+it does not qualify packaging of the full Rust workspace or registry readiness.
 The final evidence tree includes all exact archive copies, nine SPDX documents
 for the qualified eight-archive fixture, provenance, build inputs and checksums.
 The final upload excludes the native Syft executable, downloaded TAR, installer

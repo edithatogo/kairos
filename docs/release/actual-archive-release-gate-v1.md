@@ -118,3 +118,38 @@ regression run exposed a native macOS process-group permission race in the
 scanner's separate cleanup implementation; its retained failure is not converted
 into a pass by this actual qualification. That repair and its focused qualification
 must be completed before candidate delivery.
+
+
+### Final scanner repair qualification
+
+Consumer `bbd10e7ffd46e9348965b00a5985c16be08241ca` qualifies the repaired scanner.
+Each invocation captures and verifies the process-group helper bytes against the
+identity recorded before generation, then executes those same bytes in a fresh
+module before launching a child. A wrong helper hash aborts before child launch.
+Verified dead Darwin groups no longer turn successful or bounded-failure scans
+into permission errors; live or unknown groups continue to fail closed.
+
+The 32 scanner tests passed independently on this integrated consumer, including
+native fast-child repetition, distinct helper instances, captured-source loading,
+helper mismatch, timeout, oversized output and lingering-child cases. The 12
+expectation, 30 full-verifier and 23 adapter regressions also passed after the
+scanner change. All seven unaffected suites retained their earlier passes; all
+11 suites contain 256 tests in total. Scanner output bounds are checked during
+polling and after exit, so they are detection and acceptance limits rather than
+a strict cap on bytes written between polls.
+
+Fresh actual input preparation, generation, full verification and archive release
+preparation each exited zero with syntax warnings treated as errors. Independent
+readback reconciled the exact retained ZIP, eight archives and release copies,
+seven ecosystems, nine SPDX documents, 12 ordered dependency pins and all
+checksums/provenance subjects against this consumer's trusted blobs. The result
+contains 44 evidence files. Wrong-source and missing-evidence cases each exited
+one with no requested output directory; their errors are `binding_source_mismatch`
+and `path_missing` respectively.
+
+The final commands and logs are retained in ignored
+`.artifacts/archive-pr235-actual-qualification/`; the original scanner failure and
+its subsequent test-fixture signature failure remain preserved. This final local
+qualification resolves the scanner delivery condition above. Hosted Linux at
+the updated installer source, the first hosted mainline consumer, release-workflow
+wiring and production release acceptance remain separate, unverified gates.
