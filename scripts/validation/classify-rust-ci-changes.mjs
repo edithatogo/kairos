@@ -25,17 +25,22 @@ const KNOWN_NON_RUST_PATHS = [
 ];
 
 export function requiresRustVerification(paths) {
-  // Empty or unfamiliar change sets must run Rust verification. Only skip it
-  // when every changed path is in a deliberately small, known unrelated set.
+  // Empty or unfamiliar change sets run Rust verification. Skip only when all
+  // paths are in the deliberately small, known non-Rust set.
   if (paths.length === 0) return true;
   return paths.some((path) => !KNOWN_NON_RUST_PATHS.some((pattern) => pattern.test(path))
     || RUST_RELEVANT_PATHS.some((pattern) => pattern.test(path)));
 }
 
+export function classifyRustChanges(eventName, paths) {
+  if (eventName === 'push') return true;
+  if (eventName !== 'pull_request') throw new Error(`Unsupported event: ${eventName}`);
+  return requiresRustVerification(paths);
+}
+
 function main(args) {
   const [eventName, baseSha, headSha] = args;
   if (eventName === 'push') {
-    // Every main commit gets exact-SHA trusted coverage evidence for the drift gate.
     console.log('rust=true');
     return;
   }
@@ -44,14 +49,14 @@ function main(args) {
     if (!/^[0-9a-f]{40}$/i.test(sha ?? '')) throw new Error(`Invalid ${label} commit SHA`);
   }
 
-  // Disable rename detection so a rename away from a Rust path still classifies
-  // the source deletion. No diff filter means deletions also remain visible.
+  // Disable rename detection and include deletions so removing a Rust path
+  // cannot be misclassified as a docs-only change.
   const changed = execFileSync(
     'git',
     ['diff', '--no-renames', '--name-only', `${baseSha}...${headSha}`],
     { encoding: 'utf8' },
   ).split(/\r?\n/).filter(Boolean);
-  console.log(`rust=${requiresRustVerification(changed)}`);
+  console.log(`rust=${classifyRustChanges(eventName, changed)}`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -4,8 +4,7 @@ version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/edithatogo/kairos"
-rust-version = "1.76"
-
+rust-version = "1.99"
 [dependencies]
 kairo-ecs-state = { path = "../../../crates/kairo-ecs-state" }
 kairo-ecs-types = { path = "../../../crates/kairo-ecs-types" }

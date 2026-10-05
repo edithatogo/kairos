@@ -63,15 +63,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - channel: stable
-            expected-prefix: "1.99"
-          - channel: beta
-            expected-prefix: "1."
+          - channel: "1.99.0"
+            expected-version: "1.99.0"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust ${{ matrix.channel }}
+      - name: Install exact Rust ${{ matrix.channel }}
         env:
           CHANNEL: ${{ matrix.channel }}
         run: |
@@ -80,8 +78,8 @@ jobs:
       - name: Validate installed Rust channel
         shell: pwsh
         env:
-          EXPECTED_PREFIX: ${{ matrix.expected-prefix }}
-        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedPrefix $env:EXPECTED_PREFIX
+          EXPECTED_VERSION: ${{ matrix.expected-version }}
+        run: pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedVersion $env:EXPECTED_VERSION
 
   python:
     name: Python ${{ matrix.python-version }}

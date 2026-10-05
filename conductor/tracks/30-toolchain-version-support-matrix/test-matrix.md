@@ -1,6 +1,12 @@
 # Test Matrix: Track 30 Toolchain & Version Support Matrix
 
-Last updated: 2026-05-07.
+Last updated: 2026-10-05.
+
+## Current Rust policy (2026-10-05)
+
+The Kairos owner directed that Rust 1.99.0 is the only supported and pinned Rust version; development follows current stable and does not maintain older Rust compatibility. This Rust-only direction supersedes the prior Rust compatibility notice period. It does not change any other ecosystem policy and does not constitute test, hosted CI, or release acceptance. The dated validation table below is historical and does not establish the new policy gates.
+
+The Track 30 Rust lane requires the exact stable three-part version `1.99.0`; stable/beta aliases, nightly prerelease suffixes, and prefix-only comparisons are rejected. The Track 30 static validator passed. `mise.toml` pins `1.99.0`; the Windows setup validator selects the exact `1.99.0-x86_64-pc-windows-gnu` toolchain, resolves canonical Cargo/rustc/rustdoc executables, checks each exact version, and restores caller environment variables. Its PowerShell regression test extracts production functions and uses mocked tool commands; it passed without launching Rust. See `conductor/evidence/rust199-alias-enforcement-20261005/acceptance.json` and `receipt.json`. Windows-native behavior, actual workspace runtime, hosted CI, and release acceptance remain unverified. Dated validation rows below remain historical and do not establish current acceptance.
 
 | Check | Alpha | Beta | RC | 1.0 | Current evidence |
 |---|---:|---:|---:|---:|---|
@@ -39,9 +45,9 @@ Last updated: 2026-05-07.
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
 
-## Scoped stable-channel reconciliation — 2026-10-03
+## Historical stable-channel reconciliation — 2026-10-03 (superseded by the 2026-10-05 Rust-only policy)
 
-Official source: `https://static.rust-lang.org/dist/channel-rust-stable.toml`, manifest dated 2026-10-01, Rust 1.99.0 (b940084d7 2026-09-28), SHA-256 `ce6dddc886364f8d786514771212cebe9b731ba82d6b859951c6b0ccc516b6a2`. Hosted PR195 installed 1.99 but expected 1.98. The current-stable row, workflow prefix and static validator now agree on 1.99. Rust 1.76 MSRV, beta lane, package manifests and rust-toolchain.toml remain unchanged. The matrix header date remains the last full multi-language refresh; only this Rust row is refreshed here.
+Official source: `https://static.rust-lang.org/dist/channel-rust-stable.toml`, manifest dated 2026-10-01, Rust 1.99.0 (b940084d7 2026-09-28), SHA-256 `ce6dddc886364f8d786514771212cebe9b731ba82d6b859951c6b0ccc516b6a2`. Hosted PR195 installed 1.99 but expected 1.98. At that time, the current-stable row, workflow prefix and static validator agreed on 1.99; the Rust 1.76 MSRV, beta lane, package manifests and rust-toolchain.toml remained unchanged. The matrix header date remains the last full multi-language refresh; only this Rust row is refreshed here.
 
 On base `34a680cdb738b5e855bac9b821f9adae8c805ed9`, from `/private/tmp/kairos-rust-stable-matrix-20261003`, the static validator passes; actual isolated Rust1.99.0 passes the 1.99 check; actual Rust1.98.1 is rejected with the expected mismatch. actionlint and diff checks pass. Rust1.99 uses isolated `/private/tmp/kairos-rust-matrix-toolchains-20261003`; no shared toolchain defaults changed. Exact commands, environments, exits and logs: `/tmp/rust-matrix-command-receipts.json`. Context was bounded to 24KB; the workflow was inspected separately after the combined packet exceeded budget. A negative attempt using only RUSTUP_TOOLCHAIN did not select the intended compiler on this host; the recorded negative check uses its actual bin directory explicitly.
 

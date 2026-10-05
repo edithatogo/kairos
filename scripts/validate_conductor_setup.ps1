@@ -12,7 +12,11 @@ function Test-RustupToolchainInstalled {
         return $false
     }
 
-    return [bool](@($toolchains) | Where-Object { $_ -match "^$([regex]::Escape($Toolchain))\b" })
+    $installedNames = @($toolchains | ForEach-Object {
+        $line = ([string]$_).Trim()
+        if ($line.Length -gt 0) { ($line -split '\s+', 2)[0] }
+    })
+    return ($installedNames -ccontains $Toolchain)
 }
 
 function Test-WindowsHost {
@@ -20,14 +24,82 @@ function Test-WindowsHost {
 }
 
 function Invoke-CargoWorkspaceTests {
-    if ((Test-WindowsHost) -and (Test-RustupToolchainInstalled -Toolchain "stable-x86_64-pc-windows-gnu")) {
-        & rustup run stable-x86_64-pc-windows-gnu cargo test --workspace
+    if (Test-WindowsHost) {
+        $toolchain = "1.99.0-x86_64-pc-windows-gnu"
     } else {
-        & cargo test --workspace
+        $hostOutput = & rustup show host 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to determine the current Rust host from rustup"
+        }
+        $hostTriple = (@($hostOutput) -join "`n").Trim()
+        if ($hostTriple -notmatch '^[A-Za-z0-9_]+(?:-[A-Za-z0-9_]+)+$') {
+            throw "rustup returned an invalid host triple: $hostTriple"
+        }
+        $toolchain = "1.99.0-$hostTriple"
     }
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "Cargo workspace tests failed with exit code $LASTEXITCODE"
+    if (-not (Test-RustupToolchainInstalled -Toolchain $toolchain)) {
+        throw "Required Rust toolchain '$toolchain' is not installed"
+    }
+
+    $toolPaths = @{}
+    foreach ($binary in @("cargo", "rustc", "rustdoc")) {
+        $pathOutput = & rustup which --toolchain $toolchain $binary 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "rustup could not resolve $binary for '$toolchain'"
+        }
+        $binaryPath = (@($pathOutput) -join "`n").Trim()
+        if ([string]::IsNullOrWhiteSpace($binaryPath)) {
+            throw "rustup returned an empty path for $binary on '$toolchain'"
+        }
+
+        $versionOutput = & $binaryPath --version 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to read the pinned $binary version from '$binaryPath'"
+        }
+        $versionText = (@($versionOutput) -join "`n").Trim()
+        if ($versionText -notmatch "^$([regex]::Escape($binary)) 1\.99\.0(?:\s|$)") {
+            throw "Pinned $binary must report exact version 1.99.0; got: $versionText"
+        }
+        $toolPaths[$binary] = $binaryPath
+    }
+
+    $environmentNames = @(
+        "RUSTUP_TOOLCHAIN",
+        "RUSTC",
+        "RUSTDOC",
+        "RUSTC_WRAPPER",
+        "RUSTC_WORKSPACE_WRAPPER"
+    )
+    $processEnvironment = [Environment]::GetEnvironmentVariables("Process")
+    $savedEnvironment = @{}
+    foreach ($name in $environmentNames) {
+        $savedEnvironment[$name] = [pscustomobject]@{
+            Present = $processEnvironment.Contains($name)
+            Value = [Environment]::GetEnvironmentVariable($name, "Process")
+        }
+    }
+
+    try {
+        [Environment]::SetEnvironmentVariable("RUSTUP_TOOLCHAIN", $toolchain, "Process")
+        [Environment]::SetEnvironmentVariable("RUSTC", $toolPaths["rustc"], "Process")
+        [Environment]::SetEnvironmentVariable("RUSTDOC", $toolPaths["rustdoc"], "Process")
+        [Environment]::SetEnvironmentVariable("RUSTC_WRAPPER", $null, "Process")
+        [Environment]::SetEnvironmentVariable("RUSTC_WORKSPACE_WRAPPER", $null, "Process")
+
+        & $toolPaths["cargo"] test --workspace --locked
+        if ($LASTEXITCODE -ne 0) {
+            throw "Cargo workspace tests failed with exit code $LASTEXITCODE"
+        }
+    } finally {
+        foreach ($name in $environmentNames) {
+            $saved = $savedEnvironment[$name]
+            if ($saved.Present) {
+                [Environment]::SetEnvironmentVariable($name, [string]$saved.Value, "Process")
+            } else {
+                [Environment]::SetEnvironmentVariable($name, $null, "Process")
+            }
+        }
     }
 }
 

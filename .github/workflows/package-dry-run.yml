@@ -51,10 +51,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust stable
+      - name: Install Rust 1.99.0
         run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
+          rustup toolchain install 1.99.0 --profile minimal
+      - name: Bind Rust 1.99.0 tools
+        shell: bash
+        run: |
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
+          task_rustdoc="$(rustup which --toolchain 1.99.0 rustdoc)"
+          "$task_cargo" -V | grep -E '^cargo 1\.99\.0 '
+          "$task_rustc" -V | grep -E '^rustc 1\.99\.0 '
+          "$task_rustdoc" -V | grep -E '^rustdoc 1\.99\.0 '
+          printf '%s\n' "PATH=$task_bin:$PATH" 'RUSTUP_TOOLCHAIN=1.99.0' "RUSTC=$task_rustc" "RUSTDOC=$task_rustdoc" >> "$GITHUB_ENV"
       - name: Cargo package dry run
         run: |
           test -f Cargo.toml

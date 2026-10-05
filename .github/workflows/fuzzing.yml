@@ -13,30 +13,26 @@ permissions:
   contents: read
 
 jobs:
-  fuzz-smoke:
-    name: fuzz-smoke
+  fuzz-unverified:
+    name: Fuzzing UNVERIFIED (cargo-fuzz not run)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust nightly
+      - name: Record the outstanding fuzzing obligation
         run: |
-          rustup toolchain install nightly --profile minimal
-          rustup default nightly
-      - name: Install cargo-fuzz
-        run: cargo install cargo-fuzz --version 0.13.2 --locked
-      - name: Scheduler fuzz smoke
-        run: |
-          set -euo pipefail
-          test -f fuzz/Cargo.toml
-          cargo +nightly fuzz run scheduler_requests -- -max_total_time=60 -rss_limit_mb=2048
-      - name: Preserve crash corpus
+          {
+            echo '## Scheduler fuzzing: UNVERIFIED'
+            echo 'No fuzz run was performed. cargo-fuzz requires Rust nightly, which is disallowed by the sole Rust 1.99.0 policy.'
+            echo 'Outstanding obligation: reassess fuzz execution only under a future reviewed toolchain policy; this workflow reports no fuzz pass.'
+          } | tee fuzzing-unverified.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve unverified fuzzing status
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: scheduler-fuzz-artifacts
-          path: fuzz/artifacts
-          if-no-files-found: warn
+          name: scheduler-fuzz-unverified
+          path: fuzzing-unverified.txt
+          if-no-files-found: error
           retention-days: 30

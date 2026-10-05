@@ -1,5 +1,5 @@
 [tools]
-rust = "stable"
+rust = "1.99.0"
 python = "3.14.7"
 node = "lts"
 go = "latest"

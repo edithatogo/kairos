@@ -20,7 +20,7 @@ Evidence 2026-05-06: this slice changed only Track 30 artifacts, `conductor/tool
 ## Phase 1 - Build the support matrix
 
 ### Task 1.1 - Define supported versions per language [x]
-- Rust: stable, beta, and MSRV per `rust-toolchain.toml`.
+- Rust: exact `1.99.0` only, as directed in the 2026-10-05 policy update.
 - Python: 3.10, 3.11, 3.12, 3.13, 3.14 (free-threaded where applicable).
 - .NET: 10.0 (stable), 11.0 (preview).
 - Julia: LTS and current stable.
@@ -89,3 +89,10 @@ Before any task or phase in this track is marked complete, and before the next p
 6. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` to verify recorded commits, pushed refs, and cleanup state.
 8. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
+
+
+## 2026-10-05 owner-directed Rust policy update
+
+The owner directs Rust 1.99.0 as the only supported and pinned Rust version, with development on current stable and no older-version compatibility maintenance. This supersedes the earlier Rust-only two-cycle/six-month compatibility notice and does not alter other ecosystems. This policy authorization is separate from technical validation and release acceptance.
+
+The Track 30 checker, `mise.toml`, and Windows setup validator now enforce the exact Rust `1.99.0` toolchain. Commit `de1bc5aded2506b568e55426427f2dd30a882bea` and `conductor/evidence/rust199-alias-enforcement-20261005/acceptance.json` record the three-file source change and independent review. Static policy validation and the mocked setup regression test passed; no Rust executable was run, and Windows-native behavior, workspace runtime, hosted CI, and release acceptance remain unverified. The dated 2026-05-06 planning and validation notes above remain historical evidence. No other ecosystem policy changed.

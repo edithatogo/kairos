@@ -34,10 +34,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Rust stable
+      - name: Install Rust 1.99.0
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt
-          rustup default stable
+          rustup toolchain install 1.99.0 --profile minimal --component rustfmt
+      - name: Bind Rust 1.99.0 tools
+        shell: bash
+        run: |
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
+          task_rustdoc="$(rustup which --toolchain 1.99.0 rustdoc)"
+          "$task_cargo" -V | grep -E '^cargo 1\.99\.0 '
+          "$task_rustc" -V | grep -E '^rustc 1\.99\.0 '
+          "$task_rustdoc" -V | grep -E '^rustdoc 1\.99\.0 '
+          printf '%s\n' "PATH=$task_bin:$PATH" 'RUSTUP_TOOLCHAIN=1.99.0' "RUSTC=$task_rustc" "RUSTDOC=$task_rustdoc" >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:

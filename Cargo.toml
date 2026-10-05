@@ -36,7 +36,7 @@ exclude = [
 edition = "2021"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/edithatogo/kairos"
-rust-version = "1.76"
+rust-version = "1.99"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

@@ -1,5 +1,17 @@
 # Handoff — 13 CI/CD, Code Quality & Supply Chain
 
+## Current Rust 1.99 policy reconciliation — 2026-10-05
+
+Current `ci-core.yml` policy uses Rust 1.99.0 for stable verification, workspace
+checks, and WebAssembly checks. Pull-request routing may skip those lanes only
+for non-empty diffs fully covered by the known non-Rust allowlist. Empty,
+unclassified, or Rust-relevant diffs run them, and every main push runs them.
+The dated September 29 notes below record the earlier 1.76/1.77 policy and are
+retained as historical evidence; they are superseded for current routing by this
+reconciliation and the active workflow. The PR-only skip-guard remains a PR
+context, not a push-required context. This local candidate does not establish
+hosted acceptance.
+
 ## Summary
 
 CI and supply-chain gates now cover core Rust quality, binding smoke workflows, conformance fixture validation, benchmark smoke checks, dependency policy, and workflow security checks. This pass also wires the Track 07-13 hardening validator into the conformance workflow and keeps release/registry actions out of local validation.

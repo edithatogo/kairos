@@ -18,13 +18,15 @@ Format:
 
 - Rust workspace member path dependencies now declare matching crate version requirements for package archives.
 
+- Set the Rust workspace and supported toolchain to exact Rust 1.99.0. CI no longer maintains older Rust compatibility lanes; nightly Miri and fuzz execution remain unverified.
+
 - CI refreshes pinned action releases and package-validation runtimes while preserving compatibility floors.
 
 - Python package extras now pin Ruff 0.16.10 for tests and require Gymnasium 0.29.1 or newer for the `python/kairo_gym` optional integration.
 
 - Release dry runs require the final `dist/` artifact upload to find files and retain the uploaded evidence for 90 days.
 
-- Refreshed the current-stable Rust matrix lane to 1.99, matching the official stable channel; the Rust 1.76 core MSRV is unchanged.
+- As of 2026-10-03, refreshed the Rust stable matrix lane to 1.99 while retaining the then-current 1.76 core MSRV; the 2026-10-05 owner policy now sets Rust 1.99.0 as the sole supported version.
 
 - Package dry runs now retain actual supported ecosystem archives, verify a shared SHA-256 index, and upload the combined archive tree for 90 days without publishing.
 - Release delivery checks now fail closed unless an SPDX SBOM, manifest-covering provenance, and matching checksums are present before artifact upload.

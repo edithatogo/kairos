@@ -1,6 +1,6 @@
 # Toolchain & Version Support Matrix
 
-Last refreshed: 2026-05-07.
+Last full multi-language refresh: 2026-05-07. Rust policy reconciled: 2026-10-05.
 
 This document is the single source of truth for KairoECS language and runner version support. Binding tracks may support a narrower feature surface while they are still scaffolding, but they must not raise a minimum version or drop a supported version without following the version-drop policy below.
 
@@ -8,9 +8,9 @@ This document is the single source of truth for KairoECS language and runner ver
 
 | Source | Evidence used |
 |---|---|
-| `rust-toolchain.toml` | Rust channel is `stable`; components are `rustfmt` and `clippy`. |
-| `Cargo.toml` | Workspace `rust-version` is `1.76`; edition is `2021`. |
-| `mise.toml` | Repo-local developer defaults are Rust `stable`, Python `3.14`, Node `lts`, Go `latest`, Julia `latest`, R `latest`, .NET `10.0`. |
+| `rust-toolchain.toml` | Rust channel is exactly `1.99.0`; components are `rustfmt` and `clippy`. |
+| `Cargo.toml` | Workspace `rust-version` is `1.99`; edition is `2021`. |
+| `mise.toml` | Repo-local developer defaults are Rust `1.99.0`, Python `3.14`, Node `lts`, Go `latest`, Julia `latest`, R `latest`, .NET `10.0`. |
 | `bindings/python/pyproject.toml` | Python binding declares `requires-python = ">=3.10"`. |
 | `bindings/r/DESCRIPTION` | R binding declares `Depends: R (>= 4.2)`. |
 | `bindings/julia/Project.toml` | Julia binding declares `[compat] julia = "1.10"`. |
@@ -30,7 +30,7 @@ Support labels:
 
 | Ecosystem | Binding track | Minimum supported version | Latest/current supported version | Experimental or preview lane | CI selector | Deprecation horizon | Linux x86_64 | Linux aarch64 | macOS x86_64 | macOS aarch64 | Windows x86_64 |
 |---|---:|---|---|---|---|---|---|---|---|---|---|
-| Rust core | 00/01/13 | MSRV `1.76`; default channel `stable` | Rust `1.99.x` stable as of 2026-10-03 | Rust `beta` advisory lane | `stable`, `beta` | MSRV may rise only after 2 release cycles or 6 months notice; `stable` tracks upstream stable. | Stable tests/docs plus locked all-feature compile on Rust 1.76 in required CI | best-effort | best-effort | best-effort | best-effort |
+| Rust core | 00/01/13 | Rust `1.99.0` only | Rust `1.99.0` only | None; beta/nightly are disallowed | `1.99.0` exact | Owner-directed Rust-only policy update on 2026-10-05 supersedes the prior Rust compatibility notice; this does not alter other ecosystems' drop rules. | Rust 1.99.0 checks and test suite; exact version parser rejects aliases and prerelease suffixes | best-effort | best-effort | best-effort | best-effort |
 | Python binding | 06 | CPython `3.10` | CPython `3.14.x` | CPython 3.14 free-threaded smoke where runner support exists | `3.10`, `3.11`, `3.12`, `3.13`, `3.14` | Drop only after upstream PSF security support ends and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | R binding | 07 | R `4.2` package floor; CI floor is previous CRAN release | R `4.6.x` current release | R-devel advisory lane only | `oldrel-1`, `release` | Drop a package floor only after CRAN support pressure or dependency incompatibility is documented for 2 cycles/6 months. | CI-covered | best-effort | best-effort | best-effort | best-effort |
 | Julia binding | 08 | Julia `1.10` LTS-compatible floor | Julia `1.12.x` current stable | Julia `1.13` beta advisory lane only | `1.10`, `1.12` | Drop an LTS-compatible floor only after Julia LTS guidance changes and 2 cycles/6 months notice is complete. | CI-covered | best-effort | best-effort | best-effort | best-effort |
@@ -40,9 +40,9 @@ Support labels:
 
 ## Rust
 
-The Rust support row is the source of truth for the core workspace MSRV, stable CI lane, and beta advisory lane. The core MSRV lane compiles locked library and binary targets without repeating the test suite; stable CI owns tests, coverage, doctests, docs, and dependency policy. The separate `kairo-ecs-wasm` export crate declares Rust 1.77 and has a locked wasm-target MSRV check because its current `wasm-bindgen` dependency requires that floor.
+The Rust support row is the source of truth for the workspace Rust floor and CI lane. The owner-directed policy requires the exact `1.99.0` toolchain for development and CI; beta, nightly, and older compatibility lanes are not supported. Rust core CI runs formatting, lint, tests and coverage, doctests, docs, dependency policy, locked workspace checks, and the wasm target checks on Rust 1.99.0.
 
-On Windows developer hosts, `scripts/validate_conductor_setup.ps1` prefers the installed `stable-x86_64-pc-windows-gnu` Rust toolchain for local workspace tests when it is available. This avoids accidental resolution of Git's `link.exe` on hosts without a working MSVC linker while keeping Windows runner coverage `best-effort` until Track 13 provisions hosted or self-hosted Windows lanes.
+On Windows developer hosts, `scripts/validate_conductor_setup.ps1` resolves the exact installed `1.99.0-x86_64-pc-windows-gnu` Rust toolchain for local workspace tests. This avoids accidental resolution of Git's `link.exe` on hosts without a working MSVC linker while keeping Windows runner coverage `best-effort` until Track 13 provisions hosted or self-hosted Windows lanes.
 
 ## Python
 

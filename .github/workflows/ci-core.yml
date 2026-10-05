@@ -23,6 +23,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Validate Rust CI routing
+        run: node tests/conformance/classify-rust-ci-changes-check.mjs
       - name: Classify changed files
         id: classify
         env:
@@ -34,7 +36,7 @@ jobs:
           node scripts/validation/classify-rust-ci-changes.mjs "$EVENT_NAME" "$BASE_SHA" "$HEAD_SHA" >> "$GITHUB_OUTPUT"
 
   rust-stable:
-    name: Rust stable verification
+    name: Rust 1.99.0 verification
     if: needs.changes.outputs.rust == 'true'
     needs: changes
     runs-on: ubuntu-latest
@@ -42,10 +44,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust stable
+      - name: Install current stable Rust 1.99.0
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt --component clippy
-          rustup default stable
+          rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
+          rustup default 1.99.0
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
       - name: Install pinned cargo tools
         uses: taiki-e/install-action@e407f7bafb71fd004bc5c2da3032e5470cbb6ef0 # v2.87.24
@@ -87,7 +89,7 @@ jobs:
           cargo audit
 
   rust-msrv:
-    name: Rust MSRV 1.76
+    name: Rust 1.99.0 workspace checks
     if: needs.changes.outputs.rust == 'true'
     needs: changes
     runs-on: ubuntu-latest
@@ -95,14 +97,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust MSRV
-        run: rustup toolchain install 1.76.0 --profile minimal
+      - name: Install Rust 1.99.0
+        run: rustup toolchain install 1.99.0 --profile minimal
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
-      - name: Check workspace on Rust 1.76
-        run: cargo +1.76.0 check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked
+      - name: Check workspace on Rust 1.99.0
+        run: cargo +1.99.0 check --workspace --exclude kairo-ecs-wasm --exclude kairo-ecs-arrow --lib --bins --all-features --locked
+      - name: Check default Arrow telemetry on Rust 1.99.0
+        run: cargo +1.99.0 check -p kairo-ecs-arrow --lib --locked
 
   rust-wasm-msrv:
-    name: Rust Wasm MSRV 1.77
+    name: Rust 1.99.0 WebAssembly check
     if: needs.changes.outputs.rust == 'true'
     needs: changes
     runs-on: ubuntu-latest
@@ -110,11 +114,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install Rust Wasm MSRV
-        run: rustup toolchain install 1.77.0 --profile minimal --target wasm32-unknown-unknown
+      - name: Install Rust 1.99.0 WebAssembly target
+        run: rustup toolchain install 1.99.0 --profile minimal --target wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
-      - name: Check wasm-export on Rust 1.77
-        run: cargo +1.77.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown
+      - name: Check wasm-export on Rust 1.99.0
+        run: cargo +1.99.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown
 
   rust-core:
     name: Rust core quality
@@ -122,7 +126,7 @@ jobs:
     needs: [changes, rust-stable, rust-msrv, rust-wasm-msrv]
     runs-on: ubuntu-latest
     steps:
-      - name: Require Rust verification or an explicit skip
+      - name: Require Rust verification or a valid selective skip
         env:
           CHANGES_RESULT: ${{ needs.changes.result }}
           RUST_REQUIRED: ${{ needs.changes.outputs.rust }}

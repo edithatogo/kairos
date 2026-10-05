@@ -1,6 +1,7 @@
 param(
     [string]$Ecosystem = "",
     [string]$ExpectedPrefix = "",
+    [string]$ExpectedVersion = "",
     [switch]$CheckInstalled
 )
 
@@ -33,14 +34,39 @@ function Get-CommandOutput {
     return ($output -join "`n").Trim()
 }
 
+function ConvertFrom-RustcVersionText {
+    param([string]$Text)
+    if ($Text -match '^rustc\s+([0-9]+\.[0-9]+\.[0-9]+)(?:\s|$)') { return $Matches[1] }
+    throw "Could not parse exact stable rustc version from: $Text"
+}
+
+function Test-ExactRustVersion {
+    param([string]$Actual, [string]$Expected)
+    return $Actual -ceq $Expected
+}
+
+function Assert-RustVersionParserContract {
+    $accepted = ConvertFrom-RustcVersionText 'rustc 1.99.0 (abc123 2026-10-05)'
+    if (-not (Test-ExactRustVersion -Actual $accepted -Expected '1.99.0')) { throw "Rust parser accepted the wrong stable version: $accepted" }
+    foreach ($text in @('rustc 1.99.0-beta.1 (abc123 2026-10-05)', 'rustc 1.99.0-nightly (abc123 2026-10-05)', 'rustc 1.99 (abc123 2026-10-05)', 'rustc 1.99.0.1 (abc123 2026-10-05)')) {
+        $rejected = $false
+        try { [void](ConvertFrom-RustcVersionText $text) } catch { $rejected = $true }
+        if (-not $rejected) { throw "Rust parser incorrectly accepted: $text" }
+    }
+    foreach ($version in @('1.98.9', '1.100.0')) {
+        if (Test-ExactRustVersion -Actual $version -Expected '1.99.0') { throw "Exact Rust comparison incorrectly accepted $version" }
+    }
+}
+
+Assert-RustVersionParserContract
+
 function Get-InstalledVersion {
     param([string]$Name)
 
     switch ($Name) {
         "rust" {
             $text = Get-CommandOutput @("rustc", "--version")
-            if ($text -match "rustc\s+([0-9]+\.[0-9]+)") { return $Matches[1] }
-            throw "Could not parse rustc version from: $text"
+            return ConvertFrom-RustcVersionText $text
         }
         "python" {
             $text = Get-CommandOutput @("python", "--version")
@@ -81,6 +107,7 @@ function Get-InstalledVersion {
 $matrix = Get-Content -LiteralPath $matrixPath -Raw
 $gates = Get-Content -LiteralPath $gatesPath -Raw
 $workflow = Get-Content -LiteralPath $workflowPath -Raw
+$validatorText = Get-Content -LiteralPath $PSCommandPath -Raw
 $bindingWorkflowPath = Join-Path $repoRoot ".github\workflows\ci-bindings.yml"
 $bindingWorkflow = Get-Content -LiteralPath $bindingWorkflowPath -Raw
 $typescriptPackagePath = Join-Path $repoRoot "bindings\typescript\package.json"
@@ -125,8 +152,7 @@ foreach ($token in @("conductor/toolchain-matrix.md", "bindings/python/pyproject
 }
 
 $laneExpectations = @(
-    @{ Matrix = 'Rust `1.99.x`'; Workflow = 'expected-prefix: "1.99"' }
-    @{ Matrix = 'Rust `beta`'; Workflow = 'expected-prefix: "1."' }
+    @{ Matrix = 'Rust `1.99.0` only'; Workflow = 'expected-version: "1.99.0"' }
     @{ Matrix = 'CPython `3.10`'; Workflow = 'python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]' }
     @{ Matrix = 'CPython `3.14.x`'; Workflow = 'python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]' }
     @{ Matrix = 'R `4.6.x`'; Workflow = 'expected-prefix: "4.6"' }
@@ -145,6 +171,35 @@ foreach ($expectation in $laneExpectations) {
     Assert-Contains -Text $workflow -Needle $expectation.Workflow -Label "workflow lane matching matrix"
 }
 
+function Assert-NoSupersededRustWorkflowSelectors {
+    param([string]$Text)
+    foreach ($superseded in @('channel: stable', 'channel: beta', 'expected-prefix: "1.98"', 'expected-prefix: "1."')) {
+        if ($Text.Contains($superseded)) { throw "Rust lane contains superseded alias or prefix selector: $superseded" }
+    }
+}
+function Assert-NoSupersededRustMatrixClaims {
+    param([string]$Text)
+    foreach ($superseded in @('MSRV `1.76`', 'Rust `1.98.x` stable as of', 'Rust `beta` advisory lane')) {
+        if ($Text.Contains($superseded)) { throw "Current Rust matrix contains superseded support policy: $superseded" }
+    }
+}
+Assert-NoSupersededRustWorkflowSelectors -Text $workflow
+Assert-NoSupersededRustMatrixClaims -Text $matrix
+foreach ($token in @('function ConvertFrom-RustcVersionText', 'function Test-ExactRustVersion', 'Assert-RustVersionParserContract', 'rustc 1.99.0-beta.1', 'rustc 1.99.0-nightly')) {
+    Assert-Contains -Text $validatorText -Needle $token -Label "exact Rust 1.99.0 parser contract"
+}
+Assert-Contains -Text $workflow -Needle '-ExpectedVersion $env:EXPECTED_VERSION' -Label "exact Rust 1.99.0 workflow wiring"
+foreach ($superseded in @('channel: stable', 'channel: beta', 'expected-prefix: "1.98"', 'expected-prefix: "1."')) {
+    $rejected = $false
+    try { Assert-NoSupersededRustWorkflowSelectors -Text ($workflow + "`n" + $superseded) } catch { $rejected = $true }
+    if (-not $rejected) { throw "Rust workflow negative self-check did not reject: $superseded" }
+}
+foreach ($superseded in @('MSRV `1.76`', 'Rust `1.98.x` stable as of 2026-09-28', 'Rust `beta` advisory lane')) {
+    $rejected = $false
+    try { Assert-NoSupersededRustMatrixClaims -Text ($matrix + "`n" + $superseded) } catch { $rejected = $true }
+    if (-not $rejected) { throw "Rust matrix negative self-check did not reject: $superseded" }
+}
+
 Assert-Contains -Text $bindingWorkflow -Needle 'go-version: ''stable''' -Label "Go binding test toolchain"
 Assert-Contains -Text $bindingWorkflow -Needle 'go vet ./...' -Label "Go binding vet coverage"
 Assert-Contains -Text $bindingWorkflow -Needle 'go test ./...' -Label "Go binding test coverage"
@@ -154,15 +209,20 @@ if ($typescriptPackage.engines.node -ne ">=22 <25") {
 }
 
 if ($CheckInstalled) {
-    if ([string]::IsNullOrWhiteSpace($Ecosystem) -or [string]::IsNullOrWhiteSpace($ExpectedPrefix)) {
-        throw "-CheckInstalled requires -Ecosystem and -ExpectedPrefix."
+    if ([string]::IsNullOrWhiteSpace($Ecosystem)) {
+        throw "-CheckInstalled requires -Ecosystem and an expected version."
     }
 
     $actual = Get-InstalledVersion -Name $Ecosystem.ToLowerInvariant()
-    if (-not $actual.StartsWith($ExpectedPrefix)) {
-        throw "$Ecosystem version mismatch: expected prefix $ExpectedPrefix, got $actual."
+    if ($Ecosystem -eq "rust") {
+        if ([string]::IsNullOrWhiteSpace($ExpectedVersion) -or -not [string]::IsNullOrWhiteSpace($ExpectedPrefix)) { throw "Rust checks require -ExpectedVersion and reject -ExpectedPrefix." }
+        if ($actual -ne $ExpectedVersion) { throw "Rust version mismatch: expected exact $ExpectedVersion, got $actual." }
+        Write-Host "Rust installed version check passed: exact $actual"
+    } else {
+        if ([string]::IsNullOrWhiteSpace($ExpectedPrefix) -or -not [string]::IsNullOrWhiteSpace($ExpectedVersion)) { throw "-CheckInstalled requires -ExpectedPrefix for $Ecosystem and rejects -ExpectedVersion." }
+        if (-not $actual.StartsWith($ExpectedPrefix)) { throw "$Ecosystem version mismatch: expected prefix $ExpectedPrefix, got $actual." }
+        Write-Host "$Ecosystem installed version check passed: $actual matches $ExpectedPrefix"
     }
-    Write-Host "$Ecosystem installed version check passed: $actual matches $ExpectedPrefix"
 }
 
 Write-Host "Track 30 toolchain matrix validation passed."
