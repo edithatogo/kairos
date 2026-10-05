@@ -1,0 +1,119 @@
+{
+  "acceptance_status": "not_accepted",
+  "base_commit": "d497d5f16e9904dc510ffb8599190e7c60c31891",
+  "baseline_red": {
+    "expected_red": true,
+    "meaning": "Exact absent work_duration.rs expected compile red on original base; preparation evidence only.",
+    "native_exit_status": 101,
+    "raw_log": ".artifacts/mvp/C2.0.red-tests.provider/baseline-red/cargo-native-red.log",
+    "raw_log_sha256": "2fea35eb34675bce7cae8470c3daf5a3b1821289f1fa971d332365e43d009163",
+    "receipt": ".artifacts/mvp/C2.0.red-tests.provider/baseline-red/result.json",
+    "receipt_sha256": "49617e4f5d1eded9e231d71376bf0f131843907f2ad84e6ed30cd82f10597d08",
+    "source_commit": "d497d5f16e9904dc510ffb8599190e7c60c31891"
+  },
+  "bound_input_hashes": {
+    ".artifacts/mvp/C2.2.durations.provider/context.md": "d3b162e27cac6313e3d06b0314160acf4764a959d73fd870474f50fe13277e5d",
+    "Cargo.lock": "b8fdaeff8205f2f3d18cd66fc307a8edf6e37c5373749032c6c88ecc30050ff0",
+    "conductor/design/calibration/c20-work-provider-v1.md": "51ac6dc6783c280368dfd4630e4c33c5d585bf4c9657484e5e6c4ccb5c541333",
+    "conformance/c20/run_provider_red.py": "5d68df77ba9107a0c102ab3917a55ddd0faa12eff436181519be99233b2f5dfd",
+    "conformance/c20/work_duration_c20.rs": "eba6baebe352c10cc1f235141178fede807c2d0560b46593c6a8a32ea78f0ad7",
+    "crates/kairo-ecs-calibration/Cargo.toml": "1b7fb0a78238d82b58e9b452031d71e91bad8cdb937fc92f838d6d7e895aac55",
+    "crates/kairo-ecs-calibration/src/lib.rs": "10d002666a71440198f0d72033afd5ef449411be29ec294b2bea2eff30e21295",
+    "crates/kairo-ecs-calibration/src/seed_map.rs": "d5f1117c88fad73d6507250c7157b0b9b341d8adf7e084fde4429cf56b0104f7"
+  },
+  "changed_source_paths": [
+    "crates/kairo-ecs-calibration/src/seed_map.rs",
+    "crates/kairo-ecs-calibration/src/work_duration.rs",
+    "crates/kairo-ecs-calibration/src/lib.rs"
+  ],
+  "claim": "Private C2.2 intrinsic provider and stable opaque seed-key implementation locally qualified; no Flow/policy/transit/runtime acceptance claim.",
+  "fixture_sha256": "eba6baebe352c10cc1f235141178fede807c2d0560b46593c6a8a32ea78f0ad7",
+  "limitations": [
+    "Green C2.0 fixture execution is C2.2 provider evidence only, not coordinator acceptance.",
+    "No Flow bridge, paired execution/policy, transit, empirical fitting, public API or clinical validity implemented or claimed.",
+    "Original expected-red receipt/log and the earlier pre-correction green receipt/log are retained under the authorized runner artifact directory."
+  ],
+  "packet_id": "C2.2.durations.provider",
+  "schema": "C2.2.durations.provider-result/v1",
+  "source_commit": "a2b8f6c89ed84839d8590e2b938afcd6d4f919fe",
+  "source_commits": [
+    "c54ecf16b710591883658dbfe2cf43a4e5bbe020",
+    "97a2f078cc92c59844aa280f39e48c4b31f987a2",
+    "a2b8f6c89ed84839d8590e2b938afcd6d4f919fe"
+  ],
+  "source_sha256": {
+    "crates/kairo-ecs-calibration/src/lib.rs": "8f9cd7b5b065be80145bc85a1cc09409cc64f2473110c668235ddff1fd41cb45",
+    "crates/kairo-ecs-calibration/src/seed_map.rs": "bbbd4249a01848802dc33636c4df68bb30a2843c75e5d2133220c594fe6c0571",
+    "crates/kairo-ecs-calibration/src/work_duration.rs": "21e6f48baba7800a2fc540f966b2bb5ea7e00b03e5def9e73ab25373f586c06f"
+  },
+  "status": "ready_for_review",
+  "unchanged_manifest_lock": {
+    "Cargo.lock_sha256": "b8fdaeff8205f2f3d18cd66fc307a8edf6e37c5373749032c6c88ecc30050ff0",
+    "crates/kairo-ecs-calibration/Cargo.toml_sha256": "1b7fb0a78238d82b58e9b452031d71e91bad8cdb937fc92f838d6d7e895aac55"
+  },
+  "verification": [
+    {
+      "additional_test": "work_duration::tests::sampled_duration_retains_opaque_identity_without_debug_leakage passed once; total 24.",
+      "argv": [
+        "/opt/homebrew/bin/python3",
+        "conformance/c20/run_provider_red.py",
+        "--expect",
+        "green"
+      ],
+      "cwd": "/private/tmp/careops-c22-duration-20261005/libs/kairos",
+      "exit_status": 0,
+      "filtered": 0,
+      "ignored": 0,
+      "native_exit_status": 0,
+      "raw_log": ".artifacts/mvp/C2.0.red-tests.provider/logs/cargo-native-red.log",
+      "raw_log_sha256": "3ff61ae2065c800ea8ea16f7031fda39b8e99fcdada0405dec86cc7bc15b6512",
+      "required_fixture_cases": 22,
+      "required_passes": 22,
+      "runner_receipt": ".artifacts/mvp/C2.0.red-tests.provider/result.json",
+      "runner_receipt_sha256": "eefa2d7cf460b74199051b2bd99bac3c263d2e4a70f5873b9c3e891379da8175",
+      "test_summary": "test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out;",
+      "toolchain": "Rust 1.99.0; runner configures isolated archive, RUSTC/RUSTDOC, PATH and target"
+    },
+    {
+      "argv": [
+        "env",
+        "PATH=/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR=/private/tmp/careops-c22-duration-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.provider/msrv-target",
+        "/Users/doughnut/.rustup/toolchains/1.88.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--lib"
+      ],
+      "capture": "Command stdout/stderr redirected to the listed durable raw log.",
+      "cwd": "/private/tmp/careops-c22-duration-20261005/libs/kairos",
+      "exit_status": 0,
+      "raw_log": ".artifacts/mvp/C2.0.red-tests.provider/logs/cargo-msrv-188.log",
+      "raw_log_sha256": "ae0d6c0789b06a3bab628c95e0a638c6dbd972575413f8d9bd0b6e755f2e6468",
+      "test_summary": "test result: ok. 61 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out;"
+    },
+    {
+      "argv": [
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustfmt",
+        "--check",
+        "--config",
+        "skip_children=true",
+        "crates/kairo-ecs-calibration/src/seed_map.rs",
+        "crates/kairo-ecs-calibration/src/work_duration.rs",
+        "crates/kairo-ecs-calibration/src/lib.rs"
+      ],
+      "cwd": "/private/tmp/careops-c22-duration-20261005/libs/kairos",
+      "exit_status": 0,
+      "stdout_stderr_bytes": 0,
+      "stdout_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "workspace": {
+    "head": "a2b8f6c89ed84839d8590e2b938afcd6d4f919fe",
+    "manifest_lock_unchanged": true,
+    "tracked_status": "clean"
+  }
+}

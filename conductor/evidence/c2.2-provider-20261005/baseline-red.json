@@ -1,0 +1,52 @@
+{
+  "base_commit": "c6d914fff4527f9c415c45df42db509cfdc95342",
+  "claim": "expected native missing-work_duration API red preparation only; not runtime pass or capability acceptance",
+  "command": {
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "work_duration_c20"
+    ],
+    "cargo_test_summary": null,
+    "cwd": "/private/tmp/careops-c22-duration-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.provider/disposable",
+    "exit_status": 101,
+    "expected_exit_status": 101,
+    "expected_missing_api_signature": true,
+    "expected_test_names": [],
+    "green_oracle": null,
+    "log": ".artifacts/mvp/C2.0.red-tests.provider/logs/cargo-native-red.log",
+    "log_sha256": "2fea35eb34675bce7cae8470c3daf5a3b1821289f1fa971d332365e43d009163",
+    "missing_api_compiler_diagnostic": "error: couldn't find file `crates/kairo-ecs-calibration/tests/../src/work_duration.rs`",
+    "missing_source_errno": 2,
+    "missing_source_error": "No such file or directory",
+    "observed_test_results": [],
+    "required_test_passes": {}
+  },
+  "committed_workspace": "d497d5f16e9904dc510ffb8599190e7c60c31891",
+  "expectation": "red",
+  "fixture": "conformance/c20/work_duration_c20.rs",
+  "fixture_sha256": "eba6baebe352c10cc1f235141178fede807c2d0560b46593c6a8a32ea78f0ad7",
+  "green_expectation_unverified": true,
+  "limitations": [
+    "The disposable archive overlays the actual fixture into the native calibration crate test target.",
+    "The nonzero native result is expected because work_duration.rs is absent; it is not behavioral qualification.",
+    "No live crate source, Cargo manifest, or lockfile was changed.",
+    "Runtime tests must be rerun after the reviewed provider implementation exists."
+  ],
+  "overlay_path": "crates/kairo-ecs-calibration/tests/work_duration_c20.rs",
+  "packet_id": "C2.0.red-tests.provider",
+  "task_status": "ready_for_review",
+  "toolchain": {
+    "path_prefix": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin",
+    "rustc": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+    "rustdoc": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+    "version": "1.99.0"
+  }
+}
