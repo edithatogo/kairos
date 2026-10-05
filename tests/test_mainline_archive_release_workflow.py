@@ -58,7 +58,7 @@ class MainlineArchiveReleaseWorkflowTests(unittest.TestCase):
 
     def test_retention_excludes_fresh_binary_downloads_and_venv(self):
         upload = self.actual.split("      - name: Upload qualified", 1)[1]
-        for value in ("/actual-package-archives/", "/producer-acquisition/", "/consumer-acquisition/", "/expectations/", "/fresh-syft/evidence/receipt.json", "/command-records.json"):
+        for value in ("/actual-package-archives/", "/producer-acquisition/", "/consumer-acquisition/", "/expectations/", "/fresh-syft/evidence/receipt.json", "/command-records.json", "/expectation-preparation.json"):
             self.assertIn(value, upload)
         for value in ("/fresh-syft/bin/", "/fresh-syft/downloads/", "/fresh-syft/verifier-venv/", "/fresh-syft/\n"):
             self.assertNotIn(value, upload)
