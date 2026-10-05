@@ -1,5 +1,5 @@
 use crate::{FlowRuntime, PreemptionStrategy, WorkId, WorkState};
-use kairo_ecs_types::{EntityId, SimDuration, SimTime};
+use kairo_ecs_types::{SimDuration, SimTime};
 
 use crate::fidelity::{
     FidelityAdapter, FidelityDecision, FidelityError, FidelityMode, FidelityPolicy, FidelityScope,
@@ -13,7 +13,7 @@ fn d(ticks: u128) -> SimDuration {
     SimDuration::from_ticks(ticks)
 }
 
-fn make_work(flow: &mut FlowRuntime, owner: EntityId) -> WorkId {
+fn make_work(flow: &mut FlowRuntime, owner: kairo_ecs_types::EntityId) -> WorkId {
     flow.create_work(
         owner,
         d(10),
