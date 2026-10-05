@@ -1,0 +1,11 @@
+{
+  "compared_base": "21e48b257b5c89dd9756b647d9ee17f698f9496b",
+  "exact_bytes_unchanged": {
+    "conductor/research/c0.3-source-inputs-20261001/calibration-v1.schema.json": "8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842",
+    "schemas/arrow/event_log_v1.schema.json": "2e8025a5997f1e056956d47db3b18d3e01e3b0fd865d7235803811ae2aab9dcc",
+    "crates/kairo-ecs-arrow/src/lib.rs": "2d12e6f1d4bff87f8903f9f28ba56d6b421267c3387b5aed5daad3de6f358415",
+    "crates/kairo-ecs-calibration/src/metrics.rs": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4",
+    "crates/kairo-ecs-calibration/src/metric_cohorts.rs": "f62c6f3f2352dee945d769144b236805f512667e701f536cd6ca3003de004b20",
+    "crates/kairo-ecs-calibration/src/residuals.rs": "1844042b8841340ea16eaa93da9d293ea3003d03bc49ed567df66ada9ca3cb8f"
+  }
+}

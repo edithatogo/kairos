@@ -1,0 +1,25 @@
+{
+  "deviations": [
+    {
+      "event": "Encoding worker bound editable test input in initial repair lease",
+      "resolution": "Preserved patch, restored owned files, reclaimed immutable contract only, reran checks."
+    },
+    {
+      "event": "Adapter rustfmt followed path imports into C4.2 source",
+      "resolution": "Preserved patch, restored C4.2 modules, used skip_children and reran checks."
+    },
+    {
+      "event": "Adapter commit contained five ignored synthetic receipts outside initial integration claim",
+      "resolution": "Fresh expanded claim removed receipts from tracked tip; canonical archive retains synthetic evidence; incoming commit path preview now required."
+    },
+    {
+      "event": "Root format claim rejected because checks lease already owned worktree; subsequent shell formatter ran",
+      "resolution": "Preserved formatting patch in owned artifact prefix, immediately restored two files, released checks lease, reclaimed full actual scope and reapplied formatting."
+    },
+    {
+      "event": "A root scope-check printed a local lease token",
+      "resolution": "Lease immediately released; private lease files and tokens excluded from all retained/published archives; later scope checks suppress stdout."
+    }
+  ],
+  "preliminary_failures": "All failed compile, readback and format logs remain evidence; only clean source-bound qualification receipts support acceptance."
+}

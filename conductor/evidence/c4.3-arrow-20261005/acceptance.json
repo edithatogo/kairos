@@ -1,0 +1,56 @@
+{
+  "source_commit": "543a5dd4c6b3b3b2b890ee258fa7e77cea86505f",
+  "native_source_binding": {
+    "accepted-current-full": {
+      "executed_head": "5ae258601aa469efc399901fc258b381f10f9dc0",
+      "all_calibration_source_sha256_matches_final": true,
+      "source_files": 24,
+      "receipt_sha256": "38bcb39c413ba55161d50d0e3454f688511f762e5175b7e2e3372e602d5b6d3b"
+    },
+    "accepted-current-clippy": {
+      "executed_head": "5ae258601aa469efc399901fc258b381f10f9dc0",
+      "all_calibration_source_sha256_matches_final": true,
+      "source_files": 24,
+      "receipt_sha256": "bf56b29d299b4f456e7b8c04c12fff6442ec329dc22d65640c2c177705924d0a"
+    },
+    "accepted-floor-native": {
+      "executed_head": "5ae258601aa469efc399901fc258b381f10f9dc0",
+      "all_calibration_source_sha256_matches_final": true,
+      "source_files": 24,
+      "receipt_sha256": "5984b946555b6549120ad54a6b0f6febc3001725931b20fb9bb267cdbf9280b0"
+    }
+  },
+  "actual_native_tests_current": 140,
+  "named_ignored_default": 4,
+  "floor_c43_tests": 21,
+  "required_manifests": [
+    "join_manifest.json",
+    "source_manifest.json",
+    "event_log.smoke"
+  ],
+  "strict_reader_mutation_rejections_each": 15,
+  "physical_formats": [
+    "IPC file",
+    "IPC stream",
+    "Parquet"
+  ],
+  "framing_sizes": [
+    1,
+    2,
+    64
+  ],
+  "fixture_counts": {
+    "residual_raw": 15,
+    "residual_pairs": 8,
+    "metric_raw": 4,
+    "metric_records": 7,
+    "matched_pairs": 3,
+    "unmatched_raw_instances": 9
+  },
+  "public_api": "open",
+  "C4.4/C-04": "open",
+  "release_and_clinical_acceptance": false,
+  "hosted_successor": "pending; recorded separately after publication",
+  "archive_sha256": "0382dcf41f38b9635e1de91d8bba4d32c8bf834a47c6bd3fffc32acf6f3f3233",
+  "local_disposition": "C4.3 private sidecar implementation locally qualified; exact-head hosted delivery and parent pin recorded separately."
+}
