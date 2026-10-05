@@ -50,7 +50,10 @@ fn external_fidelity_api_controls_actual_flow_policy_boundary() {
     flow.step()
         .expect("Flow start dispatch should succeed")
         .expect("submitted work should start");
-    assert_eq!(flow.work_progress(original).unwrap().state, WorkState::Active);
+    assert_eq!(
+        flow.work_progress(original).unwrap().state,
+        WorkState::Active
+    );
 
     adapter.stage_policy(FidelityPolicy::new(1, Some(FidelityMode::Macro)).unwrap());
     assert_eq!(
