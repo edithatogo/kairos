@@ -1,4 +1,4 @@
-use kairo_ecs_des::{FlowRuntime, PreemptionStrategy, WorkId, WorkState};
+use kairo_ecs_des::{FlowRuntime, FlowRuntimeIdentity, PreemptionStrategy, WorkId, WorkState};
 use kairo_ecs_types::{SimDuration, SimTime};
 
 #[path = "../src/fidelity.rs"]

@@ -305,3 +305,11 @@ oracles. Existing ready fixture IDs/goldens remain unchanged. This does not
 close Q5 or reopen historical track completion; Q5.2–Q5.4 and existing holds remain.
 Exact-head Linux/macOS native-owner qualification and parent integration are
 controlled by the parent pin contract, not this antecedent source receipt.
+
+## C2 in-process ownership bridge — 2026-10-05
+
+Track03 adds the opaque FlowRuntimeIdentity under
+[ADR-0006](../../design/calibration/ADR-0006-flow-runtime-identity.md) to prevent
+cross-runtime WorkId collisions in Track21 admission adapters. No dependency on
+calibration is added to DES. Private fidelity support stays experimental; portable
+Track22 continuation/rebinding and full C2 acceptance remain open.

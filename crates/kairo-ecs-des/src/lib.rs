@@ -3,6 +3,10 @@
 mod flow;
 pub use flow::*;
 
+// Private experimental C2 adapter; public API review and integrated delivery remain open.
+#[allow(dead_code)]
+mod fidelity;
+
 mod preemption;
 
 use kairo_ecs_core::Scheduler;
