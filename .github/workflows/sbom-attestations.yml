@@ -39,11 +39,11 @@ jobs:
           test -f "${ARTIFACT_PATH}/release-artifact-manifest.json"
           test -f "${ARTIFACT_PATH}/SHA256SUMS"
       - name: Install Syft
-        uses: anchore/sbom-action/download-syft@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
       - name: Generate SBOM
         run: syft "dir:${ARTIFACT_PATH}" -o "spdx-json=${ARTIFACT_PATH}/sbom.spdx.json"
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sbom-spdx
           path: ${{ env.ARTIFACT_PATH }}/sbom.spdx.json

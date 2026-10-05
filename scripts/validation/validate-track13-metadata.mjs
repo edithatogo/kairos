@@ -247,7 +247,7 @@ for (const workflow of workflowFiles) {
 }
 
 requireTerms('.github/workflows/ci-core.yml', [
-  'taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29',
+  'taiki-e/install-action@e407f7bafb71fd004bc5c2da3032e5470cbb6ef0',
   'cargo-nextest@0.9.146',
   'cargo-deny@0.20.2',
   'cargo-audit@0.22.2',
@@ -313,7 +313,7 @@ requireTerms('.github/workflows/ci-bindings.yml', [
   "python -m pip install --no-deps --no-build-isolation -e '.[test]'",
   'ruff check .',
 ]);
-requireTerms('bindings/python/pyproject.toml', ['ruff==0.16.9']);
+requireTerms('bindings/python/pyproject.toml', ['ruff==0.16.10']);
 requireTerms('scripts/validation/check-core-coverage.mjs', ['kairo-ecs-core/src/', '90']);
 
 requirePattern('.github/workflows/dependency-review.yml', /fail-on-severity:\s*high/, 'high-severity dependency review gate');

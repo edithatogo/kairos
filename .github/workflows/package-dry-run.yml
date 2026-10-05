@@ -142,9 +142,9 @@ jobs:
         with:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with: { node-version: '22.22.2' }
+        with: { node-version: '22.23.3' }
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with: { python-version: '3.14' }
+        with: { python-version: '3.14.8' }
       - name: Create fail-closed npm audit marker
         run: |
           mkdir -p artifacts/npm-audit-gate
@@ -222,7 +222,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with: { dotnet-version: '10.0.x' }
+        with: { dotnet-version: '10.0.401' }
       - name: dotnet pack dry run
         run: |
           test -f bindings/csharp/Kairo.ECS.sln
@@ -281,16 +281,14 @@ jobs:
     name: verify-and-retain-package-archives
     needs: [rust-package, python-package, r-package, npm-package, nuget-package, julia-package, go-package]
     runs-on: ubuntu-latest
-    # The validator only downloads this run's artifacts and reads the checked-out source;
-    # it does not publish packages or change repository contents.
     permissions:
-      actions: read
-      contents: read
+      actions: read # Read this run's artifact metadata and download its artifacts.
+      contents: read # Read the checked-out source for archive validation.
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v7.0.0
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: kairos-package-*
           path: dist/package-archives
