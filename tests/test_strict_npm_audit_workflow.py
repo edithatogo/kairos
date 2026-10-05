@@ -87,8 +87,8 @@ class StrictNpmAuditWorkflowTests(unittest.TestCase):
             "test_npm_audit_runner.py",
         ):
             self.assertNotIn(forbidden, self.job)
-        self.assertIn("node-version: '22.22.2'", self.job)
-        self.assertIn("python-version: '3.14'", self.job)
+        self.assertIn("node-version: '22.23.3'", self.job)
+        self.assertIn("python-version: '3.14.8'", self.job)
         self.assertIn("npm ci --ignore-scripts", self.job)
         self.assertIn("npm run build", self.job)
         self.assertIn("npm pack --ignore-scripts", self.job)

@@ -16,6 +16,8 @@ Format:
 
 ### Changed
 
+- CI updates the Rust tool installer and Node runtime used by package validation.
+
 - Python package extras now pin Ruff 0.16.10 for tests and require Gymnasium 0.29.1 or newer for the `python/kairo_gym` optional integration.
 
 - Release dry runs require the final `dist/` artifact upload to find files and retain the uploaded evidence for 90 days.
