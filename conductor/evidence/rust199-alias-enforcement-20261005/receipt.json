@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "packet_id": "rust199-exact-alias-enforcement",
+  "base_commit": "42a707662d1a8f9a9d675bec52106c686641ace7",
+  "worktree": "/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-rust199-20261005",
+  "toolchain_execution": "No Rust, cargo, or rustup executable was run. Gate 1 used mocked rustup/cargo/rustc/rustdoc functions only.",
+  "runtime": "PowerShell 7.6.6 on macOS; no Windows native/runtime claim.",
+  "source_hashes_sha256": {
+    "mise.toml": "37351d739e0ba0c6da1fead21a0f1ab9faacd0a6421fa6ea64a4f3172059d21a",
+    "scripts/validate_conductor_setup.ps1": "d8914f2058d1954fab73047b6b18e7fc5b09b3fa4034582582a1f7dc3d7f11ff",
+    "scripts/validation/test-setup-rust-toolchain.ps1": "6ae42aa1269cd0c7aa7ea9f55ae7e539fadede9e36c8e4e8add29eeaae90322b"
+  },
+  "gates": [
+    {
+      "argv": ["/opt/homebrew/bin/pwsh", "-NoProfile", "-File", "scripts/validation/test-setup-rust-toolchain.ps1"],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-rust199-20261005",
+      "exit_code": 0,
+      "log": ".artifacts/rust199-alias-enforcement/gate-1.log",
+      "log_sha256": "e054159a8e9a298a16b064e9020e9730a3468ad4605bba73b1f0bd75fae3a318"
+    },
+    {
+      "argv": ["/opt/homebrew/bin/pwsh", "-NoProfile", "-File", "conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1"],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-rust199-20261005",
+      "exit_code": 0,
+      "log": ".artifacts/rust199-alias-enforcement/gate-2.log",
+      "log_sha256": "a6751aee8888659467b172efe3b59650b174695dc78f346e6bdff86a7b16ff8b"
+    },
+    {
+      "argv": ["git", "diff", "--check"],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-rust199-20261005",
+      "exit_code": 0,
+      "log": ".artifacts/rust199-alias-enforcement/gate-3.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

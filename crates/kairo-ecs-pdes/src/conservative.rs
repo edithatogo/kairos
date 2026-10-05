@@ -654,7 +654,7 @@ impl<P: ConservativeProcess> ConservativeRuntime<P> {
                 queue
                     .keys()
                     .next()
-                    .map_or(true, |(tick, _, _)| *tick >= horizon)
+                    .is_none_or(|(tick, _, _)| *tick >= horizon)
             })
     }
 }

@@ -108,7 +108,7 @@ impl KairoEcsZeroCopyLayout {
         if self.len == 0 || self.alignment == 0 {
             return KairoEcsLayoutStatus::KAIRO_ECS_LAYOUT_ERR_EMPTY;
         }
-        if self.data_addr % self.alignment != 0 {
+        if !self.data_addr.is_multiple_of(self.alignment) {
             return KairoEcsLayoutStatus::KAIRO_ECS_LAYOUT_ERR_MISALIGNED;
         }
         if self.ownership == KairoEcsOwnership::Unspecified {

@@ -12,7 +12,11 @@ function Test-RustupToolchainInstalled {
         return $false
     }
 
-    return [bool](@($toolchains) | Where-Object { $_ -match "^$([regex]::Escape($Toolchain))\b" })
+    $installedNames = @($toolchains | ForEach-Object {
+        $line = ([string]$_).Trim()
+        if ($line.Length -gt 0) { ($line -split '\s+', 2)[0] }
+    })
+    return ($installedNames -ccontains $Toolchain)
 }
 
 function Test-WindowsHost {
@@ -20,14 +24,85 @@ function Test-WindowsHost {
 }
 
 function Invoke-CargoWorkspaceTests {
-    if ((Test-WindowsHost) -and (Test-RustupToolchainInstalled -Toolchain "stable-x86_64-pc-windows-gnu")) {
-        & rustup run stable-x86_64-pc-windows-gnu cargo test --workspace
+    if (Test-WindowsHost) {
+        $toolchain = "1.99.0-x86_64-pc-windows-gnu"
     } else {
-        & cargo test --workspace
+        $hostOutput = & rustup show 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to read the rustup configuration needed to determine the current Rust host"
+        }
+        $hostLines = @($hostOutput | Where-Object {
+            ([string]$_) -match '^Default host:\s+[A-Za-z0-9_]+(?:-[A-Za-z0-9_]+)+\s*$'
+        })
+        if ($hostLines.Count -ne 1) {
+            throw "rustup show must return exactly one valid Default host triple"
+        }
+        $hostTriple = (([string]$hostLines[0]) -replace '^Default host:\s+', '').Trim()
+        $toolchain = "1.99.0-$hostTriple"
     }
 
-    if ($LASTEXITCODE -ne 0) {
-        throw "Cargo workspace tests failed with exit code $LASTEXITCODE"
+    if (-not (Test-RustupToolchainInstalled -Toolchain $toolchain)) {
+        throw "Required Rust toolchain '$toolchain' is not installed"
+    }
+
+    $toolPaths = @{}
+    foreach ($binary in @("cargo", "rustc", "rustdoc")) {
+        $pathOutput = & rustup which --toolchain $toolchain $binary 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "rustup could not resolve $binary for '$toolchain'"
+        }
+        $binaryPath = (@($pathOutput) -join "`n").Trim()
+        if ([string]::IsNullOrWhiteSpace($binaryPath)) {
+            throw "rustup returned an empty path for $binary on '$toolchain'"
+        }
+
+        $versionOutput = & $binaryPath --version 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to read the pinned $binary version from '$binaryPath'"
+        }
+        $versionText = (@($versionOutput) -join "`n").Trim()
+        if ($versionText -notmatch "^$([regex]::Escape($binary)) 1\.99\.0(?:\s|$)") {
+            throw "Pinned $binary must report exact version 1.99.0; got: $versionText"
+        }
+        $toolPaths[$binary] = $binaryPath
+    }
+
+    $environmentNames = @(
+        "RUSTUP_TOOLCHAIN",
+        "RUSTC",
+        "RUSTDOC",
+        "RUSTC_WRAPPER",
+        "RUSTC_WORKSPACE_WRAPPER"
+    )
+    $processEnvironment = [Environment]::GetEnvironmentVariables("Process")
+    $savedEnvironment = @{}
+    foreach ($name in $environmentNames) {
+        $savedEnvironment[$name] = [pscustomobject]@{
+            Present = $processEnvironment.Contains($name)
+            Value = [Environment]::GetEnvironmentVariable($name, "Process")
+        }
+    }
+
+    try {
+        [Environment]::SetEnvironmentVariable("RUSTUP_TOOLCHAIN", $toolchain, "Process")
+        [Environment]::SetEnvironmentVariable("RUSTC", $toolPaths["rustc"], "Process")
+        [Environment]::SetEnvironmentVariable("RUSTDOC", $toolPaths["rustdoc"], "Process")
+        [Environment]::SetEnvironmentVariable("RUSTC_WRAPPER", $null, "Process")
+        [Environment]::SetEnvironmentVariable("RUSTC_WORKSPACE_WRAPPER", $null, "Process")
+
+        & $toolPaths["cargo"] test --workspace --locked
+        if ($LASTEXITCODE -ne 0) {
+            throw "Cargo workspace tests failed with exit code $LASTEXITCODE"
+        }
+    } finally {
+        foreach ($name in $environmentNames) {
+            $saved = $savedEnvironment[$name]
+            if ($saved.Present) {
+                [Environment]::SetEnvironmentVariable($name, [string]$saved.Value, "Process")
+            } else {
+                [Environment]::SetEnvironmentVariable($name, $null, "Process")
+            }
+        }
     }
 }
 
@@ -101,6 +176,16 @@ function Get-TrackIdsFromTracksYaml {
     return @($ids | Sort-Object -Unique)
 }
 
+function Invoke-SetupValidatorScript {
+    param([string]$Path)
+
+    $global:LASTEXITCODE = 0
+    & $Path
+    if ($global:LASTEXITCODE -ne 0) {
+        throw "Setup validator '$Path' failed with exit code $global:LASTEXITCODE"
+    }
+}
+
 $expectedTrackIds = @(Get-TrackIdsFromTracksYaml -Path "conductor/tracks.yaml")
 if ($expectedTrackIds.Count -eq 0) {
     throw "No track ids found in conductor/tracks.yaml"
@@ -133,9 +218,9 @@ foreach ($track in $trackDirs) {
     }
 }
 
-& (Join-Path $PSScriptRoot "validate_track_no_skip_claims.ps1")
-& (Join-Path $PSScriptRoot "validate_conductor_phase_gates.ps1")
-& (Join-Path $PSScriptRoot "validate_conductor_git_closeout.ps1")
+Invoke-SetupValidatorScript -Path (Join-Path $PSScriptRoot "validate_track_no_skip_claims.ps1")
+Invoke-SetupValidatorScript -Path (Join-Path $PSScriptRoot "validate_conductor_phase_gates.ps1")
+Invoke-SetupValidatorScript -Path (Join-Path $PSScriptRoot "validate_conductor_git_closeout.ps1")
 
 $workflowFiles = @(Get-ChildItem -LiteralPath ".github/workflows" -Filter "*.yml")
 $bootstrapAllowed = @(

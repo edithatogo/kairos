@@ -4,11 +4,10 @@ version = "0.0.0"
 edition = "2021"
 license.workspace = true
 repository = "https://github.com/edithatogo/kairos"
-rust-version = "1.76"
-
+rust-version.workspace = true
 [dependencies]
-kairo-ecs-core = { path = "../kairo-ecs-core" }
-kairo-ecs-types = { path = "../kairo-ecs-types" }
+kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
+kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 clap = { version = ">=4.5.0, <4.6.0", features = ["derive"] }
 
 [lib]

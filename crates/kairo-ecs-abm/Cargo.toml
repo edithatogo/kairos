@@ -1,4 +1,5 @@
 [package]
+rust-version.workspace = true
 name = "kairo-ecs-abm"
 version = "0.1.0"
 edition = "2021"
@@ -7,7 +8,7 @@ repository = "https://github.com/edithatogo/kairos"
 description = "Agent-Based Modeling behavior API for KairoECS"
 
 [dependencies]
-kairo-ecs-types = { path = "../kairo-ecs-types" }
-kairo-ecs-core = { path = "../kairo-ecs-core" }
-kairo-ecs-state = { path = "../kairo-ecs-state" }
-kairo-ecs-rng = { path = "../kairo-ecs-rng" }
+kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
+kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
+kairo-ecs-state = { path = "../kairo-ecs-state", version = "0.0.0" }
+kairo-ecs-rng = { path = "../kairo-ecs-rng", version = "0.0.0" }

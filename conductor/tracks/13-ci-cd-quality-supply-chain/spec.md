@@ -53,9 +53,21 @@ Arrow roundtrip tests
 docs site build
 package dry-runs
 security/supply-chain scans
-nightly heavy checks
+scheduled Rust 1.99.0 mutation and benchmark checks; Miri and fuzzing remain UNVERIFIED because nightly execution is disallowed
 release artifact creation
 ```
+
+### Rust core routing contract
+
+Core verification, workspace checks, and WebAssembly checks use the pinned
+Rust 1.99.0 toolchain. Pull requests may skip these lanes only when a non-empty
+diff consists entirely of known non-Rust paths. Empty diffs, or diffs containing
+any Rust-relevant or unclassified path, run all three lanes. Every main push
+runs them regardless of changed paths. The required `Rust core quality`
+aggregate succeeds only when all three lanes pass for a Rust-required change
+or all three are explicitly skipped for an allowed pull-request selection.
+Missing or invalid classification fails the aggregate. The routing behavior is unchanged. The Rust policy now runs exact 1.99.0
+workspace and WebAssembly checks, with Arrow telemetry checked in its own lane.
 
 
 

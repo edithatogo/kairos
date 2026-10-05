@@ -133,7 +133,7 @@ impl OptimisticProcess for Probe {
             }
         }
         let mode = payload.get(1).copied().unwrap_or_default();
-        if mode == 0 || (mode == 5 && self.value % 2 != 0) {
+        if mode == 0 || (mode == 5 && !self.value.is_multiple_of(2)) {
             return Vec::new();
         }
         if mode == 4 {
@@ -151,7 +151,7 @@ impl OptimisticProcess for Probe {
         }
         if mode == 6 {
             let delay = u128::from(payload.get(4).copied().unwrap_or(1));
-            let destinations = if self.value % 2 == 0 {
+            let destinations = if self.value.is_multiple_of(2) {
                 vec![payload.get(2), payload.get(3)]
             } else {
                 vec![payload.get(2)]
@@ -180,14 +180,14 @@ impl OptimisticProcess for Probe {
         }
         let destination = match mode {
             1 | 5 => LpId(u32::from(payload.get(2).copied().unwrap_or_default())),
-            2 if self.value % 2 == 0 => {
+            2 if self.value.is_multiple_of(2) => {
                 LpId(u32::from(payload.get(2).copied().unwrap_or_default()))
             }
             2 => LpId(u32::from(payload.get(3).copied().unwrap_or_default())),
             3 => self.lp,
             _ => return Vec::new(),
         };
-        let delay = if mode == 2 && self.value % 2 != 0 {
+        let delay = if mode == 2 && !self.value.is_multiple_of(2) {
             payload
                 .get(5)
                 .or_else(|| payload.get(4))
@@ -289,10 +289,10 @@ impl Drop for FaultSnapshot {
             let mut control = self.control.lock().unwrap();
             let targeted = control
                 .drop_snapshot_target
-                .map_or(true, |target| target == (self.lp, self.snapshot_id));
+                .is_none_or(|target| target == (self.lp, self.snapshot_id));
             let peer_targeted = control
                 .peer_drop_snapshot_target
-                .map_or(true, |target| target == (self.lp, self.snapshot_id));
+                .is_none_or(|target| target == (self.lp, self.snapshot_id));
             let drop_peer = self.drop_fault_eligible
                 && peer_targeted
                 && control.peer_drop_snapshot_drop == Some(self.lp);

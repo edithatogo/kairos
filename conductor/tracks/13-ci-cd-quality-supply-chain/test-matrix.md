@@ -9,8 +9,8 @@
 - Root workspace gate: `Cargo.toml`, `rust-toolchain.toml`, and `deny.toml` exist and are used.
 - Core CI installs pinned Rust tool binaries from checksum-verified, SHA-pinned GitHub releases and disables source-build fallbacks.
 - Core CI runs `cargo fmt --all --check`, `cargo clippy --workspace --all-targets --all-features -- -D warnings`, and one coverage-instrumented nextest pass.
-- Required Rust core CI runs stable verification, a Rust 1.76 locked library/binary compile, and a Rust 1.77 wasm-target compile; a stable aggregate check requires all three jobs.
-- The Rust 1.76 lane checks `cargo +1.76.0 check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked`. The separately declared Wasm binding floor is 1.77 and checks `cargo +1.77.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown`.
+- Required Rust core CI uses exact Rust 1.99.0 for verification, locked workspace library/binary checks, and the wasm-target check; the `Rust core quality` aggregate fails closed on classifier errors, missing outputs, invalid results, or failed lanes.
+- The Rust 1.99.0 workspace lane checks `cargo +1.99.0 check --workspace --exclude kairo-ecs-wasm --exclude kairo-ecs-arrow --lib --bins --all-features --locked` and `cargo +1.99.0 check -p kairo-ecs-arrow --lib --locked`. The WebAssembly lane checks `cargo +1.99.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown`.
 - Core CI runs `cargo test --doc --workspace --all-features` once as a distinct test class; this complements nextest without repeating unit and integration tests.
 - Core CI runs the workspace nextest suite once under coverage instrumentation, then filters the same LCOV report to core scheduler production sources and enforces a 90% line-coverage floor; a minimal-permission job uploads the report with OIDC only on trusted main pushes. PRs use the Rust core check as their merge gate and do not receive OIDC.
 - `just test` creates the workspace LCOV report while running tests once. `just check-coverage` reads the last report without rerunning tests. `just ci` is the local equivalent of the core Rust formatting, lint, test/coverage, docs, and dependency-audit lane.
@@ -65,12 +65,12 @@ node tests/conformance/conformance-check.mjs
 node tests/conformance/track07_13_hardening_check.mjs
 node tests/conformance/track12_20_evidence_check.mjs
 node scripts/validation/validate-track13-metadata.mjs
-cargo +nightly fuzz run scheduler_requests -- -max_total_time=60 -rss_limit_mb=2048
+Fuzzing remains UNVERIFIED; nightly cargo-fuzz execution is disallowed by the Rust 1.99.0-only policy.
 python benches/benchmark_smoke.py
 cargo check -p kairo-ecs-bench
 test -f renovate.json
-rg -n 'rust-version = "1\.76"' Cargo.toml
-rg -n 'channel = "stable"' rust-toolchain.toml
+rg -n 'rust-version = "1\.99"' Cargo.toml
+rg -n 'channel = "1.99.0"' rust-toolchain.toml
 rg -n 'unknown-registry = "deny"|unknown-git = "deny"' deny.toml
 rg -n "future surface; skipping" .github/workflows/ci-bindings.yml .github/workflows/package-dry-run.yml && exit 1 || exit 0
 rg -n "No benchmarks yet|No fuzz harness yet|\|\| true" .github/workflows/benchmarks.yml .github/workflows/fuzzing.yml && exit 1 || exit 0

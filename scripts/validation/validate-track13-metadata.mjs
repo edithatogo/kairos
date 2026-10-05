@@ -122,6 +122,14 @@ function requireTerms(relativePath, terms) {
   return text;
 }
 
+function forbidTerms(relativePath, terms) {
+  const text = read(relativePath);
+  for (const term of terms) {
+    assert(!text.includes(term), `${relativePath} contains forbidden term: ${term}`);
+  }
+  return text;
+}
+
 function requirePattern(relativePath, pattern, label) {
   const text = read(relativePath);
   assert(pattern.test(text), `${relativePath} missing ${label}`);
@@ -259,10 +267,12 @@ requireTerms('.github/workflows/ci-core.yml', [
   'cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info',
   'node scripts/validation/check-core-coverage.mjs lcov.info',
   'cargo test --doc --workspace --all-features',
-  'Rust MSRV 1.76',
-  'cargo +1.76.0 check --workspace --exclude kairo-ecs-wasm --lib --bins --all-features --locked',
-  'Rust Wasm MSRV 1.77',
-  'cargo +1.77.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown',
+  'Rust 1.99.0 workspace checks',
+  'cargo +1.99.0 check --workspace --exclude kairo-ecs-wasm --exclude kairo-ecs-arrow --lib --bins --all-features --locked',
+  'cargo +1.99.0 check -p kairo-ecs-arrow --lib --locked',
+  'Rust 1.99.0 WebAssembly check',
+  'cargo +1.99.0 check --locked --manifest-path crates/kairo-ecs-wasm/Cargo.toml --features wasm-export --target wasm32-unknown-unknown',
+  'node tests/conformance/classify-rust-ci-changes-check.mjs',
   'name: Classify Rust changes',
   'scripts/validation/classify-rust-ci-changes.mjs',
   "if: needs.changes.outputs.rust == 'true'",
@@ -285,6 +295,24 @@ requireTerms('tests/conformance/ci-rust-change-classifier-check.mjs', [
   'deleted.rs',
   'include/kairo_ecs.h',
   'schemas/arrow/event_log_v1.schema.json',
+]);
+
+forbidTerms('.github/workflows/ci-core.yml', [
+  'Rust MSRV 1.76', 'cargo +1.76.0', 'Rust Wasm MSRV 1.77', 'cargo +1.77.0',
+]);
+forbidTerms('.github/workflows/nightly.yml', [
+  'rustup toolchain install nightly', 'cargo +nightly miri', 'cargo +nightly test -Z miri',
+]);
+forbidTerms('.github/workflows/fuzzing.yml', [
+  'rustup toolchain install nightly', 'cargo install cargo-fuzz', 'cargo +nightly fuzz',
+]);
+requireTerms('.github/workflows/nightly.yml', [
+  'Rust 1.99.0 benchmarks (Miri UNVERIFIED)', 'cargo +1.99.0 bench --workspace',
+  'Miri analysis: UNVERIFIED',
+]);
+requireTerms('.github/workflows/fuzzing.yml', [
+  'Fuzzing UNVERIFIED (cargo-fuzz not run)', 'Scheduler fuzzing: UNVERIFIED',
+  'this workflow reports no fuzz pass',
 ]);
 
 requireTerms('codecov.yml', [

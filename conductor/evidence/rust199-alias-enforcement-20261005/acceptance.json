@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "status": "local_static_instance_accepted",
+  "source_commit": "de1bc5aded2506b568e55426427f2dd30a882bea",
+  "source_sha256": {
+    "mise.toml": "37351d739e0ba0c6da1fead21a0f1ab9faacd0a6421fa6ea64a4f3172059d21a",
+    "scripts/validate_conductor_setup.ps1": "d8914f2058d1954fab73047b6b18e7fc5b09b3fa4034582582a1f7dc3d7f11ff",
+    "scripts/validation/test-setup-rust-toolchain.ps1": "6ae42aa1269cd0c7aa7ea9f55ae7e539fadede9e36c8e4e8add29eeaae90322b"
+  },
+  "reviewer": "root coordinator plus independent rust_policy_resume",
+  "scope": "exact three files: sole mise pin and canonical setup tool resolution/env restoration, actual AST extracted mocks",
+  "conditional_ci_routing": "unchanged by this commit; integration/classifier gate remains separate",
+  "rust_execution": "No Rust executable run by these static gates",
+  "windows_native_verified": false,
+  "workspace_runtime_verified": false,
+  "hosted_verified": false,
+  "full_C2_accepted": false
+}

@@ -7,7 +7,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-kairo-ecs-types = { path = "../kairo-ecs-types" }
+kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 
 [features]
 default = []

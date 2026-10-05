@@ -1,4 +1,5 @@
 [package]
+rust-version = "1.99"
 name = "kairo-fmi-basic-import"
 version = "0.1.0"
 edition = "2021"

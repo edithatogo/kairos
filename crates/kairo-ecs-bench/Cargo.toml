@@ -12,10 +12,10 @@ name = "kairo_ecs_bench"
 path = "src/lib.rs"
 
 [dependencies]
-kairo-ecs-core = { path = "../kairo-ecs-core" }
-kairo-ecs-rng = { path = "../kairo-ecs-rng" }
-kairo-ecs-state = { path = "../kairo-ecs-state" }
-kairo-ecs-types = { path = "../kairo-ecs-types" }
+kairo-ecs-core = { path = "../kairo-ecs-core", version = "0.0.0" }
+kairo-ecs-rng = { path = "../kairo-ecs-rng", version = "0.0.0" }
+kairo-ecs-state = { path = "../kairo-ecs-state", version = "0.0.0" }
+kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 
 [dev-dependencies]
 criterion = "0.5"

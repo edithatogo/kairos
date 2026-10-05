@@ -13,21 +13,28 @@ cargo audit
 cargo semver-checks check-release
 ```
 
-The required `Rust core quality` GitHub check combines stable verification with
-parallel MSRV lanes. Rust 1.76 checks all workspace library and binary targets
-except `kairo-ecs-wasm`; that binding declares Rust 1.77 to match its current
-`wasm-bindgen` floor and compiles its `wasm-export` target there. Stable CI runs
-the workspace test suite once under coverage, then runs doctests as their own
-test class. The aggregate is successful only when all three jobs pass.
+The required `Rust core quality` GitHub check uses Rust 1.99.0 for stable
+verification, locked workspace checks, and the WebAssembly target check. On
+pull requests, these three lanes run when changed paths include Rust or
+unclassified content; a non-empty change set entirely within the known
+documentation, website, or binding paths may skip them. Empty or unknown change
+sets fail closed and run the lanes. Main pushes always run all three lanes for
+trusted exact-SHA coverage evidence. Workspace crate exclusions and the
+separate default Arrow telemetry check are defined in `.github/workflows/ci-core.yml`.
+Stable verification runs the workspace test suite once under coverage, then
+runs doctests as their own test class. The aggregate accepts either three
+successful lanes or a validated known non-Rust pull-request skip; classification
+errors fail the aggregate.
 
 ## Heavy/nightly gates
 
+Scheduled ordinary benchmarks use exact Rust 1.99.0:
+
 ```bash
-cargo miri test -p kairo-ecs-core
-cargo miri test -p kairo-ecs-state
-cargo fuzz run ffi_boundary -- -max_total_time=60
-cargo bench --workspace
+cargo +1.99.0 bench --workspace
 ```
+
+Miri and fuzzing remain **UNVERIFIED** because their current workflows would require the disallowed nightly toolchain. No Miri or fuzz pass is claimed.
 
 ## Binding gates
 

@@ -1,4 +1,5 @@
 [package]
+rust-version.workspace = true
 name = "kairo-ecs-arrow"
 version = "0.1.0"
 edition = "2021"
@@ -7,7 +8,7 @@ repository = "https://github.com/edithatogo/kairos"
 description = "Arrow telemetry and event log serialization for KairoECS"
 
 [dependencies]
-kairo-ecs-types = { path = "../kairo-ecs-types" }
+kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 
 [features]
 default = []
