@@ -43,7 +43,9 @@ for (const path of [
   'scripts/supply_chain/install_verified_syft.py',
   'scripts/supply_chain/syft-darwin-verifier.lock',
   'scripts/supply_chain/syft-linux-verifier.lock',
+  'scripts/supply_chain/verify_syft_installation_receipt.py',
   'tests/test_verified_syft_installer.py',
+  'tests/test_syft_installation_receipt.py',
 ]) assert.ok(ARCHIVE_PATHS.includes(path), `archive path missing from exact allowlist: ${path}`);
 for (const [lane, path] of Object.entries({
   python: 'bindings/python/src/a.py', r: 'bindings/r/R/a.R', julia: 'bindings/julia/src/a.jl',
@@ -54,6 +56,9 @@ assert.deepEqual(classifyBindingPaths(['tests/test_archive_supply_chain.py', 'RE
 assert.deepEqual(classifyBindingPaths(['README.md', 'tests/test_archive_supply_chain.py']), routing(BINDING_LANES, true));
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_supply_chain.py', '.github/workflows/ci-bindings.yml']), routing(BINDING_LANES, true));
 assert.deepEqual(classifyBindingPaths(['.github/workflows/ci-bindings.yml', 'tests/test_archive_supply_chain.py']), routing(BINDING_LANES, true));
+assert.deepEqual(classifyBindingPaths(['tests/test_syft_installation_receipt.py', 'bindings/python/a.py']), routing(['python'], true));
+assert.deepEqual(classifyBindingPaths(['scripts/supply_chain/verify_syft_installation_receipt.py', 'README.md']), routing(BINDING_LANES, true));
+assert.deepEqual(classifyBindingPaths(['tests/test_syft_installation_receipt.py', '.github/workflows/ci-bindings.yml']), routing(BINDING_LANES, true));
 assert.throws(() => classifyBindingEvent('pull_request', 'bad-base', 'bad-head'), /Invalid base or head commit SHA/);
 assert.equal(serializeGitHubOutputs(routing(['csharp'], true)), 'python=false\nr=false\njulia=false\ntypescript=false\ncsharp=true\ngo=false\ngym=false\narchive_python=true');
 
@@ -130,8 +135,9 @@ assert.deepEqual(
     'test_package_archive_bundle.py',
     'test_archive_supply_chain_evidence_verifier.py',
     'test_verified_syft_installer.py',
+    'test_syft_installation_receipt.py',
   ],
-  'archive lane must run all seven focused suites in order',
+  'archive lane must run all eight focused suites in order',
 );
 const aggregateJob = workflow.slice(workflow.indexOf('  binding-ci:\n'));
 const scriptMatch = aggregateJob.match(/        run: \|\n((?:          .*\n)+)/);

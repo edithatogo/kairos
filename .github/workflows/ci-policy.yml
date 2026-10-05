@@ -75,6 +75,7 @@ jobs:
           test -f .github/workflows/secret-scan.yml
           test -f .github/workflows/sbom-attestations.yml
           test -f .github/workflows/stale.yml
+          test -f .github/workflows/syft-linux-qualification.yml
           test -f .github/workflows/toolchain-check.yml
           test -f .github/workflows/validate-conductor.yml
           test -f .github/workflows/workflow-security.yml
