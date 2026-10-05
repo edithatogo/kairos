@@ -1,0 +1,58 @@
+{
+  "packet_id": "c43-final-archive-audit",
+  "task_id": "C4.3",
+  "target_repo": ".",
+  "base_commit": "543a5dd4c6b3b3b2b890ee258fa7e77cea86505f",
+  "status": "prepared",
+  "objective": "Independent deterministic archive byte/member/hash/safety readback for synthetic C4.3 evidence",
+  "context_paths": [
+    "AGENTS.md",
+    "conductor/design/calibration/c4.3-arrow-output-v1.md"
+  ],
+  "input_hashes": {
+    "AGENTS.md": "f1e9c7076e13e6d83de2759434dde92119426250dd880770ae6d661be29b2b35",
+    "conductor/design/calibration/c4.3-arrow-output-v1.md": "df908f2ccc34589aca9f5b9ce5f54254c1315830ea5d2cc4d5c63e792ff76cbf"
+  },
+  "write_paths": [
+    ".artifacts/c43-archive-audit"
+  ],
+  "protected_paths": [
+    "crates/kairo-ecs-calibration/Cargo.toml",
+    "Cargo.lock",
+    "crates/kairo-ecs-calibration/src/lib.rs",
+    ".github",
+    "schemas/arrow/event_log_v1.schema.json"
+  ],
+  "leaf_dependencies": [
+    "C4.2"
+  ],
+  "interface_contract": "conductor/design/calibration/c4.3-arrow-output-v1.md",
+  "steps": [
+    "Acquire scoped artifact-only lease and bounded tracked context",
+    "Independently read every tar member, verify exact hashes/bytes, sorted unique regular safe paths and deterministic tar/gzip metadata; reserialize and match complete gzip hash; no source mutation",
+    "Record exact command/cwd/head/input/output SHA results and release lease"
+  ],
+  "verification": [
+    {
+      "argv": [
+        "python3",
+        ".artifacts/c43-archive-audit/verify_archive.py",
+        "/private/tmp/kairos-c43-20261005/.artifacts/c43-root/qualification.tar.gz"
+      ],
+      "cwd": ".",
+      "expected_exit": 0,
+      "oracle": "All585 actual members exact and safe; independently reproduce gzip SHA88732ce4024f3f4040a1c625ade58d98cceb810721ef06ce68c408ea2bae8218"
+    }
+  ],
+  "acceptance": [
+    "All frozen fields/types/status/null/count/join/order obligations for this slice",
+    "No public API or existing schema/source edits; actual evidence retained"
+  ],
+  "result_path": ".artifacts/c43-archive-audit/final-result.json",
+  "stop_conditions": [
+    "Contract ambiguity: report to root before implementation",
+    "Path conflict/drift or missing tool: stop dependent writes",
+    "Do not touch other workers or root shared files"
+  ],
+  "context_budget_bytes": 24000
+}
