@@ -54,6 +54,24 @@ fn actual_public_getters_bind_geometry_profile_and_time() {
 
 #[test]
 fn exact_mode_identity_boundaries_and_unicode_are_checked() {
+    let bytes_for_mode = |mode: &str| {
+        TransitGraphV1::new(
+            1,
+            vec![NodeId::new(1), NodeId::new(2)],
+            vec![TransitEdge {
+                id: EdgeId::new(7),
+                from: NodeId::new(1),
+                to: NodeId::new(2),
+                length_mm: 5,
+                allowed_modes: vec![MovementModeId::new(mode).unwrap()],
+            }],
+        )
+        .unwrap()
+        .canonical_bytes()
+    };
+    assert_ne!(bytes_for_mode("walk"), bytes_for_mode("Walk"));
+    assert_ne!(bytes_for_mode("é"), bytes_for_mode("e\u{301}"));
+
     for invalid in [
         "",
         " walk",
