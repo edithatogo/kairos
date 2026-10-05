@@ -9,6 +9,11 @@ on:
     paths:
       - '.github/workflows/docs.yml'
       - '.github/workflows/docs-quality.yml'
+      - 'scripts/bootstrap-node-tools/apply_http_cache_fix.py'
+      - 'tests/test_website_cache_evidence.py'
+      - 'tests/test_website_http_cache_patch.py'
+      - 'tests/fixtures/http-cache-semantics-4.3.0.tgz'
+      - 'tests/http-cache-security-regression.mjs'
       - 'tools/docs-quality-node-tools/package.json'
       - 'tools/docs-quality-node-tools/package-lock.json'
       - '*.md'
@@ -75,10 +80,25 @@ jobs:
       - name: Tutorial validation
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File docs/tutorials/validate-tutorials.ps1
       - name: Install website dependencies
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
         run: |
-          npm ci --prefix website
-          python3 scripts/bootstrap-node-tools/apply_http_cache_fix.py website/node_modules
-          node tests/http-cache-security-regression.mjs website/node_modules/http-cache-semantics/index.js
+          mkdir -p artifacts/website-cache-security
+          node --version > artifacts/website-cache-security/node-version.txt
+          npm --version > artifacts/website-cache-security/npm-version.txt
+          test -f tests/test_website_http_cache_patch.py
+          test -f tests/test_website_cache_evidence.py
+          python3 -m unittest discover -s tests -p 'test_website*cache*.py' -v > artifacts/website-cache-security/adapter-tests.log 2>&1
+          npm ci --prefix website > artifacts/website-cache-security/install.log 2>&1
+          npm audit --prefix website --audit-level=moderate --json > artifacts/website-cache-security/raw-audit.json
+          node tests/http-cache-security-regression.mjs website/node_modules/http-cache-semantics/index.js --expect-vulnerable > artifacts/website-cache-security/negative-control.log
+          python3 website/scripts/apply_http_cache_fix.py website/node_modules > artifacts/website-cache-security/mitigation.log
+          node tests/http-cache-security-regression.mjs website/node_modules/http-cache-semantics/index.js > artifacts/website-cache-security/regression.log
+          printf '%s\n' "$GITHUB_SHA" > artifacts/website-cache-security/source-commit.txt
+          sha256sum website/package-lock.json website/scripts/apply_http_cache_fix.py scripts/bootstrap-node-tools/apply_http_cache_fix.py tests/http-cache-security-regression.mjs tests/test_website_http_cache_patch.py tests/fixtures/http-cache-semantics-4.3.0.tgz website/node_modules/http-cache-semantics/index.js website/scripts/verify_cache_security_evidence.py tests/test_website_cache_evidence.py > artifacts/website-cache-security/SHA256SUMS
+          mkdir -p artifacts/website-cache-security/http-cache-semantics
+          cp website/node_modules/http-cache-semantics/index.js website/node_modules/http-cache-semantics/package.json website/node_modules/http-cache-semantics/LICENSE artifacts/website-cache-security/http-cache-semantics/
+          python3 website/scripts/verify_cache_security_evidence.py artifacts/website-cache-security
       - name: Local LLMS renderer contract tests
         run: node --test website/tests/kairoecs-llms-txt.test.mjs
       - name: Search DOM XSS regression tests
@@ -93,3 +113,11 @@ jobs:
         run: node scripts/validation/validate-learning-coverage.mjs
       - name: Notebook validation
         run: python notebooks/validate_notebooks.py
+      - name: Retain website cache security evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: website-cache-security-${{ github.workflow }}-${{ github.run_id }}
+          path: artifacts/website-cache-security
+          if-no-files-found: error
+          retention-days: 14

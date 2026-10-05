@@ -33,6 +33,8 @@ Format:
 
 ### Fixed
 
+- Website documentation locks `http-cache-semantics` 4.3.0 with an exact-source local mitigation, requires the raw dependency audit and unmodified-source negative control, and rejects incomplete security evidence before building. This is a local mitigation, not an official patched upstream release.
+
 - The `kairo-ecs-pdes` TimeWarp helper now restores initialized state during rollback and rejects stale or foreign cell handles without changing diagnostic generation counts.
 
 - Website documentation builds verify a checksum-bound local cache-semantics mitigation and run installed-package security regressions before building; registry advisories remain open.
