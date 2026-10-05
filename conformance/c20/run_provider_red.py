@@ -36,6 +36,8 @@ EXPECTED_TESTS = {
     "provider_version_validation_precedes_strata_and_ids_are_fail_closed",
     "malformed_and_missing_lookups_preserve_stream_and_do_not_alias",
     "provider_dispatches_exact_stratum_and_advances_only_on_success",
+    "opaque_identity_restore_requires_every_identity_component_and_preserves_position",
+    "stratum_ids_enforce_utf8_byte_and_control_limits_and_debug_redacts_identity",
 }
 
 
@@ -140,7 +142,7 @@ def main() -> int:
         "claim": (
             "expected native missing-work_duration API red preparation only; not runtime pass or capability acceptance"
             if expectation == "red"
-            else "green mode requires all 12 named fixture tests to run and pass; fixture success is not capability acceptance"
+            else "green mode requires all 14 named fixture tests to run and pass; fixture success is not capability acceptance"
         ),
         "base_commit": BASE_COMMIT,
         "committed_workspace": commit,

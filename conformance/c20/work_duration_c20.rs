@@ -328,3 +328,181 @@ fn provider_dispatches_exact_stratum_and_advances_only_on_success() {
     assert_eq!(sample.draw_after(), 0);
     assert_eq!(stream.draw_position(), 0);
 }
+
+#[test]
+fn opaque_identity_restore_requires_every_identity_component_and_preserves_position() {
+    let mut map = CalibrationSeedMap::new(1, STUDY, ROOT_SEED).unwrap();
+    let key = map
+        .key_for(
+            "restore-schedule",
+            REPLICATION,
+            CASE,
+            TASK,
+            SeedPurpose::Service,
+        )
+        .unwrap();
+    let mut stream = map
+        .stream_for(
+            "restore-schedule",
+            REPLICATION,
+            CASE,
+            TASK,
+            SeedPurpose::Service,
+        )
+        .unwrap();
+    stream.next_u64().unwrap();
+    stream.next_u64().unwrap();
+
+    let mut continuation = stream.snapshot().restore().unwrap();
+    let mut restored = stream.snapshot().restore_for(&key).unwrap();
+    assert_eq!(restored.draw_position(), 2);
+    assert_eq!(
+        restored.next_u64().unwrap(),
+        continuation.next_u64().unwrap()
+    );
+    assert_eq!(restored.draw_position(), 3);
+
+    let case_key = map
+        .key_for(
+            "restore-schedule",
+            REPLICATION,
+            "case-other",
+            TASK,
+            SeedPurpose::Service,
+        )
+        .unwrap();
+    let task_key = map
+        .key_for(
+            "restore-schedule",
+            REPLICATION,
+            CASE,
+            "task-other",
+            SeedPurpose::Service,
+        )
+        .unwrap();
+    let schedule_key = map
+        .key_for(
+            "schedule-other",
+            REPLICATION,
+            CASE,
+            TASK,
+            SeedPurpose::Service,
+        )
+        .unwrap();
+    let replication_key = map
+        .key_for(
+            "restore-schedule",
+            REPLICATION + 1,
+            CASE,
+            TASK,
+            SeedPurpose::Service,
+        )
+        .unwrap();
+    let purpose_key = map
+        .key_for(
+            "restore-schedule",
+            REPLICATION,
+            CASE,
+            TASK,
+            SeedPurpose::Transit,
+        )
+        .unwrap();
+    let mut root_map = CalibrationSeedMap::new(1, STUDY, ROOT_SEED + 1).unwrap();
+    let root_key = root_map
+        .key_for(
+            "restore-schedule",
+            REPLICATION,
+            CASE,
+            TASK,
+            SeedPurpose::Service,
+        )
+        .unwrap();
+    let mut study_map = CalibrationSeedMap::new(1, "study-other", ROOT_SEED).unwrap();
+    let study_key = study_map
+        .key_for(
+            "restore-schedule",
+            REPLICATION,
+            CASE,
+            TASK,
+            SeedPurpose::Service,
+        )
+        .unwrap();
+
+    for mismatched_key in [
+        &case_key,
+        &task_key,
+        &schedule_key,
+        &root_key,
+        &replication_key,
+        &purpose_key,
+        &study_key,
+    ] {
+        assert!(matches!(
+            stream.snapshot().restore_for(mismatched_key),
+            Err(seed_map::CalibrationSeedError::InvalidSnapshot)
+        ));
+    }
+}
+
+#[test]
+fn stratum_ids_enforce_utf8_byte_and_control_limits_and_debug_redacts_identity() {
+    let exact_limit = "é".repeat(512);
+    let over_limit = format!("{exact_limit}x");
+    assert_eq!(exact_limit.len(), 1024);
+    assert_eq!(exact_limit.chars().count(), 512);
+    assert_eq!(over_limit.len(), 1025);
+    assert_eq!(over_limit.chars().count(), 513);
+    let exact_provider = IntrinsicWorkProvider::new(
+        1,
+        vec![(
+            exact_limit.clone(),
+            IntrinsicDurationDistribution::fixed(3).unwrap(),
+        )],
+    )
+    .unwrap();
+    let (mut stream, key) = service_identity("stratum-byte-limit");
+    assert_eq!(
+        exact_provider
+            .sample(&exact_limit, &mut stream, &key)
+            .unwrap()
+            .duration(),
+        SimDuration::from_ticks(3)
+    );
+    assert!(matches!(
+        IntrinsicWorkProvider::new(
+            1,
+            vec![(over_limit, IntrinsicDurationDistribution::fixed(3).unwrap())]
+        ),
+        Err(WorkDurationError::InvalidStratum)
+    ));
+    assert!(matches!(
+        IntrinsicWorkProvider::new(
+            1,
+            vec![(
+                "private-stratum\u{0000}sentinel".to_owned(),
+                IntrinsicDurationDistribution::fixed(3).unwrap()
+            )]
+        ),
+        Err(WorkDurationError::InvalidStratum)
+    ));
+
+    let identity = "private-stratum-sentinel";
+    let provider = IntrinsicWorkProvider::new(
+        1,
+        vec![(
+            identity.to_owned(),
+            IntrinsicDurationDistribution::fixed(3).unwrap(),
+        )],
+    )
+    .unwrap();
+    let (mut stream, key) = service_identity("debug-redaction");
+    let missing = provider.sample("private-stratum-sentinel-missing", &mut stream, &key);
+    assert!(matches!(missing, Err(WorkDurationError::MissingStratum)));
+    assert!(!format!("{missing:?}").contains(identity));
+    let sample = provider.sample(identity, &mut stream, &key).unwrap();
+    let debug = format!("{sample:?}");
+    assert!(!debug.contains(identity));
+    assert!(!debug.contains(STUDY));
+    assert!(!debug.contains(CASE));
+    assert!(!debug.contains(TASK));
+}
