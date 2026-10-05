@@ -1159,9 +1159,30 @@ impl AcquireBuilder<'_> {
         )
     }
 }
+/// Opaque ownership identity for one in-process Flow runtime.
+///
+/// Clones and a moved runtime retain the same identity; separately constructed
+/// runtimes never compare equal while an identity handle is retained. This is
+/// not simulation data: do not use it for seeds, ordering, telemetry or portable
+/// checkpoints. It has no public constructor or serialization representation.
+#[derive(Clone)]
+pub struct FlowRuntimeIdentity(std::sync::Arc<()>);
+impl PartialEq for FlowRuntimeIdentity {
+    fn eq(&self, other: &Self) -> bool {
+        std::sync::Arc::ptr_eq(&self.0, &other.0)
+    }
+}
+impl Eq for FlowRuntimeIdentity {}
+impl std::fmt::Debug for FlowRuntimeIdentity {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("FlowRuntimeIdentity")
+    }
+}
+
 /// Private shared scheduler/world/registry. Single process, experimental Rust API.
 /// All runtime resource changes occur only at command dispatch boundaries.
 pub struct FlowRuntime {
+    identity: FlowRuntimeIdentity,
     config: FlowConfig,
     callback_config: FlowCallbackConfig,
     next_batch_identity: u64,
@@ -1209,6 +1230,7 @@ impl FlowRuntime {
     }
     pub fn with_configs(config: FlowConfig, callback_config: FlowCallbackConfig) -> Self {
         Self {
+            identity: FlowRuntimeIdentity(std::sync::Arc::new(())),
             config,
             callback_config,
             next_batch_identity: 0,
@@ -1237,6 +1259,13 @@ impl FlowRuntime {
             next_admission: 0,
             next_lease: 0,
         }
+    }
+    /// Return an opaque identity for runtime-local work ownership checks.
+    ///
+    /// Moving this runtime preserves identity. The token is strictly in-process
+    /// and must never be serialized or incorporated into deterministic results.
+    pub fn identity(&self) -> FlowRuntimeIdentity {
+        self.identity.clone()
     }
     /// Require registration before any successful task or actor-domain creation.
     /// Historical context metadata keeps this phase closed after work cleanup.
