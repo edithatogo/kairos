@@ -171,7 +171,7 @@ mod tests {
         let high_lease = flow.request(high_request).unwrap().lease.unwrap();
         let release_at = t(flow.now().ticks() + 1);
         flow.release(high_lease, release_at).unwrap();
-        run_until_work_state(flow, low_request, RequestState::Active, records);
+        run_until_state(flow, low_request, RequestState::Active, records);
     }
 
     fn submit_high_priority_preemptor(
@@ -186,11 +186,11 @@ mod tests {
             .acquire(resource)
             .owner(high_owner)
             .at(preempt_at)
-            .priority(10)
+            .priority(-10)
             .can_preempt(true)
             .submit()
             .unwrap();
-        run_until_work_state(flow, low_request, RequestState::Suspended, records);
+        run_until_state(flow, low_request, RequestState::Suspended, records);
         assert_eq!(
             flow.request(high_request).unwrap().state,
             RequestState::Active
@@ -216,7 +216,6 @@ mod tests {
     }
 
     fn actual_task(
-        flow: &FlowRuntime,
         submitted: &SubmittedIntrinsicWork<WorkTemplate, WorkContext>,
     ) -> (WorkId, RequestId) {
         (submitted.work(), submitted.request())
@@ -261,13 +260,13 @@ mod tests {
 
     fn complete_transit(
         flow: &mut FlowRuntime,
-        bound: &mut crate::flow_bridge::BoundIntrinsicWork<WorkTemplate, WorkContext>,
+        mut bound: crate::flow_bridge::BoundIntrinsicWork<WorkTemplate, WorkContext>,
     ) -> SubmittedIntrinsicWork<WorkTemplate, WorkContext> {
         must(bound.start_transit(flow));
         for _ in 0..32 {
             let dispatch = flow.step().unwrap().expect("scheduled transit event");
             let observation = must(bound.observe_transit_dispatch(flow, &dispatch));
-            if observation == TransitObservation::Arrived {
+            if matches!(observation, TransitObservation::Arrived) {
                 return must(bound.finish_transit(flow));
             }
         }
@@ -304,7 +303,7 @@ mod tests {
         let mut bound = must(created.bind(&flow));
         assert_eq!(bound.service_draw_position(), 1);
 
-        let submitted = complete_transit(&mut flow, &mut bound);
+        let submitted = complete_transit(&mut flow, bound);
         assert_submitted_sample(&submitted);
         let (actual_work, request) = actual_task(&submitted);
         assert_eq!(actual_work, work);
@@ -340,6 +339,10 @@ mod tests {
         assert_eq!(progress.state, WorkState::Suspended);
         assert_eq!(progress.useful_elapsed, SimDuration::from_ticks(3));
         assert_eq!(progress.remaining, SimDuration::from_ticks(27));
+        assert_eq!(
+            flow.actor_domain_context(carrier_actor).unwrap(),
+            carrier_work
+        );
         let resource_state = flow.resource(resource).unwrap();
         assert_eq!(resource_state.active.len(), 1);
         assert_eq!(resource_state.allocations.len(), 1);
@@ -383,6 +386,13 @@ mod tests {
             record.request == request && record.transition == LifecycleTransition::Resumed
         }));
         assert_submitted_sample(&submitted);
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier_work)
+                .unwrap()
+                .progress_at(flow.now())
+                .unwrap(),
+            transit_before
+        );
 
         run_until_state(&mut flow, request, RequestState::Completed, &mut records);
         let complete = flow.work_progress(work).unwrap();
@@ -393,6 +403,10 @@ mod tests {
         assert_eq!(flow.work(work).unwrap().request, Some(request));
         assert_submitted_sample(&submitted);
 
+        assert_eq!(
+            flow.actor_domain_context(carrier_actor).unwrap(),
+            carrier_work
+        );
         let carrier_after = flow.work_context::<TransitContext>(carrier_work).unwrap();
         assert_eq!(
             carrier_after.phase(),
@@ -409,15 +423,17 @@ mod tests {
     fn restart_preemption_rebuilds_original_template_without_resampling_or_transit_reset() {
         let mut flow = FlowRuntime::new();
         register_work(&mut flow);
+        register_transit(&mut flow);
         let owner = flow.spawn_actor().unwrap();
         let preemptor_owner = flow.spawn_actor().unwrap();
+        let carrier_actor = flow.spawn_actor().unwrap();
         let resource = flow.create_resource(1).unwrap();
         let (provider, mut adapter, input) = provider_inputs(
             owner,
             resource,
             PreemptionStrategy::Restart,
-            FidelityMode::Macro,
-            TransitRequest::Zero,
+            FidelityMode::Micro,
+            route_request(carrier_actor),
         );
 
         let prepared = must(input.prepare(&flow, &mut adapter, &provider));
@@ -427,12 +443,21 @@ mod tests {
         let work = created.work();
         let bound = must(created.bind(&flow));
         assert_eq!(bound.service_draw_position(), 1);
-        let submitted = must(bound.submit(&mut flow));
+        let submitted = complete_transit(&mut flow, bound);
         assert_submitted_sample(&submitted);
         let (actual_work, request) = actual_task(&submitted);
         assert_eq!(actual_work, work);
         assert_eq!(flow.work(work).unwrap().request, Some(request));
         assert_flow_work(&flow, work);
+        let carrier_work = flow.actor_domain_context(carrier_actor).unwrap();
+        let carrier = flow.work_context::<TransitContext>(carrier_work).unwrap();
+        assert_eq!(carrier.service_work(), work);
+        assert_eq!(
+            carrier.phase(),
+            kairo_ecs_abm::spatial::TransitPhase::Arrived
+        );
+        let transit_before = carrier.progress_at(flow.now()).unwrap();
+        assert_eq!(transit_before.remaining, SimDuration::ZERO);
 
         let mut records = Vec::new();
         run_until_state(&mut flow, request, RequestState::Active, &mut records);
@@ -449,6 +474,10 @@ mod tests {
         assert_eq!(suspended.state, WorkState::Suspended);
         assert_eq!(suspended.useful_elapsed, SimDuration::from_ticks(3));
         assert_eq!(suspended.remaining, SimDuration::from_ticks(27));
+        assert_eq!(
+            flow.actor_domain_context(carrier_actor).unwrap(),
+            carrier_work
+        );
         let resource_state = flow.resource(resource).unwrap();
         assert_eq!(resource_state.active.len(), 1);
         assert_eq!(resource_state.allocations.len(), 1);
@@ -460,6 +489,13 @@ mod tests {
             ATTEMPT_MARKER
         );
         assert_submitted_sample(&submitted);
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier_work)
+                .unwrap()
+                .progress_at(flow.now())
+                .unwrap(),
+            transit_before
+        );
 
         release_preemptor_and_resume(&mut flow, high_request, request, &mut records);
         let restarted = flow.work_progress(work).unwrap();
@@ -484,6 +520,17 @@ mod tests {
             record.request == request && record.transition == LifecycleTransition::Restarted
         }));
         assert_submitted_sample(&submitted);
+        assert_eq!(
+            flow.actor_domain_context(carrier_actor).unwrap(),
+            carrier_work
+        );
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier_work)
+                .unwrap()
+                .progress_at(flow.now())
+                .unwrap(),
+            transit_before
+        );
 
         run_until_state(&mut flow, request, RequestState::Completed, &mut records);
         let complete = flow.work_progress(work).unwrap();
@@ -497,5 +544,19 @@ mod tests {
         );
         assert_eq!(flow.request(request).unwrap().work, Some(work));
         assert_submitted_sample(&submitted);
+        assert_eq!(
+            flow.actor_domain_context(carrier_actor).unwrap(),
+            carrier_work
+        );
+        let carrier_after = flow.work_context::<TransitContext>(carrier_work).unwrap();
+        assert_eq!(
+            carrier_after.phase(),
+            kairo_ecs_abm::spatial::TransitPhase::Arrived
+        );
+        assert_eq!(
+            carrier_after.progress_at(flow.now()).unwrap(),
+            transit_before
+        );
+        assert_eq!(carrier_after.service_work(), work);
     }
 }
