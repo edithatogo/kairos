@@ -1,6 +1,7 @@
 # C2.0 transactional transit execution v1
 
-Status: reviewed architecture; exact document awaits final independent readback.
+Status: test-interface contract accepted after independent owner readback and
+coordinator resolution of the explicit-start correction; runtime remains absent.
 Track03 owns production geometry/actor route execution and the DES planned hook.
 Track21 owns calibration purpose streams and cryptographic receipt adapter.
 This contract freezes future tests; it does not assert these APIs already exist.
@@ -102,9 +103,13 @@ model adapter, never inferred from colliding entity IDs. Separate carrier avoids
 Restart rebuilding completed transit. Existing carrier may be reused only after
 its previous route/claim is terminal; overlapping movement fails explicitly.
 
-Nonzero Micro starts by scheduling the carrier's domain event at now plus first
-positive segment duration. The planned callback returns next progress and emits
-next domain event, or an actual timed Acquire for the service task at arrival.
+Nonzero Micro creates/reuses a Ready carrier and schedules an initial ordinary
+domain start event at AcquireIntent.at. Only its accepted planned callback changes
+Ready to Moving and schedules the first positive progress event at actual start
+plus segment duration. The planned callback then emits each next progress event,
+or an actual timed Acquire for the service task at arrival. A rejected start leaves
+Ready unchanged; explicit retry targets that same start on the retained carrier.
+No useful travel is inferred before the accepted start.
 Only accepted arrival batch changes context phase and WorkSpec.request together.
 Macro and explicit Zero Micro schedule no transit events or RNG draws. Deterministic
 graph travel uses no RNG; later empirical transit sampling uses Transit purpose
@@ -223,3 +228,26 @@ accepted arrival/acquire and intrinsic completion. Assert useful movement plus
 paused time plus queue plus useful service separately, remaining ticks unchanged
 while paused, and no duplicate on repeated controls/stale events. Source events
 remain consumed on rejection; retain sample and context and explicitly retry.
+
+
+## Reviewed explicit-start and pre-start pause correction
+
+TransitContext retains original_start_at, paused_from (Ready or Moving), current
+segment elapsed/remaining, and pending start/progress due plus outstanding status.
+Pause from Ready records zero useful movement. A delivered start while Paused is
+a no-op that clears its outstanding status. Resume from Ready reuses a still
+outstanding future start event; if it was consumed, emit a new start event at
+max(actual now, original_start_at). The accepted start then begins the full leg.
+Resume from Moving retains remaining ticks and follows the due/reuse rules above.
+
+progress_at before accepted start returns zero useful movement and full remaining
+route duration, even if planned start time passed while paused/rejected. Repeated
+start/control events cannot trigger a second movement or arrival. Contract fixture
+must pause before a future start, consume the stale start while paused, resume,
+and prove full movement begins at the accepted new start and one actual claim.
+Existing post-start pause/stale-arrival fixtures remain mandatory.
+
+Independent review identified and resolved this correction without weakening
+Macro/Zero no-transit, actual Flow scheduling or interruption requirements. This
+closes interface definition only; red fixture authoring and runtime/native gates
+are still required for C2.0/C2.1.

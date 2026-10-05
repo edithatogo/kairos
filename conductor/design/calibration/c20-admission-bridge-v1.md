@@ -1,6 +1,7 @@
 # C2.0 actual Flow admission bridge v1
 
-Status: reviewed architecture; exact document awaits final independent readback.
+Status: test-interface contract accepted after independent owner readback and
+coordinator resolution of the explicit-start correction; runtime remains absent.
 This freezes test interfaces, not runtime acceptance. Track03 owns DES fidelity
 and transaction hooks; Track21 owns optional calibration production adapter;
 Track01 owns purpose keys; Track22 owns complete checkpoint restoration.
@@ -183,7 +184,9 @@ retained. Nonzero Micro uses start/observe/retry/finish. Input intent.at is the
 planned route start; actual arrival replaces the timed command's at field with
 FlowWorldView.now. Original fields and this adjustment rule remain retained.
 
-Start retains a cloneable route/carrier context on carrier-creation failure;
+Start creates/reuses Ready context and schedules its initial ordinary domain event
+at AcquireIntent.at; it never starts elapsed movement synchronously. Start retains
+a cloneable route/carrier context on carrier-creation failure;
 once created its actual carrier WorkId remains stored and is reused on scheduling
 retry, never recreated. Existing unrelated/nonterminal carrier -> conflict, no
 silent overwrite. Reuse is explicit through the registered transit adapter only
