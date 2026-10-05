@@ -134,7 +134,7 @@ impl GrpcContractEnvelope {
             && self
                 .migration_id
                 .as_ref()
-                .map_or(true, |id| id.trim().is_empty())
+                .is_none_or(|id| id.trim().is_empty())
         {
             return Err(ProtocolValidationError::InvalidMigrationId);
         }
