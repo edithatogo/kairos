@@ -84,3 +84,16 @@ Run `$conductor-review` before advancing this track. Apply accepted fixes in own
 
 - archive commit SHA: `c1ae99b516db2c7375508ff0b02d5536f385ecff`.
 - pushed ref: `origin/codex/kairos-hpc-parity-wave` pending final push confirmation.
+
+## Website dependency mitigation integration — 2026-10-05
+
+Bounded follow-up to public advisory GHSA-ch52-4w7c-c8xp / alert69: website lock resolves http-cache-semantics4.3.0, with a separate website adapter retaining the existing hash-pinned source mitigation. Unmodified official4.3 fails189/248 security/compatibility cases; a composed scratch mitigation passes248/248. Version4.3 is not claimed as an official security fix. Bootstrap4.2 generator and EXC199 approval/source binding stay unchanged. Docs and Docs Quality invoke the website adapter, fail on raw npm audit at moderate severity, run its offline fail-closed tests and the actual248-case installed-source regression, and retain versions/source hashes/raw audit/logs in a distinct artifact. Final integrated source, actual install/build, independent review and exact-head hosted results remain required; this entry is an implementation handoff, not an executed-gate or deployment claim. No new policy exception or broader Track45/13 phase completion is asserted.
+
+
+## Website cache mitigation local qualification — 2026-10-05
+
+At integrated source `3cdcc6b62ecbb29567451208b3d513d8e2477a74`, a clean website install, raw npm audit (zero findings), released-source unsafe-reuse negative control, exact-source mitigation, 248-case installed-source regression, and 27 combined adapter/evidence tests all exited zero. The actual package manifest and BSD licence match the verified 4.3.0 archive; the installed index matches SHA-256 `1c7d64faf562b93a3a989fe931aec6877b18c4f3e18b7822bb8647e1b3e2678e`. The completion verifier accepted the real evidence bundle and bound its payload/source hashes to that checkout. Local Node was 26.10.0 and npm 11.19.1; hosted Node 24 remains a separate gate.
+
+The same source passed `npm --prefix website run check:all`, all four LLMS renderer contracts, and actionlint for both docs workflows. Earlier focused search/workflow/SOTA/learning/notebook and Conductor phase/DAG/artifact checks passed on the reviewed source preparation. Exact command logs, exit status, source identities, the real completion manifest and local static build archive are retained through the managed security artifact store. Initial fixture failures are retained separately; macOS system temporary-path aliases are canonicalized in the test fixture while the production evidence-path check remains strict.
+
+Replacement is atomic per package index after validation of the complete discovered tree; it is not a filesystem transaction across multiple packages. Failed writes fail the job and idempotent reruns remain supported. The bootstrap 4.2 helper and EXC199 remain byte-identical. Independent source/lock review found no implementation blocker; hosted exact-source checks, retained CI readback, merge and deployment are still pending. No official upstream security fix, new exception, clinical acceptance or release approval is claimed.
