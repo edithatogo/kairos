@@ -7,6 +7,9 @@ pub use flow::*;
 #[allow(dead_code)]
 mod fidelity;
 
+#[cfg(test)]
+mod fidelity_mode_c21;
+
 mod preemption;
 
 use kairo_ecs_core::Scheduler;
