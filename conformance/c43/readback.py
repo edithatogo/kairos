@@ -740,8 +740,21 @@ def _assert_runtime_fixture(residuals: list[dict[str, Any]], logical_metrics: An
             fail(f"paired summary {stat} value differs from C4.2 group summary")
 
 
-def readback(directory: Path, *, include_framings: bool = True) -> dict[str, Any]:
+REQUIRED_MANIFEST_FILES = ("join_manifest.json", "source_manifest.json", "event_log.smoke")
+
+
+def _require_manifests(directory: Path) -> None:
+    for name in REQUIRED_MANIFEST_FILES:
+        path = directory / name
+        if not path.is_file() or path.stat().st_size == 0:
+            fail(f"required runtime evidence missing or empty: {name}")
+
+
+def readback(directory: Path, *, include_framings: bool = True,
+             require_manifests: bool = False) -> dict[str, Any]:
     directory = directory.resolve()
+    if require_manifests:
+        _require_manifests(directory)
     if hashlib.sha256(C0_SCHEMA_PATH.read_bytes()).hexdigest() != C0_SCHEMA_SHA256:
         fail("C0 logical schema digest changed from packet-bound source")
     if hashlib.sha256(EVENT_SCHEMA_PATH.read_bytes()).hexdigest() != EVENT_SCHEMA_SHA256:
@@ -777,7 +790,7 @@ def readback(directory: Path, *, include_framings: bool = True) -> dict[str, Any
     evidence["python"] = sys.version
     if include_framings:
         evidence["framing_variants"] = {
-            path.name: readback(path, include_framings=False)
+            path.name: readback(path, include_framings=False, require_manifests=require_manifests)
             for path in sorted(directory.glob("framing-*")) if path.is_dir()
         }
     return evidence
@@ -812,6 +825,20 @@ def actual_manifest_mutation_controls(directory: Path) -> list[dict[str, Any]]:
                 results.append({"control": name, "expected": "reject", "observed": f"{type(exc).__name__}: {exc}"})
             else:
                 fail(f"mutated actual manifest unexpectedly accepted: {name}")
+    for evidence_name in REQUIRED_MANIFEST_FILES:
+        for state in ("missing", "empty"):
+            with tempfile.TemporaryDirectory(prefix=f"c43-{state}-{evidence_name.replace('.', '-')}-") as temp:
+                target = Path(temp) / "runtime"
+                shutil.copytree(directory, target, ignore=shutil.ignore_patterns("framing-*"))
+                evidence_path = target / evidence_name
+                if state == "missing":
+                    evidence_path.unlink()
+                else:
+                    evidence_path.write_bytes(b"")
+                control_id = f"{state}_{evidence_name}"
+                observed = _expect_reject(lambda: readback(target, include_framings=False,
+                                                            require_manifests=True), control_id)
+                results.append({"control": control_id, "expected": "reject", "observed": observed})
     with tempfile.TemporaryDirectory(prefix="c43-mut-source-clock-") as temp:
         target = Path(temp) / "runtime"
         shutil.copytree(directory, target, ignore=shutil.ignore_patterns("framing-*"))
@@ -927,14 +954,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--mutation-controls", action="store_true",
-                        help="copy actual producer outputs and verify manifest mutations are rejected")
+                        help="copy actual producer outputs and verify manifest mutations and missing-evidence controls reject")
+    parser.add_argument("--require-manifests", action="store_true",
+                        help="require nonempty join/source manifests and event_log.smoke for runtime output")
     parser.add_argument("directory", nargs="?", type=Path)
     args = parser.parse_args()
     try:
         if args.self_test:
             result = _self_test()
         elif args.directory:
-            result = readback(args.directory)
+            result = readback(args.directory, require_manifests=args.require_manifests)
             if args.mutation_controls:
                 result["actual_manifest_mutation_controls"] = actual_manifest_mutation_controls(args.directory)
         else:

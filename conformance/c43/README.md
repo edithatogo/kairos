@@ -34,7 +34,12 @@ For producer output:
 To exercise rejection controls against the actual producer join manifest, add
 `--mutation-controls`. The controls alter observed pair/raw-row counts, raw
 hashes, the unmatched diagnostic, event handle, and residual status; each
-mutation must fail readback.
+mutation must fail readback. Add `--require-manifests` for CI runtime checks to
+require nonempty `join_manifest.json`, `source_manifest.json`, and
+`event_log.smoke` files at the output root and in each framing directory. The
+missing-evidence controls under `--mutation-controls` verify that strict mode
+rejects each absent file. Codec fixtures and the standalone self-test keep the
+default optional-manifest behavior.
 
 The logical reader evaluates the bounded JSON Schema keyword subset used by
 the unchanged C0 residual and metric definitions. It fails closed if those
