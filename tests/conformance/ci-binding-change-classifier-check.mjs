@@ -52,6 +52,13 @@ for (const [lane, path] of Object.entries({
   typescript: 'bindings/typescript/src/a.ts', csharp: 'bindings/csharp/a.cs', go: 'bindings/go/a.go', gym: 'python/kairo_gym/src/a.py',
 })) assert.deepEqual(classifyBindingPaths([ARCHIVE_PATHS[0], path]), routing([lane], true));
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_supply_chain.py', 'bindings/python/a.py']), routing(['python'], true));
+assert.deepEqual(classifyBindingPaths(['packaging/scripts/prepare_verified_archive_release.py']), routing([], true));
+assert.deepEqual(classifyBindingPaths(['packaging/scripts/build_archive_evidence_expectations.py']), routing([], true));
+assert.deepEqual(classifyBindingPaths(['tests/test_prepare_verified_archive_release.py']), routing([], true));
+assert.deepEqual(classifyBindingPaths(['tests/test_prepare_verified_archive_release.py', 'bindings/python/src/a.py']), routing(['python'], true));
+assert.deepEqual(classifyBindingPaths(['bindings/python/src/a.py', 'tests/test_prepare_verified_archive_release.py']), routing(['python'], true));
+assert.deepEqual(classifyBindingPaths(['tests/test_prepare_verified_archive_release.py', 'Cargo.toml']), routing(BINDING_LANES, true));
+assert.deepEqual(classifyBindingPaths(['.github/workflows/ci-bindings.yml', 'packaging/scripts/prepare_verified_archive_release.py']), routing(BINDING_LANES, true));
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_evidence_expectations.py']), routing([], true));
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_evidence_expectations.py', 'bindings/python/a.py']), routing(['python'], true));
 assert.deepEqual(classifyBindingPaths(['bindings/python/a.py', 'tests/test_archive_evidence_expectations.py']), routing(['python'], true));
@@ -142,8 +149,9 @@ assert.deepEqual(
     'test_archive_supply_chain_evidence_verifier.py',
     'test_verified_syft_installer.py',
     'test_syft_installation_receipt.py',
+    'test_prepare_verified_archive_release.py',
   ],
-  'archive lane must run all nine focused suites in order',
+  'archive lane must run all ten focused suites in order',
 );
 const aggregateJob = workflow.slice(workflow.indexOf('  binding-ci:\n'));
 const scriptMatch = aggregateJob.match(/        run: \|\n((?:          .*\n)+)/);

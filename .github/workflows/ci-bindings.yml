@@ -257,6 +257,7 @@ jobs:
           python -m unittest discover -s tests -p test_archive_supply_chain_evidence_verifier.py -v
           python -m unittest discover -s tests -p test_verified_syft_installer.py -v
           python -m unittest discover -s tests -p test_syft_installation_receipt.py -v
+          python -m unittest discover -s tests -p test_prepare_verified_archive_release.py -v
 
   binding-ci:
     name: Binding CI
