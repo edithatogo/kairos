@@ -208,6 +208,22 @@ fn c43_emits_c0_sidecars_from_kernels_and_joins_explicit_event() {
     assert_eq!(out.joins[0].probe_id.as_deref(), Some("probe-1"));
     let manifest = join_manifest_json(&out);
     assert_eq!(
+        manifest["metric_group_diagnostics"][0]["group"],
+        "candidate-a"
+    );
+    assert_eq!(
+        manifest["metric_group_diagnostics"][0]["strata"]["candidate_id"],
+        "candidate-a"
+    );
+    assert_eq!(
+        manifest["metric_group_diagnostics"][0]["reference_tie_count"],
+        0
+    );
+    assert_eq!(
+        manifest["metric_group_diagnostics"][0]["coverage_warnings"],
+        json!([])
+    );
+    assert_eq!(
         manifest["rows"][0]["event_id_le_hex"],
         "040000000000000002000000"
     );
@@ -414,6 +430,10 @@ fn c43_input_permutation_preserves_logical_records_and_metric_bits() {
     assert_eq!(first.residuals, second.residuals);
     assert_eq!(first.metrics, second.metrics);
     assert_eq!(first.joins, second.joins);
+    assert_eq!(
+        join_manifest_json(&first)["metric_group_diagnostics"],
+        join_manifest_json(&second)["metric_group_diagnostics"]
+    );
     assert_eq!(first.raw_diagnostics, second.raw_diagnostics);
     assert_eq!(first.metric_raw_rows, second.metric_raw_rows);
 }

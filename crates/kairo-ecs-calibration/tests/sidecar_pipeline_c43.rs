@@ -275,6 +275,115 @@ fn rich_input() -> Input {
     ));
     x
 }
+
+fn write_c44_case(root: &std::path::Path, name: &str, input: &Input) {
+    let output = build_sidecars(input).expect("C4.4 diagnostic fixture runs through adapter");
+    let dir = root.join(name);
+    fs::create_dir_all(&dir).unwrap();
+    fs::write(
+        dir.join("join_manifest.json"),
+        serde_json::to_vec(&sidecar_adapter::join_manifest_json(&output)).unwrap(),
+    )
+    .unwrap();
+    fs::write(
+        dir.join("metric.json"),
+        serde_json::to_vec(&output.metrics).unwrap(),
+    )
+    .unwrap();
+    let events: Vec<_> = input
+        .events
+        .iter()
+        .map(|e| {
+            json!({
+                "run_id":e.run_id,
+                "event_id":format!("event:{}:{}", e.event_id.index, e.event_id.generation),
+                "time_ticks":e.time_ticks.to_string()
+            })
+        })
+        .collect();
+    let mut metric_groups: Vec<_> = input
+        .metric_strata
+        .iter()
+        .map(|s| {
+            json!({
+                "group":s.group, "strata":s.strata
+            })
+        })
+        .collect();
+    metric_groups.sort_by(|a, b| a["group"].as_str().cmp(&b["group"].as_str()));
+    let runs: Vec<_> = input.run_records.iter().map(|b| json!({
+        "run_id":b.run_id, "candidate_id":b.candidate_id, "dataset_id":b.dataset_id,
+        "scenario_id":b.scenario_id, "study_id":b.study_id, "replication_id":b.replication_id,
+        "seed_schedule_id":b.seed_schedule_id, "seed_map_ref":b.seed_map_ref,
+        "mapping_version":b.mapping_version, "parameter_hash":b.parameter_hash
+    })).collect();
+    fs::write(dir.join("source_manifest.json"), serde_json::to_vec(&json!({
+        "runs":runs, "events":events, "source_rows":input.residual_rows.len(),
+        "metric_reference_rows":input.reference_metric.rows.len(),
+        "metric_simulation_rows":input.simulation_metric.rows.len(), "metric_groups":metric_groups,
+        "source_window":{"start_ticks":input.source_window.start.to_string(),
+            "end_ticks":input.source_window.end_exclusive.to_string()}
+    })).unwrap()).unwrap();
+}
+
+fn write_c44_diagnostic_cases(input: &Input) {
+    let Some(root) = std::env::var_os("C44_DIAGNOSTICS_DIR").map(PathBuf::from) else {
+        return;
+    };
+    let mut overlap = clone_input(input);
+    overlap.reference_metric.rows[1].value = Some("0".into());
+    for (key, outcome) in [
+        ("diag-censored", Outcome::Censored),
+        ("diag-missing", Outcome::Missing),
+        ("diag-failed", Outcome::Failed),
+        ("diag-infeasible", Outcome::Infeasible),
+    ] {
+        let mut row = metric_row(key, "0", 5);
+        row.value = None;
+        row.outcome = outcome;
+        row.excluded = true;
+        overlap.reference_metric.rows.push(row);
+    }
+    overlap
+        .reference_metric
+        .rows
+        .push(metric_row("diag-outside", "0", 20));
+    write_c44_case(&root, "overlap-and-ties", &overlap);
+
+    let mut sparse = clone_input(input);
+    sparse.metric_spec.groups.push("insufficient".into());
+    sparse.metric_strata.push(GroupStratum {
+        group: "insufficient".into(),
+        strata: json!({"candidate_id":"candidate-a","coverage":"insufficient"}),
+    });
+    let mut only_reference = metric_row("only-reference", "1", 5);
+    only_reference.group = "insufficient".into();
+    sparse.reference_metric.rows.push(only_reference);
+    write_c44_case(&root, "empty-and-insufficient", &sparse);
+}
+
+fn clone_input(input: &Input) -> Input {
+    Input {
+        binding: input.binding.clone(),
+        run_records: input.run_records.clone(),
+        source_window: input.source_window,
+        residual_groups: input.residual_groups.clone(),
+        residual_rows: input.residual_rows.clone(),
+        metric_spec: MetricSpec {
+            identity: input.metric_spec.identity.clone(),
+            groups: input.metric_spec.groups.clone(),
+            window: input.metric_spec.window,
+            algorithm_version: input.metric_spec.algorithm_version.clone(),
+            origin: input.metric_spec.origin.clone(),
+            scale_ticks: input.metric_spec.scale_ticks.clone(),
+            provenance_verified: input.metric_spec.provenance_verified,
+        },
+        reference_metric: input.reference_metric.clone(),
+        simulation_metric: input.simulation_metric.clone(),
+        metric_strata: input.metric_strata.clone(),
+        events: input.events.clone(),
+    }
+}
 fn limits(chunk: usize) -> kairo_ecs_arrow_io::IoLimits {
     kairo_ecs_arrow_io::IoLimits {
         max_input_bytes: 1_000_000,
@@ -293,7 +402,9 @@ fn records(kind: &str, batches: &[arrow_array::RecordBatch]) -> Vec<Value> {
 }
 #[test]
 fn c43_runtime_records_and_hashes_survive_permutation_and_physical_framing() {
-    let first = build_sidecars(&rich_input()).expect("joined runtime records");
+    let original = rich_input();
+    write_c44_diagnostic_cases(&original);
+    let first = build_sidecars(&original).expect("joined runtime records");
     let mut reversed = rich_input();
     reversed.residual_rows.reverse();
     reversed.events.reverse();
@@ -397,7 +508,12 @@ fn c43_runtime_records_and_hashes_survive_permutation_and_physical_framing() {
         );
         fs::write(dir.join("event_log.smoke"), bytes).unwrap();
         let events: Vec<_> = x.events.iter().map(|e|json!({"run_id":e.run_id,"event_id":format!("event:{}:{}",e.event_id.index,e.event_id.generation),"time_ticks":e.time_ticks.to_string()})).collect();
-        fs::write(dir.join("source_manifest.json"),serde_json::to_vec(&json!({"runs":[{"run_id":"run-a","candidate_id":"candidate-a","dataset_id":"dataset","scenario_id":"scenario","study_id":"study","replication_id":"rep-1","seed_schedule_id":"schedule-v1","seed_map_ref":"map-v1","mapping_version":"mapping-v1","parameter_hash":"a".repeat(64)}],"events":events,"source_rows":x.residual_rows.len(),"metric_reference_rows":x.reference_metric.rows.len(),"metric_simulation_rows":x.simulation_metric.rows.len(),"source_window":{"start_ticks":"0","end_ticks":"20"}})).unwrap()).unwrap();
+        let metric_groups: Vec<_> = x
+            .metric_strata
+            .iter()
+            .map(|s| json!({"group":s.group,"strata":s.strata}))
+            .collect();
+        fs::write(dir.join("source_manifest.json"),serde_json::to_vec(&json!({"runs":[{"run_id":"run-a","candidate_id":"candidate-a","dataset_id":"dataset","scenario_id":"scenario","study_id":"study","replication_id":"rep-1","seed_schedule_id":"schedule-v1","seed_map_ref":"map-v1","mapping_version":"mapping-v1","parameter_hash":"a".repeat(64)}],"events":events,"source_rows":x.residual_rows.len(),"metric_reference_rows":x.reference_metric.rows.len(),"metric_simulation_rows":x.simulation_metric.rows.len(),"metric_groups":metric_groups,"source_window":{"start_ticks":"0","end_ticks":"20"}})).unwrap()).unwrap();
         for chunk in [1, 2, 64] {
             let framed = dir.join(format!("framing-{chunk}"));
             for manifest in [
