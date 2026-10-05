@@ -155,6 +155,7 @@ jobs:
             ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/syft-requalification.json
             ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/command-records.json
             ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/expectation-preparation.json
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/actual-archive-readback-report.json
             ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/logs/*.stdout
             ${{ runner.temp }}/archive-release-inputs-${{ github.run_id }}-${{ github.run_attempt }}/
           if-no-files-found: error
