@@ -104,10 +104,10 @@ fn planned<'a>(
             Ok(next)
         }
         Behavior::Controls => {
-            let FlowCallbackCause::DomainControl { action, .. } = snapshot.cause else {
+            let FlowCallbackCause::DomainControl { action, .. } = &snapshot.cause else {
                 return Err(FlowError::InvalidState);
             };
-            next.controls.push((action, view.now()));
+            next.controls.push((*action, view.now()));
             Ok(next)
         }
     }

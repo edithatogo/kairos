@@ -133,7 +133,13 @@ def main() -> int:
         + "\n"
     )
 
-    missing_module = proc.returncode == 101 and bool(
+    error_headers = re.findall(r"(?m)^error(?:\[[^\]]+\])?:[^\n]*", raw)
+    unexpected_errors = [
+        header for header in error_headers
+        if header != "error[E0432]: unresolved import `kairo_ecs_abm::spatial`"
+        and not header.startswith("error: could not compile ")
+    ]
+    missing_module = proc.returncode == 101 and not unexpected_errors and bool(
         re.search(r"error\[E0432\].*?unresolved import.*?kairo_ecs_abm::spatial", raw, re.S)
     )
     named_tests_passed = all(
@@ -169,6 +175,7 @@ def main() -> int:
         "cargo_argv": argv,
         "cargo_cwd": str(DISPOSABLE),
         "cargo_exit_status": proc.returncode,
+        "unexpected_errors": unexpected_errors,
         "cargo_log": str(LOGS / "cargo-test.log"),
         "cargo_log_sha256": hashlib.sha256(raw.encode()).hexdigest(),
         "toolchain_log": str(LOGS / "toolchain.log"),

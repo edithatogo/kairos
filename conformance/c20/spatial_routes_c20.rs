@@ -113,9 +113,10 @@ fn chooses_distance_then_hops_then_full_edge_id_sequence_and_ignores_zero_cycles
 fn equal_distance_and_hop_count_use_lexicographic_full_edge_id_sequence() {
     let graph = TransitGraphV1::new(
         1,
-        vec![n(1), n(2), n(3), n(4)],
+        vec![n(0), n(1), n(2), n(3), n(4)],
         vec![
-            e(90, 1, 4, 8, &["walk"]),
+            e(90, 0, 4, 9, &["walk"]),
+            e(50, 0, 1, 1, &["walk"]),
             e(8, 1, 2, 3, &["walk"]),
             e(30, 2, 4, 4, &["walk"]),
             e(3, 1, 3, 3, &["walk"]),
@@ -123,14 +124,14 @@ fn equal_distance_and_hop_count_use_lexicographic_full_edge_id_sequence() {
         ],
     )
     .unwrap();
-    let route = graph.route(n(1), n(4), &profile("walk", 1), 1).unwrap();
+    let route = graph.route(n(0), n(4), &profile("walk", 1), 1).unwrap();
     assert_eq!(
         route
             .segments()
             .iter()
             .map(|segment| segment.edge_id().value())
             .collect::<Vec<_>>(),
-        vec![3, 99]
+        vec![50, 3, 99]
     );
 }
 
@@ -168,6 +169,13 @@ fn canonical_bytes_ignore_permutation_and_bind_sorted_modes() {
     )
     .unwrap();
     assert_eq!(a.canonical_bytes(), b.canonical_bytes());
+    let changed_modes = TransitGraphV1::new(
+        1,
+        vec![n(1), n(2), n(3)],
+        vec![e(2, 2, 3, 4, &["walk", "bike"]), e(1, 1, 2, 3, &["walk"])],
+    )
+    .unwrap();
+    assert_ne!(a.canonical_bytes(), changed_modes.canonical_bytes());
     let route_a = a.route(n(1), n(3), &profile("walk", 3), 5).unwrap();
     let route_b = b.route(n(1), n(3), &profile("walk", 3), 5).unwrap();
     assert_eq!(route_a.duration(), route_b.duration());
