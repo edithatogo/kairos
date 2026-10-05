@@ -36,6 +36,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_website*cache*.py' -v > artifacts/website-cache-security/adapter-tests.log 2>&1
           npm ci --prefix website > artifacts/website-cache-security/install.log 2>&1
           npm audit --prefix website --audit-level=moderate --json > artifacts/website-cache-security/raw-audit.json
+          node tests/http-cache-security-regression.mjs website/node_modules/http-cache-semantics/index.js --expect-vulnerable > artifacts/website-cache-security/negative-control.log
           python3 website/scripts/apply_http_cache_fix.py website/node_modules > artifacts/website-cache-security/mitigation.log
           node tests/http-cache-security-regression.mjs website/node_modules/http-cache-semantics/index.js > artifacts/website-cache-security/regression.log
           printf '%s\n' "$GITHUB_SHA" > artifacts/website-cache-security/source-commit.txt
