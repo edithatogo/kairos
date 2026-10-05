@@ -106,3 +106,9 @@ CodeQL and Scorecard wait for SARIF processing, then call the shared organizatio
 ## Local HTTP cache mitigation
 
 After each bootstrap npm ci, apply the exact hash-verified upstream PR 58 source fix, retaining http-cache-semantics@4.2.0 identity. Run seven offline installer regressions and 60 cache behavior cases for each installed npm consumer copy. Validate npm and make-fetch-happen resolution hashes before CLI use. The unchanged moderate npm audit still reports GHSA-ch52-4w7c-c8xp; this is local source remediation, not a published fixed version or audit exception. Linux hosted evidence remains required.
+
+## Archive evidence Python lane — 2026-10-05
+
+`ci-bindings.yml` runs seven explicit suites: package archive bundle (13), acquisition (24), release manifest (2), supply chain (28), copy provenance (49), independent evidence verifier (25), and verified Syft installer (32). Local integration total: 173 passed; hosted integrated-head evidence is pending. Dependencies use `scripts/archive-python-tools.lock` with hash enforcement.
+
+`tests/conformance/ci-binding-change-classifier-check.mjs` checks each exact archive path, add/delete routing, the seven-suite command inventory, and actual eight-lane shell aggregate outcomes. Push and manual events select all lanes; unknown or malformed inputs fail closed. Archive-only changes do not select unrelated binding lanes.

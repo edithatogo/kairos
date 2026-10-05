@@ -1,0 +1,2 @@
+# Direct validation dependency; the lock also retains all transitive hashes.
+jsonschema==4.26.0

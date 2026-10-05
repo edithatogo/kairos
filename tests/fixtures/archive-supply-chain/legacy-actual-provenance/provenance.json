@@ -1,0 +1,147 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "predicate": {
+    "buildDefinition": {
+      "buildType": "urn:careops:build-type:verified-archive-copy:v1",
+      "externalParameters": {
+        "original_run_id": 37273717088,
+        "source_commit": "ddfb65da90dc041cea20fa73bfb59d3560746eaf"
+      },
+      "internalParameters": {
+        "acquisition_artifact_id": 11329331832,
+        "runtime": {
+          "jsonschema": "4.26.0",
+          "python": "3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]"
+        }
+      },
+      "resolvedDependencies": [
+        {
+          "digest": {
+            "sha256": "f8b59d1effd7678a1779240a8cb2edeb5d5517d0f8c3a957d33e72c139213eee"
+          },
+          "uri": "https://github.com/edithatogo/kairos/actions/runs/37273717088"
+        },
+        {
+          "digest": {
+            "sha256": "ff82daf20fe3161040fe87dcfdc1b7607dc3d65e3a176d3713945896c86fce11"
+          },
+          "uri": "ARCHIVE-INDEX.json"
+        },
+        {
+          "digest": {
+            "sha256": "ff82daf20fe3161040fe87dcfdc1b7607dc3d65e3a176d3713945896c86fce11"
+          },
+          "uri": "build-inputs/ARCHIVE-INDEX.json"
+        },
+        {
+          "digest": {
+            "sha256": "b14069b159f6f15c4d6e5aabb6254c4b893428f75772f12b8ee9338a137ae3e0"
+          },
+          "uri": "build-inputs/BUILD-RECEIPT.json"
+        },
+        {
+          "digest": {
+            "sha256": "1b1a254de0386ee3609d1bb422405472c26f9b05424a6d770c62ab00b06a77e1"
+          },
+          "uri": "build-inputs/acquisition.json"
+        },
+        {
+          "digest": {
+            "sha256": "000665a85570b8e27ba8d4e973ff382ecb67265b7e16619213b02db09d2d4da5"
+          },
+          "uri": "packaging/scripts/build_archive_supply_chain.py"
+        },
+        {
+          "digest": {
+            "sha256": "3fdd90b0392c31dd22f5fec5fa251457f1b11ceef0e80186554962faef2ef780"
+          },
+          "uri": "packaging/scripts/build_archive_release_manifest.py"
+        },
+        {
+          "digest": {
+            "sha256": "43c469ebfa0c1ebee007bd1faa57d40cb3f2dacd9370a5f94fe67ae46c6c0af7"
+          },
+          "uri": "packaging/scripts/build_package_archive_bundle.py"
+        },
+        {
+          "digest": {
+            "sha256": "bc1c0ae18f6cea506a7b121741279f7471ea85b338ebc1c08df83d075249e1f5"
+          },
+          "uri": "packaging/scripts/acquire_package_archive_bundle.py"
+        },
+        {
+          "digest": {
+            "sha256": "835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61"
+          },
+          "uri": "tool:syft"
+        },
+        {
+          "digest": {
+            "sha256": "239208b7ac287b3cf5d9a9af23f9d69863971102a5e1587a27a398b43490b89b"
+          },
+          "uri": "schema:spdx-2.3"
+        }
+      ]
+    },
+    "runDetails": {
+      "builder": {
+        "id": "urn:careops:local-untrusted-builder:archive-copy"
+      },
+      "metadata": {
+        "finishedOn": "2026-10-05T08:44:53.608681+00:00",
+        "startedOn": "2026-10-05T08:44:48.514073+00:00"
+      }
+    }
+  },
+  "predicateType": "https://slsa.dev/provenance/v1",
+  "subject": [
+    {
+      "digest": {
+        "sha256": "5fd08ba9e0ff173570f37dd2314737365a36c329526a16e6924e8365d20af95f"
+      },
+      "name": "archives/go/kairos-go-ddfb65da90dc-source.tar.gz"
+    },
+    {
+      "digest": {
+        "sha256": "11dd6646df163a49bc627f0bf858f35e1d220cf4aaf62b06a7119da702212b07"
+      },
+      "name": "archives/julia/KairoECS-0.1.0-source.tar.gz"
+    },
+    {
+      "digest": {
+        "sha256": "9088a104f61f3250b8d20c9b70fe0710713180c718edb4a9854831fc5fef64e7"
+      },
+      "name": "archives/nuget/Kairo.ECS.0.1.0-preview.1.nupkg"
+    },
+    {
+      "digest": {
+        "sha256": "d952faafc910b38f13e81872b53fd0c6a26ddd48bbddf0b28d63d8a1c1d0fcdb"
+      },
+      "name": "archives/python/kairo_ecs-0.1.0-py3-none-any.whl"
+    },
+    {
+      "digest": {
+        "sha256": "a61a037ef8a322176adc7c09703924e57b64590ecb9623c476093b788f49147c"
+      },
+      "name": "archives/python/kairo_ecs-0.1.0.tar.gz"
+    },
+    {
+      "digest": {
+        "sha256": "7e6487c68f5ccc1a01e71c73cf76c834388673db2c2b04f050c7551dec033ace"
+      },
+      "name": "archives/r/kairoECS_0.1.0.tar.gz"
+    },
+    {
+      "digest": {
+        "sha256": "41c6a56c75dcaafa04c7e2a2632dd6e3ae28ad2be14626cb3f4e7d12ce3b92c0"
+      },
+      "name": "archives/rust/kairo-ecs-types-0.0.0.crate"
+    },
+    {
+      "digest": {
+        "sha256": "a17d4dd85cc2910f752a2791be15b66367e2ba9a501cd6a51ee84092fa16df4c"
+      },
+      "name": "archives/typescript/kairo-ecs-typescript-0.1.0.tgz"
+    }
+  ]
+}

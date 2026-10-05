@@ -1,0 +1,52 @@
+{
+  "archive_index_sha256": "ff82daf20fe3161040fe87dcfdc1b7607dc3d65e3a176d3713945896c86fce11",
+  "source_commit": "ddfb65da90dc041cea20fa73bfb59d3560746eaf",
+  "original_run_id": 37273717088,
+  "acquisition_artifact_id": 11329331832,
+  "dependencies": [
+    {
+      "id": "https://github.com/edithatogo/kairos/actions/runs/37273717088",
+      "sha256": "f8b59d1effd7678a1779240a8cb2edeb5d5517d0f8c3a957d33e72c139213eee"
+    },
+    {
+      "id": "ARCHIVE-INDEX.json",
+      "sha256": "ff82daf20fe3161040fe87dcfdc1b7607dc3d65e3a176d3713945896c86fce11"
+    },
+    {
+      "id": "build-inputs/ARCHIVE-INDEX.json",
+      "sha256": "ff82daf20fe3161040fe87dcfdc1b7607dc3d65e3a176d3713945896c86fce11"
+    },
+    {
+      "id": "build-inputs/BUILD-RECEIPT.json",
+      "sha256": "b14069b159f6f15c4d6e5aabb6254c4b893428f75772f12b8ee9338a137ae3e0"
+    },
+    {
+      "id": "build-inputs/acquisition.json",
+      "sha256": "1b1a254de0386ee3609d1bb422405472c26f9b05424a6d770c62ab00b06a77e1"
+    },
+    {
+      "id": "packaging/scripts/build_archive_supply_chain.py",
+      "sha256": "000665a85570b8e27ba8d4e973ff382ecb67265b7e16619213b02db09d2d4da5"
+    },
+    {
+      "id": "packaging/scripts/build_archive_release_manifest.py",
+      "sha256": "3fdd90b0392c31dd22f5fec5fa251457f1b11ceef0e80186554962faef2ef780"
+    },
+    {
+      "id": "packaging/scripts/build_package_archive_bundle.py",
+      "sha256": "43c469ebfa0c1ebee007bd1faa57d40cb3f2dacd9370a5f94fe67ae46c6c0af7"
+    },
+    {
+      "id": "packaging/scripts/acquire_package_archive_bundle.py",
+      "sha256": "bc1c0ae18f6cea506a7b121741279f7471ea85b338ebc1c08df83d075249e1f5"
+    },
+    {
+      "id": "tool:syft",
+      "sha256": "835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61"
+    },
+    {
+      "id": "schema:spdx-2.3",
+      "sha256": "239208b7ac287b3cf5d9a9af23f9d69863971102a5e1587a27a398b43490b89b"
+    }
+  ]
+}

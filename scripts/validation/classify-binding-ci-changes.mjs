@@ -3,6 +3,34 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
 export const BINDING_LANES = ['python', 'r', 'julia', 'typescript', 'csharp', 'go', 'gym'];
+export const ARCHIVE_PATHS = [
+  'packaging/scripts/validate_archive_copy_provenance.py',
+  'packaging/scripts/build_package_archive_bundle.py',
+  'packaging/scripts/build_archive_supply_chain.py',
+  'packaging/scripts/build_archive_release_manifest.py',
+  'packaging/scripts/acquire_package_archive_bundle.py',
+  'tests/test_archive_supply_chain.py',
+  'tests/test_archive_copy_provenance.py',
+  'tests/test_archive_release_manifest.py',
+  'tests/test_package_archive_acquisition.py',
+  'tests/test_package_archive_bundle.py',
+  'tests/fixtures/archive-supply-chain/spdx-2.3/LICENSE',
+  'tests/fixtures/archive-supply-chain/spdx-2.3/NOTICE.md',
+  'tests/fixtures/archive-supply-chain/spdx-2.3/spdx-schema.json',
+  'tests/fixtures/archive-supply-chain/legacy-actual-provenance/README.md',
+  'tests/fixtures/archive-supply-chain/legacy-actual-provenance/archive-index.json',
+  'tests/fixtures/archive-supply-chain/legacy-actual-provenance/expected-inputs.json',
+  'tests/fixtures/archive-supply-chain/legacy-actual-provenance/provenance.json',
+  'scripts/archive-python-tools.in',
+  'scripts/archive-python-tools.lock',
+  'packaging/scripts/verify_archive_supply_chain_evidence.py',
+  'tests/test_archive_supply_chain_evidence_verifier.py',
+  'scripts/supply_chain/install_verified_syft.py',
+  'scripts/supply_chain/syft-darwin-verifier.lock',
+  'scripts/supply_chain/syft-linux-verifier.lock',
+  'tests/test_verified_syft_installer.py',
+];
+const ARCHIVE_PATH_SET = new Set(ARCHIVE_PATHS);
 
 const SHARED_PATHS = [
   /^\.github\//,
@@ -28,12 +56,14 @@ const LANE_PATHS = {
 const DOC_PATHS = [/^CHANGELOG\.md$/, /^(docs|website)\//, /^conductor\/(?!contracts\/)/];
 
 export function classifyBindingPaths(paths) {
+  const archivePython = Array.isArray(paths) && paths.some((path) => ARCHIVE_PATH_SET.has(path));
   const selected = Object.fromEntries(BINDING_LANES.map((lane) => [lane, false]));
   if (!Array.isArray(paths) || paths.length === 0) return allLanes();
 
   for (const path of paths) {
     if (typeof path !== 'string' || path.length === 0) return allLanes();
     if (DOC_PATHS.some((pattern) => pattern.test(path))) continue;
+    if (ARCHIVE_PATH_SET.has(path)) continue;
     if (SHARED_PATHS.some((pattern) => pattern.test(path))) return allLanes();
 
     const lane = Object.entries(LANE_PATHS).find(([, pattern]) => pattern.test(path))?.[0];
@@ -46,11 +76,11 @@ export function classifyBindingPaths(paths) {
     return allLanes();
   }
 
-  return selected;
+  return { ...selected, archive_python: archivePython };
 }
 
 function allLanes() {
-  return Object.fromEntries(BINDING_LANES.map((lane) => [lane, true]));
+  return { ...Object.fromEntries(BINDING_LANES.map((lane) => [lane, true])), archive_python: true };
 }
 
 function changedPaths(baseSha, headSha) {
@@ -71,7 +101,7 @@ export function classifyBindingEvent(eventName, baseSha, headSha) {
 }
 
 export function serializeGitHubOutputs(selected) {
-  return BINDING_LANES.map((lane) => `${lane}=${selected[lane]}`).join('\n');
+  return [...BINDING_LANES, 'archive_python'].map((lane) => `${lane}=${selected[lane]}`).join('\n');
 }
 
 function main([eventName, baseSha, headSha]) {

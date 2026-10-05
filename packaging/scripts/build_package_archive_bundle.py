@@ -69,6 +69,21 @@ def checksum(path: Path) -> str:
     return digest.hexdigest()
 
 
+def valid_source_commit(source_commit: object) -> bool:
+    return (
+        isinstance(source_commit, str)
+        and len(source_commit) == 40
+        and all(character in "0123456789abcdef" for character in source_commit)
+    )
+
+
+def has_receipt_text_fields(receipt: dict[str, object]) -> bool:
+    return all(
+        isinstance(receipt.get(key), str) and bool(receipt[key].strip())
+        for key in ("command", "toolchain", "platform")
+    )
+
+
 def build(
     source: Path,
     output: Path,
@@ -95,7 +110,7 @@ def build(
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
         if receipt.get("ecosystem") != ecosystem or receipt.get("source_commit") != source_commit:
             raise ValueError(f"build receipt does not match {ecosystem} and source commit")
-        if not all(receipt.get(key) for key in ("command", "toolchain", "platform")):
+        if not has_receipt_text_fields(receipt):
             raise ValueError(f"build receipt is incomplete for {ecosystem}")
         if receipt.get("exit_status") != 0:
             raise ValueError(f"package build did not complete successfully for {ecosystem}")
@@ -150,20 +165,63 @@ def build(
     (output / "SHA256SUMS").write_text(checksums, encoding="utf-8")
 
 
-def verify(output: Path) -> None:
-    index = json.loads((output / "ARCHIVE-INDEX.json").read_text(encoding="utf-8"))
+def indexed_path(output: Path, relative: object) -> Path:
+    if not isinstance(relative, str) or not relative or "\\" in relative:
+        raise ValueError("archive index path must be a nonempty POSIX relative path")
+    name = PurePosixPath(relative)
+    if (
+        name.is_absolute()
+        or ".." in name.parts
+        or ":" in relative
+        or name.as_posix() != relative
+    ):
+        raise ValueError("archive index path must be canonical and remain in the artifact tree")
+    path = output / relative
+    if not path.resolve().is_relative_to(output.resolve()):
+        raise ValueError("archive index path escapes the artifact tree")
+    if any(
+        part.is_symlink()
+        for part in (path, *path.parents)
+        if part.is_relative_to(output)
+    ):
+        raise ValueError("archive index path contains a symlink")
+    return path
+
+
+def bundle_file(output: Path, name: str) -> Path:
+    path = output / name
+    if output.is_symlink() or path.is_symlink():
+        raise ValueError(f"bundle metadata must not be a symlink: {name}")
+    if not path.is_file():
+        raise ValueError(f"bundle metadata is missing: {name}")
+    return path
+
+
+def verify(output: Path, expected_source_commit: str | None = None) -> None:
+    index = json.loads(bundle_file(output, "ARCHIVE-INDEX.json").read_text(encoding="utf-8"))
     if index.get("schema_version") != 1:
         raise ValueError("unsupported archive index schema")
-    if len(index.get("source_commit", "")) != 40:
+    source_commit = index.get("source_commit")
+    if not valid_source_commit(source_commit):
         raise ValueError("archive index has no full source commit")
-    receipt_path = output / "BUILD-RECEIPT.json"
-    if not receipt_path.is_file():
-        raise ValueError("package build receipt is missing")
-    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    if expected_source_commit is not None and source_commit != expected_source_commit:
+        raise ValueError("archive source commit differs from the expected acquisition commit")
+    receipt = json.loads(bundle_file(output, "BUILD-RECEIPT.json").read_text(encoding="utf-8"))
     if receipt.get("source_commit") != index["source_commit"]:
         raise ValueError("package build receipt has a different source commit")
-    if set(receipt.get("ecosystems", {})) != set(ARCHIVES):
+    ecosystem_receipts = receipt.get("ecosystems")
+    if not isinstance(ecosystem_receipts, dict) or set(ecosystem_receipts) != set(ARCHIVES):
         raise ValueError("package build receipt must cover all seven ecosystems")
+    for ecosystem, builder in ecosystem_receipts.items():
+        if (
+            not isinstance(builder, dict)
+            or builder.get("ecosystem") != ecosystem
+            or builder.get("source_commit") != source_commit
+            or not has_receipt_text_fields(builder)
+            or type(builder.get("exit_status")) is not int
+            or builder["exit_status"] != 0
+        ):
+            raise ValueError(f"package build receipt does not match source or successful build: {ecosystem}")
     artifacts = index.get("artifacts")
     if not isinstance(artifacts, list) or not artifacts:
         raise ValueError("archive index has no artifacts")
@@ -174,13 +232,13 @@ def verify(output: Path) -> None:
         ecosystem = artifact.get("ecosystem")
         if ecosystem not in ARCHIVES or artifact.get("kind") != ARCHIVES[ecosystem][0]:
             raise ValueError(f"unknown ecosystem or archive kind: {ecosystem}")
-        if artifact.get("builder") != receipt["ecosystems"].get(ecosystem):
+        if artifact.get("builder") != ecosystem_receipts.get(ecosystem):
             raise ValueError(f"archive build receipt mismatch: {ecosystem}")
         ecosystems.add(ecosystem)
         relative = artifact["path"]
+        path = indexed_path(output, relative)
         if relative in expected_paths:
             raise ValueError(f"duplicate archive index path: {relative}")
-        path = output / relative
         if path.is_symlink() or not path.is_file():
             raise ValueError(f"archive is missing or is a symlink: {relative}")
         digest = checksum(path)
@@ -200,18 +258,29 @@ def verify(output: Path) -> None:
     }
     if actual_paths != expected_paths:
         raise ValueError("archive tree and index entries differ")
-    if (output / "SHA256SUMS").read_text(encoding="utf-8") != "".join(expected_checksums):
+    if bundle_file(output, "SHA256SUMS").read_text(encoding="utf-8") != "".join(expected_checksums):
         raise ValueError("SHA256SUMS does not match archive index")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, required=True)
+    parser.add_argument("--input", type=Path)
+    parser.add_argument("--verify-existing", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source-commit", required=True)
     args = parser.parse_args()
-    build(args.input.resolve(), args.output.resolve(), args.source_commit)
-    verify(args.output.resolve())
+    if not valid_source_commit(args.source_commit):
+        parser.error("--source-commit must be a full lowercase Git SHA")
+    if args.verify_existing:
+        if args.input is not None:
+            parser.error("--input is not allowed with --verify-existing")
+        verify(args.output, expected_source_commit=args.source_commit)
+    elif args.input is None:
+        parser.error("--input is required when building")
+    else:
+        output = args.output.resolve()
+        build(args.input.resolve(), output, args.source_commit)
+        verify(output, expected_source_commit=args.source_commit)
     index_path = args.output / "ARCHIVE-INDEX.json"
     artifact_count = len(json.loads(index_path.read_text(encoding="utf-8"))["artifacts"])
     print(f"verified {artifact_count} package archives")
