@@ -61,8 +61,7 @@ impl MovementProfile {
 ```
 
 NodeId/EdgeId are stable u64 newtypes (zero allowed); MovementModeId is an exact
-canonical UTF8 string. Constructors/getters must be completed in the API review
-packet before implementation, never inferred from display IDs. Errors include
+canonical UTF8 string. Exact constructors/getters are listed below; never infer them from display IDs. Errors include
 UnsupportedVersion, InvalidGraph, InvalidMovementMode, InvalidSpeed,
 InvalidTickRate, UnknownNode, Unreachable, Overflow, InvalidProgress. Reject
 duplicate nodes/edges/modes, dangling endpoints, invalid mode IDs, empty allowed
@@ -85,7 +84,7 @@ computes SHA256 from actual canonical bytes and checks graph/profile identity on
 continuation. Permuted inputs yield identical graph bytes/hash/route timing.
 RoutePlan supplies read-only origin/destination, edges, cumulative tick positions,
 distance, duration, profile, tick rate and actual graph identity getters; no mutable
-route fields. Exact accessor names remain part of final API review.
+route fields. Accessor names below are frozen for test authoring; public adoption still requires review.
 
 ## Separate actor carrier and actual task
 
@@ -96,7 +95,7 @@ registers hooks before work starts. Carrier creation retains a cloneable context
 in the adapter and passes a clone because creation consumes C even on Err.
 
 A TransitContext owns active actual service WorkId, immutable RoutePlan, segment
-index/elapsed/remaining ticks, phase and exact AcquireIntent. Its actor carrier
+index/elapsed/remaining ticks, phase and DES FlowAcquireCommand (no ABM -> calibration dependency). Its actor carrier
 may be a model-selected staff actor; AcquireIntent.owner remains actual task owner.
 Carrier ownership and selected task/resource relationship must be validated by
 model adapter, never inferred from colliding entity IDs. Separate carrier avoids
@@ -136,3 +135,91 @@ fixtures use actual graph/Flow execution, not independent accounting counters.
 Full runtime checkpoint/restore remains Track22: provider snapshots and retained
 in-memory carrier are insufficient. Complete scheduler/resource/work/policy/route/
 stream continuation, public API review and native hosted gates remain mandatory.
+
+
+## Exact routing/carrier accessors and control ingress
+
+```rust
+impl NodeId { pub const fn new(value:u64)->Self; pub const fn value(self)->u64; }
+impl EdgeId { pub const fn new(value:u64)->Self; pub const fn value(self)->u64; }
+impl MovementModeId {
+    pub fn new(value:&str)->Result<Self,TransitError>;
+    pub fn as_str(&self)->&str;
+}
+impl MovementProfile {
+    pub fn mode(&self)->&MovementModeId;
+    pub fn speed_mm_per_second(&self)->std::num::NonZeroU64;
+}
+impl RoutePlan {
+    pub fn origin(&self)->NodeId; pub fn destination(&self)->NodeId;
+    pub fn segments(&self)->&[RouteSegment];
+    pub fn distance_mm(&self)->u128; pub fn duration(&self)->SimDuration;
+    pub fn profile(&self)->&MovementProfile; pub fn ticks_per_second(&self)->u64;
+    pub fn graph_version(&self)->u32; pub fn graph_canonical_bytes(&self)->&[u8];
+}
+impl RouteSegment {
+    pub fn edge_id(&self)->EdgeId;
+    pub fn from(&self)->NodeId; pub fn to(&self)->NodeId;
+    pub fn length_mm(&self)->u64;
+    pub fn start_offset(&self)->SimDuration; pub fn end_offset(&self)->SimDuration;
+}
+pub struct TransitContext { /* private cloneable route/progress/command state */ }
+pub enum TransitPhase { Ready,Moving,Paused,Arrived }
+pub struct TransitProgress {
+    pub segment_index:usize,pub useful_elapsed:SimDuration,
+    pub remaining:SimDuration,pub phase:TransitPhase,
+}
+impl TransitContext {
+    pub fn new(flow:&FlowRuntime,route:RoutePlan,acquire:FlowAcquireCommand,
+        start:SimTime)->Result<Self,TransitError>;
+    pub fn service_work(&self)->WorkId;
+    pub fn phase(&self)->TransitPhase;
+    pub fn progress_at(&self,at:SimTime)->Result<TransitProgress,TransitError>;
+    pub fn arrival_ticket(&self)->Option<FlowCommandTicket>;
+    pub fn next_progress_ticket(&self)->Option<FlowCommandTicket>;
+    pub fn plan<'a>(current:&'a Self,snapshot:&'a FlowCallbackSnapshot,
+        view:FlowWorldView<'a>,sink:&'a mut FlowCommandSink)->Result<Self,FlowError>;
+}
+pub enum FlowDomainControl { Pause,Resume }
+impl FlowRuntime {
+    pub fn schedule_domain_control(&mut self,work:WorkId,kind:EventKind,
+        action:FlowDomainControl,at:SimTime,priority:i32)->Result<EventId,FlowError>;
+}
+// Additive cause, retaining existing Domain { kind } unchanged:
+// FlowCallbackCause::DomainControl { kind:EventKind, action:FlowDomainControl }
+```
+
+Node/edge/mode/profile/route immutable data may Clone; handles with live mutable
+stream ownership may not. TransitPhase/control/progress derive Debug/Eq/PartialEq;
+control and phase Copy. TransitContext Clone contains no RNG owner and is used
+for pure planned replacement and failed-creation retry. new validates actual
+service work owner/timed command/work link/Pending state, route and future start;
+InvalidProgress covers invalid work/command/start without inventing IDs. It
+retains no calibration type. Route getters expose validated actual state only.
+
+DomainControl targets the same bound kind on a Plan carrier. Registration/role,
+past time, budget/counter and lineage checks precede event allocation. Legacy
+mutable hooks cannot receive controls through this new API. Controls are real
+scheduler events, not synchronous arbitrary context mutation. Pause/Resume enum
+is the minimal generic domain protocol; future directives need their own review.
+
+At Pause delivery, compute checked movement elapsed up to that actual tick, retain
+current segment/remaining ticks and enter Paused. Existing progress events stay
+queued. While paused they perform no movement/claim; matching consumed event clears
+outstanding status. Resume recomputes current due from actual now+remaining, then
+reuses an outstanding event only if its due is unchanged. Otherwise emit one new
+progress event and treat older events as stale. Expected due/phase and accepted
+receipt ticket track current progress; stale events never advance another segment.
+
+If remaining is zero on Resume, process contiguous zero-duration segments and
+emit one arrival claim in that control's accepted transaction. Pause/Resume before
+planned route start preserve zero useful elapsed; invalid repeated control yields
+planner rejection with unchanged C. Ties at the same tick follow existing scheduler
+priority/sequence. No automatic cancellation/reordering is introduced.
+
+Required actual-runtime interruption oracle: Pause before the planned arrival,
+consume old arrival while paused with no request, Resume, then observe exactly one
+accepted arrival/acquire and intrinsic completion. Assert useful movement plus
+paused time plus queue plus useful service separately, remaining ticks unchanged
+while paused, and no duplicate on repeated controls/stale events. Source events
+remain consumed on rejection; retain sample and context and explicitly retry.

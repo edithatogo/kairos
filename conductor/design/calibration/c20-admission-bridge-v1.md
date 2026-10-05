@@ -116,15 +116,90 @@ on retry, policy change, Suspend or Restart. Template cloning is not RNG cloning
 AcquireIntent owns resource, owner, at, priority_level, optional deadline,
 scheduler_priority, can_preempt, optional preemptible strategy; work is inserted
 from the actual bound handle and timed is always true. Macro and Zero Micro call
-actual timed acquire. Before retry read WorkSpec.request: existing request is
-accepted only if every ResourceRequest field matches stored intent; mismatches
-reject ConflictingSubmission. Scheduler priority is not stored on ResourceRequest:
-matching its value requires retained actual admission EventId/preview evidence,
-not an invented getter. The bridge must not assert full idempotency from incomplete
-metadata. First submission stores RequestId and its admission evidence. Failed
-submission returns Bound; no second successful submit can be inferred from fields
-that are absent. External caller mutation of bound work is rejected, not reconciled
-by guessing. Nonzero Micro submission follows accepted arrival receipts.
+actual timed acquire. A successful direct submit immediately returns Submitted.
+Bound retry accepts only WorkSpec.request=None. Some(request) without this bridge's
+own accepted receipt -> ConflictingSubmission, even if exposed fields happen to
+match. ResourceRequest omits scheduler priority; no invented getter or generic
+external-request recovery is permitted. Accepted callback receipt proves the
+bridge's exact stored emitted command/ticket/event/request and is reconciled with
+actual WorkSpec.request/ResourceRequest. Full intent comparisons use the retained
+command; lost evidence remains unrecoverable. A failed stage retains original
+sample, stream, template and current actual work handle.
+
+## Constructible adapter and asynchronous Micro interfaces
+
+```rust
+pub(crate) struct PreparationIdentity {
+    pub(crate) owner:EntityId, pub(crate) subsystem:String,
+    pub(crate) registration:String, pub(crate) stratum:String,
+}
+pub(crate) struct AcquireIntent {
+    pub(crate) resource:ResourceId, pub(crate) owner:EntityId,
+    pub(crate) at:SimTime, pub(crate) priority_level:i32,
+    pub(crate) deadline:Option<SimTime>, pub(crate) scheduler_priority:i32,
+    pub(crate) can_preempt:bool,
+    pub(crate) preemptible:Option<PreemptionStrategy>,
+}
+pub(crate) enum TransitRequest {
+    Zero,
+    Route {
+        graph:std::sync::Arc<TransitGraphV1>, origin:NodeId,destination:NodeId,
+        profile:MovementProfile,ticks_per_second:u64,
+        carrier_actor:EntityId,carrier_registration:String,kind:EventKind,
+    },
+}
+impl<T:Clone,C:'static> WorkPreparationInput<T,C> {
+    pub(crate) fn new(identity:PreparationIdentity,
+        service:CalibrationStream,expected:CalibrationStreamKey,
+        template:T,make_context:fn(&T)->C,intent:AcquireIntent,
+        transit:TransitRequest)->Self;
+}
+impl<'a,T:Clone,C:'static> PreparedIntrinsicWork<'a,T,C> {
+    pub(crate) fn sampled_duration(&self)->SimDuration;
+    pub(crate) fn service_draw_position(&self)->u64;
+}
+impl<T:Clone,C:'static> BoundIntrinsicWork<T,C> {
+    pub(crate) fn sampled_duration(&self)->SimDuration;
+    pub(crate) fn service_draw_position(&self)->u64;
+    pub(crate) fn start_transit(&mut self,flow:&mut FlowRuntime)
+        ->Result<EventId,BridgeError>;
+    pub(crate) fn observe_transit_dispatch(&mut self,flow:&FlowRuntime,
+        dispatch:&FlowDispatch)->Result<TransitObservation,BridgeError>;
+    pub(crate) fn retry_transit(&mut self,flow:&mut FlowRuntime,
+        rejected:&FlowDispatch)->Result<EventId,BridgeError>;
+    pub(crate) fn finish_transit(self,flow:&FlowRuntime)
+        ->Result<SubmittedIntrinsicWork<T,C>,SubmitFailure<T,C>>;
+}
+pub(crate) enum TransitObservation {
+    Progress,Paused,Resumed,IgnoredStale,Rejected,Arrived,
+}
+```
+
+Constructors merely retain input; prepare validates canonical identity strings,
+owner equality, future at/deadline and resource existence before service sampling.
+Macro ignores Route input; explicit Zero Micro bypasses transit. Bound.submit is
+only direct Macro/Zero; nonzero Micro returns a Flow InvalidState error with Bound
+retained. Nonzero Micro uses start/observe/retry/finish. Input intent.at is the
+planned route start; actual arrival replaces the timed command's at field with
+FlowWorldView.now. Original fields and this adjustment rule remain retained.
+
+Start retains a cloneable route/carrier context on carrier-creation failure;
+once created its actual carrier WorkId remains stored and is reused on scheduling
+retry, never recreated. Existing unrelated/nonterminal carrier -> conflict, no
+silent overwrite. Reuse is explicit through the registered transit adapter only
+when its previous movement and resource claim are terminal. Hook registration is
+setup work before task creation and never silently performed by a sampling call.
+
+TransitContext stores DES FlowAcquireCommand, not calibration AcquireIntent.
+The bridge constructs it after real task creation with work=Some(actual task),
+timed=true and actual task owner. Carrier may be a distinct selected staff actor;
+model adapter validates assignment rather than equating unrelated actor IDs.
+Bound tracks its current progress EventId and accepted command tickets plus its
+own scheduled control EventIds. Dispatch observation validates runtime first and
+matches actual source/receipt. finish requires Arrived, own accepted arrival
+receipt and linked request. A new request inferred only from mutable metadata
+cannot produce Submitted. Retry of a rejected attempt is explicit and one-shot;
+control/source event consumption remains actual scheduler behavior.
 
 ## Required test oracles and remaining gates
 
