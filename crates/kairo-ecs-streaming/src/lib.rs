@@ -226,11 +226,7 @@ impl WallClockPacer {
             .tick_duration
             .saturating_mul(tick_index as u32);
         let elapsed = self.started_at.elapsed();
-        if elapsed >= target {
-            elapsed - target
-        } else {
-            target - elapsed
-        }
+        elapsed.abs_diff(target)
     }
 
     pub fn within_tolerance(&self, tick_index: u64) -> bool {

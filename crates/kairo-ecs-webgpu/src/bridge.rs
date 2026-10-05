@@ -35,7 +35,7 @@ impl BufferBridge {
         if descriptor.len_bytes == 0 {
             return Err(BufferBridgeError::EmptyBuffer);
         }
-        if descriptor.offset_bytes % WGSL_STORAGE_ALIGNMENT != 0 {
+        if !descriptor.offset_bytes.is_multiple_of(WGSL_STORAGE_ALIGNMENT) {
             return Err(BufferBridgeError::MisalignedOffset {
                 offset_bytes: descriptor.offset_bytes,
                 alignment: WGSL_STORAGE_ALIGNMENT,
@@ -44,14 +44,14 @@ impl BufferBridge {
         if descriptor.stride_bytes == 0 {
             return Err(BufferBridgeError::ZeroStride);
         }
-        if descriptor.stride_bytes % WGSL_STORAGE_ALIGNMENT != 0 {
+        if !descriptor.stride_bytes.is_multiple_of(WGSL_STORAGE_ALIGNMENT) {
             return Err(BufferBridgeError::MisalignedStride {
                 stride_bytes: descriptor.stride_bytes,
                 alignment: WGSL_STORAGE_ALIGNMENT,
             });
         }
         if descriptor.len_bytes < descriptor.stride_bytes
-            || descriptor.len_bytes % descriptor.stride_bytes != 0
+            || !descriptor.len_bytes.is_multiple_of(descriptor.stride_bytes)
         {
             return Err(BufferBridgeError::InvalidLengthForStride {
                 len_bytes: descriptor.len_bytes,
