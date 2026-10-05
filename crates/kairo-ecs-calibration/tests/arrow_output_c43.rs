@@ -3,7 +3,7 @@
 #[path = "../src/arrow_output.rs"]
 mod output;
 
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 fn residual() -> Value {
     json!({
@@ -147,8 +147,8 @@ fn c43_validates_frozen_keys_metric_semantics_and_decode_rows() {
 #[test]
 fn c43_actual_ipc_file_stream_and_parquet_roundtrip() {
     use kairo_ecs_arrow_io::{
-        IoLimits, read_ipc_file, read_ipc_stream, read_parquet, write_ipc_file, write_ipc_stream,
-        write_parquet,
+        read_ipc_file, read_ipc_stream, read_parquet, write_ipc_file, write_ipc_stream,
+        write_parquet, IoLimits,
     };
     use std::sync::Arc;
     let limits = IoLimits::default();

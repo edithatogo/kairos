@@ -174,8 +174,7 @@ pub(crate) fn build_sidecars(input: &Input) -> Result<Output, AdapterFailure> {
                 (status, "undefined", None)
             }
         };
-        let evidence = merge_evidence(residual_status, reference, simulation)
-            .map_err(|reason| fail(&reason))?;
+        let evidence = merge_evidence(reference, simulation).map_err(|reason| fail(&reason))?;
         let observed_ticks = reference
             .first()
             .and_then(|r| r.row.observed_ticks)
@@ -651,7 +650,6 @@ fn point_simulation(row: &ResidualRow) -> bool {
 }
 
 fn merge_evidence(
-    status: &str,
     reference: &[&SidecarRow],
     simulation: &[&SidecarRow],
 ) -> Result<Evidence, String> {
@@ -664,17 +662,18 @@ fn merge_evidence(
         return Err("contradictory graph hashes for one logical pair".into());
     }
     let base = s.or(r).expect("pair has source evidence");
-    let censor_evidence = match status {
-        "censored" => reference
-            .iter()
-            .chain(simulation)
-            .find(|r| r.row.status == OutcomeStatus::Censored),
-        "missing_observed" => reference
-            .iter()
-            .chain(simulation)
-            .find(|r| r.row.status == OutcomeStatus::Missing),
-        _ => None,
-    };
+    // Preserve source censor lineage even when another side determines the
+    // residual outcome (for example, a failed simulation with a censored source).
+    let censor_evidence = reference
+        .iter()
+        .chain(simulation)
+        .find(|r| r.row.status == OutcomeStatus::Censored)
+        .or_else(|| {
+            reference
+                .iter()
+                .chain(simulation)
+                .find(|r| r.row.status == OutcomeStatus::Missing)
+        });
     Ok(Evidence {
         fidelity: base.fidelity.clone(),
         anchor_role: s.or(r).unwrap().anchor_role.clone(),

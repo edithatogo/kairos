@@ -4,8 +4,8 @@
     reason = "private C4.3 codec is path-imported by its focused integration qualification"
 )]
 use arrow_array::{
-    ArrayRef, BooleanArray, Float64Array, RecordBatch, StringArray, UInt32Array, UInt64Array,
-    builder::FixedSizeBinaryBuilder,
+    builder::FixedSizeBinaryBuilder, ArrayRef, BooleanArray, Float64Array, RecordBatch,
+    StringArray, UInt32Array, UInt64Array,
 };
 use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use serde_json::{Map, Number, Value};
@@ -713,12 +713,11 @@ pub(crate) fn decode(kind: &str, batch: &RecordBatch) -> Result<Vec<Value>, Outp
                 }
                 Kind::U32 => json!(a.as_any().downcast_ref::<UInt32Array>().unwrap().value(row)),
                 Kind::U64 => json!(a.as_any().downcast_ref::<UInt64Array>().unwrap().value(row)),
-                Kind::Bool => json!(
-                    a.as_any()
-                        .downcast_ref::<BooleanArray>()
-                        .unwrap()
-                        .value(row)
-                ),
+                Kind::Bool => json!(a
+                    .as_any()
+                    .downcast_ref::<BooleanArray>()
+                    .unwrap()
+                    .value(row)),
                 Kind::NullableF64 => {
                     let x = a.as_any().downcast_ref::<Float64Array>().unwrap();
                     if x.is_null(row) {

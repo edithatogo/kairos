@@ -417,3 +417,22 @@ fn c43_input_permutation_preserves_logical_records_and_metric_bits() {
     assert_eq!(first.raw_diagnostics, second.raw_diagnostics);
     assert_eq!(first.metric_raw_rows, second.metric_raw_rows);
 }
+
+#[test]
+fn c43_failed_prediction_preserves_reference_censor_and_missing_lineage() {
+    for (status, category) in [
+        (OutcomeStatus::Censored, "right"),
+        (OutcomeStatus::Missing, "missing"),
+    ] {
+        let mut i = fixture();
+        i.residual_rows[0].row.status = status;
+        i.residual_rows[0].row.observed_ticks = None;
+        i.residual_rows[0].evidence.censor_status = category.into();
+        i.residual_rows[1].row.status = OutcomeStatus::Failed;
+        i.residual_rows[1].row.predicted_ticks = None;
+        i.residual_rows[1].row.prediction_unclamped = false;
+        let out = build_sidecars(&i).unwrap();
+        assert_eq!(out.residuals[0]["residual_status"], "probe_failed");
+        assert_eq!(out.residuals[0]["censor_status"], category);
+    }
+}
