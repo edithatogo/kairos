@@ -212,3 +212,46 @@ impl fmt::Debug for CalibrationStreamKey {
         formatter.write_str("CalibrationStreamKey([redacted])")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::seed_map::CalibrationSeedMap;
+
+    #[test]
+    fn sampled_duration_retains_opaque_identity_without_debug_leakage() {
+        fn sample_for(case: &str, task: &str) -> (SampledWorkDuration, CalibrationStreamKey) {
+            let mut map = CalibrationSeedMap::new(1, "private-study-sentinel", 1234).unwrap();
+            let key = map
+                .key_for("same-schedule", 7, case, task, SeedPurpose::Service)
+                .unwrap();
+            let mut stream = map
+                .stream_for("same-schedule", 7, case, task, SeedPurpose::Service)
+                .unwrap();
+            let sample = IntrinsicDurationDistribution::fixed(30)
+                .unwrap()
+                .sample(&mut stream, &key)
+                .unwrap();
+            (sample, key)
+        }
+
+        let (first, first_key) = sample_for("private-case-one", "private-task-one");
+        let (second, second_key) = sample_for("private-case-two", "private-task-two");
+        assert_eq!(first.duration(), second.duration());
+        assert_eq!(first.draw_before(), second.draw_before());
+        assert_eq!(first.draw_after(), second.draw_after());
+        assert_eq!(first.key, first_key);
+        assert_eq!(second.key, second_key);
+        assert_ne!(first.key, second.key);
+
+        let debug = format!("{first:?}");
+        for private_id in [
+            "private-study-sentinel",
+            "private-case-one",
+            "private-task-one",
+        ] {
+            assert!(!debug.contains(private_id));
+        }
+        assert!(debug.contains("[redacted]"));
+    }
+}
