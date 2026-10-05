@@ -254,6 +254,26 @@ class ArchiveSupplyChainMainWorkflowTests(unittest.TestCase):
         self.assertIn("--expected-inputs", self.scan)
         self.assertIn('--target linux-amd64 --output-dir "$output"', self.scan)
 
+    def test_hash_locked_generator_dependencies_install_before_expectations(self) -> None:
+        install = section_after(
+            self.scan,
+            "      - name: Install hash-locked archive evidence dependencies\n",
+            "      - name: ",
+        )
+        self.assertIn(
+            "python -m pip install --require-hashes -r scripts/archive-python-tools.lock",
+            install,
+        )
+        self.assertLess(self.scan.index("actions/setup-python@"), self.scan.index("Install hash-locked archive evidence dependencies"))
+        for step_name in (
+            "Prepare independent archive and tool expectations before scanning",
+            "Run pinned offline archive scanner and evidence builder",
+            "Verify the complete generated archive evidence profile",
+        ):
+            self.assertLess(self.scan.index("Install hash-locked archive evidence dependencies"), self.scan.index(step_name))
+        lock = (ROOT / "scripts/archive-python-tools.lock").read_text(encoding="utf-8")
+        self.assertIn("jsonschema==4.26.0", lock)
+
     def test_retained_artifacts_include_full_replayable_evidence_without_installed_tool_bytes(self) -> None:
         final_upload = self.scan[self.scan.rindex("      - uses: actions/upload-artifact@"):]
         self.assertIn("/archive-evidence-${{ github.run_id }}-${{ github.run_attempt }}/evidence/", final_upload)
