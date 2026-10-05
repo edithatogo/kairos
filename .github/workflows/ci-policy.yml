@@ -51,6 +51,7 @@ jobs:
           test -f .github/workflows/ci-bindings.yml
           test -f .github/workflows/ci-core.yml
           test -f .github/workflows/ci-policy.yml
+          test -f .github/workflows/archive-supply-chain-main.yml
           test -f .github/workflows/ci-skip-guard.yml
           test -f .github/workflows/cloud-smoke.yml
           test -f .github/workflows/code-health.yml

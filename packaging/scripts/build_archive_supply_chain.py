@@ -136,6 +136,19 @@ def load_helper(name):
     spec.loader.exec_module(module)
     return module
 
+def process_group_helper(expected_sha256: str | None = None):
+    """Load exactly the captured acquisition-helper bytes for bounded group checks."""
+    name = 'acquire_package_archive_bundle'
+    path = Path(__file__).with_name(name + '.py')
+    source = path.read_bytes()
+    if expected_sha256 is not None and hashlib.sha256(source).hexdigest() != expected_sha256:
+        raise ValueError('acquisition helper bytes differ from the recorded source identity')
+    module = type(sys)(name)
+    module.__file__ = str(path)
+    module.__package__ = ''
+    exec(compile(source, str(path), 'exec'), module.__dict__)
+    return module
+
 def load_provenance_validator():
     name = 'validate_archive_copy_provenance'
     path = Path(__file__).with_name(name + '.py')
@@ -196,36 +209,27 @@ def validate_component_graph(document: dict, namespaces: set[str], external_docu
                 raise ValueError('dangling external SPDX relationship endpoint: ' + endpoint)
     namespaces.add(namespace)
 
-def run_scanner(command: list[str], env: dict[str, str], stdout_path: Path, stderr_path: Path, sbom_path: Path) -> int:
+def run_scanner(command: list[str], env: dict[str, str], stdout_path: Path, stderr_path: Path, sbom_path: Path, helper_sha256: str | None = None) -> int:
     """Run the scanner with a time limit and bounded, retained output files."""
+    # Bind cleanup behavior to helper bytes loaded for this scanner invocation.
+    # Loading before Popen also ensures helper failures cannot orphan a child.
+    helper = process_group_helper(helper_sha256)
     started = time.monotonic()
     with stdout_path.open('xb') as stdout, stderr_path.open('xb') as stderr:
         process = subprocess.Popen(command, stdout=stdout, stderr=stderr, env=env, start_new_session=True)
         def group_exists() -> bool:
-            try:
-                os.killpg(process.pid, 0)
-            except ProcessLookupError:
-                return False
-            except PermissionError:
-                return True
-            return True
+            return helper._process_group_exists(process.pid)
         def stop_group() -> bool:
             if not group_exists():
                 return False
-            try:
-                os.killpg(process.pid, signal.SIGTERM)
-            except ProcessLookupError:
-                return True
+            helper._signal_process_group(process, signal.SIGTERM)
             deadline = time.monotonic() + 2
             while time.monotonic() < deadline:
                 process.poll()  # Reap the direct child so its zombie cannot keep the group visible.
                 if not group_exists():
                     return True
                 time.sleep(0.05)
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                return True
+            helper._signal_process_group(process, signal.SIGKILL)
             deadline = time.monotonic() + 2
             while time.monotonic() < deadline:
                 process.poll()
@@ -261,10 +265,7 @@ def run_scanner(command: list[str], env: dict[str, str], stdout_path: Path, stde
                 try:
                     process.wait(timeout=2)
                 except subprocess.TimeoutExpired:
-                    try:
-                        os.killpg(process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
+                    helper._signal_process_group(process, signal.SIGKILL)
                     process.wait(timeout=2)
             raise
 
@@ -348,7 +349,7 @@ def _generate(source: Path, output: Path, commit: str, acquisition: Path, syft: 
                 ident = identity(tree, row['ecosystem'])
                 sbom_path = scan_dir / (short + '.spdx.json')
                 cmd = [str(syft), '-c', str(config), 'scan', 'dir:' + str(tree), '--source-name', row['path'], '--source-version', commit, '--select-catalogers', '+javascript-package-cataloger', '-o', 'spdx-json=' + str(sbom_path)]
-                scan_status = run_scanner(cmd, env, scan_dir / (short + '.stdout'), scan_dir / (short + '.stderr'), sbom_path)
+                scan_status = run_scanner(cmd, env, scan_dir / (short + '.stdout'), scan_dir / (short + '.stderr'), sbom_path, source_identities['acquire_package_archive_bundle.py'])
                 if scan_status:
                     raise ValueError('package scan failed: ' + row['path'])
                 scan = json.loads(sbom_path.read_text())

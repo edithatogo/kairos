@@ -467,9 +467,9 @@ class SupplyChainTests(unittest.TestCase):
             root = Path(d); fixture = make_fixture(root); output = root / "mutated-output"
             real_run = module.run_scanner
             changed = False
-            def scan_then_mutate(command, env, stdout_path, stderr_path, sbom_path):
+            def scan_then_mutate(command, env, stdout_path, stderr_path, sbom_path, helper_sha256=None):
                 nonlocal changed
-                result = real_run(command, env, stdout_path, stderr_path, sbom_path)
+                result = real_run(command, env, stdout_path, stderr_path, sbom_path, helper_sha256)
                 if not changed:
                     source_name = command[command.index("--source-name") + 1]
                     copied = output / "archives" / source_name
@@ -670,6 +670,91 @@ class SupplyChainTests(unittest.TestCase):
                     module.run_scanner([os.sys.executable, "-c", code], os.environ.copy(), root / "out", root / "err", root / "sbom")
             finally:
                 module.SCANNER_TIMEOUT_SECONDS = previous
+
+    @unittest.skipUnless(os.name == "posix", "requires POSIX process groups")
+    def test_scanner_darwin_group_eperm_accepts_only_verified_dead_group(self):
+        import signal
+        import sys
+        from unittest.mock import patch
+
+        helper = module.process_group_helper()
+        for probe, should_pass in ((False, True), (True, False), (None, False)):
+            with self.subTest(probe=probe), tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                with patch.object(module, "process_group_helper", return_value=helper), \
+                     patch.object(helper.sys, "platform", "darwin"), \
+                     patch.object(helper.os, "killpg", side_effect=PermissionError("simulated Darwin EPERM")) as killpg, \
+                     patch.object(helper, "_darwin_group_has_live_members", return_value=probe) as inspect:
+                    command = [sys.executable, "-c", "pass"]
+                    paths = (root / "stdout", root / "stderr", root / "sbom")
+                    if should_pass:
+                        self.assertEqual(module.run_scanner(command, os.environ.copy(), *paths), 0)
+                    else:
+                        with self.assertRaisesRegex(PermissionError, "simulated Darwin EPERM"):
+                            module.run_scanner(command, os.environ.copy(), *paths)
+                    killpg.assert_any_call(unittest.mock.ANY, 0)
+                    inspect.assert_called()
+                    if should_pass:
+                        killpg.assert_called_once_with(killpg.call_args.args[0], 0)
+                    else:
+                        self.assertTrue(any(call.args[1] == signal.SIGTERM for call in killpg.call_args_list))
+
+    def test_scanner_loads_fresh_process_group_helper_before_each_child(self):
+        import sys
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            loaded = []
+            original_process_group_helper = module.process_group_helper
+            def capture_helper(expected_sha256=None):
+                helper = original_process_group_helper(expected_sha256)
+                loaded.append(helper)
+                return helper
+            with patch.object(module, "process_group_helper", side_effect=capture_helper) as load:
+                for attempt in range(2):
+                    paths = tuple(root / f"{attempt}-{name}" for name in ("stdout", "stderr", "sbom"))
+                    self.assertEqual(module.run_scanner([sys.executable, "-c", "pass"], os.environ.copy(), *paths), 0)
+                self.assertEqual(load.call_count, 2)
+                self.assertIsNot(loaded[0], loaded[1])
+                load.assert_called_with(None)
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            paths = tuple(root / name for name in ("stdout", "stderr", "sbom"))
+            with patch.object(module.importlib.util, "spec_from_file_location", side_effect=AssertionError("helper bytes were reopened")):
+                self.assertEqual(module.run_scanner([sys.executable, "-c", "pass"], os.environ.copy(), *paths), 0)
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            paths = tuple(root / name for name in ("stdout", "stderr", "sbom"))
+            with patch.object(module, "process_group_helper", side_effect=ValueError("helper unavailable")), \
+                 patch.object(module.subprocess, "Popen") as popen:
+                with self.assertRaisesRegex(ValueError, "helper unavailable"):
+                    module.run_scanner([sys.executable, "-c", "pass"], os.environ.copy(), *paths)
+                popen.assert_not_called()
+
+    def test_scanner_rejects_helper_bytes_outside_pinned_identity_before_child(self):
+        import sys
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            paths = tuple(root / name for name in ("stdout", "stderr", "sbom"))
+            with patch.object(module.subprocess, "Popen") as popen:
+                with self.assertRaisesRegex(ValueError, "recorded source identity"):
+                    module.run_scanner([sys.executable, "-c", "pass"], os.environ.copy(), *paths, "0" * 64)
+                popen.assert_not_called()
+
+    @unittest.skipUnless(os.name == "posix", "requires POSIX process groups")
+    def test_scanner_native_fast_cleanup_repetition(self):
+        import sys
+
+        for attempt in range(24):
+            with self.subTest(attempt=attempt), tempfile.TemporaryDirectory() as d:
+                root = Path(d)
+                paths = (root / "stdout", root / "stderr", root / "sbom")
+                self.assertEqual(module.run_scanner([sys.executable, "-c", "pass"], os.environ.copy(), *paths), 0)
 
     @unittest.skipUnless(hasattr(os, "fork"), "requires POSIX process groups")
     def test_exited_parent_cannot_leave_sbom_writer_running(self):

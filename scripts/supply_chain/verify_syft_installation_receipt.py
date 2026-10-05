@@ -24,7 +24,7 @@ ISSUER = "https://token.actions.githubusercontent.com"
 CHECKSUM_SHA256 = "e423344e663d7d14db62e51ddd31e4a5012818ed69e78358391dc487483f839c"
 BUNDLE_SHA256 = "6a0dbf94cb89e2fb157f022bed752b3ceb5827cb557a4a4cfb6af67f98b99811"
 TARGETS = {
-    "linux-amd64": ("linux/amd64", "syft_1.54.0_linux_amd64.tar.gz", "54a87372498168b2d033e876fd41fa4e8035b872699e525a57046e1f2f09c860", None, "syft-linux-verifier.lock", "e8c2913539b2dc4260ef8611e1f21daa56efbdf8b55199c34882808aecd6acea"),
+    "linux-amd64": ("linux/amd64", "syft_1.54.0_linux_amd64.tar.gz", "54a87372498168b2d033e876fd41fa4e8035b872699e525a57046e1f2f09c860", "d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92", "syft-linux-verifier.lock", "e8c2913539b2dc4260ef8611e1f21daa56efbdf8b55199c34882808aecd6acea"),
     "darwin-arm64": ("darwin/arm64", "syft_1.54.0_darwin_arm64.tar.gz", "7e0bdad94c569fc6d5785c9a657bbae3d4c4e140ccb5eace3d0b5b6bc2b6dbcf", "835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61", "syft-darwin-verifier.lock", "bc22323572381258237ff65529b55f37387a3bdfddf1ccf82305d41443ddacf2"),
 }
 LABELS = ["download-checksums", "download-signature-bundle", "create-verifier-venv", "audit-pip-configuration", "install-hash-locked-verifier", "verify-signed-checksum-document", "download-syft-archive", "extract-syft-archive", "syft-version"]
@@ -117,6 +117,10 @@ def require(condition: bool, message: str) -> None:
 
 
 def validate(output: Path, target_key: str, repo: Path) -> dict:
+    # Make receipt argv comparisons independent of the CLI's relative spelling.
+    # abspath is lexical; resolving symlinks here would bypass read_regular's
+    # no-follow checks for every path component.
+    output = Path(os.path.abspath(output))
     require(target_key in TARGETS, "unsupported target")
     platform_name, asset, archive_hash, pinned_binary_hash, lock_name, lock_hash = TARGETS[target_key]
     evidence = output / "evidence" / "receipt.json"
@@ -181,7 +185,7 @@ def validate(output: Path, target_key: str, repo: Path) -> dict:
     require(archive_receipt.get("archive_sha256") == archive_hash and receipt.get("archive_sha256") == archive_hash, "archive digest mismatch")
     require(archive_receipt.get("binary_sha256") == receipt.get("binary_sha256") == archive_receipt["members"].get("syft"), "binary digest linkage mismatch")
     if pinned_binary_hash:
-        require(receipt.get("binary_sha256") == pinned_binary_hash, "binary digest differs from native Darwin pin")
+        require(receipt.get("binary_sha256") == pinned_binary_hash, "binary digest differs from pinned target")
     archive_path = output / "downloads" / asset
     binary_path = output / "bin/syft"
     require(digest(read_regular(output / "downloads/syft-checksums.txt", 64 * 1024)) == CHECKSUM_SHA256, "signed checksum document bytes mismatch")

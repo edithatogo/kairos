@@ -50,7 +50,7 @@ TARGETS = {
         "key": "linux-amd64",
         "asset": "syft_1.54.0_linux_amd64.tar.gz",
         "sha256": "54a87372498168b2d033e876fd41fa4e8035b872699e525a57046e1f2f09c860",
-        "binary_sha256": None,  # Must be established by a separate native-Linux qualification.
+        "binary_sha256": "d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92",  # Native Linux run 37327710820.
         "platform": "linux/amd64",
         "verifier_lock": "syft-linux-verifier.lock",
         "verifier_lock_sha256": "e8c2913539b2dc4260ef8611e1f21daa56efbdf8b55199c34882808aecd6acea",
@@ -954,7 +954,7 @@ class Installer:
                 "verifier": {"sigstore": "4.5.0", "lock_path": self.target["verifier_lock"],
                              "lock_sha256": sha256_bytes(lock_bytes)},
                 "commands": self.commands, "events": self.events,
-                "qualification_limit": "Darwin arm64 has retained native evidence; Linux amd64 installation execution remains unqualified until a native Linux qualification is reviewed.",
+                "qualification_limit": "Native authenticated installation and version probe only; no package scan, release, or publication is represented.",
             }
             receipt_path = self.output / "evidence" / "receipt.json"
             self._assert_output_anchored()

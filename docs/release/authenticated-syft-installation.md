@@ -54,13 +54,15 @@ the pinned version, commit, application, and detected platform.
 
 | Target | Archive SHA-256 | Binary SHA-256 | Evidence status |
 |---|---|---|---|
-| Darwin arm64 | `7e0bdad94c569fc6d5785c9a657bbae3d4c4e140ccb5eace3d0b5b6bc2b6dbcf` | `835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61` | Qualified by the fresh native run recorded below. |
-| Linux amd64 | `54a87372498168b2d033e876fd41fa4e8035b872699e525a57046e1f2f09c860` | Not yet retained | The authenticated checksum row is retained; native Linux installation remains unqualified until separately run and reviewed on Linux x86_64. |
+| Darwin arm64 | `7e0bdad94c569fc6d5785c9a657bbae3d4c4e140ccb5eace3d0b5b6bc2b6dbcf` | `835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61` | Binary pin retained; a fresh receipt is required for this installer source revision. |
+| Linux amd64 | `54a87372498168b2d033e876fd41fa4e8035b872699e525a57046e1f2f09c860` | `d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92` | Binary pin independently read back from native run 37327710820; a fresh receipt is required for this installer source revision. |
 
-Other operating systems and architectures fail closed. The Linux lock is an
-exact retained verifier dependency closure, not evidence that the Syft Linux
-archive or binary has been qualified. Darwin qualification used Python 3.14.8
-on native arm64 macOS; Linux execution remains unqualified.
+Other operating systems and architectures fail closed. Both target pins are
+bound to exact archive and binary bytes. The Linux lock is an exact retained
+verifier dependency closure. The native receipts below were produced from the
+previous installer source hash; changing the pins changes that source hash, so
+fresh receipts on native Darwin arm64 and Linux amd64 are required before this
+revision has current-source installer evidence.
 
 ## Native Darwin qualification record
 
@@ -72,13 +74,38 @@ Darwin asset, and ran `syft version -o json`. The probe reported Syft 1.54.0,
 commit `cc326e45a6213360266dda4b30cc68095946d676`, and `darwin/arm64`. The
 observed archive and binary hashes matched the retained pins in the table.
 
-The receipt and all nine bounded command logs are retained under
+The receipt and all nine bounded command logs were retained under
 `.artifacts/verified-syft-installer/native-darwin-arm64/`. Receipt SHA-256:
 `d7e878a4d484c2d4f4be23ea45b5f0fcfc3a5c7496f477c898b6c9f7fffe7681`. The
 receipt records Python and executable hashes, input hashes, command arguments,
-exit statuses, log lengths and hashes, and output hashes. This qualifies the
-installer path on native Darwin arm64; it does not represent a Syft scan or
-qualify the Linux target.
+exit statuses, log lengths and hashes, and output hashes. It records the
+earlier installer source revision and is not a fresh receipt for this pin
+update. It does not represent a Syft scan.
+
+## Native Linux qualification and raw-byte readback
+
+The native Linux run completed all nine installer commands successfully on
+`ubuntu-24.04` with Python 3.14.8. Run `37327710820` was a manual dispatch on
+`main` at `ca2c42eb55facd166f5e30e133e7fb159511f522`; qualification job
+`111822584000` uploaded artifact `11352233766` named
+`syft-linux-native-qualification-37327710820-1`. The retained receipt SHA-256
+is `79ec2da36d66b5466feaeb4cd02303abb16050deaa6a69d79eaa31cf380aaf28` and
+records installer source hash
+`05acf566b35cb1b4358bed4740e95b40c15c8148e90f251b47a4a60498f2a41b`. The
+receipt and logs report Syft 1.54.0, commit
+`cc326e45a6213360266dda4b30cc68095946d676`, and `linux/amd64`.
+
+The hosted evidence artifact contains the receipt, validation report, and nine
+logs, but not the runtime release archive or executable. A separate bounded
+readback downloaded the exact pinned release TAR and used the installer's safe
+extractor without executing the binary. The TAR was 29,217,540 bytes with SHA-256
+`54a87372498168b2d033e876fd41fa4e8035b872699e525a57046e1f2f09c860`; its four
+regular members were `CHANGELOG.md`, `LICENSE`, `README.md`, and `syft`. The
+extracted Linux executable was 87,204,002 bytes with SHA-256
+`d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92`, matching
+the hosted receipt and validation report. These exact raw bytes establish the
+Linux binary pin, but the run used the previous installer source hash; a fresh
+native receipt must validate the updated source after merge.
 
 ## Use and retained evidence
 
@@ -101,7 +128,8 @@ child environment values.
 
 Tests use injected HTTP transport, verifier and scanner-command results. A
 mocked success exercises ordering and receipt construction only; it is not
-cryptographic verification or host qualification. The local unit tests do not perform network access, dependency installation,
-real Sigstore verification, or a Syft probe. The separate native Darwin run above
-provides those installer-path checks for Darwin only. No actual Syft scan, Linux
-native run, workflow change, release, or publication is represented here.
+cryptographic verification or host qualification. The local unit tests do not
+perform network access, dependency installation, real Sigstore verification,
+or a Syft probe. The native runs above provide installer-path evidence for the
+previous source revision only. No actual Syft scan, release, or publication is
+represented here.

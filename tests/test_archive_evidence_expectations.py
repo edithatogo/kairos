@@ -45,13 +45,20 @@ class ExpectationFixture:
         self.bundle = self.acquisition / "bundle"
         self.consumer = self.root / "consumer"
         self.consumer.mkdir()
+        self.binary = self.root / "syft"
+        self.binary.write_bytes(b"synthetic fixture binary; never executed")
+        synthetic_binary_sha = digest(self.binary.read_bytes())
         source_root = SCRIPT.parents[2]
         trusted_paths = (*builder.HELPERS, builder.VERIFIER, builder.BUILDER, builder.SCHEMA,
-                         builder.SYFT_INSTALLER, builder.SYFT_DARWIN_LOCK)
+                         builder.SYFT_INSTALLER, builder.SYFT_DARWIN_LOCK, builder.SYFT_LINUX_LOCK)
         for relative in trusted_paths:
             destination = self.consumer / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source_root / relative, destination)
+            data = (source_root / relative).read_bytes()
+            if relative == builder.SYFT_INSTALLER:
+                data = data.replace(b"835607cdfbdbfc59335b0beadeefc47aa6aab7d3b403c11cfa65627d92a27f61", synthetic_binary_sha.encode())
+                data = data.replace(b"d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92", synthetic_binary_sha.encode())
+            destination.write_bytes(data)
         subprocess.run(["git", "init", "-q"], cwd=self.consumer, check=True, timeout=builder.GIT_TIMEOUT)
         subprocess.run(["git", "add", *trusted_paths], cwd=self.consumer, check=True, timeout=builder.GIT_TIMEOUT)
         subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "trusted consumer fixture"],
@@ -61,28 +68,45 @@ class ExpectationFixture:
             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=builder.GIT_TIMEOUT,
             check=True, text=True,
         ).stdout.strip()
-        self.binary = self.root / "syft"
-        self.binary.write_bytes(b"synthetic pinned binary; not executed")
         self.receipt = self.root / "qualified-syft-receipt.json"
-        source_sha = digest((self.consumer / builder.SYFT_INSTALLER).read_bytes())
-        lock_sha = digest((self.consumer / builder.SYFT_DARWIN_LOCK).read_bytes())
-        self.receipt.write_bytes(builder.canonical({
-            "schema": "kairos.verified-syft-installer.v1",
-            "result": "pass",
-            "repository": "anchore/syft",
-            "ref": "refs/heads/main",
-            "target": "darwin-arm64",
-            "platform": "darwin/arm64",
-            "version": "1.54.0",
-            "release_commit": "c" * 40,
-            "binary_sha256": digest(self.binary.read_bytes()),
-            "installer_source_sha256": source_sha,
-            "verifier": {"lock_path": "syft-darwin-verifier.lock", "lock_sha256": lock_sha},
-            "version_probe": {"application": "syft", "version": "1.54.0", "platform": "darwin/arm64", "gitCommit": "c" * 40},
-            "qualification_limit": "Darwin arm64 has retained native evidence; Linux amd64 installation execution remains unqualified until a native Linux qualification is reviewed.",
-        }))
+        self.set_target_receipt("Darwin", "arm64")
         self.output = self.root / "derived"
         self.preparation_receipt = self.root / "preparation-receipt.json"
+
+    def set_target_receipt(self, system: str, machine: str) -> dict[str, object]:
+        installer_blob = subprocess.run(
+            ["git", "show", f"HEAD:{builder.SYFT_INSTALLER}"], cwd=self.consumer,
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=builder.GIT_TIMEOUT,
+            check=True,
+        ).stdout
+        installer = builder.load_trusted_module(
+            None, installer_blob, "archive_expectations_fixture_installer", builder.SYFT_INSTALLER,
+        )
+        target = installer.detect_target(system, machine)
+        lock_path = self.consumer / "scripts/supply_chain" / target["verifier_lock"]
+        source_sha = digest((self.consumer / builder.SYFT_INSTALLER).read_bytes())
+        lock_sha = digest(lock_path.read_bytes())
+        release_commit = installer.RELEASE_COMMIT
+        receipt = {
+            "schema": "kairos.verified-syft-installer.v1",
+            "result": "pass",
+            "repository": installer.REPOSITORY,
+            "ref": installer.WORKFLOW_REF,
+            "target": target["key"],
+            "platform": target["platform"],
+            "version": installer.VERSION,
+            "release_commit": release_commit,
+            "binary_sha256": digest(self.binary.read_bytes()),
+            "installer_source_sha256": source_sha,
+            "verifier": {"lock_path": target["verifier_lock"], "lock_sha256": lock_sha},
+            "version_probe": {
+                "application": "syft", "version": installer.VERSION,
+                "platform": target["platform"], "gitCommit": release_commit,
+            },
+            "qualification_limit": builder.SYFT_QUALIFICATION_LIMIT,
+        }
+        self.receipt.write_bytes(builder.canonical(receipt))
+        return target
 
     def argv(self, **changes: object) -> list[str]:
         values: dict[str, object] = {
@@ -137,6 +161,12 @@ class ArchiveExpectationTests(unittest.TestCase):
             self.assertEqual(prep["trusted_consumer_sha"], fixture.consumer_sha)
             self.assertEqual(prep["syft_qualification"]["receipt_path"], str(fixture.receipt.absolute()))
             self.assertEqual(prep["syft_qualification"]["receipt_sha256"], digest(fixture.receipt.read_bytes()))
+            self.assertEqual(prep["syft_qualification"]["platform"], "darwin/arm64")
+            self.assertEqual(prep["syft_qualification"]["verifier_lock_path"], builder.SYFT_DARWIN_LOCK)
+            self.assertEqual(
+                prep["syft_qualification"]["verifier_lock_sha256"],
+                digest((fixture.consumer / builder.SYFT_DARWIN_LOCK).read_bytes()),
+            )
             self.assertEqual(set(prep["prepared_files"]), {"outer-binding.json", "expected-inputs.json", "acquisition.json"})
             binding = json.loads((fixture.output / "outer-binding.json").read_bytes())
             expected = json.loads((fixture.output / "expected-inputs.json").read_bytes())
@@ -212,6 +242,73 @@ class ArchiveExpectationTests(unittest.TestCase):
             bad["verifier"]["lock_sha256"] = "0" * 64
             fixture.receipt.write_bytes(builder.canonical(bad))
             code, _, _ = self.run_main(fixture, fixture.argv(**{"--syft-receipt-sha256": digest(fixture.receipt.read_bytes())}))
+            self.assertEqual(code, 1)
+            self.assertFalse(fixture.output.exists())
+        for changed_field, changed_value in (
+            ("installer_source_sha256", "0" * 64),
+            ("verifier", {"lock_path": "syft-darwin-verifier.lock", "lock_sha256": "0" * 64}),
+        ):
+            with tempfile.TemporaryDirectory() as temporary:
+                fixture = ExpectationFixture(Path(temporary))
+                fixture.set_target_receipt("Linux", "x86_64")
+                bad = json.loads(fixture.receipt.read_bytes())
+                bad[changed_field] = changed_value
+                fixture.receipt.write_bytes(builder.canonical(bad))
+                code, _, _ = self.run_main(
+                    fixture,
+                    fixture.argv(**{"--syft-receipt-sha256": digest(fixture.receipt.read_bytes())}),
+                    host=("Linux", "x86_64"),
+                )
+                self.assertEqual(code, 1, changed_field)
+                self.assertFalse(fixture.output.exists())
+
+    def test_accepts_linux_only_with_native_target_and_lock_fixture(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = ExpectationFixture(Path(temporary))
+            target = fixture.set_target_receipt("Linux", "x86_64")
+            code, stdout, _ = self.run_main(fixture, fixture.argv(), host=("Linux", "x86_64"))
+            self.assertEqual(code, 0, stdout)
+            prep = json.loads(fixture.preparation_receipt.read_bytes())
+            qualification = prep["syft_qualification"]
+            self.assertEqual(qualification["platform"], "linux/amd64")
+            self.assertEqual(qualification["verifier_lock_path"], builder.SYFT_LINUX_LOCK)
+            self.assertEqual(
+                qualification["verifier_lock_sha256"],
+                digest((fixture.consumer / builder.SYFT_LINUX_LOCK).read_bytes()),
+            )
+            expected = json.loads((fixture.output / "expected-inputs.json").read_bytes())
+            syft_pin = next(item["sha256"] for item in expected["dependencies"] if item["id"] == "tool:syft")
+            self.assertEqual(syft_pin, target["binary_sha256"])
+            # The fixture rewrites trusted target constants to a fake digest;
+            # it tests pin selection and is not native installer qualification.
+
+    def test_rejects_cross_platform_receipt_unsupported_host_and_unpinned_binary(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = ExpectationFixture(Path(temporary))
+            fixture.set_target_receipt("Linux", "x86_64")
+            code, _, _ = self.run_main(fixture, fixture.argv(), host=("Darwin", "arm64"))
+            self.assertEqual(code, 1)
+            self.assertFalse(fixture.output.exists())
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = ExpectationFixture(Path(temporary))
+            code, _, _ = self.run_main(fixture, fixture.argv(), host=("Linux", "aarch64"))
+            self.assertEqual(code, 1)
+            self.assertFalse(fixture.output.exists())
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = ExpectationFixture(Path(temporary))
+            fixture.set_target_receipt("Linux", "x86_64")
+            fixture.binary.write_bytes(b"second synthetic binary; never executed")
+            receipt = json.loads(fixture.receipt.read_bytes())
+            receipt["binary_sha256"] = digest(fixture.binary.read_bytes())
+            fixture.receipt.write_bytes(builder.canonical(receipt))
+            code, _, _ = self.run_main(
+                fixture,
+                fixture.argv(**{
+                    "--syft-sha256": digest(fixture.binary.read_bytes()),
+                    "--syft-receipt-sha256": digest(fixture.receipt.read_bytes()),
+                }),
+                host=("Linux", "x86_64"),
+            )
             self.assertEqual(code, 1)
             self.assertFalse(fixture.output.exists())
 
@@ -290,10 +387,10 @@ class ArchiveExpectationTests(unittest.TestCase):
             self.assertFalse(fixture.output.exists())
             self.assertFalse(fixture.preparation_receipt.exists())
 
-    def test_refuses_linux_without_native_qualification_and_rejects_result_input(self) -> None:
+    def test_rejects_unsupported_native_target_and_result_input(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             fixture = ExpectationFixture(Path(temporary))
-            code, _, _ = self.run_main(fixture, fixture.argv(), host=("Linux", "x86_64"))
+            code, _, _ = self.run_main(fixture, fixture.argv(), host=("Linux", "aarch64"))
             self.assertEqual(code, 1)
             self.assertFalse(fixture.output.exists())
             code, _, _ = self.run_main(fixture, [*fixture.argv(), "--evidence-dir", str(Path(temporary) / "result")])

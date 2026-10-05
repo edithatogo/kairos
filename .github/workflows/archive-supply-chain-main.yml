@@ -1,0 +1,439 @@
+name: Mainline archive supply-chain evidence consumer
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Exact successful main package-build workflow run ID
+        required: true
+        type: number
+      artifact_id:
+        description: Exact archive-bundle artifact ID from that run
+        required: true
+        type: number
+      source_commit:
+        description: Full lowercase source commit SHA from the producer run
+        required: true
+        type: string
+      producer_tree:
+        description: Full lowercase source tree SHA from the producer run
+        required: true
+        type: string
+      archive_zip_sha256:
+        description: Exact lowercase SHA-256 of the original Actions artifact ZIP
+        required: true
+        type: string
+      archive_zip_bytes:
+        description: Exact byte length of the original Actions artifact ZIP
+        required: true
+        type: number
+
+permissions: {}
+
+jobs:
+  acquire:
+    name: Retain one explicitly pinned main producer artifact
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      actions: read # Read the selected producer run, artifact metadata and retained ZIP.
+      contents: read # Check out pinned source and read the producer main Git lineage.
+    outputs:
+      run_id: ${{ steps.dispatch-pins.outputs.run_id }}
+      artifact_id: ${{ steps.dispatch-pins.outputs.artifact_id }}
+      source_commit: ${{ steps.dispatch-pins.outputs.source_commit }}
+      producer_tree: ${{ steps.dispatch-pins.outputs.producer_tree }}
+      archive_zip_sha256: ${{ steps.dispatch-pins.outputs.archive_zip_sha256 }}
+      archive_zip_bytes: ${{ steps.dispatch-pins.outputs.archive_zip_bytes }}
+    steps:
+      - name: Enforce trusted manual main invocation
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]
+          [[ "$GITHUB_REPOSITORY" == edithatogo/kairos ]]
+          [[ "$GITHUB_REF" == refs/heads/main ]]
+      - name: Validate all six dispatch pins before API access
+        id: dispatch-pins
+        shell: bash
+        env:
+          PIN_RUN_ID: ${{ inputs.run_id }}
+          PIN_ARTIFACT_ID: ${{ inputs.artifact_id }}
+          PIN_SOURCE_COMMIT: ${{ inputs.source_commit }}
+          PIN_PRODUCER_TREE: ${{ inputs.producer_tree }}
+          PIN_ARCHIVE_ZIP_SHA256: ${{ inputs.archive_zip_sha256 }}
+          PIN_ARCHIVE_ZIP_BYTES: ${{ inputs.archive_zip_bytes }}
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          integer_fields = ("PIN_RUN_ID", "PIN_ARTIFACT_ID", "PIN_ARCHIVE_ZIP_BYTES")
+          parsed = {}
+          for field in integer_fields:
+              raw = os.environ.get(field, "")
+              if not re.fullmatch(r"[1-9][0-9]{0,18}", raw):
+                  raise SystemExit(f"invalid positive integer dispatch pin: {field}")
+              parsed[field] = int(raw)
+          if parsed["PIN_RUN_ID"] > 2**63 - 1 or parsed["PIN_ARTIFACT_ID"] > 2**63 - 1:
+              raise SystemExit("dispatch run or artifact ID exceeds bound")
+          if parsed["PIN_ARCHIVE_ZIP_BYTES"] > 64 * 1024 * 1024:
+              raise SystemExit("archive ZIP byte pin exceeds acquisition bound")
+          for field in ("PIN_SOURCE_COMMIT", "PIN_PRODUCER_TREE"):
+              if re.fullmatch(r"[0-9a-f]{40}", os.environ.get(field, "")) is None:
+                  raise SystemExit(f"invalid full lowercase commit pin: {field}")
+          if re.fullmatch(r"[0-9a-f]{64}", os.environ.get("PIN_ARCHIVE_ZIP_SHA256", "")) is None:
+              raise SystemExit("invalid lowercase archive ZIP SHA-256 pin")
+          outputs = {
+              "run_id": str(parsed["PIN_RUN_ID"]),
+              "artifact_id": str(parsed["PIN_ARTIFACT_ID"]),
+              "source_commit": os.environ["PIN_SOURCE_COMMIT"],
+              "producer_tree": os.environ["PIN_PRODUCER_TREE"],
+              "archive_zip_sha256": os.environ["PIN_ARCHIVE_ZIP_SHA256"],
+              "archive_zip_bytes": str(parsed["PIN_ARCHIVE_ZIP_BYTES"]),
+          }
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a", encoding="utf-8") as stream:
+              for key, value in outputs.items():
+                  stream.write(f"{key}={value}\n")
+          PY
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: 3.14.8
+          architecture: x64
+      - name: Retain exact run acquisition and original artifact ZIP
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PIN_RUN_ID: ${{ steps.dispatch-pins.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          output="$RUNNER_TEMP/archive-acquisition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          [[ ! -e "$output" ]]
+          python3 -B packaging/scripts/acquire_package_archive_bundle.py \
+            --run-id "$PIN_RUN_ID" --require-main-dispatch --acquisition-output "$output"
+      - name: Reconcile retained acquisition with all six pins
+        shell: bash
+        env:
+          PIN_RUN_ID: ${{ steps.dispatch-pins.outputs.run_id }}
+          PIN_ARTIFACT_ID: ${{ steps.dispatch-pins.outputs.artifact_id }}
+          PIN_SOURCE_COMMIT: ${{ steps.dispatch-pins.outputs.source_commit }}
+          PIN_PRODUCER_TREE: ${{ steps.dispatch-pins.outputs.producer_tree }}
+          PIN_ARCHIVE_ZIP_SHA256: ${{ steps.dispatch-pins.outputs.archive_zip_sha256 }}
+          PIN_ARCHIVE_ZIP_BYTES: ${{ steps.dispatch-pins.outputs.archive_zip_bytes }}
+        run: |
+          set -euo pipefail
+          output="$RUNNER_TEMP/archive-acquisition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          python3 -B - "$output" <<'PY'
+          import hashlib
+          import json
+          import os
+          import re
+          import stat
+          import sys
+          from pathlib import Path
+
+          root = Path(sys.argv[1])
+          values = {key: os.environ[key] for key in (
+              "PIN_RUN_ID", "PIN_ARTIFACT_ID", "PIN_SOURCE_COMMIT", "PIN_PRODUCER_TREE",
+              "PIN_ARCHIVE_ZIP_SHA256", "PIN_ARCHIVE_ZIP_BYTES")}
+          run_id, artifact_id, zip_bytes = (int(values[key]) for key in (
+              "PIN_RUN_ID", "PIN_ARTIFACT_ID", "PIN_ARCHIVE_ZIP_BYTES"))
+
+          def read_json(name):
+              path = root / name
+              info = path.lstat()
+              if not stat.S_ISREG(info.st_mode) or info.st_size > 8 * 1024 * 1024:
+                  raise SystemExit(f"invalid retained record: {name}")
+              def unique_pairs(pairs):
+                  result = {}
+                  for key, value in pairs:
+                      if key in result:
+                          raise ValueError("duplicate JSON key")
+                      result[key] = value
+                  return result
+              return json.loads(path.read_bytes(), object_pairs_hook=unique_pairs,
+                                parse_constant=lambda _: (_ for _ in ()).throw(ValueError("non-finite JSON number")))
+
+          receipt = read_json("receipt.json")
+          metadata = read_json("artifact-metadata.json")
+          run = read_json("run-metadata.json")
+          source_readback = read_json("source-commit-readback.json")
+          expected = {
+              "workflow_run": run_id,
+              "artifact_id": artifact_id,
+              "producer_checkout_source": values["PIN_SOURCE_COMMIT"],
+              "producer_tree": values["PIN_PRODUCER_TREE"],
+              "archive_zip_sha256": values["PIN_ARCHIVE_ZIP_SHA256"],
+              "selection_policy": "same-repository-main-workflow-dispatch",
+          }
+          if any(receipt.get(key) != value for key, value in expected.items()):
+              raise SystemExit("retained acquisition receipt differs from explicit pins")
+          if (type(receipt.get("workflow_run")) is not int or type(receipt.get("artifact_id")) is not int
+                  or type(run.get("id")) is not int
+                  or type(metadata.get("id")) is not int or metadata["id"] != artifact_id
+                  or run["id"] != run_id
+                  or run.get("event") != "workflow_dispatch" or run.get("head_branch") != "main"
+                  or run.get("head_sha") != values["PIN_SOURCE_COMMIT"]
+                  or run.get("repository", {}).get("full_name") != "edithatogo/kairos"
+                  or run.get("head_repository", {}).get("full_name") != "edithatogo/kairos"):
+              raise SystemExit("retained run or artifact identity differs from explicit pins")
+          source = source_readback.get(values["PIN_SOURCE_COMMIT"], {})
+          if source.get("tree", {}).get("sha") != values["PIN_PRODUCER_TREE"]:
+              raise SystemExit("retained source tree differs from explicit pin")
+          archive = root / f"{artifact_id}.zip"
+          info = archive.lstat()
+          if not stat.S_ISREG(info.st_mode) or info.st_size != zip_bytes or info.st_nlink != 1:
+              raise SystemExit("retained original ZIP length differs from explicit pin")
+          digest = hashlib.sha256()
+          with archive.open("rb") as stream:
+              while block := stream.read(1024 * 1024):
+                  digest.update(block)
+          if digest.hexdigest() != values["PIN_ARCHIVE_ZIP_SHA256"]:
+              raise SystemExit("retained original ZIP digest differs from explicit pin")
+          if metadata.get("digest") != "sha256:" + values["PIN_ARCHIVE_ZIP_SHA256"]:
+              raise SystemExit("GitHub artifact metadata digest differs from explicit ZIP pin")
+          bundle_index = read_json("bundle/ARCHIVE-INDEX.json")
+          if bundle_index.get("source_commit") != values["PIN_SOURCE_COMMIT"]:
+              raise SystemExit("retained archive index source differs from explicit pin")
+          print("retained acquisition reconciles with all six producer pins")
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: archive-main-acquisition-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/archive-acquisition-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 30
+
+  scan:
+    name: Prepare independent expectations, scan, and verify
+    needs: acquire
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read # Check out pinned installer, scanner and verifier sources.
+    env:
+      PIN_RUN_ID: ${{ needs.acquire.outputs.run_id }}
+      PIN_ARTIFACT_ID: ${{ needs.acquire.outputs.artifact_id }}
+      PIN_SOURCE_COMMIT: ${{ needs.acquire.outputs.source_commit }}
+      PIN_PRODUCER_TREE: ${{ needs.acquire.outputs.producer_tree }}
+      PIN_ARCHIVE_ZIP_SHA256: ${{ needs.acquire.outputs.archive_zip_sha256 }}
+      PIN_ARCHIVE_ZIP_BYTES: ${{ needs.acquire.outputs.archive_zip_bytes }}
+    steps:
+      - name: Enforce trusted manual main invocation
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]
+          [[ "$GITHUB_REPOSITORY" == edithatogo/kairos ]]
+          [[ "$GITHUB_REF" == refs/heads/main ]]
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: 3.14.8
+          architecture: x64
+      - name: Require fresh acquisition handoff directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ ! -e "$RUNNER_TEMP/archive-acquisition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" ]]
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: archive-main-acquisition-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/archive-acquisition-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Recheck producer pins after job handoff
+        shell: bash
+        env:
+          PIN_RUN_ID: ${{ needs.acquire.outputs.run_id }}
+          PIN_ARTIFACT_ID: ${{ needs.acquire.outputs.artifact_id }}
+          PIN_SOURCE_COMMIT: ${{ needs.acquire.outputs.source_commit }}
+          PIN_PRODUCER_TREE: ${{ needs.acquire.outputs.producer_tree }}
+          PIN_ARCHIVE_ZIP_SHA256: ${{ needs.acquire.outputs.archive_zip_sha256 }}
+          PIN_ARCHIVE_ZIP_BYTES: ${{ needs.acquire.outputs.archive_zip_bytes }}
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/archive-acquisition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          python3 -B - "$root" <<'PY'
+          import hashlib
+          import json
+          import os
+          import stat
+          import sys
+          from pathlib import Path
+
+          root = Path(sys.argv[1])
+          pins = {name: os.environ[name] for name in (
+              "PIN_RUN_ID", "PIN_ARTIFACT_ID", "PIN_SOURCE_COMMIT", "PIN_PRODUCER_TREE",
+              "PIN_ARCHIVE_ZIP_SHA256", "PIN_ARCHIVE_ZIP_BYTES")}
+          def load(name):
+              path = root / name
+              info = path.lstat()
+              if not stat.S_ISREG(info.st_mode) or info.st_size > 8 * 1024 * 1024:
+                  raise SystemExit(f"invalid handoff record: {name}")
+              def unique_pairs(pairs):
+                  result = {}
+                  for key, value in pairs:
+                      if key in result:
+                          raise ValueError("duplicate JSON key")
+                      result[key] = value
+                  return result
+              return json.loads(path.read_bytes(), object_pairs_hook=unique_pairs,
+                                parse_constant=lambda _: (_ for _ in ()).throw(ValueError("non-finite JSON number")))
+          receipt = load("receipt.json")
+          metadata = load("artifact-metadata.json")
+          run = load("run-metadata.json")
+          source_readback = load("source-commit-readback.json")
+          expected = {"workflow_run": int(pins["PIN_RUN_ID"]), "artifact_id": int(pins["PIN_ARTIFACT_ID"]),
+                      "producer_checkout_source": pins["PIN_SOURCE_COMMIT"], "producer_tree": pins["PIN_PRODUCER_TREE"],
+                      "archive_zip_sha256": pins["PIN_ARCHIVE_ZIP_SHA256"],
+                      "selection_policy": "same-repository-main-workflow-dispatch"}
+          if any(receipt.get(key) != value for key, value in expected.items()):
+              raise SystemExit("handoff receipt differs from explicit producer pins")
+          if type(metadata.get("id")) is not int or metadata["id"] != int(pins["PIN_ARTIFACT_ID"]):
+              raise SystemExit("handoff artifact metadata differs from explicit pin")
+          if (type(receipt.get("workflow_run")) is not int or type(receipt.get("artifact_id")) is not int
+                  or type(run.get("id")) is not int or run["id"] != int(pins["PIN_RUN_ID"])
+                  or run.get("event") != "workflow_dispatch" or run.get("head_branch") != "main"
+                  or run.get("head_sha") != pins["PIN_SOURCE_COMMIT"]
+                  or run.get("repository", {}).get("full_name") != "edithatogo/kairos"
+                  or run.get("head_repository", {}).get("full_name") != "edithatogo/kairos"):
+              raise SystemExit("handoff run identity differs from explicit source pin")
+          source = source_readback.get(pins["PIN_SOURCE_COMMIT"], {})
+          if source.get("tree", {}).get("sha") != pins["PIN_PRODUCER_TREE"]:
+              raise SystemExit("handoff source tree differs from explicit pin")
+          archive = root / f"{pins['PIN_ARTIFACT_ID']}.zip"
+          info = archive.lstat()
+          if not stat.S_ISREG(info.st_mode) or info.st_size != int(pins["PIN_ARCHIVE_ZIP_BYTES"]) or info.st_nlink != 1:
+              raise SystemExit("handoff ZIP length differs from explicit pin")
+          digest = hashlib.sha256()
+          with archive.open("rb") as stream:
+              while block := stream.read(1024 * 1024):
+                  digest.update(block)
+          if digest.hexdigest() != pins["PIN_ARCHIVE_ZIP_SHA256"]:
+              raise SystemExit("handoff ZIP digest differs from explicit pin")
+          if metadata.get("digest") != "sha256:" + pins["PIN_ARCHIVE_ZIP_SHA256"]:
+              raise SystemExit("handoff artifact metadata digest differs from explicit ZIP pin")
+          print("handoff independently reconciles with all six producer pins")
+          PY
+      - name: Require native Linux amd64 and pinned Python
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(uname -s)" == Linux ]]
+          [[ "$(uname -m)" == x86_64 ]]
+          python3 -B -c 'import sys; assert sys.version_info[:3] == (3, 14, 8), sys.version'
+      - name: Authenticate and install pinned Syft release
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$RUNNER_TEMP/syft-linux-amd64-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          [[ ! -e "$output" ]]
+          python3 -B scripts/supply_chain/install_verified_syft.py --output-dir "$output"
+      - name: Independently validate native installation evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$RUNNER_TEMP/syft-linux-amd64-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          python3 -B scripts/supply_chain/verify_syft_installation_receipt.py \
+            --target linux-amd64 --output-dir "$output" \
+            > "$output/evidence/validation-report.json"
+      - name: Prepare independent archive and tool expectations before scanning
+        shell: bash
+        env:
+          SYFT_SHA256: d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92
+          TRUSTED_CONSUMER_SHA: ${{ github.workflow_sha }}
+        run: |
+          set -euo pipefail
+          acquisition="$RUNNER_TEMP/archive-acquisition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          syft="$RUNNER_TEMP/syft-linux-amd64-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          work="$RUNNER_TEMP/archive-evidence-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          [[ ! -e "$work" ]]
+          mkdir -m 700 "$work"
+          receipt_sha256="$(python3 -B -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$syft/evidence/receipt.json")"
+          python3 -B packaging/scripts/build_archive_evidence_expectations.py \
+            --repository "$GITHUB_WORKSPACE" \
+            --trusted-consumer-sha "$TRUSTED_CONSUMER_SHA" \
+            --acquisition-dir "$acquisition" \
+            --archive-bundle "$acquisition/bundle" \
+            --archive-zip "$acquisition/$PIN_ARTIFACT_ID.zip" \
+            --run-id "$PIN_RUN_ID" --artifact-id "$PIN_ARTIFACT_ID" \
+            --source-commit "$PIN_SOURCE_COMMIT" --producer-tree "$PIN_PRODUCER_TREE" \
+            --archive-zip-sha256 "$PIN_ARCHIVE_ZIP_SHA256" \
+            --archive-zip-bytes "$PIN_ARCHIVE_ZIP_BYTES" \
+            --syft "$syft/bin/syft" --syft-sha256 "$SYFT_SHA256" \
+            --syft-receipt "$syft/evidence/receipt.json" --syft-receipt-sha256 "$receipt_sha256" \
+            --output-dir "$work/expectations" --preparation-receipt "$work/preparation-receipt.json"
+      - name: Require fresh generated-evidence directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ ! -e "$RUNNER_TEMP/archive-evidence-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/evidence" ]]
+      - name: Run pinned offline archive scanner and evidence builder
+        shell: bash
+        env:
+          SYFT_SHA256: d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92
+        run: |
+          set -euo pipefail
+          acquisition_dir="$RUNNER_TEMP/archive-acquisition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          syft="$RUNNER_TEMP/syft-linux-amd64-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          work="$RUNNER_TEMP/archive-evidence-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          evidence="$work/evidence"
+          schema=tests/fixtures/archive-supply-chain/spdx-2.3/spdx-schema.json
+          schema_sha256="$(python3 -B -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$schema")"
+          acquisition="$work/expectations/acquisition.json"
+          acquisition_sha256="$(python3 -B -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "$acquisition")"
+          python3 -B packaging/scripts/build_archive_supply_chain.py \
+            --input "$acquisition_dir/bundle" --output "$evidence" \
+            --acquisition "$acquisition" \
+            --syft "$syft/bin/syft" --spdx-schema "$schema" \
+            --source-commit "$PIN_SOURCE_COMMIT" --run-id "$PIN_RUN_ID" \
+            --syft-sha256 "$SYFT_SHA256" --spdx-schema-sha256 "$schema_sha256" \
+            --acquisition-sha256 "$acquisition_sha256"
+      - name: Verify the complete generated archive evidence profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          acquisition="$RUNNER_TEMP/archive-acquisition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          work="$RUNNER_TEMP/archive-evidence-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          verifier_sha256="$(python3 -B -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' packaging/scripts/verify_archive_supply_chain_evidence.py)"
+          python3 -B packaging/scripts/verify_archive_supply_chain_evidence.py \
+            --evidence-dir "$work/evidence" \
+            --archive-bundle "$acquisition/bundle" \
+            --archive-zip "$acquisition/$PIN_ARTIFACT_ID.zip" \
+            --acquisition-dir "$acquisition" \
+            --expected-inputs "$work/expectations/expected-inputs.json" \
+            --expected-binding "$work/expectations/outer-binding.json" \
+            --expected-verifier-sha256 "$verifier_sha256" \
+            --spdx-schema tests/fixtures/archive-supply-chain/spdx-2.3/spdx-schema.json \
+            > "$work/validation-report.json"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: archive-main-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/archive-evidence-${{ github.run_id }}-${{ github.run_attempt }}/preparation-receipt.json
+            ${{ runner.temp }}/archive-evidence-${{ github.run_id }}-${{ github.run_attempt }}/expectations/
+            ${{ runner.temp }}/archive-evidence-${{ github.run_id }}-${{ github.run_attempt }}/validation-report.json
+            ${{ runner.temp }}/archive-acquisition-${{ github.run_id }}-${{ github.run_attempt }}/receipt.json
+            ${{ runner.temp }}/archive-acquisition-${{ github.run_id }}-${{ github.run_attempt }}/artifact-metadata.json
+            ${{ runner.temp }}/archive-acquisition-${{ github.run_id }}-${{ github.run_attempt }}/run-metadata.json
+            ${{ runner.temp }}/archive-acquisition-${{ github.run_id }}-${{ github.run_attempt }}/source-commit-readback.json
+            ${{ runner.temp }}/archive-evidence-${{ github.run_id }}-${{ github.run_attempt }}/evidence/
+            ${{ runner.temp }}/syft-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}/evidence/receipt.json
+            ${{ runner.temp }}/syft-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}/evidence/validation-report.json
+            ${{ runner.temp }}/syft-linux-amd64-${{ github.run_id }}-${{ github.run_attempt }}/logs/*.log
+          if-no-files-found: error
+          retention-days: 30

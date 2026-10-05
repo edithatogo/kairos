@@ -11,24 +11,29 @@ The caller supplies the complete consumer commit and producer identities:
 
 - `--trusted-consumer-sha` must equal the checkout's full `HEAD` SHA. The
   builder reads the five packaging helpers, archive evidence verifier, SPDX
-  2.3 schema, Syft installer source, Darwin verifier lock, and executing
-  builder itself from Git blobs at that commit, then compares every checkout
-  file byte for byte with its blob.
+  2.3 schema, Syft installer source, both Darwin and Linux verifier locks, and
+  executing builder itself from Git blobs at that commit, then compares every
+  checkout file byte for byte with its blob.
 - `--run-id`, `--artifact-id`, `--source-commit`, `--producer-tree`,
   `--archive-zip-sha256`, and `--archive-zip-bytes` are explicit caller pins.
   The exact retained `{artifact-id}.zip` and `bundle/` must be the children of
   `--acquisition-dir`.
 - `--syft-sha256` and `--syft-receipt-sha256` pin the binary and native
-  qualification receipt. The builder checks the receipt's passing schema,
-  version/platform identity, the binary digest, and its installer-source and
-  verifier-lock hashes against the trusted consumer blobs.
+  qualification receipt. The builder selects the target for the current host
+  from the trusted installer blob and requires the caller's binary digest to
+  equal that target's pinned binary digest. It also checks the receipt's
+  passing schema, version/platform identity, installer-source hash, and
+  selected verifier-lock hash against trusted consumer blobs.
 
 The Syft receipt is an upstream qualification input. This builder does not
 rerun the installer verifier or establish the receipt's signature itself. A
 separately reviewed native installer qualification must validate the receipt
-and binary. This checkout has qualified Darwin arm64 evidence for Syft 1.54.0;
-the builder rejects other host platforms. Linux requires its own native
-qualification before use.
+and binary. The trusted installer currently supports Darwin arm64 and Linux
+amd64; each receipt must match the native host, the matching installer target
+and verifier lock, and the installer's neutral scope statement. Other hosts
+fail closed. Retained native receipts from an earlier installer-source hash do
+not qualify the current source revision; obtain a fresh native receipt for the
+trusted source before preparing evidence on that host.
 
 The trusted acquisition and bundle helpers validate the retained raw run,
 artifact, commit, ZIP, and bundle records. Admission requires a successful
@@ -124,3 +129,12 @@ they are not counted as passing evidence. This qualification proves local copyin
 consistency with independently pinned inputs. It does not prove original
 compilation attestation, signed provenance, a SLSA level, a hosted consumer run,
 release acceptance or publication.
+
+## Integrated native-input qualification
+
+The integrated builder was qualified with a fresh source-bound Darwin receipt
+and the actual release-subject adapter at consumer
+`419ac4291c763f6429a37e908d542294afc257d6`. See the single retained
+[actual qualification record](actual-archive-release-gate-v1.md#integrated-actual-qualification)
+for command results, archive counts, receipt pins and the release-source negative
+case. Hosted Linux qualification at the updated source remains a separate gate.

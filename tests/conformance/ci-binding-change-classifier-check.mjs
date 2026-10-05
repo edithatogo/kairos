@@ -52,6 +52,19 @@ for (const [lane, path] of Object.entries({
   typescript: 'bindings/typescript/src/a.ts', csharp: 'bindings/csharp/a.cs', go: 'bindings/go/a.go', gym: 'python/kairo_gym/src/a.py',
 })) assert.deepEqual(classifyBindingPaths([ARCHIVE_PATHS[0], path]), routing([lane], true));
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_supply_chain.py', 'bindings/python/a.py']), routing(['python'], true));
+assert.deepEqual(classifyBindingPaths(['.github/workflows/archive-supply-chain-main.yml']), routing([], true));
+assert.deepEqual(classifyBindingPaths(['tests/test_archive_supply_chain_main_workflow.py']), routing([], true));
+assert.deepEqual(classifyBindingPaths(['.github/workflows/archive-supply-chain-main.yml', 'bindings/csharp/a.cs']), routing(['csharp'], true));
+assert.deepEqual(classifyBindingPaths(['bindings/csharp/a.cs', '.github/workflows/archive-supply-chain-main.yml']), routing(['csharp'], true));
+assert.deepEqual(classifyBindingPaths(['.github/workflows/archive-supply-chain-main.yml', 'Cargo.lock']), routing(BINDING_LANES, true));
+assert.deepEqual(classifyBindingPaths(['.github/workflows/archive-supply-chain-main.yml', 'README.md']), routing(BINDING_LANES, true));
+assert.deepEqual(classifyBindingPaths(['packaging/scripts/prepare_verified_archive_release.py']), routing([], true));
+assert.deepEqual(classifyBindingPaths(['packaging/scripts/build_archive_evidence_expectations.py']), routing([], true));
+assert.deepEqual(classifyBindingPaths(['tests/test_prepare_verified_archive_release.py']), routing([], true));
+assert.deepEqual(classifyBindingPaths(['tests/test_prepare_verified_archive_release.py', 'bindings/python/src/a.py']), routing(['python'], true));
+assert.deepEqual(classifyBindingPaths(['bindings/python/src/a.py', 'tests/test_prepare_verified_archive_release.py']), routing(['python'], true));
+assert.deepEqual(classifyBindingPaths(['tests/test_prepare_verified_archive_release.py', 'Cargo.toml']), routing(BINDING_LANES, true));
+assert.deepEqual(classifyBindingPaths(['.github/workflows/ci-bindings.yml', 'packaging/scripts/prepare_verified_archive_release.py']), routing(BINDING_LANES, true));
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_evidence_expectations.py']), routing([], true));
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_evidence_expectations.py', 'bindings/python/a.py']), routing(['python'], true));
 assert.deepEqual(classifyBindingPaths(['bindings/python/a.py', 'tests/test_archive_evidence_expectations.py']), routing(['python'], true));
@@ -96,7 +109,19 @@ try {
   const archiveHeadSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   assert.deepEqual(classifyBindingEvent('pull_request', archiveBaseSha, archiveHeadSha), routing([], true));
 
-  const renameBaseSha = archiveHeadSha;
+  const mainWorkflowBaseSha = archiveHeadSha;
+  mkdirSync('.github/workflows', { recursive: true });
+  writeFileSync('.github/workflows/archive-supply-chain-main.yml', 'name: main archive evidence\n');
+  execFileSync('git', ['add', '.']);
+  execFileSync('git', ['commit', '-qm', 'add main archive workflow']);
+  const mainWorkflowAddedSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  assert.deepEqual(classifyBindingEvent('pull_request', mainWorkflowBaseSha, mainWorkflowAddedSha), routing([], true));
+  execFileSync('git', ['rm', '.github/workflows/archive-supply-chain-main.yml']);
+  execFileSync('git', ['commit', '-qm', 'delete main archive workflow']);
+  const mainWorkflowDeletedSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+  assert.deepEqual(classifyBindingEvent('pull_request', mainWorkflowAddedSha, mainWorkflowDeletedSha), routing([], true));
+
+  const renameBaseSha = mainWorkflowDeletedSha;
   mkdirSync('bindings/r', { recursive: true });
   execFileSync('git', ['mv', 'bindings/python/source.py', 'bindings/r/source.R']);
   execFileSync('git', ['commit', '-qm', 'rename binding path']);
@@ -124,6 +149,11 @@ try {
 }
 
 const workflow = readFileSync('.github/workflows/ci-bindings.yml', 'utf8');
+const mainArchiveWorkflowPath = '.github/workflows/archive-supply-chain-main.yml';
+assert.match(workflow, /^\s+- '\.github\/workflows\/archive-supply-chain-main\.yml'$/m);
+assert.equal(readFileSync('.github/workflows/ci-policy.yml', 'utf8').split(mainArchiveWorkflowPath).length - 1, 1);
+assert.equal(readFileSync('.github/workflows/workflow-security.yml', 'utf8').split(mainArchiveWorkflowPath).length - 1, 2);
+assert.ok(readFileSync('scripts/validation/validate-track13-metadata.mjs', 'utf8').includes("'archive-supply-chain-main.yml'"));
 const archiveStart = workflow.indexOf('  archive-python:\n');
 const aggregateStartIndex = workflow.indexOf('  binding-ci:\n');
 assert.ok(archiveStart >= 0 && aggregateStartIndex > archiveStart, 'archive and aggregate jobs must exist in order');
@@ -142,8 +172,10 @@ assert.deepEqual(
     'test_archive_supply_chain_evidence_verifier.py',
     'test_verified_syft_installer.py',
     'test_syft_installation_receipt.py',
+    'test_prepare_verified_archive_release.py',
+    'test_archive_supply_chain_main_workflow.py',
   ],
-  'archive lane must run all nine focused suites in order',
+  'archive lane must run all eleven focused suites in order',
 );
 const aggregateJob = workflow.slice(workflow.indexOf('  binding-ci:\n'));
 const scriptMatch = aggregateJob.match(/        run: \|\n((?:          .*\n)+)/);
