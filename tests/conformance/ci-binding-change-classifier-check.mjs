@@ -53,6 +53,7 @@ for (const path of [
   'tests/test_mainline_archive_release_workflow.py',
   'packaging/scripts/prepare_mainline_archive_release.py',
   'tests/test_prepare_mainline_archive_release.py',
+  'tests/test_package_archive_attestation_workflow.py',
 ]) assert.ok(ARCHIVE_PATHS.includes(path), `archive path missing from exact allowlist: ${path}`);
 for (const [lane, path] of Object.entries({
   python: 'bindings/python/src/a.py', r: 'bindings/r/R/a.R', julia: 'bindings/julia/src/a.jl',
@@ -192,8 +193,9 @@ assert.deepEqual(
     'test_actual_archive_release_validation.py',
     'test_mainline_archive_release_workflow.py',
     'test_prepare_mainline_archive_release.py',
+    'test_package_archive_attestation_workflow.py',
   ],
-  'archive lane must run all fifteen focused suites in order',
+  'archive lane must run all sixteen focused suites in order',
 );
 const aggregateJob = workflow.slice(workflow.indexOf('  binding-ci:\n'));
 const scriptMatch = aggregateJob.match(/        run: \|\n((?:          .*\n)+)/);

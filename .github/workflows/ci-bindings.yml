@@ -265,6 +265,7 @@ jobs:
           python -m unittest discover -s tests -p test_actual_archive_release_validation.py -v
           python -m unittest discover -s tests -p test_mainline_archive_release_workflow.py -v
           python -m unittest discover -s tests -p test_prepare_mainline_archive_release.py -v
+          python -m unittest discover -s tests -p test_package_archive_attestation_workflow.py -v
 
   binding-ci:
     name: Binding CI

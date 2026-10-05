@@ -44,6 +44,7 @@ export const ARCHIVE_PATHS = [
   'tests/test_mainline_archive_release_workflow.py',
   'packaging/scripts/prepare_mainline_archive_release.py',
   'tests/test_prepare_mainline_archive_release.py',
+  'tests/test_package_archive_attestation_workflow.py',
 ];
 const ARCHIVE_PATH_SET = new Set(ARCHIVE_PATHS);
 
