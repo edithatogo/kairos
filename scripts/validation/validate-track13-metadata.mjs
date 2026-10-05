@@ -313,7 +313,7 @@ requireTerms('.github/workflows/ci-bindings.yml', [
   "python -m pip install --no-deps --no-build-isolation -e '.[test]'",
   'ruff check .',
 ]);
-requireTerms('bindings/python/pyproject.toml', ['ruff==0.16.9']);
+requireTerms('bindings/python/pyproject.toml', ['ruff==0.16.10']);
 requireTerms('scripts/validation/check-core-coverage.mjs', ['kairo-ecs-core/src/', '90']);
 
 requirePattern('.github/workflows/dependency-review.yml', /fail-on-severity:\s*high/, 'high-severity dependency review gate');
