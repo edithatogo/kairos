@@ -67,13 +67,16 @@ remain separate gates. No Track48/49 completion or runtime dispatch follows.
 
 ## Local artifact bindings
 
-- `artifacts/track49-commit-uncertainty-20261005/scratch/src/main.rs` SHA256 `9eeab70e833c553f582bac502d6390266252af09b1dfc49ea62a026d00924fbf`.
-- `artifacts/track49-commit-uncertainty-20261005/scratch/Cargo.toml` SHA256 `bad9d028c56d3d4739a1f5965890e8f4379de1e9c96fb9cf6fe20edcb608fa6c`.
-- `artifacts/track49-commit-uncertainty-20261005/scratch/Cargo.lock` SHA256 `526330ec1fa655f2f7398bb1ac1a48ed5baca977293ecb7aa95749da0f578006`.
-- `artifacts/track49-commit-uncertainty-20261005/run.py` SHA256 `6ad45981f482b1f1674e8aacf0a6fc0d31b6b8a00ce3d38c14b99ccadf710eb5`.
-- `artifacts/track49-commit-uncertainty-20261005/packet.json` SHA256 `7ff5734675315e58d1f922691952e5b09871712a28372f27e6bb767107d3ab81`.
-- `artifacts/track49-commit-uncertainty-20261005/receipts.json` SHA256 `3a619525e2a6c7484d2d5f16b034f5ce767c622b177453ef23572028f9d116ab`.
-- `artifacts/track49-commit-uncertainty-20261005/cases.json` SHA256 `5537c58c92c8aa431e39e570f12156776f48f9ad407640b164ac7c44db39cd19`.
-- `artifacts/track49-commit-uncertainty-20261005/summary.json` SHA256 `dffeb8f9f3f407696c474f782f85a7ab06e1934855931187d99e91427a2a376b`.
+Attempt2 paths below name the immutable preserved snapshot; later diagnostics
+use separate attempt snapshots. Original hashes remain unchanged.
+
+- `artifacts/track49-commit-uncertainty-20261005/attempt2-preserved/main.rs` SHA256 `9eeab70e833c553f582bac502d6390266252af09b1dfc49ea62a026d00924fbf`.
+- `artifacts/track49-commit-uncertainty-20261005/attempt2-preserved/Cargo.toml` SHA256 `bad9d028c56d3d4739a1f5965890e8f4379de1e9c96fb9cf6fe20edcb608fa6c`.
+- `artifacts/track49-commit-uncertainty-20261005/attempt2-preserved/Cargo.lock` SHA256 `526330ec1fa655f2f7398bb1ac1a48ed5baca977293ecb7aa95749da0f578006`.
+- `artifacts/track49-commit-uncertainty-20261005/attempt2-preserved/run.py` SHA256 `6ad45981f482b1f1674e8aacf0a6fc0d31b6b8a00ce3d38c14b99ccadf710eb5`.
+- `artifacts/track49-commit-uncertainty-20261005/attempt2-preserved/packet.json` SHA256 `7ff5734675315e58d1f922691952e5b09871712a28372f27e6bb767107d3ab81`.
+- `artifacts/track49-commit-uncertainty-20261005/attempt2-preserved/receipts.json` SHA256 `3a619525e2a6c7484d2d5f16b034f5ce767c622b177453ef23572028f9d116ab`.
+- `artifacts/track49-commit-uncertainty-20261005/attempt2-preserved/cases.json` SHA256 `5537c58c92c8aa431e39e570f12156776f48f9ad407640b164ac7c44db39cd19`.
+- `artifacts/track49-commit-uncertainty-20261005/attempt2-preserved/summary.json` SHA256 `dffeb8f9f3f407696c474f782f85a7ab06e1934855931187d99e91427a2a376b`.
 - `artifacts/track49-commit-uncertainty-20261005/source-retrieval.json` SHA256 `13050a6d8c7d28ab413404b7e37f06a652818487ed3e036841331e9a7650466e`.
 - `artifacts/track49-commit-uncertainty-20261005/attempt1-preserved/preservation.json` SHA256 `9bd22e41d627c06a15ce8b8c937250985c288f8008c8782e2a7fa64ba61d907b`.
