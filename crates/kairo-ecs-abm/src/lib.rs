@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod flow_adapter;
+pub mod spatial;
 pub use flow_adapter::{
     create_flow_agent, register_flow_agent_behavior, schedule_flow_agent_update, FlowAgentBehavior,
     FlowAgentContext, FlowAgentHandle,
