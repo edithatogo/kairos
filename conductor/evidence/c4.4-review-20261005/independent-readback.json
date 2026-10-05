@@ -1,0 +1,314 @@
+{
+  "actual_diagnostics": {
+    "current/empty-and-insufficient": {
+      "groups": [
+        {
+          "coverage_warnings": [],
+          "group": "candidate-a",
+          "reference_count": 2,
+          "reference_tie_count": 0,
+          "simulation_count": 2,
+          "simulation_tie_count": 0,
+          "status": "computed"
+        },
+        {
+          "coverage_warnings": [],
+          "group": "empty",
+          "reference_count": 0,
+          "reference_tie_count": 0,
+          "simulation_count": 0,
+          "simulation_tie_count": 0,
+          "status": "empty"
+        },
+        {
+          "coverage_warnings": [],
+          "group": "insufficient",
+          "reference_count": 1,
+          "reference_tie_count": 0,
+          "simulation_count": 0,
+          "simulation_tie_count": 0,
+          "status": "insufficient_data"
+        }
+      ],
+      "raw_reference": 3,
+      "raw_simulation": 2,
+      "status": "pass"
+    },
+    "current/overlap-and-ties": {
+      "groups": [
+        {
+          "coverage_warnings": [
+            "censored_observations_present",
+            "excluded_observations_present",
+            "failed_outcomes_present",
+            "infeasible_outcomes_present",
+            "missing_outcomes_present",
+            "tied_observations_present",
+            "uncensored_subset_no_survival_correction"
+          ],
+          "group": "candidate-a",
+          "reference_count": 2,
+          "reference_tie_count": 1,
+          "simulation_count": 2,
+          "simulation_tie_count": 0,
+          "status": "computed"
+        },
+        {
+          "coverage_warnings": [],
+          "group": "empty",
+          "reference_count": 0,
+          "reference_tie_count": 0,
+          "simulation_count": 0,
+          "simulation_tie_count": 0,
+          "status": "empty"
+        }
+      ],
+      "raw_reference": 7,
+      "raw_simulation": 2,
+      "status": "pass"
+    },
+    "floor/empty-and-insufficient": {
+      "groups": [
+        {
+          "coverage_warnings": [],
+          "group": "candidate-a",
+          "reference_count": 2,
+          "reference_tie_count": 0,
+          "simulation_count": 2,
+          "simulation_tie_count": 0,
+          "status": "computed"
+        },
+        {
+          "coverage_warnings": [],
+          "group": "empty",
+          "reference_count": 0,
+          "reference_tie_count": 0,
+          "simulation_count": 0,
+          "simulation_tie_count": 0,
+          "status": "empty"
+        },
+        {
+          "coverage_warnings": [],
+          "group": "insufficient",
+          "reference_count": 1,
+          "reference_tie_count": 0,
+          "simulation_count": 0,
+          "simulation_tie_count": 0,
+          "status": "insufficient_data"
+        }
+      ],
+      "raw_reference": 3,
+      "raw_simulation": 2,
+      "status": "pass"
+    },
+    "floor/overlap-and-ties": {
+      "groups": [
+        {
+          "coverage_warnings": [
+            "censored_observations_present",
+            "excluded_observations_present",
+            "failed_outcomes_present",
+            "infeasible_outcomes_present",
+            "missing_outcomes_present",
+            "tied_observations_present",
+            "uncensored_subset_no_survival_correction"
+          ],
+          "group": "candidate-a",
+          "reference_count": 2,
+          "reference_tie_count": 1,
+          "simulation_count": 2,
+          "simulation_tie_count": 0,
+          "status": "computed"
+        },
+        {
+          "coverage_warnings": [],
+          "group": "empty",
+          "reference_count": 0,
+          "reference_tie_count": 0,
+          "simulation_count": 0,
+          "simulation_tie_count": 0,
+          "status": "empty"
+        }
+      ],
+      "raw_reference": 7,
+      "raw_simulation": 2,
+      "status": "pass"
+    }
+  },
+  "candidate_reports": {
+    "current": {
+      "candidate_source_sha256": "d2c7d2fb5a8172907f534d135eb59b21aa7bef0ddace4b695dcd697671df3db4",
+      "cases": 42,
+      "fixture_sha256": "f2b35392e64245475d039d55761344eaeebd6cb0499342436c63840325ed0e6b",
+      "independent_generator_sha256": "59e8732737c58974031aeb8128950209b203eb98fc2b3b0b6f9a1a6d48bbd695",
+      "producer_head": "79fac7ea52b8c21650759ef2d137104fa421c48d",
+      "status": "pass",
+      "tolerance": {
+        "KS_D": "1e-12",
+        "W1": "1e-12 * max(1, scale_ticks)"
+      },
+      "tolerance_contract_sha256": "2f7a4666d923e4dfc44cdd93e28c2fd69a89ba053df423a3f6c003dd7a356185",
+      "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)"
+    },
+    "floor": {
+      "candidate_source_sha256": "d2c7d2fb5a8172907f534d135eb59b21aa7bef0ddace4b695dcd697671df3db4",
+      "cases": 42,
+      "fixture_sha256": "f2b35392e64245475d039d55761344eaeebd6cb0499342436c63840325ed0e6b",
+      "independent_generator_sha256": "59e8732737c58974031aeb8128950209b203eb98fc2b3b0b6f9a1a6d48bbd695",
+      "producer_head": "79fac7ea52b8c21650759ef2d137104fa421c48d",
+      "status": "pass",
+      "tolerance": {
+        "KS_D": "1e-12",
+        "W1": "1e-12 * max(1, scale_ticks)"
+      },
+      "tolerance_contract_sha256": "2f7a4666d923e4dfc44cdd93e28c2fd69a89ba053df423a3f6c003dd7a356185",
+      "toolchain": "rustc 1.88.0 (6b00bc388 2025-06-23)"
+    }
+  },
+  "contract_sha256": {
+    "c4.4-statistical-diagnostics-readback-v1.md": "eeb25477ab42fb3c1e7d28234cb7220b30c91ca585ec07770f9c9b8de2f5cb43",
+    "c4.4-statistical-diagnostics-v1.md": "5ec0b69857d6bb39a19b488ad9b07dc729e14d8605b7eac6d588aa89447a4e71"
+  },
+  "integrated_head": "79fac7ea52b8c21650759ef2d137104fa421c48d",
+  "integrated_worktree_status_at_readback": [
+    " M conductor/design/calibration/c4.4-statistical-diagnostics-readback-v1.md",
+    "?? .gitleaksignore"
+  ],
+  "manual_analytic": {
+    "conditional_opposite_dependence": {
+      "conditional_group_KS_D": [
+        "1",
+        "1"
+      ],
+      "conditional_group_W1": [
+        "1",
+        "1"
+      ],
+      "marginal_KS_D": "0",
+      "marginal_W1": "0",
+      "prespecified_empty_group": "empty"
+    },
+    "fractional_[-1/2,1/2]_[0,1/3]": {
+      "KS_D": "1/2",
+      "W1": "1/3",
+      "reason": "equal quantile distances 1/2 and 1/6"
+    },
+    "tail_[0]_[0,0,0,0,900]": {
+      "KS_D": "1/5",
+      "W1": "180",
+      "reason": "CDF gap 1/5 over 900 ticks"
+    },
+    "uniform_supports_[0,2]_[1,3]": {
+      "KS_D": "1/2",
+      "W1": "1"
+    }
+  },
+  "negative_controls": [
+    {
+      "exit": 1,
+      "join_manifest_sha256": "c2d478e0673defcd5328508c44825fbb118ebaacef5e7722e042b08097bda064",
+      "metric_sha256": "170373c5476a72ede3495db19899c7b6bdfd8989f6710abe0ba392a78fb2a93e",
+      "mutation": "forged_tie_count",
+      "rejection": "ValueError: exact tie count mismatch",
+      "source_manifest_sha256": "18fac34dee2db5bf0ff85a01a74d98f60d6f51df01bf5e3d345765e8aab00a52",
+      "validator_log_sha256": "7e9cd06c58c6134bbe054d377a8bef9e62f6affdf6c6cb8c45db3c76573aa7b8"
+    },
+    {
+      "exit": 1,
+      "join_manifest_sha256": "ead8c27205516779b859b1dfddf6a92879cbaac57221c78906e3136a634ad14c",
+      "metric_sha256": "170373c5476a72ede3495db19899c7b6bdfd8989f6710abe0ba392a78fb2a93e",
+      "mutation": "forged_warning",
+      "rejection": "ValueError: source-derived warnings mismatch",
+      "source_manifest_sha256": "18fac34dee2db5bf0ff85a01a74d98f60d6f51df01bf5e3d345765e8aab00a52",
+      "validator_log_sha256": "029ac3ce3d32532ded15e34a819cd2c32cd0b5113ed8843fb7fa8931b2658142"
+    },
+    {
+      "exit": 1,
+      "join_manifest_sha256": "782143bbcb4eaa198e0caa93e3fdf785d7c5eb7b52da19a425bf257144797d73",
+      "metric_sha256": "170373c5476a72ede3495db19899c7b6bdfd8989f6710abe0ba392a78fb2a93e",
+      "mutation": "omitted_seed_contract",
+      "rejection": "ValueError: source run missing/nonempty seed_contract_version",
+      "source_manifest_sha256": "578d67fe8dcb23d911b29bcd22fa9f8c03ba0e35c812e8b7ca9d524fcaf5472e",
+      "validator_log_sha256": "69c57f1efdbecf24ba677d8c8b75f4bd4a2ba188a9539daf24118faa84a51488"
+    },
+    {
+      "exit": 1,
+      "join_manifest_sha256": "782143bbcb4eaa198e0caa93e3fdf785d7c5eb7b52da19a425bf257144797d73",
+      "metric_sha256": "170373c5476a72ede3495db19899c7b6bdfd8989f6710abe0ba392a78fb2a93e",
+      "mutation": "mismatched_seed_contract",
+      "rejection": "ValueError: metric provenance does not resolve to exactly one source run",
+      "source_manifest_sha256": "27d2a5f5de3efd6be09f1ee6d6cd4b33435bcf8bc7881033627081a1352f3b16",
+      "validator_log_sha256": "6ef487e4d88afa526d3fb60c8335e0421e1428dad85420d498313def406477b7"
+    },
+    {
+      "exit": 1,
+      "join_manifest_sha256": "782143bbcb4eaa198e0caa93e3fdf785d7c5eb7b52da19a425bf257144797d73",
+      "metric_sha256": "170373c5476a72ede3495db19899c7b6bdfd8989f6710abe0ba392a78fb2a93e",
+      "mutation": "omitted_candidate",
+      "rejection": "ValueError: source run missing/nonempty candidate_id",
+      "source_manifest_sha256": "7ec96095c06091641bd2c93edd930bef9e1aa9e0c1c3291de335527543c190b2",
+      "validator_log_sha256": "ad2f613740878c80ff915bd1479cfbe85140df8aae204ed4cec35ef1665ec796"
+    },
+    {
+      "exit": 1,
+      "join_manifest_sha256": "782143bbcb4eaa198e0caa93e3fdf785d7c5eb7b52da19a425bf257144797d73",
+      "metric_sha256": "170373c5476a72ede3495db19899c7b6bdfd8989f6710abe0ba392a78fb2a93e",
+      "mutation": "mismatched_candidate",
+      "rejection": "ValueError: metric provenance does not resolve to exactly one source run",
+      "source_manifest_sha256": "34610f3b9e72a25c47e5232e15be21b54126d0cd0f6f0a6937375b094564a88b",
+      "validator_log_sha256": "6ef487e4d88afa526d3fb60c8335e0421e1428dad85420d498313def406477b7"
+    }
+  ],
+  "residual_count_walkthrough": {
+    "causal_reference_records": 1,
+    "causal_references_resolved": 1,
+    "diagnostic_counts": {
+      "censored": 1,
+      "excluded": 2,
+      "failed": 1,
+      "infeasible": 1,
+      "missing": 1
+    },
+    "eligible_reference": 5,
+    "eligible_simulation": 5,
+    "logical_pair_slots": 8,
+    "matched_pairs": 3,
+    "reference_raw": 8,
+    "residual_raw": 15,
+    "residual_status_counts": {
+      "censored": 1,
+      "computed": 4,
+      "missing_observed": 1,
+      "probe_failed": 2
+    },
+    "simulation_raw": 7,
+    "source_events": 1,
+    "source_runs": 1,
+    "unmatched_raw_instances": 9
+  },
+  "root_receipt_and_source_binding": {
+    "reader_self_tests": "pass",
+    "source_binding_sha256": "21cc441c62ac5f22e3c532e228f23c5439dc11cac5f2ae24841780c8673b421b",
+    "source_files": 76,
+    "status": "pass",
+    "toolchains": {
+      "current": {
+        "all_exit_zero": true,
+        "logs_hash_match": true,
+        "receipt_count": 6,
+        "source_binding_sha256": "21cc441c62ac5f22e3c532e228f23c5439dc11cac5f2ae24841780c8673b421b",
+        "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)"
+      },
+      "floor": {
+        "all_exit_zero": true,
+        "logs_hash_match": true,
+        "receipt_count": 5,
+        "source_binding_sha256": "21cc441c62ac5f22e3c532e228f23c5439dc11cac5f2ae24841780c8673b421b",
+        "toolchain": "rustc 1.88.0 (6b00bc388 2025-06-23)"
+      }
+    }
+  },
+  "schema": "c44.independent.readback.v1",
+  "status": "pass",
+  "worktree_head": "79fac7ea52b8c21650759ef2d137104fa421c48d"
+}
