@@ -14,3 +14,13 @@
 ## CI mapping
 
 `.github/workflows/docs-quality.yml` runs `node scripts/validation/validate-docs-platform-sota.mjs` after `node scripts/dx/validate-docs-workflow.mjs`.
+
+## Website cache source control — 2026-10-05
+
+| Gate | Command | Expected result |
+|---|---|---|
+| Website adapter identity, drift and atomicity | `python3 -m unittest discover -s tests -p test_website_http_cache_patch.py -v` | Exact4.3 offline fixture patches to pinned output; idempotence succeeds; unsupported/mutated/symlink/mixed trees reject. |
+| Raw website dependency audit | `npm audit --prefix website --audit-level=moderate --json` | Exit0; raw JSON remains retained separately from source mitigation. |
+| Installed-source mitigation and behavior | `python3 website/scripts/apply_http_cache_fix.py website/node_modules` then `node tests/http-cache-security-regression.mjs website/node_modules/http-cache-semantics/index.js` | Pinned4.3 source becomes the reviewed local mitigation; all248 named cases pass. |
+
+Docs and Docs Quality retain website-cache-security artifacts. A version-only audit pass is not source-security proof or release approval. Bootstrap EXC199 remains restricted to its original tree and scope.

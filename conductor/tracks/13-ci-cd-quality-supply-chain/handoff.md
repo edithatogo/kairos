@@ -259,3 +259,7 @@ PDES package test reproduced the missing-import failure (exit 101) at
 `e3306f4ca3e560b81725a1b07a275d98643caefe`. Receipts and logs are local under
 `artifacts/track48-conductor-repair/`. The original hosted run remains failed;
 exact-head hosted rerun evidence is pending, so no hosted pass is claimed.
+
+## Website dependency mitigation integration — 2026-10-05
+
+Bounded follow-up to public advisory GHSA-ch52-4w7c-c8xp / alert69: website lock resolves http-cache-semantics4.3.0, with a separate website adapter retaining the existing hash-pinned source mitigation. Unmodified official4.3 fails189/248 security/compatibility cases; a composed scratch mitigation passes248/248. Version4.3 is not claimed as an official security fix. Bootstrap4.2 generator and EXC199 approval/source binding stay unchanged. Docs and Docs Quality invoke the website adapter, fail on raw npm audit at moderate severity, run its offline fail-closed tests and the actual248-case installed-source regression, and retain versions/source hashes/raw audit/logs in a distinct artifact. Final integrated source, actual install/build, independent review and exact-head hosted results remain required; this entry is an implementation handoff, not an executed-gate or deployment claim. No new policy exception or broader Track45/13 phase completion is asserted.
