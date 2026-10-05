@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { ARCHIVE_PATHS } from './classify-binding-ci-changes.mjs';
 
 const RUST_RELEVANT_PATHS = [
   /\.rs$/,
@@ -24,11 +25,22 @@ const KNOWN_NON_RUST_PATHS = [
   /^(?:website|bindings|templates|python|r|julia|go|csharp)\//,
 ];
 
+// The binding classifier owns this exact archive helper/test allowlist. Only
+// Python source and test files under these two roots are non-Rust; workflows,
+// schemas, locks, docs, and general packaging/tests remain fail-closed.
+const ARCHIVE_PYTHON_NON_RUST_PATHS = new Set(ARCHIVE_PATHS.filter((path) =>
+  path.endsWith('.py') && (path.startsWith('packaging/scripts/') || path.startsWith('tests/'))));
+
+function isKnownNonRustPath(path) {
+  return KNOWN_NON_RUST_PATHS.some((pattern) => pattern.test(path))
+    || ARCHIVE_PYTHON_NON_RUST_PATHS.has(path);
+}
+
 export function requiresRustVerification(paths) {
   // Empty or unfamiliar change sets run Rust verification. Skip only when all
   // paths are in the deliberately small, known non-Rust set.
   if (paths.length === 0) return true;
-  return paths.some((path) => !KNOWN_NON_RUST_PATHS.some((pattern) => pattern.test(path))
+  return paths.some((path) => !isKnownNonRustPath(path)
     || RUST_RELEVANT_PATHS.some((pattern) => pattern.test(path)));
 }
 
