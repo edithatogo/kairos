@@ -16,6 +16,8 @@ Format:
 
 ### Changed
 
+- Retained package acquisition can preserve the original artifact ZIP and native GitHub readbacks; archive evidence verifies exact successful main-dispatch lineage while preserving the existing PR evidence format.
+
 - Archive supply-chain helpers verify retained package bytes, SPDX documents and copy provenance with independent readback; authenticated Syft installation and seven focused Python suites are included in selective binding CI.
 
 - Rust workspace member path dependencies now declare matching crate version requirements for package archives.

@@ -61,13 +61,15 @@ def _make_tar(member: str, payload: bytes) -> bytes:
 class CompleteEvidenceFixture:
     """Build a tiny complete profile with one real-format archive per ecosystem."""
 
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, *, main_dispatch: bool = False, main_head_sha: str | None = None):
         self.root = root
         self.bundle = root / "acquisition" / "bundle"
         self.evidence = root / "result"
         self.acquisition = root / "acquisition"
         self.expected = root / "expected"
-        self.commit, self.pr_head, self.tree = "a" * 40, "b" * 40, "c" * 40
+        self.main_dispatch = main_dispatch
+        self.commit, self.pr_head, self.tree = "a" * 40, ("a" if main_dispatch else "b") * 40, "c" * 40
+        self.main_head_sha = main_head_sha or self.commit
         self.run_id, self.artifact_id = 37273717088, 11329331832
         self.specs = [
             ("go", "go-source-archive", "go/fixture.tar.gz", "go.mod", b"module example.org/fixture-go\n", "example.org/fixture-go", None, "go"),
@@ -127,17 +129,32 @@ class CompleteEvidenceFixture:
         schema_bytes = schema.read_bytes()
         self.binding["spdx_schema_sha256"] = _sha(schema_bytes)
         _put(self.schema, schema_bytes)
-        _put(self.acquisition / "artifact-metadata.json", _json_bytes({
+        artifact_metadata = {
             "id": self.artifact_id, "size_in_bytes": len(self.archive_zip_bytes),
             "digest": "sha256:" + _sha(self.archive_zip_bytes),
             "workflow_run": {"id": self.run_id, "head_sha": self.pr_head},
-        }))
-        _put(self.acquisition / "source-commit-readback.json", _json_bytes({self.commit: {
-            "sha": self.commit, "tree": {"sha": self.tree}, "parents": [{"sha": self.pr_head,
-                "url": f"https://api.github.com/repos/edithatogo/kairos/git/commits/{self.pr_head}",
-                "html_url": f"https://github.com/edithatogo/kairos/commit/{self.pr_head}"}],
-            "verification": {"verified": True, "reason": "valid"},
-        }}))
+        }
+        parent_sha = ("d" if self.main_dispatch else "b") * 40
+        parents = [{"sha": parent_sha,
+            "url": f"https://api.github.com/repos/edithatogo/kairos/git/commits/{parent_sha}",
+            "html_url": f"https://github.com/edithatogo/kairos/commit/{parent_sha}"}]
+        if self.main_dispatch:
+            artifact_metadata.update({
+                "name": "kairos-actual-package-archives-" + self.commit,
+                "expired": False,
+            })
+            artifact_metadata["workflow_run"].update({
+                "repository_id": 1229600990, "head_repository_id": 1229600990, "head_branch": "main",
+            })
+        _put(self.acquisition / "artifact-metadata.json", _json_bytes(artifact_metadata))
+        normalized = {"sha": self.commit, "tree": {"sha": self.tree}, "parents": parents,
+            "verification": {"verified": True, "reason": "valid"}}
+        _put(self.acquisition / "source-commit-readback.json", _json_bytes({self.commit: normalized}))
+        if self.main_dispatch:
+            _put(self.acquisition / "source-commit-api-readback.json", _json_bytes({self.commit: {
+                "sha": self.commit, "tree": {"sha": self.tree}, "verification": {"verified": True, "reason": "valid"},
+                "parents": parents,
+            }}))
         artifact_hash = _sha((self.acquisition / "artifact-metadata.json").read_bytes())
         source_hash = _sha((self.acquisition / "source-commit-readback.json").read_bytes())
         zip_hash = _sha(self.archive_zip_bytes)
@@ -148,6 +165,36 @@ class CompleteEvidenceFixture:
             "ecosystems": sorted(verifier.ECOSYSTEMS),
             "scope": "Actual retained archive structural/source acquisition verification; no producer SLSA attestation, release or registry acceptance",
         }
+        if self.main_dispatch:
+            identical = self.main_head_sha == self.commit
+            compare_url = None if identical else f"https://api.github.com/repos/edithatogo/kairos/compare/{self.commit}...{self.main_head_sha}"
+            ancestry = {"observed_branch": "main", "source_sha": self.commit,
+                "observed_main_sha": self.main_head_sha, "compare_url": compare_url, "base_sha": self.commit,
+                "merge_base_sha": self.commit, "status": "identical" if identical else "ahead",
+                "ahead_by": 0 if identical else 1, "behind_by": 0}
+            acquisition_receipt["selection_policy"] = "same-repository-main-workflow-dispatch"
+            acquisition_receipt["main_ancestry"] = ancestry
+            _put(self.acquisition / "run-metadata.json", _json_bytes({
+                "id": self.run_id, "repository": {"full_name": "edithatogo/kairos", "id": 1229600990},
+                "head_repository": {"full_name": "edithatogo/kairos", "id": 1229600990},
+                "path": ".github/workflows/package-dry-run.yml", "status": "completed", "conclusion": "success",
+                "event": "workflow_dispatch", "head_branch": "main", "pull_requests": [], "head_sha": self.commit,
+            }))
+            _put(self.acquisition / "branch-main-readback.json", _json_bytes({"name": "main", "commit": {"sha": self.main_head_sha}}))
+            if not identical:
+                _put(self.acquisition / "compare-main-readback.json", _json_bytes({
+                    "url": compare_url, "head_commit": {"sha": self.main_head_sha},
+                    "base_commit": {"sha": self.commit}, "merge_base_commit": {"sha": self.commit},
+                    "status": "ahead", "ahead_by": 1, "behind_by": 0,
+                }))
+            _put(self.acquisition / "acquisition.json", _json_bytes({
+                "repository": "edithatogo/kairos", "run_id": self.run_id, "source_commit": self.commit,
+                "head_commit": self.commit, "artifact_id": self.artifact_id,
+                "artifact_digest": "sha256:" + zip_hash,
+                "archive_index_sha256": _sha(self.index_bytes), "scope": "verified acquisition; not original build provenance or release acceptance",
+                "build_commit_parents": parents,
+                "selection_policy": "same-repository-main-workflow-dispatch", "main_ancestry": ancestry,
+            }))
         _put(self.acquisition / "receipt.json", _json_bytes(acquisition_receipt))
         acquisition_data = {
             "archive_count": len(self.rows), "archive_index_sha256": _sha(self.index_bytes),
@@ -157,6 +204,14 @@ class CompleteEvidenceFixture:
                 "artifact_metadata_sha256": artifact_hash,
                 "original_local_verification_receipt_sha256": _sha((self.acquisition / "receipt.json").read_bytes()),
                 "source_commit_readback_sha256": source_hash,
+                **({
+                    "source_commit_api_readback_json_sha256": _sha((self.acquisition / "source-commit-api-readback.json").read_bytes()),
+                    "run_metadata_json_sha256": _sha((self.acquisition / "run-metadata.json").read_bytes()),
+                    "acquisition_json_sha256": _sha((self.acquisition / "acquisition.json").read_bytes()),
+                    "branch_main_readback_json_sha256": _sha((self.acquisition / "branch-main-readback.json").read_bytes()),
+                    **({"compare_main_readback_json_sha256": _sha((self.acquisition / "compare-main-readback.json").read_bytes())}
+                       if (self.acquisition / "compare-main-readback.json").exists() else {}),
+                } if self.main_dispatch else {}),
             }},
             "ecosystems": sorted(verifier.ECOSYSTEMS), "repository": "edithatogo/kairos",
             "run_id": self.run_id, "source_commit": self.commit,
@@ -349,6 +404,91 @@ class ArchiveEvidenceVerifierTests(unittest.TestCase):
             self.assertTrue(all(events[pos][0] == "preflight" and events[pos + 1][0] == "zipfile"
                                 for pos in range(0, len(events), 2)))
 
+    def test_exact_successful_main_dispatch_identity_passes_with_real_parent(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = CompleteEvidenceFixture(Path(temporary).resolve(), main_dispatch=True)
+            result = verifier.verify_profile(fixture.args())
+            self.assertTrue(result["valid"])
+            parents = json.loads((fixture.acquisition / "source-commit-readback.json").read_bytes())[fixture.commit]["parents"]
+            self.assertEqual(len(parents), 1)
+            self.assertNotEqual(parents[0]["sha"], fixture.commit)
+
+    def test_main_dispatch_ahead_case_binds_raw_compare_head_and_merge_base(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = CompleteEvidenceFixture(Path(temporary).resolve(), main_dispatch=True, main_head_sha="e" * 40)
+            result = verifier.verify_profile(fixture.args())
+            self.assertTrue(result["valid"])
+            compare_path = fixture.acquisition / "compare-main-readback.json"
+            compare = json.loads(compare_path.read_bytes())
+            compare["head_commit"]["sha"] = "f" * 40
+            _put(compare_path, _json_bytes(compare))
+            with self.assertRaises(verifier.VerificationFailure) as raised:
+                verifier.verify_profile(fixture.args())
+            self.assertEqual(raised.exception.code, "main_compare_head_binding")
+
+    def test_main_dispatch_admission_fields_fail_closed(self) -> None:
+        mutations = (
+            ("run-metadata.json", lambda value: value.update(event="push")),
+            ("run-metadata.json", lambda value: value.update(head_branch="release")),
+            ("run-metadata.json", lambda value: value.update(path=".github/workflows/other.yml")),
+            ("run-metadata.json", lambda value: value.update(status="in_progress")),
+            ("run-metadata.json", lambda value: value.update(conclusion="failure")),
+            ("run-metadata.json", lambda value: value.update(id=1)),
+            ("run-metadata.json", lambda value: value.update(head_sha="e" * 40)),
+            ("run-metadata.json", lambda value: value.update(pull_requests=[{"number": 1}])),
+            ("run-metadata.json", lambda value: value["repository"].update(full_name="other/repo")),
+            ("run-metadata.json", lambda value: value["head_repository"].update(id=2)),
+            ("artifact-metadata.json", lambda value: value["workflow_run"].update(head_sha="e" * 40)),
+            ("artifact-metadata.json", lambda value: value.update(name="other")),
+            ("artifact-metadata.json", lambda value: value.update(expired=True)),
+            ("artifact-metadata.json", lambda value: value.update(id=float(value["id"]))),
+            ("artifact-metadata.json", lambda value: value.update(size_in_bytes=float(value["size_in_bytes"]))),
+            ("artifact-metadata.json", lambda value: value["workflow_run"].update(repository_id=1)),
+            ("artifact-metadata.json", lambda value: value["workflow_run"].update(head_repository_id=1)),
+            ("artifact-metadata.json", lambda value: value["workflow_run"].update(head_branch="feature")),
+            ("receipt.json", lambda value: value.update(selection_policy="caller-selected")),
+            ("receipt.json", lambda value: value.update(main_ancestry={"status": "identical"})),
+            ("acquisition.json", lambda value: value.update(selection_policy="caller-selected")),
+            ("acquisition.json", lambda value: value.update(archive_index_sha256="0" * 64)),
+            ("acquisition.json", lambda value: value.update(build_commit_parents=[])),
+            ("branch-main-readback.json", lambda value: value["commit"].update(sha="e" * 40)),
+            ("acquisition.json", lambda value: value.update(main_ancestry={"status": "identical"})),
+        )
+        for name, mutate in mutations:
+            with self.subTest(file=name, mutate=mutate), tempfile.TemporaryDirectory() as temporary:
+                fixture = CompleteEvidenceFixture(Path(temporary).resolve(), main_dispatch=True)
+                path = fixture.acquisition / name
+                value = json.loads(path.read_bytes())
+                mutate(value)
+                _put(path, _json_bytes(value))
+                with self.assertRaises(verifier.VerificationFailure):
+                    verifier.verify_profile(fixture.args())
+
+    def test_main_dispatch_requires_all_retained_records_and_native_parent_shape(self) -> None:
+        for name in ("run-metadata.json", "acquisition.json", "branch-main-readback.json", "source-commit-api-readback.json"):
+            with self.subTest(missing=name), tempfile.TemporaryDirectory() as temporary:
+                fixture = CompleteEvidenceFixture(Path(temporary).resolve(), main_dispatch=True)
+                (fixture.acquisition / name).unlink()
+                with self.assertRaises(verifier.VerificationFailure):
+                    verifier.verify_profile(fixture.args())
+        bad_parent_sets = (
+            [],
+            [{"sha": "d" * 40, "url": "https://api.github.com/repos/edithatogo/kairos/git/commits/" + "d" * 40,
+              "html_url": "https://github.com/edithatogo/kairos/commit/" + "d" * 40, "extra": True}],
+            [{"sha": "a" * 40, "url": "https://api.github.com/repos/edithatogo/kairos/git/commits/" + "a" * 40,
+              "html_url": "https://github.com/edithatogo/kairos/commit/" + "a" * 40}],
+        )
+        for parents in bad_parent_sets:
+            with self.subTest(parents=parents), tempfile.TemporaryDirectory() as temporary:
+                fixture = CompleteEvidenceFixture(Path(temporary).resolve(), main_dispatch=True)
+                path = fixture.acquisition / "source-commit-readback.json"
+                value = json.loads(path.read_bytes())
+                value[fixture.commit]["parents"] = parents
+                _put(path, _json_bytes(value))
+                with self.assertRaises(verifier.VerificationFailure) as raised:
+                    verifier.verify_profile(fixture.args())
+                self.assertEqual(raised.exception.code, "source_readback_parent")
+
     def test_external_expected_inputs_must_match_bundled_map_semantically(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             fixture = CompleteEvidenceFixture(Path(temporary).resolve())
@@ -370,9 +510,11 @@ class ArchiveEvidenceVerifierTests(unittest.TestCase):
             self.assertEqual(raised.exception.code, "source_commit_mismatch")
 
     def test_native_parent_objects_require_expected_parent_and_exact_urls(self) -> None:
+        expected_parent = {"sha": "b" * 40, "url": f"https://api.github.com/repos/edithatogo/kairos/git/commits/{'b' * 40}",
+                           "html_url": f"https://github.com/edithatogo/kairos/commit/{'b' * 40}"}
         for parents in ([], [{"sha": "d" * 40, "url": f"https://api.github.com/repos/edithatogo/kairos/git/commits/{'d' * 40}",
                               "html_url": f"https://github.com/edithatogo/kairos/commit/{'d' * 40}"}],
-                        ["b" * 40]):
+                        [expected_parent, expected_parent], ["b" * 40]):
             with self.subTest(parents=parents), tempfile.TemporaryDirectory() as temporary:
                 fixture = CompleteEvidenceFixture(Path(temporary).resolve())
                 path = fixture.acquisition / "source-commit-readback.json"

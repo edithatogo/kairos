@@ -793,7 +793,7 @@ def parse_checksums(data: bytes, label: str) -> dict[str, str]:
     return entries
 
 
-def validate_acquisition_records(acquisition: Path, binding: dict[str, Any], rows: list[dict[str, Any]], helper: Any) -> dict[str, Any]:
+def validate_acquisition_records(acquisition: Path, binding: dict[str, Any], rows: list[dict[str, Any]], index_sha: str, helper: Any, acquisition_helper: Any) -> dict[str, Any]:
     files = {}
     hashes = {}
     for name in ("receipt.json", "artifact-metadata.json", "source-commit-readback.json"):
@@ -820,7 +820,7 @@ def validate_acquisition_records(acquisition: Path, binding: dict[str, Any], row
     run = metadata.get("workflow_run")
     if not isinstance(run, dict) or run.get("id") != run_id or run.get("head_sha") != pr_head:
         fail("artifact_workflow_binding", "artifact-metadata.json")
-    if not isinstance(readback, dict) or commit not in readback or not isinstance(readback[commit], dict):
+    if not isinstance(readback, dict) or set(readback) != {commit} or not isinstance(readback[commit], dict):
         fail("source_readback_missing", "source-commit-readback.json")
     commit_data = readback[commit]
     verification = commit_data.get("verification")
@@ -835,13 +835,110 @@ def validate_acquisition_records(acquisition: Path, binding: dict[str, Any], row
         or parent.get("url") != f"https://api.github.com/repos/edithatogo/kairos/git/commits/{parent['sha']}"
         or parent.get("html_url") != f"https://github.com/edithatogo/kairos/commit/{parent['sha']}"
         for parent in parents
-    ) or pr_head not in {parent["sha"] for parent in parents}:
+    ) or commit in {parent["sha"] for parent in parents} or len({parent["sha"] for parent in parents}) != len(parents):
         fail("source_readback_parent", "source-commit-readback.json")
     if not isinstance(verification, dict) or verification.get("verified") is not True or verification.get("reason") != "valid":
         fail("source_readback_verification", "source-commit-readback.json")
     if receipt.get("scope") != "Actual retained archive structural/source acquisition verification; no producer SLSA attestation, release or registry acceptance":
         fail("acquisition_receipt_scope", "receipt.json")
-    return {"receipt": receipt, "metadata": metadata, "readback": commit_data, "hashes": hashes}
+    compact_path = acquisition / "acquisition.json"
+    compact_receipt = None
+    compact_bytes = None
+    if compact_path.exists() or compact_path.is_symlink():
+        compact_receipt, compact_bytes = load_json(helper, contained_file(acquisition, "acquisition.json", "acquisition.json"), "acquisition.json")
+    mode = compact_receipt.get("selection_policy") if isinstance(compact_receipt, dict) else None
+    main_mode = mode == "same-repository-main-workflow-dispatch"
+    main_names = ("run-metadata.json", "branch-main-readback.json")
+    if main_mode:
+        files["acquisition.json"] = compact_receipt
+        hashes["acquisition.json"] = sha256_bytes(compact_bytes)
+        raw_path = contained_file(acquisition, "source-commit-api-readback.json", "source-commit-api-readback.json")
+        raw_map, raw_bytes = load_json(helper, raw_path, "source-commit-api-readback.json")
+        hashes["source-commit-api-readback.json"] = sha256_bytes(raw_bytes)
+        raw = raw_map.get(commit) if isinstance(raw_map, dict) and set(raw_map) == {commit} else None
+        raw_parents = raw.get("parents") if isinstance(raw, dict) else None
+        raw_tree = raw.get("tree") if isinstance(raw, dict) else None
+        raw_verification = raw.get("verification") if isinstance(raw, dict) else None
+        projected_parents = ([{key: parent.get(key) for key in ("sha", "url", "html_url")}
+                              for parent in raw_parents]
+                             if isinstance(raw_parents, list) and all(isinstance(parent, dict) for parent in raw_parents)
+                             else None)
+        if (not isinstance(raw, dict) or raw.get("sha") != commit
+                or not isinstance(raw_tree, dict) or raw_tree.get("sha") != tree
+                or projected_parents != parents or not isinstance(raw_verification, dict)
+                or raw_verification.get("verified") is not True or raw_verification.get("reason") != "valid"):
+            fail("source_api_readback_mismatch", "source-commit-api-readback.json")
+        for name in main_names:
+            path = contained_file(acquisition, name, name)
+            files[name], data = load_json(helper, path, name)
+            hashes[name] = sha256_bytes(data)
+        run_record = files["run-metadata.json"]
+        try:
+            run_source = acquisition_helper.validate_main_dispatch_run(run_record, run_id)
+        except Exception:
+            fail("main_dispatch_admission", "run-metadata.json")
+        if run_source != commit or pr_head != run_source or metadata.get("workflow_run", {}).get("head_sha") != run_source:
+            fail("main_dispatch_source_binding", "run-metadata.json")
+        workflow_run = metadata.get("workflow_run")
+        run_repository = run_record.get("repository")
+        head_repository = run_record.get("head_repository")
+        if (metadata.get("name") != "kairos-actual-package-archives-" + commit
+                or metadata.get("expired") is not False
+                or type(metadata.get("id")) is not int
+                or type(metadata.get("size_in_bytes")) is not int
+                or not isinstance(workflow_run, dict)
+                or type(workflow_run.get("id")) is not int
+                or type(workflow_run.get("repository_id")) is not int
+                or type(workflow_run.get("head_repository_id")) is not int
+                or workflow_run.get("repository_id") != run_repository.get("id")
+                or workflow_run.get("head_repository_id") != head_repository.get("id")
+                or workflow_run.get("head_branch") != "main"):
+            fail("main_artifact_metadata_binding", "artifact-metadata.json")
+        acquisition_receipt = files["acquisition.json"]
+        compact_parents = acquisition_receipt.get("build_commit_parents") if isinstance(acquisition_receipt, dict) else None
+        compact_parent_projection = ([{key: parent.get(key) for key in ("sha", "url", "html_url")}
+                                      for parent in compact_parents]
+                                     if isinstance(compact_parents, list) and all(isinstance(parent, dict) for parent in compact_parents)
+                                     else None)
+        if (not isinstance(acquisition_receipt, dict)
+                or acquisition_receipt.get("repository") != "edithatogo/kairos"
+                or acquisition_receipt.get("run_id") != run_id
+                or acquisition_receipt.get("source_commit") != commit
+                or acquisition_receipt.get("head_commit") != run_source
+                or acquisition_receipt.get("artifact_id") != aid
+                or acquisition_receipt.get("artifact_digest") != "sha256:" + binding["archive_zip_sha256"]
+                or acquisition_receipt.get("selection_policy") != mode
+                or acquisition_receipt.get("archive_index_sha256") != index_sha
+                or acquisition_receipt.get("scope") != "verified acquisition; not original build provenance or release acceptance"
+                or compact_parent_projection != parents):
+            fail("main_acquisition_binding", "acquisition.json")
+        branch = files["branch-main-readback.json"]
+        observed_main = branch.get("commit", {}).get("sha") if isinstance(branch, dict) and isinstance(branch.get("commit"), dict) else None
+        if not isinstance(observed_main, str) or not COMMIT_RE.fullmatch(observed_main):
+            fail("main_branch_readback", "branch-main-readback.json")
+        comparison_path = acquisition / "compare-main-readback.json"
+        comparison = None
+        if observed_main == commit:
+            if comparison_path.exists() or comparison_path.is_symlink():
+                fail("main_compare_unexpected", "compare-main-readback.json")
+        else:
+            comparison, data = load_json(helper, contained_file(acquisition, "compare-main-readback.json", "compare-main-readback.json"), "compare-main-readback.json")
+            hashes["compare-main-readback.json"] = sha256_bytes(data)
+            if not isinstance(comparison, dict) or not isinstance(comparison.get("head_commit"), dict) or comparison["head_commit"].get("sha") != observed_main:
+                fail("main_compare_head_binding", "compare-main-readback.json")
+        try:
+            ancestry = acquisition_helper.validate_main_ancestry(commit, branch, comparison)
+        except Exception:
+            fail("main_ancestry_admission", "branch-main-readback.json")
+        if acquisition_receipt.get("main_ancestry") != ancestry:
+            fail("main_ancestry_binding", "acquisition.json")
+        if receipt.get("selection_policy") != mode or receipt.get("main_ancestry") != ancestry:
+            fail("outer_main_ancestry_binding", "receipt.json")
+    elif mode is not None:
+        fail("acquisition_selection_policy", "receipt.json")
+    elif pr_head not in {parent["sha"] for parent in parents}:
+        fail("source_readback_parent", "source-commit-readback.json")
+    return {"receipt": receipt, "metadata": metadata, "readback": commit_data, "hashes": hashes, "main_mode": main_mode}
 
 
 def build_expected_inventory(rows: list[dict[str, Any]]) -> set[str]:
@@ -1146,6 +1243,9 @@ def verify_profile(args: argparse.Namespace) -> dict[str, Any]:
     supply = load_verified_module(
         verified_helper_bytes["build_archive_supply_chain.py"],
         "_archive_evidence_supply", str(source_dir / "build_archive_supply_chain.py"))
+    acquisition_helper = load_verified_module(
+        verified_helper_bytes["acquire_package_archive_bundle.py"],
+        "_archive_evidence_acquisition", str(source_dir / "acquire_package_archive_bundle.py"))
     if provenance.load_json_bytes(binding_bytes, "expected_binding", MAX_JSON_BYTES) != binding_value:
         fail("bootstrap_loader_disagreement", "expected_binding")
     if provenance.load_json_bytes(expected_bytes, "expected_inputs", MAX_JSON_BYTES) != expected_value:
@@ -1181,7 +1281,7 @@ def verify_profile(args: argparse.Namespace) -> dict[str, Any]:
     verify_acquisition_zip(args.archive_zip, binding, args.archive_bundle, index_bytes, receipt_bytes, checksum_bytes, rows)
     if args.archive_bundle.resolve() != (args.acquisition_dir / "bundle").resolve():
         fail("archive_bundle_location", "archive_bundle")
-    acquisition_records = validate_acquisition_records(args.acquisition_dir, binding, rows, provenance)
+    acquisition_records = validate_acquisition_records(args.acquisition_dir, binding, rows, index_sha, provenance, acquisition_helper)
 
     for rel in ("build-inputs/ARCHIVE-INDEX.json", "build-inputs/BUILD-RECEIPT.json", "build-inputs/acquisition.json"):
         actual, _ = hash_file(contained_file(args.evidence_dir, rel, rel), MAX_JSON_BYTES, rel)
@@ -1204,6 +1304,9 @@ def verify_profile(args: argparse.Namespace) -> dict[str, Any]:
         "artifact_metadata_sha256": acquisition_records["hashes"]["artifact-metadata.json"],
         "original_local_verification_receipt_sha256": acquisition_records["hashes"]["receipt.json"],
         "source_commit_readback_sha256": acquisition_records["hashes"]["source-commit-readback.json"],
+        **{name.replace("-", "_").replace(".", "_") + "_sha256": digest
+           for name, digest in acquisition_records["hashes"].items()
+           if name not in {"receipt.json", "artifact-metadata.json", "source-commit-readback.json"}},
     }
     if not isinstance(derivation, dict) or derivation.get("status") != "derived local adapter receipt; not original acquisition history" or derivation_inputs != required_derivation:
         fail("evidence_acquisition_derivation", "build-inputs/acquisition.json.derivation")
