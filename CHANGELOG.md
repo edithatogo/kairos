@@ -16,6 +16,8 @@ Format:
 
 ### Changed
 
+- A manual main-only Linux Syft qualification workflow independently checks authenticated installation receipts, logs and exact archive/executable bytes before retaining evidence.
+
 - Archive supply-chain helpers verify retained package bytes, SPDX documents and copy provenance with independent readback; authenticated Syft installation and seven focused Python suites are included in selective binding CI.
 
 - Rust workspace member path dependencies now declare matching crate version requirements for package archives.

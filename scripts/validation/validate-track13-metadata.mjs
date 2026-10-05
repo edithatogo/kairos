@@ -236,6 +236,7 @@ for (const workflow of [
   'sbom-attestations.yml',
   'scorecard.yml',
   'secret-scan.yml',
+  'syft-linux-qualification.yml',
   'toolchain-check.yml',
   'validate-conductor.yml',
   'workflow-security.yml',
