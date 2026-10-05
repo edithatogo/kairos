@@ -2,12 +2,9 @@
 #![forbid(unsafe_code)]
 
 pub mod seed_map;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "Private C2.2 provider is exercised by source conformance; Flow integration is a later instance"
-    )
+#[expect(
+    dead_code,
+    reason = "Private C2.2 provider is exercised by source conformance; Flow integration is a later instance"
 )]
 mod work_duration;
 

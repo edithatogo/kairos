@@ -8,6 +8,7 @@ use crate::seed_map::{
 };
 use kairo_ecs_types::SimDuration;
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 use thiserror::Error;
 
 pub(crate) const INTRINSIC_WORK_PROVIDER_VERSION_V1: u32 = 1;
@@ -32,6 +33,7 @@ pub(crate) struct IntrinsicWorkProvider {
 #[derive(Debug, Eq, PartialEq)]
 pub(crate) struct SampledWorkDuration {
     duration: SimDuration,
+    key: CalibrationStreamKey,
     draw_before: u64,
     draw_after: u64,
 }
@@ -142,6 +144,7 @@ impl IntrinsicDurationDistribution {
         };
         let sample = SampledWorkDuration {
             duration: SimDuration::from_ticks(duration),
+            key: expected.clone(),
             draw_before,
             draw_after: candidate.draw_position(),
         };
@@ -201,5 +204,11 @@ impl SampledWorkDuration {
 
     pub(crate) fn draw_after(&self) -> u64 {
         self.draw_after
+    }
+}
+
+impl fmt::Debug for CalibrationStreamKey {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("CalibrationStreamKey([redacted])")
     }
 }
