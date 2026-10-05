@@ -97,3 +97,24 @@ in `.artifacts/archive-release-gate-reviewed/`; it is not a passing result.
 This local qualification does not establish a fresh hosted Linux receipt at
 the updated installer source, hosted archive consumer execution, release workflow
 integration, signed original-build provenance, release acceptance or publication.
+
+
+### Cleanup and hosted-consumer candidate qualification
+
+A fresh local execution at consumer
+`30d3c38e9740e316c1cf6046cbce0ee8aae9d796` used the same exact retained producer
+and fresh reviewed installer receipt described above. Every command treated
+Python syntax warnings as errors. Input preparation, eight actual package scans,
+full verification and the release adapter each exited zero; the verifier again
+accepted eight archives, seven ecosystems, nine SPDX documents and 44 files.
+All five helper pins were reconciled with that consumer's trusted Git blobs,
+and all eight prepared archive copies matched the scanned evidence bytes.
+The wrong-source case again failed with `binding_source_mismatch` and no output.
+
+Commands and logs remain in ignored `.artifacts/archive-hosted-candidate-actual/`.
+The source includes the [mainline consumer workflow](archive-main-consumer-v1.md),
+whose hosted execution remains a separate gate. A subsequent integrated scanner
+regression run exposed a native macOS process-group permission race in the
+scanner's separate cleanup implementation; its retained failure is not converted
+into a pass by this actual qualification. That repair and its focused qualification
+must be completed before candidate delivery.
