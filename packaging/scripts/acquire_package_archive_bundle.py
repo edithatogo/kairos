@@ -187,7 +187,6 @@ def _darwin_group_snapshot(pid: int) -> tuple[int, bytes, bytes] | None:
         return None
     finally:
         selector.close()
-        cleanup_failed = False
         if process is not None:
             if process.poll() is None:
                 try:
@@ -195,16 +194,14 @@ def _darwin_group_snapshot(pid: int) -> tuple[int, bytes, bytes] | None:
                 except ProcessLookupError:
                     pass
                 except OSError:
-                    cleanup_failed = True
+                    pass
                 try:
                     process.wait(timeout=1)  # Also reap a child that exited before kill().
                 except (OSError, subprocess.TimeoutExpired):
-                    cleanup_failed = True
+                    pass
             for stream in (process.stdout, process.stderr):
                 if stream is not None:
                     stream.close()
-        if cleanup_failed:
-            return None
 
 
 def _darwin_group_has_live_members(pid: int) -> bool | None:
