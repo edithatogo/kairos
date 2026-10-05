@@ -10,6 +10,7 @@ mod residuals;
 mod sidecar_adapter;
 
 use kairo_ecs_arrow::{EventLogRecord, EventStatus, SCHEMA_VERSION};
+use kairo_ecs_calibration::seed_map;
 use kairo_ecs_types::EventId;
 use metric_cohorts::{Identity, Outcome, Row as MetricRow, Spec as MetricSpec};
 use residuals::{GroupKey, LogicalKey, OutcomeStatus, Row, Side, Window};
@@ -152,7 +153,7 @@ fn input() -> Input {
         run_id: "run-a".into(),
         event_id: EventId::new(4, 2),
         entity_id: None,
-        time_ticks: 12,
+        time_ticks: 10,
         time_scale: "ticks".into(),
         priority: 0,
         sequence: 1,
@@ -249,6 +250,9 @@ fn rich_input() -> Input {
     ] {
         let mut a = residual_row(Side::Reference, case, rs, observed);
         let mut b = residual_row(Side::Simulation, case, ss, predicted);
+        if rs == OutcomeStatus::Missing {
+            a.evidence.censor_status = "missing".into();
+        }
         if rs == OutcomeStatus::Censored {
             a.evidence.censor_status = "right".into();
         }
@@ -260,6 +264,7 @@ fn rich_input() -> Input {
             b.row.infeasible = true;
             b.evidence.feasibility = "infeasible".into();
         }
+        b.evidence.probe_id = Some(format!("probe-{case}"));
         x.residual_rows.extend([a, b]);
     }
     x.residual_rows.push(residual_row(
@@ -346,7 +351,11 @@ fn c43_runtime_records_and_hashes_survive_permutation_and_physical_framing() {
                     <sha2::Sha256 as sha2::Digest>::digest(serde_json::to_vec(&actual).unwrap())
                 );
                 if let Some(ref dir) = output {
-                    fs::write(dir.join(format!("{name}.{format}")), bytes).unwrap();
+                    fs::write(dir.join(format!("{name}.{format}")), &bytes).unwrap();
+                    let framed = dir.join(format!("framing-{chunk}"));
+                    fs::create_dir_all(&framed).unwrap();
+                    fs::write(framed.join(format!("{name}.{format}")), &bytes).unwrap();
+                    fs::write(framed.join(format!("{name}.json")), &canonical_bytes).unwrap();
                 }
             }
             #[cfg(feature = "parquet")]
@@ -364,7 +373,11 @@ fn c43_runtime_records_and_hashes_survive_permutation_and_physical_framing() {
                     <sha2::Sha256 as sha2::Digest>::digest(serde_json::to_vec(&actual).unwrap())
                 );
                 if let Some(ref dir) = output {
-                    fs::write(dir.join(format!("{name}.parquet")), bytes).unwrap();
+                    fs::write(dir.join(format!("{name}.parquet")), &bytes).unwrap();
+                    let framed = dir.join(format!("framing-{chunk}"));
+                    fs::create_dir_all(&framed).unwrap();
+                    fs::write(framed.join(format!("{name}.parquet")), &bytes).unwrap();
+                    fs::write(framed.join(format!("{name}.json")), &canonical_bytes).unwrap();
                 }
             }
         }
@@ -376,7 +389,43 @@ fn c43_runtime_records_and_hashes_survive_permutation_and_physical_framing() {
         )
         .unwrap();
         let x = rich_input();
+        let legacy = kairo_ecs_arrow::EventLogBatch::new(x.events.clone()).unwrap();
+        let bytes = legacy.to_smoke_bytes();
+        assert_eq!(
+            legacy,
+            kairo_ecs_arrow::EventLogBatch::from_smoke_bytes(&bytes).unwrap()
+        );
+        fs::write(dir.join("event_log.smoke"), bytes).unwrap();
         let events: Vec<_> = x.events.iter().map(|e|json!({"run_id":e.run_id,"event_id":format!("event:{}:{}",e.event_id.index,e.event_id.generation),"time_ticks":e.time_ticks.to_string()})).collect();
-        fs::write(dir.join("source_manifest.json"),serde_json::to_vec(&json!({"runs":[{"run_id":"run-a","candidate_id":"candidate-a","dataset_id":"dataset","scenario_id":"scenario","study_id":"study","replication_id":"rep-1","seed_schedule_id":"schedule-v1","seed_map_ref":"map-v1","mapping_version":"mapping-v1","parameter_hash":"a".repeat(64)}],"events":events,"source_rows":x.residual_rows.len(),"source_window":{"start_ticks":"0","end_ticks":"20"}})).unwrap()).unwrap();
+        fs::write(dir.join("source_manifest.json"),serde_json::to_vec(&json!({"runs":[{"run_id":"run-a","candidate_id":"candidate-a","dataset_id":"dataset","scenario_id":"scenario","study_id":"study","replication_id":"rep-1","seed_schedule_id":"schedule-v1","seed_map_ref":"map-v1","mapping_version":"mapping-v1","parameter_hash":"a".repeat(64)}],"events":events,"source_rows":x.residual_rows.len(),"metric_reference_rows":x.reference_metric.rows.len(),"metric_simulation_rows":x.simulation_metric.rows.len(),"source_window":{"start_ticks":"0","end_ticks":"20"}})).unwrap()).unwrap();
+    }
+}
+
+#[test]
+fn c43_empty_runtime_preserves_typed_residual_schema_and_null_metrics() {
+    let mut x = input();
+    x.residual_rows.clear();
+    x.reference_metric.rows.clear();
+    x.simulation_metric.rows.clear();
+    let result = build_sidecars(&x).expect("empty fixed cohorts are representable");
+    assert!(result.residuals.is_empty());
+    assert!(result
+        .metrics
+        .iter()
+        .all(|m| m["status"] == "empty" && m["value"].is_null()));
+    let schema = arrow_output::schema("calibration_residual.v1").unwrap();
+    let batch = arrow_output::encode("calibration_residual.v1", &result.residuals).unwrap();
+    assert_eq!(batch.num_rows(), 0);
+    #[cfg(feature = "ipc")]
+    {
+        let bytes = kairo_ecs_arrow_io::write_ipc_file(schema.clone(), &[], limits(2)).unwrap();
+        let read = kairo_ecs_arrow_io::read_ipc_file(&bytes, schema.clone(), limits(2)).unwrap();
+        assert!(records("calibration_residual.v1", &read).is_empty());
+    }
+    #[cfg(feature = "parquet")]
+    {
+        let bytes = kairo_ecs_arrow_io::write_parquet(schema.clone(), &[], limits(2)).unwrap();
+        let read = kairo_ecs_arrow_io::read_parquet(&bytes, schema, limits(2)).unwrap();
+        assert!(records("calibration_residual.v1", &read).is_empty());
     }
 }

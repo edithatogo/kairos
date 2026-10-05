@@ -183,7 +183,7 @@ jobs:
           "$task_cargo" test --locked -p kairo-ecs-arrow-io --all-features 2>&1 | tee "$log_dir/test.log"
           "$task_cargo" test --locked -p kairo-ecs-arrow --features resource-lifecycle-io 2>&1 | tee "$log_dir/resource-lifecycle.log"
           export C43_OUTPUT_DIR="$GITHUB_WORKSPACE/$log_dir/c43-rust-output"
-          "$task_cargo" test --locked -p kairo-ecs-calibration --no-default-features --features ipc,parquet 2>&1 | tee "$log_dir/c43-native.log"
+          "$task_cargo" test --locked -p kairo-ecs-calibration --no-default-features --features ipc,parquet --test arrow_output_c43 --test sidecar_adapter_c43 --test sidecar_pipeline_c43 c43_ 2>&1 | tee "$log_dir/c43-native.log"
           "$python_dir/bin/python" conformance/c43/readback.py --self-test 2>&1 | tee "$log_dir/c43-reader-controls.log"
           "$python_dir/bin/python" conformance/c43/readback.py "$C43_OUTPUT_DIR" 2>&1 | tee "$log_dir/c43-readback.log"
           test -s "$output_dir/rust.ipc_file"
@@ -282,7 +282,7 @@ jobs:
             mkdir -p "$KAIROS_INTEROP_OUTDIR"
           fi
           "$task_cargo" "${cargo_args[@]}" 2>&1 | tee "$log_dir/test.log"
-          calibration_args=(test --locked -p kairo-ecs-calibration --no-default-features)
+          calibration_args=(test --locked -p kairo-ecs-calibration --no-default-features --test arrow_output_c43 --test sidecar_adapter_c43 --test sidecar_pipeline_c43)
           case "$FEATURE_SET" in
             none) ;;
             ipc) calibration_args+=(--features ipc) ;;
@@ -290,7 +290,7 @@ jobs:
             both) calibration_args+=(--features 'ipc,parquet') ;;
           esac
           export C43_OUTPUT_DIR="$GITHUB_WORKSPACE/$log_dir/c43-rust-output"
-          "$task_cargo" "${calibration_args[@]}" 2>&1 | tee "$log_dir/c43-native.log"
+          "$task_cargo" "${calibration_args[@]}" c43_ 2>&1 | tee "$log_dir/c43-native.log"
           if [ "$FEATURE_SET" = both ]; then
             "$RUNNER_TEMP/c1-arrow-io-python/bin/python" conformance/c43/readback.py --self-test 2>&1 | tee "$log_dir/c43-reader-controls.log"
             "$RUNNER_TEMP/c1-arrow-io-python/bin/python" conformance/c43/readback.py "$C43_OUTPUT_DIR" 2>&1 | tee "$log_dir/c43-readback.log"

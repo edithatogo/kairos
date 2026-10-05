@@ -80,10 +80,6 @@ mod ingestion_c01;
 
 // Private C4.3 outer IO adapter; pure default builds retain no Arrow IO dependency.
 #[cfg(any(feature = "ipc", feature = "parquet"))]
-#[expect(
-    dead_code,
-    reason = "Private C4.3 output codec is qualified by integration tests; public API review remains open"
-)]
 mod arrow_output;
 #[cfg(any(feature = "ipc", feature = "parquet"))]
 #[expect(
