@@ -40,8 +40,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
-      actions: read
-      contents: read
+      actions: read # Read the selected producer run, artifact metadata and retained ZIP.
+      contents: read # Check out pinned source and read the producer main Git lineage.
     outputs:
       run_id: ${{ steps.dispatch-pins.outputs.run_id }}
       artifact_id: ${{ steps.dispatch-pins.outputs.artifact_id }}
@@ -221,7 +221,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     permissions:
-      contents: read
+      contents: read # Check out pinned installer, scanner and verifier sources.
     env:
       PIN_RUN_ID: ${{ needs.acquire.outputs.run_id }}
       PIN_ARTIFACT_ID: ${{ needs.acquire.outputs.artifact_id }}

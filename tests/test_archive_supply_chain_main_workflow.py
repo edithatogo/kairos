@@ -49,7 +49,7 @@ class ArchiveSupplyChainMainWorkflowTests(unittest.TestCase):
             self.assertIn("ref: ${{ github.workflow_sha }}", job)
             self.assertIn("persist-credentials: false", job)
         self.assertIn("permissions: {}", self.text)
-        self.assertIn("    permissions:\n      actions: read\n      contents: read", self.acquire)
+        self.assertIn("    permissions:\n      actions: read", self.acquire)
         self.assertIn("    permissions:\n      contents: read", self.scan)
         self.assertNotIn("GH_TOKEN", self.scan)
         self.assertNotIn("GITHUB_TOKEN", self.scan)
@@ -61,11 +61,16 @@ class ArchiveSupplyChainMainWorkflowTests(unittest.TestCase):
         scan_permissions = re.search(r"(?m)^    permissions:\n((?:      [^\n]+\n)+)", self.scan)
         self.assertIsNotNone(acquire_permissions)
         self.assertIsNotNone(scan_permissions)
-        self.assertEqual(acquire_permissions.group(1), "      actions: read\n      contents: read\n")
-        self.assertEqual(scan_permissions.group(1), "      contents: read\n")
+        self.assertEqual(re.sub(r" #[^\n]*", "", acquire_permissions.group(1)), "      actions: read\n      contents: read\n")
+        self.assertEqual(re.sub(r" #[^\n]*", "", scan_permissions.group(1)), "      contents: read\n")
         actions = re.findall(r"(?m)^\s+- uses: ([^@\s]+)@([0-9a-f]{40}) # ([^\n]+)$", self.text)
         self.assertEqual(len(actions), 7)
         self.assertTrue(all(version.startswith("v") for _, _, version in actions))
+
+    def test_permissions_explain_each_required_read_scope(self) -> None:
+        permissions = re.findall(r"(?m)^      (actions|contents): read(?: # ([^\n]+))?$", self.text)
+        self.assertEqual([scope for scope, _ in permissions], ["actions", "contents", "contents"])
+        self.assertTrue(all(reason.strip() for _, reason in permissions))
 
     def test_dispatch_exposes_only_six_required_typed_producer_pins(self) -> None:
         inputs = section_after(self.text, "    inputs:\n", "\npermissions:")
