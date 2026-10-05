@@ -1,0 +1,135 @@
+{
+  "artifacts": [
+    {
+      "builder": {
+        "command": "git archive bindings/go; gzip -n",
+        "ecosystem": "go",
+        "exit_status": 0,
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "source_commit": "ddfb65da90dc041cea20fa73bfb59d3560746eaf",
+        "toolchain": "git version 2.55.0; gzip 1.12",
+        "validation_notes": "Go module tests and vet run in the required ci-bindings workflow."
+      },
+      "bytes": 4634,
+      "ecosystem": "go",
+      "kind": "go-source-archive",
+      "path": "go/kairos-go-ddfb65da90dc-source.tar.gz",
+      "sha256": "5fd08ba9e0ff173570f37dd2314737365a36c329526a16e6924e8365d20af95f"
+    },
+    {
+      "builder": {
+        "command": "git archive bindings/julia; gzip -n",
+        "ecosystem": "julia",
+        "exit_status": 0,
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "source_commit": "ddfb65da90dc041cea20fa73bfb59d3560746eaf",
+        "toolchain": "git version 2.55.0; gzip 1.12",
+        "validation_notes": "Julia package tests run in the required ci-bindings workflow."
+      },
+      "bytes": 5683,
+      "ecosystem": "julia",
+      "kind": "julia-source-archive",
+      "path": "julia/KairoECS-0.1.0-source.tar.gz",
+      "sha256": "11dd6646df163a49bc627f0bf858f35e1d220cf4aaf62b06a7119da702212b07"
+    },
+    {
+      "builder": {
+        "command": "dotnet restore --locked-mode; dotnet pack -c Release -p:TargetFrameworks=net10.0 --no-restore",
+        "ecosystem": "nuget",
+        "exit_status": 0,
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "source_commit": "ddfb65da90dc041cea20fa73bfb59d3560746eaf",
+        "toolchain": "dotnet 10.0.401",
+        "validation_notes": ""
+      },
+      "bytes": 13868,
+      "ecosystem": "nuget",
+      "kind": "nuget-package",
+      "path": "nuget/Kairo.ECS.0.1.0-preview.1.nupkg",
+      "sha256": "9088a104f61f3250b8d20c9b70fe0710713180c718edb4a9854831fc5fef64e7"
+    },
+    {
+      "builder": {
+        "command": "python -m build --no-isolation; python -m twine check",
+        "ecosystem": "python",
+        "exit_status": 0,
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "source_commit": "ddfb65da90dc041cea20fa73bfb59d3560746eaf",
+        "toolchain": "Python 3.14.7; build 1.6.1 (/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/build); twine version 7.0.0 (readme-renderer: 46.0, requests: 2.34.2, requests-\ntoolbelt: 1.0.0, urllib3: 2.8.0, keyring: 25.7.0, rfc3986: 2.0.0, rich:\n15.0.0, packaging: 26.3, id: 1.6.1)",
+        "validation_notes": ""
+      },
+      "bytes": 7464,
+      "ecosystem": "python",
+      "kind": "python-distribution",
+      "path": "python/kairo_ecs-0.1.0-py3-none-any.whl",
+      "sha256": "d952faafc910b38f13e81872b53fd0c6a26ddd48bbddf0b28d63d8a1c1d0fcdb"
+    },
+    {
+      "builder": {
+        "command": "python -m build --no-isolation; python -m twine check",
+        "ecosystem": "python",
+        "exit_status": 0,
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "source_commit": "ddfb65da90dc041cea20fa73bfb59d3560746eaf",
+        "toolchain": "Python 3.14.7; build 1.6.1 (/opt/hostedtoolcache/Python/3.14.7/x64/lib/python3.14/site-packages/build); twine version 7.0.0 (readme-renderer: 46.0, requests: 2.34.2, requests-\ntoolbelt: 1.0.0, urllib3: 2.8.0, keyring: 25.7.0, rfc3986: 2.0.0, rich:\n15.0.0, packaging: 26.3, id: 1.6.1)",
+        "validation_notes": ""
+      },
+      "bytes": 8656,
+      "ecosystem": "python",
+      "kind": "python-distribution",
+      "path": "python/kairo_ecs-0.1.0.tar.gz",
+      "sha256": "a61a037ef8a322176adc7c09703924e57b64590ecb9623c476093b788f49147c"
+    },
+    {
+      "builder": {
+        "command": "R CMD build; R CMD check --no-manual --no-tests",
+        "ecosystem": "r",
+        "exit_status": 0,
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "source_commit": "ddfb65da90dc041cea20fa73bfb59d3560746eaf",
+        "toolchain": "R version 4.3.3 (2024-02-29) -- \"Angel Food Cake\"",
+        "validation_notes": "R CMD check completed with one NOTE for unavailable optional suggested packages; package tests skipped by the specified --no-tests workflow command."
+      },
+      "bytes": 5522,
+      "ecosystem": "r",
+      "kind": "r-source-package",
+      "path": "r/kairoECS_0.1.0.tar.gz",
+      "sha256": "7e6487c68f5ccc1a01e71c73cf76c834388673db2c2b04f050c7551dec033ace"
+    },
+    {
+      "builder": {
+        "command": "cargo package --locked --allow-dirty -p kairo-ecs-types",
+        "ecosystem": "rust",
+        "exit_status": 0,
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "source_commit": "ddfb65da90dc041cea20fa73bfb59d3560746eaf",
+        "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28); cargo 1.99.0 (5f94df478 2026-08-27)",
+        "validation_notes": ""
+      },
+      "bytes": 3338,
+      "ecosystem": "rust",
+      "kind": "crate",
+      "path": "rust/kairo-ecs-types-0.0.0.crate",
+      "sha256": "41c6a56c75dcaafa04c7e2a2632dd6e3ae28ad2be14626cb3f4e7d12ce3b92c0"
+    },
+    {
+      "builder": {
+        "command": "npm ci --ignore-scripts; npm run build; npm pack --ignore-scripts",
+        "ecosystem": "typescript",
+        "exit_status": 0,
+        "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+        "source_commit": "ddfb65da90dc041cea20fa73bfb59d3560746eaf",
+        "toolchain": "v22.23.3; 10.9.9",
+        "validation_notes": ""
+      },
+      "bytes": 4755,
+      "ecosystem": "typescript",
+      "kind": "npm-package",
+      "path": "typescript/kairo-ecs-typescript-0.1.0.tgz",
+      "sha256": "a17d4dd85cc2910f752a2791be15b66367e2ba9a501cd6a51ee84092fa16df4c"
+    }
+  ],
+  "created_at_utc": "2026-10-05T06:42:20.240689+00:00",
+  "schema_version": 1,
+  "source_commit": "ddfb65da90dc041cea20fa73bfb59d3560746eaf"
+}

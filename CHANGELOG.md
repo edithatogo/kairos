@@ -16,6 +16,8 @@ Format:
 
 ### Changed
 
+- Archive supply-chain helpers verify retained package bytes, SPDX documents and copy provenance with independent readback; authenticated Syft installation and seven focused Python suites are included in selective binding CI.
+
 - Rust workspace member path dependencies now declare matching crate version requirements for package archives.
 
 - Set the Rust workspace and supported toolchain to exact Rust 1.99.0. CI no longer maintains older Rust compatibility lanes; nightly Miri and fuzz execution remain unverified.

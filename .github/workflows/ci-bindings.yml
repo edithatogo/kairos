@@ -49,6 +49,7 @@ jobs:
       csharp: ${{ steps.classify.outputs.csharp }}
       go: ${{ steps.classify.outputs.go }}
       gym: ${{ steps.classify.outputs.gym }}
+      archive_python: ${{ steps.classify.outputs.archive_python }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -231,10 +232,34 @@ jobs:
         run: |
           python -m unittest discover -s python/kairo_gym/tests -v
 
+  archive-python:
+    needs: changes
+    if: always() && (needs.changes.result != 'success' || needs.changes.outputs.archive_python == 'true')
+    name: Archive Python validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14.8'
+      - name: Install hash-locked archive validation tools
+        run: python -m pip install --require-hashes -r scripts/archive-python-tools.lock
+      - name: Run archive validation suite
+        run: |
+          python -m unittest discover -s tests -p test_archive_supply_chain.py -v
+          python -m unittest discover -s tests -p test_archive_copy_provenance.py -v
+          python -m unittest discover -s tests -p test_package_archive_acquisition.py -v
+          python -m unittest discover -s tests -p test_archive_release_manifest.py -v
+          python -m unittest discover -s tests -p test_package_archive_bundle.py -v
+          python -m unittest discover -s tests -p test_archive_supply_chain_evidence_verifier.py -v
+          python -m unittest discover -s tests -p test_verified_syft_installer.py -v
+
   binding-ci:
     name: Binding CI
     if: always()
-    needs: [changes, python, r, julia, typescript, csharp, go, python-gym]
+    needs: [changes, python, r, julia, typescript, csharp, go, python-gym, archive-python]
     runs-on: ubuntu-latest
     steps:
       - name: Require selected binding checks and classifier
@@ -247,6 +272,7 @@ jobs:
           CSHARP_REQUIRED: ${{ needs.changes.outputs.csharp }}
           GO_REQUIRED: ${{ needs.changes.outputs.go }}
           GYM_REQUIRED: ${{ needs.changes.outputs.gym }}
+          ARCHIVE_PYTHON_REQUIRED: ${{ needs.changes.outputs.archive_python }}
           PYTHON_RESULT: ${{ needs.python.result }}
           R_RESULT: ${{ needs.r.result }}
           JULIA_RESULT: ${{ needs.julia.result }}
@@ -254,14 +280,21 @@ jobs:
           CSHARP_RESULT: ${{ needs.csharp.result }}
           GO_RESULT: ${{ needs.go.result }}
           GYM_RESULT: ${{ needs.python-gym.result }}
+          ARCHIVE_PYTHON_RESULT: ${{ needs.archive-python.result }}
         run: |
           set -euo pipefail
           test "$CHANGES_RESULT" = success
-          for lane in python r julia typescript csharp go gym; do
-            required_var="${lane^^}_REQUIRED"
-            result_var="${lane^^}_RESULT"
-            required="${!required_var}"
-            result="${!result_var}"
+          for lane in python r julia typescript csharp go gym archive_python; do
+            case "$lane" in
+              python) required="$PYTHON_REQUIRED"; result="$PYTHON_RESULT" ;;
+              r) required="$R_REQUIRED"; result="$R_RESULT" ;;
+              julia) required="$JULIA_REQUIRED"; result="$JULIA_RESULT" ;;
+              typescript) required="$TYPESCRIPT_REQUIRED"; result="$TYPESCRIPT_RESULT" ;;
+              csharp) required="$CSHARP_REQUIRED"; result="$CSHARP_RESULT" ;;
+              go) required="$GO_REQUIRED"; result="$GO_RESULT" ;;
+              gym) required="$GYM_REQUIRED"; result="$GYM_RESULT" ;;
+              archive_python) required="$ARCHIVE_PYTHON_REQUIRED"; result="$ARCHIVE_PYTHON_RESULT" ;;
+            esac
             case "$required" in
               true) test "$result" = success ;;
               false) test "$result" = skipped ;;
