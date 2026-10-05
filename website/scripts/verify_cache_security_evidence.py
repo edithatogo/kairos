@@ -296,7 +296,7 @@ def validate_evidence(evidence_dir, repo_root, expected_commit: str):
     install_log = (root / "install.log").read_text(encoding="utf-8")
     if not re.search(r"^added\s+\d+\s+packages?,\s+and audited\s+\d+\s+packages?\s+in\s+.+$", install_log, re.IGNORECASE | re.MULTILINE):
         raise EvidenceError("install.log does not show successful npm ci package installation and audit")
-    if re.search(r"^npm\s+(?:ERR!|error)\b|\b(?:error:|failed)\b", install_log, re.IGNORECASE | re.MULTILINE):
+    if re.search(r"^npm\s+(?:ERR!(?:\s|$)|error\b)|(?:\berror:|\bfailed\b)", install_log, re.IGNORECASE | re.MULTILINE):
         raise EvidenceError("install.log contains a failure indication")
     mitigation = (root / "mitigation.log").read_text(encoding="utf-8")
     if PATCHED_INDEX_SHA256 not in mitigation or f"{PACKAGE}@{VERSION}" not in mitigation:

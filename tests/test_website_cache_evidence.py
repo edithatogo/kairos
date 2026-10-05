@@ -151,7 +151,9 @@ class WebsiteCacheEvidenceTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.fixture = EvidenceFixture(Path(self.temporary.name))
+        # macOS exposes its system temporary directory through /var -> /private/var.
+        # Canonicalize this test-created directory before testing evidence symlinks.
+        self.fixture = EvidenceFixture(Path(self.temporary.name).resolve())
 
     def test_accepts_complete_pinned_evidence_and_writes_payload_hashes(self):
         result = self.fixture.complete()
@@ -236,6 +238,12 @@ class WebsiteCacheEvidenceTests(unittest.TestCase):
         with self.assertRaises(verifier.EvidenceError):
             self.fixture.validate()
         path.write_text(original)
+
+    def test_rejects_legacy_npm_error_after_successful_install_summary(self):
+        path = self.fixture.evidence / "install.log"
+        path.write_text("added 419 packages, and audited 420 packages in 4s\nnpm ERR! code ERESOLVE\n")
+        with self.assertRaises(verifier.EvidenceError):
+            self.fixture.validate()
 
     def test_rejects_wrong_commit_and_wrong_retained_index_bytes(self):
         commit = self.fixture.evidence / "source-commit.txt"
