@@ -1,0 +1,85 @@
+{
+  "packet_id": "c43-adapter",
+  "task_id": "C4.3",
+  "status": "implemented-private-runtime-adapter",
+  "base_commit": "41fae25231439b3dfcaf10618dbd7a35b51a4205",
+  "tested_source_sha256": {
+    "crates/kairo-ecs-calibration/src/sidecar_adapter.rs": "d48b68464c8b8ea03c78f0cbdc9526de25b452e041e740aadc60a71144a69bd1",
+    "crates/kairo-ecs-calibration/tests/sidecar_adapter_c43.rs": "436569a21a9a614c7598071c9ba90ec9e29beb42bc5d02d94762a0434203227c"
+  },
+  "inputs": {
+    "AGENTS.md": "f1e9c7076e13e6d83de2759434dde92119426250dd880770ae6d661be29b2b35",
+    "conductor/design/calibration/c4.3-arrow-output-v1.md": "bffed8fc355a90c327f84e48a78556a02fe817cd50b9523751a1985a7bb35d5e",
+    "crates/kairo-ecs-calibration/Cargo.toml": "1b7fb0a78238d82b58e9b452031d71e91bad8cdb937fc92f838d6d7e895aac55"
+  },
+  "interface": "build_sidecars(&Input) -> Result<Output, AdapterFailure>; fixture available as pub(crate) fn fixture() -> Input in the owned test file for the integrated parent pipeline fixture.",
+  "implemented": {
+    "c42_kernels": "Calls actual residuals::summarize and metric_cohorts::compare_groups; no oracle values copied.",
+    "logical_outputs": "Builds full C0 calibration_residual.v1 and calibration_metric.v1 serde_json::Value records.",
+    "joins": "Validates one declared run binding, run/event handles, canonical event:<index>:<generation> causal refs, C0 residual identity, explicit source window, fixed groups/strata, hashes and seed-map v1.",
+    "diagnostics": "Retains side-tagged raw residual and metric input records, canonical batch SHA-256 hashes, per-pair probe/event links, window eligibility/exclusion, and C4.2 group populations/counts.",
+    "paired_summary_counts": "C0 paired statistic reference_count and simulation_count equal the number of matched pairs used; eligible side counts and unmatched/raw counts remain in group diagnostics.",
+    "reviewed_addenda": [
+      "True observed/predicted points keep their computed exact residual even outside the active source window; C4.2 summary eligibility remains unchanged and the manifest identifies exclusions.",
+      "Structural invalid metric cohorts fail before publication with both raw cohorts preserved. Numeric/kernel invalidity can be reported as C0 invalid status with null value.",
+      "This adapter admits empirical_equal.v1 only with scale_ticks=1 and nanosecond units; no unreviewed unit conversion is applied.",
+      "Event references resolve only through actual EventLogRecord.validate() records keyed by run_id and EventId; null causal_ref means no asserted event link."
+    ]
+  },
+  "commands": [
+    {
+      "command": "env RUSTUP_TOOLCHAIN=1.99.0 rustfmt --edition 2021 crates/kairo-ecs-calibration/src/sidecar_adapter.rs crates/kairo-ecs-calibration/tests/sidecar_adapter_c43.rs",
+      "cwd": "/private/tmp/kairos-c43-adapter-20261005",
+      "exit_status": 0,
+      "artifact": ".artifacts/c43-adapter/rustfmt-final.log"
+    },
+    {
+      "command": "env CARGO_TARGET_DIR=.artifacts/c43-adapter/target rustup run 1.99.0 cargo test --locked --offline -p kairo-ecs-calibration --test sidecar_adapter_c43",
+      "cwd": "/private/tmp/kairos-c43-adapter-20261005",
+      "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+      "exit_status": 0,
+      "tests_passed": 10,
+      "tests_failed": 0,
+      "artifact": ".artifacts/c43-adapter/adapter-test-final.log"
+    },
+    {
+      "command": "env RUSTUP_TOOLCHAIN=1.99.0 rustfmt --edition 2021 --config skip_children=true crates/kairo-ecs-calibration/src/sidecar_adapter.rs crates/kairo-ecs-calibration/tests/sidecar_adapter_c43.rs",
+      "cwd": "/private/tmp/kairos-c43-adapter-20261005",
+      "exit_status": 0
+    },
+    {
+      "command": "env CARGO_TARGET_DIR=.artifacts/c43-adapter/target rustup run 1.99.0 cargo test --locked --offline -p kairo-ecs-calibration --test sidecar_adapter_c43",
+      "cwd": "/private/tmp/kairos-c43-adapter-20261005",
+      "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+      "exit_status": 0,
+      "tests_passed": 10,
+      "tests_failed": 0,
+      "artifact": ".artifacts/c43-adapter/adapter-test-final.log"
+    },
+    {
+      "command": "env CARGO_TARGET_DIR=.artifacts/c43-adapter/target rustup run 1.99.0 cargo clippy --locked --offline -p kairo-ecs-calibration --test sidecar_adapter_c43 -- -D warnings",
+      "cwd": "/private/tmp/kairos-c43-adapter-20261005",
+      "toolchain": "rustc 1.99.0 (b940084d7 2026-09-28)",
+      "exit_status": 0,
+      "artifact": ".artifacts/c43-adapter/adapter-clippy-final.log"
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "/private/tmp/kairos-c43-adapter-20261005",
+      "exit_status": 0
+    }
+  ],
+  "limitations": [
+    "This owned leaf constructs validated C0 logical records and join evidence; Arrow physical schemas and IPC/Parquet readback are owned by the parent integration leaf.",
+    "No public API, existing C4.2 module, Cargo manifest, lockfile, or event_log.v1 schema was modified."
+  ],
+  "result_artifact": ".artifacts/c43-adapter/result.json",
+  "coordination_deviation": {
+    "summary": "An initial rustfmt invocation followed path-imported modules and formatted two out-of-scope C4.2 files. Their exact diff was retained privately and both files restored to HEAD before final checks. Final rustfmt used skip_children=true.",
+    "artifact": ".artifacts/c43-adapter/unowned-rustfmt-deviation.patch",
+    "restored_paths": [
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs",
+      "crates/kairo-ecs-calibration/src/metrics.rs"
+    ]
+  }
+}

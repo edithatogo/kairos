@@ -1,0 +1,32 @@
+diff --git a/crates/kairo-ecs-calibration/src/metric_cohorts.rs b/crates/kairo-ecs-calibration/src/metric_cohorts.rs
+index 745a632..916e7c6 100644
+--- a/crates/kairo-ecs-calibration/src/metric_cohorts.rs
++++ b/crates/kairo-ecs-calibration/src/metric_cohorts.rs
+@@ -1,5 +1,5 @@
+ //! Private fixed-cohort adapter. Selection never uses a prediction as a clock.
+-use crate::metrics::{compare, MetricRequest, MetricStatus, Precision};
++use crate::metrics::{MetricRequest, MetricStatus, Precision, compare};
+ use std::collections::{BTreeMap, BTreeSet};
+
+ #[derive(Clone, Debug, PartialEq, Eq)]
+diff --git a/crates/kairo-ecs-calibration/src/metrics.rs b/crates/kairo-ecs-calibration/src/metrics.rs
+index a6c40c6..cdffb26 100644
+--- a/crates/kairo-ecs-calibration/src/metrics.rs
++++ b/crates/kairo-ecs-calibration/src/metrics.rs
+@@ -245,14 +245,14 @@ fn cmp_unsigned_fraction(
+                     Ordering::Greater
+                 } else {
+                     Ordering::Less
+-                })
++                });
+             }
+             (false, true) => {
+                 return Some(if reverse {
+                     Ordering::Less
+                 } else {
+                     Ordering::Greater
+-                })
++                });
+             }
+             (false, false) => {
+                 an = ad;
