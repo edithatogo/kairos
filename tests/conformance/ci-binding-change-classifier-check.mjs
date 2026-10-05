@@ -48,6 +48,11 @@ for (const path of [
   'tests/test_syft_installation_receipt.py',
   'packaging/scripts/acquire_archive_consumer_evidence.py',
   'tests/test_archive_consumer_evidence_acquisition.py',
+  'packaging/scripts/validate_actual_archive_release.py',
+  'tests/test_actual_archive_release_validation.py',
+  'tests/test_mainline_archive_release_workflow.py',
+  'packaging/scripts/prepare_mainline_archive_release.py',
+  'tests/test_prepare_mainline_archive_release.py',
 ]) assert.ok(ARCHIVE_PATHS.includes(path), `archive path missing from exact allowlist: ${path}`);
 for (const [lane, path] of Object.entries({
   python: 'bindings/python/src/a.py', r: 'bindings/r/R/a.R', julia: 'bindings/julia/src/a.jl',
@@ -56,6 +61,9 @@ for (const [lane, path] of Object.entries({
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_supply_chain.py', 'bindings/python/a.py']), routing(['python'], true));
 assert.deepEqual(classifyBindingPaths(['.github/workflows/archive-supply-chain-main.yml']), routing([], true));
 assert.deepEqual(classifyBindingPaths(['tests/test_archive_supply_chain_main_workflow.py']), routing([], true));
+assert.deepEqual(classifyBindingPaths(['.github/workflows/release.yml']), routing(BINDING_LANES, true));
+assert.deepEqual(classifyBindingPaths(['.github/workflows/release.yml', 'bindings/csharp/a.cs']), routing(BINDING_LANES, true));
+assert.deepEqual(classifyBindingPaths(['bindings/csharp/a.cs', '.github/workflows/release.yml']), routing(BINDING_LANES, true));
 assert.deepEqual(classifyBindingPaths(['.github/workflows/archive-supply-chain-main.yml', 'bindings/csharp/a.cs']), routing(['csharp'], true));
 assert.deepEqual(classifyBindingPaths(['bindings/csharp/a.cs', '.github/workflows/archive-supply-chain-main.yml']), routing(['csharp'], true));
 assert.deepEqual(classifyBindingPaths(['.github/workflows/archive-supply-chain-main.yml', 'Cargo.lock']), routing(BINDING_LANES, true));
@@ -156,6 +164,7 @@ try {
 const workflow = readFileSync('.github/workflows/ci-bindings.yml', 'utf8');
 const mainArchiveWorkflowPath = '.github/workflows/archive-supply-chain-main.yml';
 assert.match(workflow, /^\s+- '\.github\/workflows\/archive-supply-chain-main\.yml'$/m);
+assert.match(workflow, /^\s+- '\.github\/workflows\/release\.yml'$/m);
 assert.equal(readFileSync('.github/workflows/ci-policy.yml', 'utf8').split(mainArchiveWorkflowPath).length - 1, 1);
 assert.equal(readFileSync('.github/workflows/workflow-security.yml', 'utf8').split(mainArchiveWorkflowPath).length - 1, 2);
 assert.ok(readFileSync('scripts/validation/validate-track13-metadata.mjs', 'utf8').includes("'archive-supply-chain-main.yml'"));
@@ -180,8 +189,11 @@ assert.deepEqual(
     'test_prepare_verified_archive_release.py',
     'test_archive_supply_chain_main_workflow.py',
     'test_archive_consumer_evidence_acquisition.py',
+    'test_actual_archive_release_validation.py',
+    'test_mainline_archive_release_workflow.py',
+    'test_prepare_mainline_archive_release.py',
   ],
-  'archive lane must run all twelve focused suites in order',
+  'archive lane must run all fifteen focused suites in order',
 );
 const aggregateJob = workflow.slice(workflow.indexOf('  binding-ci:\n'));
 const scriptMatch = aggregateJob.match(/        run: \|\n((?:          .*\n)+)/);

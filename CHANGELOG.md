@@ -18,6 +18,8 @@ Format:
 
 ### Changed
 
+- Release dry runs offer an explicit actual-package-archives profile that reacquires pinned producer and consumer evidence, requalifies native Linux scanner bytes, independently verifies exact archive output, and retains checksums and readback receipts; the legacy source inventory profile remains the default.
+
 - Archive release subjects require independently verified retained evidence and matching release source; native scanner receipts bind exact Darwin and Linux executable pins.
 
 - Archive evidence expectations are prepared independently from pinned acquisition records and qualified scanner bytes before scanning; the verifier rejects mismatched inputs.

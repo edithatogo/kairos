@@ -8,19 +8,165 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version to release
+        description: Descriptive preparation label; retained package versions are unchanged
         required: true
+        type: string
       dry_run:
-        description: Dry run only
+        description: Evidence preparation only; publication is disabled
         required: true
         default: 'true'
+        type: string
+      profile:
+        description: Separate legacy release evidence from actual archive preparation
+        required: true
+        type: choice
+        default: legacy-source-inventory
+        options:
+          - legacy-source-inventory
+          - actual-package-archives
+      producer_pins:
+        description: Exact producer run_id, artifact_id, source_commit, producer_tree, archive_zip_sha256, archive_zip_bytes JSON
+        required: false
+        type: string
+      consumer_pins:
+        description: Exact consumer run_id, run_attempt, artifact_id, source_commit, archive_zip_sha256, archive_zip_bytes JSON
+        required: false
+        type: string
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
+  validate-profile:
+    name: Require a supported dry-run evidence profile
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      - name: Validate release invocation before either profile
+        shell: bash
+        env:
+          PROFILE: ${{ inputs.profile }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]
+          [[ "$GITHUB_REPOSITORY" == edithatogo/kairos ]]
+          [[ "$GITHUB_REF" == refs/heads/main ]]
+          [[ "$DRY_RUN" == true ]]
+          [[ "$PROFILE" == legacy-source-inventory || "$PROFILE" == actual-package-archives ]]
+  actual-archive-preparation:
+    name: Verify retained actual package archives
+    needs: validate-profile
+    if: inputs.profile == 'actual-package-archives' && github.repository == 'edithatogo/kairos' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read # Check out exact source and read producer Git lineage.
+      actions: read # Reacquire the explicitly pinned producer and consumer artifacts.
+    steps:
+      - name: Enforce trusted manual main preparation
+        shell: bash
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]
+          [[ "$GITHUB_REPOSITORY" == edithatogo/kairos ]]
+          [[ "$GITHUB_REF" == refs/heads/main ]]
+          [[ "$DRY_RUN" == true ]]
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14.8'
+          architecture: x64
+      - name: Require native Linux and pinned Python
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(uname -s)" == Linux ]]
+          [[ "$(uname -m)" == x86_64 ]]
+          python3 -B -c 'import sys; assert sys.version_info[:3] == (3, 14, 8), sys.version'
+      - name: Retain explicit bounded dispatch inputs
+        shell: bash
+        env:
+          PRODUCER_PINS_JSON: ${{ inputs.producer_pins }}
+          CONSUMER_PINS_JSON: ${{ inputs.consumer_pins }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          label = os.environ['RELEASE_VERSION']
+          if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+-]{0,127}', label):
+              raise SystemExit('invalid descriptive preparation label')
+          root = Path(os.environ['RUNNER_TEMP']) / ('archive-release-inputs-' + os.environ['GITHUB_RUN_ID'] + '-' + os.environ['GITHUB_RUN_ATTEMPT'])
+          root.mkdir(mode=0o700)
+          for env_name, name in [('PRODUCER_PINS_JSON', 'producer-pins.json'), ('CONSUMER_PINS_JSON', 'consumer-pins.json')]:
+              raw = os.environ[env_name].encode('utf-8')
+              if not raw or len(raw) > 4096:
+                  raise SystemExit('missing or oversized explicit dispatch pins')
+              # The trusted helper checks duplicate keys and exact schemas
+              # before dispatching any acquisition or installation process.
+              if not isinstance(json.loads(raw), dict):
+                  raise SystemExit('dispatch pins must be JSON objects')
+              with (root / name).open('xb') as stream:
+                  stream.write(raw)
+          with (root / 'preparation-label.txt').open('x', encoding='utf-8') as stream:
+              stream.write(label + '\n')
+          PY
+      - name: Install hash-locked evidence verifier dependencies
+        run: python3 -m pip install --require-hashes -r scripts/archive-python-tools.lock
+      - name: Reacquire, independently verify, and prepare exact archives
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          inputs="$RUNNER_TEMP/archive-release-inputs-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          work="$RUNNER_TEMP/archive-release-preparation-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          python3 -B -W error::SyntaxWarning packaging/scripts/prepare_mainline_archive_release.py \
+            --repository "$GITHUB_WORKSPACE" --release-source-commit "$GITHUB_SHA" \
+            --producer-pins-json "$inputs/producer-pins.json" \
+            --consumer-pins-json "$inputs/consumer-pins.json" \
+            --work-dir "$work" --output "$work/actual-package-archives"
+      - name: Upload qualified actual archive profile and retained evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kairos-actual-package-release-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/actual-package-archives/
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/producer-acquisition/
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/consumer-acquisition/
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/expectations/
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/fresh-syft/evidence/receipt.json
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/fresh-syft/evidence/validation-report.json
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/fresh-syft/verifier.lock
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/fresh-syft/logs/*.log
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/validation-report.json
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/preparation-receipt.json
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/preparation-start.json
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/syft-requalification.json
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/command-records.json
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/expectation-preparation.json
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/actual-archive-readback-report.json
+            ${{ runner.temp }}/archive-release-preparation-${{ github.run_id }}-${{ github.run_attempt }}/logs/*.stdout
+            ${{ runner.temp }}/archive-release-inputs-${{ github.run_id }}-${{ github.run_attempt }}/
+          if-no-files-found: error
+          retention-days: 90
+
   release-dry-run:
     name: release-dry-run
+    needs: validate-profile
+    if: inputs.profile == 'legacy-source-inventory'
+    permissions:
+      contents: read # Preserve the legacy source inventory and release evidence gate.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
