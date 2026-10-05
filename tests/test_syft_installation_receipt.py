@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import re
 import sys
 import tarfile
 import tempfile
@@ -122,6 +123,21 @@ class ReceiptValidatorTests(unittest.TestCase):
         report = verifier.validate(self.output, "linux-amd64", self.repo)
         self.assertEqual(report["result"], "pass")
         self.assertEqual(report["validated_commands"], 9)
+
+    def test_workflow_requires_manual_main_and_serial_qualification(self):
+        workflow = (ROOT / ".github/workflows/syft-linux-qualification.yml").read_text()
+        self.assertIn("concurrency:\n  group: ${{ github.workflow }}-${{ github.ref }}\n  cancel-in-progress: false\n", workflow)
+        self.assertIn("on:\n  workflow_dispatch:\n", workflow)
+        self.assertNotIn("  push:", workflow)
+        self.assertNotIn("  pull_request:", workflow)
+        self.assertIn('[[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]', workflow)
+        self.assertIn('[[ "$GITHUB_REPOSITORY" == edithatogo/kairos ]]', workflow)
+        self.assertIn('[[ "$GITHUB_REF" == refs/heads/main ]]', workflow)
+        self.assertIn("ref: ${{ github.workflow_sha }}", workflow)
+        self.assertIn("persist-credentials: false", workflow)
+        permissions = re.findall(r"(?m)^([ ]*)permissions:\n((?:[ ]+[A-Za-z-]+: [^\n]+\n)+)", workflow)
+        self.assertEqual([(indent, body.strip()) for indent, body in permissions],
+                         [("", "contents: read"), ("    ", "contents: read")])
 
     def test_rejects_changed_release_identity(self):
         self.receipt["certificate_identity"] = "untrusted"
