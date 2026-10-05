@@ -1,6 +1,6 @@
 # ADR-0007 — C2 experimental production API adoption
 
-Status: proposed for independent review; no export or runtime acceptance.
+Status: independently reviewed architecture; no export or runtime acceptance.
 Date: 2026-10-05. Owners: Track03/21/01/22 and API/MSRV Track25/30.
 
 ## Need
@@ -52,3 +52,13 @@ Frozen definitions: `c20-work-provider-v1.md`, `c20-admission-bridge-v1.md`,
 `c20-transit-execution-v1.md`; existing private semantics:
 `c2-execution-admission-v1.md` and `ADR-0006-flow-runtime-identity.md`.
 No contract used by an active worker is changed by this proposal.
+
+## Independent disposition
+
+The bounded read-only d35_gate_review inspected the proposal against current
+private fidelity and DES/ABM dependency direction. No architecture objection
+remains: optional calibration may depend on DES/ABM, while default DES remains
+independent of calibration. The admission permit is explicitly future API.
+Coordinator accepts the architecture definition only; exact implementation
+exports, production feature compilation and compatibility evidence remain
+required at the implementation gate. This does not close C2.0 or C2.1.
