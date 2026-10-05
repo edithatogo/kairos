@@ -491,10 +491,49 @@ class AcquisitionTests(unittest.TestCase):
             a.API_TIMEOUT_SECONDS = old_timeout
             a.API_OUTPUT_LIMIT = 32
             with patch.object(a, 'API_COMMAND_PREFIX', [sys.executable, '-c', 'print("x"*1000)']):
-                with self.assertRaisesRegex(ValueError, 'byte limit'):
-                    a.api('large')
+                for _ in range(8):
+                    with self.subTest(over_limit_attempt=_):
+                        with self.assertRaisesRegex(ValueError, 'byte limit'):
+                            a.api('large')
         finally:
             a.API_TIMEOUT_SECONDS, a.API_OUTPUT_LIMIT = old_timeout, old_limit
+
+    def test_cleanup_reaps_zombie_before_suppressing_stale_group_eperm(self):
+        import signal
+        from unittest.mock import patch
+
+        class ExitedProcess:
+            pid = 4242
+            def __init__(self):
+                self.poll_count = 0
+            def poll(self):
+                self.poll_count += 1
+                return None if self.poll_count == 1 else 17
+
+        process = ExitedProcess()
+        with patch.object(a, '_process_group_exists', side_effect=[True, False, False, False, False]) as group_exists, \
+             patch.object(a.os, 'killpg', side_effect=PermissionError('stale zombie group')) as killpg:
+            a._stop_process_group(process)
+        killpg.assert_called_once_with(process.pid, signal.SIGTERM)
+        self.assertGreaterEqual(process.poll_count, 4)
+        self.assertEqual(group_exists.call_count, 5)
+
+    def test_cleanup_keeps_live_group_eperm_fail_closed(self):
+        import signal
+        from unittest.mock import patch
+
+        class LiveProcess:
+            pid = 4343
+            def poll(self):
+                return None
+
+        process = LiveProcess()
+        with patch.object(a, '_process_group_exists', return_value=True) as group_exists, \
+             patch.object(a.os, 'killpg', side_effect=PermissionError('inaccessible live group')) as killpg:
+            with self.assertRaisesRegex(PermissionError, 'inaccessible live group'):
+                a._stop_process_group(process)
+        group_exists.assert_called_once_with(process.pid)
+        killpg.assert_called_once_with(process.pid, signal.SIGTERM)
 
     def test_parent_exit_with_child_holding_stdout_obeys_deadline(self):
         import sys

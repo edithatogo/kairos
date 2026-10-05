@@ -158,13 +158,26 @@ def _process_group_exists(pid: int) -> bool:
         return True
     return True
 
+def _signal_process_group(process: subprocess.Popen, signum: int) -> None:
+    """Signal the process group, accepting EPERM only after a reap proves it vanished."""
+    process.poll()  # Reap an exited leader before signaling its former process group.
+    try:
+        os.killpg(process.pid, signum)
+    except ProcessLookupError:
+        pass
+    except PermissionError:
+        # macOS can report EPERM for a just-exited, not-yet-reaped group leader.
+        # Only treat that race as gone after waitpid reaps the leader and a fresh
+        # killpg(pid, 0) independently confirms that no group remains.
+        if process.poll() is None or _process_group_exists(process.pid):
+            raise
+
+
 def _stop_process_group(process: subprocess.Popen) -> None:
     """Terminate, escalate, and reap a process group within bounded waits."""
+    process.poll()  # Reap an already-exited leader before checking or signaling its group.
     if _process_group_exists(process.pid):
-        try:
-            os.killpg(process.pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
+        _signal_process_group(process, signal.SIGTERM)
         deadline = time.monotonic() + 2
         while time.monotonic() < deadline:
             process.poll()
@@ -172,10 +185,7 @@ def _stop_process_group(process: subprocess.Popen) -> None:
                 break
             time.sleep(0.05)
         if _process_group_exists(process.pid):
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
+            _signal_process_group(process, signal.SIGKILL)
             deadline = time.monotonic() + 2
             while time.monotonic() < deadline:
                 process.poll()
@@ -186,10 +196,7 @@ def _stop_process_group(process: subprocess.Popen) -> None:
         try:
             process.wait(timeout=2)
         except subprocess.TimeoutExpired:
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
+            _signal_process_group(process, signal.SIGKILL)
             process.wait(timeout=2)
     if _process_group_exists(process.pid):
         raise RuntimeError("subprocess group did not stop")
