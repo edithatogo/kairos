@@ -12,6 +12,7 @@ export const ARCHIVE_PATHS = [
   'tests/test_archive_supply_chain.py',
   'tests/test_archive_copy_provenance.py',
   'tests/test_archive_release_manifest.py',
+  'tests/test_archive_evidence_expectations.py',
   'tests/test_package_archive_acquisition.py',
   'tests/test_package_archive_bundle.py',
   'tests/fixtures/archive-supply-chain/spdx-2.3/LICENSE',

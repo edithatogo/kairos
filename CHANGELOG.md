@@ -16,6 +16,8 @@ Format:
 
 ### Changed
 
+- Archive evidence expectations are prepared independently from pinned acquisition records and qualified scanner bytes before scanning; the verifier rejects mismatched inputs.
+
 - Retained package acquisition can preserve the original artifact ZIP and native GitHub readbacks; archive evidence verifies exact successful main-dispatch lineage while preserving the existing PR evidence format.
 
 - A manual main-only Linux Syft qualification workflow independently checks authenticated installation receipts, logs and exact archive/executable bytes before retaining evidence.
