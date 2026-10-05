@@ -67,3 +67,9 @@ test -f conformance/fixtures/README.md
 - `rustup run 1.99.0 cargo clippy --locked -p kairo-ecs-calibration --all-targets -- -D warnings` and workspace Rustfmt pass.
 - Actual `metrics_c42` report is source/commit/toolchain-bound; explicitly execute existing ignored `metrics_c41::c42_candidate_report` on both toolchains and independent exact Python comparator:42cases pass.
 - False commit/toolchain and mutated metric controls fail as required; explicit100000points/side debug timing passes. [Exact receipts](../../evidence/c4.2-runtime-20261005/README.md) preserve source and output hashes. Public API, Arrow sidecars and C-04 remain open.
+
+## C4.3 actual Arrow sidecar qualification
+
+- Real private runtime residual/metric IPC file/stream and Parquet outputs reconcile through pinned independent PyArrow, complete joins/raw hashes and15 manifest negative controls.
+- Rust1.99 both-feature calibration140pass/4namedignored; Rust1.88 C4.3 targets21pass; feature-minimal/default compatibility checked. Strict Clippy/Rustfmt pass.
+- [Retained exact source-bound evidence](../../evidence/c4.3-arrow-20261005/README.md); hosted successor and parent pin recorded separately. C4.4/C-04, public API, release and clinical acceptance remain open.

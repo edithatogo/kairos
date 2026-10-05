@@ -1,0 +1,99 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling autocfg v1.5.0
+   Compiling libm v0.2.16
+   Compiling libc v0.2.186
+   Compiling cfg-if v1.0.4
+   Compiling zerocopy v0.8.48
+   Compiling getrandom v0.3.4
+   Compiling version_check v0.9.5
+   Compiling core-foundation-sys v0.8.7
+   Compiling bytes v1.12.1
+   Compiling ahash v0.8.12
+   Compiling iana-time-zone v0.1.65
+   Compiling num-traits v0.2.19
+   Compiling arrow-schema v60.0.0
+   Compiling semver v1.0.28
+   Compiling once_cell v1.21.4
+   Compiling hashbrown v0.17.1
+   Compiling typenum v1.20.1
+   Compiling thiserror v2.0.20
+   Compiling rustc_version v0.4.1
+   Compiling bitflags v2.13.2
+   Compiling zmij v1.0.21
+   Compiling flatbuffers v25.12.19
+   Compiling serde_core v1.0.228
+   Compiling serde_json v1.0.149
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/kairos-c43-20261005/crates/kairo-ecs-types)
+   Compiling twox-hash v2.1.4
+   Compiling hybrid-array v0.4.15
+   Compiling seq-macro v0.3.6
+   Compiling base64 v0.23.1
+   Compiling const-oid v0.10.2
+   Compiling cpufeatures v0.3.1
+   Compiling memchr v2.8.0
+   Compiling itoa v1.0.18
+   Compiling crypto-common v0.2.2
+   Compiling syn v2.0.117
+   Compiling num-integer v0.1.47
+   Compiling num-complex v0.4.6
+   Compiling chrono v0.4.45
+   Compiling syn v3.0.6
+   Compiling block-buffer v0.12.1
+   Compiling num-bigint v0.5.1
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.0
+   Compiling thiserror-impl v2.0.20
+   Compiling zerocopy-derive v0.8.48
+   Compiling kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-c43-20261005/crates/kairo-ecs-arrow)
+   Compiling half v2.7.1
+   Compiling arrow-buffer v60.0.0
+   Compiling arrow-data v60.0.0
+   Compiling arrow-array v60.0.0
+   Compiling arrow-cmp v60.0.0
+   Compiling arrow-select v60.0.0
+   Compiling arrow-ipc v60.0.0
+   Compiling parquet v60.0.0
+   Compiling kairo-ecs-arrow-io v0.1.0 (/private/tmp/kairos-c43-20261005/crates/kairo-ecs-arrow-io)
+   Compiling kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c43-20261005/crates/kairo-ecs-calibration)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 34.24s
+     Running tests/arrow_output_c43.rs (.artifacts/c43-root/target/debug/deps/arrow_output_c43-7aa54367f80f8c28)
+
+running 7 tests
+test c43_roundtrips_full_width_ticks_nulls_and_canonical_strata ... ok
+test c43_validates_frozen_keys_metric_semantics_and_decode_rows ... ok
+test c43_schemas_preserve_empty_shapes_and_output_types ... ok
+test c43_sort_uses_full_residual_identity_and_numeric_occurrence ... ok
+test c43_residual_sort_uses_raw_string_order_for_escaped_ids ... ok
+test c43_rejects_inconsistent_residual_unknown_fields_and_duplicate_records ... ok
+test c43_actual_ipc_file_stream_and_parquet_roundtrip ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/sidecar_adapter_c43.rs (.artifacts/c43-root/target/debug/deps/sidecar_adapter_c43-7222a0fcc347bf17)
+
+running 12 tests
+test c43_contradictory_source_clocks_fail_and_retain_both_raw_sides ... ok
+test c43_emits_c0_sidecars_from_kernels_and_joins_explicit_event ... ok
+test c43_in_window_nonpoint_is_ineligible_but_not_window_excluded ... ok
+test c43_max_u128_is_exact_and_window_exclusion_does_not_rewrite_point_residual ... ok
+test c43_noncomputed_statuses_keep_null_contract_and_overlapping_counts ... ok
+test c43_paired_metric_denominator_is_matched_pairs_and_manifest_keeps_cohort_counts ... ok
+test c43_input_permutation_preserves_logical_records_and_metric_bits ... ok
+test c43_structurally_invalid_metric_rows_fail_with_both_raw_cohorts ... ok
+test c43_invalid_run_event_hash_and_duplicate_key_fail_with_raw_diagnostics ... ok
+test c43_empty_residual_population_still_emits_declared_empty_metric_summaries ... ok
+test c43_failed_prediction_preserves_reference_censor_and_missing_lineage ... ok
+test c43_unmatched_missing_failed_and_infeasible_pairs_keep_schema_statuses ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/sidecar_pipeline_c43.rs (.artifacts/c43-root/target/debug/deps/sidecar_pipeline_c43-00ff2aff373c094c)
+
+running 2 tests
+test c43_empty_runtime_preserves_typed_residual_schema_and_null_metrics ... ok
+test c43_runtime_records_and_hashes_survive_permutation_and_physical_framing ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+

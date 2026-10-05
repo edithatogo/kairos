@@ -1,0 +1,4 @@
+case_id	bound_state	foreign_state	foreign_error	bound_error
+pending-vs-terminal	Pending	Completed	InvalidWork	BusyBoundary
+active-vs-terminal	Active	Completed	InvalidWork	BusyBoundary
+suspended-vs-terminal	Suspended	Completed	InvalidWork	BusyBoundary

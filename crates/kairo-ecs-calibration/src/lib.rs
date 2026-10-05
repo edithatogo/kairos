@@ -77,3 +77,13 @@ mod ingestion_sort;
 // Exact C-01 invariance qualification over private ingestion interfaces.
 #[cfg(test)]
 mod ingestion_c01;
+
+// Private C4.3 outer IO adapter; pure default builds retain no Arrow IO dependency.
+#[cfg(any(feature = "ipc", feature = "parquet"))]
+mod arrow_output;
+#[cfg(any(feature = "ipc", feature = "parquet"))]
+#[expect(
+    dead_code,
+    reason = "Private C4.3 run/event adapter is qualified by integration tests; public API review remains open"
+)]
+mod sidecar_adapter;

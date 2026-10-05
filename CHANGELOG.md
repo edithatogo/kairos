@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- Experimental `kairo-ecs-calibration` C4.3 sidecars now use actual Arrow IPC file/stream and Parquet with deterministic records, run/event joins and retained raw provenance. Native owner CI requires complete manifests and independently verifies types, nulls, hashes and counts across framing sizes. `event_log.v1` remains unchanged; public API, C4.4/C-04 and release acceptance remain open.
+
 - Experimental private C1 ingestion adapters now pass scoped CI lint qualification without promoting their API; dry-run package/workflow inventories and MSRV metadata match the optional calibration and Arrow IO lanes.
 
 - Experimental calibration physical schema v2 qualification now freezes every nested Arrow type, nullability and metadata field, exercises IPC and Parquet separately at the Rust 1.88 floor, and retains exact PyArrow readback evidence. Legacy telemetry remains a custom smoke format with its own Rust 1.76 compatibility qualification.
