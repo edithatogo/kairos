@@ -16,6 +16,8 @@ Format:
 
 ### Changed
 
+- Python package extras now pin Ruff 0.16.10 for tests and require Gymnasium 0.29.1 or newer for the `python/kairo_gym` optional integration.
+
 - Release dry runs require the final `dist/` artifact upload to find files and retain the uploaded evidence for 90 days.
 
 - Refreshed the current-stable Rust matrix lane to 1.99, matching the official stable channel; the Rust 1.76 core MSRV is unchanged.
