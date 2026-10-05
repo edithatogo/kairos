@@ -7,6 +7,7 @@ import hashlib
 import json
 import math
 import re
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -427,8 +428,10 @@ def check_event_joins(directory: Path, residuals: list[dict[str, Any]]) -> None:
         if not join_path.is_file():
             fail("missing actual join_manifest.json")
         join = load_json(join_path)
-        _validate_join_manifest(join, residuals, runs, event_keys, manifest)
+        _validate_join_manifest(join, residuals, runs, event_keys, manifest,
+                                load_json(directory / "metric.json"))
         _assert_runtime_fixture(residuals, logical_metrics=load_json(directory / "metric.json"), join=join)
+        _validate_legacy_smoke(directory, event_keys)
         return
     p = directory / "event_log.json"
     if not p.exists():
@@ -463,24 +466,60 @@ def check_event_joins(directory: Path, residuals: list[dict[str, Any]]) -> None:
             fail(f"residual row {i} causal_ref has no (run_id,event_id) event match")
 
 
+def _validate_legacy_smoke(directory: Path, event_keys: set[tuple[str, str]]) -> None:
+    """Check the producer's compatibility smoke record against the unchanged v1 field contract."""
+    path = directory / "event_log.smoke"
+    if not path.exists():
+        return
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if len(lines) < 2 or lines[0] != "stream=kairo_ecs.event_log.v1;schema_version=1":
+        fail("event_log.smoke header differs from unchanged event_log_v1 stream")
+    schema = load_json(EVENT_SCHEMA_PATH)
+    fields = [field["name"] for field in schema["fields"]]
+    expected_header = ["schema_version" if name == "schema_version" else
+                       "event_id_hex" if name == "event_id" else
+                       "entity_id_hex" if name == "entity_id" else
+                       "time_ticks_le_hex" if name == "time_ticks" else name
+                       for name in fields]
+    if lines[1].split("\t") != expected_header:
+        fail("event_log.smoke columns differ from unchanged event_log_v1 schema order")
+    for line_no, line in enumerate(lines[2:], start=3):
+        values = line.split("\t")
+        if len(values) != len(expected_header):
+            fail(f"event_log.smoke row {line_no} has wrong field count")
+        row = dict(zip(fields, values))
+        if row["schema_version"] != "1" or row["time_scale"] != "ticks":
+            fail(f"event_log.smoke row {line_no} has unsupported schema/time scale")
+        if row["status"] not in {"dispatched", "cancelled", "skipped", "error"}:
+            fail(f"event_log.smoke row {line_no} has unsupported event status")
+        if not re.fullmatch(r"[0-9a-f]{24}", row["event_id"]):
+            fail(f"event_log.smoke row {line_no} event_id is not 12-byte lowercase hex")
+        if not re.fullmatch(r"[0-9a-f]{32}", row["time_ticks"]):
+            fail(f"event_log.smoke row {line_no} time_ticks is not 16-byte lowercase hex")
+        index = int.from_bytes(bytes.fromhex(row["event_id"])[0:8], "little")
+        generation = int.from_bytes(bytes.fromhex(row["event_id"])[8:12], "little")
+        event_id = f"event:{index}:{generation}"
+        if (row["run_id"], event_id) not in event_keys:
+            fail(f"event_log.smoke row {line_no} has no (run_id,event_id) source manifest match")
+
+
 JOIN_KEYS = ("study_id", "dataset_id", "scenario_id", "seed_schedule_id", "replication_id", "case_key",
              "task_key", "occurrence", "endpoint", "seed_purpose", "seed_map_ref", "mapping_version")
 
 
 def _validate_join_manifest(join: Any, residuals: list[dict[str, Any]], runs: dict[str, dict[str, Any]],
-                            event_keys: set[tuple[str, str]], source_manifest: dict[str, Any]) -> None:
+                            event_keys: set[tuple[str, str]], source_manifest: dict[str, Any],
+                            metrics: Any) -> None:
     if not isinstance(join, dict) or join.get("version") != "c43.join_manifest.v1":
         fail("join_manifest version must be c43.join_manifest.v1")
     counts = join.get("counts")
     rows = join.get("rows")
     if not isinstance(counts, dict) or not isinstance(rows, list):
         fail("join_manifest requires counts and rows")
-    if counts.get("pairs") != len(rows) or len(rows) != len(residuals):
-        fail("join_manifest pair count differs from residual records")
-    if counts.get("reference_rows") != sum(_strict_count(r, "raw_reference_count") for r in rows):
-        fail("join_manifest reference row count does not reconcile")
-    if counts.get("simulation_rows") != sum(_strict_count(r, "raw_simulation_count") for r in rows):
-        fail("join_manifest simulation row count does not reconcile")
+    if counts.get("residual_pairs") != len(rows) or len(rows) != len(residuals):
+        fail("join_manifest residual_pairs differs from residual records")
+    reference_rows = sum(_strict_count(r, "raw_reference_count") for r in rows)
+    simulation_rows = sum(_strict_count(r, "raw_simulation_count") for r in rows)
     raw_records = []
     by_key = {}
     for i, row in enumerate(rows):
@@ -522,13 +561,27 @@ def _validate_join_manifest(join: Any, residuals: list[dict[str, Any]], runs: di
                 fail(f"join_manifest row {i} event_id_le_hex must be 12-byte lowercase hex")
             if causal is None or bytes.fromhex(event_hex) != _event_id_bytes(causal):
                 fail(f"join_manifest row {i} event handle bytes disagree with causal_ref")
+        event_resolved = row.get("event_resolved")
+        if causal is None:
+            if event_resolved is not None or event_hex is not None:
+                fail(f"join_manifest row {i} null causal_ref must have null event resolution fields")
+        elif event_resolved is not True:
+            fail(f"join_manifest row {i} causal_ref must be marked resolved")
+    if counts.get("residual_raw_rows") != len(raw_records):
+        fail("join_manifest residual_raw_rows differs from retained raw records")
+    if counts.get("residual_reference_rows") != reference_rows:
+        fail("join_manifest residual_reference_rows does not reconcile")
+    if counts.get("residual_simulation_rows") != simulation_rows:
+        fail("join_manifest residual_simulation_rows does not reconcile")
+    if reference_rows + simulation_rows != len(raw_records):
+        fail("residual raw side counts do not sum to retained raw records")
     if len(raw_records) != source_manifest.get("source_rows"):
         fail("join_manifest raw_records count differs from source_manifest source_rows")
     canonical_raw_rows = sorted(canonical(r) for r in raw_records)
     canonical_raw = ("[" + ",".join(canonical_raw_rows) + "]").encode("utf-8")
     digest = hashlib.sha256(canonical_raw).hexdigest()
-    if counts.get("raw_rows_canonical_sha256") != digest:
-        fail("join_manifest raw_rows_canonical_sha256 differs from canonical raw_records array")
+    if counts.get("residual_raw_rows_canonical_sha256") != digest:
+        fail("join_manifest residual_raw_rows_canonical_sha256 differs from canonical raw_records array")
     residual_keys = {}
     for row in residuals:
         key = tuple(row[k] for k in JOIN_KEYS)
@@ -542,6 +595,57 @@ def _validate_join_manifest(join: Any, residuals: list[dict[str, Any]], runs: di
             fail("residual has no exact join_manifest full-key/run/candidate match")
         if len(matches) != 1 or joined.get("residual_status") != matches[0]["residual_status"]:
             fail("join_manifest residual status/uniqueness differs from sidecar")
+        _reconcile_raw_pair(joined, key)
+
+    if not isinstance(metrics, list):
+        fail("metric.json must contain canonical metric record array")
+    metric_raw = join.get("metric_raw_records")
+    if not isinstance(metric_raw, list) or any(not isinstance(r, dict) for r in metric_raw):
+        fail("join_manifest metric_raw_records must be an array of objects")
+    if any(r.get("side") not in ("reference", "simulation") for r in metric_raw):
+        fail("metric raw record has unsupported side")
+    metric_ref = sum(r["side"] == "reference" for r in metric_raw)
+    metric_sim = sum(r["side"] == "simulation" for r in metric_raw)
+    if counts.get("metric_reference_raw_rows") != metric_ref or metric_ref != source_manifest.get("metric_reference_rows"):
+        fail("metric reference raw-row count differs from join/source manifest")
+    if counts.get("metric_simulation_raw_rows") != metric_sim or metric_sim != source_manifest.get("metric_simulation_rows"):
+        fail("metric simulation raw-row count differs from join/source manifest")
+    metric_digest_rows = sorted(canonical(r) for r in metric_raw)
+    metric_digest = hashlib.sha256(("[" + ",".join(metric_digest_rows) + "]").encode("utf-8")).hexdigest()
+    if counts.get("metric_raw_rows_canonical_sha256") != metric_digest:
+        fail("metric_raw_rows_canonical_sha256 differs from retained metric raw records")
+    group_summaries = join.get("group_summaries")
+    if not isinstance(group_summaries, list) or not group_summaries:
+        fail("join_manifest group_summaries missing")
+    for summary in group_summaries:
+        if not isinstance(summary, dict):
+            fail("group summary must be object")
+        for name in ("raw_reference_count", "raw_simulation_count", "eligible_reference_count",
+                     "eligible_simulation_count", "matched_count", "unmatched_count", "excluded_count",
+                     "censored_count", "missing_count", "failed_count", "infeasible_count"):
+            _strict_count(summary, name)
+
+
+def _reconcile_raw_pair(row: dict[str, Any], logical_key: tuple[Any, ...]) -> None:
+    raw_records = row["raw_records"]
+    reference = [r for r in raw_records if r.get("side") == "Reference"]
+    simulation = [r for r in raw_records if r.get("side") == "Simulation"]
+    if len(reference) != row["raw_reference_count"] or len(simulation) != row["raw_simulation_count"]:
+        fail("join raw side counts differ from retained raw records")
+    if any(r.get("side") not in ("Reference", "Simulation") for r in raw_records):
+        fail("residual raw record has unsupported side")
+    expected_key = dict(zip(JOIN_KEYS, logical_key))
+    for raw in raw_records:
+        if raw.get("key") != expected_key:
+            fail("raw residual record key differs from complete pair key")
+        if raw.get("tick_unit") != "nanosecond":
+            fail("raw residual record tick unit differs from frozen nanosecond contract")
+        if raw.get("source_time") != row.get("source_time"):
+            fail("raw residual source clock differs from join row")
+        if raw.get("source_time") is not None:
+            parse_u128(raw["source_time"], "raw residual source_time")
+    if row["excluded"] and row["eligible"]:
+        fail("excluded source pair cannot contribute to eligible C4.2 summary")
 
 
 def _strict_count(row: dict[str, Any], name: str) -> int:
@@ -608,12 +712,35 @@ def _assert_runtime_fixture(residuals: list[dict[str, Any]], logical_metrics: An
     summary_stats = {r.get("strata", {}).get("statistic") for r in summaries}
     if summary_stats != {"bias", "mae", "rmse"}:
         fail("known C4.3 fixture must retain bias/mae/rmse paired summary rows")
-    if not any(r.get("metric") == "paired_residual_summary" and r.get("excluded_count", 0) >= 1
-               for r in logical_metrics):
-        fail("known C4.3 paired summary must count the excluded outside-window point")
+    if len(logical_metrics) != 7:
+        fail(f"known C4.3 runtime fixture requires 7 metric rows, got {len(logical_metrics)}")
+    if len(join.get("group_summaries", [])) != 1:
+        fail("known C4.3 fixture requires one C4.2 group summary")
+    group = join["group_summaries"][0]
+    expected_counts = {
+        "raw_reference_count": 8, "raw_simulation_count": 7,
+        "eligible_reference_count": 5, "eligible_simulation_count": 5,
+        "matched_count": 3, "unmatched_count": 9, "excluded_count": 2,
+        "censored_count": 1, "missing_count": 1, "failed_count": 1, "infeasible_count": 1,
+    }
+    for name, expected in expected_counts.items():
+        if group.get(name) != expected:
+            fail(f"C4.2 group diagnostic {name} expected {expected}, got {group.get(name)}")
+    if group.get("status") != "Computed" or group.get("approximate") is not True or group.get("missing_time_count") != 0:
+        fail("C4.2 group status/precision/missing-time diagnostics differ from reviewed fixture")
+    expected_summary_values = {"bias": group.get("bias"), "mae": group.get("mae"), "rmse": group.get("rmse")}
+    for row in summaries:
+        stat = row["strata"]["statistic"]
+        if row["reference_count"] != 3 or row["simulation_count"] != 3:
+            fail("paired summary reference_count/simulation_count must equal matched-pair count 3")
+        for name in ("excluded_count", "censored_count", "missing_count", "unmatched_count", "failed_count", "infeasible_count"):
+            if row[name] != expected_counts[name]:
+                fail(f"paired summary {name} differs from C4.2 group diagnostic")
+        if row["value"] != expected_summary_values[stat]:
+            fail(f"paired summary {stat} value differs from C4.2 group summary")
 
 
-def readback(directory: Path) -> dict[str, Any]:
+def readback(directory: Path, *, include_framings: bool = True) -> dict[str, Any]:
     directory = directory.resolve()
     if hashlib.sha256(C0_SCHEMA_PATH.read_bytes()).hexdigest() != C0_SCHEMA_SHA256:
         fail("C0 logical schema digest changed from packet-bound source")
@@ -648,7 +775,67 @@ def readback(directory: Path) -> dict[str, Any]:
     evidence["c0_logical_schema_sha256"] = hashlib.sha256(C0_SCHEMA_PATH.read_bytes()).hexdigest()
     evidence["pyarrow"] = pa.__version__
     evidence["python"] = sys.version
+    if include_framings:
+        evidence["framing_variants"] = {
+            path.name: readback(path, include_framings=False)
+            for path in sorted(directory.glob("framing-*")) if path.is_dir()
+        }
     return evidence
+
+
+def actual_manifest_mutation_controls(directory: Path) -> list[dict[str, Any]]:
+    directory = directory.resolve()
+    if not (directory / "join_manifest.json").is_file():
+        fail("actual manifest mutation controls require join_manifest.json")
+    mutations = (
+        ("residual_pairs", lambda d: d["counts"].__setitem__("residual_pairs", d["counts"]["residual_pairs"] + 1)),
+        ("residual_raw_rows", lambda d: d["counts"].__setitem__("residual_raw_rows", d["counts"]["residual_raw_rows"] + 1)),
+        ("residual_hash", lambda d: d["counts"].__setitem__("residual_raw_rows_canonical_sha256", "0" * 64)),
+        ("metric_raw_count", lambda d: d["counts"].__setitem__("metric_reference_raw_rows", d["counts"]["metric_reference_raw_rows"] + 1)),
+        ("metric_hash", lambda d: d["counts"].__setitem__("metric_raw_rows_canonical_sha256", "0" * 64)),
+        ("group_unmatched", lambda d: d["group_summaries"][0].__setitem__("unmatched_count", 4)),
+        ("event_handle", lambda d: d["rows"][0].__setitem__("event_id_le_hex", "050000000000000002000000")),
+        ("residual_status", lambda d: d["rows"][0].__setitem__("residual_status", "probe_failed")),
+    )
+    results = []
+    for name, mutate in mutations:
+        with tempfile.TemporaryDirectory(prefix=f"c43-mut-{name}-") as temp:
+            target = Path(temp) / "runtime"
+            shutil.copytree(directory, target, ignore=shutil.ignore_patterns("framing-*"))
+            manifest_path = target / "join_manifest.json"
+            manifest = load_json(manifest_path)
+            mutate(manifest)
+            manifest_path.write_text(canonical(manifest) + "\n")
+            try:
+                readback(target, include_framings=False)
+            except Exception as exc:
+                results.append({"control": name, "expected": "reject", "observed": f"{type(exc).__name__}: {exc}"})
+            else:
+                fail(f"mutated actual manifest unexpectedly accepted: {name}")
+    with tempfile.TemporaryDirectory(prefix="c43-mut-source-clock-") as temp:
+        target = Path(temp) / "runtime"
+        shutil.copytree(directory, target, ignore=shutil.ignore_patterns("framing-*"))
+        manifest_path = target / "join_manifest.json"
+        manifest = load_json(manifest_path)
+        row = next(r for r in manifest["rows"] if r["logical_key"]["case_key"] == "case-3")
+        raw = next(r for r in row["raw_records"] if r["side"] == "Simulation")
+        raw["source_time"] = "6"
+        _refresh_residual_raw_hash(manifest)
+        manifest_path.write_text(canonical(manifest) + "\n")
+        try:
+            readback(target, include_framings=False)
+        except Exception as exc:
+            results.append({"control": "raw_clock_contradiction", "expected": "reject",
+                            "observed": f"{type(exc).__name__}: {exc}"})
+        else:
+            fail("contradictory raw source clock unexpectedly accepted")
+    return results
+
+
+def _refresh_residual_raw_hash(manifest: dict[str, Any]) -> None:
+    raw_records = [raw for row in manifest["rows"] for raw in row["raw_records"]]
+    encoded = "[" + ",".join(sorted(canonical(r) for r in raw_records)) + "]"
+    manifest["counts"]["residual_raw_rows_canonical_sha256"] = hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
 def _fixture_rows() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -739,10 +926,19 @@ def _expect_reject(action: Any, label: str) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--mutation-controls", action="store_true",
+                        help="copy actual producer outputs and verify manifest mutations are rejected")
     parser.add_argument("directory", nargs="?", type=Path)
     args = parser.parse_args()
     try:
-        result = _self_test() if args.self_test else readback(args.directory) if args.directory else fail("directory is required unless --self-test")
+        if args.self_test:
+            result = _self_test()
+        elif args.directory:
+            result = readback(args.directory)
+            if args.mutation_controls:
+                result["actual_manifest_mutation_controls"] = actual_manifest_mutation_controls(args.directory)
+        else:
+            fail("directory is required unless --self-test")
         print(json.dumps(result, sort_keys=True, indent=2))
         return 0
     except Exception as exc:
