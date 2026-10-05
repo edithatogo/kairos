@@ -17,6 +17,49 @@ class AcquisitionTests(unittest.TestCase):
         self.artifact = {'id': 9, 'name': 'kairos-actual-package-archives-' + self.sha, 'digest': 'sha256:' + 'a' * 64, 'expired': False, 'workflow_run': {'id': 7, 'head_sha': self.sha, 'repository_id': 123, 'head_repository_id': 123}}
         self.inventory = {'total_count': 1, 'artifacts': [self.artifact]}
 
+    def make_archive_zip(self, root, source_commit):
+        import io
+        import json
+        import tarfile
+        bundle_spec = importlib.util.spec_from_file_location('retained_bundle_test', Path(a.__file__).with_name('build_package_archive_bundle.py'))
+        bundle = importlib.util.module_from_spec(bundle_spec)
+        bundle_spec.loader.exec_module(bundle)
+        source = root / ('source-' + source_commit[:6])
+        for ecosystem, (_, extensions) in bundle.ARCHIVES.items():
+            directory = source / ecosystem
+            directory.mkdir(parents=True)
+            (directory / 'BUILD-INFO.json').write_text(json.dumps({'ecosystem': ecosystem, 'source_commit': source_commit, 'command': 'synthetic build', 'toolchain': 'fixture', 'platform': 'fixture', 'exit_status': 0}))
+            suffixes = sorted(extensions) if ecosystem == 'python' else [sorted(extensions)[0]]
+            for suffix in suffixes:
+                archive = directory / ('sample' + suffix)
+                if suffix in {'.whl', '.nupkg'}:
+                    with zipfile.ZipFile(archive, 'w') as z:
+                        z.writestr('package/payload', b'payload')
+                else:
+                    with tarfile.open(archive, 'w:gz') as z:
+                        info = tarfile.TarInfo('package/payload')
+                        info.size = 7
+                        z.addfile(info, io.BytesIO(b'payload'))
+        retained = root / ('retained-' + source_commit[:6])
+        bundle.build(source, retained, source_commit)
+        archive_zip = root / ('producer-' + source_commit[:6] + '.zip')
+        with zipfile.ZipFile(archive_zip, 'w') as z:
+            for item in retained.rglob('*'):
+                if item.is_file():
+                    z.write(item, item.relative_to(retained).as_posix())
+        payload = archive_zip.read_bytes()
+        return bundle, payload, 'sha256:' + hashlib.sha256(payload).hexdigest()
+
+    def source_readback(self, source, tree, parents):
+        return {
+            'sha': source,
+            'url': f'https://api.github.com/repos/{a.REPOSITORY}/git/commits/{source}',
+            'html_url': f'https://github.com/{a.REPOSITORY}/commit/{source}',
+            'tree': {'sha': tree, 'url': f'https://api.github.com/repos/{a.REPOSITORY}/git/trees/{tree}'},
+            'verification': {'verified': True, 'reason': 'valid', 'signature': 'fixture-signature', 'payload': 'fixture-payload'},
+            'parents': [{'sha': parent, 'url': f'https://api.github.com/repos/{a.REPOSITORY}/git/commits/{parent}', 'html_url': f'https://github.com/{a.REPOSITORY}/commit/{parent}', 'node_id': 'fixture-node'} for parent in parents],
+        }
+
     def test_exact_run_and_archive_identity(self):
         self.assertEqual(a.select_artifact(self.run, self.inventory, 7, self.sha), self.artifact)
 
@@ -130,6 +173,183 @@ class AcquisitionTests(unittest.TestCase):
             receipt = json.loads(output.with_name('acquired.acquisition.json').read_text())
             self.assertEqual(receipt['source_commit'], self.sha)
             self.assertEqual(receipt['artifact_digest'], self.artifact['digest'])
+
+    def test_retained_main_acquisition_keeps_zip_and_all_admission_readbacks(self):
+        import json
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            bundle, payload, digest = self.make_archive_zip(root, self.sha)
+            source_tree = '3' * 40
+            prior = '4' * 40
+            commit = self.source_readback(self.sha, source_tree, [prior])
+            run = dict(self.run, event='workflow_dispatch', head_branch='main', pull_requests=[])
+            artifact = copy.deepcopy(self.artifact)
+            artifact['digest'] = digest
+            artifact['workflow_run']['head_branch'] = 'main'
+            inventory = {'total_count': 1, 'artifacts': [artifact]}
+            observed_main = '2' * 40
+            branch = {'name': 'main', 'commit': {'sha': observed_main}}
+            compare_path = f'repos/{a.REPOSITORY}/compare/{self.sha}...{observed_main}'
+            compare = {'url': f'https://api.github.com/{compare_path}', 'base_commit': {'sha': self.sha}, 'merge_base_commit': {'sha': self.sha}, 'status': 'ahead', 'ahead_by': 1, 'behind_by': 0}
+
+            def acquire(output, branch_readback, compare_readback):
+                rows = {
+                    f'repos/{a.REPOSITORY}/actions/runs/7': run,
+                    f'repos/{a.REPOSITORY}/branches/main': branch_readback,
+                    f'repos/{a.REPOSITORY}/actions/runs/7/artifacts?per_page=100': inventory,
+                    f'repos/{a.REPOSITORY}/git/commits/{self.sha}': commit,
+                }
+                if compare_readback is not None:
+                    rows[compare_path] = compare_readback
+                def fake_api(path):
+                    return rows[path]
+                def fake_download(argv, path):
+                    self.assertEqual(argv[-1], f'repos/{a.REPOSITORY}/actions/artifacts/9/zip')
+                    path.write_bytes(payload)
+                    return digest
+                argv = ['acquire', '--run-id', '7', '--require-main-dispatch', '--acquisition-output', str(output)]
+                with patch.object(a, 'api', side_effect=fake_api), patch.object(a, 'download_verified', side_effect=fake_download) as download_mock, patch('sys.argv', argv):
+                    a.main()
+                download_mock.assert_called_once()
+
+            output = root / 'acquisition-main'
+            acquire(output, branch, compare)
+            bundle.verify(output / 'bundle')
+            self.assertEqual((output / '9.zip').read_bytes(), payload)
+            receipt = json.loads((output / 'acquisition.json').read_text())
+            self.assertEqual(receipt['source_commit'], self.sha)
+            self.assertEqual(receipt['archive_index_sha256'], hashlib.sha256((output / 'bundle/ARCHIVE-INDEX.json').read_bytes()).hexdigest())
+            self.assertEqual(receipt['main_ancestry']['observed_main_sha'], observed_main)
+            self.assertEqual(receipt['scope'], 'verified acquisition; not original build provenance or release acceptance')
+            self.assertEqual(receipt['build_commit_parents'], commit['parents'])
+            self.assertEqual(receipt['archive_index_sha256'], hashlib.sha256((output / 'bundle/ARCHIVE-INDEX.json').read_bytes()).hexdigest())
+            self.assertEqual(json.loads((output / 'receipt.json').read_text())['producer_pr_head'], self.sha)
+            self.assertEqual(json.loads((output / 'receipt.json').read_text())['selection_policy'], 'same-repository-main-workflow-dispatch')
+            self.assertEqual(json.loads((output / 'receipt.json').read_text())['actual_archive_count'], 8)
+            self.assertEqual(json.loads((output / 'artifact-metadata.json').read_text()), artifact)
+            self.assertEqual(json.loads((output / 'run-metadata.json').read_text()), run)
+            self.assertEqual(json.loads((output / 'branch-main-readback.json').read_text()), branch)
+            self.assertEqual(json.loads((output / 'compare-main-readback.json').read_text()), compare)
+            self.assertEqual(json.loads((output / 'source-commit-readback.json').read_text())[self.sha], a.validate_source_commit_readback(commit, self.sha, self.sha))
+            self.assertEqual(json.loads((output / 'source-commit-api-readback.json').read_text())[self.sha], commit)
+            self.assertEqual(set(json.loads((output / 'source-commit-readback.json').read_text())[self.sha]['parents'][0]), {'sha', 'url', 'html_url'})
+            self.assertEqual(json.loads((output / 'source-commit-api-readback.json').read_text())[self.sha]['parents'][0]['node_id'], 'fixture-node')
+
+            identity_output = root / 'acquisition-identical-main'
+            acquire(identity_output, {'name': 'main', 'commit': {'sha': self.sha}}, None)
+            self.assertEqual(json.loads((identity_output / 'acquisition.json').read_text())['main_ancestry']['status'], 'identical')
+            self.assertFalse((identity_output / 'compare-main-readback.json').exists())
+
+    def test_retained_pr_acquisition_requires_distinct_head_parent(self):
+        import json
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            source = self.sha
+            head = '2' * 40
+            base = '3' * 40
+            bundle, payload, digest = self.make_archive_zip(root, source)
+            run = dict(self.run, event='pull_request', head_sha=head, pull_requests=[{'head': {'sha': head}, 'base': {'sha': base}}])
+            artifact = copy.deepcopy(self.artifact)
+            artifact['digest'] = digest
+            artifact['workflow_run']['head_sha'] = head
+            inventory = {'total_count': 1, 'artifacts': [artifact]}
+            commit = self.source_readback(source, '4' * 40, [base, head])
+            commit_api = {'sha': source, 'commit': {'tree': commit['tree'], 'verification': commit['verification']}, 'parents': commit['parents']}
+            rows = {
+                f'repos/{a.REPOSITORY}/actions/runs/7': run,
+                f'repos/{a.REPOSITORY}/actions/runs/7/artifacts?per_page=100': inventory,
+                f'repos/{a.REPOSITORY}/commits/{source}': commit_api,
+                f'repos/{a.REPOSITORY}/git/commits/{source}': commit,
+            }
+            def fake_download(argv, path):
+                path.write_bytes(payload)
+                return digest
+            output = root / 'acquisition-pr'
+            argv = ['acquire', '--run-id', '7', '--source-commit', source, '--head-commit', head, '--acquisition-output', str(output)]
+            with patch.object(a, 'api', side_effect=lambda path: rows[path]), patch.object(a, 'download_verified', side_effect=fake_download), patch('sys.argv', argv):
+                a.main()
+            bundle.verify(output / 'bundle')
+            receipt = json.loads((output / 'receipt.json').read_text())
+            self.assertEqual(receipt['producer_pr_head'], head)
+            self.assertEqual(receipt['actual_archive_count'], 8)
+            self.assertNotEqual(receipt['producer_checkout_source'], head)
+            self.assertEqual((output / '9.zip').read_bytes(), payload)
+
+    def test_source_commit_readback_rejects_missing_identity_parent_and_signature(self):
+        tree = '3' * 40
+        parent = '4' * 40
+        valid = self.source_readback(self.sha, tree, [parent])
+        self.assertEqual(a.validate_source_commit_readback(valid, self.sha, self.sha)['tree']['sha'], tree)
+        invalid = [None, dict(valid, sha='2' * 40), self.source_readback(self.sha, 'bad-tree', [parent]),
+                   self.source_readback(self.sha, tree, []), self.source_readback(self.sha, tree, [dict(valid['parents'][0], url='https://wrong')]),
+                   dict(valid, verification={'verified': False, 'reason': 'unsigned'}),
+                   self.source_readback(self.sha, tree, [self.sha]),
+                   self.source_readback(self.sha, tree, [parent, parent])]
+        for bad in invalid:
+            with self.subTest(readback=bad), self.assertRaises(ValueError):
+                a.validate_source_commit_readback(bad, self.sha, self.sha)
+        with self.assertRaisesRegex(ValueError, 'PR producer head'):
+            a.validate_source_commit_readback(valid, self.sha, '5' * 40)
+
+    def test_retained_output_rejects_existing_root_and_cleans_failed_fresh_root(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            existing = root / 'existing'
+            existing.mkdir()
+            sentinel = existing / 'keep.txt'
+            sentinel.write_text('preserve')
+            with patch.object(a, 'api') as api_mock, patch('sys.argv', ['acquire', '--run-id', '7', '--acquisition-output', str(existing)]):
+                with self.assertRaises(SystemExit):
+                    a.main()
+            api_mock.assert_not_called()
+            self.assertEqual(sentinel.read_text(), 'preserve')
+
+            source_tree = '3' * 40
+            parent = '4' * 40
+            run = dict(self.run, event='workflow_dispatch', head_branch='main', pull_requests=[])
+            artifact = copy.deepcopy(self.artifact)
+            artifact['workflow_run']['head_branch'] = 'main'
+            branch = {'name': 'main', 'commit': {'sha': self.sha}}
+            commit = self.source_readback(self.sha, source_tree, [parent])
+            inventory = {'total_count': 1, 'artifacts': [artifact]}
+            rows = {
+                f'repos/{a.REPOSITORY}/actions/runs/7': run,
+                f'repos/{a.REPOSITORY}/branches/main': branch,
+                f'repos/{a.REPOSITORY}/actions/runs/7/artifacts?per_page=100': inventory,
+                f'repos/{a.REPOSITORY}/git/commits/{self.sha}': commit,
+            }
+            for name, fake_download in [
+                ('digest-mismatch', lambda argv, path: (path.write_bytes(b'partial'), 'sha256:' + '0' * 64)[1]),
+                ('partial-error', lambda argv, path: (path.write_bytes(b'partial'), (_ for _ in ()).throw(OSError('fixture download failure')))[1]),
+            ]:
+                output = root / name
+                argv = ['acquire', '--run-id', '7', '--require-main-dispatch', '--acquisition-output', str(output)]
+                with self.subTest(name=name), patch.object(a, 'api', side_effect=lambda path: rows[path]), patch.object(a, 'download_verified', side_effect=fake_download), patch('sys.argv', argv):
+                    with self.assertRaises((ValueError, OSError)):
+                        a.main()
+                self.assertFalse(output.exists())
+                self.assertEqual(sentinel.read_text(), 'preserve')
+
+            missing_readback_output = root / 'missing-readback'
+            missing_rows = {key: value for key, value in rows.items() if not key.endswith('/git/commits/' + self.sha)}
+            argv = ['acquire', '--run-id', '7', '--require-main-dispatch', '--acquisition-output', str(missing_readback_output)]
+            with patch.object(a, 'api', side_effect=lambda path: missing_rows[path]), patch.object(a, 'download_verified') as download_mock, patch('sys.argv', argv):
+                with self.assertRaises(KeyError):
+                    a.main()
+            download_mock.assert_not_called()
+            self.assertFalse(missing_readback_output.exists())
+
+    def test_output_modes_are_mutually_exclusive(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t)
+            with patch.object(a, 'api') as api_mock, patch('sys.argv', ['acquire', '--run-id', '7', '--output', str(root / 'legacy'), '--acquisition-output', str(root / 'retained')]):
+                with self.assertRaises(SystemExit):
+                    a.main()
+            api_mock.assert_not_called()
 
 
     def test_streamed_download_exact_limit_and_existing_destination(self):
@@ -271,10 +491,49 @@ class AcquisitionTests(unittest.TestCase):
             a.API_TIMEOUT_SECONDS = old_timeout
             a.API_OUTPUT_LIMIT = 32
             with patch.object(a, 'API_COMMAND_PREFIX', [sys.executable, '-c', 'print("x"*1000)']):
-                with self.assertRaisesRegex(ValueError, 'byte limit'):
-                    a.api('large')
+                for _ in range(8):
+                    with self.subTest(over_limit_attempt=_):
+                        with self.assertRaisesRegex(ValueError, 'byte limit'):
+                            a.api('large')
         finally:
             a.API_TIMEOUT_SECONDS, a.API_OUTPUT_LIMIT = old_timeout, old_limit
+
+    def test_cleanup_reaps_zombie_before_suppressing_stale_group_eperm(self):
+        import signal
+        from unittest.mock import patch
+
+        class ExitedProcess:
+            pid = 4242
+            def __init__(self):
+                self.poll_count = 0
+            def poll(self):
+                self.poll_count += 1
+                return None if self.poll_count == 1 else 17
+
+        process = ExitedProcess()
+        with patch.object(a, '_process_group_exists', side_effect=[True, False, False, False, False]) as group_exists, \
+             patch.object(a.os, 'killpg', side_effect=PermissionError('stale zombie group')) as killpg:
+            a._stop_process_group(process)
+        killpg.assert_called_once_with(process.pid, signal.SIGTERM)
+        self.assertGreaterEqual(process.poll_count, 4)
+        self.assertEqual(group_exists.call_count, 5)
+
+    def test_cleanup_keeps_live_group_eperm_fail_closed(self):
+        import signal
+        from unittest.mock import patch
+
+        class LiveProcess:
+            pid = 4343
+            def poll(self):
+                return None
+
+        process = LiveProcess()
+        with patch.object(a, '_process_group_exists', return_value=True) as group_exists, \
+             patch.object(a.os, 'killpg', side_effect=PermissionError('inaccessible live group')) as killpg:
+            with self.assertRaisesRegex(PermissionError, 'inaccessible live group'):
+                a._stop_process_group(process)
+        group_exists.assert_called_once_with(process.pid)
+        killpg.assert_called_once_with(process.pid, signal.SIGTERM)
 
     def test_parent_exit_with_child_holding_stdout_obeys_deadline(self):
         import sys
