@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "task": "C2.3.routing.routing_time",
+  "status": "ready_for_review",
+  "objective": "Implement the indivisible validated generic route and exact route-time source family in ABM; preserve existing DES/ABM behavior and all frozen fixture oracles.",
+  "base_commit": "44fd7d45b7badcc2904a924e815f45a2b38df15d",
+  "attempts": [
+    {
+      "commit": "6537b11813eafb9bdbc1d6cbaad37dae2548f02e",
+      "disposition": "Superseded after review identified exponential simple-path enumeration; logs retained under attempt1."
+    },
+    {
+      "commit": "d9607405b1c9a3998f7a9dbf4d623b0a07419787",
+      "disposition": "Corrected label-setting Dijkstra implementation; final verification head."
+    }
+  ],
+  "source_commit": "d9607405b1c9a3998f7a9dbf4d623b0a07419787",
+  "parent_commit": "f5bf5699b15ce05215cf9d653748d50bf7271ee1",
+  "source_files": {
+    "crates/kairo-ecs-abm/src/lib.rs": "fe29728ba48c0e614da2844e18a84202021efa4a370ca6aec8dbe7bd13f541af",
+    "crates/kairo-ecs-abm/src/spatial.rs": "502d317e916e48aee69c16fd1ffb5978bc0e805a0f302d868431e09d5df2f079"
+  },
+  "input_hashes": {
+    "conductor/design/calibration/c20-transit-execution-v1.md": "40c8400a4030a836bcec41e18291cedc8ceee1dcab88fee43f88916863d0d491",
+    "conductor/design/calibration/c23-spatial-api-adoption-20261005.md": "46957f3dc319de95417b68c5880aba034df9d0561cd6c404e2d9274e5aa9da10",
+    "conformance/c20/spatial_routes_c20.rs": "1ca26266d74bee8156f7262bc04c77ca344703b85eaa4249743101e8a9716de0",
+    "crates/kairo-ecs-abm/src/lib.rs (base)": "28cb36d070b3b7c96c446ce8ab30c2bb5f5f3c7509d79c1fa5cd51813d35dadb",
+    "conductor/evidence/c2.3-spatial-api-20261005/readback.json": "f113c27809a2fadf7827c7995fece338c8790d1da86a873a40c9525d54c9938c",
+    "conformance/c20/run_routes_red.py": "1cbda8b0c63b9a474cf46f77746019442aa387f78f42dcdba76ea5f677c13360",
+    "conformance/c23/spatial_api_smoke.rs": "328a85581f4cd66410f48d8479b7e8c592fb7fa7d3a5090e2db1f2b7a072210b",
+    "crates/kairo-ecs-abm/Cargo.toml": "3593f927b084bbf0b45b66e4dc6a88dec91479a237feb6163926fd6db46957c7",
+    "Cargo.lock": "b8fdaeff8205f2f3d18cd66fc307a8edf6e37c5373749032c6c88ecc30050ff0",
+    ".artifacts/mvp/C2.3.routing.routing_time/context.md": "0b08296e450fc8ec9de6c0f2f4243ad8d226a52714533a7685e84ee5703b29c3"
+  },
+  "algorithm_note": "Best-label queue ordered lexicographically by (checked u128 distance, hop count, full edge ID sequence), with stale-label suppression and one best label per node. Tuple order is extension-monotone: distance adds the same nonnegative edge length; hop count adds one; equal-hop edge sequences have equal length, so appending the same edge preserves their lexicographic order. Any route revisiting a node contains a nonnegative cycle; removing it lowers distance or preserves distance while reducing hops, so simple-path filtering cannot remove the globally preferred route. Dense layered and late-tie zero-cycle unit oracles exercise this behavior.",
+  "verification": [
+    {
+      "argv": [
+        "env",
+        "PATH=/Users/doughnut/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "/opt/homebrew/bin/python3",
+        "conformance/c20/run_routes_red.py",
+        "--expect",
+        "green"
+      ],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos",
+      "commit": "d9607405b1c9a3998f7a9dbf4d623b0a07419787",
+      "python": "/opt/homebrew/bin/python3",
+      "exit_status": 0,
+      "oracle": "All 9 named native route tests passed; zero failed or ignored; no unexpected errors.",
+      "result": ".artifacts/mvp/C2.0.red-tests.routes/result.json",
+      "result_sha256": "279e191550899054ec6bcbcad38bd7eba3b70c191c10b13ad97f85605e24cd58",
+      "cargo_log": ".artifacts/mvp/C2.0.red-tests.routes/logs/cargo-test.log",
+      "cargo_log_sha256": "162bf3453b19b4a2af95d180576df743c8e70fc63cf432015bcf0a699ebf5c51",
+      "toolchain_log_sha256": "fc03afbebb6a249cfec7c0cf9f9479f1fa925aa44b1bee5ef086ca96add4bc9a",
+      "commands_log_sha256": "f9ba17e894af98b29ceb2412d36022b794b95b1fa0e64f26e26c13a43c2e88f6"
+    },
+    {
+      "argv": [
+        "env",
+        "PATH=/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin:/Users/doughnut/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR=.artifacts/mvp/C2.3.routing.routing_time/target",
+        "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-abm"
+      ],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos",
+      "rustc": "1.76.0",
+      "exit_status": 0,
+      "summary": "all package test targets passed, including 10 new/ABM unit tests, 2 behavior tests, 3 integration tests, 7 flow adapter tests; doc-tests 0.",
+      "log": ".artifacts/mvp/C2.3.routing.routing_time/1.76.0-test.log",
+      "log_sha256": "bacb4df0259806ed89c59b282c247787681f480b41670a24081f73042354cf4e"
+    },
+    {
+      "argv": [
+        "env",
+        "PATH=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin:/Users/doughnut/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR=.artifacts/mvp/C2.3.routing.routing_time/target",
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "kairo-ecs-abm",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos",
+      "rustc": "1.99.0 (b940084d7 2026-09-28)",
+      "exit_status": 0,
+      "log": ".artifacts/mvp/C2.3.routing.routing_time/1.99.0-clippy.log",
+      "log_sha256": "03c264199e5eb0b748e39dd4aa087282ea601f29dfcbb965e77e30f3e149eca0"
+    }
+  ],
+  "formatting": {
+    "argv": [
+      "rustfmt",
+      "--edition",
+      "2021",
+      "crates/kairo-ecs-abm/src/spatial.rs",
+      "crates/kairo-ecs-abm/src/lib.rs"
+    ],
+    "exit_status": 0
+  },
+  "attempt1_logs": {
+    "C20_result_sha256": "ef14f569f157013a56f9f2b7362fd57b67de77aca5e36a97252f8986827fc786",
+    "C20_cargo_log_sha256": "0f478bc8d176b0da128a8aed6a9701846f9c85bde3496ca6d15f24f17e7132fa",
+    "1.76_test_log_sha256": "8a0735804896e28be93063babee9ce1ce6c751d4fa109cce68e7f1bc72396067",
+    "1.99_clippy_log_sha256": "407c3d1f96de61263809a9da435c708ed7edeae48b7d940d9e88efd3e4848b55"
+  },
+  "changed_files": [
+    "crates/kairo-ecs-abm/src/lib.rs",
+    "crates/kairo-ecs-abm/src/spatial.rs"
+  ],
+  "limitations": [
+    "External C2.3 API/mode/golden smoke and independent source review remain coordinator gates.",
+    "Worker evidence only; no C2.3 acceptance, C2.0 runtime acceptance, or stable-release readiness."
+  ]
+}

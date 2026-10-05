@@ -1,0 +1,23 @@
+{
+  "archive": [
+    "git",
+    "archive",
+    "--format=tar",
+    "d9607405b1c9a3998f7a9dbf4d623b0a07419787"
+  ],
+  "overlay_fixture_sha256": "1ca26266d74bee8156f7262bc04c77ca344703b85eaa4249743101e8a9716de0",
+  "cargo_argv": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "kairo-ecs-abm",
+    "--test",
+    "spatial_routes_c20"
+  ],
+  "cargo_cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/disposable",
+  "commit": "d9607405b1c9a3998f7a9dbf4d623b0a07419787",
+  "toolchain": "rustup run 1.99.0 rustc --version\nrustc 1.99.0 (b940084d7 2026-09-28)\nrustup run 1.99.0 cargo --version\ncargo 1.99.0 (5f94df478 2026-08-27)\nRUSTC=/Volumes/PortableSSD/toolchains/rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc\nRUSTDOC=/Volumes/PortableSSD/toolchains/rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc\nCARGO_TARGET_DIR=/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/disposable/target",
+  "cargo_exit_status": 0,
+  "cargo_log_sha256": "162bf3453b19b4a2af95d180576df743c8e70fc63cf432015bcf0a699ebf5c51"
+}

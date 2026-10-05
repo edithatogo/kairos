@@ -1,0 +1,63 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling kairo-ecs-types v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-types)
+   Compiling thiserror v2.0.20
+   Compiling kairo-ecs-state v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-state)
+   Compiling kairo-ecs-rng v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-rng)
+   Compiling kairo-ecs-core v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-core)
+   Compiling syn v3.0.6
+   Compiling thiserror-impl v2.0.20
+   Compiling kairo-ecs-des v0.1.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-des)
+   Compiling kairo-ecs-abm v0.1.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-abm)
+    Finished test [unoptimized + debuginfo] target(s) in 5.73s
+     Running unittests src/lib.rs (.artifacts/mvp/C2.3.routing.routing_time/target/debug/deps/kairo_ecs_abm-f0cff3e656931a24)
+
+running 8 tests
+test tests::behavior_simulation_updates_in_scheduler_order ... ok
+test tests::schedule_and_step ... ok
+test tests::behavior_decision_can_despawn_agent ... ok
+test tests::behavior_simulation_replays_entity_rng ... ok
+test tests::behavior_simulation_respects_event_budget ... ok
+test tests::despawned_agent_future_events_do_not_update_behavior ... ok
+test tests::spawn_and_attach ... ok
+test flow_adapter::tests::preconsume_budget_preserves_actual_private_stream_state_and_behavior ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/abm_behavior_update_v1.rs (.artifacts/mvp/C2.3.routing.routing_time/target/debug/deps/abm_behavior_update_v1-48b4b06bd4fec335)
+
+running 2 tests
+test abm_behavior_update_v1_replays_entity_rng_streams ... ok
+test abm_behavior_update_v1_runs_updates_in_scheduler_order ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/abm_integration.rs (.artifacts/mvp/C2.3.routing.routing_time/target/debug/deps/abm_integration-2f9fa5549506cc8b)
+
+running 3 tests
+test schedule_and_dispatch ... ok
+test agent_with_components ... ok
+test multi_agent_scheduling ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/flow_adapter_v1.rs (.artifacts/mvp/C2.3.routing.routing_time/target/debug/deps/flow_adapter_v1-96e23d104f699f48)
+
+running 7 tests
+test registration_type_kind_and_unique_carrier_failures_are_atomic ... ok
+test preconsume_budget_failure_preserves_behavior_draw_position_and_pending_head ... ok
+test recycled_actor_generation_has_fresh_stream_and_old_handle_is_stale ... ok
+test shared_behavior_observes_authoritative_des_time_and_buffered_peer_lifetime ... ok
+test rejected_callback_batches_keep_one_state_change_and_one_draw_without_replay ... ok
+test behavior_commands_use_real_task_leases_and_never_acquire_the_carrier ... ok
+test entity_stream_draw_positions_ignore_cross_actor_order_and_pause_boundaries ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests kairo-ecs-abm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "task": "C2.3.spatial-api-smoke-qualification",
+  "status": "three_external_api_cases_passed",
+  "qualification_scope": "Frozen external API smoke only; this does not assert full C2.3 or stable-release acceptance.",
+  "source_commit": "d9607405b1c9a3998f7a9dbf4d623b0a07419787",
+  "source_tree_was_clean_before_archive": true,
+  "archive": {
+    "command": [
+      "git",
+      "archive",
+      "--format=tar",
+      "--output",
+      ".artifacts/qualification/c23-spatial-api-20261005/kairos-d960740.tar",
+      "d9607405b1c9a3998f7a9dbf4d623b0a07419787"
+    ],
+    "sha256": "61014122c7be53b754b88551e6df43ee63ee81d10f70dca6d621d226063d52af",
+    "extraction": "Python tarfile.extractall(filter=\"data\") into qualification/source"
+  },
+  "fixture": {
+    "source": "conformance/c23/spatial_api_smoke.rs",
+    "sha256": "328a85581f4cd66410f48d8479b7e8c592fb7fa7d3a5090e2db1f2b7a072210b",
+    "overlay": "source/crates/kairo-ecs-abm/tests/spatial_api_c23.rs",
+    "unchanged": true
+  },
+  "input_hashes": {
+    "crates/kairo-ecs-abm/src/lib.rs": "fe29728ba48c0e614da2844e18a84202021efa4a370ca6aec8dbe7bd13f541af",
+    "crates/kairo-ecs-abm/src/spatial.rs": "502d317e916e48aee69c16fd1ffb5978bc0e805a0f302d868431e09d5df2f079",
+    "crates/kairo-ecs-abm/Cargo.toml": "3593f927b084bbf0b45b66e4dc6a88dec91479a237feb6163926fd6db46957c7",
+    "Cargo.lock": "b8fdaeff8205f2f3d18cd66fc307a8edf6e37c5373749032c6c88ecc30050ff0",
+    "conformance/c23/spatial_api_smoke.rs": "328a85581f4cd66410f48d8479b7e8c592fb7fa7d3a5090e2db1f2b7a072210b",
+    "parent .artifacts/preparation/c23-routing-independent-review.json": "464409165714e97aee95db39377841f4f85e2593f7176fe9e7ce2275201fa3b2"
+  },
+  "command": {
+    "argv": [
+      "env",
+      "PATH=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin:/Users/doughnut/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin",
+      "RUSTC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+      "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+      "CARGO_TARGET_DIR=/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/qualification/c23-spatial-api-20261005/target",
+      "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-abm",
+      "--test",
+      "spatial_api_c23"
+    ],
+    "cwd": ".artifacts/qualification/c23-spatial-api-20261005/source",
+    "rustc": "1.99.0",
+    "exit_status": 0,
+    "raw_log": ".artifacts/qualification/c23-spatial-api-20261005/native.log",
+    "raw_log_sha256": "842286ac69bf86e1e672df74c05db84a3de2320e872c692fec7f4281fe3fe6fa"
+  },
+  "named_tests": {
+    "exact_v1_topology_byte_golden": {
+      "occurrences": 1,
+      "passed": true
+    },
+    "actual_public_getters_bind_geometry_profile_and_time": {
+      "occurrences": 1,
+      "passed": true
+    },
+    "exact_mode_identity_boundaries_and_unicode_are_checked": {
+      "occurrences": 1,
+      "passed": true
+    }
+  },
+  "summary": "3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out.",
+  "scope_limit": "No production source, manifest, lockfile, or fixture edits. This is an external public-API smoke receipt only, not combined native/hosted C2.3 acceptance."
+}
