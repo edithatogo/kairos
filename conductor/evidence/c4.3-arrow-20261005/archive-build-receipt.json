@@ -1,8 +1,8 @@
 {
-  "source_commit": "543a5dd4c6b3b3b2b890ee258fa7e77cea86505f",
-  "archive_sha256": "0382dcf41f38b9635e1de91d8bba4d32c8bf834a47c6bd3fffc32acf6f3f3233",
-  "compressed_bytes": 595221,
-  "member_count": 416,
-  "uncompressed_bytes": 4988218,
+  "source_commit": "ddf93fc0c4348654a127494b975a22dbe2d5ea0b",
+  "archive_sha256": "88732ce4024f3f4040a1c625ade58d98cceb810721ef06ce68c408ea2bae8218",
+  "compressed_bytes": 864019,
+  "member_count": 585,
+  "uncompressed_bytes": 7494168,
   "deterministic_metadata": true
 }

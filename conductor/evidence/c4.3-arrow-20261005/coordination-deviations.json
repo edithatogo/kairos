@@ -19,6 +19,10 @@
     {
       "event": "A root scope-check printed a local lease token",
       "resolution": "Lease immediately released; private lease files and tokens excluded from all retained/published archives; later scope checks suppress stdout."
+    },
+    {
+      "event": "Final checks lease initially rejected oversized reader input; separate shell check command proceeded with artifact outputs",
+      "resolution": "Claimed only bounded immutable contract before further checks; final reader identity independently SHA-bound in receipts and packet. Source never changed without its own lease."
     }
   ],
   "preliminary_failures": "All failed compile, readback and format logs remain evidence; only clean source-bound qualification receipts support acceptance."

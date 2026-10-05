@@ -10,5 +10,7 @@
   "resolution": "Actual Censored then Missing source evidence selected independently of status; regression covers both Failed pairs; reviewer confirmed resolved.",
   "remaining_scope": "C4.4/C-04, public API, release and clinical acceptance remain open.",
   "reader_review": "Counts, raw hashes, full joins and nine manifest controls checked. Mixed-clock finding withdrawn after actual unchanged C42 kernel rejected contradictory logical-pair clocks.",
-  "mixed_clock_regression_commit": "d3c563f"
+  "mixed_clock_regression_commit": "d3c563f",
+  "final_gate_review": "Independent reader reviewer cleared both hosted strict gate invocations, propagated recursive requirements and actual per-framing manifest/smoke copies.",
+  "framing_source_commit": "56df9a4"
 }

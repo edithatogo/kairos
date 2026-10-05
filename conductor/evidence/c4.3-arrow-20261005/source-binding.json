@@ -1,23 +1,41 @@
 {
-  "source_commit": "543a5dd4c6b3b3b2b890ee258fa7e77cea86505f",
+  "source_commit": "ddf93fc0c4348654a127494b975a22dbe2d5ea0b",
   "native_source_binding": {
     "accepted-current-full": {
       "executed_head": "5ae258601aa469efc399901fc258b381f10f9dc0",
-      "all_calibration_source_sha256_matches_final": true,
-      "source_files": 24,
-      "receipt_sha256": "38bcb39c413ba55161d50d0e3454f688511f762e5175b7e2e3372e602d5b6d3b"
+      "all_compiled_production_source_sha256_matches_final": true,
+      "production_source_files": 15,
+      "final_test_only_manifest_copy_qualified_separately": true
     },
     "accepted-current-clippy": {
       "executed_head": "5ae258601aa469efc399901fc258b381f10f9dc0",
-      "all_calibration_source_sha256_matches_final": true,
-      "source_files": 24,
-      "receipt_sha256": "bf56b29d299b4f456e7b8c04c12fff6442ec329dc22d65640c2c177705924d0a"
+      "all_compiled_production_source_sha256_matches_final": true,
+      "production_source_files": 15,
+      "final_test_only_manifest_copy_qualified_separately": true
     },
     "accepted-floor-native": {
       "executed_head": "5ae258601aa469efc399901fc258b381f10f9dc0",
-      "all_calibration_source_sha256_matches_final": true,
-      "source_files": 24,
-      "receipt_sha256": "5984b946555b6549120ad54a6b0f6febc3001725931b20fb9bb267cdbf9280b0"
+      "all_compiled_production_source_sha256_matches_final": true,
+      "production_source_files": 15,
+      "final_test_only_manifest_copy_qualified_separately": true
+    },
+    "ci-shaped-current-native": {
+      "executed_head": "56df9a45168c496a434fab20f7009248338e2065",
+      "all_production_and_reader_source_sha256_matches_final": true,
+      "source_files": 17,
+      "test_only_list_format_successor": "ddf93fc; final formatted pipeline executed separately"
+    },
+    "ci-shaped-current-clippy": {
+      "executed_head": "56df9a45168c496a434fab20f7009248338e2065",
+      "all_production_and_reader_source_sha256_matches_final": true,
+      "source_files": 17,
+      "test_only_list_format_successor": "ddf93fc; final formatted pipeline executed separately"
+    },
+    "final-current-pipeline": {
+      "executed_head": "ddf93fc0c4348654a127494b975a22dbe2d5ea0b",
+      "all_source_sha256_matches_final": true,
+      "tests_passed": 2,
+      "receipt_sha256": "fea49527c8ee922df1f4f5c4b51f6e4ccd80ec6260827b2e1deef568e88f104b"
     }
   },
   "actual_native_tests_current": 140,
@@ -50,5 +68,11 @@
   "public_api": "open",
   "C4.4/C-04": "open",
   "release_and_clinical_acceptance": false,
-  "hosted_successor": "pending; recorded separately after publication"
+  "hosted_successor": "pending; recorded separately after publication",
+  "final_floor_pipeline": {
+    "worker_commit": "1e2872aa9c9b878c3fa179a183f582aa0093bdad",
+    "pipeline_tests_passed": 2,
+    "strict_recursive_readback_controls_rejected": 15,
+    "final_successor": "ddf93fc formats the copied-file name array only; production modules byte-identical and current formatted pipeline independently executed."
+  }
 }
