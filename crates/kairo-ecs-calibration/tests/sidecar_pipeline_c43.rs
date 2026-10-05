@@ -398,6 +398,12 @@ fn c43_runtime_records_and_hashes_survive_permutation_and_physical_framing() {
         fs::write(dir.join("event_log.smoke"), bytes).unwrap();
         let events: Vec<_> = x.events.iter().map(|e|json!({"run_id":e.run_id,"event_id":format!("event:{}:{}",e.event_id.index,e.event_id.generation),"time_ticks":e.time_ticks.to_string()})).collect();
         fs::write(dir.join("source_manifest.json"),serde_json::to_vec(&json!({"runs":[{"run_id":"run-a","candidate_id":"candidate-a","dataset_id":"dataset","scenario_id":"scenario","study_id":"study","replication_id":"rep-1","seed_schedule_id":"schedule-v1","seed_map_ref":"map-v1","mapping_version":"mapping-v1","parameter_hash":"a".repeat(64)}],"events":events,"source_rows":x.residual_rows.len(),"metric_reference_rows":x.reference_metric.rows.len(),"metric_simulation_rows":x.simulation_metric.rows.len(),"source_window":{"start_ticks":"0","end_ticks":"20"}})).unwrap()).unwrap();
+        for chunk in [1, 2, 64] {
+            let framed = dir.join(format!("framing-{chunk}"));
+            for manifest in ["join_manifest.json", "source_manifest.json", "event_log.smoke"] {
+                fs::copy(dir.join(manifest), framed.join(manifest)).unwrap();
+            }
+        }
     }
 }
 
