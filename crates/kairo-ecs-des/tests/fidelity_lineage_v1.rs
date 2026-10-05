@@ -68,7 +68,32 @@ fn failed_initial_admission_does_not_bind_a_runtime() {
 }
 #[test]
 fn foreign_terminal_work_never_bypasses_bound_live_work() {
-    for state in [WorkState::Pending, WorkState::Active, WorkState::Suspended] {
+    let fixture = include_str!("../../../conformance/c21/flow-runtime-identity-v1.tsv");
+    let mut rows = fixture.lines();
+    assert_eq!(
+        rows.next(),
+        Some("case_id\tbound_state\tforeign_state\tforeign_error\tbound_error")
+    );
+    let cases: Vec<_> = rows.collect();
+    assert_eq!(
+        cases.len(),
+        3,
+        "all three nonterminal states must be covered"
+    );
+    let mut states = std::collections::BTreeSet::new();
+    for row in cases {
+        let columns: Vec<_> = row.split('\t').collect();
+        assert_eq!(columns.len(), 5);
+        assert!(
+            states.insert(columns[1]),
+            "duplicate bound state in fixture"
+        );
+        let state = match columns[1] {
+            "Pending" => WorkState::Pending,
+            "Active" => WorkState::Active,
+            "Suspended" => WorkState::Suspended,
+            other => panic!("unsupported fixture state: {other}"),
+        };
         let mut a = FlowRuntime::new();
         let wa = work(&mut a);
         let mut b = FlowRuntime::new();
@@ -82,23 +107,37 @@ fn foreign_terminal_work_never_bypasses_bound_live_work() {
         assert_eq!(a.work_progress(wa).unwrap().state, state);
         activate(&mut b, wb, false);
         b.step().unwrap().unwrap();
-        assert_eq!(b.work_progress(wb).unwrap().state, WorkState::Completed);
+        assert_eq!(
+            format!("{:?}", b.work_progress(wb).unwrap().state),
+            columns[2]
+        );
         adapter.stage_policy(policy(Some(FidelityMode::Micro)));
         let before = adapter.clone();
         let progress = a.work_progress(wa).unwrap();
         let context = *a.work_context::<u64>(wa).unwrap();
-        assert_eq!(adapter.admit(&b, wb, "ed"), Err(FidelityError::InvalidWork));
+        let foreign_progress = b.work_progress(wb).unwrap();
+        let foreign_context = *b.work_context::<u64>(wb).unwrap();
         assert_eq!(
-            adapter.apply_at_boundary(&b),
-            Err(FidelityError::InvalidWork)
+            format!("{:?}", adapter.admit(&b, wb, "ed").unwrap_err()),
+            columns[3]
+        );
+        assert_eq!(
+            format!("{:?}", adapter.apply_at_boundary(&b).unwrap_err()),
+            columns[3]
         );
         assert_eq!(adapter, before);
+        assert_eq!(b.work_progress(wb).unwrap(), foreign_progress);
+        assert_eq!(*b.work_context::<u64>(wb).unwrap(), foreign_context);
         assert_eq!(
-            adapter.apply_at_boundary(&a),
-            Err(FidelityError::BusyBoundary)
+            format!("{:?}", adapter.apply_at_boundary(&a).unwrap_err()),
+            columns[4]
         );
         assert_eq!(adapter.decision(wa), Some(&decision));
         assert_eq!(a.work_progress(wa).unwrap(), progress);
         assert_eq!(*a.work_context::<u64>(wa).unwrap(), context);
     }
+    assert_eq!(
+        states.into_iter().collect::<Vec<_>>(),
+        vec!["Active", "Pending", "Suspended"]
+    );
 }

@@ -313,3 +313,9 @@ Track03 adds the opaque FlowRuntimeIdentity under
 cross-runtime WorkId collisions in Track21 admission adapters. No dependency on
 calibration is added to DES. Private fidelity support stays experimental; portable
 Track22 continuation/rebinding and full C2 acceptance remain open.
+
+Track12 conformance dependency: native-only family `conformance/c21` supplies
+actual work states to the lineage test; portable bootstrap ready IDs remain
+unchanged. Track25 API form is `docs/api/c2-flow-runtime-identity-review.md`.
+Independent review's divergent-clone objection is addressed by removing Clone
+from the production private adapter; test-only snapshots can still compare state.
