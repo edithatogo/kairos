@@ -877,6 +877,10 @@ def statistical_manifest_mutation_controls(directory: Path) -> list[dict[str, An
         ("forged_sample_count", lambda j, s: j["metric_group_diagnostics"][0].__setitem__("reference_count", 99)),
         ("missing_declared_groups", lambda j, s: s.pop("metric_groups")),
         ("forged_strata", lambda j, s: j["metric_group_diagnostics"][0].__setitem__("strata", {})),
+        ("omitted_source_seed_contract", lambda j, s: s["runs"][0].pop("seed_contract_version")),
+        ("mismatched_source_seed_contract", lambda j, s: s["runs"][0].__setitem__("seed_contract_version", "other-seed-v2")),
+        ("omitted_source_candidate", lambda j, s: s["runs"][0].pop("candidate_id")),
+        ("mismatched_source_candidate", lambda j, s: s["runs"][0].__setitem__("candidate_id", "other-candidate")),
     )
     results = []
     for name, mutate in mutations:

@@ -47,6 +47,15 @@ def validate(join: dict, source: dict, metrics: list, *, required: bool = False)
     require(isinstance(source_runs, list) and bool(source_runs), "missing source runs")
     run_ids = [r.get("run_id") for r in source_runs if isinstance(r, dict)]
     require(len(run_ids) == len(source_runs) and len(set(run_ids)) == len(run_ids), "invalid/duplicate source run")
+    bind_fields = ("dataset_id", "run_id", "mapping_version", "seed_schedule_id", "seed_map_ref",
+                   "parameter_hash", "seed_contract_version", "candidate_id")
+    for run in source_runs:
+        for field in bind_fields:
+            value = run.get(field)
+            require(isinstance(value, str) and bool(value.strip()), f"source run missing/nonempty {field}")
+        require(len(run["parameter_hash"]) == 64 and
+                all(c in "0123456789abcdef" for c in run["parameter_hash"]),
+                "source run parameter_hash must be lowercase SHA-256")
     window = source["source_window"]
     start, end = tick(window["start_ticks"]), tick(window["end_ticks"])
     require(start < end, "invalid source window")
@@ -81,11 +90,15 @@ def validate(join: dict, source: dict, metrics: list, *, required: bool = False)
         require(cohort_identity(matched[0]) == cohort_identity(matched[1]), "W1/KS endpoint or provenance mismatch")
         provenance = matched[0].get("provenance")
         require(isinstance(provenance, dict), "metric provenance must be an object")
-        bind_fields = ("dataset_id", "run_id", "mapping_version", "seed_schedule_id", "seed_map_ref",
-                       "parameter_hash", "seed_contract_version")
+        provenance_fields = ("dataset_id", "run_id", "mapping_version", "seed_schedule_id", "seed_map_ref",
+                             "parameter_hash", "seed_contract_version")
+        require(all(isinstance(provenance.get(field), str) and bool(provenance[field].strip())
+                    for field in provenance_fields), "metric provenance missing source binding field")
         source_matches = [r for r in source_runs
-                          if all(field not in r or provenance.get(field) == r.get(field)
-                                 for field in bind_fields)]
+                          if all(provenance.get(field) == r[field] for field in provenance_fields)
+                          and all(provenance.get(field) == r[field] for field in bind_fields
+                                  if field in provenance)
+                          and e["strata"].get("candidate_id") == r["candidate_id"]]
         require(len(source_matches) == 1, "metric provenance does not resolve to exactly one source run")
         for m in matched:
             require(m["status"] == status and m["window"] == window, "status/window mismatch")
@@ -145,7 +158,7 @@ def self_test() -> dict:
     strata = {"candidate_id": "a"}
     run = {"run_id": "run-a", "dataset_id": "d", "mapping_version": "map-v1",
            "seed_schedule_id": "sched-v1", "seed_map_ref": "seed-map-v1",
-           "parameter_hash": "a" * 64}
+           "parameter_hash": "a" * 64, "seed_contract_version": "seed-v1", "candidate_id": "a"}
     provenance = {k: run[k] for k in run if k != "parameter_hash"}
     provenance.update(seed_contract_version="seed-v1", parameter_hash=run["parameter_hash"])
 
@@ -248,6 +261,17 @@ def self_test() -> dict:
     rejected("source_run_provenance_mismatch", source, join, metrics,
              lambda s, j, m: (m[0]["provenance"].__setitem__("run_id", "other-run"),
                               m[1]["provenance"].__setitem__("run_id", "other-run")))
+    rejected("omitted_source_seed_contract", source, join, metrics,
+             lambda s, j, m: s["runs"][0].pop("seed_contract_version"))
+    rejected("mismatched_source_seed_contract", source, join, metrics,
+             lambda s, j, m: s["runs"][0].__setitem__("seed_contract_version", "other-seed-v2"))
+    rejected("omitted_source_candidate", source, join, metrics,
+             lambda s, j, m: s["runs"][0].pop("candidate_id"))
+    rejected("mismatched_source_candidate", source, join, metrics,
+             lambda s, j, m: s["runs"][0].__setitem__("candidate_id", "other-candidate"))
+    rejected("mismatched_metric_candidate", source, join, metrics,
+             lambda s, j, m: (m[0]["provenance"].__setitem__("candidate_id", "other-candidate"),
+                              m[1]["provenance"].__setitem__("candidate_id", "other-candidate")))
     rejected("missing_declared_groups", source, join, metrics, lambda s, j, m: s.pop("metric_groups"))
     rejected("missing_diagnostics", source, {"metric_raw_records": join["metric_raw_records"]}, metrics,
              lambda s, j, m: None)
