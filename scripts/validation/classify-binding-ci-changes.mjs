@@ -37,6 +37,8 @@ export const ARCHIVE_PATHS = [
   'scripts/supply_chain/verify_syft_installation_receipt.py',
   'tests/test_verified_syft_installer.py',
   'tests/test_syft_installation_receipt.py',
+  'packaging/scripts/acquire_archive_consumer_evidence.py',
+  'tests/test_archive_consumer_evidence_acquisition.py',
 ];
 const ARCHIVE_PATH_SET = new Set(ARCHIVE_PATHS);
 

@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- Acquire explicitly pinned mainline archive consumer artifacts with secure extraction, receipt and tool hash bindings, and selective CI coverage; install hash-locked scanner dependencies before hosted verification.
+
 ### Changed
 
 - Archive release subjects require independently verified retained evidence and matching release source; native scanner receipts bind exact Darwin and Linux executable pins.
