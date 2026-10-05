@@ -1,0 +1,28 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling kairo-ecs-types v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/disposable/crates/kairo-ecs-types)
+   Compiling thiserror v2.0.20
+   Compiling kairo-ecs-state v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/disposable/crates/kairo-ecs-state)
+   Compiling kairo-ecs-rng v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/disposable/crates/kairo-ecs-rng)
+   Compiling kairo-ecs-core v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/disposable/crates/kairo-ecs-core)
+   Compiling syn v3.0.6
+   Compiling thiserror-impl v2.0.20
+   Compiling kairo-ecs-des v0.1.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/disposable/crates/kairo-ecs-des)
+   Compiling kairo-ecs-abm v0.1.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/disposable/crates/kairo-ecs-abm)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.54s
+     Running tests/spatial_routes_c20.rs (target/debug/deps/spatial_routes_c20-03986a6c0c2cf768)
+
+running 9 tests
+test rejects_duplicate_edges_and_duplicate_allowed_modes ... ok
+test accumulates_distance_in_u128_beyond_u64 ... ok
+test cumulative_ceiling_segment_increments_sum_to_total_duration ... ok
+test checked_tick_multiplication_overflow_is_reported ... ok
+test origin_equals_destination_is_empty_and_distinct_zero_route_is_valid ... ok
+test equal_distance_and_hop_count_use_lexicographic_full_edge_id_sequence ... ok
+test rejects_invalid_version_graph_mode_speed_and_tick_rate ... ok
+test chooses_distance_then_hops_then_full_edge_id_sequence_and_ignores_zero_cycles ... ok
+test canonical_bytes_ignore_permutation_and_bind_sorted_modes ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

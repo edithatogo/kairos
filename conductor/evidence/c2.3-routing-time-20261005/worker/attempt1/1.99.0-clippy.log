@@ -1,0 +1,13 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+    Checking kairo-ecs-types v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-types)
+   Compiling thiserror v2.0.20
+    Checking kairo-ecs-state v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-state)
+    Checking kairo-ecs-rng v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-rng)
+    Checking kairo-ecs-core v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-core)
+   Compiling syn v3.0.6
+   Compiling thiserror-impl v2.0.20
+    Checking kairo-ecs-des v0.1.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-des)
+    Checking kairo-ecs-abm v0.1.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/crates/kairo-ecs-abm)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.63s

@@ -1,0 +1,22 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling kairo-ecs-types v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/qualification/c23-spatial-api-20261005/source/crates/kairo-ecs-types)
+   Compiling thiserror v2.0.20
+   Compiling kairo-ecs-state v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/qualification/c23-spatial-api-20261005/source/crates/kairo-ecs-state)
+   Compiling kairo-ecs-rng v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/qualification/c23-spatial-api-20261005/source/crates/kairo-ecs-rng)
+   Compiling kairo-ecs-core v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/qualification/c23-spatial-api-20261005/source/crates/kairo-ecs-core)
+   Compiling syn v3.0.6
+   Compiling thiserror-impl v2.0.20
+   Compiling kairo-ecs-des v0.1.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/qualification/c23-spatial-api-20261005/source/crates/kairo-ecs-des)
+   Compiling kairo-ecs-abm v0.1.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/qualification/c23-spatial-api-20261005/source/crates/kairo-ecs-abm)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.48s
+     Running tests/spatial_api_c23.rs (/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/qualification/c23-spatial-api-20261005/target/debug/deps/spatial_api_c23-ca90b8578380c73b)
+
+running 3 tests
+test exact_v1_topology_byte_golden ... ok
+test actual_public_getters_bind_geometry_profile_and_time ... ok
+test exact_mode_identity_boundaries_and_unicode_are_checked ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

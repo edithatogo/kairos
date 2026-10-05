@@ -1,0 +1,32 @@
+{
+  "review_type": "read_only_independent_c23_spatial_api_readback",
+  "reviewed_head": "290713de6d34acb336e518b54fbc68364db17169",
+  "source_base": "2f69a3929706f4e4966e0b0a2ed5b7f6851a0b87",
+  "reviewed_paths": [
+    "libs/kairos/conductor/design/calibration/c23-spatial-api-adoption-20261005.md",
+    "libs/kairos/conductor/evidence/c2.3-spatial-api-20261005/review.json",
+    "libs/kairos/conformance/c23/spatial_api_smoke.rs"
+  ],
+  "source_delta": "No kairo-ecs-abm source changes since the bound source base were included in the reviewed adoption commit.",
+  "runtime_or_acceptance_claim": false,
+  "canonical_golden": {
+    "status": "independently_verified",
+    "method": "Constructed the specified tag, version, units, sorted node/edge fields, and length-framed UTF-8 mode using Python struct little-endian encodings.",
+    "bytes": 112,
+    "matches_fixture_hex": true,
+    "hex": "4b4149524f532d5452414e5349542d475241504800010000006d6d00020000000000000001000000000000000200000000000000010000000000000007000000000000000100000000000000020000000000000005000000000000000100000000000000040000000000000077616c6b"
+  },
+  "prior_review_disposition": {
+    "canonical_encoding": "Resolved: exact domain tag, NUL terminators, u32/u64 little-endian widths, ordering, byte framing, overflow behavior, no trailing bytes, and excluded fields are frozen.",
+    "movement_mode_validation": "Resolved: exact UTF-8 byte bounds 1..1024 inclusive, control and boundary-whitespace rejection, internal whitespace allowance, and no normalization/case-folding are explicit.",
+    "exports": "Resolved: only kairo_ecs_abm::spatial is approved; no crate-root aliases or extra dependency/DES/calibration changes.",
+    "getter_smoke": "Resolved as a pre-acceptance gate: external fixture exercises route/profile/segment getters and verifies route graph bytes against the graph bytes.",
+    "runner_exact_once_note": "Resolved: adoption text corrects the earlier caveat; distinct expected test names plus the exact nine-pass single-target summary imply once each, subject to saved log/hash inspection."
+  },
+  "remaining_review_note": {
+    "severity": "nonblocking_test_strengthening_before_api_acceptance",
+    "finding": "The smoke confirms exact retention for composed/decomposed Unicode and case-distinct mode strings, but does not directly compare canonical_bytes for graphs differing only by those mode identities. The frozen encoding does specify raw UTF-8 bytes, so there is no ambiguity in the API decision; an explicit inequality oracle would make this identity guarantee more direct.",
+    "recommendation": "Before API acceptance, add a small assertion that otherwise-identical graphs using (for example) Walk versus walk and é versus e plus combining acute have different canonical bytes. Do not treat the present review as runtime or implementation evidence."
+  },
+  "disposition": "No remaining design blocker to dispatching the bounded implementation under the adopted API. API acceptance remains contingent on the documented external smoke and native/toolchain/algorithm/hosted gates; the noted canonical-identity assertion is recommended before acceptance. This readback does not qualify runtime behavior, full C2.3, or stable-release readiness."
+}

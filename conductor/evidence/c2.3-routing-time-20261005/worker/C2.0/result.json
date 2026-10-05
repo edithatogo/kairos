@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "task": "C2.0.red-tests.routes",
+  "status": "all_named_runtime_tests_passed",
+  "oracle": "all 9 named native tests passed; zero failed or ignored",
+  "expected": "green",
+  "named_test_count": 9,
+  "named_test_results": {
+    "rejects_invalid_version_graph_mode_speed_and_tick_rate": true,
+    "rejects_duplicate_edges_and_duplicate_allowed_modes": true,
+    "chooses_distance_then_hops_then_full_edge_id_sequence_and_ignores_zero_cycles": true,
+    "equal_distance_and_hop_count_use_lexicographic_full_edge_id_sequence": true,
+    "origin_equals_destination_is_empty_and_distinct_zero_route_is_valid": true,
+    "canonical_bytes_ignore_permutation_and_bind_sorted_modes": true,
+    "cumulative_ceiling_segment_increments_sum_to_total_duration": true,
+    "accumulates_distance_in_u128_beyond_u64": true,
+    "checked_tick_multiplication_overflow_is_reported": true
+  },
+  "commit": "d9607405b1c9a3998f7a9dbf4d623b0a07419787",
+  "fixture_sha256": "1ca26266d74bee8156f7262bc04c77ca344703b85eaa4249743101e8a9716de0",
+  "cargo_argv": [
+    "cargo",
+    "test",
+    "--locked",
+    "-p",
+    "kairo-ecs-abm",
+    "--test",
+    "spatial_routes_c20"
+  ],
+  "cargo_cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/disposable",
+  "cargo_exit_status": 0,
+  "unexpected_errors": [],
+  "cargo_log": "/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/logs/cargo-test.log",
+  "cargo_log_sha256": "162bf3453b19b4a2af95d180576df743c8e70fc63cf432015bcf0a699ebf5c51",
+  "toolchain_log": "/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/logs/toolchain.log",
+  "commands_log": "/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.routes/logs/commands.log"
+}

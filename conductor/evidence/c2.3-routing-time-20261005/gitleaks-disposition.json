@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "failed_run": 37271086883,
+  "disposition": "false_positive_source_sha256",
+  "source_path": "conformance/c23/spatial_api_smoke.rs",
+  "source_digest_sha256": "328a85581f4cd66410f48d8479b7e8c592fb7fa7d3a5090e2db1f2b7a072210b",
+  "fingerprints": [
+    "8c38664fd8d7587b01434a6eb7e0316ba5e12df9:conductor/evidence/c2.3-routing-time-20261005/worker/result.json:generic-api-key:30",
+    "8c38664fd8d7587b01434a6eb7e0316ba5e12df9:conductor/evidence/c2.3-routing-time-20261005/external-api/result.json:generic-api-key:31"
+  ],
+  "proof": "Both fields equal independently computed SHA256 of unchanged frozen external fixture; historical receipt bytes preserved. Exact fingerprints only, no rule/path suppression."
+}
