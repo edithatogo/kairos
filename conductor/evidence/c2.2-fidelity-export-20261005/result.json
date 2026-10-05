@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "packet_id": "C2.2.policy.fidelity_export",
+  "instance_id": "fidelity_export",
+  "status": "ready_for_review",
+  "disposition": "external API smoke and local compatibility checks pass; coordinator review pending; this is not full C2.2 or runtime acceptance",
+  "packet_base": "c370e4234aafe43af94088b8353cf85277a8218e",
+  "source_commit": "d926dea70199bf9e8a8d53a275376e8edb7f7934",
+  "source_hashes": {
+    "crates/kairo-ecs-des/src/lib.rs": "11fefc08651a95a85aa51148b37009dbe5d7b9e7613eba841a81f85271e850aa",
+    "crates/kairo-ecs-des/tests/fidelity_api_c22.rs": "ab72252b5fdb38f952c9e02bdbf6272cd4d546ed000298505181d4698a2b914b"
+  },
+  "input_hashes_at_packet_base": {
+    "conductor/design/calibration/c22-fidelity-api-adoption-20261005.md": "7e5732d431b4a141f0c86ff112ca1a73428639925d1eea915d65aa360f5d0e38",
+    "crates/kairo-ecs-des/src/fidelity.rs": "817853b4271d89370a53e7f7954884c49f1febd6b7f544837dd935830c83653f",
+    "crates/kairo-ecs-des/src/lib.rs": "45f4a86525e5b6ea1696962b785bddbc64ed9e2b3102277abd0b7dc2b11a089b",
+    "crates/kairo-ecs-des/src/flow.rs": "dbcaa36a3314a2a8d6b73056b0bfea3dbc8bbff64e45e01fce8550c28f118e92",
+    "conductor/evidence/c2.2-policy-ports-20261005/acceptance.json": "e928839d71a7f429bcc99e5cd3159ad5af6c33ad7ef2630e4f3b18ecf45875fc",
+    "conductor/evidence/c2.2-policy-api-20261005/review.json": "224c44acc7f84d96e079a99a4536f7b4737332aac65d185452ac7bd8c1a0c25b",
+    "crates/kairo-ecs-des/src/fidelity_mode_c21.rs": "4d6825d2b76c0d57544fa72a61613b7867b9b165e53db5110eb5e08597539fb4",
+    "crates/kairo-ecs-des/src/fidelity_lineage_v1.rs": "2d8011c5aa5cdd6524f6da507b446c5a980ecb8fb8ed49b12f9a2b5a2ee17df7",
+    "crates/kairo-ecs-des/Cargo.toml": "9f5a852926de2bb795da29f203d2101bbedc5f712f65197c5d5812fe011df816",
+    "Cargo.lock": "b8fdaeff8205f2f3d18cd66fc307a8edf6e37c5373749032c6c88ecc30050ff0",
+    "conformance/c21/flow-runtime-identity-v1.tsv": "b1756cc3daf765c13b04a0d373a3a18217ef94114f177010adc4ca06c1ebd66a",
+    ".artifacts/mvp/C2.2.policy.fidelity_export/context.md": "f0764163eff3ddd1a86210a43a80e009094244f6912957236f1c44adba965b43"
+  },
+  "unchanged_manifest_sha256": "9f5a852926de2bb795da29f203d2101bbedc5f712f65197c5d5812fe011df816",
+  "unchanged_lock_sha256": "b8fdaeff8205f2f3d18cd66fc307a8edf6e37c5373749032c6c88ecc30050ff0",
+  "fixture_tsv_sha256": "b1756cc3daf765c13b04a0d373a3a18217ef94114f177010adc4ca06c1ebd66a",
+  "original_unit_case_counts": {
+    "mode": 10,
+    "lineage": 3,
+    "executed_once_each_rust_1_76_and_1_99": true
+  },
+  "external_smoke": {
+    "name": "external_fidelity_api_controls_actual_flow_policy_boundary",
+    "passed_once_each_rust_1_76_and_1_99": true,
+    "observed": [
+      "entity/subsystem Micro decision wins over global Macro",
+      "duplicate admission returns DuplicateAdmission",
+      "real Flow work dispatches Pending to Active",
+      "staged policy boundary returns BusyBoundary while active",
+      "real Flow completion reaches Completed",
+      "staged global Macro applies at terminal boundary",
+      "existing decision unchanged; future work receives Global Macro"
+    ]
+  },
+  "runs": [
+    {
+      "argv": [
+        "env",
+        "PATH=/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin:/Users/doughnut/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR=.artifacts/mvp/C2.2.policy.fidelity_export/target",
+        "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-des"
+      ],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/c22-policy-20261005/libs/kairos",
+      "exit_status": 0,
+      "raw_output": ".artifacts/mvp/C2.2.policy.fidelity_export/1.76.0-test.log",
+      "raw_output_sha256": "bad56b026d11d4c8a9fc6965130e5f1a888285377209cedc6f6f60bc97c87a52",
+      "mode_cases_passed": [
+        "policy_resolves_all_sixteen_scope_presence_masks",
+        "version_missing_policy_and_subsystem_identity_are_checked",
+        "entity_overrides_use_live_generational_flow_identities",
+        "actual_pending_active_and_suspended_work_block_policy_application",
+        "every_terminal_state_preserves_old_work_and_uses_replaced_policy_for_future_work",
+        "failed_missing_or_duplicate_admission_preserves_the_first_decision",
+        "colliding_work_ids_cannot_cross_flow_runtime_instances",
+        "active_and_suspended_work_cannot_be_admitted_and_failed_admission_does_not_bind",
+        "despawned_bound_work_fails_closed_without_consuming_pending_policy",
+        "boundary_checks_every_admitted_work_even_when_the_first_is_terminal"
+      ],
+      "lineage_cases_passed": [
+        "opaque_identity_survives_moves_and_clone_but_distinguishes_instances",
+        "failed_initial_admission_does_not_bind_a_runtime",
+        "foreign_terminal_work_never_bypasses_bound_live_work"
+      ],
+      "public_smoke_matches": [
+        "test external_fidelity_api_controls_actual_flow_policy_boundary ... ok"
+      ],
+      "ignored_scoped_cases": []
+    },
+    {
+      "argv": [
+        "env",
+        "PATH=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin:/Users/doughnut/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR=.artifacts/mvp/C2.2.policy.fidelity_export/target",
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-des"
+      ],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/c22-policy-20261005/libs/kairos",
+      "exit_status": 0,
+      "raw_output": ".artifacts/mvp/C2.2.policy.fidelity_export/1.99.0-test.log",
+      "raw_output_sha256": "d11e8ed8aa0db7ba4023a9b29fa38fc8c6fe9f0ccb7b5da8d9f34dd8717789e0",
+      "mode_cases_passed": [
+        "policy_resolves_all_sixteen_scope_presence_masks",
+        "version_missing_policy_and_subsystem_identity_are_checked",
+        "entity_overrides_use_live_generational_flow_identities",
+        "actual_pending_active_and_suspended_work_block_policy_application",
+        "every_terminal_state_preserves_old_work_and_uses_replaced_policy_for_future_work",
+        "failed_missing_or_duplicate_admission_preserves_the_first_decision",
+        "colliding_work_ids_cannot_cross_flow_runtime_instances",
+        "active_and_suspended_work_cannot_be_admitted_and_failed_admission_does_not_bind",
+        "despawned_bound_work_fails_closed_without_consuming_pending_policy",
+        "boundary_checks_every_admitted_work_even_when_the_first_is_terminal"
+      ],
+      "lineage_cases_passed": [
+        "opaque_identity_survives_moves_and_clone_but_distinguishes_instances",
+        "failed_initial_admission_does_not_bind_a_runtime",
+        "foreign_terminal_work_never_bypasses_bound_live_work"
+      ],
+      "public_smoke_matches": [
+        "test external_fidelity_api_controls_actual_flow_policy_boundary ... ok"
+      ],
+      "ignored_scoped_cases": []
+    },
+    {
+      "argv": [
+        "env",
+        "PATH=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin:/Users/doughnut/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR=.artifacts/mvp/C2.2.policy.fidelity_export/target",
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "kairo-ecs-des",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/c22-policy-20261005/libs/kairos",
+      "exit_status": 0,
+      "raw_output": ".artifacts/mvp/C2.2.policy.fidelity_export/1.99.0-clippy.log",
+      "raw_output_sha256": "dbb765aa64c2c279bea35932eed1840da38518130d386374d5995b0641924dc6"
+    }
+  ],
+  "production_adapter_clone_changed": false,
+  "fidelity_behavior_changed": false,
+  "permit_or_actor_helper_added": false,
+  "claim_acceptance_limit": "Source-design adoption and local checks do not imply hosted exact-head CI, permit implementation, full policy acceptance, C2.2 runtime acceptance, or publication."
+}

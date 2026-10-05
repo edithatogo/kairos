@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "packet_id": "C2.2.policy.lineage_test_port",
+  "instance_id": "lineage_test_port",
+  "disposition": "bounded test-location migration evidence; coordinator review pending; not policy runtime acceptance",
+  "packet_base": "ac56c999eca60bbdb08a39edbbad4ececaa87302",
+  "source_commit": "51128b6217a83fc51b73aec11d48e4ff603862f7",
+  "source_paths": {
+    "crates/kairo-ecs-des/src/lib.rs": "45f4a86525e5b6ea1696962b785bddbc64ed9e2b3102277abd0b7dc2b11a089b",
+    "crates/kairo-ecs-des/src/fidelity_lineage_v1.rs": "2d8011c5aa5cdd6524f6da507b446c5a980ecb8fb8ed49b12f9a2b5a2ee17df7"
+  },
+  "original_lineage_fixture_sha256": "683a5e3ece5ce30df24b9da622696a0c618a2a98dc9ef6993cbb09d02e72f46b",
+  "original_fn_work_tail_sha256": "f66effc97263b3b2ed908ddfd0899dd3fba57b9f583731c8cf2623fdfd6dbfb0",
+  "lineage_tests_passed": [
+    "opaque_identity_survives_moves_and_clone_but_distinguishes_instances",
+    "failed_initial_admission_does_not_bind_a_runtime",
+    "foreign_terminal_work_never_bypasses_bound_live_work"
+  ],
+  "mode_tests_passed": [
+    "colliding_work_ids_cannot_cross_flow_runtime_instances",
+    "actual_pending_active_and_suspended_work_block_policy_application",
+    "entity_overrides_use_live_generational_flow_identities",
+    "despawned_bound_work_fails_closed_without_consuming_pending_policy",
+    "failed_missing_or_duplicate_admission_preserves_the_first_decision",
+    "boundary_checks_every_admitted_work_even_when_the_first_is_terminal",
+    "active_and_suspended_work_cannot_be_admitted_and_failed_admission_does_not_bind",
+    "policy_resolves_all_sixteen_scope_presence_masks",
+    "version_missing_policy_and_subsystem_identity_are_checked",
+    "every_terminal_state_preserves_old_work_and_uses_replaced_policy_for_future_work"
+  ],
+  "runs": [
+    {
+      "argv": [
+        "env",
+        "PATH=/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin:/Users/doughnut/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR=.artifacts/mvp/C2.2.policy.lineage_test_port/target",
+        "/Users/doughnut/.rustup/toolchains/1.76.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-des"
+      ],
+      "cwd": "/private/tmp/careops-c22-policy-20261005/libs/kairos",
+      "exit_status": 0,
+      "log": ".artifacts/mvp/C2.2.policy.lineage_test_port/1.76.0-test.log",
+      "log_sha256": "5dab96fae051f8121eb515a533d01d6f77781fb6405a2111bbef28828bf4dbc5",
+      "lineage_passes": [
+        "opaque_identity_survives_moves_and_clone_but_distinguishes_instances",
+        "failed_initial_admission_does_not_bind_a_runtime",
+        "foreign_terminal_work_never_bypasses_bound_live_work"
+      ],
+      "mode_passes": [
+        "boundary_checks_every_admitted_work_even_when_the_first_is_terminal",
+        "entity_overrides_use_live_generational_flow_identities",
+        "active_and_suspended_work_cannot_be_admitted_and_failed_admission_does_not_bind",
+        "actual_pending_active_and_suspended_work_block_policy_application",
+        "colliding_work_ids_cannot_cross_flow_runtime_instances",
+        "every_terminal_state_preserves_old_work_and_uses_replaced_policy_for_future_work",
+        "failed_missing_or_duplicate_admission_preserves_the_first_decision",
+        "despawned_bound_work_fails_closed_without_consuming_pending_policy",
+        "version_missing_policy_and_subsystem_identity_are_checked",
+        "policy_resolves_all_sixteen_scope_presence_masks"
+      ],
+      "lineage_count": 3,
+      "mode_count": 10,
+      "ignored_test_cases": [
+        "test flow::q52_bench::benchmark_q52_measurements ... ignored, explicit Q5.2 release measurement; emits supplementary raw rows"
+      ]
+    },
+    {
+      "argv": [
+        "env",
+        "PATH=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin:/Users/doughnut/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR=.artifacts/mvp/C2.2.policy.lineage_test_port/target",
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-des"
+      ],
+      "cwd": "/private/tmp/careops-c22-policy-20261005/libs/kairos",
+      "exit_status": 0,
+      "log": ".artifacts/mvp/C2.2.policy.lineage_test_port/1.99.0-test.log",
+      "log_sha256": "b6e77be647114d77ae49702abef196e33f231cef7ffce0ec4292d21ae2f3cd10",
+      "lineage_passes": [
+        "opaque_identity_survives_moves_and_clone_but_distinguishes_instances",
+        "failed_initial_admission_does_not_bind_a_runtime",
+        "foreign_terminal_work_never_bypasses_bound_live_work"
+      ],
+      "mode_passes": [
+        "colliding_work_ids_cannot_cross_flow_runtime_instances",
+        "actual_pending_active_and_suspended_work_block_policy_application",
+        "entity_overrides_use_live_generational_flow_identities",
+        "despawned_bound_work_fails_closed_without_consuming_pending_policy",
+        "failed_missing_or_duplicate_admission_preserves_the_first_decision",
+        "boundary_checks_every_admitted_work_even_when_the_first_is_terminal",
+        "active_and_suspended_work_cannot_be_admitted_and_failed_admission_does_not_bind",
+        "policy_resolves_all_sixteen_scope_presence_masks",
+        "version_missing_policy_and_subsystem_identity_are_checked",
+        "every_terminal_state_preserves_old_work_and_uses_replaced_policy_for_future_work"
+      ],
+      "lineage_count": 3,
+      "mode_count": 10,
+      "ignored_test_cases": [
+        "test flow::q52_bench::benchmark_q52_measurements ... ignored, explicit Q5.2 release measurement; emits supplementary raw rows"
+      ]
+    },
+    {
+      "argv": [
+        "env",
+        "PATH=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin:/Users/doughnut/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "RUSTDOC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+        "CARGO_TARGET_DIR=.artifacts/mvp/C2.2.policy.lineage_test_port/target",
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "kairo-ecs-des",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": "/private/tmp/careops-c22-policy-20261005/libs/kairos",
+      "exit_status": 0,
+      "log": ".artifacts/mvp/C2.2.policy.lineage_test_port/1.99.0-clippy.log",
+      "log_sha256": "1e7b78f5ccd5d72a0f6042b5627564de38bc9e3063daab4389c42a4531571cb9"
+    }
+  ],
+  "preserved_prior_failed_clippy": {
+    "path": ".artifacts/mvp/C2.2.policy.lineage_test_port/correction-1/1.99.0-clippy-failed.log",
+    "sha256": "0d2ecd555e969b895150c4a4266f65f79bd37d46e39d8d84abdf97d8c6efe435",
+    "issue": "unused FlowRuntimeIdentity import; correction removed only that unused import"
+  },
+  "manifest_lock_unchanged": true,
+  "lineage_fixture_input_sha256": "b1756cc3daf765c13b04a0d373a3a18217ef94114f177010adc4ca06c1ebd66a",
+  "cargo_manifest_sha256": "9f5a852926de2bb795da29f203d2101bbedc5f712f65197c5d5812fe011df816",
+  "cargo_lock_sha256": "b8fdaeff8205f2f3d18cd66fc307a8edf6e37c5373749032c6c88ecc30050ff0",
+  "acceptance_limit": "The three lineage and ten predecessor mode cases passed in local test runs. Policy runtime/export/permit and larger joins remain separate coordinator gates."
+}
