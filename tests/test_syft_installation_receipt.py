@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import os
 import re
 import sys
 import tarfile
@@ -124,6 +125,22 @@ class ReceiptValidatorTests(unittest.TestCase):
         report = verifier.validate(self.output, "linux-amd64", self.repo)
         self.assertEqual(report["result"], "pass")
         self.assertEqual(report["validated_commands"], 9)
+
+    def test_accepts_relative_output_path_with_managed_working_directory(self):
+        original_directory = Path.cwd()
+        try:
+            os.chdir(self.root)
+            report = verifier.validate(Path("output"), "linux-amd64", self.repo)
+        finally:
+            os.chdir(original_directory)
+        self.assertEqual(report["result"], "pass")
+        self.assertEqual(report["validated_commands"], 9)
+
+    def test_rejects_symlink_output_ancestor_after_lexical_normalization(self):
+        alias = self.root / "output-alias"
+        alias.symlink_to(self.root, target_is_directory=True)
+        with self.assertRaises(OSError):
+            verifier.validate(alias / "output", "linux-amd64", self.repo)
 
     def test_linux_binary_pin_matches_native_qualification_readback(self):
         self.assertEqual(self.retained_linux_target[3], "d46a9a61a6ae3d367f0a03748c5e9c59253e586c4388ab26ddcacebc2efa0d92")

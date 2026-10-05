@@ -117,6 +117,10 @@ def require(condition: bool, message: str) -> None:
 
 
 def validate(output: Path, target_key: str, repo: Path) -> dict:
+    # Make receipt argv comparisons independent of the CLI's relative spelling.
+    # abspath is lexical; resolving symlinks here would bypass read_regular's
+    # no-follow checks for every path component.
+    output = Path(os.path.abspath(output))
     require(target_key in TARGETS, "unsupported target")
     platform_name, asset, archive_hash, pinned_binary_hash, lock_name, lock_hash = TARGETS[target_key]
     evidence = output / "evidence" / "receipt.json"
