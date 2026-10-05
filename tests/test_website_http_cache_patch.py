@@ -132,6 +132,34 @@ class WebsiteHttpCachePatchTests(unittest.TestCase):
             self.assertEqual(source.read_bytes(), before)
             self.assertEqual(again[0][1], EXPECTED_PATCHED_SHA256)
 
+    def test_patches_multiple_valid_nested_packages_and_is_idempotent(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "node_modules"
+            first = make_package(root, rel="outer/node_modules")
+            second = make_package(root, rel="outer/inner/node_modules")
+            first_source = first / "index.js"
+            second_source = second / "index.js"
+            first_source.chmod(0o640)
+            second_source.chmod(0o604)
+            licenses = [(first / "LICENSE").read_bytes(), (second / "LICENSE").read_bytes()]
+
+            result = adapter.patch_tree(root)
+            self.assertEqual({item[1] for item in result}, {EXPECTED_PATCHED_SHA256})
+            self.assertEqual({item[0] for item in result}, {first_source, second_source})
+            self.assertEqual(sha256(first_source.read_bytes()), EXPECTED_PATCHED_SHA256)
+            self.assertEqual(sha256(second_source.read_bytes()), EXPECTED_PATCHED_SHA256)
+            self.assertEqual(stat.S_IMODE(first_source.stat().st_mode), 0o640)
+            self.assertEqual(stat.S_IMODE(second_source.stat().st_mode), 0o604)
+            self.assertEqual((first / "LICENSE").read_bytes(), licenses[0])
+            self.assertEqual((second / "LICENSE").read_bytes(), licenses[1])
+
+            patched = [first_source.read_bytes(), second_source.read_bytes()]
+            again = adapter.patch_tree(root)
+            self.assertEqual(first_source.read_bytes(), patched[0])
+            self.assertEqual(second_source.read_bytes(), patched[1])
+            self.assertEqual({item[1] for item in again}, {EXPECTED_PATCHED_SHA256})
+            self.assertEqual({item[0] for item in again}, {first_source, second_source})
+
     def test_rejects_tampered_helper_before_executing_it(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -200,6 +228,18 @@ class WebsiteHttpCachePatchTests(unittest.TestCase):
             (root / "http-cache-semantics").symlink_to(actual, target_is_directory=True)
             with self.assertRaisesRegex(ValueError, "refusing symlink package directory"):
                 adapter.patch_tree(root)
+
+    def test_rejects_symlink_package_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "node_modules"
+            package = make_package(root)
+            manifest = package / "package.json"
+            actual = package / "manifest.json"
+            manifest.replace(actual)
+            manifest.symlink_to(actual)
+            with self.assertRaisesRegex(ValueError, "refusing symlink package source"):
+                adapter.patch_tree(root)
+            self.assertEqual((package / "index.js").read_bytes(), SOURCE)
 
     def test_rejects_symlink_source(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
