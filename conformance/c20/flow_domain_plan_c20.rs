@@ -21,8 +21,10 @@ fn t(ticks: u128) -> SimTime {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Behavior {
     ErrorAfterEmit,
+    ErrorAfterPoison,
     PoisonSink,
     InvalidBatch,
+    PartialInvalidBatch,
     Accept,
     Controls,
 }
@@ -68,6 +70,11 @@ fn planned<'a>(
             sink.emit(acquire(current, current.resource, view.now()))?;
             Err(FlowError::InvalidState)
         }
+        Behavior::ErrorAfterPoison => {
+            let _ = sink.emit(acquire(current, current.resource, view.now()));
+            let _ = sink.emit(acquire(current, current.resource, view.now()));
+            Err(FlowError::InvalidState)
+        }
         Behavior::PoisonSink => {
             // The runtime is configured with a one-command bound. Ignore the
             // second emit error deliberately; the poisoned sink must still fail.
@@ -76,6 +83,15 @@ fn planned<'a>(
             Ok(next)
         }
         Behavior::InvalidBatch => {
+            sink.emit(acquire(
+                current,
+                current.invalid_resource.expect("fixture foreign resource"),
+                view.now(),
+            ))?;
+            Ok(next)
+        }
+        Behavior::PartialInvalidBatch => {
+            sink.emit(acquire(current, current.resource, view.now()))?;
             sink.emit(acquire(
                 current,
                 current.invalid_resource.expect("fixture foreign resource"),
@@ -239,6 +255,98 @@ fn accepted_plan_commits_context_and_actual_timed_flow_claim_together() {
     assert_eq!(actual.owner, f.owner);
     assert_eq!(actual.work, Some(f.task));
     assert!(actual.timed);
+}
+
+#[test]
+fn planner_error_takes_precedence_over_poisoned_sink_and_discards_all_staging() {
+    let mut f = fixture(Behavior::ErrorAfterPoison, 1, None);
+    f.flow
+        .schedule_domain(f.carrier, PLAN_KIND, t(31), 0)
+        .unwrap();
+
+    let dispatch = f.flow.step().unwrap().unwrap();
+
+    rejected(&dispatch, FlowError::InvalidState, false);
+    assert_eq!(f.flow.work_context::<State>(f.carrier).unwrap().commits, 0);
+    assert_eq!(f.flow.work(f.task).unwrap().request, None);
+    assert!(f.flow.resource(f.resource).unwrap().queued.is_empty());
+}
+
+#[test]
+fn valid_first_acquire_and_invalid_second_acquire_roll_back_as_one_batch() {
+    let mut foreign = FlowRuntime::new();
+    foreign.spawn_actor().unwrap();
+    foreign.spawn_actor().unwrap();
+    let foreign_resource = foreign.create_resource(1).unwrap();
+    let mut f = fixture(Behavior::PartialInvalidBatch, 4, Some(foreign_resource));
+    f.flow
+        .schedule_domain(f.carrier, PLAN_KIND, t(32), 0)
+        .unwrap();
+
+    let dispatch = f.flow.step().unwrap().unwrap();
+
+    rejected(&dispatch, FlowError::InvalidResource, true);
+    assert_eq!(f.flow.work_context::<State>(f.carrier).unwrap().commits, 0);
+    assert_eq!(f.flow.work(f.task).unwrap().request, None);
+    assert!(f.flow.resource(f.resource).unwrap().queued.is_empty());
+}
+
+fn legacy_noop<'a>(
+    _state: &'a mut LegacyState,
+    _snapshot: &'a FlowCallbackSnapshot,
+    _view: FlowWorldView<'a>,
+    _sink: &'a mut FlowCommandSink,
+) {
+}
+
+#[test]
+fn domain_control_rejects_legacy_view_carrier_before_allocation() {
+    let mut flow = FlowRuntime::new();
+    flow.register_domain_view_hook("c20.legacy-control", PLAN_KIND, legacy_noop)
+        .unwrap();
+    let owner = flow.spawn_actor().unwrap();
+    let resource = flow.create_resource(1).unwrap();
+    let task = flow
+        .create_work(owner, SimDuration::from_ticks(1), "c20.task", ())
+        .unwrap();
+    let carrier = flow
+        .create_actor_domain_context(
+            owner,
+            "c20.legacy-control",
+            PLAN_KIND,
+            LegacyState {
+                task,
+                owner,
+                foreign_resource: resource,
+                calls: 0,
+            },
+        )
+        .unwrap();
+    let before = flow.budget_snapshot();
+
+    assert_eq!(
+        flow.schedule_domain_control(carrier, PLAN_KIND, FlowDomainControl::Pause, t(33), 0),
+        Err(FlowError::InvalidWork)
+    );
+    assert_eq!(flow.budget_snapshot(), before);
+}
+
+#[test]
+fn past_domain_control_rejects_before_event_allocation() {
+    let mut f = fixture(Behavior::Controls, 4, None);
+    f.flow
+        .schedule_domain(f.carrier, PLAN_KIND, t(34), 0)
+        .unwrap();
+    f.flow.step().unwrap().unwrap();
+    assert_eq!(f.flow.now(), t(34));
+    let before = f.flow.budget_snapshot();
+
+    assert_eq!(
+        f.flow
+            .schedule_domain_control(f.carrier, PLAN_KIND, FlowDomainControl::Pause, t(33), 0),
+        Err(FlowError::PastCommand)
+    );
+    assert_eq!(f.flow.budget_snapshot(), before);
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

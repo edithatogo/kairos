@@ -29,6 +29,10 @@ TEST_NAMES = (
     "accepted_plan_commits_context_and_actual_timed_flow_claim_together",
     "legacy_mutable_hook_still_retains_context_effect_on_batch_rejection",
     "plan_carrier_is_unique_kind_bound_and_delivers_typed_pause_resume_in_order",
+    "planner_error_takes_precedence_over_poisoned_sink_and_discards_all_staging",
+    "valid_first_acquire_and_invalid_second_acquire_roll_back_as_one_batch",
+    "domain_control_rejects_legacy_view_carrier_before_allocation",
+    "past_domain_control_rejects_before_event_allocation",
 )
 RED_MARKERS = (
     "register_domain_plan_hook",
