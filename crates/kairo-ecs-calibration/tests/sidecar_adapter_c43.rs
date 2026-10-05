@@ -436,3 +436,23 @@ fn c43_failed_prediction_preserves_reference_censor_and_missing_lineage() {
         assert_eq!(out.residuals[0]["censor_status"], category);
     }
 }
+
+#[test]
+fn c43_contradictory_source_clocks_fail_and_retain_both_raw_sides() {
+    let mut i = fixture();
+    i.residual_rows[0].row.source_time = Some(5);
+    i.residual_rows[1].row.source_time = Some(6);
+    let failure = build_sidecars(&i).unwrap_err();
+    assert_eq!(
+        failure.reason,
+        "C4.2 residual kernel returned invalid or unverified batch"
+    );
+    let clocks: std::collections::BTreeSet<_> = failure
+        .raw_rows
+        .iter()
+        .map(|r| r["source_time"].as_str().unwrap())
+        .collect();
+    assert_eq!(clocks, ["5", "6"].into_iter().collect());
+    assert_eq!(failure.raw_rows.len(), 2);
+    assert_eq!(failure.metric_raw_rows.len(), 2);
+}
