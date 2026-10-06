@@ -10,7 +10,7 @@ rust-version = "1.88"
 default = []
 ipc = ["dep:arrow-array", "dep:arrow-schema", "dep:kairo-ecs-arrow-io", "kairo-ecs-arrow-io/ipc"]
 parquet = ["dep:arrow-array", "dep:arrow-schema", "dep:kairo-ecs-arrow-io", "kairo-ecs-arrow-io/parquet"]
-flow = ["dep:kairo-ecs-des"]
+flow = ["dep:kairo-ecs-abm", "dep:kairo-ecs-des"]
 
 [dependencies]
 kairo-ecs-rng = { path = "../kairo-ecs-rng", version = "=0.0.0" }
@@ -21,6 +21,7 @@ chrono = { version = "=0.4.45", default-features = false, features = ["std"] }
 serde_json = { version = "=1.0.149", features = ["arbitrary_precision"] }
 kairo-ecs-arrow = { path = "../kairo-ecs-arrow", version = "=0.1.0" }
 kairo-ecs-des = { path = "../kairo-ecs-des", version = "=0.1.0", optional = true }
+kairo-ecs-abm = { path = "../kairo-ecs-abm", version = "=0.1.0", optional = true }
 
 arrow-array = { version = "=60.0.0", optional = true, default-features = false }
 arrow-schema = { version = "=60.0.0", optional = true, default-features = false }

@@ -5,9 +5,9 @@ use crate::flow_bridge::{
 use crate::seed_map::{CalibrationSeedMap, SeedPurpose};
 use crate::work_duration::{IntrinsicDurationDistribution, IntrinsicWorkProvider};
 use kairo_ecs_abm::spatial::{
-    EdgeId, MovementModeId, MovementProfile, NodeId, TransitContext, TransitEdge, TransitGraphV1,
-    TransitPhase,
+    EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1,
 };
+use kairo_ecs_abm::{register_transit_context, TransitContext, TransitPhase};
 use kairo_ecs_des::fidelity::{FidelityAdapter, FidelityMode, FidelityPolicy};
 use kairo_ecs_des::{FlowDomainControl, FlowError, FlowRuntime, LifecycleTransition, WorkState};
 use kairo_ecs_types::{EventKind, SimDuration, SimTime};
@@ -119,8 +119,7 @@ fn assert_invalid_dispatch(
 #[test]
 fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_once() {
     let mut flow = FlowRuntime::new();
-    flow.register_domain_plan_hook("paired-transit-plan", KIND, TransitContext::plan)
-        .unwrap();
+    register_transit_context(&mut flow, "paired-transit-plan", KIND).unwrap();
     flow.register_work_continuations(
         REGISTRATION,
         kairo_ecs_des::FlowContinuations::<Context>::default(),

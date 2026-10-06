@@ -1,26 +1,32 @@
 //! Private, experimental calibration-to-Flow admission bridge.
 //!
-//! The first runtime slice accepts Macro and explicit Zero-transit Micro.
-//! Route execution, callback receipts and checkpoint restoration are separate
-//! contracts. The states below keep the single Service stream and sampled
-//! duration owned across every fallible create/bind/submit transition.
+//! Intrinsic service sampling owns one Service stream. Nonzero Micro transit is
+//! scheduled through the ABM TransitContext; Macro and zero routes submit work
+//! without creating a transit carrier or event.
 
 use crate::seed_map::{CalibrationStream, CalibrationStreamKey, SeedPurpose};
 use crate::work_duration::{IntrinsicWorkProvider, SampledWorkDuration, WorkDurationError};
+use kairo_ecs_abm::spatial::{MovementProfile, NodeId, TransitError, TransitGraphV1};
+use kairo_ecs_abm::{
+    schedule_transit_control, schedule_transit_start, TransitContext, TransitPhase,
+};
 use kairo_ecs_des::fidelity::{
     FidelityAdapter, FidelityAdmissionPermit, FidelityDecision, FidelityError, FidelityMode,
 };
 use kairo_ecs_des::{
-    FlowError, FlowRuntime, FlowRuntimeIdentity, PreemptionStrategy, RequestId, ResourceId, WorkId,
-    WorkState,
+    FlowAcquireCommand, FlowBatchReceipt, FlowDispatch, FlowDomainControl, FlowError, FlowRuntime,
+    FlowRuntimeIdentity, PreemptionStrategy, RequestId, ResourceId, WorkId, WorkState,
 };
-use kairo_ecs_types::{EntityId, SimDuration, SimTime};
+use kairo_ecs_types::{EntityId, EventId, EventKind, SimDuration, SimTime};
 use std::marker::PhantomData;
+use std::sync::Arc;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum TransitIntent {
-    Zero,
-    Route,
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct PreparationIdentity {
+    pub(crate) owner: EntityId,
+    pub(crate) subsystem: String,
+    pub(crate) registration: String,
+    pub(crate) stratum: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -35,10 +41,36 @@ pub(crate) struct AcquireIntent {
     pub(crate) preemptible: Option<PreemptionStrategy>,
 }
 
+#[derive(Clone)]
+pub(crate) enum TransitRequest {
+    Zero,
+    Route {
+        graph: Arc<TransitGraphV1>,
+        origin: NodeId,
+        destination: NodeId,
+        profile: MovementProfile,
+        ticks_per_second: u64,
+        carrier_actor: EntityId,
+        carrier_registration: String,
+        kind: EventKind,
+    },
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum TransitObservation {
+    Progress,
+    Paused,
+    Resumed,
+    IgnoredStale,
+    Rejected,
+    Arrived,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum BridgeError {
     Fidelity(FidelityError),
     Duration(WorkDurationError),
+    Transit(TransitError),
     Flow(FlowError),
     ConflictingSubmission,
     InvalidDispatch,
@@ -54,7 +86,32 @@ pub(crate) struct WorkPreparationInput<T: Clone, C: 'static> {
     pub(crate) registration: String,
     pub(crate) make_context: fn(&T) -> C,
     pub(crate) acquire: AcquireIntent,
-    pub(crate) transit: TransitIntent,
+    pub(crate) transit: TransitRequest,
+}
+
+impl<T: Clone, C: 'static> WorkPreparationInput<T, C> {
+    pub(crate) fn new(
+        identity: PreparationIdentity,
+        service_stream: CalibrationStream,
+        expected_service_key: CalibrationStreamKey,
+        template: T,
+        make_context: fn(&T) -> C,
+        acquire: AcquireIntent,
+        transit: TransitRequest,
+    ) -> Self {
+        Self {
+            owner: identity.owner,
+            subsystem: identity.subsystem,
+            stratum: identity.stratum,
+            expected_service_key,
+            service_stream,
+            template,
+            registration: identity.registration,
+            make_context,
+            acquire,
+            transit,
+        }
+    }
 }
 
 pub(crate) struct PrepareFailure<T: Clone, C: 'static> {
@@ -72,6 +129,7 @@ pub(crate) struct PreparedIntrinsicWork<'a, T: Clone, C: 'static> {
     registration: String,
     make_context: fn(&T) -> C,
     acquire: AcquireIntent,
+    transit: TransitRequest,
 }
 
 pub(crate) struct CreateFailure<'a, T: Clone, C: 'static> {
@@ -86,6 +144,7 @@ pub(crate) struct CreatedIntrinsicWork<'a, T: Clone, C: 'static> {
     service_stream: CalibrationStream,
     sample: SampledWorkDuration,
     acquire: AcquireIntent,
+    transit: TransitRequest,
     work: WorkId,
     _restart_types: PhantomData<fn() -> (T, C)>,
 }
@@ -101,8 +160,21 @@ pub(crate) struct BoundIntrinsicWork<T: Clone, C: 'static> {
     service_stream: CalibrationStream,
     sample: SampledWorkDuration,
     acquire: AcquireIntent,
+    transit: TransitRequest,
     runtime: FlowRuntimeIdentity,
     work: WorkId,
+    carrier: Option<WorkId>,
+    carrier_actor: Option<EntityId>,
+    kind: Option<EventKind>,
+    pending_event: Option<EventId>,
+    pending_priority: Option<i32>,
+    owned_events: Vec<EventId>,
+    stale_events: Vec<EventId>,
+    consumed_events: Vec<EventId>,
+    controls: Vec<(EventId, FlowDomainControl)>,
+    retryable: Option<FlowDispatch>,
+    arrival_request: Option<RequestId>,
+    arrival_at: Option<SimTime>,
     _restart_types: PhantomData<fn() -> (T, C)>,
 }
 
@@ -151,9 +223,6 @@ impl<T: Clone + 'static, C: 'static> WorkPreparationInput<T, C> {
             Err(BridgeError::InvalidDispatch)
         } else if flow.resource(self.acquire.resource).is_err() {
             Err(BridgeError::Flow(FlowError::InvalidResource))
-        } else if decision.mode == FidelityMode::Micro && self.transit == TransitIntent::Route {
-            // C2.3 owns actual route dispatch. Reject before touching Service.
-            Err(BridgeError::InvalidDispatch)
         } else if self.service_stream.purpose() != SeedPurpose::Service {
             Err(BridgeError::Duration(WorkDurationError::WrongPurpose))
         } else if self.service_stream.key() != self.expected_service_key {
@@ -164,6 +233,32 @@ impl<T: Clone + 'static, C: 'static> WorkPreparationInput<T, C> {
         if let Err(error) = validation {
             drop(permit);
             return Err(PrepareFailure { input: self, error });
+        }
+
+        if decision.mode == FidelityMode::Micro {
+            let zero_route = match &self.transit {
+                TransitRequest::Zero => false,
+                TransitRequest::Route {
+                    graph,
+                    origin,
+                    destination,
+                    profile,
+                    ticks_per_second,
+                    ..
+                } => match graph.route(*origin, *destination, profile, *ticks_per_second) {
+                    Ok(route) => route.duration() == SimDuration::ZERO,
+                    Err(error) => {
+                        drop(permit);
+                        return Err(PrepareFailure {
+                            input: self,
+                            error: BridgeError::Transit(error),
+                        });
+                    }
+                },
+            };
+            if zero_route {
+                self.transit = TransitRequest::Zero;
+            }
         }
 
         // Sampling is the last fallible operation in prepare. The provider
@@ -194,6 +289,7 @@ impl<T: Clone + 'static, C: 'static> WorkPreparationInput<T, C> {
             registration: self.registration,
             make_context: self.make_context,
             acquire: self.acquire,
+            transit: self.transit,
         })
     }
 }
@@ -211,6 +307,10 @@ impl<'a, T: Clone + 'static, C: 'static> PreparedIntrinsicWork<'a, T, C> {
         (self.sample.draw_before(), self.sample.draw_after())
     }
 
+    pub(crate) fn service_draw_position(&self) -> u64 {
+        self.service_stream.draw_position()
+    }
+
     #[allow(clippy::result_large_err)]
     pub(crate) fn create(
         self,
@@ -226,6 +326,7 @@ impl<'a, T: Clone + 'static, C: 'static> PreparedIntrinsicWork<'a, T, C> {
             registration,
             make_context,
             acquire,
+            transit,
         } = self;
         match flow.create_restartable_work(
             acquire.owner,
@@ -241,6 +342,7 @@ impl<'a, T: Clone + 'static, C: 'static> PreparedIntrinsicWork<'a, T, C> {
                 service_stream,
                 sample,
                 acquire,
+                transit,
                 work,
                 _restart_types: PhantomData,
             }),
@@ -255,6 +357,7 @@ impl<'a, T: Clone + 'static, C: 'static> PreparedIntrinsicWork<'a, T, C> {
                     registration,
                     make_context,
                     acquire,
+                    transit,
                 },
                 error: BridgeError::Flow(error),
             }),
@@ -283,8 +386,21 @@ impl<'a, T: Clone + 'static, C: 'static> CreatedIntrinsicWork<'a, T, C> {
                 service_stream: self.service_stream,
                 sample: self.sample,
                 acquire: self.acquire,
+                transit: self.transit,
                 runtime: flow.identity(),
                 work: self.work,
+                carrier: None,
+                carrier_actor: None,
+                kind: None,
+                pending_event: None,
+                pending_priority: None,
+                owned_events: Vec::new(),
+                stale_events: Vec::new(),
+                consumed_events: Vec::new(),
+                controls: Vec::new(),
+                retryable: None,
+                arrival_request: None,
+                arrival_at: None,
                 _restart_types: PhantomData,
             }),
             Err((permit, error)) => Err(BindFailure {
@@ -304,6 +420,10 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
         self.service_stream.draw_position()
     }
 
+    pub(crate) fn service_draw_position(&self) -> u64 {
+        self.draw_position()
+    }
+
     pub(crate) fn decision(&self) -> FidelityDecision {
         self.decision
     }
@@ -316,6 +436,370 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
         &self.acquire
     }
 
+    pub(crate) fn start_transit(&mut self, flow: &mut FlowRuntime) -> Result<EventId, BridgeError> {
+        if self.runtime != flow.identity() {
+            return Err(BridgeError::Fidelity(FidelityError::InvalidWork));
+        }
+        if self.decision.mode != FidelityMode::Micro {
+            return Err(BridgeError::InvalidDispatch);
+        }
+        let (graph, origin, destination, profile, tps, actor, registration, kind) =
+            match &self.transit {
+                TransitRequest::Route {
+                    graph,
+                    origin,
+                    destination,
+                    profile,
+                    ticks_per_second,
+                    carrier_actor,
+                    carrier_registration,
+                    kind,
+                } => (
+                    graph,
+                    *origin,
+                    *destination,
+                    profile,
+                    *ticks_per_second,
+                    *carrier_actor,
+                    carrier_registration.as_str(),
+                    *kind,
+                ),
+                TransitRequest::Zero => return Err(BridgeError::InvalidDispatch),
+            };
+        if self.pending_event.is_some() {
+            return Err(BridgeError::InvalidDispatch);
+        }
+        let carrier = if let Some(carrier) = self.carrier {
+            if self.carrier_actor != Some(actor) || self.kind != Some(kind) {
+                return Err(BridgeError::InvalidDispatch);
+            }
+            carrier
+        } else {
+            let route = graph
+                .route(origin, destination, profile, tps)
+                .map_err(BridgeError::Transit)?;
+            if route.duration() == SimDuration::ZERO {
+                return Err(BridgeError::InvalidDispatch);
+            }
+            let acquire = FlowAcquireCommand {
+                resource: self.acquire.resource,
+                owner: self.acquire.owner,
+                work: Some(self.work),
+                at: self.acquire.at,
+                priority_level: self.acquire.priority_level,
+                deadline: self.acquire.deadline,
+                scheduler_priority: self.acquire.scheduler_priority,
+                timed: true,
+                can_preempt: self.acquire.can_preempt,
+                preemptible: self.acquire.preemptible,
+            };
+            let context = TransitContext::new(flow, route, acquire, self.acquire.at)
+                .map_err(BridgeError::Transit)?;
+            let carrier = flow
+                .create_actor_domain_context(actor, registration, kind, context)
+                .map_err(BridgeError::Flow)?;
+            self.carrier = Some(carrier);
+            self.carrier_actor = Some(actor);
+            self.kind = Some(kind);
+            self.pending_priority = Some(self.acquire.scheduler_priority);
+            carrier
+        };
+        let event = schedule_transit_start(
+            flow,
+            carrier,
+            kind,
+            self.acquire.at,
+            self.acquire.scheduler_priority,
+        )
+        .map_err(BridgeError::Flow)?;
+        self.pending_event = Some(event);
+        self.owned_events.push(event);
+        Ok(event)
+    }
+
+    pub(crate) fn schedule_transit_control(
+        &mut self,
+        flow: &mut FlowRuntime,
+        action: FlowDomainControl,
+        at: SimTime,
+        priority: i32,
+    ) -> Result<EventId, BridgeError> {
+        if self.runtime != flow.identity() {
+            return Err(BridgeError::Fidelity(FidelityError::InvalidWork));
+        }
+        let (Some(carrier), Some(kind)) = (self.carrier, self.kind) else {
+            return Err(BridgeError::InvalidDispatch);
+        };
+        let event = schedule_transit_control(flow, carrier, kind, action, at, priority)
+            .map_err(BridgeError::Flow)?;
+        self.controls.push((event, action));
+        self.owned_events.push(event);
+        Ok(event)
+    }
+
+    pub(crate) fn observe_transit_dispatch(
+        &mut self,
+        flow: &FlowRuntime,
+        dispatch: &FlowDispatch,
+    ) -> Result<TransitObservation, BridgeError> {
+        if self.runtime != flow.identity() {
+            return Err(BridgeError::Fidelity(FidelityError::InvalidWork));
+        }
+        let (Some(carrier), Some(_kind), Some(pending)) =
+            (self.carrier, self.kind, self.pending_event)
+        else {
+            return Err(BridgeError::InvalidDispatch);
+        };
+        if dispatch.at != flow.now()
+            || !self.owned_events.contains(&dispatch.event)
+            || self.consumed_events.contains(&dispatch.event)
+        {
+            return Err(BridgeError::InvalidDispatch);
+        }
+        if let Some(index) = self
+            .controls
+            .iter()
+            .position(|(event, _)| *event == dispatch.event)
+        {
+            let action = self.controls[index].1;
+            let [FlowBatchReceipt::Accepted(admissions)] = dispatch.callback_batches.as_slice()
+            else {
+                return match dispatch.callback_batches.as_slice() {
+                    [FlowBatchReceipt::Rejected(rejection)] => {
+                        Err(BridgeError::Flow(rejection.error))
+                    }
+                    _ => Err(BridgeError::InvalidDispatch),
+                };
+            };
+            let context = flow
+                .work_context::<TransitContext>(carrier)
+                .map_err(BridgeError::Flow)?;
+            if context.service_work() != self.work {
+                return Err(BridgeError::InvalidDispatch);
+            }
+            let scheduled = match action {
+                FlowDomainControl::Pause => {
+                    if context.phase() != TransitPhase::Paused || !admissions.is_empty() {
+                        return Err(BridgeError::InvalidDispatch);
+                    }
+                    None
+                }
+                FlowDomainControl::Resume => {
+                    if !matches!(context.phase(), TransitPhase::Ready | TransitPhase::Moving) {
+                        return Err(BridgeError::InvalidDispatch);
+                    }
+                    match admissions.as_slice() {
+                        [] => None,
+                        [admission]
+                            if admission.request.is_none() && admission.event != dispatch.event =>
+                        {
+                            Some(admission.event)
+                        }
+                        _ => return Err(BridgeError::InvalidDispatch),
+                    }
+                }
+            };
+            self.controls.remove(index);
+            self.consumed_events.push(dispatch.event);
+            if let Some(event) = scheduled {
+                self.pending_event = Some(event);
+                self.owned_events.push(event);
+            }
+            return Ok(match action {
+                FlowDomainControl::Pause => TransitObservation::Paused,
+                FlowDomainControl::Resume => TransitObservation::Resumed,
+            });
+        }
+        if dispatch.event != pending {
+            if self.stale_events.contains(&dispatch.event) {
+                self.consumed_events.push(dispatch.event);
+                return Ok(TransitObservation::IgnoredStale);
+            }
+            return Err(BridgeError::InvalidDispatch);
+        }
+        if matches!(
+            dispatch.callback_batches.as_slice(),
+            [FlowBatchReceipt::Rejected(_)]
+        ) {
+            if self.carrier_actor.is_none()
+                || self.pending_priority.is_none()
+                || flow
+                    .work_context::<TransitContext>(carrier)
+                    .map_err(BridgeError::Flow)?
+                    .service_work()
+                    != self.work
+            {
+                return Err(BridgeError::InvalidDispatch);
+            }
+            TransitContext::validate_retry_dispatch(flow, carrier, dispatch)
+                .map_err(|_| BridgeError::InvalidDispatch)?;
+            self.retryable = Some(dispatch.clone());
+            return Ok(TransitObservation::Rejected);
+        }
+        let [FlowBatchReceipt::Accepted(admissions)] = dispatch.callback_batches.as_slice() else {
+            return Err(BridgeError::InvalidDispatch);
+        };
+        let context = flow
+            .work_context::<TransitContext>(carrier)
+            .map_err(BridgeError::Flow)?;
+        if context.service_work() != self.work {
+            return Err(BridgeError::InvalidDispatch);
+        }
+        let phase = context.phase();
+        let ticket = match phase {
+            TransitPhase::Moving => context.next_progress_ticket(),
+            TransitPhase::Arrived => context.arrival_ticket(),
+            _ => None,
+        };
+        if let Some(ticket) = ticket {
+            let [admission] = admissions.as_slice() else {
+                return Err(BridgeError::InvalidDispatch);
+            };
+            if admission.ticket != ticket {
+                return Err(BridgeError::InvalidDispatch);
+            }
+            if admission.event == dispatch.event {
+                return Err(BridgeError::InvalidDispatch);
+            }
+            if phase == TransitPhase::Arrived {
+                let request = admission.request.ok_or(BridgeError::InvalidDispatch)?;
+                let saved = flow.request(request).map_err(BridgeError::Flow)?;
+                if saved.work != Some(self.work)
+                    || saved.owner != self.acquire.owner
+                    || saved.resource != self.acquire.resource
+                    || !saved.timed
+                    || saved.submitted_at != dispatch.at
+                    || saved.priority_level != self.acquire.priority_level
+                    || saved.deadline != self.acquire.deadline
+                    || saved.can_preempt != self.acquire.can_preempt
+                    || saved.preemptible != self.acquire.preemptible
+                    || flow.work(self.work).map_err(BridgeError::Flow)?.request != Some(request)
+                {
+                    return Err(BridgeError::InvalidDispatch);
+                }
+                self.consumed_events.push(dispatch.event);
+                self.pending_event = Some(admission.event);
+                self.owned_events.push(admission.event);
+                self.arrival_request = Some(request);
+                self.arrival_at = Some(dispatch.at);
+                return Ok(TransitObservation::Arrived);
+            }
+            if admission.request.is_some() {
+                return Err(BridgeError::InvalidDispatch);
+            }
+            self.consumed_events.push(dispatch.event);
+            self.pending_event = Some(admission.event);
+            self.owned_events.push(admission.event);
+            return Ok(TransitObservation::Progress);
+        }
+        if !admissions.is_empty()
+            || context.phase() != TransitPhase::Paused
+            || context.expects_event(dispatch.event, dispatch.at)
+        {
+            return Err(BridgeError::InvalidDispatch);
+        }
+        self.consumed_events.push(dispatch.event);
+        self.stale_events.push(dispatch.event);
+        Ok(TransitObservation::IgnoredStale)
+    }
+
+    pub(crate) fn retry_transit(
+        &mut self,
+        flow: &mut FlowRuntime,
+        rejected: &FlowDispatch,
+    ) -> Result<EventId, BridgeError> {
+        if self.runtime != flow.identity() {
+            return Err(BridgeError::Fidelity(FidelityError::InvalidWork));
+        }
+        let (Some(carrier), Some(kind), Some(pending), Some(priority), Some(saved)) = (
+            self.carrier,
+            self.kind,
+            self.pending_event,
+            self.pending_priority,
+            self.retryable.as_ref(),
+        ) else {
+            return Err(BridgeError::InvalidDispatch);
+        };
+        let TransitRequest::Route {
+            carrier_actor,
+            kind: expected_kind,
+            ..
+        } = &self.transit
+        else {
+            return Err(BridgeError::InvalidDispatch);
+        };
+        if self.carrier_actor != Some(*carrier_actor)
+            || kind != *expected_kind
+            || priority != self.acquire.scheduler_priority
+            || rejected != saved
+            || rejected.event != pending
+            || self.consumed_events.contains(&pending)
+            || !matches!(
+                rejected.callback_batches.as_slice(),
+                [FlowBatchReceipt::Rejected(_)]
+            )
+        {
+            return Err(BridgeError::InvalidDispatch);
+        }
+        let context = flow
+            .work_context::<TransitContext>(carrier)
+            .map_err(BridgeError::Flow)?;
+        if context.service_work() != self.work {
+            return Err(BridgeError::InvalidDispatch);
+        }
+        let event = TransitContext::schedule_transit_retry(flow, carrier, kind, rejected, priority)
+            .map_err(BridgeError::Flow)?;
+        self.consumed_events.push(pending);
+        self.pending_event = Some(event);
+        self.owned_events.push(event);
+        self.retryable = None;
+        Ok(event)
+    }
+
+    pub(crate) fn finish_transit(
+        self,
+        flow: &FlowRuntime,
+    ) -> Result<SubmittedIntrinsicWork<T, C>, BridgeError> {
+        if self.runtime != flow.identity() {
+            return Err(BridgeError::Fidelity(FidelityError::InvalidWork));
+        }
+        let (Some(carrier), Some(request), Some(at)) =
+            (self.carrier, self.arrival_request, self.arrival_at)
+        else {
+            return Err(BridgeError::InvalidDispatch);
+        };
+        let context = flow
+            .work_context::<TransitContext>(carrier)
+            .map_err(BridgeError::Flow)?;
+        if context.service_work() != self.work || context.phase() != TransitPhase::Arrived {
+            return Err(BridgeError::InvalidDispatch);
+        }
+        let saved = flow.request(request).map_err(BridgeError::Flow)?;
+        if saved.resource != self.acquire.resource
+            || saved.owner != self.acquire.owner
+            || saved.work != Some(self.work)
+            || !saved.timed
+            || saved.submitted_at != at
+            || saved.priority_level != self.acquire.priority_level
+            || saved.deadline != self.acquire.deadline
+            || saved.can_preempt != self.acquire.can_preempt
+            || saved.preemptible != self.acquire.preemptible
+            || flow.work(self.work).map_err(BridgeError::Flow)?.request != Some(request)
+        {
+            return Err(BridgeError::InvalidDispatch);
+        }
+        Ok(SubmittedIntrinsicWork {
+            decision: self.decision,
+            expected_service_key: self.expected_service_key,
+            service_stream: self.service_stream,
+            sample: self.sample,
+            acquire: self.acquire,
+            work: self.work,
+            request,
+            _restart_types: PhantomData,
+        })
+    }
+
     #[allow(clippy::result_large_err)]
     pub(crate) fn submit(
         self,
@@ -325,6 +809,14 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
             return Err(SubmitFailure {
                 bound: self,
                 error: BridgeError::InvalidDispatch,
+            });
+        }
+        if self.decision.mode == FidelityMode::Micro
+            && matches!(&self.transit, TransitRequest::Route { .. })
+        {
+            return Err(SubmitFailure {
+                bound: self,
+                error: BridgeError::Flow(FlowError::InvalidState),
             });
         }
         if !self.service_identity_matches() {
@@ -444,6 +936,10 @@ impl<T: Clone + 'static, C: 'static> SubmittedIntrinsicWork<T, C> {
         self.service_stream.draw_position()
     }
 
+    pub(crate) fn service_draw_position(&self) -> u64 {
+        self.draw_position()
+    }
+
     pub(crate) fn decision(&self) -> FidelityDecision {
         self.decision
     }
@@ -462,8 +958,16 @@ mod tests {
     use super::*;
     use crate::seed_map::CalibrationSeedMap;
     use crate::work_duration::{IntrinsicDurationDistribution, INTRINSIC_WORK_PROVIDER_VERSION_V1};
+    use kairo_ecs_abm::register_transit_context;
+    use kairo_ecs_abm::spatial::{EdgeId, MovementModeId, TransitEdge};
     use kairo_ecs_des::fidelity::FidelityPolicy;
-    use kairo_ecs_des::{RequestState, WorkHandlers};
+    use kairo_ecs_des::{FlowBatchRejection, FlowDispatch, RequestState, WorkHandlers};
+
+    #[derive(Clone, Copy)]
+    enum TransitIntent {
+        Zero,
+        Route,
+    }
 
     fn make_context(template: &u32) -> u32 {
         *template
@@ -493,6 +997,7 @@ mod tests {
     ) {
         let mut flow = FlowRuntime::new();
         let owner = flow.spawn_actor().unwrap();
+        let carrier_actor = flow.spawn_actor().unwrap();
         let resource = flow.create_resource(1).unwrap();
 
         let mut seed_map = CalibrationSeedMap::new(1, "bridge-test", 19).unwrap();
@@ -503,16 +1008,48 @@ mod tests {
         let service_stream = seed_map
             .stream_for("paired", 0, "case-a", stream_task, purpose)
             .unwrap();
-        let input = WorkPreparationInput {
-            owner,
-            subsystem: "assessment".to_owned(),
-            stratum: "triage".to_owned(),
-            expected_service_key: key,
+        let transit = match transit {
+            TransitIntent::Zero => TransitRequest::Zero,
+            TransitIntent::Route => {
+                let node = |n| NodeId::new(n);
+                let mode = MovementModeId::new("walk").unwrap();
+                TransitRequest::Route {
+                    graph: Arc::new(
+                        TransitGraphV1::new(
+                            1,
+                            vec![node(1), node(2)],
+                            vec![TransitEdge {
+                                id: EdgeId::new(1),
+                                from: node(1),
+                                to: node(2),
+                                length_mm: 1,
+                                allowed_modes: vec![mode],
+                            }],
+                        )
+                        .unwrap(),
+                    ),
+                    origin: node(1),
+                    destination: node(2),
+                    profile: MovementProfile::new("walk", 1).unwrap(),
+                    ticks_per_second: 1,
+                    carrier_actor,
+                    carrier_registration: "bridge.transit".to_owned(),
+                    kind: EventKind::custom(0xC20),
+                }
+            }
+        };
+        let input = WorkPreparationInput::new(
+            PreparationIdentity {
+                owner,
+                subsystem: "assessment".to_owned(),
+                registration: "bridge.context".to_owned(),
+                stratum: "triage".to_owned(),
+            },
             service_stream,
-            template: 42,
-            registration: "bridge.context".to_owned(),
+            key,
+            42,
             make_context,
-            acquire: AcquireIntent {
+            AcquireIntent {
                 resource,
                 owner,
                 at: SimTime::from_ticks(0),
@@ -523,7 +1060,7 @@ mod tests {
                 preemptible: None,
             },
             transit,
-        };
+        );
         let adapter = FidelityAdapter::new(FidelityPolicy::new(1, Some(mode)).unwrap());
         (input, flow, adapter, resource)
     }
@@ -652,25 +1189,116 @@ mod tests {
     }
 
     #[test]
-    fn micro_route_rejection_returns_unchanged_service_stream_before_sampling() {
+    fn micro_route_is_prepared_and_samples_service_once() {
         let (input, flow, mut adapter, _) = input(
             FidelityMode::Micro,
             TransitIntent::Route,
             SeedPurpose::Service,
             false,
         );
-        let failure = match input.prepare(&flow, &mut adapter, &provider()) {
-            Ok(_) => panic!("Micro Route should be rejected before sampling"),
-            Err(failure) => failure,
-        };
-        assert_eq!(failure.error, BridgeError::InvalidDispatch);
-        assert_eq!(failure.input.service_stream.draw_position(), 0);
-        let mut retry_stream = failure.input.service_stream;
-        let mut fresh = CalibrationSeedMap::new(1, "bridge-test", 19)
-            .unwrap()
-            .stream_for("paired", 0, "case-a", "task-a", SeedPurpose::Service)
+        let prepared = must_prepare(input.prepare(&flow, &mut adapter, &provider()));
+        assert_eq!(prepared.draw_bounds(), (0, 1));
+        assert_eq!(prepared.service_draw_position(), 1);
+    }
+
+    #[test]
+    fn matching_rejected_transit_event_retries_once_and_replay_is_atomic() {
+        let (input, mut flow, mut adapter, _) = input(
+            FidelityMode::Micro,
+            TransitIntent::Route,
+            SeedPurpose::Service,
+            false,
+        );
+        register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20)).unwrap();
+        flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
             .unwrap();
-        assert_eq!(retry_stream.next_u64(), fresh.next_u64());
+        let prepared = must_prepare(input.prepare(&flow, &mut adapter, &provider()));
+        let created = must_create(prepared.create(&mut flow));
+        let mut bound = must_bind(created.bind(&flow));
+        let original = bound.start_transit(&mut flow).unwrap();
+        let rejected = FlowDispatch {
+            event: original,
+            at: flow.now(),
+            records: Vec::new(),
+            error: None,
+            callback_batches: vec![FlowBatchReceipt::Rejected(FlowBatchRejection {
+                failed_ticket: None,
+                error: FlowError::InvalidState,
+            })],
+        };
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &rejected),
+            Ok(TransitObservation::Rejected)
+        );
+        let baseline = flow.budget_snapshot().scheduler;
+        let mut wrong_event = rejected.clone();
+        wrong_event.event = EventId::new(u64::MAX, u32::MAX);
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &wrong_event),
+            Err(BridgeError::InvalidDispatch)
+        );
+        let mut forged_accepted = rejected.clone();
+        forged_accepted.callback_batches = vec![FlowBatchReceipt::Accepted(Vec::new())];
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &forged_accepted),
+            Err(BridgeError::InvalidDispatch)
+        );
+        let mut malformed = rejected.clone();
+        malformed
+            .callback_batches
+            .push(FlowBatchReceipt::Accepted(Vec::new()));
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &malformed),
+            Err(BridgeError::InvalidDispatch)
+        );
+        let mut foreign = FlowRuntime::new();
+        assert_eq!(
+            bound.retry_transit(&mut foreign, &rejected),
+            Err(BridgeError::Fidelity(FidelityError::InvalidWork))
+        );
+        assert_eq!(flow.budget_snapshot().scheduler, baseline);
+        let carrier = bound.carrier;
+        let kind = bound.kind;
+        let priority = bound.pending_priority;
+        bound.carrier = Some(bound.work);
+        assert!(bound.retry_transit(&mut flow, &rejected).is_err());
+        bound.carrier = carrier;
+        bound.kind = Some(EventKind::custom(0xC21));
+        assert_eq!(
+            bound.retry_transit(&mut flow, &rejected),
+            Err(BridgeError::InvalidDispatch)
+        );
+        bound.kind = kind;
+        bound.pending_priority = priority.map(|value| value + 1);
+        assert_eq!(
+            bound.retry_transit(&mut flow, &rejected),
+            Err(BridgeError::InvalidDispatch)
+        );
+        bound.pending_priority = priority;
+        assert_eq!(flow.budget_snapshot().scheduler, baseline);
+        let carrier = bound.carrier.unwrap();
+        let failed_schedule = TransitContext::schedule_transit_retry(
+            &mut flow,
+            carrier,
+            EventKind::custom(0xC21),
+            &rejected,
+            7,
+        );
+        assert_eq!(failed_schedule, Err(FlowError::InvalidWork));
+        assert_eq!(flow.budget_snapshot().scheduler, baseline);
+        let before_retry = flow.budget_snapshot().scheduler;
+        let replacement = bound.retry_transit(&mut flow, &rejected).unwrap();
+        assert_ne!(replacement, original);
+        let after_retry = flow.budget_snapshot().scheduler;
+        assert_eq!(
+            after_retry.scheduled_events,
+            before_retry.scheduled_events + 1
+        );
+        assert_eq!(
+            bound.retry_transit(&mut flow, &rejected),
+            Err(BridgeError::InvalidDispatch)
+        );
+        assert_eq!(flow.budget_snapshot().scheduler, after_retry);
     }
 
     #[test]
@@ -815,3 +1443,7 @@ mod tests {
         assert_eq!(flow.request(external).unwrap().work, Some(work));
     }
 }
+
+#[cfg(test)]
+#[path = "../../../conformance/c20/transit_flow_c20.rs"]
+mod transit_flow_c20;

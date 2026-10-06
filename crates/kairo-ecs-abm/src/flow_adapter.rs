@@ -144,6 +144,48 @@ pub struct TransitContext {
 }
 
 impl TransitContext {
+    /// Atomically retry a structurally matching rejected transit event.
+    ///
+    /// The calibration adapter must establish provenance for the returned dispatch.
+    #[doc(hidden)]
+    pub fn validate_retry_dispatch(
+        flow: &FlowRuntime,
+        carrier: WorkId,
+        rejected: &kairo_ecs_des::FlowDispatch,
+    ) -> Result<(), FlowError> {
+        let context = flow.work_context::<TransitContext>(carrier)?;
+        if context.runtime != flow.identity()
+            || !matches!(context.phase, TransitPhase::Ready | TransitPhase::Moving)
+            || context.expected_event != Some(rejected.event)
+            || context.expected_due != Some(rejected.at)
+            || rejected.at != flow.now()
+            || !matches!(
+                rejected.callback_batches.as_slice(),
+                [FlowBatchReceipt::Rejected(_)]
+            )
+        {
+            return Err(FlowError::InvalidWork);
+        }
+        Ok(())
+    }
+
+    pub fn schedule_transit_retry(
+        flow: &mut FlowRuntime,
+        carrier: WorkId,
+        kind: EventKind,
+        rejected: &kairo_ecs_des::FlowDispatch,
+        priority: i32,
+    ) -> Result<EventId, FlowError> {
+        Self::validate_retry_dispatch(flow, carrier, rejected)?;
+        flow.schedule_domain_and_bind::<TransitContext>(
+            carrier,
+            kind,
+            rejected.at,
+            priority,
+            bind_retried_transit_event,
+        )
+    }
+
     fn bind_initial_start_event(&mut self, event: EventId) {
         self.expected_event = Some(event);
         self.expected_due = Some(self.start_at);
@@ -200,6 +242,11 @@ impl TransitContext {
 
     pub fn phase(&self) -> TransitPhase {
         self.phase
+    }
+
+    #[doc(hidden)]
+    pub fn expects_event(&self, event: EventId, at: SimTime) -> bool {
+        self.expected_event == Some(event) && self.expected_due == Some(at)
     }
 
     pub fn arrival_ticket(&self) -> Option<FlowCommandTicket> {
@@ -381,7 +428,7 @@ impl TransitContext {
                     _ => Err(FlowError::InvalidWork),
                 }
             }
-            _ => Err(FlowError::InvalidWork),
+            _ => Err(FlowError::InvalidState),
         }
     }
 
@@ -528,6 +575,11 @@ pub fn schedule_transit_start(
         TransitContext::bind_initial_start_event,
     )
 }
+
+fn bind_retried_transit_event(context: &mut TransitContext, event: EventId) {
+    context.expected_event = Some(event);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -742,9 +794,9 @@ mod tests {
         let before_repeated_pause = paused.clone();
         let dispatches_before = flow.budget_snapshot().scheduler.dispatched_events;
         let repeated_pause = flow.step().unwrap().unwrap();
-        assert_eq!(repeated_pause.error, Some(FlowError::InvalidWork));
+        assert_eq!(repeated_pause.error, Some(FlowError::InvalidState));
         assert!(
-            matches!(repeated_pause.callback_batches.as_slice(), [FlowBatchReceipt::Rejected(row)] if row.error == FlowError::InvalidWork && row.failed_ticket.is_none())
+            matches!(repeated_pause.callback_batches.as_slice(), [FlowBatchReceipt::Rejected(row)] if row.error == FlowError::InvalidState && row.failed_ticket.is_none())
         );
         assert_eq!(
             flow.budget_snapshot().scheduler.dispatched_events,

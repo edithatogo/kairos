@@ -683,6 +683,7 @@ dependencies = [
  "arrow-array",
  "arrow-schema",
  "chrono",
+ "kairo-ecs-abm",
  "kairo-ecs-arrow",
  "kairo-ecs-arrow-io",
  "kairo-ecs-des",
