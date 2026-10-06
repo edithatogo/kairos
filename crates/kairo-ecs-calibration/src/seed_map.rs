@@ -595,6 +595,35 @@ mod tests {
     }
 
     #[test]
+    fn snapshot_restore_continues_at_next_draw() {
+        let mut subject_map = CalibrationSeedMap::new(1, "study-α", 1234).unwrap();
+        let mut control_map = CalibrationSeedMap::new(1, "study-α", 1234).unwrap();
+        let mut subject = subject_map
+            .stream_for("crn-v1", 7, "case-0001", "triage:1", SeedPurpose::Service)
+            .unwrap();
+        let mut control = control_map
+            .stream_for("crn-v1", 7, "case-0001", "triage:1", SeedPurpose::Service)
+            .unwrap();
+
+        let first_draw = subject.next_u64().unwrap();
+        assert_eq!(first_draw, control.next_u64().unwrap());
+        let snapshot = subject.snapshot();
+        let mut restored = snapshot.restore().unwrap();
+
+        assert!(restored.key() == control.key());
+        assert_eq!(restored.draw_position(), control.draw_position());
+        assert_eq!(restored.draw_position(), 1);
+
+        let uninterrupted_next_u64 = control.next_u64().unwrap();
+        assert_ne!(uninterrupted_next_u64, first_draw);
+        assert_eq!(restored.next_u64().unwrap(), uninterrupted_next_u64);
+        assert_eq!(restored.draw_position(), control.draw_position());
+
+        assert_eq!(restored.next_u32().unwrap(), control.next_u32().unwrap());
+        assert_eq!(restored.draw_position(), control.draw_position());
+    }
+
+    #[test]
     fn unknown_snapshot_versions_and_seed_mismatch_fail_closed() {
         let mut map = CalibrationSeedMap::new(1, "study", 0).unwrap();
         let stream = map
