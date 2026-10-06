@@ -32,13 +32,15 @@ are part of a synchronous transaction. Capture is allowed only between completed
 bridge method calls, when no callback or submit operation is in flight and no
 returned `FlowDispatch` awaits `observe_transit_dispatch`. Tests capture after
 transit start and after a pause has been dispatched and observed. The
-crate-private capture entrypoint accepts only the runtime, adapter, and bound
-value produced by the same successful prepare/create/bind sequence. Before
-consuming them it verifies `bound.runtime == flow.identity()` and that
-`adapter.decision(bound.work()) == Some(&bound.decision())`; a mismatch returns
-the original tuple with an error. This local invariant relies on the bridge
-remaining crate-private and on capture not being exposed as a general tuple
-constructor.
+crate-private capture entrypoint requires the caller to supply the runtime,
+adapter, and bound value from the same successful prepare/create/bind sequence.
+It verifies `bound.runtime == flow.identity()` and that
+`adapter.decision(bound.work()) == Some(&bound.decision())`; a Flow identity or
+decision mismatch returns the original tuple with an error. DES exposes no
+adapter-instance lineage check to this crate, so capture cannot independently
+reject a different adapter that has the same local WorkId and equal decision.
+This pairing is a precondition of the private bridge call path, not a general
+tuple-construction API or a fail-closed cross-adapter guarantee.
 
 The bundle retains the exact bound bridge value, including its frozen fidelity
 decision, expected Service key, live Service stream and draw position, sampled
