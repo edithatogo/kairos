@@ -1222,23 +1222,41 @@ mod tests {
             macro_submitted.draw_position(),
             micro_submitted.draw_position()
         );
+        assert_eq!(
+            macro_submitted.expected_service_key,
+            micro_submitted.expected_service_key
+        );
+        assert_eq!(
+            macro_submitted.service_stream.derived_seed(),
+            micro_submitted.service_stream.derived_seed()
+        );
+        assert_eq!(
+            macro_submitted.expected_service_key,
+            macro_submitted.service_stream.key()
+        );
+        assert_eq!(
+            micro_submitted.expected_service_key,
+            micro_submitted.service_stream.key()
+        );
         assert!(macro_submitted.service_identity_matches());
+        assert!(micro_submitted.service_identity_matches());
         assert_eq!(macro_submitted.decision().mode, FidelityMode::Macro);
+        assert_eq!(micro_submitted.decision().mode, FidelityMode::Micro);
         assert_eq!(macro_submitted.acquire_intent().scheduler_priority, 7);
-        for (flow, resource, submitted) in [
-            (&mut macro_flow, macro_resource, &macro_submitted),
-            (&mut micro_flow, micro_resource, &micro_submitted),
-        ] {
-            assert_eq!(
-                submitted.sampled_duration(),
-                flow.work(submitted.work()).unwrap().original_duration
-            );
-            let spec = flow.work(submitted.work()).unwrap();
-            assert_eq!(spec.request, Some(submitted.request()));
-            let request = flow.request(submitted.request()).unwrap();
-            assert_eq!(request.resource, resource);
+        assert_eq!(micro_submitted.acquire_intent().scheduler_priority, 7);
+        assert_eq!(macro_flow.budget_snapshot().scheduler.scheduled_events, 1);
+        assert_eq!(micro_flow.budget_snapshot().scheduler.scheduled_events, 1);
+
+        let macro_request = {
+            let flow = &mut macro_flow;
+            let spec = flow.work(macro_submitted.work()).unwrap();
+            assert_eq!(spec.context_type_key, "bridge.context");
+            assert_eq!(spec.original_duration, macro_submitted.sampled_duration());
+            assert_eq!(spec.request, Some(macro_submitted.request()));
+            let request = flow.request(macro_submitted.request()).unwrap();
+            assert_eq!(request.resource, macro_resource);
             assert_eq!(request.owner, spec.owner);
-            assert_eq!(request.work, Some(submitted.work()));
+            assert_eq!(request.work, Some(macro_submitted.work()));
             assert!(request.timed);
             assert_eq!(request.priority_level, 3);
             assert_eq!(request.deadline, None);
@@ -1246,10 +1264,74 @@ mod tests {
             assert_eq!(request.state, RequestState::Pending);
             assert!(flow.step().unwrap().is_some());
             assert_eq!(
-                flow.request(submitted.request()).unwrap().state,
+                flow.request(macro_submitted.request()).unwrap().state,
                 RequestState::Active
             );
-        }
+            request
+        };
+        let micro_request = {
+            let flow = &mut micro_flow;
+            let spec = flow.work(micro_submitted.work()).unwrap();
+            assert_eq!(spec.context_type_key, "bridge.context");
+            assert_eq!(spec.original_duration, micro_submitted.sampled_duration());
+            assert_eq!(spec.request, Some(micro_submitted.request()));
+            let request = flow.request(micro_submitted.request()).unwrap();
+            assert_eq!(request.resource, micro_resource);
+            assert_eq!(request.owner, spec.owner);
+            assert_eq!(request.work, Some(micro_submitted.work()));
+            assert!(request.timed);
+            assert_eq!(request.priority_level, 3);
+            assert_eq!(request.deadline, None);
+            assert!(!request.can_preempt);
+            assert_eq!(request.state, RequestState::Pending);
+            assert!(flow.step().unwrap().is_some());
+            assert_eq!(
+                flow.request(micro_submitted.request()).unwrap().state,
+                RequestState::Active
+            );
+            request
+        };
+        assert_eq!(macro_request, micro_request);
+
+        let macro_run = macro_flow.run_for(10).unwrap();
+        let micro_run = micro_flow.run_for(10).unwrap();
+        assert!(!macro_run.budget_exhausted);
+        assert!(!micro_run.budget_exhausted);
+        assert_eq!(macro_run, micro_run);
+        assert_eq!(macro_flow.now(), micro_flow.now());
+        assert_eq!(
+            macro_flow.now(),
+            SimTime::from_ticks(0)
+                .checked_add(macro_submitted.sampled_duration())
+                .unwrap()
+        );
+        assert_eq!(
+            macro_flow.work_progress(macro_submitted.work()).unwrap(),
+            micro_flow.work_progress(micro_submitted.work()).unwrap()
+        );
+        assert_eq!(
+            macro_flow
+                .work_progress(macro_submitted.work())
+                .unwrap()
+                .state,
+            WorkState::Completed
+        );
+        assert_eq!(
+            macro_flow.request(macro_submitted.request()).unwrap().state,
+            RequestState::Completed
+        );
+        assert_eq!(
+            macro_flow.request(macro_submitted.request()).unwrap(),
+            micro_flow.request(micro_submitted.request()).unwrap()
+        );
+        assert_eq!(
+            macro_flow.budget_snapshot().scheduler.scheduled_events,
+            micro_flow.budget_snapshot().scheduler.scheduled_events
+        );
+        assert_eq!(macro_flow.budget_snapshot().scheduler.scheduled_events, 2);
+        // TransitContext contains deterministic route progress and command tickets,
+        // but no CalibrationStream or other RNG state. This path submits only the
+        // Service-purpose stream and schedules exactly the two Flow events above.
     }
 
     #[test]
