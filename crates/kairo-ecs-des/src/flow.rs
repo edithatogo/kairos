@@ -426,6 +426,15 @@ pub enum FlowCallbackCause {
     Domain {
         kind: EventKind,
     },
+    DomainControl {
+        kind: EventKind,
+        action: FlowDomainControl,
+    },
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum FlowDomainControl {
+    Pause,
+    Resume,
 }
 /// Borrowed view of the authoritative Flow world at committed delivery time.
 /// The view exposes no mutation or registry/scheduler access.
@@ -486,6 +495,13 @@ pub enum FlowOwnedCommand {
     Domain {
         work: WorkId,
         kind: EventKind,
+        at: SimTime,
+        scheduler_priority: i32,
+    },
+    DomainControl {
+        work: WorkId,
+        kind: EventKind,
+        action: FlowDomainControl,
         at: SimTime,
         scheduler_priority: i32,
     },
@@ -589,7 +605,7 @@ fn invoke_continuation<C: 'static>(
             .downcast_ref::<FlowContinuations<C>>()
             .expect("validated continuation type")
             .select(*transition),
-        FlowCallbackCause::Domain { .. } => None,
+        FlowCallbackCause::Domain { .. } | FlowCallbackCause::DomainControl { .. } => None,
     };
     if let Some(callback) = callback {
         if let Some(context) = registry
@@ -609,18 +625,29 @@ type DomainViewBridge = fn(
     &mut FlowCommandSink,
     &dyn Any,
 );
+type DomainPlanBridge = fn(
+    &World,
+    &ComponentRegistry,
+    EntityId,
+    &FlowCallbackSnapshot,
+    &mut FlowCommandSink,
+    &dyn Any,
+) -> Result<Box<dyn Any>, FlowError>;
+type DomainPlanApply = fn(&mut ComponentRegistry, EntityId, Box<dyn Any>);
 struct DomainViewCallback<C>(
     for<'a> fn(&'a mut C, &'a FlowCallbackSnapshot, FlowWorldView<'a>, &'a mut FlowCommandSink),
 );
 enum DomainInvocation {
     Legacy(ContinuationBridge),
     View(DomainViewBridge),
+    Plan(DomainPlanBridge),
 }
 struct DomainDescriptor {
     context_type: TypeId,
     invoke: DomainInvocation,
     context_present: fn(&ComponentRegistry, EntityId) -> bool,
     callback: Box<dyn Any>,
+    apply_plan: Option<DomainPlanApply>,
 }
 fn invoke_domain<C: 'static>(
     registry: &mut ComponentRegistry,
@@ -666,6 +693,56 @@ fn invoke_domain_view<C: 'static>(
             },
             sink,
         );
+    }
+}
+
+struct DomainPlanCallback<C>(
+    for<'a> fn(
+        &'a C,
+        &'a FlowCallbackSnapshot,
+        FlowWorldView<'a>,
+        &'a mut FlowCommandSink,
+    ) -> Result<C, FlowError>,
+);
+fn invoke_domain_plan<C: 'static>(
+    world: &World,
+    registry: &ComponentRegistry,
+    entity: EntityId,
+    snapshot: &FlowCallbackSnapshot,
+    sink: &mut FlowCommandSink,
+    callback: &dyn Any,
+) -> Result<Box<dyn Any>, FlowError> {
+    let callback = callback
+        .downcast_ref::<DomainPlanCallback<C>>()
+        .expect("validated planned-domain context type")
+        .0;
+    let context = registry
+        .get::<WorkContext<C>>(entity)
+        .ok_or(FlowError::InvalidWork)?;
+    callback(
+        &context.0,
+        snapshot,
+        FlowWorldView {
+            world,
+            at: snapshot.delivery.at,
+        },
+        sink,
+    )
+    .map(|candidate| Box::new(candidate) as Box<dyn Any>)
+}
+fn apply_domain_plan<C: 'static>(
+    registry: &mut ComponentRegistry,
+    entity: EntityId,
+    candidate: Box<dyn Any>,
+) {
+    let candidate = *candidate
+        .downcast::<C>()
+        .expect("validated planned-domain candidate type");
+    if let Some(context) = registry
+        .store_mut::<WorkContext<C>>()
+        .and_then(|store| store.get_mut(entity))
+    {
+        context.0 = candidate;
     }
 }
 
@@ -865,6 +942,7 @@ enum Command {
     Completion(RequestId, LeaseId, u64, SimTime),
     Notify,
     Domain(WorkId, EventKind),
+    DomainControl(WorkId, EventKind, FlowDomainControl),
 }
 #[derive(Clone, Copy)]
 enum BatchRequest {
@@ -897,6 +975,13 @@ enum BatchCommand {
         at: SimTime,
         priority: i32,
     },
+    DomainControl {
+        work: WorkId,
+        kind: EventKind,
+        action: FlowDomainControl,
+        at: SimTime,
+        priority: i32,
+    },
     DespawnActor {
         actor: EntityId,
         at: SimTime,
@@ -912,7 +997,15 @@ struct BatchAdmissionPlan {
 
 enum PreparedDelivery {
     Notification(Notification),
-    Domain { work: WorkId, kind: EventKind },
+    Domain {
+        work: WorkId,
+        kind: EventKind,
+    },
+    DomainControl {
+        work: WorkId,
+        kind: EventKind,
+        action: FlowDomainControl,
+    },
 }
 impl PreparedDelivery {
     fn needs_batch(&self) -> bool {
@@ -1443,7 +1536,7 @@ impl FlowRuntime {
             priority,
             entity: None,
             kind: match command {
-                Command::Domain(_, kind) => kind,
+                Command::Domain(_, kind) | Command::DomainControl(_, kind, _) => kind,
                 _ => EventKind::custom(match command {
                     Command::Deadline(_) => FLOW_WAITING_DEADLINE_EVENT_KIND,
                     Command::Completion(..) => FLOW_TIMED_COMPLETION_EVENT_KIND,
@@ -1532,7 +1625,10 @@ impl FlowRuntime {
             .get(&(registration.to_owned(), kind))
             .ok_or(FlowError::UnregisteredDomainEvent)?;
         if descriptor.context_type != TypeId::of::<C>()
-            || !matches!(descriptor.invoke, DomainInvocation::View(_))
+            || !matches!(
+                descriptor.invoke,
+                DomainInvocation::View(_) | DomainInvocation::Plan(_)
+            )
         {
             return Err(FlowError::InvalidWork);
         }
@@ -1603,7 +1699,10 @@ impl FlowRuntime {
                         .registry
                         .get::<WorkProgress>(work.0)
                         .is_some_and(|p| p.state == WorkState::Pending)
-                    || !matches!(descriptor.invoke, DomainInvocation::View(_))
+                    || !matches!(
+                        descriptor.invoke,
+                        DomainInvocation::View(_) | DomainInvocation::Plan(_)
+                    )
                     || self.context_types.get(&spec.context_type_key)
                         != Some(&descriptor.context_type)
                 {
@@ -1703,6 +1802,7 @@ impl FlowRuntime {
                     registry.get::<WorkContext<C>>(entity).is_some()
                 },
                 callback: Box::new(DomainCallback(callback)),
+                apply_plan: None,
             },
         );
         Ok(())
@@ -1734,6 +1834,39 @@ impl FlowRuntime {
                     registry.get::<WorkContext<C>>(entity).is_some()
                 },
                 callback: Box::new(DomainViewCallback(callback)),
+                apply_plan: None,
+            },
+        );
+        Ok(())
+    }
+    pub fn register_domain_plan_hook<C: 'static>(
+        &mut self,
+        registration: &str,
+        kind: EventKind,
+        planner: for<'a> fn(
+            &'a C,
+            &'a FlowCallbackSnapshot,
+            FlowWorldView<'a>,
+            &'a mut FlowCommandSink,
+        ) -> Result<C, FlowError>,
+    ) -> Result<(), FlowError> {
+        self.check_running()?;
+        Self::check_domain_kind(kind)?;
+        self.check_registration::<C>(registration)?;
+        let key = (registration.to_owned(), kind);
+        if self.domain_hooks.contains_key(&key) {
+            return Err(FlowError::InvalidWork);
+        }
+        self.domain_hooks.insert(
+            key,
+            DomainDescriptor {
+                context_type: TypeId::of::<C>(),
+                invoke: DomainInvocation::Plan(invoke_domain_plan::<C>),
+                context_present: |registry, entity| {
+                    registry.get::<WorkContext<C>>(entity).is_some()
+                },
+                callback: Box::new(DomainPlanCallback(planner)),
+                apply_plan: Some(apply_domain_plan::<C>),
             },
         );
         Ok(())
@@ -1758,6 +1891,32 @@ impl FlowRuntime {
             return Err(FlowError::InvalidWork);
         }
         self.schedule_command(Command::Domain(work, kind), at, priority)
+    }
+    pub fn schedule_domain_control(
+        &mut self,
+        work: WorkId,
+        kind: EventKind,
+        action: FlowDomainControl,
+        at: SimTime,
+        priority: i32,
+    ) -> Result<EventId, FlowError> {
+        self.check_running()?;
+        Self::check_domain_kind(kind)?;
+        let spec = self.work(work)?;
+        self.actor(spec.owner)?;
+        self.check_work_domain_kind(work, kind)?;
+        let descriptor = self
+            .domain_hooks
+            .get(&(spec.context_type_key, kind))
+            .ok_or(FlowError::UnregisteredDomainEvent)?;
+        if !matches!(
+            descriptor.invoke,
+            DomainInvocation::View(_) | DomainInvocation::Plan(_)
+        ) || !(descriptor.context_present)(&self.registry, work.0)
+        {
+            return Err(FlowError::InvalidWork);
+        }
+        self.schedule_command(Command::DomainControl(work, kind, action), at, priority)
     }
     pub fn create_restartable_work<T: 'static, C: 'static>(
         &mut self,
@@ -2171,7 +2330,10 @@ impl FlowRuntime {
             error: None,
             callback_batches: Vec::new(),
         };
-        let plan = if matches!(command, Command::Notify | Command::Domain(..)) {
+        let plan = if matches!(
+            command,
+            Command::Notify | Command::Domain(..) | Command::DomainControl(..)
+        ) {
             None
         } else {
             self.plan(command, &mut outcome)?
@@ -2185,14 +2347,22 @@ impl FlowRuntime {
                 .map(PreparedDelivery::Notification),
             Command::Domain(work, kind) => match self.domain_delivery(work, kind) {
                 Ok(delivery) => delivery,
-                // Structural role/index corruption rejects before consuming the head.
-                // Ordinary absent descriptors remain consumed semantic errors.
                 Err(FlowError::InvalidState) => return Err(FlowError::InvalidState),
                 Err(error) => {
                     outcome.error = Some(error);
                     None
                 }
             },
+            Command::DomainControl(work, kind, action) => {
+                match self.domain_control_delivery(work, kind, action) {
+                    Ok(delivery) => delivery,
+                    Err(FlowError::InvalidState) => return Err(FlowError::InvalidState),
+                    Err(error) => {
+                        outcome.error = Some(error);
+                        None
+                    }
+                }
+            }
             _ => None,
         };
         let next_batch = if delivery.as_ref().is_some_and(PreparedDelivery::needs_batch) {
@@ -2267,6 +2437,8 @@ impl FlowRuntime {
                     let batch = self.next_batch_identity;
                     self.next_batch_identity = next_batch.expect("preflighted batch identity");
                     let mut sink = FlowCommandSink::new(batch, self.callback_config);
+                    let mut staged_context: Option<(WorkId, Box<dyn Any>, DomainPlanApply)> = None;
+                    let mut planner_error = None;
                     match delivery {
                         PreparedDelivery::Notification(n) => {
                             let key = self
@@ -2325,14 +2497,89 @@ impl FlowRuntime {
                                     &mut sink,
                                     h.callback.as_ref(),
                                 ),
+                                DomainInvocation::Plan(invoke) => match invoke(
+                                    &self.world,
+                                    &self.registry,
+                                    work.0,
+                                    &snapshot,
+                                    &mut sink,
+                                    h.callback.as_ref(),
+                                ) {
+                                    Ok(candidate) => {
+                                        staged_context = Some((
+                                            work,
+                                            candidate,
+                                            h.apply_plan.expect("planned hook has apply bridge"),
+                                        ))
+                                    }
+                                    Err(error) => planner_error = Some(error),
+                                },
+                            }
+                        }
+                        PreparedDelivery::DomainControl { work, kind, action } => {
+                            let key = self
+                                .registry
+                                .get::<WorkSpec>(work.0)
+                                .expect("validated control work")
+                                .context_type_key
+                                .clone();
+                            let snapshot = FlowCallbackSnapshot {
+                                delivery: preview,
+                                origin: preview.id,
+                                origin_ordinal: None,
+                                work,
+                                cause: FlowCallbackCause::DomainControl { kind, action },
+                            };
+                            let h = &self.domain_hooks[&(key, kind)];
+                            match h.invoke {
+                                DomainInvocation::View(invoke) => invoke(
+                                    &self.world,
+                                    &mut self.registry,
+                                    work.0,
+                                    &snapshot,
+                                    &mut sink,
+                                    h.callback.as_ref(),
+                                ),
+                                DomainInvocation::Plan(invoke) => match invoke(
+                                    &self.world,
+                                    &self.registry,
+                                    work.0,
+                                    &snapshot,
+                                    &mut sink,
+                                    h.callback.as_ref(),
+                                ) {
+                                    Ok(candidate) => {
+                                        staged_context = Some((
+                                            work,
+                                            candidate,
+                                            h.apply_plan.expect("planned hook has apply bridge"),
+                                        ))
+                                    }
+                                    Err(error) => planner_error = Some(error),
+                                },
+                                DomainInvocation::Legacy(_) => {
+                                    unreachable!("control preflight excludes legacy hooks")
+                                }
                             }
                         }
                     }
-                    // Validate the entire emitted batch after this once-only delivery.
-                    // Rejection retains context effects and consumes no command IDs.
-                    outcome
-                        .callback_batches
-                        .push(self.admit_callback_batch(sink));
+                    if let Some(error) = planner_error {
+                        outcome.error = Some(error);
+                        outcome.callback_batches.push(FlowBatchReceipt::Rejected(
+                            FlowBatchRejection {
+                                failed_ticket: None,
+                                error,
+                            },
+                        ));
+                    } else {
+                        let receipt = self.admit_callback_batch(sink);
+                        if matches!(receipt, FlowBatchReceipt::Accepted(_)) {
+                            if let Some((work, candidate, apply)) = staged_context {
+                                apply(&mut self.registry, work.0, candidate);
+                            }
+                        }
+                        outcome.callback_batches.push(receipt);
+                    }
                 }
             }
         }
@@ -2487,6 +2734,38 @@ impl FlowRuntime {
                             BatchCommand::Reprioritize {
                                 request,
                                 level: *level,
+                                at: *at,
+                                priority: *scheduler_priority,
+                            },
+                            *at,
+                            1,
+                        )
+                    }
+                    FlowOwnedCommand::DomainControl {
+                        work,
+                        kind,
+                        action,
+                        at,
+                        scheduler_priority,
+                    } => {
+                        Self::check_domain_kind(*kind)?;
+                        let spec = self.work(*work)?;
+                        self.actor(spec.owner)?;
+                        self.check_work_domain_kind(*work, *kind)?;
+                        let h = self
+                            .domain_hooks
+                            .get(&(spec.context_type_key, *kind))
+                            .ok_or(FlowError::UnregisteredDomainEvent)?;
+                        if !matches!(h.invoke, DomainInvocation::View(_))
+                            || !(h.context_present)(&self.registry, work.0)
+                        {
+                            return Err(FlowError::InvalidWork);
+                        }
+                        (
+                            BatchCommand::DomainControl {
+                                work: *work,
+                                kind: *kind,
+                                action: *action,
                                 at: *at,
                                 priority: *scheduler_priority,
                             },
@@ -2678,6 +2957,13 @@ impl FlowRuntime {
                     at,
                     priority,
                 } => (Command::Domain(work, kind), at, priority),
+                BatchCommand::DomainControl {
+                    work,
+                    kind,
+                    action,
+                    at,
+                    priority,
+                } => (Command::DomainControl(work, kind, action), at, priority),
             };
             let event = self.commit_batch_event(command, at, priority);
             requests.push(None);
@@ -2707,7 +2993,7 @@ impl FlowRuntime {
         // Every scheduler call is owned by this facade. Validated lifetime counts
         // bound index, sequence and generation before the first batch mutation.
         let kind = match command {
-            Command::Domain(_, kind) => kind,
+            Command::Domain(_, kind) | Command::DomainControl(_, kind, _) => kind,
             Command::Deadline(_) => EventKind::custom(FLOW_WAITING_DEADLINE_EVENT_KIND),
             _ => EventKind::custom(FLOW_COMMAND_DISPATCH_EVENT_KIND),
         };
@@ -2778,6 +3064,34 @@ impl FlowRuntime {
         }
         Ok(Some(PreparedDelivery::Domain { work, kind }))
     }
+    fn domain_control_delivery(
+        &self,
+        work: WorkId,
+        kind: EventKind,
+        action: FlowDomainControl,
+    ) -> Result<Option<PreparedDelivery>, FlowError> {
+        let Some(spec) = self.registry.get::<WorkSpec>(work.0) else {
+            return self.domain_delivery(work, kind).map(|_| None);
+        };
+        self.check_work_domain_kind(work, kind)?;
+        let descriptor = self
+            .domain_hooks
+            .get(&(spec.context_type_key.clone(), kind))
+            .ok_or(FlowError::UnregisteredDomainEvent)?;
+        if !matches!(
+            descriptor.invoke,
+            DomainInvocation::View(_) | DomainInvocation::Plan(_)
+        ) {
+            return Err(FlowError::InvalidWork);
+        }
+        if !(descriptor.context_present)(&self.registry, work.0) {
+            return Ok(None);
+        }
+        if !self.actors.contains(&spec.owner) || !self.world.is_alive(spec.owner) {
+            return Ok(None);
+        }
+        Ok(Some(PreparedDelivery::DomainControl { work, kind, action }))
+    }
     fn plan(
         &self,
         command: Command,
@@ -2833,7 +3147,7 @@ impl FlowRuntime {
                 .map(|r| BTreeSet::from([r.resource]))
                 .unwrap_or_default(),
             Command::Capacity(id, _) | Command::Remove(id) => BTreeSet::from([id]),
-            Command::Notify | Command::Domain(..) => BTreeSet::new(),
+            Command::Notify | Command::Domain(..) | Command::DomainControl(..) => BTreeSet::new(),
             Command::Despawn(owner) => self
                 .requests
                 .iter()
@@ -3222,7 +3536,9 @@ impl FlowRuntime {
                     }
                     remove_actor = Some(owner);
                 }
-                Command::Notify | Command::Domain(..) => return Err(FlowError::InvalidState),
+                Command::Notify | Command::Domain(..) | Command::DomainControl(..) => {
+                    return Err(FlowError::InvalidState)
+                }
                 Command::Completion(..) => {
                     // Validated before staging; due-boundary processing completed it.
                 }
@@ -6895,5 +7211,152 @@ mod buffered_despawn_private_tests {
         assert_eq!(survivor_calls.get(), 1);
         assert_eq!(f.request(q).unwrap().state, RequestState::Cancelled);
         assert!(f.pending_despawns.is_empty());
+    }
+}
+
+#[cfg(test)]
+mod domain_control_tests {
+    use super::*;
+    use std::{cell::RefCell, rc::Rc};
+
+    const KIND: EventKind = EventKind::custom(7410);
+
+    fn planned(
+        current: &u32,
+        _: &FlowCallbackSnapshot,
+        _: FlowWorldView<'_>,
+        _: &mut FlowCommandSink,
+    ) -> Result<u32, FlowError> {
+        Ok(current + 1)
+    }
+    fn rejected_plan(
+        _: &u32,
+        _: &FlowCallbackSnapshot,
+        _: FlowWorldView<'_>,
+        _: &mut FlowCommandSink,
+    ) -> Result<u32, FlowError> {
+        Err(FlowError::InvalidWork)
+    }
+
+    #[test]
+    fn planned_domain_context_commits_only_when_planner_succeeds() {
+        let mut flow = FlowRuntime::new();
+        flow.register_domain_plan_hook("plan", KIND, planned)
+            .unwrap();
+        let actor = flow.spawn_actor().unwrap();
+        let carrier = flow
+            .create_actor_domain_context(actor, "plan", KIND, 0_u32)
+            .unwrap();
+        flow.schedule_domain(carrier, KIND, SimTime::from_ticks(1), 0)
+            .unwrap();
+        let dispatch = flow.step().unwrap().unwrap();
+        assert!(dispatch.error.is_none());
+        assert_eq!(*flow.work_context::<u32>(carrier).unwrap(), 1);
+
+        let mut rejected = FlowRuntime::new();
+        rejected
+            .register_domain_plan_hook("reject", KIND, rejected_plan)
+            .unwrap();
+        let actor = rejected.spawn_actor().unwrap();
+        let carrier = rejected
+            .create_actor_domain_context(actor, "reject", KIND, 7_u32)
+            .unwrap();
+        rejected
+            .schedule_domain(carrier, KIND, SimTime::from_ticks(1), 0)
+            .unwrap();
+        let dispatch = rejected.step().unwrap().unwrap();
+        assert_eq!(dispatch.error, Some(FlowError::InvalidWork));
+        assert!(matches!(
+            dispatch.callback_batches.as_slice(),
+            [FlowBatchReceipt::Rejected(FlowBatchRejection {
+                failed_ticket: None,
+                error: FlowError::InvalidWork
+            })]
+        ));
+        assert_eq!(*rejected.work_context::<u32>(carrier).unwrap(), 7);
+    }
+
+    fn callback<'a>(
+        actions: &'a mut Rc<RefCell<Vec<FlowDomainControl>>>,
+        snapshot: &'a FlowCallbackSnapshot,
+        view: FlowWorldView<'a>,
+        sink: &'a mut FlowCommandSink,
+    ) {
+        let FlowCallbackCause::DomainControl { kind, action } = snapshot.cause else {
+            panic!("expected scheduled domain control");
+        };
+        assert_eq!(kind, KIND);
+        assert_eq!(view.now(), snapshot.delivery.at);
+        actions.borrow_mut().push(action);
+        if action == FlowDomainControl::Pause {
+            sink.emit(FlowOwnedCommand::DomainControl {
+                work: snapshot.work,
+                kind,
+                action: FlowDomainControl::Resume,
+                at: view.now().checked_add(SimDuration::from_ticks(1)).unwrap(),
+                scheduler_priority: 0,
+            })
+            .unwrap();
+        }
+    }
+
+    #[test]
+    fn scheduled_control_delivers_actual_action_and_can_plan_next_control() {
+        let mut flow = FlowRuntime::new();
+        flow.register_domain_view_hook("control", KIND, callback)
+            .unwrap();
+        let actor = flow.spawn_actor().unwrap();
+        let actions: Rc<RefCell<Vec<FlowDomainControl>>> = Rc::new(RefCell::new(Vec::new()));
+        let carrier = flow
+            .create_actor_domain_context(actor, "control", KIND, actions.clone())
+            .unwrap();
+        let pause = flow
+            .schedule_domain_control(
+                carrier,
+                KIND,
+                FlowDomainControl::Pause,
+                SimTime::from_ticks(2),
+                0,
+            )
+            .unwrap();
+        let pause_dispatch = flow.step().unwrap().unwrap();
+        assert_eq!(pause_dispatch.event, pause);
+        assert!(pause_dispatch.error.is_none());
+        assert_eq!(*actions.borrow(), vec![FlowDomainControl::Pause]);
+        let FlowBatchReceipt::Accepted(admissions) = &pause_dispatch.callback_batches[0] else {
+            panic!("Pause callback's Resume command should be admitted");
+        };
+        assert_eq!(admissions.len(), 1);
+        let resume_dispatch = flow.step().unwrap().unwrap();
+        assert_eq!(resume_dispatch.event, admissions[0].event);
+        assert!(resume_dispatch.error.is_none());
+        assert_eq!(
+            *actions.borrow(),
+            vec![FlowDomainControl::Pause, FlowDomainControl::Resume]
+        );
+        assert!(flow.step().unwrap().is_none());
+    }
+
+    #[test]
+    fn control_schedule_rejects_legacy_hooks_without_allocating_event() {
+        fn legacy(_: &mut u32, _: &FlowCallbackSnapshot, _: &mut FlowCommandSink) {}
+        let mut flow = FlowRuntime::new();
+        flow.register_domain_hook("legacy", KIND, legacy).unwrap();
+        let actor = flow.spawn_actor().unwrap();
+        let carrier = flow
+            .create_work(actor, SimDuration::ZERO, "legacy", 0_u32)
+            .unwrap();
+        let before = flow.budget_snapshot().scheduler;
+        assert_eq!(
+            flow.schedule_domain_control(
+                carrier,
+                KIND,
+                FlowDomainControl::Pause,
+                SimTime::from_ticks(2),
+                0,
+            ),
+            Err(FlowError::InvalidWork)
+        );
+        assert_eq!(flow.budget_snapshot().scheduler, before);
     }
 }
