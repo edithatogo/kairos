@@ -28,6 +28,47 @@ impl ResourceId {
         self.0
     }
 }
+
+#[cfg(test)]
+mod submit_scheduler_capacity_tests {
+    use super::*;
+
+    #[test]
+    fn timed_submit_preflights_acquire_and_deadline_before_request_mutation() {
+        let mut flow = FlowRuntime::new();
+        let owner = flow.spawn_actor().unwrap();
+        let resource = flow.create_resource(1).unwrap();
+        let work = flow
+            .create_work(owner, SimDuration::from_ticks(10), "capacity", ())
+            .unwrap();
+        let scheduler = flow.scheduler.stats();
+        let world = flow.world.snapshot();
+        let created = flow.created;
+        let scheduled = flow.scheduled;
+        let command_count = flow.commands.len();
+
+        // One scheduler slot would cover the acquire but not the optional
+        // deadline. The entire two-event operation must reject up front.
+        flow.scheduler_event_cap_for_test = Some(1);
+        assert_eq!(
+            flow.acquire(resource)
+                .owner(owner)
+                .timed_work(work)
+                .at(SimTime::from_ticks(1))
+                .deadline(SimTime::from_ticks(5))
+                .submit(),
+            Err(FlowError::CounterOverflow)
+        );
+
+        assert!(flow.requests.is_empty());
+        assert_eq!(flow.work(work).unwrap().request, None);
+        assert_eq!(flow.scheduler.stats(), scheduler);
+        assert_eq!(flow.world.snapshot(), world);
+        assert_eq!(flow.created, created);
+        assert_eq!(flow.scheduled, scheduled);
+        assert_eq!(flow.commands.len(), command_count);
+    }
+}
 /// Capacity is ECS-owned; available capacity is always derived.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ResourceCapacity {
@@ -1210,6 +1251,8 @@ pub struct FlowRuntime {
     scheduled: u64,
     next_admission: u64,
     next_lease: u64,
+    #[cfg(test)]
+    scheduler_event_cap_for_test: Option<u64>,
 }
 const FLOW_COMMAND_DISPATCH_EVENT_KIND: u32 = 4000;
 const FLOW_WAITING_DEADLINE_EVENT_KIND: u32 = 4002;
@@ -1258,6 +1301,8 @@ impl FlowRuntime {
             scheduled: 0,
             next_admission: 0,
             next_lease: 0,
+            #[cfg(test)]
+            scheduler_event_cap_for_test: None,
         }
     }
     /// Return an opaque identity for runtime-local work ownership checks.
@@ -1348,6 +1393,25 @@ impl FlowRuntime {
         if self.scheduled >= OPERATION_CAP {
             return Err(FlowError::CounterOverflow);
         }
+        Ok(())
+    }
+    fn check_scheduler_event_capacity(&self, needed: u64) -> Result<(), FlowError> {
+        let limit = {
+            #[cfg(test)]
+            {
+                self.scheduler_event_cap_for_test.unwrap_or(OPERATION_CAP)
+            }
+            #[cfg(not(test))]
+            {
+                OPERATION_CAP
+            }
+        };
+        self.scheduler
+            .stats()
+            .scheduled_events
+            .checked_add(needed)
+            .filter(|n| *n <= limit)
+            .ok_or(FlowError::CounterOverflow)?;
         Ok(())
     }
     fn schedule(&mut self, command: Command, at: SimTime) -> Result<(), FlowError> {
@@ -1878,6 +1942,10 @@ impl FlowRuntime {
         {
             return Err(FlowError::CounterOverflow);
         }
+        // Preflight every scheduler event before creating the request record.
+        // schedule_command checks this cap again, but a late rejection there
+        // would otherwise strand a ResourceRequest without a returned ID.
+        self.check_scheduler_event_capacity(needed)?;
         let mut spec = match work {
             Some(id) => {
                 let spec = self.work(id)?;
