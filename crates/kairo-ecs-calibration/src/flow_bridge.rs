@@ -1255,9 +1255,9 @@ mod tests {
             let work = bound.work();
             let progress = flow.work_progress(work).unwrap();
             let stream_position = bound.service_draw_position();
-            adapter.stage_policy(FidelityPolicy::new(2, Some(FidelityMode::Micro)).unwrap());
+            adapter.stage_policy(FidelityPolicy::new(1, Some(FidelityMode::Micro)).unwrap());
             control_adapter
-                .stage_policy(FidelityPolicy::new(2, Some(FidelityMode::Micro)).unwrap());
+                .stage_policy(FidelityPolicy::new(1, Some(FidelityMode::Micro)).unwrap());
 
             let continuation = BoundWorkContinuation::capture(flow, adapter, bound)
                 .ok()
