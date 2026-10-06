@@ -536,6 +536,42 @@ pub fn register_transit_context(
     )
 }
 
+#[cfg(feature = "test-support")]
+thread_local! {
+    static REJECTED_TRANSIT_PLAN_FOR_TEST: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+#[cfg(feature = "test-support")]
+fn reject_first_transit_plan_for_test<'a>(
+    current: &'a TransitContext,
+    snapshot: &'a FlowCallbackSnapshot,
+    view: FlowWorldView<'a>,
+    sink: &'a mut FlowCommandSink,
+) -> Result<TransitContext, FlowError> {
+    if REJECTED_TRANSIT_PLAN_FOR_TEST.with(|rejected| !rejected.replace(true)) {
+        return Err(FlowError::InvalidState);
+    }
+    TransitContext::plan(current, snapshot, view, sink)
+}
+
+/// Test-only registration that rejects the first actual transit planner call on this thread.
+///
+/// This helper is available only with the non-default `test-support` feature.
+#[cfg(feature = "test-support")]
+#[doc(hidden)]
+pub fn register_transit_context_reject_first_for_test(
+    flow: &mut FlowRuntime,
+    registration: &str,
+    kind: EventKind,
+) -> Result<(), FlowError> {
+    flow.register_domain_plan_hook_with_receipt(
+        registration,
+        kind,
+        reject_first_transit_plan_for_test,
+        accept_transit_context,
+    )
+}
+
 pub fn schedule_transit_control(
     flow: &mut FlowRuntime,
     carrier: WorkId,

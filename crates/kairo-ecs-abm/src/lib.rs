@@ -2,6 +2,9 @@
 
 mod flow_adapter;
 pub mod spatial;
+#[cfg(feature = "test-support")]
+#[doc(hidden)]
+pub use flow_adapter::register_transit_context_reject_first_for_test;
 pub use flow_adapter::{
     create_flow_agent, register_flow_agent_behavior, register_transit_context,
     schedule_flow_agent_update, schedule_transit_control, schedule_transit_start,

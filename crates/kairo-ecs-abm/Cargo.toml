@@ -6,6 +6,9 @@ license.workspace = true
 repository = "https://github.com/edithatogo/kairos"
 description = "Agent-Based Modeling behavior API for KairoECS"
 
+[features]
+test-support = []
+
 [dependencies]
 kairo-ecs-types = { path = "../kairo-ecs-types" , version = "=0.0.0" }
 kairo-ecs-core = { path = "../kairo-ecs-core" , version = "=0.0.0" }

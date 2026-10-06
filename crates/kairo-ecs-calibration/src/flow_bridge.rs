@@ -958,8 +958,8 @@ mod tests {
     use super::*;
     use crate::seed_map::CalibrationSeedMap;
     use crate::work_duration::{IntrinsicDurationDistribution, INTRINSIC_WORK_PROVIDER_VERSION_V1};
-    use kairo_ecs_abm::register_transit_context;
     use kairo_ecs_abm::spatial::{EdgeId, MovementModeId, TransitEdge};
+    use kairo_ecs_abm::{register_transit_context, register_transit_context_reject_first_for_test};
     use kairo_ecs_des::fidelity::FidelityPolicy;
     use kairo_ecs_des::{FlowBatchRejection, FlowDispatch, RequestState, WorkHandlers};
 
@@ -1105,6 +1105,14 @@ mod tests {
         start: SimTime,
         edge_count: u32,
     ) -> (BoundIntrinsicWork<u32, u32>, FlowRuntime) {
+        bound_route_at_with_registration(start, edge_count, register_transit_context)
+    }
+
+    fn bound_route_at_with_registration(
+        start: SimTime,
+        edge_count: u32,
+        register: fn(&mut FlowRuntime, &str, EventKind) -> Result<(), FlowError>,
+    ) -> (BoundIntrinsicWork<u32, u32>, FlowRuntime) {
         let (mut input, mut flow, mut adapter, _) = input(
             FidelityMode::Micro,
             TransitIntent::Route,
@@ -1139,7 +1147,7 @@ mod tests {
             carrier_registration: "bridge.transit".to_owned(),
             kind: EventKind::custom(0xC20),
         };
-        register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20)).unwrap();
+        register(&mut flow, "bridge.transit", EventKind::custom(0xC20)).unwrap();
         flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
             .unwrap();
         let prepared = must_prepare(input.prepare(&flow, &mut adapter, &provider()));
@@ -1355,6 +1363,117 @@ mod tests {
             Err(BridgeError::InvalidDispatch)
         );
         assert_eq!(flow.budget_snapshot().scheduler, after_retry);
+    }
+
+    #[test]
+    fn actual_transit_rejection_retries_to_one_accepted_arrival_and_request() {
+        let (mut bound, mut flow) = bound_route_at_with_registration(
+            SimTime::from_ticks(0),
+            1,
+            register_transit_context_reject_first_for_test,
+        );
+        let original = bound.start_transit(&mut flow).unwrap();
+        let work_id = bound.work();
+        let carrier = bound.carrier.unwrap();
+
+        let rejected = flow
+            .step()
+            .unwrap()
+            .expect("actual scheduled start callback");
+        assert_eq!(rejected.event, original);
+        assert_eq!(rejected.at, SimTime::from_ticks(0));
+        assert_eq!(rejected.error, Some(FlowError::InvalidState));
+        assert!(matches!(
+            rejected.callback_batches.as_slice(),
+            [FlowBatchReceipt::Rejected(rejection)]
+                if rejection.error == FlowError::InvalidState
+                    && rejection.failed_ticket.is_none()
+        ));
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &rejected),
+            Ok(TransitObservation::Rejected)
+        );
+        let ready = flow.work_context::<TransitContext>(carrier).unwrap();
+        assert_eq!(ready.phase(), TransitPhase::Ready);
+        assert!(ready.expects_event(original, SimTime::from_ticks(0)));
+        assert_eq!(flow.work(bound.work()).unwrap().request, None);
+
+        let replacement = bound.retry_transit(&mut flow, &rejected).unwrap();
+        assert_ne!(replacement, original);
+        assert!(flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .expects_event(replacement, SimTime::from_ticks(0)));
+        let after_retry = flow.budget_snapshot().scheduler;
+        assert_eq!(
+            bound.retry_transit(&mut flow, &rejected),
+            Err(BridgeError::InvalidDispatch)
+        );
+        assert_eq!(flow.budget_snapshot().scheduler, after_retry);
+        assert_eq!(bound.owned_events, vec![original, replacement]);
+        assert_eq!(bound.consumed_events, vec![original]);
+
+        let retried_start = flow.step().unwrap().expect("actual retried start callback");
+        assert_eq!(retried_start.event, replacement);
+        assert!(matches!(
+            retried_start.callback_batches.as_slice(),
+            [FlowBatchReceipt::Accepted(admissions)] if admissions.len() == 1
+        ));
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &retried_start),
+            Ok(TransitObservation::Progress)
+        );
+        assert_eq!(bound.consumed_events, vec![original, replacement]);
+        assert_eq!(flow.work(bound.work()).unwrap().request, None);
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier)
+                .unwrap()
+                .phase(),
+            TransitPhase::Moving
+        );
+
+        let arrival = flow.step().unwrap().expect("actual route arrival callback");
+        let arrival_event = bound.pending_event.unwrap();
+        assert_ne!(arrival_event, original);
+        assert_ne!(arrival_event, replacement);
+        assert_eq!(arrival.event, arrival_event);
+        assert!(matches!(
+            arrival.callback_batches.as_slice(),
+            [FlowBatchReceipt::Accepted(admissions)]
+                if admissions.len() == 1 && admissions[0].request.is_some()
+        ));
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &arrival),
+            Ok(TransitObservation::Arrived)
+        );
+        let [FlowBatchReceipt::Accepted(admissions)] = arrival.callback_batches.as_slice() else {
+            unreachable!("arrival was asserted accepted above")
+        };
+        let request_event = admissions[0].event;
+        assert_eq!(bound.pending_event, Some(request_event));
+        assert_ne!(request_event, arrival_event);
+        assert_eq!(
+            bound.owned_events,
+            vec![original, replacement, arrival_event, request_event]
+        );
+        assert_eq!(
+            bound.consumed_events,
+            vec![original, replacement, arrival_event]
+        );
+        let request = admissions[0].request.unwrap();
+        let saved_work = flow.work(work_id).unwrap();
+        let saved_request = flow.request(request).unwrap();
+        assert_eq!(saved_work.request, Some(request));
+        assert_eq!(saved_work.owner, bound.acquire.owner);
+        assert_eq!(saved_request.work, Some(work_id));
+        assert_eq!(saved_request.owner, bound.acquire.owner);
+        assert_eq!(saved_request.resource, bound.acquire.resource);
+        assert!(saved_request.timed);
+        assert_eq!(saved_request.submitted_at, arrival.at);
+
+        let submitted = bound.finish_transit(&flow).unwrap();
+        assert_eq!(submitted.work(), work_id);
+        assert_eq!(submitted.request(), request);
     }
 
     #[test]
