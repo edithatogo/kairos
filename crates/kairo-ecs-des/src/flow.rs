@@ -1955,6 +1955,47 @@ impl FlowRuntime {
         }
         self.schedule_command(Command::Domain(work, kind), at, priority)
     }
+
+    /// Schedule a domain event and bind its allocated identity into the typed
+    /// work context before returning. Validation and event scheduling complete
+    /// before `bind_event` runs; the binder must be infallible and must not
+    /// dispatch events or mutate this runtime through other means.
+    pub fn schedule_domain_and_bind<C: 'static>(
+        &mut self,
+        work: WorkId,
+        kind: EventKind,
+        at: SimTime,
+        priority: i32,
+        bind_event: fn(&mut C, EventId),
+    ) -> Result<EventId, FlowError> {
+        self.check_running()?;
+        Self::check_domain_kind(kind)?;
+        let spec = self.work(work)?;
+        self.actor(spec.owner)?;
+        self.check_work_domain_kind(work, kind)?;
+        let descriptor = self
+            .domain_hooks
+            .get(&(spec.context_type_key, kind))
+            .ok_or(FlowError::UnregisteredDomainEvent)?;
+        if descriptor.context_type != TypeId::of::<C>()
+            || !(descriptor.context_present)(&self.registry, work.0)
+            || self.registry.get::<WorkContext<C>>(work.0).is_none()
+        {
+            return Err(FlowError::InvalidWork);
+        }
+
+        // schedule_command performs all fallible scheduler/counter checks before
+        // allocating the EventId. With exclusive access to FlowRuntime, the
+        // already-validated typed context remains present until it is bound.
+        let event = self.schedule_command(Command::Domain(work, kind), at, priority)?;
+        let context = self
+            .registry
+            .store_mut::<WorkContext<C>>()
+            .and_then(|store| store.get_mut(work.0))
+            .expect("validated typed Flow context remains present during binding");
+        bind_event(&mut context.0, event);
+        Ok(event)
+    }
     pub fn schedule_domain_control(
         &mut self,
         work: WorkId,
@@ -7431,5 +7472,79 @@ mod domain_control_tests {
             Err(FlowError::InvalidWork)
         );
         assert_eq!(flow.budget_snapshot().scheduler, before);
+    }
+}
+
+#[cfg(test)]
+mod schedule_domain_binding_tests {
+    use super::*;
+
+    const KIND: EventKind = EventKind::custom(7117);
+
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    struct BoundContext(Option<EventId>);
+
+    fn plan(
+        current: &BoundContext,
+        _snapshot: &FlowCallbackSnapshot,
+        _view: FlowWorldView<'_>,
+        _sink: &mut FlowCommandSink,
+    ) -> Result<BoundContext, FlowError> {
+        Ok(current.clone())
+    }
+
+    fn bind(context: &mut BoundContext, event: EventId) {
+        context.0 = Some(event);
+    }
+
+    fn create_carrier(flow: &mut FlowRuntime) -> WorkId {
+        flow.register_domain_plan_hook("schedule-bind", KIND, plan)
+            .unwrap();
+        let actor = flow.spawn_actor().unwrap();
+        flow.create_actor_domain_context(actor, "schedule-bind", KIND, BoundContext(None))
+            .unwrap()
+    }
+
+    #[test]
+    fn schedule_domain_binds_allocated_id_and_rejects_without_binding_on_schedule_error() {
+        let mut flow = FlowRuntime::new();
+        let carrier = create_carrier(&mut flow);
+        let event = flow
+            .schedule_domain_and_bind::<BoundContext>(
+                carrier,
+                KIND,
+                SimTime::from_ticks(2),
+                0,
+                bind,
+            )
+            .unwrap();
+        assert_eq!(
+            flow.work_context::<BoundContext>(carrier).unwrap().0,
+            Some(event)
+        );
+
+        let delivered = flow.step().unwrap().unwrap();
+        assert_eq!(delivered.event, event);
+        assert!(delivered.error.is_none());
+
+        let mut past = FlowRuntime::new();
+        let carrier = create_carrier(&mut past);
+        past.schedule_domain(carrier, KIND, SimTime::from_ticks(1), 0)
+            .unwrap();
+        past.step().unwrap();
+        assert_eq!(past.now(), SimTime::from_ticks(1));
+        let before_rejected_schedule = past.budget_snapshot();
+        assert_eq!(
+            past.schedule_domain_and_bind::<BoundContext>(
+                carrier,
+                KIND,
+                SimTime::from_ticks(0),
+                0,
+                bind,
+            ),
+            Err(FlowError::PastCommand)
+        );
+        assert_eq!(past.budget_snapshot(), before_rejected_schedule);
+        assert_eq!(past.work_context::<BoundContext>(carrier).unwrap().0, None);
     }
 }

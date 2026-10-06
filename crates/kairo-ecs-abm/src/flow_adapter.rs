@@ -144,6 +144,11 @@ pub struct TransitContext {
 }
 
 impl TransitContext {
+    fn bind_initial_start_event(&mut self, event: EventId) {
+        self.expected_event = Some(event);
+        self.expected_due = Some(self.start_at);
+    }
+
     pub fn new(
         flow: &FlowRuntime,
         route: RoutePlan,
@@ -255,10 +260,13 @@ impl TransitContext {
         sink: &mut FlowCommandSink,
     ) -> Result<(), FlowError> {
         if self.phase == TransitPhase::Paused {
-            if self.initial_start_pending && at == self.start_at {
+            if self.initial_start_pending
+                && self.expected_event == Some(snapshot.delivery.id)
+                && self.expected_due == Some(at)
+            {
                 self.initial_start_pending = false;
             }
-            if self.expected_event == Some(snapshot.delivery.id) {
+            if self.expected_event == Some(snapshot.delivery.id) && self.expected_due == Some(at) {
                 self.expected_event = None;
                 self.expected_due = None;
                 self.next_progress_ticket = None;
@@ -266,10 +274,7 @@ impl TransitContext {
             return Ok(());
         }
         if self.phase == TransitPhase::Ready {
-            if (self.initial_start_pending && at != self.start_at)
-                || (!self.initial_start_pending
-                    && self.expected_event != Some(snapshot.delivery.id))
-            {
+            if self.expected_event != Some(snapshot.delivery.id) || self.expected_due != Some(at) {
                 return Ok(());
             }
             self.initial_start_pending = false;
@@ -514,7 +519,13 @@ pub fn schedule_transit_start(
     {
         return Err(FlowError::InvalidWork);
     }
-    flow.schedule_domain(carrier, kind, at, priority)
+    flow.schedule_domain_and_bind::<TransitContext>(
+        carrier,
+        kind,
+        at,
+        priority,
+        TransitContext::bind_initial_start_event,
+    )
 }
 #[cfg(test)]
 mod tests {
@@ -674,8 +685,13 @@ mod tests {
             Err(FlowError::InvalidWork)
         );
         assert_eq!(foreign.budget_snapshot(), foreign_before);
-        schedule_transit_start(&mut flow, carrier, TRANSIT_KIND, SimTime::from_ticks(5), 0)
+        let retained_start =
+            schedule_transit_start(&mut flow, carrier, TRANSIT_KIND, SimTime::from_ticks(5), 0)
+                .unwrap();
+        let alien_start = flow
+            .schedule_domain(carrier, TRANSIT_KIND, SimTime::from_ticks(5), -1)
             .unwrap();
+        assert_ne!(retained_start, alien_start);
 
         schedule_transit_control(
             &mut flow,
@@ -723,7 +739,22 @@ mod tests {
             .unwrap();
         assert_eq!(after_repeated_pause, before_repeated_pause);
 
+        let alien_while_paused = flow.step().unwrap().unwrap();
+        assert_eq!(alien_while_paused.event, alien_start);
+        assert_eq!(alien_while_paused.at, SimTime::from_ticks(5));
+        assert!(alien_while_paused.error.is_none());
+        let paused_after_alien = flow.work_context::<TransitContext>(carrier).unwrap();
+        assert_eq!(paused_after_alien.phase(), TransitPhase::Paused);
+        assert_eq!(
+            paused_after_alien
+                .progress_at(SimTime::from_ticks(5))
+                .unwrap()
+                .useful_elapsed,
+            SimDuration::ZERO
+        );
+
         let stale_start = flow.step().unwrap().unwrap();
+        assert_eq!(stale_start.event, retained_start);
         assert_eq!(stale_start.at, SimTime::from_ticks(5));
         assert!(stale_start.error.is_none());
         assert!(
@@ -829,6 +860,71 @@ mod tests {
             .unwrap()
             .arrival_ticket()
             .is_some());
+    }
+
+    #[test]
+    fn same_tick_alien_domain_event_cannot_start_before_bound_start_id() {
+        const TRANSIT_KIND: EventKind = EventKind::custom(9412);
+        let mut flow = FlowRuntime::new();
+        register_transit_context(&mut flow, "exact-start-plan", TRANSIT_KIND).unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let carrier_actor = flow.spawn_actor().unwrap();
+        let resource = flow.create_resource(1).unwrap();
+        let service = flow
+            .create_work(owner, SimDuration::from_ticks(4), "service", ())
+            .unwrap();
+        let context = TransitContext::new(
+            &flow,
+            test_route(),
+            flow_acquire(resource, owner, service),
+            SimTime::from_ticks(5),
+        )
+        .unwrap();
+        let carrier = flow
+            .create_actor_domain_context(carrier_actor, "exact-start-plan", TRANSIT_KIND, context)
+            .unwrap();
+        let retained_start =
+            schedule_transit_start(&mut flow, carrier, TRANSIT_KIND, SimTime::from_ticks(5), 0)
+                .unwrap();
+        let alien = flow
+            .schedule_domain(carrier, TRANSIT_KIND, SimTime::from_ticks(5), -1)
+            .unwrap();
+        assert_ne!(retained_start, alien);
+
+        let alien_dispatch = flow.step().unwrap().unwrap();
+        assert_eq!(alien_dispatch.event, alien);
+        assert!(alien_dispatch.error.is_none());
+        assert!(matches!(
+            alien_dispatch.callback_batches.as_slice(),
+            [FlowBatchReceipt::Accepted(rows)] if rows.is_empty()
+        ));
+        let before_start = flow.work_context::<TransitContext>(carrier).unwrap();
+        assert_eq!(before_start.phase(), TransitPhase::Ready);
+        assert_eq!(
+            before_start
+                .progress_at(SimTime::from_ticks(5))
+                .unwrap()
+                .useful_elapsed,
+            SimDuration::ZERO
+        );
+
+        let exact_dispatch = flow.step().unwrap().unwrap();
+        assert_eq!(exact_dispatch.event, retained_start);
+        assert!(exact_dispatch.error.is_none());
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier)
+                .unwrap()
+                .phase(),
+            TransitPhase::Moving
+        );
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier)
+                .unwrap()
+                .progress_at(SimTime::from_ticks(5))
+                .unwrap()
+                .useful_elapsed,
+            SimDuration::ZERO
+        );
     }
 
     #[test]
