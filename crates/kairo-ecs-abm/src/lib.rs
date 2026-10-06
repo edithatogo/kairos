@@ -3,8 +3,10 @@
 mod flow_adapter;
 pub mod spatial;
 pub use flow_adapter::{
-    create_flow_agent, register_flow_agent_behavior, schedule_flow_agent_update, FlowAgentBehavior,
-    FlowAgentContext, FlowAgentHandle,
+    create_flow_agent, register_flow_agent_behavior, register_transit_context,
+    schedule_flow_agent_update, schedule_transit_control, schedule_transit_start,
+    FlowAgentBehavior, FlowAgentContext, FlowAgentHandle, TransitContext, TransitPhase,
+    TransitProgress,
 };
 
 use kairo_ecs_core::Scheduler;

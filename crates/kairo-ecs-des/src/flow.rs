@@ -634,6 +634,15 @@ type DomainPlanBridge = fn(
     &dyn Any,
 ) -> Result<Box<dyn Any>, FlowError>;
 type DomainPlanApply = fn(&mut ComponentRegistry, EntityId, Box<dyn Any>);
+type DomainPlanAccept = fn(&mut ComponentRegistry, EntityId, &FlowBatchReceipt, &dyn Any);
+type DomainPlanClone = fn(&dyn Any) -> Box<dyn Any>;
+type StagedDomainPlan = (
+    WorkId,
+    Box<dyn Any>,
+    DomainPlanApply,
+    DomainPlanAccept,
+    Box<dyn Any>,
+);
 struct DomainViewCallback<C>(
     for<'a> fn(&'a mut C, &'a FlowCallbackSnapshot, FlowWorldView<'a>, &'a mut FlowCommandSink),
 );
@@ -648,6 +657,8 @@ struct DomainDescriptor {
     context_present: fn(&ComponentRegistry, EntityId) -> bool,
     callback: Box<dyn Any>,
     apply_plan: Option<DomainPlanApply>,
+    accept_plan: Option<DomainPlanAccept>,
+    clone_plan: Option<DomainPlanClone>,
 }
 fn invoke_domain<C: 'static>(
     registry: &mut ComponentRegistry,
@@ -696,14 +707,28 @@ fn invoke_domain_view<C: 'static>(
     }
 }
 
-struct DomainPlanCallback<C>(
-    for<'a> fn(
+struct DomainPlanCallback<C> {
+    planner: for<'a> fn(
         &'a C,
         &'a FlowCallbackSnapshot,
         FlowWorldView<'a>,
         &'a mut FlowCommandSink,
     ) -> Result<C, FlowError>,
-);
+    on_accepted: fn(&mut C, &FlowBatchReceipt),
+}
+impl<C> Copy for DomainPlanCallback<C> {}
+impl<C> Clone for DomainPlanCallback<C> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+fn clone_domain_plan_callback<C: 'static>(callback: &dyn Any) -> Box<dyn Any> {
+    Box::new(
+        *callback
+            .downcast_ref::<DomainPlanCallback<C>>()
+            .expect("validated planned-domain callback type"),
+    )
+}
 fn invoke_domain_plan<C: 'static>(
     world: &World,
     registry: &ComponentRegistry,
@@ -714,12 +739,11 @@ fn invoke_domain_plan<C: 'static>(
 ) -> Result<Box<dyn Any>, FlowError> {
     let callback = callback
         .downcast_ref::<DomainPlanCallback<C>>()
-        .expect("validated planned-domain context type")
-        .0;
+        .expect("validated planned-domain context type");
     let context = registry
         .get::<WorkContext<C>>(entity)
         .ok_or(FlowError::InvalidWork)?;
-    callback(
+    (callback.planner)(
         &context.0,
         snapshot,
         FlowWorldView {
@@ -743,6 +767,22 @@ fn apply_domain_plan<C: 'static>(
         .and_then(|store| store.get_mut(entity))
     {
         context.0 = candidate;
+    }
+}
+fn accept_domain_plan<C: 'static>(
+    registry: &mut ComponentRegistry,
+    entity: EntityId,
+    receipt: &FlowBatchReceipt,
+    callback: &dyn Any,
+) {
+    let callback = callback
+        .downcast_ref::<DomainPlanCallback<C>>()
+        .expect("validated planned-domain context type");
+    if let Some(context) = registry
+        .store_mut::<WorkContext<C>>()
+        .and_then(|store| store.get_mut(entity))
+    {
+        (callback.on_accepted)(&mut context.0, receipt);
     }
 }
 
@@ -1803,6 +1843,8 @@ impl FlowRuntime {
                 },
                 callback: Box::new(DomainCallback(callback)),
                 apply_plan: None,
+                accept_plan: None,
+                clone_plan: None,
             },
         );
         Ok(())
@@ -1835,6 +1877,8 @@ impl FlowRuntime {
                 },
                 callback: Box::new(DomainViewCallback(callback)),
                 apply_plan: None,
+                accept_plan: None,
+                clone_plan: None,
             },
         );
         Ok(())
@@ -1849,6 +1893,20 @@ impl FlowRuntime {
             FlowWorldView<'a>,
             &'a mut FlowCommandSink,
         ) -> Result<C, FlowError>,
+    ) -> Result<(), FlowError> {
+        self.register_domain_plan_hook_with_receipt(registration, kind, planner, |_, _| {})
+    }
+    pub fn register_domain_plan_hook_with_receipt<C: 'static>(
+        &mut self,
+        registration: &str,
+        kind: EventKind,
+        planner: for<'a> fn(
+            &'a C,
+            &'a FlowCallbackSnapshot,
+            FlowWorldView<'a>,
+            &'a mut FlowCommandSink,
+        ) -> Result<C, FlowError>,
+        on_accepted: fn(&mut C, &FlowBatchReceipt),
     ) -> Result<(), FlowError> {
         self.check_running()?;
         Self::check_domain_kind(kind)?;
@@ -1865,8 +1923,13 @@ impl FlowRuntime {
                 context_present: |registry, entity| {
                     registry.get::<WorkContext<C>>(entity).is_some()
                 },
-                callback: Box::new(DomainPlanCallback(planner)),
+                callback: Box::new(DomainPlanCallback {
+                    planner,
+                    on_accepted,
+                }),
                 apply_plan: Some(apply_domain_plan::<C>),
+                accept_plan: Some(accept_domain_plan::<C>),
+                clone_plan: Some(clone_domain_plan_callback::<C>),
             },
         );
         Ok(())
@@ -2437,7 +2500,7 @@ impl FlowRuntime {
                     let batch = self.next_batch_identity;
                     self.next_batch_identity = next_batch.expect("preflighted batch identity");
                     let mut sink = FlowCommandSink::new(batch, self.callback_config);
-                    let mut staged_context: Option<(WorkId, Box<dyn Any>, DomainPlanApply)> = None;
+                    let mut staged_context: Option<StagedDomainPlan> = None;
                     let mut planner_error = None;
                     match delivery {
                         PreparedDelivery::Notification(n) => {
@@ -2510,6 +2573,10 @@ impl FlowRuntime {
                                             work,
                                             candidate,
                                             h.apply_plan.expect("planned hook has apply bridge"),
+                                            h.accept_plan.expect("planned hook has receipt bridge"),
+                                            (h.clone_plan.expect("planned callback clone bridge"))(
+                                                h.callback.as_ref(),
+                                            ),
                                         ))
                                     }
                                     Err(error) => planner_error = Some(error),
@@ -2553,6 +2620,10 @@ impl FlowRuntime {
                                             work,
                                             candidate,
                                             h.apply_plan.expect("planned hook has apply bridge"),
+                                            h.accept_plan.expect("planned hook has receipt bridge"),
+                                            (h.clone_plan.expect("planned callback clone bridge"))(
+                                                h.callback.as_ref(),
+                                            ),
                                         ))
                                     }
                                     Err(error) => planner_error = Some(error),
@@ -2574,8 +2645,10 @@ impl FlowRuntime {
                     } else {
                         let receipt = self.admit_callback_batch(sink);
                         if matches!(receipt, FlowBatchReceipt::Accepted(_)) {
-                            if let Some((work, candidate, apply)) = staged_context {
+                            if let Some((work, candidate, apply, accept, callback)) = staged_context
+                            {
                                 apply(&mut self.registry, work.0, candidate);
+                                accept(&mut self.registry, work.0, &receipt, callback.as_ref());
                             }
                         }
                         outcome.callback_batches.push(receipt);

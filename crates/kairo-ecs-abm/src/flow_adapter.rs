@@ -1,9 +1,13 @@
 //! Shared agent behavior on the authoritative Flow runtime.
+use super::spatial::{RoutePlan, TransitError, TransitProgressState};
 use kairo_ecs_des::{
-    FlowCallbackSnapshot, FlowCommandSink, FlowError, FlowRuntime, FlowWorldView, WorkId,
+    FlowAcquireCommand, FlowBatchReceipt, FlowCallbackCause, FlowCallbackSnapshot, FlowCommandSink,
+    FlowCommandTicket, FlowDomainControl, FlowError, FlowOwnedCommand, FlowRuntime,
+    FlowRuntimeIdentity, FlowWorldView, WorkId, WorkState,
 };
 use kairo_ecs_rng::DeterministicStream;
-use kairo_ecs_types::{EntityId, EventId, EventKind, SimTime};
+use kairo_ecs_types::{EntityId, EventId, EventKind, SimDuration, SimTime};
+use std::cmp::min;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct FlowAgentHandle {
     actor: EntityId,
@@ -95,10 +99,430 @@ pub fn schedule_flow_agent_update(
     }
     flow.schedule_domain(agent.carrier, agent.kind, at, scheduler_priority)
 }
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TransitPhase {
+    Ready,
+    Moving,
+    Paused,
+    Arrived,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TransitProgress {
+    pub segment_index: usize,
+    pub useful_elapsed: SimDuration,
+    pub remaining: SimDuration,
+    pub phase: TransitPhase,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum TransitCommandPurpose {
+    Start { due: SimTime },
+    Progress { due: SimTime },
+    Arrival,
+}
+
+#[derive(Clone)]
+pub struct TransitContext {
+    runtime: FlowRuntimeIdentity,
+    progress: TransitProgressState,
+    service_work: WorkId,
+    acquire: FlowAcquireCommand,
+    carrier: Option<WorkId>,
+    kind: Option<EventKind>,
+    start_at: SimTime,
+    phase: TransitPhase,
+    paused_from: Option<TransitPhase>,
+    last_advanced_at: SimTime,
+    initial_start_pending: bool,
+    expected_event: Option<EventId>,
+    expected_due: Option<SimTime>,
+    command_ticket: Option<(FlowCommandTicket, TransitCommandPurpose)>,
+    arrival_ticket: Option<FlowCommandTicket>,
+    next_progress_ticket: Option<FlowCommandTicket>,
+}
+
+impl TransitContext {
+    pub fn new(
+        flow: &FlowRuntime,
+        route: RoutePlan,
+        acquire: FlowAcquireCommand,
+        start: SimTime,
+    ) -> Result<Self, TransitError> {
+        let Some(work) = acquire.work else {
+            return Err(TransitError::InvalidProgress);
+        };
+        let spec = flow.work(work).map_err(|_| TransitError::InvalidProgress)?;
+        let progress = flow
+            .work_progress(work)
+            .map_err(|_| TransitError::InvalidProgress)?;
+        flow.resource(acquire.resource)
+            .map_err(|_| TransitError::InvalidProgress)?;
+        if start < flow.now()
+            || acquire.at != start
+            || !acquire.timed
+            || acquire.owner != spec.owner
+            || spec.request.is_some()
+            || progress.state != WorkState::Pending
+        {
+            return Err(TransitError::InvalidProgress);
+        }
+        let progress = TransitProgressState::new(route.clone())?;
+        Ok(Self {
+            runtime: flow.identity(),
+            progress,
+            service_work: work,
+            acquire,
+            carrier: None,
+            kind: None,
+            start_at: start,
+            phase: TransitPhase::Ready,
+            paused_from: None,
+            last_advanced_at: start,
+            initial_start_pending: true,
+            expected_event: None,
+            expected_due: None,
+            command_ticket: None,
+            arrival_ticket: None,
+            next_progress_ticket: None,
+        })
+    }
+
+    pub fn service_work(&self) -> WorkId {
+        self.service_work
+    }
+
+    pub fn phase(&self) -> TransitPhase {
+        self.phase
+    }
+
+    pub fn arrival_ticket(&self) -> Option<FlowCommandTicket> {
+        self.arrival_ticket
+    }
+
+    pub fn next_progress_ticket(&self) -> Option<FlowCommandTicket> {
+        self.next_progress_ticket
+    }
+
+    pub fn progress_at(&self, at: SimTime) -> Result<TransitProgress, TransitError> {
+        let mut state = self.progress.clone();
+        if self.phase == TransitPhase::Moving {
+            let elapsed = at
+                .duration_since(self.last_advanced_at)
+                .ok_or(TransitError::InvalidProgress)?;
+            state.advance(min(elapsed, state.remaining()?))?;
+        } else if at < self.start_at && self.phase == TransitPhase::Ready {
+            return Err(TransitError::InvalidProgress);
+        }
+        Ok(TransitProgress {
+            segment_index: state.segment_index(),
+            useful_elapsed: state.useful_elapsed()?,
+            remaining: state.remaining()?,
+            phase: self.phase,
+        })
+    }
+
+    pub fn plan<'a>(
+        current: &'a Self,
+        snapshot: &'a FlowCallbackSnapshot,
+        view: FlowWorldView<'a>,
+        sink: &'a mut FlowCommandSink,
+    ) -> Result<Self, FlowError> {
+        let mut next = current.clone();
+        let at = view.now();
+        next.carrier = Some(snapshot.work);
+        next.kind = match snapshot.cause {
+            FlowCallbackCause::Domain { kind } | FlowCallbackCause::DomainControl { kind, .. } => {
+                Some(kind)
+            }
+            FlowCallbackCause::Work { .. } => return Err(FlowError::InvalidWork),
+        };
+        match snapshot.cause {
+            FlowCallbackCause::Domain { .. } => next.plan_domain(snapshot, at, sink)?,
+            FlowCallbackCause::DomainControl { action, .. } => {
+                next.plan_control(action, at, sink)?
+            }
+            FlowCallbackCause::Work { .. } => return Err(FlowError::InvalidWork),
+        }
+        Ok(next)
+    }
+
+    fn plan_domain(
+        &mut self,
+        snapshot: &FlowCallbackSnapshot,
+        at: SimTime,
+        sink: &mut FlowCommandSink,
+    ) -> Result<(), FlowError> {
+        if self.phase == TransitPhase::Paused {
+            if self.initial_start_pending && at == self.start_at {
+                self.initial_start_pending = false;
+            }
+            if self.expected_event == Some(snapshot.delivery.id) {
+                self.expected_event = None;
+                self.expected_due = None;
+                self.next_progress_ticket = None;
+            }
+            return Ok(());
+        }
+        if self.phase == TransitPhase::Ready {
+            if (self.initial_start_pending && at != self.start_at)
+                || (!self.initial_start_pending
+                    && self.expected_event != Some(snapshot.delivery.id))
+            {
+                return Ok(());
+            }
+            self.initial_start_pending = false;
+            self.expected_event = None;
+            self.expected_due = None;
+            self.phase = TransitPhase::Moving;
+            self.last_advanced_at = at;
+            return self.schedule_next_or_arrive(at, sink);
+        }
+        if self.phase != TransitPhase::Moving
+            || self.expected_event != Some(snapshot.delivery.id)
+            || self.expected_due != Some(at)
+        {
+            return Ok(());
+        }
+        let elapsed = at
+            .duration_since(self.last_advanced_at)
+            .ok_or(FlowError::InvalidWork)?;
+        self.progress
+            .advance(min(
+                elapsed,
+                self.progress
+                    .remaining()
+                    .map_err(|_| FlowError::InvalidWork)?,
+            ))
+            .map_err(|_| FlowError::InvalidWork)?;
+        self.last_advanced_at = at;
+        self.expected_event = None;
+        self.expected_due = None;
+        self.next_progress_ticket = None;
+        self.schedule_next_or_arrive(at, sink)
+    }
+
+    fn plan_control(
+        &mut self,
+        action: FlowDomainControl,
+        at: SimTime,
+        sink: &mut FlowCommandSink,
+    ) -> Result<(), FlowError> {
+        match (action, self.phase) {
+            (FlowDomainControl::Pause, TransitPhase::Ready) if at <= self.start_at => {
+                self.paused_from = Some(TransitPhase::Ready);
+                self.phase = TransitPhase::Paused;
+                Ok(())
+            }
+            (FlowDomainControl::Pause, TransitPhase::Moving) => {
+                let elapsed = at
+                    .duration_since(self.last_advanced_at)
+                    .ok_or(FlowError::InvalidWork)?;
+                self.progress
+                    .advance(min(
+                        elapsed,
+                        self.progress
+                            .remaining()
+                            .map_err(|_| FlowError::InvalidWork)?,
+                    ))
+                    .map_err(|_| FlowError::InvalidWork)?;
+                self.last_advanced_at = at;
+                self.paused_from = Some(TransitPhase::Moving);
+                self.phase = TransitPhase::Paused;
+                Ok(())
+            }
+            (FlowDomainControl::Resume, TransitPhase::Paused) => {
+                let was = self.paused_from.take().ok_or(FlowError::InvalidWork)?;
+                self.phase = was;
+                match was {
+                    TransitPhase::Ready => {
+                        let due = if self.initial_start_pending {
+                            self.start_at
+                        } else {
+                            max_time(at, self.start_at)
+                        };
+                        if self.initial_start_pending
+                            || (self.expected_event.is_some() && self.expected_due == Some(due))
+                        {
+                            Ok(())
+                        } else {
+                            self.emit_domain(due, TransitCommandPurpose::Start { due }, sink)
+                        }
+                    }
+                    TransitPhase::Moving => {
+                        if self
+                            .progress
+                            .remaining()
+                            .map_err(|_| FlowError::InvalidWork)?
+                            == SimDuration::ZERO
+                        {
+                            return self.emit_arrival(at, sink);
+                        }
+                        let remaining = self
+                            .progress
+                            .current_segment_remaining()
+                            .map_err(|_| FlowError::InvalidWork)?;
+                        let due = at
+                            .checked_add(remaining)
+                            .ok_or(FlowError::CounterOverflow)?;
+                        if self.expected_event.is_some() && self.expected_due == Some(due) {
+                            self.last_advanced_at = at;
+                            return Ok(());
+                        }
+                        self.last_advanced_at = at;
+                        self.emit_domain(due, TransitCommandPurpose::Progress { due }, sink)
+                    }
+                    _ => Err(FlowError::InvalidWork),
+                }
+            }
+            _ => Err(FlowError::InvalidWork),
+        }
+    }
+
+    fn schedule_next_or_arrive(
+        &mut self,
+        at: SimTime,
+        sink: &mut FlowCommandSink,
+    ) -> Result<(), FlowError> {
+        if self
+            .progress
+            .remaining()
+            .map_err(|_| FlowError::InvalidWork)?
+            == SimDuration::ZERO
+        {
+            return self.emit_arrival(at, sink);
+        }
+        let remaining = self
+            .progress
+            .current_segment_remaining()
+            .map_err(|_| FlowError::InvalidWork)?;
+        let due = at
+            .checked_add(remaining)
+            .ok_or(FlowError::CounterOverflow)?;
+        self.last_advanced_at = at;
+        self.emit_domain(due, TransitCommandPurpose::Progress { due }, sink)
+    }
+
+    fn emit_domain(
+        &mut self,
+        due: SimTime,
+        purpose: TransitCommandPurpose,
+        sink: &mut FlowCommandSink,
+    ) -> Result<(), FlowError> {
+        let ticket = sink.emit(FlowOwnedCommand::Domain {
+            work: self.carrier.ok_or(FlowError::InvalidWork)?,
+            kind: self.kind.ok_or(FlowError::InvalidWork)?,
+            at: due,
+            scheduler_priority: self.acquire.scheduler_priority,
+        })?;
+        self.command_ticket = Some((ticket, purpose));
+        self.expected_event = None;
+        self.expected_due = Some(due);
+        if matches!(purpose, TransitCommandPurpose::Progress { .. }) {
+            self.next_progress_ticket = Some(ticket);
+        }
+        Ok(())
+    }
+
+    fn emit_arrival(&mut self, at: SimTime, sink: &mut FlowCommandSink) -> Result<(), FlowError> {
+        let mut acquire = self.acquire.clone();
+        acquire.at = at;
+        let ticket = sink.emit(FlowOwnedCommand::Acquire(acquire))?;
+        self.command_ticket = Some((ticket, TransitCommandPurpose::Arrival));
+        self.arrival_ticket = Some(ticket);
+        self.phase = TransitPhase::Arrived;
+        Ok(())
+    }
+
+    fn apply_receipt(&mut self, receipt: &FlowBatchReceipt) {
+        let Some((ticket, purpose)) = self.command_ticket.take() else {
+            return;
+        };
+        let FlowBatchReceipt::Accepted(admissions) = receipt else {
+            return;
+        };
+        let Some(admission) = admissions.iter().find(|row| row.ticket == ticket) else {
+            return;
+        };
+        match purpose {
+            TransitCommandPurpose::Start { due } => {
+                self.expected_event = Some(admission.event);
+                self.expected_due = Some(due);
+            }
+            TransitCommandPurpose::Progress { due } => {
+                self.expected_event = Some(admission.event);
+                self.expected_due = Some(due);
+            }
+            TransitCommandPurpose::Arrival => self.expected_due = None,
+        }
+    }
+}
+
+fn max_time(left: SimTime, right: SimTime) -> SimTime {
+    if left < right {
+        right
+    } else {
+        left
+    }
+}
+
+fn accept_transit_context(context: &mut TransitContext, receipt: &FlowBatchReceipt) {
+    context.apply_receipt(receipt);
+}
+
+pub fn register_transit_context(
+    flow: &mut FlowRuntime,
+    registration: &str,
+    kind: EventKind,
+) -> Result<(), FlowError> {
+    flow.register_domain_plan_hook_with_receipt(
+        registration,
+        kind,
+        TransitContext::plan,
+        accept_transit_context,
+    )
+}
+
+pub fn schedule_transit_control(
+    flow: &mut FlowRuntime,
+    carrier: WorkId,
+    kind: EventKind,
+    action: FlowDomainControl,
+    at: SimTime,
+    priority: i32,
+) -> Result<EventId, FlowError> {
+    let context = flow.work_context::<TransitContext>(carrier)?;
+    if context.runtime != flow.identity() || context.phase == TransitPhase::Arrived {
+        return Err(FlowError::InvalidWork);
+    }
+    flow.schedule_domain_control(carrier, kind, action, at, priority)
+}
+
+pub fn schedule_transit_start(
+    flow: &mut FlowRuntime,
+    carrier: WorkId,
+    kind: EventKind,
+    at: SimTime,
+    priority: i32,
+) -> Result<EventId, FlowError> {
+    let context = flow.work_context::<TransitContext>(carrier)?;
+    if context.runtime != flow.identity()
+        || context.phase != TransitPhase::Ready
+        || at != context.start_at
+        || at < flow.now()
+    {
+        return Err(FlowError::InvalidWork);
+    }
+    flow.schedule_domain(carrier, kind, at, priority)
+}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kairo_ecs_des::FlowConfig;
+    use crate::spatial::{
+        EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1,
+    };
+    use kairo_ecs_des::{FlowConfig, RequestState, ResourceId};
     use std::num::NonZeroU64;
     struct Draw {
         calls: u32,
@@ -164,5 +588,294 @@ mod tests {
         }
         assert_eq!(calls, 1);
         assert_eq!(state.len(), 1);
+    }
+
+    fn test_route() -> RoutePlan {
+        let nodes = (1..=3).map(NodeId::new).collect::<Vec<_>>();
+        let mode = MovementModeId::new("walk").unwrap();
+        let edges = vec![
+            TransitEdge {
+                id: EdgeId::new(1),
+                from: nodes[0],
+                to: nodes[1],
+                length_mm: 1,
+                allowed_modes: vec![mode.clone()],
+            },
+            TransitEdge {
+                id: EdgeId::new(2),
+                from: nodes[1],
+                to: nodes[2],
+                length_mm: 1,
+                allowed_modes: vec![mode],
+            },
+        ];
+        TransitGraphV1::new(1, nodes.clone(), edges)
+            .unwrap()
+            .route(
+                nodes[0],
+                nodes[2],
+                &MovementProfile::new("walk", 1).unwrap(),
+                1,
+            )
+            .unwrap()
+    }
+
+    fn zero_route() -> RoutePlan {
+        let origin = NodeId::new(1);
+        TransitGraphV1::new(1, vec![origin], vec![])
+            .unwrap()
+            .route(origin, origin, &MovementProfile::new("walk", 1).unwrap(), 1)
+            .unwrap()
+    }
+
+    fn flow_acquire(resource: ResourceId, owner: EntityId, work: WorkId) -> FlowAcquireCommand {
+        FlowAcquireCommand {
+            resource,
+            owner,
+            work: Some(work),
+            at: SimTime::from_ticks(5),
+            priority_level: 0,
+            deadline: None,
+            scheduler_priority: 0,
+            timed: true,
+            can_preempt: false,
+            preemptible: None,
+        }
+    }
+
+    #[test]
+    fn actual_flow_pause_resume_retains_route_and_submits_one_arrival_acquire() {
+        const TRANSIT_KIND: EventKind = EventKind::custom(9410);
+        let mut flow = FlowRuntime::new();
+        register_transit_context(&mut flow, "transit-plan", TRANSIT_KIND).unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let carrier_actor = flow.spawn_actor().unwrap();
+        let resource = flow.create_resource(1).unwrap();
+        let service = flow
+            .create_work(owner, SimDuration::from_ticks(4), "service", ())
+            .unwrap();
+        let acquire = flow_acquire(resource, owner, service);
+        let context =
+            TransitContext::new(&flow, test_route(), acquire, SimTime::from_ticks(5)).unwrap();
+        let carrier = flow
+            .create_actor_domain_context(carrier_actor, "transit-plan", TRANSIT_KIND, context)
+            .unwrap();
+        let mut foreign = FlowRuntime::new();
+        let foreign_before = foreign.budget_snapshot();
+        assert_eq!(
+            schedule_transit_control(
+                &mut foreign,
+                carrier,
+                TRANSIT_KIND,
+                FlowDomainControl::Pause,
+                SimTime::from_ticks(2),
+                0,
+            ),
+            Err(FlowError::InvalidWork)
+        );
+        assert_eq!(foreign.budget_snapshot(), foreign_before);
+        schedule_transit_start(&mut flow, carrier, TRANSIT_KIND, SimTime::from_ticks(5), 0)
+            .unwrap();
+
+        schedule_transit_control(
+            &mut flow,
+            carrier,
+            TRANSIT_KIND,
+            FlowDomainControl::Pause,
+            SimTime::from_ticks(2),
+            0,
+        )
+        .unwrap();
+        schedule_transit_control(
+            &mut flow,
+            carrier,
+            TRANSIT_KIND,
+            FlowDomainControl::Pause,
+            SimTime::from_ticks(3),
+            0,
+        )
+        .unwrap();
+        let paused_ready = flow.step().unwrap().unwrap();
+        assert!(paused_ready.error.is_none());
+        let paused = flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .progress_at(SimTime::from_ticks(2))
+            .unwrap();
+        assert_eq!(paused.phase, TransitPhase::Paused);
+        assert_eq!(paused.useful_elapsed, SimDuration::ZERO);
+        assert_eq!(paused.remaining, SimDuration::from_ticks(2));
+        let before_repeated_pause = paused.clone();
+        let dispatches_before = flow.budget_snapshot().scheduler.dispatched_events;
+        let repeated_pause = flow.step().unwrap().unwrap();
+        assert_eq!(repeated_pause.error, Some(FlowError::InvalidWork));
+        assert!(
+            matches!(repeated_pause.callback_batches.as_slice(), [FlowBatchReceipt::Rejected(row)] if row.error == FlowError::InvalidWork && row.failed_ticket.is_none())
+        );
+        assert_eq!(
+            flow.budget_snapshot().scheduler.dispatched_events,
+            dispatches_before + 1
+        );
+        let after_repeated_pause = flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .progress_at(SimTime::from_ticks(3))
+            .unwrap();
+        assert_eq!(after_repeated_pause, before_repeated_pause);
+
+        let stale_start = flow.step().unwrap().unwrap();
+        assert_eq!(stale_start.at, SimTime::from_ticks(5));
+        assert!(stale_start.error.is_none());
+        assert!(
+            matches!(stale_start.callback_batches.as_slice(), [FlowBatchReceipt::Accepted(rows)] if rows.is_empty())
+        );
+
+        schedule_transit_control(
+            &mut flow,
+            carrier,
+            TRANSIT_KIND,
+            FlowDomainControl::Resume,
+            SimTime::from_ticks(6),
+            0,
+        )
+        .unwrap();
+        let resume_ready = flow.step().unwrap().unwrap();
+        assert!(resume_ready.error.is_none());
+        let FlowBatchReceipt::Accepted(resume_rows) = &resume_ready.callback_batches[0] else {
+            panic!(
+                "Resume must plan a new start after the original start was consumed while paused"
+            );
+        };
+        assert_eq!(resume_rows.len(), 1);
+        assert_eq!(resume_rows[0].request, None);
+
+        let start = flow.step().unwrap().unwrap();
+        assert_eq!(start.at, SimTime::from_ticks(6));
+        assert!(start.error.is_none());
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier)
+                .unwrap()
+                .phase(),
+            TransitPhase::Moving
+        );
+
+        schedule_transit_control(
+            &mut flow,
+            carrier,
+            TRANSIT_KIND,
+            FlowDomainControl::Pause,
+            SimTime::from_ticks(7),
+            -1,
+        )
+        .unwrap();
+        let paused_moving = flow.step().unwrap().unwrap();
+        assert_eq!(paused_moving.at, SimTime::from_ticks(7));
+        assert!(paused_moving.error.is_none());
+        let after_pause = flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .progress_at(SimTime::from_ticks(7))
+            .unwrap();
+        assert_eq!(after_pause.phase, TransitPhase::Paused);
+        assert_eq!(after_pause.segment_index, 1);
+        assert_eq!(after_pause.useful_elapsed, SimDuration::from_ticks(1));
+        assert_eq!(after_pause.remaining, SimDuration::from_ticks(1));
+
+        let stale_progress = flow.step().unwrap().unwrap();
+        assert_eq!(stale_progress.at, SimTime::from_ticks(7));
+        assert!(stale_progress.error.is_none());
+        let still_paused = flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .progress_at(SimTime::from_ticks(7))
+            .unwrap();
+        assert_eq!(still_paused.useful_elapsed, SimDuration::from_ticks(1));
+        assert_eq!(still_paused.remaining, SimDuration::from_ticks(1));
+
+        schedule_transit_control(
+            &mut flow,
+            carrier,
+            TRANSIT_KIND,
+            FlowDomainControl::Resume,
+            SimTime::from_ticks(8),
+            0,
+        )
+        .unwrap();
+        assert!(flow.step().unwrap().unwrap().error.is_none());
+        let arrival = flow.step().unwrap().unwrap();
+        assert_eq!(arrival.at, SimTime::from_ticks(9));
+        assert!(arrival.error.is_none());
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier)
+                .unwrap()
+                .phase(),
+            TransitPhase::Arrived
+        );
+        let FlowBatchReceipt::Accepted(admissions) = &arrival.callback_batches[0] else {
+            panic!("arrival must submit its actual timed service acquire");
+        };
+        assert_eq!(admissions.len(), 1);
+        let request = admissions[0]
+            .request
+            .expect("actual request id in accepted receipt");
+        assert_eq!(flow.work(service).unwrap().request, Some(request));
+        let actual = flow.request(request).unwrap();
+        assert_eq!(actual.owner, owner);
+        assert_eq!(actual.work, Some(service));
+        assert!(actual.timed);
+        assert_ne!(actual.state, RequestState::Cancelled);
+        assert!(flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .arrival_ticket()
+            .is_some());
+    }
+
+    #[test]
+    fn rejected_arrival_batch_keeps_transit_context_and_existing_request_unchanged() {
+        const TRANSIT_KIND: EventKind = EventKind::custom(9411);
+        let mut flow = FlowRuntime::new();
+        register_transit_context(&mut flow, "zero-transit-plan", TRANSIT_KIND).unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let carrier_actor = flow.spawn_actor().unwrap();
+        let resource = flow.create_resource(1).unwrap();
+        let service = flow
+            .create_work(owner, SimDuration::from_ticks(2), "service", ())
+            .unwrap();
+        let context = TransitContext::new(
+            &flow,
+            zero_route(),
+            flow_acquire(resource, owner, service),
+            SimTime::from_ticks(5),
+        )
+        .unwrap();
+        let existing = flow
+            .submit_work(resource, owner, service, SimTime::from_ticks(5))
+            .unwrap();
+        let carrier = flow
+            .create_actor_domain_context(carrier_actor, "zero-transit-plan", TRANSIT_KIND, context)
+            .unwrap();
+        schedule_transit_start(&mut flow, carrier, TRANSIT_KIND, SimTime::from_ticks(5), 0)
+            .unwrap();
+
+        let submit = flow.step().unwrap().unwrap();
+        assert!(submit.error.is_none());
+        let arrival = flow.step().unwrap().unwrap();
+        assert_eq!(arrival.at, SimTime::from_ticks(5));
+        assert!(arrival.error.is_none());
+        assert!(
+            matches!(arrival.callback_batches.as_slice(), [FlowBatchReceipt::Rejected(row)] if row.failed_ticket.is_some())
+        );
+        assert_eq!(flow.work(service).unwrap().request, Some(existing));
+        assert_eq!(flow.request(existing).unwrap().work, Some(service));
+        let retained = flow.work_context::<TransitContext>(carrier).unwrap();
+        assert_eq!(retained.phase(), TransitPhase::Ready);
+        assert_eq!(
+            retained
+                .progress_at(SimTime::from_ticks(5))
+                .unwrap()
+                .useful_elapsed,
+            SimDuration::ZERO
+        );
     }
 }

@@ -489,6 +489,24 @@ impl TransitProgressState {
             .map(|segment| segment.edge_id)
     }
 
+    pub(crate) fn segment_index(&self) -> usize {
+        self.segment_index
+    }
+
+    pub(crate) fn current_segment_remaining(&self) -> Result<SimDuration, TransitError> {
+        self.validate_cursor()?;
+        let Some(segment) = self.route.segments.get(self.segment_index) else {
+            return Ok(SimDuration::ZERO);
+        };
+        let duration = segment
+            .end_offset
+            .checked_sub(segment.start_offset)
+            .ok_or(TransitError::InvalidProgress)?;
+        duration
+            .checked_sub(self.elapsed_in_segment)
+            .ok_or(TransitError::InvalidProgress)
+    }
+
     pub(crate) fn elapsed_in_segment(&self) -> SimDuration {
         self.elapsed_in_segment
     }
