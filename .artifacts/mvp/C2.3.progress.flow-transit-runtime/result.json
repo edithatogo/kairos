@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "packet_id": "C2.3.progress.flow-transit-runtime",
+  "status": "ready_for_review",
+  "source_commit": "34de9c0fb90b4472db2ba2b6f164eccfee2f7250",
+  "implemented": [
+    "Added accepted-batch receipt callbacks to DES planned domain hooks, preserving context and mapping command tickets to actual EventIds only after accepted batches.",
+    "Added TransitContext over the existing route cursor with future start, segment progress, Pause/Resume, stale event handling, and an actual timed service Acquire at route arrival.",
+    "Added atomicity coverage for planner errors and arrival batch rejection. Initial start now requires the scheduled start tick; an unrelated earlier event cannot begin movement."
+  ],
+  "verification": [
+    {"command": "rustup run 1.99.0 cargo fmt --all -- --check", "cwd": "libs/kairos", "exit_code": 0, "log": "/tmp/c23-transit-runtime-fmt.log", "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    {"command": "CARGO_TARGET_DIR=/tmp/careops-c23-transit-runtime-target rustup run 1.76.0 cargo test --locked -p kairo-ecs-des -p kairo-ecs-abm", "cwd": "libs/kairos", "exit_code": 0, "log": "/tmp/c23-transit-runtime-tests.log", "sha256": "18b17e982d8510e6db4eb5634d1e37106a8e16699d540a8cb60bfba31a4efaa5"},
+    {"command": "CARGO_TARGET_DIR=/tmp/careops-c23-transit-runtime-target rustup run 1.99.0 cargo clippy --locked -p kairo-ecs-des -p kairo-ecs-abm --all-targets -- -D warnings", "cwd": "libs/kairos", "exit_code": 0, "log": "/tmp/c23-transit-runtime-clippy.log", "sha256": "7a7c5f339ce35cb7811e73ee64d146487d7e72eb2090f8175330980b4fb58593"},
+    {"command": "git diff --check", "cwd": "libs/kairos", "exit_code": 0}
+  ],
+  "limitations": [
+    "Independent review identified that TransitContext does not retain the initial start EventId, so a different same-kind event at the exact start tick could still be mistaken for the scheduled start. The reviewed packet did not authorize adding a runtime context-mutation API; exact initial start EventId binding is deferred to a reviewed follow-on packet.",
+    "Calibration BoundIntrinsicWork dispatch/retry reconciliation, C2.2 callback/seed/checkpoint joins, C2.1 paired Macro/Micro acceptance, and hosted/release/clinical claims are not implemented by this packet."
+  ]
+}
