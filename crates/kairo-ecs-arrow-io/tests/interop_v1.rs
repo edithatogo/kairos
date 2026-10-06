@@ -4,8 +4,8 @@ use arrow_array::builder::FixedSizeBinaryBuilder;
 use arrow_array::{Array, FixedSizeBinaryArray, Int32Array, RecordBatch, StringArray};
 use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use kairo_ecs_arrow_io::{
-    IoLimits, read_ipc_file, read_ipc_stream, read_parquet, write_ipc_file, write_ipc_stream,
-    write_parquet,
+    read_ipc_file, read_ipc_stream, read_parquet, write_ipc_file, write_ipc_stream, write_parquet,
+    IoLimits,
 };
 use std::collections::HashMap;
 use std::fs;
@@ -95,7 +95,7 @@ fn ticks_array(rows: &[Row]) -> FixedSizeBinaryArray {
     let mut builder = FixedSizeBinaryBuilder::with_capacity(rows.len(), 16);
     for row in rows {
         builder
-            .append_value(&row.ticks.to_le_bytes())
+            .append_value(row.ticks.to_le_bytes())
             .expect("tick value is exactly sixteen bytes");
     }
     builder.finish()
@@ -248,24 +248,20 @@ fn pyarrow_fixtures_are_read_and_rust_transports_are_written() {
         .expect("read independent PyArrow Parquet");
     assert_rows(&parquet, None);
 
-    assert!(
-        read_ipc_file(
-            &fixture("typed_empty.ipc_file"),
-            Arc::clone(&schema),
-            io_limits(),
-        )
-        .expect("typed IPC file with no batches")
-        .is_empty()
-    );
-    assert!(
-        read_ipc_stream(
-            &fixture("typed_empty.ipc_stream"),
-            Arc::clone(&schema),
-            io_limits(),
-        )
-        .expect("typed IPC stream with no batches")
-        .is_empty()
-    );
+    assert!(read_ipc_file(
+        &fixture("typed_empty.ipc_file"),
+        Arc::clone(&schema),
+        io_limits(),
+    )
+    .expect("typed IPC file with no batches")
+    .is_empty());
+    assert!(read_ipc_stream(
+        &fixture("typed_empty.ipc_stream"),
+        Arc::clone(&schema),
+        io_limits(),
+    )
+    .expect("typed IPC stream with no batches")
+    .is_empty());
     let empty_parquet = read_parquet(
         &fixture("typed_empty.parquet"),
         Arc::clone(&schema),
@@ -273,11 +269,9 @@ fn pyarrow_fixtures_are_read_and_rust_transports_are_written() {
     )
     .expect("typed empty Parquet");
     assert!(empty_parquet.iter().all(|batch| batch.num_rows() == 0));
-    assert!(
-        empty_parquet
-            .iter()
-            .all(|batch| batch.schema().as_ref() == schema.as_ref())
-    );
+    assert!(empty_parquet
+        .iter()
+        .all(|batch| batch.schema().as_ref() == schema.as_ref()));
 
     let zero_row_file = read_ipc_file(
         &fixture("typed_zero_row_batch.ipc_file"),
@@ -297,15 +291,13 @@ fn pyarrow_fixtures_are_read_and_rust_transports_are_written() {
     assert_eq!(zero_row_stream[0].num_rows(), 0);
 
     let no_fields = empty_schema();
-    assert!(
-        read_ipc_file(
-            &fixture("empty_schema.ipc_file"),
-            Arc::clone(&no_fields),
-            io_limits(),
-        )
-        .expect("empty-schema IPC file")
-        .is_empty()
-    );
+    assert!(read_ipc_file(
+        &fixture("empty_schema.ipc_file"),
+        Arc::clone(&no_fields),
+        io_limits(),
+    )
+    .expect("empty-schema IPC file")
+    .is_empty());
     assert!(
         read_ipc_stream(&fixture("empty_schema.ipc_stream"), no_fields, io_limits(),)
             .expect("empty-schema IPC stream")

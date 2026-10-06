@@ -4,4 +4,8 @@
 pub mod seed_map;
 
 // Kept crate-private under Track 21's no-public-API-without-ADR boundary.
+#[expect(
+    dead_code,
+    reason = "the C1.3 ingestion pipeline will consume this private ordering key"
+)]
 mod trace_order;

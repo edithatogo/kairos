@@ -131,6 +131,14 @@ jobs:
           test -s "$output_dir/rust.ipc_stream"
           test -s "$output_dir/rust.parquet"
           "$python_dir/bin/python" "$fixtures" --check-rust "$output_dir" 2>&1 | tee "$log_dir/pyarrow-readback.log"
+      - name: Retain bounded failure log
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: careops-owner-failure-${{ matrix.os }}
+          path: .artifacts/ci/native/
+          retention-days: 7
+          if-no-files-found: error
       - name: Preserve Arrow IO Rust 1.98 evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -139,15 +147,6 @@ jobs:
           path: .artifacts/ci/arrow-io/1.98.1/${{ matrix.os }}/
           retention-days: 7
           if-no-files-found: error
-      - name: Retain bounded failure log
-        if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: careops-owner-failure-${{ matrix.os }}
-          path: .artifacts/ci/native/
-          retention-days: 7
-          if-no-files-found: ignore
-
   arrow-io-floor:
     name: Arrow IO Rust 1.88 (${{ matrix.os }}, ${{ matrix.features }})
     timeout-minutes: 30

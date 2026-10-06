@@ -43,7 +43,10 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
       - name: Workspace tests and core coverage
+        env:
+          KAIROS_INTEROP_OUTDIR: ${{ runner.temp }}/kairos-arrow-io-interop
         run: |
+          mkdir -p "$KAIROS_INTEROP_OUTDIR"
           cargo llvm-cov nextest --workspace --all-features --lcov --output-path lcov.info
           node scripts/validation/check-core-coverage.mjs lcov.info
       - name: Preserve coverage report
