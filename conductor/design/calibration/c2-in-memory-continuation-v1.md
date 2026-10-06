@@ -32,7 +32,15 @@ are part of a synchronous transaction. Capture is allowed only between completed
 bridge method calls, when no callback or submit operation is in flight and no
 returned `FlowDispatch` awaits `observe_transit_dispatch`. Tests capture after
 transit start and after a pause has been dispatched and observed. The
-bundle retains the exact bound bridge value, including its frozen fidelity
+crate-private capture entrypoint accepts only the runtime, adapter, and bound
+value produced by the same successful prepare/create/bind sequence. Before
+consuming them it verifies `bound.runtime == flow.identity()` and that
+`adapter.decision(bound.work()) == Some(&bound.decision())`; a mismatch returns
+the original tuple with an error. This local invariant relies on the bridge
+remaining crate-private and on capture not being exposed as a general tuple
+constructor.
+
+The bundle retains the exact bound bridge value, including its frozen fidelity
 decision, expected Service key, live Service stream and draw position, sampled
 intrinsic duration, acquire intent, transit request, runtime identity, work and
 carrier IDs, pending/owned/stale/consumed event IDs, controls, retryable dispatch,
