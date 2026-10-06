@@ -1,7 +1,11 @@
-//! Experimental private C2 admission adapter over actual Flow work.
+//! Experimental C2 fidelity policy and admission adapter over actual Flow work.
 //!
 //! Execution fidelity is independent of observed replay policy. This adapter
-//! neither changes work/resources nor samples service/transit randomness.
+//! neither changes work/resources nor samples service/transit randomness. The
+//! public Rust surface is a preview, not a stable API or a portable checkpoint
+//! contract. Bindings and policy-boundary checks cover only work admitted through
+//! this adapter. Decision lookups are adapter-local; unknown or despawned work
+//! fails closed, and admission permits cannot be cloned or serialized.
 
 use super::{FlowRuntime, FlowRuntimeIdentity, WorkId, WorkState};
 use kairo_ecs_types::EntityId;

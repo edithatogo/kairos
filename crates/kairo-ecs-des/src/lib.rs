@@ -3,9 +3,16 @@
 mod flow;
 pub use flow::*;
 
-// Private experimental C2 adapter; public API review and integrated delivery remain open.
-#[allow(dead_code)]
-mod fidelity;
+/// Experimental in-process Rust API for resolving and binding execution fidelity.
+///
+/// This preview is not a stable compatibility promise and is not exposed through
+/// FFI, host-language bindings, schemas, or checkpoints. A `FidelityAdapter`
+/// guards only work admitted through that adapter; copied `FidelityDecision`
+/// values are descriptive metadata, not admission authority. Its policy-boundary
+/// scan is limited to adapter-admitted work, and unknown or despawned bindings
+/// fail closed. The admission permit is non-cloneable in-memory state and cannot
+/// be serialized or rebound across runtime restoration.
+pub mod fidelity;
 
 mod preemption;
 
