@@ -435,6 +435,57 @@ mod tests {
     }
 
     #[test]
+    fn provider_validation_precedence_is_deterministic() {
+        let fixed = || IntrinsicDurationDistribution::fixed(1).unwrap();
+
+        assert_eq!(
+            IntrinsicWorkProvider::new(99, vec![("bad\nstratum".into(), fixed())],)
+                .err()
+                .unwrap(),
+            WorkDurationError::UnsupportedProviderVersion(99)
+        );
+
+        assert_eq!(
+            IntrinsicWorkProvider::new(
+                INTRINSIC_WORK_PROVIDER_VERSION_V1,
+                vec![
+                    ("same".into(), fixed()),
+                    ("same".into(), fixed()),
+                    ("bad\nstratum".into(), fixed()),
+                ],
+            )
+            .err()
+            .unwrap(),
+            WorkDurationError::InvalidStratum
+        );
+
+        assert_eq!(
+            IntrinsicDurationDistribution::weighted_ticks(vec![(0, 0)])
+                .err()
+                .unwrap(),
+            WorkDurationError::ZeroDuration
+        );
+        assert_eq!(
+            IntrinsicDurationDistribution::weighted_ticks(vec![(1, 1), (1, 0)])
+                .err()
+                .unwrap(),
+            WorkDurationError::ZeroWeight
+        );
+        assert_eq!(
+            IntrinsicDurationDistribution::weighted_ticks(vec![(1, u64::MAX), (1, 1)])
+                .err()
+                .unwrap(),
+            WorkDurationError::DuplicateDuration
+        );
+        assert_eq!(
+            IntrinsicDurationDistribution::weighted_ticks(vec![(1, u64::MAX), (2, 1)])
+                .err()
+                .unwrap(),
+            WorkDurationError::WeightOverflow
+        );
+    }
+
+    #[test]
     fn rejected_real_stream_draws_are_included_in_sample_positions() {
         let mut map = CalibrationSeedMap::new(1, "study-α", 1234).unwrap();
         let key = map
