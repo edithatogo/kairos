@@ -1101,6 +1101,62 @@ mod tests {
         }
     }
 
+    fn bound_route_at(
+        start: SimTime,
+        edge_count: u32,
+    ) -> (BoundIntrinsicWork<u32, u32>, FlowRuntime) {
+        let (mut input, mut flow, mut adapter, _) = input(
+            FidelityMode::Micro,
+            TransitIntent::Route,
+            SeedPurpose::Service,
+            false,
+        );
+        input.acquire.at = start;
+        let carrier_actor = match &input.transit {
+            TransitRequest::Route { carrier_actor, .. } => *carrier_actor,
+            TransitRequest::Zero => unreachable!(),
+        };
+        let nodes = (1..=u64::from(edge_count) + 1)
+            .map(NodeId::new)
+            .collect::<Vec<_>>();
+        let mode = MovementModeId::new("walk").unwrap();
+        let edges = (0..edge_count)
+            .map(|index| TransitEdge {
+                id: EdgeId::new(index as u64 + 1),
+                from: nodes[index as usize],
+                to: nodes[index as usize + 1],
+                length_mm: 1,
+                allowed_modes: vec![mode.clone()],
+            })
+            .collect();
+        input.transit = TransitRequest::Route {
+            graph: Arc::new(TransitGraphV1::new(1, nodes.clone(), edges).unwrap()),
+            origin: nodes[0],
+            destination: *nodes.last().unwrap(),
+            profile: MovementProfile::new("walk", 1).unwrap(),
+            ticks_per_second: 1,
+            carrier_actor,
+            carrier_registration: "bridge.transit".to_owned(),
+            kind: EventKind::custom(0xC20),
+        };
+        register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20)).unwrap();
+        flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
+            .unwrap();
+        let prepared = must_prepare(input.prepare(&flow, &mut adapter, &provider()));
+        let created = must_create(prepared.create(&mut flow));
+        (must_bind(created.bind(&flow)), flow)
+    }
+
+    fn assert_overflow_rejection(dispatch: &FlowDispatch) {
+        assert_eq!(dispatch.error, Some(FlowError::CounterOverflow));
+        assert!(matches!(
+            dispatch.callback_batches.as_slice(),
+            [FlowBatchReceipt::Rejected(rejection)]
+                if rejection.error == FlowError::CounterOverflow
+                    && rejection.failed_ticket.is_none()
+        ));
+    }
+
     #[test]
     fn macro_and_zero_micro_share_service_draws_and_submit_actual_timed_work() {
         let (macro_input, mut macro_flow, mut macro_adapter, macro_resource) = input(
@@ -1299,6 +1355,130 @@ mod tests {
             Err(BridgeError::InvalidDispatch)
         );
         assert_eq!(flow.budget_snapshot().scheduler, after_retry);
+    }
+
+    #[test]
+    fn runtime_rejected_start_at_u128_max_retries_once_at_same_due_and_priority() {
+        let max = SimTime::from_ticks(u128::MAX);
+        let (mut bound, mut flow) = bound_route_at(max, 1);
+        let original = bound.start_transit(&mut flow).unwrap();
+        let carrier = bound.carrier.unwrap();
+        let rejected_start = flow.step().unwrap().expect("actual scheduled start event");
+        assert_eq!(rejected_start.event, original);
+        assert_eq!(rejected_start.at, max);
+        assert_overflow_rejection(&rejected_start);
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &rejected_start),
+            Ok(TransitObservation::Rejected)
+        );
+        let context = flow.work_context::<TransitContext>(carrier).unwrap();
+        assert_eq!(context.phase(), TransitPhase::Ready);
+        assert!(context.expects_event(original, max));
+
+        let before_retry = flow.budget_snapshot().scheduler;
+        let replacement = bound.retry_transit(&mut flow, &rejected_start).unwrap();
+        assert_ne!(replacement, original);
+        assert_eq!(
+            flow.budget_snapshot().scheduler.scheduled_events,
+            before_retry.scheduled_events + 1
+        );
+        assert!(flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .expects_event(replacement, max));
+        let after_retry = flow.budget_snapshot().scheduler;
+        assert_eq!(
+            bound.retry_transit(&mut flow, &rejected_start),
+            Err(BridgeError::InvalidDispatch)
+        );
+        assert_eq!(flow.budget_snapshot().scheduler, after_retry);
+        assert_eq!(bound.pending_priority, Some(7));
+
+        // Bracket the retry with same-time events: the replacement sorts after
+        // priority 6 and before priority 8, proving the retained priority is 7.
+        let before_priority = flow
+            .schedule_domain(carrier, EventKind::custom(0xC20), max, 6)
+            .unwrap();
+        let after_priority = flow
+            .schedule_domain(carrier, EventKind::custom(0xC20), max, 8)
+            .unwrap();
+        assert_eq!(flow.step().unwrap().unwrap().event, before_priority);
+        let retried = flow.step().unwrap().expect("replacement start retry");
+        assert_eq!(retried.event, replacement);
+        assert_eq!(retried.at, max);
+        assert_overflow_rejection(&retried);
+        assert_eq!(flow.step().unwrap().unwrap().event, after_priority);
+    }
+
+    #[test]
+    fn runtime_rejected_progress_at_u128_max_retries_once_and_preserves_progress() {
+        let max = SimTime::from_ticks(u128::MAX);
+        let start = SimTime::from_ticks(u128::MAX - 1);
+        let (mut bound, mut flow) = bound_route_at(start, 2);
+        let start_event = bound.start_transit(&mut flow).unwrap();
+        let carrier = bound.carrier.unwrap();
+        let accepted_start = flow.step().unwrap().expect("actual scheduled start event");
+        assert_eq!(accepted_start.event, start_event);
+        assert_eq!(accepted_start.at, start);
+        assert!(matches!(
+            accepted_start.callback_batches.as_slice(),
+            [FlowBatchReceipt::Accepted(_)]
+        ));
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &accepted_start),
+            Ok(TransitObservation::Progress)
+        );
+        let progress_event = bound.pending_event.unwrap();
+
+        let rejected_progress = flow
+            .step()
+            .unwrap()
+            .expect("actual scheduled progress event");
+        assert_eq!(rejected_progress.event, progress_event);
+        assert_eq!(rejected_progress.at, max);
+        assert_overflow_rejection(&rejected_progress);
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &rejected_progress),
+            Ok(TransitObservation::Rejected)
+        );
+        let context = flow.work_context::<TransitContext>(carrier).unwrap();
+        assert_eq!(context.phase(), TransitPhase::Moving);
+        let retained = context.progress_at(start).unwrap();
+        assert_eq!(retained.useful_elapsed, SimDuration::ZERO);
+        assert_eq!(retained.remaining, SimDuration::from_ticks(2));
+        assert!(context.expects_event(progress_event, max));
+
+        let before_retry = flow.budget_snapshot().scheduler;
+        let replacement = bound.retry_transit(&mut flow, &rejected_progress).unwrap();
+        assert_ne!(replacement, progress_event);
+        assert_eq!(
+            flow.budget_snapshot().scheduler.scheduled_events,
+            before_retry.scheduled_events + 1
+        );
+        assert!(flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .expects_event(replacement, max));
+        let after_retry = flow.budget_snapshot().scheduler;
+        assert_eq!(
+            bound.retry_transit(&mut flow, &rejected_progress),
+            Err(BridgeError::InvalidDispatch)
+        );
+        assert_eq!(flow.budget_snapshot().scheduler, after_retry);
+        assert_eq!(bound.pending_priority, Some(7));
+
+        let before_priority = flow
+            .schedule_domain(carrier, EventKind::custom(0xC20), max, 6)
+            .unwrap();
+        let after_priority = flow
+            .schedule_domain(carrier, EventKind::custom(0xC20), max, 8)
+            .unwrap();
+        assert_eq!(flow.step().unwrap().unwrap().event, before_priority);
+        let retried = flow.step().unwrap().expect("replacement progress retry");
+        assert_eq!(retried.event, replacement);
+        assert_eq!(retried.at, max);
+        assert_overflow_rejection(&retried);
+        assert_eq!(flow.step().unwrap().unwrap().event, after_priority);
     }
 
     #[test]
