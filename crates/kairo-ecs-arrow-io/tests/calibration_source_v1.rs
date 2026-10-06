@@ -3,8 +3,8 @@
 use arrow_array::{Array, RecordBatch, StringArray};
 use arrow_schema::{DataType, Field, Schema, SchemaRef};
 use kairo_ecs_arrow_io::{
-    IoLimits, read_ipc_file, read_ipc_stream, read_parquet, write_ipc_file, write_ipc_stream,
-    write_parquet,
+    read_ipc_file, read_ipc_stream, read_parquet, write_ipc_file, write_ipc_stream, write_parquet,
+    IoLimits,
 };
 use std::collections::HashMap;
 use std::fs;
