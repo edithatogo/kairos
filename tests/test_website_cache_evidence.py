@@ -75,6 +75,7 @@ class EvidenceFixture:
             "node-version.txt": "v24.9.0\n",
             "npm-version.txt": "11.6.0\n",
             "adapter-tests.log": "Ran 14 tests in 0.032s\n\nOK\nRan 9 tests in 0.020s\n\nOK\n",
+            "dependency-pin-tests.log": "Ran 5 tests in 0.010s\n\nOK\n",
             "install.log": "added 419 packages, and audited 420 packages in 4s\nfound 0 vulnerabilities\n",
             "raw-audit.json": json.dumps({
                 "auditReportVersion": 2,
@@ -148,6 +149,20 @@ class EvidenceFixture:
 
 
 class WebsiteCacheEvidenceTests(unittest.TestCase):
+    def test_dependency_pin_log_is_bound_and_requires_all_five_tests(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = EvidenceFixture(Path(directory).resolve())
+            result = verifier.validate_evidence(fixture.evidence, fixture.repo, EXPECTED_COMMIT)
+            self.assertEqual(result["dependency_pin_unittest_cases"], 5)
+            self.assertEqual(result["payload_sha256"]["dependency-pin-tests.log"],
+                             sha256((fixture.evidence / "dependency-pin-tests.log").read_bytes()))
+            self.assertIn("tests/test_dependency_advisory_pins.py", result["source_identities"])
+            for bad in ("Ran 4 tests in 0.1s\n\nOK\n", "Ran 5 tests in 0.1s\n\nOK (skipped=1)\n",
+                        "Ran 5 tests in 0.1s\n\nFAILED (failures=1)\n"):
+                (fixture.evidence / "dependency-pin-tests.log").write_text(bad)
+                with self.subTest(log=bad), self.assertRaises(verifier.EvidenceError):
+                    verifier.validate_evidence(fixture.evidence, fixture.repo, EXPECTED_COMMIT)
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)

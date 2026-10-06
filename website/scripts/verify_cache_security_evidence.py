@@ -26,13 +26,13 @@ FIXTURE_SHA256 = "d75e1e6a11587954da5e2f0e2b5c4b397a16d28cc2f7bdf64e9027fc2fe593
 FIXTURE_SRI = "sha512-M5t5LlJpS1UHMjvwRQVdFHvPISGeLAxNcrWuJkeGh0KxsqCHZ1O3NXZU/8x7cD0BDcGW8kapxMKTvwlqrNkHkA=="
 
 REPO_HASHES = {
-    "website/package-lock.json": "be5c411f9088545c2883d17bbf7ad04b4f683130826f23340380236c7d90dcb4",
+    "website/package-lock.json": "18de86623839b1a581d46ced2895d0c7aca6fc056086a1c3a061da4407633d59",
     "website/scripts/apply_http_cache_fix.py": "b999e9cb2e1bd2d292a1ca295a10c5149d9790311ae608ccb01b62f112153855",
     "scripts/bootstrap-node-tools/apply_http_cache_fix.py": LEGACY_HELPER_SHA256,
     "tests/http-cache-security-regression.mjs": REGRESSION_SHA256,
     "tests/fixtures/http-cache-semantics-4.3.0.tgz": FIXTURE_SHA256,
 }
-UNPINNED_SOURCE_PATHS = ("tests/test_website_http_cache_patch.py",)
+UNPINNED_SOURCE_PATHS = ("tests/test_website_http_cache_patch.py", "tests/test_dependency_advisory_pins.py")
 COPIED_FILES = (
     "http-cache-semantics/index.js",
     "http-cache-semantics/package.json",
@@ -42,6 +42,7 @@ LOG_FILES = (
     "node-version.txt",
     "npm-version.txt",
     "adapter-tests.log",
+    "dependency-pin-tests.log",
     "install.log",
     "raw-audit.json",
     "mitigation.log",
@@ -292,6 +293,10 @@ def validate_evidence(evidence_dir, repo_root, expected_commit: str):
 
     environment = _validate_versions(root)
     unittest_count = _validate_unittests((root / "adapter-tests.log").read_text(encoding="utf-8"))
+    dependency_test_log = (root / "dependency-pin-tests.log").read_text(encoding="utf-8")
+    dependency_test_count = _validate_unittests(dependency_test_log)
+    if dependency_test_count != 5 or re.search(r"\bskipped\s*=", dependency_test_log):
+        raise EvidenceError("dependency-pin-tests.log must prove all five pin tests passed without skips")
     audit_counts = _validate_audit(root)
     install_log = (root / "install.log").read_text(encoding="utf-8")
     if not re.search(r"^added\s+\d+\s+packages?,\s+and audited\s+\d+\s+packages?\s+in\s+.+$", install_log, re.IGNORECASE | re.MULTILINE):
@@ -318,6 +323,7 @@ def validate_evidence(evidence_dir, repo_root, expected_commit: str):
         "source_commit": expected_commit,
         "environment": environment,
         "adapter_unittest_cases": unittest_count,
+        "dependency_pin_unittest_cases": dependency_test_count,
         "named_regression_cases": 248,
         "audit_vulnerabilities": audit_counts,
         "package": package,

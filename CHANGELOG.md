@@ -18,6 +18,8 @@ Format:
 
 ### Changed
 
+- Website CSS tooling uses reviewed PostCSS nesting and parser fixes, and website/TypeScript source-map-js locks resolve the fixed 1.2.2 release with preserved evidence checks.
+
 - Bootstrap npm resolves an exact unbundled postcss-selector-parser 7.1.6 security fix, verifies its installed identity, and retains the strict zero-vulnerability package gate.
 
 - Explicitly opted-in manual mainline package archive runs isolate signed producer workflow provenance in a dedicated job, verify the retained archive checksums before signing, and retain the attestation bundle without publishing packages.

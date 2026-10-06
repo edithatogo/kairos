@@ -112,8 +112,8 @@ test("lock graph removes the vulnerable chain and retains the exact renderer gra
     "node_modules/starlight-llms-txt",
     "node_modules/to-regex-range",
   ];
-  const expectedLockSha256 = "be5c411f9088545c2883d17bbf7ad04b4f683130826f23340380236c7d90dcb4";
-  const expectedRetainedGraphSha256 = "e0a21231f530a35363a4119ca81a1182eead814668635c2f85f9107987ec69fe";
+  const expectedLockSha256 = "18de86623839b1a581d46ced2895d0c7aca6fc056086a1c3a061da4407633d59";
+  const expectedRetainedGraphSha256 = "4a2e21a4897afcb0f0b218f74b0233b25b5aae2c6f1f6329280660abe1bb4652";
   assert.deepEqual(pkg.dependencies, expectedDependencies, "package.json direct dependency map changed");
   assert.deepEqual(candidate.packages[""].dependencies, expectedDependencies, "lock root direct dependency map changed");
   assert.equal(createHash("sha256").update(readFileSync(path.join(root, "website/package-lock.json"))).digest("hex"), expectedLockSha256, "package lock content changed");
@@ -155,7 +155,7 @@ test("lock graph removes the vulnerable chain and retains the exact renderer gra
     integrity: "sha512-M5t5LlJpS1UHMjvwRQVdFHvPISGeLAxNcrWuJkeGh0KxsqCHZ1O3NXZU/8x7cD0BDcGW8kapxMKTvwlqrNkHkA==",
     license: "BSD-2-Clause",
   });
-  // Restore only that reviewed identity for the original retained-graph oracle.
+  // Normalize the historical cache identity before hashing the freshly reviewed renderer graph.
   candidatePackages["node_modules/http-cache-semantics"] = {
     version: "4.2.0",
     resolved: "https://registry.npmjs.org/http-cache-semantics/-/http-cache-semantics-4.2.0.tgz",
