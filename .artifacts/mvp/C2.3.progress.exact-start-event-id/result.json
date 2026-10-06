@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "packet_id": "C2.3.progress.exact-start-event-id",
+  "status": "ready_for_review",
+  "base_commit": "1637d80ddc3a0da17c84afd6ea6eba0f7abe84e6",
+  "source_commit": "606a27841a00c82589bc32fb5c1542088706d134",
+  "implemented": [
+    "Added FlowRuntime::schedule_domain_and_bind<C>, which validates the registered typed context before scheduling and synchronously binds the allocated EventId only after schedule_domain succeeds.",
+    "TransitContext retains the exact initial start EventId and due time. Ready and Paused transitions now require matching event identity and tick; alien same-kind events cannot start movement or clear the pending start.",
+    "Added actual scheduler coverage for an earlier-priority alien event at the start tick while Ready and while Paused, followed by the exact retained start event. Only the retained event starts movement; the paused path preserves zero useful movement.",
+    "Added DES coverage that a PastCommand schedule-and-bind rejection preserves typed context and the full Flow budget/scheduler snapshot."
+  ],
+  "verification": [
+    {
+      "command": "PATH=/opt/homebrew/bin:$PATH CARGO_HOME=/tmp/careops-c23-cargo-home CARGO_TARGET_DIR=/tmp/careops-c23-transit-runtime-target /opt/homebrew/bin/cargo test --locked -p kairo-ecs-des -p kairo-ecs-abm",
+      "cwd": "/tmp/kairos-c23-transit-runtime",
+      "toolchain": {
+        "cargo_path": "/opt/homebrew/bin/cargo",
+        "cargo_version": "cargo 1.99.0 (5f94df478 2026-08-27)",
+        "rustc_path": "/opt/homebrew/bin/rustc",
+        "rustc_version": "rustc 1.99.0 (b940084d7 2026-09-28)"
+      },
+      "exit_code": 0,
+      "result": "32 test result groups; 282 passed, 0 failed, 1 ignored",
+      "log": "/tmp/c23-exact-start-tests-homebrew.log",
+      "sha256": "edb64e1e82c1be44bc861a6709e22480c54543a5e90fec5f5206de0f122a3840"
+    },
+    {
+      "command": "PATH=/opt/homebrew/bin:$PATH CARGO_HOME=/tmp/careops-c23-cargo-home CARGO_TARGET_DIR=/tmp/careops-c23-transit-runtime-target /opt/homebrew/bin/cargo clippy --locked -p kairo-ecs-des -p kairo-ecs-abm --all-targets -- -D warnings",
+      "cwd": "/tmp/kairos-c23-transit-runtime",
+      "toolchain": {
+        "cargo_path": "/opt/homebrew/bin/cargo",
+        "cargo_version": "cargo 1.99.0 (5f94df478 2026-08-27)",
+        "rustc_path": "/opt/homebrew/bin/rustc",
+        "rustc_version": "rustc 1.99.0 (b940084d7 2026-09-28)"
+      },
+      "exit_code": 0,
+      "log": "/tmp/c23-exact-start-clippy-homebrew.log",
+      "sha256": "9bc86bd76ef654d71b1ecaf3bdc14d939a4020db44f808734ce6d789d6b508d4"
+    },
+    {
+      "command": "PATH=/opt/homebrew/bin:$PATH CARGO_HOME=/tmp/careops-c23-cargo-home /opt/homebrew/bin/cargo fmt --all -- --check",
+      "cwd": "/tmp/kairos-c23-transit-runtime",
+      "toolchain": {
+        "cargo_path": "/opt/homebrew/bin/cargo",
+        "cargo_version": "cargo 1.99.0 (5f94df478 2026-08-27)",
+        "rustfmt_version": "rustfmt 1.10.0"
+      },
+      "exit_code": 0,
+      "log": "/tmp/c23-exact-start-fmt-homebrew.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "/tmp/kairos-c23-transit-runtime",
+      "exit_code": 0
+    }
+  ],
+  "unverified": [
+    {
+      "command": "CARGO_TARGET_DIR=/tmp/careops-c23-transit-runtime-target rustup run 1.76.0 cargo test --locked -p kairo-ecs-des -p kairo-ecs-abm",
+      "reason": "PortableSSD disappeared during the run. /Users/doughnut/.rustup and /Users/doughnut/.cargo are symlinks into /Volumes/PortableSSD/toolchains, which is absent. The in-flight command was interrupted after it stopped progressing at the kairo-ecs-abm compile banner; later rustup invocation exited 1 with 'could not create home directory: /Users/doughnut/.rustup: File exists'. No Rust 1.76 test result is claimed."
+    }
+  ],
+  "limitations": [
+    "This is a C2.3 progress slice, not C2.3.dispatch acceptance. Calibration-bound dispatch and explicit retry reconciliation remain open.",
+    "C2.2 callback/seed/checkpoint joins, C2.1 paired Macro/Micro runtime acceptance, and hosted/release/clinical claims remain outside this packet."
+  ]
+}
