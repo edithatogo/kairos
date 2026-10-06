@@ -587,7 +587,29 @@ mod tests {
         EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1,
     };
     use kairo_ecs_des::{FlowConfig, RequestState, ResourceId};
+    use std::cell::Cell;
     use std::num::NonZeroU64;
+
+    thread_local! {
+        static PLANNER_CALLS: Cell<usize> = const { Cell::new(0) };
+    }
+
+    fn reject_start_and_first_progress_once(
+        current: &TransitContext,
+        snapshot: &FlowCallbackSnapshot,
+        view: FlowWorldView<'_>,
+        sink: &mut FlowCommandSink,
+    ) -> Result<TransitContext, FlowError> {
+        let call = PLANNER_CALLS.with(|calls| {
+            let call = calls.get();
+            calls.set(call + 1);
+            call
+        });
+        if matches!(call, 0 | 2) {
+            return Err(FlowError::InvalidState);
+        }
+        TransitContext::plan(current, snapshot, view, sink)
+    }
     struct Draw {
         calls: u32,
     }
@@ -919,6 +941,164 @@ mod tests {
         let request = admissions[0]
             .request
             .expect("actual request id in accepted receipt");
+        assert_eq!(flow.work(service).unwrap().request, Some(request));
+        let actual = flow.request(request).unwrap();
+        assert_eq!(actual.owner, owner);
+        assert_eq!(actual.work, Some(service));
+        assert!(actual.timed);
+        assert_ne!(actual.state, RequestState::Cancelled);
+        assert!(flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .arrival_ticket()
+            .is_some());
+    }
+
+    #[test]
+    fn rejected_start_and_progress_recover_to_one_arrival_acquire() {
+        const TRANSIT_KIND: EventKind = EventKind::custom(9413);
+        PLANNER_CALLS.with(|calls| calls.set(0));
+        let mut flow = FlowRuntime::new();
+        flow.register_domain_plan_hook_with_receipt(
+            "retry-once-transit-plan",
+            TRANSIT_KIND,
+            reject_start_and_first_progress_once,
+            accept_transit_context,
+        )
+        .unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let carrier_actor = flow.spawn_actor().unwrap();
+        let resource = flow.create_resource(1).unwrap();
+        let service = flow
+            .create_work(owner, SimDuration::from_ticks(4), "service", ())
+            .unwrap();
+        let start_at = SimTime::from_ticks(5);
+        let carrier = flow
+            .create_actor_domain_context(
+                carrier_actor,
+                "retry-once-transit-plan",
+                TRANSIT_KIND,
+                TransitContext::new(
+                    &flow,
+                    test_route(),
+                    flow_acquire(resource, owner, service),
+                    start_at,
+                )
+                .unwrap(),
+            )
+            .unwrap();
+        let source_start =
+            schedule_transit_start(&mut flow, carrier, TRANSIT_KIND, start_at, 4).unwrap();
+
+        let rejected_start = flow.step().unwrap().unwrap();
+        assert_eq!(rejected_start.event, source_start);
+        assert_eq!(rejected_start.at, start_at);
+        assert_eq!(rejected_start.error, Some(FlowError::InvalidState));
+        assert!(matches!(
+            rejected_start.callback_batches.as_slice(),
+            [FlowBatchReceipt::Rejected(row)]
+                if row.error == FlowError::InvalidState && row.failed_ticket.is_none()
+        ));
+        let ready = flow.work_context::<TransitContext>(carrier).unwrap();
+        assert_eq!(ready.phase(), TransitPhase::Ready);
+        assert_eq!(ready.expected_event, Some(source_start));
+        assert_eq!(ready.expected_due, Some(start_at));
+
+        let retry_start = TransitContext::schedule_transit_retry(
+            &mut flow,
+            carrier,
+            TRANSIT_KIND,
+            &rejected_start,
+            4,
+        )
+        .unwrap();
+        assert_ne!(retry_start, source_start);
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier)
+                .unwrap()
+                .expected_event,
+            Some(retry_start)
+        );
+        let accepted_start = flow.step().unwrap().unwrap();
+        assert_eq!(accepted_start.event, retry_start);
+        assert_eq!(accepted_start.at, start_at);
+        assert!(accepted_start.error.is_none());
+        let FlowBatchReceipt::Accepted(start_rows) = &accepted_start.callback_batches[0] else {
+            panic!("accepted retry start must schedule the first segment progress");
+        };
+        assert_eq!(start_rows.len(), 1);
+        assert_eq!(start_rows[0].request, None);
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier)
+                .unwrap()
+                .phase(),
+            TransitPhase::Moving
+        );
+        assert_eq!(
+            TransitContext::schedule_transit_retry(
+                &mut flow,
+                carrier,
+                TRANSIT_KIND,
+                &rejected_start,
+                4,
+            ),
+            Err(FlowError::InvalidWork)
+        );
+
+        let rejected_progress = flow.step().unwrap().unwrap();
+        assert_eq!(rejected_progress.at, SimTime::from_ticks(6));
+        assert_eq!(rejected_progress.error, Some(FlowError::InvalidState));
+        assert!(matches!(
+            rejected_progress.callback_batches.as_slice(),
+            [FlowBatchReceipt::Rejected(row)]
+                if row.error == FlowError::InvalidState && row.failed_ticket.is_none()
+        ));
+        let retained_progress = flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .progress_at(rejected_progress.at)
+            .unwrap();
+        assert_eq!(retained_progress.phase, TransitPhase::Moving);
+        assert_eq!(retained_progress.segment_index, 1);
+        assert_eq!(retained_progress.useful_elapsed, SimDuration::from_ticks(1));
+        assert_eq!(retained_progress.remaining, SimDuration::from_ticks(1));
+        let source_progress = rejected_progress.event;
+        let retry_progress = TransitContext::schedule_transit_retry(
+            &mut flow,
+            carrier,
+            TRANSIT_KIND,
+            &rejected_progress,
+            4,
+        )
+        .unwrap();
+        assert_ne!(retry_progress, source_progress);
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier)
+                .unwrap()
+                .expected_event,
+            Some(retry_progress)
+        );
+        let accepted_progress = flow.step().unwrap().unwrap();
+        assert_eq!(accepted_progress.event, retry_progress);
+        assert_eq!(accepted_progress.at, rejected_progress.at);
+        assert!(accepted_progress.error.is_none());
+
+        let arrival = flow.step().unwrap().unwrap();
+        assert_eq!(arrival.at, SimTime::from_ticks(7));
+        assert!(arrival.error.is_none());
+        assert_eq!(
+            flow.work_context::<TransitContext>(carrier)
+                .unwrap()
+                .phase(),
+            TransitPhase::Arrived
+        );
+        let FlowBatchReceipt::Accepted(admissions) = &arrival.callback_batches[0] else {
+            panic!("arrival after recovered progress must submit its actual timed acquire");
+        };
+        assert_eq!(admissions.len(), 1);
+        let request = admissions[0]
+            .request
+            .expect("accepted actual acquire returns the request id");
         assert_eq!(flow.work(service).unwrap().request, Some(request));
         let actual = flow.request(request).unwrap();
         assert_eq!(actual.owner, owner);
