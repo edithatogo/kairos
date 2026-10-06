@@ -382,16 +382,43 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
             builder = builder.preemptible(strategy);
         }
         match builder.submit() {
-            Ok(request) => Ok(SubmittedIntrinsicWork {
-                decision: self.decision,
-                expected_service_key: self.expected_service_key,
-                service_stream: self.service_stream,
-                sample: self.sample,
-                acquire: self.acquire,
-                work: self.work,
-                request,
-                _restart_types: PhantomData,
-            }),
+            Ok(request) => {
+                // Treat the runtime's ID as a candidate until both sides of
+                // the authoritative work/request association agree.
+                let request_matches = flow.request(request).is_ok_and(|saved| {
+                    saved.resource == self.acquire.resource
+                        && saved.owner == self.acquire.owner
+                        && saved.work == Some(self.work)
+                        && saved.timed
+                        && saved.submitted_at == self.acquire.at
+                        && saved.priority_level == self.acquire.priority_level
+                        && saved.deadline == self.acquire.deadline
+                        && saved.can_preempt == self.acquire.can_preempt
+                        && saved.preemptible == self.acquire.preemptible
+                });
+                let work_matches = flow
+                    .work(self.work)
+                    .is_ok_and(|saved| saved.request == Some(request));
+                if !request_matches || !work_matches {
+                    // The request may already exist, so retain the bound
+                    // state for diagnosis; its normal retry path will fail
+                    // closed on the existing WorkSpec.request association.
+                    return Err(SubmitFailure {
+                        bound: self,
+                        error: BridgeError::InvalidDispatch,
+                    });
+                }
+                Ok(SubmittedIntrinsicWork {
+                    decision: self.decision,
+                    expected_service_key: self.expected_service_key,
+                    service_stream: self.service_stream,
+                    sample: self.sample,
+                    acquire: self.acquire,
+                    work: self.work,
+                    request,
+                    _restart_types: PhantomData,
+                })
+            }
             Err(error) => Err(SubmitFailure {
                 bound: self,
                 error: BridgeError::Flow(error),
