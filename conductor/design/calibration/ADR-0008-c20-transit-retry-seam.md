@@ -1,7 +1,8 @@
 # ADR-0008 — C20 experimental transit retry ingress
 
-Status: proposed for C2 coordinator and Track03 owner acceptance; implementation
-authorization is pending. No stable API acceptance follows from this proposal.
+Status: independently reviewed experimental form; C2 implementation authorized.
+Track03 source review and all release gates remain open. No stable API acceptance
+follows from this ADR.
 Date: 2026-10-06. Owners: Track03/21; API/MSRV Track25/30.
 
 ## Context
@@ -74,13 +75,15 @@ events. No automatic retry is added.
 
 ## Ownership and acceptance
 
-The implementation touches Track03-owned `crates/kairo-ecs-abm`; Track03's
-agent contract requires an explicit owner handoff for that path. This ADR is only
-a proposal until the C2 coordinator and Track03 owner accept the exact API and
-bounded write reservation. Track25/30 release compatibility gates remain open.
-The function is experimental and hidden from generated docs, with no stable Rust
-API promise. No DES source, event ordering, callback cause, schema, ABI, binding,
-random stream, or Flow receipt shape changes.
+The implementation touches Track03-owned `crates/kairo-ecs-abm`. The user's
+2026-10-06 instruction to implement as much of C2 as possible authorizes this
+bounded, one-task path handoff; the detail is recorded in Track03's handoff.
+This does not transfer general Track03 ownership or mark Track03 accepted. The
+independent API review and C2 coordinator accept this exact experimental form for
+implementation. Track03 review remains required before its phase acceptance, and
+Track25/30 release compatibility gates remain open. The function is hidden from
+generated docs and has no stable Rust API promise. No DES source, event ordering,
+callback cause, schema, ABI, binding, random stream, or Flow receipt shape changes.
 
 ## Non-goals
 
