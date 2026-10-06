@@ -169,6 +169,7 @@ impl TransitContext {
         Ok(())
     }
 
+    #[doc(hidden)]
     pub fn schedule_transit_retry(
         flow: &mut FlowRuntime,
         carrier: WorkId,
