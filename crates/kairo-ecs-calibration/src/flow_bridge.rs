@@ -1471,11 +1471,36 @@ mod tests {
 
     #[test]
     fn continuation_capture_decision_mismatch_returns_original_values() {
-        let (flow, mut adapter, mut bound) =
+        let (mut flow, mut adapter, mut bound) =
             bound_simple_with_adapter(FidelityMode::Macro, TransitIntent::Route);
+        let work = bound.work();
+
+        let blocker_actor = flow.spawn_actor().unwrap();
+        let blocker_request = flow
+            .acquire(bound.acquire.resource)
+            .owner(blocker_actor)
+            .submit()
+            .unwrap();
+        let _blocker_dispatch = flow.step().unwrap().expect("blocker submit is processed");
+        assert_eq!(
+            flow.request(blocker_request).unwrap().state,
+            RequestState::Active
+        );
+
+        let waiter_actor = flow.spawn_actor().unwrap();
+        let waiter_request = flow
+            .acquire(bound.acquire.resource)
+            .owner(waiter_actor)
+            .submit()
+            .unwrap();
+        let _waiter_dispatch = flow.step().unwrap().expect("waiter submit is processed");
+        assert_eq!(
+            flow.request(waiter_request).unwrap().state,
+            RequestState::Queued
+        );
+
         let identity = flow.identity();
         let now = flow.now();
-        let work = bound.work();
         let progress = flow.work_progress(work).unwrap();
         let budget = flow.budget_snapshot();
         let adapter_decision = *adapter.decision(work).unwrap();
@@ -1485,6 +1510,14 @@ mod tests {
             adapter.apply_at_boundary(&flow),
             Err(FidelityError::BusyBoundary)
         );
+
+        let blocker_row = flow.request(blocker_request).unwrap();
+        let waiter_row = flow.request(waiter_request).unwrap();
+        let resource_snapshot = flow.resource(bound.acquire.resource).unwrap();
+        assert_eq!(resource_snapshot.active.len(), 1);
+        assert_eq!(resource_snapshot.queued, vec![waiter_request]);
+        assert_eq!(resource_snapshot.allocations.len(), 1);
+        let work_context = *flow.work_context::<u32>(work).unwrap();
 
         let runtime = bound.runtime.clone();
         let expected_service_key = bound.expected_service_key.clone();
@@ -1548,6 +1581,18 @@ mod tests {
         assert_eq!(returned_flow.now(), now);
         assert_eq!(returned_flow.work_progress(work).unwrap(), progress);
         assert_eq!(returned_flow.budget_snapshot(), budget);
+        assert_eq!(returned_flow.request(blocker_request).unwrap(), blocker_row);
+        assert_eq!(returned_flow.request(waiter_request).unwrap(), waiter_row);
+        assert_eq!(
+            returned_flow
+                .resource(returned_bound.acquire.resource)
+                .unwrap(),
+            resource_snapshot
+        );
+        assert_eq!(
+            *returned_flow.work_context::<u32>(work).unwrap(),
+            work_context
+        );
         assert_eq!(returned_adapter.decision(work), Some(&adapter_decision));
         assert_eq!(
             returned_adapter.apply_at_boundary(&returned_flow),
