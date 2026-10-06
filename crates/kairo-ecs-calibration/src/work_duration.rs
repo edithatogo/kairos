@@ -218,6 +218,17 @@ mod tests {
     use super::*;
     use crate::seed_map::CalibrationSeedMap;
 
+    fn canonical_service_stream() -> (CalibrationStreamKey, CalibrationStream) {
+        let mut map = CalibrationSeedMap::new(1, "study-α", 1234).unwrap();
+        let key = map
+            .key_for("crn-v1", 7, "case-0001", "triage:1", SeedPurpose::Service)
+            .unwrap();
+        let stream = map
+            .stream_for("crn-v1", 7, "case-0001", "triage:1", SeedPurpose::Service)
+            .unwrap();
+        (key, stream)
+    }
+
     #[test]
     fn sampled_duration_retains_opaque_identity_without_debug_leakage() {
         fn sample_for(case: &str, task: &str) -> (SampledWorkDuration, CalibrationStreamKey) {
@@ -253,5 +264,246 @@ mod tests {
             assert!(!debug.contains(private_id));
         }
         assert!(debug.contains("[redacted]"));
+    }
+
+    #[test]
+    fn weighted_sampling_matches_canonical_golden_sequence_and_draw_positions() {
+        let (key, mut stream) = canonical_service_stream();
+        let distribution =
+            IntrinsicDurationDistribution::weighted_ticks(vec![(10, 3), (20, 2), (30, 5)]).unwrap();
+
+        let samples: Vec<_> = (0..3)
+            .map(|_| distribution.sample(&mut stream, &key).unwrap())
+            .collect();
+
+        assert_eq!(
+            samples
+                .iter()
+                .map(|sample| sample.duration().ticks())
+                .collect::<Vec<_>>(),
+            vec![30, 10, 20]
+        );
+        assert_eq!(
+            samples
+                .iter()
+                .map(|sample| (sample.draw_before(), sample.draw_after()))
+                .collect::<Vec<_>>(),
+            vec![(0, 1), (1, 2), (2, 3)]
+        );
+        assert_eq!(stream.draw_position(), 3);
+    }
+
+    #[test]
+    fn weighted_sampling_preserves_support_order_and_assigns_boundary_to_next_bucket() {
+        let (key, mut reversed_stream) = canonical_service_stream();
+        let reversed =
+            IntrinsicDurationDistribution::weighted_ticks(vec![(30, 5), (20, 2), (10, 3)]).unwrap();
+        let reversed_samples: Vec<_> = (0..3)
+            .map(|_| {
+                reversed
+                    .sample(&mut reversed_stream, &key)
+                    .unwrap()
+                    .duration()
+                    .ticks()
+            })
+            .collect();
+        assert_eq!(reversed_samples, vec![10, 30, 30]);
+
+        // The canonical stream's first accepted value has residue 7 modulo 10.
+        // Since residue 7 is the first index after the weight-7 bucket, it must
+        // select the second support item.
+        let (key, mut boundary_stream) = canonical_service_stream();
+        let boundary =
+            IntrinsicDurationDistribution::weighted_ticks(vec![(10, 7), (20, 3)]).unwrap();
+        let sample = boundary.sample(&mut boundary_stream, &key).unwrap();
+        assert_eq!(sample.duration().ticks(), 20);
+        assert_eq!((sample.draw_before(), sample.draw_after()), (0, 1));
+    }
+
+    #[test]
+    fn fixed_u128_max_preserves_full_width_and_consumes_no_draws() {
+        let (key, mut stream) = canonical_service_stream();
+        let sample = IntrinsicDurationDistribution::fixed(u128::MAX)
+            .unwrap()
+            .sample(&mut stream, &key)
+            .unwrap();
+
+        assert_eq!(sample.duration().ticks(), u128::MAX);
+        assert_eq!((sample.draw_before(), sample.draw_after()), (0, 0));
+        assert_eq!(stream.draw_position(), 0);
+    }
+
+    #[test]
+    fn provider_rejects_typed_constructor_and_lookup_errors() {
+        assert_eq!(
+            IntrinsicDurationDistribution::fixed(0).err().unwrap(),
+            WorkDurationError::ZeroDuration
+        );
+        assert_eq!(
+            IntrinsicDurationDistribution::weighted_ticks(vec![])
+                .err()
+                .unwrap(),
+            WorkDurationError::EmptySupport
+        );
+        assert_eq!(
+            IntrinsicDurationDistribution::weighted_ticks(vec![(0, 1)])
+                .err()
+                .unwrap(),
+            WorkDurationError::ZeroDuration
+        );
+        assert_eq!(
+            IntrinsicDurationDistribution::weighted_ticks(vec![(1, 0)])
+                .err()
+                .unwrap(),
+            WorkDurationError::ZeroWeight
+        );
+        assert_eq!(
+            IntrinsicDurationDistribution::weighted_ticks(vec![(1, 1), (1, 2)])
+                .err()
+                .unwrap(),
+            WorkDurationError::DuplicateDuration
+        );
+        assert_eq!(
+            IntrinsicDurationDistribution::weighted_ticks(vec![(1, u64::MAX), (2, 1)])
+                .err()
+                .unwrap(),
+            WorkDurationError::WeightOverflow
+        );
+        assert_eq!(
+            IntrinsicWorkProvider::new(99, vec![]).err().unwrap(),
+            WorkDurationError::UnsupportedProviderVersion(99)
+        );
+        assert_eq!(
+            IntrinsicWorkProvider::new(INTRINSIC_WORK_PROVIDER_VERSION_V1, vec![])
+                .err()
+                .unwrap(),
+            WorkDurationError::EmptySupport
+        );
+        assert_eq!(
+            IntrinsicWorkProvider::new(
+                INTRINSIC_WORK_PROVIDER_VERSION_V1,
+                vec![(
+                    "bad\nstratum".into(),
+                    IntrinsicDurationDistribution::fixed(1).unwrap()
+                )]
+            )
+            .err()
+            .unwrap(),
+            WorkDurationError::InvalidStratum
+        );
+        assert_eq!(
+            IntrinsicWorkProvider::new(
+                INTRINSIC_WORK_PROVIDER_VERSION_V1,
+                vec![
+                    (
+                        "same".into(),
+                        IntrinsicDurationDistribution::fixed(1).unwrap()
+                    ),
+                    (
+                        "same".into(),
+                        IntrinsicDurationDistribution::fixed(2).unwrap()
+                    ),
+                ]
+            )
+            .err()
+            .unwrap(),
+            WorkDurationError::DuplicateStratum
+        );
+
+        let provider = IntrinsicWorkProvider::new(
+            INTRINSIC_WORK_PROVIDER_VERSION_V1,
+            vec![(
+                "triage".into(),
+                IntrinsicDurationDistribution::fixed(1).unwrap(),
+            )],
+        )
+        .unwrap();
+        let (key, mut stream) = canonical_service_stream();
+        let mut control = stream.snapshot().restore_for(&key).unwrap();
+        assert_eq!(
+            provider.sample("missing", &mut stream, &key).err().unwrap(),
+            WorkDurationError::MissingStratum
+        );
+        assert_eq!(
+            provider
+                .sample("bad\nstratum", &mut stream, &key)
+                .err()
+                .unwrap(),
+            WorkDurationError::InvalidStratum
+        );
+        assert_eq!(stream.next_u64().unwrap(), control.next_u64().unwrap());
+    }
+
+    #[test]
+    fn rejected_real_stream_draws_are_included_in_sample_positions() {
+        let mut map = CalibrationSeedMap::new(1, "study-α", 1234).unwrap();
+        let key = map
+            .key_for("reject-4", 7, "case-0001", "triage:1", SeedPurpose::Service)
+            .unwrap();
+        let mut stream = map
+            .stream_for("reject-4", 7, "case-0001", "triage:1", SeedPurpose::Service)
+            .unwrap();
+        let mut oracle = stream.snapshot().restore_for(&key).unwrap();
+        let weight = 0x8000_0000_0000_0001_u64;
+        let threshold = weight.wrapping_neg() % weight;
+        let mut rejected = 0;
+        loop {
+            if oracle.next_u64().unwrap() >= threshold {
+                break;
+            }
+            rejected += 1;
+        }
+        assert!(
+            rejected > 0,
+            "the fixed real-stream fixture must reject a draw"
+        );
+
+        let sample = IntrinsicDurationDistribution::weighted_ticks(vec![(7, weight)])
+            .unwrap()
+            .sample(&mut stream, &key)
+            .unwrap();
+
+        assert_eq!(sample.duration().ticks(), 7);
+        assert_eq!(sample.draw_before(), 0);
+        assert_eq!(sample.draw_after(), rejected + 1);
+        assert_eq!(stream.draw_position(), oracle.draw_position());
+        assert_eq!(stream.next_u64().unwrap(), oracle.next_u64().unwrap());
+    }
+
+    #[test]
+    fn invalid_purpose_and_identity_errors_preserve_stream_continuation() {
+        let (service_key, service) = canonical_service_stream();
+        let fixed = IntrinsicDurationDistribution::fixed(u128::MAX).unwrap();
+
+        let mut map = CalibrationSeedMap::new(1, "study-α", 1234).unwrap();
+        let transit_key = map
+            .key_for("crn-v1", 7, "case-0001", "triage:1", SeedPurpose::Transit)
+            .unwrap();
+        let mut transit = map
+            .stream_for("crn-v1", 7, "case-0001", "triage:1", SeedPurpose::Transit)
+            .unwrap();
+        let mut transit_control = transit.snapshot().restore_for(&transit_key).unwrap();
+        assert_eq!(
+            fixed.sample(&mut transit, &service_key).err().unwrap(),
+            WorkDurationError::WrongPurpose
+        );
+        assert_eq!(
+            transit.next_u64().unwrap(),
+            transit_control.next_u64().unwrap()
+        );
+
+        let other_key = map
+            .key_for("crn-v1", 7, "case-0001", "other-task", SeedPurpose::Service)
+            .unwrap();
+        let mut other = map
+            .stream_for("crn-v1", 7, "case-0001", "other-task", SeedPurpose::Service)
+            .unwrap();
+        let mut other_control = other.snapshot().restore_for(&other_key).unwrap();
+        assert_eq!(
+            fixed.sample(&mut other, &service_key).err().unwrap(),
+            WorkDurationError::IdentityMismatch
+        );
+        assert_eq!(other.next_u64().unwrap(), other_control.next_u64().unwrap());
+        assert_eq!(service.draw_position(), 0);
     }
 }
