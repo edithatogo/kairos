@@ -18,6 +18,8 @@ Format:
 
 ### Changed
 
+- Explicitly opted-in manual mainline package archive runs isolate signed producer workflow provenance in a dedicated job, verify the retained archive checksums before signing, and retain the attestation bundle without publishing packages.
+
 - Rust CI skips exact allowlisted archive Python helper and test changes while retaining verification for Rust, shared workflows, schemas, locks, and unknown paths; archive validation remains required.
 
 - Release dry runs offer an explicit actual-package-archives profile that reacquires pinned producer and consumer evidence, requalifies native Linux scanner bytes, independently verifies exact archive output, and retains checksums and readback receipts; the legacy source inventory profile remains the default.

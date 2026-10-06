@@ -35,10 +35,17 @@ on:
       - 'packaging/scripts/build_package_archive_bundle.py'
       - 'packaging/scripts/write_package_build_receipt.py'
       - 'tests/test_package_archive_bundle.py'
+      - 'tests/test_package_archive_attestation_workflow.py'
       - 'tools/docs-quality-node-tools/package.json'
       - 'tools/docs-quality-node-tools/package-lock.json'
       - '.github/workflows/package-dry-run.yml'
   workflow_dispatch:
+    inputs:
+      attest_archives:
+        description: Upload signed provenance for retained archives to GitHub Attestations (no package publication)
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -312,5 +319,185 @@ jobs:
         with:
           name: kairos-actual-package-archives-${{ github.sha }}
           path: dist/retained-package-archives/
+          if-no-files-found: error
+          retention-days: 90
+
+  attest-retained-archives:
+    name: attest-retained-package-archives
+    needs: [retain-package-archives]
+    if: inputs.attest_archives == true && github.event_name == 'workflow_dispatch' && github.repository == 'edithatogo/kairos' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read # Download the exact retained artifact from this workflow run.
+      attestations: write # Upload signed provenance to the repository Attestations API.
+      contents: read # Check out and run the pinned archive verifier.
+      id-token: write # Request the short-lived Sigstore signing identity.
+    steps:
+      - name: Recheck opt-in trusted main invocation
+        shell: bash
+        env:
+          ATTEST_ARCHIVES: ${{ inputs.attest_archives }}
+        run: |
+          set -euo pipefail
+          [[ "$ATTEST_ARCHIVES" == true ]]
+          [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]
+          [[ "$GITHUB_REPOSITORY" == edithatogo/kairos ]]
+          [[ "$GITHUB_REF" == refs/heads/main ]]
+          [[ "$GITHUB_SHA" == "$GITHUB_WORKFLOW_SHA" ]]
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: kairos-actual-package-archives-${{ github.sha }}
+          path: dist/retained-package-archives
+      - name: Reverify exact source-bound archive tree
+        run: >-
+          python3 packaging/scripts/build_package_archive_bundle.py
+          --verify-existing
+          --output dist/retained-package-archives
+          --source-commit "$GITHUB_SHA"
+      - name: Project exact archive checksums to workspace-relative subjects
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import hashlib
+          import json
+          import os
+          import re
+          from collections import Counter
+          from pathlib import Path, PurePosixPath
+
+          def unique_object(pairs):
+              result = {}
+              for key, value in pairs:
+                  if key in result:
+                      raise ValueError(f'duplicate JSON key: {key}')
+                  result[key] = value
+              return result
+
+          source_sha = os.environ['GITHUB_SHA']
+          if not re.fullmatch(r'[0-9a-f]{40}', source_sha):
+              raise SystemExit('workflow source SHA must be a full lowercase Git commit')
+          workspace = Path(os.environ['GITHUB_WORKSPACE']).resolve(strict=True)
+          dist_root = workspace / 'dist'
+          archive_root = dist_root / 'retained-package-archives'
+          if dist_root.is_symlink() or not dist_root.is_dir() or archive_root.is_symlink() or not archive_root.is_dir():
+              raise SystemExit('retained archive root or parent is missing or symlinked')
+          archive_root_real = archive_root.resolve(strict=True)
+          if not archive_root_real.is_relative_to(workspace):
+              raise SystemExit('retained archive root escapes the checkout')
+          index_path = archive_root / 'ARCHIVE-INDEX.json'
+          sums_path = archive_root / 'SHA256SUMS'
+          if index_path.is_symlink() or sums_path.is_symlink():
+              raise SystemExit('retained archive metadata must not be symlinks')
+          index_bytes = index_path.read_bytes()
+          index = json.loads(index_bytes, object_pairs_hook=unique_object)
+          if index.get('schema_version') != 1 or index.get('source_commit') != source_sha:
+              raise SystemExit('archive index schema or source commit does not match this workflow run')
+          artifacts = index.get('artifacts')
+          expected_counts = {'rust': 1, 'python': 2, 'r': 1, 'julia': 1, 'typescript': 1, 'nuget': 1, 'go': 1}
+          expected_kinds = {'rust': 'crate', 'python': 'python-distribution', 'r': 'r-source-package', 'julia': 'julia-source-archive', 'typescript': 'npm-package', 'nuget': 'nuget-package', 'go': 'go-source-archive'}
+          if not isinstance(artifacts, list) or len(artifacts) != 8:
+              raise SystemExit('archive index must contain exactly eight package archives')
+          if Counter(row.get('ecosystem') for row in artifacts if isinstance(row, dict)) != Counter(expected_counts):
+              raise SystemExit('archive index must contain the exact seven ecosystems with Python wheel and sdist')
+          generated = []
+          seen_paths = set()
+          python_suffixes = []
+          expected_suffixes = {'rust': ('.crate',), 'python': ('.whl', '.tar.gz'), 'r': ('.tar.gz',), 'julia': ('.tar.gz',), 'typescript': ('.tgz',), 'nuget': ('.nupkg',), 'go': ('.tar.gz',)}
+          for row in artifacts:
+              if not isinstance(row, dict):
+                  raise SystemExit('archive index entry must be an object')
+              ecosystem = row.get('ecosystem')
+              relative = row.get('path')
+              digest = row.get('sha256')
+              size = row.get('bytes')
+              if ecosystem not in expected_counts or row.get('kind') != expected_kinds[ecosystem]:
+                  raise SystemExit('archive index contains an unexpected ecosystem or archive kind')
+              if not isinstance(relative, str) or not relative or '\\' in relative or ':' in relative:
+                  raise SystemExit('archive index path is not a canonical POSIX path')
+              relpath = PurePosixPath(relative)
+              if relpath.is_absolute() or '..' in relpath.parts or relpath.as_posix() != relative or len(relpath.parts) != 2 or relpath.parts[0] != ecosystem:
+                  raise SystemExit('archive index path escapes or mismatches its ecosystem')
+              filename = relpath.name
+              if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+-]*', filename):
+                  raise SystemExit('archive filename is not a portable basename')
+              if not any(filename.endswith(suffix) for suffix in expected_suffixes[ecosystem]):
+                  raise SystemExit('archive filename suffix does not match its ecosystem')
+              if ecosystem == 'python':
+                  python_suffixes.append('.whl' if filename.endswith('.whl') else '.tar.gz')
+              if relative in seen_paths:
+                  raise SystemExit('archive index contains duplicate archive paths')
+              if not isinstance(digest, str) or not re.fullmatch(r'[0-9a-f]{64}', digest):
+                  raise SystemExit('archive index SHA-256 is malformed')
+              if type(size) is not int or size <= 0:
+                  raise SystemExit('archive index byte count is invalid')
+              ecosystem_root = archive_root / ecosystem
+              path = archive_root / relative
+              if ecosystem_root.is_symlink() or not ecosystem_root.is_dir() or path.is_symlink() or not path.is_file():
+                  raise SystemExit('indexed archive or ecosystem directory is missing or symlinked')
+              if not path.resolve(strict=True).is_relative_to(archive_root_real):
+                  raise SystemExit('indexed archive escapes the retained bundle')
+              if path.stat().st_size != size:
+                  raise SystemExit('indexed archive byte count changed')
+              hasher = hashlib.sha256()
+              with path.open('rb') as stream:
+                  for block in iter(lambda: stream.read(1024 * 1024), b''):
+                      hasher.update(block)
+              if hasher.hexdigest() != digest:
+                  raise SystemExit('indexed archive digest changed')
+              workspace_relative = f'dist/retained-package-archives/{relative}'
+              generated.append(f'{digest}  {workspace_relative}\n')
+              seen_paths.add(relative)
+          if Counter(python_suffixes) != Counter({'.whl': 1, '.tar.gz': 1}):
+              raise SystemExit('Python archive set must contain exactly one wheel and one sdist')
+          expected_sums = ''.join(f"{row['sha256']}  {row['path']}\n" for row in artifacts)
+          if sums_path.read_text(encoding='utf-8') != expected_sums:
+              raise SystemExit('original SHA256SUMS does not match the verified index')
+          evidence_dir = workspace / 'dist/package-provenance-evidence'
+          evidence_dir.mkdir(mode=0o700)
+          files = {
+              'ARCHIVE-INDEX.json': index_bytes,
+              'SHA256SUMS': sums_path.read_bytes(),
+              'package-archive-subjects.sha256': ''.join(generated).encode('ascii'),
+          }
+          for name, content in files.items():
+              with (evidence_dir / name).open('xb') as stream:
+                  stream.write(content)
+          PY
+      # This step uploads signed metadata to the GitHub Attestations API. It is opt-in and does not publish packages.
+      - id: archive-attestation
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-checksums: dist/package-provenance-evidence/package-archive-subjects.sha256
+          push-to-registry: false
+          create-storage-record: false
+          show-summary: true
+      - name: Preserve action bundle with exact subject inputs
+        shell: bash
+        env:
+          ATTESTATION_BUNDLE_PATH: ${{ steps.archive-attestation.outputs.bundle-path }}
+        run: |
+          set -euo pipefail
+          python3 -B - <<'PY'
+          import os
+          import shutil
+          from pathlib import Path
+
+          source = Path(os.environ['ATTESTATION_BUNDLE_PATH'])
+          target = Path('dist/package-provenance-evidence/attestation.bundle.json')
+          if source.is_symlink() or not source.is_file() or not 0 < source.stat().st_size <= 16 * 1024 * 1024:
+              raise SystemExit('attestation action bundle output is missing, oversized, or unsafe')
+          with source.open('rb') as incoming, target.open('xb') as outgoing:
+              shutil.copyfileobj(incoming, outgoing, length=1024 * 1024)
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: kairos-package-archive-provenance-${{ github.sha }}
+          path: dist/package-provenance-evidence/
           if-no-files-found: error
           retention-days: 90
