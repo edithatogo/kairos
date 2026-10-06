@@ -1417,6 +1417,32 @@ mod tests {
         assert_eq!(bound.owned_events, control_bound.owned_events);
         assert_eq!(bound.consumed_events, control_bound.consumed_events);
         assert_eq!(adapter.decision(work), control_adapter.decision(work));
+
+        // Finish both arrived bridges and verify each returns the original
+        // timed request without creating divergent work or progress state.
+        let submitted = bound.finish_transit(&flow).unwrap();
+        let control_submitted = control_bound.finish_transit(&control_flow).unwrap();
+        assert_eq!(submitted.work(), control_submitted.work());
+        assert_eq!(submitted.request(), control_submitted.request());
+        assert_eq!(submitted.decision(), control_submitted.decision());
+        assert_eq!(
+            submitted.service_draw_position(),
+            control_submitted.service_draw_position()
+        );
+        assert_eq!(submitted.work(), work);
+        let request = flow.request(submitted.request()).unwrap();
+        let control_request = control_flow.request(control_submitted.request()).unwrap();
+        assert_eq!(request.work, Some(work));
+        assert_eq!(request.work, control_request.work);
+        assert_eq!(request.resource, control_request.resource);
+        assert_eq!(request.owner, control_request.owner);
+        assert!(request.timed);
+        assert_eq!(request.timed, control_request.timed);
+        assert_eq!(request.submitted_at, control_request.submitted_at);
+        assert_eq!(
+            flow.work_progress(work).unwrap(),
+            control_flow.work_progress(work).unwrap()
+        );
     }
 
     #[test]
