@@ -1335,6 +1335,11 @@ impl FlowRuntime {
             Err(FlowError::InvalidEntity)
         }
     }
+
+    /// Validate a model actor without exposing mutable world access.
+    pub(crate) fn validate_actor(&self, id: EntityId) -> Result<(), FlowError> {
+        self.actor(id)
+    }
     fn check_schedule(&self, at: SimTime) -> Result<(), FlowError> {
         self.check_running()?;
         if at < self.now() {

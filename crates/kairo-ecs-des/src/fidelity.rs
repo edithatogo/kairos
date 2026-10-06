@@ -3,7 +3,7 @@
 //! Execution fidelity is independent of observed replay policy. This adapter
 //! neither changes work/resources nor samples service/transit randomness.
 
-use super::{FlowRuntime, WorkId, WorkState};
+use super::{FlowRuntime, FlowRuntimeIdentity, WorkId, WorkState};
 use kairo_ecs_types::EntityId;
 use std::collections::BTreeMap;
 use thiserror::Error;
@@ -189,6 +189,29 @@ impl FidelityAdapter {
         Ok(decision)
     }
 
+    /// Freeze the resolved policy while actual work is being created.
+    ///
+    /// The mutable borrow prevents staging or applying another policy between
+    /// resolution and binding. Runtime lineage is committed only by a
+    /// successful `bind`, so a failed create/bind can be retried safely.
+    pub fn prepare_admission<'a>(
+        &'a mut self,
+        flow: &FlowRuntime,
+        owner: EntityId,
+        subsystem: &str,
+    ) -> Result<FidelityAdmissionPermit<'a>, FidelityError> {
+        self.check_runtime(flow)?;
+        flow.validate_actor(owner)
+            .map_err(|_| FidelityError::InvalidWork)?;
+        let decision = self.policy.resolve(owner, subsystem)?;
+        Ok(FidelityAdmissionPermit {
+            adapter: self,
+            runtime: flow.identity(),
+            owner,
+            decision,
+        })
+    }
+
     /// Adapter-local lookup, valid within the runtime bound by admission.
     /// This signature cannot attest the origin of a colliding foreign WorkId.
     pub fn decision(&self, work: WorkId) -> Option<&FidelityDecision> {
@@ -230,6 +253,61 @@ impl FidelityAdapter {
         // any admitted decision or its Flow work/progress/context.
         self.policy = self.pending.take().expect("pending policy checked above");
         Ok(())
+    }
+}
+
+/// Non-cloneable proof that one actual task is bound to its frozen decision.
+/// This remains in-memory state; it is never serialized with a checkpoint.
+#[derive(Debug)]
+pub struct FidelityAdmissionPermit<'a> {
+    adapter: &'a mut FidelityAdapter,
+    runtime: FlowRuntimeIdentity,
+    owner: EntityId,
+    decision: FidelityDecision,
+}
+
+impl FidelityAdmissionPermit<'_> {
+    pub fn decision(&self) -> FidelityDecision {
+        self.decision
+    }
+
+    pub fn bind(
+        self,
+        flow: &FlowRuntime,
+        work: WorkId,
+        expected: kairo_ecs_types::SimDuration,
+    ) -> Result<FidelityDecision, (Self, FidelityError)> {
+        let validation = (|| {
+            if self.runtime != flow.identity() {
+                return Err(FidelityError::InvalidWork);
+            }
+            self.adapter.check_runtime(flow)?;
+            flow.validate_actor(self.owner)
+                .map_err(|_| FidelityError::InvalidWork)?;
+            if self.adapter.admitted.contains_key(&work) {
+                return Err(FidelityError::DuplicateAdmission);
+            }
+            let spec = flow.work(work).map_err(|_| FidelityError::InvalidWork)?;
+            let progress = flow
+                .work_progress(work)
+                .map_err(|_| FidelityError::InvalidWork)?;
+            if spec.owner != self.owner
+                || spec.original_duration != expected
+                || progress.state != WorkState::Pending
+            {
+                return Err(FidelityError::InvalidWork);
+            }
+            Ok(())
+        })();
+        if let Err(error) = validation {
+            return Err((self, error));
+        }
+
+        if self.adapter.bound_runtime.is_none() {
+            self.adapter.bound_runtime = Some(self.runtime.clone());
+        }
+        self.adapter.admitted.insert(work, self.decision);
+        Ok(self.decision)
     }
 }
 

@@ -726,3 +726,170 @@ mod mode {
         );
     }
 }
+
+mod permit {
+    use crate::fidelity::{
+        FidelityAdapter, FidelityAdmissionPermit, FidelityDecision, FidelityError, FidelityMode,
+        FidelityPolicy, FidelityScope,
+    };
+    use crate::{FlowRuntime, PreemptionStrategy, WorkId, WorkState};
+    use kairo_ecs_types::{EntityId, SimDuration};
+
+    fn work(flow: &mut FlowRuntime, owner: EntityId, ticks: u128) -> WorkId {
+        flow.create_work(owner, SimDuration::from_ticks(ticks), "admission.v1", ())
+            .unwrap()
+    }
+
+    fn adapter() -> FidelityAdapter {
+        FidelityAdapter::new(FidelityPolicy::new(1, Some(FidelityMode::Micro)).unwrap())
+    }
+
+    fn bind_error<'a>(
+        result: Result<FidelityDecision, (FidelityAdmissionPermit<'a>, FidelityError)>,
+    ) -> (FidelityAdmissionPermit<'a>, FidelityError) {
+        match result {
+            Err(error) => error,
+            Ok(_) => panic!("invalid admission unexpectedly succeeded"),
+        }
+    }
+
+    #[test]
+    fn permit_binds_one_frozen_decision_to_actual_pending_work() {
+        let mut flow = FlowRuntime::new();
+        let owner = flow.spawn_actor().unwrap();
+        let task = work(&mut flow, owner, 9);
+        let mut adapter = adapter();
+        let permit = adapter.prepare_admission(&flow, owner, "ed").unwrap();
+        let decision = permit.decision();
+        assert_eq!(decision.mode, FidelityMode::Micro);
+        assert_eq!(decision.scope, FidelityScope::Global);
+        assert_eq!(
+            permit
+                .bind(&flow, task, SimDuration::from_ticks(9))
+                .unwrap(),
+            decision
+        );
+        assert_eq!(adapter.decision(task), Some(&decision));
+        assert_eq!(flow.work_progress(task).unwrap().state, WorkState::Pending);
+    }
+
+    #[test]
+    fn invalid_actor_does_not_bind_runtime_and_valid_prepare_can_follow() {
+        let mut first = FlowRuntime::new();
+        let resource = first.create_resource(1).unwrap();
+        let mut adapter = adapter();
+        assert_eq!(
+            adapter
+                .prepare_admission(&first, resource.entity_id(), "ed")
+                .err(),
+            Some(FidelityError::InvalidWork)
+        );
+
+        let mut second = FlowRuntime::new();
+        let owner = second.spawn_actor().unwrap();
+        let task = work(&mut second, owner, 4);
+        let permit = adapter.prepare_admission(&second, owner, "ed").unwrap();
+        assert_eq!(
+            permit
+                .bind(&second, task, SimDuration::from_ticks(4))
+                .unwrap(),
+            FidelityDecision {
+                mode: FidelityMode::Micro,
+                scope: FidelityScope::Global,
+                policy_version: 1,
+            }
+        );
+    }
+
+    #[test]
+    fn owner_and_sampled_duration_mismatches_return_the_same_permit() {
+        let mut flow = FlowRuntime::new();
+        let owner = flow.spawn_actor().unwrap();
+        let other = flow.spawn_actor().unwrap();
+        let wrong_owner = work(&mut flow, other, 8);
+        let right_owner = work(&mut flow, owner, 8);
+        let mut adapter = adapter();
+        let permit = adapter.prepare_admission(&flow, owner, "ed").unwrap();
+
+        let (permit, error) =
+            bind_error(permit.bind(&flow, wrong_owner, SimDuration::from_ticks(8)));
+        assert_eq!(error, FidelityError::InvalidWork);
+        assert_eq!(
+            flow.work_progress(wrong_owner).unwrap().state,
+            WorkState::Pending
+        );
+
+        let (permit, error) =
+            bind_error(permit.bind(&flow, right_owner, SimDuration::from_ticks(7)));
+        assert_eq!(error, FidelityError::InvalidWork);
+        assert_eq!(
+            flow.work_progress(right_owner).unwrap().state,
+            WorkState::Pending
+        );
+
+        permit
+            .bind(&flow, right_owner, SimDuration::from_ticks(8))
+            .expect("failed checks preserve permit for retry");
+        assert_eq!(adapter.decision(wrong_owner), None);
+        assert!(adapter.decision(right_owner).is_some());
+    }
+
+    #[test]
+    fn foreign_runtime_collision_rejects_and_returns_original_permit() {
+        let mut original = FlowRuntime::new();
+        let owner = original.spawn_actor().unwrap();
+        let task = work(&mut original, owner, 5);
+        let mut foreign = FlowRuntime::new();
+        let foreign_owner = foreign.spawn_actor().unwrap();
+        let foreign_task = work(&mut foreign, foreign_owner, 5);
+        assert_eq!(owner, foreign_owner);
+        assert_eq!(task, foreign_task);
+
+        let mut adapter = adapter();
+        let permit = adapter.prepare_admission(&original, owner, "ed").unwrap();
+        let (permit, error) =
+            bind_error(permit.bind(&foreign, foreign_task, SimDuration::from_ticks(5)));
+        assert_eq!(error, FidelityError::InvalidWork);
+        permit
+            .bind(&original, task, SimDuration::from_ticks(5))
+            .expect("foreign rejection leaves original permit available");
+        assert!(adapter.decision(task).is_some());
+        assert_eq!(
+            foreign.work_progress(foreign_task).unwrap().state,
+            WorkState::Pending
+        );
+    }
+
+    #[test]
+    fn non_pending_and_duplicate_work_reject_without_losing_permit() {
+        let mut flow = FlowRuntime::new();
+        let owner = flow.spawn_actor().unwrap();
+        let active = work(&mut flow, owner, 20);
+        let resource = flow.create_resource(1).unwrap();
+        flow.acquire(resource)
+            .owner(owner)
+            .timed_work(active)
+            .preemptible(PreemptionStrategy::Suspend)
+            .submit()
+            .unwrap();
+        flow.step().unwrap().unwrap();
+        assert_eq!(flow.work_progress(active).unwrap().state, WorkState::Active);
+
+        let mut adapter = adapter();
+        let permit = adapter.prepare_admission(&flow, owner, "ed").unwrap();
+        let (permit, error) = bind_error(permit.bind(&flow, active, SimDuration::from_ticks(20)));
+        assert_eq!(error, FidelityError::InvalidWork);
+        assert_eq!(flow.work_progress(active).unwrap().state, WorkState::Active);
+
+        let pending = work(&mut flow, owner, 3);
+        permit
+            .bind(&flow, pending, SimDuration::from_ticks(3))
+            .unwrap();
+        assert_eq!(adapter.decision(active), None);
+        let duplicate = adapter.prepare_admission(&flow, owner, "ed").unwrap();
+        let (duplicate, error) =
+            bind_error(duplicate.bind(&flow, pending, SimDuration::from_ticks(3)));
+        assert_eq!(error, FidelityError::DuplicateAdmission);
+        assert_eq!(duplicate.decision().mode, FidelityMode::Micro);
+    }
+}
