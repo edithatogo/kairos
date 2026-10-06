@@ -178,6 +178,54 @@ pub(crate) struct BoundIntrinsicWork<T: Clone, C: 'static> {
     _restart_types: PhantomData<fn() -> (T, C)>,
 }
 
+/// One-shot, same-process continuation for one already-bound bridge item.
+///
+/// Owning the runtime and adapter prevents their engine APIs from advancing
+/// while detached. The private fields and consuming resume make the handoff
+/// opaque and non-forkable.
+pub(crate) struct BoundWorkContinuation<T: Clone, C: 'static> {
+    flow: FlowRuntime,
+    adapter: FidelityAdapter,
+    bound: BoundIntrinsicWork<T, C>,
+}
+
+impl<T: Clone + 'static, C: 'static> BoundWorkContinuation<T, C> {
+    #[allow(clippy::result_large_err)]
+    pub(crate) fn capture(
+        flow: FlowRuntime,
+        adapter: FidelityAdapter,
+        bound: BoundIntrinsicWork<T, C>,
+    ) -> Result<
+        Self,
+        (
+            FlowRuntime,
+            FidelityAdapter,
+            BoundIntrinsicWork<T, C>,
+            BridgeError,
+        ),
+    > {
+        let valid_runtime = bound.runtime == flow.identity();
+        let valid_decision = adapter.decision(bound.work) == Some(&bound.decision);
+        if !valid_runtime || !valid_decision {
+            return Err((
+                flow,
+                adapter,
+                bound,
+                BridgeError::Fidelity(FidelityError::InvalidWork),
+            ));
+        }
+        Ok(Self {
+            flow,
+            adapter,
+            bound,
+        })
+    }
+
+    pub(crate) fn resume(self) -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<T, C>) {
+        (self.flow, self.adapter, self.bound)
+    }
+}
+
 pub(crate) struct SubmitFailure<T: Clone, C: 'static> {
     pub(crate) bound: BoundIntrinsicWork<T, C>,
     pub(crate) error: BridgeError,
@@ -1101,6 +1149,35 @@ mod tests {
         }
     }
 
+    fn bound_route_with_adapter() -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
+        let (input, mut flow, mut adapter, _) = input(
+            FidelityMode::Micro,
+            TransitIntent::Route,
+            SeedPurpose::Service,
+            false,
+        );
+        register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20)).unwrap();
+        flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
+            .unwrap();
+        let prepared = must_prepare(input.prepare(&flow, &mut adapter, &provider()));
+        let created = must_create(prepared.create(&mut flow));
+        let bound = must_bind(created.bind(&flow));
+        (flow, adapter, bound)
+    }
+
+    fn bound_simple_with_adapter(
+        mode: FidelityMode,
+        transit: TransitIntent,
+    ) -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
+        let (input, mut flow, mut adapter, _) = input(mode, transit, SeedPurpose::Service, false);
+        flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
+            .unwrap();
+        let prepared = must_prepare(input.prepare(&flow, &mut adapter, &provider()));
+        let created = must_create(prepared.create(&mut flow));
+        let bound = must_bind(created.bind(&flow));
+        (flow, adapter, bound)
+    }
+
     fn bound_route_at(
         start: SimTime,
         edge_count: u32,
@@ -1163,6 +1240,205 @@ mod tests {
                 if rejection.error == FlowError::CounterOverflow
                     && rejection.failed_ticket.is_none()
         ));
+    }
+
+    #[test]
+    fn owning_continuation_preserves_macro_and_zero_micro_values_and_service_draws() {
+        for (mode, transit) in [
+            (FidelityMode::Macro, TransitIntent::Route),
+            (FidelityMode::Micro, TransitIntent::Zero),
+        ] {
+            let (flow, mut adapter, bound) = bound_simple_with_adapter(mode, transit);
+            let (control_flow, mut control_adapter, mut control_bound) =
+                bound_simple_with_adapter(mode, transit);
+            let identity = flow.identity();
+            let work = bound.work();
+            let progress = flow.work_progress(work).unwrap();
+            let stream_position = bound.service_draw_position();
+            adapter.stage_policy(FidelityPolicy::new(2, Some(FidelityMode::Micro)).unwrap());
+            control_adapter
+                .stage_policy(FidelityPolicy::new(2, Some(FidelityMode::Micro)).unwrap());
+
+            let continuation = BoundWorkContinuation::capture(flow, adapter, bound)
+                .ok()
+                .expect("valid bound bridge values capture");
+            let (flow, mut adapter, mut bound) = continuation.resume();
+            assert_eq!(flow.identity(), identity);
+            assert_eq!(flow.work_progress(work).unwrap(), progress);
+            assert_eq!(adapter.decision(work), Some(&bound.decision));
+            assert_eq!(bound.service_draw_position(), stream_position);
+            assert_eq!(flow.budget_snapshot(), control_flow.budget_snapshot());
+            assert_eq!(
+                bound.service_stream.next_u64().unwrap(),
+                control_bound.service_stream.next_u64().unwrap()
+            );
+            assert_eq!(
+                bound.service_draw_position(),
+                control_bound.service_draw_position()
+            );
+            assert_eq!(
+                adapter.apply_at_boundary(&flow),
+                Err(FidelityError::BusyBoundary)
+            );
+            assert_eq!(
+                control_adapter.apply_at_boundary(&control_flow),
+                Err(FidelityError::BusyBoundary)
+            );
+            assert_eq!(adapter, control_adapter);
+        }
+    }
+
+    #[test]
+    fn owning_continuation_preserves_started_and_observed_paused_transit() {
+        let (mut flow, adapter, mut bound) = bound_route_with_adapter();
+        let (mut control_flow, control_adapter, mut control_bound) = bound_route_with_adapter();
+        let identity = flow.identity();
+        let work = bound.work();
+        let start = bound.start_transit(&mut flow).unwrap();
+        let control_start = control_bound.start_transit(&mut control_flow).unwrap();
+        assert_eq!(start, control_start);
+
+        let continuation = BoundWorkContinuation::capture(flow, adapter, bound)
+            .ok()
+            .expect("same-runtime bridge values capture after transit start");
+        let (mut flow, adapter, mut bound) = continuation.resume();
+        assert_eq!(flow.identity(), identity);
+        assert_eq!(adapter.decision(work), Some(&bound.decision));
+        assert_eq!(bound.pending_event, Some(start));
+        assert_eq!(flow.budget_snapshot(), control_flow.budget_snapshot());
+
+        let start_dispatch = flow.step().unwrap().unwrap();
+        let control_start_dispatch = control_flow.step().unwrap().unwrap();
+        assert_eq!(start_dispatch, control_start_dispatch);
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &start_dispatch),
+            Ok(TransitObservation::Progress)
+        );
+        assert_eq!(
+            control_bound.observe_transit_dispatch(&control_flow, &control_start_dispatch),
+            Ok(TransitObservation::Progress)
+        );
+        let now = flow.now();
+        let pause = bound
+            .schedule_transit_control(&mut flow, FlowDomainControl::Pause, now, 7)
+            .unwrap();
+        let control_now = control_flow.now();
+        let control_pause = control_bound
+            .schedule_transit_control(&mut control_flow, FlowDomainControl::Pause, control_now, 7)
+            .unwrap();
+        assert_eq!(pause, control_pause);
+        let pause_dispatch = flow.step().unwrap().unwrap();
+        let control_pause_dispatch = control_flow.step().unwrap().unwrap();
+        assert_eq!(pause_dispatch, control_pause_dispatch);
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &pause_dispatch),
+            Ok(TransitObservation::Paused)
+        );
+        assert_eq!(
+            control_bound.observe_transit_dispatch(&control_flow, &control_pause_dispatch),
+            Ok(TransitObservation::Paused)
+        );
+        let carrier = bound.carrier.unwrap();
+        let progress = flow.work_progress(work).unwrap();
+        let context = flow.work_context::<TransitContext>(carrier).unwrap();
+        assert_eq!(context.phase(), TransitPhase::Paused);
+        let control_context = control_flow
+            .work_context::<TransitContext>(control_bound.carrier.unwrap())
+            .unwrap();
+        assert_eq!(context.phase(), control_context.phase());
+        assert_eq!(
+            context.progress_at(flow.now()),
+            control_context.progress_at(flow.now())
+        );
+
+        let continuation = BoundWorkContinuation::capture(flow, adapter, bound)
+            .ok()
+            .expect("same-runtime bound bridge values capture after observed pause");
+        let (mut flow, adapter, mut bound) = continuation.resume();
+        assert_eq!(flow.identity(), identity);
+        assert_eq!(flow.work_progress(work).unwrap(), progress);
+        assert_eq!(adapter.decision(work), Some(&bound.decision));
+        assert_eq!(bound.owned_events, control_bound.owned_events);
+        assert_eq!(bound.consumed_events, control_bound.consumed_events);
+        assert_eq!(flow.budget_snapshot(), control_flow.budget_snapshot());
+        assert_eq!(
+            bound.service_stream.next_u64().unwrap(),
+            control_bound.service_stream.next_u64().unwrap()
+        );
+
+        // Both paused continuations resume through the same accepted arrival
+        // callback exactly once, with matching bridge receipts and ownership.
+        let resume_at = flow.now();
+        let resume = bound
+            .schedule_transit_control(&mut flow, FlowDomainControl::Resume, resume_at, 7)
+            .unwrap();
+        let control_resume_at = control_flow.now();
+        let control_resume = control_bound
+            .schedule_transit_control(
+                &mut control_flow,
+                FlowDomainControl::Resume,
+                control_resume_at,
+                7,
+            )
+            .unwrap();
+        assert_eq!(resume, control_resume);
+        let dispatch = flow.step().unwrap().unwrap();
+        let control_dispatch = control_flow.step().unwrap().unwrap();
+        assert_eq!(dispatch, control_dispatch);
+        assert_eq!(dispatch.event, resume);
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &dispatch),
+            Ok(TransitObservation::Resumed)
+        );
+        assert_eq!(
+            control_bound.observe_transit_dispatch(&control_flow, &control_dispatch),
+            Ok(TransitObservation::Resumed)
+        );
+        let mut arrived = false;
+        while !arrived {
+            let dispatch = flow.step().unwrap().unwrap();
+            let control_dispatch = control_flow.step().unwrap().unwrap();
+            assert_eq!(dispatch, control_dispatch);
+            let observation = bound.observe_transit_dispatch(&flow, &dispatch).unwrap();
+            let control_observation = control_bound
+                .observe_transit_dispatch(&control_flow, &control_dispatch)
+                .unwrap();
+            assert_eq!(observation, control_observation);
+            arrived = observation == TransitObservation::Arrived;
+        }
+        assert_eq!(bound.owned_events.len(), 5);
+        assert_eq!(bound.consumed_events.len(), 4);
+        assert!(bound.arrival_request.is_some());
+        assert_eq!(bound.owned_events.len(), control_bound.owned_events.len());
+        assert_eq!(
+            bound.consumed_events.len(),
+            control_bound.consumed_events.len()
+        );
+        assert_eq!(bound.owned_events, control_bound.owned_events);
+        assert_eq!(bound.consumed_events, control_bound.consumed_events);
+        assert_eq!(adapter.decision(work), control_adapter.decision(work));
+    }
+
+    #[test]
+    fn continuation_capture_mismatch_returns_the_original_values() {
+        let (flow, adapter, bound) =
+            bound_simple_with_adapter(FidelityMode::Macro, TransitIntent::Route);
+        let original_identity = flow.identity();
+        let original_work = bound.work();
+        let foreign_flow = FlowRuntime::new();
+        let foreign_identity = foreign_flow.identity();
+        let result = BoundWorkContinuation::capture(foreign_flow, adapter, bound);
+        let (returned_flow, returned_adapter, returned_bound, error) = match result {
+            Err(values) => values,
+            Ok(_) => panic!("foreign runtime must fail capture validation"),
+        };
+        assert_eq!(error, BridgeError::Fidelity(FidelityError::InvalidWork));
+        assert_eq!(returned_flow.identity(), foreign_identity);
+        assert_eq!(
+            returned_adapter.decision(original_work),
+            Some(&returned_bound.decision)
+        );
+        assert_eq!(returned_bound.runtime, original_identity);
     }
 
     #[test]
