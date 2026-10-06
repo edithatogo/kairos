@@ -1948,6 +1948,10 @@ mod tests {
         let micro_submitted = micro_bound.finish_transit(&micro_flow).unwrap();
         assert_eq!(micro_submitted.sampled_duration(), service_duration);
         assert_eq!(
+            micro_submitted.draw_position(),
+            macro_submitted.draw_position()
+        );
+        assert_eq!(
             micro_submitted.expected_service_key,
             macro_submitted.expected_service_key
         );
