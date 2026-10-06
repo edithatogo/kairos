@@ -450,9 +450,324 @@ fn put_len(bytes: &mut Vec<u8>, len: usize) -> Result<(), TransitError> {
     Ok(())
 }
 
+/// In-memory route cursor used by the Flow adapter to retain actual transit
+/// movement independently of service-work restart state.
+#[allow(dead_code)] // The Flow carrier consumes this private cursor in the dispatch leaf.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct TransitProgressState {
+    route: RoutePlan,
+    segment_index: usize,
+    elapsed_in_segment: SimDuration,
+}
+
+/// Cloneable interruption checkpoint for the in-memory transit cursor.
+#[allow(dead_code)] // The Flow carrier consumes this private checkpoint in the dispatch leaf.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct TransitProgressCheckpoint {
+    route: RoutePlan,
+    segment_index: usize,
+    elapsed_in_segment: SimDuration,
+}
+
+#[allow(dead_code)] // Kept crate-private until the reviewed Flow dispatch adapter uses it.
+impl TransitProgressState {
+    pub(crate) fn new(route: RoutePlan) -> Result<Self, TransitError> {
+        let mut state = Self {
+            route,
+            segment_index: 0,
+            elapsed_in_segment: SimDuration::ZERO,
+        };
+        state.validate_route()?;
+        state.skip_zero_duration_segments()?;
+        Ok(state)
+    }
+
+    pub(crate) fn current_edge_id(&self) -> Option<EdgeId> {
+        self.route
+            .segments
+            .get(self.segment_index)
+            .map(|segment| segment.edge_id)
+    }
+
+    pub(crate) fn elapsed_in_segment(&self) -> SimDuration {
+        self.elapsed_in_segment
+    }
+
+    pub(crate) fn remaining(&self) -> Result<SimDuration, TransitError> {
+        self.validate_cursor()?;
+        let Some(segment) = self.route.segments.get(self.segment_index) else {
+            return Ok(SimDuration::ZERO);
+        };
+        let segment_duration = segment
+            .end_offset
+            .checked_sub(segment.start_offset)
+            .ok_or(TransitError::InvalidProgress)?;
+        let current_remaining = segment_duration
+            .checked_sub(self.elapsed_in_segment)
+            .ok_or(TransitError::InvalidProgress)?;
+        let later_remaining = self
+            .route
+            .duration
+            .checked_sub(segment.end_offset)
+            .ok_or(TransitError::InvalidProgress)?;
+        current_remaining
+            .checked_add(later_remaining)
+            .ok_or(TransitError::Overflow)
+    }
+
+    pub(crate) fn useful_elapsed(&self) -> Result<SimDuration, TransitError> {
+        self.route
+            .duration
+            .checked_sub(self.remaining()?)
+            .ok_or(TransitError::InvalidProgress)
+    }
+
+    /// Advance actual movement time. An over-advance fails atomically so a
+    /// rejected callback can retry from the same edge and elapsed position.
+    pub(crate) fn advance(&mut self, elapsed: SimDuration) -> Result<(), TransitError> {
+        self.validate_cursor()?;
+        let mut segment_index = self.segment_index;
+        let mut elapsed_in_segment = self.elapsed_in_segment;
+        let mut to_advance = elapsed;
+
+        loop {
+            while let Some(segment) = self.route.segments.get(segment_index) {
+                let segment_duration = segment
+                    .end_offset
+                    .checked_sub(segment.start_offset)
+                    .ok_or(TransitError::InvalidProgress)?;
+                if segment_duration.ticks() != 0 {
+                    break;
+                }
+                segment_index = segment_index
+                    .checked_add(1)
+                    .ok_or(TransitError::InvalidProgress)?;
+                elapsed_in_segment = SimDuration::ZERO;
+            }
+
+            let Some(segment) = self.route.segments.get(segment_index) else {
+                if to_advance.ticks() != 0 {
+                    return Err(TransitError::InvalidProgress);
+                }
+                break;
+            };
+            let segment_duration = segment
+                .end_offset
+                .checked_sub(segment.start_offset)
+                .ok_or(TransitError::InvalidProgress)?;
+            let remaining_in_segment = segment_duration
+                .checked_sub(elapsed_in_segment)
+                .ok_or(TransitError::InvalidProgress)?;
+
+            if to_advance < remaining_in_segment {
+                elapsed_in_segment = elapsed_in_segment
+                    .checked_add(to_advance)
+                    .ok_or(TransitError::Overflow)?;
+                break;
+            }
+
+            to_advance = to_advance
+                .checked_sub(remaining_in_segment)
+                .ok_or(TransitError::InvalidProgress)?;
+            segment_index = segment_index
+                .checked_add(1)
+                .ok_or(TransitError::InvalidProgress)?;
+            elapsed_in_segment = SimDuration::ZERO;
+        }
+
+        let mut candidate = self.clone();
+        candidate.segment_index = segment_index;
+        candidate.elapsed_in_segment = elapsed_in_segment;
+        candidate.validate_cursor()?;
+        self.segment_index = candidate.segment_index;
+        self.elapsed_in_segment = candidate.elapsed_in_segment;
+        Ok(())
+    }
+
+    pub(crate) fn checkpoint(&self) -> Result<TransitProgressCheckpoint, TransitError> {
+        self.validate_cursor()?;
+        Ok(TransitProgressCheckpoint {
+            route: self.route.clone(),
+            segment_index: self.segment_index,
+            elapsed_in_segment: self.elapsed_in_segment,
+        })
+    }
+
+    pub(crate) fn restore(checkpoint: TransitProgressCheckpoint) -> Result<Self, TransitError> {
+        let state = Self {
+            route: checkpoint.route,
+            segment_index: checkpoint.segment_index,
+            elapsed_in_segment: checkpoint.elapsed_in_segment,
+        };
+        state.validate_cursor()?;
+        Ok(state)
+    }
+
+    fn skip_zero_duration_segments(&mut self) -> Result<(), TransitError> {
+        while let Some(segment) = self.route.segments.get(self.segment_index) {
+            let segment_duration = segment
+                .end_offset
+                .checked_sub(segment.start_offset)
+                .ok_or(TransitError::InvalidProgress)?;
+            if segment_duration.ticks() != 0 {
+                break;
+            }
+            self.segment_index = self
+                .segment_index
+                .checked_add(1)
+                .ok_or(TransitError::InvalidProgress)?;
+        }
+        self.validate_cursor()
+    }
+
+    fn validate_cursor(&self) -> Result<(), TransitError> {
+        self.validate_route()?;
+        if self.segment_index > self.route.segments.len() {
+            return Err(TransitError::InvalidProgress);
+        }
+        let Some(segment) = self.route.segments.get(self.segment_index) else {
+            return if self.elapsed_in_segment.ticks() == 0 {
+                Ok(())
+            } else {
+                Err(TransitError::InvalidProgress)
+            };
+        };
+        let segment_duration = segment
+            .end_offset
+            .checked_sub(segment.start_offset)
+            .ok_or(TransitError::InvalidProgress)?;
+        if segment_duration.ticks() == 0 || self.elapsed_in_segment >= segment_duration {
+            return Err(TransitError::InvalidProgress);
+        }
+        Ok(())
+    }
+
+    fn validate_route(&self) -> Result<(), TransitError> {
+        let segments = &self.route.segments;
+        let Some(first) = segments.first() else {
+            return if self.route.duration.ticks() == 0 {
+                Ok(())
+            } else {
+                Err(TransitError::InvalidProgress)
+            };
+        };
+        if first.start_offset.ticks() != 0 {
+            return Err(TransitError::InvalidProgress);
+        }
+        let mut prior_end = SimDuration::ZERO;
+        for segment in segments {
+            if segment.start_offset != prior_end || segment.end_offset < segment.start_offset {
+                return Err(TransitError::InvalidProgress);
+            }
+            prior_end = segment.end_offset;
+        }
+        if prior_end != self.route.duration {
+            return Err(TransitError::InvalidProgress);
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1};
+    use super::{
+        EdgeId, MovementModeId, MovementProfile, NodeId, RoutePlan, SimDuration, TransitEdge,
+        TransitError, TransitGraphV1, TransitProgressState,
+    };
+
+    fn linear_route(
+        lengths_mm: &[u64],
+        speed_mm_per_second: u64,
+        ticks_per_second: u64,
+    ) -> RoutePlan {
+        let nodes: Vec<_> = (0..=lengths_mm.len())
+            .map(|value| NodeId::new(u64::try_from(value).unwrap()))
+            .collect();
+        let mode = MovementModeId::new("walk").unwrap();
+        let edges = lengths_mm
+            .iter()
+            .enumerate()
+            .map(|(index, length_mm)| TransitEdge {
+                id: EdgeId::new(u64::try_from(index + 1).unwrap()),
+                from: nodes[index],
+                to: nodes[index + 1],
+                length_mm: *length_mm,
+                allowed_modes: vec![mode.clone()],
+            })
+            .collect();
+        TransitGraphV1::new(1, nodes.clone(), edges)
+            .unwrap()
+            .route(
+                nodes[0],
+                *nodes.last().unwrap(),
+                &MovementProfile::new("walk", speed_mm_per_second).unwrap(),
+                ticks_per_second,
+            )
+            .unwrap()
+    }
+
+    #[test]
+    fn transit_progress_checkpoint_restores_edge_elapsed_and_remaining_duration() {
+        let route = linear_route(&[5, 3, 4], 2, 3);
+        let mut progress = TransitProgressState::new(route.clone()).unwrap();
+        progress.advance(SimDuration::from_ticks(10)).unwrap();
+
+        assert_eq!(progress.current_edge_id(), Some(EdgeId::new(2)));
+        assert_eq!(progress.elapsed_in_segment(), SimDuration::from_ticks(2));
+        assert_eq!(
+            progress.useful_elapsed().unwrap(),
+            SimDuration::from_ticks(10)
+        );
+        assert_eq!(progress.remaining().unwrap(), SimDuration::from_ticks(8));
+
+        let resumed = TransitProgressState::restore(progress.checkpoint().unwrap()).unwrap();
+        assert_eq!(resumed, progress);
+        assert_eq!(resumed.route, route);
+        assert_eq!(resumed.current_edge_id(), Some(EdgeId::new(2)));
+        assert_eq!(resumed.remaining().unwrap(), SimDuration::from_ticks(8));
+
+        let mut resumed = resumed;
+        resumed.advance(SimDuration::from_ticks(8)).unwrap();
+        assert_eq!(resumed.current_edge_id(), None);
+        assert_eq!(resumed.remaining().unwrap(), SimDuration::ZERO);
+    }
+
+    #[test]
+    fn transit_progress_over_advance_rejects_without_losing_checkpoint_state() {
+        let mut progress = TransitProgressState::new(linear_route(&[5], 1, 1)).unwrap();
+        progress.advance(SimDuration::from_ticks(2)).unwrap();
+        let before = progress.clone();
+
+        assert_eq!(
+            progress.advance(SimDuration::from_ticks(4)),
+            Err(TransitError::InvalidProgress)
+        );
+        assert_eq!(progress, before);
+    }
+
+    #[test]
+    fn transit_progress_consumes_zero_duration_edges_at_the_boundary() {
+        let mut progress = TransitProgressState::new(linear_route(&[1, 1], u64::MAX, 1)).unwrap();
+        assert_eq!(progress.current_edge_id(), Some(EdgeId::new(1)));
+        assert_eq!(progress.remaining().unwrap(), SimDuration::from_ticks(1));
+
+        progress.advance(SimDuration::from_ticks(1)).unwrap();
+        assert_eq!(progress.current_edge_id(), None);
+        assert_eq!(progress.elapsed_in_segment(), SimDuration::ZERO);
+        assert_eq!(progress.remaining().unwrap(), SimDuration::ZERO);
+    }
+
+    #[test]
+    fn transit_progress_rejects_out_of_range_restored_cursor() {
+        let progress = TransitProgressState::new(linear_route(&[5], 1, 1)).unwrap();
+        let mut checkpoint = progress.checkpoint().unwrap();
+        checkpoint.segment_index = usize::MAX;
+
+        assert_eq!(
+            TransitProgressState::restore(checkpoint),
+            Err(TransitError::InvalidProgress)
+        );
+    }
 
     #[test]
     fn zero_cycle_does_not_override_a_late_full_sequence_tie_break() {
