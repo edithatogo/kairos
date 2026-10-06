@@ -104,7 +104,7 @@ def main() -> int:
     (LOGS / "toolchain.log").write_text(toolchain)
     argv = ["cargo", "test", "--locked", "-p", "kairo-ecs-calibration", "--lib"]
     if ready:
-        argv.extend(["--features", "flow"])
+        argv.extend(["--features", "flow,kairo-ecs-abm/test-support"])
     proc = run(argv, cwd=DISPOSABLE, env=env)
     raw = proc.stdout.encode()
     (LOGS / "cargo-test.log").write_bytes(raw)
