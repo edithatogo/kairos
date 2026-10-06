@@ -1,0 +1,835 @@
+{
+  "status": "accepted_C1.1_fixture_join_local_synthetic",
+  "base_sha": "17311dd13b4aacc267f6d9ac1889e99a41d41bcc",
+  "consumer_commit": "658a7a845f117405a6c728c34279d8e1814ade82",
+  "consumer_source_sha256": "a49206a0c374cc3363ad33d4b8dd2a6f61ec5cc18ffdcdad2151060334ec9a6a",
+  "snapshot_sha256": "f71bc569c11253b9505ed4935cf001d49778b1b847af5e0c3b97c53e74b683cf",
+  "physical_version": "2",
+  "logical_schema_sha256": "8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842",
+  "request_count": 51,
+  "record_counts": {
+    "outcome_observation.v1": 4,
+    "trace_event.v1": 31,
+    "trace_exclusion.v1": 17
+  },
+  "verification": [
+    {
+      "argv": [
+        "/private/tmp/kairos-c1-ci-python-qualify-20261004/.artifacts/c1-ci-python-qualification/venv-attempt2/bin/python",
+        "-B",
+        "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py",
+        "--generate",
+        "/private/tmp/careops-c11-mapper-prototype-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.mapper_boundaries_20261004/actual-mapper-snapshot.json"
+      ],
+      "cwd": ".",
+      "expected_exit": 0,
+      "oracle": "Actual C0-validated records encoded with frozen schemas; Python exact schema/metadata/payload readback across9files"
+    },
+    {
+      "argv": [
+        "env",
+        "RUSTC=/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+        "CARGO_TARGET_DIR=/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.physical_interop_v2_20261004/target",
+        "KAIROS_C11_PHYSICAL_OUTDIR=/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.physical_interop_v2_20261004/rust-out",
+        "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+        "test",
+        "--locked",
+        "--offline",
+        "-p",
+        "kairo-ecs-arrow-io",
+        "--no-default-features",
+        "--features",
+        "ipc,parquet",
+        "--test",
+        "calibration_physical_v2"
+      ],
+      "cwd": ".",
+      "expected_exit": 0,
+      "oracle": "Rust reads all9external files, compares row payloads and rejects metadata mismatch, writes fresh9files"
+    },
+    {
+      "argv": [
+        "/private/tmp/kairos-c1-ci-python-qualify-20261004/.artifacts/c1-ci-python-qualification/venv-attempt2/bin/python",
+        "-B",
+        "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py",
+        "--check-rust",
+        "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.physical_interop_v2_20261004/rust-out"
+      ],
+      "cwd": ".",
+      "expected_exit": 0,
+      "oracle": "Independent PyArrow readback of fresh Rust-written9files exact schema/metadata/nulls/fullpayload"
+    }
+  ],
+  "exit_codes": [
+    0,
+    0,
+    0
+  ],
+  "log_sha256": {
+    "generate.log": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114",
+    "native.log": "68f457d7adb717177f350f1fda8c9d8f3f30b6a3ddf2443920839307de0e30fb",
+    "readback.log": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114",
+    "c0-validation-final.log": "7fff05a325b00e4e8cc899f0c27259610b429f22e4101bf1a3ff9a5217a59289",
+    "optimized-invalid-c0.log": "66ef0ffa7d350dfa90c7e4347db28f2647506c10bd67e762bb2f29f147088079",
+    "generate-final.log": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114",
+    "readback-final.log": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114",
+    "generate-final-reviewed.log": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114",
+    "readback-final-reviewed.log": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114",
+    "c0-validation-retained.log": "6c6b9c1c92dcc8466768a24130321cc410859aeba5facd971034aeb4f9d2e945",
+    "generate-retained.log": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114",
+    "readback-retained.log": "2748d07f9074a35d971023555874cef90e4be3ddfe9dbf46cb99b04f988c1114"
+  },
+  "binary_sha256": {
+    "exclusion.ipc_file": "09abb1ff38b13d941ef868aed8cb6b8dde32615bbc98d290d031cd7df6e75895",
+    "exclusion.ipc_stream": "9a58c4e6bd7d4c9744cf4fb7bcf1098d91c9e754ccbb163f2e4f9d420549aff4",
+    "exclusion.parquet": "4318450a7059cf323c4bd62c56893c93f4462b30123b72f570bc2085627d624c",
+    "outcome.ipc_file": "b28623729090e94b24d51dfdccde7c4d08f6e65277a5fb4991d99e65c8a5bc13",
+    "outcome.ipc_stream": "5a4755ab0b2048ce4cdfe4a1acf349a3d9dfb3f98a09374c66012a65bc52575b",
+    "outcome.parquet": "b3fdda33d61b9a36e6b6c479f1ff1ce0cc1551be1a3720e9be5230a89f138fcd",
+    "trace.ipc_file": "b941f2d3d2b903cb50594d99bc9f9b04230a25f12e90321426beb78ad4beceab",
+    "trace.ipc_stream": "ce35e7a21eed11bd392940503559f205ebe053c519941c4cd9982d9e9fe96392",
+    "trace.parquet": "6f887c1d97b59c13ddf5f5bbc08f83f3e64a3e0a4b3fdc5b30d71d0dc9b02ea7"
+  },
+  "limitations": [
+    "synthetic mapping profile only; classified DST controls not an IANA resolver",
+    "private prototype not stable API or full C1.3 streaming/sort/occupancy pipeline",
+    "C1.2/C1.3/full C1phase/MSRV/platform/release not accepted by this proof"
+  ],
+  "seed": "not applicable; deterministic raw fixture requests",
+  "attempts": "Rejected v1 map layout and lineage-domain failure receipts preserved in predecessor worktrees; v2 exact parity succeeded",
+  "independent_c0_validation": {
+    "argv": [
+      "/opt/homebrew/Cellar/python@3.14/3.14.8/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python",
+      "-B",
+      "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/validate_actual.py",
+      "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/conductor/research/c0.3-source-inputs-20261001/calibration-v1.schema.json",
+      "/private/tmp/careops-c11-mapper-prototype-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.mapper_boundaries_20261004/actual-mapper-snapshot.json"
+    ],
+    "candidate_expansion_checks": 51,
+    "candidate_partition_checks": 51,
+    "cwd": "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos",
+    "exit_code": 0,
+    "jsonschema": "4.26.0",
+    "logical_schema_sha256": "8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842",
+    "outcome_population_checks": 51,
+    "per_request": [
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 0,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 1,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 2,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 3,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 4,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 5,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 6,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 1
+        },
+        "request_index": 7,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 1
+        },
+        "request_index": 8,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 1
+        },
+        "request_index": 9,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 10,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 11,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 12,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 13,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 14,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 15,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 16,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 17,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 18,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 19,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 20,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 21,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 22,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 23,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 24,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 25,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 26,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 27,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 28,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 3,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 3,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 29,
+        "source_rows": 3
+      },
+      {
+        "candidate_units": 3,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 3,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 30,
+        "source_rows": 3
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 0,
+          "failed_units": 1,
+          "unresolved_units": 0
+        },
+        "request_index": 31,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 1,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 32,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 2,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 0,
+          "failed_units": 2,
+          "unresolved_units": 0
+        },
+        "request_index": 33,
+        "source_rows": 2
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 34,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 0,
+          "failed_units": 1,
+          "unresolved_units": 0
+        },
+        "request_index": 35,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 36,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 37,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 0,
+          "failed_units": 1,
+          "unresolved_units": 0
+        },
+        "request_index": 38,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 39,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 0,
+          "failed_units": 1,
+          "unresolved_units": 0
+        },
+        "request_index": 40,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 1
+        },
+        "request_index": 41,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 1
+        },
+        "request_index": 42,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 1,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 43,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 1,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 44,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 2,
+        "outcome_observations": 1,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 45,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 2,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 2,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 46,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 2,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 2,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 47,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 48,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 0,
+          "excluded_units": 1,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 49,
+        "source_rows": 1
+      },
+      {
+        "candidate_units": 1,
+        "outcome_observations": 0,
+        "partition": {
+          "accepted_units": 1,
+          "excluded_units": 0,
+          "failed_units": 0,
+          "unresolved_units": 0
+        },
+        "request_index": 50,
+        "source_rows": 1
+      }
+    ],
+    "python": "3.14.8",
+    "record_counts": {
+      "outcome_observation.v1": 4,
+      "trace_event.v1": 31,
+      "trace_exclusion.v1": 17
+    },
+    "request_count": 51,
+    "snapshot_sha256": "f71bc569c11253b9505ed4935cf001d49778b1b847af5e0c3b97c53e74b683cf",
+    "source_row_count_checks": 51,
+    "validator_sha256": "d293dc45f666518b174868ade8bc2c32b899fb2e22ed89eede4b17e737ded625",
+    "log_sha256": "6c6b9c1c92dcc8466768a24130321cc410859aeba5facd971034aeb4f9d2e945"
+  },
+  "qualified_generation": {
+    "argv": [
+      "/private/tmp/kairos-c1-ci-python-qualify-20261004/.artifacts/c1-ci-python-qualification/venv-attempt2/bin/python",
+      "-B",
+      "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py",
+      "--generate",
+      "/private/tmp/careops-c11-mapper-prototype-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.mapper_boundaries_20261004/actual-mapper-snapshot.json",
+      "--validation-receipt",
+      "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/c0-validation.json"
+    ],
+    "cwd": "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos",
+    "exit_code": 0,
+    "all_nine_binary_sha256_unchanged": true,
+    "native_repeated": false,
+    "reason": "Same Rust test source and identical binaryfixture hashes; fresh PyArrow readback with C0receipt linkage passed"
+  },
+  "retained_c0_receipt_sha256": "754e85ceff580fd70f6891c9b1964e6c0d74b01f4eb0594112f68c5ccc46de74",
+  "review_followup": "Two independent receipt revisions resolved: actual C0 and per-request source/outcome/expansion/partition receipts; all coverage gates enforced before asset writes. Native test source and all9binary hashes unchanged.",
+  "negative_evidence_controls": [
+    {
+      "argv": [
+        "/private/tmp/kairos-c1-ci-python-qualify-20261004/.artifacts/c1-ci-python-qualification/venv-attempt2/bin/python",
+        "-B",
+        "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py",
+        "--generate",
+        "/private/tmp/careops-c11-mapper-prototype-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.mapper_boundaries_20261004/actual-mapper-snapshot.json"
+      ],
+      "cwd": "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos",
+      "exit_code": 1,
+      "expected": "missing receipt rejects before fixture writes"
+    },
+    {
+      "argv": [
+        "/private/tmp/kairos-c1-ci-python-qualify-20261004/.artifacts/c1-ci-python-qualification/venv-attempt2/bin/python",
+        "-B",
+        "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py",
+        "--generate",
+        "/private/tmp/careops-c11-mapper-prototype-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.mapper_boundaries_20261004/actual-mapper-snapshot.json",
+        "--validation-receipt",
+        "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.physical_interop_v2_20261004/mismatched-c0-proof.json"
+      ],
+      "cwd": "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos",
+      "exit_code": 1,
+      "expected": "mismatched capture receipt rejects before fixture writes"
+    },
+    {
+      "argv": [
+        "python3",
+        "-O",
+        "-B",
+        "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/validate_actual.py",
+        "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/conductor/research/c0.3-source-inputs-20261001/calibration-v1.schema.json",
+        "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.physical_interop_v2_20261004/invalid-c0-control.json"
+      ],
+      "cwd": "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos",
+      "exit_code": 1,
+      "expected": "invalid C0 schema rejects even under Python -O"
+    },
+    {
+      "argv": [
+        "/private/tmp/kairos-c1-ci-python-qualify-20261004/.artifacts/c1-ci-python-qualification/venv-attempt2/bin/python",
+        "-B",
+        "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py",
+        "--generate",
+        "/private/tmp/careops-c11-mapper-prototype-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.mapper_boundaries_20261004/actual-mapper-snapshot.json",
+        "--validation-receipt",
+        "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.physical_interop_v2_20261004/candidate_expansion_checks-missing.json"
+      ],
+      "cwd": "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos",
+      "exit_code": 1,
+      "expected": "candidate_expansion_checks incomplete rejects before writes"
+    },
+    {
+      "argv": [
+        "/private/tmp/kairos-c1-ci-python-qualify-20261004/.artifacts/c1-ci-python-qualification/venv-attempt2/bin/python",
+        "-B",
+        "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py",
+        "--generate",
+        "/private/tmp/careops-c11-mapper-prototype-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.mapper_boundaries_20261004/actual-mapper-snapshot.json",
+        "--validation-receipt",
+        "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos/.artifacts/mvp/C1.1.formats.physical_interop_v2_20261004/candidate_partition_checks-missing.json"
+      ],
+      "cwd": "/private/tmp/careops-c11-physical-v2-20261004/libs/kairos",
+      "exit_code": 1,
+      "expected": "candidate_partition_checks incomplete rejects before writes"
+    }
+  ],
+  "generator_source_sha256": "cde1c0679c0e1c7c82e48da90fdd734033ebe6d69f604db323ff3d1d62ad14ab",
+  "independent_review": "Luna ACCEPT after two receipt revisions; root accepts retained self-describing validation receipt metadata, counts unchanged",
+  "source_sha256": {
+    "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py": "cde1c0679c0e1c7c82e48da90fdd734033ebe6d69f604db323ff3d1d62ad14ab",
+    "crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/validate_actual.py": "d293dc45f666518b174868ade8bc2c32b899fb2e22ed89eede4b17e737ded625",
+    "crates/kairo-ecs-arrow-io/tests/calibration_physical_v2.rs": "3324940bbcaf04b469903ecc47f8ffd1cfe1eeeb59bd0b08204532787d3a8480"
+  }
+}
