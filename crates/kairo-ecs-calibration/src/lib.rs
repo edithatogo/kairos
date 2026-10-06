@@ -2,6 +2,14 @@
 #![forbid(unsafe_code)]
 
 pub mod seed_map;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2.3 model dispatch helper is qualified by its focused tests; runtime integration remains separate"
+    )
+)]
+mod staff_dispatch;
 #[expect(
     dead_code,
     reason = "Private C2.2 provider is exercised by source conformance; Flow integration is a later instance"
