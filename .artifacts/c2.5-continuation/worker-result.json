@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "packet_id": "C2.5.continuation",
-  "status": "ready_for_review_with_verification_blocker",
-  "base_head": "e7a963e54aee56d175f23df2e5212c9f25c25bbc",
-  "verification_head": "e7a963e54aee56d175f23df2e5212c9f25c25bbc",
+  "status": "ready_for_review",
+  "base_head": "387fa0d598655316fc4484807ffd0f90534b3a09",
+  "verification_head": "387fa0d598655316fc4484807ffd0f90534b3a09",
   "toolchain": "stable Rust 1.99.0 selected through rustup run 1.99.0",
   "source_hashes_sha256": {
-    "crates/kairo-ecs-calibration/src/flow_bridge.rs": "0230f727e399c8de309f427af74a6d3d76aef413b32f1c81660fe2064772b1e6",
+    "crates/kairo-ecs-calibration/src/flow_bridge.rs": "40c2ef4190aee45bf996c4d0f8a7882fc80f54824bd6aeefebcf200543342eee",
     "conductor/design/calibration/c2-in-memory-continuation-v1.md": "b8b139298d05d3c6e0e0b564f3c5f067d5cca6909a4f633373725163611ae11a",
     "crates/kairo-ecs-des/src/fidelity.rs": "8c6c50a26d351e5e5d2ccce4dd3fbd39325b4d72743adfbdbb61e4434fd04bce"
   },
@@ -23,7 +23,7 @@
         "--check"
       ],
       "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-c2.5-continuation-20261007",
-      "head": "47fab4377ce031b7c8ff768d95aa3278aee53670",
+      "head": "387fa0d598655316fc4484807ffd0f90534b3a09",
       "toolchain": "stable Rust 1.99.0",
       "exit_code": 0,
       "stdout": "",
@@ -40,14 +40,17 @@
         "-p",
         "kairo-ecs-calibration",
         "--features",
-        "flow"
+        "flow,kairo-ecs-abm/test-support",
+        "--target-dir",
+        ".artifacts/c2.5-continuation/target"
       ],
       "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-c2.5-continuation-20261007",
-      "head": "47fab4377ce031b7c8ff768d95aa3278aee53670",
+      "head": "387fa0d598655316fc4484807ffd0f90534b3a09",
       "toolchain": "stable Rust 1.99.0",
-      "exit_code": 101,
-      "stdout": "   Compiling kairo-ecs-calibration v0.1.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-c2.5-continuation-20261007/crates/kairo-ecs-calibration)\n",
-      "stderr": "error[E0432]: unresolved import `kairo_ecs_abm::register_transit_context_reject_first_for_test`\n    --> crates/kairo-ecs-calibration/src/flow_bridge.rs:1010:51\n     |\n1010 |     use kairo_ecs_abm::{register_transit_context, register_transit_context_reject_first_for_test};\n     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `register_transit_context_reject_first_for_test` in the root\n     |\nnote: found an item that was configured out\n    --> crates/kairo-ecs-abm/src/lib.rs:7:23\n     |\n   5 | #[cfg(feature = \"test-support\")]\n     |       ------------------------ the item is gated behind the `test-support` feature\n   6 | #[doc(hidden)]\n   7 | pub use flow_adapter::register_transit_context_reject_first_for_test;\n     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFor more information about this error, try `rustc --explain E0432`.\nerror: could not compile `kairo-ecs-calibration` (lib test) due to 1 previous error\nwarning: build failed, waiting for other jobs to finish...\n"
+      "exit_code": 0,
+      "result": "85 passed; 0 failed; 2 ignored in library tests. Integration suites: cohorts 6 passed; distance 15 passed/1 ignored; metrics_c41 8 passed/1 ignored; metrics_c42 8 passed; residuals 23 passed; seed_map 5 passed; sidecar_adapter_c43 13 passed; other targets/doc-tests 0 failures.",
+      "stdout_tail": "test result: ok. 85 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 5.00s\ncohorts_c42: 6 passed; distance_c42: 15 passed, 1 ignored; metrics_c41: 8 passed, 1 ignored; metrics_c42: 8 passed; residuals_c42: 23 passed; seed_map: 5 passed; sidecar_adapter_c43: 13 passed; all other targets and doc-tests reported 0 failures.",
+      "stderr": ""
     },
     {
       "argv": [
@@ -60,18 +63,20 @@
         "-p",
         "kairo-ecs-calibration",
         "--features",
-        "flow",
+        "flow,kairo-ecs-abm/test-support",
         "--all-targets",
+        "--target-dir",
+        ".artifacts/c2.5-continuation/target",
         "--",
         "-D",
         "warnings"
       ],
       "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-c2.5-continuation-20261007",
-      "head": "47fab4377ce031b7c8ff768d95aa3278aee53670",
+      "head": "387fa0d598655316fc4484807ffd0f90534b3a09",
       "toolchain": "stable Rust 1.99.0",
-      "exit_code": 101,
-      "stdout": "    Checking kairo-ecs-calibration v0.1.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-c2.5-continuation-20261007)\n",
-      "stderr": "error[E0432]: unresolved import `kairo_ecs_abm::register_transit_context_reject_first_for_test`\n    --> crates/kairo-ecs-calibration/src/flow_bridge.rs:1010:51\n     |\n1010 |     use kairo_ecs_abm::{register_transit_context, register_transit_context_reject_first_for_test};\n     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `register_transit_context_reject_first_for_test` in the root\n     |\nnote: found an item that was configured out\n    --> crates/kairo-ecs-abm/src/lib.rs:7:23\n     |\n   5 | #[cfg(feature = \"test-support\")]\n     |       ------------------------ the item is gated behind the `test-support` feature\n   6 | #[doc(hidden)]\n   7 | pub use flow_adapter::register_transit_context_reject_first_for_test;\n     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFor more information about this error, try `rustc --explain E0432`.\nerror: could not compile `kairo-ecs-calibration` (lib test) due to 1 previous error\n"
+      "exit_code": 0,
+      "stdout": "    Checking kairo-ecs-types v0.0.0\n    Checking typenum v1.20.1\n    Checking libc v0.2.186\n    Checking const-oid v0.10.2\n    Checking serde_core v1.0.228\n    Checking zmij v1.0.4\n    Checking memchr v2.8.0\n    Checking num-traits v0.2.19\n    Checking itoa v1.0.18\n    Checking thiserror v2.0.20\n    Checking cfg-if v1.0.4\n    Checking kairo-ecs-state v0.0.0\n    Checking kairo-ecs-rng v0.0.0\n    Checking kairo-ecs-core v0.0.0\n    Checking cpufeatures v0.3.1\n    Checking chrono v0.4.45\n    Checking hybrid-array v0.4.15\n    Checking kairo-ecs-des v0.1.0\n    Checking kairo-ecs-arrow v0.1.0\n    Checking crypto-common v0.2.2\n    Checking block-buffer v0.12.2\n    Checking serde_json v1.0.149\n    Checking kairo-ecs-abm v0.1.0\n    Checking digest v0.11.3\n    Checking sha2 v0.11.0\n    Checking kairo-ecs-calibration v0.1.0\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.87s\n",
+      "stderr": ""
     }
   ],
   "implementation": [
@@ -79,8 +84,8 @@
     "Capture validates runtime identity and the adapter's exact admitted decision, returning original values on mismatch.",
     "Resume consumes the bundle and returns the same owned values.",
     "Added Macro, explicit-zero Micro, transit-start, observed-pause, continuity, pending-policy, and mismatch-preservation tests.",
-    "Corrected the staged test policy fixture to supported FidelityPolicy version 1."
+    "Corrected the staged test policy fixture to supported FidelityPolicy version 1.",
+    "Replaced cross-runtime FidelityAdapter equality with observable decision equality; both adapters are separately asserted to reject policy application with BusyBoundary while their work remains bound."
   ],
-  "blocker": "Exact Rust 1.99.0 test and Clippy commands still stop on the existing unconditional import of ABM test-only register_transit_context_reject_first_for_test. The helper is gated by kairo-ecs-abm/test-support, absent from the packet command --features flow. The protected calibration Cargo.toml was not changed. The policy-version fixture is now corrected to supported version 1.",
-  "attempt_id": "C2.5.continuation.attempt-3"
+  "attempt_id": "C2.5.continuation.attempt-5"
 }

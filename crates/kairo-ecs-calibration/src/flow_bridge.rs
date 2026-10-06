@@ -1284,7 +1284,7 @@ mod tests {
                 control_adapter.apply_at_boundary(&control_flow),
                 Err(FidelityError::BusyBoundary)
             );
-            assert_eq!(adapter, control_adapter);
+            assert_eq!(adapter.decision(work), control_adapter.decision(work));
         }
     }
 
