@@ -10,6 +10,15 @@ pub mod seed_map;
     )
 )]
 mod staff_dispatch;
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2.3 resource lifecycle adapter is exercised by focused actual-Flow tests; coordinator acceptance remains separate"
+    )
+)]
+mod staff_flow_lifecycle;
 #[expect(
     dead_code,
     reason = "Private C2.2 provider is exercised by source conformance; Flow integration is a later instance"
