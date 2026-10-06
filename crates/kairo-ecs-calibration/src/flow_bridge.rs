@@ -1866,6 +1866,9 @@ mod tests {
         service_draw_position: u64,
         decision: FidelityDecision,
         transit_elapsed: SimDuration,
+        has_transit_carrier: bool,
+        terminal_progress: kairo_ecs_des::WorkProgress,
+        terminal_request_state: RequestState,
     }
 
     fn recorded_step(
@@ -1877,15 +1880,21 @@ mod tests {
         dispatch
     }
 
-    fn run_urgent_preemption_case(mode: FidelityMode) -> UrgentPreemptionOutcome {
+    fn run_urgent_preemption_case(
+        mode: FidelityMode,
+        preemption_strategy: PreemptionStrategy,
+        transit_intent: TransitIntent,
+    ) -> UrgentPreemptionOutcome {
         let t = SimTime::from_ticks;
         let d = SimDuration::from_ticks;
         let (mut work_input, mut flow, mut adapter, resource) =
-            input(mode, TransitIntent::Route, SeedPurpose::Service, false);
-        // Q4 Suspend is enabled only for this fixture; production bridge defaults
-        // remain non-preemptible.
-        work_input.acquire.preemptible = Some(PreemptionStrategy::Suspend);
-        if mode == FidelityMode::Micro {
+            input(mode, transit_intent, SeedPurpose::Service, false);
+        // Q4 interruption is enabled only for this fixture; production bridge
+        // defaults remain non-preemptible.
+        work_input.acquire.preemptible = Some(preemption_strategy);
+        if mode == FidelityMode::Micro
+            && matches!(&work_input.transit, TransitRequest::Route { .. })
+        {
             let carrier_actor = match &work_input.transit {
                 TransitRequest::Route { carrier_actor, .. } => *carrier_actor,
                 TransitRequest::Zero => unreachable!(),
@@ -1939,7 +1948,8 @@ mod tests {
         let work = must_create(prepared.create(&mut flow));
         let work_id = work.work();
         let mut bound = must_bind(work.bind(&flow));
-        let (transit_elapsed, submitted) = if mode == FidelityMode::Micro {
+        let has_transit_carrier = bound.carrier.is_some();
+        let (transit_elapsed, submitted) = if mode == FidelityMode::Micro && has_transit_carrier {
             register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20))
                 .unwrap();
             bound.start_transit(&mut flow).unwrap();
@@ -1983,7 +1993,7 @@ mod tests {
         assert_eq!(flow.request(request_id).unwrap().work, Some(work_id));
         assert_eq!(
             flow.request(request_id).unwrap().preemptible,
-            Some(PreemptionStrategy::Suspend)
+            Some(preemption_strategy)
         );
         flow.release(blocker_lease, t(5)).unwrap();
 
@@ -2023,8 +2033,18 @@ mod tests {
         );
         let suspended = flow.work_progress(work_id).unwrap();
         assert_eq!(suspended.state, WorkState::Suspended);
-        assert_eq!(suspended.useful_elapsed, d(3));
-        assert_eq!(suspended.remaining, d(17));
+        match preemption_strategy {
+            PreemptionStrategy::Suspend => {
+                assert_eq!(suspended.useful_elapsed, d(3));
+                assert_eq!(suspended.remaining, d(17));
+            }
+            PreemptionStrategy::Restart => {
+                assert_eq!(suspended.attempt_revision, 1);
+                assert_eq!(suspended.useful_elapsed, SimDuration::ZERO);
+                assert_eq!(suspended.remaining, d(20));
+            }
+            PreemptionStrategy::Abort => unreachable!("fixture does not exercise Abort"),
+        }
         let preempted = at_eight
             .records
             .iter()
@@ -2060,17 +2080,46 @@ mod tests {
         );
         let resumed = flow.work_progress(work_id).unwrap();
         assert_eq!(resumed.state, WorkState::Active);
-        assert_eq!(resumed.useful_elapsed, d(3));
-        assert_eq!(resumed.remaining, d(17));
-        let resumed_record = at_ten
-            .records
-            .iter()
-            .find(|row| row.request == request_id && row.transition == LifecycleTransition::Resumed)
-            .unwrap();
-        assert_eq!(
-            resumed_record.snapshot.progress.as_ref().unwrap().remaining,
-            d(17)
-        );
+        match preemption_strategy {
+            PreemptionStrategy::Suspend => {
+                assert_eq!(resumed.useful_elapsed, d(3));
+                assert_eq!(resumed.remaining, d(17));
+                let resumed_record = at_ten
+                    .records
+                    .iter()
+                    .find(|row| {
+                        row.request == request_id && row.transition == LifecycleTransition::Resumed
+                    })
+                    .unwrap();
+                assert_eq!(
+                    resumed_record.snapshot.progress.as_ref().unwrap().remaining,
+                    d(17)
+                );
+            }
+            PreemptionStrategy::Restart => {
+                assert_eq!(resumed.attempt_revision, 1);
+                assert_eq!(resumed.useful_elapsed, SimDuration::ZERO);
+                assert_eq!(resumed.remaining, d(20));
+                let restarted_record = at_ten
+                    .records
+                    .iter()
+                    .find(|row| {
+                        row.request == request_id
+                            && row.transition == LifecycleTransition::Restarted
+                    })
+                    .unwrap();
+                assert_eq!(
+                    restarted_record
+                        .snapshot
+                        .progress
+                        .as_ref()
+                        .unwrap()
+                        .remaining,
+                    d(20)
+                );
+            }
+            PreemptionStrategy::Abort => unreachable!("fixture does not exercise Abort"),
+        }
 
         let mut completion = None;
         while flow.request(request_id).unwrap().state != RequestState::Completed {
@@ -2082,7 +2131,12 @@ mod tests {
             }
         }
         let completion = completion.unwrap();
-        assert_eq!(completion, t(27));
+        let expected_completion = if preemption_strategy == PreemptionStrategy::Restart {
+            t(30)
+        } else {
+            t(27)
+        };
+        assert_eq!(completion, expected_completion);
         let completed = flow.work_progress(work_id).unwrap();
         assert_eq!(completed.state, WorkState::Completed);
         assert_eq!(completed.useful_elapsed, d(20));
@@ -2107,14 +2161,19 @@ mod tests {
             .find(|(_, transition)| *transition == LifecycleTransition::Granted)
             .unwrap()
             .0;
+        let return_transition = if preemption_strategy == PreemptionStrategy::Restart {
+            LifecycleTransition::Restarted
+        } else {
+            LifecycleTransition::Resumed
+        };
         assert_eq!(
             original_rows,
             vec![
                 (submitted_at, LifecycleTransition::Queued),
                 (t(5), LifecycleTransition::Granted),
                 (t(8), LifecycleTransition::Preempted),
-                (t(10), LifecycleTransition::Resumed),
-                (t(27), LifecycleTransition::Completed),
+                (t(10), return_transition),
+                (expected_completion, LifecycleTransition::Completed),
             ]
         );
         let bridge_lineage_rows: Vec<_> = records
@@ -2141,7 +2200,7 @@ mod tests {
         let queue_elapsed = granted_at.duration_since(submitted_at).unwrap();
         assert_eq!(
             queue_elapsed,
-            if mode == FidelityMode::Macro {
+            if transit_elapsed == SimDuration::ZERO {
                 d(5)
             } else {
                 d(3)
@@ -2151,9 +2210,16 @@ mod tests {
         let interruption = t(10).duration_since(t(8)).unwrap();
         assert_eq!(useful_service, d(20));
         assert_eq!(interruption, d(2));
+        let discarded_attempt = if preemption_strategy == PreemptionStrategy::Restart {
+            d(3)
+        } else {
+            SimDuration::ZERO
+        };
         assert_eq!(
             transit_elapsed
                 .checked_add(queue_elapsed)
+                .unwrap()
+                .checked_add(discarded_attempt)
                 .unwrap()
                 .checked_add(useful_service)
                 .unwrap()
@@ -2170,13 +2236,24 @@ mod tests {
             service_draw_position: submitted.service_draw_position(),
             decision: submitted.decision(),
             transit_elapsed,
+            has_transit_carrier,
+            terminal_progress: completed,
+            terminal_request_state: flow.request(request_id).unwrap().state,
         }
     }
 
     #[test]
     fn actual_flow_urgent_suspend_resumes_same_macro_and_routed_micro_service() {
-        let macro_run = run_urgent_preemption_case(FidelityMode::Macro);
-        let micro_run = run_urgent_preemption_case(FidelityMode::Micro);
+        let macro_run = run_urgent_preemption_case(
+            FidelityMode::Macro,
+            PreemptionStrategy::Suspend,
+            TransitIntent::Route,
+        );
+        let micro_run = run_urgent_preemption_case(
+            FidelityMode::Micro,
+            PreemptionStrategy::Suspend,
+            TransitIntent::Route,
+        );
 
         assert_eq!(macro_run.completion, SimTime::from_ticks(27));
         assert_eq!(micro_run.completion, macro_run.completion);
@@ -2206,6 +2283,65 @@ mod tests {
                 .checked_add(d(20))
                 .unwrap()
                 .checked_add(d(2))
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn actual_flow_urgent_restart_reuses_sampled_service_for_macro_and_zero_transit_micro() {
+        let macro_run = run_urgent_preemption_case(
+            FidelityMode::Macro,
+            PreemptionStrategy::Restart,
+            TransitIntent::Zero,
+        );
+        let micro_run = run_urgent_preemption_case(
+            FidelityMode::Micro,
+            PreemptionStrategy::Restart,
+            TransitIntent::Zero,
+        );
+
+        assert_eq!(macro_run.completion, SimTime::from_ticks(30));
+        assert_eq!(micro_run.completion, macro_run.completion);
+        assert_eq!(macro_run.service_duration, SimDuration::from_ticks(20));
+        assert_eq!(micro_run.service_duration, macro_run.service_duration);
+        assert_eq!(macro_run.service_key, micro_run.service_key);
+        assert_eq!(macro_run.service_seed, micro_run.service_seed);
+        assert_eq!(macro_run.service_draw_position, 1);
+        assert_eq!(
+            micro_run.service_draw_position,
+            macro_run.service_draw_position
+        );
+        assert_eq!(macro_run.decision.mode, FidelityMode::Macro);
+        assert_eq!(micro_run.decision.mode, FidelityMode::Micro);
+        assert_eq!(macro_run.transit_elapsed, SimDuration::ZERO);
+        assert_eq!(micro_run.transit_elapsed, SimDuration::ZERO);
+        assert!(!macro_run.has_transit_carrier);
+        assert!(!micro_run.has_transit_carrier);
+        assert_eq!(macro_run.terminal_progress, micro_run.terminal_progress);
+        assert_eq!(macro_run.terminal_request_state, RequestState::Completed);
+        assert_eq!(
+            micro_run.terminal_request_state,
+            macro_run.terminal_request_state
+        );
+
+        let t = SimTime::from_ticks;
+        let d = SimDuration::from_ticks;
+        assert_eq!(
+            macro_run.completion.duration_since(t(0)).unwrap(),
+            d(5).checked_add(d(3))
+                .unwrap()
+                .checked_add(d(2))
+                .unwrap()
+                .checked_add(d(20))
+                .unwrap()
+        );
+        assert_eq!(
+            micro_run.completion.duration_since(t(0)).unwrap(),
+            d(5).checked_add(d(3))
+                .unwrap()
+                .checked_add(d(2))
+                .unwrap()
+                .checked_add(d(20))
                 .unwrap()
         );
     }
