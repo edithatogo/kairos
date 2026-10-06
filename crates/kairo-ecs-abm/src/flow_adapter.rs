@@ -514,6 +514,7 @@ pub fn schedule_transit_start(
     let context = flow.work_context::<TransitContext>(carrier)?;
     if context.runtime != flow.identity()
         || context.phase != TransitPhase::Ready
+        || context.expected_event.is_some()
         || at != context.start_at
         || at < flow.now()
     {
@@ -688,6 +689,23 @@ mod tests {
         let retained_start =
             schedule_transit_start(&mut flow, carrier, TRANSIT_KIND, SimTime::from_ticks(5), 0)
                 .unwrap();
+        let before_duplicate = flow.budget_snapshot();
+        let before_duplicate_context = flow.work_context::<TransitContext>(carrier).unwrap();
+        assert_eq!(
+            before_duplicate_context.expected_event,
+            Some(retained_start)
+        );
+        assert_eq!(
+            schedule_transit_start(&mut flow, carrier, TRANSIT_KIND, SimTime::from_ticks(5), 1),
+            Err(FlowError::InvalidWork)
+        );
+        assert_eq!(flow.budget_snapshot(), before_duplicate);
+        let after_duplicate_context = flow.work_context::<TransitContext>(carrier).unwrap();
+        assert_eq!(after_duplicate_context.expected_event, Some(retained_start));
+        assert_eq!(
+            after_duplicate_context.expected_due,
+            Some(SimTime::from_ticks(5))
+        );
         let alien_start = flow
             .schedule_domain(carrier, TRANSIT_KIND, SimTime::from_ticks(5), -1)
             .unwrap();
