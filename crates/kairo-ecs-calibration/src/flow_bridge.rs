@@ -1335,6 +1335,226 @@ mod tests {
     }
 
     #[test]
+    fn macro_and_micro_reconcile_queue_transit_and_service_elapsed_time() {
+        let t = SimTime::from_ticks;
+        let d = SimDuration::from_ticks;
+
+        let (macro_input, mut macro_flow, mut macro_adapter, macro_resource) = input(
+            FidelityMode::Macro,
+            TransitIntent::Route,
+            SeedPurpose::Service,
+            false,
+        );
+        let macro_blocker = macro_flow.spawn_actor().unwrap();
+        let macro_blocker_request = macro_flow
+            .acquire(macro_resource)
+            .owner(macro_blocker)
+            .at(t(0))
+            .submit()
+            .unwrap();
+        macro_flow.step().unwrap().unwrap();
+        let macro_blocker_lease = macro_flow.resource(macro_resource).unwrap().allocations[0].lease;
+        assert_eq!(
+            macro_flow.request(macro_blocker_request).unwrap().state,
+            RequestState::Active
+        );
+
+        let macro_prepared =
+            must_prepare(macro_input.prepare(&macro_flow, &mut macro_adapter, &provider()));
+        macro_flow
+            .register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
+            .unwrap();
+        let macro_work = must_create(macro_prepared.create(&mut macro_flow));
+        let macro_bound = must_bind(macro_work.bind(&macro_flow));
+        let macro_submitted = must_submit(macro_bound.submit(&mut macro_flow));
+        let service_duration = macro_submitted.sampled_duration();
+        assert_eq!(
+            macro_submitted.service_stream.derived_seed(),
+            0x4e65_a0fe_ae85_3a9b
+        );
+        assert_eq!(service_duration, d(20));
+        macro_flow.release(macro_blocker_lease, t(5)).unwrap();
+        macro_flow.step().unwrap().unwrap();
+        let macro_request = macro_flow.request(macro_submitted.request()).unwrap();
+        let macro_submitted_at = macro_request.submitted_at;
+        let macro_request_state = macro_request.state;
+        assert_eq!(macro_submitted_at, t(0));
+        assert_eq!(macro_request_state, RequestState::Queued);
+        macro_flow.step().unwrap().unwrap();
+        let macro_allocation = macro_flow
+            .resource(macro_resource)
+            .unwrap()
+            .allocations
+            .into_iter()
+            .find(|allocation| allocation.request == macro_submitted.request())
+            .unwrap();
+        assert_eq!(macro_allocation.granted_at, t(5));
+        let macro_completion = macro_allocation.completion_at.unwrap();
+        assert_eq!(macro_flow.step().unwrap().unwrap().at, macro_completion);
+        assert_eq!(
+            macro_flow
+                .work_progress(macro_submitted.work())
+                .unwrap()
+                .state,
+            WorkState::Completed
+        );
+
+        let (mut micro_input, mut micro_flow, mut micro_adapter, micro_resource) = input(
+            FidelityMode::Micro,
+            TransitIntent::Route,
+            SeedPurpose::Service,
+            false,
+        );
+        let carrier_actor = match &micro_input.transit {
+            TransitRequest::Route { carrier_actor, .. } => *carrier_actor,
+            TransitRequest::Zero => unreachable!(),
+        };
+        let nodes = (1..=3).map(NodeId::new).collect::<Vec<_>>();
+        let walk = MovementModeId::new("walk").unwrap();
+        let edges = (0..2)
+            .map(|index| TransitEdge {
+                id: EdgeId::new(index + 1),
+                from: nodes[index as usize],
+                to: nodes[index as usize + 1],
+                length_mm: 1,
+                allowed_modes: vec![walk.clone()],
+            })
+            .collect();
+        micro_input.transit = TransitRequest::Route {
+            graph: Arc::new(TransitGraphV1::new(1, nodes.clone(), edges).unwrap()),
+            origin: nodes[0],
+            destination: *nodes.last().unwrap(),
+            profile: MovementProfile::new("walk", 1).unwrap(),
+            ticks_per_second: 1,
+            carrier_actor,
+            carrier_registration: "bridge.transit".to_owned(),
+            kind: EventKind::custom(0xC20),
+        };
+        let micro_blocker = micro_flow.spawn_actor().unwrap();
+        let micro_blocker_request = micro_flow
+            .acquire(micro_resource)
+            .owner(micro_blocker)
+            .at(t(0))
+            .submit()
+            .unwrap();
+        micro_flow.step().unwrap().unwrap();
+        let micro_blocker_lease = micro_flow.resource(micro_resource).unwrap().allocations[0].lease;
+        assert_eq!(
+            micro_flow.request(micro_blocker_request).unwrap().state,
+            RequestState::Active
+        );
+
+        let micro_prepared =
+            must_prepare(micro_input.prepare(&micro_flow, &mut micro_adapter, &provider()));
+        micro_flow
+            .register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
+            .unwrap();
+        register_transit_context(&mut micro_flow, "bridge.transit", EventKind::custom(0xC20))
+            .unwrap();
+        let micro_work = must_create(micro_prepared.create(&mut micro_flow));
+        let mut micro_bound = must_bind(micro_work.bind(&micro_flow));
+        micro_bound.start_transit(&mut micro_flow).unwrap();
+        let carrier = micro_bound.carrier.unwrap();
+        let start = micro_flow.step().unwrap().unwrap();
+        assert_eq!(start.at, t(0));
+        assert_eq!(
+            micro_bound.observe_transit_dispatch(&micro_flow, &start),
+            Ok(TransitObservation::Progress)
+        );
+        micro_flow.release(micro_blocker_lease, t(5)).unwrap();
+        let progress = micro_flow.step().unwrap().unwrap();
+        assert_eq!(progress.at, t(1));
+        assert_eq!(
+            micro_bound.observe_transit_dispatch(&micro_flow, &progress),
+            Ok(TransitObservation::Progress)
+        );
+        let arrival = micro_flow.step().unwrap().unwrap();
+        assert_eq!(arrival.at, t(2));
+        assert_eq!(
+            micro_bound.observe_transit_dispatch(&micro_flow, &arrival),
+            Ok(TransitObservation::Arrived)
+        );
+        let transit = micro_flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .progress_at(t(2))
+            .unwrap();
+        assert_eq!(transit.useful_elapsed, d(2));
+        let micro_submitted = micro_bound.finish_transit(&micro_flow).unwrap();
+        assert_eq!(micro_submitted.sampled_duration(), service_duration);
+        assert_eq!(
+            micro_submitted.expected_service_key,
+            macro_submitted.expected_service_key
+        );
+        assert_eq!(
+            micro_submitted.service_stream.derived_seed(),
+            macro_submitted.service_stream.derived_seed()
+        );
+        let submitted_dispatch = micro_flow.step().unwrap().unwrap();
+        assert_eq!(submitted_dispatch.at, t(2));
+        let micro_request = micro_flow.request(micro_submitted.request()).unwrap();
+        let micro_submitted_at = micro_request.submitted_at;
+        let micro_request_state = micro_request.state;
+        assert_eq!(micro_submitted_at, t(2));
+        assert_eq!(micro_request_state, RequestState::Queued);
+        micro_flow.step().unwrap().unwrap();
+        let micro_allocation = micro_flow
+            .resource(micro_resource)
+            .unwrap()
+            .allocations
+            .into_iter()
+            .find(|allocation| allocation.request == micro_submitted.request())
+            .unwrap();
+        assert_eq!(micro_allocation.granted_at, t(5));
+        let micro_completion = micro_allocation.completion_at.unwrap();
+        assert_eq!(micro_flow.step().unwrap().unwrap().at, micro_completion);
+        assert_eq!(
+            micro_flow
+                .work_progress(micro_submitted.work())
+                .unwrap()
+                .state,
+            WorkState::Completed
+        );
+
+        let macro_queue = macro_allocation
+            .granted_at
+            .duration_since(macro_submitted_at)
+            .unwrap();
+        let micro_queue = micro_allocation
+            .granted_at
+            .duration_since(micro_submitted_at)
+            .unwrap();
+        let macro_service = macro_completion
+            .duration_since(macro_allocation.granted_at)
+            .unwrap();
+        let micro_service = micro_completion
+            .duration_since(micro_allocation.granted_at)
+            .unwrap();
+        assert_eq!(macro_queue, d(5));
+        assert_eq!(micro_queue, d(3));
+        assert_eq!(macro_service, service_duration);
+        assert_eq!(micro_service, service_duration);
+        assert_eq!(
+            macro_completion,
+            t(5).checked_add(service_duration).unwrap()
+        );
+        assert_eq!(micro_completion, macro_completion);
+        assert_eq!(
+            macro_completion.duration_since(t(0)).unwrap(),
+            macro_queue.checked_add(macro_service).unwrap()
+        );
+        assert_eq!(
+            micro_completion.duration_since(t(0)).unwrap(),
+            transit
+                .useful_elapsed
+                .checked_add(micro_queue)
+                .unwrap()
+                .checked_add(micro_service)
+                .unwrap()
+        );
+    }
+
+    #[test]
     fn micro_route_is_prepared_and_samples_service_once() {
         let (input, flow, mut adapter, _) = input(
             FidelityMode::Micro,
