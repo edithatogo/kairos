@@ -40,6 +40,15 @@ class StrictNpmAuditWorkflowTests(unittest.TestCase):
         self.assertIn("  workflow_dispatch:", self.text)
         self.assertIn("  pull_request:", self.text)
 
+    def test_parser_security_regression_is_required_before_strict_audit(self):
+        for path in ("tests/test_bootstrap_postcss_pin.py", "scripts/validate_dependency_identity.py"):
+            self.assertIn(f"      - '{path}'", self.text)
+        self.assertIn("run: python3 -m unittest discover -s tests -p test_bootstrap_postcss_pin.py -v", self.job)
+        self.assertLess(self.job.index("- name: Test bootstrap parser security pin"),
+                        self.job.index("- name: Run strict private-tree npm audit"))
+        manifest = json.loads((ROOT / "scripts/bootstrap-node-tools/package.json").read_text())
+        self.assertEqual(manifest["overrides"]["postcss-selector-parser"], "7.1.6")
+
     def test_node_binary_is_resolved_before_both_suites_and_reused(self):
         setup = self.job.index("uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020")
         derive = self.job.index("- name: Resolve and hash setup-node executable")

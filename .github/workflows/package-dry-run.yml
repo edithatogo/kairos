@@ -16,6 +16,8 @@ on:
       - 'scripts/bootstrap-node-tools/run_strict_npm_audit_gate.py'
       - 'tests/test_strict_npm_audit_runner.py'
       - 'tests/test_strict_npm_audit_workflow.py'
+      - 'tests/test_bootstrap_postcss_pin.py'
+      - 'scripts/validate_dependency_identity.py'
       - 'tests/http-cache-private-vendor-regression.mjs'
       - 'tests/http-cache-connection-regression.mjs'
       - 'vendor/http-cache-semantics-kairos-prototype/**'
@@ -176,6 +178,8 @@ jobs:
         run: npm ci --ignore-scripts --prefix scripts/bootstrap-node-tools
       - name: Test strict npm audit runner
         run: python3 -m unittest discover -s tests -p test_strict_npm_audit_runner.py -v
+      - name: Test bootstrap parser security pin
+        run: python3 -m unittest discover -s tests -p test_bootstrap_postcss_pin.py -v
       - name: Test package workflow contract
         run: python3 -m unittest discover -s tests -p test_strict_npm_audit_workflow.py -v
       - name: Resolve and hash setup-node executable
