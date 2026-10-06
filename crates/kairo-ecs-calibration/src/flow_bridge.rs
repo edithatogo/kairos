@@ -1470,6 +1470,167 @@ mod tests {
     }
 
     #[test]
+    fn continuation_capture_decision_mismatch_returns_original_values() {
+        let (flow, mut adapter, mut bound) =
+            bound_simple_with_adapter(FidelityMode::Macro, TransitIntent::Route);
+        let identity = flow.identity();
+        let now = flow.now();
+        let work = bound.work();
+        let progress = flow.work_progress(work).unwrap();
+        let budget = flow.budget_snapshot();
+        let adapter_decision = *adapter.decision(work).unwrap();
+        assert_eq!(adapter_decision.mode, FidelityMode::Macro);
+        adapter.stage_policy(FidelityPolicy::new(1, Some(FidelityMode::Micro)).unwrap());
+        assert_eq!(
+            adapter.apply_at_boundary(&flow),
+            Err(FidelityError::BusyBoundary)
+        );
+
+        let runtime = bound.runtime.clone();
+        let expected_service_key = bound.expected_service_key.clone();
+        let service_stream_key = bound.service_stream.key();
+        let service_seed = bound.service_stream.derived_seed();
+        let service_draw_position = bound.service_stream.draw_position();
+        let sample_duration = bound.sample.duration();
+        let sample_draw_bounds = (bound.sample.draw_before(), bound.sample.draw_after());
+        let acquire = bound.acquire.clone();
+        let transit = match &bound.transit {
+            TransitRequest::Zero => None,
+            TransitRequest::Route {
+                graph,
+                origin,
+                destination,
+                profile,
+                ticks_per_second,
+                carrier_actor,
+                carrier_registration,
+                kind,
+            } => Some((
+                Arc::clone(graph),
+                *origin,
+                *destination,
+                profile.clone(),
+                *ticks_per_second,
+                *carrier_actor,
+                carrier_registration.clone(),
+                *kind,
+            )),
+        };
+        let carrier = bound.carrier;
+        let carrier_actor = bound.carrier_actor;
+        let kind = bound.kind;
+        let pending_event = bound.pending_event;
+        let pending_priority = bound.pending_priority;
+        let owned_events = bound.owned_events.clone();
+        let stale_events = bound.stale_events.clone();
+        let consumed_events = bound.consumed_events.clone();
+        let controls = bound.controls.clone();
+        let retryable = bound.retryable.clone();
+        let arrival_request = bound.arrival_request;
+        let arrival_at = bound.arrival_at;
+
+        // Isolate the decision predicate while retaining a valid same-runtime tuple.
+        bound.decision.mode = FidelityMode::Micro;
+        let mismatched_decision = bound.decision;
+        assert_eq!(adapter.decision(work), Some(&adapter_decision));
+        assert_ne!(Some(&mismatched_decision), adapter.decision(work));
+
+        let mut control_bound =
+            bound_simple_with_adapter(FidelityMode::Macro, TransitIntent::Route).2;
+        let result = BoundWorkContinuation::capture(flow, adapter, bound);
+        let (returned_flow, mut returned_adapter, mut returned_bound, error) = match result {
+            Err(values) => values,
+            Ok(_) => panic!("decision mismatch must fail capture validation"),
+        };
+
+        assert_eq!(error, BridgeError::Fidelity(FidelityError::InvalidWork));
+        assert_eq!(returned_flow.identity(), identity);
+        assert_eq!(returned_flow.now(), now);
+        assert_eq!(returned_flow.work_progress(work).unwrap(), progress);
+        assert_eq!(returned_flow.budget_snapshot(), budget);
+        assert_eq!(returned_adapter.decision(work), Some(&adapter_decision));
+        assert_eq!(
+            returned_adapter.apply_at_boundary(&returned_flow),
+            Err(FidelityError::BusyBoundary)
+        );
+
+        assert_eq!(returned_bound.decision, mismatched_decision);
+        assert_eq!(returned_bound.runtime, runtime);
+        assert_eq!(returned_bound.work, work);
+        assert_eq!(returned_bound.expected_service_key, expected_service_key);
+        assert_eq!(returned_bound.service_stream.key(), service_stream_key);
+        assert_eq!(returned_bound.service_stream.derived_seed(), service_seed);
+        assert_eq!(
+            returned_bound.service_stream.draw_position(),
+            service_draw_position
+        );
+        assert_eq!(returned_bound.sample.duration(), sample_duration);
+        assert_eq!(
+            (
+                returned_bound.sample.draw_before(),
+                returned_bound.sample.draw_after()
+            ),
+            sample_draw_bounds
+        );
+        assert_eq!(returned_bound.acquire, acquire);
+        match (&returned_bound.transit, transit) {
+            (TransitRequest::Zero, None) => {}
+            (
+                TransitRequest::Route {
+                    graph,
+                    origin,
+                    destination,
+                    profile,
+                    ticks_per_second,
+                    carrier_actor,
+                    carrier_registration,
+                    kind,
+                },
+                Some((
+                    expected_graph,
+                    expected_origin,
+                    expected_destination,
+                    expected_profile,
+                    expected_ticks_per_second,
+                    expected_carrier_actor,
+                    expected_registration,
+                    expected_kind,
+                )),
+            ) => {
+                assert!(Arc::ptr_eq(graph, &expected_graph));
+                assert_eq!(*origin, expected_origin);
+                assert_eq!(*destination, expected_destination);
+                assert_eq!(profile, &expected_profile);
+                assert_eq!(*ticks_per_second, expected_ticks_per_second);
+                assert_eq!(*carrier_actor, expected_carrier_actor);
+                assert_eq!(carrier_registration, &expected_registration);
+                assert_eq!(*kind, expected_kind);
+            }
+            _ => panic!("capture changed the original transit request"),
+        }
+        assert_eq!(returned_bound.carrier, carrier);
+        assert_eq!(returned_bound.carrier_actor, carrier_actor);
+        assert_eq!(returned_bound.kind, kind);
+        assert_eq!(returned_bound.pending_event, pending_event);
+        assert_eq!(returned_bound.pending_priority, pending_priority);
+        assert_eq!(returned_bound.owned_events, owned_events);
+        assert_eq!(returned_bound.stale_events, stale_events);
+        assert_eq!(returned_bound.consumed_events, consumed_events);
+        assert_eq!(returned_bound.controls, controls);
+        assert_eq!(returned_bound.retryable, retryable);
+        assert_eq!(returned_bound.arrival_request, arrival_request);
+        assert_eq!(returned_bound.arrival_at, arrival_at);
+        assert_eq!(
+            returned_bound.service_stream.next_u64().unwrap(),
+            control_bound.service_stream.next_u64().unwrap()
+        );
+        assert_eq!(
+            returned_bound.service_stream.draw_position(),
+            control_bound.service_stream.draw_position()
+        );
+    }
+
+    #[test]
     fn macro_and_zero_micro_share_service_draws_and_submit_actual_timed_work() {
         let (macro_input, mut macro_flow, mut macro_adapter, macro_resource) = input(
             FidelityMode::Macro,
