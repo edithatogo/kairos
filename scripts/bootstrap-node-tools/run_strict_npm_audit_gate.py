@@ -12,16 +12,16 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 
-# These are the reviewed bootstrap inputs at 61b3fb601ef5d765df399c03e7b11fb03a2dbe74.
-# A source change requires a reviewed update to this gate's binding.
+# These hashes bind the reviewed bootstrap candidate files; its source base is ad3379dade50ece748eec3f47e85aa56605beec7.
+# The receipt records the actual execution commit separately.
 EXPECTED_SOURCE_SHA256 = {
-    "scripts/bootstrap-node-tools/package.json": "4e8bf29c554e486e6ba942c452b7dc58ff0856f769bb52de2bbb2e65690c8628",
-    "scripts/bootstrap-node-tools/package-lock.json": "3928f3049db0d21170bbf8fb564715eeb50d59f14b0a27ebcaa42381071b999e",
-    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "2749d7c0e2e4ece4bff92a3ddef376f89203d91806ccb6620d88bdd4f452b29f",
-    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "f91c3049e700f0ae98270af9635e9c952e248ddfa7544873cd9ab32e84d8737e",
+    "scripts/bootstrap-node-tools/package.json": "f8517b245bd1abb7882faa4368c929d8f2cd8344dadf217b564ac1065bb0480f",
+    "scripts/bootstrap-node-tools/package-lock.json": "758ec4b68464cafe2e9835ceaee219375fd956b33d59367027ffaec447f8e913",
+    "scripts/bootstrap-node-tools/prepare_npm_cli.py": "0cee106407770720eccc23a589eeb71b9f30e27ce698935f0acce30218488f50",
+    "scripts/bootstrap-node-tools/validate_npm_cli.mjs": "1a036da08b4172810610c5cc68f484452acd812c6c43ee4c75eaee0a012d7472",
 }
 EXPECTED_NPM_CLI_SHA256 = "8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7"
-SOURCE_COMMIT = "61b3fb601ef5d765df399c03e7b11fb03a2dbe74"
+SOURCE_COMMIT = "ad3379dade50ece748eec3f47e85aa56605beec7"
 VULNERABILITY_COUNTERS = {"info", "low", "moderate", "high", "critical", "total"}
 DEPENDENCY_COUNTERS = {"prod", "dev", "optional", "peer", "peerOptional", "total"}
 

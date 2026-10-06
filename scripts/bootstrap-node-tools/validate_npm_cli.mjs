@@ -7,6 +7,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -26,7 +27,11 @@ const ARCHIVE_SRI = 'sha512-MtoYfkkiGt+8PL2ax7Gb7IQuIXfKIiR4Wde5aoC9h6BupT33oita
 const NPM_ARCHIVE_SHA256 = '3c6d8cb8da512e43f135bd254d70e21cc5d7b7962d24933892c9da614e4df783';
 const NPM_PACKAGE_SHA256 = '76a37a84bfec6c4dfba991bec5fadfe2b72c5867cca402b5d46908604fa6ae51';
 const NPM_CLI_SHA256 = '8e5f6f3429f8cdbe693cdc29904e9d5a7b127a494bd15c804bd54c7403bfcbe7';
-const LOCK_SHA256 = '3928f3049db0d21170bbf8fb564715eeb50d59f14b0a27ebcaa42381071b999e';
+const LOCK_SHA256 = '758ec4b68464cafe2e9835ceaee219375fd956b33d59367027ffaec447f8e913';
+const POSTCSS_PARSER = 'postcss-selector-parser';
+const POSTCSS_PARSER_VERSION = '7.1.6';
+const POSTCSS_PARSER_SRI = 'sha512-7qASPzhKF2l2KLboRZux8CCTRMdGiV08vWmyKzPz22qZ7ZjQBOeY7rNzNoCLSUiftJ7HUq0GERHmxw/t0dCdMw==';
+const POSTCSS_PARSER_RESOLVED = 'https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-7.1.6.tgz';
 const MANIFEST_OVERRIDE = 'file:../../../../vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz';
 const LOCK_RESOLVED = 'file:../../vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz';
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -74,6 +79,21 @@ function findHcsDirectories(nodeModulesRoot) {
       const child = join(directory, entry);
       const info = lstatSync(child);
       if (basename(child) === 'http-cache-semantics') found.push(child);
+      if (info.isDirectory() && !info.isSymbolicLink()) pending.push(child);
+    }
+  }
+  return found;
+}
+
+function findPackageDirectories(nodeModulesRoot, packageName) {
+  const found = [];
+  const pending = [nodeModulesRoot];
+  while (pending.length) {
+    const directory = pending.pop();
+    for (const entry of readdirSync(directory)) {
+      const child = join(directory, entry);
+      const info = lstatSync(child);
+      if (basename(child) === packageName) found.push(child);
       if (info.isDirectory() && !info.isSymbolicLink()) pending.push(child);
     }
   }
@@ -145,8 +165,71 @@ function validateConsumers(root, npmPackagePath, mfhPackagePath) {
   }
 }
 
+function validatePostcssParser(root, npmPackagePath, lock) {
+  const toolsDirectory = resolve(root, 'scripts/bootstrap-node-tools');
+  const nodeModules = join(toolsDirectory, 'node_modules');
+  const requireFromNpm = createRequire(npmPackagePath);
+  const queryPackagePath = requireFromNpm.resolve('@npmcli/query/package.json');
+  assertNoSymlinkPath(root, queryPackagePath, 'file');
+  const queryPackage = readJson(queryPackagePath);
+  assert.equal(queryPackage.name, '@npmcli/query', 'npm must resolve the reviewed bundled query package');
+  assert.equal(queryPackage.version, '5.0.0');
+  assert.equal(queryPackage.dependencies?.[POSTCSS_PARSER], '^7.0.0',
+    'the bundled npm query package must declare the parser dependency');
+  const relativeQueryDirectory = relative(nodeModules, dirname(queryPackagePath));
+  assert.ok(relativeQueryDirectory !== '..' && !relativeQueryDirectory.startsWith(`..${sep}`)
+    && !isAbsolute(relativeQueryDirectory), 'resolved query package escapes bootstrap node_modules');
+  const queryLockPath = `node_modules/${relativeQueryDirectory.split(sep).join('/')}`;
+  const queryLockRecord = lock.packages?.[queryLockPath];
+  assert.equal(queryLockRecord?.version, '5.0.0', 'npm query runtime path must match the pinned lock record');
+  assert.equal(queryLockRecord?.inBundle, true, 'npm query must remain the expected bundled npm dependency');
+
+  const parserPackagePath = createRequire(queryPackagePath).resolve(`${POSTCSS_PARSER}/package.json`);
+  assertNoSymlinkPath(root, parserPackagePath, 'file');
+  const parserPackage = readJson(parserPackagePath);
+  assert.equal(parserPackage.name, POSTCSS_PARSER);
+  assert.equal(parserPackage.version, POSTCSS_PARSER_VERSION);
+
+  const records = Object.entries(lock.packages || {}).filter(([path]) =>
+    path.startsWith('node_modules/') && path.split('/').at(-1) === POSTCSS_PARSER);
+  assert.ok(records.length > 0, 'bootstrap lock is missing the unbundled parser package');
+  for (const [path, record] of records) {
+    const parts = path.split('/');
+    assert.ok(parts.every((part) => part && part !== '.' && part !== '..' && !part.includes('\\')),
+      `${path} must be a canonical package-lock path`);
+    assert.equal(record.version, POSTCSS_PARSER_VERSION, `${path} must use the reviewed parser version`);
+    assert.ok(record.inBundle === undefined || record.inBundle === false, `${path} must not remain bundled`);
+    assert.equal(record.resolved, POSTCSS_PARSER_RESOLVED, `${path} registry source mismatch`);
+    assert.equal(record.integrity, POSTCSS_PARSER_SRI, `${path} package integrity mismatch`);
+  }
+
+  const installedParserDirectories = findPackageDirectories(nodeModules, POSTCSS_PARSER);
+  assert.ok(installedParserDirectories.length > 0, 'bootstrap node_modules is missing the parser package');
+  for (const parserDirectory of installedParserDirectories) {
+    assertNoSymlinkPath(root, parserDirectory, 'directory');
+    const installedManifestPath = join(parserDirectory, 'package.json');
+    assertNoSymlinkPath(root, installedManifestPath, 'file');
+    const installedManifest = readJson(installedManifestPath);
+    assert.equal(installedManifest.name, POSTCSS_PARSER);
+    assert.equal(installedManifest.version, POSTCSS_PARSER_VERSION,
+      'all installed parser copies must use the reviewed version');
+    const relativeParserDirectory = relative(nodeModules, parserDirectory);
+    assert.ok(relativeParserDirectory !== '..' && !relativeParserDirectory.startsWith(`..${sep}`)
+      && !isAbsolute(relativeParserDirectory), 'installed parser escapes bootstrap node_modules');
+    const resolvedLockPath = `node_modules/${relativeParserDirectory.split(sep).join('/')}`;
+    assert.ok(records.some(([path]) => path === resolvedLockPath),
+      'each installed parser copy must match an exact non-bundled lock record');
+  }
+
+  const relativeResolvedParser = relative(nodeModules, dirname(parserPackagePath));
+  const resolvedLockPath = `node_modules/${relativeResolvedParser.split(sep).join('/')}`;
+  assert.ok(records.some(([path]) => path === resolvedLockPath),
+    'npm query must resolve the parser through an exact non-bundled lock record');
+}
+
 function validateInstalled(root) {
   const { toolsDirectory } = validateInstalledPrivateHcs(root);
+  const lock = readJson(join(toolsDirectory, 'package-lock.json'));
   const npmPackagePath = join(toolsDirectory, 'node_modules/npm/package.json');
   assertNoSymlinkPath(root, npmPackagePath, 'file');
   assert.equal(sha256(readFileSync(npmPackagePath)), NPM_PACKAGE_SHA256,
@@ -154,6 +237,7 @@ function validateInstalled(root) {
   const requireFromNpm = createRequire(npmPackagePath);
   const npmPackage = requireFromNpm(npmPackagePath);
   assert.equal(npmPackage.version, '12.1.0');
+  validatePostcssParser(resolve(root), npmPackagePath, lock);
   const npmCliPath = join(toolsDirectory, 'node_modules/npm/bin/npm-cli.js');
   assertNoSymlinkPath(root, npmCliPath, 'file');
   assert.equal(sha256(readFileSync(npmCliPath)), NPM_CLI_SHA256, 'installed npm CLI digest mismatch');
@@ -207,6 +291,84 @@ function fixtureRoot() {
   return { root, hcs, nodeModules, vendorArchive: join(vendor, 'http-cache-semantics-kairos-prototype-0.1.0.tgz') };
 }
 
+function postcssFixtureRoot() {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'kairos-bootstrap-postcss-validator-')));
+  const nodeModules = join(root, 'scripts/bootstrap-node-tools/node_modules');
+  const npmPackagePath = join(nodeModules, 'npm/package.json');
+  const queryPackagePath = join(nodeModules, 'npm/node_modules/@npmcli/query/package.json');
+  const parserPackagePath = join(nodeModules, 'npm/node_modules/postcss-selector-parser/package.json');
+  mkdirSync(dirname(npmPackagePath), { recursive: true });
+  mkdirSync(dirname(queryPackagePath), { recursive: true });
+  mkdirSync(dirname(parserPackagePath), { recursive: true });
+  writeFileSync(npmPackagePath, JSON.stringify({ name: 'npm', version: '12.1.0' }));
+  writeFileSync(queryPackagePath, JSON.stringify({
+    name: '@npmcli/query',
+    version: '5.0.0',
+    dependencies: { [POSTCSS_PARSER]: '^7.0.0' },
+  }));
+  writeFileSync(parserPackagePath, JSON.stringify({
+    name: POSTCSS_PARSER,
+    version: POSTCSS_PARSER_VERSION,
+  }));
+  const parserLockPath = 'node_modules/npm/node_modules/postcss-selector-parser';
+  const queryLockPath = 'node_modules/npm/node_modules/@npmcli/query';
+  const lock = {
+    packages: {
+      [queryLockPath]: { version: '5.0.0', inBundle: true },
+      [parserLockPath]: {
+        version: POSTCSS_PARSER_VERSION,
+        resolved: POSTCSS_PARSER_RESOLVED,
+        integrity: POSTCSS_PARSER_SRI,
+      },
+    },
+  };
+  return { root, nodeModules, npmPackagePath, queryPackagePath, parserPackagePath, lock, parserLockPath };
+}
+
+function expectPostcssRejected(name, mutate) {
+  const fixture = postcssFixtureRoot();
+  try {
+    mutate(fixture);
+    assert.throws(() => validatePostcssParser(fixture.root, fixture.npmPackagePath, fixture.lock), undefined, name);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+}
+
+function runPostcssSelfTests() {
+  const fixture = postcssFixtureRoot();
+  try {
+    validatePostcssParser(fixture.root, fixture.npmPackagePath, fixture.lock);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+  expectPostcssRejected('wrong installed parser version', ({ parserPackagePath }) => {
+    writeFileSync(parserPackagePath, JSON.stringify({ name: POSTCSS_PARSER, version: '7.1.4' }));
+  });
+  expectPostcssRejected('bundled parser lock record', ({ lock, parserLockPath }) => {
+    lock.packages[parserLockPath].inBundle = true;
+  });
+  expectPostcssRejected('wrong parser package integrity', ({ lock, parserLockPath }) => {
+    lock.packages[parserLockPath].integrity = 'sha512-wrong';
+  });
+  expectPostcssRejected('unregistered vulnerable parser copy', ({ nodeModules }) => {
+    const path = join(nodeModules, 'other/node_modules/postcss-selector-parser/package.json');
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, JSON.stringify({ name: POSTCSS_PARSER, version: '7.1.4' }));
+  });
+  expectPostcssRejected('unregistered safe parser copy', ({ nodeModules }) => {
+    const path = join(nodeModules, 'other/node_modules/postcss-selector-parser/package.json');
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, JSON.stringify({ name: POSTCSS_PARSER, version: POSTCSS_PARSER_VERSION }));
+  });
+  expectPostcssRejected('symlink parser directory', ({ nodeModules, parserPackagePath }) => {
+    const alias = join(nodeModules, 'other/node_modules/postcss-selector-parser');
+    mkdirSync(dirname(alias), { recursive: true });
+    symlinkSync(dirname(parserPackagePath), alias, 'dir');
+  });
+  console.log('postcss-selector-parser query resolution: PASS (6 rejected cases)');
+}
+
 function expectRejected(label, mutate) {
   const fixture = fixtureRoot();
   try {
@@ -258,6 +420,7 @@ function runSelfTests() {
     mkdirSync(nested, { recursive: true });
     writeFileSync(join(nested, 'index.js'), 'old');
   });
+  runPostcssSelfTests();
   console.log('bootstrap HCS validator negative canaries: PASS (7 rejected cases)');
 }
 
