@@ -1009,7 +1009,9 @@ mod tests {
     use kairo_ecs_abm::spatial::{EdgeId, MovementModeId, TransitEdge};
     use kairo_ecs_abm::{register_transit_context, register_transit_context_reject_first_for_test};
     use kairo_ecs_des::fidelity::FidelityPolicy;
-    use kairo_ecs_des::{FlowBatchRejection, FlowDispatch, RequestState, WorkHandlers};
+    use kairo_ecs_des::{
+        FlowBatchRejection, FlowDispatch, LifecycleTransition, RequestState, WorkHandlers,
+    };
 
     #[derive(Clone, Copy)]
     enum TransitIntent {
@@ -1852,6 +1854,358 @@ mod tests {
                 .checked_add(micro_queue)
                 .unwrap()
                 .checked_add(micro_service)
+                .unwrap()
+        );
+    }
+
+    struct UrgentPreemptionOutcome {
+        completion: SimTime,
+        service_duration: SimDuration,
+        service_key: crate::seed_map::CalibrationStreamKey,
+        service_seed: u64,
+        service_draw_position: u64,
+        decision: FidelityDecision,
+        transit_elapsed: SimDuration,
+    }
+
+    fn recorded_step(
+        flow: &mut FlowRuntime,
+        records: &mut Vec<kairo_ecs_des::LifecycleRecord>,
+    ) -> FlowDispatch {
+        let dispatch = flow.step().unwrap().expect("scheduled Flow dispatch");
+        records.extend(dispatch.records.iter().cloned());
+        dispatch
+    }
+
+    fn run_urgent_preemption_case(mode: FidelityMode) -> UrgentPreemptionOutcome {
+        let t = SimTime::from_ticks;
+        let d = SimDuration::from_ticks;
+        let (mut work_input, mut flow, mut adapter, resource) =
+            input(mode, TransitIntent::Route, SeedPurpose::Service, false);
+        // Q4 Suspend is enabled only for this fixture; production bridge defaults
+        // remain non-preemptible.
+        work_input.acquire.preemptible = Some(PreemptionStrategy::Suspend);
+        if mode == FidelityMode::Micro {
+            let carrier_actor = match &work_input.transit {
+                TransitRequest::Route { carrier_actor, .. } => *carrier_actor,
+                TransitRequest::Zero => unreachable!(),
+            };
+            let nodes = (1..=3).map(NodeId::new).collect::<Vec<_>>();
+            let walk = MovementModeId::new("walk").unwrap();
+            let edges = (0..2)
+                .map(|index| TransitEdge {
+                    id: EdgeId::new(index + 1),
+                    from: nodes[index as usize],
+                    to: nodes[index as usize + 1],
+                    length_mm: 1,
+                    allowed_modes: vec![walk.clone()],
+                })
+                .collect();
+            work_input.transit = TransitRequest::Route {
+                graph: Arc::new(TransitGraphV1::new(1, nodes.clone(), edges).unwrap()),
+                origin: nodes[0],
+                destination: *nodes.last().unwrap(),
+                profile: MovementProfile::new("walk", 1).unwrap(),
+                ticks_per_second: 1,
+                carrier_actor,
+                carrier_registration: "bridge.transit".to_owned(),
+                kind: EventKind::custom(0xC20),
+            };
+        }
+
+        let blocker = flow.spawn_actor().unwrap();
+        let blocker_request = flow
+            .acquire(resource)
+            .owner(blocker)
+            .at(t(0))
+            .submit()
+            .unwrap();
+        let mut records = Vec::new();
+        let blocker_dispatch = recorded_step(&mut flow, &mut records);
+        assert_eq!(blocker_dispatch.at, t(0));
+        assert_eq!(
+            flow.request(blocker_request).unwrap().state,
+            RequestState::Active
+        );
+        let blocker_lease = flow.resource(resource).unwrap().allocations[0].lease;
+
+        flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
+            .unwrap();
+        let prepared = must_prepare(work_input.prepare(&flow, &mut adapter, &provider()));
+        assert_eq!(prepared.decision().mode, mode);
+        let service_duration = prepared.sampled_duration();
+        assert_eq!(service_duration, d(20));
+        assert_eq!(prepared.draw_bounds(), (0, 1));
+        let work = must_create(prepared.create(&mut flow));
+        let work_id = work.work();
+        let mut bound = must_bind(work.bind(&flow));
+        let (transit_elapsed, submitted) = if mode == FidelityMode::Micro {
+            register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20))
+                .unwrap();
+            bound.start_transit(&mut flow).unwrap();
+            let start = recorded_step(&mut flow, &mut records);
+            assert_eq!(start.at, t(0));
+            let start_observation = bound.observe_transit_dispatch(&flow, &start);
+            assert_eq!(start_observation, Ok(TransitObservation::Progress));
+            let progress = recorded_step(&mut flow, &mut records);
+            assert_eq!(progress.at, t(1));
+            let progress_observation = bound.observe_transit_dispatch(&flow, &progress);
+            assert_eq!(progress_observation, Ok(TransitObservation::Progress));
+            let arrival = recorded_step(&mut flow, &mut records);
+            assert_eq!(arrival.at, t(2));
+            let arrival_observation = bound.observe_transit_dispatch(&flow, &arrival);
+            assert_eq!(arrival_observation, Ok(TransitObservation::Arrived));
+            assert_eq!(
+                [start_observation, progress_observation, arrival_observation],
+                [
+                    Ok(TransitObservation::Progress),
+                    Ok(TransitObservation::Progress),
+                    Ok(TransitObservation::Arrived),
+                ]
+            );
+            let elapsed = flow
+                .work_context::<TransitContext>(bound.carrier.unwrap())
+                .unwrap()
+                .progress_at(t(2))
+                .unwrap()
+                .useful_elapsed;
+            assert_eq!(elapsed, d(2));
+            let submitted = bound.finish_transit(&flow).unwrap();
+            assert_eq!(submitted.work(), work_id);
+            (elapsed, submitted)
+        } else {
+            (SimDuration::ZERO, must_submit(bound.submit(&mut flow)))
+        };
+        assert_eq!(submitted.work(), work_id);
+        assert_eq!(submitted.sampled_duration(), d(20));
+        assert_eq!(submitted.service_draw_position(), 1);
+        let request_id = submitted.request();
+        assert_eq!(flow.request(request_id).unwrap().work, Some(work_id));
+        assert_eq!(
+            flow.request(request_id).unwrap().preemptible,
+            Some(PreemptionStrategy::Suspend)
+        );
+        flow.release(blocker_lease, t(5)).unwrap();
+
+        // Drain only until the original timed service starts at tick 5.
+        while flow.request(request_id).unwrap().state != RequestState::Active {
+            recorded_step(&mut flow, &mut records);
+        }
+        assert_eq!(flow.now(), t(5));
+        assert_eq!(
+            flow.work_progress(work_id).unwrap().useful_elapsed,
+            SimDuration::ZERO
+        );
+
+        let urgent_owner = flow.spawn_actor().unwrap();
+        let urgent_work = flow
+            .create_work(urgent_owner, d(2), "bridge.context", 7u32)
+            .unwrap();
+        let urgent_request = flow
+            .acquire(resource)
+            .owner(urgent_owner)
+            .timed_work(urgent_work)
+            .priority(2)
+            .can_preempt(true)
+            .at(t(8))
+            .submit()
+            .unwrap();
+
+        let at_eight = recorded_step(&mut flow, &mut records);
+        assert_eq!(at_eight.at, t(8));
+        assert_eq!(
+            flow.request(request_id).unwrap().state,
+            RequestState::Suspended
+        );
+        assert_eq!(
+            flow.request(urgent_request).unwrap().state,
+            RequestState::Active
+        );
+        let suspended = flow.work_progress(work_id).unwrap();
+        assert_eq!(suspended.state, WorkState::Suspended);
+        assert_eq!(suspended.useful_elapsed, d(3));
+        assert_eq!(suspended.remaining, d(17));
+        let preempted = at_eight
+            .records
+            .iter()
+            .find(|row| {
+                row.request == request_id && row.transition == LifecycleTransition::Preempted
+            })
+            .unwrap();
+        assert_eq!(
+            preempted.snapshot.progress.as_ref().unwrap().useful_elapsed,
+            d(3)
+        );
+        assert_eq!(
+            preempted.snapshot.progress.as_ref().unwrap().remaining,
+            d(17)
+        );
+        let paused_resource = flow.resource(resource).unwrap();
+        assert_eq!(
+            paused_resource.total,
+            paused_resource.available + paused_resource.active.len() as u32
+        );
+        assert_eq!(paused_resource.active.len(), 1);
+        assert_eq!(paused_resource.queued, vec![request_id]);
+
+        let at_ten = recorded_step(&mut flow, &mut records);
+        assert_eq!(at_ten.at, t(10));
+        assert_eq!(
+            flow.request(urgent_request).unwrap().state,
+            RequestState::Completed
+        );
+        assert_eq!(
+            flow.request(request_id).unwrap().state,
+            RequestState::Active
+        );
+        let resumed = flow.work_progress(work_id).unwrap();
+        assert_eq!(resumed.state, WorkState::Active);
+        assert_eq!(resumed.useful_elapsed, d(3));
+        assert_eq!(resumed.remaining, d(17));
+        let resumed_record = at_ten
+            .records
+            .iter()
+            .find(|row| row.request == request_id && row.transition == LifecycleTransition::Resumed)
+            .unwrap();
+        assert_eq!(
+            resumed_record.snapshot.progress.as_ref().unwrap().remaining,
+            d(17)
+        );
+
+        let mut completion = None;
+        while flow.request(request_id).unwrap().state != RequestState::Completed {
+            let dispatch = recorded_step(&mut flow, &mut records);
+            if dispatch.records.iter().any(|row| {
+                row.request == request_id && row.transition == LifecycleTransition::Completed
+            }) {
+                completion = Some(dispatch.at);
+            }
+        }
+        let completion = completion.unwrap();
+        assert_eq!(completion, t(27));
+        let completed = flow.work_progress(work_id).unwrap();
+        assert_eq!(completed.state, WorkState::Completed);
+        assert_eq!(completed.useful_elapsed, d(20));
+        assert_eq!(completed.remaining, SimDuration::ZERO);
+
+        let resource_end = flow.resource(resource).unwrap();
+        assert_eq!(
+            resource_end.total,
+            resource_end.available + resource_end.active.len() as u32
+        );
+        assert_eq!(resource_end.available, 1);
+        assert!(resource_end.active.is_empty());
+        assert!(resource_end.queued.is_empty());
+        let original_rows: Vec<_> = records
+            .iter()
+            .filter(|row| row.request == request_id)
+            .map(|row| (row.at, row.transition))
+            .collect();
+        let submitted_at = flow.request(request_id).unwrap().submitted_at;
+        let granted_at = original_rows
+            .iter()
+            .find(|(_, transition)| *transition == LifecycleTransition::Granted)
+            .unwrap()
+            .0;
+        assert_eq!(
+            original_rows,
+            vec![
+                (submitted_at, LifecycleTransition::Queued),
+                (t(5), LifecycleTransition::Granted),
+                (t(8), LifecycleTransition::Preempted),
+                (t(10), LifecycleTransition::Resumed),
+                (t(27), LifecycleTransition::Completed),
+            ]
+        );
+        let bridge_lineage_rows: Vec<_> = records
+            .iter()
+            .filter(|row| row.snapshot.work == Some(work_id))
+            .collect();
+        assert_eq!(bridge_lineage_rows.len(), original_rows.len());
+        assert!(bridge_lineage_rows
+            .iter()
+            .all(|row| row.request == request_id));
+        let urgent_rows: Vec<_> = records
+            .iter()
+            .filter(|row| row.request == urgent_request)
+            .map(|row| (row.at, row.transition))
+            .collect();
+        assert_eq!(
+            urgent_rows,
+            vec![
+                (t(8), LifecycleTransition::Queued),
+                (t(8), LifecycleTransition::Granted),
+                (t(10), LifecycleTransition::Completed),
+            ]
+        );
+        let queue_elapsed = granted_at.duration_since(submitted_at).unwrap();
+        assert_eq!(
+            queue_elapsed,
+            if mode == FidelityMode::Macro {
+                d(5)
+            } else {
+                d(3)
+            }
+        );
+        let useful_service = completed.useful_elapsed;
+        let interruption = t(10).duration_since(t(8)).unwrap();
+        assert_eq!(useful_service, d(20));
+        assert_eq!(interruption, d(2));
+        assert_eq!(
+            transit_elapsed
+                .checked_add(queue_elapsed)
+                .unwrap()
+                .checked_add(useful_service)
+                .unwrap()
+                .checked_add(interruption)
+                .unwrap(),
+            completion.duration_since(t(0)).unwrap()
+        );
+
+        UrgentPreemptionOutcome {
+            completion,
+            service_duration: submitted.sampled_duration(),
+            service_key: submitted.expected_service_key.clone(),
+            service_seed: submitted.service_stream.derived_seed(),
+            service_draw_position: submitted.service_draw_position(),
+            decision: submitted.decision(),
+            transit_elapsed,
+        }
+    }
+
+    #[test]
+    fn actual_flow_urgent_suspend_resumes_same_macro_and_routed_micro_service() {
+        let macro_run = run_urgent_preemption_case(FidelityMode::Macro);
+        let micro_run = run_urgent_preemption_case(FidelityMode::Micro);
+
+        assert_eq!(macro_run.completion, SimTime::from_ticks(27));
+        assert_eq!(micro_run.completion, macro_run.completion);
+        assert_eq!(macro_run.service_duration, SimDuration::from_ticks(20));
+        assert_eq!(micro_run.service_duration, macro_run.service_duration);
+        assert_eq!(macro_run.service_key, micro_run.service_key);
+        assert_eq!(macro_run.service_seed, micro_run.service_seed);
+        assert_eq!(macro_run.service_draw_position, 1);
+        assert_eq!(
+            micro_run.service_draw_position,
+            macro_run.service_draw_position
+        );
+        assert_eq!(macro_run.decision.mode, FidelityMode::Macro);
+        assert_eq!(micro_run.decision.mode, FidelityMode::Micro);
+        assert_eq!(macro_run.transit_elapsed, SimDuration::ZERO);
+        assert_eq!(micro_run.transit_elapsed, SimDuration::from_ticks(2));
+        let t = SimTime::from_ticks;
+        let d = SimDuration::from_ticks;
+        assert_eq!(
+            macro_run.completion.duration_since(t(0)).unwrap(),
+            d(5).checked_add(d(20)).unwrap().checked_add(d(2)).unwrap()
+        );
+        assert_eq!(
+            micro_run.completion.duration_since(t(0)).unwrap(),
+            d(2).checked_add(d(3))
+                .unwrap()
+                .checked_add(d(20))
+                .unwrap()
+                .checked_add(d(2))
                 .unwrap()
         );
     }
