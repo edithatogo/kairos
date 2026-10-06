@@ -74,6 +74,7 @@ Format:
 
 ### Fixed
 
+- Workspace Clippy now validates the private C1 mapper with behavior-preserving context structs, and the Q0.1 design disposition links directly to its evidence in the parent repository.
 - CI metadata and release packaging inventories now include the current Rust toolchain, native-owner workflow, and Arrow/calibration crates; Arrow IO passes current stable Clippy.
 - Python's optional Arrow extra now requires PyArrow 14.0.2 or later to exclude releases affected by an upstream Arrow reader security advisory.
 - Upgrade Astro to 7.3.5 and its Starlight integration/plugins to security-compatible releases, fixing the critical Astro image-optimization remote-code-execution alert.
