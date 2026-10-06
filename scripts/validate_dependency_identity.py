@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 ROOT=Path(__file__).resolve().parents[1]
 PINS={
- 'scripts/bootstrap-node-tools/package-lock.json':'3928f3049db0d21170bbf8fb564715eeb50d59f14b0a27ebcaa42381071b999e',
+ 'scripts/bootstrap-node-tools/package-lock.json':'758ec4b68464cafe2e9835ceaee219375fd956b33d59367027ffaec447f8e913',
  'vendor/http-cache-semantics-kairos-prototype-0.1.0.tgz':'fbd36545bda6d9cd7da805cff6967f96ca2f7f9c59b45e79f97a3e129eec7485',
  'vendor/http-cache-semantics-kairos-prototype/index.js':'ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46ca6620c',
 }

@@ -32,8 +32,27 @@ SOURCE_INTEGRITY = (
     "sha512-Fyhu62pNx70YCs/5+dEmJQTFVmSKwvo5CA0qvBkGDRpob42MJ6G2RQ2tdxeKM4nYnIZDqkYAxEgqtoejn9QGtQ=="
 )
 PATCHED_DEPENDENCIES = ("make-fetch-happen", "node-gyp")
-REMOVED_BUNDLES = (*PATCHED_DEPENDENCIES, "ip-address", "undici", "brace-expansion", "http-cache-semantics")
-FIXED_DEPENDENCIES = {"ip-address": "10.7.1", "brace-expansion": "5.0.12"}
+POSTCSS_PARSER = "postcss-selector-parser"
+POSTCSS_PARSER_VERSION = "7.1.6"
+POSTCSS_PARSER_SRI = (
+    "sha512-7qASPzhKF2l2KLboRZux8CCTRMdGiV08vWmyKzPz22qZ7ZjQBOeY7rNzNoCLSUiftJ7HUq0GERHmxw/t0dCdMw=="
+)
+POSTCSS_PARSER_URL = (
+    "https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-7.1.6.tgz"
+)
+LOCK_SHA256 = "758ec4b68464cafe2e9835ceaee219375fd956b33d59367027ffaec447f8e913"
+REMOVED_BUNDLES = (
+    *PATCHED_DEPENDENCIES,
+    "ip-address",
+    "undici",
+    "brace-expansion",
+    "http-cache-semantics",
+    POSTCSS_PARSER,
+)
+FIXED_DEPENDENCIES = {
+    "ip-address": "10.7.1",
+    "brace-expansion": "5.0.12",
+}
 HCS_ALIAS = "@careops/http-cache-semantics-kairos-prototype"
 HCS_ALIAS_VERSION = "0.1.0"
 HCS_INDEX_SHA256 = "ed6c1faabbe21f7bfef09ce258392cf181678149237a67ce492308a46ca6620c"
@@ -81,6 +100,36 @@ def is_removed_bundle(path: str) -> bool:
     )
 
 
+def validate_postcss_lock_entries(packages: dict) -> set[str]:
+    """Require every lock record for the npm-bundled parser to use the reviewed release."""
+    records = {
+        path: dependency
+        for path, dependency in packages.items()
+        if isinstance(path, str)
+        and path.rsplit("node_modules/", maxsplit=1)[-1] == POSTCSS_PARSER
+        and path.startswith("node_modules/")
+    }
+    if not records:
+        raise RuntimeError("package-lock.json does not resolve the npm transitive parser")
+    for path, dependency in records.items():
+        parts = path.split("/")
+        if any(part in {"", ".", ".."} or "\\" in part for part in parts):
+            raise RuntimeError(f"package-lock.json parser path is not canonical: {path}")
+        if any(parts[index] != "node_modules" for index, part in enumerate(parts) if part == "node_modules"):
+            raise RuntimeError(f"package-lock.json parser path is not canonical: {path}")
+        if not isinstance(dependency, dict):
+            raise RuntimeError(f"package-lock.json {path} record is invalid")
+        if dependency.get("version") != POSTCSS_PARSER_VERSION:
+            raise RuntimeError(f"package-lock.json does not pin {path}@{POSTCSS_PARSER_VERSION}")
+        if dependency.get("inBundle") is not None and dependency.get("inBundle") is not False:
+            raise RuntimeError(f"package-lock.json still marks {path} as bundled")
+        if dependency.get("resolved") != POSTCSS_PARSER_URL:
+            raise RuntimeError(f"package-lock.json {path} is not the reviewed registry package")
+        if dependency.get("integrity") != POSTCSS_PARSER_SRI:
+            raise RuntimeError(f"package-lock.json {path} does not match the reviewed package integrity")
+    return set(records)
+
+
 def repack(source_data: bytes) -> bytes:
     source_buffer = io.BytesIO(source_data)
     output_buffer = io.BytesIO()
@@ -88,6 +137,27 @@ def repack(source_data: bytes) -> bytes:
     with tarfile.open(fileobj=source_buffer, mode="r:gz") as source:
         members = source.getmembers()
         package_manifest_found = False
+        source_members = {member.name.rstrip("/"): member for member in members}
+        parser_member = source_members.get("package/node_modules/postcss-selector-parser/package.json")
+        query_member = source_members.get("package/node_modules/@npmcli/query/package.json")
+        if parser_member is None or not parser_member.isfile():
+            raise RuntimeError("npm bundle layout changed: transitive postcss-selector-parser package is missing")
+        if query_member is None or not query_member.isfile():
+            raise RuntimeError("npm bundle layout changed: bundled @npmcli/query package is missing")
+        parser_file = source.extractfile(parser_member)
+        query_file = source.extractfile(query_member)
+        if parser_file is None or query_file is None:
+            raise RuntimeError("npm bundle layout changed: transitive parser manifests are unreadable")
+        parser_manifest = json.load(parser_file)
+        query_manifest = json.load(query_file)
+        if (parser_manifest.get("name"), parser_manifest.get("version")) != (POSTCSS_PARSER, "7.1.4"):
+            raise RuntimeError("npm bundle layout changed: parser source identity or version drifted")
+        if (
+            query_manifest.get("name"),
+            query_manifest.get("version"),
+            query_manifest.get("dependencies", {}).get(POSTCSS_PARSER),
+        ) != ("@npmcli/query", "5.0.0", "^7.0.0"):
+            raise RuntimeError("npm bundle layout changed: parser is no longer the expected @npmcli/query dependency")
         vulnerable_package_paths: list[str] = []
 
         with gzip.GzipFile(fileobj=output_buffer, mode="wb", mtime=0) as gzip_output:
@@ -203,6 +273,7 @@ def verify_lock(artifact_integrity: str) -> None:
     hcs_override, hcs_integrity = verify_hcs_vendor()
     expected_overrides = {
         **FIXED_DEPENDENCIES,
+        POSTCSS_PARSER: POSTCSS_PARSER_VERSION,
         "http-cache-semantics": hcs_override,
     }
     if package.get("overrides") != expected_overrides:
@@ -217,7 +288,7 @@ def verify_lock(artifact_integrity: str) -> None:
         hcs_integrity, "BSD-2-Clause", False, False,
     ):
         raise RuntimeError("package-lock.json does not bind the exact local private HCS archive")
-    if hashlib.sha256(LOCK_PATH.read_bytes()).hexdigest() != "3928f3049db0d21170bbf8fb564715eeb50d59f14b0a27ebcaa42381071b999e":
+    if hashlib.sha256(LOCK_PATH.read_bytes()).hexdigest() != LOCK_SHA256:
         raise RuntimeError("package-lock.json differs from the reviewed lock graph")
     if npm_lock.get("version") != VERSION:
         raise RuntimeError("package-lock.json npm version does not match the upstream source pin")
@@ -230,6 +301,7 @@ def verify_lock(artifact_integrity: str) -> None:
         )
 
     packages = lock.get("packages", {})
+    validate_postcss_lock_entries(packages)
     for name, version in FIXED_DEPENDENCIES.items():
         dependency = packages.get(f"node_modules/{name}", {})
         if dependency.get("version") != version or dependency.get("inBundle"):
@@ -247,6 +319,10 @@ def verify_lock(artifact_integrity: str) -> None:
         if name in FIXED_DEPENDENCIES and version != FIXED_DEPENDENCIES[name]:
             vulnerable_entries.append(f"{path}@{version}")
         if name in FIXED_DEPENDENCIES and dependency.get("inBundle"):
+            vulnerable_entries.append(f"{path}@{version} (still bundled)")
+        if name == POSTCSS_PARSER and version != POSTCSS_PARSER_VERSION:
+            vulnerable_entries.append(f"{path}@{version}")
+        if name == POSTCSS_PARSER and dependency.get("inBundle"):
             vulnerable_entries.append(f"{path}@{version} (still bundled)")
         if name == "brace-expansion" and dependency.get("inBundle"):
             vulnerable_entries.append(f"{path}@{version} (still bundled)")
