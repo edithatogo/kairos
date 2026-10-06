@@ -232,3 +232,7 @@ impl FidelityAdapter {
         Ok(())
     }
 }
+
+#[cfg(test)]
+#[path = "fidelity_tests.rs"]
+mod fidelity_tests;
