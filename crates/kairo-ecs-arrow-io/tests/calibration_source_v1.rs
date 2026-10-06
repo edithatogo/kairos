@@ -406,7 +406,11 @@ fn assert_long_payload_matches_wide(
 
 fn output_dir() -> PathBuf {
     PathBuf::from(
-        std::env::var("KAIROS_CALIBRATION_OUTDIR").expect("output directory is packet-bound"),
+        std::env::var_os("KAIROS_CALIBRATION_OUTDIR")
+            .or_else(|| std::env::var_os("KAIROS_INTEROP_OUTDIR"))
+            .expect(
+                "set KAIROS_CALIBRATION_OUTDIR or the workflow's KAIROS_INTEROP_OUTDIR to the packet-bound output directory",
+            ),
     )
 }
 
