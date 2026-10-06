@@ -8,8 +8,10 @@ use kairo_ecs_abm::spatial::{
     EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1,
 };
 use kairo_ecs_abm::{register_transit_context, TransitContext, TransitPhase};
-use kairo_ecs_des::fidelity::{FidelityAdapter, FidelityMode, FidelityPolicy};
-use kairo_ecs_des::{FlowDomainControl, FlowError, FlowRuntime, LifecycleTransition, WorkState};
+use kairo_ecs_des::fidelity::{FidelityAdapter, FidelityDecision, FidelityMode, FidelityPolicy};
+use kairo_ecs_des::{
+    FlowDomainControl, FlowError, FlowRuntime, LifecycleTransition, WorkId, WorkState,
+};
 use kairo_ecs_types::{EventKind, SimDuration, SimTime};
 use std::sync::Arc;
 
@@ -116,6 +118,20 @@ fn assert_invalid_dispatch(
     ));
 }
 
+fn assert_bound_retained(
+    flow: &FlowRuntime,
+    bound: &crate::flow_bridge::BoundIntrinsicWork<Template, Context>,
+    work: WorkId,
+    decision: FidelityDecision,
+    duration: SimDuration,
+    draw_position: u64,
+) {
+    assert_eq!(bound.decision(), decision);
+    assert_eq!(flow.work(work).unwrap().original_duration, duration);
+    assert!(bound.service_identity_matches());
+    assert_eq!(bound.service_draw_position(), draw_position);
+}
+
 #[test]
 fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_once() {
     let mut flow = FlowRuntime::new();
@@ -185,14 +201,30 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
         .unwrap_or_else(|_| panic!("actual provider/Flow preparation failed"));
     assert_eq!(prepared.sampled_duration(), SimDuration::from_ticks(30));
     assert_eq!(prepared.service_draw_position(), 1);
+    let frozen_decision = prepared.decision();
+    let frozen_duration = prepared.sampled_duration();
+    let frozen_draw_bounds = prepared.draw_bounds();
+    assert_eq!(frozen_decision.mode, FidelityMode::Micro);
+    assert_eq!(frozen_draw_bounds, (0, 1));
     let created = prepared
         .create(&mut flow)
         .unwrap_or_else(|_| panic!("actual restartable Flow work creation failed"));
     let work = created.work();
+    assert_eq!(flow.work(work).unwrap().original_duration, frozen_duration);
     let mut bound = created
         .bind(&flow)
         .unwrap_or_else(|_| panic!("actual Flow work binding failed"));
-    assert_eq!(bound.service_draw_position(), 1);
+    assert_eq!(bound.decision(), frozen_decision);
+    assert!(bound.service_identity_matches());
+    assert_eq!(bound.service_draw_position(), frozen_draw_bounds.1);
+    assert_bound_retained(
+        &flow,
+        &bound,
+        work,
+        frozen_decision,
+        frozen_duration,
+        frozen_draw_bounds.1,
+    );
 
     let first_start = bound.start_transit(&mut flow).unwrap();
     let mut foreign_flow = FlowRuntime::new();
@@ -221,6 +253,14 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
     );
     let paused_ready = dispatch_and_observe(&mut flow, &mut bound);
     assert_eq!(paused_ready.event, first_pause);
+    assert_bound_retained(
+        &flow,
+        &bound,
+        work,
+        frozen_decision,
+        frozen_duration,
+        frozen_draw_bounds.1,
+    );
     no_request_admissions(&paused_ready);
     assert_invalid_dispatch(&flow, &mut bound, &paused_ready);
 
@@ -259,6 +299,14 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
         .unwrap();
     let unowned_pause = flow.step().unwrap().expect("external Flow control event");
     assert_eq!(unowned_pause.event, unowned_event);
+    assert_bound_retained(
+        &flow,
+        &bound,
+        work,
+        frozen_decision,
+        frozen_duration,
+        frozen_draw_bounds.1,
+    );
     assert_invalid_dispatch(&flow, &mut bound, &unowned_pause);
     assert!(matches!(
         unowned_pause.callback_batches.as_slice(),
@@ -287,6 +335,14 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
     );
 
     let stale_start = dispatch_and_observe(&mut flow, &mut bound);
+    assert_bound_retained(
+        &flow,
+        &bound,
+        work,
+        frozen_decision,
+        frozen_duration,
+        frozen_draw_bounds.1,
+    );
     assert_eq!(stale_start.event, first_start);
     no_request_admissions(&stale_start);
     let prestart_resume = owned_control(
@@ -298,8 +354,24 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
     );
     let resumed_ready = dispatch_and_observe(&mut flow, &mut bound);
     assert_eq!(resumed_ready.event, prestart_resume);
+    assert_bound_retained(
+        &flow,
+        &bound,
+        work,
+        frozen_decision,
+        frozen_duration,
+        frozen_draw_bounds.1,
+    );
     no_request_admissions(&resumed_ready);
     let accepted_start = dispatch_and_observe(&mut flow, &mut bound);
+    assert_bound_retained(
+        &flow,
+        &bound,
+        work,
+        frozen_decision,
+        frozen_duration,
+        frozen_draw_bounds.1,
+    );
     no_request_admissions(&accepted_start);
     assert_eq!(flow.now(), SimTime::from_ticks(6));
     let context = flow.work_context::<TransitContext>(carrier_work).unwrap();
@@ -322,8 +394,24 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
     );
     let paused_moving = dispatch_and_observe(&mut flow, &mut bound);
     assert_eq!(paused_moving.event, poststart_pause);
+    assert_bound_retained(
+        &flow,
+        &bound,
+        work,
+        frozen_decision,
+        frozen_duration,
+        frozen_draw_bounds.1,
+    );
     no_request_admissions(&paused_moving);
     let stale_arrival = dispatch_and_observe(&mut flow, &mut bound);
+    assert_bound_retained(
+        &flow,
+        &bound,
+        work,
+        frozen_decision,
+        frozen_duration,
+        frozen_draw_bounds.1,
+    );
     no_request_admissions(&stale_arrival);
     assert_eq!(flow.work(work).unwrap().request, None);
     let context = flow.work_context::<TransitContext>(carrier_work).unwrap();
@@ -345,6 +433,14 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
     );
     let resumed_moving = dispatch_and_observe(&mut flow, &mut bound);
     assert_eq!(resumed_moving.event, poststart_resume);
+    assert_bound_retained(
+        &flow,
+        &bound,
+        work,
+        frozen_decision,
+        frozen_duration,
+        frozen_draw_bounds.1,
+    );
     no_request_admissions(&resumed_moving);
 
     let mut arrivals = Vec::new();
@@ -355,6 +451,14 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
         let observation = bound
             .observe_transit_dispatch(&flow, &dispatch)
             .unwrap_or_else(|_| panic!("actual transit dispatch observation failed"));
+        assert_bound_retained(
+            &flow,
+            &bound,
+            work,
+            frozen_decision,
+            frozen_duration,
+            frozen_draw_bounds.1,
+        );
         if matches!(observation, TransitObservation::Arrived) {
             arrivals.push(dispatch);
             break;
@@ -362,6 +466,14 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
     }
     assert_eq!(arrivals.len(), 1);
     let arrival = &arrivals[0];
+    assert_bound_retained(
+        &flow,
+        &bound,
+        work,
+        frozen_decision,
+        frozen_duration,
+        frozen_draw_bounds.1,
+    );
     assert_eq!(arrival.at, SimTime::from_ticks(9));
     assert_invalid_dispatch(&flow, &mut bound, arrival);
     let admissions = accepted(arrival);
@@ -376,8 +488,11 @@ fn actual_nonzero_route_consumes_stale_start_and_arrival_across_pause_resume_onc
     let submitted = bound
         .finish_transit(&flow)
         .unwrap_or_else(|_| panic!("accepted arrival did not yield submitted intrinsic work"));
-    assert_eq!(submitted.sampled_duration(), SimDuration::from_ticks(30));
-    assert_eq!(submitted.service_draw_position(), 1);
+    assert_eq!(submitted.work(), work);
+    assert_eq!(submitted.decision(), frozen_decision);
+    assert_eq!(submitted.sampled_duration(), frozen_duration);
+    assert_eq!(submitted.service_draw_position(), frozen_draw_bounds.1);
+    assert!(submitted.service_identity_matches());
     assert_eq!(submitted.request(), request_id);
     let context = flow.work_context::<TransitContext>(carrier_work).unwrap();
     assert_eq!(context.phase(), TransitPhase::Arrived);
