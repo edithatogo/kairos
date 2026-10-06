@@ -173,7 +173,7 @@ def check_document(doc,schema,validator):
         if set(source)!= {record["source_event_key"] for record in records}: errors.append("wide/long raw event key coverage")
         for record in records:
             raw=source.get(record["source_event_key"],{})
-            kind=raw.get("kind",raw.get("kind"))
+            kind=raw.get("kind")
             occurrence=raw.get("occurrence")
             rank=raw.get("rank")
             source_order=raw.get("source_order")
