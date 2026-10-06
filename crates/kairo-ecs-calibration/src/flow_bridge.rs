@@ -1948,7 +1948,8 @@ mod tests {
         let work = must_create(prepared.create(&mut flow));
         let work_id = work.work();
         let mut bound = must_bind(work.bind(&flow));
-        let has_transit_carrier = bound.carrier.is_some();
+        let has_transit_carrier =
+            mode == FidelityMode::Micro && matches!(&bound.transit, TransitRequest::Route { .. });
         let (transit_elapsed, submitted) = if mode == FidelityMode::Micro && has_transit_carrier {
             register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20))
                 .unwrap();
