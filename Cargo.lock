@@ -685,6 +685,7 @@ dependencies = [
  "chrono",
  "kairo-ecs-arrow",
  "kairo-ecs-arrow-io",
+ "kairo-ecs-des",
  "kairo-ecs-rng",
  "kairo-ecs-types",
  "serde_json",

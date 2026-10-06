@@ -16,6 +16,18 @@ mod staff_dispatch;
 )]
 mod work_duration;
 
+// Experimental adapter for actual Flow work; it remains crate-private while
+// C2.2 transit, checkpoint and public-API joins are unfinished.
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2.2 Flow bridge is exercised by focused actual-runtime tests; the paired runtime join is a later instance"
+    )
+)]
+mod flow_bridge;
+
 // Private C4.2 numeric implementation; no public API or sidecar promises.
 #[expect(
     dead_code,
