@@ -1845,6 +1845,264 @@ mod tests {
     }
 
     #[test]
+    fn mixed_subsystems_keep_macro_and_routed_micro_work_associated_in_one_flow() {
+        let t = SimTime::from_ticks;
+        let mut flow = FlowRuntime::new();
+        let owner = flow.spawn_actor().unwrap();
+        let carrier_actor = flow.spawn_actor().unwrap();
+        let macro_resource = flow.create_resource(1).unwrap();
+        let micro_resource = flow.create_resource(1).unwrap();
+
+        let mut policy = FidelityPolicy::new(1, None).unwrap();
+        policy
+            .set_subsystem("assessment.macro", FidelityMode::Macro)
+            .unwrap();
+        policy
+            .set_subsystem("assessment.micro", FidelityMode::Micro)
+            .unwrap();
+        let mut adapter = FidelityAdapter::new(policy);
+
+        let mut seeds = CalibrationSeedMap::new(1, "mixed-subsystem", 37).unwrap();
+        let macro_key = seeds
+            .key_for(
+                "mixed-subsystem-v1",
+                0,
+                "case-1",
+                "macro-task",
+                SeedPurpose::Service,
+            )
+            .unwrap();
+        let macro_stream = seeds
+            .stream_for(
+                "mixed-subsystem-v1",
+                0,
+                "case-1",
+                "macro-task",
+                SeedPurpose::Service,
+            )
+            .unwrap();
+        let micro_key = seeds
+            .key_for(
+                "mixed-subsystem-v1",
+                0,
+                "case-1",
+                "micro-task",
+                SeedPurpose::Service,
+            )
+            .unwrap();
+        let micro_stream = seeds
+            .stream_for(
+                "mixed-subsystem-v1",
+                0,
+                "case-1",
+                "micro-task",
+                SeedPurpose::Service,
+            )
+            .unwrap();
+
+        let node = |id| NodeId::new(id);
+        let walk = MovementModeId::new("walk").unwrap();
+        let nodes = (1..=3).map(node).collect::<Vec<_>>();
+        let edges = (0..2)
+            .map(|index| TransitEdge {
+                id: EdgeId::new(index + 1),
+                from: nodes[index as usize],
+                to: nodes[index as usize + 1],
+                length_mm: 1,
+                allowed_modes: vec![walk.clone()],
+            })
+            .collect();
+        let graph = Arc::new(TransitGraphV1::new(1, nodes.clone(), edges).unwrap());
+        let transit = || TransitRequest::Route {
+            graph: Arc::clone(&graph),
+            origin: nodes[0],
+            destination: *nodes.last().unwrap(),
+            profile: MovementProfile::new("walk", 1).unwrap(),
+            ticks_per_second: 1,
+            carrier_actor,
+            carrier_registration: "bridge.transit".to_owned(),
+            kind: EventKind::custom(0xC20),
+        };
+        let acquire = |resource| AcquireIntent {
+            resource,
+            owner,
+            at: t(0),
+            priority_level: 3,
+            deadline: None,
+            scheduler_priority: 7,
+            can_preempt: false,
+            preemptible: None,
+        };
+        let macro_input = WorkPreparationInput::new(
+            PreparationIdentity {
+                owner,
+                subsystem: "assessment.macro".to_owned(),
+                registration: "bridge.context".to_owned(),
+                stratum: "triage".to_owned(),
+            },
+            macro_stream,
+            macro_key.clone(),
+            42,
+            make_context,
+            acquire(macro_resource),
+            transit(),
+        );
+        let micro_input = WorkPreparationInput::new(
+            PreparationIdentity {
+                owner,
+                subsystem: "assessment.micro".to_owned(),
+                registration: "bridge.context".to_owned(),
+                stratum: "triage".to_owned(),
+            },
+            micro_stream,
+            micro_key.clone(),
+            43,
+            make_context,
+            acquire(micro_resource),
+            transit(),
+        );
+
+        flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
+            .unwrap();
+        register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20)).unwrap();
+
+        let macro_prepared = must_prepare(macro_input.prepare(&flow, &mut adapter, &provider()));
+        assert_eq!(macro_prepared.decision().mode, FidelityMode::Macro);
+        let macro_work = must_create(macro_prepared.create(&mut flow));
+        let macro_work_id = macro_work.work();
+        let mut macro_bound = must_bind(macro_work.bind(&flow));
+        assert_eq!(
+            adapter.decision(macro_work_id).unwrap().mode,
+            FidelityMode::Macro
+        );
+        assert_eq!(macro_bound.carrier, None);
+        assert!(macro_bound.owned_events.is_empty());
+        let macro_draw_position = macro_bound.service_stream.draw_position();
+        let scheduled_events_before_macro_rejection =
+            flow.budget_snapshot().scheduler.scheduled_events;
+        assert_eq!(
+            macro_bound.start_transit(&mut flow),
+            Err(BridgeError::InvalidDispatch)
+        );
+        assert_eq!(
+            flow.budget_snapshot().scheduler.scheduled_events,
+            scheduled_events_before_macro_rejection
+        );
+        assert_eq!(macro_bound.carrier, None);
+        assert!(macro_bound.owned_events.is_empty());
+        assert_eq!(
+            macro_bound.service_stream.draw_position(),
+            macro_draw_position
+        );
+        let macro_submitted = must_submit(macro_bound.submit(&mut flow));
+        let macro_request_id = macro_submitted.request();
+        assert_eq!(macro_submitted.decision().mode, FidelityMode::Macro);
+        assert_eq!(macro_submitted.expected_service_key, macro_key);
+        assert!(macro_submitted.service_identity_matches());
+        assert_eq!(macro_submitted.draw_position(), 1);
+        assert_eq!(
+            flow.work(macro_work_id).unwrap().request,
+            Some(macro_request_id)
+        );
+        let macro_request = flow.request(macro_request_id).unwrap();
+        assert_eq!(macro_request.work, Some(macro_work_id));
+        assert_eq!(macro_request.resource, macro_resource);
+        assert!(macro_request.timed);
+        assert_eq!(macro_request.submitted_at, t(0));
+
+        let micro_prepared = must_prepare(micro_input.prepare(&flow, &mut adapter, &provider()));
+        assert_eq!(micro_prepared.decision().mode, FidelityMode::Micro);
+        let micro_work = must_create(micro_prepared.create(&mut flow));
+        let micro_work_id = micro_work.work();
+        let mut micro_bound = must_bind(micro_work.bind(&flow));
+        assert_eq!(
+            adapter.decision(micro_work_id).unwrap().mode,
+            FidelityMode::Micro
+        );
+        assert_eq!(micro_bound.carrier, None);
+        assert!(micro_bound.owned_events.is_empty());
+        assert_eq!(flow.work(micro_work_id).unwrap().request, None);
+        let micro_start = micro_bound.start_transit(&mut flow).unwrap();
+        let micro_carrier = micro_bound.carrier.expect("Micro route owns a carrier");
+        assert_eq!(micro_bound.owned_events, vec![micro_start]);
+        assert_eq!(
+            flow.work_context::<TransitContext>(micro_carrier)
+                .unwrap()
+                .service_work(),
+            micro_work_id
+        );
+        assert_eq!(
+            flow.resource(micro_resource).unwrap().queued,
+            Vec::<RequestId>::new()
+        );
+        assert_eq!(flow.resource(micro_resource).unwrap().allocations.len(), 0);
+
+        let mut observed = Vec::new();
+        loop {
+            let dispatch = flow.step().unwrap().expect("Micro route must arrive");
+            if micro_bound.pending_event == Some(dispatch.event) {
+                let observation = micro_bound
+                    .observe_transit_dispatch(&flow, &dispatch)
+                    .unwrap();
+                observed.push((dispatch.at, observation));
+                if observation == TransitObservation::Arrived {
+                    break;
+                }
+            }
+        }
+        assert_eq!(
+            observed,
+            vec![
+                (t(0), TransitObservation::Progress),
+                (t(1), TransitObservation::Progress),
+                (t(2), TransitObservation::Arrived),
+            ]
+        );
+        let micro_request_id = flow.work(micro_work_id).unwrap().request.unwrap();
+        let micro_request = flow.request(micro_request_id).unwrap();
+        assert_eq!(micro_request.work, Some(micro_work_id));
+        assert_eq!(micro_request.resource, micro_resource);
+        assert!(micro_request.timed);
+        assert_eq!(micro_request.submitted_at, t(2));
+        assert_eq!(micro_bound.arrival_request, Some(micro_request_id));
+        let micro_submitted = micro_bound.finish_transit(&flow).unwrap();
+        assert_eq!(micro_submitted.work(), micro_work_id);
+        assert_eq!(micro_submitted.request(), micro_request_id);
+        assert_eq!(micro_submitted.decision().mode, FidelityMode::Micro);
+        assert_eq!(micro_submitted.expected_service_key, micro_key);
+        assert!(micro_submitted.service_identity_matches());
+        assert_eq!(micro_submitted.draw_position(), 1);
+        assert_eq!(
+            adapter.decision(macro_work_id).unwrap().mode,
+            FidelityMode::Macro
+        );
+        assert_eq!(
+            adapter.decision(micro_work_id).unwrap().mode,
+            FidelityMode::Micro
+        );
+
+        let run = flow.run_for(100).unwrap();
+        assert!(!run.budget_exhausted);
+        for (work, request) in [
+            (macro_work_id, macro_request_id),
+            (micro_work_id, micro_request_id),
+        ] {
+            assert_eq!(flow.work(work).unwrap().request, Some(request));
+            assert_eq!(flow.request(request).unwrap().work, Some(work));
+            assert_eq!(
+                flow.request(request).unwrap().state,
+                RequestState::Completed
+            );
+            assert_eq!(
+                flow.work_progress(work).unwrap().state,
+                WorkState::Completed
+            );
+        }
+        assert_eq!(flow.resource(macro_resource).unwrap().allocations.len(), 0);
+        assert_eq!(flow.resource(micro_resource).unwrap().allocations.len(), 0);
+    }
+
+    #[test]
     fn macro_and_micro_reconcile_queue_transit_and_service_elapsed_time() {
         let t = SimTime::from_ticks;
         let d = SimDuration::from_ticks;
