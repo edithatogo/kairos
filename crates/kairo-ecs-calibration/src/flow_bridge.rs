@@ -2619,6 +2619,11 @@ mod tests {
         assert_eq!(resource_end.available, 1);
         assert!(resource_end.active.is_empty());
         assert!(resource_end.queued.is_empty());
+        assert_eq!(
+            flow.budget_snapshot().scheduler.pending_events,
+            0,
+            "the isolated urgent-interruption fixture must leave no future Flow events"
+        );
         let original_rows: Vec<_> = records
             .iter()
             .filter(|row| row.request == request_id)
