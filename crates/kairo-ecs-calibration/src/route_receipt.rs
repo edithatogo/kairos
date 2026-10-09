@@ -9,6 +9,7 @@ use sha2::{Digest, Sha256};
 
 const RECEIPT_TAG: &[u8] = b"KAIROS-CALIBRATION-ROUTE-RECEIPT\0";
 const RECEIPT_VERSION: u32 = 1;
+pub(crate) const ROUTE_METADATA_VERSION_V1: u32 = 1;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum DistanceProvenance {
@@ -18,6 +19,7 @@ pub(crate) enum DistanceProvenance {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum RouteReceiptError {
+    UnsupportedMetadataVersion,
     InvalidTripPurpose,
     SensorObservationOnly,
     RouteMismatch,
@@ -25,9 +27,52 @@ pub(crate) enum RouteReceiptError {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct RouteReceipt {
+pub(crate) struct RouteMetadata {
+    version: u32,
     trip_purpose: String,
     distance_provenance: DistanceProvenance,
+}
+
+impl RouteMetadata {
+    pub(crate) fn v1(
+        trip_purpose: impl Into<String>,
+        distance_provenance: DistanceProvenance,
+    ) -> Self {
+        Self {
+            version: ROUTE_METADATA_VERSION_V1,
+            trip_purpose: trip_purpose.into(),
+            distance_provenance,
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn with_version(
+        version: u32,
+        trip_purpose: impl Into<String>,
+        distance_provenance: DistanceProvenance,
+    ) -> Self {
+        Self {
+            version,
+            trip_purpose: trip_purpose.into(),
+            distance_provenance,
+        }
+    }
+
+    pub(crate) fn validate(&self) -> Result<(), RouteReceiptError> {
+        if self.version != ROUTE_METADATA_VERSION_V1 {
+            return Err(RouteReceiptError::UnsupportedMetadataVersion);
+        }
+        validate_purpose(&self.trip_purpose)?;
+        if self.distance_provenance == DistanceProvenance::SensorObservationOnly {
+            return Err(RouteReceiptError::SensorObservationOnly);
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct RouteReceipt {
+    metadata: RouteMetadata,
     canonical_bytes: Vec<u8>,
     sha256: [u8; 32],
 }
@@ -35,19 +80,13 @@ pub(crate) struct RouteReceipt {
 impl RouteReceipt {
     pub(crate) fn from_context(
         context: &TransitContext,
-        trip_purpose: &str,
-        distance_provenance: DistanceProvenance,
+        metadata: &RouteMetadata,
     ) -> Result<Self, RouteReceiptError> {
-        validate_purpose(trip_purpose)?;
-        if distance_provenance == DistanceProvenance::SensorObservationOnly {
-            return Err(RouteReceiptError::SensorObservationOnly);
-        }
-        let canonical_bytes =
-            canonical_receipt_bytes(context.route_plan(), trip_purpose, distance_provenance)?;
+        metadata.validate()?;
+        let canonical_bytes = canonical_receipt_bytes(context.route_plan(), metadata)?;
         let sha256 = Sha256::digest(&canonical_bytes).into();
         Ok(Self {
-            trip_purpose: trip_purpose.to_owned(),
-            distance_provenance,
+            metadata: metadata.clone(),
             canonical_bytes,
             sha256,
         })
@@ -58,16 +97,13 @@ impl RouteReceipt {
     pub(crate) fn validate_context(
         &self,
         context: &TransitContext,
-        trip_purpose: &str,
+        metadata: &RouteMetadata,
     ) -> Result<(), RouteReceiptError> {
-        validate_purpose(trip_purpose)?;
-        if self.trip_purpose != trip_purpose
-            || self.distance_provenance != DistanceProvenance::ConfiguredGeometry
-        {
+        metadata.validate()?;
+        if &self.metadata != metadata {
             return Err(RouteReceiptError::RouteMismatch);
         }
-        let actual =
-            canonical_receipt_bytes(context.route_plan(), trip_purpose, self.distance_provenance)?;
+        let actual = canonical_receipt_bytes(context.route_plan(), metadata)?;
         let digest: [u8; 32] = Sha256::digest(&actual).into();
         if actual != self.canonical_bytes || digest != self.sha256 {
             return Err(RouteReceiptError::RouteMismatch);
@@ -94,14 +130,14 @@ fn validate_purpose(purpose: &str) -> Result<(), RouteReceiptError> {
 
 fn canonical_receipt_bytes(
     route: &RoutePlan,
-    trip_purpose: &str,
-    distance_provenance: DistanceProvenance,
+    metadata: &RouteMetadata,
 ) -> Result<Vec<u8>, RouteReceiptError> {
     let mut bytes = Vec::new();
     bytes.extend_from_slice(RECEIPT_TAG);
     bytes.extend_from_slice(&RECEIPT_VERSION.to_le_bytes());
-    append_bytes(&mut bytes, trip_purpose.as_bytes())?;
-    bytes.push(match distance_provenance {
+    bytes.extend_from_slice(&metadata.version.to_le_bytes());
+    append_bytes(&mut bytes, metadata.trip_purpose.as_bytes())?;
+    bytes.push(match metadata.distance_provenance {
         DistanceProvenance::ConfiguredGeometry => 1,
         DistanceProvenance::SensorObservationOnly => 2,
     });
@@ -152,6 +188,10 @@ mod tests {
     use kairo_ecs_types::{EventKind, SimDuration, SimTime};
 
     const KIND: EventKind = EventKind::custom(9411);
+
+    fn route_metadata(purpose: &str) -> RouteMetadata {
+        RouteMetadata::v1(purpose, DistanceProvenance::ConfiguredGeometry)
+    }
 
     fn route_graph(lengths: [u64; 2], reversed: bool, speed: u64) -> RoutePlan {
         route_graph_at(lengths, reversed, speed, 1, 1, 3, "walk")
@@ -230,36 +270,25 @@ mod tests {
     fn canonical_graph_order_and_purpose_identity_are_stable() {
         let first = context(route_graph([2, 3], false, 1));
         let reordered = context(route_graph([2, 3], true, 1));
-        let a = RouteReceipt::from_context(
-            &first,
-            "patient-transfer",
-            DistanceProvenance::ConfiguredGeometry,
-        )
-        .unwrap();
-        let b = RouteReceipt::from_context(
-            &reordered,
-            "patient-transfer",
-            DistanceProvenance::ConfiguredGeometry,
-        )
-        .unwrap();
+        let a = RouteReceipt::from_context(&first, &route_metadata("patient-transfer")).unwrap();
+        let b =
+            RouteReceipt::from_context(&reordered, &route_metadata("patient-transfer")).unwrap();
         assert_eq!(a.digest(), b.digest());
         assert_eq!(
             a.digest()
                 .iter()
                 .map(|byte| format!("{byte:02x}"))
                 .collect::<String>(),
-            "a5576147f6629d0597979ebd90a5ea9f8a14316a2fe1e4533b1d58b3fda2da77"
+            "6e2de4e99a98adaadfb78a64e8a0d438c6036f6c43c7c5b953238893532d5425"
         );
-        assert!(a.validate_context(&reordered, "patient-transfer").is_ok());
-        let other_purpose = RouteReceipt::from_context(
-            &reordered,
-            "staff-transfer",
-            DistanceProvenance::ConfiguredGeometry,
-        )
-        .unwrap();
+        assert!(a
+            .validate_context(&reordered, &route_metadata("patient-transfer"))
+            .is_ok());
+        let other_purpose =
+            RouteReceipt::from_context(&reordered, &route_metadata("staff-transfer")).unwrap();
         assert_ne!(a.digest(), other_purpose.digest());
         assert_eq!(
-            a.validate_context(&reordered, "staff-transfer"),
+            a.validate_context(&reordered, &route_metadata("staff-transfer")),
             Err(RouteReceiptError::RouteMismatch)
         );
     }
@@ -267,12 +296,8 @@ mod tests {
     #[test]
     fn actual_context_profile_and_topology_mismatches_reject() {
         let expected = context(route_graph([2, 3], false, 1));
-        let receipt = RouteReceipt::from_context(
-            &expected,
-            "patient-transfer",
-            DistanceProvenance::ConfiguredGeometry,
-        )
-        .unwrap();
+        let receipt =
+            RouteReceipt::from_context(&expected, &route_metadata("patient-transfer")).unwrap();
         let changed_topology = context(route_graph([2, 4], false, 1));
         let changed_profile = context(route_graph([2, 3], false, 2));
         let changed_origin = context(route_graph_at([2, 3], false, 1, 1, 2, 3, "walk"));
@@ -280,27 +305,27 @@ mod tests {
         let changed_tick_rate = context(route_graph_at([2, 3], false, 1, 2, 1, 3, "walk"));
         let changed_mode = context(route_graph_at([2, 3], false, 1, 1, 1, 3, "roll"));
         assert_eq!(
-            receipt.validate_context(&changed_topology, "patient-transfer"),
+            receipt.validate_context(&changed_topology, &route_metadata("patient-transfer")),
             Err(RouteReceiptError::RouteMismatch)
         );
         assert_eq!(
-            receipt.validate_context(&changed_profile, "patient-transfer"),
+            receipt.validate_context(&changed_profile, &route_metadata("patient-transfer")),
             Err(RouteReceiptError::RouteMismatch)
         );
         assert_eq!(
-            receipt.validate_context(&changed_origin, "patient-transfer"),
+            receipt.validate_context(&changed_origin, &route_metadata("patient-transfer")),
             Err(RouteReceiptError::RouteMismatch)
         );
         assert_eq!(
-            receipt.validate_context(&changed_destination, "patient-transfer"),
+            receipt.validate_context(&changed_destination, &route_metadata("patient-transfer")),
             Err(RouteReceiptError::RouteMismatch)
         );
         assert_eq!(
-            receipt.validate_context(&changed_tick_rate, "patient-transfer"),
+            receipt.validate_context(&changed_tick_rate, &route_metadata("patient-transfer")),
             Err(RouteReceiptError::RouteMismatch)
         );
         assert_eq!(
-            receipt.validate_context(&changed_mode, "patient-transfer"),
+            receipt.validate_context(&changed_mode, &route_metadata("patient-transfer")),
             Err(RouteReceiptError::RouteMismatch)
         );
     }
@@ -311,8 +336,10 @@ mod tests {
         assert_eq!(
             RouteReceipt::from_context(
                 &actual,
-                "patient-transfer",
-                DistanceProvenance::SensorObservationOnly,
+                &RouteMetadata::v1(
+                    "patient-transfer",
+                    DistanceProvenance::SensorObservationOnly
+                ),
             ),
             Err(RouteReceiptError::SensorObservationOnly)
         );
@@ -328,33 +355,20 @@ mod tests {
             "patient\ntransfer",
         ] {
             assert_eq!(
-                RouteReceipt::from_context(
-                    &actual,
-                    purpose,
-                    DistanceProvenance::ConfiguredGeometry,
-                ),
+                RouteReceipt::from_context(&actual, &route_metadata(purpose),),
                 Err(RouteReceiptError::InvalidTripPurpose)
             );
         }
         let too_long = "x".repeat(1025);
         assert_eq!(
-            RouteReceipt::from_context(&actual, &too_long, DistanceProvenance::ConfiguredGeometry,),
+            RouteReceipt::from_context(&actual, &route_metadata(&too_long)),
             Err(RouteReceiptError::InvalidTripPurpose)
         );
         let max_utf8 = "é".repeat(512);
-        assert!(RouteReceipt::from_context(
-            &actual,
-            &max_utf8,
-            DistanceProvenance::ConfiguredGeometry,
-        )
-        .is_ok());
+        assert!(RouteReceipt::from_context(&actual, &route_metadata(&max_utf8),).is_ok());
         let too_long_utf8 = "é".repeat(513);
         assert_eq!(
-            RouteReceipt::from_context(
-                &actual,
-                &too_long_utf8,
-                DistanceProvenance::ConfiguredGeometry,
-            ),
+            RouteReceipt::from_context(&actual, &route_metadata(&too_long_utf8),),
             Err(RouteReceiptError::InvalidTripPurpose)
         );
     }
@@ -388,8 +402,7 @@ mod tests {
             .unwrap();
         let receipt = RouteReceipt::from_context(
             flow.work_context::<TransitContext>(carrier).unwrap(),
-            "patient-transfer",
-            DistanceProvenance::ConfiguredGeometry,
+            &route_metadata("patient-transfer"),
         )
         .unwrap();
 
@@ -410,7 +423,9 @@ mod tests {
         let paused_progress = paused.progress_at(flow.now()).unwrap();
         assert_eq!(paused_progress.useful_elapsed.ticks(), 1);
         assert_eq!(paused_progress.remaining.ticks(), 4);
-        assert!(receipt.validate_context(paused, "patient-transfer").is_ok());
+        assert!(receipt
+            .validate_context(paused, &route_metadata("patient-transfer"))
+            .is_ok());
 
         schedule_transit_control(
             &mut flow,
@@ -429,7 +444,7 @@ mod tests {
         assert_eq!(resumed_progress.useful_elapsed.ticks(), 1);
         assert_eq!(resumed_progress.remaining.ticks(), 4);
         assert_eq!(
-            receipt.validate_context(resumed, "patient-transfer"),
+            receipt.validate_context(resumed, &route_metadata("patient-transfer")),
             Ok(())
         );
         assert!(flow.step().unwrap().unwrap().error.is_none()); // first segment completes at 4
@@ -446,7 +461,7 @@ mod tests {
         assert_eq!(completed_progress.useful_elapsed.ticks(), 5);
         assert_eq!(completed_progress.remaining.ticks(), 0);
         assert!(receipt
-            .validate_context(arrived, "patient-transfer")
+            .validate_context(arrived, &route_metadata("patient-transfer"))
             .is_ok());
         let request_id = flow.work(service).unwrap().request.unwrap();
         let request = flow.request(request_id).unwrap();

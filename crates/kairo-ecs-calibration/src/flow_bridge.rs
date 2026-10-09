@@ -4,6 +4,7 @@
 //! scheduled through the ABM TransitContext; Macro and zero routes submit work
 //! without creating a transit carrier or event.
 
+use crate::route_receipt::{RouteMetadata, RouteReceipt, RouteReceiptError};
 use crate::seed_map::{CalibrationStream, CalibrationStreamKey, SeedPurpose};
 use crate::work_duration::{IntrinsicWorkProvider, SampledWorkDuration, WorkDurationError};
 use kairo_ecs_abm::spatial::{MovementProfile, NodeId, TransitError, TransitGraphV1};
@@ -74,6 +75,7 @@ pub(crate) enum BridgeError {
     Flow(FlowError),
     ConflictingSubmission,
     InvalidDispatch,
+    RouteReceipt(RouteReceiptError),
 }
 
 pub(crate) struct WorkPreparationInput<T: Clone, C: 'static> {
@@ -87,6 +89,7 @@ pub(crate) struct WorkPreparationInput<T: Clone, C: 'static> {
     pub(crate) make_context: fn(&T) -> C,
     pub(crate) acquire: AcquireIntent,
     pub(crate) transit: TransitRequest,
+    route_metadata: Option<RouteMetadata>,
 }
 
 impl<T: Clone, C: 'static> WorkPreparationInput<T, C> {
@@ -110,7 +113,13 @@ impl<T: Clone, C: 'static> WorkPreparationInput<T, C> {
             make_context,
             acquire,
             transit,
+            route_metadata: None,
         }
+    }
+
+    pub(crate) fn with_route_metadata(mut self, metadata: RouteMetadata) -> Self {
+        self.route_metadata = Some(metadata);
+        self
     }
 }
 
@@ -130,6 +139,7 @@ pub(crate) struct PreparedIntrinsicWork<'a, T: Clone, C: 'static> {
     make_context: fn(&T) -> C,
     acquire: AcquireIntent,
     transit: TransitRequest,
+    route_metadata: Option<RouteMetadata>,
 }
 
 pub(crate) struct CreateFailure<'a, T: Clone, C: 'static> {
@@ -145,6 +155,7 @@ pub(crate) struct CreatedIntrinsicWork<'a, T: Clone, C: 'static> {
     sample: SampledWorkDuration,
     acquire: AcquireIntent,
     transit: TransitRequest,
+    route_metadata: Option<RouteMetadata>,
     work: WorkId,
     _restart_types: PhantomData<fn() -> (T, C)>,
 }
@@ -161,6 +172,8 @@ pub(crate) struct BoundIntrinsicWork<T: Clone, C: 'static> {
     sample: SampledWorkDuration,
     acquire: AcquireIntent,
     transit: TransitRequest,
+    route_metadata: Option<RouteMetadata>,
+    route_receipt: Option<RouteReceipt>,
     runtime: FlowRuntimeIdentity,
     work: WorkId,
     carrier: Option<WorkId>,
@@ -206,13 +219,20 @@ impl<T: Clone + 'static, C: 'static> BoundWorkContinuation<T, C> {
     > {
         let valid_runtime = bound.runtime == flow.identity();
         let valid_decision = adapter.decision(bound.work) == Some(&bound.decision);
-        if !valid_runtime || !valid_decision {
-            return Err((
-                flow,
-                adapter,
-                bound,
-                BridgeError::Fidelity(FidelityError::InvalidWork),
-            ));
+        let route_validation = if !valid_runtime {
+            Ok(())
+        } else {
+            match (bound.carrier, bound.route_receipt.is_some()) {
+                (Some(carrier), _) => bound.validate_route_context(&flow, carrier),
+                (None, false) => Ok(()),
+                (None, true) => Err(BridgeError::InvalidDispatch),
+            }
+        };
+        if !valid_runtime || !valid_decision || route_validation.is_err() {
+            let error = route_validation
+                .err()
+                .unwrap_or(BridgeError::Fidelity(FidelityError::InvalidWork));
+            return Err((flow, adapter, bound, error));
         }
         Ok(Self {
             flow,
@@ -250,6 +270,14 @@ impl<T: Clone + 'static, C: 'static> WorkPreparationInput<T, C> {
         adapter: &'a mut FidelityAdapter,
         provider: &IntrinsicWorkProvider,
     ) -> Result<PreparedIntrinsicWork<'a, T, C>, PrepareFailure<T, C>> {
+        if let Some(metadata) = &self.route_metadata {
+            if let Err(error) = metadata.validate() {
+                return Err(PrepareFailure {
+                    input: self,
+                    error: BridgeError::RouteReceipt(error),
+                });
+            }
+        }
         let permit = match adapter.prepare_admission(flow, self.owner, &self.subsystem) {
             Ok(permit) => permit,
             Err(error) => {
@@ -338,6 +366,7 @@ impl<T: Clone + 'static, C: 'static> WorkPreparationInput<T, C> {
             make_context: self.make_context,
             acquire: self.acquire,
             transit: self.transit,
+            route_metadata: self.route_metadata,
         })
     }
 }
@@ -375,6 +404,7 @@ impl<'a, T: Clone + 'static, C: 'static> PreparedIntrinsicWork<'a, T, C> {
             make_context,
             acquire,
             transit,
+            route_metadata,
         } = self;
         match flow.create_restartable_work(
             acquire.owner,
@@ -391,6 +421,7 @@ impl<'a, T: Clone + 'static, C: 'static> PreparedIntrinsicWork<'a, T, C> {
                 sample,
                 acquire,
                 transit,
+                route_metadata,
                 work,
                 _restart_types: PhantomData,
             }),
@@ -406,6 +437,7 @@ impl<'a, T: Clone + 'static, C: 'static> PreparedIntrinsicWork<'a, T, C> {
                     make_context,
                     acquire,
                     transit,
+                    route_metadata,
                 },
                 error: BridgeError::Flow(error),
             }),
@@ -435,6 +467,8 @@ impl<'a, T: Clone + 'static, C: 'static> CreatedIntrinsicWork<'a, T, C> {
                 sample: self.sample,
                 acquire: self.acquire,
                 transit: self.transit,
+                route_metadata: self.route_metadata,
+                route_receipt: None,
                 runtime: flow.identity(),
                 work: self.work,
                 carrier: None,
@@ -485,6 +519,9 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
     }
 
     pub(crate) fn start_transit(&mut self, flow: &mut FlowRuntime) -> Result<EventId, BridgeError> {
+        if let Some(metadata) = &self.route_metadata {
+            metadata.validate().map_err(BridgeError::RouteReceipt)?;
+        }
         if self.runtime != flow.identity() {
             return Err(BridgeError::Fidelity(FidelityError::InvalidWork));
         }
@@ -521,6 +558,8 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
             if self.carrier_actor != Some(actor) || self.kind != Some(kind) {
                 return Err(BridgeError::InvalidDispatch);
             }
+            self.ensure_route_receipt(flow, carrier)?;
+            self.validate_route_context(flow, carrier)?;
             carrier
         } else {
             let route = graph
@@ -550,6 +589,8 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
             self.carrier_actor = Some(actor);
             self.kind = Some(kind);
             self.pending_priority = Some(self.acquire.scheduler_priority);
+            self.ensure_route_receipt(flow, carrier)?;
+            self.validate_route_context(flow, carrier)?;
             carrier
         };
         let event = schedule_transit_start(
@@ -565,6 +606,25 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
         Ok(event)
     }
 
+    fn ensure_route_receipt(
+        &mut self,
+        flow: &FlowRuntime,
+        carrier: WorkId,
+    ) -> Result<(), BridgeError> {
+        if self.route_receipt.is_none() {
+            if let Some(metadata) = &self.route_metadata {
+                let context = flow
+                    .work_context::<TransitContext>(carrier)
+                    .map_err(BridgeError::Flow)?;
+                self.route_receipt = Some(
+                    RouteReceipt::from_context(context, metadata)
+                        .map_err(BridgeError::RouteReceipt)?,
+                );
+            }
+        }
+        Ok(())
+    }
+
     pub(crate) fn schedule_transit_control(
         &mut self,
         flow: &mut FlowRuntime,
@@ -578,6 +638,7 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
         let (Some(carrier), Some(kind)) = (self.carrier, self.kind) else {
             return Err(BridgeError::InvalidDispatch);
         };
+        self.validate_route_context(flow, carrier)?;
         let event = schedule_transit_control(flow, carrier, kind, action, at, priority)
             .map_err(BridgeError::Flow)?;
         self.controls.push((event, action));
@@ -598,6 +659,7 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
         else {
             return Err(BridgeError::InvalidDispatch);
         };
+        self.validate_route_context(flow, carrier)?;
         if dispatch.at != flow.now()
             || !self.owned_events.contains(&dispatch.event)
             || self.consumed_events.contains(&dispatch.event)
@@ -650,6 +712,11 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
             self.controls.remove(index);
             self.consumed_events.push(dispatch.event);
             if let Some(event) = scheduled {
+                if action == FlowDomainControl::Resume {
+                    if let Some(replaced) = self.pending_event.filter(|pending| *pending != event) {
+                        self.stale_events.push(replaced);
+                    }
+                }
                 self.pending_event = Some(event);
                 self.owned_events.push(event);
             }
@@ -792,6 +859,7 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
         let context = flow
             .work_context::<TransitContext>(carrier)
             .map_err(BridgeError::Flow)?;
+        self.validate_route_context(flow, carrier)?;
         if context.service_work() != self.work {
             return Err(BridgeError::InvalidDispatch);
         }
@@ -819,6 +887,7 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
         let context = flow
             .work_context::<TransitContext>(carrier)
             .map_err(BridgeError::Flow)?;
+        self.validate_route_context(flow, carrier)?;
         if context.service_work() != self.work || context.phase() != TransitPhase::Arrived {
             return Err(BridgeError::InvalidDispatch);
         }
@@ -846,6 +915,25 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
             request,
             _restart_types: PhantomData,
         })
+    }
+
+    fn validate_route_context(
+        &self,
+        flow: &FlowRuntime,
+        carrier: WorkId,
+    ) -> Result<(), BridgeError> {
+        match (&self.route_metadata, &self.route_receipt) {
+            (None, None) => Ok(()),
+            (Some(metadata), Some(receipt)) => {
+                let context = flow
+                    .work_context::<TransitContext>(carrier)
+                    .map_err(BridgeError::Flow)?;
+                receipt
+                    .validate_context(context, metadata)
+                    .map_err(BridgeError::RouteReceipt)
+            }
+            _ => Err(BridgeError::InvalidDispatch),
+        }
     }
 
     #[allow(clippy::result_large_err)]
@@ -1004,6 +1092,7 @@ impl<T: Clone + 'static, C: 'static> SubmittedIntrinsicWork<T, C> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::route_receipt::DistanceProvenance;
     use crate::seed_map::CalibrationSeedMap;
     use crate::work_duration::{IntrinsicDurationDistribution, INTRINSIC_WORK_PROVIDER_VERSION_V1};
     use kairo_ecs_abm::spatial::{EdgeId, MovementModeId, TransitEdge};
@@ -1021,6 +1110,10 @@ mod tests {
 
     fn make_context(template: &u32) -> u32 {
         *template
+    }
+
+    fn configured_route_metadata(purpose: &str) -> RouteMetadata {
+        RouteMetadata::v1(purpose, DistanceProvenance::ConfiguredGeometry)
     }
 
     fn provider() -> IntrinsicWorkProvider {
@@ -1152,12 +1245,28 @@ mod tests {
     }
 
     fn bound_route_with_adapter() -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
+        bound_route_with_metadata(false)
+    }
+
+    fn bound_annotated_route_with_adapter(
+    ) -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
+        bound_route_with_metadata(true)
+    }
+
+    fn bound_route_with_metadata(
+        annotated: bool,
+    ) -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
         let (input, mut flow, mut adapter, _) = input(
             FidelityMode::Micro,
             TransitIntent::Route,
             SeedPurpose::Service,
             false,
         );
+        let input = if annotated {
+            input.with_route_metadata(configured_route_metadata("patient-transfer"))
+        } else {
+            input
+        };
         register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20)).unwrap();
         flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
             .unwrap();
@@ -1178,6 +1287,103 @@ mod tests {
         let created = must_create(prepared.create(&mut flow));
         let bound = must_bind(created.bind(&flow));
         (flow, adapter, bound)
+    }
+
+    fn bound_simple_with_metadata(
+        mode: FidelityMode,
+        transit: TransitIntent,
+    ) -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
+        let (input, mut flow, mut adapter, _) = input(mode, transit, SeedPurpose::Service, false);
+        let input = input.with_route_metadata(configured_route_metadata("patient-transfer"));
+        flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
+            .unwrap();
+        let prepared = must_prepare(input.prepare(&flow, &mut adapter, &provider()));
+        let created = must_create(prepared.create(&mut flow));
+        let bound = must_bind(created.bind(&flow));
+        (flow, adapter, bound)
+    }
+
+    #[test]
+    fn invalid_route_metadata_rejects_before_admission_or_service_draw() {
+        let invalid_metadata = [
+            RouteMetadata::with_version(
+                2,
+                "patient-transfer",
+                DistanceProvenance::ConfiguredGeometry,
+            ),
+            RouteMetadata::v1("", DistanceProvenance::ConfiguredGeometry),
+            RouteMetadata::v1(
+                "patient-transfer",
+                DistanceProvenance::SensorObservationOnly,
+            ),
+        ];
+        for metadata in invalid_metadata {
+            let (input, flow, mut adapter, _) = input(
+                FidelityMode::Micro,
+                TransitIntent::Route,
+                SeedPurpose::Service,
+                false,
+            );
+            let before_draw = input.service_stream.draw_position();
+            let before_budget = flow.budget_snapshot();
+            adapter.stage_policy(FidelityPolicy::new(1, Some(FidelityMode::Macro)).unwrap());
+            let failure =
+                match input
+                    .with_route_metadata(metadata)
+                    .prepare(&flow, &mut adapter, &provider())
+                {
+                    Err(failure) => failure,
+                    Ok(_) => panic!("invalid route metadata must reject preparation"),
+                };
+            assert!(matches!(failure.error, BridgeError::RouteReceipt(_)));
+            assert_eq!(failure.input.service_stream.draw_position(), before_draw);
+            assert_eq!(flow.budget_snapshot(), before_budget);
+            assert_eq!(adapter.apply_at_boundary(&flow), Ok(()));
+        }
+    }
+
+    #[test]
+    fn route_metadata_mismatch_preserves_bound_state_and_rejects_continuation() {
+        let (mut flow, adapter, mut bound) = bound_annotated_route_with_adapter();
+        let work = bound.work();
+        let event = bound.start_transit(&mut flow).unwrap();
+        let receipt = bound.route_receipt.clone().unwrap();
+        let draw_position = bound.service_draw_position();
+        let progress = flow.work_progress(work).unwrap();
+        let budget = flow.budget_snapshot();
+        let service_request = flow.work(work).unwrap().request;
+        bound.route_metadata = Some(configured_route_metadata("different-purpose"));
+        let now = flow.now();
+
+        assert_eq!(
+            bound.schedule_transit_control(&mut flow, FlowDomainControl::Pause, now, 7,),
+            Err(BridgeError::RouteReceipt(RouteReceiptError::RouteMismatch))
+        );
+        assert_eq!(bound.pending_event, Some(event));
+        assert_eq!(bound.route_receipt, Some(receipt.clone()));
+        assert_eq!(bound.service_draw_position(), draw_position);
+        assert_eq!(flow.work_progress(work).unwrap(), progress);
+        assert_eq!(flow.work(work).unwrap().request, service_request);
+        assert_eq!(flow.budget_snapshot(), budget);
+
+        let (returned_flow, returned_adapter, returned_bound, error) =
+            match BoundWorkContinuation::capture(flow, adapter, bound) {
+                Err(values) => values,
+                Ok(_) => panic!("mismatched route purpose must reject continuation capture"),
+            };
+        assert_eq!(
+            error,
+            BridgeError::RouteReceipt(RouteReceiptError::RouteMismatch)
+        );
+        assert_eq!(returned_bound.route_receipt, Some(receipt));
+        assert_eq!(returned_bound.service_draw_position(), draw_position);
+        assert_eq!(returned_flow.work_progress(work).unwrap(), progress);
+        assert_eq!(returned_flow.work(work).unwrap().request, service_request);
+        assert_eq!(returned_flow.budget_snapshot(), budget);
+        assert_eq!(
+            returned_adapter.decision(work),
+            Some(&returned_bound.decision)
+        );
     }
 
     fn bound_route_at(
@@ -1250,9 +1456,15 @@ mod tests {
             (FidelityMode::Macro, TransitIntent::Route),
             (FidelityMode::Micro, TransitIntent::Zero),
         ] {
-            let (flow, mut adapter, bound) = bound_simple_with_adapter(mode, transit);
+            let (flow, mut adapter, bound) = bound_simple_with_metadata(mode, transit);
             let (control_flow, mut control_adapter, mut control_bound) =
                 bound_simple_with_adapter(mode, transit);
+            assert!(bound.route_receipt.is_none());
+            assert_eq!(
+                flow.budget_snapshot().scheduler,
+                control_flow.budget_snapshot().scheduler
+            );
+            assert_eq!(flow.budget_snapshot().scheduler.scheduled_events, 0);
             let identity = flow.identity();
             let work = bound.work();
             let progress = flow.work_progress(work).unwrap();
@@ -1292,13 +1504,39 @@ mod tests {
 
     #[test]
     fn owning_continuation_preserves_started_and_observed_paused_transit() {
-        let (mut flow, adapter, mut bound) = bound_route_with_adapter();
+        let (mut flow, adapter, mut bound) = bound_annotated_route_with_adapter();
         let (mut control_flow, control_adapter, mut control_bound) = bound_route_with_adapter();
+        let five_tick_graph = Arc::new(
+            TransitGraphV1::new(
+                1,
+                vec![NodeId::new(1), NodeId::new(2)],
+                vec![TransitEdge {
+                    id: EdgeId::new(1),
+                    from: NodeId::new(1),
+                    to: NodeId::new(2),
+                    length_mm: 5,
+                    allowed_modes: vec![MovementModeId::new("walk").unwrap()],
+                }],
+            )
+            .unwrap(),
+        );
+        for candidate in [&mut bound, &mut control_bound] {
+            if let TransitRequest::Route { graph, .. } = &mut candidate.transit {
+                *graph = Arc::clone(&five_tick_graph);
+            } else {
+                panic!("route fixture expected");
+            }
+        }
         let identity = flow.identity();
         let work = bound.work();
         let start = bound.start_transit(&mut flow).unwrap();
         let control_start = control_bound.start_transit(&mut control_flow).unwrap();
         assert_eq!(start, control_start);
+        assert_eq!(control_bound.route_receipt, None);
+        let expected_receipt = bound.route_receipt.clone().unwrap();
+        assert!(bound
+            .validate_route_context(&flow, bound.carrier.unwrap())
+            .is_ok());
 
         let continuation = BoundWorkContinuation::capture(flow, adapter, bound)
             .ok()
@@ -1307,6 +1545,8 @@ mod tests {
         assert_eq!(flow.identity(), identity);
         assert_eq!(adapter.decision(work), Some(&bound.decision));
         assert_eq!(bound.pending_event, Some(start));
+        assert_eq!(bound.route_receipt, Some(expected_receipt.clone()));
+        assert_eq!(control_bound.route_receipt, None);
         assert_eq!(flow.budget_snapshot(), control_flow.budget_snapshot());
 
         let start_dispatch = flow.step().unwrap().unwrap();
@@ -1320,15 +1560,33 @@ mod tests {
             control_bound.observe_transit_dispatch(&control_flow, &control_start_dispatch),
             Ok(TransitObservation::Progress)
         );
-        let now = flow.now();
+        let replaced_progress_event = bound.pending_event.unwrap();
+        let now = SimTime::from_ticks(1);
         let pause = bound
             .schedule_transit_control(&mut flow, FlowDomainControl::Pause, now, 7)
             .unwrap();
-        let control_now = control_flow.now();
+        let control_now = SimTime::from_ticks(1);
         let control_pause = control_bound
             .schedule_transit_control(&mut control_flow, FlowDomainControl::Pause, control_now, 7)
             .unwrap();
         assert_eq!(pause, control_pause);
+        let resume = bound
+            .schedule_transit_control(
+                &mut flow,
+                FlowDomainControl::Resume,
+                SimTime::from_ticks(3),
+                7,
+            )
+            .unwrap();
+        let control_resume = control_bound
+            .schedule_transit_control(
+                &mut control_flow,
+                FlowDomainControl::Resume,
+                SimTime::from_ticks(3),
+                7,
+            )
+            .unwrap();
+        assert_eq!(resume, control_resume);
         let pause_dispatch = flow.step().unwrap().unwrap();
         let control_pause_dispatch = control_flow.step().unwrap().unwrap();
         assert_eq!(pause_dispatch, control_pause_dispatch);
@@ -1344,6 +1602,10 @@ mod tests {
         let progress = flow.work_progress(work).unwrap();
         let context = flow.work_context::<TransitContext>(carrier).unwrap();
         assert_eq!(context.phase(), TransitPhase::Paused);
+        let paused_progress = context.progress_at(flow.now()).unwrap();
+        assert_eq!(paused_progress.useful_elapsed, SimDuration::from_ticks(1));
+        assert_eq!(paused_progress.remaining, SimDuration::from_ticks(4));
+        assert!(bound.validate_route_context(&flow, carrier).is_ok());
         let control_context = control_flow
             .work_context::<TransitContext>(control_bound.carrier.unwrap())
             .unwrap();
@@ -1359,6 +1621,7 @@ mod tests {
         let (mut flow, adapter, mut bound) = continuation.resume();
         assert_eq!(flow.identity(), identity);
         assert_eq!(flow.work_progress(work).unwrap(), progress);
+        assert_eq!(bound.route_receipt, Some(expected_receipt.clone()));
         assert_eq!(adapter.decision(work), Some(&bound.decision));
         assert_eq!(bound.owned_events, control_bound.owned_events);
         assert_eq!(bound.consumed_events, control_bound.consumed_events);
@@ -1370,20 +1633,6 @@ mod tests {
 
         // Both paused continuations resume through the same accepted arrival
         // callback exactly once, with matching bridge receipts and ownership.
-        let resume_at = flow.now();
-        let resume = bound
-            .schedule_transit_control(&mut flow, FlowDomainControl::Resume, resume_at, 7)
-            .unwrap();
-        let control_resume_at = control_flow.now();
-        let control_resume = control_bound
-            .schedule_transit_control(
-                &mut control_flow,
-                FlowDomainControl::Resume,
-                control_resume_at,
-                7,
-            )
-            .unwrap();
-        assert_eq!(resume, control_resume);
         let dispatch = flow.step().unwrap().unwrap();
         let control_dispatch = control_flow.step().unwrap().unwrap();
         assert_eq!(dispatch, control_dispatch);
@@ -1392,11 +1641,18 @@ mod tests {
             bound.observe_transit_dispatch(&flow, &dispatch),
             Ok(TransitObservation::Resumed)
         );
+        let resumed_context = flow.work_context::<TransitContext>(carrier).unwrap();
+        assert_eq!(resumed_context.phase(), TransitPhase::Moving);
+        let resumed_progress = resumed_context.progress_at(flow.now()).unwrap();
+        assert_eq!(resumed_progress.useful_elapsed, SimDuration::from_ticks(1));
+        assert_eq!(resumed_progress.remaining, SimDuration::from_ticks(4));
+        assert_eq!(bound.route_receipt, Some(expected_receipt.clone()));
         assert_eq!(
             control_bound.observe_transit_dispatch(&control_flow, &control_dispatch),
             Ok(TransitObservation::Resumed)
         );
         let mut arrived = false;
+        let mut saw_replaced_stale_event = false;
         while !arrived {
             let dispatch = flow.step().unwrap().unwrap();
             let control_dispatch = control_flow.step().unwrap().unwrap();
@@ -1406,11 +1662,28 @@ mod tests {
                 .observe_transit_dispatch(&control_flow, &control_dispatch)
                 .unwrap();
             assert_eq!(observation, control_observation);
+            if dispatch.event == replaced_progress_event {
+                assert_eq!(dispatch.at, SimTime::from_ticks(5));
+                assert_eq!(observation, TransitObservation::IgnoredStale);
+                saw_replaced_stale_event = true;
+            }
             arrived = observation == TransitObservation::Arrived;
         }
-        assert_eq!(bound.owned_events.len(), 5);
-        assert_eq!(bound.consumed_events.len(), 4);
+        assert!(saw_replaced_stale_event);
+        assert_eq!(bound.stale_events, vec![replaced_progress_event]);
+        assert!(bound.consumed_events.contains(&replaced_progress_event));
+        assert_eq!(bound.owned_events.len(), 6);
+        assert_eq!(bound.consumed_events.len(), 5);
         assert!(bound.arrival_request.is_some());
+        assert_eq!(bound.route_receipt, Some(expected_receipt.clone()));
+        assert_eq!(flow.now(), SimTime::from_ticks(7));
+        let arrived_context = flow.work_context::<TransitContext>(carrier).unwrap();
+        let arrived_progress = arrived_context.progress_at(flow.now()).unwrap();
+        assert_eq!(arrived_progress.useful_elapsed, SimDuration::from_ticks(5));
+        assert_eq!(arrived_progress.remaining, SimDuration::ZERO);
+        assert!(bound
+            .validate_route_context(&flow, bound.carrier.unwrap())
+            .is_ok());
         assert_eq!(bound.owned_events.len(), control_bound.owned_events.len());
         assert_eq!(
             bound.consumed_events.len(),
@@ -1422,6 +1695,7 @@ mod tests {
 
         // Finish both arrived bridges and verify each returns the original
         // timed request without creating divergent work or progress state.
+        assert_eq!(control_bound.route_receipt, None);
         let submitted = bound.finish_transit(&flow).unwrap();
         let control_submitted = control_bound.finish_transit(&control_flow).unwrap();
         assert_eq!(submitted.work(), control_submitted.work());
