@@ -12,6 +12,9 @@ use std::fmt;
 use thiserror::Error;
 
 mod checkpoint_wire;
+// The sibling composite checkpoint module consumes these bounded wire types.
+#[allow(unused_imports)]
+pub(crate) use checkpoint_wire::{IntrinsicWorkProviderWireError, IntrinsicWorkProviderWireLimits};
 
 pub(crate) const INTRINSIC_WORK_PROVIDER_VERSION_V1: u32 = 1;
 

@@ -7,6 +7,8 @@ use kairo_ecs_abm::spatial::{RoutePlan, RouteSegment};
 use kairo_ecs_abm::TransitContext;
 use sha2::{Digest, Sha256};
 
+pub(crate) mod checkpoint_wire;
+
 const RECEIPT_TAG: &[u8] = b"KAIROS-CALIBRATION-ROUTE-RECEIPT\0";
 const RECEIPT_VERSION: u32 = 1;
 pub(crate) const ROUTE_METADATA_VERSION_V1: u32 = 1;

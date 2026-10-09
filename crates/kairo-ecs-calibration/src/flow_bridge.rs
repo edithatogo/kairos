@@ -32,6 +32,8 @@ use kairo_ecs_types::{EntityId, EventId, EventKind, SimDuration, SimTime};
 use std::marker::PhantomData;
 use std::sync::Arc;
 
+pub(crate) mod checkpoint_wire;
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct PreparationIdentity {
     pub(crate) owner: EntityId,
@@ -182,6 +184,67 @@ enum TransitRequestCheckpointV1 {
         carrier_registration: String,
         kind: EventKind,
     },
+}
+
+impl BoundIntrinsicWorkCheckpointV1 {
+    /// Checks this record against caller-trusted stream and route bindings
+    /// without constructing a route or allocating. A Zero transit record has
+    /// no graph binding, so `trusted_graph` is unused for that variant.
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "Consumed by the complete C2 composite trusted-binding preflight"
+        )
+    )]
+    pub(crate) fn validate_trusted_binding(
+        &self,
+        expected_service_key: &CalibrationStreamKey,
+        trusted_graph: Option<&TransitGraphV1>,
+    ) -> Result<(), BridgeCheckpointError> {
+        if self.stream.identity.purpose != SeedPurpose::Service
+            || !expected_service_key.matches_identity(&self.stream.identity)
+        {
+            return Err(BridgeCheckpointError::InvalidState);
+        }
+        if let TransitRequestCheckpointV1::Route {
+            graph_version,
+            graph_canonical_bytes,
+            ..
+        } = &self.transit
+        {
+            let graph = trusted_graph.ok_or(BridgeCheckpointError::InvalidState)?;
+            // TransitGraphV1 currently admits version 1 only. Its canonical
+            // identity contains that version, and byte equality is borrowed.
+            if *graph_version != 1 || graph.canonical_bytes_ref() != graph_canonical_bytes {
+                return Err(BridgeCheckpointError::InvalidState);
+            }
+        }
+        Ok(())
+    }
+}
+
+impl SubmittedIntrinsicWorkCheckpointV1 {
+    /// Checks the saved Service identity against a key supplied by the
+    /// caller's trusted model configuration. This comparison is allocation-free.
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "Consumed by the complete C2 composite trusted-binding preflight"
+        )
+    )]
+    pub(crate) fn validate_trusted_binding(
+        &self,
+        expected_service_key: &CalibrationStreamKey,
+    ) -> Result<(), BridgeCheckpointError> {
+        if self.stream.identity.purpose != SeedPurpose::Service
+            || !expected_service_key.matches_identity(&self.stream.identity)
+        {
+            return Err(BridgeCheckpointError::InvalidState);
+        }
+        Ok(())
+    }
 }
 
 impl BoundIntrinsicWorkCheckpointV1 {
@@ -2218,9 +2281,9 @@ mod tests {
     use crate::work_duration::{IntrinsicDurationDistribution, INTRINSIC_WORK_PROVIDER_VERSION_V1};
     use kairo_ecs_abm::spatial::{EdgeId, MovementModeId, NodeId, TransitEdge};
     use kairo_ecs_abm::{
-        register_transit_context, register_transit_context_checkpoint_domain,
-        register_transit_context_reject_first_for_test, TransitContext,
-        TransitContextCheckpointLimitsV1, TransitContextCheckpointV1,
+        register_transit_context, register_transit_context_checkpoint_codec,
+        register_transit_context_checkpoint_domain, register_transit_context_reject_first_for_test,
+        TransitContext, TransitContextCheckpointLimitsV1, TransitContextCheckpointV1,
     };
     use kairo_ecs_des::fidelity::{FidelityCheckpointLimits, FidelityPolicy};
     use kairo_ecs_des::{
@@ -2635,6 +2698,248 @@ mod tests {
         }
     }
 
+    fn bridge_wire_limits() -> checkpoint_wire::BridgeWireLimits {
+        checkpoint_wire::BridgeWireLimits {
+            native: bridge_checkpoint_limits(),
+            max_wire_bytes: 4 * 1024 * 1024,
+            seed: crate::seed_map::checkpoint_wire::SeedWireLimits {
+                max_entries: 32,
+                max_identifier_bytes: 4096,
+                max_wire_bytes: 64 * 1024,
+            },
+            flow: kairo_ecs_des::FlowCheckpointWireLimits::default(),
+        }
+    }
+
+    fn capture_real_transit_flow_image(
+        flow: &FlowRuntime,
+        bound: &BoundIntrinsicWork<u32, u32>,
+    ) -> kairo_ecs_des::FlowCheckpointV1 {
+        let mut codecs = native_test_codecs();
+        register_transit_context_checkpoint_codec(
+            &mut codecs,
+            "bridge.transit",
+            flow.identity(),
+            route_graph(bound),
+            TransitContextCheckpointLimitsV1::new(128, 16 * 1024, 1024, 32 * 1024),
+        )
+        .unwrap();
+        register_transit_context_checkpoint_domain(
+            &mut codecs,
+            "bridge.transit",
+            EventKind::custom(0xC20),
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.plan".to_owned(),
+                version: 1,
+            },
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.accept".to_owned(),
+                version: 1,
+            },
+        )
+        .unwrap();
+        flow.capture_checkpoint(&codecs, FlowCheckpointLimits::default())
+            .unwrap()
+    }
+
+    #[test]
+    fn bound_bridge_wire_roundtrips_complete_zero_route_image() {
+        let (flow, adapter, bound) =
+            bound_simple_with_adapter(FidelityMode::Macro, TransitIntent::Zero);
+        let image = BoundIntrinsicWorkCheckpointV1::capture(
+            &bound,
+            &flow,
+            &adapter,
+            bridge_checkpoint_limits(),
+        )
+        .unwrap();
+        let bytes = image.encode_wire_v1(bridge_wire_limits()).unwrap();
+        let decoded =
+            BoundIntrinsicWorkCheckpointV1::decode_wire_v1(&bytes, bridge_wire_limits()).unwrap();
+        assert_eq!(decoded, image);
+        assert_eq!(decoded.work_entity_id(), image.work_entity_id());
+        assert_eq!(decoded.stream_identity(), image.stream_identity());
+        let mut trailing = bytes.clone();
+        trailing.push(0);
+        assert_eq!(
+            BoundIntrinsicWorkCheckpointV1::decode_wire_v1(&trailing, bridge_wire_limits()),
+            Err(checkpoint_wire::BridgeWireError::TrailingBytes)
+        );
+        let mut bad_schema = bytes.clone();
+        bad_schema[8..10].copy_from_slice(&2u16.to_le_bytes());
+        assert_eq!(
+            BoundIntrinsicWorkCheckpointV1::decode_wire_v1(&bad_schema, bridge_wire_limits()),
+            Err(checkpoint_wire::BridgeWireError::UnsupportedSchema(2))
+        );
+        let mut bad_tag = bytes.clone();
+        bad_tag[10] = 9;
+        assert_eq!(
+            BoundIntrinsicWorkCheckpointV1::decode_wire_v1(&bad_tag, bridge_wire_limits()),
+            Err(checkpoint_wire::BridgeWireError::InvalidTag)
+        );
+        let mut tiny = bridge_wire_limits();
+        tiny.max_wire_bytes = bytes.len() - 1;
+        assert_eq!(
+            BoundIntrinsicWorkCheckpointV1::decode_wire_v1(&bytes, tiny),
+            Err(checkpoint_wire::BridgeWireError::LimitExceeded)
+        );
+    }
+
+    #[test]
+    fn coherent_cut_requires_the_observed_domain_dispatch_frontier() {
+        let (mut flow, adapter, mut bound) = bound_route_with_adapter();
+        bound.start_transit(&mut flow).unwrap();
+        let control = bound
+            .schedule_transit_control(
+                &mut flow,
+                FlowDomainControl::Pause,
+                SimTime::from_ticks(1),
+                0,
+            )
+            .unwrap();
+        let _image = BoundIntrinsicWorkCheckpointV1::capture(
+            &bound,
+            &flow,
+            &adapter,
+            bridge_checkpoint_limits(),
+        )
+        .unwrap();
+        let mut codecs = native_test_codecs();
+        register_transit_context_checkpoint_codec(
+            &mut codecs,
+            "bridge.transit",
+            flow.identity(),
+            route_graph(&bound),
+            TransitContextCheckpointLimitsV1::new(128, 16 * 1024, 1024, 32 * 1024),
+        )
+        .unwrap();
+        register_transit_context_checkpoint_domain(
+            &mut codecs,
+            "bridge.transit",
+            EventKind::custom(0xC20),
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.plan".to_owned(),
+                version: 1,
+            },
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.accept".to_owned(),
+                version: 1,
+            },
+        )
+        .unwrap();
+        let flow_image = flow
+            .capture_checkpoint(&codecs, FlowCheckpointLimits::default())
+            .unwrap();
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                &flow_image,
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Ok(())
+        );
+        let mut missing_control = flow_image.clone();
+        missing_control.commands.retain(|(id, _)| *id != control);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                &missing_control,
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut inconsistent = flow_image.clone();
+        inconsistent
+            .commands
+            .retain(|(id, _)| Some(*id) != bound.pending_event);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                &inconsistent,
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+    }
+
+    #[test]
+    fn coherent_cut_rejects_flow_step_before_bridge_observation() {
+        let (mut flow, _adapter, mut bound) = bound_route_with_adapter();
+        bound.start_transit(&mut flow).unwrap();
+        let before = capture_real_transit_flow_image(&flow, &bound);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                &before,
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Ok(())
+        );
+
+        // The runtime applies the event and mutates TransitContext, but the
+        // bridge has not consumed that dispatch. The two owners are therefore
+        // on opposite sides of the observation frontier and cannot be joined.
+        assert!(flow.step().unwrap().is_some());
+        let unobserved = capture_real_transit_flow_image(&flow, &bound);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                &unobserved,
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+    }
+
+    #[test]
+    fn coherent_cut_accepts_observed_arrival_and_queued_admission() {
+        let (mut flow, adapter, mut bound) = bound_route_with_adapter();
+        bound.start_transit(&mut flow).unwrap();
+        loop {
+            let dispatch = flow.step().unwrap().unwrap();
+            let observation = bound.observe_transit_dispatch(&flow, &dispatch).unwrap();
+            if observation == TransitObservation::Arrived {
+                break;
+            }
+        }
+        assert!(bound.arrival_request.is_some());
+        let _image = BoundIntrinsicWorkCheckpointV1::capture(
+            &bound,
+            &flow,
+            &adapter,
+            bridge_checkpoint_limits(),
+        )
+        .unwrap();
+        let flow_image = capture_real_transit_flow_image(&flow, &bound);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                &flow_image,
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Ok(())
+        );
+        let mut without_submit = flow_image;
+        without_submit
+            .commands
+            .retain(|(event, _)| Some(*event) != bound.pending_event);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                &without_submit,
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+    }
+
     #[test]
     fn native_bound_checkpoint_captures_zero_draw_macro_and_is_bounded_before_clone() {
         let (flow, adapter, bound) =
@@ -2769,6 +3074,101 @@ mod tests {
             restored_flow.work(work).unwrap().owner,
             restored.acquire.owner
         );
+    }
+
+    #[test]
+    fn bridge_checkpoint_trusted_binding_checks_key_and_graph_without_mutation() {
+        let (flow, adapter, bound) = bound_route_with_adapter();
+        let image = BoundIntrinsicWorkCheckpointV1::capture(
+            &bound,
+            &flow,
+            &adapter,
+            bridge_checkpoint_limits(),
+        )
+        .unwrap();
+        let original = image.clone();
+        let graph = route_graph(&bound);
+        assert_eq!(
+            image.validate_trusted_binding(&bound.expected_service_key, Some(&graph)),
+            Ok(())
+        );
+
+        let mut different_task_map = CalibrationSeedMap::new(1, "bridge-test", 19).unwrap();
+        let different_task_key = different_task_map
+            .key_for("paired", 0, "case-a", "task-b", SeedPurpose::Service)
+            .unwrap();
+        let mut different_root_map = CalibrationSeedMap::new(1, "bridge-test", 20).unwrap();
+        let different_root_key = different_root_map
+            .key_for("paired", 0, "case-a", "task-a", SeedPurpose::Service)
+            .unwrap();
+        let mut different_purpose_map = CalibrationSeedMap::new(1, "bridge-test", 19).unwrap();
+        let different_purpose_key = different_purpose_map
+            .key_for("paired", 0, "case-a", "task-a", SeedPurpose::Transit)
+            .unwrap();
+        let other_graph = TransitGraphV1::new(
+            1,
+            vec![NodeId::new(1), NodeId::new(2)],
+            vec![TransitEdge {
+                id: EdgeId::new(1),
+                from: NodeId::new(1),
+                to: NodeId::new(2),
+                length_mm: 2,
+                allowed_modes: vec![MovementModeId::new("walk").unwrap()],
+            }],
+        )
+        .unwrap();
+
+        for result in [
+            image.validate_trusted_binding(&different_task_key, Some(&graph)),
+            image.validate_trusted_binding(&different_root_key, Some(&graph)),
+            image.validate_trusted_binding(&different_purpose_key, Some(&graph)),
+            image.validate_trusted_binding(&bound.expected_service_key, None),
+            image.validate_trusted_binding(&bound.expected_service_key, Some(&other_graph)),
+        ] {
+            assert_eq!(result, Err(BridgeCheckpointError::InvalidState));
+        }
+        assert_eq!(image, original);
+
+        let (zero_flow, zero_adapter, zero_bound) =
+            bound_simple_with_adapter(FidelityMode::Macro, TransitIntent::Zero);
+        let zero_image = BoundIntrinsicWorkCheckpointV1::capture(
+            &zero_bound,
+            &zero_flow,
+            &zero_adapter,
+            bridge_checkpoint_limits(),
+        )
+        .unwrap();
+        assert_eq!(
+            zero_image.validate_trusted_binding(&zero_bound.expected_service_key, None),
+            Ok(())
+        );
+        // A graph binding is unused for a Zero transit payload and is ignored.
+        assert_eq!(
+            zero_image
+                .validate_trusted_binding(&zero_bound.expected_service_key, Some(&other_graph)),
+            Ok(())
+        );
+
+        let (mut submitted_flow, submitted_adapter, submitted_bound) =
+            bound_simple_with_adapter(FidelityMode::Macro, TransitIntent::Zero);
+        let submitted = must_submit(submitted_bound.submit(&mut submitted_flow));
+        let submitted_image = SubmittedIntrinsicWorkCheckpointV1::capture(
+            &submitted,
+            &submitted_flow,
+            &submitted_adapter,
+            bridge_checkpoint_limits(),
+        )
+        .unwrap();
+        let submitted_original = submitted_image.clone();
+        assert_eq!(
+            submitted_image.validate_trusted_binding(&submitted.expected_service_key),
+            Ok(())
+        );
+        assert_eq!(
+            submitted_image.validate_trusted_binding(&different_task_key),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        assert_eq!(submitted_image, submitted_original);
     }
 
     #[test]
@@ -3205,6 +3605,11 @@ mod tests {
         assert!(image.route_receipt.is_some());
         assert_eq!(image.pending_event, bound.pending_event);
         assert_eq!(image.owned_events, bound.owned_events);
+        let wire = image.encode_wire_v1(bridge_wire_limits()).unwrap();
+        assert_eq!(
+            BoundIntrinsicWorkCheckpointV1::decode_wire_v1(&wire, bridge_wire_limits()).unwrap(),
+            image
+        );
 
         let mut tiny = bridge_checkpoint_limits();
         tiny.max_canonical_bytes = 1;
@@ -3372,6 +3777,13 @@ mod tests {
         assert_eq!(image.duration_ticks, submitted.sample.duration().ticks());
         assert_eq!(image.draw_before, submitted.sample.draw_before());
         assert_eq!(image.draw_after, submitted.sample.draw_after());
+        let wire = image.encode_wire_v1(bridge_wire_limits()).unwrap();
+        let decoded =
+            SubmittedIntrinsicWorkCheckpointV1::decode_wire_v1(&wire, bridge_wire_limits())
+                .unwrap();
+        assert_eq!(decoded, image);
+        assert_eq!(decoded.work_entity_id(), image.work_entity_id());
+        assert_eq!(decoded.stream_identity(), image.stream_identity());
     }
 
     #[test]
