@@ -7,13 +7,20 @@ service completion at tick 27. The journal reconstructs the closed scenario
 and replays its prefix; it does not serialize a Flow runtime or accept scenario
 configuration from the checkpoint.
 
-Build the example once, then save and restore in separate processes using that
-same built executable:
+Use Rust 1.99.0 for this experiment. Bind the complete Rustup toolchain and a
+task-local Cargo cache, build once, then use that same executable in separate
+save and restore processes. This also avoids mixing Homebrew and Rustup compiler
+metadata or relying on the default Cargo home:
 
 ```sh
-mkdir -p .artifacts/c2-replay-demo-cli
-cargo run --locked -p kairo-ecs-calibration --features flow --example c2_replay_demo -- save .artifacts/c2-replay-demo-cli/checkpoint.json
-cargo run --locked -p kairo-ecs-calibration --features flow --example c2_replay_demo -- restore .artifacts/c2-replay-demo-cli/checkpoint.json
+mkdir -p .artifacts/c2-replay-demo-cli .artifacts/cargo-home
+c2_demo_toolchain="$(rustup run 1.99.0 rustc --print sysroot)"
+export PATH="$c2_demo_toolchain/bin:$PATH"
+export CARGO_HOME="$PWD/.artifacts/cargo-home"
+export CARGO_TARGET_DIR="$PWD/.artifacts/c2-replay-demo-cli/target-rustup"
+rustup run 1.99.0 cargo build --locked -p kairo-ecs-calibration --features flow --example c2_replay_demo
+"$CARGO_TARGET_DIR/debug/examples/c2_replay_demo" save .artifacts/c2-replay-demo-cli/checkpoint.json
+"$CARGO_TARGET_DIR/debug/examples/c2_replay_demo" restore .artifacts/c2-replay-demo-cli/checkpoint.json
 ```
 
 The parent directory must already exist and pass the API's path checks. Save
