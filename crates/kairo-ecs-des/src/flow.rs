@@ -17,6 +17,8 @@ mod deadline_index;
 use deadline_index::{DeadlineKey, OwnedDeadlineChanges, WaitingDeadlineIndex};
 mod preempting_index;
 use preempting_index::{OwnedPreemptingChanges, PreemptingWaiters};
+#[doc(hidden)]
+pub mod checkpoint;
 #[cfg(test)]
 mod q52_preempting_index_tests;
 
@@ -378,7 +380,8 @@ impl Default for FlowCallbackConfig {
     }
 }
 /// Restricted delivery callback; no runtime, scheduler or registry is exposed.
-type FlowCallback<C> = fn(&mut C, &FlowCallbackSnapshot, &mut FlowCommandSink);
+#[doc(hidden)]
+pub type FlowCallback<C> = fn(&mut C, &FlowCallbackSnapshot, &mut FlowCommandSink);
 pub struct FlowContinuations<C> {
     pub on_resume: Option<FlowCallback<C>>,
     pub on_restart: Option<FlowCallback<C>>,
@@ -455,6 +458,13 @@ impl FlowWorldView<'_> {
 pub struct FlowCommandTicket {
     batch: u64,
     index: usize,
+}
+impl FlowCommandTicket {
+    /// Numeric ticket components for trusted checkpoint codecs.
+    #[doc(hidden)]
+    pub const fn checkpoint_parts(self) -> (u64, usize) {
+        (self.batch, self.index)
+    }
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum FlowRequestRef {

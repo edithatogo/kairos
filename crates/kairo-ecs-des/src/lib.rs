@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 mod flow;
+pub use flow::checkpoint::*;
 pub use flow::*;
 
 /// Experimental in-process Rust API for resolving and binding execution fidelity.
