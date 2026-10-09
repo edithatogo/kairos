@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- Add experimental doc-hidden scheduler/entity-allocator checkpoint state DTOs and a crate-private calibration seed-registry image, with validated bounded imports preserving IDs, ordering and generations; complete Flow/context codecs and fresh-process portable restart remain in development.
+
 - Experimental doc-hidden calibration C2 replay APIs now save and restore one sealed synthetic scenario, validate its private route receipt, and require the same executable for both processes; this adds no stable API, general recovery, or C5 claim.
 
 - Experimental private `kairo-ecs-calibration` diagnostics now report exact per-cohort tie counts and source-derived coverage warnings in the sidecar manifest. Independent readback binds metric provenance and rejects missing or forged diagnostics; the frozen calibration Arrow schemas and `event_log.v1` remain unchanged.
