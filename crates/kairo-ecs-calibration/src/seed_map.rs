@@ -386,6 +386,19 @@ pub(crate) struct CalibrationStreamKey {
 }
 
 impl CalibrationStreamKey {
+    /// Compare complete logical identity without cloning, deriving or registering.
+    /// The caller must obtain this expected key from its trusted model binding.
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "Consumed by the complete C2 composite capture assembler"
+        )
+    )]
+    pub(crate) fn matches_identity(&self, identity: &SeedIdentity) -> bool {
+        &self.identity == identity
+    }
+
     /// Allocation-free preflight for a containing owner checkpoint's total cap.
     #[cfg_attr(
         not(test),
@@ -742,6 +755,42 @@ fn encode_identity(identity: &SeedIdentity) -> Result<Vec<u8>, CalibrationSeedEr
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn expected_key_matches_complete_identity_without_changing_registry_or_stream() {
+        let mut map = CalibrationSeedMap::new(1, "study", 7).unwrap();
+        let key = map
+            .key_for("schedule", 3, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        let mut stream = map
+            .stream_for("schedule", 3, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        stream.next_u64().unwrap();
+        let state = stream
+            .checkpoint_state(CalibrationStreamStateLimits {
+                max_identifier_bytes: 1024,
+            })
+            .unwrap();
+        assert!(key.matches_identity(&state.identity));
+        let mut wrong = state.identity.clone();
+        wrong.purpose = SeedPurpose::Transit;
+        assert!(!key.matches_identity(&wrong));
+        wrong = state.identity.clone();
+        wrong.task_key.push_str("-other");
+        assert!(!key.matches_identity(&wrong));
+        wrong = state.identity.clone();
+        wrong.root_seed += 1;
+        assert!(!key.matches_identity(&wrong));
+        assert_eq!(
+            stream
+                .checkpoint_state(CalibrationStreamStateLimits {
+                    max_identifier_bytes: 1024
+                })
+                .unwrap(),
+            state
+        );
+        assert_eq!(map.registered.len(), 1);
+    }
 
     #[test]
     fn checkpoint_identifier_bytes_preserve_exact_stream_state() {
