@@ -221,7 +221,7 @@ fn short_empty_context_and_restart_rows_roundtrip_at_minimum_wire_width() {
 
     let mut source = FlowRuntime::new();
     let owner = source.spawn_actor().unwrap();
-    for _ in 0..8 {
+    for _ in 0..128 {
         source
             .create_work(owner, SimDuration::from_ticks(1), "z", ())
             .unwrap();
@@ -232,8 +232,8 @@ fn short_empty_context_and_restart_rows_roundtrip_at_minimum_wire_width() {
     let image = source
         .capture_checkpoint(&codecs, FlowCheckpointLimits::default())
         .unwrap();
-    assert_eq!(image.context_stores[0].rows.len(), 16);
-    assert_eq!(image.restart_stores[0].rows.len(), 8);
+    assert_eq!(image.context_stores[0].rows.len(), 256);
+    assert_eq!(image.restart_stores[0].rows.len(), 128);
     assert!(image.restart_stores[0]
         .rows
         .iter()
@@ -413,6 +413,32 @@ fn domain_dispatch_tickets_and_every_flow_error_variant_roundtrip() {
     for error in all_errors.drain(..) {
         receipt.error = Some(error);
         let bytes = receipt.encode_wire_v1(wire_limits()).unwrap();
+        assert_eq!(
+            receipt.encoded_wire_len_v1(wire_limits()).unwrap(),
+            bytes.len()
+        );
+        assert_eq!(
+            kairo_ecs_des::FlowDispatch::preflight_wire_v1(&bytes, wire_limits()),
+            Ok(())
+        );
+        assert_eq!(
+            kairo_ecs_des::FlowDispatch::preflight_wire_v1(
+                &bytes[..bytes.len() - 1],
+                wire_limits()
+            ),
+            Err(FlowCheckpointWireError::Truncated)
+        );
+        let mut short = wire_limits();
+        short.max_wire_bytes = bytes.len() - 1;
+        assert!(matches!(
+            receipt.encoded_wire_len_v1(short),
+            Err(FlowCheckpointWireError::LimitExceeded(_))
+        ));
+        assert!(matches!(
+            kairo_ecs_des::FlowDispatch::preflight_wire_v1(&bytes, short),
+            Err(FlowCheckpointWireError::LimitExceeded(_))
+        ));
+
         assert_eq!(
             kairo_ecs_des::FlowDispatch::decode_wire_v1(&bytes, wire_limits()).unwrap(),
             receipt

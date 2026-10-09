@@ -209,6 +209,7 @@ struct Reader<'a> {
     dispatch_admissions: usize,
     registrations: usize,
     pending_operations: usize,
+    scanning_dispatch: bool,
 }
 
 impl<'a> Reader<'a> {
@@ -231,6 +232,7 @@ impl<'a> Reader<'a> {
             dispatch_admissions: 0,
             registrations: 0,
             pending_operations: 0,
+            scanning_dispatch: false,
         })
     }
     fn raw(&mut self, len: usize) -> Result<&'a [u8], FlowCheckpointWireError> {
@@ -343,6 +345,9 @@ impl<'a> Reader<'a> {
         Ok(())
     }
     fn reserve<T>(&mut self, n: usize) -> Result<Vec<T>, FlowCheckpointWireError> {
+        if self.scanning_dispatch {
+            return Ok(Vec::new());
+        }
         let mut v = Vec::new();
         v.try_reserve_exact(n)
             .map_err(|_| FlowCheckpointWireError::AllocationFailed)?;
@@ -450,6 +455,40 @@ impl FlowCheckpointV1 {
 }
 
 impl FlowDispatch {
+    /// Measure a complete dispatch without allocating an output buffer.
+    #[doc(hidden)]
+    pub fn encoded_wire_len_v1(
+        &self,
+        limits: FlowCheckpointWireLimits,
+    ) -> Result<usize, FlowCheckpointWireError> {
+        let mut writer = Writer::measure(limits);
+        writer.raw(MAGIC)?;
+        writer.u16(WIRE_SCHEMA)?;
+        encode_dispatch(self, &mut writer)?;
+        Ok(writer.len)
+    }
+
+    /// Scan every dispatch field and nested collection under limits without
+    /// allocating records/admissions. Canonical scalar tags, booleans, lengths,
+    /// integer conversions and trailing bytes are checked before owner decode.
+    #[doc(hidden)]
+    pub fn preflight_wire_v1(
+        bytes: &[u8],
+        limits: FlowCheckpointWireLimits,
+    ) -> Result<(), FlowCheckpointWireError> {
+        let mut reader = Reader::new(bytes, limits)?;
+        reader.scanning_dispatch = true;
+        if reader.raw(MAGIC.len())? != MAGIC {
+            return Err(FlowCheckpointWireError::InvalidTag);
+        }
+        let schema = reader.u16()?;
+        if schema != WIRE_SCHEMA {
+            return Err(FlowCheckpointWireError::UnsupportedSchema(schema));
+        }
+        let _ = decode_dispatch(&mut reader)?;
+        reader.finish()
+    }
+
     /// Encode every lifecycle record, error, and callback batch receipt.
     #[doc(hidden)]
     pub fn encode_wire_v1(
@@ -474,6 +513,7 @@ impl FlowDispatch {
         bytes: &[u8],
         limits: FlowCheckpointWireLimits,
     ) -> Result<Self, FlowCheckpointWireError> {
+        Self::preflight_wire_v1(bytes, limits)?;
         let mut r = Reader::new(bytes, limits)?;
         if r.raw(MAGIC.len())? != MAGIC {
             return Err(FlowCheckpointWireError::InvalidTag);
@@ -1002,7 +1042,10 @@ fn get_vec_counted<T>(
     r.require_min_items(n, minimum_record_bytes)?;
     let mut v = r.reserve(n)?;
     for _ in 0..n {
-        v.push(f(r)?);
+        let value = f(r)?;
+        if !r.scanning_dispatch {
+            v.push(value);
+        }
     }
     Ok(v)
 }
@@ -1391,7 +1434,10 @@ fn get_batch(r: &mut Reader<'_>) -> WResult<FlowBatchReceipt> {
             r.require_min_items(n, 30)?;
             let mut items = r.reserve(n)?;
             for _ in 0..n {
-                items.push(get_admission(r)?);
+                let admission = get_admission(r)?;
+                if !r.scanning_dispatch {
+                    items.push(admission);
+                }
             }
             Ok(FlowBatchReceipt::Accepted(items))
         }
@@ -1931,4 +1977,39 @@ fn get_notification(r: &mut Reader<'_>) -> WResult<FlowNotificationV1> {
         origin: get_event(r)?,
         ordinal: r.u32()?,
     })
+}
+
+#[cfg(test)]
+mod dispatch_scanning_tests {
+    use super::*;
+    #[test]
+    fn scan_reader_does_not_reserve_or_retain_collection_values() {
+        let dispatch = FlowDispatch {
+            event: EventId::new(2, 2),
+            at: SimTime::ZERO,
+            records: Vec::new(),
+            error: None,
+            callback_batches: vec![FlowBatchReceipt::Accepted(vec![FlowCommandAdmission {
+                ticket: FlowCommandTicket { batch: 0, index: 0 },
+                event: EventId::new(1, 1),
+                request: None,
+                deadline_event: None,
+            }])],
+        };
+        let limits = FlowCheckpointWireLimits::default();
+        let bytes = dispatch.encode_wire_v1(limits).unwrap();
+        let mut reader = Reader::new(&bytes, limits).unwrap();
+        reader.scanning_dispatch = true;
+        assert_eq!(reader.reserve::<u8>(usize::MAX).unwrap().capacity(), 0);
+        assert_eq!(reader.raw(MAGIC.len()).unwrap(), MAGIC);
+        assert_eq!(reader.u16().unwrap(), WIRE_SCHEMA);
+        let scanned = decode_dispatch(&mut reader).unwrap();
+        assert!(scanned.records.is_empty());
+        assert!(scanned.callback_batches.is_empty());
+        reader.finish().unwrap();
+        assert_eq!(
+            FlowDispatch::decode_wire_v1(&bytes, limits).unwrap(),
+            dispatch
+        );
+    }
 }
