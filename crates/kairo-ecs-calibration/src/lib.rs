@@ -15,6 +15,16 @@ mod checkpoint_envelope;
 mod checkpoint_sections;
 
 #[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2 composite transaction is exercised by focused owner tests"
+    )
+)]
+mod c2_portable_checkpoint;
+
+#[cfg(feature = "flow")]
 mod route_receipt;
 pub mod seed_map;
 #[cfg_attr(
