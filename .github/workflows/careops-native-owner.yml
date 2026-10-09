@@ -103,12 +103,19 @@ jobs:
           exclude_file="$(git rev-parse --git-path info/exclude)"
           mkdir -p "$(dirname "$exclude_file")"
           touch "$exclude_file"
-          for pattern in '/.artifacts/c2-native-ci/' '/.artifacts/c2-replay-demo/'; do
+          for pattern in '/.artifacts/c2-native-ci/' '/.artifacts/c2-replay-demo/' '/.artifacts/c2-process-matrix/' '/.artifacts/c2-generic-context-tests/' '/.artifacts/c2-identity-rng/'; do
             if ! grep -Fxq "$pattern" "$exclude_file"; then
               printf '%s\n' "$pattern" >> "$exclude_file"
             fi
           done
           git rev-parse HEAD | tee "$log_dir/source.log"
+          git rev-parse 'HEAD^{tree}' | tee "$log_dir/source-tree.log"
+          shasum -a 256 \
+            crates/kairo-ecs-calibration/src/c2_portable_checkpoint.rs \
+            crates/kairo-ecs-calibration/src/c2_portable_checkpoint/process_tests.rs \
+            crates/kairo-ecs-calibration/src/c2_portable_checkpoint/generic_context_tests.rs \
+            crates/kairo-ecs-calibration/src/c2_portable_checkpoint/identity_rng_tests.rs \
+            > "$log_dir/portable-source.sha256"
           task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
           task_bin="$(dirname "$task_rustc")"
           task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
@@ -153,7 +160,11 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: c2-native-${{ matrix.os }}
-          path: .artifacts/c2-native-ci/${{ matrix.os }}/
+          path: |
+            .artifacts/c2-native-ci/${{ matrix.os }}/
+            .artifacts/c2-process-matrix/
+            .artifacts/c2-generic-context-tests/
+            .artifacts/c2-identity-rng/
           retention-days: 7
           if-no-files-found: error
       - name: Initialize Arrow IO Rust 1.99.0 evidence directory
