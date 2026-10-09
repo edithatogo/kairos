@@ -126,6 +126,7 @@ enum TransitCommandPurpose {
 #[derive(Clone)]
 pub struct TransitContext {
     runtime: FlowRuntimeIdentity,
+    route_plan: RoutePlan,
     progress: TransitProgressState,
     service_work: WorkId,
     acquire: FlowAcquireCommand,
@@ -219,6 +220,7 @@ impl TransitContext {
         let progress = TransitProgressState::new(route.clone())?;
         Ok(Self {
             runtime: flow.identity(),
+            route_plan: route,
             progress,
             service_work: work,
             acquire,
@@ -239,6 +241,15 @@ impl TransitContext {
 
     pub fn service_work(&self) -> WorkId {
         self.service_work
+    }
+
+    /// Returns the immutable route actually retained by this transit carrier.
+    ///
+    /// This experimental readback is for the private calibration adapter; it
+    /// does not establish a stable API or checkpoint compatibility promise.
+    #[doc(hidden)]
+    pub fn route_plan(&self) -> &RoutePlan {
+        &self.route_plan
     }
 
     pub fn phase(&self) -> TransitPhase {

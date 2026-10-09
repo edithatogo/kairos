@@ -1,6 +1,15 @@
 //! Optional calibration primitives; no empirical or clinical acceptance.
 #![forbid(unsafe_code)]
 
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2 receipt is exercised by focused tests; Track21 integration remains open"
+    )
+)]
+mod route_receipt;
 pub mod seed_map;
 #[cfg_attr(
     not(test),
