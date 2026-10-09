@@ -187,6 +187,19 @@ enum TransitRequestCheckpointV1 {
 }
 
 impl BoundIntrinsicWorkCheckpointV1 {
+    /// Borrow the exact retained rejection for trusted continuation coordination.
+    /// This does not infer dispatch provenance or mutate the saved owner state.
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "Consumed by complete C2 process restoration and retry coordination"
+        )
+    )]
+    pub(crate) fn retryable_dispatch(&self) -> Option<&FlowDispatch> {
+        self.retryable.as_ref()
+    }
+
     /// Checks this record against caller-trusted stream and route bindings
     /// without constructing a route or allocating. A Zero transit record has
     /// no graph binding, so `trusted_graph` is unused for that variant.
@@ -5753,6 +5766,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(retry_image.retryable, Some(rejected.clone()));
+        assert_eq!(retry_image.retryable_dispatch(), Some(&rejected));
         let baseline = flow.budget_snapshot().scheduler;
         let mut wrong_event = rejected.clone();
         wrong_event.event = EventId::new(u64::MAX, u32::MAX);
