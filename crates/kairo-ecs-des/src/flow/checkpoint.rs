@@ -347,6 +347,8 @@ pub type DecodeContext<C> =
 pub struct FlowCheckpointRebindV1 {
     identity: FlowRuntimeIdentity,
     works: BTreeSet<EntityId>,
+    work_owners: BTreeMap<EntityId, EntityId>,
+    work_bindings: BTreeMap<EntityId, (EntityId, String, Option<EventKind>)>,
     resources: BTreeSet<EntityId>,
     requests: BTreeSet<EntityId>,
     actors: BTreeSet<EntityId>,
@@ -368,6 +370,26 @@ impl FlowCheckpointRebindV1 {
             .contains(&id)
             .then_some(WorkId(id))
             .ok_or_else(|| FlowCheckpointCodecError("unknown work reference".to_owned()))
+    }
+
+    /// Owner recorded by validated current work state or its retained request.
+    /// Historical ownership is structural state, not a provenance attestation.
+    pub fn resolve_work_owner(&self, id: EntityId) -> Result<EntityId, FlowCheckpointCodecError> {
+        self.work_owners
+            .get(&id)
+            .copied()
+            .ok_or_else(|| FlowCheckpointCodecError("unknown work owner".to_owned()))
+    }
+
+    /// Current work owner, context registration and optional actor-domain kind.
+    pub fn resolve_work_binding(
+        &self,
+        id: EntityId,
+    ) -> Result<(EntityId, &str, Option<EventKind>), FlowCheckpointCodecError> {
+        self.work_bindings
+            .get(&id)
+            .map(|(owner, key, kind)| (*owner, key.as_str(), *kind))
+            .ok_or_else(|| FlowCheckpointCodecError("unknown current work binding".to_owned()))
     }
 
     /// Resolve a current or validated historical resource reference.
@@ -433,6 +455,10 @@ impl FlowCheckpointRebindV1 {
     }
 }
 
+type OwnedEncode<C> = Box<dyn Fn(&C, usize) -> Result<Vec<u8>, FlowCheckpointCodecError>>;
+type OwnedDecode<C> =
+    Box<dyn Fn(&[u8], EntityId, &FlowCheckpointRebindV1) -> Result<C, FlowCheckpointCodecError>>;
+
 trait ContextCodec {
     fn key(&self) -> &str;
     fn version(&self) -> u32;
@@ -462,8 +488,8 @@ trait ContextCodec {
 struct ContextCodecImpl<C> {
     key: String,
     version: u32,
-    encode: EncodeContext<C>,
-    decode: DecodeContext<C>,
+    encode: OwnedEncode<C>,
+    decode: OwnedDecode<C>,
 }
 
 impl<C: 'static> ContextCodec for ContextCodecImpl<C> {
@@ -549,25 +575,32 @@ impl<C: 'static> ContextCodec for ContextCodecImpl<C> {
                 self.key.clone(),
             ));
         }
+        let mut rows = Vec::new();
+        rows.try_reserve_exact(image.rows.len())
+            .map_err(|_| FlowCheckpointError::AllocationFailed)?;
+        for (owner, bytes) in image.rows {
+            rows.push((owner, (owner, bytes)));
+        }
         let payload = ComponentStoreCheckpointV1 {
             version: 1,
             sparse_slots: image.sparse_slots,
-            rows: image.rows,
+            rows,
         };
-        let store = ComponentStore::from_checkpoint_state_with(payload, limits, |bytes| {
-            (self.decode)(&bytes, rebind)
-                .map(WorkContext)
-                .map_err(ComponentStoreCodecError)
-        })
-        .map_err(|error| match error {
-            ComponentCheckpointError::Structure(error) => FlowCheckpointError::Component(error),
-            ComponentCheckpointError::Codec(ComponentStoreCodecError(error)) => {
-                FlowCheckpointError::Codec {
-                    key: self.key.clone(),
-                    error,
+        let store =
+            ComponentStore::from_checkpoint_state_with(payload, limits, |(owner, bytes)| {
+                (self.decode)(&bytes, owner, rebind)
+                    .map(WorkContext)
+                    .map_err(ComponentStoreCodecError)
+            })
+            .map_err(|error| match error {
+                ComponentCheckpointError::Structure(error) => FlowCheckpointError::Component(error),
+                ComponentCheckpointError::Codec(ComponentStoreCodecError(error)) => {
+                    FlowCheckpointError::Codec {
+                        key: self.key.clone(),
+                        error,
+                    }
                 }
-            }
-        })?;
+            })?;
         registry.register::<WorkContext<C>>();
         *registry
             .store_mut::<WorkContext<C>>()
@@ -614,6 +647,23 @@ impl FlowCheckpointCodecs {
         encode: EncodeContext<C>,
         decode: DecodeContext<C>,
     ) -> Result<(), FlowCheckpointError> {
+        self.register_context_with_owner(codec_key, version, encode, move |bytes, _, view| {
+            decode(bytes, view)
+        })
+    }
+
+    /// Register caller-owned immutable codec environments. The outer trusted
+    /// model/configuration manifest binds their meaning to the stable codec key.
+    /// The decoder receives the actual dense row owner and a read-only view;
+    /// returned values must own their state and must not alias mutable outsiders.
+    pub fn register_context_with_owner<C: 'static>(
+        &mut self,
+        codec_key: impl Into<String>,
+        version: u32,
+        encode: impl Fn(&C, usize) -> Result<Vec<u8>, FlowCheckpointCodecError> + 'static,
+        decode: impl Fn(&[u8], EntityId, &FlowCheckpointRebindV1) -> Result<C, FlowCheckpointCodecError>
+            + 'static,
+    ) -> Result<(), FlowCheckpointError> {
         let key = codec_key.into();
         if key.trim().is_empty()
             || version != 1
@@ -628,8 +678,8 @@ impl FlowCheckpointCodecs {
             Box::new(ContextCodecImpl::<C> {
                 key,
                 version,
-                encode,
-                decode,
+                encode: Box::new(encode),
+                decode: Box::new(decode),
             }),
         );
         Ok(())
@@ -648,6 +698,24 @@ impl FlowCheckpointCodecs {
         encode: fn(&T, usize) -> Result<Vec<u8>, FlowCheckpointCodecError>,
         decode: fn(&[u8], &FlowCheckpointRebindV1) -> Result<T, FlowCheckpointCodecError>,
     ) -> Result<(), FlowCheckpointError> {
+        self.register_restart_template_with_owner::<T, C>(
+            codec_key,
+            version,
+            encode,
+            move |bytes, _, view| decode(bytes, view),
+        )
+    }
+
+    /// Register caller-owned template codec environments under the same trusted
+    /// manifest contract as context codecs. Factory bindings remain explicit.
+    pub fn register_restart_template_with_owner<T: 'static, C: 'static>(
+        &mut self,
+        codec_key: impl Into<String>,
+        version: u32,
+        encode: impl Fn(&T, usize) -> Result<Vec<u8>, FlowCheckpointCodecError> + 'static,
+        decode: impl Fn(&[u8], EntityId, &FlowCheckpointRebindV1) -> Result<T, FlowCheckpointCodecError>
+            + 'static,
+    ) -> Result<(), FlowCheckpointError> {
         let key = codec_key.into();
         let types = (TypeId::of::<T>(), TypeId::of::<C>());
         if key.trim().is_empty()
@@ -663,8 +731,8 @@ impl FlowCheckpointCodecs {
             Box::new(RestartCodecImpl::<T, C> {
                 key,
                 version,
-                encode,
-                decode,
+                encode: Box::new(encode),
+                decode: Box::new(decode),
                 factories: BTreeMap::new(),
             }),
         );
@@ -1198,8 +1266,8 @@ trait RestartCodec {
 struct RestartCodecImpl<T, C> {
     key: String,
     version: u32,
-    encode: fn(&T, usize) -> Result<Vec<u8>, FlowCheckpointCodecError>,
-    decode: fn(&[u8], &FlowCheckpointRebindV1) -> Result<T, FlowCheckpointCodecError>,
+    encode: OwnedEncode<T>,
+    decode: OwnedDecode<T>,
     factories: BTreeMap<String, fn(&T) -> C>,
 }
 
@@ -1363,35 +1431,37 @@ impl<T: 'static, C: 'static> RestartCodec for RestartCodecImpl<T, C> {
                 self.key.clone(),
             ));
         }
-        let rows = image
-            .rows
-            .into_iter()
-            .map(|(entity, factory_key, bytes)| (entity, (factory_key, bytes)))
-            .collect();
+        let mut rows = Vec::new();
+        rows.try_reserve_exact(image.rows.len())
+            .map_err(|_| FlowCheckpointError::AllocationFailed)?;
+        for (owner, factory_key, bytes) in image.rows {
+            rows.push((owner, (owner, factory_key, bytes)));
+        }
         let payload = ComponentStoreCheckpointV1 {
             version: 1,
             sparse_slots: image.sparse_slots,
             rows,
         };
-        let store = ComponentStore::from_checkpoint_state_with(payload, limits, |(key, bytes)| {
-            let factory = self.factories.get(&key).copied().ok_or_else(|| {
-                ComponentStoreCodecError(FlowCheckpointCodecError(format!(
-                    "unknown restart factory key: {key}"
-                )))
-            })?;
-            (self.decode)(&bytes, rebind)
-                .map(|template| RestartTemplate { template, factory })
-                .map_err(ComponentStoreCodecError)
-        })
-        .map_err(|error| match error {
-            ComponentCheckpointError::Structure(error) => FlowCheckpointError::Component(error),
-            ComponentCheckpointError::Codec(ComponentStoreCodecError(error)) => {
-                FlowCheckpointError::Codec {
-                    key: self.key.clone(),
-                    error,
+        let store =
+            ComponentStore::from_checkpoint_state_with(payload, limits, |(owner, key, bytes)| {
+                let factory = self.factories.get(&key).copied().ok_or_else(|| {
+                    ComponentStoreCodecError(FlowCheckpointCodecError(format!(
+                        "unknown restart factory key: {key}"
+                    )))
+                })?;
+                (self.decode)(&bytes, owner, rebind)
+                    .map(|template| RestartTemplate { template, factory })
+                    .map_err(ComponentStoreCodecError)
+            })
+            .map_err(|error| match error {
+                ComponentCheckpointError::Structure(error) => FlowCheckpointError::Component(error),
+                ComponentCheckpointError::Codec(ComponentStoreCodecError(error)) => {
+                    FlowCheckpointError::Codec {
+                        key: self.key.clone(),
+                        error,
+                    }
                 }
-            }
-        })?;
+            })?;
         registry.register::<RestartTemplate<T, C>>();
         *registry
             .store_mut::<RestartTemplate<T, C>>()
@@ -1941,6 +2011,18 @@ impl FlowRuntime {
         codecs: &FlowCheckpointCodecs,
         limits: FlowCheckpointLimits,
     ) -> Result<Self, FlowCheckpointError> {
+        Self::restore_checkpoint_with_rebind(image, codecs, limits).map(|(runtime, _)| runtime)
+    }
+
+    /// Restore privately and return the same validated read-only view used by
+    /// owner decoders. A composite assembler must validate all remaining owners
+    /// before exposing this runtime. This does not certify an outer frontier.
+    #[doc(hidden)]
+    pub fn restore_checkpoint_with_rebind(
+        image: FlowCheckpointV1,
+        codecs: &FlowCheckpointCodecs,
+        limits: FlowCheckpointLimits,
+    ) -> Result<(Self, FlowCheckpointRebindV1), FlowCheckpointError> {
         if image.version != FLOW_CHECKPOINT_VERSION_V1 {
             return Err(FlowCheckpointError::UnsupportedVersion(image.version));
         }
@@ -2540,8 +2622,21 @@ impl FlowRuntime {
                     }
                 }
             }
+            let spec_owners: BTreeMap<_, _> = image
+                .builtins
+                .work_specs
+                .as_ref()
+                .into_iter()
+                .flat_map(|store| store.rows.iter())
+                .map(|(id, spec)| (*id, spec.owner))
+                .collect();
             for (work, role) in &roles {
                 if let FlowWorkRoleV1::ActorDomain { actor, .. } = role {
+                    if spec_owners.get(work) != Some(actor) {
+                        return Err(FlowCheckpointError::InvalidState(
+                            "actor domain work owner mismatch",
+                        ));
+                    }
                     if actor_domain_by_actor.get(actor) != Some(work) {
                         return Err(FlowCheckpointError::InvalidState(
                             "actor domain index is incomplete",
@@ -2581,7 +2676,8 @@ impl FlowRuntime {
                     let request_value = request_by_entity.get(&request.0).copied().ok_or(
                         FlowCheckpointError::InvalidState("WorkSpec request is missing"),
                     )?;
-                    if request_value.work != Some(WorkId(*id)) {
+                    if request_value.work != Some(WorkId(*id)) || request_value.owner != spec.owner
+                    {
                         return Err(FlowCheckpointError::InvalidState(
                             "WorkSpec request is not reciprocal",
                         ));
@@ -3021,7 +3117,7 @@ impl FlowRuntime {
         runtime.scheduled = image.scheduled;
         runtime.next_admission = image.next_admission;
         runtime.next_lease = image.next_lease;
-        Ok(runtime)
+        Ok((runtime, rebind))
     }
 }
 
@@ -3058,6 +3154,30 @@ fn checkpoint_rebind_view(
         .iter()
         .map(|work| work.id)
         .collect();
+    let roles: BTreeMap<_, _> = image
+        .builtins
+        .work_roles
+        .as_ref()
+        .into_iter()
+        .flat_map(|store| store.rows.iter())
+        .map(|(id, role)| (*id, *role))
+        .collect();
+    let mut work_owners = BTreeMap::new();
+    let mut work_bindings = BTreeMap::new();
+    for (id, spec) in image
+        .builtins
+        .work_specs
+        .as_ref()
+        .into_iter()
+        .flat_map(|store| store.rows.iter())
+    {
+        work_owners.insert(*id, spec.owner);
+        let kind = match roles.get(id) {
+            Some(FlowWorkRoleV1::ActorDomain { kind, .. }) => Some(*kind),
+            _ => None,
+        };
+        work_bindings.insert(*id, (spec.owner, spec.context_type_key.clone(), kind));
+    }
     let mut resources: BTreeSet<_> = image.resources.iter().map(|id| id.entity_id()).collect();
     let mut requests: BTreeSet<_> = image.requests.iter().map(|id| id.entity_id()).collect();
     let mut actors: BTreeSet<_> = image.actors.iter().copied().collect();
@@ -3087,6 +3207,7 @@ fn checkpoint_rebind_view(
         actors.insert(request.owner);
         if let Some(work) = request.work {
             works.insert(work.entity_id());
+            work_owners.entry(work.entity_id()).or_insert(request.owner);
         }
     }
     for (_, spec) in image
@@ -3153,6 +3274,8 @@ fn checkpoint_rebind_view(
     FlowCheckpointRebindV1 {
         identity,
         works,
+        work_owners,
+        work_bindings,
         resources,
         requests,
         actors,
@@ -3722,6 +3845,10 @@ mod rebind_view_tests {
         let view = FlowCheckpointRebindV1 {
             identity: identity.clone(),
             works: [work].into_iter().collect(),
+            work_owners: [(work, actor)].into_iter().collect(),
+            work_bindings: [(work, (actor, "test".to_owned(), None))]
+                .into_iter()
+                .collect(),
             resources: [resource].into_iter().collect(),
             requests: [request].into_iter().collect(),
             actors: [actor].into_iter().collect(),

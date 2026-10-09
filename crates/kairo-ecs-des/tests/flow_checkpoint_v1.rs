@@ -8,6 +8,116 @@ use kairo_ecs_types::{EventKind, SimDuration, SimTime};
 use std::cell::{Cell, RefCell};
 use std::num::NonZeroU64;
 
+#[test]
+fn owned_codec_environments_receive_dense_owner_and_return_same_validated_view() {
+    let mut source = FlowRuntime::new();
+    let owner = source.spawn_actor().unwrap();
+    let other_owner = source.spawn_actor().unwrap();
+    let work = source
+        .create_restartable_work(
+            owner,
+            SimDuration::from_ticks(20),
+            "service",
+            Template { initial: 7 },
+            template_context,
+        )
+        .unwrap();
+    let offset = std::sync::Arc::new(19_u64);
+    let mut codecs = FlowCheckpointCodecs::new();
+    let encode_offset = offset.clone();
+    let decode_offset = offset.clone();
+    codecs
+        .register_context_with_owner::<Context>(
+            "context.v1",
+            1,
+            move |context, remaining| {
+                if remaining < 8 {
+                    return Err(kairo_ecs_des::FlowCheckpointCodecError("budget".into()));
+                }
+                Ok((context.value + *encode_offset).to_le_bytes().to_vec())
+            },
+            move |bytes, row, view| {
+                assert_eq!(view.resolve_work(row).unwrap(), work);
+                assert_eq!(view.resolve_work_owner(row).unwrap(), owner);
+                assert_eq!(
+                    view.resolve_work_binding(row).unwrap(),
+                    (owner, "service", None)
+                );
+                let bytes: [u8; 8] = bytes
+                    .try_into()
+                    .map_err(|_| kairo_ecs_des::FlowCheckpointCodecError("payload".into()))?;
+                Ok(Context {
+                    value: u64::from_le_bytes(bytes) - *decode_offset,
+                })
+            },
+        )
+        .unwrap();
+    let encode_offset = offset.clone();
+    codecs
+        .register_restart_template_with_owner::<Template, Context>(
+            "template.v1",
+            1,
+            move |template, remaining| {
+                if remaining < 8 {
+                    return Err(kairo_ecs_des::FlowCheckpointCodecError("budget".into()));
+                }
+                Ok((template.initial + *encode_offset).to_le_bytes().to_vec())
+            },
+            move |bytes, row, view| {
+                assert_eq!(view.resolve_work(row).unwrap(), work);
+                let bytes: [u8; 8] = bytes
+                    .try_into()
+                    .map_err(|_| kairo_ecs_des::FlowCheckpointCodecError("payload".into()))?;
+                Ok(Template {
+                    initial: u64::from_le_bytes(bytes) - *offset,
+                })
+            },
+        )
+        .unwrap();
+    codecs
+        .register_restart_factory::<Template, Context>(
+            "template.v1",
+            "factory.v1",
+            template_context,
+        )
+        .unwrap();
+    let resource = source.create_resource(1).unwrap();
+    source
+        .acquire(resource)
+        .owner(owner)
+        .timed_work(work)
+        .submit()
+        .unwrap();
+    let image = source
+        .capture_checkpoint(&codecs, FlowCheckpointLimits::default())
+        .unwrap();
+    let mut mismatched_owner = image.clone();
+    mismatched_owner.builtins.work_specs.as_mut().unwrap().rows[0]
+        .1
+        .owner = other_owner;
+    assert!(matches!(
+        FlowRuntime::restore_checkpoint_with_rebind(
+            mismatched_owner,
+            &codecs,
+            FlowCheckpointLimits::default()
+        ),
+        Err(FlowCheckpointError::InvalidState(_))
+    ));
+    let (restored, view) = FlowRuntime::restore_checkpoint_with_rebind(
+        image,
+        &codecs,
+        FlowCheckpointLimits::default(),
+    )
+    .unwrap();
+    assert_ne!(restored.identity(), source.identity());
+    assert_eq!(*view.identity(), restored.identity());
+    assert_eq!(view.resolve_work(work.entity_id()).unwrap(), work);
+    assert_eq!(restored.work_context::<Context>(work).unwrap().value, 7);
+    assert!(view
+        .resolve_work_owner(kairo_ecs_types::EntityId::new(u64::MAX, 0))
+        .is_err());
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct Context {
     value: u64,
