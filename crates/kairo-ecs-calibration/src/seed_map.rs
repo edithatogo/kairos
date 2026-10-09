@@ -383,6 +383,17 @@ pub(crate) struct CalibrationStreamKey {
     identity: SeedIdentity,
 }
 
+impl CalibrationStreamKey {
+    /// Allocation-free preflight for a containing owner checkpoint's total cap.
+    #[cfg_attr(
+        not(test),
+        expect(dead_code, reason = "Consumed by the C2 owner checkpoint assembler")
+    )]
+    pub(crate) fn checkpoint_identifier_bytes(&self) -> Result<usize, CalibrationStreamStateError> {
+        stream_identity_identifier_bytes(&self.identity)
+    }
+}
+
 /// Owned purpose stream with checked completed-draw accounting.
 pub struct CalibrationStream {
     identity: SeedIdentity,
@@ -445,6 +456,15 @@ pub(crate) enum CalibrationStreamStateError {
 const CALIBRATION_STREAM_STATE_VERSION_V1: u32 = 1;
 
 impl CalibrationStream {
+    /// Count complete identity bytes without cloning or advancing this stream.
+    #[cfg_attr(
+        not(test),
+        expect(dead_code, reason = "Consumed by the C2 owner checkpoint assembler")
+    )]
+    pub(crate) fn checkpoint_identifier_bytes(&self) -> Result<usize, CalibrationStreamStateError> {
+        stream_identity_identifier_bytes(&self.identity)
+    }
+
     pub fn derived_seed(&self) -> u64 {
         self.derived_seed
     }
@@ -720,6 +740,37 @@ fn encode_identity(identity: &SeedIdentity) -> Result<Vec<u8>, CalibrationSeedEr
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn checkpoint_identifier_bytes_preserve_exact_stream_state() {
+        let mut map = CalibrationSeedMap::new(1, "study", 7).unwrap();
+        let key = map
+            .key_for("sched", 1, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        let mut stream = map
+            .stream_for("sched", 1, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        stream.next_u64().unwrap();
+        let limits = CalibrationStreamStateLimits {
+            max_identifier_bytes: 18,
+        };
+        let before = stream.checkpoint_state(limits).unwrap();
+        assert_eq!(stream.checkpoint_identifier_bytes().unwrap(), 18);
+        assert_eq!(key.checkpoint_identifier_bytes().unwrap(), 18);
+        assert_eq!(stream.checkpoint_state(limits).unwrap(), before);
+    }
+
+    #[test]
+    fn checkpoint_identifier_bytes_reject_invalid_owned_identity() {
+        let mut map = CalibrationSeedMap::new(1, "study", 7).unwrap();
+        let mut stream = map
+            .stream_for("sched", 1, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        stream.identity.study_id.clear();
+        let key = stream.key();
+        assert!(stream.checkpoint_identifier_bytes().is_err());
+        assert!(key.checkpoint_identifier_bytes().is_err());
+    }
 
     fn identity(purpose: SeedPurpose) -> SeedIdentity {
         SeedIdentity {
