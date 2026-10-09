@@ -2,6 +2,19 @@
 #![forbid(unsafe_code)]
 
 #[cfg(feature = "flow")]
+#[expect(
+    dead_code,
+    reason = "Complete C2 composite assembler consumes the reviewed envelope next"
+)]
+mod checkpoint_envelope;
+#[cfg(feature = "flow")]
+#[expect(
+    dead_code,
+    reason = "Complete C2 composite assembler consumes the reviewed section directory next"
+)]
+mod checkpoint_sections;
+
+#[cfg(feature = "flow")]
 mod route_receipt;
 pub mod seed_map;
 #[cfg_attr(
