@@ -1,11 +1,13 @@
 //! Private replay-only checkpoint proof for one sealed C2 route scenario.
 //! This is not a general Flow serializer or durable continuation API.
 
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
+#[cfg(test)]
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 const LIMIT: u64 = 1024 * 1024;
@@ -26,12 +28,26 @@ const EXPECTED_PREFIX_SHA256: &str =
 static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub(crate) enum JournalError {
+pub enum JournalError {
     Io,
     TooLarge,
     Invalid,
     Exists,
 }
+
+impl std::fmt::Display for JournalError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let message = match self {
+            Self::Io => "checkpoint path I/O failed",
+            Self::TooLarge => "checkpoint exceeds the one-MiB limit",
+            Self::Invalid => "checkpoint is invalid or incompatible with the sealed recipe",
+            Self::Exists => "checkpoint destination already exists",
+        };
+        formatter.write_str(message)
+    }
+}
+
+impl std::error::Error for JournalError {}
 
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
@@ -134,7 +150,47 @@ fn expected_frontier() -> Value {
     json!({"now":"1","phase":"Paused","useful_elapsed":"1","remaining":"4","pending_progress_due_from_route_plan":"5","resume_at":"3","draw_position":"1"})
 }
 
+fn checked_parent(path: &Path) -> Result<&Path, JournalError> {
+    let parent = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    let absolute = if parent.is_absolute() {
+        parent.to_path_buf()
+    } else {
+        std::env::current_dir()
+            .map_err(|_| JournalError::Io)?
+            .join(parent)
+    };
+    let mut current = std::path::PathBuf::new();
+    for component in absolute.components() {
+        match component {
+            std::path::Component::CurDir => continue,
+            std::path::Component::ParentDir => return Err(JournalError::Invalid),
+            _ => current.push(component.as_os_str()),
+        }
+        let metadata = fs::symlink_metadata(&current).map_err(|_| JournalError::Io)?;
+        if metadata.file_type().is_symlink() || !metadata.is_dir() {
+            return Err(JournalError::Invalid);
+        }
+    }
+    Ok(parent)
+}
+
+fn preflight_destination(path: &Path) -> Result<(), JournalError> {
+    checked_parent(path)?;
+    if path.file_name().is_none_or(|name| name.is_empty()) {
+        return Err(JournalError::Invalid);
+    }
+    match fs::symlink_metadata(path) {
+        Ok(_) => Err(JournalError::Exists),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(_) => Err(JournalError::Io),
+    }
+}
+
 fn read_bounded(path: &Path) -> Result<Vec<u8>, JournalError> {
+    checked_parent(path)?;
     let meta = fs::symlink_metadata(path).map_err(|_| JournalError::Io)?;
     if meta.file_type().is_symlink() || !meta.is_file() {
         return Err(JournalError::Invalid);
@@ -165,8 +221,7 @@ fn read_bounded(path: &Path) -> Result<Vec<u8>, JournalError> {
 }
 
 fn publish_no_replace(path: &Path, bytes: &[u8]) -> Result<(), JournalError> {
-    let parent = path.parent().ok_or(JournalError::Invalid)?;
-    fs::create_dir_all(parent).map_err(|_| JournalError::Io)?;
+    let parent = checked_parent(path)?;
     let name = path
         .file_name()
         .ok_or(JournalError::Invalid)?
@@ -207,8 +262,9 @@ fn publish_no_replace(path: &Path, bytes: &[u8]) -> Result<(), JournalError> {
 #[cfg(test)]
 fn captured_artifact_path() -> PathBuf {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let output = root.join(".artifacts/c2-checkpoint-replay");
+    let root = fs::canonicalize(Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."))
+        .expect("canonical repository root");
+    let output = root.join(".artifacts/c2-replay-demo");
     for directory in [root.join(".artifacts"), output.clone()] {
         if let Ok(meta) = fs::symlink_metadata(&directory) {
             assert!(
@@ -229,61 +285,62 @@ fn captured_artifact_path() -> PathBuf {
         .duration_since(UNIX_EPOCH)
         .expect("clock")
         .as_nanos();
-    output.join(format!("checkpoint-{}-{nonce}.json", std::process::id()))
+    canonical_output.join(format!("checkpoint-{}-{nonce}.json", std::process::id()))
 }
 
+use crate::flow_bridge::{
+    AcquireIntent, BoundIntrinsicWork, PreparationIdentity, TransitRequest, WorkPreparationInput,
+};
+use crate::route_receipt::{DistanceProvenance, RouteMetadata};
+use crate::seed_map::{CalibrationSeedMap, SeedPurpose};
+use crate::work_duration::{
+    IntrinsicDurationDistribution, IntrinsicWorkProvider, INTRINSIC_WORK_PROVIDER_VERSION_V1,
+};
+use kairo_ecs_abm::spatial::{
+    EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1,
+};
+use kairo_ecs_abm::{register_transit_context, TransitContext, TransitPhase};
+use kairo_ecs_des::fidelity::{FidelityAdapter, FidelityMode, FidelityPolicy};
+use kairo_ecs_des::{FlowBatchReceipt, FlowDomainControl, FlowRuntime, WorkHandlers};
+use kairo_ecs_types::{EventKind, SimTime};
+use std::sync::Arc;
+
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::flow_bridge::{
-        AcquireIntent, BoundIntrinsicWork, PreparationIdentity, TransitRequest,
-        WorkPreparationInput,
-    };
-    use crate::route_receipt::{DistanceProvenance, RouteMetadata};
-    use crate::seed_map::{CalibrationSeedMap, SeedPurpose};
-    use crate::work_duration::{
-        INTRINSIC_WORK_PROVIDER_VERSION_V1, IntrinsicDurationDistribution, IntrinsicWorkProvider,
-    };
-    use kairo_ecs_abm::spatial::{
-        EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1,
-    };
-    use kairo_ecs_abm::{TransitContext, TransitPhase, register_transit_context};
-    use kairo_ecs_des::fidelity::{FidelityAdapter, FidelityMode, FidelityPolicy};
-    use kairo_ecs_des::{FlowBatchReceipt, FlowDomainControl, FlowRuntime, WorkHandlers};
-    use kairo_ecs_types::{EventKind, SimTime};
-    use std::sync::Arc;
+fn unique_temp_dir(label: &str) -> PathBuf {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("clock")
+        .as_nanos();
+    let root = fs::canonicalize(Path::new(env!("CARGO_MANIFEST_DIR")).join("../.."))
+        .expect("canonical repository root");
+    let artifacts = root.join(".artifacts/c2-replay-demo");
+    fs::create_dir_all(&artifacts).expect("create claimed artifact directory");
+    let path = artifacts.join(format!("test-{label}-{}-{nonce}", std::process::id()));
+    fs::create_dir(&path).expect("exclusive test directory");
+    path
+}
 
-    fn unique_temp_dir(label: &str) -> PathBuf {
-        use std::time::{SystemTime, UNIX_EPOCH};
-        let nonce = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("clock")
-            .as_nanos();
-        let path =
-            std::env::temp_dir().join(format!("kairos-c2-{label}-{}-{nonce}", std::process::id()));
-        fs::create_dir(&path).expect("exclusive temp directory");
-        path
-    }
-
-    fn make_context(v: &u32) -> u32 {
-        *v
-    }
-    fn build() -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
-        let mut flow = FlowRuntime::new();
-        let owner = flow.spawn_actor().unwrap();
-        let actor = flow.spawn_actor().unwrap();
-        let resource = flow.create_resource(1).unwrap();
-        register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20)).unwrap();
-        flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
-            .unwrap();
-        let mut seeds = CalibrationSeedMap::new(1, "c2-replay-test", 19).unwrap();
-        let key = seeds
-            .key_for("paired", 0, "case-a", "triage", SeedPurpose::Service)
-            .unwrap();
-        let stream = seeds
-            .stream_for("paired", 0, "case-a", "triage", SeedPurpose::Service)
-            .unwrap();
-        let graph = Arc::new(
+fn make_context(v: &u32) -> u32 {
+    *v
+}
+fn build() -> Result<(FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>), JournalError> {
+    let mut flow = FlowRuntime::new();
+    let owner = flow.spawn_actor().map_err(|_| JournalError::Invalid)?;
+    let actor = flow.spawn_actor().map_err(|_| JournalError::Invalid)?;
+    let resource = flow.create_resource(1).map_err(|_| JournalError::Invalid)?;
+    register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20))
+        .map_err(|_| JournalError::Invalid)?;
+    flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
+        .map_err(|_| JournalError::Invalid)?;
+    let mut seeds =
+        CalibrationSeedMap::new(1, "c2-replay-test", 19).map_err(|_| JournalError::Invalid)?;
+    let stream = seeds
+        .stream_for("paired", 0, "case-a", "triage", SeedPurpose::Service)
+        .map_err(|_| JournalError::Invalid)?;
+    let key = stream.key();
+    let graph =
+        Arc::new(
             TransitGraphV1::new(
                 1,
                 vec![NodeId::new(1), NodeId::new(2)],
@@ -292,304 +349,371 @@ mod tests {
                     from: NodeId::new(1),
                     to: NodeId::new(2),
                     length_mm: 5000,
-                    allowed_modes: vec![MovementModeId::new("walk").unwrap()],
+                    allowed_modes: vec![
+                        MovementModeId::new("walk").map_err(|_| JournalError::Invalid)?
+                    ],
                 }],
             )
-            .unwrap(),
+            .map_err(|_| JournalError::Invalid)?,
         );
-        let input = WorkPreparationInput::new(
-            PreparationIdentity {
-                owner,
-                subsystem: "assessment".into(),
-                registration: "bridge.context".into(),
-                stratum: "triage".into(),
-            },
-            stream,
-            key,
+    let input = WorkPreparationInput::new(
+        PreparationIdentity {
+            owner,
+            subsystem: "assessment".into(),
+            registration: "bridge.context".into(),
+            stratum: "triage".into(),
+        },
+        stream,
+        key,
+        7,
+        make_context,
+        AcquireIntent {
+            resource,
+            owner,
+            at: SimTime::from_ticks(0),
+            priority_level: 3,
+            deadline: None,
+            scheduler_priority: 7,
+            can_preempt: false,
+            preemptible: None,
+        },
+        TransitRequest::Route {
+            graph,
+            origin: NodeId::new(1),
+            destination: NodeId::new(2),
+            profile: MovementProfile::new("walk", 1000).map_err(|_| JournalError::Invalid)?,
+            ticks_per_second: 1,
+            carrier_actor: actor,
+            carrier_registration: "bridge.transit".into(),
+            kind: EventKind::custom(0xC20),
+        },
+    )
+    .with_route_metadata(RouteMetadata::v1(
+        "patient-transfer",
+        DistanceProvenance::ConfiguredGeometry,
+    ));
+    let provider = IntrinsicWorkProvider::new(
+        INTRINSIC_WORK_PROVIDER_VERSION_V1,
+        vec![(
+            "triage".into(),
+            IntrinsicDurationDistribution::weighted_ticks(vec![(20, 1), (30, 1)])
+                .map_err(|_| JournalError::Invalid)?,
+        )],
+    )
+    .map_err(|_| JournalError::Invalid)?;
+    let mut adapter = FidelityAdapter::new(
+        FidelityPolicy::new(1, Some(FidelityMode::Micro)).map_err(|_| JournalError::Invalid)?,
+    );
+    let prepared = input
+        .prepare(&flow, &mut adapter, &provider)
+        .map_err(|_| JournalError::Invalid)?;
+    let created = prepared
+        .create(&mut flow)
+        .map_err(|_| JournalError::Invalid)?;
+    let bound = created.bind(&flow).map_err(|_| JournalError::Invalid)?;
+    Ok((flow, adapter, bound))
+}
+
+fn ensure(condition: bool) -> Result<(), JournalError> {
+    if condition {
+        Ok(())
+    } else {
+        Err(JournalError::Invalid)
+    }
+}
+
+type ScenarioState = (
+    FlowRuntime,
+    FidelityAdapter,
+    BoundIntrinsicWork<u32, u32>,
+    Value,
+    Value,
+    kairo_ecs_types::EventId,
+);
+
+fn scenario() -> Result<ScenarioState, JournalError> {
+    let (mut flow, adapter, mut bound) = build()?;
+    let start = bound
+        .start_transit(&mut flow)
+        .map_err(|_| JournalError::Invalid)?;
+    let pause = bound
+        .schedule_transit_control(
+            &mut flow,
+            FlowDomainControl::Pause,
+            SimTime::from_ticks(1),
             7,
-            make_context,
-            AcquireIntent {
-                resource,
-                owner,
-                at: SimTime::from_ticks(0),
-                priority_level: 3,
-                deadline: None,
-                scheduler_priority: 7,
-                can_preempt: false,
-                preemptible: None,
-            },
-            TransitRequest::Route {
-                graph,
-                origin: NodeId::new(1),
-                destination: NodeId::new(2),
-                profile: MovementProfile::new("walk", 1000).unwrap(),
-                ticks_per_second: 1,
-                carrier_actor: actor,
-                carrier_registration: "bridge.transit".into(),
-                kind: EventKind::custom(0xC20),
-            },
         )
-        .with_route_metadata(RouteMetadata::v1(
-            "patient-transfer",
-            DistanceProvenance::ConfiguredGeometry,
-        ));
-        let provider = IntrinsicWorkProvider::new(
-            INTRINSIC_WORK_PROVIDER_VERSION_V1,
-            vec![(
-                "triage".into(),
-                IntrinsicDurationDistribution::weighted_ticks(vec![(20, 1), (30, 1)]).unwrap(),
-            )],
+        .map_err(|_| JournalError::Invalid)?;
+    let resume = bound
+        .schedule_transit_control(
+            &mut flow,
+            FlowDomainControl::Resume,
+            SimTime::from_ticks(3),
+            7,
         )
-        .unwrap();
-        let mut adapter =
-            FidelityAdapter::new(FidelityPolicy::new(1, Some(FidelityMode::Micro)).unwrap());
-        let prepared = input
-            .prepare(&flow, &mut adapter, &provider)
-            .unwrap_or_else(|_| panic!("prepare"));
-        let created = prepared
-            .create(&mut flow)
-            .unwrap_or_else(|_| panic!("create"));
-        let bound = created.bind(&flow).unwrap_or_else(|_| panic!("bind"));
-        (flow, adapter, bound)
-    }
-
-    fn scenario() -> (
-        FlowRuntime,
-        FidelityAdapter,
-        BoundIntrinsicWork<u32, u32>,
-        Value,
-        Value,
-        kairo_ecs_types::EventId,
-    ) {
-        let (mut flow, adapter, mut bound) = build();
-        let start = bound.start_transit(&mut flow).unwrap();
-        let pause = bound
-            .schedule_transit_control(
-                &mut flow,
-                FlowDomainControl::Pause,
-                SimTime::from_ticks(1),
-                7,
-            )
-            .unwrap();
-        let resume = bound
-            .schedule_transit_control(
-                &mut flow,
-                FlowDomainControl::Resume,
-                SimTime::from_ticks(3),
-                7,
-            )
-            .unwrap();
-        let d0 = flow.step().unwrap().unwrap();
-        assert_eq!(d0.event, start);
-        let pending_admission = match d0.callback_batches.as_slice() {
-            [FlowBatchReceipt::Accepted(admissions)] => {
-                admissions
-                    .first()
-                    .expect("start creates first progress command")
-                    .event
-            }
-            _ => panic!("accepted start must expose progress admission"),
-        };
-        assert!(bound.observe_transit_dispatch(&flow, &d0).is_ok());
-        let stale = bound.pending_event_for_checkpoint().unwrap();
-        assert_eq!(stale, pending_admission);
-        let d1 = flow.step().unwrap().unwrap();
-        assert_eq!(d1.event, pause);
-        assert!(bound.observe_transit_dispatch(&flow, &d1).is_ok());
-        let carrier = bound.carrier_id_for_checkpoint().unwrap();
-        let context = flow.work_context::<TransitContext>(carrier).unwrap();
-        assert_eq!(context.phase(), TransitPhase::Paused);
-        assert!(bound.validate_route_context_for_checkpoint(&flow).is_ok());
-        let progress = context.progress_at(flow.now()).unwrap();
-        let actual_pending_due = SimTime::from_ticks(context.route_plan().duration().ticks());
-        assert_eq!(actual_pending_due, SimTime::from_ticks(5));
-        assert!(context.expects_event(stale, actual_pending_due));
-        let budget = flow.budget_snapshot().scheduler;
-        let work = bound.work();
-        let work_spec = flow.work(work).unwrap();
-        let work_progress = flow.work_progress(work).unwrap();
-        let resource = flow.resource(bound.acquire_intent().resource).unwrap();
-        let request = work_spec.request.map(|id| { let saved=flow.request(id).unwrap(); json!({"id":{"index":id.entity_id().index,"generation":id.entity_id().generation},"state":format!("{:?}",saved.state),"submitted_at":saved.submitted_at.ticks().to_string()}) });
-        let decision = bound.decision();
-        let owner = work_spec.owner;
-        let resource_id = bound.acquire_intent().resource.entity_id();
-        let front = json!({"now":flow.now().ticks().to_string(),"phase":"Paused","useful_elapsed":progress.useful_elapsed.ticks().to_string(),"remaining":progress.remaining.ticks().to_string(),"pending_progress_due_from_route_plan":actual_pending_due.ticks().to_string(),"resume_at":"3","draw_position":bound.service_draw_position().to_string()});
-        let prefix = json!({"start_event":{"index":start.index,"generation":start.generation},"pause_event":{"index":pause.index,"generation":pause.generation},"resume_event":{"index":resume.index,"generation":resume.generation},"old_progress_event":{"index":stale.index,"generation":stale.generation},"start_progress_admission_event":{"index":pending_admission.index,"generation":pending_admission.generation},"scheduler":{"scheduled":budget.scheduled_events,"dispatched":budget.dispatched_events,"cancelled":budget.cancelled_events,"pending":budget.pending_events},"service_sample_ticks":bound.sampled_duration().ticks().to_string(),"service_draw_probe":bound.next_service_draw_probe_for_checkpoint().to_string(),"route_receipt_sha256":bound.route_receipt_sha_for_checkpoint(&flow).unwrap(),"carrier_id":{"index":carrier.entity_id().index,"generation":carrier.entity_id().generation},"decision":{"mode":format!("{:?}",decision.mode),"policy_version":decision.policy_version},"owner":{"index":owner.index,"generation":owner.generation},"work":{"id":{"index":work.entity_id().index,"generation":work.entity_id().generation},"state":format!("{:?}",work_progress.state),"useful_elapsed":work_progress.useful_elapsed.ticks().to_string(),"remaining":work_progress.remaining.ticks().to_string(),"context_type":work_spec.context_type_key},"request":request,"resource":{"id":{"index":resource_id.index,"generation":resource_id.generation},"total":resource.total,"available":resource.available,"queued":resource.queued.len(),"active":resource.active.len()},"frontier":front});
-        (flow, adapter, bound, front, prefix, stale)
-    }
-
-    fn prefix() -> (Value, Value) {
-        let (_, _, _, front, prefix, _) = scenario();
-        (front, prefix)
-    }
-
-    fn run_suffix() -> Value {
-        let (mut flow, _adapter, mut bound, front, prefix_data, stale) = scenario();
-        assert_eq!(front, expected_frontier());
-        let binary = executable_sha256().unwrap();
-        let mut cfg = compiled_config(&binary);
-        cfg["source_executable_sha256"] = json!("BOUND_BY_ENVELOPE_EXECUTABLE_SHA256");
-        let digest_now = digest(
-            &canonical(&json!({"config":cfg,"operations":OPERATIONS,"prefix":prefix_data}))
-                .unwrap(),
-        );
-        // The artifact constructor freezes the canonical scenario digest; artifact data never selects runtime inputs.
-        let (expected_front, expected_prefix) = prefix();
-        assert_eq!(front, expected_front);
-        assert_eq!(prefix_data, expected_prefix);
-        assert_eq!(digest_now, EXPECTED_PREFIX_SHA256);
-        let mut observations = Vec::new();
-        let mut arrived = false;
-        for _ in 0..3 {
-            if arrived {
-                break;
-            }
-            let dispatch = flow
-                .step()
-                .unwrap()
-                .expect("expected one of three route suffix events");
-            let observation = bound.observe_transit_dispatch(&flow, &dispatch).unwrap();
-            observations.push(json!({"event":{"index":dispatch.event.index,"generation":dispatch.event.generation},"at":dispatch.at.ticks().to_string(),"observation":format!("{observation:?}")}));
-            if dispatch.event == stale {
-                assert_eq!(dispatch.at, SimTime::from_ticks(5));
-                assert_eq!(
-                    observation,
-                    crate::flow_bridge::TransitObservation::IgnoredStale
-                );
-            }
-            if observation == crate::flow_bridge::TransitObservation::Resumed {
-                assert_eq!(dispatch.at, SimTime::from_ticks(3));
-                assert_eq!(dispatch.event.index, prefix_data["resume_event"]["index"]);
-                assert_eq!(
-                    dispatch.event.generation,
-                    prefix_data["resume_event"]["generation"]
-                );
-            }
-            if observation == crate::flow_bridge::TransitObservation::Arrived {
-                assert_eq!(dispatch.at, SimTime::from_ticks(7));
-            }
-            arrived = observation == crate::flow_bridge::TransitObservation::Arrived;
+        .map_err(|_| JournalError::Invalid)?;
+    let d0 = flow
+        .step()
+        .map_err(|_| JournalError::Invalid)?
+        .ok_or(JournalError::Invalid)?;
+    ensure(d0.event == start)?;
+    let pending_admission = match d0.callback_batches.as_slice() {
+        [FlowBatchReceipt::Accepted(admissions)] => {
+            admissions.first().ok_or(JournalError::Invalid)?.event
         }
-        assert!(
-            arrived,
-            "route did not arrive within the closed three-event suffix"
-        );
-        assert_eq!(
-            observations
-                .iter()
-                .filter(|v| v["observation"] == "IgnoredStale")
-                .count(),
-            1
-        );
-        assert_eq!(
-            observations
-                .iter()
-                .filter(|v| v["observation"] == "Arrived")
-                .count(),
-            1
-        );
-        assert_eq!(
-            observations
-                .iter()
-                .filter(|v| v["observation"] == "Resumed")
-                .count(),
-            1
-        );
-        let carrier = bound.carrier_id_for_checkpoint().unwrap();
-        let context = flow.work_context::<TransitContext>(carrier).unwrap();
-        let p = context.progress_at(flow.now()).unwrap();
-        let route_phase = format!("{:?}", context.phase());
-        assert_eq!(flow.now(), SimTime::from_ticks(7));
-        assert_eq!(p.useful_elapsed.ticks(), 5);
-        assert_eq!(p.remaining.ticks(), 0);
-        assert!(bound.validate_route_context_for_checkpoint(&flow).is_ok());
-        let receipt_sha = bound.route_receipt_sha_for_checkpoint(&flow).unwrap();
-        let service_draw_position = bound.service_draw_position();
-        let next_service_draw = bound.next_service_draw_probe_for_checkpoint();
-        let work = bound.work();
-        let submitted = bound.finish_transit(&flow).unwrap();
-        let request = submitted.request();
-        assert_eq!(submitted.work(), work);
-        assert_eq!(flow.work(work).unwrap().request, Some(request));
-        let mut service_events = Vec::new();
-        for _ in 0..2 {
-            if flow.work_progress(work).unwrap().state == kairo_ecs_des::WorkState::Completed {
-                break;
-            }
-            let dispatch = flow
-                .step()
-                .unwrap()
-                .expect("one of two service events before completion");
-            let lifecycle=dispatch.records.iter().map(|record| json!({"request":{"index":record.request.entity_id().index,"generation":record.request.entity_id().generation},"resource":{"index":record.resource.entity_id().index,"generation":record.resource.entity_id().generation},"work":record.snapshot.work.map(|w|json!({"index":w.entity_id().index,"generation":w.entity_id().generation})),"at":record.at.ticks().to_string(),"state":format!("{:?}",record.state),"transition":format!("{:?}",record.transition),"progress":record.snapshot.progress.as_ref().map(|p|json!({"state":format!("{:?}",p.state),"useful_elapsed":p.useful_elapsed.ticks().to_string(),"remaining":p.remaining.ticks().to_string()}))})).collect::<Vec<_>>();
-            service_events.push(json!({"event":{"index":dispatch.event.index,"generation":dispatch.event.generation},"at":dispatch.at.ticks().to_string(),"lifecycle":lifecycle}));
+        _ => return Err(JournalError::Invalid),
+    };
+    bound
+        .observe_transit_dispatch(&flow, &d0)
+        .map_err(|_| JournalError::Invalid)?;
+    let stale = bound
+        .pending_event_for_checkpoint()
+        .ok_or(JournalError::Invalid)?;
+    ensure(stale == pending_admission)?;
+    let d1 = flow
+        .step()
+        .map_err(|_| JournalError::Invalid)?
+        .ok_or(JournalError::Invalid)?;
+    ensure(d1.event == pause)?;
+    bound
+        .observe_transit_dispatch(&flow, &d1)
+        .map_err(|_| JournalError::Invalid)?;
+    let carrier = bound
+        .carrier_id_for_checkpoint()
+        .ok_or(JournalError::Invalid)?;
+    let context = flow
+        .work_context::<TransitContext>(carrier)
+        .map_err(|_| JournalError::Invalid)?;
+    ensure(context.phase() == TransitPhase::Paused)?;
+    bound
+        .validate_route_context_for_checkpoint(&flow)
+        .map_err(|_| JournalError::Invalid)?;
+    let progress = context
+        .progress_at(flow.now())
+        .map_err(|_| JournalError::Invalid)?;
+    let actual_pending_due = SimTime::from_ticks(context.route_plan().duration().ticks());
+    ensure(actual_pending_due == SimTime::from_ticks(5))?;
+    ensure(context.expects_event(stale, actual_pending_due))?;
+    let budget = flow.budget_snapshot().scheduler;
+    let work = bound.work();
+    let work_spec = flow.work(work).map_err(|_| JournalError::Invalid)?;
+    let work_progress = flow
+        .work_progress(work)
+        .map_err(|_| JournalError::Invalid)?;
+    let resource_id = bound.acquire_intent().resource.entity_id();
+    let resource = flow
+        .resource(bound.acquire_intent().resource)
+        .map_err(|_| JournalError::Invalid)?;
+    let request = match work_spec.request {
+        Some(id) => {
+            let saved = flow.request(id).map_err(|_| JournalError::Invalid)?;
+            json!({"id":{"index":id.entity_id().index,"generation":id.entity_id().generation},"state":format!("{:?}",saved.state),"submitted_at":saved.submitted_at.ticks().to_string()})
         }
-        assert_eq!(
-            flow.work_progress(work).unwrap().state,
-            kairo_ecs_des::WorkState::Completed
-        );
-        assert_eq!(service_events.len(), 2);
-        assert_eq!(
-            service_events
-                .iter()
-                .map(|v| v["at"].as_str().unwrap())
-                .collect::<Vec<_>>(),
-            vec!["7", "27"]
-        );
-        let completed_records = service_events
+        None => Value::Null,
+    };
+    let decision = bound.decision();
+    let owner = work_spec.owner;
+    let front = json!({"now":flow.now().ticks().to_string(),"phase":"Paused","useful_elapsed":progress.useful_elapsed.ticks().to_string(),"remaining":progress.remaining.ticks().to_string(),"pending_progress_due_from_route_plan":actual_pending_due.ticks().to_string(),"resume_at":"3","draw_position":bound.service_draw_position().to_string()});
+    let prefix = json!({"start_event":{"index":start.index,"generation":start.generation},"pause_event":{"index":pause.index,"generation":pause.generation},"resume_event":{"index":resume.index,"generation":resume.generation},"old_progress_event":{"index":stale.index,"generation":stale.generation},"start_progress_admission_event":{"index":pending_admission.index,"generation":pending_admission.generation},"scheduler":{"scheduled":budget.scheduled_events,"dispatched":budget.dispatched_events,"cancelled":budget.cancelled_events,"pending":budget.pending_events},"service_sample_ticks":bound.sampled_duration().ticks().to_string(),"service_draw_probe":bound.next_service_draw_probe_for_checkpoint().to_string(),"route_receipt_sha256":bound.route_receipt_sha_for_checkpoint(&flow).map_err(|_| JournalError::Invalid)?,"carrier_id":{"index":carrier.entity_id().index,"generation":carrier.entity_id().generation},"decision":{"mode":format!("{:?}",decision.mode),"policy_version":decision.policy_version},"owner":{"index":owner.index,"generation":owner.generation},"work":{"id":{"index":work.entity_id().index,"generation":work.entity_id().generation},"state":format!("{:?}",work_progress.state),"useful_elapsed":work_progress.useful_elapsed.ticks().to_string(),"remaining":work_progress.remaining.ticks().to_string(),"context_type":work_spec.context_type_key},"request":request,"resource":{"id":{"index":resource_id.index,"generation":resource_id.generation},"total":resource.total,"available":resource.available,"queued":resource.queued.len(),"active":resource.active.len()},"frontier":front});
+    Ok((flow, adapter, bound, front, prefix, stale))
+}
+
+fn prefix() -> Result<(Value, Value), JournalError> {
+    let (_, _, _, front, prefix, _) = scenario()?;
+    Ok((front, prefix))
+}
+
+pub fn save_demo(path: impl AsRef<Path>) -> Result<(), JournalError> {
+    preflight_destination(path.as_ref())?;
+    let (frontier, prefix) = prefix()?;
+    let artifact = envelope(&executable_sha256()?, frontier, prefix)?;
+    let bytes = canonical(&artifact)?;
+    validate_bytes(&bytes)?;
+    publish_no_replace(path.as_ref(), &bytes)
+}
+
+pub fn restore_demo(path: impl AsRef<Path>) -> Result<String, JournalError> {
+    let raw = read_bounded(path.as_ref())?;
+    let artifact = validate_bytes(&raw)?;
+    let (frontier, prefix) = prefix()?;
+    ensure(artifact["body"]["frontier"] == frontier)?;
+    ensure(artifact["body"]["prefix"] == prefix)?;
+    let trace = run_suffix()?;
+    String::from_utf8(canonical(&trace)?).map_err(|_| JournalError::Invalid)
+}
+
+fn run_suffix() -> Result<Value, JournalError> {
+    let (mut flow, _adapter, mut bound, front, prefix_data, stale) = scenario()?;
+    assert_eq!(front, expected_frontier());
+    let binary = executable_sha256().unwrap();
+    let mut cfg = compiled_config(&binary);
+    cfg["source_executable_sha256"] = json!("BOUND_BY_ENVELOPE_EXECUTABLE_SHA256");
+    let digest_now = digest(
+        &canonical(&json!({"config":cfg,"operations":OPERATIONS,"prefix":prefix_data})).unwrap(),
+    );
+    // The artifact constructor freezes the canonical scenario digest; artifact data never selects runtime inputs.
+    let (expected_front, expected_prefix) = prefix()?;
+    assert_eq!(front, expected_front);
+    assert_eq!(prefix_data, expected_prefix);
+    assert_eq!(digest_now, EXPECTED_PREFIX_SHA256);
+    let mut observations = Vec::new();
+    let mut arrived = false;
+    for _ in 0..3 {
+        if arrived {
+            break;
+        }
+        let dispatch = flow
+            .step()
+            .unwrap()
+            .expect("expected one of three route suffix events");
+        let observation = bound.observe_transit_dispatch(&flow, &dispatch).unwrap();
+        observations.push(json!({"event":{"index":dispatch.event.index,"generation":dispatch.event.generation},"at":dispatch.at.ticks().to_string(),"observation":format!("{observation:?}")}));
+        if dispatch.event == stale {
+            assert_eq!(dispatch.at, SimTime::from_ticks(5));
+            assert_eq!(
+                observation,
+                crate::flow_bridge::TransitObservation::IgnoredStale
+            );
+        }
+        if observation == crate::flow_bridge::TransitObservation::Resumed {
+            assert_eq!(dispatch.at, SimTime::from_ticks(3));
+            assert_eq!(dispatch.event.index, prefix_data["resume_event"]["index"]);
+            assert_eq!(
+                dispatch.event.generation,
+                prefix_data["resume_event"]["generation"]
+            );
+        }
+        if observation == crate::flow_bridge::TransitObservation::Arrived {
+            assert_eq!(dispatch.at, SimTime::from_ticks(7));
+        }
+        arrived = observation == crate::flow_bridge::TransitObservation::Arrived;
+    }
+    assert!(
+        arrived,
+        "route did not arrive within the closed three-event suffix"
+    );
+    assert_eq!(
+        observations
             .iter()
-            .flat_map(|e| e["lifecycle"].as_array().unwrap())
-            .filter(|r| r["transition"] == "Completed")
-            .collect::<Vec<_>>();
-        assert_eq!(completed_records.len(), 1);
-        let completed_record = completed_records[0];
-        assert_eq!(
-            completed_record["request"]["index"],
-            request.entity_id().index
-        );
-        assert_eq!(
-            completed_record["request"]["generation"],
-            request.entity_id().generation
-        );
-        assert_eq!(
-            completed_record["resource"]["index"],
-            submitted.acquire_intent().resource.entity_id().index
-        );
-        assert_eq!(
-            completed_record["resource"]["generation"],
-            submitted.acquire_intent().resource.entity_id().generation
-        );
-        assert_eq!(completed_record["work"]["index"], work.entity_id().index);
-        assert_eq!(
-            completed_record["work"]["generation"],
-            work.entity_id().generation
-        );
-        assert_eq!(completed_record["at"], "27");
-        assert_eq!(completed_record["state"], "Completed");
-        assert_eq!(completed_record["progress"]["state"], "Completed");
-        assert_eq!(completed_record["progress"]["useful_elapsed"], "20");
-        assert_eq!(completed_record["progress"]["remaining"], "0");
-        let final_progress = flow.work_progress(work).unwrap();
-        let final_request = flow.request(request).unwrap();
-        let resource = flow.resource(submitted.acquire_intent().resource).unwrap();
-        assert_eq!(flow.now(), SimTime::from_ticks(27));
-        assert_eq!(final_progress.useful_elapsed.ticks(), 20);
-        assert_eq!(final_progress.remaining.ticks(), 0);
-        assert_eq!(final_request.state, kairo_ecs_des::RequestState::Completed);
-        assert_eq!(resource.available, resource.total);
-        assert!(resource.queued.is_empty());
-        assert!(resource.active.is_empty());
-        json!({"route_suffix":observations,"route_arrival_at":"7","route_phase":route_phase,"route_useful_elapsed":p.useful_elapsed.ticks().to_string(),"route_remaining":p.remaining.ticks().to_string(),"stale_event":{"index":stale.index,"generation":stale.generation},"route_receipt_sha256":receipt_sha,"service_draw_position":service_draw_position.to_string(),"next_service_draw":next_service_draw.to_string(),"service_events":service_events,"service_completion_at":flow.now().ticks().to_string(),"service_work_state":format!("{:?}",final_progress.state),"service_useful_elapsed":final_progress.useful_elapsed.ticks().to_string(),"service_remaining":final_progress.remaining.ticks().to_string(),"request_state":format!("{:?}",final_request.state),"request_id":{"index":request.entity_id().index,"generation":request.entity_id().generation},"resource":{"total":resource.total,"available":resource.available,"queued":resource.queued.len(),"active":resource.active.len()},"scheduler":{"scheduled":flow.budget_snapshot().scheduler.scheduled_events,"dispatched":flow.budget_snapshot().scheduler.dispatched_events,"pending":flow.budget_snapshot().scheduler.pending_events}})
+            .filter(|v| v["observation"] == "IgnoredStale")
+            .count(),
+        1
+    );
+    assert_eq!(
+        observations
+            .iter()
+            .filter(|v| v["observation"] == "Arrived")
+            .count(),
+        1
+    );
+    assert_eq!(
+        observations
+            .iter()
+            .filter(|v| v["observation"] == "Resumed")
+            .count(),
+        1
+    );
+    let carrier = bound.carrier_id_for_checkpoint().unwrap();
+    let context = flow.work_context::<TransitContext>(carrier).unwrap();
+    let p = context.progress_at(flow.now()).unwrap();
+    let route_phase = format!("{:?}", context.phase());
+    assert_eq!(flow.now(), SimTime::from_ticks(7));
+    assert_eq!(p.useful_elapsed.ticks(), 5);
+    assert_eq!(p.remaining.ticks(), 0);
+    assert!(bound.validate_route_context_for_checkpoint(&flow).is_ok());
+    let receipt_sha = bound.route_receipt_sha_for_checkpoint(&flow).unwrap();
+    let service_draw_position = bound.service_draw_position();
+    let next_service_draw = bound.next_service_draw_probe_for_checkpoint();
+    let work = bound.work();
+    let submitted = bound.finish_transit(&flow).unwrap();
+    let request = submitted.request();
+    assert_eq!(submitted.work(), work);
+    assert_eq!(flow.work(work).unwrap().request, Some(request));
+    let mut service_events = Vec::new();
+    for _ in 0..2 {
+        if flow.work_progress(work).unwrap().state == kairo_ecs_des::WorkState::Completed {
+            break;
+        }
+        let dispatch = flow
+            .step()
+            .unwrap()
+            .expect("one of two service events before completion");
+        let lifecycle=dispatch.records.iter().map(|record| json!({"request":{"index":record.request.entity_id().index,"generation":record.request.entity_id().generation},"resource":{"index":record.resource.entity_id().index,"generation":record.resource.entity_id().generation},"work":record.snapshot.work.map(|w|json!({"index":w.entity_id().index,"generation":w.entity_id().generation})),"at":record.at.ticks().to_string(),"state":format!("{:?}",record.state),"transition":format!("{:?}",record.transition),"progress":record.snapshot.progress.as_ref().map(|p|json!({"state":format!("{:?}",p.state),"useful_elapsed":p.useful_elapsed.ticks().to_string(),"remaining":p.remaining.ticks().to_string()}))})).collect::<Vec<_>>();
+        service_events.push(json!({"event":{"index":dispatch.event.index,"generation":dispatch.event.generation},"at":dispatch.at.ticks().to_string(),"lifecycle":lifecycle}));
     }
+    assert_eq!(
+        flow.work_progress(work).unwrap().state,
+        kairo_ecs_des::WorkState::Completed
+    );
+    assert_eq!(service_events.len(), 2);
+    assert_eq!(
+        service_events
+            .iter()
+            .map(|v| v["at"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["7", "27"]
+    );
+    let completed_records = service_events
+        .iter()
+        .flat_map(|e| e["lifecycle"].as_array().unwrap())
+        .filter(|r| r["transition"] == "Completed")
+        .collect::<Vec<_>>();
+    assert_eq!(completed_records.len(), 1);
+    let completed_record = completed_records[0];
+    assert_eq!(
+        completed_record["request"]["index"],
+        request.entity_id().index
+    );
+    assert_eq!(
+        completed_record["request"]["generation"],
+        request.entity_id().generation
+    );
+    assert_eq!(
+        completed_record["resource"]["index"],
+        submitted.acquire_intent().resource.entity_id().index
+    );
+    assert_eq!(
+        completed_record["resource"]["generation"],
+        submitted.acquire_intent().resource.entity_id().generation
+    );
+    assert_eq!(completed_record["work"]["index"], work.entity_id().index);
+    assert_eq!(
+        completed_record["work"]["generation"],
+        work.entity_id().generation
+    );
+    assert_eq!(completed_record["at"], "27");
+    assert_eq!(completed_record["state"], "Completed");
+    assert_eq!(completed_record["progress"]["state"], "Completed");
+    assert_eq!(completed_record["progress"]["useful_elapsed"], "20");
+    assert_eq!(completed_record["progress"]["remaining"], "0");
+    let final_progress = flow.work_progress(work).unwrap();
+    let final_request = flow.request(request).unwrap();
+    let resource = flow.resource(submitted.acquire_intent().resource).unwrap();
+    assert_eq!(flow.now(), SimTime::from_ticks(27));
+    assert_eq!(final_progress.useful_elapsed.ticks(), 20);
+    assert_eq!(final_progress.remaining.ticks(), 0);
+    assert_eq!(final_request.state, kairo_ecs_des::RequestState::Completed);
+    assert_eq!(resource.available, resource.total);
+    assert!(resource.queued.is_empty());
+    assert!(resource.active.is_empty());
+    Ok(
+        json!({"route_suffix":observations,"route_arrival_at":"7","route_phase":route_phase,"route_useful_elapsed":p.useful_elapsed.ticks().to_string(),"route_remaining":p.remaining.ticks().to_string(),"stale_event":{"index":stale.index,"generation":stale.generation},"route_receipt_sha256":receipt_sha,"service_draw_position":service_draw_position.to_string(),"next_service_draw":next_service_draw.to_string(),"service_events":service_events,"service_completion_at":flow.now().ticks().to_string(),"service_work_state":format!("{:?}",final_progress.state),"service_useful_elapsed":final_progress.useful_elapsed.ticks().to_string(),"service_remaining":final_progress.remaining.ticks().to_string(),"request_state":format!("{:?}",final_request.state),"request_id":{"index":request.entity_id().index,"generation":request.entity_id().generation},"resource":{"total":resource.total,"available":resource.available,"queued":resource.queued.len(),"active":resource.active.len()},"scheduler":{"scheduled":flow.budget_snapshot().scheduler.scheduled_events,"dispatched":flow.budget_snapshot().scheduler.dispatched_events,"pending":flow.budget_snapshot().scheduler.pending_events}}),
+    )
+}
 
-    fn write_fixture(path: &Path) -> Result<(), JournalError> {
-        let (front, prefix) = prefix();
-        let value = envelope(&executable_sha256()?, front, prefix)?;
-        publish_no_replace(path, &canonical(&value)?)
-    }
+#[cfg(test)]
+fn write_fixture(path: &Path) -> Result<(), JournalError> {
+    save_demo(path)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
 
     #[test]
     fn checkpoint_rejects_rehashed_mutations_and_never_overwrites() {
-        let (front, prefix) = prefix();
+        assert_eq!(save_demo(Path::new("")), Err(JournalError::Invalid));
+        let (front, prefix) = prefix().unwrap();
         let mut value = envelope(&executable_sha256().unwrap(), front, prefix).unwrap();
         let bytes = canonical(&value).unwrap();
         assert_eq!(validate_bytes(&bytes), Ok(value.clone()));
@@ -639,11 +763,14 @@ mod tests {
         let target = dir.join("checkpoint.json");
         let original = b"preexisting sentinel bytes";
         fs::write(&target, original).unwrap();
-        assert_eq!(
-            publish_no_replace(&target, &bytes),
-            Err(JournalError::Exists)
-        );
+        assert_eq!(save_demo(&target), Err(JournalError::Exists));
         assert_eq!(fs::read(&target).unwrap(), original);
+        let missing_parent = dir.join("missing-parent");
+        assert_eq!(
+            save_demo(missing_parent.join("checkpoint.json")),
+            Err(JournalError::Io)
+        );
+        assert!(!missing_parent.exists());
         fs::remove_dir_all(dir).unwrap();
         value.as_object_mut().unwrap();
     }
@@ -667,6 +794,7 @@ mod tests {
         let oversized_file = fs::File::create(&oversized).unwrap();
         oversized_file.set_len(LIMIT + 1).unwrap();
         assert_eq!(read_bounded(&oversized), Err(JournalError::TooLarge));
+        assert_eq!(restore_demo(&oversized), Err(JournalError::TooLarge));
         let target = dir.join("target.json");
         fs::write(&target, b"{}").unwrap();
         #[cfg(unix)]
@@ -674,10 +802,20 @@ mod tests {
             let link = dir.join("link.json");
             std::os::unix::fs::symlink(&target, &link).unwrap();
             assert_eq!(read_bounded(&link), Err(JournalError::Invalid));
+            assert_eq!(restore_demo(&link), Err(JournalError::Invalid));
+            let linked_parent = dir.join("linked-parent");
+            std::os::unix::fs::symlink(&dir, &linked_parent).unwrap();
+            assert_eq!(
+                restore_demo(linked_parent.join("target.json")),
+                Err(JournalError::Invalid)
+            );
+            assert_eq!(
+                save_demo(linked_parent.join("new-checkpoint.json")),
+                Err(JournalError::Invalid)
+            );
         }
         assert_eq!(read_bounded(&dir), Err(JournalError::Invalid));
-        fs::remove_dir_all(dir).unwrap();
-        let (front, prefix) = prefix();
+        let (front, prefix) = prefix().unwrap();
         let mut value = envelope(&executable_sha256().unwrap(), front, prefix).unwrap();
         let raw = canonical(&value).unwrap();
         assert_eq!(validate_bytes(&raw), Ok(value.clone()));
@@ -715,14 +853,41 @@ mod tests {
                 Err(JournalError::Invalid)
             );
         }
+        let bad_path = dir.join("bad-schema.json");
+        let mut bad_schema = value.clone();
+        bad_schema["body"]["schema"] = json!("unknown-schema");
+        let bad_body = bad_schema["body"].as_object().unwrap().clone();
+        bad_schema["integrity_sha256"] =
+            json!(digest(&canonical(&Value::Object(bad_body)).unwrap()));
+        fs::write(&bad_path, canonical(&bad_schema).unwrap()).unwrap();
+        assert_eq!(restore_demo(&bad_path), Err(JournalError::Invalid));
+        let wrong_source = dir.join("wrong-source.json");
+        let mut source_mismatch = value.clone();
+        source_mismatch["body"]["config"]["source_executable_sha256"] = json!("00");
+        let source_body = source_mismatch["body"].as_object().unwrap().clone();
+        source_mismatch["integrity_sha256"] =
+            json!(digest(&canonical(&Value::Object(source_body)).unwrap()));
+        fs::write(&wrong_source, canonical(&source_mismatch).unwrap()).unwrap();
+        assert_eq!(restore_demo(&wrong_source), Err(JournalError::Invalid));
+        let malformed = dir.join("malformed.json");
+        fs::write(&malformed, b"{").unwrap();
+        assert_eq!(restore_demo(&malformed), Err(JournalError::Invalid));
         value.as_object_mut().unwrap();
+        fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn fresh_process_replay_matches_uninterrupted_suffix() {
         let artifact = captured_artifact_path();
         write_fixture(&artifact).unwrap();
-        let expected = run_suffix();
+        let first_restore = restore_demo(&artifact).unwrap();
+        let second_restore = restore_demo(&artifact).unwrap();
+        assert_eq!(first_restore, second_restore);
+        let expected = run_suffix().unwrap();
+        assert_eq!(
+            first_restore,
+            String::from_utf8(canonical(&expected).unwrap()).unwrap()
+        );
         let output = std::process::Command::new(std::env::current_exe().unwrap())
             .args([
                 "--exact",
@@ -743,10 +908,7 @@ mod tests {
             .lines()
             .find_map(|line| line.strip_prefix(marker))
             .expect("child trace");
-        assert_eq!(
-            actual,
-            String::from_utf8(canonical(&expected).unwrap()).unwrap()
-        );
+        assert_eq!(actual, first_restore);
     }
 
     #[test]
@@ -757,10 +919,7 @@ mod tests {
         let value = validate_bytes(&read_bounded(Path::new(&path)).unwrap()).unwrap();
         assert_eq!(value["body"]["schema"], SCHEMA);
         assert_eq!(value["body"]["frontier"], expected_frontier());
-        let trace = run_suffix();
-        println!(
-            "C2_REPLAY_TRACE:{}",
-            String::from_utf8(canonical(&trace).unwrap()).unwrap()
-        );
+        let trace = restore_demo(&path).unwrap();
+        println!("C2_REPLAY_TRACE:{trace}");
     }
 }

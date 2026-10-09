@@ -524,7 +524,6 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
         &self.acquire
     }
 
-    #[cfg(test)]
     pub(crate) fn next_service_draw_probe_for_checkpoint(&self) -> u64 {
         self.service_stream
             .snapshot()
@@ -534,17 +533,14 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
             .expect("draw probe")
     }
 
-    #[cfg(test)]
     pub(crate) fn pending_event_for_checkpoint(&self) -> Option<EventId> {
         self.pending_event
     }
 
-    #[cfg(test)]
     pub(crate) fn carrier_id_for_checkpoint(&self) -> Option<WorkId> {
         self.carrier
     }
 
-    #[cfg(test)]
     pub(crate) fn route_receipt_sha_for_checkpoint(
         &self,
         flow: &FlowRuntime,
@@ -557,7 +553,6 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
             .ok_or(BridgeError::InvalidDispatch)
     }
 
-    #[cfg(test)]
     pub(crate) fn validate_route_context_for_checkpoint(
         &self,
         flow: &FlowRuntime,

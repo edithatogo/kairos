@@ -2,13 +2,6 @@
 #![forbid(unsafe_code)]
 
 #[cfg(feature = "flow")]
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "Private C2 receipt is exercised by focused tests; Track21 integration remains open"
-    )
-)]
 mod route_receipt;
 pub mod seed_map;
 #[cfg_attr(
@@ -37,6 +30,8 @@ mod work_duration;
 // Experimental adapter for actual Flow work; it remains crate-private while
 // C2.2 transit, checkpoint and public-API joins are unfinished.
 #[cfg(feature = "flow")]
+mod c2_checkpoint_journal;
+#[cfg(feature = "flow")]
 #[cfg_attr(
     not(test),
     expect(
@@ -45,8 +40,12 @@ mod work_duration;
     )
 )]
 mod flow_bridge;
-#[cfg(all(feature = "flow", test))]
-mod c2_checkpoint_journal;
+
+#[cfg(feature = "flow")]
+#[doc(hidden)]
+pub mod experimental_c2_replay {
+    pub use crate::c2_checkpoint_journal::{restore_demo, save_demo, JournalError};
+}
 
 // Private C4.2 numeric implementation; no public API or sidecar promises.
 #[expect(
