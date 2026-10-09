@@ -11,6 +11,8 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use thiserror::Error;
 
+mod checkpoint_wire;
+
 pub(crate) const INTRINSIC_WORK_PROVIDER_VERSION_V1: u32 = 1;
 
 #[derive(Clone)]

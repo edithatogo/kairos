@@ -4,6 +4,8 @@
 //! registry. It does not change the Kairos engine RNG or claim that 64-bit
 //! derived seeds are globally collision-free.
 
+pub(crate) mod checkpoint_wire;
+
 use kairo_ecs_rng::DeterministicStream;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;

@@ -2,15 +2,19 @@
 //!
 //! Execution fidelity is independent of observed replay policy. This adapter
 //! neither changes work/resources nor samples service/transit randomness. The
-//! public Rust surface is a preview, not a stable API or a portable checkpoint
-//! contract. Bindings and policy-boundary checks cover only work admitted through
-//! this adapter. Decision lookups are adapter-local; unknown or despawned work
-//! fails closed, and admission permits cannot be cloned or serialized.
+//! public Rust surface is a preview, not a stable API. Its versioned checkpoint
+//! DTO and bounded wire transport are experimental. Bindings and policy-boundary
+//! checks cover only work admitted through this adapter. Decision lookups are
+//! adapter-local; unknown or despawned work fails closed, and admission permits
+//! cannot be cloned or serialized.
 
 use super::{FlowRuntime, FlowRuntimeIdentity, WorkId, WorkState};
 use kairo_ecs_types::EntityId;
 use std::collections::BTreeMap;
 use thiserror::Error;
+
+mod checkpoint_wire;
+pub use checkpoint_wire::{FidelityCheckpointWireError, FidelityCheckpointWireLimits};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum FidelityMode {
@@ -334,7 +338,7 @@ fn live_policy_limits(
     Ok(())
 }
 
-/// Live in-process decisions; no portable checkpoint/serialization promise.
+/// Live in-process decisions with an experimental versioned checkpoint surface.
 ///
 /// Keeping all bindings here prevents a caller from omitting active/suspended
 /// work when requesting the global policy boundary. Unknown/despawned bindings
