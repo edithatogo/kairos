@@ -83,10 +83,13 @@ def main() -> int:
     flow_feature = "flow" in manifest.get("features", {})
     flow_dependency = "kairo-ecs-des" in manifest.get("dependencies", {})
     abm_dependency = "kairo-ecs-abm" in manifest.get("dependencies", {})
+    abm_manifest = tomllib.loads((DISPOSABLE / "crates/kairo-ecs-abm/Cargo.toml").read_text())
+    abm_test_support = "test-support" in abm_manifest.get("features", {})
     ready = (
         flow_feature
         and flow_dependency
         and abm_dependency
+        and abm_test_support
         and all(files_present.values())
         and all(declarations.values())
     )
@@ -127,7 +130,15 @@ def main() -> int:
 
     argv = ["cargo", "test", "--locked", "-p", "kairo-ecs-calibration", "--lib"]
     if ready:
-        argv.extend(["--features", "flow"])
+        argv.extend(
+            [
+                "--features",
+                "flow,kairo-ecs-abm/test-support",
+                "--",
+                "--exact",
+                f"paired_flow_c20::{TEST_MODULE}",
+            ]
+        )
     proc = command(argv, cwd=DISPOSABLE, env=env)
     raw_log = proc.stdout.encode()
     (LOGS / "cargo-test.log").write_bytes(raw_log)
@@ -162,7 +173,7 @@ def main() -> int:
         and proc.returncode == 0
         and re.search(rf"(?m)^test paired_flow_c20::{re.escape(TEST_MODULE)} \.\.\. ok$", proc.stdout)
         and re.search(
-            r"(?m)^test result: ok\. \d+ passed; 0 failed; 0 ignored; 0 measured; 0 filtered out;",
+            r"(?m)^test result: ok\. 1 passed; 0 failed; 0 ignored; 0 measured; \d+ filtered out;",
             proc.stdout,
         )
     )
@@ -206,6 +217,7 @@ def main() -> int:
             "flow_feature_present": flow_feature,
             "des_dependency_present": flow_dependency,
             "abm_dependency_present": abm_dependency,
+            "abm_test_support_feature_present": abm_test_support,
             "archive_hashes": {
                 "lib_before_overlay": sha256(lib_before),
                 "manifest_before_overlay": sha256(manifest_before),

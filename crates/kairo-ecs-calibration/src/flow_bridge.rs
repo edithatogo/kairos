@@ -498,6 +498,12 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
         self.work
     }
 
+    // The disposable C20 runner overlays the paired fixture that reads this sample.
+    #[allow(dead_code)]
+    pub(crate) fn sampled_duration(&self) -> SimDuration {
+        self.sample.duration()
+    }
+
     pub(crate) fn draw_position(&self) -> u64 {
         self.service_stream.draw_position()
     }
