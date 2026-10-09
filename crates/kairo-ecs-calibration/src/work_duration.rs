@@ -30,6 +30,51 @@ pub(crate) struct IntrinsicWorkProvider {
     strata: HashMap<String, IntrinsicDurationDistribution>,
 }
 
+/// Owned, crate-private representation used only by the experimental flow
+/// checkpoint assembly. Stratum order is canonical; weighted support order is
+/// intentionally retained because it participates in seeded selection.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct IntrinsicWorkProviderCheckpointV1 {
+    version: u32,
+    strata: Vec<ProviderStratumCheckpointV1>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct ProviderStratumCheckpointV1 {
+    id: String,
+    distribution: ProviderDistributionCheckpointV1,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+enum ProviderDistributionCheckpointV1 {
+    FixedTicks(u128),
+    WeightedTicks {
+        support: Vec<(u128, u64)>,
+        cached_total: u64,
+    },
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) struct IntrinsicWorkProviderCheckpointLimits {
+    pub(crate) max_strata: usize,
+    pub(crate) max_total_support: usize,
+    pub(crate) max_identifier_bytes: usize,
+}
+
+#[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
+pub(crate) enum IntrinsicWorkProviderCheckpointError {
+    #[error("unsupported provider checkpoint version")]
+    UnsupportedVersion,
+    #[error("provider checkpoint is empty or exceeds a configured limit")]
+    LimitExceeded,
+    #[error("provider checkpoint has invalid identifiers or ordering")]
+    InvalidIdentifierOrOrder,
+    #[error("provider checkpoint contains invalid distribution data")]
+    InvalidDistribution,
+    #[error("provider checkpoint allocation failed")]
+    Allocation,
+}
+
 #[derive(Debug, Eq, PartialEq)]
 pub(crate) struct SampledWorkDuration {
     duration: SimDuration,
@@ -191,6 +236,180 @@ impl IntrinsicWorkProvider {
             .ok_or(WorkDurationError::MissingStratum)?;
         distribution.sample(stream, expected)
     }
+
+    pub(crate) fn checkpoint_v1(
+        &self,
+        limits: IntrinsicWorkProviderCheckpointLimits,
+    ) -> Result<IntrinsicWorkProviderCheckpointV1, IntrinsicWorkProviderCheckpointError> {
+        // Complete aggregate preflight before sorting, hashing, or cloning any
+        // identifier/support data into the checkpoint.
+        let mut support_count = 0usize;
+        let mut identifier_bytes = 0usize;
+        for (id, distribution) in &self.strata {
+            identifier_bytes = identifier_bytes
+                .checked_add(id.len())
+                .ok_or(IntrinsicWorkProviderCheckpointError::LimitExceeded)?;
+            if let Distribution::Weighted { support, .. } = &distribution.distribution {
+                support_count = support_count
+                    .checked_add(support.len())
+                    .ok_or(IntrinsicWorkProviderCheckpointError::LimitExceeded)?;
+            }
+        }
+        if self.strata.is_empty()
+            || self.strata.len() > limits.max_strata
+            || support_count > limits.max_total_support
+            || identifier_bytes > limits.max_identifier_bytes
+        {
+            return Err(IntrinsicWorkProviderCheckpointError::LimitExceeded);
+        }
+
+        let mut keys = Vec::new();
+        keys.try_reserve_exact(self.strata.len())
+            .map_err(|_| IntrinsicWorkProviderCheckpointError::Allocation)?;
+        keys.extend(self.strata.keys());
+        keys.sort_unstable();
+        let mut strata = Vec::new();
+        strata
+            .try_reserve_exact(keys.len())
+            .map_err(|_| IntrinsicWorkProviderCheckpointError::Allocation)?;
+        for id in keys {
+            validate_id("stratum_id", id)
+                .map_err(|_| IntrinsicWorkProviderCheckpointError::InvalidIdentifierOrOrder)?;
+            let distribution = &self.strata[id].distribution;
+            let checkpoint_distribution = match distribution {
+                Distribution::Fixed(ticks) => {
+                    if *ticks == 0 {
+                        return Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution);
+                    }
+                    ProviderDistributionCheckpointV1::FixedTicks(*ticks)
+                }
+                Distribution::Weighted { support, total } => {
+                    validate_support(support, Some(*total))?;
+                    let mut copied = Vec::new();
+                    copied
+                        .try_reserve_exact(support.len())
+                        .map_err(|_| IntrinsicWorkProviderCheckpointError::Allocation)?;
+                    copied.extend_from_slice(support);
+                    ProviderDistributionCheckpointV1::WeightedTicks {
+                        support: copied,
+                        cached_total: *total,
+                    }
+                }
+            };
+            strata.push(ProviderStratumCheckpointV1 {
+                id: id.clone(),
+                distribution: checkpoint_distribution,
+            });
+        }
+        Ok(IntrinsicWorkProviderCheckpointV1 {
+            version: INTRINSIC_WORK_PROVIDER_VERSION_V1,
+            strata,
+        })
+    }
+}
+
+impl IntrinsicWorkProviderCheckpointV1 {
+    pub(crate) fn restore(
+        self,
+        limits: IntrinsicWorkProviderCheckpointLimits,
+    ) -> Result<IntrinsicWorkProvider, IntrinsicWorkProviderCheckpointError> {
+        if self.version != INTRINSIC_WORK_PROVIDER_VERSION_V1 {
+            return Err(IntrinsicWorkProviderCheckpointError::UnsupportedVersion);
+        }
+        let mut support_count = 0usize;
+        let mut identifier_bytes = 0usize;
+        for stratum in &self.strata {
+            identifier_bytes = identifier_bytes
+                .checked_add(stratum.id.len())
+                .ok_or(IntrinsicWorkProviderCheckpointError::LimitExceeded)?;
+            if let ProviderDistributionCheckpointV1::WeightedTicks { support, .. } =
+                &stratum.distribution
+            {
+                support_count = support_count
+                    .checked_add(support.len())
+                    .ok_or(IntrinsicWorkProviderCheckpointError::LimitExceeded)?;
+            }
+        }
+        if self.strata.is_empty()
+            || self.strata.len() > limits.max_strata
+            || support_count > limits.max_total_support
+            || identifier_bytes > limits.max_identifier_bytes
+        {
+            return Err(IntrinsicWorkProviderCheckpointError::LimitExceeded);
+        }
+        // After aggregate caps, linear uniqueness and canonical-order checks
+        // avoid attacker-sized hash table construction and reject aliases.
+        for (index, stratum) in self.strata.iter().enumerate() {
+            validate_id("stratum_id", &stratum.id)
+                .map_err(|_| IntrinsicWorkProviderCheckpointError::InvalidIdentifierOrOrder)?;
+            if index > 0 && self.strata[index - 1].id >= stratum.id {
+                return Err(IntrinsicWorkProviderCheckpointError::InvalidIdentifierOrOrder);
+            }
+            if let ProviderDistributionCheckpointV1::WeightedTicks {
+                support,
+                cached_total,
+            } = &stratum.distribution
+            {
+                validate_support(support, Some(*cached_total))?;
+            }
+        }
+        let mut entries = Vec::new();
+        entries
+            .try_reserve_exact(self.strata.len())
+            .map_err(|_| IntrinsicWorkProviderCheckpointError::Allocation)?;
+        for stratum in self.strata {
+            let distribution = match stratum.distribution {
+                ProviderDistributionCheckpointV1::FixedTicks(ticks) if ticks > 0 => {
+                    IntrinsicDurationDistribution {
+                        distribution: Distribution::Fixed(ticks),
+                    }
+                }
+                ProviderDistributionCheckpointV1::FixedTicks(_) => {
+                    return Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution)
+                }
+                ProviderDistributionCheckpointV1::WeightedTicks {
+                    support,
+                    cached_total,
+                } => IntrinsicDurationDistribution {
+                    distribution: Distribution::Weighted {
+                        support,
+                        total: cached_total,
+                    },
+                },
+            };
+            entries.push((stratum.id, distribution));
+        }
+        IntrinsicWorkProvider::new(INTRINSIC_WORK_PROVIDER_VERSION_V1, entries)
+            .map_err(|_| IntrinsicWorkProviderCheckpointError::InvalidDistribution)
+    }
+}
+
+fn validate_support(
+    support: &[(u128, u64)],
+    cached_total: Option<u64>,
+) -> Result<(), IntrinsicWorkProviderCheckpointError> {
+    if support.is_empty() {
+        return Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution);
+    }
+    let mut seen = HashSet::new();
+    seen.try_reserve(support.len())
+        .map_err(|_| IntrinsicWorkProviderCheckpointError::Allocation)?;
+    let mut total = 0u64;
+    for &(ticks, weight) in support {
+        if ticks == 0 || weight == 0 {
+            return Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution);
+        }
+        if !seen.insert(ticks) {
+            return Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution);
+        }
+        total = total
+            .checked_add(weight)
+            .ok_or(IntrinsicWorkProviderCheckpointError::InvalidDistribution)?;
+    }
+    if total == 0 || cached_total.is_some_and(|cached| cached != total) {
+        return Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution);
+    }
+    Ok(())
 }
 
 impl SampledWorkDuration {
@@ -556,5 +775,182 @@ mod tests {
         );
         assert_eq!(other.next_u64().unwrap(), other_control.next_u64().unwrap());
         assert_eq!(service.draw_position(), 0);
+    }
+
+    fn checkpoint_limits() -> IntrinsicWorkProviderCheckpointLimits {
+        IntrinsicWorkProviderCheckpointLimits {
+            max_strata: 8,
+            max_total_support: 32,
+            max_identifier_bytes: 128,
+        }
+    }
+
+    fn mixed_provider() -> IntrinsicWorkProvider {
+        IntrinsicWorkProvider::new(
+            INTRINSIC_WORK_PROVIDER_VERSION_V1,
+            vec![
+                (
+                    "z-fixed".into(),
+                    IntrinsicDurationDistribution::fixed(11).unwrap(),
+                ),
+                (
+                    "a-weighted".into(),
+                    IntrinsicDurationDistribution::weighted_ticks(vec![(31, 2), (17, 5), (23, 1)])
+                        .unwrap(),
+                ),
+            ],
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn checkpoint_restores_canonical_strata_and_exact_draw_behavior() {
+        let provider = mixed_provider();
+        let image = provider.checkpoint_v1(checkpoint_limits()).unwrap();
+        assert_eq!(image.strata[0].id, "a-weighted");
+        assert_eq!(image.strata[1].id, "z-fixed");
+        let restored = image.restore(checkpoint_limits()).unwrap();
+        for stratum in ["a-weighted", "z-fixed", "a-weighted", "z-fixed"] {
+            let (key1, mut stream1) = canonical_service_stream();
+            let (key2, mut stream2) = canonical_service_stream();
+            let original = provider.sample(stratum, &mut stream1, &key1).unwrap();
+            let replay = restored.sample(stratum, &mut stream2, &key2).unwrap();
+            assert_eq!(original.duration(), replay.duration());
+            assert_eq!(original.draw_before(), replay.draw_before());
+            assert_eq!(original.draw_after(), replay.draw_after());
+            assert_eq!(stream1.draw_position(), stream2.draw_position());
+            assert_eq!(stream1.next_u64().unwrap(), stream2.next_u64().unwrap());
+        }
+    }
+
+    #[test]
+    fn checkpoint_rejects_version_order_duplicates_and_invalid_distributions() {
+        let image = mixed_provider().checkpoint_v1(checkpoint_limits()).unwrap();
+        let mut bad = image.clone();
+        bad.version = 99;
+        assert!(matches!(
+            bad.restore(checkpoint_limits()),
+            Err(IntrinsicWorkProviderCheckpointError::UnsupportedVersion)
+        ));
+
+        let mut bad = image.clone();
+        bad.strata.swap(0, 1);
+        assert!(matches!(
+            bad.restore(checkpoint_limits()),
+            Err(IntrinsicWorkProviderCheckpointError::InvalidIdentifierOrOrder)
+        ));
+
+        let mut bad = image.clone();
+        bad.strata[1].id = bad.strata[0].id.clone();
+        assert!(matches!(
+            bad.restore(checkpoint_limits()),
+            Err(IntrinsicWorkProviderCheckpointError::InvalidIdentifierOrOrder)
+        ));
+
+        let mut bad = image.clone();
+        if let ProviderDistributionCheckpointV1::WeightedTicks { cached_total, .. } =
+            &mut bad.strata[0].distribution
+        {
+            *cached_total += 1;
+        }
+        assert!(matches!(
+            bad.restore(checkpoint_limits()),
+            Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution)
+        ));
+
+        let mut bad = image.clone();
+        if let ProviderDistributionCheckpointV1::WeightedTicks { support, .. } =
+            &mut bad.strata[0].distribution
+        {
+            support.push(support[0]);
+        }
+        assert!(matches!(
+            bad.restore(checkpoint_limits()),
+            Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution)
+        ));
+
+        let mut bad = image.clone();
+        bad.strata[1].id.clear();
+        assert!(matches!(
+            bad.restore(checkpoint_limits()),
+            Err(IntrinsicWorkProviderCheckpointError::InvalidIdentifierOrOrder)
+        ));
+
+        let mut bad = image.clone();
+        if let ProviderDistributionCheckpointV1::WeightedTicks {
+            support,
+            cached_total,
+        } = &mut bad.strata[0].distribution
+        {
+            support[0].0 = 0;
+            *cached_total -= support[0].1;
+        }
+        assert!(matches!(
+            bad.restore(checkpoint_limits()),
+            Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution)
+        ));
+
+        let mut bad = image.clone();
+        if let ProviderDistributionCheckpointV1::WeightedTicks {
+            support,
+            cached_total,
+        } = &mut bad.strata[0].distribution
+        {
+            support.clear();
+            *cached_total = 0;
+        }
+        assert!(matches!(
+            bad.restore(checkpoint_limits()),
+            Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution)
+        ));
+
+        let mut bad = image;
+        if let ProviderDistributionCheckpointV1::WeightedTicks {
+            support,
+            cached_total,
+        } = &mut bad.strata[0].distribution
+        {
+            support.clear();
+            support.extend([(1, u64::MAX), (2, 1)]);
+            *cached_total = u64::MAX;
+        }
+        assert!(matches!(
+            bad.restore(checkpoint_limits()),
+            Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution)
+        ));
+    }
+
+    #[test]
+    fn checkpoint_aggregate_limits_apply_before_restore_and_capture() {
+        let provider = mixed_provider();
+        let too_few_strata = IntrinsicWorkProviderCheckpointLimits {
+            max_strata: 1,
+            ..checkpoint_limits()
+        };
+        assert_eq!(
+            provider.checkpoint_v1(too_few_strata),
+            Err(IntrinsicWorkProviderCheckpointError::LimitExceeded)
+        );
+        let image = provider.checkpoint_v1(checkpoint_limits()).unwrap();
+        assert!(matches!(
+            image.clone().restore(too_few_strata),
+            Err(IntrinsicWorkProviderCheckpointError::LimitExceeded)
+        ));
+        let too_little_support = IntrinsicWorkProviderCheckpointLimits {
+            max_total_support: 2,
+            ..checkpoint_limits()
+        };
+        assert_eq!(
+            provider.checkpoint_v1(too_little_support),
+            Err(IntrinsicWorkProviderCheckpointError::LimitExceeded)
+        );
+        let too_few_identifier_bytes = IntrinsicWorkProviderCheckpointLimits {
+            max_identifier_bytes: 2,
+            ..checkpoint_limits()
+        };
+        assert_eq!(
+            provider.checkpoint_v1(too_few_identifier_bytes),
+            Err(IntrinsicWorkProviderCheckpointError::LimitExceeded)
+        );
     }
 }

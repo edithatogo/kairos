@@ -8,6 +8,8 @@ use kairo_ecs_types::EntityId;
 
 #[doc(hidden)]
 pub mod checkpoint;
+#[doc(hidden)]
+pub mod component_checkpoint;
 
 /// Deterministic snapshot of one live entity.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -384,6 +386,12 @@ impl ComponentRegistry {
 
     pub fn get<T: 'static>(&self, entity: EntityId) -> Option<&T> {
         self.store::<T>()?.get(entity)
+    }
+
+    /// Return the process-local types for which this registry owns stores.
+    #[doc(hidden)]
+    pub fn registered_types(&self) -> Vec<TypeId> {
+        self.stores.keys().copied().collect()
     }
 }
 
