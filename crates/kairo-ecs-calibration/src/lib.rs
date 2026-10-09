@@ -45,6 +45,8 @@ mod work_duration;
     )
 )]
 mod flow_bridge;
+#[cfg(all(feature = "flow", test))]
+mod c2_checkpoint_journal;
 
 // Private C4.2 numeric implementation; no public API or sidecar promises.
 #[expect(

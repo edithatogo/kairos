@@ -524,6 +524,50 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
         &self.acquire
     }
 
+    #[cfg(test)]
+    pub(crate) fn next_service_draw_probe_for_checkpoint(&self) -> u64 {
+        self.service_stream
+            .snapshot()
+            .restore_for(&self.expected_service_key)
+            .expect("owned snapshot identity")
+            .next_u64()
+            .expect("draw probe")
+    }
+
+    #[cfg(test)]
+    pub(crate) fn pending_event_for_checkpoint(&self) -> Option<EventId> {
+        self.pending_event
+    }
+
+    #[cfg(test)]
+    pub(crate) fn carrier_id_for_checkpoint(&self) -> Option<WorkId> {
+        self.carrier
+    }
+
+    #[cfg(test)]
+    pub(crate) fn route_receipt_sha_for_checkpoint(
+        &self,
+        flow: &FlowRuntime,
+    ) -> Result<String, BridgeError> {
+        let carrier = self.carrier.ok_or(BridgeError::InvalidDispatch)?;
+        self.validate_route_context(flow, carrier)?;
+        self.route_receipt
+            .as_ref()
+            .map(|receipt| receipt.checkpoint_sha256_hex())
+            .ok_or(BridgeError::InvalidDispatch)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn validate_route_context_for_checkpoint(
+        &self,
+        flow: &FlowRuntime,
+    ) -> Result<(), BridgeError> {
+        match self.carrier {
+            Some(carrier) => self.validate_route_context(flow, carrier),
+            None => Err(BridgeError::InvalidDispatch),
+        }
+    }
+
     pub(crate) fn start_transit(&mut self, flow: &mut FlowRuntime) -> Result<EventId, BridgeError> {
         if let Some(metadata) = &self.route_metadata {
             metadata.validate().map_err(BridgeError::RouteReceipt)?;

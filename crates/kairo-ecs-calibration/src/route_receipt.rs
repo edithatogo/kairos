@@ -115,6 +115,11 @@ impl RouteReceipt {
     fn digest(&self) -> &[u8; 32] {
         &self.sha256
     }
+
+    #[cfg(test)]
+    pub(crate) fn checkpoint_sha256_hex(&self) -> String {
+        self.sha256.iter().map(|b| format!("{b:02x}")).collect()
+    }
 }
 
 fn validate_purpose(purpose: &str) -> Result<(), RouteReceiptError> {
