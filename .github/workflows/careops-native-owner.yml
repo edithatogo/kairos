@@ -79,25 +79,83 @@ jobs:
           task_bin="$(dirname "$task_rustc")"
           export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
           cargo test --locked -p kairo-ecs-core -p kairo-ecs-types -p kairo-ecs-state -p kairo-ecs-rng -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-arrow -p kairo-ecs-calibration 2>&1 | tee .artifacts/ci/native/owner.log
-      - name: Test optional calibration package floor
+      - name: Test calibration and resource lifecycle on current Rust 1.99.0
         env:
           EXPECTED_OS: ${{ matrix.os }}
         run: |
-          set -o pipefail
-          rustup toolchain install 1.88.0 --profile minimal 2>&1 | tee .artifacts/ci/native/calibration-install.log
-          task_rustc="$(rustup which --toolchain 1.88.0 rustc)"
-          task_bin="$(dirname "$task_rustc")"
-          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
-          rustc -vV | tee .artifacts/ci/native/calibration-floor.log
-          grep -Fx 'release: 1.88.0' .artifacts/ci/native/calibration-floor.log
+          set -euo pipefail
+          rustup run 1.99.0 rustc -vV | tee .artifacts/ci/native/calibration-current.log
+          grep -Fx 'release: 1.99.0' .artifacts/ci/native/calibration-current.log
           if [ "$EXPECTED_OS" = macos-15 ]; then
-            grep -Fx 'host: aarch64-apple-darwin' .artifacts/ci/native/calibration-floor.log
+            grep -Fx 'host: aarch64-apple-darwin' .artifacts/ci/native/calibration-current.log
           else
-            grep -Fx 'host: x86_64-unknown-linux-gnu' .artifacts/ci/native/calibration-floor.log
+            grep -Fx 'host: x86_64-unknown-linux-gnu' .artifacts/ci/native/calibration-current.log
           fi
-          cargo test --locked -p kairo-ecs-calibration 2>&1 | tee -a .artifacts/ci/native/calibration-floor.log
-          rustc -vV | tee .artifacts/ci/native/resource-lifecycle-floor.log
-          cargo test --locked -p kairo-ecs-arrow --features resource-lifecycle-io 2>&1 | tee -a .artifacts/ci/native/resource-lifecycle-floor.log
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-calibration 2>&1 | tee -a .artifacts/ci/native/calibration-current.log
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-arrow --features resource-lifecycle-io 2>&1 | tee .artifacts/ci/native/resource-lifecycle-current.log
+      - name: C2 save, restore, repeat, and sentinel verification on Rust 1.99.0
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          set -euo pipefail
+          log_dir=".artifacts/c2-native-ci/${EXPECTED_OS}"
+          mkdir -p "$log_dir"
+          exclude_file="$(git rev-parse --git-path info/exclude)"
+          mkdir -p "$(dirname "$exclude_file")"
+          touch "$exclude_file"
+          for pattern in '/.artifacts/c2-native-ci/' '/.artifacts/c2-replay-demo/'; do
+            if ! grep -Fxq "$pattern" "$exclude_file"; then
+              printf '%s\n' "$pattern" >> "$exclude_file"
+            fi
+          done
+          git rev-parse HEAD | tee "$log_dir/source.log"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
+          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
+          "$task_cargo" -V | tee -a "$log_dir/source.log"
+          "$task_rustc" -vV | tee -a "$log_dir/source.log"
+          grep -Fx 'release: 1.99.0' "$log_dir/source.log"
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            grep -Fx 'host: aarch64-apple-darwin' "$log_dir/source.log"
+          else
+            grep -Fx 'host: x86_64-unknown-linux-gnu' "$log_dir/source.log"
+          fi
+          export CARGO_TARGET_DIR="$RUNNER_TEMP/c2-native-ci-target"
+          rustup run 1.99.0 cargo test --locked -p kairo-ecs-des -p kairo-ecs-abm -p kairo-ecs-calibration --features kairo-ecs-calibration/flow,kairo-ecs-abm/test-support -- --nocapture 2>&1 | tee "$log_dir/flow-tests.log"
+          "$task_cargo" build --locked -p kairo-ecs-calibration --features flow,kairo-ecs-abm/test-support --example c2_replay_demo 2>&1 | tee "$log_dir/example-build.log"
+          binary="$CARGO_TARGET_DIR/debug/examples/c2_replay_demo"
+          test -x "$binary"
+          shasum -a 256 "$binary" | tee "$log_dir/example-binary.sha256"
+          checkpoint="$log_dir/checkpoint.json"
+          test ! -e "$checkpoint"
+          "$binary" save "$checkpoint" 2>&1 | tee "$log_dir/save.log"
+          shasum -a 256 "$checkpoint" | tee "$log_dir/checkpoint.sha256"
+          "$binary" restore "$checkpoint" > "$log_dir/restore-first.json" 2> "$log_dir/restore-first.log"
+          "$binary" restore "$checkpoint" > "$log_dir/restore-second.json" 2> "$log_dir/restore-second.log"
+          cmp "$log_dir/restore-first.json" "$log_dir/restore-second.json"
+          printf '%s\n' 'repeat_restore_output=identical' | tee "$log_dir/repeat-check.log"
+          sentinel="$log_dir/preexisting-checkpoint.json"
+          expected="$log_dir/preexisting-checkpoint.expected"
+          printf '%s\n' 'preexisting sentinel bytes' > "$sentinel"
+          cp "$sentinel" "$expected"
+          if "$binary" save "$sentinel" > "$log_dir/sentinel-save.stdout" 2> "$log_dir/sentinel-save.stderr"; then
+            status=0
+          else
+            status=$?
+          fi
+          test "$status" -eq 1
+          grep -F 'checkpoint destination already exists' "$log_dir/sentinel-save.stderr"
+          cmp "$expected" "$sentinel"
+          printf 'sentinel_save_exit=%s\nexisting_target_rejected=true\nsentinel_bytes_unchanged=true\n' "$status" | tee "$log_dir/sentinel-check.log"
+      - name: Preserve C2 native evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: c2-native-${{ matrix.os }}
+          path: .artifacts/c2-native-ci/${{ matrix.os }}/
+          retention-days: 7
+          if-no-files-found: error
       - name: Initialize Arrow IO Rust 1.99.0 evidence directory
         run: mkdir -p ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}"
       - name: Install pinned Python for Arrow IO interoperability
@@ -198,7 +256,7 @@ jobs:
           test -s "$output_dir/rust.parquet"
           "$python_dir/bin/python" "$fixtures" --check-rust "$output_dir" 2>&1 | tee "$log_dir/pyarrow-readback.log"
           "$python_dir/bin/python" crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py --check-rust "$KAIROS_C11_PHYSICAL_OUTDIR" 2>&1 | tee "$log_dir/c11-pyarrow-readback.log"
-      - name: Preserve Arrow IO Rust 1.98 evidence
+      - name: Preserve Arrow IO Rust 1.99.0 evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -215,8 +273,8 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
-  arrow-io-floor:
-    name: Arrow IO Rust 1.88 (${{ matrix.os }}, ${{ matrix.features }})
+  arrow-io-current:
+    name: Arrow IO Rust 1.99.0 (${{ matrix.os }}, ${{ matrix.features }})
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -229,22 +287,22 @@ jobs:
         with:
           persist-credentials: false
       - name: Initialize Arrow IO evidence directory
-        run: mkdir -p ".artifacts/ci/arrow-io/1.88.0/${{ matrix.os }}/${{ matrix.features }}"
-      - name: Install reviewed Rust 1.88.0
-        run: rustup toolchain install 1.88.0 --profile minimal
-      - name: Verify Rust 1.88 host
+        run: mkdir -p ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}"
+      - name: Install current stable Rust 1.99.0
+        run: rustup toolchain install 1.99.0 --profile minimal
+      - name: Verify Rust 1.99.0 host
         env:
           EXPECTED_OS: ${{ matrix.os }}
         run: |
-          task_rustc="$(rustup which --toolchain 1.88.0 rustc)"
-          task_cargo="$(rustup which --toolchain 1.88.0 cargo)"
-          "$task_cargo" -V | tee ".artifacts/ci/arrow-io/1.88.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
-          "$task_rustc" -vV | tee -a ".artifacts/ci/arrow-io/1.88.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
-          grep -Fx 'release: 1.88.0' ".artifacts/ci/arrow-io/1.88.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
+          "$task_cargo" -V | tee ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
+          "$task_rustc" -vV | tee -a ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
+          grep -Fx 'release: 1.99.0' ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
           if [ "$EXPECTED_OS" = macos-15 ]; then
-            grep -Fx 'host: aarch64-apple-darwin' ".artifacts/ci/arrow-io/1.88.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
+            grep -Fx 'host: aarch64-apple-darwin' ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
           else
-            grep -Fx 'host: x86_64-unknown-linux-gnu' ".artifacts/ci/arrow-io/1.88.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
+            grep -Fx 'host: x86_64-unknown-linux-gnu' ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/toolchain.log"
           fi
       - name: Install pinned PyArrow for bidirectional interop
         if: matrix.features == 'both'
@@ -255,7 +313,7 @@ jobs:
         if: matrix.features == 'both'
         run: |
           set -o pipefail
-          log_dir=".artifacts/ci/arrow-io/1.88.0/${{ matrix.os }}/${{ matrix.features }}"
+          log_dir=".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}"
           python_dir="$RUNNER_TEMP/c1-arrow-io-python"
           test ! -e "$python_dir"
           python -m venv "$python_dir"
@@ -268,13 +326,13 @@ jobs:
         env:
           EXPECTED_OS: ${{ matrix.os }}
           FEATURE_SET: ${{ matrix.features }}
-          KAIROS_INTEROP_OUTDIR: ${{ github.workspace }}/.artifacts/ci/arrow-io/1.88.0/${{ matrix.os }}/${{ matrix.features }}/rust-output
+          KAIROS_INTEROP_OUTDIR: ${{ github.workspace }}/.artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/rust-output
         run: |
           set -o pipefail
-          log_dir=".artifacts/ci/arrow-io/1.88.0/${EXPECTED_OS}/${FEATURE_SET}"
-          task_rustc="$(rustup which --toolchain 1.88.0 rustc)"
+          log_dir=".artifacts/ci/arrow-io/1.99.0/${EXPECTED_OS}/${FEATURE_SET}"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
           task_bin="$(dirname "$task_rustc")"
-          task_cargo="$(rustup which --toolchain 1.88.0 cargo)"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
           export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
           cargo_args=(test --locked -p kairo-ecs-arrow-io --no-default-features)
           case "$FEATURE_SET" in
@@ -312,19 +370,19 @@ jobs:
             test -s "$KAIROS_INTEROP_OUTDIR/rust.parquet"
             "$RUNNER_TEMP/c1-arrow-io-python/bin/python" crates/kairo-ecs-arrow-io/tests/fixtures/interop_v1/generate.py --check-rust "$KAIROS_INTEROP_OUTDIR" 2>&1 | tee "$log_dir/pyarrow-readback.log"
           fi
-      - name: Preserve Arrow IO Rust 1.88 evidence
+      - name: Preserve Arrow IO Rust 1.99.0 feature evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: arrow-io-rust-1.88.0-${{ matrix.os }}-${{ matrix.features }}
-          path: .artifacts/ci/arrow-io/1.88.0/${{ matrix.os }}/${{ matrix.features }}/
+          name: arrow-io-rust-1.99.0-${{ matrix.os }}-${{ matrix.features }}
+          path: .artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}/${{ matrix.features }}/
           retention-days: 7
           if-no-files-found: error
 
   q52-native-regression:
     name: Q5.2 canonical native regression (Ubuntu)
     if: startsWith(github.head_ref || github.ref_name, 'codex/careops-q52')
-    needs: [native, arrow-io-floor]
+    needs: [native, arrow-io-current]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -365,13 +423,13 @@ jobs:
   native-required:
     name: Native and Arrow IO required
     if: always()
-    needs: [native, arrow-io-floor, q52-native-regression]
+    needs: [native, arrow-io-current, q52-native-regression]
     runs-on: ubuntu-24.04
     steps:
       - name: Require native and every Arrow IO matrix child
         env:
           NATIVE_RESULT: ${{ needs.native.result }}
-          ARROW_IO_RESULT: ${{ needs.arrow-io-floor.result }}
+          ARROW_IO_RESULT: ${{ needs.arrow-io-current.result }}
           Q52_RESULT: ${{ needs.q52-native-regression.result }}
           Q52_REQUIRED: ${{ startsWith(github.head_ref || github.ref_name, 'codex/careops-q52') }}
         run: |
