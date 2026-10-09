@@ -567,6 +567,29 @@ pub(crate) fn decode_key(
     Ok(CalibrationStreamKey { identity })
 }
 
+/// Checks whether an existing opaque key is registered in this map without
+/// deriving a new key, changing the registry, or constructing a stream.
+pub(crate) fn contains_registered_key(
+    map: &CalibrationSeedMap,
+    key: &CalibrationStreamKey,
+) -> Result<bool, SeedWireError> {
+    let identity = idref(&key.identity);
+    identity.ids()?;
+    if map.version != SEED_MAP_VERSION_V1 {
+        return Err(SeedWireError::Registry(SeedRegistryCheckpointError::Seed(
+            super::CalibrationSeedError::UnsupportedSeedMapVersion(map.version),
+        )));
+    }
+    if identity.version != map.version {
+        return Err(SeedWireError::InvalidFormat);
+    }
+    if identity.root != map.root_seed || identity.study != map.study_id {
+        return Ok(false);
+    }
+    let seed = identity.derived()?;
+    Ok(map.registered.get(&seed) == Some(&key.identity))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -589,6 +612,107 @@ mod tests {
             map.key_for("schedule", 7, "case", "task", purpose).unwrap();
         }
         map
+    }
+
+    fn registry_snapshot(map: &CalibrationSeedMap) -> SeedMapCheckpointStateV1 {
+        map.checkpoint_state(SeedRegistryCheckpointLimits {
+            max_entries: 128,
+            max_identifier_bytes: 16 * 1024,
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn registry_membership_is_read_only_and_checks_all_purposes_and_identity_fields() {
+        let mut map = CalibrationSeedMap::new(1, "study-membership", 41).unwrap();
+        let before = registry_snapshot(&map);
+        for purpose in [
+            SeedPurpose::Service,
+            SeedPurpose::Transit,
+            SeedPurpose::Behavior,
+            SeedPurpose::Calibration,
+        ] {
+            let key = map.key_for("schedule", 3, "case", "task", purpose).unwrap();
+            let before_query = registry_snapshot(&map);
+            assert_eq!(contains_registered_key(&map, &key), Ok(true));
+            assert_eq!(registry_snapshot(&map), before_query);
+        }
+        let mut absent_map = CalibrationSeedMap::new(1, "study-membership", 41).unwrap();
+        let absent = absent_map
+            .key_for(
+                "schedule",
+                3,
+                "case",
+                "not-registered",
+                SeedPurpose::Service,
+            )
+            .unwrap();
+        let before_absent_query = registry_snapshot(&map);
+        assert_eq!(contains_registered_key(&map, &absent), Ok(false));
+        assert_eq!(registry_snapshot(&map), before_absent_query);
+        let after_registered = registry_snapshot(&map);
+        assert_ne!(before, after_registered);
+
+        let mut foreign_root = CalibrationSeedMap::new(1, "study-membership", 42).unwrap();
+        let foreign_root_key = foreign_root
+            .key_for("schedule", 3, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        assert_eq!(contains_registered_key(&map, &foreign_root_key), Ok(false));
+        assert_eq!(registry_snapshot(&map), after_registered);
+
+        let mut foreign_study = CalibrationSeedMap::new(1, "another-study", 41).unwrap();
+        let foreign_study_key = foreign_study
+            .key_for("schedule", 3, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        assert_eq!(contains_registered_key(&map, &foreign_study_key), Ok(false));
+        assert_eq!(registry_snapshot(&map), after_registered);
+
+        let mut wrong_version = absent.clone();
+        wrong_version.identity.version = 2;
+        assert_eq!(
+            contains_registered_key(&map, &wrong_version),
+            Err(SeedWireError::InvalidFormat)
+        );
+        let mut invalid_identity = absent.clone();
+        invalid_identity.identity.task_key.clear();
+        assert_eq!(
+            contains_registered_key(&map, &invalid_identity),
+            Err(SeedWireError::InvalidFormat)
+        );
+        assert_eq!(registry_snapshot(&map), after_registered);
+    }
+
+    #[test]
+    fn registry_membership_compares_full_identity_not_just_seed_slot() {
+        let mut map = CalibrationSeedMap::new(1, "study-collision", 99).unwrap();
+        let key = map
+            .key_for("schedule", 8, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        let seed = idref(&key.identity).derived().unwrap();
+        let mut conflicting_identity = key.identity.clone();
+        conflicting_identity.task_key.push_str("-different");
+        // Create an intentionally inconsistent internal registry fixture to
+        // prove an occupied derived-seed slot alone is not membership.
+        map.registered.insert(seed, conflicting_identity);
+        let before = registry_snapshot(&map);
+
+        assert_eq!(contains_registered_key(&map, &key), Ok(false));
+        assert_eq!(registry_snapshot(&map), before);
+    }
+
+    #[test]
+    fn registry_membership_rejects_unsupported_map_version() {
+        let mut map = populated();
+        let key = map
+            .key_for("schedule", 7, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        map.version = 2;
+        assert_eq!(
+            contains_registered_key(&map, &key),
+            Err(SeedWireError::Registry(SeedRegistryCheckpointError::Seed(
+                super::super::CalibrationSeedError::UnsupportedSeedMapVersion(2)
+            )))
+        );
     }
 
     #[test]
