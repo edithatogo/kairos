@@ -4,7 +4,7 @@
 //! to the execution model and are deliberately not represented here.
 
 use crate::seed_map::{
-    CalibrationSeedError, CalibrationStream, CalibrationStreamKey, SeedPurpose, validate_id,
+    validate_id, CalibrationSeedError, CalibrationStream, CalibrationStreamKey, SeedPurpose,
 };
 use kairo_ecs_types::SimDuration;
 use std::collections::{HashMap, HashSet};
@@ -569,17 +569,15 @@ mod tests {
             .unwrap();
         let (duration, stored_key, before, after) = weighted.checkpoint_parts();
         let restored = stream.snapshot().restore().unwrap();
-        assert!(
-            SampledWorkDuration::from_checkpoint_parts(
-                duration,
-                stored_key.clone(),
-                before,
-                after,
-                &restored,
-                &key,
-            )
-            .is_ok()
-        );
+        assert!(SampledWorkDuration::from_checkpoint_parts(
+            duration,
+            stored_key.clone(),
+            before,
+            after,
+            &restored,
+            &key,
+        )
+        .is_ok());
 
         assert_eq!(
             SampledWorkDuration::from_checkpoint_parts(

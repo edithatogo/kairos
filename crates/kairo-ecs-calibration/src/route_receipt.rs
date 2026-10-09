@@ -3,8 +3,8 @@
 //! The receipt hashes the immutable route retained by an actual transit carrier.
 //! It is not a seed identity, checkpoint codec, or authenticity signature.
 
-use kairo_ecs_abm::TransitContext;
 use kairo_ecs_abm::spatial::{RoutePlan, RouteSegment};
+use kairo_ecs_abm::TransitContext;
 use sha2::{Digest, Sha256};
 
 const RECEIPT_TAG: &[u8] = b"KAIROS-CALIBRATION-ROUTE-RECEIPT\0";
@@ -378,7 +378,7 @@ mod tests {
         EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1,
     };
     use kairo_ecs_abm::{
-        TransitPhase, register_transit_context, schedule_transit_control, schedule_transit_start,
+        register_transit_context, schedule_transit_control, schedule_transit_start, TransitPhase,
     };
     use kairo_ecs_des::{FlowAcquireCommand, FlowBatchReceipt, FlowDomainControl, FlowRuntime};
     use kairo_ecs_types::{EventKind, SimDuration, SimTime};
@@ -477,10 +477,9 @@ mod tests {
                 .collect::<String>(),
             "6e2de4e99a98adaadfb78a64e8a0d438c6036f6c43c7c5b953238893532d5425"
         );
-        assert!(
-            a.validate_context(&reordered, &route_metadata("patient-transfer"))
-                .is_ok()
-        );
+        assert!(a
+            .validate_context(&reordered, &route_metadata("patient-transfer"))
+            .is_ok());
         let other_purpose =
             RouteReceipt::from_context(&reordered, &route_metadata("staff-transfer")).unwrap();
         assert_ne!(a.digest(), other_purpose.digest());
@@ -677,11 +676,9 @@ mod tests {
         let paused_progress = paused.progress_at(flow.now()).unwrap();
         assert_eq!(paused_progress.useful_elapsed.ticks(), 1);
         assert_eq!(paused_progress.remaining.ticks(), 4);
-        assert!(
-            receipt
-                .validate_context(paused, &route_metadata("patient-transfer"))
-                .is_ok()
-        );
+        assert!(receipt
+            .validate_context(paused, &route_metadata("patient-transfer"))
+            .is_ok());
 
         schedule_transit_control(
             &mut flow,
@@ -716,11 +713,9 @@ mod tests {
         let completed_progress = arrived.progress_at(flow.now()).unwrap();
         assert_eq!(completed_progress.useful_elapsed.ticks(), 5);
         assert_eq!(completed_progress.remaining.ticks(), 0);
-        assert!(
-            receipt
-                .validate_context(arrived, &route_metadata("patient-transfer"))
-                .is_ok()
-        );
+        assert!(receipt
+            .validate_context(arrived, &route_metadata("patient-transfer"))
+            .is_ok());
         let request_id = flow.work(service).unwrap().request.unwrap();
         let request = flow.request(request_id).unwrap();
         assert_eq!(request.work, Some(service));
