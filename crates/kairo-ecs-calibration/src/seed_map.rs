@@ -393,6 +393,57 @@ pub struct CalibrationStream {
     draw_position: u64,
 }
 
+/// Complete native continuation state for the experimental C2 checkpoint
+/// assembly. This is not a serialized format or evidence of RNG history.
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Consumed by the future crate-private C2 checkpoint assembler"
+    )
+)]
+pub(crate) struct CalibrationStreamStateV1 {
+    pub(crate) version: u32,
+    pub(crate) identity: SeedIdentity,
+    pub(crate) seed_map_version: u32,
+    pub(crate) stream_version: u32,
+    pub(crate) derived_seed: u64,
+    pub(crate) current_state: u64,
+    pub(crate) draw_position: u64,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Consumed by the future crate-private C2 checkpoint assembler"
+    )
+)]
+pub(crate) struct CalibrationStreamStateLimits {
+    pub(crate) max_identifier_bytes: usize,
+}
+
+#[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Consumed by the future crate-private C2 checkpoint assembler"
+    )
+)]
+pub(crate) enum CalibrationStreamStateError {
+    #[error(transparent)]
+    Seed(#[from] CalibrationSeedError),
+    #[error("calibration stream state exceeds caller limits")]
+    LimitExceeded,
+    #[error("invalid calibration stream state image")]
+    InvalidState,
+}
+
+const CALIBRATION_STREAM_STATE_VERSION_V1: u32 = 1;
+
 impl CalibrationStream {
     pub fn derived_seed(&self) -> u64 {
         self.derived_seed
@@ -412,6 +463,42 @@ impl CalibrationStream {
 
     pub(crate) fn purpose(&self) -> SeedPurpose {
         self.identity.purpose
+    }
+
+    /// Capture complete owned state after checking the aggregate identifier
+    /// budget and state invariants, before cloning any identity strings.
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "Consumed by the future crate-private C2 checkpoint assembler"
+        )
+    )]
+    pub(crate) fn checkpoint_state(
+        &self,
+        limits: CalibrationStreamStateLimits,
+    ) -> Result<CalibrationStreamStateV1, CalibrationStreamStateError> {
+        let identifier_bytes = stream_identity_identifier_bytes(&self.identity)?;
+        if identifier_bytes > limits.max_identifier_bytes {
+            return Err(CalibrationStreamStateError::LimitExceeded);
+        }
+        if self.seed_map_version != SEED_MAP_VERSION_V1
+            || self.identity.version != self.seed_map_version
+            || self.stream_version != STREAM_VERSION_V1
+            || derive_seed(&self.identity)? != self.derived_seed
+            || (self.draw_position == 0 && self.stream.clone().into_inner() != self.derived_seed)
+        {
+            return Err(CalibrationStreamStateError::InvalidState);
+        }
+        Ok(CalibrationStreamStateV1 {
+            version: CALIBRATION_STREAM_STATE_VERSION_V1,
+            identity: self.identity.clone(),
+            seed_map_version: self.seed_map_version,
+            stream_version: self.stream_version,
+            derived_seed: self.derived_seed,
+            current_state: self.stream.clone().into_inner(),
+            draw_position: self.draw_position,
+        })
     }
 
     /// Advance one SplitMix64 transition. Counter overflow is detected before
@@ -443,6 +530,74 @@ impl CalibrationStream {
             draw_position: self.draw_position,
         }
     }
+}
+
+impl CalibrationStreamStateV1 {
+    /// Restore exact current state only for the owner-derived complete identity.
+    /// No root-seed replay or draw-history validation is performed.
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "Consumed by the future crate-private C2 checkpoint assembler"
+        )
+    )]
+    pub(crate) fn restore_for(
+        self,
+        expected: &CalibrationStreamKey,
+        limits: CalibrationStreamStateLimits,
+    ) -> Result<CalibrationStream, CalibrationStreamStateError> {
+        if self.version != CALIBRATION_STREAM_STATE_VERSION_V1 {
+            return Err(CalibrationStreamStateError::InvalidState);
+        }
+        if stream_identity_identifier_bytes(&self.identity)? > limits.max_identifier_bytes {
+            return Err(CalibrationStreamStateError::LimitExceeded);
+        }
+        if self.seed_map_version != SEED_MAP_VERSION_V1
+            || self.stream_version != STREAM_VERSION_V1
+            || self.identity.version != self.seed_map_version
+            || self.identity != expected.identity
+            || (self.draw_position == 0 && self.current_state != self.derived_seed)
+        {
+            return Err(CalibrationStreamStateError::InvalidState);
+        }
+        let snapshot = CalibrationStreamSnapshot {
+            identity: self.identity,
+            seed_map_version: self.seed_map_version,
+            stream_version: self.stream_version,
+            derived_seed: self.derived_seed,
+            current_state: self.current_state,
+            draw_position: self.draw_position,
+        };
+        snapshot
+            .restore_for(expected)
+            .map_err(CalibrationStreamStateError::Seed)
+    }
+}
+
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Consumed by the future crate-private C2 checkpoint assembler"
+    )
+)]
+fn stream_identity_identifier_bytes(
+    identity: &SeedIdentity,
+) -> Result<usize, CalibrationStreamStateError> {
+    let mut total = 0usize;
+    for (field, value) in [
+        ("study_id", identity.study_id.as_str()),
+        ("seed_schedule_id", identity.seed_schedule_id.as_str()),
+        ("case_key", identity.case_key.as_str()),
+        ("task_key", identity.task_key.as_str()),
+    ] {
+        validate_id(field, value)?;
+        total = total
+            .checked_add(value.len())
+            .ok_or(CalibrationStreamStateError::LimitExceeded)?;
+    }
+    Ok(total)
 }
 
 /// Opaque, owned in-memory continuation. Private fields prevent callers from
@@ -1101,5 +1256,194 @@ mod tests {
             snapshot.restore(),
             Err(CalibrationSeedError::InvalidSnapshot)
         ));
+    }
+
+    #[test]
+    fn complete_stream_state_image_resumes_without_replay() {
+        let limits = CalibrationStreamStateLimits {
+            max_identifier_bytes: 128,
+        };
+        let mut map = CalibrationSeedMap::new(1, "study", 0).unwrap();
+        let mut stream = map
+            .stream_for("schedule", 0, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        let key = stream.key();
+        stream.next_u32().unwrap();
+        let image = stream.checkpoint_state(limits).unwrap();
+        let mut restored = image.restore_for(&key, limits).unwrap();
+        assert_eq!(restored.draw_position(), stream.draw_position());
+        assert_eq!(restored.next_u64(), stream.next_u64());
+    }
+
+    #[test]
+    fn state_image_transports_all_purposes_and_matches_long_future_prefixes() {
+        let limits = CalibrationStreamStateLimits {
+            max_identifier_bytes: 128,
+        };
+        let purposes = [
+            SeedPurpose::Service,
+            SeedPurpose::Transit,
+            SeedPurpose::Behavior,
+            SeedPurpose::Calibration,
+        ];
+        for (purpose_index, purpose) in purposes.into_iter().enumerate() {
+            let mut subject_map = CalibrationSeedMap::new(1, "study-α", 1234).unwrap();
+            let mut control_map = CalibrationSeedMap::new(1, "study-α", 1234).unwrap();
+            let mut subject = subject_map
+                .stream_for("crn-v1", 7, "case-0001", "triage:1", purpose)
+                .unwrap();
+            let mut control = control_map
+                .stream_for("crn-v1", 7, "case-0001", "triage:1", purpose)
+                .unwrap();
+            let key = subject.key();
+            for prefix in 0..purpose_index {
+                if prefix % 2 == 0 {
+                    assert_eq!(subject.next_u32(), control.next_u32());
+                } else {
+                    assert_eq!(subject.next_u64(), control.next_u64());
+                }
+            }
+            let image = subject.checkpoint_state(limits).unwrap();
+            // Rebuild the owned DTO field by field to exercise state transport.
+            let transported = CalibrationStreamStateV1 {
+                version: image.version,
+                identity: image.identity.clone(),
+                seed_map_version: image.seed_map_version,
+                stream_version: image.stream_version,
+                derived_seed: image.derived_seed,
+                current_state: image.current_state,
+                draw_position: image.draw_position,
+            };
+            assert_eq!(transported, image);
+            let mut restored = transported.restore_for(&key, limits).unwrap();
+            assert_eq!(restored.draw_position(), control.draw_position());
+            for draw in 0..64 {
+                if draw % 3 == 0 {
+                    assert_eq!(restored.next_u32(), control.next_u32());
+                } else {
+                    assert_eq!(restored.next_u64(), control.next_u64());
+                }
+                assert_eq!(restored.draw_position(), control.draw_position());
+            }
+        }
+    }
+
+    #[test]
+    fn state_image_rejects_identity_purpose_schema_seed_and_zero_state_changes() {
+        let limits = CalibrationStreamStateLimits {
+            max_identifier_bytes: 128,
+        };
+        let mut map = CalibrationSeedMap::new(1, "study", 0).unwrap();
+        let stream = map
+            .stream_for("schedule", 0, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        let key = stream.key();
+        let image = stream.checkpoint_state(limits).unwrap();
+
+        let mut other_map = CalibrationSeedMap::new(1, "other-study", 0).unwrap();
+        let other_key = other_map
+            .key_for("schedule", 0, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        assert!(matches!(
+            image.clone().restore_for(&other_key, limits),
+            Err(CalibrationStreamStateError::InvalidState)
+        ));
+        let mut other_map = CalibrationSeedMap::new(1, "study", 0).unwrap();
+        let wrong_purpose = other_map
+            .key_for("schedule", 0, "case", "task", SeedPurpose::Transit)
+            .unwrap();
+        assert!(matches!(
+            image.clone().restore_for(&wrong_purpose, limits),
+            Err(CalibrationStreamStateError::InvalidState)
+        ));
+        for alter in 0..5 {
+            let mut identity = image.identity.clone();
+            match alter {
+                0 => identity.root_seed ^= 1,
+                1 => identity.replication_id += 1,
+                2 => identity.seed_schedule_id.push_str("-other"),
+                3 => identity.case_key.push_str("-other"),
+                _ => identity.task_key.push_str("-other"),
+            }
+            let mismatched = CalibrationStreamKey { identity };
+            assert!(matches!(
+                image.clone().restore_for(&mismatched, limits),
+                Err(CalibrationStreamStateError::InvalidState)
+            ));
+        }
+
+        let mut bad = image.clone();
+        bad.version = 2;
+        assert!(matches!(
+            bad.restore_for(&key, limits),
+            Err(CalibrationStreamStateError::InvalidState)
+        ));
+        let mut bad = image.clone();
+        bad.seed_map_version = 2;
+        assert!(matches!(
+            bad.restore_for(&key, limits),
+            Err(CalibrationStreamStateError::InvalidState)
+        ));
+        let mut bad = image.clone();
+        bad.identity.version = 2;
+        assert!(matches!(
+            bad.restore_for(&key, limits),
+            Err(CalibrationStreamStateError::InvalidState)
+        ));
+        let mut bad = image.clone();
+        bad.stream_version = 2;
+        assert!(matches!(
+            bad.restore_for(&key, limits),
+            Err(CalibrationStreamStateError::InvalidState)
+        ));
+        let mut bad = image.clone();
+        bad.derived_seed ^= 1;
+        bad.draw_position = 1;
+        assert!(matches!(
+            bad.restore_for(&key, limits),
+            Err(CalibrationStreamStateError::Seed(
+                CalibrationSeedError::InvalidSnapshot
+            ))
+        ));
+        let mut bad = image;
+        bad.current_state ^= 1;
+        assert!(matches!(
+            bad.restore_for(&key, limits),
+            Err(CalibrationStreamStateError::InvalidState)
+        ));
+    }
+
+    #[test]
+    fn state_image_limits_and_source_preservation_hold_on_rejection() {
+        let limits = CalibrationStreamStateLimits {
+            max_identifier_bytes: 128,
+        };
+        let mut map = CalibrationSeedMap::new(1, "study", 0).unwrap();
+        let stream = map
+            .stream_for("schedule", 0, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        let before = stream.checkpoint_state(limits).unwrap();
+        let tiny = CalibrationStreamStateLimits {
+            max_identifier_bytes: 1,
+        };
+        assert_eq!(
+            stream.checkpoint_state(tiny),
+            Err(CalibrationStreamStateError::LimitExceeded)
+        );
+        assert_eq!(stream.checkpoint_state(limits).unwrap(), before);
+        let key = stream.key();
+        assert!(matches!(
+            before.clone().restore_for(&key, tiny),
+            Err(CalibrationStreamStateError::LimitExceeded)
+        ));
+        assert_eq!(stream.checkpoint_state(limits).unwrap(), before);
+
+        let mut zero_draw_bad = before.clone();
+        zero_draw_bad.current_state ^= 1;
+        assert!(matches!(
+            zero_draw_bad.restore_for(&key, limits),
+            Err(CalibrationStreamStateError::InvalidState)
+        ));
+        assert_eq!(stream.checkpoint_state(limits).unwrap(), before);
     }
 }

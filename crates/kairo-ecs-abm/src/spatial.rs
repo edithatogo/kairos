@@ -398,6 +398,223 @@ impl RoutePlan {
     pub fn graph_canonical_bytes(&self) -> &[u8] {
         &self.graph_canonical_bytes
     }
+
+    /// Captures a bounded native image of this immutable route.
+    #[doc(hidden)]
+    pub fn checkpoint_image_v1(
+        &self,
+        limits: &RoutePlanImageLimitsV1,
+    ) -> Result<RoutePlanImageV1, RouteCheckpointError> {
+        limits.check_parts(
+            self.segments.len(),
+            self.graph_canonical_bytes.len(),
+            self.profile.mode.as_str().len(),
+        )?;
+        validate_route_plan(self).map_err(|_| RouteCheckpointError::InvalidPlan)?;
+        Ok(RoutePlanImageV1 {
+            schema_version: 1,
+            origin: self.origin.value(),
+            destination: self.destination.value(),
+            segments: self
+                .segments
+                .iter()
+                .map(|segment| RouteSegmentImageV1 {
+                    edge_id: segment.edge_id.value(),
+                    from: segment.from.value(),
+                    to: segment.to.value(),
+                    length_mm: segment.length_mm,
+                    start_offset_ticks: segment.start_offset.ticks(),
+                    end_offset_ticks: segment.end_offset.ticks(),
+                })
+                .collect(),
+            distance_mm: self.distance_mm,
+            duration_ticks: self.duration.ticks(),
+            movement_mode: self.profile.mode.as_str().to_owned(),
+            speed_mm_per_second: self.profile.speed_mm_per_second.get(),
+            ticks_per_second: self.ticks_per_second,
+            graph_version: self.graph_version,
+            graph_canonical_bytes: self.graph_canonical_bytes.clone(),
+        })
+    }
+
+    /// Validates a route image against the supplied immutable graph and restores
+    /// the exact deterministic plan represented by that image.
+    #[doc(hidden)]
+    pub fn restore_image_v1(
+        image: &RoutePlanImageV1,
+        graph: &TransitGraphV1,
+        limits: &RoutePlanImageLimitsV1,
+    ) -> Result<Self, RouteCheckpointError> {
+        image.validate_limits(limits)?;
+        if image.schema_version != 1 {
+            return Err(RouteCheckpointError::UnsupportedVersion);
+        }
+        let profile = MovementProfile::new(&image.movement_mode, image.speed_mm_per_second)
+            .map_err(|_| RouteCheckpointError::InvalidPlan)?;
+        let route = graph
+            .route(
+                NodeId::new(image.origin),
+                NodeId::new(image.destination),
+                &profile,
+                image.ticks_per_second,
+            )
+            .map_err(|_| RouteCheckpointError::InvalidGraph)?;
+        if !image.matches_route(&route) {
+            return Err(RouteCheckpointError::InvalidPlan);
+        }
+        Ok(route)
+    }
+}
+
+/// Bounded allocation limits for the native route image.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RoutePlanImageLimitsV1 {
+    pub max_segments: usize,
+    pub max_graph_bytes: usize,
+    pub max_mode_bytes: usize,
+    pub max_total_bytes: usize,
+}
+
+impl RoutePlanImageLimitsV1 {
+    pub const fn new(
+        max_segments: usize,
+        max_graph_bytes: usize,
+        max_mode_bytes: usize,
+        max_total_bytes: usize,
+    ) -> Self {
+        Self {
+            max_segments,
+            max_graph_bytes,
+            max_mode_bytes,
+            max_total_bytes,
+        }
+    }
+
+    fn check_parts(
+        &self,
+        segment_count: usize,
+        graph_bytes: usize,
+        mode_bytes: usize,
+    ) -> Result<(), RouteCheckpointError> {
+        let total = segment_count
+            .checked_mul(64)
+            .and_then(|bytes| bytes.checked_add(graph_bytes))
+            .and_then(|bytes| bytes.checked_add(mode_bytes))
+            .ok_or(RouteCheckpointError::LimitExceeded)?;
+        if segment_count > self.max_segments
+            || graph_bytes > self.max_graph_bytes
+            || mode_bytes > self.max_mode_bytes
+            || total > self.max_total_bytes
+        {
+            return Err(RouteCheckpointError::LimitExceeded);
+        }
+        Ok(())
+    }
+}
+
+/// Native owner-defined immutable route image, schema version 1.
+#[doc(hidden)]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RoutePlanImageV1 {
+    pub schema_version: u32,
+    pub origin: u64,
+    pub destination: u64,
+    pub segments: Vec<RouteSegmentImageV1>,
+    pub distance_mm: u128,
+    pub duration_ticks: u128,
+    pub movement_mode: String,
+    pub speed_mm_per_second: u64,
+    pub ticks_per_second: u64,
+    pub graph_version: u32,
+    pub graph_canonical_bytes: Vec<u8>,
+}
+
+#[doc(hidden)]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RouteSegmentImageV1 {
+    pub edge_id: u64,
+    pub from: u64,
+    pub to: u64,
+    pub length_mm: u64,
+    pub start_offset_ticks: u128,
+    pub end_offset_ticks: u128,
+}
+
+/// Errors for the experimental route-image API; public transit errors stay stable.
+#[doc(hidden)]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum RouteCheckpointError {
+    UnsupportedVersion,
+    LimitExceeded,
+    InvalidPlan,
+    InvalidGraph,
+    InvalidProgress,
+}
+
+impl RoutePlanImageV1 {
+    fn validate_limits(&self, limits: &RoutePlanImageLimitsV1) -> Result<(), RouteCheckpointError> {
+        limits.check_parts(
+            self.segments.len(),
+            self.graph_canonical_bytes.len(),
+            self.movement_mode.len(),
+        )
+    }
+
+    fn matches_route(&self, route: &RoutePlan) -> bool {
+        self.origin == route.origin.value()
+            && self.destination == route.destination.value()
+            && self.distance_mm == route.distance_mm
+            && self.duration_ticks == route.duration.ticks()
+            && self.movement_mode == route.profile.mode.as_str()
+            && self.speed_mm_per_second == route.profile.speed_mm_per_second.get()
+            && self.ticks_per_second == route.ticks_per_second
+            && self.graph_version == route.graph_version
+            && self.graph_canonical_bytes == route.graph_canonical_bytes
+            && self.segments.len() == route.segments.len()
+            && self
+                .segments
+                .iter()
+                .zip(&route.segments)
+                .all(|(image, segment)| {
+                    image.edge_id == segment.edge_id.value()
+                        && image.from == segment.from.value()
+                        && image.to == segment.to.value()
+                        && image.length_mm == segment.length_mm
+                        && image.start_offset_ticks == segment.start_offset.ticks()
+                        && image.end_offset_ticks == segment.end_offset.ticks()
+                })
+    }
+}
+
+fn validate_route_plan(route: &RoutePlan) -> Result<(), TransitError> {
+    if route.ticks_per_second == 0 || route.profile.speed_mm_per_second.get() == 0 {
+        return Err(TransitError::InvalidProgress);
+    }
+    let mut distance = 0_u128;
+    let mut prior_end = SimDuration::ZERO;
+    let mut prior_node = route.origin;
+    for segment in &route.segments {
+        if segment.from != prior_node
+            || segment.start_offset != prior_end
+            || segment.end_offset < segment.start_offset
+        {
+            return Err(TransitError::InvalidProgress);
+        }
+        distance = distance
+            .checked_add(u128::from(segment.length_mm))
+            .ok_or(TransitError::Overflow)?;
+        prior_end = segment.end_offset;
+        prior_node = segment.to;
+    }
+    if prior_node != route.destination
+        || distance != route.distance_mm
+        || prior_end != route.duration
+        || (route.segments.is_empty() && route.origin != route.destination)
+    {
+        return Err(TransitError::InvalidProgress);
+    }
+    Ok(())
 }
 
 fn ceil_ticks(
@@ -464,7 +681,7 @@ pub(crate) struct TransitProgressState {
 #[allow(dead_code)] // The Flow carrier consumes this private checkpoint in the dispatch leaf.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct TransitProgressCheckpoint {
-    route: RoutePlan,
+    route: RoutePlanImageV1,
     segment_index: usize,
     elapsed_in_segment: SimDuration,
 }
@@ -602,22 +819,32 @@ impl TransitProgressState {
         Ok(())
     }
 
-    pub(crate) fn checkpoint(&self) -> Result<TransitProgressCheckpoint, TransitError> {
-        self.validate_cursor()?;
+    pub(crate) fn checkpoint(
+        &self,
+        limits: &RoutePlanImageLimitsV1,
+    ) -> Result<TransitProgressCheckpoint, RouteCheckpointError> {
+        self.validate_cursor()
+            .map_err(|_| RouteCheckpointError::InvalidProgress)?;
         Ok(TransitProgressCheckpoint {
-            route: self.route.clone(),
+            route: self.route.checkpoint_image_v1(limits)?,
             segment_index: self.segment_index,
             elapsed_in_segment: self.elapsed_in_segment,
         })
     }
 
-    pub(crate) fn restore(checkpoint: TransitProgressCheckpoint) -> Result<Self, TransitError> {
+    pub(crate) fn restore(
+        checkpoint: TransitProgressCheckpoint,
+        graph: &TransitGraphV1,
+        limits: &RoutePlanImageLimitsV1,
+    ) -> Result<Self, RouteCheckpointError> {
         let state = Self {
-            route: checkpoint.route,
+            route: RoutePlan::restore_image_v1(&checkpoint.route, graph, limits)?,
             segment_index: checkpoint.segment_index,
             elapsed_in_segment: checkpoint.elapsed_in_segment,
         };
-        state.validate_cursor()?;
+        state
+            .validate_cursor()
+            .map_err(|_| RouteCheckpointError::InvalidProgress)?;
         Ok(state)
     }
 
@@ -689,15 +916,16 @@ impl TransitProgressState {
 #[cfg(test)]
 mod tests {
     use super::{
-        EdgeId, MovementModeId, MovementProfile, NodeId, RoutePlan, SimDuration, TransitEdge,
-        TransitError, TransitGraphV1, TransitProgressState,
+        EdgeId, MovementModeId, MovementProfile, NodeId, RouteCheckpointError, RoutePlan,
+        RoutePlanImageLimitsV1, SimDuration, TransitEdge, TransitError, TransitGraphV1,
+        TransitProgressState,
     };
 
-    fn linear_route(
-        lengths_mm: &[u64],
-        speed_mm_per_second: u64,
-        ticks_per_second: u64,
-    ) -> RoutePlan {
+    fn image_limits() -> RoutePlanImageLimitsV1 {
+        RoutePlanImageLimitsV1::new(128, 16_384, 1_024, 32_768)
+    }
+
+    fn linear_graph(lengths_mm: &[u64]) -> TransitGraphV1 {
         let nodes: Vec<_> = (0..=lengths_mm.len())
             .map(|value| NodeId::new(u64::try_from(value).unwrap()))
             .collect();
@@ -713,11 +941,19 @@ mod tests {
                 allowed_modes: vec![mode.clone()],
             })
             .collect();
-        TransitGraphV1::new(1, nodes.clone(), edges)
-            .unwrap()
+        TransitGraphV1::new(1, nodes, edges).unwrap()
+    }
+
+    fn linear_route(
+        lengths_mm: &[u64],
+        speed_mm_per_second: u64,
+        ticks_per_second: u64,
+    ) -> RoutePlan {
+        let graph = linear_graph(lengths_mm);
+        graph
             .route(
-                nodes[0],
-                *nodes.last().unwrap(),
+                NodeId::new(0),
+                NodeId::new(u64::try_from(lengths_mm.len()).unwrap()),
                 &MovementProfile::new("walk", speed_mm_per_second).unwrap(),
                 ticks_per_second,
             )
@@ -726,7 +962,15 @@ mod tests {
 
     #[test]
     fn transit_progress_checkpoint_restores_edge_elapsed_and_remaining_duration() {
-        let route = linear_route(&[5, 3, 4], 2, 3);
+        let graph = linear_graph(&[5, 3, 4]);
+        let route = graph
+            .route(
+                NodeId::new(0),
+                NodeId::new(3),
+                &MovementProfile::new("walk", 2).unwrap(),
+                3,
+            )
+            .unwrap();
         let mut progress = TransitProgressState::new(route.clone()).unwrap();
         progress.advance(SimDuration::from_ticks(10)).unwrap();
 
@@ -738,7 +982,12 @@ mod tests {
         );
         assert_eq!(progress.remaining().unwrap(), SimDuration::from_ticks(8));
 
-        let resumed = TransitProgressState::restore(progress.checkpoint().unwrap()).unwrap();
+        let resumed = TransitProgressState::restore(
+            progress.checkpoint(&image_limits()).unwrap(),
+            &graph,
+            &image_limits(),
+        )
+        .unwrap();
         assert_eq!(resumed, progress);
         assert_eq!(resumed.route, route);
         assert_eq!(resumed.current_edge_id(), Some(EdgeId::new(2)));
@@ -778,13 +1027,229 @@ mod tests {
     #[test]
     fn transit_progress_rejects_out_of_range_restored_cursor() {
         let progress = TransitProgressState::new(linear_route(&[5], 1, 1)).unwrap();
-        let mut checkpoint = progress.checkpoint().unwrap();
+        let mut checkpoint = progress.checkpoint(&image_limits()).unwrap();
         checkpoint.segment_index = usize::MAX;
 
         assert_eq!(
-            TransitProgressState::restore(checkpoint),
-            Err(TransitError::InvalidProgress)
+            TransitProgressState::restore(checkpoint, &linear_graph(&[5]), &image_limits()),
+            Err(RouteCheckpointError::InvalidProgress)
         );
+    }
+
+    #[test]
+    fn route_image_roundtrips_exact_plan_and_rejects_geometry_changes() {
+        let graph = linear_graph(&[5, 3, 4]);
+        let profile = MovementProfile::new("walk", 2).unwrap();
+        let route = graph
+            .route(NodeId::new(0), NodeId::new(3), &profile, 3)
+            .unwrap();
+        let limits = image_limits();
+        let image = route.checkpoint_image_v1(&limits).unwrap();
+        let original = image.clone();
+        assert_eq!(
+            RoutePlan::restore_image_v1(&image, &graph, &limits).unwrap(),
+            route
+        );
+
+        let mut changed = image.clone();
+        changed.segments[1].edge_id += 10;
+        assert_eq!(
+            RoutePlan::restore_image_v1(&changed, &graph, &limits),
+            Err(RouteCheckpointError::InvalidPlan)
+        );
+        assert_eq!(image, original);
+
+        let changed_graph = linear_graph(&[5, 4, 4]);
+        assert_eq!(
+            RoutePlan::restore_image_v1(&image, &changed_graph, &limits),
+            Err(RouteCheckpointError::InvalidPlan)
+        );
+
+        let mut invalid_images = Vec::new();
+        let mut candidate = image.clone();
+        candidate.schema_version = 2;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.origin = 99;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.destination = 2;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.distance_mm += 1;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.duration_ticks += 1;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.movement_mode = " walk".to_owned();
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.speed_mm_per_second = 0;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.ticks_per_second = 0;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.graph_version = 2;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.graph_canonical_bytes.push(0);
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.segments[0].from = 2;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.segments[0].to = 2;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.segments[0].length_mm += 1;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.segments[0].start_offset_ticks = 1;
+        invalid_images.push(candidate);
+        let mut candidate = image.clone();
+        candidate.segments[0].end_offset_ticks = 0;
+        invalid_images.push(candidate);
+        for invalid in invalid_images {
+            assert!(RoutePlan::restore_image_v1(&invalid, &graph, &limits).is_err());
+        }
+        assert_eq!(image, original);
+    }
+
+    #[test]
+    fn route_image_preserves_profile_tie_winner_and_enforces_all_capture_limits() {
+        let node = |value| NodeId::new(value);
+        let mode = MovementModeId::new("walk").unwrap();
+        let edge = |id, from, to, length_mm| TransitEdge {
+            id: EdgeId::new(id),
+            from: node(from),
+            to: node(to),
+            length_mm,
+            allowed_modes: vec![mode.clone()],
+        };
+        let graph = TransitGraphV1::new(
+            1,
+            vec![node(0), node(1), node(2), node(3)],
+            vec![
+                edge(9, 0, 1, 4),
+                edge(3, 0, 2, 4),
+                edge(10, 1, 3, 4),
+                edge(4, 2, 3, 4),
+            ],
+        )
+        .unwrap();
+        let route = graph
+            .route(
+                node(0),
+                node(3),
+                &MovementProfile::new("walk", 2).unwrap(),
+                5,
+            )
+            .unwrap();
+        assert_eq!(
+            route
+                .segments()
+                .iter()
+                .map(|segment| segment.edge_id().value())
+                .collect::<Vec<_>>(),
+            vec![3, 4]
+        );
+        let limits = image_limits();
+        let image = route.checkpoint_image_v1(&limits).unwrap();
+        assert_eq!(
+            RoutePlan::restore_image_v1(&image, &graph, &limits).unwrap(),
+            route
+        );
+        let faster = graph
+            .route(
+                node(0),
+                node(3),
+                &MovementProfile::new("walk", 4).unwrap(),
+                5,
+            )
+            .unwrap();
+        let faster_image = faster.checkpoint_image_v1(&limits).unwrap();
+        assert_eq!(
+            RoutePlan::restore_image_v1(&faster_image, &graph, &limits).unwrap(),
+            faster
+        );
+        assert_eq!(
+            RoutePlan::restore_image_v1(
+                &image,
+                &graph,
+                &RoutePlanImageLimitsV1::new(1, usize::MAX, usize::MAX, usize::MAX)
+            ),
+            Err(RouteCheckpointError::LimitExceeded)
+        );
+        assert_eq!(
+            route.checkpoint_image_v1(&RoutePlanImageLimitsV1::new(
+                usize::MAX,
+                1,
+                usize::MAX,
+                usize::MAX
+            )),
+            Err(RouteCheckpointError::LimitExceeded)
+        );
+        assert_eq!(
+            route.checkpoint_image_v1(&RoutePlanImageLimitsV1::new(
+                usize::MAX,
+                usize::MAX,
+                1,
+                usize::MAX
+            )),
+            Err(RouteCheckpointError::LimitExceeded)
+        );
+        assert_eq!(
+            route.checkpoint_image_v1(&RoutePlanImageLimitsV1::new(
+                usize::MAX,
+                usize::MAX,
+                usize::MAX,
+                1
+            )),
+            Err(RouteCheckpointError::LimitExceeded)
+        );
+    }
+
+    #[test]
+    fn progress_image_restores_boundary_zero_tick_and_completed_cursors_directly() {
+        let graph = linear_graph(&[5, 0, 3]);
+        let route = graph
+            .route(
+                NodeId::new(0),
+                NodeId::new(3),
+                &MovementProfile::new("walk", 1).unwrap(),
+                1,
+            )
+            .unwrap();
+        let limits = image_limits();
+        let mut progress = TransitProgressState::new(route).unwrap();
+        progress.advance(SimDuration::from_ticks(5)).unwrap();
+        assert_eq!(progress.current_edge_id(), Some(EdgeId::new(3)));
+        let resumed =
+            TransitProgressState::restore(progress.checkpoint(&limits).unwrap(), &graph, &limits)
+                .unwrap();
+        assert_eq!(resumed, progress);
+        assert_eq!(
+            resumed.useful_elapsed().unwrap(),
+            SimDuration::from_ticks(5)
+        );
+        assert_eq!(resumed.remaining().unwrap(), SimDuration::from_ticks(3));
+        let mut resumed = resumed;
+        resumed.advance(SimDuration::from_ticks(1)).unwrap();
+        assert_eq!(resumed.current_edge_id(), Some(EdgeId::new(3)));
+        assert_eq!(resumed.elapsed_in_segment(), SimDuration::from_ticks(1));
+
+        resumed.advance(SimDuration::from_ticks(2)).unwrap();
+        let completed =
+            TransitProgressState::restore(resumed.checkpoint(&limits).unwrap(), &graph, &limits)
+                .unwrap();
+        assert_eq!(completed.current_edge_id(), None);
+        assert_eq!(
+            completed.useful_elapsed().unwrap(),
+            SimDuration::from_ticks(8)
+        );
+        assert_eq!(completed.remaining().unwrap(), SimDuration::ZERO);
     }
 
     #[test]
