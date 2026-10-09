@@ -34,10 +34,17 @@ alternate artifact path.
 
 ## Verification
 
-The named green result is recorded under
-`.artifacts/mvp/C2.0.red-tests.paired-flow`. The result records the exact
-fixture SHA, Cargo argv, toolchain, exit status, and output hash. The expected
-missing-module red oracle remains in the runner for the baseline source state;
-this compatibility commit does not claim a red result from the repaired tree.
-Local results do not establish hosted checks or external maintainer
-acceptance.
+The committed-source runner selected the exact named fixture with the intended
+feature set, but the run did not pass. Cargo compiled the fixture and failed at
+its frozen assertion that `WorkProgress.completion_at` remains set to tick 30;
+the runtime clears that active due field when it checkpoints completed work.
+The result is preserved at `.artifacts/mvp/C2.0.red-tests.paired-flow` with
+status `oracle_mismatch`, fixture SHA, Cargo argv, toolchain and log hash.
+
+The pre-change compile failure was the missing crate-private
+`BoundIntrinsicWork::sampled_duration()` method, not missing production module
+files. The runner's existing `--expect red` oracle only recognizes absent
+module files and therefore does not classify that baseline failure. Its
+missing-module diagnostic check is retained but is not evidence for this
+compatibility case. No green paired-fixture result or acceptance gate is
+claimed; hosted checks and external maintainer acceptance remain separate.
