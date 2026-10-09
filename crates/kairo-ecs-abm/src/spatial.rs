@@ -156,6 +156,12 @@ impl TransitGraphV1 {
         self.canonical_bytes.clone()
     }
 
+    /// Borrow the canonical graph identity without allocating a copy.
+    #[doc(hidden)]
+    pub fn canonical_bytes_ref(&self) -> &[u8] {
+        &self.canonical_bytes
+    }
+
     pub fn route(
         &self,
         origin: NodeId,
@@ -491,7 +497,7 @@ impl RoutePlanImageLimitsV1 {
         }
     }
 
-    fn check_parts(
+    pub(crate) fn check_parts(
         &self,
         segment_count: usize,
         graph_bytes: usize,
@@ -553,7 +559,10 @@ pub enum RouteCheckpointError {
 }
 
 impl RoutePlanImageV1 {
-    fn validate_limits(&self, limits: &RoutePlanImageLimitsV1) -> Result<(), RouteCheckpointError> {
+    pub(crate) fn validate_limits(
+        &self,
+        limits: &RoutePlanImageLimitsV1,
+    ) -> Result<(), RouteCheckpointError> {
         limits.check_parts(
             self.segments.len(),
             self.graph_canonical_bytes.len(),
@@ -832,6 +841,48 @@ impl TransitProgressState {
         })
     }
 
+    pub(crate) fn checkpoint_cursor(&self) -> Result<(usize, SimDuration), RouteCheckpointError> {
+        self.validate_cursor()
+            .map_err(|_| RouteCheckpointError::InvalidProgress)?;
+        Ok((self.segment_index, self.elapsed_in_segment))
+    }
+
+    pub(crate) fn is_initial_cursor(&self) -> bool {
+        self.segment_index
+            == self
+                .route
+                .segments
+                .iter()
+                .position(|segment| segment.end_offset > segment.start_offset)
+                .unwrap_or(self.route.segments.len())
+            && self.elapsed_in_segment == SimDuration::ZERO
+    }
+
+    pub(crate) fn is_complete_cursor(&self) -> bool {
+        self.segment_index == self.route.segments.len()
+            && self.elapsed_in_segment == SimDuration::ZERO
+    }
+
+    pub(crate) fn uses_route(&self, route: &RoutePlan) -> bool {
+        &self.route == route
+    }
+
+    pub(crate) fn restore_at_cursor(
+        route: RoutePlan,
+        segment_index: usize,
+        elapsed_in_segment: SimDuration,
+    ) -> Result<Self, RouteCheckpointError> {
+        let state = Self {
+            route,
+            segment_index,
+            elapsed_in_segment,
+        };
+        state
+            .validate_cursor()
+            .map_err(|_| RouteCheckpointError::InvalidProgress)?;
+        Ok(state)
+    }
+
     pub(crate) fn restore(
         checkpoint: TransitProgressCheckpoint,
         graph: &TransitGraphV1,
@@ -942,6 +993,15 @@ mod tests {
             })
             .collect();
         TransitGraphV1::new(1, nodes, edges).unwrap()
+    }
+
+    #[test]
+    fn canonical_graph_identity_can_be_borrowed_without_changing_owned_api() {
+        let graph = linear_graph(&[5, 3]);
+        assert_eq!(
+            graph.canonical_bytes_ref(),
+            graph.canonical_bytes().as_slice()
+        );
     }
 
     fn linear_route(

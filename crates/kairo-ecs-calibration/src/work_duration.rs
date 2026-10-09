@@ -4,7 +4,7 @@
 //! to the execution model and are deliberately not represented here.
 
 use crate::seed_map::{
-    validate_id, CalibrationSeedError, CalibrationStream, CalibrationStreamKey, SeedPurpose,
+    CalibrationSeedError, CalibrationStream, CalibrationStreamKey, SeedPurpose, validate_id,
 };
 use kairo_ecs_types::SimDuration;
 use std::collections::{HashMap, HashSet};
@@ -81,6 +81,16 @@ pub(crate) struct SampledWorkDuration {
     key: CalibrationStreamKey,
     draw_before: u64,
     draw_after: u64,
+}
+
+#[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
+pub(crate) enum SampledWorkDurationCheckpointError {
+    #[error("sample checkpoint requires a Service stream")]
+    WrongPurpose,
+    #[error("sample checkpoint identity does not match the expected stream")]
+    IdentityMismatch,
+    #[error("sample checkpoint draw bounds or duration are invalid")]
+    InvalidSample,
 }
 
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
@@ -365,7 +375,7 @@ impl IntrinsicWorkProviderCheckpointV1 {
                     }
                 }
                 ProviderDistributionCheckpointV1::FixedTicks(_) => {
-                    return Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution)
+                    return Err(IntrinsicWorkProviderCheckpointError::InvalidDistribution);
                 }
                 ProviderDistributionCheckpointV1::WeightedTicks {
                     support,
@@ -423,6 +433,40 @@ impl SampledWorkDuration {
 
     pub(crate) fn draw_after(&self) -> u64 {
         self.draw_after
+    }
+
+    /// Borrow the complete owner identity and draw bounds for a private
+    /// checkpoint assembler. The opaque key itself remains module-owned.
+    pub(crate) fn checkpoint_parts(&self) -> (SimDuration, &CalibrationStreamKey, u64, u64) {
+        (self.duration, &self.key, self.draw_before, self.draw_after)
+    }
+
+    /// Rebuild a sample only after validating it against the restored exact
+    /// Service stream state. This does not sample, advance, or replay draws.
+    pub(crate) fn from_checkpoint_parts(
+        duration: SimDuration,
+        key: CalibrationStreamKey,
+        draw_before: u64,
+        draw_after: u64,
+        stream: &CalibrationStream,
+        expected: &CalibrationStreamKey,
+    ) -> Result<Self, SampledWorkDurationCheckpointError> {
+        if stream.purpose() != SeedPurpose::Service {
+            return Err(SampledWorkDurationCheckpointError::WrongPurpose);
+        }
+        if &key != expected || stream.key() != *expected {
+            return Err(SampledWorkDurationCheckpointError::IdentityMismatch);
+        }
+        if duration.ticks() == 0 || draw_before > draw_after || draw_after > stream.draw_position()
+        {
+            return Err(SampledWorkDurationCheckpointError::InvalidSample);
+        }
+        Ok(Self {
+            duration,
+            key,
+            draw_before,
+            draw_after,
+        })
     }
 }
 
@@ -483,6 +527,119 @@ mod tests {
             assert!(!debug.contains(private_id));
         }
         assert!(debug.contains("[redacted]"));
+    }
+
+    #[test]
+    fn sample_checkpoint_parts_rebuild_without_consuming_rng() {
+        let (key, mut stream) = canonical_service_stream();
+        let fixed = IntrinsicDurationDistribution::fixed(12)
+            .unwrap()
+            .sample(&mut stream, &key)
+            .unwrap();
+        let (duration, stored_key, before, after) = fixed.checkpoint_parts();
+        assert_eq!((before, after), (0, 0));
+        // The sample interval is historical metadata. The owning stream can
+        // continue after sampling; restoring the sample must not rewind it.
+        stream.next_u64().unwrap();
+        let restored_stream = stream.snapshot().restore().unwrap();
+        let rebuilt = SampledWorkDuration::from_checkpoint_parts(
+            duration,
+            stored_key.clone(),
+            before,
+            after,
+            &restored_stream,
+            &key,
+        )
+        .unwrap();
+        assert_eq!(rebuilt.duration(), fixed.duration());
+        assert_eq!(
+            rebuilt.checkpoint_parts().2..=rebuilt.checkpoint_parts().3,
+            0..=0
+        );
+        assert_eq!(restored_stream.draw_position(), 1);
+        assert_eq!(stream.draw_position(), 1);
+    }
+
+    #[test]
+    fn sample_checkpoint_rejects_invalid_owner_purpose_duration_and_draw_bounds() {
+        let (key, mut stream) = canonical_service_stream();
+        let weighted = IntrinsicDurationDistribution::weighted_ticks(vec![(4, 2), (9, 3)])
+            .unwrap()
+            .sample(&mut stream, &key)
+            .unwrap();
+        let (duration, stored_key, before, after) = weighted.checkpoint_parts();
+        let restored = stream.snapshot().restore().unwrap();
+        assert!(
+            SampledWorkDuration::from_checkpoint_parts(
+                duration,
+                stored_key.clone(),
+                before,
+                after,
+                &restored,
+                &key,
+            )
+            .is_ok()
+        );
+
+        assert_eq!(
+            SampledWorkDuration::from_checkpoint_parts(
+                SimDuration::from_ticks(0),
+                stored_key.clone(),
+                before,
+                after,
+                &restored,
+                &key,
+            ),
+            Err(SampledWorkDurationCheckpointError::InvalidSample)
+        );
+        assert_eq!(
+            SampledWorkDuration::from_checkpoint_parts(
+                duration,
+                stored_key.clone(),
+                after,
+                before,
+                &restored,
+                &key,
+            ),
+            Err(SampledWorkDurationCheckpointError::InvalidSample)
+        );
+        assert_eq!(
+            SampledWorkDuration::from_checkpoint_parts(
+                duration,
+                stored_key.clone(),
+                before,
+                restored.draw_position() + 1,
+                &restored,
+                &key,
+            ),
+            Err(SampledWorkDurationCheckpointError::InvalidSample)
+        );
+
+        let mut map = CalibrationSeedMap::new(1, "study-α", 1234).unwrap();
+        let other_key = map
+            .key_for("crn-v1", 7, "other-case", "triage:1", SeedPurpose::Service)
+            .unwrap();
+        assert_eq!(
+            SampledWorkDuration::from_checkpoint_parts(
+                duration, other_key, before, after, &restored, &key,
+            ),
+            Err(SampledWorkDurationCheckpointError::IdentityMismatch)
+        );
+
+        let behavior = map
+            .stream_for("crn-v1", 7, "case-0001", "triage:1", SeedPurpose::Behavior)
+            .unwrap();
+        assert_eq!(
+            SampledWorkDuration::from_checkpoint_parts(
+                duration,
+                stored_key.clone(),
+                before,
+                after,
+                &behavior,
+                &key,
+            ),
+            Err(SampledWorkDurationCheckpointError::WrongPurpose)
+        );
     }
 
     #[test]

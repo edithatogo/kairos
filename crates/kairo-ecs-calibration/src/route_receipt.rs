@@ -3,13 +3,36 @@
 //! The receipt hashes the immutable route retained by an actual transit carrier.
 //! It is not a seed identity, checkpoint codec, or authenticity signature.
 
-use kairo_ecs_abm::spatial::{RoutePlan, RouteSegment};
 use kairo_ecs_abm::TransitContext;
+use kairo_ecs_abm::spatial::{RoutePlan, RouteSegment};
 use sha2::{Digest, Sha256};
 
 const RECEIPT_TAG: &[u8] = b"KAIROS-CALIBRATION-ROUTE-RECEIPT\0";
 const RECEIPT_VERSION: u32 = 1;
 pub(crate) const ROUTE_METADATA_VERSION_V1: u32 = 1;
+
+/// Bounds for the private, in-memory C2 route receipt packet. This is not a
+/// byte codec or a promise of compatibility across crate versions.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) struct RouteReceiptCheckpointLimits {
+    pub(crate) max_identifier_bytes: usize,
+    pub(crate) max_canonical_bytes: usize,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct RouteMetadataCheckpointV1 {
+    version: u32,
+    trip_purpose: String,
+    distance_provenance: DistanceProvenance,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct RouteReceiptCheckpointV1 {
+    version: u32,
+    metadata: RouteMetadataCheckpointV1,
+    canonical_bytes: Vec<u8>,
+    sha256: [u8; 32],
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) enum DistanceProvenance {
@@ -68,6 +91,49 @@ impl RouteMetadata {
         }
         Ok(())
     }
+
+    pub(crate) fn checkpoint_identifier_bytes(&self) -> Result<usize, RouteReceiptError> {
+        self.validate()?;
+        Ok(self.trip_purpose.len())
+    }
+
+    pub(crate) fn checkpoint_v1(
+        &self,
+        limits: RouteReceiptCheckpointLimits,
+    ) -> Result<RouteMetadataCheckpointV1, RouteReceiptError> {
+        self.validate()?;
+        if self.trip_purpose.len() > limits.max_identifier_bytes {
+            return Err(RouteReceiptError::EncodingOverflow);
+        }
+        Ok(RouteMetadataCheckpointV1 {
+            version: self.version,
+            trip_purpose: self.trip_purpose.clone(),
+            distance_provenance: self.distance_provenance,
+        })
+    }
+}
+
+impl RouteMetadataCheckpointV1 {
+    pub(crate) fn checkpoint_identifier_bytes(&self) -> Result<usize, RouteReceiptError> {
+        validate_purpose(&self.trip_purpose)?;
+        Ok(self.trip_purpose.len())
+    }
+
+    pub(crate) fn restore(
+        &self,
+        limits: RouteReceiptCheckpointLimits,
+    ) -> Result<RouteMetadata, RouteReceiptError> {
+        if self.trip_purpose.len() > limits.max_identifier_bytes {
+            return Err(RouteReceiptError::EncodingOverflow);
+        }
+        let metadata = RouteMetadata {
+            version: self.version,
+            trip_purpose: self.trip_purpose.clone(),
+            distance_provenance: self.distance_provenance,
+        };
+        metadata.validate()?;
+        Ok(metadata)
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -78,6 +144,10 @@ pub(crate) struct RouteReceipt {
 }
 
 impl RouteReceipt {
+    pub(crate) fn metadata_identifier_bytes(&self) -> Result<usize, RouteReceiptError> {
+        self.metadata.checkpoint_identifier_bytes()
+    }
+
     pub(crate) fn from_context(
         context: &TransitContext,
         metadata: &RouteMetadata,
@@ -99,9 +169,36 @@ impl RouteReceipt {
         context: &TransitContext,
         metadata: &RouteMetadata,
     ) -> Result<(), RouteReceiptError> {
+        self.validate_context_with_limit(context, metadata, None)
+    }
+
+    /// Check the exact canonical size before constructing its comparison bytes.
+    /// This is used at checkpoint boundaries; ordinary receipt validation keeps
+    /// the existing unbounded runtime behavior.
+    pub(crate) fn validate_context_bounded(
+        &self,
+        context: &TransitContext,
+        metadata: &RouteMetadata,
+        max_canonical_bytes: usize,
+    ) -> Result<(), RouteReceiptError> {
+        self.validate_context_with_limit(context, metadata, Some(max_canonical_bytes))
+    }
+
+    fn validate_context_with_limit(
+        &self,
+        context: &TransitContext,
+        metadata: &RouteMetadata,
+        max_canonical_bytes: Option<usize>,
+    ) -> Result<(), RouteReceiptError> {
         metadata.validate()?;
         if &self.metadata != metadata {
             return Err(RouteReceiptError::RouteMismatch);
+        }
+        if let Some(limit) = max_canonical_bytes {
+            let projected = canonical_receipt_encoded_len(context.route_plan(), metadata)?;
+            if projected > limit {
+                return Err(RouteReceiptError::EncodingOverflow);
+            }
         }
         let actual = canonical_receipt_bytes(context.route_plan(), metadata)?;
         let digest: [u8; 32] = Sha256::digest(&actual).into();
@@ -111,6 +208,51 @@ impl RouteReceipt {
         Ok(())
     }
 
+    pub(crate) fn checkpoint_v1(
+        &self,
+        limits: RouteReceiptCheckpointLimits,
+    ) -> Result<RouteReceiptCheckpointV1, RouteReceiptError> {
+        let metadata = self.metadata.checkpoint_v1(limits)?;
+        if self.canonical_bytes.len() > limits.max_canonical_bytes {
+            return Err(RouteReceiptError::EncodingOverflow);
+        }
+        let digest: [u8; 32] = Sha256::digest(&self.canonical_bytes).into();
+        if digest != self.sha256 {
+            return Err(RouteReceiptError::RouteMismatch);
+        }
+        Ok(RouteReceiptCheckpointV1 {
+            version: 1,
+            metadata,
+            canonical_bytes: self.canonical_bytes.clone(),
+            sha256: self.sha256,
+        })
+    }
+
+    pub(crate) fn restore_checkpoint_v1(
+        checkpoint: RouteReceiptCheckpointV1,
+        context: &TransitContext,
+        limits: RouteReceiptCheckpointLimits,
+    ) -> Result<Self, RouteReceiptError> {
+        if checkpoint.version != 1 {
+            return Err(RouteReceiptError::UnsupportedMetadataVersion);
+        }
+        if checkpoint.canonical_bytes.len() > limits.max_canonical_bytes {
+            return Err(RouteReceiptError::EncodingOverflow);
+        }
+        let metadata = checkpoint.metadata.restore(limits)?;
+        let digest: [u8; 32] = Sha256::digest(&checkpoint.canonical_bytes).into();
+        if digest != checkpoint.sha256 {
+            return Err(RouteReceiptError::RouteMismatch);
+        }
+        let receipt = Self {
+            metadata: metadata.clone(),
+            canonical_bytes: checkpoint.canonical_bytes,
+            sha256: checkpoint.sha256,
+        };
+        receipt.validate_context_bounded(context, &metadata, limits.max_canonical_bytes)?;
+        Ok(receipt)
+    }
+
     #[cfg(test)]
     fn digest(&self) -> &[u8; 32] {
         &self.sha256
@@ -118,6 +260,12 @@ impl RouteReceipt {
 
     pub(crate) fn checkpoint_sha256_hex(&self) -> String {
         self.sha256.iter().map(|b| format!("{b:02x}")).collect()
+    }
+}
+
+impl RouteReceiptCheckpointV1 {
+    pub(crate) fn metadata_identifier_bytes(&self) -> Result<usize, RouteReceiptError> {
+        self.metadata.checkpoint_identifier_bytes()
     }
 }
 
@@ -136,7 +284,7 @@ fn canonical_receipt_bytes(
     route: &RoutePlan,
     metadata: &RouteMetadata,
 ) -> Result<Vec<u8>, RouteReceiptError> {
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(canonical_receipt_encoded_len(route, metadata)?);
     bytes.extend_from_slice(RECEIPT_TAG);
     bytes.extend_from_slice(&RECEIPT_VERSION.to_le_bytes());
     bytes.extend_from_slice(&metadata.version.to_le_bytes());
@@ -163,6 +311,50 @@ fn canonical_receipt_bytes(
     Ok(bytes)
 }
 
+/// Computes the exact encoded length using the same field widths and framing as
+/// `canonical_receipt_bytes`, without allocating or cloning route data.
+fn canonical_receipt_encoded_len(
+    route: &RoutePlan,
+    metadata: &RouteMetadata,
+) -> Result<usize, RouteReceiptError> {
+    let length_prefix = std::mem::size_of::<u64>();
+    let segment_count =
+        u64::try_from(route.segments().len()).map_err(|_| RouteReceiptError::EncodingOverflow)?;
+    u64::try_from(metadata.trip_purpose.len()).map_err(|_| RouteReceiptError::EncodingOverflow)?;
+    u64::try_from(route.graph_canonical_bytes().len())
+        .map_err(|_| RouteReceiptError::EncodingOverflow)?;
+    u64::try_from(route.profile().mode().as_str().len())
+        .map_err(|_| RouteReceiptError::EncodingOverflow)?;
+
+    let fixed_bytes = RECEIPT_TAG
+        .len()
+        .checked_add(std::mem::size_of::<u32>()) // receipt version
+        .and_then(|n| n.checked_add(std::mem::size_of::<u32>())) // metadata version
+        .and_then(|n| n.checked_add(length_prefix)) // purpose length
+        .and_then(|n| n.checked_add(metadata.trip_purpose.len()))
+        .and_then(|n| n.checked_add(1)) // provenance tag
+        .and_then(|n| n.checked_add(length_prefix)) // graph length
+        .and_then(|n| n.checked_add(route.graph_canonical_bytes().len()))
+        .and_then(|n| n.checked_add(std::mem::size_of::<u32>())) // graph version
+        .and_then(|n| n.checked_add(length_prefix)) // movement mode length
+        .and_then(|n| n.checked_add(route.profile().mode().as_str().len()))
+        .and_then(|n| n.checked_add(std::mem::size_of::<u64>())) // speed
+        .and_then(|n| n.checked_add(std::mem::size_of::<u64>())) // ticks per second
+        .and_then(|n| n.checked_add(std::mem::size_of::<u64>())) // origin
+        .and_then(|n| n.checked_add(std::mem::size_of::<u64>())) // destination
+        .and_then(|n| n.checked_add(std::mem::size_of::<u128>())) // distance
+        .and_then(|n| n.checked_add(std::mem::size_of::<u128>())) // duration
+        .and_then(|n| n.checked_add(std::mem::size_of::<u64>())) // segment count
+        .ok_or(RouteReceiptError::EncodingOverflow)?;
+    let segment_bytes = usize::try_from(segment_count)
+        .map_err(|_| RouteReceiptError::EncodingOverflow)?
+        .checked_mul(4 * std::mem::size_of::<u64>() + 2 * std::mem::size_of::<u128>())
+        .ok_or(RouteReceiptError::EncodingOverflow)?;
+    fixed_bytes
+        .checked_add(segment_bytes)
+        .ok_or(RouteReceiptError::EncodingOverflow)
+}
+
 fn append_bytes(target: &mut Vec<u8>, value: &[u8]) -> Result<(), RouteReceiptError> {
     let length = u64::try_from(value.len()).map_err(|_| RouteReceiptError::EncodingOverflow)?;
     target.extend_from_slice(&length.to_le_bytes());
@@ -186,7 +378,7 @@ mod tests {
         EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1,
     };
     use kairo_ecs_abm::{
-        register_transit_context, schedule_transit_control, schedule_transit_start, TransitPhase,
+        TransitPhase, register_transit_context, schedule_transit_control, schedule_transit_start,
     };
     use kairo_ecs_des::{FlowAcquireCommand, FlowBatchReceipt, FlowDomainControl, FlowRuntime};
     use kairo_ecs_types::{EventKind, SimDuration, SimTime};
@@ -285,14 +477,72 @@ mod tests {
                 .collect::<String>(),
             "6e2de4e99a98adaadfb78a64e8a0d438c6036f6c43c7c5b953238893532d5425"
         );
-        assert!(a
-            .validate_context(&reordered, &route_metadata("patient-transfer"))
-            .is_ok());
+        assert!(
+            a.validate_context(&reordered, &route_metadata("patient-transfer"))
+                .is_ok()
+        );
         let other_purpose =
             RouteReceipt::from_context(&reordered, &route_metadata("staff-transfer")).unwrap();
         assert_ne!(a.digest(), other_purpose.digest());
         assert_eq!(
             a.validate_context(&reordered, &route_metadata("staff-transfer")),
+            Err(RouteReceiptError::RouteMismatch)
+        );
+    }
+
+    #[test]
+    fn checkpoint_size_preflight_matches_encoder_and_fails_before_materialization_limit() {
+        let context = context(route_graph([2, 3], false, 1));
+        let metadata = route_metadata("patient-transfer");
+        let receipt = RouteReceipt::from_context(&context, &metadata).unwrap();
+        let exact_size = canonical_receipt_encoded_len(context.route_plan(), &metadata).unwrap();
+        assert_eq!(exact_size, receipt.canonical_bytes.len());
+        assert!(context.route_plan().segments().len() < 16);
+
+        let before = receipt.clone();
+        assert_eq!(
+            receipt.validate_context_bounded(&context, &metadata, exact_size - 1),
+            Err(RouteReceiptError::EncodingOverflow)
+        );
+        assert_eq!(receipt, before);
+        assert_eq!(
+            receipt.validate_context_bounded(&context, &metadata, exact_size),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn native_receipt_checkpoint_is_bounded_and_revalidates_the_actual_route() {
+        let actual = context(route_graph([2, 3], false, 1));
+        let receipt =
+            RouteReceipt::from_context(&actual, &route_metadata("patient-transfer")).unwrap();
+        let limits = RouteReceiptCheckpointLimits {
+            max_identifier_bytes: 64,
+            max_canonical_bytes: 4096,
+        };
+        let image = receipt.checkpoint_v1(limits).unwrap();
+        let restored = RouteReceipt::restore_checkpoint_v1(image.clone(), &actual, limits).unwrap();
+        assert_eq!(restored, receipt);
+
+        let too_small = RouteReceiptCheckpointLimits {
+            max_identifier_bytes: 2,
+            max_canonical_bytes: 4096,
+        };
+        assert_eq!(
+            receipt.checkpoint_v1(too_small),
+            Err(RouteReceiptError::EncodingOverflow)
+        );
+
+        let changed = context(route_graph([2, 4], false, 1));
+        assert_eq!(
+            RouteReceipt::restore_checkpoint_v1(image.clone(), &changed, limits),
+            Err(RouteReceiptError::RouteMismatch)
+        );
+
+        let mut corrupt = image;
+        corrupt.canonical_bytes.push(0);
+        assert_eq!(
+            RouteReceipt::restore_checkpoint_v1(corrupt, &actual, limits),
             Err(RouteReceiptError::RouteMismatch)
         );
     }
@@ -427,9 +677,11 @@ mod tests {
         let paused_progress = paused.progress_at(flow.now()).unwrap();
         assert_eq!(paused_progress.useful_elapsed.ticks(), 1);
         assert_eq!(paused_progress.remaining.ticks(), 4);
-        assert!(receipt
-            .validate_context(paused, &route_metadata("patient-transfer"))
-            .is_ok());
+        assert!(
+            receipt
+                .validate_context(paused, &route_metadata("patient-transfer"))
+                .is_ok()
+        );
 
         schedule_transit_control(
             &mut flow,
@@ -464,9 +716,11 @@ mod tests {
         let completed_progress = arrived.progress_at(flow.now()).unwrap();
         assert_eq!(completed_progress.useful_elapsed.ticks(), 5);
         assert_eq!(completed_progress.remaining.ticks(), 0);
-        assert!(receipt
-            .validate_context(arrived, &route_metadata("patient-transfer"))
-            .is_ok());
+        assert!(
+            receipt
+                .validate_context(arrived, &route_metadata("patient-transfer"))
+                .is_ok()
+        );
         let request_id = flow.work(service).unwrap().request.unwrap();
         let request = flow.request(request_id).unwrap();
         assert_eq!(request.work, Some(service));

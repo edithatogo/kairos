@@ -1,13 +1,157 @@
 //! Shared agent behavior on the authoritative Flow runtime.
-use super::spatial::{RoutePlan, TransitError, TransitProgressState};
+use super::spatial::{
+    RouteCheckpointError, RoutePlan, RoutePlanImageLimitsV1, RoutePlanImageV1, TransitError,
+    TransitGraphV1, TransitProgressState,
+};
 use kairo_ecs_des::{
-    FlowAcquireCommand, FlowBatchReceipt, FlowCallbackCause, FlowCallbackSnapshot, FlowCommandSink,
-    FlowCommandTicket, FlowDomainControl, FlowError, FlowOwnedCommand, FlowRuntime,
-    FlowRuntimeIdentity, FlowWorldView, WorkId, WorkState,
+    FlowAcquireCommand, FlowBatchReceipt, FlowCallbackCause, FlowCallbackCodeV1,
+    FlowCallbackSnapshot, FlowCheckpointCodecs, FlowCheckpointError, FlowCheckpointRebindV1,
+    FlowCommandSink, FlowCommandTicket, FlowDomainControl, FlowError, FlowOwnedCommand,
+    FlowRuntime, FlowRuntimeIdentity, FlowWorldView, PreemptionStrategy, WorkId, WorkState,
 };
 use kairo_ecs_rng::DeterministicStream;
 use kairo_ecs_types::{EntityId, EventId, EventKind, SimDuration, SimTime};
 use std::cmp::min;
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+
+const TRANSIT_CONTEXT_SCHEMA_V1: u32 = 1;
+const TRANSIT_CONTEXT_FIXED_IMAGE_BYTES: usize = 512;
+
+/// Bounds for one native TransitContext image. Route limits are checked before
+/// route payload cloning; `max_total_bytes` also includes this context envelope.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct TransitContextCheckpointLimitsV1 {
+    pub max_segments: usize,
+    pub max_graph_bytes: usize,
+    pub max_mode_bytes: usize,
+    pub max_total_bytes: usize,
+}
+
+impl TransitContextCheckpointLimitsV1 {
+    pub const fn new(
+        max_segments: usize,
+        max_graph_bytes: usize,
+        max_mode_bytes: usize,
+        max_total_bytes: usize,
+    ) -> Self {
+        Self {
+            max_segments,
+            max_graph_bytes,
+            max_mode_bytes,
+            max_total_bytes,
+        }
+    }
+
+    fn route_limits(self) -> RoutePlanImageLimitsV1 {
+        RoutePlanImageLimitsV1::new(
+            self.max_segments,
+            self.max_graph_bytes,
+            self.max_mode_bytes,
+            self.max_total_bytes
+                .saturating_sub(TRANSIT_CONTEXT_FIXED_IMAGE_BYTES),
+        )
+    }
+
+    fn check_context_size(
+        self,
+        segments: usize,
+        graph_bytes: usize,
+        mode_bytes: usize,
+    ) -> Result<(), TransitContextCheckpointError> {
+        let total = segments
+            .checked_mul(64)
+            .and_then(|bytes| bytes.checked_add(graph_bytes))
+            .and_then(|bytes| bytes.checked_add(mode_bytes))
+            .and_then(|bytes| bytes.checked_add(TRANSIT_CONTEXT_FIXED_IMAGE_BYTES))
+            .ok_or(TransitContextCheckpointError::LimitExceeded)?;
+        if segments > self.max_segments
+            || graph_bytes > self.max_graph_bytes
+            || mode_bytes > self.max_mode_bytes
+            || total > self.max_total_bytes
+        {
+            return Err(TransitContextCheckpointError::LimitExceeded);
+        }
+        Ok(())
+    }
+}
+
+/// Errors from the experimental native TransitContext checkpoint seam.
+#[doc(hidden)]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum TransitContextCheckpointError {
+    UnsupportedVersion(u32),
+    LimitExceeded,
+    LineageMismatch,
+    InvalidState,
+    InvalidReference,
+    InvalidRoute,
+    InvalidProgress,
+    InvalidTicket,
+}
+
+impl Display for TransitContextCheckpointError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnsupportedVersion(version) => {
+                write!(f, "unsupported transit context image version: {version}")
+            }
+            Self::LimitExceeded => f.write_str("transit context checkpoint limit exceeded"),
+            Self::LineageMismatch => f.write_str("transit context belongs to another Flow runtime"),
+            Self::InvalidState => f.write_str("invalid transit context state"),
+            Self::InvalidReference => f.write_str("invalid transit context reference"),
+            Self::InvalidRoute => f.write_str("invalid transit context route"),
+            Self::InvalidProgress => f.write_str("invalid transit context progress"),
+            Self::InvalidTicket => f.write_str("invalid transit context ticket"),
+        }
+    }
+}
+
+impl Error for TransitContextCheckpointError {}
+
+/// Ticket purpose retained as native state for a staged callback command.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TransitCommandPurposeCheckpointV1 {
+    Start { due_ticks: u128 },
+    Progress { due_ticks: u128 },
+    Arrival,
+}
+
+/// Native owned v1 checkpoint of one transit context. Opaque runtime identity
+/// and pointer-bearing values are deliberately absent.
+#[doc(hidden)]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TransitContextCheckpointV1 {
+    pub schema_version: u32,
+    pub route: RoutePlanImageV1,
+    pub segment_index: usize,
+    pub elapsed_in_segment_ticks: u128,
+    pub service_work: EntityId,
+    pub acquire_resource: EntityId,
+    pub acquire_owner: EntityId,
+    pub acquire_work: Option<EntityId>,
+    pub acquire_at_ticks: u128,
+    pub acquire_priority_level: i32,
+    pub acquire_deadline_ticks: Option<u128>,
+    pub acquire_scheduler_priority: i32,
+    pub acquire_timed: bool,
+    pub acquire_can_preempt: bool,
+    pub acquire_preemptible: Option<PreemptionStrategy>,
+    pub carrier: Option<EntityId>,
+    pub kind: Option<EventKind>,
+    pub start_at_ticks: u128,
+    pub phase: TransitPhase,
+    pub paused_from: Option<TransitPhase>,
+    pub last_advanced_at_ticks: u128,
+    pub initial_start_pending: bool,
+    pub expected_event: Option<(u64, u32)>,
+    pub expected_due_ticks: Option<u128>,
+    pub command_ticket: Option<(u64, usize, TransitCommandPurposeCheckpointV1)>,
+    pub arrival_ticket: Option<(u64, usize)>,
+    pub next_progress_ticket: Option<(u64, usize)>,
+}
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct FlowAgentHandle {
     actor: EntityId,
@@ -142,6 +286,345 @@ pub struct TransitContext {
     command_ticket: Option<(FlowCommandTicket, TransitCommandPurpose)>,
     arrival_ticket: Option<FlowCommandTicket>,
     next_progress_ticket: Option<FlowCommandTicket>,
+}
+
+impl TransitContext {
+    /// Capture all native mutable state after verifying that the context belongs
+    /// to the supplied source runtime. This is an owner payload only: it does
+    /// not assert a coherent outer Flow/bridge frontier.
+    #[doc(hidden)]
+    pub fn checkpoint_v1(
+        &self,
+        source_identity: &FlowRuntimeIdentity,
+        limits: TransitContextCheckpointLimitsV1,
+    ) -> Result<TransitContextCheckpointV1, TransitContextCheckpointError> {
+        if &self.runtime != source_identity {
+            return Err(TransitContextCheckpointError::LineageMismatch);
+        }
+        let (segment_index, elapsed) = self
+            .progress
+            .checkpoint_cursor()
+            .map_err(|_| TransitContextCheckpointError::InvalidProgress)?;
+        if !self.progress.uses_route(&self.route_plan) {
+            return Err(TransitContextCheckpointError::InvalidRoute);
+        }
+        validate_transit_context_state(TransitStateFacts {
+            phase: self.phase,
+            paused_from: self.paused_from,
+            initial_start_pending: self.initial_start_pending,
+            acquire_timed: self.acquire.timed,
+            acquire_at_ticks: self.acquire.at.ticks(),
+            start_at_ticks: self.start_at.ticks(),
+            last_advanced_at_ticks: self.last_advanced_at.ticks(),
+            has_carrier: self.carrier.is_some(),
+            has_kind: self.kind.is_some(),
+            initial_cursor: self.progress.is_initial_cursor(),
+            complete_cursor: self.progress.is_complete_cursor(),
+        })?;
+        limits.check_context_size(
+            self.route_plan.segments().len(),
+            self.route_plan.graph_canonical_bytes().len(),
+            self.route_plan.profile().mode().as_str().len(),
+        )?;
+        let route = self
+            .route_plan
+            .checkpoint_image_v1(&limits.route_limits())
+            .map_err(map_route_checkpoint_error)?;
+        let ticket_parts = |ticket: FlowCommandTicket| ticket.checkpoint_parts();
+        Ok(TransitContextCheckpointV1 {
+            schema_version: TRANSIT_CONTEXT_SCHEMA_V1,
+            route,
+            segment_index,
+            elapsed_in_segment_ticks: elapsed.ticks(),
+            service_work: self.service_work.entity_id(),
+            acquire_resource: self.acquire.resource.entity_id(),
+            acquire_owner: self.acquire.owner,
+            acquire_work: self.acquire.work.map(WorkId::entity_id),
+            acquire_at_ticks: self.acquire.at.ticks(),
+            acquire_priority_level: self.acquire.priority_level,
+            acquire_deadline_ticks: self.acquire.deadline.map(SimTime::ticks),
+            acquire_scheduler_priority: self.acquire.scheduler_priority,
+            acquire_timed: self.acquire.timed,
+            acquire_can_preempt: self.acquire.can_preempt,
+            acquire_preemptible: self.acquire.preemptible,
+            carrier: self.carrier.map(WorkId::entity_id),
+            kind: self.kind,
+            start_at_ticks: self.start_at.ticks(),
+            phase: self.phase,
+            paused_from: self.paused_from,
+            last_advanced_at_ticks: self.last_advanced_at.ticks(),
+            initial_start_pending: self.initial_start_pending,
+            expected_event: self
+                .expected_event
+                .map(|event| (event.index, event.generation)),
+            expected_due_ticks: self.expected_due.map(SimTime::ticks),
+            command_ticket: self.command_ticket.map(|(ticket, purpose)| {
+                let (batch, index) = ticket_parts(ticket);
+                let purpose = match purpose {
+                    TransitCommandPurpose::Start { due } => {
+                        TransitCommandPurposeCheckpointV1::Start {
+                            due_ticks: due.ticks(),
+                        }
+                    }
+                    TransitCommandPurpose::Progress { due } => {
+                        TransitCommandPurposeCheckpointV1::Progress {
+                            due_ticks: due.ticks(),
+                        }
+                    }
+                    TransitCommandPurpose::Arrival => TransitCommandPurposeCheckpointV1::Arrival,
+                };
+                (batch, index, purpose)
+            }),
+            arrival_ticket: self.arrival_ticket.map(ticket_parts),
+            next_progress_ticket: self.next_progress_ticket.map(ticket_parts),
+        })
+    }
+}
+
+impl TransitContextCheckpointV1 {
+    /// Restores this context against the caller-approved immutable graph and a
+    /// validated read-only Flow ID/ticket rebinding view.
+    #[doc(hidden)]
+    pub fn restore(
+        &self,
+        graph: &TransitGraphV1,
+        rebind: &FlowCheckpointRebindV1,
+        limits: TransitContextCheckpointLimitsV1,
+    ) -> Result<TransitContext, TransitContextCheckpointError> {
+        if self.schema_version != TRANSIT_CONTEXT_SCHEMA_V1 {
+            return Err(TransitContextCheckpointError::UnsupportedVersion(
+                self.schema_version,
+            ));
+        }
+        self.route
+            .validate_limits(&limits.route_limits())
+            .map_err(map_route_checkpoint_error)?;
+        limits.check_context_size(
+            self.route.segments.len(),
+            self.route.graph_canonical_bytes.len(),
+            self.route.movement_mode.len(),
+        )?;
+        let service_work = rebind
+            .resolve_work(self.service_work)
+            .map_err(|_| TransitContextCheckpointError::InvalidReference)?;
+        let service_owner = rebind
+            .resolve_work_owner(self.service_work)
+            .map_err(|_| TransitContextCheckpointError::InvalidReference)?;
+        if service_owner != self.acquire_owner {
+            return Err(TransitContextCheckpointError::InvalidReference);
+        }
+        let acquire_work = self
+            .acquire_work
+            .map(|id| rebind.resolve_work(id))
+            .transpose()
+            .map_err(|_| TransitContextCheckpointError::InvalidReference)?;
+        if acquire_work != Some(service_work) {
+            return Err(TransitContextCheckpointError::InvalidReference);
+        }
+        let acquire = FlowAcquireCommand {
+            resource: rebind
+                .resolve_resource(self.acquire_resource)
+                .map_err(|_| TransitContextCheckpointError::InvalidReference)?,
+            owner: rebind
+                .resolve_actor(self.acquire_owner)
+                .map_err(|_| TransitContextCheckpointError::InvalidReference)?,
+            work: acquire_work,
+            at: SimTime::from_ticks(self.acquire_at_ticks),
+            priority_level: self.acquire_priority_level,
+            deadline: self.acquire_deadline_ticks.map(SimTime::from_ticks),
+            scheduler_priority: self.acquire_scheduler_priority,
+            timed: self.acquire_timed,
+            can_preempt: self.acquire_can_preempt,
+            preemptible: self.acquire_preemptible,
+        };
+        let carrier = self
+            .carrier
+            .map(|id| rebind.resolve_work(id))
+            .transpose()
+            .map_err(|_| TransitContextCheckpointError::InvalidReference)?;
+        if let Some(carrier_work) = carrier {
+            let (_, _, domain_kind) = rebind
+                .resolve_work_binding(carrier_work.entity_id())
+                .map_err(|_| TransitContextCheckpointError::InvalidReference)?;
+            if domain_kind != self.kind {
+                return Err(TransitContextCheckpointError::InvalidReference);
+            }
+        }
+        let expected_event = self
+            .expected_event
+            .map(|(index, generation)| rebind.resolve_issued_event(EventId::new(index, generation)))
+            .transpose()
+            .map_err(|_| TransitContextCheckpointError::InvalidReference)?;
+        let restore_ticket = |parts: (u64, usize)| {
+            rebind
+                .resolve_ticket(parts.0, parts.1)
+                .map_err(|_| TransitContextCheckpointError::InvalidTicket)
+        };
+        let command_ticket = self
+            .command_ticket
+            .map(|(batch, index, purpose)| {
+                let purpose = match purpose {
+                    TransitCommandPurposeCheckpointV1::Start { due_ticks } => {
+                        TransitCommandPurpose::Start {
+                            due: SimTime::from_ticks(due_ticks),
+                        }
+                    }
+                    TransitCommandPurposeCheckpointV1::Progress { due_ticks } => {
+                        TransitCommandPurpose::Progress {
+                            due: SimTime::from_ticks(due_ticks),
+                        }
+                    }
+                    TransitCommandPurposeCheckpointV1::Arrival => TransitCommandPurpose::Arrival,
+                };
+                restore_ticket((batch, index)).map(|ticket| (ticket, purpose))
+            })
+            .transpose()?;
+        let arrival_ticket = self.arrival_ticket.map(restore_ticket).transpose()?;
+        let next_progress_ticket = self.next_progress_ticket.map(restore_ticket).transpose()?;
+        let route_plan = RoutePlan::restore_image_v1(&self.route, graph, &limits.route_limits())
+            .map_err(map_route_checkpoint_error)?;
+        let progress = TransitProgressState::restore_at_cursor(
+            route_plan.clone(),
+            self.segment_index,
+            SimDuration::from_ticks(self.elapsed_in_segment_ticks),
+        )
+        .map_err(map_route_checkpoint_error)?;
+        validate_transit_context_state(TransitStateFacts {
+            phase: self.phase,
+            paused_from: self.paused_from,
+            initial_start_pending: self.initial_start_pending,
+            acquire_timed: self.acquire_timed,
+            acquire_at_ticks: self.acquire_at_ticks,
+            start_at_ticks: self.start_at_ticks,
+            last_advanced_at_ticks: self.last_advanced_at_ticks,
+            has_carrier: self.carrier.is_some(),
+            has_kind: self.kind.is_some(),
+            initial_cursor: progress.is_initial_cursor(),
+            complete_cursor: progress.is_complete_cursor(),
+        })?;
+        Ok(TransitContext {
+            runtime: rebind.identity().clone(),
+            route_plan,
+            progress,
+            service_work,
+            acquire,
+            carrier,
+            kind: self.kind,
+            start_at: SimTime::from_ticks(self.start_at_ticks),
+            phase: self.phase,
+            paused_from: self.paused_from,
+            last_advanced_at: SimTime::from_ticks(self.last_advanced_at_ticks),
+            initial_start_pending: self.initial_start_pending,
+            expected_event,
+            expected_due: self.expected_due_ticks.map(SimTime::from_ticks),
+            command_ticket,
+            arrival_ticket,
+            next_progress_ticket,
+        })
+    }
+
+    /// Restore this owner payload for its actual dense WorkContext row. The
+    /// row is supplied by the trusted Flow decoder, never by the image.
+    #[doc(hidden)]
+    pub fn restore_for_owner(
+        &self,
+        graph: &TransitGraphV1,
+        rebind: &FlowCheckpointRebindV1,
+        row_owner: EntityId,
+        limits: TransitContextCheckpointLimitsV1,
+    ) -> Result<TransitContext, TransitContextCheckpointError> {
+        let (_, _, row_domain_kind) = rebind
+            .resolve_work_binding(row_owner)
+            .map_err(|_| TransitContextCheckpointError::InvalidReference)?;
+        if row_domain_kind.is_none() {
+            return Err(TransitContextCheckpointError::InvalidReference);
+        }
+        match self.carrier {
+            Some(carrier) => {
+                if carrier != row_owner || self.kind != row_domain_kind {
+                    return Err(TransitContextCheckpointError::InvalidReference);
+                }
+            }
+            None => {
+                if self.phase != TransitPhase::Ready
+                    || self.paused_from.is_some()
+                    || self.kind.is_some()
+                {
+                    return Err(TransitContextCheckpointError::InvalidState);
+                }
+            }
+        }
+        self.restore(graph, rebind, limits)
+    }
+}
+
+struct TransitStateFacts {
+    phase: TransitPhase,
+    paused_from: Option<TransitPhase>,
+    initial_start_pending: bool,
+    acquire_timed: bool,
+    acquire_at_ticks: u128,
+    start_at_ticks: u128,
+    last_advanced_at_ticks: u128,
+    has_carrier: bool,
+    has_kind: bool,
+    initial_cursor: bool,
+    complete_cursor: bool,
+}
+
+fn validate_transit_context_state(
+    facts: TransitStateFacts,
+) -> Result<(), TransitContextCheckpointError> {
+    let TransitStateFacts {
+        phase,
+        paused_from,
+        initial_start_pending,
+        acquire_timed,
+        acquire_at_ticks,
+        start_at_ticks,
+        last_advanced_at_ticks,
+        has_carrier,
+        has_kind,
+        initial_cursor,
+        complete_cursor,
+    } = facts;
+    let paused_ready = phase == TransitPhase::Paused && paused_from == Some(TransitPhase::Ready);
+    let paused_moving = phase == TransitPhase::Paused && paused_from == Some(TransitPhase::Moving);
+    if (phase == TransitPhase::Paused) != paused_from.is_some()
+        || (paused_from.is_some()
+            && !matches!(
+                paused_from,
+                Some(TransitPhase::Ready | TransitPhase::Moving)
+            ))
+        || !acquire_timed
+        || acquire_at_ticks != start_at_ticks
+        || has_carrier != has_kind
+        || (!has_carrier && phase != TransitPhase::Ready)
+        || (matches!(phase, TransitPhase::Moving | TransitPhase::Arrived) && !has_carrier)
+        || (initial_start_pending
+            && (matches!(phase, TransitPhase::Moving | TransitPhase::Arrived) || paused_moving))
+        || ((phase == TransitPhase::Ready || paused_ready) && !initial_cursor)
+        || (phase == TransitPhase::Arrived && !complete_cursor)
+        || (phase == TransitPhase::Moving && complete_cursor)
+        || ((phase == TransitPhase::Ready || paused_ready)
+            && last_advanced_at_ticks != start_at_ticks)
+        || (!(phase == TransitPhase::Ready || paused_ready)
+            && last_advanced_at_ticks < start_at_ticks)
+    {
+        return Err(TransitContextCheckpointError::InvalidState);
+    }
+    Ok(())
+}
+
+fn map_route_checkpoint_error(error: RouteCheckpointError) -> TransitContextCheckpointError {
+    match error {
+        RouteCheckpointError::UnsupportedVersion => TransitContextCheckpointError::InvalidRoute,
+        RouteCheckpointError::LimitExceeded => TransitContextCheckpointError::LimitExceeded,
+        RouteCheckpointError::InvalidProgress => TransitContextCheckpointError::InvalidProgress,
+        RouteCheckpointError::InvalidPlan | RouteCheckpointError::InvalidGraph => {
+            TransitContextCheckpointError::InvalidRoute
+        }
+    }
 }
 
 impl TransitContext {
@@ -545,6 +1028,26 @@ pub fn register_transit_context(
         kind,
         TransitContext::plan,
         accept_transit_context,
+    )
+}
+
+/// Register this trusted transit planner in the native Flow codec manifest.
+/// The supplied callback IDs are caller-owned compatibility declarations.
+#[doc(hidden)]
+pub fn register_transit_context_checkpoint_domain(
+    codecs: &mut FlowCheckpointCodecs,
+    registration: &str,
+    kind: EventKind,
+    planner_id: FlowCallbackCodeV1,
+    receipt_id: FlowCallbackCodeV1,
+) -> Result<(), FlowCheckpointError> {
+    codecs.register_domain_plan_hook_with_receipt::<TransitContext>(
+        registration,
+        kind,
+        TransitContext::plan,
+        accept_transit_context,
+        planner_id,
+        receipt_id,
     )
 }
 

@@ -7,9 +7,11 @@ pub mod spatial;
 pub use flow_adapter::register_transit_context_reject_first_for_test;
 pub use flow_adapter::{
     create_flow_agent, register_flow_agent_behavior, register_transit_context,
-    schedule_flow_agent_update, schedule_transit_control, schedule_transit_start,
-    FlowAgentBehavior, FlowAgentContext, FlowAgentHandle, TransitContext, TransitPhase,
-    TransitProgress,
+    register_transit_context_checkpoint_domain, schedule_flow_agent_update,
+    schedule_transit_control, schedule_transit_start, FlowAgentBehavior, FlowAgentContext,
+    FlowAgentHandle, TransitCommandPurposeCheckpointV1, TransitContext,
+    TransitContextCheckpointError, TransitContextCheckpointLimitsV1, TransitContextCheckpointV1,
+    TransitPhase, TransitProgress,
 };
 
 use kairo_ecs_core::Scheduler;
