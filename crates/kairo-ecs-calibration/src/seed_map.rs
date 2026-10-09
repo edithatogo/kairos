@@ -25,15 +25,78 @@ pub enum SeedPurpose {
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-struct SeedIdentity {
-    version: u32,
-    root_seed: u64,
-    replication_id: u64,
-    study_id: String,
-    seed_schedule_id: String,
-    case_key: String,
-    task_key: String,
-    purpose: SeedPurpose,
+pub(crate) struct SeedIdentity {
+    pub(crate) version: u32,
+    pub(crate) root_seed: u64,
+    pub(crate) replication_id: u64,
+    pub(crate) study_id: String,
+    pub(crate) seed_schedule_id: String,
+    pub(crate) case_key: String,
+    pub(crate) task_key: String,
+    pub(crate) purpose: SeedPurpose,
+}
+
+/// Owned engine-native registry state for the future C2 envelope layer.
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Consumed by the future crate-private portable checkpoint adapter"
+    )
+)]
+pub(crate) struct SeedMapCheckpointStateV1 {
+    pub(crate) version: u32,
+    pub(crate) root_seed: u64,
+    pub(crate) study_id: String,
+    pub(crate) entries: Vec<SeedMapCheckpointEntryV1>,
+}
+
+/// One canonical seed-to-logical-identity registry entry.
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Consumed by the future crate-private portable checkpoint adapter"
+    )
+)]
+pub(crate) struct SeedMapCheckpointEntryV1 {
+    pub(crate) seed: u64,
+    pub(crate) identity: SeedIdentity,
+}
+
+/// Resource limits applied before registry checkpoint cloning or import allocation.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Consumed by the future crate-private portable checkpoint adapter"
+    )
+)]
+pub(crate) struct SeedRegistryCheckpointLimits {
+    pub(crate) max_entries: usize,
+    pub(crate) max_identifier_bytes: usize,
+}
+
+#[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Consumed by the future crate-private portable checkpoint adapter"
+    )
+)]
+pub(crate) enum SeedRegistryCheckpointError {
+    #[error(transparent)]
+    Seed(#[from] CalibrationSeedError),
+    #[error("invalid calibration seed registry checkpoint")]
+    InvalidState,
+    #[error("calibration seed registry checkpoint exceeds caller limits")]
+    LimitExceeded,
+    #[error("calibration seed registry checkpoint allocation failed")]
+    AllocationFailed,
 }
 
 /// Errors in seed-map construction, finite-run collision registration, or
@@ -79,6 +142,118 @@ impl CalibrationSeedMap {
             root_seed,
             study_id: study_id.to_owned(),
             registered: HashMap::new(),
+        })
+    }
+
+    /// Capture all collision-registry entries in canonical seed order.
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "Consumed by the future crate-private portable checkpoint adapter"
+        )
+    )]
+    pub(crate) fn checkpoint_state(
+        &self,
+        limits: SeedRegistryCheckpointLimits,
+    ) -> Result<SeedMapCheckpointStateV1, SeedRegistryCheckpointError> {
+        if self.registered.len() > limits.max_entries {
+            return Err(SeedRegistryCheckpointError::LimitExceeded);
+        }
+        let mut identifier_bytes = self.study_id.len();
+        for identity in self.registered.values() {
+            identifier_bytes = identifier_bytes
+                .checked_add(identity_identifier_bytes(identity)?)
+                .ok_or(SeedRegistryCheckpointError::LimitExceeded)?;
+            if identifier_bytes > limits.max_identifier_bytes {
+                return Err(SeedRegistryCheckpointError::LimitExceeded);
+            }
+        }
+        if identifier_bytes > limits.max_identifier_bytes {
+            return Err(SeedRegistryCheckpointError::LimitExceeded);
+        }
+
+        let mut entries = Vec::new();
+        entries
+            .try_reserve_exact(self.registered.len())
+            .map_err(|_| SeedRegistryCheckpointError::AllocationFailed)?;
+        for (&seed, identity) in &self.registered {
+            entries.push(SeedMapCheckpointEntryV1 {
+                seed,
+                identity: identity.clone(),
+            });
+        }
+        entries.sort_unstable_by_key(|entry| entry.seed);
+        Ok(SeedMapCheckpointStateV1 {
+            version: self.version,
+            root_seed: self.root_seed,
+            study_id: self.study_id.clone(),
+            entries,
+        })
+    }
+
+    /// Validate a complete state before allocating or exposing a restored map.
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "Consumed by the future crate-private portable checkpoint adapter"
+        )
+    )]
+    pub(crate) fn from_checkpoint_state(
+        state: SeedMapCheckpointStateV1,
+        limits: SeedRegistryCheckpointLimits,
+    ) -> Result<Self, SeedRegistryCheckpointError> {
+        if state.version != SEED_MAP_VERSION_V1 {
+            return Err(CalibrationSeedError::UnsupportedSeedMapVersion(state.version).into());
+        }
+        validate_id("study_id", &state.study_id)?;
+        if state.entries.len() > limits.max_entries {
+            return Err(SeedRegistryCheckpointError::LimitExceeded);
+        }
+        let mut identifier_bytes = state.study_id.len();
+        let mut previous_seed = None;
+        for entry in &state.entries {
+            if previous_seed.is_some_and(|previous| previous >= entry.seed) {
+                return Err(SeedRegistryCheckpointError::InvalidState);
+            }
+            previous_seed = Some(entry.seed);
+            let identity = &entry.identity;
+            if identity.version != state.version
+                || identity.root_seed != state.root_seed
+                || identity.study_id != state.study_id
+            {
+                return Err(SeedRegistryCheckpointError::InvalidState);
+            }
+            identifier_bytes = identifier_bytes
+                .checked_add(identity_identifier_bytes(identity)?)
+                .ok_or(SeedRegistryCheckpointError::LimitExceeded)?;
+            if identifier_bytes > limits.max_identifier_bytes {
+                return Err(SeedRegistryCheckpointError::LimitExceeded);
+            }
+        }
+        if identifier_bytes > limits.max_identifier_bytes {
+            return Err(SeedRegistryCheckpointError::LimitExceeded);
+        }
+
+        for entry in &state.entries {
+            if derive_seed(&entry.identity)? != entry.seed {
+                return Err(SeedRegistryCheckpointError::InvalidState);
+            }
+        }
+
+        let mut registered = HashMap::new();
+        registered
+            .try_reserve(state.entries.len())
+            .map_err(|_| SeedRegistryCheckpointError::AllocationFailed)?;
+        for entry in state.entries {
+            registered.insert(entry.seed, entry.identity);
+        }
+        Ok(Self {
+            version: state.version,
+            root_seed: state.root_seed,
+            study_id: state.study_id,
+            registered,
         })
     }
 
@@ -182,6 +357,24 @@ impl CalibrationSeedMap {
             }
         }
     }
+}
+
+fn identity_identifier_bytes(
+    identity: &SeedIdentity,
+) -> Result<usize, SeedRegistryCheckpointError> {
+    let mut total = 0usize;
+    for (field, value) in [
+        ("study_id", identity.study_id.as_str()),
+        ("seed_schedule_id", identity.seed_schedule_id.as_str()),
+        ("case_key", identity.case_key.as_str()),
+        ("task_key", identity.task_key.as_str()),
+    ] {
+        validate_id(field, value)?;
+        total = total
+            .checked_add(value.len())
+            .ok_or(SeedRegistryCheckpointError::LimitExceeded)?;
+    }
+    Ok(total)
 }
 
 /// Opaque expected identity for one logical calibration stream.
@@ -391,12 +584,263 @@ mod tests {
     }
 
     #[test]
+    fn registry_checkpoint_restores_all_purposes_and_future_collision_checks() {
+        let mut source = CalibrationSeedMap::new(1, "study", 1234).unwrap();
+        let identities = [
+            SeedPurpose::Service,
+            SeedPurpose::Transit,
+            SeedPurpose::Behavior,
+            SeedPurpose::Calibration,
+        ];
+        for purpose in identities {
+            let _ = source
+                .stream_for("schedule", 9, "case", "task", purpose)
+                .unwrap();
+        }
+
+        let state = source
+            .checkpoint_state(SeedRegistryCheckpointLimits {
+                max_entries: 4,
+                max_identifier_bytes: 128,
+            })
+            .unwrap();
+        assert!(state
+            .entries
+            .windows(2)
+            .all(|pair| pair[0].seed < pair[1].seed));
+        let mut restored = CalibrationSeedMap::from_checkpoint_state(
+            state,
+            SeedRegistryCheckpointLimits {
+                max_entries: 4,
+                max_identifier_bytes: 128,
+            },
+        )
+        .unwrap();
+
+        for purpose in identities {
+            restored
+                .stream_for("schedule", 9, "case", "task", purpose)
+                .unwrap();
+        }
+        let registered_identity = restored
+            .registered
+            .values()
+            .find(|identity| identity.purpose == SeedPurpose::Service)
+            .unwrap()
+            .clone();
+        let collision_identity = SeedIdentity {
+            seed_schedule_id: "different-schedule".into(),
+            ..registered_identity.clone()
+        };
+        let collided_seed = derive_seed(&registered_identity).unwrap();
+        assert_eq!(
+            restored.register_seed(collided_seed, collision_identity),
+            Err(CalibrationSeedError::SeedCollision {
+                seed: collided_seed
+            })
+        );
+    }
+
+    #[test]
+    fn registry_checkpoint_rejects_malformed_state_without_changing_source() {
+        let mut source = CalibrationSeedMap::new(1, "study", 1234).unwrap();
+        source
+            .stream_for("schedule", 9, "case", "task", SeedPurpose::Service)
+            .unwrap();
+        let original = source.registered.clone();
+        let state = source
+            .checkpoint_state(SeedRegistryCheckpointLimits {
+                max_entries: 8,
+                max_identifier_bytes: 128,
+            })
+            .unwrap();
+
+        assert_eq!(
+            CalibrationSeedMap::from_checkpoint_state(
+                state.clone(),
+                SeedRegistryCheckpointLimits {
+                    max_entries: 0,
+                    max_identifier_bytes: 128,
+                }
+            )
+            .err()
+            .unwrap(),
+            SeedRegistryCheckpointError::LimitExceeded
+        );
+
+        let mut bad_version = state.clone();
+        bad_version.version = 2;
+        assert_eq!(
+            CalibrationSeedMap::from_checkpoint_state(
+                bad_version,
+                SeedRegistryCheckpointLimits {
+                    max_entries: 8,
+                    max_identifier_bytes: 128,
+                }
+            )
+            .err()
+            .unwrap(),
+            SeedRegistryCheckpointError::Seed(CalibrationSeedError::UnsupportedSeedMapVersion(2))
+        );
+
+        let mut bad_order = state.clone();
+        let first = bad_order.entries[0].clone();
+        bad_order.entries.push(first);
+        assert_eq!(
+            CalibrationSeedMap::from_checkpoint_state(
+                bad_order,
+                SeedRegistryCheckpointLimits {
+                    max_entries: 8,
+                    max_identifier_bytes: 128,
+                }
+            )
+            .err()
+            .unwrap(),
+            SeedRegistryCheckpointError::InvalidState
+        );
+
+        assert!(matches!(
+            source.checkpoint_state(SeedRegistryCheckpointLimits {
+                max_entries: 0,
+                max_identifier_bytes: 128,
+            }),
+            Err(SeedRegistryCheckpointError::LimitExceeded)
+        ));
+        assert!(matches!(
+            source.checkpoint_state(SeedRegistryCheckpointLimits {
+                max_entries: 1,
+                max_identifier_bytes: 1,
+            }),
+            Err(SeedRegistryCheckpointError::LimitExceeded)
+        ));
+        assert_eq!(source.registered, original);
+    }
+
+    #[test]
+    fn registry_checkpoint_import_rejects_identity_and_seed_mutations() {
+        let mut source = CalibrationSeedMap::new(1, "study", 1234).unwrap();
+        for purpose in [SeedPurpose::Service, SeedPurpose::Transit] {
+            source
+                .stream_for("schedule", 9, "case", "task", purpose)
+                .unwrap();
+        }
+        let limits = SeedRegistryCheckpointLimits {
+            max_entries: 2,
+            max_identifier_bytes: 128,
+        };
+        let state = source.checkpoint_state(limits).unwrap();
+
+        let mut unsorted = state.clone();
+        unsorted.entries.reverse();
+        assert_eq!(
+            CalibrationSeedMap::from_checkpoint_state(unsorted, limits)
+                .err()
+                .unwrap(),
+            SeedRegistryCheckpointError::InvalidState
+        );
+
+        let mut wrong_root = state.clone();
+        wrong_root.entries[0].identity.root_seed += 1;
+        assert_eq!(
+            CalibrationSeedMap::from_checkpoint_state(wrong_root, limits)
+                .err()
+                .unwrap(),
+            SeedRegistryCheckpointError::InvalidState
+        );
+
+        let mut wrong_study = state.clone();
+        wrong_study.entries[0].identity.study_id = "other-study".into();
+        assert_eq!(
+            CalibrationSeedMap::from_checkpoint_state(wrong_study, limits)
+                .err()
+                .unwrap(),
+            SeedRegistryCheckpointError::InvalidState
+        );
+
+        let mut wrong_seed = state.clone();
+        wrong_seed.entries[0].seed ^= 1;
+        assert_eq!(
+            CalibrationSeedMap::from_checkpoint_state(wrong_seed, limits)
+                .err()
+                .unwrap(),
+            SeedRegistryCheckpointError::InvalidState
+        );
+
+        let mut invalid_id = state;
+        invalid_id.entries[0].identity.case_key = " bad".into();
+        assert!(matches!(
+            CalibrationSeedMap::from_checkpoint_state(invalid_id, limits),
+            Err(SeedRegistryCheckpointError::Seed(
+                CalibrationSeedError::InvalidIdentifier("case_key")
+            ))
+        ));
+        assert_eq!(source.registered.len(), 2);
+    }
+
+    #[test]
+    fn registry_checkpoint_applies_cumulative_key_limits_and_empty_registry_caps() {
+        let mut source = CalibrationSeedMap::new(1, "s", 1234).unwrap();
+        for schedule in ["a", "b"] {
+            source
+                .stream_for(schedule, 9, "c", "t", SeedPurpose::Service)
+                .unwrap();
+        }
+
+        let per_identity_under_cap = SeedRegistryCheckpointLimits {
+            max_entries: 2,
+            max_identifier_bytes: 8,
+        };
+        assert_eq!(
+            source
+                .checkpoint_state(per_identity_under_cap)
+                .err()
+                .unwrap(),
+            SeedRegistryCheckpointError::LimitExceeded,
+            "the map study ID plus both complete identities exceeds the cumulative cap"
+        );
+
+        let within_total_cap = SeedRegistryCheckpointLimits {
+            max_entries: 2,
+            max_identifier_bytes: 9,
+        };
+        let state = source.checkpoint_state(within_total_cap).unwrap();
+        assert_eq!(
+            CalibrationSeedMap::from_checkpoint_state(state, per_identity_under_cap)
+                .err()
+                .unwrap(),
+            SeedRegistryCheckpointError::LimitExceeded
+        );
+
+        let empty = CalibrationSeedMap::new(1, "s", 0).unwrap();
+        let empty_caps = SeedRegistryCheckpointLimits {
+            max_entries: 0,
+            max_identifier_bytes: 1,
+        };
+        let empty_state = empty.checkpoint_state(empty_caps).unwrap();
+        assert!(empty_state.entries.is_empty());
+        let restored = CalibrationSeedMap::from_checkpoint_state(empty_state, empty_caps).unwrap();
+        assert!(restored.registered.is_empty());
+        assert_eq!(
+            empty.checkpoint_state(SeedRegistryCheckpointLimits {
+                max_entries: 0,
+                max_identifier_bytes: 0,
+            }),
+            Err(SeedRegistryCheckpointError::LimitExceeded)
+        );
+    }
+
+    #[test]
     fn normative_golden_bytes_digest_seed_and_draws_match() {
         let id = identity(SeedPurpose::Service);
         let encoded = encode_identity(&id).unwrap();
         assert_eq!(encoded.len(), 114);
-        assert_eq!(encoded.iter().map(|b| format!("{b:02x}")).collect::<String>(),
-            "6b6169726f732e63616c6962726174696f6e2e736565642d6d617001000000d2040000000000000700000000000000080000000000000073747564792dceb1060000000000000063726e2d76310900000000000000636173652d3030303108000000000000007472696167653a3101000000");
+        assert_eq!(
+            encoded
+                .iter()
+                .map(|b| format!("{b:02x}"))
+                .collect::<String>(),
+            "6b6169726f732e63616c6962726174696f6e2e736565642d6d617001000000d2040000000000000700000000000000080000000000000073747564792dceb1060000000000000063726e2d76310900000000000000636173652d3030303108000000000000007472696167653a3101000000"
+        );
         let digest = Sha256::digest(&encoded);
         assert_eq!(
             hex(&digest),

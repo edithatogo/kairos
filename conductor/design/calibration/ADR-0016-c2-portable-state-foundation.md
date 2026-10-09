@@ -51,7 +51,8 @@ Before clone/allocation, enforce entry count limit. Validate schema1, strict
 sequence order and unique IDs/sequences, event index/sequence identity and
 expected generation (index modulo2^32), all indexes/sequences below next values,
 next index=next sequence=scheduled count and next generation=next index modulo
-2^32. Validate scheduled=dispatched+cancelled+live count with checked arithmetic,
+2^32. Require now=zero when no event has dispatched, because only dispatch changes
+the current scheduler clock. Validate scheduled=dispatched+cancelled+live count with checked arithmetic,
 all live entries represented and physical tombstones no greater than total
 cancelled count. Do not invent a monotonic scheduling-time restriction: the
 current generic scheduler allows scheduling requests earlier than now. Rebuild
@@ -74,9 +75,10 @@ Bound all three vector lengths before allocation. Require schema1; unique live
 IDs/indexes, exact alive-slot and generation match, unique in-range free indices
 which address dead slots, and exhaustive disjoint live/free partition of slots.
 Use checked conversions and reject contradictions without installing state.
-No arbitrary constraints on generation values or stack/dense order. Import
-allocates only after complete validation. Future spawn/despawn behavior, stale
-handle rejection, dense order and reused generations must match the control.
+No arbitrary constraints on generation values or stack/dense order. After input
+length limits, bounded temporary validation scratch is permitted; the destination
+World is allocated only after complete validation. Future spawn/despawn behavior,
+stale handle rejection, dense order and reused generations must match the control.
 
 ### Calibration collision registry — Track21
 

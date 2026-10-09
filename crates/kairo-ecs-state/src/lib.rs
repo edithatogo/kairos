@@ -6,6 +6,9 @@ use std::num::NonZeroUsize;
 
 use kairo_ecs_types::EntityId;
 
+#[doc(hidden)]
+pub mod checkpoint;
+
 /// Deterministic snapshot of one live entity.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct EntitySnapshot {
