@@ -6,6 +6,11 @@ use std::num::NonZeroUsize;
 
 use kairo_ecs_types::EntityId;
 
+#[doc(hidden)]
+pub mod checkpoint;
+#[doc(hidden)]
+pub mod component_checkpoint;
+
 /// Deterministic snapshot of one live entity.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct EntitySnapshot {
@@ -318,6 +323,12 @@ impl<T> ComponentStore<T> {
         self.dense.len()
     }
 
+    /// Allocation-free row and sparse-slot counts for aggregate checkpoint preflight.
+    #[doc(hidden)]
+    pub fn checkpoint_dimensions(&self) -> (usize, usize) {
+        (self.dense.len(), self.sparse.len())
+    }
+
     pub fn is_empty(&self) -> bool {
         self.dense.is_empty()
     }
@@ -343,6 +354,12 @@ pub struct ComponentRegistry {
 }
 
 impl ComponentRegistry {
+    /// Allocation-free native registration count, including empty stores.
+    #[doc(hidden)]
+    pub fn registered_type_count(&self) -> usize {
+        self.stores.len()
+    }
+
     pub fn new() -> Self {
         Self {
             stores: HashMap::new(),
@@ -381,6 +398,12 @@ impl ComponentRegistry {
 
     pub fn get<T: 'static>(&self, entity: EntityId) -> Option<&T> {
         self.store::<T>()?.get(entity)
+    }
+
+    /// Return the process-local types for which this registry owns stores.
+    #[doc(hidden)]
+    pub fn registered_types(&self) -> Vec<TypeId> {
+        self.stores.keys().copied().collect()
     }
 }
 

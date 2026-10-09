@@ -8,6 +8,9 @@ use kairo_ecs_types::{
     TypesError,
 };
 
+#[doc(hidden)]
+pub mod checkpoint;
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct QueueEntry {
     request: ScheduleRequest,

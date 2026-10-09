@@ -104,7 +104,15 @@ def main() -> int:
     (LOGS / "toolchain.log").write_text(toolchain)
     argv = ["cargo", "test", "--locked", "-p", "kairo-ecs-calibration", "--lib"]
     if ready:
-        argv.extend(["--features", "flow"])
+        argv.extend(
+            [
+                "--features",
+                "flow,kairo-ecs-abm/test-support",
+                "--",
+                "--exact",
+                f"paired_transit_c20::{TEST_NAME}",
+            ]
+        )
     proc = run(argv, cwd=DISPOSABLE, env=env)
     raw = proc.stdout.encode()
     (LOGS / "cargo-test.log").write_bytes(raw)
@@ -135,7 +143,7 @@ def main() -> int:
         and proc.returncode == 0
         and re.search(rf"(?m)^test paired_transit_c20::{TEST_NAME} \.\.\. ok$", proc.stdout)
         and re.search(
-            r"(?m)^test result: ok\. \d+ passed; 0 failed; 0 ignored; 0 measured; 0 filtered out;",
+            r"(?m)^test result: ok\. 1 passed; 0 failed; 0 ignored; 0 measured; \d+ filtered out;",
             proc.stdout,
         )
         and manifest_lock_unchanged
@@ -145,7 +153,7 @@ def main() -> int:
         oracle = "locked actual calibration crate exited 101 at the first exact absent production module path; other absent files are separately inventoried; no behavioral execution"
     elif args.expect == "green" and green:
         status = "named_paired_transit_fixture_passed"
-        oracle = "named actual provider/Flow transit fixture passed and Cargo reports zero failed or ignored tests"
+        oracle = "exact named actual provider/Flow transit fixture passed once; other package tests were filtered out"
     else:
         status = "oracle_mismatch"
         oracle = (

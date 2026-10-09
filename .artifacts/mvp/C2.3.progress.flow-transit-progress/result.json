@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "packet_id": "C2.3.progress.flow-transit-progress",
+  "task_id": "C2.3",
+  "instance_id": "flow-planned-hook-partial",
+  "base_commit": "ff764e7d57a577f39bab30fce752d0eb9b415623",
+  "source_commit": "68ee108c9c2f3a8de990ba7a72127ab95079c576",
+  "status": "partial",
+  "changed_paths": [
+    "crates/kairo-ecs-des/src/flow.rs",
+    "crates/kairo-ecs-des/tests/flow_continuations_v1.rs"
+  ],
+  "source_hashes": {
+    "crates/kairo-ecs-des/src/flow.rs": "24e7af08625fca015f8199e19fba563640bbef1a3c70ad683db72275c6656d76",
+    "crates/kairo-ecs-des/tests/flow_continuations_v1.rs": "f023e90ba10526625566cb20e31c39fc5505e09c3a8865fd05a06b0da8df1875"
+  },
+  "input_hashes": {
+    "conductor/design/calibration/c20-transit-execution-v1.md": "40c8400a4030a836bcec41e18291cedc8ceee1dcab88fee43f88916863d0d491"
+  },
+  "implemented": [
+    "Added register_domain_plan_hook with a read-only context planner returning a staged replacement context.",
+    "Plan hooks commit their replacement context only when the emitted command batch is accepted.",
+    "Planner errors consume the delivered event, set FlowDispatch.error, return a rejected receipt with failed_ticket=None, and preserve the stored context.",
+    "Actor-domain carrier registration and scheduled Pause/Resume controls now accept planned hooks while legacy hooks remain excluded from controls.",
+    "Added runtime tests for planned-context commit and planner-error atomicity; retained the existing actual control-event tests."
+  ],
+  "limitations": [
+    "TransitContext is not implemented or wired to TransitProgressState; route start, movement, pause/resume progress, stale-event reconciliation, and arrival are not implemented.",
+    "The packet's required C2.3.progress runtime oracle is therefore not satisfied; this partial change does not close C2.3.progress or C2.3.",
+    "No changes to ABM adapter files were needed for this DES hook slice.",
+    "C2.2 full acceptance, C2.1 runtime join, hosted gates, and parent final-head audit remain open."
+  ],
+  "verification": [
+    {
+      "argv": ["env", "CARGO_TARGET_DIR=/tmp/careops-c23-progress-target", "rustup", "run", "1.76.0", "cargo", "test", "--locked", "-p", "kairo-ecs-des", "-p", "kairo-ecs-abm"],
+      "cwd": "/private/tmp/kairos-c23-progress-final",
+      "toolchain": "Rust 1.76.0",
+      "exit_code": 0,
+      "log_path": "/tmp/c23-progress-tests.log",
+      "log_sha256": "d7d69638942716b78a87881163df14a1bb6b0c3beea5287e555cea28ea562ca9"
+    },
+    {
+      "argv": ["env", "CARGO_TARGET_DIR=/tmp/careops-c23-progress-target", "rustup", "run", "1.99.0", "cargo", "clippy", "--locked", "-p", "kairo-ecs-des", "-p", "kairo-ecs-abm", "--all-targets", "--", "-D", "warnings"],
+      "cwd": "/private/tmp/kairos-c23-progress-final",
+      "toolchain": "Rust 1.99.0",
+      "exit_code": 0,
+      "log_path": "/tmp/c23-progress-clippy.log",
+      "log_sha256": "f0788aa36d1c86b6ccdfb7f4042a5574102d82061c046422a2d42e008a1e4710"
+    },
+    {
+      "argv": ["rustup", "run", "1.99.0", "cargo", "fmt", "--all", "--", "--check"],
+      "cwd": "/private/tmp/kairos-c23-progress-final",
+      "toolchain": "Rustfmt 1.99.0",
+      "exit_code": 0,
+      "log_path": "/tmp/c23-progress-fmt.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": ["git", "diff", "--check"],
+      "cwd": "/private/tmp/kairos-c23-progress-final",
+      "exit_code": 0
+    }
+  ]
+}

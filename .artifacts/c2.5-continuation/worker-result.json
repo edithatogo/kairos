@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "packet_id": "C2.5.continuation",
+  "status": "ready_for_review",
+  "base_head": "387fa0d598655316fc4484807ffd0f90534b3a09",
+  "verification_head": "387fa0d598655316fc4484807ffd0f90534b3a09",
+  "toolchain": "stable Rust 1.99.0 selected through rustup run 1.99.0",
+  "source_hashes_sha256": {
+    "crates/kairo-ecs-calibration/src/flow_bridge.rs": "40c2ef4190aee45bf996c4d0f8a7882fc80f54824bd6aeefebcf200543342eee",
+    "conductor/design/calibration/c2-in-memory-continuation-v1.md": "b8b139298d05d3c6e0e0b564f3c5f067d5cca6909a4f633373725163611ae11a",
+    "crates/kairo-ecs-des/src/fidelity.rs": "8c6c50a26d351e5e5d2ccce4dd3fbd39325b4d72743adfbdbb61e4434fd04bce"
+  },
+  "verification": [
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-c2.5-continuation-20261007",
+      "head": "387fa0d598655316fc4484807ffd0f90534b3a09",
+      "toolchain": "stable Rust 1.99.0",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--features",
+        "flow,kairo-ecs-abm/test-support",
+        "--target-dir",
+        ".artifacts/c2.5-continuation/target"
+      ],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-c2.5-continuation-20261007",
+      "head": "387fa0d598655316fc4484807ffd0f90534b3a09",
+      "toolchain": "stable Rust 1.99.0",
+      "exit_code": 0,
+      "result": "85 passed; 0 failed; 2 ignored in library tests. Integration suites: cohorts 6 passed; distance 15 passed/1 ignored; metrics_c41 8 passed/1 ignored; metrics_c42 8 passed; residuals 23 passed; seed_map 5 passed; sidecar_adapter_c43 13 passed; other targets/doc-tests 0 failures.",
+      "stdout_tail": "test result: ok. 85 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 5.00s\ncohorts_c42: 6 passed; distance_c42: 15 passed, 1 ignored; metrics_c41: 8 passed, 1 ignored; metrics_c42: 8 passed; residuals_c42: 23 passed; seed_map: 5 passed; sidecar_adapter_c43: 13 passed; all other targets and doc-tests reported 0 failures.",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--features",
+        "flow,kairo-ecs-abm/test-support",
+        "--all-targets",
+        "--target-dir",
+        ".artifacts/c2.5-continuation/target",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "cwd": "/Users/doughnut/Documents/careops-sim-session-worktrees/kairos-c2.5-continuation-20261007",
+      "head": "387fa0d598655316fc4484807ffd0f90534b3a09",
+      "toolchain": "stable Rust 1.99.0",
+      "exit_code": 0,
+      "stdout": "    Checking kairo-ecs-types v0.0.0\n    Checking typenum v1.20.1\n    Checking libc v0.2.186\n    Checking const-oid v0.10.2\n    Checking serde_core v1.0.228\n    Checking zmij v1.0.4\n    Checking memchr v2.8.0\n    Checking num-traits v0.2.19\n    Checking itoa v1.0.18\n    Checking thiserror v2.0.20\n    Checking cfg-if v1.0.4\n    Checking kairo-ecs-state v0.0.0\n    Checking kairo-ecs-rng v0.0.0\n    Checking kairo-ecs-core v0.0.0\n    Checking cpufeatures v0.3.1\n    Checking chrono v0.4.45\n    Checking hybrid-array v0.4.15\n    Checking kairo-ecs-des v0.1.0\n    Checking kairo-ecs-arrow v0.1.0\n    Checking crypto-common v0.2.2\n    Checking block-buffer v0.12.2\n    Checking serde_json v1.0.149\n    Checking kairo-ecs-abm v0.1.0\n    Checking digest v0.11.3\n    Checking sha2 v0.11.0\n    Checking kairo-ecs-calibration v0.1.0\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.87s\n",
+      "stderr": ""
+    }
+  ],
+  "implementation": [
+    "Added an opaque crate-private continuation owning one FlowRuntime, FidelityAdapter, and BoundIntrinsicWork.",
+    "Capture validates runtime identity and the adapter's exact admitted decision, returning original values on mismatch.",
+    "Resume consumes the bundle and returns the same owned values.",
+    "Added Macro, explicit-zero Micro, transit-start, observed-pause, continuity, pending-policy, and mismatch-preservation tests.",
+    "Corrected the staged test policy fixture to supported FidelityPolicy version 1.",
+    "Replaced cross-runtime FidelityAdapter equality with observable decision equality; both adapters are separately asserted to reject policy application with BusyBoundary while their work remains bound."
+  ],
+  "attempt_id": "C2.5.continuation.attempt-5"
+}

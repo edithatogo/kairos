@@ -19,8 +19,22 @@ ROOT = Path(__file__).resolve().parents[2]
 ARTIFACTS = ROOT / ".artifacts/mvp/C2.0.red-tests.paired-flow"
 DISPOSABLE = ARTIFACTS / "disposable"
 LOGS = ARTIFACTS / "logs"
-FIXTURE = ROOT / "conformance/c20/paired_flow_c20.rs"
-TEST_MODULE = "macro_and_explicit_zero_micro_pair_actual_provider_work_without_transit_events_or_draws"
+FIXTURE_VERSIONS = {
+    1: {
+        "fixture": ROOT / "conformance/c20/paired_flow_c20.rs",
+        "fixture_name": "paired_flow_c20.rs",
+        "module": "paired_flow_c20",
+        "test": "macro_and_explicit_zero_micro_pair_actual_provider_work_without_transit_events_or_draws",
+        "artifacts": ".artifacts/mvp/C2.0.red-tests.paired-flow",
+    },
+    2: {
+        "fixture": ROOT / "conformance/c20/paired_flow_c20_v2.rs",
+        "fixture_name": "paired_flow_c20_v2.rs",
+        "module": "paired_flow_c20_v2",
+        "test": "macro_and_explicit_zero_micro_pair_actual_provider_work_without_transit_events_or_draws",
+        "artifacts": ".artifacts/mvp/C2.0.red-tests.paired-flow-v2",
+    },
+}
 MISSING_MODULES = ("flow_bridge", "work_duration")
 
 
@@ -41,9 +55,17 @@ def module_declared(source: str, name: str) -> bool:
 
 
 def main() -> int:
+    global ARTIFACTS, DISPOSABLE, LOGS
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--expect", choices=("red", "green"), default="red")
+    parser.add_argument("--fixture-version", type=int, choices=(1, 2), default=1)
     args = parser.parse_args()
+    fixture_spec = FIXTURE_VERSIONS[args.fixture_version]
+    ARTIFACTS = ROOT / fixture_spec["artifacts"]
+    DISPOSABLE = ARTIFACTS / "disposable"
+    LOGS = ARTIFACTS / "logs"
+    if args.fixture_version == 2 and args.expect != "green":
+        raise RuntimeError("fixture version 2 only supports its explicit green oracle")
     if git("status", "--porcelain", "--untracked-files=all"):
         raise RuntimeError("runner requires a committed, clean workspace")
     commit = git("rev-parse", "HEAD")
@@ -66,8 +88,8 @@ def main() -> int:
     if archive.returncode:
         raise RuntimeError(f"git archive failed: {archive_error.decode(errors='replace')}")
 
-    fixture_bytes = FIXTURE.read_bytes()
-    fixture_copy = DISPOSABLE / "crates/kairo-ecs-calibration/src/paired_flow_c20.rs"
+    fixture_bytes = fixture_spec["fixture"].read_bytes()
+    fixture_copy = DISPOSABLE / f"crates/kairo-ecs-calibration/src/{fixture_spec['fixture_name']}"
     fixture_copy.write_bytes(fixture_bytes)
     crate = DISPOSABLE / "crates/kairo-ecs-calibration"
     manifest_path = crate / "Cargo.toml"
@@ -83,10 +105,13 @@ def main() -> int:
     flow_feature = "flow" in manifest.get("features", {})
     flow_dependency = "kairo-ecs-des" in manifest.get("dependencies", {})
     abm_dependency = "kairo-ecs-abm" in manifest.get("dependencies", {})
+    abm_manifest = tomllib.loads((DISPOSABLE / "crates/kairo-ecs-abm/Cargo.toml").read_text())
+    abm_test_support = "test-support" in abm_manifest.get("features", {})
     ready = (
         flow_feature
         and flow_dependency
         and abm_dependency
+        and abm_test_support
         and all(files_present.values())
         and all(declarations.values())
     )
@@ -98,7 +123,10 @@ def main() -> int:
     if not declarations["flow_bridge"] and not files_present["flow_bridge"]:
         injected_missing.append("flow_bridge")
         lib_text += '\n#[cfg(test)]\n#[path = "flow_bridge.rs"]\nmod flow_bridge;\n'
-    lib_text += '\n#[cfg(test)]\n#[path = "paired_flow_c20.rs"]\nmod paired_flow_c20;\n'
+    lib_text += (
+        f'\n#[cfg(test)]\n#[path = "{fixture_spec["fixture_name"]}"]\n'
+        f'mod {fixture_spec["module"]};\n'
+    )
     lib_path.write_text(lib_text)
 
     sysroot = command(["rustup", "run", "1.99.0", "rustc", "--print", "sysroot"])
@@ -127,7 +155,15 @@ def main() -> int:
 
     argv = ["cargo", "test", "--locked", "-p", "kairo-ecs-calibration", "--lib"]
     if ready:
-        argv.extend(["--features", "flow"])
+        argv.extend(
+            [
+                "--features",
+                "flow,kairo-ecs-abm/test-support",
+                "--",
+                "--exact",
+                f"{fixture_spec['module']}::{fixture_spec['test']}",
+            ]
+        )
     proc = command(argv, cwd=DISPOSABLE, env=env)
     raw_log = proc.stdout.encode()
     (LOGS / "cargo-test.log").write_bytes(raw_log)
@@ -160,13 +196,21 @@ def main() -> int:
         ready
         and manifest_lock_unchanged
         and proc.returncode == 0
-        and re.search(rf"(?m)^test paired_flow_c20::{re.escape(TEST_MODULE)} \.\.\. ok$", proc.stdout)
         and re.search(
-            r"(?m)^test result: ok\. \d+ passed; 0 failed; 0 ignored; 0 measured; 0 filtered out;",
+            rf"(?m)^test {re.escape(fixture_spec['module'])}::{re.escape(fixture_spec['test'])} \.\.\. ok$",
+            proc.stdout,
+        )
+        and re.search(
+            r"(?m)^test result: ok\. 1 passed; 0 failed; 0 ignored; 0 measured; \d+ filtered out;",
             proc.stdout,
         )
     )
-    red = proc.returncode == 101 and only_missing_module_errors and manifest_lock_unchanged
+    red = (
+        args.fixture_version == 1
+        and proc.returncode == 101
+        and only_missing_module_errors
+        and manifest_lock_unchanged
+    )
     if args.expect == "red" and red:
         status = "expected_missing_production_module_red"
         oracle = "actual locked calibration test exited 101 with exact missing production module diagnostics"
@@ -183,7 +227,9 @@ def main() -> int:
 
     result = {
         "schema_version": 1,
-        "task": "C2.0.red-tests.paired-flow",
+        "task": fixture_spec["artifacts"].rsplit("/", 1)[-1],
+        "fixture_version": args.fixture_version,
+        "fixture_module": fixture_spec["module"],
         "status": status,
         "oracle": oracle,
         "expected": args.expect,
@@ -206,6 +252,7 @@ def main() -> int:
             "flow_feature_present": flow_feature,
             "des_dependency_present": flow_dependency,
             "abm_dependency_present": abm_dependency,
+            "abm_test_support_feature_present": abm_test_support,
             "archive_hashes": {
                 "lib_before_overlay": sha256(lib_before),
                 "manifest_before_overlay": sha256(manifest_before),
