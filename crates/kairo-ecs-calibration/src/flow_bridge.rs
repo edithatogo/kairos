@@ -1656,6 +1656,13 @@ impl<T: Clone + 'static, C: 'static> BoundIntrinsicWork<T, C> {
         &self.acquire
     }
 
+    /// Test oracle for drawing directly from the currently owned stream.
+    /// Keeps production bridge APIs and sampling semantics unchanged.
+    #[cfg(test)]
+    pub(crate) fn service_stream_for_checkpoint_test(&mut self) -> &mut CalibrationStream {
+        &mut self.service_stream
+    }
+
     pub(crate) fn next_service_draw_probe_for_checkpoint(&self) -> u64 {
         self.service_stream
             .snapshot()
@@ -3202,7 +3209,10 @@ mod tests {
             bound.observe_transit_dispatch(&flow, &pause),
             Ok(TransitObservation::Paused)
         );
-        bound.service_stream.next_u64().unwrap();
+        bound
+            .service_stream_for_checkpoint_test()
+            .next_u64()
+            .unwrap();
         let limits = bridge_checkpoint_limits();
         let image =
             BoundIntrinsicWorkCheckpointV1::capture(&bound, &flow, &adapter, limits).unwrap();
