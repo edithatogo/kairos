@@ -2,27 +2,21 @@ use kairo_ecs_abm::spatial::{
     EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1,
 };
 use kairo_ecs_abm::{
-    register_transit_context, register_transit_context_checkpoint_domain, schedule_transit_control,
-    schedule_transit_start, TransitContext, TransitContextCheckpointError,
-    TransitContextCheckpointLimitsV1, TransitContextCheckpointV1, TransitPhase,
+    register_transit_context, register_transit_context_checkpoint_codec,
+    register_transit_context_checkpoint_domain, schedule_transit_control, schedule_transit_start,
+    TransitContext, TransitContextCheckpointError, TransitContextCheckpointLimitsV1,
+    TransitContextCheckpointV1, TransitContextWireError, TransitPhase,
 };
 use kairo_ecs_des::{
     FlowAcquireCommand, FlowCallbackCodeV1, FlowCheckpointCodecError, FlowCheckpointCodecs,
     FlowCheckpointLimits, FlowDomainControl, FlowRuntime,
 };
 use kairo_ecs_types::{EntityId, EventKind, SimDuration, SimTime};
-use std::cell::RefCell;
+use std::sync::Arc;
 
 const KIND: EventKind = EventKind::custom(0x7c21);
 const LIMITS: TransitContextCheckpointLimitsV1 =
     TransitContextCheckpointLimitsV1::new(16, 4096, 64, 8192);
-
-thread_local! {
-    static SOURCE_IDENTITY: RefCell<Option<kairo_ecs_des::FlowRuntimeIdentity>> = const { RefCell::new(None) };
-    static ROUTE_GRAPH: RefCell<Option<TransitGraphV1>> = const { RefCell::new(None) };
-    static CONTEXT_IMAGE: RefCell<Option<TransitContextCheckpointV1>> = const { RefCell::new(None) };
-    static OTHER_ACTOR: RefCell<Option<EntityId>> = const { RefCell::new(None) };
-}
 
 fn graph() -> TransitGraphV1 {
     let nodes = (1..=3).map(NodeId::new).collect::<Vec<_>>();
@@ -76,35 +70,6 @@ fn changed_graph() -> TransitGraphV1 {
     .unwrap()
 }
 
-fn encode(
-    context: &TransitContext,
-    _remaining: usize,
-) -> Result<Vec<u8>, FlowCheckpointCodecError> {
-    let identity = SOURCE_IDENTITY.with(|value| value.borrow().clone().unwrap());
-    let image = context
-        .checkpoint_v1(&identity, LIMITS)
-        .map_err(|error| FlowCheckpointCodecError(error.to_string()))?;
-    CONTEXT_IMAGE.with(|value| *value.borrow_mut() = Some(image));
-    Ok(vec![1])
-}
-
-fn decode(
-    bytes: &[u8],
-    row_owner: EntityId,
-    rebind: &kairo_ecs_des::FlowCheckpointRebindV1,
-) -> Result<TransitContext, FlowCheckpointCodecError> {
-    if bytes != [1] {
-        return Err(FlowCheckpointCodecError(
-            "invalid test context marker".to_owned(),
-        ));
-    }
-    let image = CONTEXT_IMAGE.with(|value| value.borrow_mut().take().unwrap());
-    let trusted_graph = ROUTE_GRAPH.with(|value| value.borrow().clone().unwrap());
-    image
-        .restore_for_owner(&trusted_graph, rebind, row_owner, LIMITS)
-        .map_err(|error| FlowCheckpointCodecError(error.to_string()))
-}
-
 fn encode_unit(_: &(), _: usize) -> Result<Vec<u8>, FlowCheckpointCodecError> {
     Ok(Vec::new())
 }
@@ -120,11 +85,19 @@ fn decode_unit(
     }
 }
 
-fn codecs() -> FlowCheckpointCodecs {
+fn codecs(
+    source_identity: kairo_ecs_des::FlowRuntimeIdentity,
+    trusted_graph: Arc<TransitGraphV1>,
+) -> FlowCheckpointCodecs {
     let mut codecs = FlowCheckpointCodecs::new();
-    codecs
-        .register_context_with_owner::<TransitContext>("transit-context-v1", 1, encode, decode)
-        .unwrap();
+    register_transit_context_checkpoint_codec(
+        &mut codecs,
+        "transit-context-v1",
+        source_identity,
+        trusted_graph,
+        LIMITS,
+    )
+    .unwrap();
     codecs
         .register_context::<()>("unit-v1", 1, encode_unit, decode_unit)
         .unwrap();
@@ -145,32 +118,228 @@ fn codecs() -> FlowCheckpointCodecs {
     codecs
 }
 
-fn capture_image(
-    source: &FlowRuntime,
-    trusted_graph: TransitGraphV1,
-) -> kairo_ecs_des::FlowCheckpointV1 {
-    SOURCE_IDENTITY.with(|value| *value.borrow_mut() = Some(source.identity()));
-    ROUTE_GRAPH.with(|value| *value.borrow_mut() = Some(trusted_graph));
-    source
-        .capture_checkpoint(&codecs(), FlowCheckpointLimits::default())
-        .unwrap()
+struct CapturedCheckpoint {
+    image: kairo_ecs_des::FlowCheckpointV1,
+    graph: Arc<TransitGraphV1>,
+}
+
+impl CapturedCheckpoint {
+    fn context(&self) -> TransitContextCheckpointV1 {
+        let store = self
+            .image
+            .context_stores
+            .iter()
+            .find(|store| store.codec_key == "transit-context-v1")
+            .unwrap();
+        TransitContextCheckpointV1::decode_bytes_v1(&store.rows[0].1, LIMITS).unwrap()
+    }
+
+    fn set_context(&mut self, context: &TransitContextCheckpointV1) {
+        let store = self
+            .image
+            .context_stores
+            .iter_mut()
+            .find(|store| store.codec_key == "transit-context-v1")
+            .unwrap();
+        store.rows[0].1 = context.encode_bytes_v1(LIMITS).unwrap();
+    }
+
+    fn mutate_context_bytes(&mut self, mutate: impl FnOnce(&mut Vec<u8>)) {
+        let store = self
+            .image
+            .context_stores
+            .iter_mut()
+            .find(|store| store.codec_key == "transit-context-v1")
+            .unwrap();
+        mutate(&mut store.rows[0].1);
+    }
+
+    fn restore(self) -> Result<FlowRuntime, kairo_ecs_des::FlowCheckpointError> {
+        let codecs = codecs(FlowRuntime::new().identity(), self.graph);
+        FlowRuntime::restore_checkpoint(self.image, &codecs, FlowCheckpointLimits::default())
+    }
+}
+
+fn mutate_captured(
+    mut captured: CapturedCheckpoint,
+    mutate: impl FnOnce(&mut TransitContextCheckpointV1),
+) -> CapturedCheckpoint {
+    let mut context = captured.context();
+    mutate(&mut context);
+    captured.set_context(&context);
+    captured
+}
+
+fn capture_image(source: &FlowRuntime, trusted_graph: TransitGraphV1) -> CapturedCheckpoint {
+    let graph = Arc::new(trusted_graph);
+    let codecs = codecs(source.identity(), graph.clone());
+    let image = source
+        .capture_checkpoint(&codecs, FlowCheckpointLimits::default())
+        .unwrap();
+    CapturedCheckpoint { image, graph }
+}
+
+#[test]
+fn wire_v1_roundtrips_exactly_and_preflights_corruption_and_limits() {
+    let (source, carrier, trusted_graph) = source_flow();
+    let original_context = source.work_context::<TransitContext>(carrier).unwrap();
+    let original = original_context
+        .checkpoint_v1(&source.identity(), LIMITS)
+        .unwrap();
+    let captured = capture_image(&source, trusted_graph);
+    let wire = captured.image.context_stores[0].rows[0].1.clone();
+    assert_eq!(captured.context(), original);
+    assert_eq!(
+        original_context
+            .checkpoint_bytes_v1(
+                &source.identity(),
+                TransitContextCheckpointLimitsV1::new(
+                    LIMITS.max_segments,
+                    LIMITS.max_graph_bytes,
+                    LIMITS.max_mode_bytes,
+                    wire.len(),
+                )
+            )
+            .unwrap(),
+        wire
+    );
+    let unrelated = FlowRuntime::new();
+    assert_eq!(
+        original_context.checkpoint_bytes_v1(&unrelated.identity(), LIMITS),
+        Err(TransitContextWireError::Native(
+            TransitContextCheckpointError::LineageMismatch
+        ))
+    );
+    assert_eq!(
+        original_context.checkpoint_bytes_v1(
+            &source.identity(),
+            TransitContextCheckpointLimitsV1::new(
+                LIMITS.max_segments,
+                LIMITS.max_graph_bytes,
+                LIMITS.max_mode_bytes,
+                wire.len() - 1,
+            ),
+        ),
+        Err(TransitContextWireError::LimitExceeded)
+    );
+
+    let tight = TransitContextCheckpointLimitsV1::new(
+        LIMITS.max_segments,
+        LIMITS.max_graph_bytes,
+        LIMITS.max_mode_bytes,
+        wire.len(),
+    );
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(&wire, tight).unwrap(),
+        original
+    );
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(
+            &wire,
+            TransitContextCheckpointLimitsV1::new(
+                LIMITS.max_segments,
+                LIMITS.max_graph_bytes,
+                LIMITS.max_mode_bytes,
+                wire.len() - 1,
+            )
+        ),
+        Err(TransitContextWireError::LimitExceeded),
+    );
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(&wire[..wire.len() - 1], LIMITS),
+        Err(TransitContextWireError::Truncated),
+    );
+    let mut trailing = wire.clone();
+    trailing.push(0);
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(&trailing, LIMITS),
+        Err(TransitContextWireError::TrailingBytes)
+    );
+
+    let mut bad_schema = wire.clone();
+    bad_schema[8..12].copy_from_slice(&2u32.to_le_bytes());
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(&bad_schema, LIMITS),
+        Err(TransitContextWireError::UnsupportedVersion(2))
+    );
+    let mut bad_route_schema = wire.clone();
+    bad_route_schema[16..20].copy_from_slice(&2u32.to_le_bytes());
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(&bad_route_schema, LIMITS),
+        Err(TransitContextWireError::UnsupportedVersion(2))
+    );
+    let mut oversized_segments = wire.clone();
+    oversized_segments[36..44].copy_from_slice(&u64::MAX.to_le_bytes());
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(&oversized_segments, LIMITS),
+        Err(TransitContextWireError::LimitExceeded)
+    );
+
+    let route_bytes = 16
+        + 96
+        + original.route.segments.len() * 64
+        + original.route.movement_mode.len()
+        + original.route.graph_canonical_bytes.len();
+    let mut bad_option = wire.clone();
+    bad_option[route_bytes + 60] = 2;
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(&bad_option, LIMITS),
+        Err(TransitContextWireError::InvalidData)
+    );
+    let mut bad_bool = wire.clone();
+    bad_bool[route_bytes + 114] = 2;
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(&bad_bool, LIMITS),
+        Err(TransitContextWireError::InvalidData)
+    );
+
+    let mut bad_utf8 = wire.clone();
+    let mode_offset = 16 + 68 + original.route.segments.len() * 64;
+    bad_utf8[mode_offset] = 0xff;
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(&bad_utf8, LIMITS),
+        Err(TransitContextWireError::InvalidUtf8)
+    );
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(
+            &wire,
+            TransitContextCheckpointLimitsV1::new(0, 0, 0, LIMITS.max_total_bytes)
+        ),
+        Err(TransitContextWireError::LimitExceeded)
+    );
+    assert_eq!(
+        TransitContextCheckpointV1::decode_bytes_v1(
+            &wire,
+            TransitContextCheckpointLimitsV1::new(
+                LIMITS.max_segments,
+                0,
+                LIMITS.max_mode_bytes,
+                LIMITS.max_total_bytes,
+            )
+        ),
+        Err(TransitContextWireError::LimitExceeded)
+    );
+    assert_eq!(
+        original_context
+            .checkpoint_v1(&source.identity(), LIMITS)
+            .unwrap(),
+        original
+    );
 }
 
 fn reject_mutated_image(mutate: impl FnOnce(&mut TransitContextCheckpointV1)) {
     let (source, _, trusted_graph) = source_flow();
-    let image = capture_image(&source, trusted_graph);
-    CONTEXT_IMAGE.with(|value| mutate(value.borrow_mut().as_mut().unwrap()));
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).is_err()
-    );
+    let mut captured = capture_image(&source, trusted_graph);
+    let mut context = captured.context();
+    mutate(&mut context);
+    captured.set_context(&context);
+    assert!(captured.restore().is_err());
 }
 
 fn source_flow() -> (FlowRuntime, kairo_ecs_des::WorkId, TransitGraphV1) {
     let mut flow = FlowRuntime::new();
     register_transit_context(&mut flow, "transit", KIND).unwrap();
     let actor = flow.spawn_actor().unwrap();
-    let other_actor = flow.spawn_actor().unwrap();
-    OTHER_ACTOR.with(|value| *value.borrow_mut() = Some(other_actor));
     let resource = flow.create_resource(1).unwrap();
     let service = flow
         .create_work(actor, SimDuration::from_ticks(3), "service", ())
@@ -227,13 +396,12 @@ fn paused_mid_edge_context_roundtrips_exact_cursor_and_runtime() {
             .useful_elapsed,
         SimDuration::from_ticks(1)
     );
-    SOURCE_IDENTITY.with(|value| *value.borrow_mut() = Some(source.identity()));
-    ROUTE_GRAPH.with(|value| *value.borrow_mut() = Some(trusted_graph));
-
-    let image = source
-        .capture_checkpoint(&codecs(), FlowCheckpointLimits::default())
-        .unwrap();
-    let context_image = CONTEXT_IMAGE.with(|value| value.borrow().clone().unwrap());
+    let captured = capture_image(&source, trusted_graph);
+    let context_image = captured.context();
+    assert_eq!(
+        context_image,
+        original.checkpoint_v1(&source.identity(), LIMITS).unwrap()
+    );
     assert_eq!(context_image.phase, TransitPhase::Paused);
     assert_eq!(context_image.paused_from, Some(TransitPhase::Moving));
     assert_eq!(context_image.segment_index, 0);
@@ -244,8 +412,7 @@ fn paused_mid_edge_context_roundtrips_exact_cursor_and_runtime() {
         Some(kairo_ecs_des::PreemptionStrategy::Suspend)
     );
 
-    let mut restored =
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).unwrap();
+    let mut restored = captured.restore().unwrap();
     let rebound_carrier = restored
         .actor_domain_context(context_image.acquire_owner)
         .unwrap();
@@ -273,14 +440,21 @@ fn moving_context_roundtrips_scheduled_event_before_pause() {
     let (mut source, carrier, trusted_graph) = source_flow();
     schedule_transit_start(&mut source, carrier, KIND, SimTime::ZERO, 0).unwrap();
     source.step().unwrap().unwrap();
-    let image = capture_image(&source, trusted_graph);
-    let context_image = CONTEXT_IMAGE.with(|value| value.borrow().clone().unwrap());
+    let captured = capture_image(&source, trusted_graph);
+    let context_image = captured.context();
+    assert_eq!(
+        context_image,
+        source
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .checkpoint_v1(&source.identity(), LIMITS)
+            .unwrap()
+    );
     assert_eq!(context_image.phase, TransitPhase::Moving);
     assert!(context_image.expected_event.is_some());
     assert!(context_image.expected_due_ticks.is_some());
 
-    let mut restored =
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).unwrap();
+    let mut restored = captured.restore().unwrap();
     let rebound_carrier = restored
         .actor_domain_context(context_image.acquire_owner)
         .unwrap();
@@ -335,14 +509,10 @@ fn import_rejects_bad_cursor_and_unresolved_work_without_source_mutation() {
         .checkpoint_v1(&source.identity(), LIMITS)
         .unwrap();
 
-    let image = capture_image(&source, trusted_graph.clone());
-    CONTEXT_IMAGE.with(|value| {
-        value.borrow_mut().as_mut().unwrap().segment_index = usize::MAX;
+    let image = mutate_captured(capture_image(&source, trusted_graph.clone()), |context| {
+        context.segment_index = usize::MAX;
     });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default(),)
-            .is_err()
-    );
+    assert!(image.restore().is_err());
     assert_eq!(
         source_context
             .checkpoint_v1(&source.identity(), LIMITS)
@@ -350,20 +520,14 @@ fn import_rejects_bad_cursor_and_unresolved_work_without_source_mutation() {
         before
     );
 
-    let image = capture_image(&source, trusted_graph);
-    CONTEXT_IMAGE.with(|value| {
-        let mut stored = value.borrow_mut();
-        let context_image = stored.as_mut().unwrap();
+    let image = mutate_captured(capture_image(&source, trusted_graph), |context_image| {
         let wrong = EntityId::new(
             context_image.service_work.index,
             context_image.service_work.generation.wrapping_add(1),
         );
         context_image.service_work = wrong;
     });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default(),)
-            .is_err()
-    );
+    assert!(image.restore().is_err());
     assert_eq!(
         source_context
             .checkpoint_v1(&source.identity(), LIMITS)
@@ -376,56 +540,40 @@ fn import_rejects_bad_cursor_and_unresolved_work_without_source_mutation() {
 fn import_rejects_schema_and_unapproved_geometry() {
     let (source, _, trusted_graph) = source_flow();
 
-    let image = capture_image(&source, trusted_graph.clone());
-    CONTEXT_IMAGE.with(|value| {
-        value.borrow_mut().as_mut().unwrap().schema_version = 2;
-    });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default(),)
-            .is_err()
-    );
+    let mut image = capture_image(&source, trusted_graph.clone());
+    image.mutate_context_bytes(|bytes| bytes[8..12].copy_from_slice(&2u32.to_le_bytes()));
+    assert!(image.restore().is_err());
 
-    let image = capture_image(&source, trusted_graph);
-    ROUTE_GRAPH.with(|value| *value.borrow_mut() = Some(changed_graph()));
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default(),)
-            .is_err()
-    );
+    let mut image = capture_image(&source, trusted_graph);
+    image.graph = Arc::new(changed_graph());
+    assert!(image.restore().is_err());
 }
 
 #[test]
 fn import_binds_service_owner_carrier_row_and_domain_kind() {
-    let (source, _, trusted_graph) = source_flow();
-    let image = capture_image(&source, trusted_graph.clone());
-    CONTEXT_IMAGE.with(|value| {
-        value.borrow_mut().as_mut().unwrap().acquire_owner =
-            OTHER_ACTOR.with(|actor| actor.borrow().unwrap());
+    let (mut source, _, trusted_graph) = source_flow();
+    let other_actor = source.spawn_actor().unwrap();
+    let image = mutate_captured(capture_image(&source, trusted_graph.clone()), |context| {
+        context.acquire_owner = other_actor;
     });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).is_err()
-    );
+    assert!(image.restore().is_err());
 
-    let image = capture_image(&source, trusted_graph.clone());
-    CONTEXT_IMAGE.with(|value| {
-        let mut stored = value.borrow_mut();
-        let checkpoint = stored.as_mut().unwrap();
-        checkpoint.carrier = Some(checkpoint.service_work);
-        checkpoint.kind = Some(KIND);
-    });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).is_err()
+    let image = mutate_captured(
+        capture_image(&source, trusted_graph.clone()),
+        |checkpoint| {
+            checkpoint.carrier = Some(checkpoint.service_work);
+            checkpoint.kind = Some(KIND);
+        },
     );
+    assert!(image.restore().is_err());
 
     let (mut moving, carrier, trusted_graph) = source_flow();
     schedule_transit_start(&mut moving, carrier, KIND, SimTime::ZERO, 0).unwrap();
     moving.step().unwrap().unwrap();
-    let image = capture_image(&moving, trusted_graph);
-    CONTEXT_IMAGE.with(|value| {
-        value.borrow_mut().as_mut().unwrap().kind = Some(EventKind::custom(0x7c22));
+    let image = mutate_captured(capture_image(&moving, trusted_graph), |context| {
+        context.kind = Some(EventKind::custom(0x7c22));
     });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).is_err()
-    );
+    assert!(image.restore().is_err());
 }
 
 #[test]
@@ -441,44 +589,28 @@ fn import_rejects_transit_state_field_contradictions() {
     let (mut moving, carrier, trusted_graph) = source_flow();
     schedule_transit_start(&mut moving, carrier, KIND, SimTime::ZERO, 0).unwrap();
     moving.step().unwrap().unwrap();
-    let image = capture_image(&moving, trusted_graph.clone());
-    CONTEXT_IMAGE.with(|value| {
-        value.borrow_mut().as_mut().unwrap().initial_start_pending = true;
+    let image = mutate_captured(capture_image(&moving, trusted_graph.clone()), |context| {
+        context.initial_start_pending = true;
     });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).is_err()
-    );
+    assert!(image.restore().is_err());
 
-    let image = capture_image(&moving, trusted_graph.clone());
-    CONTEXT_IMAGE.with(|value| {
-        let mut stored = value.borrow_mut();
-        let image = stored.as_mut().unwrap();
+    let image = mutate_captured(capture_image(&moving, trusted_graph.clone()), |image| {
         image.start_at_ticks = 1;
         image.acquire_at_ticks = 1;
         image.last_advanced_at_ticks = 0;
     });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).is_err()
-    );
+    assert!(image.restore().is_err());
 
-    let image = capture_image(&moving, trusted_graph.clone());
-    CONTEXT_IMAGE.with(|value| {
-        let mut stored = value.borrow_mut();
-        let image = stored.as_mut().unwrap();
+    let image = mutate_captured(capture_image(&moving, trusted_graph.clone()), |image| {
         image.segment_index = image.route.segments.len();
         image.elapsed_in_segment_ticks = 0;
     });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).is_err()
-    );
+    assert!(image.restore().is_err());
 
-    let image = capture_image(&moving, trusted_graph);
-    CONTEXT_IMAGE.with(|value| {
-        value.borrow_mut().as_mut().unwrap().carrier = None;
+    let image = mutate_captured(capture_image(&moving, trusted_graph), |context| {
+        context.carrier = None;
     });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).is_err()
-    );
+    assert!(image.restore().is_err());
 
     let (mut paused_ready, carrier, trusted_graph) = source_flow();
     schedule_transit_control(
@@ -492,37 +624,24 @@ fn import_rejects_transit_state_field_contradictions() {
     .unwrap();
     paused_ready.step().unwrap().unwrap();
     let image = capture_image(&paused_ready, trusted_graph.clone());
-    assert_eq!(
-        CONTEXT_IMAGE.with(|value| value.borrow().as_ref().unwrap().paused_from),
-        Some(TransitPhase::Ready)
-    );
-    CONTEXT_IMAGE.with(|value| {
-        value.borrow_mut().as_mut().unwrap().last_advanced_at_ticks = 1;
-    });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).is_err()
-    );
+    assert_eq!(image.context().paused_from, Some(TransitPhase::Ready));
+    let image = mutate_captured(image, |context| context.last_advanced_at_ticks = 1);
+    assert!(image.restore().is_err());
 
-    let image = capture_image(&paused_ready, trusted_graph);
-    CONTEXT_IMAGE.with(|value| {
-        value.borrow_mut().as_mut().unwrap().segment_index = 1;
+    let image = mutate_captured(capture_image(&paused_ready, trusted_graph), |context| {
+        context.segment_index = 1;
     });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).is_err()
-    );
+    assert!(image.restore().is_err());
 
     let (mut arrived, carrier, trusted_graph) = source_flow();
     schedule_transit_start(&mut arrived, carrier, KIND, SimTime::ZERO, 0).unwrap();
     arrived.step().unwrap().unwrap();
     arrived.step().unwrap().unwrap();
     arrived.step().unwrap().unwrap();
-    let image = capture_image(&arrived, trusted_graph);
-    CONTEXT_IMAGE.with(|value| {
-        value.borrow_mut().as_mut().unwrap().segment_index = 0;
+    let image = mutate_captured(capture_image(&arrived, trusted_graph), |context| {
+        context.segment_index = 0;
     });
-    assert!(
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).is_err()
-    );
+    assert!(image.restore().is_err());
 }
 
 #[test]
@@ -560,12 +679,11 @@ fn ready_zero_route_and_paused_at_end_are_valid() {
         .create_actor_domain_context(actor, "transit", KIND, context)
         .unwrap();
     let image = capture_image(&source, trusted_graph.clone());
-    let checkpoint = CONTEXT_IMAGE.with(|value| value.borrow().clone().unwrap());
+    let checkpoint = image.context();
     assert_eq!(checkpoint.segment_index, 0);
     assert_eq!(checkpoint.carrier, None);
     assert_eq!(checkpoint.kind, None);
-    let restored =
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).unwrap();
+    let restored = image.restore().unwrap();
     assert_eq!(
         restored
             .work_context::<TransitContext>(carrier)
@@ -602,12 +720,11 @@ fn ready_zero_route_and_paused_at_end_are_valid() {
         }
     }
     let image = capture_image(&source, trusted_graph);
-    let checkpoint = CONTEXT_IMAGE.with(|value| value.borrow().clone().unwrap());
+    let checkpoint = image.context();
     assert_eq!(checkpoint.phase, TransitPhase::Paused);
     assert_eq!(checkpoint.paused_from, Some(TransitPhase::Moving));
     assert_eq!(checkpoint.segment_index, checkpoint.route.segments.len());
-    let restored =
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).unwrap();
+    let restored = image.restore().unwrap();
     assert_eq!(
         restored
             .work_context::<TransitContext>(carrier)
@@ -628,7 +745,11 @@ fn arrived_context_roundtrips_completed_cursor_and_arrival_ticket() {
     assert_eq!(original.phase(), TransitPhase::Arrived);
 
     let image = capture_image(&source, trusted_graph);
-    let context_image = CONTEXT_IMAGE.with(|value| value.borrow().clone().unwrap());
+    let context_image = image.context();
+    assert_eq!(
+        context_image,
+        original.checkpoint_v1(&source.identity(), LIMITS).unwrap()
+    );
     assert_eq!(context_image.phase, TransitPhase::Arrived);
     assert!(context_image.arrival_ticket.is_some());
     assert_eq!(
@@ -637,8 +758,7 @@ fn arrived_context_roundtrips_completed_cursor_and_arrival_ticket() {
     );
     assert_eq!(context_image.elapsed_in_segment_ticks, 0);
 
-    let restored =
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).unwrap();
+    let restored = image.restore().unwrap();
     let rebound_carrier = restored
         .actor_domain_context(context_image.acquire_owner)
         .unwrap();
@@ -687,12 +807,11 @@ fn arrived_context_rebinds_a_retained_already_dispatched_event_id() {
     assert_eq!(original.phase(), TransitPhase::Arrived);
 
     let image = capture_image(&source, trusted_graph);
-    let context_image = CONTEXT_IMAGE.with(|value| value.borrow().clone().unwrap());
+    let context_image = image.context();
     let stale = context_image.expected_event.unwrap();
     assert_eq!(context_image.expected_due_ticks, None);
 
-    let restored =
-        FlowRuntime::restore_checkpoint(image, &codecs(), FlowCheckpointLimits::default()).unwrap();
+    let restored = image.restore().unwrap();
     let rebound_carrier = restored
         .actor_domain_context(context_image.acquire_owner)
         .unwrap();

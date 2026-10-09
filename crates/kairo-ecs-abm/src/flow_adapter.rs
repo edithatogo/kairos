@@ -1,19 +1,25 @@
 //! Shared agent behavior on the authoritative Flow runtime.
 use super::spatial::{
-    RouteCheckpointError, RoutePlan, RoutePlanImageLimitsV1, RoutePlanImageV1, TransitError,
-    TransitGraphV1, TransitProgressState,
+    RouteCheckpointError, RoutePlan, RoutePlanImageLimitsV1, RoutePlanImageV1, RouteSegmentImageV1,
+    TransitError, TransitGraphV1, TransitProgressState,
 };
 use kairo_ecs_des::{
     FlowAcquireCommand, FlowBatchReceipt, FlowCallbackCause, FlowCallbackCodeV1,
-    FlowCallbackSnapshot, FlowCheckpointCodecs, FlowCheckpointError, FlowCheckpointRebindV1,
-    FlowCommandSink, FlowCommandTicket, FlowDomainControl, FlowError, FlowOwnedCommand,
-    FlowRuntime, FlowRuntimeIdentity, FlowWorldView, PreemptionStrategy, WorkId, WorkState,
+    FlowCallbackSnapshot, FlowCheckpointCodecError, FlowCheckpointCodecs, FlowCheckpointError,
+    FlowCheckpointRebindV1, FlowCommandSink, FlowCommandTicket, FlowDomainControl, FlowError,
+    FlowOwnedCommand, FlowRuntime, FlowRuntimeIdentity, FlowWorldView, PreemptionStrategy, WorkId,
+    WorkState,
 };
 use kairo_ecs_rng::DeterministicStream;
 use kairo_ecs_types::{EntityId, EventId, EventKind, SimDuration, SimTime};
 use std::cmp::min;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
+
+mod transit_checkpoint_wire;
+pub use transit_checkpoint_wire::{
+    register_transit_context_checkpoint_codec, TransitContextWireError,
+};
 
 const TRANSIT_CONTEXT_SCHEMA_V1: u32 = 1;
 const TRANSIT_CONTEXT_FIXED_IMAGE_BYTES: usize = 512;

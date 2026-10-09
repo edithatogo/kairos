@@ -18,7 +18,7 @@ use crate::work_duration::{
 };
 use kairo_ecs_abm::spatial::{MovementProfile, NodeId, TransitError, TransitGraphV1};
 use kairo_ecs_abm::{
-    TransitContext, TransitPhase, schedule_transit_control, schedule_transit_start,
+    schedule_transit_control, schedule_transit_start, TransitContext, TransitPhase,
 };
 use kairo_ecs_des::fidelity::{
     FidelityAdapter, FidelityAdmissionPermit, FidelityDecision, FidelityError, FidelityMode,
@@ -491,15 +491,19 @@ impl BoundIntrinsicWorkCheckpointV1 {
                     .map_err(BridgeCheckpointError::Route)?,
                 )
             }
+            (None, Some(_)) => None,
             (None, None) => None,
             _ => return Err(BridgeCheckpointError::InvalidState),
         };
         let pending_event = self
             .pending_event
             .map(|event| {
-                rebind
-                    .resolve_event(event)
-                    .map_err(|_| BridgeCheckpointError::InvalidState)
+                let resolved = if self.retryable.is_some() {
+                    rebind.resolve_issued_event(event)
+                } else {
+                    rebind.resolve_event(event)
+                };
+                resolved.map_err(|_| BridgeCheckpointError::InvalidState)
             })
             .transpose()?;
         let mut owned_events = Vec::new();
@@ -820,18 +824,19 @@ impl TransitRequestCheckpointV1 {
                 carrier_registration,
                 kind,
             } => {
+                let graph_bytes = graph.canonical_bytes_ref();
+                if graph_bytes.len() > limits.max_canonical_bytes {
+                    return Err(BridgeCheckpointError::LimitExceeded);
+                }
                 let plan = graph
                     .route(*origin, *destination, profile, *ticks_per_second)
                     .map_err(BridgeCheckpointError::Transit)?;
-                let bytes = plan.graph_canonical_bytes();
-                if bytes.len() > limits.max_canonical_bytes
-                    || plan.segments().len() > limits.max_route_segments
-                {
+                if plan.segments().len() > limits.max_route_segments {
                     return Err(BridgeCheckpointError::LimitExceeded);
                 }
                 Ok(Self::Route {
                     graph_version: plan.graph_version(),
-                    graph_canonical_bytes: bytes.to_vec(),
+                    graph_canonical_bytes: graph_bytes.to_vec(),
                     origin: origin.value(),
                     destination: destination.value(),
                     mode: profile.mode().as_str().to_owned(),
@@ -869,6 +874,13 @@ impl TransitRequestCheckpointV1 {
             ) => {
                 if graph_canonical_bytes.len() > limits.max_canonical_bytes {
                     return Err(BridgeCheckpointError::LimitExceeded);
+                }
+                let trusted_graph_bytes = graph.canonical_bytes_ref();
+                if trusted_graph_bytes.len() > limits.max_canonical_bytes {
+                    return Err(BridgeCheckpointError::LimitExceeded);
+                }
+                if trusted_graph_bytes != graph_canonical_bytes {
+                    return Err(BridgeCheckpointError::InvalidState);
                 }
                 let origin = NodeId::new(origin);
                 let destination = NodeId::new(destination);
@@ -2203,16 +2215,21 @@ mod tests {
     use super::*;
     use crate::route_receipt::DistanceProvenance;
     use crate::seed_map::CalibrationSeedMap;
-    use crate::work_duration::{INTRINSIC_WORK_PROVIDER_VERSION_V1, IntrinsicDurationDistribution};
-    use kairo_ecs_abm::spatial::{EdgeId, MovementModeId, TransitEdge};
-    use kairo_ecs_abm::{register_transit_context, register_transit_context_reject_first_for_test};
+    use crate::work_duration::{IntrinsicDurationDistribution, INTRINSIC_WORK_PROVIDER_VERSION_V1};
+    use kairo_ecs_abm::spatial::{EdgeId, MovementModeId, NodeId, TransitEdge};
+    use kairo_ecs_abm::{
+        register_transit_context, register_transit_context_checkpoint_domain,
+        register_transit_context_reject_first_for_test, TransitContext,
+        TransitContextCheckpointLimitsV1, TransitContextCheckpointV1,
+    };
     use kairo_ecs_des::fidelity::{FidelityCheckpointLimits, FidelityPolicy};
     use kairo_ecs_des::{
-        FlowBatchRejection, FlowCheckpointCodecError, FlowCheckpointCodecs, FlowCheckpointLimits,
-        FlowCheckpointRebindV1, FlowDispatch, FlowHandlerCodeIds, FlowRuntime, LifecycleTransition,
-        RequestState, WorkHandlers,
+        FlowBatchRejection, FlowCallbackCodeV1, FlowCheckpointCodecError, FlowCheckpointCodecs,
+        FlowCheckpointLimits, FlowCheckpointRebindV1, FlowDispatch, FlowHandlerCodeIds,
+        FlowRuntime, LifecycleTransition, RequestState, WorkHandlers,
     };
     use std::cell::RefCell;
+    use std::rc::Rc;
 
     thread_local! {
         static TEST_CHECKPOINT_REBIND: RefCell<Option<FlowCheckpointRebindV1>> = const { RefCell::new(None) };
@@ -2270,6 +2287,104 @@ mod tests {
             .register_restart_factory::<u32, u32>("bridge.template", "bridge.factory", make_context)
             .unwrap();
         codecs
+    }
+
+    fn joined_native_codecs(
+        source: &FlowRuntime,
+        trusted_graph: Arc<TransitGraphV1>,
+    ) -> FlowCheckpointCodecs {
+        const TRANSIT_LIMITS: TransitContextCheckpointLimitsV1 =
+            TransitContextCheckpointLimitsV1::new(128, 16 * 1024, 1024, 32 * 1024);
+        let source_identity = source.identity();
+        let transit_state = Rc::new(RefCell::new(None::<TransitContextCheckpointV1>));
+        let encode_state = transit_state.clone();
+        let decode_state = transit_state;
+        let mut codecs = native_test_codecs();
+        codecs
+            .register_context_with_owner::<TransitContext>(
+                "bridge.transit",
+                1,
+                move |context, max_bytes| {
+                    if max_bytes < 1 {
+                        return Err(FlowCheckpointCodecError(
+                            "transit test marker exceeds limit".to_owned(),
+                        ));
+                    }
+                    let image = context
+                        .checkpoint_v1(&source_identity, TRANSIT_LIMITS)
+                        .map_err(|error| FlowCheckpointCodecError(error.to_string()))?;
+                    *encode_state.borrow_mut() = Some(image);
+                    Ok(vec![1])
+                },
+                move |bytes, row_owner, rebind| {
+                    if bytes != [1] {
+                        return Err(FlowCheckpointCodecError(
+                            "invalid transit test marker".to_owned(),
+                        ));
+                    }
+                    let image = decode_state.borrow_mut().take().ok_or_else(|| {
+                        FlowCheckpointCodecError("missing test transit owner image".to_owned())
+                    })?;
+                    image
+                        .restore_for_owner(&trusted_graph, rebind, row_owner, TRANSIT_LIMITS)
+                        .map_err(|error| FlowCheckpointCodecError(error.to_string()))
+                },
+            )
+            .unwrap();
+        register_transit_context_checkpoint_domain(
+            &mut codecs,
+            "bridge.transit",
+            EventKind::custom(0xC20),
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.plan".to_owned(),
+                version: 1,
+            },
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.accept".to_owned(),
+                version: 1,
+            },
+        )
+        .unwrap();
+        codecs
+    }
+
+    fn restore_route_flow_with_view(
+        source: &FlowRuntime,
+        trusted_graph: Arc<TransitGraphV1>,
+    ) -> (FlowRuntime, FlowCheckpointRebindV1) {
+        let codecs = joined_native_codecs(source, trusted_graph);
+        let image = source
+            .capture_checkpoint(&codecs, FlowCheckpointLimits::default())
+            .unwrap();
+        FlowRuntime::restore_checkpoint_with_rebind(image, &codecs, FlowCheckpointLimits::default())
+            .unwrap()
+    }
+
+    fn route_graph(bound: &BoundIntrinsicWork<u32, u32>) -> Arc<TransitGraphV1> {
+        match &bound.transit {
+            TransitRequest::Route { graph, .. } => graph.clone(),
+            TransitRequest::Zero => panic!("route request expected"),
+        }
+    }
+
+    fn restore_adapter_for_flow(
+        adapter: &FidelityAdapter,
+        source: &FlowRuntime,
+        restored: &FlowRuntime,
+        work: WorkId,
+    ) -> FidelityAdapter {
+        let limits = FidelityCheckpointLimits {
+            max_admitted: 32,
+            max_overrides: 32,
+            max_subsystem_bytes: 4096,
+        };
+        FidelityAdapter::from_checkpoint(
+            adapter.checkpoint(source, limits).unwrap(),
+            restored,
+            &[(work, work)],
+            limits,
+        )
+        .unwrap()
     }
 
     fn restore_flow_with_test_rebind(flow: &FlowRuntime) -> (FlowRuntime, FlowCheckpointRebindV1) {
@@ -2433,8 +2548,8 @@ mod tests {
         bound_route_with_metadata(false)
     }
 
-    fn bound_annotated_route_with_adapter()
-    -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
+    fn bound_annotated_route_with_adapter(
+    ) -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
         bound_route_with_metadata(true)
     }
 
@@ -2466,6 +2581,25 @@ mod tests {
         transit: TransitIntent,
     ) -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
         let (input, mut flow, mut adapter, _) = input(mode, transit, SeedPurpose::Service, false);
+        flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
+            .unwrap();
+        let prepared = must_prepare(input.prepare(&flow, &mut adapter, &provider()));
+        let created = must_create(prepared.create(&mut flow));
+        let bound = must_bind(created.bind(&flow));
+        (flow, adapter, bound)
+    }
+
+    fn bound_route_at_with_adapter(
+        start: SimTime,
+    ) -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
+        let (mut input, mut flow, mut adapter, _) = input(
+            FidelityMode::Micro,
+            TransitIntent::Route,
+            SeedPurpose::Service,
+            false,
+        );
+        input.acquire.at = start;
+        register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20)).unwrap();
         flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
             .unwrap();
         let prepared = must_prepare(input.prepare(&flow, &mut adapter, &provider()));
@@ -2638,6 +2772,421 @@ mod tests {
     }
 
     #[test]
+    fn joined_native_restore_rebinds_paused_route_and_rejects_carrier_mutations() {
+        let (mut flow, adapter, mut bound) = bound_route_with_adapter();
+        bound.start_transit(&mut flow).unwrap();
+        let start = flow.step().unwrap().unwrap();
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &start),
+            Ok(TransitObservation::Progress)
+        );
+        let pause_at = flow.now();
+        bound
+            .schedule_transit_control(&mut flow, FlowDomainControl::Pause, pause_at, 7)
+            .unwrap();
+        let pause = flow.step().unwrap().unwrap();
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &pause),
+            Ok(TransitObservation::Paused)
+        );
+        bound.service_stream.next_u64().unwrap();
+        let limits = bridge_checkpoint_limits();
+        let image =
+            BoundIntrinsicWorkCheckpointV1::capture(&bound, &flow, &adapter, limits).unwrap();
+        assert!(image.draw_after < bound.draw_position());
+        let graph = route_graph(&bound);
+        let source_budget = flow.budget_snapshot();
+        let source_position = bound.draw_position();
+        let expected_next_draw = bound.next_service_draw_probe_for_checkpoint();
+        let (mut restored_flow, rebind) = restore_route_flow_with_view(&flow, graph.clone());
+        let restored_adapter =
+            restore_adapter_for_flow(&adapter, &flow, &restored_flow, bound.work());
+        let carrier_id = image.carrier.unwrap();
+        assert_eq!(
+            rebind.resolve_work_binding(carrier_id).unwrap(),
+            (
+                bound.carrier_actor.unwrap(),
+                "bridge.transit",
+                Some(bound.kind.unwrap())
+            )
+        );
+        if let Some(pending) = image.pending_event {
+            assert!(
+                rebind.resolve_event(pending).is_ok(),
+                "ordinary paused pending event should remain in scheduler membership: {pending:?}"
+            );
+        }
+        let mapped_work = rebind.resolve_work(image.work).unwrap();
+        let restored_spec = restored_flow.work(mapped_work).unwrap();
+        assert_eq!(restored_flow.identity(), *rebind.identity());
+        assert_eq!(
+            restored_adapter.decision(mapped_work),
+            Some(&image.decision)
+        );
+        assert_eq!(restored_spec.owner, image.acquire.owner);
+        assert_eq!(
+            restored_spec.original_duration.ticks(),
+            image.duration_ticks
+        );
+        assert_eq!(
+            restored_spec.request.is_some(),
+            image.arrival_request.is_some()
+        );
+        let restored_acquire = image.acquire.restore(&rebind).unwrap();
+        assert_eq!(restored_acquire.owner, restored_spec.owner);
+        assert!(restored_flow.resource(restored_acquire.resource).is_ok());
+        assert_eq!(image.carrier.is_some(), image.carrier_actor.is_some());
+        assert_eq!(image.carrier.is_some(), image.kind.is_some());
+        assert_eq!(
+            image.pending_event.is_some(),
+            image.pending_priority.is_some()
+        );
+        for event in &image.owned_events {
+            assert!(rebind.resolve_issued_event(*event).is_ok());
+        }
+        for event in &image.consumed_events {
+            assert!(rebind.resolve_issued_event(*event).is_ok());
+        }
+        for (event, _) in &image.controls {
+            assert!(rebind.resolve_issued_event(*event).is_ok());
+        }
+        let restored_stream = image
+            .stream
+            .clone()
+            .restore_for(
+                &bound.expected_service_key,
+                CalibrationStreamStateLimits {
+                    max_identifier_bytes: limits.max_identifier_bytes,
+                },
+            )
+            .unwrap();
+        assert_eq!(
+            SampledWorkDuration::from_checkpoint_parts(
+                SimDuration::from_ticks(image.duration_ticks),
+                bound.expected_service_key.clone(),
+                image.draw_before,
+                image.draw_after,
+                &restored_stream,
+                &bound.expected_service_key,
+            )
+            .unwrap()
+            .duration()
+            .ticks(),
+            image.duration_ticks
+        );
+        let restored_transit = image
+            .transit
+            .clone()
+            .restore(Some(graph.clone()), limits)
+            .unwrap();
+        let restored_carrier = rebind.resolve_work(carrier_id).unwrap();
+        let restored_context = restored_flow
+            .work_context::<TransitContext>(restored_carrier)
+            .unwrap();
+        assert!(validate_transit_context(
+            &restored_transit,
+            restored_context,
+            &restored_flow,
+            restored_carrier,
+            mapped_work,
+            Some(bound.carrier_actor.unwrap()),
+            Some(bound.kind.unwrap()),
+        )
+        .is_ok());
+        let mut restored = BoundIntrinsicWorkCheckpointV1::restore::<u32, u32>(
+            image.clone(),
+            &restored_flow,
+            &restored_adapter,
+            &bound.expected_service_key,
+            &rebind,
+            Some(graph.clone()),
+            limits,
+        )
+        .unwrap();
+        assert_eq!(restored.draw_position(), source_position);
+        assert_eq!(
+            restored.next_service_draw_probe_for_checkpoint(),
+            expected_next_draw
+        );
+        assert_eq!(
+            restored_flow
+                .work_context::<TransitContext>(restored.carrier.unwrap())
+                .unwrap()
+                .phase(),
+            TransitPhase::Paused
+        );
+
+        let mut wrong_actor = image.clone();
+        wrong_actor.carrier_actor = Some(bound.acquire.owner);
+        assert!(matches!(
+            BoundIntrinsicWorkCheckpointV1::restore::<u32, u32>(
+                wrong_actor,
+                &restored_flow,
+                &restored_adapter,
+                &bound.expected_service_key,
+                &rebind,
+                Some(graph.clone()),
+                limits,
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        ));
+        let mut wrong_both_actors = image.clone();
+        wrong_both_actors.carrier_actor = Some(bound.acquire.owner);
+        if let TransitRequestCheckpointV1::Route { carrier_actor, .. } =
+            &mut wrong_both_actors.transit
+        {
+            *carrier_actor = bound.acquire.owner;
+        }
+        assert!(matches!(
+            BoundIntrinsicWorkCheckpointV1::restore::<u32, u32>(
+                wrong_both_actors,
+                &restored_flow,
+                &restored_adapter,
+                &bound.expected_service_key,
+                &rebind,
+                Some(graph.clone()),
+                limits,
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        ));
+        let mut wrong_kind = image.clone();
+        let wrong_event_kind = EventKind::custom(0xC21);
+        wrong_kind.kind = Some(wrong_event_kind);
+        if let TransitRequestCheckpointV1::Route { kind, .. } = &mut wrong_kind.transit {
+            *kind = wrong_event_kind;
+        }
+        assert!(matches!(
+            BoundIntrinsicWorkCheckpointV1::restore::<u32, u32>(
+                wrong_kind,
+                &restored_flow,
+                &restored_adapter,
+                &bound.expected_service_key,
+                &rebind,
+                Some(graph.clone()),
+                limits,
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        ));
+        let mut wrong_registration = image.clone();
+        if let TransitRequestCheckpointV1::Route {
+            carrier_registration,
+            ..
+        } = &mut wrong_registration.transit
+        {
+            *carrier_registration = "bridge.transit.other".to_owned();
+        }
+        assert!(matches!(
+            BoundIntrinsicWorkCheckpointV1::restore::<u32, u32>(
+                wrong_registration,
+                &restored_flow,
+                &restored_adapter,
+                &bound.expected_service_key,
+                &rebind,
+                Some(graph.clone()),
+                limits,
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        ));
+
+        assert_eq!(flow.budget_snapshot(), source_budget);
+        assert_eq!(bound.draw_position(), source_position);
+        assert_eq!(
+            restored
+                .schedule_transit_control(
+                    &mut restored_flow,
+                    FlowDomainControl::Resume,
+                    SimTime::from_ticks(1),
+                    7,
+                )
+                .unwrap(),
+            bound
+                .schedule_transit_control(
+                    &mut flow,
+                    FlowDomainControl::Resume,
+                    SimTime::from_ticks(1),
+                    7,
+                )
+                .unwrap()
+        );
+        loop {
+            let source_dispatch = flow.step().unwrap().unwrap();
+            let restored_dispatch = restored_flow.step().unwrap().unwrap();
+            assert_eq!(source_dispatch, restored_dispatch);
+            let source_observation = bound
+                .observe_transit_dispatch(&flow, &source_dispatch)
+                .unwrap();
+            let restored_observation = restored
+                .observe_transit_dispatch(&restored_flow, &restored_dispatch)
+                .unwrap();
+            assert_eq!(source_observation, restored_observation);
+            if source_observation == TransitObservation::Arrived {
+                break;
+            }
+        }
+        assert_eq!(bound.owned_events, restored.owned_events);
+        assert_eq!(bound.consumed_events, restored.consumed_events);
+        assert_eq!(
+            flow.work_progress(bound.work()).unwrap(),
+            restored_flow.work_progress(restored.work()).unwrap()
+        );
+    }
+
+    #[test]
+    fn joined_native_restore_retries_a_rejected_issued_event_without_replay() {
+        let max = SimTime::from_ticks(u128::MAX);
+        let (mut flow, adapter, mut bound) = bound_route_at_with_adapter(max);
+        let original_event = bound.start_transit(&mut flow).unwrap();
+        let rejected = flow.step().unwrap().unwrap();
+        assert_eq!(rejected.event, original_event);
+        assert_overflow_rejection(&rejected);
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &rejected),
+            Ok(TransitObservation::Rejected)
+        );
+        assert_eq!(bound.retryable.as_ref(), Some(&rejected));
+
+        let limits = bridge_checkpoint_limits();
+        let image =
+            BoundIntrinsicWorkCheckpointV1::capture(&bound, &flow, &adapter, limits).unwrap();
+        let graph = route_graph(&bound);
+        let source_budget = flow.budget_snapshot();
+        let source_draw_position = bound.draw_position();
+        let (mut restored_flow, rebind) = restore_route_flow_with_view(&flow, graph.clone());
+        let restored_adapter =
+            restore_adapter_for_flow(&adapter, &flow, &restored_flow, bound.work());
+        let mut restored = BoundIntrinsicWorkCheckpointV1::restore::<u32, u32>(
+            image.clone(),
+            &restored_flow,
+            &restored_adapter,
+            &bound.expected_service_key,
+            &rebind,
+            Some(graph),
+            limits,
+        )
+        .unwrap();
+        assert_eq!(restored.retryable.as_ref(), Some(&rejected));
+        assert_eq!(restored.pending_event, Some(original_event));
+        assert_eq!(flow.budget_snapshot(), source_budget);
+        assert_eq!(bound.draw_position(), source_draw_position);
+
+        let restored_rejection = restored.retryable.clone().unwrap();
+        let source_retry = bound.retry_transit(&mut flow, &rejected).unwrap();
+        let restored_retry = restored
+            .retry_transit(&mut restored_flow, &restored_rejection)
+            .unwrap();
+        assert_eq!(source_retry, restored_retry);
+        let source_rejected_again = flow.step().unwrap().unwrap();
+        let restored_rejected_again = restored_flow.step().unwrap().unwrap();
+        assert_eq!(source_rejected_again, restored_rejected_again);
+        assert_overflow_rejection(&source_rejected_again);
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &source_rejected_again),
+            Ok(TransitObservation::Rejected)
+        );
+        assert_eq!(
+            restored.observe_transit_dispatch(&restored_flow, &restored_rejected_again),
+            Ok(TransitObservation::Rejected)
+        );
+        assert_eq!(bound.owned_events, restored.owned_events);
+        assert_eq!(bound.consumed_events, restored.consumed_events);
+        assert_eq!(bound.retryable, restored.retryable);
+    }
+
+    #[test]
+    fn joined_native_restore_preserves_arrival_and_historical_event_suffix() {
+        let (mut flow, adapter, mut bound) = bound_annotated_route_with_adapter();
+        bound.start_transit(&mut flow).unwrap();
+        let start = flow.step().unwrap().unwrap();
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &start),
+            Ok(TransitObservation::Progress)
+        );
+        let pause_at = flow.now();
+        bound
+            .schedule_transit_control(&mut flow, FlowDomainControl::Pause, pause_at, 7)
+            .unwrap();
+        loop {
+            let dispatch = flow.step().unwrap().unwrap();
+            let observation = bound.observe_transit_dispatch(&flow, &dispatch).unwrap();
+            if observation == TransitObservation::Paused {
+                break;
+            }
+        }
+        bound
+            .schedule_transit_control(
+                &mut flow,
+                FlowDomainControl::Resume,
+                SimTime::from_ticks(1),
+                7,
+            )
+            .unwrap();
+        loop {
+            let dispatch = flow.step().unwrap().unwrap();
+            let observation = bound.observe_transit_dispatch(&flow, &dispatch).unwrap();
+            if observation == TransitObservation::Arrived {
+                break;
+            }
+        }
+        assert!(bound.arrival_request.is_some());
+        assert!(!bound.consumed_events.is_empty());
+
+        let limits = bridge_checkpoint_limits();
+        let image =
+            BoundIntrinsicWorkCheckpointV1::capture(&bound, &flow, &adapter, limits).unwrap();
+        let graph = route_graph(&bound);
+        let source_budget = flow.budget_snapshot();
+        let source_history = (
+            bound.owned_events.clone(),
+            bound.stale_events.clone(),
+            bound.consumed_events.clone(),
+            bound.controls.clone(),
+        );
+        let (restored_flow, rebind) = restore_route_flow_with_view(&flow, graph.clone());
+        let restored_adapter =
+            restore_adapter_for_flow(&adapter, &flow, &restored_flow, bound.work());
+        let restored = BoundIntrinsicWorkCheckpointV1::restore::<u32, u32>(
+            image,
+            &restored_flow,
+            &restored_adapter,
+            &bound.expected_service_key,
+            &rebind,
+            Some(graph),
+            limits,
+        )
+        .unwrap();
+        assert_eq!(restored.arrival_request, bound.arrival_request);
+        assert_eq!(restored.arrival_at, bound.arrival_at);
+        assert_eq!(restored.route_receipt, bound.route_receipt);
+        assert_eq!(
+            (
+                restored.owned_events.clone(),
+                restored.stale_events.clone(),
+                restored.consumed_events.clone(),
+                restored.controls.clone(),
+            ),
+            source_history
+        );
+        assert_eq!(flow.budget_snapshot(), source_budget);
+        assert_eq!(
+            restored_flow
+                .work_context::<TransitContext>(restored.carrier.unwrap())
+                .unwrap()
+                .phase(),
+            TransitPhase::Arrived
+        );
+
+        let source_submitted = bound.finish_transit(&flow).unwrap();
+        let restored_submitted = restored.finish_transit(&restored_flow).unwrap();
+        assert_eq!(source_submitted.work(), restored_submitted.work());
+        assert_eq!(source_submitted.request(), restored_submitted.request());
+        assert_eq!(source_submitted.decision(), restored_submitted.decision());
+        assert_eq!(
+            source_submitted.service_draw_position(),
+            restored_submitted.service_draw_position()
+        );
+    }
+
+    #[test]
     fn native_bound_checkpoint_keeps_approved_route_and_receipt_state() {
         let (mut flow, adapter, mut bound) = bound_annotated_route_with_adapter();
         bound.start_transit(&mut flow).unwrap();
@@ -2729,6 +3278,80 @@ mod tests {
         bound.carrier_actor = Some(actor);
 
         assert!(BoundIntrinsicWorkCheckpointV1::capture(&bound, &flow, &adapter, limits).is_ok());
+    }
+
+    #[test]
+    fn native_bound_checkpoint_preflights_graph_limit_before_route_calculation() {
+        let (flow, adapter, mut bound) = bound_route_with_adapter();
+        let (graph_bytes, original_origin) = match &mut bound.transit {
+            TransitRequest::Route { graph, origin, .. } => {
+                let graph_bytes = graph.canonical_bytes_ref().len();
+                let original_origin = *origin;
+                *origin = NodeId::new(u64::MAX);
+                (graph_bytes, original_origin)
+            }
+            TransitRequest::Zero => panic!("route request expected"),
+        };
+        let mut limits = bridge_checkpoint_limits();
+        limits.max_canonical_bytes = graph_bytes - 1;
+        let draw_position = bound.draw_position();
+        let flow_budget = flow.budget_snapshot();
+
+        assert_eq!(
+            BoundIntrinsicWorkCheckpointV1::capture(&bound, &flow, &adapter, limits),
+            Err(BridgeCheckpointError::LimitExceeded)
+        );
+        assert_eq!(bound.draw_position(), draw_position);
+        assert_eq!(flow.budget_snapshot(), flow_budget);
+        if let TransitRequest::Route { origin, .. } = &mut bound.transit {
+            *origin = original_origin;
+        }
+    }
+
+    #[test]
+    fn native_transit_restore_preflights_trusted_graph_size_and_identity() {
+        let (_flow, _adapter, bound) = bound_route_with_adapter();
+        let image = TransitRequestCheckpointV1::capture(&bound.transit, bridge_checkpoint_limits())
+            .unwrap();
+        let TransitRequestCheckpointV1::Route {
+            graph_canonical_bytes,
+            ..
+        } = &image
+        else {
+            panic!("route image expected");
+        };
+        let nodes = [1, 2, 3, 4].map(NodeId::new);
+        let mode = MovementModeId::new("walk").unwrap();
+        let larger_graph = Arc::new(
+            TransitGraphV1::new(
+                1,
+                nodes.to_vec(),
+                vec![
+                    TransitEdge {
+                        id: EdgeId::new(1),
+                        from: nodes[0],
+                        to: nodes[1],
+                        length_mm: 1,
+                        allowed_modes: vec![mode.clone()],
+                    },
+                    TransitEdge {
+                        id: EdgeId::new(2),
+                        from: nodes[2],
+                        to: nodes[3],
+                        length_mm: 1,
+                        allowed_modes: vec![mode],
+                    },
+                ],
+            )
+            .unwrap(),
+        );
+        assert!(larger_graph.canonical_bytes_ref().len() > graph_canonical_bytes.len());
+        let mut limits = bridge_checkpoint_limits();
+        limits.max_canonical_bytes = graph_canonical_bytes.len();
+        assert!(matches!(
+            image.clone().restore(Some(larger_graph), limits),
+            Err(BridgeCheckpointError::LimitExceeded)
+        ));
     }
 
     #[test]
@@ -3054,11 +3677,9 @@ mod tests {
         assert_eq!(start, control_start);
         assert_eq!(control_bound.route_receipt, None);
         let expected_receipt = bound.route_receipt.clone().unwrap();
-        assert!(
-            bound
-                .validate_route_context(&flow, bound.carrier.unwrap())
-                .is_ok()
-        );
+        assert!(bound
+            .validate_route_context(&flow, bound.carrier.unwrap())
+            .is_ok());
 
         let continuation = BoundWorkContinuation::capture(flow, adapter, bound)
             .ok()
@@ -3227,11 +3848,9 @@ mod tests {
                 )
                 .unwrap();
                 assert_eq!(stale_image.stale_events, vec![replaced_progress_event]);
-                assert!(
-                    stale_image
-                        .consumed_events
-                        .contains(&replaced_progress_event)
-                );
+                assert!(stale_image
+                    .consumed_events
+                    .contains(&replaced_progress_event));
             }
             arrived = observation == TransitObservation::Arrived;
         }
@@ -3247,11 +3866,9 @@ mod tests {
         let arrived_progress = arrived_context.progress_at(flow.now()).unwrap();
         assert_eq!(arrived_progress.useful_elapsed, SimDuration::from_ticks(5));
         assert_eq!(arrived_progress.remaining, SimDuration::ZERO);
-        assert!(
-            bound
-                .validate_route_context(&flow, bound.carrier.unwrap())
-                .is_ok()
-        );
+        assert!(bound
+            .validate_route_context(&flow, bound.carrier.unwrap())
+            .is_ok());
         let arrived_image = BoundIntrinsicWorkCheckpointV1::capture(
             &bound,
             &flow,
@@ -4509,11 +5126,9 @@ mod tests {
             .filter(|row| row.snapshot.work == Some(work_id))
             .collect();
         assert_eq!(bridge_lineage_rows.len(), original_rows.len());
-        assert!(
-            bridge_lineage_rows
-                .iter()
-                .all(|row| row.request == request_id)
-        );
+        assert!(bridge_lineage_rows
+            .iter()
+            .all(|row| row.request == request_id));
         let urgent_rows: Vec<_> = records
             .iter()
             .filter(|row| row.request == urgent_request)
@@ -4832,11 +5447,10 @@ mod tests {
 
         let replacement = bound.retry_transit(&mut flow, &rejected).unwrap();
         assert_ne!(replacement, original);
-        assert!(
-            flow.work_context::<TransitContext>(carrier)
-                .unwrap()
-                .expects_event(replacement, SimTime::from_ticks(0))
-        );
+        assert!(flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .expects_event(replacement, SimTime::from_ticks(0)));
         let after_retry = flow.budget_snapshot().scheduler;
         assert_eq!(
             bound.retry_transit(&mut flow, &rejected),
@@ -4934,11 +5548,10 @@ mod tests {
             flow.budget_snapshot().scheduler.scheduled_events,
             before_retry.scheduled_events + 1
         );
-        assert!(
-            flow.work_context::<TransitContext>(carrier)
-                .unwrap()
-                .expects_event(replacement, max)
-        );
+        assert!(flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .expects_event(replacement, max));
         let after_retry = flow.budget_snapshot().scheduler;
         assert_eq!(
             bound.retry_transit(&mut flow, &rejected_start),
@@ -5008,11 +5621,10 @@ mod tests {
             flow.budget_snapshot().scheduler.scheduled_events,
             before_retry.scheduled_events + 1
         );
-        assert!(
-            flow.work_context::<TransitContext>(carrier)
-                .unwrap()
-                .expects_event(replacement, max)
-        );
+        assert!(flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .expects_event(replacement, max));
         let after_retry = flow.budget_snapshot().scheduler;
         assert_eq!(
             bound.retry_transit(&mut flow, &rejected_progress),

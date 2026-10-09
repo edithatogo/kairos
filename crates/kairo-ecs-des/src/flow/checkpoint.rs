@@ -15,6 +15,9 @@ use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
+mod wire;
+pub use wire::{FlowCheckpointWireError, FlowCheckpointWireLimits};
+
 const FLOW_CHECKPOINT_VERSION_V1: u32 = 1;
 
 /// Aggregate allocation and payload limits for one Flow capture or restore.
@@ -293,7 +296,8 @@ pub struct FlowNotificationV1 {
     pub ordinal: u32,
 }
 
-/// Complete native image of a Flow runtime. No callback, TypeId, or runtime token is stored.
+/// Complete native image of a Flow runtime. Callback compatibility IDs are
+/// declarations only; no callback functions, pointers, TypeIds, or runtime token are stored.
 #[doc(hidden)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FlowCheckpointV1 {
@@ -2618,7 +2622,7 @@ impl FlowRuntime {
                     _ => {
                         return Err(FlowCheckpointError::InvalidState(
                             "actor domain cross-reference mismatch",
-                        ))
+                        ));
                     }
                 }
             }
@@ -3309,7 +3313,7 @@ fn notification_from_image(
         _ => {
             return Err(FlowCheckpointError::InvalidState(
                 "unknown notification kind",
-            ))
+            ));
         }
     };
     Ok(Notification {

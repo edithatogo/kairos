@@ -455,6 +455,12 @@ impl RoutePlan {
         if image.schema_version != 1 {
             return Err(RouteCheckpointError::UnsupportedVersion);
         }
+        if graph.canonical_bytes_ref().len() > limits.max_graph_bytes {
+            return Err(RouteCheckpointError::LimitExceeded);
+        }
+        if graph.canonical_bytes_ref() != image.graph_canonical_bytes {
+            return Err(RouteCheckpointError::InvalidPlan);
+        }
         let profile = MovementProfile::new(&image.movement_mode, image.speed_mm_per_second)
             .map_err(|_| RouteCheckpointError::InvalidPlan)?;
         let route = graph
@@ -1175,6 +1181,59 @@ mod tests {
             assert!(RoutePlan::restore_image_v1(&invalid, &graph, &limits).is_err());
         }
         assert_eq!(image, original);
+    }
+
+    #[test]
+    fn route_restore_preflights_trusted_graph_identity_and_size_before_routing() {
+        let compact_graph = linear_graph(&[5, 3]);
+        let route = compact_graph
+            .route(
+                NodeId::new(0),
+                NodeId::new(2),
+                &MovementProfile::new("walk", 1).unwrap(),
+                1,
+            )
+            .unwrap();
+        let image = route.checkpoint_image_v1(&image_limits()).unwrap();
+
+        let nodes = (0..=4).map(NodeId::new).collect::<Vec<_>>();
+        let mode = MovementModeId::new("walk").unwrap();
+        let larger_graph = TransitGraphV1::new(
+            1,
+            nodes.clone(),
+            vec![
+                TransitEdge {
+                    id: EdgeId::new(1),
+                    from: nodes[0],
+                    to: nodes[1],
+                    length_mm: 5,
+                    allowed_modes: vec![mode.clone()],
+                },
+                TransitEdge {
+                    id: EdgeId::new(2),
+                    from: nodes[1],
+                    to: nodes[2],
+                    length_mm: 3,
+                    allowed_modes: vec![mode.clone()],
+                },
+                TransitEdge {
+                    id: EdgeId::new(3),
+                    from: nodes[3],
+                    to: nodes[4],
+                    length_mm: 1,
+                    allowed_modes: vec![mode],
+                },
+            ],
+        )
+        .unwrap();
+        assert!(larger_graph.canonical_bytes_ref().len() > image.graph_canonical_bytes.len());
+
+        let limits =
+            RoutePlanImageLimitsV1::new(128, image.graph_canonical_bytes.len(), 1_024, 32_768);
+        assert_eq!(
+            RoutePlan::restore_image_v1(&image, &larger_graph, &limits),
+            Err(RouteCheckpointError::LimitExceeded)
+        );
     }
 
     #[test]
