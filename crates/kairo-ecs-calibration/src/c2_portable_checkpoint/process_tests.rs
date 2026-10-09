@@ -71,6 +71,7 @@ enum Cut {
     Moving,
     PausedReady,
     PausedMidEdge,
+    PausedMidEdgeNativeActivity,
     PausedAtEnd,
     ControlPending,
     Arrived,
@@ -177,6 +178,29 @@ fn spec(name: &str) -> Result<CaseSpec, C2PortableCheckpointError> {
             name: "transit-paused-mid-edge",
             works: vec![one(FidelityMode::Micro, route(), "routed")],
             cut: Cut::PausedMidEdge,
+            pending_policy: false,
+        },
+        "transit-paused-mid-edge-native-activity" => CaseSpec {
+            name: "transit-paused-mid-edge-native-activity",
+            works: vec![
+                WorkSpec {
+                    mode: FidelityMode::Micro,
+                    graph: Some(GraphSpec {
+                        first_mm: 5_000,
+                        second_mm: 5_000,
+                        ..red_graph_spec()
+                    }),
+                    stratum: "routed",
+                    task: "mixed-route".to_owned(),
+                },
+                WorkSpec {
+                    mode: FidelityMode::Macro,
+                    graph: None,
+                    stratum: "service20",
+                    task: "mixed-use-native-activity".to_owned(),
+                },
+            ],
+            cut: Cut::PausedMidEdgeNativeActivity,
             pending_policy: false,
         },
         "transit-paused-at-end" => CaseSpec {
@@ -495,8 +519,14 @@ fn trusted_carrier_graphs(case: &CaseSpec) -> BTreeMap<EntityId, Arc<TransitGrap
                 .unwrap()
                 .1
                 .clone();
-            result.insert(EntityId::new(next_carrier, 0), trusted);
-            next_carrier += 1;
+            if case.cut == Cut::PausedMidEdgeNativeActivity && work.task == "mixed-route" {
+                // The fixture's same-owner activity occupies WorkId 5, so the
+                // routed carrier is deterministically the next WorkId, 6.
+                result.insert(EntityId::new(6, 0), trusted);
+            } else {
+                result.insert(EntityId::new(next_carrier, 0), trusted);
+                next_carrier += 1;
+            }
         }
     }
     result
@@ -572,7 +602,7 @@ fn trusted_bindings(case: &CaseSpec) -> BindingMap {
         .iter()
         .enumerate()
         .map(|(index, work)| {
-            let work_id = EntityId::new(3 + u64::try_from(index).unwrap() * 4, 0);
+            let work_id = case_work_id_for(case, index);
             let key = expected_service_key(&mut registry, case.name, &work.task);
             add_all_purpose_entries(&mut registry, case.name, &work.task);
             let trusted_graph = work.graph.as_ref().and_then(|requested| {
@@ -594,6 +624,14 @@ fn trusted_bindings(case: &CaseSpec) -> BindingMap {
 
 fn work_id_for(index: usize) -> EntityId {
     EntityId::new(3 + u64::try_from(index).unwrap() * 4, 0)
+}
+
+fn case_work_id_for(case: &CaseSpec, index: usize) -> EntityId {
+    if case.cut == Cut::PausedMidEdgeNativeActivity && index == 1 {
+        EntityId::new(5, 0)
+    } else {
+        work_id_for(index)
+    }
 }
 
 struct MatrixRuntime {
@@ -626,12 +664,20 @@ fn build_runtime(case: &CaseSpec) -> MatrixRuntime {
     }
     let provider = provider_for_matrix();
     let mut seeds = seed_map();
-    let mut bounds = Vec::new();
+    let mut bounds: Vec<BoundIntrinsicWork<Vec<u8>, OwnedContext>> = Vec::new();
     let mut service_keys = Vec::new();
     for (index, work_spec) in case.works.iter().enumerate() {
-        let owner = flow.spawn_actor().unwrap();
+        let owner = if case.cut == Cut::PausedMidEdgeNativeActivity && index == 1 {
+            flow.work(bounds[0].work()).unwrap().owner
+        } else {
+            flow.spawn_actor().unwrap()
+        };
         let carrier_actor = flow.spawn_actor().unwrap();
-        let resource = flow.create_resource(1).unwrap();
+        let resource = if case.cut == Cut::PausedMidEdgeNativeActivity && index == 1 {
+            bounds[0].acquire_intent().resource
+        } else {
+            flow.create_resource(1).unwrap()
+        };
         let _expected_service_key = expected_service_key(&mut seeds, case.name, &work_spec.task);
         add_all_purpose_entries(&mut seeds, case.name, &work_spec.task);
         let stream = seeds
@@ -644,16 +690,17 @@ fn build_runtime(case: &CaseSpec) -> MatrixRuntime {
             )
             .unwrap();
         let service_key = stream.key().clone();
-        let expected_id = work_id_for(index);
+        let expected_id = case_work_id_for(case, index);
         let acquire = AcquireIntent {
             resource,
             owner,
             // The rejected-retry case uses the production planner's checked
             // time overflow at u128::MAX. The child reconstructs this from its
             // compiled case name, without hidden mutable fixture state.
-            at: match case.cut {
-                Cut::RejectedStart => SimTime::from_ticks(u128::MAX),
-                Cut::RejectedProgress => SimTime::from_ticks(u128::MAX - 1),
+            at: match (case.cut, index) {
+                (Cut::RejectedStart, _) => SimTime::from_ticks(u128::MAX),
+                (Cut::RejectedProgress, _) => SimTime::from_ticks(u128::MAX - 1),
+                (Cut::PausedMidEdgeNativeActivity, 1) => SimTime::from_ticks(2_500),
                 _ => SimTime::from_ticks(0),
             },
             priority_level: 3,
@@ -771,6 +818,58 @@ fn step_and_observe(runtime: &mut MatrixRuntime) -> Option<kairo_ecs_des::FlowDi
     let dispatch = runtime.flow.step().unwrap()?;
     add_dispatch_observation(&runtime.flow, &mut runtime.bounds, &dispatch);
     Some(dispatch)
+}
+
+/// Find the auxiliary native activity from live Flow bindings, not a guessed ID.
+fn paused_native_activity(
+    runtime: &MatrixRuntime,
+) -> (kairo_ecs_des::WorkId, kairo_ecs_des::RequestId, EntityId) {
+    let service_work = runtime
+        .bounds
+        .iter()
+        .find(|bound| bound.decision().mode == FidelityMode::Micro)
+        .map(|bound| bound.work())
+        .or_else(|| {
+            runtime
+                .submitted
+                .iter()
+                .find(|submitted| submitted.decision().mode == FidelityMode::Micro)
+                .map(|submitted| submitted.work())
+        })
+        .expect("routed Micro service owner");
+    let owner = runtime.flow.work(service_work).unwrap().owner;
+    let candidates: Vec<_> = runtime
+        .submitted
+        .iter()
+        .filter(|submitted| {
+            submitted.work() != service_work && submitted.decision().mode == FidelityMode::Macro
+        })
+        .filter_map(|submitted| {
+            let spec = runtime.flow.work(submitted.work()).ok()?;
+            (spec.owner == owner
+                && spec.original_duration == SimDuration::from_ticks(20)
+                && spec.context_type_key == CONTEXT_CODEC
+                && spec.request == Some(submitted.request()))
+            .then_some((submitted.work(), submitted.request(), owner))
+        })
+        .collect();
+    assert_eq!(candidates.len(), 1, "one active same-actor native activity");
+    candidates[0]
+}
+
+fn paused_mixed_route_progress(
+    runtime: &MatrixRuntime,
+    at: SimTime,
+) -> kairo_ecs_abm::TransitProgress {
+    let carrier = runtime.bounds[0]
+        .carrier_id_for_checkpoint()
+        .expect("routed carrier");
+    let context = runtime
+        .flow
+        .work_context::<TransitContext>(carrier)
+        .unwrap();
+    assert_eq!(context.phase(), TransitPhase::Paused);
+    context.progress_at(at).unwrap()
 }
 
 fn cut_runtime(runtime: &mut MatrixRuntime, cut: Cut) {
@@ -917,6 +1016,104 @@ fn cut_runtime(runtime: &mut MatrixRuntime, cut: Cut) {
                 .schedule_transit_control(&mut runtime.flow, FlowDomainControl::Pause, at, -100)
                 .unwrap();
             assert!(step_and_observe(runtime).is_some());
+        }
+        Cut::PausedMidEdgeNativeActivity => {
+            let start = runtime.bounds[0].start_transit(&mut runtime.flow).unwrap();
+            let start_dispatch = runtime.flow.step().unwrap().unwrap();
+            assert_eq!(start_dispatch.event, start);
+            assert_eq!(start_dispatch.at, SimTime::ZERO);
+            assert_eq!(
+                runtime.bounds[0].observe_transit_dispatch(&runtime.flow, &start_dispatch),
+                Ok(TransitObservation::Progress)
+            );
+            runtime.bounds[0]
+                .schedule_transit_control(
+                    &mut runtime.flow,
+                    FlowDomainControl::Pause,
+                    SimTime::from_ticks(2_500),
+                    -100,
+                )
+                .unwrap();
+            let pause_dispatch = runtime.flow.step().unwrap().unwrap();
+            assert_eq!(pause_dispatch.at, SimTime::from_ticks(2_500));
+            assert_eq!(
+                runtime.bounds[0].observe_transit_dispatch(&runtime.flow, &pause_dispatch),
+                Ok(TransitObservation::Paused)
+            );
+            let paused_progress = paused_mixed_route_progress(runtime, SimTime::from_ticks(2_500));
+            assert_eq!(paused_progress.segment_index, 0);
+            assert!(paused_progress.useful_elapsed > SimDuration::ZERO);
+            assert!(paused_progress.useful_elapsed < SimDuration::from_ticks(5_000));
+            assert_eq!(
+                paused_progress.useful_elapsed,
+                SimDuration::from_ticks(2_500)
+            );
+            assert_eq!(paused_progress.remaining, SimDuration::from_ticks(7_500));
+            assert_eq!(runtime.bounds.len(), 2);
+            let service_work = runtime.bounds[0].work();
+            let activity_work = runtime.bounds[1].work();
+            let owner = runtime.flow.work(service_work).unwrap().owner;
+            assert_eq!(runtime.flow.work(activity_work).unwrap().owner, owner);
+            assert_ne!(activity_work, service_work);
+            assert_eq!(runtime.bounds[1].decision().mode, FidelityMode::Macro);
+            assert_eq!(
+                runtime.bounds[1].acquire_intent().at,
+                SimTime::from_ticks(2_500)
+            );
+            let activity = runtime.bounds.remove(1);
+            let submitted = activity.submit(&mut runtime.flow).ok().unwrap();
+            assert_eq!(submitted.sampled_duration(), SimDuration::from_ticks(20));
+            assert_eq!(
+                submitted.draw_position(),
+                0,
+                "fixed-duration service consumes no draw"
+            );
+            assert_eq!(
+                runtime.adapter.decision(submitted.work()).unwrap().mode,
+                FidelityMode::Macro,
+                "the active native activity retains its admitted Fidelity decision"
+            );
+            runtime.submitted.push(submitted);
+            let activity_work = runtime.submitted[0].work();
+            let activity_request = runtime.submitted[0].request();
+            let mut activity_start = None;
+            for _ in 0..4 {
+                let dispatch = step_and_observe(runtime).expect("activity acquisition/start");
+                assert_eq!(dispatch.at, SimTime::from_ticks(2_500));
+                if runtime.flow.request(activity_request).unwrap().state
+                    == kairo_ecs_des::RequestState::Active
+                {
+                    activity_start = Some(dispatch);
+                    break;
+                }
+            }
+            let activity_start = activity_start.expect("Macro activity became Active");
+            assert_eq!(activity_start.at, SimTime::from_ticks(2_500));
+            assert_eq!(runtime.flow.work(activity_work).unwrap().owner, owner);
+            assert_ne!(activity_work, service_work);
+            let request = runtime.flow.request(activity_request).unwrap();
+            assert_eq!(request.owner, owner);
+            assert_eq!(
+                request.resource,
+                runtime.bounds[0].acquire_intent().resource
+            );
+            assert_eq!(request.state, kairo_ecs_des::RequestState::Active);
+            let activity_progress = runtime.flow.work_progress(activity_work).unwrap();
+            assert_eq!(activity_progress.state, kairo_ecs_des::WorkState::Active);
+            assert_eq!(activity_progress.useful_elapsed, SimDuration::ZERO);
+            assert_eq!(activity_progress.remaining, SimDuration::from_ticks(20));
+            assert_eq!(
+                activity_progress.completion_at,
+                Some(SimTime::from_ticks(2_520))
+            );
+            assert_eq!(
+                paused_mixed_route_progress(runtime, SimTime::from_ticks(2_500)),
+                paused_progress
+            );
+            let (found_work, found_request, found_owner) = paused_native_activity(runtime);
+            assert_eq!(found_work, activity_work);
+            assert_eq!(found_request, activity_request);
+            assert_eq!(found_owner, owner);
         }
         Cut::ControlPending => {
             runtime.bounds[0].start_transit(&mut runtime.flow).unwrap();
@@ -1213,6 +1410,65 @@ fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
                 push_snapshot(runtime, &mut trace, "after-route-start");
             }
         }
+    } else if case.cut == Cut::PausedMidEdgeNativeActivity {
+        let (activity_work, activity_request, owner) = paused_native_activity(runtime);
+        assert_eq!(
+            runtime.adapter.decision(activity_work).unwrap().mode,
+            FidelityMode::Macro,
+            "the restored active activity retains its admitted Fidelity decision"
+        );
+        let service_work = runtime.bounds[0].work();
+        let resource = runtime.bounds[0].acquire_intent().resource;
+        assert_eq!(runtime.flow.work(service_work).unwrap().owner, owner);
+        let paused_at = runtime.flow.now();
+        assert_eq!(paused_at, SimTime::from_ticks(2_500));
+        let before = paused_mixed_route_progress(runtime, paused_at);
+        assert_eq!(before.segment_index, 0);
+        assert_eq!(before.useful_elapsed, SimDuration::from_ticks(2_500));
+        assert_eq!(before.remaining, SimDuration::from_ticks(7_500));
+        assert_eq!(
+            runtime.flow.request(activity_request).unwrap().state,
+            kairo_ecs_des::RequestState::Active
+        );
+        let activity_dispatch = step_and_observe(runtime).expect("activity completion");
+        assert_eq!(activity_dispatch.at, SimTime::from_ticks(2_520));
+        assert!(activity_dispatch.records.iter().any(|record| {
+            record.request == activity_request
+                && record.transition == kairo_ecs_des::LifecycleTransition::Completed
+                && record.snapshot.work == Some(activity_work)
+                && record.snapshot.owner == owner
+        }));
+        assert_eq!(
+            runtime.flow.request(activity_request).unwrap().state,
+            kairo_ecs_des::RequestState::Completed
+        );
+        let activity_done = runtime.flow.work_progress(activity_work).unwrap();
+        assert_eq!(activity_done.state, kairo_ecs_des::WorkState::Completed);
+        assert_eq!(activity_done.original_duration, SimDuration::from_ticks(20));
+        assert_eq!(activity_done.useful_elapsed, SimDuration::from_ticks(20));
+        assert_eq!(activity_done.remaining, SimDuration::ZERO);
+        assert_eq!(
+            paused_mixed_route_progress(runtime, runtime.flow.now()),
+            before,
+            "paused wall time must not advance route distance or useful movement"
+        );
+        assert_eq!(runtime.flow.resource(resource).unwrap().available, 1);
+        push_snapshot(
+            runtime,
+            &mut trace,
+            "after-native-activity-while-route-paused",
+        );
+        let resume_at = runtime.flow.now();
+        runtime.bounds[0]
+            .schedule_transit_control(
+                &mut runtime.flow,
+                FlowDomainControl::Resume,
+                resume_at,
+                -100,
+            )
+            .unwrap();
+        control_resume_scheduled = true;
+        push_snapshot(runtime, &mut trace, "after-mixed-use-route-resume-command");
     } else if matches!(
         case.cut,
         Cut::PausedReady | Cut::PausedMidEdge | Cut::PausedAtEnd
@@ -1238,7 +1494,7 @@ fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
 
     if case.cut == Cut::MultiGraphMixed {
         for (index, work_spec) in case.works.iter().enumerate() {
-            let work_id = work_id_for(index);
+            let work_id = case_work_id_for(case, index);
             let Some(bound_index) = runtime
                 .bounds
                 .iter()
@@ -1456,6 +1712,55 @@ fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
         assert_eq!(after, frozen);
         push_snapshot(runtime, &mut trace, "after-pending-policy-boundary");
     }
+    if case.cut == Cut::PausedMidEdgeNativeActivity {
+        let (activity_work, activity_request, owner) = paused_native_activity(runtime);
+        let submitted = runtime
+            .submitted
+            .iter()
+            .find(|submitted| submitted.decision().mode == FidelityMode::Micro)
+            .expect("route service submitted");
+        assert_eq!(runtime.flow.work(submitted.work()).unwrap().owner, owner);
+        assert_eq!(
+            runtime.flow.request(submitted.request()).unwrap().state,
+            kairo_ecs_des::RequestState::Completed
+        );
+        let service_progress = runtime.flow.work_progress(submitted.work()).unwrap();
+        assert_eq!(service_progress.state, kairo_ecs_des::WorkState::Completed);
+        assert_eq!(
+            service_progress.original_duration,
+            submitted.sampled_duration()
+        );
+        assert_eq!(
+            service_progress.useful_elapsed,
+            submitted.sampled_duration()
+        );
+        assert_eq!(service_progress.remaining, SimDuration::ZERO);
+        assert_eq!(
+            runtime.flow.request(activity_request).unwrap().state,
+            kairo_ecs_des::RequestState::Completed
+        );
+        let activity_progress = runtime.flow.work_progress(activity_work).unwrap();
+        assert_eq!(
+            activity_progress.original_duration,
+            SimDuration::from_ticks(20)
+        );
+        assert_eq!(
+            activity_progress.useful_elapsed,
+            SimDuration::from_ticks(20)
+        );
+        let final_time = SimTime::from_ticks(10_020)
+            .checked_add(submitted.sampled_duration())
+            .unwrap();
+        assert_eq!(runtime.flow.now(), final_time);
+        assert_eq!(
+            runtime
+                .flow
+                .resource(submitted.acquire_intent().resource)
+                .unwrap()
+                .available,
+            1
+        );
+    }
     trace
 }
 
@@ -1555,6 +1860,7 @@ fn full_owner_image_restores_in_a_new_process_and_matches_uninterrupted_suffix()
         "transit-moving-mid-edge",
         "transit-paused-ready",
         "transit-paused-mid-edge",
+        "transit-paused-mid-edge-native-activity",
         "transit-paused-at-end",
         "transit-control-command-pending",
         "transit-arrived-queued",
