@@ -323,6 +323,12 @@ impl<T> ComponentStore<T> {
         self.dense.len()
     }
 
+    /// Allocation-free row and sparse-slot counts for aggregate checkpoint preflight.
+    #[doc(hidden)]
+    pub fn checkpoint_dimensions(&self) -> (usize, usize) {
+        (self.dense.len(), self.sparse.len())
+    }
+
     pub fn is_empty(&self) -> bool {
         self.dense.is_empty()
     }
@@ -348,6 +354,12 @@ pub struct ComponentRegistry {
 }
 
 impl ComponentRegistry {
+    /// Allocation-free native registration count, including empty stores.
+    #[doc(hidden)]
+    pub fn registered_type_count(&self) -> usize {
+        self.stores.len()
+    }
+
     pub fn new() -> Self {
         Self {
             stores: HashMap::new(),
