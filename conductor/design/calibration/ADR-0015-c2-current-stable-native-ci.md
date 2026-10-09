@@ -8,10 +8,11 @@ public runtime-contract decision.
 
 The current C2 implementation qualification is authorized to use Rust `1.99.0`
 only. Existing matrix and CI expectations name Rust `1.98` and a beta lane. The
-current C2 native path also uses workspace default features; previous qualification
-work did not consistently include that profile. Track 30 owns its matrix and
-validator, while the `.github/workflows/toolchain-check.yml` implementation is a
-separate Track 13 dependency.
+existing native-owner workflow tests default calibration features, which omit C2
+flow execution; local C2 receipts already exercise the flow profile. Track 13
+adds explicit hosted flow/demo coverage. Track 30 owns its matrix and validator,
+while the `.github/workflows/toolchain-check.yml` implementation is a separate
+Track 13 dependency.
 
 The Cargo workspace and crate manifests contain existing `rust-version`
 declarations. Those declarations are historical compatibility metadata here;
