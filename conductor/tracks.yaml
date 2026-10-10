@@ -313,6 +313,7 @@ tracks:
       - sbom-plan
       - vulnerability-policy
   - id: 21
+    # C3 local experimental supplement: evidence/c3-local-qualification-20261010; hosted/parent acceptance pending.
     name: Verification, Validation & Uncertainty
     status: Done
     # C1 scoped supplement: evidence/c1.4-integrated-20261005; historical closure unchanged.

@@ -1,0 +1,20 @@
+{
+  ".github/workflows/careops-native-owner.yml": "9d83f3aa8b1dbf0f29d24205cb0f08611d2de3b76fa7df787e28fd6d1338e87e",
+  "conductor/design/calibration/ADR-0021-c3-shadow-runner.md": "c9eed086a018601e5f1d92c09185f6b42cb6464b79307c8f34a43bafeaf0fb3c",
+  "conductor/design/calibration/c3-checkpoint-wire-v1.md": "4bb4d01c25f1fe7e6d5ca7b0c7caed54d969c236b18f32dd1ec0e3d322979f6d",
+  "crates/kairo-ecs-calibration/src/lib.rs": "87eeb2649f06a5552fd1a73a564631b623ecffe730ac2aeb1265049aaacac681",
+  "crates/kairo-ecs-calibration/src/shadow.rs": "5b162479141882e463e8b529ecdaf971ffcfb34e43e1579907087a8f1e36a525",
+  "crates/kairo-ecs-calibration/src/shadow_c03.rs": "e0479531b1159725a6c300cd8c802d5b42817c8ec4f1c25075f06890f56d81aa",
+  "crates/kairo-ecs-calibration/src/shadow_c2_model.rs": "9555af11a33aefc14188cb316aba32a40269d2906cbfe7653edea425aa35aff6",
+  "crates/kairo-ecs-calibration/src/shadow_ledger.rs": "946d3d4e7ff6b03c39277ce3168df942120a14530e227abaac342d59e797c97b",
+  "crates/kairo-ecs-calibration/src/shadow_native.rs": "837dea007c15ec9b37d4a226fe4e7c22bbcc032acfd215ac243dfe91c46e1245",
+  "crates/kairo-ecs-calibration/src/shadow_pool.rs": "0d34b708e1a34810119c19ddd3ac5449f477bebaefb2b10ca28e26f197aba3c2",
+  "crates/kairo-ecs-calibration/src/shadow_report.rs": "2f37dc6d69823d8361655df010fef276f8d2020d3842812939bba9e715cfa684",
+  "crates/kairo-ecs-calibration/src/shadow_runner.rs": "4beff92c08a59f733215e0d05cd44faaba0f3ffa8c86074675f5388d39af4c93",
+  "crates/kairo-ecs-calibration/src/shadow_sidecars.rs": "7dd652745fcc768e3822d2b1c99ee9f2f73c5841551d4c57a49584a164456c6c",
+  "crates/kairo-ecs-calibration/src/shadow_wire.rs": "a3b4a8eb25f415c63f3df73c54aad58f43bae981b5c3186b1df23fb927b92398",
+  "crates/kairo-ecs-calibration/tests/c3_ledger.rs": "a25f819f95845566cd57e4bbab36b6684ac4fb5bcd47a7c9049017bc258ea11a",
+  "crates/kairo-ecs-calibration/tests/c3_pool.rs": "803ed7402edd6259d4f65981ca7640f890b164d55c9428d92e2fc29af6a956df",
+  "crates/kairo-ecs-calibration/tests/c3_report.rs": "e188327b5f487ea6e13ba0d2130e78e0367dad719eee0dd90e1bbd3629fefdf2",
+  "crates/kairo-ecs-calibration/tests/c3_runner.rs": "c2b3c1847bb3876a8d4e9c7a20ee3eade86c9a84f690b00d463d4ec731d79d58"
+}

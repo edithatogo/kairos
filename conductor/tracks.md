@@ -91,3 +91,13 @@ checks and two expected conditional skips. Final governance successor requires
 fresh phase, strict-clean and exact-head owner CI before parent pin acceptance.
 This supplements existing owner scope; C2, public API review, release and clinical
 validation remain open. Historical Track 04/21 closure remains unchanged.
+
+## C3 experimental private shadow runner — local review 2026-10-10
+
+Local runtime source `6f2c4e305e8b885b67f534035e5a72ac5673a094` and Rust 1.99-only
+CI gate `4e7d6075861d42a8f480ca0feb04414fa29d9bd1` qualify the bounded synthetic
+shadow runner locally. [Evidence](evidence/c3-local-qualification-20261010/README.md)
+records 351 full calibration passes, 26 release shadow passes, native fresh-process
+recovery, actual IPC/Parquet roundtrip and independent manual readback. Hosted C3
+qualification, C3.4/parent acceptance and parent pin remain pending. Historical
+owner-track Done scopes are unchanged; no C5, public API, clinical or release gate closes.
