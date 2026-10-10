@@ -12,6 +12,15 @@ mod shadow;
     reason = "Private C3 native adapter is qualified by focused owner fixtures"
 )]
 mod shadow_native;
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C3 portable recovery join is under qualification"
+    )
+)]
+mod shadow_wire;
 
 #[cfg(feature = "flow")]
 #[expect(
