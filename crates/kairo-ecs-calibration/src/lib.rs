@@ -192,5 +192,20 @@ mod arrow_output;
 mod sidecar_adapter;
 
 #[cfg(any(feature = "ipc", feature = "parquet"))]
-#[expect(dead_code, reason = "Private C3 sidecar join awaits phase acceptance")]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Private C3 sidecar join awaits phase acceptance")
+)]
 mod shadow_sidecars;
+
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Private synthetic C3 native qualification model")
+)]
+mod shadow_c2_model;
+#[expect(
+    dead_code,
+    reason = "Private C3 runner is undergoing native qualification"
+)]
+mod shadow_runner;
