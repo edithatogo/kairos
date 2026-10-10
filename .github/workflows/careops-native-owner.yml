@@ -167,6 +167,46 @@ jobs:
             .artifacts/c2-identity-rng/
           retention-days: 7
           if-no-files-found: error
+      - name: C3 native shadow acceptance and fresh-process recovery on Rust 1.99.0
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          set -euo pipefail
+          log_dir=".artifacts/ci/native/c3/${EXPECTED_OS}"
+          mkdir -p "$log_dir"
+          git rev-parse HEAD | tee "$log_dir/source.log"
+          git rev-parse 'HEAD^{tree}' | tee "$log_dir/source-tree.log"
+          shasum -a 256 \
+            crates/kairo-ecs-calibration/src/shadow_c03.rs \
+            crates/kairo-ecs-calibration/src/shadow_pool.rs \
+            crates/kairo-ecs-calibration/src/shadow_runner.rs \
+            crates/kairo-ecs-calibration/src/shadow_wire.rs \
+            > "$log_dir/source.sha256"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          task_cargo="$(rustup which --toolchain 1.99.0 cargo)"
+          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
+          "$task_cargo" -V | tee -a "$log_dir/toolchain.log"
+          "$task_rustc" -vV | tee -a "$log_dir/toolchain.log"
+          grep -Fx 'release: 1.99.0' "$log_dir/toolchain.log"
+          if [ "$EXPECTED_OS" = macos-15 ]; then
+            grep -Fx 'host: aarch64-apple-darwin' "$log_dir/toolchain.log"
+          else
+            grep -Fx 'host: x86_64-unknown-linux-gnu' "$log_dir/toolchain.log"
+          fi
+          acceptance_dir="$GITHUB_WORKSPACE/$log_dir/fresh-process"
+          test ! -e "$acceptance_dir"
+          mkdir -p "$acceptance_dir"
+          export C3_ACCEPTANCE_OUTDIR="$acceptance_dir"
+          "$task_cargo" test --locked -p kairo-ecs-calibration --features flow,kairo-ecs-abm/test-support,ipc,parquet --lib shadow_ 2>&1 | tee "$log_dir/shadow-tests.log"
+      - name: Preserve C3 native shadow evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: c3-native-${{ matrix.os }}
+          path: .artifacts/ci/native/c3/${{ matrix.os }}/
+          retention-days: 7
+          if-no-files-found: error
       - name: Initialize Arrow IO Rust 1.99.0 evidence directory
         run: mkdir -p ".artifacts/ci/arrow-io/1.99.0/${{ matrix.os }}"
       - name: Install pinned Python for Arrow IO interoperability
