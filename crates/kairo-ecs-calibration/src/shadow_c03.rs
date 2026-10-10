@@ -181,6 +181,7 @@ fn completed(r: &ProbeResult) -> u128 {
 fn wire_limits() -> WireLimits {
     WireLimits {
         max_wire_bytes: 32 * 1024 * 1024,
+        max_metadata_bytes: 16 * 1024 * 1024,
         max_probes: 8,
         max_id_bytes: 1024,
         max_image_bytes: IMAGE_CAP,
@@ -611,9 +612,57 @@ fn native_late_outcomes_join_unchanged_c4_physical_schema() {
     .unwrap();
     assert_eq!(out.residuals[0]["predicted_ticks"], "10");
     assert_eq!(out.residuals[0]["residual_magnitude"], "9");
-    let batch = crate::arrow_output::encode("calibration_residual.v1", &out.residuals).unwrap();
-    assert_eq!(
-        crate::arrow_output::decode("calibration_residual.v1", &batch).unwrap(),
-        out.residuals
-    );
+    for (kind, records) in [
+        ("calibration_residual.v1", &out.residuals),
+        ("calibration_metric.v1", &out.metrics),
+    ] {
+        let batch = crate::arrow_output::encode(kind, records).unwrap();
+        let schema = crate::arrow_output::schema(kind).unwrap();
+        let limits = kairo_ecs_arrow_io::IoLimits {
+            max_input_bytes: 1_000_000,
+            max_output_bytes: 1_000_000,
+            max_batch_rows: 100,
+            max_total_rows: 100,
+            max_batches: 100,
+            max_columns: 40,
+        };
+        #[cfg(feature = "ipc")]
+        {
+            let bytes = kairo_ecs_arrow_io::write_ipc_file(
+                schema.clone(),
+                std::slice::from_ref(&batch),
+                limits,
+            )
+            .unwrap();
+            let read = kairo_ecs_arrow_io::read_ipc_file(&bytes, schema.clone(), limits).unwrap();
+            assert_eq!(
+                read.len(),
+                1,
+                "native sidecar must contain exactly one batch"
+            );
+            assert_eq!(
+                crate::arrow_output::decode(kind, &read[0]).unwrap(),
+                *records
+            );
+        }
+        #[cfg(feature = "parquet")]
+        {
+            let bytes = kairo_ecs_arrow_io::write_parquet(
+                schema.clone(),
+                std::slice::from_ref(&batch),
+                limits,
+            )
+            .unwrap();
+            let read = kairo_ecs_arrow_io::read_parquet(&bytes, schema.clone(), limits).unwrap();
+            assert_eq!(
+                read.len(),
+                1,
+                "native sidecar must contain exactly one batch"
+            );
+            assert_eq!(
+                crate::arrow_output::decode(kind, &read[0]).unwrap(),
+                *records
+            );
+        }
+    }
 }

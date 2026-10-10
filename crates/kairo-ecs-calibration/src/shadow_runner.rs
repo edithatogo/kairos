@@ -4,7 +4,9 @@ use crate::shadow::{
     ProbeSpec, ResourcePolicy, ShadowError,
 };
 use crate::shadow_ledger::{InitialResource, LedgerLimits, ObservedLedger};
-use crate::shadow_pool::{PoolLimits, ProbePool};
+use crate::shadow_pool::{
+    metadata_base_bytes, metadata_entry_bytes, snapshot_metadata_bytes, PoolLimits, ProbePool,
+};
 use crate::shadow_report;
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
@@ -25,6 +27,14 @@ pub(crate) struct TrustedRunDefinition {
 type TrustedInventory = Vec<(ProbeSpec, LedgerSnapshot)>;
 type ProbePlans = BTreeMap<String, Vec<ProbeSpec>>;
 
+struct ReplayPrefix {
+    ledger: ObservedLedger,
+    inventory: TrustedInventory,
+    admitted: BTreeSet<String>,
+    skipped: BTreeMap<String, String>,
+    inventory_count: usize,
+}
+
 #[derive(Clone, Eq, PartialEq)]
 pub(crate) struct ShadowRunnerCheckpoint {
     pub ledger_frontier: usize,
@@ -40,7 +50,6 @@ pub(crate) struct ShadowRunner<A: ProbeAdapter> {
     source_event_count: usize,
     planned_probe_count: usize,
     fault: Option<ShadowError>,
-    inventory: BTreeMap<String, (ProbeSpec, LedgerSnapshot)>,
 }
 
 impl<A: ProbeAdapter> ShadowRunner<A> {
@@ -67,7 +76,6 @@ impl<A: ProbeAdapter> ShadowRunner<A> {
             source_event_count,
             planned_probe_count,
             fault: None,
-            inventory: BTreeMap::new(),
         })
     }
 
@@ -108,8 +116,6 @@ impl<A: ProbeAdapter> ShadowRunner<A> {
                             self.fault = Some(error.clone());
                             return Err(error);
                         }
-                        self.inventory
-                            .insert(spec.id.clone(), (spec.clone(), snapshot.clone()));
                         self.admitted.insert(spec.id.clone());
                     }
                 }
@@ -181,7 +187,7 @@ impl<A: ProbeAdapter> ShadowRunner<A> {
 
     /// Trusted immutable inventory for portable checkpoint framing; no runtimes are started.
     pub(crate) fn trusted_inventory(&self) -> Vec<(ProbeSpec, LedgerSnapshot)> {
-        self.inventory.values().cloned().collect()
+        self.pool.trusted_inventory()
     }
 
     fn ensure_healthy(&self) -> Result<(), ShadowError> {
@@ -214,54 +220,26 @@ impl<A: ProbeAdapter> ShadowRunner<A> {
         {
             return Err(ShadowError::IncompatibleCheckpoint);
         }
-        let mut ledger = ObservedLedger::new(
-            definition.events,
-            definition.initial_resources,
-            definition.assumptions,
-            definition.resource_policy,
-            definition.ledger_limits,
+        // Borrowed preflight pass enforces the complete inventory cap before clones.
+        let preflight = replay_prefix(&definition, &plans, checkpoint.ledger_frontier, false, 0)?;
+        let ReplayPrefix {
+            ledger,
+            inventory: trusted,
+            admitted,
+            skipped,
+            ..
+        } = replay_prefix(
+            &definition,
+            &plans,
+            checkpoint.ledger_frontier,
+            true,
+            preflight.inventory_count,
         )?;
-        let mut trusted = BTreeMap::<String, (ProbeSpec, LedgerSnapshot)>::new();
-        let mut admitted = BTreeSet::new();
-        let mut skipped = BTreeMap::new();
-        for _ in 0..checkpoint.ledger_frontier {
-            let mut unavailable = None;
-            let snapshot = match ledger.advance() {
-                Ok(Some(snapshot)) => Some(snapshot.clone()),
-                Ok(None) => None,
-                Err(ShadowError::UnavailableAnchor(key)) => {
-                    unavailable = Some(key);
-                    None
-                }
-                Err(error) => return Err(error),
-            };
-            if let Some(key) = unavailable {
-                if let Some(specs) = plans.get(&key) {
-                    for spec in specs {
-                        skipped.insert(spec.id.clone(), "unavailable anchor".into());
-                    }
-                }
-            }
-            if let Some(snapshot) = snapshot {
-                if let Some(specs) = plans.get(&snapshot.anchor_event) {
-                    for spec in specs {
-                        admitted.insert(spec.id.clone());
-                        if trusted
-                            .insert(spec.id.clone(), (spec.clone(), snapshot.clone()))
-                            .is_some()
-                        {
-                            return Err(ShadowError::DuplicateIdentity(spec.id.clone()));
-                        }
-                    }
-                }
-            }
-        }
-        let trusted_inventory = trusted.clone();
         let restored = ProbePool::restore(
             adapter,
             binding,
             definition.pool_limits,
-            trusted.into_values().collect(),
+            trusted,
             checkpoint.pool,
         )?;
         Ok(Self {
@@ -273,7 +251,6 @@ impl<A: ProbeAdapter> ShadowRunner<A> {
             source_event_count,
             planned_probe_count,
             fault: None,
-            inventory: trusted_inventory,
         })
     }
 }
@@ -288,6 +265,27 @@ pub(crate) fn trusted_inventory(
     if frontier > definition.events.len() {
         return Err(ShadowError::IncompatibleCheckpoint);
     }
+    let preflight = replay_prefix(definition, &plans, frontier, false, 0)?;
+    let ReplayPrefix { inventory, .. } = replay_prefix(
+        definition,
+        &plans,
+        frontier,
+        true,
+        preflight.inventory_count,
+    )?;
+    Ok((binding, inventory))
+}
+
+fn replay_prefix(
+    definition: &TrustedRunDefinition,
+    plans: &ProbePlans,
+    frontier: usize,
+    collect: bool,
+    reserve_count: usize,
+) -> Result<ReplayPrefix, ShadowError> {
+    if frontier > definition.events.len() {
+        return Err(ShadowError::IncompatibleCheckpoint);
+    }
     let mut ledger = ObservedLedger::new(
         definition.events.clone(),
         definition.initial_resources.clone(),
@@ -295,27 +293,66 @@ pub(crate) fn trusted_inventory(
         definition.resource_policy,
         definition.ledger_limits,
     )?;
-    let mut inventory = BTreeMap::<String, (ProbeSpec, LedgerSnapshot)>::new();
+    let mut inventory = Vec::new();
+    if collect {
+        inventory
+            .try_reserve_exact(reserve_count)
+            .map_err(|_| ShadowError::LimitExceeded)?;
+    }
+    let mut admitted = BTreeSet::new();
+    let mut skipped = BTreeMap::new();
+    let mut bytes = metadata_base_bytes()?;
+    let mut inventory_count = 0usize;
     for _ in 0..frontier {
+        let mut unavailable = None;
         let snapshot = match ledger.advance() {
-            Ok(Some(snapshot)) => Some(snapshot.clone()),
-            Ok(None) | Err(ShadowError::UnavailableAnchor(_)) => None,
+            Ok(Some(snapshot)) => Some(snapshot),
+            Ok(None) => None,
+            Err(ShadowError::UnavailableAnchor(key)) => {
+                unavailable = Some(key);
+                None
+            }
             Err(error) => return Err(error),
         };
+        if let Some(key) = unavailable {
+            if collect {
+                if let Some(specs) = plans.get(&key) {
+                    for spec in specs {
+                        skipped.insert(spec.id.clone(), "unavailable anchor".into());
+                    }
+                }
+            }
+        }
         if let Some(snapshot) = snapshot {
             if let Some(specs) = plans.get(&snapshot.anchor_event) {
                 for spec in specs {
-                    if inventory
-                        .insert(spec.id.clone(), (spec.clone(), snapshot.clone()))
-                        .is_some()
+                    bytes = bytes
+                        .checked_add(metadata_entry_bytes(spec, snapshot)?)
+                        .ok_or(ShadowError::LimitExceeded)?;
+                    inventory_count = inventory_count
+                        .checked_add(1)
+                        .ok_or(ShadowError::LimitExceeded)?;
+                    if bytes > definition.pool_limits.max_checkpoint_bytes
+                        || snapshot_metadata_bytes(snapshot)?
+                            > definition.pool_limits.max_snapshot_bytes
                     {
-                        return Err(ShadowError::DuplicateIdentity(spec.id.clone()));
+                        return Err(ShadowError::LimitExceeded);
+                    }
+                    if collect {
+                        admitted.insert(spec.id.clone());
+                        inventory.push((spec.clone(), snapshot.clone()));
                     }
                 }
             }
         }
     }
-    Ok((binding, inventory.into_values().collect()))
+    Ok(ReplayPrefix {
+        ledger,
+        inventory,
+        admitted,
+        skipped,
+        inventory_count,
+    })
 }
 
 fn prepare(definition: &mut TrustedRunDefinition) -> Result<([u8; 32], ProbePlans), ShadowError> {
@@ -435,8 +472,16 @@ fn prepare(definition: &mut TrustedRunDefinition) -> Result<([u8; 32], ProbePlan
                 .checked_add(value)
                 .ok_or(ShadowError::LimitExceeded)?;
         }
+        // prepare retains a cloned ID in the duplicate detector and an anchor
+        // string key in the plan map in addition to the cloned ProbeSpec below.
+        estimated = estimated
+            .checked_add(spec.id.capacity())
+            .and_then(|n| n.checked_add(spec.anchor_event.capacity()))
+            .and_then(|n| n.checked_add(3 * std::mem::size_of::<usize>()))
+            .ok_or(ShadowError::LimitExceeded)?;
         estimated = estimated
             .checked_add(std::mem::size_of::<ProbeSpec>())
+            .and_then(|n| n.checked_add(spec.input.seed_key.checkpoint_identifier_bytes().ok()?))
             .ok_or(ShadowError::LimitExceeded)?;
     }
     if estimated > definition.pool_limits.max_checkpoint_bytes {

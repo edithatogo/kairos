@@ -4,6 +4,7 @@ use crate::shadow::{
     LedgerSnapshot, LimitReason, ProbeCheckpoint, ProbeOutcome, ProbeSpec, RunnerCheckpoint,
     SavedProbeState, ShadowError, Transition,
 };
+use crate::shadow_pool::{metadata_base_bytes, metadata_entry_bytes};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 
@@ -18,6 +19,9 @@ pub(crate) struct WireLimits {
     pub max_id_bytes: usize,
     pub max_image_bytes: usize,
     pub max_reason_bytes: usize,
+    /// Estimated cap for each decoded/encoded metadata inventory; this is not an
+    /// aggregate process-peak or RSS cap while trusted and saved inventories coexist.
+    pub max_metadata_bytes: usize,
 }
 
 pub(crate) struct RunImage {
@@ -181,8 +185,15 @@ pub(crate) fn encode(image: &RunImage, limits: WireLimits) -> Result<Vec<u8>, Sh
         return Err(ShadowError::IncompatibleCheckpoint);
     }
     let mut rows = BTreeMap::new();
+    let mut metadata_bytes = metadata_base_bytes()?;
     let mut total = HEADER + 32;
     for row in &image.runner.probes {
+        metadata_bytes = metadata_bytes
+            .checked_add(metadata_entry_bytes(&row.spec, &row.snapshot)?)
+            .ok_or(ShadowError::LimitExceeded)?;
+        if metadata_bytes > limits.max_metadata_bytes {
+            return Err(ShadowError::LimitExceeded);
+        }
         if row.spec.id.trim().is_empty()
             || row.spec.id.len() > limits.max_id_bytes
             || row.snapshot.frontier as u128 > u128::from(image.ledger_frontier)
@@ -345,6 +356,16 @@ pub(crate) fn decode(
     {
         return Err(ShadowError::IncompatibleCheckpoint);
     }
+    // Measure the complete borrowed trusted inventory before allocating decoded records.
+    let mut metadata_bytes = metadata_base_bytes()?;
+    for (spec, snapshot) in trusted {
+        metadata_bytes = metadata_bytes
+            .checked_add(metadata_entry_bytes(spec, snapshot)?)
+            .ok_or(ShadowError::LimitExceeded)?;
+        if metadata_bytes > limits.max_metadata_bytes {
+            return Err(ShadowError::LimitExceeded);
+        }
+    }
     let mut inventory = BTreeMap::new();
     for (spec, snapshot) in trusted {
         if snapshot.frontier as u128 > u128::from(frontier)
@@ -447,6 +468,7 @@ mod tests {
             max_id_bytes: 256,
             max_image_bytes: 1024,
             max_reason_bytes: 256,
+            max_metadata_bytes: 64 * 1024,
         }
     }
     fn fixture() -> (RunImage, Vec<(ProbeSpec, LedgerSnapshot)>) {
@@ -602,6 +624,7 @@ mod tests {
             max_id_bytes: 32,
             max_image_bytes: 64,
             max_reason_bytes: 64,
+            max_metadata_bytes: 64 * 1024,
         };
         let bytes = encode(&image, limits).unwrap();
         assert_eq!(frontier_hint(&bytes, [9; 32], 7, limits), Ok(7));
@@ -615,5 +638,23 @@ mod tests {
         assert!(frontier_hint(&broken, [9; 32], 7, limits).is_err());
         assert!(decode(&bytes, [9; 32], 6, &[], limits).is_err());
         assert!(decode(&bytes, [9; 32], 7, &[], limits).is_ok());
+    }
+    #[test]
+    fn aggregate_trusted_metadata_limit_is_checked_before_decode_clones() {
+        let (image, trusted) = fixture();
+        let metadata = metadata_base_bytes().unwrap()
+            + metadata_entry_bytes(&trusted[0].0, &trusted[0].1).unwrap();
+        let exact = WireLimits {
+            max_metadata_bytes: metadata,
+            ..limits()
+        };
+        let bytes = encode(&image, exact).unwrap();
+        assert!(decode(&bytes, [7; 32], 2, &trusted, exact).is_ok());
+        let below = WireLimits {
+            max_metadata_bytes: metadata - 1,
+            ..limits()
+        };
+        assert!(encode(&image, below).is_err());
+        assert!(decode(&bytes, [7; 32], 2, &trusted, below).is_err());
     }
 }

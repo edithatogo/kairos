@@ -28,6 +28,10 @@ use shadow_ledger::*;
 use shadow_pool::*;
 use shadow_runner::*;
 use std::collections::BTreeMap;
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc,
+};
 use trace_order::*;
 
 #[derive(Clone, Default)]
@@ -354,4 +358,171 @@ fn strict_ledger_error_poison_preserves_failure_and_blocks_checkpoint_retry() {
         .unwrap()
         .accepted
     );
+}
+
+#[test]
+fn trusted_inventory_preflights_aggregate_metadata_at_exact_cap() {
+    let mut d = definition();
+    let mut second = spec();
+    second.id = "probe-2".into();
+    second.key.case_key = "case-2".into();
+    d.probes.push(second);
+    d.pool_limits.max_checkpoint_bytes = 128 * 1024;
+    let mut low = 0usize;
+    let mut high = d.pool_limits.max_checkpoint_bytes;
+    while low < high {
+        let middle = low + (high - low) / 2;
+        d.pool_limits.max_checkpoint_bytes = middle;
+        if trusted_inventory(&mut d, 1).is_ok() {
+            high = middle;
+        } else {
+            low = middle + 1;
+        }
+    }
+    d.pool_limits.max_checkpoint_bytes = low;
+    assert!(trusted_inventory(&mut d, 1).is_ok());
+    assert!(low > 0);
+    d.pool_limits.max_checkpoint_bytes = low - 1;
+    assert!(matches!(
+        trusted_inventory(&mut d, 1),
+        Err(ShadowError::LimitExceeded)
+    ));
+}
+
+#[derive(Clone)]
+struct RestoreCountingAdapter(Arc<AtomicUsize>);
+impl ProbeAdapter for RestoreCountingAdapter {
+    type Runtime = Runtime;
+    fn start(&self, s: &LedgerSnapshot, i: &ProbeInput) -> Result<Runtime, ShadowError> {
+        Adapter.start(s, i)
+    }
+    fn now(&self, r: &Runtime) -> u128 {
+        Adapter.now(r)
+    }
+    fn next_tick(&self, r: &Runtime) -> Result<Option<u128>, ShadowError> {
+        Adapter.next_tick(r)
+    }
+    fn step(&self, r: &mut Runtime) -> Result<ProbeStep, ShadowError> {
+        Adapter.step(r)
+    }
+    fn target_at_start(&self, r: &Runtime) -> Result<Option<u128>, ShadowError> {
+        Adapter.target_at_start(r)
+    }
+    fn checkpoint(&self, r: &Runtime, cap: usize) -> Result<Vec<u8>, ShadowError> {
+        Adapter.checkpoint(r, cap)
+    }
+    fn restore(
+        &self,
+        s: &LedgerSnapshot,
+        i: &ProbeInput,
+        b: &[u8],
+    ) -> Result<Runtime, ShadowError> {
+        self.0.fetch_add(1, Ordering::SeqCst);
+        Adapter.restore(s, i, b)
+    }
+}
+
+#[test]
+fn pool_restore_rejects_aggregate_metadata_before_native_restore() {
+    let d = definition();
+    let mut runner = ShadowRunner::new(d, Adapter).unwrap();
+    runner.advance_source(0).unwrap();
+    let checkpoint = runner.checkpoint().unwrap();
+    let mut def = definition();
+    let (_, trusted) = trusted_inventory(&mut def, 1).unwrap();
+    let (_, mut limits) = limits();
+    limits.max_checkpoint_bytes = 1;
+    let calls = Arc::new(AtomicUsize::new(0));
+    let result = ProbePool::restore(
+        RestoreCountingAdapter(calls.clone()),
+        checkpoint.pool.binding,
+        limits,
+        trusted,
+        checkpoint.pool,
+    );
+    assert!(matches!(result, Err(ShadowError::LimitExceeded)));
+    assert_eq!(calls.load(Ordering::SeqCst), 0);
+}
+
+#[test]
+fn oversized_saved_metadata_is_rejected_before_native_restore() {
+    let mut runner = ShadowRunner::new(definition(), Adapter).unwrap();
+    runner.advance_source(0).unwrap();
+    let mut checkpoint = runner.checkpoint().unwrap();
+    checkpoint.pool.probes[0].spec.id = "x".repeat(64 * 1024);
+    let mut def = definition();
+    let (_, trusted) = trusted_inventory(&mut def, 1).unwrap();
+    let (_, limits) = limits();
+    let calls = Arc::new(AtomicUsize::new(0));
+    let result = ProbePool::restore(
+        RestoreCountingAdapter(calls.clone()),
+        checkpoint.pool.binding,
+        limits,
+        trusted,
+        checkpoint.pool,
+    );
+    assert!(matches!(result, Err(ShadowError::LimitExceeded)));
+    assert_eq!(calls.load(Ordering::SeqCst), 0);
+}
+
+#[test]
+fn admission_accepts_exact_metadata_cap_and_rejects_cap_minus_one() {
+    let mut def = definition();
+    let (_, trusted) = trusted_inventory(&mut def, 1).unwrap();
+    let metadata = metadata_base_bytes().unwrap()
+        + metadata_entry_bytes(&trusted[0].0, &trusted[0].1).unwrap();
+    let (_, mut pool_limits) = limits();
+    pool_limits.max_checkpoint_bytes = metadata;
+    let (binding, _) = trusted_inventory(&mut definition(), 1).unwrap();
+    let mut exact = ProbePool::new(Adapter, binding, pool_limits);
+    exact
+        .admit(trusted[0].0.clone(), trusted[0].1.clone())
+        .unwrap();
+
+    pool_limits.max_checkpoint_bytes = metadata - 1;
+    let mut short = ProbePool::new(Adapter, binding, pool_limits);
+    assert!(matches!(
+        short.admit(trusted[0].0.clone(), trusted[0].1.clone()),
+        Err(ShadowError::LimitExceeded)
+    ));
+}
+
+#[test]
+fn checkpoint_restore_accept_exact_cap_and_reject_cap_minus_one_pre_native_restore() {
+    let mut def = definition();
+    let (binding, trusted) = trusted_inventory(&mut def, 1).unwrap();
+    let metadata = metadata_base_bytes().unwrap()
+        + metadata_entry_bytes(&trusted[0].0, &trusted[0].1).unwrap();
+    let exact_cap = metadata + 8; // Adapter checkpoint image is exactly one u64.
+    let (_, mut pool_limits) = limits();
+    pool_limits.max_checkpoint_bytes = exact_cap;
+    let mut pool = ProbePool::new(Adapter, binding, pool_limits);
+    pool.admit(trusted[0].0.clone(), trusted[0].1.clone())
+        .unwrap();
+    let checkpoint = pool.checkpoint().unwrap();
+
+    let exact_calls = Arc::new(AtomicUsize::new(0));
+    ProbePool::restore(
+        RestoreCountingAdapter(exact_calls.clone()),
+        binding,
+        pool_limits,
+        trusted.clone(),
+        checkpoint.clone(),
+    )
+    .unwrap();
+    assert_eq!(exact_calls.load(Ordering::SeqCst), 1);
+
+    pool_limits.max_checkpoint_bytes = exact_cap - 1;
+    let rejected_calls = Arc::new(AtomicUsize::new(0));
+    assert!(matches!(
+        ProbePool::restore(
+            RestoreCountingAdapter(rejected_calls.clone()),
+            binding,
+            pool_limits,
+            trusted,
+            checkpoint,
+        ),
+        Err(ShadowError::LimitExceeded)
+    ));
+    assert_eq!(rejected_calls.load(Ordering::SeqCst), 0);
 }

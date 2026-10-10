@@ -13,6 +13,8 @@ pub(crate) struct PoolLimits {
     pub max_probes: usize,
     pub max_snapshot_bytes: usize,
     pub max_probe_image_bytes: usize,
+    /// Estimated retained size cap for each checkpoint/inventory. This does not cap
+    /// total process peak or RSS when staged restore holds trusted and saved copies.
     pub max_checkpoint_bytes: usize,
 }
 
@@ -52,7 +54,7 @@ impl<A: ProbeAdapter> ProbePool<A> {
         if self.probes.contains_key(&spec.id) {
             return Err(ShadowError::DuplicateIdentity(spec.id));
         }
-        let snapshot_bytes = snapshot_size(&snapshot)?;
+        let snapshot_bytes = snapshot_metadata_bytes(&snapshot)?;
         let spec_bytes = spec_size(&spec)?;
         if self.probes.len() >= self.limits.max_probes
             || snapshot_bytes > self.limits.max_snapshot_bytes
@@ -60,18 +62,17 @@ impl<A: ProbeAdapter> ProbePool<A> {
         {
             return Err(ShadowError::LimitExceeded);
         }
-        let mut retained_bytes = checked_add(
-            checked_add(spec_bytes, snapshot_bytes)?,
-            size_of::<ProbeCheckpoint>() + 3 * size_of::<usize>(),
-        )?;
+        let mut retained_bytes = metadata_base_bytes()?;
         for existing in self.probes.values() {
-            retained_bytes = checked_add(retained_bytes, spec_size(&existing.spec)?)?;
-            retained_bytes = checked_add(retained_bytes, snapshot_size(&existing.snapshot)?)?;
             retained_bytes = checked_add(
                 retained_bytes,
-                size_of::<ProbeCheckpoint>() + 3 * size_of::<usize>(),
+                metadata_entry_bytes(&existing.spec, &existing.snapshot)?,
             )?;
+            if let Some(outcome) = &existing.terminal {
+                retained_bytes = checked_add(retained_bytes, outcome_size(outcome)?)?;
+            }
         }
+        retained_bytes = checked_add(retained_bytes, metadata_entry_bytes(&spec, &snapshot)?)?;
         if retained_bytes > self.limits.max_checkpoint_bytes {
             return Err(ShadowError::LimitExceeded);
         }
@@ -261,6 +262,13 @@ impl<A: ProbeAdapter> ProbePool<A> {
         Ok(None)
     }
 
+    pub(crate) fn trusted_inventory(&self) -> Vec<(ProbeSpec, LedgerSnapshot)> {
+        self.probes
+            .values()
+            .map(|world| (world.spec.clone(), world.snapshot.clone()))
+            .collect()
+    }
+
     pub(crate) fn results(&self) -> Vec<ProbeResult> {
         self.probes
             .values()
@@ -273,15 +281,9 @@ impl<A: ProbeAdapter> ProbePool<A> {
         if self.probes.len() > self.limits.max_probes {
             return Err(ShadowError::LimitExceeded);
         }
-        let vector_bytes = self
-            .probes
-            .len()
-            .checked_mul(size_of::<ProbeCheckpoint>())
-            .ok_or(ShadowError::LimitExceeded)?;
-        let mut bytes = checked_add(size_of::<RunnerCheckpoint>(), vector_bytes)?;
+        let mut bytes = metadata_base_bytes()?;
         for world in self.probes.values() {
-            bytes = checked_add(bytes, spec_size(&world.spec)?)?;
-            bytes = checked_add(bytes, snapshot_size(&world.snapshot)?)?;
+            bytes = checked_add(bytes, metadata_entry_bytes(&world.spec, &world.snapshot)?)?;
             if let Some(outcome) = &world.terminal {
                 bytes = checked_add(bytes, outcome_size(outcome)?)?;
             }
@@ -362,6 +364,40 @@ impl<A: ProbeAdapter> ProbePool<A> {
         {
             return Err(ShadowError::IncompatibleCheckpoint);
         }
+        // Bound each owned inventory before allocating maps or decoding runtimes.
+        // The saved DTO and trusted reconstruction coexist briefly during staged restore.
+        let mut trusted_bytes = metadata_base_bytes()?;
+        for (spec, snapshot) in &trusted {
+            if snapshot_metadata_bytes(snapshot)? > limits.max_snapshot_bytes {
+                return Err(ShadowError::LimitExceeded);
+            }
+            trusted_bytes = checked_add(trusted_bytes, metadata_entry_bytes(spec, snapshot)?)?;
+        }
+        let mut saved_bytes = metadata_base_bytes()?;
+        for saved in &checkpoint.probes {
+            if snapshot_metadata_bytes(&saved.snapshot)? > limits.max_snapshot_bytes {
+                return Err(ShadowError::LimitExceeded);
+            }
+            saved_bytes = checked_add(
+                saved_bytes,
+                metadata_entry_bytes(&saved.spec, &saved.snapshot)?,
+            )?;
+            match &saved.state {
+                SavedProbeState::Pending(image) => {
+                    if image.capacity() > limits.max_probe_image_bytes {
+                        return Err(ShadowError::LimitExceeded);
+                    }
+                    saved_bytes = checked_add(saved_bytes, image.capacity())?;
+                }
+                SavedProbeState::Terminal(outcome) => {
+                    saved_bytes = checked_add(saved_bytes, outcome_size(outcome)?)?
+                }
+            }
+        }
+        if trusted_bytes > limits.max_checkpoint_bytes || saved_bytes > limits.max_checkpoint_bytes
+        {
+            return Err(ShadowError::LimitExceeded);
+        }
         let mut trusted_map = BTreeMap::new();
         for (spec, snapshot) in trusted {
             if trusted_map
@@ -377,13 +413,6 @@ impl<A: ProbeAdapter> ProbePool<A> {
                 return Err(ShadowError::IncompatibleCheckpoint);
             }
         }
-        let mut byte_count = checked_add(
-            size_of::<RunnerCheckpoint>(),
-            saved_map
-                .len()
-                .checked_mul(size_of::<ProbeCheckpoint>())
-                .ok_or(ShadowError::LimitExceeded)?,
-        )?;
         for (id, (spec, snapshot)) in &trusted_map {
             let saved = saved_map
                 .get(id)
@@ -393,12 +422,10 @@ impl<A: ProbeAdapter> ProbePool<A> {
                 || validate_binding(spec, snapshot).is_err()
                 || spec.budget.horizon < snapshot.at
                 || saved.last_tick < snapshot.at
-                || snapshot_size(snapshot)? > limits.max_snapshot_bytes
+                || snapshot_metadata_bytes(snapshot)? > limits.max_snapshot_bytes
             {
                 return Err(ShadowError::IncompatibleCheckpoint);
             }
-            byte_count = checked_add(byte_count, snapshot_size(snapshot)?)?;
-            byte_count = checked_add(byte_count, spec_size(spec)?)?;
             match &saved.state {
                 SavedProbeState::Pending(image) => {
                     if !snapshot.resource_feasible
@@ -408,7 +435,6 @@ impl<A: ProbeAdapter> ProbePool<A> {
                     {
                         return Err(ShadowError::IncompatibleCheckpoint);
                     }
-                    byte_count = checked_add(byte_count, image.capacity())?;
                 }
                 SavedProbeState::Terminal(outcome) => {
                     if !terminal_valid(
@@ -420,12 +446,8 @@ impl<A: ProbeAdapter> ProbePool<A> {
                     ) {
                         return Err(ShadowError::IncompatibleCheckpoint);
                     }
-                    byte_count = checked_add(byte_count, outcome_size(outcome)?)?;
                 }
             }
-        }
-        if byte_count > limits.max_checkpoint_bytes {
-            return Err(ShadowError::LimitExceeded);
         }
         // Decode only after all checkpoint metadata and trusted inventory match.
         let mut pool = Self::new(adapter, binding, limits);
@@ -608,6 +630,31 @@ fn validate_binding(spec: &ProbeSpec, snapshot: &LedgerSnapshot) -> Result<(), S
     Ok(())
 }
 
+/// Fixed retained metadata header for one owned inventory. The limit is an estimated
+/// inventory bound, not a process peak or RSS bound; staged restore temporarily holds
+/// trusted and saved inventories at once, so aggregate process memory can exceed it.
+pub(crate) fn metadata_base_bytes() -> Result<usize, ShadowError> {
+    Ok(size_of::<RunnerCheckpoint>())
+}
+
+/// Per-probe owned spec/snapshot capacities, the duplicate BTreeMap ID key, plus
+/// checkpoint and conservative node overhead. Counts one inventory, not total RSS.
+pub(crate) fn metadata_entry_bytes(
+    spec: &ProbeSpec,
+    snapshot: &LedgerSnapshot,
+) -> Result<usize, ShadowError> {
+    checked_sum(
+        [
+            size_of::<ProbeCheckpoint>(),
+            3 * size_of::<usize>(),
+            spec_size(spec)?,
+            spec.id.capacity(),
+            snapshot_metadata_bytes(snapshot)?,
+        ]
+        .into_iter(),
+    )
+}
+
 fn spec_size(spec: &ProbeSpec) -> Result<usize, ShadowError> {
     let strings = [
         &spec.id,
@@ -649,7 +696,7 @@ fn spec_size(spec: &ProbeSpec) -> Result<usize, ShadowError> {
     )
 }
 
-fn snapshot_size(snapshot: &LedgerSnapshot) -> Result<usize, ShadowError> {
+pub(crate) fn snapshot_metadata_bytes(snapshot: &LedgerSnapshot) -> Result<usize, ShadowError> {
     let assumptions = checked_add(
         snapshot
             .assumptions
