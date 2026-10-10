@@ -33,3 +33,9 @@ alone is not evidence of runtime recovery or C-03 acceptance.
 
 Disk publication uses the reviewed no-clobber checkpoint file helper in the
 orchestration layer; this module is a byte codec and performs no filesystem I/O.
+
+## Bounded source reconstruction
+
+`frontier_hint` checks file cap, checksum, version, trusted run binding, probe-count framing and the caller's source-event cap before returning a frontier. It does not authorize a runtime restore. The runner rebuilds only the trusted observed prefix, derives the exact admitted inventory, then calls full `decode` and staged pool restore. No prediction prefix is replayed and no native image is decoded by the hint.
+
+C4 physical v1 retains its historical `fidelity=ShadowAnchored` replay-policy spelling. The C3 output join carries actual `execution_mode=Macro|Micro` and `replay_role=ShadowAnchored` independently in metric strata and raw residual groups in the join manifest; the physical schema is unchanged.

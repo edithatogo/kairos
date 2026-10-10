@@ -271,6 +271,44 @@ impl<'a> Reader<'a> {
     }
 }
 
+/// Bounded reconstruction hint, never permission to restore native state.
+/// The caller reconstructs trusted source snapshots at this frontier, then must
+/// call `decode` and the staged pool restore before exposing any runtime.
+pub(crate) fn frontier_hint(
+    bytes: &[u8],
+    binding: [u8; 32],
+    max_source_events: u64,
+    limits: WireLimits,
+) -> Result<u64, ShadowError> {
+    if bytes.len() > limits.max_wire_bytes {
+        return Err(ShadowError::LimitExceeded);
+    }
+    let body_len = bytes
+        .len()
+        .checked_sub(32)
+        .filter(|n| *n >= HEADER)
+        .ok_or(ShadowError::IncompatibleCheckpoint)?;
+    if Sha256::digest(&bytes[..body_len]).as_slice() != &bytes[body_len..] {
+        return Err(ShadowError::IncompatibleCheckpoint);
+    }
+    let mut r = Reader {
+        bytes: &bytes[..body_len],
+        at: 0,
+    };
+    if r.take(8)? != MAGIC || r.take(4)? != 1u32.to_le_bytes() || r.take(32)? != binding {
+        return Err(ShadowError::IncompatibleCheckpoint);
+    }
+    let frontier = r.u64()?;
+    let count = r.len()?;
+    if frontier > max_source_events
+        || count > limits.max_probes
+        || count > (body_len - HEADER) / ROW_FIXED
+    {
+        return Err(ShadowError::IncompatibleCheckpoint);
+    }
+    Ok(frontier)
+}
+
 pub(crate) fn decode(
     bytes: &[u8],
     binding: [u8; 32],
@@ -547,5 +585,35 @@ mod tests {
             .key_for("schedule", 0, "case", "task", SeedPurpose::Service)
             .unwrap();
         assert!(decode(&bytes, [7; 32], 2, &trusted, limits()).is_err());
+    }
+    #[test]
+    fn reconstruction_hint_is_bounded_and_does_not_replace_decode() {
+        let image = RunImage {
+            ledger_frontier: 7,
+            runner: RunnerCheckpoint {
+                version: 1,
+                binding: [9; 32],
+                probes: vec![],
+            },
+        };
+        let limits = WireLimits {
+            max_wire_bytes: 1024,
+            max_probes: 2,
+            max_id_bytes: 32,
+            max_image_bytes: 64,
+            max_reason_bytes: 64,
+        };
+        let bytes = encode(&image, limits).unwrap();
+        assert_eq!(frontier_hint(&bytes, [9; 32], 7, limits), Ok(7));
+        assert!(frontier_hint(&bytes, [9; 32], 6, limits).is_err());
+        assert!(frontier_hint(&bytes, [8; 32], 7, limits).is_err());
+        for end in 0..bytes.len() {
+            assert!(frontier_hint(&bytes[..end], [9; 32], 7, limits).is_err());
+        }
+        let mut broken = bytes.clone();
+        broken[12] ^= 1;
+        assert!(frontier_hint(&broken, [9; 32], 7, limits).is_err());
+        assert!(decode(&bytes, [9; 32], 6, &[], limits).is_err());
+        assert!(decode(&bytes, [9; 32], 7, &[], limits).is_ok());
     }
 }
