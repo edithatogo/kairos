@@ -6,12 +6,27 @@
     reason = "Private C3 interfaces are being joined by bounded owner packets"
 )]
 mod shadow;
+#[expect(
+    dead_code,
+    reason = "Private C3 observed replay join is under qualification"
+)]
+mod shadow_ledger;
 #[cfg(feature = "flow")]
 #[expect(
     dead_code,
     reason = "Private C3 native adapter is qualified by focused owner fixtures"
 )]
 mod shadow_native;
+#[expect(
+    dead_code,
+    reason = "Private C3 probe pool join is under qualification"
+)]
+mod shadow_pool;
+#[expect(
+    dead_code,
+    reason = "Private C3 residual projection join is under qualification"
+)]
+mod shadow_report;
 #[cfg(feature = "flow")]
 #[cfg_attr(
     not(test),
