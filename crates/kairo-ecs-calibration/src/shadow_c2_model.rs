@@ -43,6 +43,8 @@ const CONTEXT: &str = "c3.native.context";
 const TRANSIT: &str = "c3.native.transit";
 const HOLDER_STRATUM: &str = "c3-holder";
 const SERVICE_STRATUM: &str = "c3-service";
+const INTERRUPT_STRATUM: &str = "c3-interrupt";
+const INTERRUPTOR_SUFFIX: &str = ":interruptor";
 const STUDY: &str = "c3-native-fixture";
 const SEED_ROOT: u64 = 0xC3_2026_1010;
 const GRAPH_EVENT: EventKind = EventKind::custom(0xC301);
@@ -63,6 +65,7 @@ pub(crate) struct SyntheticFlowConfig {
     pub task_key: String,
     pub target_resource: String,
     pub work_duration_ticks: u128,
+    pub enable_work_interrupt: bool,
     pub route_speed_mm_per_second: u64,
     pub route_length_mm: u64,
     pub max_horizon_ticks: u128,
@@ -76,6 +79,7 @@ impl Default for SyntheticFlowConfig {
             task_key: "service".into(),
             target_resource: "resource".into(),
             work_duration_ticks: 7,
+            enable_work_interrupt: false,
             route_speed_mm_per_second: 1_000,
             route_length_mm: 3_000,
             max_horizon_ticks: 20,
@@ -202,6 +206,7 @@ impl SyntheticFlowProbeModel {
         hash_field(&mut h, self.config.task_key.as_bytes());
         hash_field(&mut h, self.config.target_resource.as_bytes());
         h.update(self.config.work_duration_ticks.to_le_bytes());
+        h.update([u8::from(self.config.enable_work_interrupt)]);
         h.update(self.config.route_speed_mm_per_second.to_le_bytes());
         h.update(self.config.route_length_mm.to_le_bytes());
         h.update(self.config.max_horizon_ticks.to_le_bytes());
@@ -228,6 +233,7 @@ impl SyntheticFlowProbeModel {
         h.update(b"c3.synthetic.parameters.v1");
         hash_field(&mut h, self.config.target_resource.as_bytes());
         h.update(self.config.work_duration_ticks.to_le_bytes());
+        h.update([u8::from(self.config.enable_work_interrupt)]);
         h.update(self.config.route_speed_mm_per_second.to_le_bytes());
         h.update(self.config.route_length_mm.to_le_bytes());
         h.update(self.config.max_horizon_ticks.to_le_bytes());
@@ -285,6 +291,14 @@ fn holder_task(resource: &str, claim: &str, unit: u32) -> String {
         resource.len(),
         claim.len()
     )
+}
+fn route_duration_ticks(config: &SyntheticFlowConfig) -> Result<u128, ShadowError> {
+    let speed = u128::from(config.route_speed_mm_per_second);
+    if speed == 0 {
+        return Err(ShadowError::InvalidInput("zero route speed"));
+    }
+    let length = u128::from(config.route_length_mm);
+    Ok(length / speed + u128::from(length % speed != 0))
 }
 
 fn graph(config: &SyntheticFlowConfig) -> Result<Arc<TransitGraphV1>, ShadowError> {
@@ -421,6 +435,9 @@ fn prepare_bound(
     mode: FidelityMode,
     transit: TransitRequest,
     template: u32,
+    priority_level: i32,
+    can_preempt: bool,
+    preemptible: Option<kairo_ecs_des::PreemptionStrategy>,
 ) -> Result<(BoundIntrinsicWork<u32, u32>, CalibrationStreamKey), ShadowError> {
     let owner = flow
         .spawn_actor()
@@ -454,11 +471,11 @@ fn prepare_bound(
             resource,
             owner,
             at: SimTime::from_ticks(at),
-            priority_level: 3,
+            priority_level,
             deadline: None,
             scheduler_priority: 0,
-            can_preempt: false,
-            preemptible: None,
+            can_preempt,
+            preemptible,
         },
         transit,
     );
@@ -496,6 +513,20 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
         let mut flow = FlowRuntime::new();
         flow.register_work_handlers(CONTEXT, WorkHandlers::<u32>::default())
             .map_err(|e| ShadowError::Adapter(format!("register handlers: {e:?}")))?;
+        let needs_anchor_materialization = snapshot
+            .resources
+            .values()
+            .all(|resource| resource.claims.is_empty());
+        if needs_anchor_materialization {
+            flow.register_domain_hook(
+                CONTEXT,
+                ANCHOR_EVENT,
+                |_: &mut u32,
+                 _: &kairo_ecs_des::FlowCallbackSnapshot,
+                 _: &mut kairo_ecs_des::FlowCommandSink| {},
+            )
+            .map_err(|e| ShadowError::Adapter(format!("anchor hook: {e:?}")))?;
+        }
         register_transit_context(&mut flow, TRANSIT, GRAPH_EVENT)
             .map_err(|e| ShadowError::Adapter(format!("register route context: {e:?}")))?;
         // Fidelity policy is immutable once any work has been admitted. Use a
@@ -522,6 +553,11 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
                     HOLDER_STRATUM.into(),
                     IntrinsicDurationDistribution::fixed(holder_ticks)
                         .map_err(|e| ShadowError::Adapter(format!("holder duration: {e:?}")))?,
+                ),
+                (
+                    INTERRUPT_STRATUM.into(),
+                    IntrinsicDurationDistribution::fixed(2)
+                        .map_err(|e| ShadowError::Adapter(format!("interrupt duration: {e:?}")))?,
                 ),
             ],
         )
@@ -556,6 +592,9 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
                         FidelityMode::Macro,
                         TransitRequest::Zero,
                         0,
+                        3,
+                        false,
+                        None,
                     )?;
                     let original = work.work().entity_id();
                     let done = work.submit(&mut flow).map_err(|e| {
@@ -609,7 +648,10 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
                 deadline: None,
                 scheduler_priority: 0,
                 can_preempt: false,
-                preemptible: None,
+                preemptible: self
+                    .config
+                    .enable_work_interrupt
+                    .then_some(kairo_ecs_des::PreemptionStrategy::Suspend),
             },
             TransitRequest::Route {
                 graph: graph.clone(),
@@ -634,15 +676,45 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
             .map_err(|e| ShadowError::Adapter(format!("target bind: {:?}", e.error)))?;
         let target_source = target.work().entity_id();
         keys.insert(target_source, key);
-        if submitted.is_empty() {
-            flow.register_domain_hook(
-                CONTEXT,
-                ANCHOR_EVENT,
-                |_: &mut u32,
-                 _: &kairo_ecs_des::FlowCallbackSnapshot,
-                 _: &mut kairo_ecs_des::FlowCommandSink| {},
-            )
-            .map_err(|e| ShadowError::Adapter(format!("anchor hook: {e:?}")))?;
+        if self.config.enable_work_interrupt {
+            let interrupt_task = format!("{}{}", self.config.task_key, INTERRUPTOR_SUFFIX);
+            let interrupt_at = snapshot
+                .at
+                .checked_add(route_duration_ticks(&self.config)?)
+                .and_then(|at| at.checked_add(2))
+                .ok_or(ShadowError::LimitExceeded)?;
+            let (interrupt, interrupt_key) = prepare_bound(
+                &mut flow,
+                &mut policy,
+                &provider,
+                &mut seeds,
+                &self.config,
+                &interrupt_task,
+                INTERRUPT_STRATUM,
+                resource,
+                interrupt_at,
+                FidelityMode::Micro,
+                TransitRequest::Zero,
+                2,
+                0,
+                true,
+                None,
+            )?;
+            let interrupt_source = interrupt.work().entity_id();
+            let submitted_interrupt = interrupt
+                .submit(&mut flow)
+                .map_err(|e| ShadowError::Adapter(format!("interrupt submit: {:?}", e.error)))?;
+            keys.insert(interrupt_source, interrupt_key);
+            submitted.push(submitted_interrupt);
+        }
+        let initial_submissions = submitted
+            .iter()
+            .filter(|work| {
+                flow.request(work.request())
+                    .is_ok_and(|request| request.submitted_at.ticks() == snapshot.at)
+            })
+            .count();
+        if initial_submissions == 0 {
             flow.schedule_domain(
                 target.work(),
                 ANCHOR_EVENT,
@@ -658,7 +730,7 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
                 return Err(ShadowError::Contract("anchor materialization failed"));
             }
         } else {
-            for _ in 0..submitted.len() {
+            for _ in 0..initial_submissions {
                 let dispatch = flow
                     .step()
                     .map_err(|e| ShadowError::Adapter(format!("initial holder dispatch: {e:?}")))?
@@ -814,6 +886,9 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
             .map_err(|_| ShadowError::IncompatibleCheckpoint)?;
         let mut restored_keys = BTreeMap::<EntityId, CalibrationStreamKey>::new();
         let mut expected_tasks = BTreeSet::from([self.config.task_key.clone()]);
+        if self.config.enable_work_interrupt {
+            expected_tasks.insert(format!("{}{}", self.config.task_key, INTERRUPTOR_SUFFIX));
+        }
         for (resource, state) in &snapshot.resources {
             for (claim, units) in &state.claims {
                 for unit in 0..*units {
@@ -855,6 +930,28 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
                                 matched = Some((task, candidate));
                             }
                         }
+                    }
+                }
+                if self.config.enable_work_interrupt {
+                    let task = format!("{}{}", self.config.task_key, INTERRUPTOR_SUFFIX);
+                    let mut seed = CalibrationSeedMap::new(1, STUDY, SEED_ROOT)
+                        .map_err(|_| C2PortableCheckpointError::InvalidState)?;
+                    let candidate = seed
+                        .stream_for(
+                            &self.config.seed_schedule,
+                            self.config.replication,
+                            &self.config.case_key,
+                            &task,
+                            SeedPurpose::Service,
+                        )
+                        .map_err(|_| C2PortableCheckpointError::InvalidState)?
+                        .key()
+                        .clone();
+                    if candidate.matches_identity(identity) {
+                        if matched.is_some() {
+                            return Err(C2PortableCheckpointError::InvalidState);
+                        }
+                        matched = Some((task, candidate));
                     }
                 }
                 let (task, key) = matched.ok_or(C2PortableCheckpointError::InvalidState)?;
@@ -901,6 +998,9 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
                     bound.push(*b)
                 }
                 RestoredBridgeRecord::Submitted(s) => {
+                    if source == id {
+                        target_live = Some(s.work());
+                    }
                     keys.insert(source, key);
                     submitted.push(*s)
                 }
@@ -1022,6 +1122,207 @@ pub(crate) fn run_fixture() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use kairo_ecs_des::FlowDomainControl;
+    use kairo_ecs_types::SimTime;
+
+    fn fixture_snapshot(model: &SyntheticFlowProbeModel) -> LedgerSnapshot {
+        LedgerSnapshot {
+            frontier: 1,
+            at: 0,
+            anchor_event: "observed-anchor".into(),
+            digest: [0x77; 32],
+            visible_events: Vec::new(),
+            resources: BTreeMap::from([(
+                model.config.target_resource.clone(),
+                crate::shadow::ResourceState {
+                    capacity: 2,
+                    claims: BTreeMap::from([("observed-holder".into(), 1)]),
+                },
+            )]),
+            resource_feasible: true,
+            assumptions: vec!["the observed holder remains held for the configured horizon".into()],
+        }
+    }
+
+    fn native_dispatch(
+        model: &SyntheticFlowProbeModel,
+        world: &mut SyntheticWorld,
+    ) -> kairo_ecs_des::FlowDispatch {
+        let dispatch = world.flow.step().unwrap().unwrap();
+        assert!(dispatch.error.is_none(), "dispatch: {dispatch:?}");
+        model.after_dispatch(world, &dispatch).unwrap();
+        dispatch
+    }
+
+    fn transit_pause_run(checkpoint_at_pause: bool) -> (u128, u128, u128, CalibrationStreamKey) {
+        let config = SyntheticFlowConfig {
+            route_length_mm: 6_000,
+            ..SyntheticFlowConfig::default()
+        };
+        let model = SyntheticFlowProbeModel { config };
+        let input = model.probe_input().unwrap();
+        let snapshot = fixture_snapshot(&model);
+        let mut world = model.start(&snapshot, &input).unwrap();
+        native_dispatch(&model, &mut world); // Begin native transit.
+        let target = world
+            .bridge
+            .bound
+            .iter()
+            .position(|b| b.work() == world.bridge.target_live)
+            .unwrap();
+        world.bridge.bound[target]
+            .schedule_transit_control(
+                &mut world.flow,
+                FlowDomainControl::Pause,
+                SimTime::from_ticks(1),
+                7,
+            )
+            .unwrap();
+        let pause = world.flow.step().unwrap().unwrap();
+        assert_eq!(pause.at, SimTime::from_ticks(1));
+        assert_eq!(
+            world.bridge.bound[target].observe_transit_dispatch(&world.flow, &pause),
+            Ok(crate::flow_bridge::TransitObservation::Paused)
+        );
+        if checkpoint_at_pause {
+            let image = model.checkpoint(&world, MAX_OUTER).unwrap();
+            let restored = model.restore(&snapshot, &input, &image).unwrap();
+            assert_eq!(model.checkpoint(&restored, MAX_OUTER).unwrap(), image);
+            world = restored;
+        }
+        let target = world
+            .bridge
+            .bound
+            .iter()
+            .position(|b| b.work() == world.bridge.target_live)
+            .unwrap();
+        world.bridge.bound[target]
+            .schedule_transit_control(
+                &mut world.flow,
+                FlowDomainControl::Resume,
+                SimTime::from_ticks(3),
+                7,
+            )
+            .unwrap();
+        let resume = world.flow.step().unwrap().unwrap();
+        assert_eq!(resume.at, SimTime::from_ticks(3));
+        assert_eq!(
+            world.bridge.bound[target].observe_transit_dispatch(&world.flow, &resume),
+            Ok(crate::flow_bridge::TransitObservation::Resumed)
+        );
+        let target_key = world.bridge.keys[&world.bridge.target_source].clone();
+        for _ in 0..32 {
+            if model.completed(&world).unwrap() {
+                return (
+                    model.arrival_tick(&world).unwrap(),
+                    world.flow.now().ticks(),
+                    world
+                        .flow
+                        .work_progress(world.bridge.target_live)
+                        .unwrap()
+                        .original_duration
+                        .ticks(),
+                    target_key,
+                );
+            }
+            native_dispatch(&model, &mut world);
+        }
+        panic!("transit pause fixture did not complete")
+    }
+
+    fn work_pause_run(checkpoint_at_pause: bool) -> (u128, u128, u128, CalibrationStreamKey) {
+        let config = SyntheticFlowConfig {
+            enable_work_interrupt: true,
+            ..SyntheticFlowConfig::default()
+        };
+        let model = SyntheticFlowProbeModel { config };
+        let input = model.probe_input().unwrap();
+        let snapshot = fixture_snapshot(&model);
+        let mut world = model.start(&snapshot, &input).unwrap();
+        let mut paused = false;
+        for _ in 0..32 {
+            let dispatch = native_dispatch(&model, &mut world);
+            let progress = world.flow.work_progress(world.bridge.target_live).unwrap();
+            if progress.state == WorkState::Suspended {
+                assert_eq!(dispatch.at, SimTime::from_ticks(5));
+                paused = true;
+                break;
+            }
+        }
+        assert!(paused, "preemptor did not suspend the routed target work");
+        let before = world.flow.work_progress(world.bridge.target_live).unwrap();
+        assert_eq!(before.useful_elapsed.ticks(), 2);
+        if checkpoint_at_pause {
+            let image = model.checkpoint(&world, MAX_OUTER).unwrap();
+            let restored = model.restore(&snapshot, &input, &image).unwrap();
+            assert_eq!(model.checkpoint(&restored, MAX_OUTER).unwrap(), image);
+            world = restored;
+        }
+        let target_key = world.bridge.keys[&world.bridge.target_source].clone();
+        for _ in 0..32 {
+            if model.completed(&world).unwrap() {
+                let progress = world.flow.work_progress(world.bridge.target_live).unwrap();
+                assert_eq!(progress.useful_elapsed, progress.original_duration);
+                return (
+                    model.arrival_tick(&world).unwrap(),
+                    world.flow.now().ticks(),
+                    progress.original_duration.ticks(),
+                    target_key,
+                );
+            }
+            native_dispatch(&model, &mut world);
+        }
+        panic!("work pause fixture did not complete")
+    }
+
+    #[test]
+    fn paused_transit_restores_and_matches_uninterrupted_pause_control() {
+        let control = transit_pause_run(false);
+        let restored = transit_pause_run(true);
+        assert_eq!(control, restored);
+        assert_eq!(restored.0, 8);
+        assert_eq!(restored.1, 15);
+        assert_eq!(restored.2, 7);
+    }
+
+    #[test]
+    fn preempted_work_restores_and_matches_uninterrupted_pause_control() {
+        let control = work_pause_run(false);
+        let restored = work_pause_run(true);
+        assert_eq!(control, restored);
+        assert_eq!(restored.0, 3);
+        assert_eq!(restored.1, 12);
+        assert_eq!(restored.2, 7);
+    }
+
+    #[test]
+    fn no_claim_nonzero_anchor_materializes_native_clock() {
+        let config = SyntheticFlowConfig {
+            enable_work_interrupt: true,
+            ..SyntheticFlowConfig::default()
+        };
+        let model = SyntheticFlowProbeModel { config };
+        let input = model.probe_input().unwrap();
+        let mut snapshot = fixture_snapshot(&model);
+        snapshot.at = 7;
+        snapshot
+            .resources
+            .get_mut(&model.config.target_resource)
+            .unwrap()
+            .claims
+            .clear();
+        let mut world = model.start(&snapshot, &input).unwrap();
+        assert_eq!(world.flow.now().ticks(), 7);
+        for _ in 0..16 {
+            if model.completed(&world).unwrap() {
+                assert_eq!(model.arrival_tick(&world), Some(10));
+                assert_eq!(world.flow.now().ticks(), 17);
+                return;
+            }
+            native_dispatch(&model, &mut world);
+        }
+        panic!("nonzero anchor fixture did not complete");
+    }
     #[test]
     fn routed_c2_image_restores_without_replaying_prediction_prefix() {
         run_fixture().unwrap();
