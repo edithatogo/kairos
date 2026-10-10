@@ -1,0 +1,73 @@
+{
+  "status": "pass",
+  "head": "faeb8e97d3021080c2dd60f0e2f065607e7666e7",
+  "tree": "8919c82573c75e549916d2317745eff52b315d6c",
+  "run": "https://github.com/edithatogo/kairos/actions/runs/38047961900",
+  "hosts": {
+    "ubuntu-24.04": {
+      "checkout_commit": "af2d53f7df7474a2efe9fc89b1bb880e867f3704",
+      "checkout_tree": "8919c82573c75e549916d2317745eff52b315d6c",
+      "source_hashes_match": true,
+      "result": {
+        "frontier": 2,
+        "results": [
+          {
+            "anchor": "anchor",
+            "events": 4,
+            "frontier": 1,
+            "id": "p0",
+            "last_tick": "10",
+            "observed": "1",
+            "predicted": "10",
+            "snapshot_digest": "20326813a24bdade85e5e2c5d0846adb2d4816de1cec637b9216b1a51aa3a097"
+          }
+        ]
+      },
+      "result_sha256": "ff54911ca87d0bdbcef21a202145819c768eca569e500ebf3aa662528d2d03c6",
+      "checkpoint_hashes": {
+        "transit": "5876659929551198480e4a1f213bccdb6a382224545143a42ef4692d0494a01a",
+        "work": "e568e90aa346d44ca6a0dc0a1dcf3f4391c2df7f7e4a9dc1ef4e1e74becd5bc7"
+      },
+      "native_test_count": {
+        "passed": 26,
+        "failed": 0,
+        "ignored_child_entrypoint": 1
+      },
+      "five_process_invocations": "passed",
+      "independent_reviewer": "c3_semantics_preparation"
+    },
+    "macos-15": {
+      "checkout_commit": "af2d53f7df7474a2efe9fc89b1bb880e867f3704",
+      "checkout_tree": "8919c82573c75e549916d2317745eff52b315d6c",
+      "source_hashes_match": true,
+      "result": {
+        "frontier": 2,
+        "results": [
+          {
+            "anchor": "anchor",
+            "events": 4,
+            "frontier": 1,
+            "id": "p0",
+            "last_tick": "10",
+            "observed": "1",
+            "predicted": "10",
+            "snapshot_digest": "20326813a24bdade85e5e2c5d0846adb2d4816de1cec637b9216b1a51aa3a097"
+          }
+        ]
+      },
+      "result_sha256": "ff54911ca87d0bdbcef21a202145819c768eca569e500ebf3aa662528d2d03c6",
+      "checkpoint_hashes": {
+        "transit": "5876659929551198480e4a1f213bccdb6a382224545143a42ef4692d0494a01a",
+        "work": "e568e90aa346d44ca6a0dc0a1dcf3f4391c2df7f7e4a9dc1ef4e1e74becd5bc7"
+      },
+      "native_test_count": {
+        "passed": 26,
+        "failed": 0,
+        "ignored_child_entrypoint": 1
+      },
+      "five_process_invocations": "passed",
+      "independent_reviewer": "c3_recovery_preparation"
+    }
+  },
+  "boundary": "Independent C3 readback occurred before the rollup finished; final run.json and checks.json now record success with two explicit conditional skips. Qualification applies to source faeb8e9; the documentation successor awaits its own final checks."
+}
