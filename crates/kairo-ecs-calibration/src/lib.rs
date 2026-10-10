@@ -1,6 +1,18 @@
 //! Optional calibration primitives; no empirical or clinical acceptance.
 #![forbid(unsafe_code)]
 
+#[expect(
+    dead_code,
+    reason = "Private C3 interfaces are being joined by bounded owner packets"
+)]
+mod shadow;
+#[cfg(feature = "flow")]
+#[expect(
+    dead_code,
+    reason = "Private C3 native adapter is qualified by focused owner fixtures"
+)]
+mod shadow_native;
+
 #[cfg(feature = "flow")]
 #[expect(
     dead_code,
