@@ -88,26 +88,74 @@ impl<M: FlowProbeModel> ProbeAdapter for NativeFlowAdapter<M> {
             .step()
             .map_err(|error| ShadowError::Adapter(format!("native dispatch: {error:?}")))?
             .ok_or(ShadowError::Contract("native step on empty queue"))?;
+        let after_native_step = self
+            .model
+            .flow(runtime)
+            .budget_snapshot()
+            .scheduler
+            .dispatched_events;
+        let dispatches = after_native_step.saturating_sub(before);
+        let dispatched_at = self.now(runtime);
         if let Some(error) = &dispatch.error {
-            return Err(ShadowError::Adapter(format!(
-                "native rejected dispatch: {error:?}"
-            )));
+            return Ok(ProbeStep {
+                dispatched_at,
+                target: None,
+                dispatches: dispatches.max(1),
+                failure: Some(ShadowError::Adapter(format!(
+                    "native rejected dispatch: {error:?}"
+                ))),
+            });
         }
-        self.model.after_dispatch(runtime, &dispatch)?;
+        if let Err(error) = self.model.after_dispatch(runtime, &dispatch) {
+            let flow = self.model.flow(runtime);
+            let total = flow.budget_snapshot().scheduler.dispatched_events;
+            return Ok(ProbeStep {
+                dispatched_at: flow.now().ticks(),
+                target: None,
+                dispatches: total.saturating_sub(before).max(dispatches).max(1),
+                failure: Some(error),
+            });
+        }
         let flow = self.model.flow(runtime);
-        if flow.now() != dispatch.at
-            || before.checked_add(1) != Some(flow.budget_snapshot().scheduler.dispatched_events)
-        {
-            return Err(ShadowError::Contract(
-                "model hook executed an extra native event",
-            ));
+        let total = flow.budget_snapshot().scheduler.dispatched_events;
+        let consumed = total.saturating_sub(before).max(dispatches).max(1);
+        if consumed != 1 {
+            return Ok(ProbeStep {
+                dispatched_at: flow.now().ticks(),
+                target: None,
+                dispatches: consumed,
+                failure: Some(ShadowError::Contract(
+                    "model hook executed an extra native event",
+                )),
+            });
         }
+        if flow.now() != dispatch.at || total != before.saturating_add(1) {
+            return Ok(ProbeStep {
+                dispatched_at: flow.now().ticks(),
+                target: None,
+                dispatches: consumed,
+                failure: Some(ShadowError::Contract(
+                    "native dispatch receipt differs from runtime",
+                )),
+            });
+        }
+        let target = match self.model.completed(runtime) {
+            Ok(true) => Some(dispatch.at.ticks()),
+            Ok(false) => None,
+            Err(error) => {
+                return Ok(ProbeStep {
+                    dispatched_at: flow.now().ticks(),
+                    target: None,
+                    dispatches: consumed,
+                    failure: Some(error),
+                })
+            }
+        };
         Ok(ProbeStep {
-            dispatched_at: dispatch.at.ticks(),
-            target: self
-                .model
-                .completed(runtime)?
-                .then_some(dispatch.at.ticks()),
+            dispatched_at: flow.now().ticks(),
+            target,
+            dispatches: consumed,
+            failure: None,
         })
     }
 
@@ -149,6 +197,7 @@ impl<M: FlowProbeModel> ProbeAdapter for NativeFlowAdapter<M> {
 mod tests {
     use super::*;
     use crate::seed_map::{CalibrationSeedMap, SeedPurpose};
+    use crate::shadow_pool::{PoolLimits, ProbePool};
     use kairo_ecs_des::{
         FlowCheckpointCodecError, FlowCheckpointRebindV1, FlowHandlerCodeIds, WorkHandlers, WorkId,
         WorkState,
@@ -158,6 +207,7 @@ mod tests {
 
     struct Model {
         illicit_extra_step: bool,
+        fail_after_dispatch: bool,
     }
     struct World {
         flow: FlowRuntime,
@@ -226,6 +276,9 @@ mod tests {
             if self.illicit_extra_step {
                 w.flow.step().unwrap();
             }
+            if self.fail_after_dispatch {
+                return Err(ShadowError::Adapter("hook failed after dispatch".into()));
+            }
             Ok(())
         }
         fn checkpoint(&self, _: &World, _: usize) -> Result<Vec<u8>, ShadowError> {
@@ -250,7 +303,21 @@ mod tests {
             at: 0,
             anchor_event: "a".into(),
             digest: [0; 32],
-            visible_events: Vec::new(),
+            visible_events: vec![crate::shadow::ObservedEvent {
+                order: crate::trace_order::TraceOrderKeyV1 {
+                    relative_ticks: 0,
+                    case_key: "case".into(),
+                    occurrence: 0,
+                    event_kind_rank: crate::trace_order::EventKindRank::from_canonical_decimal("1")
+                        .unwrap(),
+                    source_event_key: "a".into(),
+                    source_order: 0,
+                },
+                available_at: Some(0),
+                source_defined: true,
+                transition: crate::shadow::Transition::None,
+                payload: Vec::new(),
+            }],
             resources: BTreeMap::new(),
             resource_feasible: true,
             assumptions: Vec::new(),
@@ -275,6 +342,7 @@ mod tests {
         let adapter = NativeFlowAdapter {
             model: Model {
                 illicit_extra_step: false,
+                fail_after_dispatch: false,
             },
             max_image_bytes: 4096,
         };
@@ -287,6 +355,8 @@ mod tests {
             let next = adapter.next_tick(&w).unwrap().unwrap();
             let result = adapter.step(&mut w).unwrap();
             assert_eq!(result.dispatched_at, next);
+            assert_eq!(result.dispatches, 1);
+            assert_eq!(result.failure, None);
             if result.target.is_some() {
                 target = result.target;
                 break;
@@ -299,14 +369,93 @@ mod tests {
         let adapter = NativeFlowAdapter {
             model: Model {
                 illicit_extra_step: true,
+                fail_after_dispatch: false,
             },
             max_image_bytes: 4096,
         };
         let (snapshot, input) = inputs();
         let mut world = adapter.start(&snapshot, &input).unwrap();
+        let receipt = adapter.step(&mut world).unwrap();
+        assert_eq!(receipt.dispatches, 2);
+        assert_eq!(receipt.dispatched_at, adapter.now(&world));
+        assert!(matches!(receipt.failure, Some(ShadowError::Contract(_))));
+        assert_eq!(receipt.target, None);
+    }
+
+    #[test]
+    fn native_hook_failure_receipt_retains_consumed_dispatch() {
+        let adapter = NativeFlowAdapter {
+            model: Model {
+                illicit_extra_step: false,
+                fail_after_dispatch: true,
+            },
+            max_image_bytes: 4096,
+        };
+        let (snapshot, input) = inputs();
+        let mut world = adapter.start(&snapshot, &input).unwrap();
+        let next = adapter.next_tick(&world).unwrap().unwrap();
+        let receipt = adapter.step(&mut world).unwrap();
+        assert_eq!(receipt.dispatches, 1);
+        assert_eq!(receipt.dispatched_at, next);
+        assert_eq!(receipt.dispatched_at, adapter.now(&world));
+        assert!(matches!(receipt.failure, Some(ShadowError::Adapter(_))));
+        assert_eq!(receipt.target, None);
+    }
+
+    #[test]
+    fn pool_counts_real_native_dispatch_when_hook_fails_after_dispatch() {
+        let adapter = NativeFlowAdapter {
+            model: Model {
+                illicit_extra_step: false,
+                fail_after_dispatch: true,
+            },
+            max_image_bytes: 4096,
+        };
+        let (snapshot, input) = inputs();
+        let spec = crate::shadow::ProbeSpec {
+            id: "native-failure".into(),
+            key: crate::residuals::LogicalKey {
+                study_id: "study".into(),
+                dataset_id: "data".into(),
+                scenario_id: "scenario".into(),
+                seed_schedule_id: "schedule".into(),
+                replication_id: "1".into(),
+                case_key: "case".into(),
+                task_key: "task".into(),
+                occurrence: 0,
+                endpoint: input.target.clone(),
+                seed_purpose: "service".into(),
+                seed_map_ref: "seed-v1".into(),
+                mapping_version: "map-v1".into(),
+            },
+            run_id: "run".into(),
+            candidate_id: "candidate".into(),
+            anchor_event: "a".into(),
+            target_event: Some("future-target".into()),
+            observed_target: Some(5),
+            input,
+            budget: crate::shadow::ProbeBudget {
+                horizon: 5,
+                max_events: 1,
+            },
+        };
+        let mut pool = ProbePool::new(
+            adapter,
+            [9; 32],
+            PoolLimits {
+                max_probes: 2,
+                max_snapshot_bytes: 4096,
+                max_probe_image_bytes: 4096,
+                max_checkpoint_bytes: 16_384,
+            },
+        );
+        pool.admit(spec, snapshot).unwrap();
+        let result = pool.advance("native-failure", 1).unwrap().unwrap();
+        assert_eq!(result.events, 1);
+        assert_eq!(result.last_tick, 0);
         assert!(matches!(
-            adapter.step(&mut world),
-            Err(ShadowError::Contract(_))
+            result.outcome,
+            crate::shadow::ProbeOutcome::Failed { .. }
         ));
     }
 }

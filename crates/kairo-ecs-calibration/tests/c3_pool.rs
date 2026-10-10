@@ -73,6 +73,8 @@ impl ProbeAdapter for Adapter {
         Ok(ProbeStep {
             dispatched_at: tick,
             target,
+            dispatches: 1,
+            failure: None,
         })
     }
     fn target_at_start(&self, runtime: &Runtime) -> Result<Option<u128>, ShadowError> {
@@ -118,6 +120,44 @@ impl ProbeAdapter for BadReceipt {
         let mut step = self.0.step(runtime)?;
         step.dispatched_at += 1;
         Ok(step)
+    }
+    fn target_at_start(&self, runtime: &Runtime) -> Result<Option<u128>, ShadowError> {
+        self.0.target_at_start(runtime)
+    }
+    fn checkpoint(&self, runtime: &Runtime, max_bytes: usize) -> Result<Vec<u8>, ShadowError> {
+        self.0.checkpoint(runtime, max_bytes)
+    }
+    fn restore(
+        &self,
+        snapshot: &LedgerSnapshot,
+        input: &ProbeInput,
+        bytes: &[u8],
+    ) -> Result<Runtime, ShadowError> {
+        self.0.restore(snapshot, input, bytes)
+    }
+}
+
+struct ExtraDispatch(Adapter);
+impl ProbeAdapter for ExtraDispatch {
+    type Runtime = Runtime;
+    fn start(&self, snapshot: &LedgerSnapshot, input: &ProbeInput) -> Result<Runtime, ShadowError> {
+        self.0.start(snapshot, input)
+    }
+    fn now(&self, runtime: &Runtime) -> u128 {
+        self.0.now(runtime)
+    }
+    fn next_tick(&self, runtime: &Runtime) -> Result<Option<u128>, ShadowError> {
+        self.0.next_tick(runtime)
+    }
+    fn step(&self, runtime: &mut Runtime) -> Result<ProbeStep, ShadowError> {
+        let first = self.0.step(runtime)?;
+        let second = self.0.step(runtime)?;
+        Ok(ProbeStep {
+            dispatched_at: second.dispatched_at,
+            target: None,
+            dispatches: first.dispatches + second.dispatches,
+            failure: Some(ShadowError::Contract("extra fake dispatch")),
+        })
     }
     fn target_at_start(&self, runtime: &Runtime) -> Result<Option<u128>, ShadowError> {
         self.0.target_at_start(runtime)
@@ -231,6 +271,36 @@ fn per_call_and_lifetime_budgets_are_exact_and_target_is_first_dispatch() {
     assert_eq!(result.observed, Some(11));
     assert_eq!(pool.advance("a", u64::MAX).unwrap(), Some(result.clone()));
     assert_eq!(pool.results(), vec![result]);
+}
+
+#[test]
+fn exact_lifetime_event_boundary_censors_before_the_next_dispatch() {
+    let mut p = pool(Adapter {
+        restore_calls: Arc::new(AtomicUsize::new(0)),
+        start_target: false,
+    });
+    p.admit(
+        spec(
+            "event-boundary",
+            None,
+            ProbeBudget {
+                horizon: 20,
+                max_events: 1,
+            },
+        ),
+        snapshot(10),
+    )
+    .unwrap();
+    assert_eq!(p.advance("event-boundary", 1).unwrap(), None);
+    let result = p.advance("event-boundary", 1).unwrap().unwrap();
+    assert_eq!(result.events, 1);
+    assert_eq!(result.last_tick, 11);
+    assert_eq!(
+        result.outcome,
+        ProbeOutcome::Censored {
+            reason: shadow::LimitReason::EventBudget,
+        }
+    );
 }
 
 #[test]
@@ -420,6 +490,124 @@ fn contract_violation_poisoning_prevents_additional_dispatch() {
 }
 
 #[test]
+fn consumed_failure_and_hidden_dispatch_preserve_truthful_terminal_accounting() {
+    let base = Adapter {
+        restore_calls: Arc::new(AtomicUsize::new(0)),
+        start_target: false,
+    };
+    let mut p = ProbePool::new(ExtraDispatch(base.clone()), [9; 32], limits());
+    let trusted = spec(
+        "overshoot",
+        None,
+        ProbeBudget {
+            horizon: 11,
+            max_events: 1,
+        },
+    );
+    let snap = snapshot(10);
+    p.admit(trusted.clone(), snap.clone()).unwrap();
+    let terminal = p.advance("overshoot", 1).unwrap().unwrap();
+    assert_eq!(terminal.events, 2);
+    assert_eq!(terminal.last_tick, 12);
+    assert!(matches!(terminal.outcome, ProbeOutcome::Failed { .. }));
+
+    let checkpoint = p.checkpoint().unwrap();
+    let restores = Arc::new(AtomicUsize::new(0));
+    let mut restored = ProbePool::restore(
+        ExtraDispatch(Adapter {
+            restore_calls: restores.clone(),
+            start_target: false,
+        }),
+        [9; 32],
+        limits(),
+        vec![(trusted, snap)],
+        checkpoint,
+    )
+    .unwrap();
+    assert_eq!(restored.advance("overshoot", 100).unwrap(), Some(terminal));
+    assert_eq!(restores.load(Ordering::SeqCst), 0);
+}
+
+#[test]
+fn snapshot_visibility_is_canonical_historical_and_excludes_selected_future_key() {
+    let base = Adapter {
+        restore_calls: Arc::new(AtomicUsize::new(0)),
+        start_target: false,
+    };
+    let candidate = spec(
+        "visible-target",
+        None,
+        ProbeBudget {
+            horizon: 20,
+            max_events: 3,
+        },
+    );
+    let mut with_target = snapshot(10);
+    let mut old_target = with_target.visible_events[0].clone();
+    old_target.order.relative_ticks = 9;
+    old_target.order.source_event_key = "target-event".into();
+    old_target.available_at = Some(9);
+    old_target.order.source_order = 0;
+    with_target.visible_events.insert(0, old_target);
+    with_target.frontier = 4;
+    assert!(matches!(
+        pool(base.clone()).admit(candidate.clone(), with_target),
+        Err(ShadowError::InvalidInput(_))
+    ));
+
+    let mut future_known = snapshot(10);
+    future_known.visible_events[0].available_at = Some(11);
+    assert!(matches!(
+        pool(base.clone()).admit(candidate.clone(), future_known),
+        Err(ShadowError::InvalidInput(_))
+    ));
+
+    let mut future_occurrence = snapshot(10);
+    future_occurrence.visible_events[0].order.relative_ticks = 11;
+    assert!(matches!(
+        pool(base.clone()).admit(candidate.clone(), future_occurrence),
+        Err(ShadowError::InvalidInput(_))
+    ));
+
+    let mut duplicate_key = snapshot(10);
+    let mut duplicate = duplicate_key.visible_events[0].clone();
+    duplicate.order.relative_ticks = 9;
+    duplicate.order.source_order = 0;
+    duplicate_key.visible_events.insert(0, duplicate);
+    duplicate_key.frontier = 4;
+    assert!(matches!(
+        pool(base.clone()).admit(candidate.clone(), duplicate_key),
+        Err(ShadowError::InvalidInput(_))
+    ));
+
+    let mut target_is_anchor = candidate;
+    target_is_anchor.target_event = Some("anchor".into());
+    let mut unmatched_anchor = pool(Adapter {
+        restore_calls: Arc::new(AtomicUsize::new(0)),
+        start_target: false,
+    });
+    assert_eq!(
+        unmatched_anchor.admit(target_is_anchor.clone(), snapshot(10)),
+        Err(ShadowError::Contract(
+            "selected target is the anchor but adapter reports incomplete"
+        ))
+    );
+    let mut anchored_target = pool(Adapter {
+        restore_calls: Arc::new(AtomicUsize::new(0)),
+        start_target: true,
+    });
+    anchored_target
+        .admit(target_is_anchor, snapshot(10))
+        .unwrap();
+    let result = anchored_target
+        .advance("visible-target", 0)
+        .unwrap()
+        .unwrap();
+    assert_eq!(result.events, 0);
+    assert_eq!(result.outcome, ProbeOutcome::Completed { predicted: 10 });
+}
+
+#[test]
 fn invalid_anchor_and_inconsistent_checkpoint_states_are_rejected() {
     let adapter = Adapter {
         restore_calls: Arc::new(AtomicUsize::new(0)),
@@ -440,7 +628,7 @@ fn invalid_anchor_and_inconsistent_checkpoint_states_are_rejected() {
             ),
             invalid
         ),
-        Err(ShadowError::UnavailableAnchor(_))
+        Err(ShadowError::InvalidInput(_))
     ));
 
     let mut infeasible = snapshot(10);
@@ -483,6 +671,57 @@ fn invalid_anchor_and_inconsistent_checkpoint_states_are_rejected() {
             limits(),
             vec![(candidate, infeasible)],
             completed_checkpoint,
+        )
+        .err(),
+        Some(ShadowError::IncompatibleCheckpoint)
+    );
+    assert_eq!(adapter.restore_calls.load(Ordering::SeqCst), 0);
+}
+
+#[test]
+fn restore_rejects_zero_cost_future_completion_and_blank_failure_reason() {
+    let adapter = Adapter {
+        restore_calls: Arc::new(AtomicUsize::new(0)),
+        start_target: false,
+    };
+    let candidate = spec(
+        "terminal-shape",
+        None,
+        ProbeBudget {
+            horizon: 20,
+            max_events: 3,
+        },
+    );
+    let snap = snapshot(10);
+    let mut source = pool(adapter.clone());
+    source.admit(candidate.clone(), snap.clone()).unwrap();
+
+    let mut future_completion = source.checkpoint().unwrap();
+    future_completion.probes[0].state =
+        shadow::SavedProbeState::Terminal(ProbeOutcome::Completed { predicted: 11 });
+    assert_eq!(
+        ProbePool::restore(
+            adapter.clone(),
+            [9; 32],
+            limits(),
+            vec![(candidate.clone(), snap.clone())],
+            future_completion,
+        )
+        .err(),
+        Some(ShadowError::IncompatibleCheckpoint)
+    );
+
+    let mut blank_failure = source.checkpoint().unwrap();
+    blank_failure.probes[0].state = shadow::SavedProbeState::Terminal(ProbeOutcome::Failed {
+        reason: "  ".into(),
+    });
+    assert_eq!(
+        ProbePool::restore(
+            adapter.clone(),
+            [9; 32],
+            limits(),
+            vec![(candidate, snap)],
+            blank_failure,
         )
         .err(),
         Some(ShadowError::IncompatibleCheckpoint)

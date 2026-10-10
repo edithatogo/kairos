@@ -114,6 +114,13 @@ impl<A: ProbeAdapter> ProbePool<A> {
                         "admission target is not at current tick",
                     ))
                 }
+                None if world.spec.target_event.as_deref()
+                    == Some(world.snapshot.anchor_event.as_str()) =>
+                {
+                    return Err(ShadowError::Contract(
+                        "selected target is the anchor but adapter reports incomplete",
+                    ))
+                }
                 None => {}
             }
         }
@@ -198,21 +205,51 @@ impl<A: ProbeAdapter> ProbePool<A> {
                     return Ok(Some(result(world)));
                 }
             };
+            if step.dispatches == 0 {
+                return Err(poison_contract(
+                    world,
+                    "dispatch receipt reports no consumed event",
+                ));
+            }
             world.events = world
                 .events
-                .checked_add(1)
+                .checked_add(step.dispatches)
                 .ok_or(ShadowError::LimitExceeded)?;
-            local += 1;
-            if step.dispatched_at != next_tick || self.adapter.now(runtime) != step.dispatched_at {
+            local = local
+                .checked_add(step.dispatches)
+                .ok_or(ShadowError::LimitExceeded)?;
+            if step.dispatched_at < world.last_tick {
+                return Err(poison_contract(world, "runtime time reversal"));
+            }
+            world.last_tick = step.dispatched_at;
+            let runtime_now = self.adapter.now(runtime);
+            if runtime_now != step.dispatched_at {
                 return Err(poison_contract(
                     world,
                     "dispatch receipt or runtime tick mismatch",
                 ));
             }
-            if step.dispatched_at < world.last_tick {
-                return Err(poison_contract(world, "runtime time reversal"));
+            if step.dispatches != 1 && step.failure.is_none() {
+                return Err(poison_contract(
+                    world,
+                    "multiple dispatches without terminal failure",
+                ));
             }
-            world.last_tick = step.dispatched_at;
+            if let Some(failure) = step.failure {
+                finish(
+                    world,
+                    ProbeOutcome::Failed {
+                        reason: format!("{failure:?}"),
+                    },
+                );
+                return Ok(Some(result(world)));
+            }
+            if step.dispatches != 1 || step.dispatched_at != next_tick {
+                return Err(poison_contract(
+                    world,
+                    "dispatch receipt differs from next-event preview",
+                ));
+            }
             if let Some(target) = step.target {
                 if target != step.dispatched_at {
                     return Err(poison_contract(world, "target outside dispatched prefix"));
@@ -255,8 +292,22 @@ impl<A: ProbeAdapter> ProbePool<A> {
         let mut probes = Vec::with_capacity(self.probes.len());
         for world in self.probes.values() {
             let state = if let Some(outcome) = &world.terminal {
+                if !terminal_valid(
+                    outcome,
+                    world.events,
+                    world.last_tick,
+                    &world.snapshot,
+                    world.spec.budget,
+                ) {
+                    return Err(ShadowError::Contract("invalid terminal probe state"));
+                }
                 SavedProbeState::Terminal(outcome.clone())
             } else {
+                if world.events > world.spec.budget.max_events
+                    || world.last_tick > world.spec.budget.horizon
+                {
+                    return Err(ShadowError::Contract("pending probe exceeded budget"));
+                }
                 let remaining = self
                     .limits
                     .max_checkpoint_bytes
@@ -341,9 +392,7 @@ impl<A: ProbeAdapter> ProbePool<A> {
                 || &saved.snapshot != snapshot
                 || validate_binding(spec, snapshot).is_err()
                 || spec.budget.horizon < snapshot.at
-                || saved.events > spec.budget.max_events
                 || saved.last_tick < snapshot.at
-                || saved.last_tick > spec.budget.horizon
                 || snapshot_size(snapshot)? > limits.max_snapshot_bytes
             {
                 return Err(ShadowError::IncompatibleCheckpoint);
@@ -353,6 +402,8 @@ impl<A: ProbeAdapter> ProbePool<A> {
             match &saved.state {
                 SavedProbeState::Pending(image) => {
                     if !snapshot.resource_feasible
+                        || saved.events > spec.budget.max_events
+                        || saved.last_tick > spec.budget.horizon
                         || image.capacity() > limits.max_probe_image_bytes
                     {
                         return Err(ShadowError::IncompatibleCheckpoint);
@@ -439,20 +490,33 @@ fn terminal_valid(
     match outcome {
         ProbeOutcome::Completed { predicted } => {
             snapshot.resource_feasible
+                && events <= budget.max_events
                 && *predicted == last
                 && *predicted >= snapshot.at
                 && *predicted <= budget.horizon
+                && (events > 0 || *predicted == snapshot.at)
         }
-        ProbeOutcome::Infeasible { .. } => {
-            !snapshot.resource_feasible && events == 0 && last == snapshot.at
+        ProbeOutcome::Infeasible { reason } => {
+            !snapshot.resource_feasible
+                && events == 0
+                && last == snapshot.at
+                && !reason.trim().is_empty()
         }
-        ProbeOutcome::Missing | ProbeOutcome::Failed { .. } => snapshot.resource_feasible,
+        ProbeOutcome::Missing => {
+            snapshot.resource_feasible
+                && events <= budget.max_events
+                && last >= snapshot.at
+                && last <= budget.horizon
+        }
+        ProbeOutcome::Failed { reason } => {
+            snapshot.resource_feasible && !reason.trim().is_empty() && last >= snapshot.at
+        }
         ProbeOutcome::Censored {
             reason: crate::shadow::LimitReason::EventBudget,
         } => snapshot.resource_feasible && events == budget.max_events,
         ProbeOutcome::Censored {
             reason: crate::shadow::LimitReason::TickHorizon,
-        } => snapshot.resource_feasible && last <= budget.horizon,
+        } => snapshot.resource_feasible && events <= budget.max_events && last <= budget.horizon,
     }
 }
 
@@ -502,22 +566,43 @@ fn validate_binding(spec: &ProbeSpec, snapshot: &LedgerSnapshot) -> Result<(), S
     {
         return Err(ShadowError::InvalidInput("probe provenance or anchor"));
     }
-    let anchor_count = snapshot
-        .visible_events
-        .iter()
-        .filter(|event| event.order.source_event_key == snapshot.anchor_event)
-        .count();
-    let anchor = snapshot
-        .visible_events
-        .iter()
-        .find(|event| event.order.source_event_key == snapshot.anchor_event);
-    if anchor_count != 1
-        || !anchor.is_some_and(|event| {
-            event.source_defined && event.available_at.is_some_and(|tick| tick <= snapshot.at)
-        })
+    if snapshot.frontier < snapshot.visible_events.len() {
+        return Err(ShadowError::InvalidInput("snapshot frontier is too small"));
+    }
+    let mut previous = None;
+    let mut event_keys = std::collections::BTreeSet::new();
+    for event in &snapshot.visible_events {
+        if !event.source_defined
+            || !event.available_at.is_some_and(|tick| tick <= snapshot.at)
+            || event.order.relative_ticks > snapshot.at
+            || previous.is_some_and(|key| key >= &event.order)
+            || !event_keys.insert(event.order.source_event_key.as_str())
+        {
+            return Err(ShadowError::InvalidInput(
+                "snapshot visible events are not a canonical historical prefix",
+            ));
+        }
+        previous = Some(&event.order);
+    }
+    let Some(anchor) = snapshot.visible_events.last() else {
+        return Err(ShadowError::UnavailableAnchor(
+            snapshot.anchor_event.clone(),
+        ));
+    };
+    if anchor.order.source_event_key != snapshot.anchor_event
+        || anchor.order.relative_ticks != snapshot.at
+        || !anchor.source_defined
+        || !anchor.available_at.is_some_and(|tick| tick <= snapshot.at)
     {
         return Err(ShadowError::UnavailableAnchor(
             snapshot.anchor_event.clone(),
+        ));
+    }
+    if spec.target_event.as_ref().is_some_and(|target| {
+        target != &snapshot.anchor_event && event_keys.contains(target.as_str())
+    }) {
+        return Err(ShadowError::InvalidInput(
+            "selected future target is visible in the historical snapshot",
         ));
     }
     Ok(())

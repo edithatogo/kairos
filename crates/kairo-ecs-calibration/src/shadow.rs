@@ -140,7 +140,8 @@ pub(crate) trait ProbeAdapter {
     ) -> Result<Self::Runtime, ShadowError>;
     fn now(&self, runtime: &Self::Runtime) -> u128;
     fn next_tick(&self, runtime: &Self::Runtime) -> Result<Option<u128>, ShadowError>;
-    /// Dispatch exactly one native event. Return first target tick, if reached.
+    /// Dispatch native event(s). `Err` means no dispatch was consumed; after a
+    /// dispatch, failures must be carried by the receipt with actual counts.
     fn step(&self, runtime: &mut Self::Runtime) -> Result<ProbeStep, ShadowError>;
     /// Detect a target already satisfied at admission, without dispatching.
     fn target_at_start(&self, runtime: &Self::Runtime) -> Result<Option<u128>, ShadowError>;
@@ -154,10 +155,15 @@ pub(crate) trait ProbeAdapter {
     ) -> Result<Self::Runtime, ShadowError>;
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct ProbeStep {
     pub dispatched_at: u128,
     pub target: Option<u128>,
+    /// Actual native dispatch count consumed by this call, including illicit
+    /// extra dispatches detected after a model hook.
+    pub dispatches: u64,
+    /// A terminal native/hook failure after one or more dispatches.
+    pub failure: Option<ShadowError>,
 }
 
 #[derive(Clone, Eq, PartialEq)]
