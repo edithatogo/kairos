@@ -190,3 +190,7 @@ mod arrow_output;
     reason = "Private C4.3 run/event adapter is qualified by integration tests; public API review remains open"
 )]
 mod sidecar_adapter;
+
+#[cfg(any(feature = "ipc", feature = "parquet"))]
+#[expect(dead_code, reason = "Private C3 sidecar join awaits phase acceptance")]
+mod shadow_sidecars;

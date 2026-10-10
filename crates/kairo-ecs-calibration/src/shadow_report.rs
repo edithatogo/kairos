@@ -158,7 +158,9 @@ pub(crate) fn project_rows(
         let spec = spec_by_id
             .get(id)
             .ok_or_else(|| ShadowError::UnknownProbe((*id).to_owned()))?;
-        if result.events > spec.budget.max_events || result.last_tick > spec.budget.horizon {
+        if !matches!(result.outcome, ProbeOutcome::Failed { .. })
+            && (result.events > spec.budget.max_events || result.last_tick > spec.budget.horizon)
+        {
             return Err(ShadowError::Contract(
                 "result exceeds admitted event or tick budget",
             ));
