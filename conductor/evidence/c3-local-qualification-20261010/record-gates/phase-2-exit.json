@@ -1,0 +1,1 @@
+{"argv": ["pwsh", "-NoProfile", "-File", "scripts/validate_conductor_phase_gates.ps1"], "exit": 0}

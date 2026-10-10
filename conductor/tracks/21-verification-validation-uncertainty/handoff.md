@@ -169,3 +169,25 @@ C4.3 sidecars and C4.4/C-04 acceptance remain open; no release claim follows.
 ## C4.2 bounded private runtime — 5 October 2026
 
 Runtime source `59d7dbb0c004654e3da90951d42e2b983ef23993`: 42 actual cases independently conform; 119 calibration tests pass on Rust1.99/1.88, strict current Clippy and formatting pass. Paired residuals, fixed groups/source windows, diagnostic retention, provenance binding and ordered reduction are implemented privately. [Retained evidence](../../evidence/c4.2-runtime-20261005/README.md). This supersedes the historical C4.1 runtime-not-implemented boundary only for this experimental leaf; public API, C4.3, C4.4/C-04 and clinical/release gates stay open. No upstream phase/registry/ledger status advances. Hosted successor checks and parent pin acceptance are separate.
+
+## C3 experimental private shadow runner — local review 2026-10-10
+
+Local runtime source `6f2c4e305e8b885b67f534035e5a72ac5673a094` and Rust 1.99-only
+CI gate `4e7d6075861d42a8f480ca0feb04414fa29d9bd1` qualify the bounded synthetic
+shadow runner locally. [Evidence](../../evidence/c3-local-qualification-20261010/README.md)
+records 351 full calibration passes, 26 release shadow passes, native fresh-process
+recovery, actual IPC/Parquet roundtrip and independent manual readback. Hosted C3
+qualification, C3.4/parent acceptance and parent pin remain pending. Historical
+owner-track Done scopes are unchanged; no C5, public API, clinical or release gate closes.
+
+## C3 scoped synthetic implementation — hosted qualification 2026-10-10
+
+Experimental/private C3 source `faeb8e97d3021080c2dd60f0e2f065607e7666e7` passes
+local and hosted Rust 1.99.0 gates, including native isolated Flow/C2 probes,
+observed source preservation, bounded recovery, exact process/image readback and
+physical IPC/Parquet records. Native run38047961900 passed on Ubuntu x86_64 and
+macOS aarch64; PR244 has 47 successful checks and two declared conditional skips.
+[Hosted evidence](../../evidence/c3-hosted-qualification-20261010/README.md) supplements the earlier local record and supersedes its
+hosted-pending status for this tested source. Parent pin/phase acceptance awaits
+this documentation successor's final checks. Historical owner status scopes,
+C5, public API, empirical/clinical, ED MVP and release gates remain separate.

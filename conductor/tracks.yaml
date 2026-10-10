@@ -68,6 +68,7 @@ tracks:
       - panic-boundary-tests
       - header-diff
   - id: 03
+    # C3 source faeb8e9 hosted-qualified: evidence/c3-hosted-qualification-20261010; parent successor acceptance pending.
     name: The Flow - DES Trajectory API and ABM Behavior API
     status: Done
     # Historical minimal/R2 Done status is preserved; Q4 is a bounded experimental development qualification.
@@ -313,6 +314,7 @@ tracks:
       - sbom-plan
       - vulnerability-policy
   - id: 21
+    # C3 source faeb8e9 hosted-qualified: evidence/c3-hosted-qualification-20261010; parent successor acceptance pending.
     name: Verification, Validation & Uncertainty
     status: Done
     # C1 scoped supplement: evidence/c1.4-integrated-20261005; historical closure unchanged.
@@ -328,6 +330,7 @@ tracks:
       - replay-fixture
       - seed-manifest
   - id: 22
+    # C3 source faeb8e9 hosted-qualified: evidence/c3-hosted-qualification-20261010; parent successor acceptance pending.
     name: Experiment Runner & Scenario Management
     status: Done
     owner: experiment-agent

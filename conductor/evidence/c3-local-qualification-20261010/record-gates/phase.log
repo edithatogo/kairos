@@ -1,0 +1,7 @@
+=== Validate Conductor Phase Gates ===
+
+1 error(s), 0 warning(s)
+{
+  "Severity": "ERROR",
+  "Message": "Duplicate phase closeout ledger entry for track 21"
+}

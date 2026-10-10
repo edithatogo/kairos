@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "status": "local synthetic implementation qualified; hosted C3 phase acceptance pending",
+  "source_commit": "6f2c4e305e8b885b67f534035e5a72ac5673a094",
+  "ci_commit": "4e7d6075861d42a8f480ca0feb04414fa29d9bd1",
+  "base_c2": "63a72aa563258777686ee3d2e25794628daae4ec",
+  "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: aarch64-apple-darwin\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+  "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+  "host": "Darwin Pleiades-M1-14-MBP.local 27.0.0 Darwin Kernel Version 27.0.0: Tue Aug 11 21:22:49 PDT 2026; root:xnu-13432.1.9~1/RELEASE_ARM64_T6000 arm64",
+  "tests": {
+    "reviewed-full": {
+      "passed": 351,
+      "failed": 0,
+      "ignored": 5
+    },
+    "reviewed-release": {
+      "passed": 26,
+      "failed": 0,
+      "ignored": 1
+    },
+    "default-calibration": {
+      "passed": 255,
+      "failed": 0,
+      "ignored": 4
+    },
+    "owner-regression": {
+      "passed": 348,
+      "failed": 0,
+      "ignored": 1
+    }
+  },
+  "archive_sha256": "80390e156629e5fd12a9541aabecb67a895cef1f723259e012645b00a435efc0",
+  "archive_members": 181,
+  "manual_readback": "review.md",
+  "boundaries": [
+    "private experimental modules, no public API/schema change",
+    "C5, clinical validation, ED acceptance and release remain open",
+    "per-inventory metadata estimate; not total RSS cap",
+    "earlier failed and skipped gates preserved; current passes identified explicitly",
+    "reviewed-full/release/clippy precede formatting-only wrapping of two assertions; exact committed native gate re-executed in c3-hosted-join",
+    "full regression fixture commands emitted existing ignored C2 artifact directories outside original C3 artifact reservation; no tracked source outside scope changed"
+  ]
+}

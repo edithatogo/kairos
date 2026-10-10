@@ -69,3 +69,13 @@ node scripts/validation/validate-tracks21-27.mjs
 - Real private runtime residual/metric IPC file/stream and Parquet outputs reconcile through pinned independent PyArrow, complete joins/raw hashes and15 manifest negative controls.
 - Rust1.99 both-feature calibration140pass/4namedignored; Rust1.88 C4.3 targets21pass; feature-minimal/default compatibility checked. Strict Clippy/Rustfmt pass.
 - [Retained exact source-bound evidence](../../evidence/c4.3-arrow-20261005/README.md); hosted successor and parent pin recorded separately. C4.4/C-04, public API, release and clinical acceptance remain open.
+
+## C3 experimental private shadow runner — local review 2026-10-10
+
+Local runtime source `6f2c4e305e8b885b67f534035e5a72ac5673a094` and Rust 1.99-only
+CI gate `4e7d6075861d42a8f480ca0feb04414fa29d9bd1` qualify the bounded synthetic
+shadow runner locally. [Evidence](../../evidence/c3-local-qualification-20261010/README.md)
+records 351 full calibration passes, 26 release shadow passes, native fresh-process
+recovery, actual IPC/Parquet roundtrip and independent manual readback. Hosted C3
+qualification, C3.4/parent acceptance and parent pin remain pending. Historical
+owner-track Done scopes are unchanged; no C5, public API, clinical or release gate closes.
