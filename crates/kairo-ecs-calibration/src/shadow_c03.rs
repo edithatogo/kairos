@@ -241,6 +241,30 @@ fn real_early_exact_late_and_missing_observation_do_not_change_prediction() {
     }
 }
 #[test]
+fn slow_walk_retains_positive_residual_and_exact_macro_anchor() {
+    let mut predictions = Vec::new();
+    for walk in [3, 6] {
+        let c = SyntheticFlowConfig {
+            route_length_mm: walk * 1000,
+            ..config()
+        };
+        let mut r = Runner::new(definition(&c, Some(10)), adapter(c, false)).unwrap();
+        r.advance_source(0).unwrap();
+        let initial = r.trusted_inventory()[0].1.clone();
+        assert_eq!(initial.at, 0);
+        finish(&mut r, 1);
+        assert_eq!(r.frontier(), 2);
+        assert_eq!(r.trusted_inventory()[0].1, initial);
+        let evaluated = r.evaluate(EvaluationPolicy::Diagnostic).unwrap();
+        predictions.push((
+            completed(&r.results()[0]),
+            evaluated.counts.late,
+            evaluated.records[0].residual.unwrap().magnitude,
+        ));
+    }
+    assert_eq!(predictions, vec![(10, 0, 0), (13, 1, 3)]);
+}
+#[test]
 fn two_native_probes_share_history_but_not_resource_queues() {
     let c = config();
     let mut d = definition(&c, Some(1));
@@ -430,7 +454,7 @@ fn child(mode: &str, cut: &str, root: &Path) {
         return;
     }
     if mode == "save" {
-        let mut r = Runner::new(d, adapter(c, false)).unwrap();
+        let mut r = Runner::new(d, adapter(c.clone(), false)).unwrap();
         while r.advance_source(0).unwrap() {}
         let dispatches = if cut == "transit" { 1 } else { 3 };
         r.drive_probes(dispatches).unwrap();
@@ -441,7 +465,21 @@ fn child(mode: &str, cut: &str, root: &Path) {
         ));
         assert_eq!(cp.pool.probes[0].events, dispatches);
         if cut == "work" {
-            assert!(cp.pool.probes[0].last_tick > 1);
+            assert_eq!(cp.pool.probes[0].last_tick, 3);
+            let saved = &cp.pool.probes[0];
+            let SavedProbeState::Pending(image) = &saved.state else {
+                unreachable!()
+            };
+            let model = SyntheticFlowProbeModel { config: c.clone() };
+            let world = model
+                .restore(&saved.snapshot, &saved.spec.input, image)
+                .unwrap();
+            assert_eq!(
+                model.arrival_tick(&world),
+                Some(3),
+                "work cut must be after native arrival"
+            );
+            assert!(!model.completed(&world).unwrap());
         }
         checkpoint_envelope::write_file_no_clobber(
             &path,
