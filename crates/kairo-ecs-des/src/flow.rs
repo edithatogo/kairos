@@ -17,6 +17,11 @@ mod deadline_index;
 use deadline_index::{DeadlineKey, OwnedDeadlineChanges, WaitingDeadlineIndex};
 mod preempting_index;
 use preempting_index::{OwnedPreemptingChanges, PreemptingWaiters};
+mod queue_order;
+use queue_order::{queue_ordering_indexes_match, EffectiveQueueKey, ResourceQueueOrderIndexes};
+pub use queue_order::{
+    FlowQueueOrderKey, FlowQueueOrderKeyError, FlowQueueOrdering, MAX_FLOW_QUEUE_ORDER_KEY_BYTES,
+};
 #[doc(hidden)]
 pub mod checkpoint;
 #[cfg(test)]
@@ -281,13 +286,19 @@ impl WaitingQueue for QueueDelta<'_, PriorityKey> {
     }
 }
 
+impl WaitingQueue for ResourceStage<'_> {
+    fn remove_waiting_key(&mut self, key: &PriorityKey) -> bool {
+        self.remove_queue(key).is_ok()
+    }
+}
+
 fn remove_waiting_request<Q: WaitingQueue>(
-    queue: &mut Q,
+    resource: &mut Q,
     request: RequestId,
     value: &ResourceRequest,
 ) -> Result<(), FlowError> {
     if let Some(key) = waiting_key_for(request, value)? {
-        if !queue.remove_waiting_key(&key) {
+        if !resource.remove_waiting_key(&key) {
             return Err(FlowError::InvalidState);
         }
     }
@@ -1110,18 +1121,151 @@ impl PreparedDelivery {
 struct ResourceStage<'a> {
     capacity: ResourceCapacity,
     queue: QueueDelta<'a, PriorityKey>,
+    order_queue: QueueDelta<'a, EffectiveQueueKey>,
+    order_queue_expected_len: usize,
     deadline: QueueDelta<'a, DeadlineKey>,
     deadline_expected_len: usize,
     preempting: QueueDelta<'a, PriorityKey>,
     preempting_expected_len: usize,
+    order_preempting: QueueDelta<'a, EffectiveQueueKey>,
+    order_preempting_expected_len: usize,
+    ordering: FlowQueueOrdering,
+    order_keys: &'a BTreeMap<RequestId, FlowQueueOrderKey>,
     active: ActiveAllocations,
 }
 struct OwnedResourceStage {
     capacity: ResourceCapacity,
     queue: QueueChanges<PriorityKey>,
+    order_queue: QueueChanges<EffectiveQueueKey>,
+    order_queue_old_expected_len: usize,
+    order_queue_new_expected_len: usize,
     deadline: OwnedDeadlineChanges,
     preempting: OwnedPreemptingChanges,
+    order_preempting: QueueChanges<EffectiveQueueKey>,
+    order_preempting_old_expected_len: usize,
+    order_preempting_new_expected_len: usize,
     active: ActiveAllocations,
+}
+impl ResourceStage<'_> {
+    fn effective_key(&self, key: PriorityKey) -> Result<EffectiveQueueKey, FlowError> {
+        EffectiveQueueKey::new(
+            key.level,
+            key.enqueue_sequence,
+            key.request,
+            self.ordering,
+            self.order_keys.get(&key.request),
+        )
+        .ok_or(FlowError::InvalidState)
+    }
+
+    fn insert_queue(&mut self, key: PriorityKey) -> Result<(), FlowError> {
+        let effective = self.effective_key(key)?;
+        if !self.queue.insert(key) || !self.order_queue.insert(effective) {
+            return Err(FlowError::InvalidState);
+        }
+        self.order_queue_expected_len = self
+            .order_queue_expected_len
+            .checked_add(1)
+            .ok_or(FlowError::CounterOverflow)?;
+        if self.order_queue.len() != self.order_queue_expected_len
+            || self.order_queue_expected_len != self.queue.len()
+        {
+            return Err(FlowError::InvalidState);
+        }
+        Ok(())
+    }
+
+    fn remove_queue(&mut self, key: &PriorityKey) -> Result<(), FlowError> {
+        let effective = self.effective_key(*key)?;
+        if !self.queue.contains(key) || !self.order_queue.contains(&effective) {
+            return Err(FlowError::InvalidState);
+        }
+        if !self.queue.remove(key) || !self.order_queue.remove(&effective) {
+            return Err(FlowError::InvalidState);
+        }
+        self.order_queue_expected_len = self
+            .order_queue_expected_len
+            .checked_sub(1)
+            .ok_or(FlowError::InvalidState)?;
+        if self.order_queue.len() != self.order_queue_expected_len
+            || self.order_queue_expected_len != self.queue.len()
+        {
+            return Err(FlowError::InvalidState);
+        }
+        Ok(())
+    }
+
+    fn insert_preempting(&mut self, key: PriorityKey) -> Result<(), FlowError> {
+        let effective = self.effective_key(key)?;
+        if !self.queue.contains(&key) || !self.order_queue.contains(&effective) {
+            return Err(FlowError::InvalidState);
+        }
+        if !self.preempting.insert(key) || !self.order_preempting.insert(effective) {
+            return Err(FlowError::InvalidState);
+        }
+        self.preempting_expected_len = self
+            .preempting_expected_len
+            .checked_add(1)
+            .ok_or(FlowError::CounterOverflow)?;
+        self.order_preempting_expected_len = self
+            .order_preempting_expected_len
+            .checked_add(1)
+            .ok_or(FlowError::CounterOverflow)?;
+        if self.preempting.len() != self.preempting_expected_len
+            || self.order_preempting.len() != self.order_preempting_expected_len
+            || self.order_preempting_expected_len != self.preempting_expected_len
+            || self.preempting_expected_len > self.queue.len()
+            || self.order_preempting_expected_len > self.order_queue.len()
+        {
+            return Err(FlowError::InvalidState);
+        }
+        Ok(())
+    }
+
+    fn remove_preempting(&mut self, key: &PriorityKey) -> Result<(), FlowError> {
+        let effective = self.effective_key(*key)?;
+        if !self.preempting.contains(key) || !self.order_preempting.contains(&effective) {
+            return Err(FlowError::InvalidState);
+        }
+        if !self.preempting.remove(key) || !self.order_preempting.remove(&effective) {
+            return Err(FlowError::InvalidState);
+        }
+        self.preempting_expected_len = self
+            .preempting_expected_len
+            .checked_sub(1)
+            .ok_or(FlowError::InvalidState)?;
+        self.order_preempting_expected_len = self
+            .order_preempting_expected_len
+            .checked_sub(1)
+            .ok_or(FlowError::InvalidState)?;
+        if self.preempting.len() != self.preempting_expected_len
+            || self.order_preempting.len() != self.order_preempting_expected_len
+            || self.order_preempting_expected_len != self.preempting_expected_len
+        {
+            return Err(FlowError::InvalidState);
+        }
+        Ok(())
+    }
+}
+struct OwnedQueueOrderIndexes {
+    queue: QueueChanges<EffectiveQueueKey>,
+    queue_old_expected_len: usize,
+    queue_new_expected_len: usize,
+    preempting: QueueChanges<EffectiveQueueKey>,
+    preempting_old_expected_len: usize,
+    preempting_new_expected_len: usize,
+}
+impl ResourceStage<'_> {
+    fn export_order_indexes(&self, base: &ResourceQueueOrderIndexes) -> OwnedQueueOrderIndexes {
+        OwnedQueueOrderIndexes {
+            queue: self.order_queue.export(),
+            queue_old_expected_len: base.queue_expected_len,
+            queue_new_expected_len: self.order_queue_expected_len,
+            preempting: self.order_preempting.export(),
+            preempting_old_expected_len: base.preempting_expected_len,
+            preempting_new_expected_len: self.order_preempting_expected_len,
+        }
+    }
 }
 impl ResourceStage<'_> {
     fn insert_deadline(&mut self, key: DeadlineKey) -> Result<(), FlowError> {
@@ -1149,36 +1293,6 @@ impl ResourceStage<'_> {
             .checked_sub(1)
             .ok_or(FlowError::InvalidState)?;
         if self.deadline.len() != self.deadline_expected_len {
-            return Err(FlowError::InvalidState);
-        }
-        Ok(())
-    }
-
-    fn insert_preempting(&mut self, key: PriorityKey) -> Result<(), FlowError> {
-        if !self.preempting.insert(key) {
-            return Err(FlowError::InvalidState);
-        }
-        self.preempting_expected_len = self
-            .preempting_expected_len
-            .checked_add(1)
-            .ok_or(FlowError::CounterOverflow)?;
-        if self.preempting.len() != self.preempting_expected_len
-            || self.preempting_expected_len > self.queue.len()
-        {
-            return Err(FlowError::InvalidState);
-        }
-        Ok(())
-    }
-
-    fn remove_preempting(&mut self, key: &PriorityKey) -> Result<(), FlowError> {
-        if !self.preempting.remove(key) {
-            return Err(FlowError::InvalidState);
-        }
-        self.preempting_expected_len = self
-            .preempting_expected_len
-            .checked_sub(1)
-            .ok_or(FlowError::InvalidState)?;
-        if self.preempting.len() != self.preempting_expected_len {
             return Err(FlowError::InvalidState);
         }
         Ok(())
@@ -1240,13 +1354,19 @@ fn remove_waiting_preempting(
     match request.state {
         RequestState::Queued | RequestState::Suspended => {
             let key = waiting_key_for(id, request)?.ok_or(FlowError::InvalidState)?;
+            let effective = resource.effective_key(key)?;
             let cached = resource.preempting.contains(&key);
+            let ordered_cached = resource.order_preempting.contains(&effective);
             if request.can_preempt {
-                if !cached || !resource.queue.contains(&key) {
+                if !cached
+                    || !ordered_cached
+                    || !resource.queue.contains(&key)
+                    || !resource.order_queue.contains(&effective)
+                {
                     return Err(FlowError::InvalidState);
                 }
                 resource.remove_preempting(&key)?;
-            } else if cached {
+            } else if cached || ordered_cached {
                 return Err(FlowError::InvalidState);
             }
         }
@@ -1257,7 +1377,10 @@ fn remove_waiting_preempting(
                     enqueue_sequence: sequence,
                     request: id,
                 };
-                if resource.preempting.contains(&key) {
+                let effective = resource.effective_key(key)?;
+                if resource.preempting.contains(&key)
+                    || resource.order_preempting.contains(&effective)
+                {
                     return Err(FlowError::InvalidState);
                 }
             }
@@ -1273,12 +1396,25 @@ fn first_preempting_waiter(
 ) -> Result<Option<WaitingCandidate<RequestId>>, FlowError> {
     if resource.preempting_expected_len != resource.preempting.len()
         || resource.preempting_expected_len > resource.queue.len()
+        || resource.order_preempting_expected_len != resource.order_preempting.len()
+        || resource.order_preempting_expected_len != resource.preempting_expected_len
+        || resource.order_preempting_expected_len > resource.order_queue.len()
+        || resource.order_queue_expected_len != resource.order_queue.len()
+        || resource.order_queue_expected_len != resource.queue.len()
     {
         return Err(FlowError::InvalidState);
     }
-    let Some(key) = resource.preempting.iter().next().copied() else {
+    let Some(effective) = resource.order_preempting.iter().next() else {
         return Ok(None);
     };
+    let key = PriorityKey {
+        level: effective.level(),
+        enqueue_sequence: effective.enqueue_sequence(),
+        request: effective.request(),
+    };
+    if !resource.preempting.contains(&key) || !resource.queue.contains(&key) {
+        return Err(FlowError::InvalidState);
+    }
     let request = requests.get(&key.request).ok_or(FlowError::InvalidState)?;
     if request.resource != resource_id
         || !matches!(
@@ -1288,6 +1424,8 @@ fn first_preempting_waiter(
         || !request.can_preempt
         || waiting_key_for(key.request, request)? != Some(key)
         || !resource.queue.contains(&key)
+        || resource.effective_key(key)? != *effective
+        || !resource.order_queue.contains(effective)
     {
         return Err(FlowError::InvalidState);
     }
@@ -1298,6 +1436,40 @@ fn first_preempting_waiter(
         can_preempt: true,
     }))
 }
+
+fn first_queued_waiter(
+    resource_id: ResourceId,
+    resource: &ResourceStage<'_>,
+    requests: &RecordDelta<'_, RequestId, ResourceRequest>,
+) -> Result<Option<PriorityKey>, FlowError> {
+    if resource.order_queue_expected_len != resource.order_queue.len()
+        || resource.order_queue_expected_len != resource.queue.len()
+    {
+        return Err(FlowError::InvalidState);
+    }
+    let Some(effective) = resource.order_queue.iter().next() else {
+        return if resource.queue.len() == 0 {
+            Ok(None)
+        } else {
+            Err(FlowError::InvalidState)
+        };
+    };
+    let key = PriorityKey {
+        level: effective.level(),
+        enqueue_sequence: effective.enqueue_sequence(),
+        request: effective.request(),
+    };
+    let request = requests.get(&key.request).ok_or(FlowError::InvalidState)?;
+    if !resource.queue.contains(&key)
+        || request.resource != resource_id
+        || waiting_key_for(key.request, request)? != Some(key)
+        || resource.effective_key(key)? != *effective
+    {
+        return Err(FlowError::InvalidState);
+    }
+    Ok(Some(key))
+}
+
 struct DispatchPlan {
     resources: BTreeMap<ResourceId, OwnedResourceStage>,
     grant_enabled: BTreeMap<ResourceId, bool>,
@@ -1326,6 +1498,7 @@ pub struct AcquireBuilder<'a> {
     timed: bool,
     can_preempt: bool,
     preemptible: Option<PreemptionStrategy>,
+    queue_order_key: Option<FlowQueueOrderKey>,
 }
 impl AcquireBuilder<'_> {
     pub fn owner(mut self, owner: EntityId) -> Self {
@@ -1365,6 +1538,11 @@ impl AcquireBuilder<'_> {
         self.scheduler_priority = priority;
         self
     }
+    /// Set the immutable secondary key required by a StableKey resource.
+    pub fn queue_order_key(mut self, key: FlowQueueOrderKey) -> Self {
+        self.queue_order_key = Some(key);
+        self
+    }
     pub fn submit(self) -> Result<RequestId, FlowError> {
         self.runtime.check_running()?;
         let owner = self.owner.ok_or(FlowError::InvalidState)?;
@@ -1379,6 +1557,7 @@ impl AcquireBuilder<'_> {
             self.timed,
             self.can_preempt,
             self.preemptible,
+            self.queue_order_key,
         )
     }
 }
@@ -1419,6 +1598,9 @@ pub struct FlowRuntime {
     grant_enabled: BTreeMap<ResourceId, bool>,
     pending_grant_boundaries: BTreeMap<(ResourceId, SimTime), EventId>,
     allocation_modes: BTreeMap<ResourceId, FlowAllocationMode>,
+    queue_orderings: BTreeMap<ResourceId, FlowQueueOrdering>,
+    queue_order_indexes: BTreeMap<ResourceId, ResourceQueueOrderIndexes>,
+    queue_order_keys: BTreeMap<RequestId, FlowQueueOrderKey>,
     pending_allocation_flushes: BTreeMap<(ResourceId, SimTime), EventId>,
     requests: BTreeSet<RequestId>,
     actors: BTreeSet<EntityId>,
@@ -1473,6 +1655,9 @@ impl FlowRuntime {
             grant_enabled: BTreeMap::new(),
             pending_grant_boundaries: BTreeMap::new(),
             allocation_modes: BTreeMap::new(),
+            queue_orderings: BTreeMap::new(),
+            queue_order_indexes: BTreeMap::new(),
+            queue_order_keys: BTreeMap::new(),
             pending_allocation_flushes: BTreeMap::new(),
             requests: BTreeSet::new(),
             actors: BTreeSet::new(),
@@ -1572,6 +1757,16 @@ impl FlowRuntime {
         total: u32,
         mode: FlowAllocationMode,
     ) -> Result<ResourceId, FlowError> {
+        self.create_resource_with_queue_ordering(total, mode, FlowQueueOrdering::AdmissionOrder)
+    }
+
+    /// Create a resource with immutable allocation and queue-ordering policies.
+    pub fn create_resource_with_queue_ordering(
+        &mut self,
+        total: u32,
+        mode: FlowAllocationMode,
+        ordering: FlowQueueOrdering,
+    ) -> Result<ResourceId, FlowError> {
         let id = ResourceId(self.spawn()?);
         let _ = self.registry.insert(id.0, ResourceCapacity { total });
         let _ = self
@@ -1582,7 +1777,24 @@ impl FlowRuntime {
         let _ = self.registry.insert(id.0, ActiveAllocations::default());
         self.resources.insert(id);
         self.allocation_modes.insert(id, mode);
+        self.queue_orderings.insert(id, ordering);
+        self.queue_order_indexes
+            .insert(id, ResourceQueueOrderIndexes::default());
         Ok(id)
+    }
+
+    /// Return the immutable queue-ordering policy for a live resource.
+    pub fn resource_queue_ordering(
+        &self,
+        resource: ResourceId,
+    ) -> Result<FlowQueueOrdering, FlowError> {
+        if !self.resources.contains(&resource) || !self.world.is_alive(resource.0) {
+            return Err(FlowError::InvalidResource);
+        }
+        self.queue_orderings
+            .get(&resource)
+            .copied()
+            .ok_or(FlowError::InvalidState)
     }
 
     /// Return the immutable allocation behavior for a live resource.
@@ -1597,7 +1809,229 @@ impl FlowRuntime {
             .ok_or(FlowError::InvalidState)
     }
 
+    fn validate_queue_order_indexes(&self) -> Result<(), FlowError> {
+        if self.queue_orderings.len() != self.resources.len()
+            || self
+                .queue_orderings
+                .keys()
+                .any(|resource| !self.resources.contains(resource))
+            || !queue_ordering_indexes_match(&self.resources, &self.queue_order_indexes)
+        {
+            return Err(FlowError::InvalidState);
+        }
+        for id in &self.resources {
+            let ordering = self
+                .queue_orderings
+                .get(id)
+                .copied()
+                .ok_or(FlowError::InvalidState)?;
+            let indexes = self
+                .queue_order_indexes
+                .get(id)
+                .ok_or(FlowError::InvalidState)?;
+            let queue = self
+                .registry
+                .get::<ClaimQueue>(id.0)
+                .ok_or(FlowError::InvalidState)?;
+            let preempting = self
+                .registry
+                .get::<PreemptingWaiters>(id.0)
+                .ok_or(FlowError::InvalidState)?;
+            if indexes.queue_expected_len != indexes.queue.len()
+                || indexes.queue_expected_len != queue.requests.len()
+                || indexes.preempting_expected_len != indexes.preempting.len()
+                || indexes.preempting_expected_len != preempting.expected_len
+                || preempting.expected_len != preempting.keys.len()
+            {
+                return Err(FlowError::InvalidState);
+            }
+            let mut expected_preempting_len = 0usize;
+            for key in &queue.requests {
+                let request = self
+                    .registry
+                    .get::<ResourceRequest>(key.request.0)
+                    .ok_or(FlowError::InvalidState)?;
+                if request.resource != *id || waiting_key_for(key.request, request)? != Some(*key) {
+                    return Err(FlowError::InvalidState);
+                }
+                let effective = EffectiveQueueKey::new(
+                    key.level,
+                    key.enqueue_sequence,
+                    key.request,
+                    ordering,
+                    self.queue_order_keys.get(&key.request),
+                )
+                .ok_or(FlowError::InvalidState)?;
+                if !indexes.queue.contains(&effective) {
+                    return Err(FlowError::InvalidState);
+                }
+                if request.can_preempt {
+                    expected_preempting_len = expected_preempting_len
+                        .checked_add(1)
+                        .ok_or(FlowError::CounterOverflow)?;
+                    if !indexes.preempting.contains(&effective) || !preempting.keys.contains(key) {
+                        return Err(FlowError::InvalidState);
+                    }
+                } else if indexes.preempting.contains(&effective) || preempting.keys.contains(key) {
+                    return Err(FlowError::InvalidState);
+                }
+            }
+            if expected_preempting_len != indexes.preempting.len()
+                || expected_preempting_len != preempting.keys.len()
+            {
+                return Err(FlowError::InvalidState);
+            }
+            for key in &preempting.keys {
+                let request = self
+                    .registry
+                    .get::<ResourceRequest>(key.request.0)
+                    .ok_or(FlowError::InvalidState)?;
+                if !request.can_preempt
+                    || request.resource != *id
+                    || waiting_key_for(key.request, request)? != Some(*key)
+                {
+                    return Err(FlowError::InvalidState);
+                }
+                let effective = EffectiveQueueKey::new(
+                    key.level,
+                    key.enqueue_sequence,
+                    key.request,
+                    ordering,
+                    self.queue_order_keys.get(&key.request),
+                )
+                .ok_or(FlowError::InvalidState)?;
+                if !indexes.preempting.contains(&effective) || !indexes.queue.contains(&effective) {
+                    return Err(FlowError::InvalidState);
+                }
+            }
+        }
+        for id in &self.requests {
+            let request = self
+                .registry
+                .get::<ResourceRequest>(id.0)
+                .ok_or(FlowError::InvalidState)?;
+            let has_key = self.queue_order_keys.contains_key(id);
+            match self.queue_orderings.get(&request.resource) {
+                Some(FlowQueueOrdering::StableKey) if !has_key => {
+                    return Err(FlowError::InvalidState)
+                }
+                Some(FlowQueueOrdering::AdmissionOrder) if has_key => {
+                    return Err(FlowError::InvalidState)
+                }
+                None if !has_key => {}
+                None if has_key && terminal(request.state) => {}
+                None => return Err(FlowError::InvalidState),
+                _ => {}
+            }
+        }
+        if self
+            .queue_order_keys
+            .keys()
+            .any(|id| !self.requests.contains(id))
+        {
+            return Err(FlowError::InvalidState);
+        }
+        Ok(())
+    }
+
+    pub(crate) fn rebuild_admission_queue_order_indexes(&mut self) -> Result<(), FlowError> {
+        if !self.queue_order_keys.is_empty() {
+            return Err(FlowError::InvalidState);
+        }
+        let mut orderings = BTreeMap::new();
+        let mut indexes = BTreeMap::new();
+        for resource_id in &self.resources {
+            let queue = self
+                .registry
+                .get::<ClaimQueue>(resource_id.entity_id())
+                .ok_or(FlowError::InvalidState)?;
+            let preempting = self
+                .registry
+                .get::<PreemptingWaiters>(resource_id.entity_id())
+                .ok_or(FlowError::InvalidState)?;
+            let mut queue_index = BTreeSet::new();
+            let mut preempting_index = BTreeSet::new();
+            for key in &queue.requests {
+                let request = self
+                    .registry
+                    .get::<ResourceRequest>(key.request.0)
+                    .ok_or(FlowError::InvalidState)?;
+                if request.resource != *resource_id
+                    || waiting_key_for(key.request, request)? != Some(*key)
+                {
+                    return Err(FlowError::InvalidState);
+                }
+                let effective = EffectiveQueueKey::new(
+                    key.level,
+                    key.enqueue_sequence,
+                    key.request,
+                    FlowQueueOrdering::AdmissionOrder,
+                    None,
+                )
+                .ok_or(FlowError::InvalidState)?;
+                if !queue_index.insert(effective.clone()) {
+                    return Err(FlowError::InvalidState);
+                }
+                if request.can_preempt {
+                    preempting_index.insert(effective);
+                }
+            }
+            if preempting.expected_len != preempting.keys.len()
+                || preempting.expected_len != preempting_index.len()
+            {
+                return Err(FlowError::InvalidState);
+            }
+            for key in &preempting.keys {
+                let effective = EffectiveQueueKey::new(
+                    key.level,
+                    key.enqueue_sequence,
+                    key.request,
+                    FlowQueueOrdering::AdmissionOrder,
+                    None,
+                )
+                .ok_or(FlowError::InvalidState)?;
+                if !queue.requests.contains(key) || !preempting_index.contains(&effective) {
+                    return Err(FlowError::InvalidState);
+                }
+            }
+            let queue_len = queue_index.len();
+            let preempting_len = preempting_index.len();
+            orderings.insert(*resource_id, FlowQueueOrdering::AdmissionOrder);
+            indexes.insert(
+                *resource_id,
+                ResourceQueueOrderIndexes {
+                    queue: queue_index,
+                    queue_expected_len: queue_len,
+                    preempting: preempting_index,
+                    preempting_expected_len: preempting_len,
+                },
+            );
+        }
+        self.queue_orderings = orderings;
+        self.queue_order_indexes = indexes;
+        self.validate_queue_order_indexes()
+    }
+
+    fn ensure_queue_ordering_checkpoint_supported(
+        &self,
+    ) -> Result<(), checkpoint::FlowCheckpointError> {
+        let diagnostic = "V1/V2/V3 cannot represent stable queue ordering";
+        if self
+            .queue_orderings
+            .values()
+            .any(|mode| *mode == FlowQueueOrdering::StableKey)
+            || !self.queue_order_keys.is_empty()
+        {
+            return Err(checkpoint::FlowCheckpointError::InvalidState(diagnostic));
+        }
+        if self.validate_queue_order_indexes().is_err() {
+            return Err(checkpoint::FlowCheckpointError::InvalidState(diagnostic));
+        }
+        Ok(())
+    }
+
     fn ensure_legacy_checkpoint_supported(&self) -> Result<(), checkpoint::FlowCheckpointError> {
+        self.ensure_queue_ordering_checkpoint_supported()?;
         let mode_keys_match = self.allocation_modes.len() == self.resources.len()
             && self
                 .allocation_modes
@@ -1811,6 +2245,7 @@ impl FlowRuntime {
             timed: false,
             can_preempt: false,
             preemptible: None,
+            queue_order_key: None,
         }
     }
     pub fn create_work<C: 'static>(
@@ -2375,7 +2810,9 @@ impl FlowRuntime {
         work: Option<WorkId>,
         at: SimTime,
     ) -> Result<RequestId, FlowError> {
-        self.submit_configured(resource, owner, work, at, 0, None, 0, false, false, None)
+        self.submit_configured(
+            resource, owner, work, at, 0, None, 0, false, false, None, None,
+        )
     }
     #[allow(clippy::too_many_arguments)]
     fn submit_configured(
@@ -2390,10 +2827,18 @@ impl FlowRuntime {
         timed: bool,
         can_preempt: bool,
         preemptible: Option<PreemptionStrategy>,
+        queue_order_key: Option<FlowQueueOrderKey>,
     ) -> Result<RequestId, FlowError> {
         self.check_running()?;
         self.actor(owner)?;
         self.resource(resource)?;
+        let ordering = self.resource_queue_ordering(resource)?;
+        if !matches!(
+            (ordering, queue_order_key.as_ref()),
+            (FlowQueueOrdering::AdmissionOrder, None) | (FlowQueueOrdering::StableKey, Some(_))
+        ) {
+            return Err(FlowError::InvalidState);
+        }
         if (timed && work.is_none()) || (preemptible.is_some() && (!timed || work.is_none())) {
             return Err(FlowError::InvalidWork);
         }
@@ -2461,6 +2906,9 @@ impl FlowRuntime {
             spec.request = Some(request);
             let _ = self.registry.insert(id.0, spec.clone());
         }
+        if let Some(key) = queue_order_key {
+            self.queue_order_keys.insert(request, key);
+        }
         Ok(request)
     }
     pub fn request(&self, id: RequestId) -> Result<ResourceRequest, FlowError> {
@@ -2471,6 +2919,16 @@ impl FlowRuntime {
             .get::<ResourceRequest>(id.0)
             .cloned()
             .ok_or(FlowError::InvalidRequest)
+    }
+    /// Return the immutable key for a StableKey request, including terminal audits.
+    pub fn request_queue_order_key(
+        &self,
+        id: RequestId,
+    ) -> Result<Option<&FlowQueueOrderKey>, FlowError> {
+        if !self.requests.contains(&id) || !self.world.is_alive(id.0) {
+            return Err(FlowError::InvalidRequest);
+        }
+        Ok(self.queue_order_keys.get(&id))
     }
     pub fn resource(&self, id: ResourceId) -> Result<ResourceSnapshot, FlowError> {
         if !self.resources.contains(&id) || !self.world.is_alive(id.0) {
@@ -2489,13 +2947,67 @@ impl FlowRuntime {
             .get::<ActiveAllocations>(id.0)
             .ok_or(FlowError::InvalidResource)?;
         let used = u32::try_from(active.leases.len()).map_err(|_| FlowError::InvalidState)?;
+        let queued = match self.resource_queue_ordering(id)? {
+            FlowQueueOrdering::AdmissionOrder => {
+                queue.requests.iter().map(|key| key.request).collect()
+            }
+            FlowQueueOrdering::StableKey => {
+                let indexes = self
+                    .queue_order_indexes
+                    .get(&id)
+                    .ok_or(FlowError::InvalidState)?;
+                if indexes.queue_expected_len != indexes.queue.len()
+                    || indexes.queue_expected_len != queue.requests.len()
+                {
+                    return Err(FlowError::InvalidState);
+                }
+                let mut queued = Vec::with_capacity(indexes.queue.len());
+                let mut expected = BTreeSet::new();
+                for key in &indexes.queue {
+                    let legacy = PriorityKey {
+                        level: key.level(),
+                        enqueue_sequence: key.enqueue_sequence(),
+                        request: key.request(),
+                    };
+                    if !queue.requests.contains(&legacy) {
+                        return Err(FlowError::InvalidState);
+                    }
+                    let request = self
+                        .registry
+                        .get::<ResourceRequest>(legacy.request.0)
+                        .ok_or(FlowError::InvalidState)?;
+                    if request.resource != id
+                        || waiting_key_for(legacy.request, request)? != Some(legacy)
+                        || EffectiveQueueKey::new(
+                            legacy.level,
+                            legacy.enqueue_sequence,
+                            legacy.request,
+                            FlowQueueOrdering::StableKey,
+                            self.queue_order_keys.get(&legacy.request),
+                        )
+                        .as_ref()
+                            != Some(key)
+                        || !expected.insert(legacy)
+                    {
+                        return Err(FlowError::InvalidState);
+                    }
+                    queued.push(key.request());
+                }
+                if expected.len() != queue.requests.len()
+                    || queue.requests.iter().any(|key| !expected.contains(key))
+                {
+                    return Err(FlowError::InvalidState);
+                }
+                queued
+            }
+        };
         Ok(ResourceSnapshot {
             total: capacity.total,
             available: capacity
                 .total
                 .checked_sub(used)
                 .ok_or(FlowError::InvalidState)?,
-            queued: queue.requests.iter().map(|key| key.request).collect(),
+            queued,
             active: active.leases.keys().copied().collect(),
             allocations: active.leases.values().cloned().collect(),
         })
@@ -2999,6 +3511,11 @@ impl FlowRuntime {
                     FlowOwnedCommand::Acquire(spec) => {
                         self.actor(spec.owner)?;
                         self.resource(spec.resource)?;
+                        if self.resource_queue_ordering(spec.resource)?
+                            != FlowQueueOrdering::AdmissionOrder
+                        {
+                            return Err(FlowError::InvalidState);
+                        }
                         if (spec.timed && spec.work.is_none())
                             || (spec.preemptible.is_some() && (!spec.timed || spec.work.is_none()))
                         {
@@ -3555,6 +4072,23 @@ impl FlowRuntime {
             {
                 return Err(FlowError::InvalidState);
             }
+            let ordering = self
+                .queue_orderings
+                .get(id)
+                .copied()
+                .ok_or(FlowError::InvalidState)?;
+            let order_index = self
+                .queue_order_indexes
+                .get(id)
+                .ok_or(FlowError::InvalidState)?;
+            if order_index.queue_expected_len != order_index.queue.len()
+                || order_index.queue_expected_len != queue.requests.len()
+                || order_index.preempting_expected_len != order_index.preempting.len()
+                || order_index.preempting_expected_len != preempting.expected_len
+                || order_index.queue_expected_len > queue.requests.len()
+            {
+                return Err(FlowError::InvalidState);
+            }
             let active = self
                 .registry
                 .get::<ActiveAllocations>(id.0)
@@ -3565,10 +4099,16 @@ impl FlowRuntime {
                 ResourceStage {
                     capacity,
                     queue: QueueDelta::new(&queue.requests),
+                    order_queue: QueueDelta::new(&order_index.queue),
+                    order_queue_expected_len: order_index.queue_expected_len,
                     deadline: QueueDelta::new(&deadline.entries),
                     deadline_expected_len: deadline.expected_len,
                     preempting: QueueDelta::new(&preempting.keys),
                     preempting_expected_len: preempting.expected_len,
+                    order_preempting: QueueDelta::new(&order_index.preempting),
+                    order_preempting_expected_len: order_index.preempting_expected_len,
+                    ordering,
+                    order_keys: &self.queue_order_keys,
                     active,
                 },
             );
@@ -3652,9 +4192,7 @@ impl FlowRuntime {
                     return Err(FlowError::InvalidState);
                 }
                 remove_waiting_preempting(resource, key.request, request)?;
-                if !resource.queue.remove(&key) {
-                    return Err(FlowError::InvalidState);
-                }
+                resource.remove_queue(&key)?;
                 resource.remove_deadline(&(deadline, key))?;
                 let r = requests
                     .get_mut(&key.request)
@@ -3751,9 +4289,7 @@ impl FlowRuntime {
                         enqueue_sequence: request.admission_sequence.unwrap(),
                         request: id,
                     };
-                    if !resource.queue.insert(key) {
-                        return Err(FlowError::InvalidState);
-                    }
+                    resource.insert_queue(key)?;
                     if let Some(deadline) = request.deadline {
                         resource.insert_deadline((deadline, key))?;
                     }
@@ -3857,6 +4393,10 @@ impl FlowRuntime {
                         || staged.deadline_expected_len > staged.queue.len()
                         || staged.preempting_expected_len != staged.preempting.len()
                         || staged.preempting_expected_len > staged.queue.len()
+                        || staged.order_queue_expected_len != staged.order_queue.len()
+                        || staged.order_queue_expected_len != staged.queue.len()
+                        || staged.order_preempting_expected_len != staged.order_preempting.len()
+                        || staged.order_preempting_expected_len != staged.preempting_expected_len
                         || staged.queue.len() != 0
                         || staged.deadline.len() != 0
                         || staged.preempting.len() != 0
@@ -3893,7 +4433,7 @@ impl FlowRuntime {
                             .ok_or(FlowError::InvalidResource)?;
                         remove_waiting_deadline(resource, id, request)?;
                         remove_waiting_preempting(resource, id, request)?;
-                        remove_waiting_request(&mut resource.queue, id, request)?;
+                        remove_waiting_request(resource, id, request)?;
                         let causal_lease = request.lease;
                         if let Some(lease) = causal_lease {
                             resource.active.leases.remove(&lease);
@@ -3946,7 +4486,7 @@ impl FlowRuntime {
                         .ok_or(FlowError::InvalidResource)?;
                     remove_waiting_deadline(resource, id, request)?;
                     remove_waiting_preempting(resource, id, request)?;
-                    remove_waiting_request(&mut resource.queue, id, request)?;
+                    remove_waiting_request(resource, id, request)?;
                     let causal_lease = request.lease;
                     if let Some(lease) = causal_lease {
                         resource.active.leases.remove(&lease);
@@ -3991,9 +4531,7 @@ impl FlowRuntime {
                     remove_waiting_preempting(resource, id, request)?;
                     let old_waiting_key = waiting_key_for(id, request)?;
                     if let Some(key) = old_waiting_key {
-                        if !resource.queue.remove(&key) {
-                            return Err(FlowError::InvalidState);
-                        }
+                        resource.remove_queue(&key)?;
                     }
                     request.priority_level = level;
                     if let Some(old_key) = old_waiting_key {
@@ -4002,9 +4540,7 @@ impl FlowRuntime {
                             enqueue_sequence: old_key.enqueue_sequence,
                             request: id,
                         };
-                        if !resource.queue.insert(new_key) {
-                            return Err(FlowError::InvalidState);
-                        }
+                        resource.insert_queue(new_key)?;
                         if let Some(deadline) = request.deadline {
                             resource.insert_deadline((deadline, new_key))?;
                         }
@@ -4072,7 +4608,7 @@ impl FlowRuntime {
             }
             loop {
                 let key = if resource.active.leases.len() < resource.capacity.total as usize {
-                    resource.queue.iter().next().copied()
+                    first_queued_waiter(id, resource, &requests)?
                 } else {
                     let Some(waiter) = first_preempting_waiter(id, resource, &requests)? else {
                         break;
@@ -4172,9 +4708,7 @@ impl FlowRuntime {
                                     .ok_or(FlowError::InvalidState)?,
                                 request: victim,
                             };
-                            if !resource.queue.insert(key) {
-                                return Err(FlowError::InvalidState);
-                            }
+                            resource.insert_queue(key)?;
                             if victim_request.can_preempt {
                                 resource.insert_preempting(key)?;
                             }
@@ -4187,9 +4721,7 @@ impl FlowRuntime {
                                     .ok_or(FlowError::InvalidState)?,
                                 request: victim,
                             };
-                            if !resource.queue.insert(key) {
-                                return Err(FlowError::InvalidState);
-                            }
+                            resource.insert_queue(key)?;
                             if victim_request.can_preempt {
                                 resource.insert_preempting(key)?;
                             }
@@ -4207,9 +4739,7 @@ impl FlowRuntime {
                 let request = requests.get(&request_id).ok_or(FlowError::InvalidState)?;
                 remove_waiting_deadline(resource, request_id, request)?;
                 remove_waiting_preempting(resource, request_id, request)?;
-                if !resource.queue.remove(&key) {
-                    return Err(FlowError::InvalidState);
-                }
+                resource.remove_queue(&key)?;
                 let request = requests
                     .get_mut(&request_id)
                     .ok_or(FlowError::InvalidState)?;
@@ -4456,11 +4986,42 @@ impl FlowRuntime {
             preempting_changes
                 .preflight(&preempting_base.keys)
                 .map_err(|_| FlowError::InvalidState)?;
+            if resource.order_queue.len() != resource.order_queue_expected_len
+                || resource.order_queue_expected_len != resource.queue.len()
+                || resource.order_preempting.len() != resource.order_preempting_expected_len
+                || resource.order_preempting_expected_len != resource.preempting_expected_len
+                || resource.order_preempting_expected_len > resource.order_queue_expected_len
+            {
+                return Err(FlowError::InvalidState);
+            }
+            let order_base = self
+                .queue_order_indexes
+                .get(&id)
+                .ok_or(FlowError::InvalidState)?;
+            if order_base.queue_expected_len != order_base.queue.len()
+                || order_base.queue_expected_len != base.requests.len()
+                || order_base.preempting_expected_len != order_base.preempting.len()
+                || order_base.preempting_expected_len != preempting_base.expected_len
+            {
+                return Err(FlowError::InvalidState);
+            }
+            let order_changes = resource.export_order_indexes(order_base);
+            order_changes
+                .queue
+                .preflight(&order_base.queue)
+                .map_err(|_| FlowError::InvalidState)?;
+            order_changes
+                .preempting
+                .preflight(&order_base.preempting)
+                .map_err(|_| FlowError::InvalidState)?;
             owned_resources.insert(
                 id,
                 OwnedResourceStage {
                     capacity: resource.capacity,
                     queue,
+                    order_queue: order_changes.queue,
+                    order_queue_old_expected_len: order_changes.queue_old_expected_len,
+                    order_queue_new_expected_len: order_changes.queue_new_expected_len,
                     deadline: OwnedDeadlineChanges {
                         old_expected_len: deadline_base.expected_len,
                         new_expected_len: resource.deadline_expected_len,
@@ -4471,6 +5032,9 @@ impl FlowRuntime {
                         new_expected_len: resource.preempting_expected_len,
                         changes: preempting_changes,
                     },
+                    order_preempting: order_changes.preempting,
+                    order_preempting_old_expected_len: order_changes.preempting_old_expected_len,
+                    order_preempting_new_expected_len: order_changes.preempting_new_expected_len,
                     active: resource.active,
                 },
             );
@@ -4519,7 +5083,14 @@ impl FlowRuntime {
                 let Some(preempting) = self.registry.get::<PreemptingWaiters>(id.0) else {
                     return Some(*id);
                 };
+                let Some(order_base) = self.queue_order_indexes.get(id) else {
+                    return Some(*id);
+                };
                 let valid = resource.queue.preflight(&base.requests).is_ok()
+                    && order_base.queue_expected_len == resource.order_queue_old_expected_len
+                    && order_base.queue_expected_len == order_base.queue.len()
+                    && order_base.queue_expected_len == base.requests.len()
+                    && resource.order_queue.preflight(&order_base.queue).is_ok()
                     && deadline.expected_len == resource.deadline.old_expected_len
                     && deadline.expected_len == deadline.entries.len()
                     && deadline.expected_len <= base.requests.len()
@@ -4535,6 +5106,16 @@ impl FlowRuntime {
                         .preempting
                         .changes
                         .preflight(&preempting.keys)
+                        .is_ok()
+                    && order_base.preempting_expected_len
+                        == resource.order_preempting_old_expected_len
+                    && order_base.preempting_expected_len == order_base.preempting.len()
+                    && order_base.preempting_expected_len == preempting.expected_len
+                    && resource.order_preempting_new_expected_len
+                        <= resource.order_queue_new_expected_len
+                    && resource
+                        .order_preempting
+                        .preflight(&order_base.preempting)
                         .is_ok();
                 (!valid).then_some(*id)
             })
@@ -4557,54 +5138,103 @@ impl FlowRuntime {
             let OwnedResourceStage {
                 capacity,
                 queue,
+                order_queue,
+                order_queue_old_expected_len,
+                order_queue_new_expected_len,
                 deadline,
                 preempting,
+                order_preempting,
+                order_preempting_old_expected_len,
+                order_preempting_new_expected_len,
                 active,
             } = resource;
             let _ = self.registry.insert(id.0, capacity);
-            let queue_store = self
-                .registry
-                .store_mut::<ClaimQueue>()
-                .expect("preflighted queue component store");
-            let base_queue = queue_store
-                .get_mut(id.0)
-                .expect("preflighted queue component");
-            queue
-                .apply(&mut base_queue.requests)
-                .expect("queue changeset remains preflighted");
-            let deadline_store = self
-                .registry
-                .store_mut::<WaitingDeadlineIndex>()
-                .expect("preflighted deadline index component store");
-            let base_deadline = deadline_store
-                .get_mut(id.0)
-                .expect("preflighted deadline index component");
-            deadline
-                .changes
-                .apply(&mut base_deadline.entries)
-                .expect("deadline changeset remains preflighted");
-            base_deadline.expected_len = deadline.new_expected_len;
+            let legacy_queue_len = {
+                let queue_store = self
+                    .registry
+                    .store_mut::<ClaimQueue>()
+                    .expect("preflighted queue component store");
+                let base_queue = queue_store
+                    .get_mut(id.0)
+                    .expect("preflighted queue component");
+                queue
+                    .apply(&mut base_queue.requests)
+                    .expect("queue changeset remains preflighted");
+                base_queue.requests.len()
+            };
+            {
+                let deadline_store = self
+                    .registry
+                    .store_mut::<WaitingDeadlineIndex>()
+                    .expect("preflighted deadline index component store");
+                let base_deadline = deadline_store
+                    .get_mut(id.0)
+                    .expect("preflighted deadline index component");
+                deadline
+                    .changes
+                    .apply(&mut base_deadline.entries)
+                    .expect("deadline changeset remains preflighted");
+                base_deadline.expected_len = deadline.new_expected_len;
+                assert_eq!(
+                    base_deadline.expected_len,
+                    base_deadline.entries.len(),
+                    "preflighted deadline count witness"
+                );
+            }
+            let legacy_preempting_len = {
+                let preempting_store = self
+                    .registry
+                    .store_mut::<PreemptingWaiters>()
+                    .expect("preflighted preempting index component store");
+                let base_preempting = preempting_store
+                    .get_mut(id.0)
+                    .expect("preflighted preempting index component");
+                preempting
+                    .changes
+                    .apply(&mut base_preempting.keys)
+                    .expect("preempting changeset remains preflighted");
+                base_preempting.expected_len = preempting.new_expected_len;
+                assert_eq!(
+                    base_preempting.expected_len,
+                    base_preempting.keys.len(),
+                    "preflighted preempting count witness"
+                );
+                base_preempting.expected_len
+            };
+            let base_order = self
+                .queue_order_indexes
+                .get_mut(&id)
+                .expect("preflighted queue ordering indexes");
+            assert_eq!(base_order.queue_expected_len, order_queue_old_expected_len);
+            order_queue
+                .apply(&mut base_order.queue)
+                .expect("queue-order changeset remains preflighted");
+            base_order.queue_expected_len = order_queue_new_expected_len;
             assert_eq!(
-                base_deadline.expected_len,
-                base_deadline.entries.len(),
-                "preflighted deadline count witness"
+                base_order.queue_expected_len,
+                base_order.queue.len(),
+                "preflighted queue-order count witness"
             );
-            let preempting_store = self
-                .registry
-                .store_mut::<PreemptingWaiters>()
-                .expect("preflighted preempting index component store");
-            let base_preempting = preempting_store
-                .get_mut(id.0)
-                .expect("preflighted preempting index component");
-            preempting
-                .changes
-                .apply(&mut base_preempting.keys)
-                .expect("preempting changeset remains preflighted");
-            base_preempting.expected_len = preempting.new_expected_len;
             assert_eq!(
-                base_preempting.expected_len,
-                base_preempting.keys.len(),
-                "preflighted preempting count witness"
+                base_order.queue_expected_len, legacy_queue_len,
+                "legacy/effective queue count parity"
+            );
+            assert_eq!(
+                base_order.preempting_expected_len,
+                order_preempting_old_expected_len
+            );
+            order_preempting
+                .apply(&mut base_order.preempting)
+                .expect("preempting order changeset remains preflighted");
+            base_order.preempting_expected_len = order_preempting_new_expected_len;
+            assert_eq!(
+                base_order.preempting_expected_len,
+                base_order.preempting.len(),
+                "preflighted preempting-order count witness"
+            );
+            assert_eq!(
+                base_order.preempting_expected_len, legacy_preempting_len,
+                "legacy/effective preempting count parity"
             );
             let _ = self.registry.insert(id.0, active);
         }
@@ -4646,6 +5276,8 @@ impl FlowRuntime {
             self.resources.remove(&id);
             self.grant_enabled.remove(&id);
             self.allocation_modes.remove(&id);
+            self.queue_orderings.remove(&id);
+            self.queue_order_indexes.remove(&id);
             self.world.despawn(id.0);
         }
         for (work, cleanup) in removed_works {
@@ -4804,6 +5436,212 @@ mod q52_queue_staging_tests;
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[derive(Debug, Eq, PartialEq)]
+    struct QueueOrderAtomicSnapshot {
+        scheduler: kairo_ecs_core::checkpoint::SchedulerCheckpointV1,
+        scheduler_stats: SchedulerStats,
+        world: kairo_ecs_state::WorldSnapshot,
+        created: u64,
+        destroyed: u64,
+        scheduled: u64,
+        next_admission: u64,
+        next_lease: u64,
+        requests: BTreeMap<RequestId, ResourceRequest>,
+        commands: BTreeMap<EventId, Command>,
+        resources: BTreeMap<
+            ResourceId,
+            (
+                ClaimQueue,
+                WaitingDeadlineIndex,
+                PreemptingWaiters,
+                ActiveAllocations,
+                ResourceQueueOrderIndexes,
+            ),
+        >,
+        allocation_modes: BTreeMap<ResourceId, FlowAllocationMode>,
+        orderings: BTreeMap<ResourceId, FlowQueueOrdering>,
+        queue_order_keys: BTreeMap<RequestId, FlowQueueOrderKey>,
+    }
+
+    fn queue_order_atomic_snapshot(flow: &FlowRuntime) -> QueueOrderAtomicSnapshot {
+        let requests = flow
+            .requests
+            .iter()
+            .map(|id| (*id, flow.request(*id).unwrap()))
+            .collect();
+        let resources = flow
+            .resources
+            .iter()
+            .map(|id| {
+                (
+                    *id,
+                    (
+                        flow.registry.get::<ClaimQueue>(id.0).unwrap().clone(),
+                        flow.registry
+                            .get::<WaitingDeadlineIndex>(id.0)
+                            .unwrap()
+                            .clone(),
+                        flow.registry
+                            .get::<PreemptingWaiters>(id.0)
+                            .unwrap()
+                            .clone(),
+                        flow.registry
+                            .get::<ActiveAllocations>(id.0)
+                            .unwrap()
+                            .clone(),
+                        flow.queue_order_indexes.get(id).unwrap().clone(),
+                    ),
+                )
+            })
+            .collect();
+        QueueOrderAtomicSnapshot {
+            scheduler: flow
+                .scheduler
+                .checkpoint_state(kairo_ecs_core::checkpoint::SchedulerCheckpointLimits {
+                    max_entries: usize::MAX,
+                })
+                .unwrap(),
+            scheduler_stats: flow.scheduler.stats(),
+            world: flow.world.snapshot(),
+            created: flow.created,
+            destroyed: flow.destroyed,
+            scheduled: flow.scheduled,
+            next_admission: flow.next_admission,
+            next_lease: flow.next_lease,
+            requests,
+            commands: flow.commands.clone(),
+            resources,
+            allocation_modes: flow.allocation_modes.clone(),
+            orderings: flow.queue_orderings.clone(),
+            queue_order_keys: flow.queue_order_keys.clone(),
+        }
+    }
+
+    fn stable_queued_pair() -> (FlowRuntime, EntityId, ResourceId, RequestId, RequestId) {
+        let mut flow = FlowRuntime::new();
+        let owner = flow.spawn_actor().unwrap();
+        let resource = flow
+            .create_resource_with_queue_ordering(
+                0,
+                FlowAllocationMode::Eager,
+                FlowQueueOrdering::StableKey,
+            )
+            .unwrap();
+        let earlier = flow
+            .acquire(resource)
+            .owner(owner)
+            .queue_order_key(FlowQueueOrderKey::new(b"a").unwrap())
+            .submit()
+            .unwrap();
+        let later = flow
+            .acquire(resource)
+            .owner(owner)
+            .queue_order_key(FlowQueueOrderKey::new(b"b").unwrap())
+            .submit()
+            .unwrap();
+        flow.step().unwrap().unwrap();
+        flow.step().unwrap().unwrap();
+        (flow, owner, resource, earlier, later)
+    }
+
+    #[test]
+    fn queue_order_key_bounds_and_mode_mismatch_are_atomic() {
+        assert_eq!(
+            FlowQueueOrderKey::new(b""),
+            Err(FlowQueueOrderKeyError::Empty)
+        );
+        assert_eq!(
+            FlowQueueOrderKey::new(&[0; MAX_FLOW_QUEUE_ORDER_KEY_BYTES + 1]),
+            Err(FlowQueueOrderKeyError::TooLong {
+                limit: MAX_FLOW_QUEUE_ORDER_KEY_BYTES,
+                actual: MAX_FLOW_QUEUE_ORDER_KEY_BYTES + 1,
+            })
+        );
+        assert_eq!(
+            FlowQueueOrderKey::new(&[0; MAX_FLOW_QUEUE_ORDER_KEY_BYTES])
+                .unwrap()
+                .as_bytes()
+                .len(),
+            MAX_FLOW_QUEUE_ORDER_KEY_BYTES
+        );
+
+        let mut flow = FlowRuntime::new();
+        let owner = flow.spawn_actor().unwrap();
+        let stable = flow
+            .create_resource_with_queue_ordering(
+                1,
+                FlowAllocationMode::Eager,
+                FlowQueueOrdering::StableKey,
+            )
+            .unwrap();
+        let admission = flow.create_resource(1).unwrap();
+        assert_eq!(
+            flow.resource_queue_ordering(stable),
+            Ok(FlowQueueOrdering::StableKey)
+        );
+        assert_eq!(
+            flow.resource_queue_ordering(admission),
+            Ok(FlowQueueOrdering::AdmissionOrder)
+        );
+        let before = queue_order_atomic_snapshot(&flow);
+        assert_eq!(
+            flow.acquire(stable).owner(owner).submit(),
+            Err(FlowError::InvalidState)
+        );
+        assert_eq!(queue_order_atomic_snapshot(&flow), before);
+        assert_eq!(
+            flow.acquire(admission)
+                .owner(owner)
+                .queue_order_key(FlowQueueOrderKey::new(b"forbidden").unwrap())
+                .submit(),
+            Err(FlowError::InvalidState)
+        );
+        assert_eq!(queue_order_atomic_snapshot(&flow), before);
+
+        let (mut positive, _, positive_resource, earlier, later) = stable_queued_pair();
+        positive.set_capacity(positive_resource, 1).unwrap();
+        positive.step().unwrap().unwrap();
+        assert_eq!(
+            positive.request(earlier).unwrap().state,
+            RequestState::Active
+        );
+        assert_eq!(positive.request(later).unwrap().state, RequestState::Queued);
+
+        let (mut corrupted, _, resource, _, later) = stable_queued_pair();
+        corrupted.set_capacity(resource, 1).unwrap();
+        let later_row = corrupted
+            .queue_order_indexes
+            .get(&resource)
+            .unwrap()
+            .queue
+            .iter()
+            .find(|row| row.request() == later)
+            .unwrap()
+            .clone();
+        let fake_earlier_row = EffectiveQueueKey::new(
+            later_row.level(),
+            later_row.enqueue_sequence(),
+            later,
+            FlowQueueOrdering::StableKey,
+            Some(&FlowQueueOrderKey::new(b"a").unwrap()),
+        )
+        .unwrap();
+        let index = corrupted.queue_order_indexes.get_mut(&resource).unwrap();
+        let canonical_earlier = index
+            .queue
+            .iter()
+            .find(|row| row.request() != later)
+            .unwrap()
+            .clone();
+        assert!(index.queue.remove(&canonical_earlier));
+        assert!(index.queue.insert(fake_earlier_row));
+        assert_eq!(index.queue.len(), 2);
+        let before_dispatch = queue_order_atomic_snapshot(&corrupted);
+        assert_eq!(corrupted.step().unwrap_err(), FlowError::InvalidState);
+        assert_eq!(queue_order_atomic_snapshot(&corrupted), before_dispatch);
+    }
+
     #[test]
     fn stale_completion_cannot_process_same_tick_neighbor_or_mismatched_future_boundary() {
         let mut f = FlowRuntime::new();

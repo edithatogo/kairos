@@ -63,6 +63,7 @@ fn stage_for<'a>(flow: &'a FlowRuntime, resource: ResourceId) -> ResourceStage<'
         .get::<WaitingDeadlineIndex>(resource.0)
         .unwrap();
     let preempting = flow.registry.get::<PreemptingWaiters>(resource.0).unwrap();
+    let order_index = flow.queue_order_indexes.get(&resource).unwrap();
     ResourceStage {
         capacity: flow
             .registry
@@ -70,10 +71,16 @@ fn stage_for<'a>(flow: &'a FlowRuntime, resource: ResourceId) -> ResourceStage<'
             .unwrap()
             .clone(),
         queue: QueueDelta::new(&queue.requests),
+        order_queue: QueueDelta::new(&order_index.queue),
+        order_queue_expected_len: order_index.queue_expected_len,
         deadline: QueueDelta::new(&deadline.entries),
         deadline_expected_len: deadline.expected_len,
         preempting: QueueDelta::new(&preempting.keys),
         preempting_expected_len: preempting.expected_len,
+        order_preempting: QueueDelta::new(&order_index.preempting),
+        order_preempting_expected_len: order_index.preempting_expected_len,
+        ordering: *flow.queue_orderings.get(&resource).unwrap(),
+        order_keys: &flow.queue_order_keys,
         active: flow
             .registry
             .get::<ActiveAllocations>(resource.0)
@@ -174,6 +181,7 @@ fn first_cached_key_is_validated_against_request_and_primary_queue() {
         .registry
         .get::<PreemptingWaiters>(resource_id.0)
         .unwrap();
+    let order_index = flow.queue_order_indexes.get(&resource_id).unwrap();
     let capacity = flow
         .registry
         .get::<ResourceCapacity>(resource_id.0)
@@ -187,10 +195,16 @@ fn first_cached_key_is_validated_against_request_and_primary_queue() {
     let mut stage = ResourceStage {
         capacity,
         queue: QueueDelta::new(&queue.requests),
+        order_queue: QueueDelta::new(&order_index.queue),
+        order_queue_expected_len: order_index.queue_expected_len,
         deadline: QueueDelta::new(&deadline.entries),
         deadline_expected_len: deadline.expected_len,
         preempting: QueueDelta::new(&cache.keys),
         preempting_expected_len: cache.expected_len,
+        order_preempting: QueueDelta::new(&order_index.preempting),
+        order_preempting_expected_len: order_index.preempting_expected_len,
+        ordering: *flow.queue_orderings.get(&resource_id).unwrap(),
+        order_keys: &flow.queue_order_keys,
         active,
     };
     let lookup = |id: &RequestId| flow.registry.get::<ResourceRequest>(id.0);

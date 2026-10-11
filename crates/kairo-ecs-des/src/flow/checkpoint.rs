@@ -825,6 +825,7 @@ impl FlowRuntime {
         limits: FlowCheckpointLimits,
         legacy_format: bool,
     ) -> Result<v2::FlowCheckpointParts, FlowCheckpointError> {
+        self.ensure_queue_ordering_checkpoint_supported()?;
         if legacy_format {
             self.ensure_legacy_checkpoint_supported()?;
         }
@@ -1344,6 +1345,7 @@ impl FlowRuntime {
         codecs: &FlowCheckpointCodecs,
         limits: FlowCheckpointLimits,
     ) -> Result<FlowCheckpointImage, FlowCheckpointError> {
+        self.ensure_queue_ordering_checkpoint_supported()?;
         // Select validation policy from the source inventory before capturing.
         // Corrupt Deferred entries/cache/commands still select strict validation;
         // no failed capture is retried or downgraded through a legacy image.
@@ -4213,6 +4215,13 @@ impl FlowRuntime {
         runtime.scheduled = image.scheduled;
         runtime.next_admission = image.next_admission;
         runtime.next_lease = image.next_lease;
+        runtime
+            .rebuild_admission_queue_order_indexes()
+            .map_err(|_| {
+                FlowCheckpointError::InvalidState(
+                    "restored admission queue ordering indexes are inconsistent",
+                )
+            })?;
         Ok((runtime, rebind))
     }
 }
