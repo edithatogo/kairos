@@ -66,7 +66,7 @@ useful ticks, zero remaining, one Completed lifecycle record, and the resource
 released. Terminal IDs/outcomes, resource/work/request observations, and the
 next Service draw are compared with an uninterrupted baseline. Publication
 uses a same-directory, create-new temporary file, file sync, and atomic
-no-overwrite hard-link to the target followed by directory sync; an existing
+no-overwrite hard-link to the target followed by directory sync on Unix; an existing
 target is left byte-for-byte unchanged.
 
 ## Compatibility and scope
@@ -98,3 +98,12 @@ Verified with Rust 1.99.0 from the Rustup toolchain at
 All logs and artifacts are retained under `.artifacts/c2-checkpoint-replay`.
 Passing this closed fixture does not establish portable general recovery, C5
 recovery, hosted checks, or phase acceptance.
+
+## C5 Windows compatibility clarification — 11 October 2026
+
+File contents are flushed and no-replace publication is retained on all platforms.
+Directory-entry flushing is performed on Unix only. Windows recovery is scoped to
+process termination, with no power-loss durability guarantee. Windows drive/UNC
+prefixes are assembled with their root before ancestor metadata checks. Actual
+host verification is recorded in the C5 acceptance evidence; this note alone does
+not establish Windows execution or a general cross-platform replay promise.

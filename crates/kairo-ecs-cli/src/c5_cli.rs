@@ -609,8 +609,14 @@ fn validate_path_components(path: &Path, allow_missing_leaf: bool) -> Result<(),
     let mut current = PathBuf::new();
     for component in abs.components() {
         match component {
-            Component::Prefix(prefix) => current.push(prefix.as_os_str()),
-            Component::RootDir => current.push("/"),
+            // A Windows prefix is incomplete until its root separator arrives.
+            // Metadata on e.g. `\\?\C:` is interpreted as a drive-relative
+            // path and fails even when the eventual canonical path is valid.
+            Component::Prefix(prefix) => {
+                current.push(prefix.as_os_str());
+                continue;
+            }
+            Component::RootDir => current.push(component.as_os_str()),
             Component::Normal(v) => current.push(v),
             Component::ParentDir => {
                 return Err("parent-directory path components are rejected".into());
@@ -723,4 +729,24 @@ fn resolve_manifest_reference(manifest: &Path, reference: &str) -> Result<PathBu
     }
     validate_path_components(&candidate, false)?;
     Ok(candidate)
+}
+
+#[cfg(all(test, windows))]
+mod windows_path_validation_tests {
+    use super::{validate_path_components, Component};
+    use std::fs;
+    use std::path::Path;
+
+    #[test]
+    fn accepts_canonicalized_verbatim_path() {
+        let executable = std::env::current_exe().expect("current executable");
+        let canonical = fs::canonicalize(executable).expect("canonical executable path");
+        assert!(canonical.to_string_lossy().starts_with("\\\\?\\"));
+        assert!(matches!(
+            canonical.components().next(),
+            Some(Component::Prefix(_))
+        ));
+        validate_path_components(Path::new(&canonical), false)
+            .expect("canonicalized verbatim paths must pass component validation");
+    }
 }

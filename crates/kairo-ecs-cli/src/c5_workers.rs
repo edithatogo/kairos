@@ -434,9 +434,16 @@ fn publish_shard(
     }
     fs::remove_file(&temp_path)
         .map_err(|error| format!("cannot remove temporary shard: {error}"))?;
+    #[cfg(unix)]
     File::open(output)
         .and_then(|directory| directory.sync_all())
         .map_err(|error| format!("cannot sync shard directory: {error}"))?;
+    #[cfg(not(unix))]
+    {
+        // The shard file was synced before atomic hard-link publication.
+        // This non-Unix path supports process-crash recovery only; it does
+        // not claim power-loss durability of the directory entry.
+    }
     Ok(())
 }
 
@@ -489,14 +496,16 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        let manifest_dir = fs::canonicalize(PathBuf::from(env!("CARGO_MANIFEST_DIR")))
+            .expect("canonical CLI manifest directory");
+        let root = manifest_dir
             .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .join(".artifacts/c5-workers/test-output");
+            .and_then(Path::parent)
+            .expect("Kairos workspace root")
+            .to_path_buf();
+        assert!(manifest_dir.starts_with(&root));
+        assert!(root.join("Cargo.toml").is_file());
+        let root = root.join(".artifacts/c5-workers/test-output");
         fs::create_dir_all(&root).unwrap();
         let path = root.join(format!("c5-workers-{label}-{}-{nonce}", std::process::id()));
         fs::create_dir(&path).unwrap();

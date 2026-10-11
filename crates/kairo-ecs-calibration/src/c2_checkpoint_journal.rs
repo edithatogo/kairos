@@ -167,6 +167,13 @@ fn checked_parent(path: &Path) -> Result<&Path, JournalError> {
         match component {
             std::path::Component::CurDir => continue,
             std::path::Component::ParentDir => return Err(JournalError::Invalid),
+            // A Windows prefix such as `C:` or `\\server\share` is only
+            // a path anchor. It is not itself a directory to inspect; defer
+            // metadata checks until the root or first normal component joins it.
+            std::path::Component::Prefix(_) => {
+                current.push(component.as_os_str());
+                continue;
+            }
             _ => current.push(component.as_os_str()),
         }
         let metadata = fs::symlink_metadata(&current).map_err(|_| JournalError::Io)?;
@@ -254,9 +261,21 @@ fn publish_no_replace(path: &Path, bytes: &[u8]) -> Result<(), JournalError> {
         }
         Err(_) => return Err(JournalError::Io),
     }
-    File::open(parent)
-        .and_then(|f| f.sync_all())
-        .map_err(|_| JournalError::Io)
+    // The file contents are synced above on every platform. Unix also syncs
+    // the containing directory to persist the new name. Other platforms retain
+    // exclusive no-replace publication for process-crash safety, without a
+    // power-loss durability promise for the directory entry.
+    #[cfg(unix)]
+    {
+        File::open(parent)
+            .and_then(|f| f.sync_all())
+            .map_err(|_| JournalError::Io)
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = parent;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -709,6 +728,29 @@ fn write_fixture(path: &Path) -> Result<(), JournalError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_absolute_parent_defers_metadata_until_after_prefix() {
+        let dir = unique_temp_dir("windows-prefix");
+        assert!(dir.is_absolute());
+        assert!(matches!(
+            dir.components().next(),
+            Some(std::path::Component::Prefix(_))
+        ));
+        assert_eq!(
+            preflight_destination(&dir.join("new-checkpoint.json")),
+            Ok(())
+        );
+
+        let not_a_directory = dir.join("regular-file");
+        fs::write(&not_a_directory, b"fixture").unwrap();
+        assert_eq!(
+            checked_parent(&not_a_directory.join("checkpoint.json")),
+            Err(JournalError::Invalid)
+        );
+        fs::remove_dir_all(dir).unwrap();
+    }
 
     #[test]
     fn checkpoint_rejects_rehashed_mutations_and_never_overwrites() {
