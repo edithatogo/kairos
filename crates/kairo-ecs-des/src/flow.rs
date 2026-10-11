@@ -6022,6 +6022,30 @@ mod tests {
             }
             index.expected_len = index.keys.len();
         }
+        let effective_waiting_keys: Vec<_> = highs
+            .iter()
+            .map(|request| {
+                let key = waiting_key_for(*request, &f.request(*request).unwrap())
+                    .unwrap()
+                    .unwrap();
+                EffectiveQueueKey::new(
+                    key.level,
+                    key.enqueue_sequence,
+                    key.request,
+                    f.queue_orderings[&resource],
+                    f.queue_order_keys.get(&key.request),
+                )
+                .unwrap()
+            })
+            .collect();
+        {
+            let indexes = f.queue_order_indexes.get_mut(&resource).unwrap();
+            for key in effective_waiting_keys {
+                assert!(indexes.preempting.insert(key));
+            }
+            indexes.preempting_expected_len = indexes.preempting.len();
+        }
+        let order_indexes_before = f.queue_order_indexes.get(&resource).unwrap().clone();
         let preempting_before = f
             .registry
             .get::<PreemptingWaiters>(resource.0)
@@ -6044,6 +6068,11 @@ mod tests {
         assert_eq!(
             f.registry.get::<PreemptingWaiters>(resource.0),
             Some(&preempting_before)
+        );
+        assert_eq!(
+            f.queue_order_indexes.get(&resource),
+            Some(&order_indexes_before),
+            "effective queue/preempting sidecars and length witnesses roll back"
         );
         for (w, p) in works.iter().zip(progress) {
             assert_eq!(f.registry.get::<WorkProgress>(w.0), Some(&p));
