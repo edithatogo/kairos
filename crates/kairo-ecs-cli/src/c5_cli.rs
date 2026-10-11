@@ -1,4 +1,5 @@
 //! Bounded command adapter for the hidden experimental C5 JSON facade.
+use crate::c5_workers;
 use kairo_ecs_calibration::experimental_c5 as c5;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};

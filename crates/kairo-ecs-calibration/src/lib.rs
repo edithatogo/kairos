@@ -109,7 +109,7 @@ mod flow_bridge;
 #[cfg(feature = "flow")]
 #[doc(hidden)]
 pub mod experimental_c2_replay {
-    pub use crate::c2_checkpoint_journal::{restore_demo, save_demo, JournalError};
+    pub use crate::c2_checkpoint_journal::{JournalError, restore_demo, save_demo};
 }
 
 // Private C4.2 numeric implementation; no public API or sidecar promises.
@@ -127,7 +127,7 @@ mod residuals;
 
 // Kept crate-private under Track 21's no-public-API-without-ADR boundary.
 #[cfg_attr(
-    not(test),
+    not(any(test, feature = "flow")),
     expect(
         dead_code,
         reason = "Private C1 adapters are exercised by conformance tests; public API review is pending"
