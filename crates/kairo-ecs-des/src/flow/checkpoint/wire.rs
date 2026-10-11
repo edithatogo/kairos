@@ -3928,3 +3928,2056 @@ mod dispatch_scanning_tests {
         );
     }
 }
+
+// V3 retains the complete DTO and command vector throughout all phases. These
+// outer traversals deliberately leave the existing V1/V2 transport unchanged.
+const MAGIC_V3: &[u8; 8] = b"KFLOWV3\0";
+#[cfg(test)]
+thread_local! {
+    static V3_OWNED_DECODE_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static V3_CANONICAL_VALIDATION_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static V3_OUTPUT_ALLOCATION_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+fn scan_flow_v3(bytes: &[u8], limits: FlowCheckpointWireLimits) -> WResult {
+    let mut r = Reader::new(bytes, limits)?;
+    if r.raw(8)? != MAGIC_V3 {
+        return Err(FlowCheckpointWireError::InvalidTag);
+    }
+    let schema = r.u16()?;
+    if schema != WIRE_SCHEMA {
+        return Err(FlowCheckpointWireError::UnsupportedSchema(schema));
+    }
+    if r.u32()? != FLOW_CHECKPOINT_VERSION_V3 {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "Flow checkpoint version",
+        ));
+    }
+    if r.u64()? == 0 || r.usize()? == 0 {
+        return Err(FlowCheckpointWireError::InvalidValue("zero Flow limit"));
+    }
+    r.u64()?;
+    scan_opt_time(&mut r)?;
+    r.u64()?;
+    scan_halt(&mut r)?;
+    scan_scheduler(&mut r)?;
+    scan_world(&mut r)?;
+    let cap = r.limits.flow.max_resources;
+    scan_vec(&mut r, cap, "resource", 12, |r| {
+        get_resource(r)?;
+        Ok(())
+    })?;
+    let cap = r.limits.flow.max_requests;
+    scan_vec(&mut r, cap, "request", 12, |r| {
+        get_request(r)?;
+        Ok(())
+    })?;
+    let cap = r.limits.flow.max_actors;
+    scan_vec(&mut r, cap, "actor", 12, |r| {
+        get_entity(r)?;
+        Ok(())
+    })?;
+    let cap = r.limits.flow.max_actors;
+    scan_vec(&mut r, cap, "actor domain", 24, |r| {
+        get_entity(r)?;
+        get_entity(r)?;
+        Ok(())
+    })?;
+    let cap = r.limits.flow.max_works;
+    scan_vec(&mut r, cap, "work registration", 30, scan_work_registration)?;
+    scan_registration_vec(&mut r, 20, scan_context_registration)?;
+    scan_registration_vec(&mut r, 26, scan_callback_registration)?;
+    scan_registration_vec(&mut r, 26, scan_callback_registration)?;
+    scan_registration_vec(&mut r, 26, scan_callback_registration)?;
+    scan_builtin_stores_v3(&mut r)?;
+    scan_registration_vec(&mut r, 28, scan_context_store)?;
+    scan_registration_vec(&mut r, 12, |r| {
+        r.scan_key()?;
+        r.u32()?;
+        Ok(())
+    })?;
+    scan_registration_vec(&mut r, 28, scan_restart_store)?;
+    let n = r.count(r.limits.flow.max_commands, "command")?;
+    r.require_min_items(n, 13)?;
+    let mut gates = 0usize;
+    let mut previous = None;
+    for _ in 0..n {
+        let event = get_event(&mut r)?;
+        if previous.is_some_and(|p| p >= event) {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "noncanonical order or duplicate entry",
+            ));
+        }
+        previous = Some(event);
+        if scan_command_v3(&mut r)? {
+            gates = gates
+                .checked_add(1)
+                .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+        }
+    }
+    if gates > r.limits.flow.max_commands {
+        return Err(FlowCheckpointWireError::LimitExceeded("pending command"));
+    }
+    r.pending_count(gates)?;
+    let cap = r.limits.flow.max_notifications;
+    scan_vec(&mut r, cap, "notification", 126, |r| {
+        get_event(r)?;
+        scan_notification(r)
+    })?;
+    let n = r.count(r.limits.flow.max_pending_operations, "pending release")?;
+    r.pending_count(n)?;
+    scan_vec_counted(&mut r, n, 20, |r| {
+        get_lease(r)?;
+        Ok(())
+    })?;
+    let n = r.count(r.limits.flow.max_pending_operations, "pending despawn")?;
+    r.pending_count(n)?;
+    scan_vec_counted(&mut r, n, 12, |r| {
+        get_entity(r)?;
+        Ok(())
+    })?;
+    r.u64()?;
+    r.u64()?;
+    r.u64()?;
+    r.u64()?;
+    r.u64()?;
+    let n = r.count(r.limits.flow.max_resources, "resource grant flag")?;
+    r.require_min_items(n, 13)?;
+    let mut prev = None;
+    for _ in 0..n {
+        let id = get_resource(&mut r)?;
+        if prev.is_some_and(|p| p >= id) {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "noncanonical order or duplicate entry",
+            ));
+        }
+        prev = Some(id);
+        r.bool()?;
+    }
+    scan_opt_time(&mut r)?;
+    let n = r.count(r.limits.flow.max_resources, "allocation mode")?;
+    scan_vec_counted(&mut r, n, 13, |r| {
+        get_resource(r)?;
+        match r.u8()? {
+            0 | 1 => Ok(()),
+            _ => Err(FlowCheckpointWireError::InvalidTag),
+        }
+    })?;
+    r.finish()
+}
+
+fn scan_command_v3(r: &mut Reader<'_>) -> Result<bool, FlowCheckpointWireError> {
+    Ok(match r.u8()? {
+        0 => {
+            get_request(r)?;
+            false
+        }
+        1 => {
+            get_lease(r)?;
+            false
+        }
+        2 => {
+            get_resource(r)?;
+            r.u32()?;
+            false
+        }
+        3 => {
+            get_resource(r)?;
+            false
+        }
+        4 => {
+            get_entity(r)?;
+            false
+        }
+        5 | 6 => {
+            get_request(r)?;
+            false
+        }
+        7 => {
+            get_request(r)?;
+            r.i32()?;
+            false
+        }
+        8 => {
+            get_request(r)?;
+            get_lease(r)?;
+            r.u64()?;
+            get_time(r)?;
+            false
+        }
+        9 => false,
+        10 => {
+            get_work(r)?;
+            get_kind(r)?;
+            false
+        }
+        11 => {
+            get_work(r)?;
+            get_kind(r)?;
+            scan_domain_control(r)?;
+            false
+        }
+        12 => {
+            get_resource(r)?;
+            r.bool()?;
+            true
+        }
+        13 => {
+            get_resource(r)?;
+            true
+        }
+        _ => return Err(FlowCheckpointWireError::InvalidTag),
+    })
+}
+
+fn scan_builtin_stores_v3(r: &mut Reader<'_>) -> WResult {
+    scan_component_option(r, 16, |r| {
+        r.u32()?;
+        Ok(())
+    })?;
+    scan_component_option(r, 20, scan_queue)?;
+    scan_component_option(r, 52, scan_resource_request)?;
+    scan_component_option(r, 28, scan_deadline_v3)?;
+    scan_component_option(r, 28, scan_preempting_v3)?;
+    scan_component_option(r, 20, scan_active_allocations)?;
+    scan_component_option(r, 37, scan_work_spec)?;
+    scan_component_option(r, 13, scan_role)?;
+    scan_component_option(r, 96, scan_progress)
+}
+fn scan_deadline_v3(r: &mut Reader<'_>) -> WResult {
+    r.usize()?;
+    let mut previous = None;
+    scan_vec(r, r.limits.flow.max_requests, "deadline entry", 40, |r| {
+        let key = (get_time(r)?, scan_priority(r)?);
+        if previous.is_some_and(|p| p >= key) {
+            return Err(FlowCheckpointWireError::InvalidValue("deadline key order"));
+        }
+        previous = Some(key);
+        Ok(())
+    })
+}
+fn scan_preempting_v3(r: &mut Reader<'_>) -> WResult {
+    r.usize()?;
+    let mut previous = None;
+    scan_vec(r, r.limits.flow.max_requests, "preemption key", 24, |r| {
+        let key = scan_priority(r)?;
+        if previous.is_some_and(|p| p >= key) {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "preemption key order",
+            ));
+        }
+        previous = Some(key);
+        Ok(())
+    })
+}
+impl FlowCheckpointV3 {
+    /// Encode the complete V3 image using canonical bounded little-endian fields.
+    #[doc(hidden)]
+    pub fn encode_wire_v3(
+        &self,
+        limits: FlowCheckpointWireLimits,
+    ) -> Result<Vec<u8>, FlowCheckpointWireError> {
+        if self.version != FLOW_CHECKPOINT_VERSION_V3 {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "Flow checkpoint version",
+            ));
+        }
+        preflight_counts_v3(self, limits)?;
+        let mut measure = Writer::measure(limits);
+        encode_flow_v3(self, &mut measure)?;
+        validate_canonical_order_v3(self)?;
+        #[cfg(test)]
+        V3_OUTPUT_ALLOCATION_CALLS.with(|calls| calls.set(calls.get() + 1));
+        let mut writer = Writer::writing(limits, measure.len)?;
+        encode_flow_v3(self, &mut writer)?;
+        Ok(writer.finish())
+    }
+
+    /// Scan the complete payload before creating any owned DTO collections.
+    #[doc(hidden)]
+    pub fn decode_wire_v3(
+        bytes: &[u8],
+        limits: FlowCheckpointWireLimits,
+    ) -> Result<Self, FlowCheckpointWireError> {
+        scan_flow_v3(bytes, limits)?;
+        #[cfg(test)]
+        V3_OWNED_DECODE_CALLS.with(|calls| calls.set(calls.get().saturating_add(1)));
+        let mut reader = Reader::new(bytes, limits)?;
+        let image = decode_flow_v3(&mut reader)?;
+        reader.finish()?;
+        preflight_counts_v3(&image, limits)?;
+        validate_canonical_order_v3(&image)?;
+        Ok(image)
+    }
+}
+
+fn preflight_counts_v3(image: &FlowCheckpointV3, limits: FlowCheckpointWireLimits) -> WResult {
+    let f = limits.flow;
+    let mut rows = 0usize;
+    let mut sparse = 0usize;
+    macro_rules! store {
+        ($s:expr) => {
+            if let Some(s) = $s {
+                rows = rows
+                    .checked_add(s.rows.len())
+                    .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+                sparse = sparse
+                    .checked_add(s.sparse_slots)
+                    .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+            }
+        };
+    }
+    store!(image.builtins.capacities.as_ref());
+    store!(image.builtins.queues.as_ref());
+    store!(image.builtins.requests.as_ref());
+    store!(image.builtins.deadlines.as_ref());
+    store!(image.builtins.preempting.as_ref());
+    store!(image.builtins.allocations.as_ref());
+    store!(image.builtins.work_specs.as_ref());
+    store!(image.builtins.work_roles.as_ref());
+    store!(image.builtins.work_progress.as_ref());
+    for s in &image.context_stores {
+        rows = rows
+            .checked_add(s.rows.len())
+            .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+        sparse = sparse
+            .checked_add(s.sparse_slots)
+            .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+    }
+    for s in &image.restart_stores {
+        rows = rows
+            .checked_add(s.rows.len())
+            .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+        sparse = sparse
+            .checked_add(s.sparse_slots)
+            .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+    }
+    let registrations = image
+        .contexts
+        .len()
+        .checked_add(image.handlers.len())
+        .and_then(|n| n.checked_add(image.continuations.len()))
+        .and_then(|n| n.checked_add(image.domains.len()))
+        .and_then(|n| n.checked_add(image.context_stores.len()))
+        .and_then(|n| n.checked_add(image.restart_store_manifest.len()))
+        .and_then(|n| n.checked_add(image.restart_stores.len()))
+        .and_then(|n| {
+            image
+                .handlers
+                .iter()
+                .chain(&image.continuations)
+                .chain(&image.domains)
+                .try_fold(n, |n, c| n.checked_add(c.callback_ids.len()))
+        })
+        .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+    let pending = image
+        .pending_releases
+        .len()
+        .checked_add(image.pending_despawns.len())
+        .and_then(|n| {
+            n.checked_add(
+                image
+                    .commands
+                    .iter()
+                    .filter(|(_, c)| {
+                        matches!(
+                            c,
+                            FlowCommandV3::GrantEnabled(..) | FlowCommandV3::AllocationFlush(..)
+                        )
+                    })
+                    .count(),
+            )
+        })
+        .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+    if image.world.slots.len() > f.max_entities
+        || image.world.free_indices.len() > f.max_entities
+        || image.world.live_entities.len() > f.max_entities
+        || image.scheduler.entries.len() > f.max_scheduler_entries
+        || image.resources.len() > f.max_resources
+        || image.resource_grant_flags.len() > f.max_resources
+        || image.allocation_modes.len() > f.max_resources
+        || image.requests.len() > f.max_requests
+        || image.actors.len() > f.max_actors
+        || image.work_registrations.len() > f.max_works
+        || image.actor_domains.len() > f.max_actors
+        || image.commands.len() > f.max_commands
+        || image.notifications.len() > f.max_notifications
+        || pending > f.max_pending_operations
+        || rows > f.max_component_rows
+        || sparse > f.max_sparse_slots
+        || registrations > f.max_registrations
+    {
+        return Err(FlowCheckpointWireError::LimitExceeded("Flow collection"));
+    }
+    if image.builtins.queues.as_ref().is_some_and(|s| {
+        s.rows
+            .iter()
+            .any(|(_, q)| q.requests.len() > f.max_requests)
+    }) || image
+        .builtins
+        .allocations
+        .as_ref()
+        .is_some_and(|s| s.rows.iter().any(|(_, a)| a.leases.len() > f.max_requests))
+        || image
+            .builtins
+            .deadlines
+            .as_ref()
+            .is_some_and(|s| s.rows.iter().any(|(_, d)| d.entries.len() > f.max_requests))
+        || image
+            .builtins
+            .preempting
+            .as_ref()
+            .is_some_and(|s| s.rows.iter().any(|(_, p)| p.keys.len() > f.max_requests))
+    {
+        return Err(FlowCheckpointWireError::LimitExceeded("Flow collection"));
+    }
+    Ok(())
+}
+
+fn validate_canonical_order_v3(i: &FlowCheckpointV3) -> WResult {
+    #[cfg(test)]
+    V3_CANONICAL_VALIDATION_CALLS.with(|calls| calls.set(calls.get().saturating_add(1)));
+    let ordered = strict_by(&i.resources, |a, b| a.cmp(b))
+        && strict_by(&i.requests, |a, b| a.cmp(b))
+        && strict_by(&i.actors, |a, b| a.cmp(b))
+        && strict_by(&i.actor_domains, |a, b| a.0.cmp(&b.0))
+        && strict_by(&i.work_registrations, |a, b| a.id.cmp(&b.id))
+        && strict_by(&i.contexts, |a, b| a.runtime_key.cmp(&b.runtime_key))
+        && strict_by(&i.handlers, |a, b| a.runtime_key.cmp(&b.runtime_key))
+        && strict_by(&i.continuations, |a, b| a.runtime_key.cmp(&b.runtime_key))
+        && strict_by(&i.domains, |a, b| {
+            (&a.runtime_key, a.kind).cmp(&(&b.runtime_key, b.kind))
+        })
+        && strict_by(&i.context_stores, |a, b| a.codec_key.cmp(&b.codec_key))
+        && strict_by(&i.restart_store_manifest, |a, b| a.0.cmp(&b.0))
+        && strict_by(&i.restart_stores, |a, b| a.codec_key.cmp(&b.codec_key))
+        && strict_by(&i.commands, |a, b| a.0.cmp(&b.0))
+        && strict_by(&i.pending_releases, |a, b| a.cmp(b))
+        && strict_by(&i.pending_despawns, |a, b| a.cmp(b))
+        && strict_by(&i.scheduler.entries, |a, b| a.sequence.cmp(&b.sequence))
+        && strict_by(&i.resource_grant_flags, |a, b| a.0.cmp(&b.0));
+    if !ordered {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "noncanonical order or duplicate entry",
+        ));
+    }
+    if i.resources.len() != i.resource_grant_flags.len()
+        || !i
+            .resources
+            .iter()
+            .zip(&i.resource_grant_flags)
+            .all(|(r, (f, _))| r == f)
+    {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "resource grant flags",
+        ));
+    }
+    if i.started_frontier != (i.scheduler.dispatched_events > 0).then_some(i.scheduler.now) {
+        return Err(FlowCheckpointWireError::InvalidValue("started frontier"));
+    }
+    if !strict_by(&i.allocation_modes, |a, b| a.0.cmp(&b.0)) {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "noncanonical order or duplicate entry",
+        ));
+    }
+    if i.resources.len() != i.allocation_modes.len()
+        || !i
+            .resources
+            .iter()
+            .zip(&i.allocation_modes)
+            .all(|(r, (m, _))| r == m)
+    {
+        return Err(FlowCheckpointWireError::InvalidValue("allocation modes"));
+    }
+    if i.scheduler
+        .entries
+        .iter()
+        .any(|e| e.id.index != e.sequence || e.id.generation != e.id.index as u32)
+    {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "scheduler event order",
+        ));
+    }
+    ensure_unique(i.world.free_indices.iter().copied())?;
+    ensure_unique(i.world.live_entities.iter().copied())?;
+    ensure_unique(i.notifications.iter().map(|(event, _)| *event))?;
+    ensure_unique(i.actor_domains.iter().map(|(_, work)| *work))?;
+    macro_rules! unique_rows {
+        ($s:expr) => {
+            if let Some(s) = $s {
+                ensure_unique(s.rows.iter().map(|(id, _)| *id))?;
+            }
+        };
+    }
+    unique_rows!(i.builtins.capacities.as_ref());
+    unique_rows!(i.builtins.queues.as_ref());
+    unique_rows!(i.builtins.requests.as_ref());
+    unique_rows!(i.builtins.deadlines.as_ref());
+    unique_rows!(i.builtins.preempting.as_ref());
+    unique_rows!(i.builtins.allocations.as_ref());
+    unique_rows!(i.builtins.work_specs.as_ref());
+    unique_rows!(i.builtins.work_roles.as_ref());
+    unique_rows!(i.builtins.work_progress.as_ref());
+    for s in &i.context_stores {
+        ensure_unique(s.rows.iter().map(|(id, _)| *id))?;
+    }
+    for s in &i.restart_stores {
+        ensure_unique(s.rows.iter().map(|(id, _, _)| *id))?;
+    }
+    if i.notifications.iter().any(|(_, n)| n.kind > 1) {
+        return Err(FlowCheckpointWireError::InvalidTag);
+    }
+    if let Some(s) = &i.builtins.queues {
+        for (_, q) in &s.rows {
+            if !q.requests.iter().is_sorted() {
+                return Err(FlowCheckpointWireError::InvalidValue("queue key order"));
+            }
+        }
+    }
+    if let Some(s) = &i.builtins.deadlines {
+        for (_, v) in &s.rows {
+            if !v.entries.windows(2).all(|w| w[0] < w[1]) {
+                return Err(FlowCheckpointWireError::InvalidValue("deadline key order"));
+            }
+        }
+    }
+    if let Some(s) = &i.builtins.preempting {
+        for (_, v) in &s.rows {
+            if !v.keys.windows(2).all(|w| w[0] < w[1]) {
+                return Err(FlowCheckpointWireError::InvalidValue(
+                    "preemption key order",
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn encode_flow_v3(i: &FlowCheckpointV3, w: &mut Writer) -> WResult {
+    w.raw(MAGIC_V3)?;
+    w.u16(WIRE_SCHEMA)?;
+    w.u32(i.version)?;
+    w.u64(i.config.max_same_tick_flow_transitions.get())?;
+    w.usize(i.callback_config.max_callback_commands.get())?;
+    w.u64(i.next_batch_identity)?;
+    put_option_time(w, i.budget_tick)?;
+    w.u64(i.budget_consumed)?;
+    put_option(w, i.budget_halt, put_halt)?;
+    put_scheduler(w, &i.scheduler)?;
+    put_world(w, &i.world)?;
+    put_vec(w, &i.resources, |w, x| put_resource(w, *x))?;
+    put_vec(w, &i.requests, |w, x| put_request(w, *x))?;
+    put_vec(w, &i.actors, |w, x| put_entity(w, *x))?;
+    put_vec(w, &i.actor_domains, |w, (a, b)| {
+        put_entity(w, *a)?;
+        put_entity(w, *b)
+    })?;
+    put_vec(w, &i.work_registrations, put_work_registration)?;
+    put_vec(w, &i.contexts, put_context_registration)?;
+    put_vec(w, &i.handlers, put_callback_registration)?;
+    put_vec(w, &i.continuations, put_callback_registration)?;
+    put_vec(w, &i.domains, put_callback_registration)?;
+    put_builtin_stores(w, &i.builtins)?;
+    put_vec(w, &i.context_stores, put_context_store)?;
+    put_vec(w, &i.restart_store_manifest, |w, (key, version)| {
+        w.key(key)?;
+        w.u32(*version)
+    })?;
+    put_vec(w, &i.restart_stores, put_restart_store)?;
+    put_vec(w, &i.commands, |w, (id, c)| {
+        put_event(w, *id)?;
+        put_command_v3(w, *c)
+    })?;
+    put_vec(w, &i.notifications, |w, (id, n)| {
+        put_event(w, *id)?;
+        put_notification(w, n)
+    })?;
+    put_vec(w, &i.pending_releases, |w, id| put_lease(w, *id))?;
+    put_vec(w, &i.pending_despawns, |w, id| put_entity(w, *id))?;
+    w.u64(i.created)?;
+    w.u64(i.destroyed)?;
+    w.u64(i.scheduled)?;
+    w.u64(i.next_admission)?;
+    w.u64(i.next_lease)?;
+    put_vec(w, &i.resource_grant_flags, |w, (resource, enabled)| {
+        put_resource(w, *resource)?;
+        w.bool(*enabled)
+    })?;
+    put_option_time(w, i.started_frontier)?;
+    put_vec(w, &i.allocation_modes, |w, (resource, mode)| {
+        put_resource(w, *resource)?;
+        w.u8(match mode {
+            FlowAllocationMode::Eager => 0,
+            FlowAllocationMode::Deferred => 1,
+        })
+    })
+}
+
+fn decode_flow_v3(r: &mut Reader<'_>) -> WResult<FlowCheckpointV3> {
+    if r.raw(MAGIC_V3.len())? != MAGIC_V3 {
+        return Err(FlowCheckpointWireError::InvalidTag);
+    }
+    let schema = r.u16()?;
+    if schema != WIRE_SCHEMA {
+        return Err(FlowCheckpointWireError::UnsupportedSchema(schema));
+    }
+    let version = r.u32()?;
+    if version != FLOW_CHECKPOINT_VERSION_V3 {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "Flow checkpoint version",
+        ));
+    }
+    let config = FlowConfig {
+        max_same_tick_flow_transitions: NonZeroU64::new(r.u64()?).ok_or(
+            FlowCheckpointWireError::InvalidValue("zero transition budget"),
+        )?,
+    };
+    let callback_config = FlowCallbackConfig {
+        max_callback_commands: NonZeroUsize::new(r.usize()?)
+            .ok_or(FlowCheckpointWireError::InvalidValue("zero callback limit"))?,
+    };
+    let next_batch_identity = r.u64()?;
+    let budget_tick = get_option_time(r)?;
+    let budget_consumed = r.u64()?;
+    let budget_halt = r.option(get_halt)?;
+    let scheduler = get_scheduler(r)?;
+    let world = get_world(r)?;
+    let resources = get_vec(r, r.limits.flow.max_resources, "resource", 12, get_resource)?;
+    let requests = get_vec(r, r.limits.flow.max_requests, "request", 12, get_request)?;
+    let actors = get_vec(r, r.limits.flow.max_actors, "actor", 12, get_entity)?;
+    let actor_domains = get_vec(r, r.limits.flow.max_actors, "actor domain", 24, |r| {
+        Ok((get_entity(r)?, get_entity(r)?))
+    })?;
+    let work_registrations = get_vec(
+        r,
+        r.limits.flow.max_works,
+        "work registration",
+        30,
+        get_work_registration,
+    )?;
+    let contexts = get_registration_vec(r, 20, get_context_registration)?;
+    let handlers = get_registration_vec(r, 26, get_callback_registration)?;
+    let continuations = get_registration_vec(r, 26, get_callback_registration)?;
+    let domains = get_registration_vec(r, 26, get_callback_registration)?;
+    let builtins = get_builtin_stores(r)?;
+    let context_stores = get_registration_vec(r, 28, get_context_store)?;
+    let restart_store_manifest = get_registration_vec(r, 12, |r| Ok((r.key()?, r.u32()?)))?;
+    let restart_stores = get_registration_vec(r, 28, get_restart_store)?;
+    let commands = get_vec(r, r.limits.flow.max_commands, "command", 13, |r| {
+        let event = get_event(r)?;
+        let command = get_command_v3(r)?;
+        if matches!(
+            command,
+            FlowCommandV3::GrantEnabled(..) | FlowCommandV3::AllocationFlush(..)
+        ) {
+            r.pending_count(1)?;
+        }
+        Ok((event, command))
+    })?;
+    let notifications = get_vec(
+        r,
+        r.limits.flow.max_notifications,
+        "notification",
+        126,
+        |r| Ok((get_event(r)?, get_notification(r)?)),
+    )?;
+    let release_count = r.count(r.limits.flow.max_pending_operations, "pending release")?;
+    r.pending_count(release_count)?;
+    let pending_releases = get_vec_counted(r, release_count, 20, get_lease)?;
+    let despawn_count = r.count(r.limits.flow.max_pending_operations, "pending despawn")?;
+    r.pending_count(despawn_count)?;
+    let pending_despawns = get_vec_counted(r, despawn_count, 12, get_entity)?;
+    let created = r.u64()?;
+    let destroyed = r.u64()?;
+    let scheduled = r.u64()?;
+    let next_admission = r.u64()?;
+    let next_lease = r.u64()?;
+    let resource_grant_flags = get_vec(
+        r,
+        r.limits.flow.max_resources,
+        "resource grant flag",
+        13,
+        |r| Ok((get_resource(r)?, r.bool()?)),
+    )?;
+    let started_frontier = get_option_time(r)?;
+    let allocation_modes = get_vec(r, r.limits.flow.max_resources, "allocation mode", 13, |r| {
+        let resource = get_resource(r)?;
+        let mode = match r.u8()? {
+            0 => FlowAllocationMode::Eager,
+            1 => FlowAllocationMode::Deferred,
+            _ => return Err(FlowCheckpointWireError::InvalidTag),
+        };
+        Ok((resource, mode))
+    })?;
+    Ok(FlowCheckpointV3 {
+        version,
+        config,
+        callback_config,
+        next_batch_identity,
+        budget_tick,
+        budget_consumed,
+        budget_halt,
+        scheduler,
+        world,
+        resources,
+        requests,
+        actors,
+        actor_domains,
+        work_registrations,
+        contexts,
+        handlers,
+        continuations,
+        domains,
+        builtins,
+        context_stores,
+        restart_store_manifest,
+        restart_stores,
+        commands,
+        notifications,
+        pending_releases,
+        pending_despawns,
+        created,
+        destroyed,
+        scheduled,
+        next_admission,
+        next_lease,
+        resource_grant_flags,
+        started_frontier,
+        allocation_modes,
+    })
+}
+fn put_command_v3(w: &mut Writer, c: FlowCommandV3) -> WResult {
+    match c {
+        FlowCommandV3::Submit(x) => {
+            w.u8(0)?;
+            put_request(w, x)
+        }
+        FlowCommandV3::Release(x) => {
+            w.u8(1)?;
+            put_lease(w, x)
+        }
+        FlowCommandV3::Capacity(x, n) => {
+            w.u8(2)?;
+            put_resource(w, x)?;
+            w.u32(n)
+        }
+        FlowCommandV3::Remove(x) => {
+            w.u8(3)?;
+            put_resource(w, x)
+        }
+        FlowCommandV3::Despawn(x) => {
+            w.u8(4)?;
+            put_entity(w, x)
+        }
+        FlowCommandV3::Deadline(x) => {
+            w.u8(5)?;
+            put_request(w, x)
+        }
+        FlowCommandV3::Cancel(x) => {
+            w.u8(6)?;
+            put_request(w, x)
+        }
+        FlowCommandV3::Reprioritize(x, n) => {
+            w.u8(7)?;
+            put_request(w, x)?;
+            w.i32(n)
+        }
+        FlowCommandV3::Completion(req, lease, rev, at) => {
+            w.u8(8)?;
+            put_request(w, req)?;
+            put_lease(w, lease)?;
+            w.u64(rev)?;
+            put_time(w, at)
+        }
+        FlowCommandV3::Notify => w.u8(9),
+        FlowCommandV3::Domain(work, kind) => {
+            w.u8(10)?;
+            put_work(w, work)?;
+            put_kind(w, kind)
+        }
+        FlowCommandV3::DomainControl(work, kind, action) => {
+            w.u8(11)?;
+            put_work(w, work)?;
+            put_kind(w, kind)?;
+            put_domain_control(w, action)
+        }
+        FlowCommandV3::AllocationFlush(resource) => {
+            w.u8(13)?;
+            put_resource(w, resource)
+        }
+        FlowCommandV3::GrantEnabled(resource, enabled) => {
+            w.u8(12)?;
+            put_resource(w, resource)?;
+            w.bool(enabled)
+        }
+    }
+}
+fn get_command_v3(r: &mut Reader<'_>) -> WResult<FlowCommandV3> {
+    match r.u8()? {
+        0 => Ok(FlowCommandV3::Submit(get_request(r)?)),
+        1 => Ok(FlowCommandV3::Release(get_lease(r)?)),
+        2 => Ok(FlowCommandV3::Capacity(get_resource(r)?, r.u32()?)),
+        3 => Ok(FlowCommandV3::Remove(get_resource(r)?)),
+        4 => Ok(FlowCommandV3::Despawn(get_entity(r)?)),
+        5 => Ok(FlowCommandV3::Deadline(get_request(r)?)),
+        6 => Ok(FlowCommandV3::Cancel(get_request(r)?)),
+        7 => Ok(FlowCommandV3::Reprioritize(get_request(r)?, r.i32()?)),
+        8 => Ok(FlowCommandV3::Completion(
+            get_request(r)?,
+            get_lease(r)?,
+            r.u64()?,
+            get_time(r)?,
+        )),
+        9 => Ok(FlowCommandV3::Notify),
+        10 => Ok(FlowCommandV3::Domain(get_work(r)?, get_kind(r)?)),
+        11 => Ok(FlowCommandV3::DomainControl(
+            get_work(r)?,
+            get_kind(r)?,
+            get_domain_control(r)?,
+        )),
+        12 => Ok(FlowCommandV3::GrantEnabled(get_resource(r)?, r.bool()?)),
+        13 => Ok(FlowCommandV3::AllocationFlush(get_resource(r)?)),
+        _ => Err(FlowCheckpointWireError::InvalidTag),
+    }
+}
+
+#[cfg(test)]
+mod wire_v3_tests {
+    use super::*;
+    thread_local! { static DECODER_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+    fn codecs() -> FlowCheckpointCodecs {
+        FlowCheckpointCodecs::new()
+    }
+    fn encode_u64(value: &u64, remaining: usize) -> Result<Vec<u8>, FlowCheckpointCodecError> {
+        if remaining < 8 {
+            return Err(FlowCheckpointCodecError("payload budget".into()));
+        }
+        Ok(value.to_le_bytes().to_vec())
+    }
+    fn decode_u64(
+        bytes: &[u8],
+        _: &FlowCheckpointRebindV1,
+    ) -> Result<u64, FlowCheckpointCodecError> {
+        DECODER_CALLS.with(|calls| calls.set(calls.get().saturating_add(1)));
+        let value: [u8; 8] = bytes
+            .try_into()
+            .map_err(|_| FlowCheckpointCodecError("u64 payload".into()))?;
+        Ok(u64::from_le_bytes(value))
+    }
+    fn restart_factory(template: &u64) -> u64 {
+        *template + 1
+    }
+    fn completed(_: &mut u64, _: &FlowCallbackSnapshot, _: &mut FlowCommandSink) {}
+    fn continuations() -> FlowContinuations<u64> {
+        FlowContinuations {
+            on_complete: Some(completed),
+            ..FlowContinuations::default()
+        }
+    }
+    fn rich_image() -> (FlowCheckpointV3, FlowCheckpointCodecs) {
+        let mut codecs = codecs();
+        codecs
+            .register_context::<u64>("scan.context", 1, encode_u64, decode_u64)
+            .unwrap();
+        codecs
+            .register_restart_template::<u64, u64>("scan.restart", 1, encode_u64, decode_u64)
+            .unwrap();
+        codecs
+            .register_restart_factory::<u64, u64>("scan.restart", "scan.factory", restart_factory)
+            .unwrap();
+        let mut runtime = FlowRuntime::new();
+        for key in ["scan.context", "scan.restart"] {
+            runtime
+                .register_work_continuations(key, continuations())
+                .unwrap();
+            codecs
+                .register_work_continuations(
+                    key,
+                    FlowContinuationCodeIds {
+                        on_complete: Some(FlowCallbackCodeV1 {
+                            stable_id: "scan.complete".into(),
+                            version: 1,
+                        }),
+                        ..FlowContinuationCodeIds::default()
+                    },
+                    continuations(),
+                )
+                .unwrap();
+        }
+        let resource = runtime
+            .create_resource_with_allocation_mode(2, FlowAllocationMode::Deferred)
+            .unwrap();
+        let owners: Vec<_> = (0..5).map(|_| runtime.spawn_actor().unwrap()).collect();
+        let mut requests = Vec::new();
+        for (index, &owner) in owners.iter().take(4).enumerate() {
+            let work = if index == 0 {
+                runtime
+                    .create_restartable_work(
+                        owner,
+                        SimDuration::from_ticks(12),
+                        "scan.restart",
+                        100_u64,
+                        restart_factory,
+                    )
+                    .unwrap()
+            } else {
+                runtime
+                    .create_work(
+                        owner,
+                        SimDuration::from_ticks(12),
+                        "scan.context",
+                        index as u64,
+                    )
+                    .unwrap()
+            };
+            requests.push(
+                runtime
+                    .acquire(resource)
+                    .owner(owner)
+                    .timed_work(work)
+                    .priority(index as i32)
+                    .submit()
+                    .unwrap(),
+            );
+        }
+        for _ in 0..16 {
+            if requests
+                .iter()
+                .all(|request| runtime.request(*request).unwrap().state != RequestState::Pending)
+            {
+                break;
+            }
+            runtime.step().unwrap().unwrap();
+        }
+        assert!(requests
+            .iter()
+            .all(|r| runtime.request(*r).unwrap().state == RequestState::Queued));
+        let flush = runtime
+            .schedule_allocation_flush(resource, SimTime::ZERO, 0)
+            .unwrap();
+        let mut reached_flush = false;
+        for _ in 0..16 {
+            let dispatch = runtime.step().unwrap().unwrap();
+            if dispatch.event == flush {
+                assert_eq!(dispatch.error, None);
+                reached_flush = true;
+                break;
+            }
+        }
+        assert!(reached_flush);
+        assert_eq!(
+            requests
+                .iter()
+                .filter(|r| runtime.request(**r).unwrap().state == RequestState::Active)
+                .count(),
+            2
+        );
+        assert_eq!(
+            requests
+                .iter()
+                .filter(|r| runtime.request(**r).unwrap().state == RequestState::Queued)
+                .count(),
+            2
+        );
+        let eager = runtime.create_resource(1).unwrap();
+        let notify_work = runtime
+            .create_work(owners[4], SimDuration::ZERO, "scan.context", 999_u64)
+            .unwrap();
+        runtime
+            .acquire(eager)
+            .owner(owners[4])
+            .timed_work(notify_work)
+            .submit()
+            .unwrap();
+        let mut reached_completion = false;
+        for _ in 0..16 {
+            runtime.step().unwrap().unwrap();
+            if runtime.work_progress(notify_work).unwrap().state == WorkState::Completed {
+                reached_completion = true;
+                break;
+            }
+        }
+        assert!(reached_completion);
+        runtime
+            .schedule_allocation_flush(resource, SimTime::from_ticks(12), 1)
+            .unwrap();
+        runtime
+            .schedule_allocation_flush(resource, SimTime::from_ticks(16), 1)
+            .unwrap();
+        assert_eq!(
+            runtime.resource_allocation_mode(eager).unwrap(),
+            FlowAllocationMode::Eager
+        );
+        let lease = requests
+            .iter()
+            .find_map(|request| runtime.request(*request).ok().and_then(|r| r.lease))
+            .unwrap();
+        runtime.release(lease, SimTime::from_ticks(12)).unwrap();
+        runtime
+            .despawn_actor_at_with_scheduler_priority(owners[4], SimTime::from_ticks(13), 0)
+            .unwrap();
+        runtime
+            .schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(14), 0)
+            .unwrap();
+        runtime
+            .schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(15), 0)
+            .unwrap();
+        let image = runtime
+            .capture_checkpoint_v3(&codecs, FlowCheckpointLimits::default())
+            .unwrap();
+        assert!(image
+            .builtins
+            .queues
+            .as_ref()
+            .is_some_and(|s| s.rows.iter().any(|(_, q)| q.requests.len() >= 2)));
+        assert!(image
+            .builtins
+            .allocations
+            .as_ref()
+            .is_some_and(|s| s.rows.iter().any(|(_, a)| a.leases.len() >= 2)));
+        assert!(image.restart_stores.iter().any(|s| !s.rows.is_empty()));
+        assert!(image
+            .context_stores
+            .iter()
+            .flat_map(|s| &s.rows)
+            .any(|(_, p)| !p.is_empty()));
+        assert!(image
+            .restart_stores
+            .iter()
+            .flat_map(|s| &s.rows)
+            .any(|(_, f, p)| f == "scan.factory" && !p.is_empty()));
+        let mut restored = FlowRuntime::restore_checkpoint_v3(
+            image.clone(),
+            &codecs,
+            FlowCheckpointLimits::default(),
+        )
+        .unwrap();
+        assert_eq!(
+            restored
+                .capture_checkpoint_v3(&codecs, FlowCheckpointLimits::default())
+                .unwrap(),
+            image
+        );
+        let mut dispatched = 0;
+        let mut terminal = false;
+        for _ in 0..128 {
+            let expected = runtime.step().unwrap();
+            let actual = restored.step().unwrap();
+            assert_eq!(actual, expected);
+            if expected.is_none() {
+                terminal = true;
+                break;
+            }
+            dispatched += 1;
+        }
+        assert!(terminal);
+        assert!(dispatched > 0);
+        (image, codecs)
+    }
+    fn component_totals(i: &FlowCheckpointV3) -> (usize, usize) {
+        let mut rows = 0usize;
+        let mut sparse = 0usize;
+        macro_rules! add {
+            ($s:expr) => {
+                if let Some(s) = $s {
+                    rows += s.rows.len();
+                    sparse += s.sparse_slots;
+                }
+            };
+        }
+        add!(i.builtins.capacities.as_ref());
+        add!(i.builtins.queues.as_ref());
+        add!(i.builtins.requests.as_ref());
+        add!(i.builtins.deadlines.as_ref());
+        add!(i.builtins.preempting.as_ref());
+        add!(i.builtins.allocations.as_ref());
+        add!(i.builtins.work_specs.as_ref());
+        add!(i.builtins.work_roles.as_ref());
+        add!(i.builtins.work_progress.as_ref());
+        for s in &i.context_stores {
+            rows += s.rows.len();
+            sparse += s.sparse_slots;
+        }
+        for s in &i.restart_stores {
+            rows += s.rows.len();
+            sparse += s.sparse_slots;
+        }
+        (rows, sparse)
+    }
+
+    #[test]
+    fn v3_structural_tags_0_through_13_roundtrip_wire_only() {
+        let mut runtime = FlowRuntime::new();
+        // WIRE ONLY: this synthetic complete command vector does not certify restore.
+        let resource = runtime
+            .create_resource_with_allocation_mode(1, FlowAllocationMode::Deferred)
+            .unwrap();
+        runtime.create_resource(1).unwrap();
+        runtime
+            .schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(8), 0)
+            .unwrap();
+        let mut image = runtime
+            .capture_checkpoint_v3(&codecs(), FlowCheckpointLimits::default())
+            .unwrap();
+        let entity = EntityId::new(55, 3);
+        let request = RequestId(entity);
+        let work = WorkId(entity);
+        let lease = LeaseId {
+            request,
+            revision: 7,
+        };
+        let commands = [
+            FlowCommandV3::Submit(request),
+            FlowCommandV3::Release(lease),
+            FlowCommandV3::Capacity(resource, 3),
+            FlowCommandV3::Remove(resource),
+            FlowCommandV3::Despawn(entity),
+            FlowCommandV3::Deadline(request),
+            FlowCommandV3::Cancel(request),
+            FlowCommandV3::Reprioritize(request, -4),
+            FlowCommandV3::Completion(request, lease, 9, SimTime::from_ticks(4)),
+            FlowCommandV3::AllocationFlush(resource),
+            FlowCommandV3::Notify,
+            FlowCommandV3::Domain(work, EventKind::custom(771)),
+            FlowCommandV3::DomainControl(work, EventKind::custom(771), FlowDomainControl::Pause),
+            FlowCommandV3::GrantEnabled(resource, false),
+            FlowCommandV3::GrantEnabled(resource, true),
+            FlowCommandV3::DomainControl(work, EventKind::custom(771), FlowDomainControl::Resume),
+        ];
+        image.commands = commands
+            .into_iter()
+            .enumerate()
+            .map(|(n, c)| (EventId::new(n as u64, 0), c))
+            .collect();
+        image.started_frontier = None;
+        image.resource_grant_flags[0].1 = false;
+        assert!(image
+            .resource_grant_flags
+            .iter()
+            .any(|(_, enabled)| *enabled));
+        assert!(image
+            .resource_grant_flags
+            .iter()
+            .any(|(_, enabled)| !*enabled));
+        assert!(image
+            .allocation_modes
+            .iter()
+            .any(|(_, mode)| *mode == FlowAllocationMode::Deferred));
+        assert!(image
+            .allocation_modes
+            .iter()
+            .any(|(_, mode)| *mode == FlowAllocationMode::Eager));
+        let bytes = image
+            .encode_wire_v3(FlowCheckpointWireLimits::default())
+            .unwrap();
+        let decoded =
+            FlowCheckpointV3::decode_wire_v3(&bytes, FlowCheckpointWireLimits::default()).unwrap();
+        assert_eq!(decoded, image);
+        assert_eq!(
+            decoded
+                .encode_wire_v3(FlowCheckpointWireLimits::default())
+                .unwrap(),
+            bytes
+        );
+    }
+
+    #[test]
+    fn v3_measurement_precedes_canonical_validation_and_output_allocation() {
+        let (image, _) = rich_image();
+        let defaults = FlowCheckpointWireLimits::default();
+        let mut measured = Writer::measure(defaults);
+        encode_flow_v3(&image, &mut measured).unwrap();
+        assert!(measured.payload_bytes > 0);
+        let mut too_small = defaults;
+        too_small.flow.max_payload_bytes = measured.payload_bytes - 1;
+        V3_CANONICAL_VALIDATION_CALLS.with(|calls| calls.set(0));
+        V3_OUTPUT_ALLOCATION_CALLS.with(|calls| calls.set(0));
+        assert!(matches!(
+            image.encode_wire_v3(too_small),
+            Err(FlowCheckpointWireError::LimitExceeded(
+                "aggregate payload byte"
+            ))
+        ));
+        assert_eq!(V3_CANONICAL_VALIDATION_CALLS.with(|calls| calls.get()), 0);
+        assert_eq!(V3_OUTPUT_ALLOCATION_CALLS.with(|calls| calls.get()), 0);
+        let mut short_bytes = defaults;
+        short_bytes.max_wire_bytes = measured.len - 1;
+        assert_eq!(
+            image.encode_wire_v3(short_bytes).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded("total byte")
+        );
+        assert_eq!(V3_CANONICAL_VALIDATION_CALLS.with(|calls| calls.get()), 0);
+        assert_eq!(V3_OUTPUT_ALLOCATION_CALLS.with(|calls| calls.get()), 0);
+        V3_CANONICAL_VALIDATION_CALLS.with(|calls| calls.set(0));
+        image.encode_wire_v3(defaults).unwrap();
+        assert_eq!(V3_CANONICAL_VALIDATION_CALLS.with(|calls| calls.get()), 1);
+        assert_eq!(V3_OUTPUT_ALLOCATION_CALLS.with(|calls| calls.get()), 1);
+        let bytes = image.encode_wire_v3(defaults).unwrap();
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&bytes, defaults)
+                .unwrap()
+                .encode_wire_v3(defaults)
+                .unwrap(),
+            bytes
+        );
+    }
+
+    #[test]
+    fn v3_canonical_mode_resource_coverage_and_nested_order_errors() {
+        let (image, _) = rich_image();
+        let limits = FlowCheckpointWireLimits::default();
+        let bytes = image.encode_wire_v3(limits).unwrap();
+        V3_OWNED_DECODE_CALLS.with(|n| n.set(0));
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&bytes, limits).unwrap(),
+            image
+        );
+        assert_eq!(V3_OWNED_DECODE_CALLS.with(|n| n.get()), 1);
+        // Locate an entire canonical nested payload uniquely in the complete image.
+        // Replace it without changing lengths, then exercise the public scan boundary.
+        let reject = |canonical: &[u8], replacement: &[u8], message| {
+            assert_eq!(canonical.len(), replacement.len());
+            let positions: Vec<_> = bytes
+                .windows(canonical.len())
+                .enumerate()
+                .filter_map(|(offset, value)| (value == canonical).then_some(offset))
+                .collect();
+            assert_eq!(positions.len(), 1);
+            let mut malformed = bytes.clone();
+            let offset = positions[0];
+            malformed[offset..offset + canonical.len()].copy_from_slice(replacement);
+            V3_OWNED_DECODE_CALLS.with(|n| n.set(0));
+            assert_eq!(
+                FlowCheckpointV3::decode_wire_v3(&malformed, limits).unwrap_err(),
+                FlowCheckpointWireError::InvalidValue(message)
+            );
+            assert_eq!(V3_OWNED_DECODE_CALLS.with(|n| n.get()), 0);
+        };
+        let queue = image
+            .builtins
+            .queues
+            .as_ref()
+            .unwrap()
+            .rows
+            .iter()
+            .map(|(_, q)| q)
+            .find(|q| q.requests.len() >= 2)
+            .unwrap();
+        let keys: Vec<_> = queue.requests.iter().copied().collect();
+        assert_eq!(keys.len(), 2);
+        let encode_queue = |keys: &[PriorityKey]| {
+            let mut writer = Writer::writing(limits, 128).unwrap();
+            writer.count(keys.len()).unwrap();
+            for key in keys {
+                put_priority(&mut writer, *key).unwrap();
+            }
+            writer.finish()
+        };
+        let canonical = encode_queue(&keys);
+        reject(
+            &canonical,
+            &encode_queue(&[keys[1], keys[0]]),
+            "queue key order or duplicate",
+        );
+        reject(
+            &canonical,
+            &encode_queue(&[keys[0], keys[0]]),
+            "queue key order or duplicate",
+        );
+        let active = image
+            .builtins
+            .allocations
+            .as_ref()
+            .unwrap()
+            .rows
+            .iter()
+            .map(|(_, a)| a)
+            .find(|a| a.leases.len() >= 2)
+            .unwrap();
+        let allocations: Vec<_> = active.leases.iter().collect();
+        assert_eq!(allocations.len(), 2);
+        let encode_allocations = |rows: &[(&LeaseId, &Allocation)]| {
+            let mut writer = Writer::writing(limits, 512).unwrap();
+            writer.count(rows.len()).unwrap();
+            for (lease, allocation) in rows {
+                put_lease(&mut writer, **lease).unwrap();
+                put_allocation(&mut writer, allocation).unwrap();
+            }
+            writer.finish()
+        };
+        let canonical = encode_allocations(&allocations);
+        reject(
+            &canonical,
+            &encode_allocations(&[allocations[1], allocations[0]]),
+            "allocation key order",
+        );
+        // Keep payload widths/content unchanged: duplicate only the lease identity.
+        reject(
+            &canonical,
+            &encode_allocations(&[allocations[0], (allocations[0].0, allocations[1].1)]),
+            "allocation key order",
+        );
+        let order = FlowCheckpointWireError::InvalidValue("noncanonical order or duplicate entry");
+        let coverage = FlowCheckpointWireError::InvalidValue("allocation modes");
+        let mut mutations = Vec::new();
+        let mut missing = image.clone();
+        missing.allocation_modes.pop();
+        mutations.push((missing, coverage.clone()));
+        let mut extra = image.clone();
+        extra.allocation_modes.push((
+            ResourceId(EntityId::new(u64::MAX, 0)),
+            FlowAllocationMode::Eager,
+        ));
+        mutations.push((extra, coverage.clone()));
+        let mut wrong = image.clone();
+        wrong.allocation_modes[0].0 .0.generation += 1;
+        mutations.push((wrong, coverage));
+        let mut duplicate = image.clone();
+        duplicate.allocation_modes[1] = duplicate.allocation_modes[0];
+        mutations.push((duplicate, order.clone()));
+        let mut unsorted = image.clone();
+        unsorted.allocation_modes.reverse();
+        mutations.push((unsorted, order));
+        let mut frontier = image.clone();
+        frontier.started_frontier = None;
+        mutations.push((
+            frontier,
+            FlowCheckpointWireError::InvalidValue("started frontier"),
+        ));
+        let mut flags = image.clone();
+        flags.resource_grant_flags.pop();
+        mutations.push((
+            flags,
+            FlowCheckpointWireError::InvalidValue("resource grant flags"),
+        ));
+        for (bad, error) in mutations {
+            assert_eq!(bad.encode_wire_v3(limits).unwrap_err(), error);
+            assert_eq!(
+                FlowCheckpointV3::decode_wire_v3(&unchecked_bytes(&bad), limits).unwrap_err(),
+                error
+            );
+        }
+    }
+
+    fn collection_bound(
+        image: &FlowCheckpointV3,
+        name: &str,
+        exact: usize,
+        set: impl Fn(&mut FlowCheckpointWireLimits, usize),
+        decode_error: &'static str,
+    ) {
+        assert!(exact > 0, "{name} positive control");
+        let bytes = image
+            .encode_wire_v3(FlowCheckpointWireLimits::default())
+            .unwrap();
+        let mut cap = FlowCheckpointWireLimits::default();
+        set(&mut cap, exact);
+        assert_eq!(
+            image.encode_wire_v3(cap).unwrap(),
+            bytes,
+            "{name} exact encode"
+        );
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&bytes, cap).unwrap(),
+            *image,
+            "{name} exact decode"
+        );
+        set(&mut cap, exact - 1);
+        assert_eq!(
+            image.encode_wire_v3(cap).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded("Flow collection"),
+            "{name} cap+1 encode"
+        );
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&bytes, cap).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded(decode_error),
+            "{name} cap+1 decode"
+        );
+    }
+    fn unchecked_bytes(image: &FlowCheckpointV3) -> Vec<u8> {
+        let mut writer = Writer::writing(FlowCheckpointWireLimits::default(), 16384).unwrap();
+        encode_flow_v3(image, &mut writer).unwrap();
+        writer.finish()
+    }
+    #[test]
+    fn v3_exact_wire_record_collection_and_pending_limits() {
+        let (image, _) = rich_image();
+        let limits = FlowCheckpointWireLimits::default();
+        let bytes = image.encode_wire_v3(limits).unwrap();
+        let mut measure = Writer::measure(limits);
+        encode_flow_v3(&image, &mut measure).unwrap();
+        assert!(measure.records > 0);
+        let mut cap = limits;
+        cap.max_wire_bytes = bytes.len();
+        cap.max_total_records = measure.records;
+        assert_eq!(image.encode_wire_v3(cap).unwrap(), bytes);
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&bytes, cap).unwrap(),
+            image
+        );
+        cap.max_wire_bytes -= 1;
+        assert_eq!(
+            image.encode_wire_v3(cap).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded("total byte")
+        );
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&bytes, cap).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded("total byte")
+        );
+        cap.max_wire_bytes += 1;
+        cap.max_total_records -= 1;
+        assert_eq!(
+            image.encode_wire_v3(cap).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded("aggregate record")
+        );
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&bytes, cap).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded("allocation mode")
+        );
+        collection_bound(
+            &image,
+            "resources",
+            image.resources.len(),
+            |l, v| l.flow.max_resources = v,
+            "resource",
+        );
+        collection_bound(
+            &image,
+            "entities",
+            image.world.slots.len(),
+            |l, v| l.flow.max_entities = v,
+            "world slot",
+        );
+        collection_bound(
+            &image,
+            "scheduler",
+            image.scheduler.entries.len(),
+            |l, v| l.flow.max_scheduler_entries = v,
+            "scheduler entry",
+        );
+        collection_bound(
+            &image,
+            "requests",
+            image.requests.len(),
+            |l, v| l.flow.max_requests = v,
+            "request",
+        );
+        collection_bound(
+            &image,
+            "actors",
+            image.actors.len(),
+            |l, v| l.flow.max_actors = v,
+            "actor",
+        );
+        collection_bound(
+            &image,
+            "works",
+            image.work_registrations.len(),
+            |l, v| l.flow.max_works = v,
+            "work registration",
+        );
+        collection_bound(
+            &image,
+            "commands",
+            image.commands.len(),
+            |l, v| l.flow.max_commands = v,
+            "command",
+        );
+        collection_bound(
+            &image,
+            "notifications",
+            image.notifications.len(),
+            |l, v| l.flow.max_notifications = v,
+            "notification",
+        );
+        // WIRE ONLY detached DTOs isolate collection caps shared by several fields.
+        let mut detached = image.clone();
+        detached.actors.clear();
+        detached.actor_domains = vec![
+            (EntityId::new(1000, 0), EntityId::new(2000, 0)),
+            (EntityId::new(1001, 0), EntityId::new(2001, 0)),
+        ];
+        collection_bound(
+            &detached,
+            "actor domains",
+            2,
+            |l, v| l.flow.max_actors = v,
+            "actor domain",
+        );
+        detached = image.clone();
+        detached.world.slots.clear();
+        detached.world.live_entities.clear();
+        detached.world.free_indices = vec![1000, 1001];
+        collection_bound(
+            &detached,
+            "free indices",
+            2,
+            |l, v| l.flow.max_entities = v,
+            "free index",
+        );
+        detached.world.free_indices.clear();
+        detached.world.live_entities = vec![EntityId::new(1000, 0), EntityId::new(1001, 0)];
+        collection_bound(
+            &detached,
+            "live IDs",
+            2,
+            |l, v| l.flow.max_entities = v,
+            "live entity",
+        );
+        let pending = image.pending_releases.len()
+            + image.pending_despawns.len()
+            + image
+                .commands
+                .iter()
+                .filter(|(_, c)| {
+                    matches!(
+                        c,
+                        FlowCommandV3::GrantEnabled(..) | FlowCommandV3::AllocationFlush(..)
+                    )
+                })
+                .count();
+        assert_eq!(image.pending_releases.len(), 1);
+        assert_eq!(image.pending_despawns.len(), 1);
+        assert_eq!(
+            image
+                .commands
+                .iter()
+                .filter(|(_, c)| matches!(c, FlowCommandV3::GrantEnabled(..)))
+                .count(),
+            2
+        );
+        assert_eq!(
+            image
+                .commands
+                .iter()
+                .filter(|(_, c)| matches!(c, FlowCommandV3::AllocationFlush(..)))
+                .count(),
+            2
+        );
+        collection_bound(
+            &image,
+            "four-kind pending",
+            pending,
+            |l, v| l.flow.max_pending_operations = v,
+            "aggregate pending operation",
+        );
+        // WIRE ONLY malformed mode/flag counts independently hit their native cap.
+        for modes in [false, true] {
+            let mut bad = image.clone();
+            if modes {
+                bad.allocation_modes.push((
+                    ResourceId(EntityId::new(u64::MAX, 0)),
+                    FlowAllocationMode::Eager,
+                ));
+            } else {
+                bad.resource_grant_flags
+                    .push((ResourceId(EntityId::new(u64::MAX, 0)), true));
+            }
+            let mut cap = limits;
+            cap.flow.max_resources = image.resources.len();
+            assert_eq!(
+                bad.encode_wire_v3(cap).unwrap_err(),
+                FlowCheckpointWireError::LimitExceeded("Flow collection")
+            );
+            assert_eq!(
+                FlowCheckpointV3::decode_wire_v3(&unchecked_bytes(&bad), cap).unwrap_err(),
+                FlowCheckpointWireError::LimitExceeded(if modes {
+                    "allocation mode"
+                } else {
+                    "resource grant flag"
+                })
+            );
+        }
+        // Independently reach each nested request cap with a detached structural DTO.
+        let mut queue_image = image.clone();
+        queue_image.requests.clear();
+        let mut cap = limits;
+        cap.flow.max_requests = 2;
+        assert!(queue_image.encode_wire_v3(cap).is_ok());
+        assert!(FlowCheckpointV3::decode_wire_v3(&unchecked_bytes(&queue_image), cap).is_ok());
+        cap.flow.max_requests = 1;
+        assert_eq!(
+            queue_image.encode_wire_v3(cap).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded("Flow collection")
+        );
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&unchecked_bytes(&queue_image), cap).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded("queue key")
+        );
+        queue_image.builtins.queues = None;
+        queue_image.builtins.deadlines = None;
+        queue_image.builtins.preempting = None;
+        cap.flow.max_requests = 2;
+        assert!(queue_image.encode_wire_v3(cap).is_ok());
+        assert!(FlowCheckpointV3::decode_wire_v3(&unchecked_bytes(&queue_image), cap).is_ok());
+        cap.flow.max_requests = 1;
+        assert_eq!(
+            queue_image.encode_wire_v3(cap).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded("Flow collection")
+        );
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&unchecked_bytes(&queue_image), cap).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded("allocation")
+        );
+        let keys: Vec<_> = image
+            .builtins
+            .queues
+            .as_ref()
+            .unwrap()
+            .rows
+            .iter()
+            .find(|(_, q)| q.requests.len() == 2)
+            .unwrap()
+            .1
+            .requests
+            .iter()
+            .copied()
+            .collect();
+        assert_eq!(keys.len(), 2);
+        queue_image.builtins.allocations = None;
+        let entity = image.resources[0].0;
+        for deadline in [true, false] {
+            if deadline {
+                queue_image.builtins.deadlines = Some(ComponentStoreCheckpointV1 {
+                    version: 1,
+                    sparse_slots: 1,
+                    rows: vec![(
+                        entity,
+                        FlowDeadlineIndexV1 {
+                            expected_len: 2,
+                            entries: vec![
+                                (SimTime::from_ticks(10), keys[0]),
+                                (SimTime::from_ticks(11), keys[1]),
+                            ],
+                        },
+                    )],
+                });
+            } else {
+                queue_image.builtins.deadlines = None;
+                queue_image.builtins.preempting = Some(ComponentStoreCheckpointV1 {
+                    version: 1,
+                    sparse_slots: 1,
+                    rows: vec![(
+                        entity,
+                        FlowPreemptingIndexV1 {
+                            expected_len: 2,
+                            keys: keys.clone(),
+                        },
+                    )],
+                });
+            }
+            collection_bound(
+                &queue_image,
+                if deadline {
+                    "nested deadlines"
+                } else {
+                    "nested preemption"
+                },
+                2,
+                |l, v| l.flow.max_requests = v,
+                if deadline {
+                    "deadline entry"
+                } else {
+                    "preemption key"
+                },
+            );
+            let mut bad = queue_image.clone();
+            if deadline {
+                bad.builtins.deadlines.as_mut().unwrap().rows[0]
+                    .1
+                    .entries
+                    .reverse();
+            } else {
+                bad.builtins.preempting.as_mut().unwrap().rows[0]
+                    .1
+                    .keys
+                    .reverse();
+            }
+            let error = FlowCheckpointWireError::InvalidValue(if deadline {
+                "deadline key order"
+            } else {
+                "preemption key order"
+            });
+            assert_eq!(bad.encode_wire_v3(limits).unwrap_err(), error);
+            V3_OWNED_DECODE_CALLS.with(|n| n.set(0));
+            assert_eq!(
+                FlowCheckpointV3::decode_wire_v3(&unchecked_bytes(&bad), limits).unwrap_err(),
+                error
+            );
+            assert_eq!(V3_OWNED_DECODE_CALLS.with(|n| n.get()), 0);
+        }
+    }
+
+    #[test]
+    fn v3_scan_rejects_bad_last_mode_and_trailing_before_ownership() {
+        let (image, codecs) = rich_image();
+        let limits = FlowCheckpointWireLimits::default();
+        let bytes = image.encode_wire_v3(limits).unwrap();
+        let mut last = bytes.clone();
+        *last.last_mut().unwrap() = 2;
+        let mut trailing = bytes.clone();
+        trailing.push(0);
+        for (bad, error) in [
+            (last, FlowCheckpointWireError::InvalidTag),
+            (trailing, FlowCheckpointWireError::TrailingBytes),
+        ] {
+            V3_OWNED_DECODE_CALLS.with(|n| n.set(0));
+            assert_eq!(
+                FlowCheckpointV3::decode_wire_v3(&bad, limits).unwrap_err(),
+                error
+            );
+            assert_eq!(V3_OWNED_DECODE_CALLS.with(|n| n.get()), 0);
+        }
+        V3_OWNED_DECODE_CALLS.with(|n| n.set(0));
+        let decoded = FlowCheckpointV3::decode_wire_v3(&bytes, limits).unwrap();
+        assert_eq!(decoded, image);
+        assert_eq!(V3_OWNED_DECODE_CALLS.with(|n| n.get()), 1);
+        let mut original =
+            FlowRuntime::restore_checkpoint_v3(image.clone(), &codecs, limits.flow).unwrap();
+        DECODER_CALLS.with(|n| n.set(0));
+        let mut restored =
+            FlowRuntime::restore_checkpoint_v3(decoded, &codecs, limits.flow).unwrap();
+        assert!(DECODER_CALLS.with(|n| n.get()) > 0);
+        assert_eq!(
+            restored
+                .capture_checkpoint_v3(&codecs, limits.flow)
+                .unwrap(),
+            image
+        );
+        let mut steps = 0;
+        let mut terminal = false;
+        for _ in 0..128 {
+            let expected = original.step().unwrap();
+            assert_eq!(restored.step().unwrap(), expected);
+            if expected.is_none() {
+                terminal = true;
+                break;
+            }
+            steps += 1;
+        }
+        assert!(terminal);
+        assert!(steps > 0);
+        // Native membership checks operate on complete decoded Flush commands,
+        // and precede all context/template codec calls.
+        let (event, resource) = image
+            .commands
+            .iter()
+            .find_map(|(e, c)| {
+                if let FlowCommandV3::AllocationFlush(r) = c {
+                    Some((*e, *r))
+                } else {
+                    None
+                }
+            })
+            .unwrap();
+        let eager = image
+            .allocation_modes
+            .iter()
+            .find(|(_, m)| *m == FlowAllocationMode::Eager)
+            .unwrap()
+            .0;
+        for change in 0..5 {
+            let mut bad = image.clone();
+            match change {
+                0 => {
+                    bad.scheduler
+                        .entries
+                        .iter_mut()
+                        .find(|s| s.id == event)
+                        .unwrap()
+                        .request
+                        .kind = EventKind::custom(u32::MAX)
+                }
+                1 => {
+                    bad.scheduler
+                        .entries
+                        .iter_mut()
+                        .find(|s| s.id == event)
+                        .unwrap()
+                        .request
+                        .entity = Some(EntityId::new(u64::MAX, 0))
+                }
+                2 => {
+                    bad.commands
+                        .iter_mut()
+                        .find(|(e, _)| *e == event)
+                        .unwrap()
+                        .1 = FlowCommandV3::AllocationFlush(eager)
+                }
+                3 => {
+                    bad.allocation_modes
+                        .iter_mut()
+                        .find(|(r, _)| *r == resource)
+                        .unwrap()
+                        .1 = FlowAllocationMode::Eager
+                }
+                _ => {
+                    bad.commands
+                        .iter_mut()
+                        .find(|(_, c)| matches!(c, FlowCommandV3::GrantEnabled(..)))
+                        .unwrap()
+                        .1 = FlowCommandV3::Remove(resource)
+                }
+            }
+            let bad_bytes = bad.encode_wire_v3(limits).unwrap();
+            let bad = FlowCheckpointV3::decode_wire_v3(&bad_bytes, limits).unwrap();
+            DECODER_CALLS.with(|n| n.set(0));
+            assert!(matches!(
+                FlowRuntime::restore_checkpoint_v3(bad, &codecs, limits.flow),
+                Err(FlowCheckpointError::InvalidState(_))
+            ));
+            assert_eq!(DECODER_CALLS.with(|n| n.get()), 0);
+        }
+    }
+
+    #[test]
+    fn v3_registration_component_key_payload_limits_and_overflow() {
+        let (mut image, _) = rich_image();
+        // WIRE ONLY callback rows exercise all three nested registration classes.
+        let callback = FlowCallbackRegistrationV1 {
+            runtime_key: "bound.handler".into(),
+            context_codec_key: "scan.context".into(),
+            kind: None,
+            variant: 0,
+            callback_ids: vec![(
+                "bound.on_resume".into(),
+                FlowCallbackCodeV1 {
+                    stable_id: "bound.resume.code".into(),
+                    version: 1,
+                },
+            )],
+        };
+        image.handlers.push(callback.clone());
+        image.continuations.push(callback.clone());
+        image
+            .continuations
+            .sort_by(|a, b| a.runtime_key.cmp(&b.runtime_key));
+        let mut domain = callback;
+        domain.kind = Some(EventKind::custom(910));
+        image.domains.push(domain);
+        let limits = FlowCheckpointWireLimits::default();
+        let bytes = image.encode_wire_v3(limits).unwrap();
+        let mut measure = Writer::measure(limits);
+        encode_flow_v3(&image, &mut measure).unwrap();
+        let registrations = image.contexts.len()
+            + image.handlers.len()
+            + image.continuations.len()
+            + image.domains.len()
+            + image.context_stores.len()
+            + image.restart_stores.len()
+            + image.restart_store_manifest.len()
+            + image
+                .handlers
+                .iter()
+                .chain(&image.continuations)
+                .chain(&image.domains)
+                .map(|c| c.callback_ids.len())
+                .sum::<usize>();
+        let (rows, sparse) = component_totals(&image);
+        collection_bound(
+            &image,
+            "nested registrations",
+            registrations,
+            |l, v| l.flow.max_registrations = v,
+            "aggregate registrations",
+        );
+        collection_bound(
+            &image,
+            "component rows",
+            rows,
+            |l, v| l.flow.max_component_rows = v,
+            "aggregate component",
+        );
+        collection_bound(
+            &image,
+            "sparse slots",
+            sparse,
+            |l, v| l.flow.max_sparse_slots = v,
+            "aggregate component",
+        );
+        for (key, value) in [(true, measure.key_bytes), (false, measure.payload_bytes)] {
+            assert!(value > 0);
+            let mut cap = limits;
+            if key {
+                cap.flow.max_key_bytes = value;
+            } else {
+                cap.flow.max_payload_bytes = value;
+            }
+            assert_eq!(image.encode_wire_v3(cap).unwrap(), bytes);
+            assert_eq!(
+                FlowCheckpointV3::decode_wire_v3(&bytes, cap).unwrap(),
+                image
+            );
+            if key {
+                cap.flow.max_key_bytes -= 1;
+            } else {
+                cap.flow.max_payload_bytes -= 1;
+            }
+            let error = FlowCheckpointWireError::LimitExceeded(if key {
+                "aggregate key byte"
+            } else {
+                "aggregate payload byte"
+            });
+            assert_eq!(image.encode_wire_v3(cap).unwrap_err(), error);
+            assert_eq!(
+                FlowCheckpointV3::decode_wire_v3(&bytes, cap).unwrap_err(),
+                error
+            );
+        }
+        let mut overflow = image.clone();
+        overflow.builtins.capacities.as_mut().unwrap().sparse_slots = usize::MAX;
+        let mut cap = limits;
+        cap.flow.max_sparse_slots = usize::MAX;
+        assert_eq!(
+            overflow.encode_wire_v3(cap).unwrap_err(),
+            FlowCheckpointWireError::IntegerOverflow
+        );
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&unchecked_bytes(&overflow), cap).unwrap_err(),
+            FlowCheckpointWireError::IntegerOverflow
+        );
+        // Resource count occurs after nonzero scheduler/world record counts:
+        // u64::MAX overflows the aggregate; count2/cap1 remains a cap error.
+        let mut r = Reader::new(&bytes, limits).unwrap();
+        r.raw(8).unwrap();
+        r.u16().unwrap();
+        r.u32().unwrap();
+        r.u64().unwrap();
+        r.usize().unwrap();
+        r.u64().unwrap();
+        scan_opt_time(&mut r).unwrap();
+        r.u64().unwrap();
+        scan_halt(&mut r).unwrap();
+        scan_scheduler(&mut r).unwrap();
+        scan_world(&mut r).unwrap();
+        let at = r.at;
+        assert_eq!(u64::from_le_bytes(bytes[at..at + 8].try_into().unwrap()), 2);
+        let mut huge = bytes.clone();
+        huge[at..at + 8].copy_from_slice(&u64::MAX.to_le_bytes());
+        cap = limits;
+        cap.flow.max_resources = usize::MAX;
+        cap.max_total_records = usize::MAX;
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&huge, cap).unwrap_err(),
+            FlowCheckpointWireError::IntegerOverflow
+        );
+        cap = limits;
+        cap.flow.max_resources = 1;
+        assert_eq!(
+            FlowCheckpointV3::decode_wire_v3(&bytes, cap).unwrap_err(),
+            FlowCheckpointWireError::LimitExceeded("resource")
+        );
+    }
+
+    fn unique_offset(bytes: &[u8], needle: &[u8]) -> usize {
+        let positions: Vec<_> = bytes
+            .windows(needle.len())
+            .enumerate()
+            .filter_map(|(i, w)| (w == needle).then_some(i))
+            .collect();
+        assert_eq!(positions.len(), 1);
+        positions[0]
+    }
+    #[test]
+    fn v3_header_primitive_truncation_and_error_precedence() {
+        let (image, _) = rich_image();
+        let limits = FlowCheckpointWireLimits::default();
+        let bytes = image.encode_wire_v3(limits).unwrap();
+        let reject = |bad: &[u8], error| {
+            V3_OWNED_DECODE_CALLS.with(|n| n.set(0));
+            assert_eq!(
+                FlowCheckpointV3::decode_wire_v3(bad, limits).unwrap_err(),
+                error
+            );
+            assert_eq!(V3_OWNED_DECODE_CALLS.with(|n| n.get()), 0);
+        };
+        for magic in [MAGIC, MAGIC_V2, b"UNKNOWN\0"] {
+            let mut bad = bytes.clone();
+            bad[..8].copy_from_slice(magic);
+            reject(&bad, FlowCheckpointWireError::InvalidTag);
+        }
+        for reader in [
+            FlowCheckpointV1::decode_wire_v1(&bytes, limits).map(|_| ()),
+            FlowCheckpointV2::decode_wire_v2(&bytes, limits).map(|_| ()),
+            FlowCheckpointImage::decode_wire(&bytes, limits).map(|_| ()),
+        ] {
+            assert_eq!(reader.unwrap_err(), FlowCheckpointWireError::InvalidTag);
+        }
+        let mut bad = bytes.clone();
+        bad[8..10].copy_from_slice(&77u16.to_le_bytes());
+        reject(&bad, FlowCheckpointWireError::UnsupportedSchema(77));
+        bad = bytes.clone();
+        bad[10..14].copy_from_slice(&2u32.to_le_bytes());
+        reject(
+            &bad,
+            FlowCheckpointWireError::InvalidValue("Flow checkpoint version"),
+        );
+        let mut wrong_version = image.clone();
+        wrong_version.version = 2;
+        assert_eq!(
+            wrong_version.encode_wire_v3(limits).unwrap_err(),
+            FlowCheckpointWireError::InvalidValue("Flow checkpoint version")
+        );
+        bad = bytes.clone();
+        bad[14..22].fill(0);
+        reject(
+            &bad,
+            FlowCheckpointWireError::InvalidValue("zero Flow limit"),
+        );
+        bad = bytes.clone();
+        bad[38] = 2;
+        reject(&bad, FlowCheckpointWireError::InvalidTag); // budget_tick tag
+        let (event, command) = image
+            .commands
+            .iter()
+            .find(|(_, c)| matches!(c, FlowCommandV3::GrantEnabled(..)))
+            .unwrap();
+        let mut w = Writer::writing(limits, 64).unwrap();
+        put_event(&mut w, *event).unwrap();
+        put_command_v3(&mut w, *command).unwrap();
+        let needle = w.finish();
+        let at = unique_offset(&bytes, &needle);
+        bad = bytes.clone();
+        bad[at + 12] = 99;
+        reject(&bad, FlowCheckpointWireError::InvalidTag);
+        bad = bytes.clone();
+        bad[at + 25] = 2;
+        reject(&bad, FlowCheckpointWireError::InvalidBoolean);
+        let request = &image.builtins.requests.as_ref().unwrap().rows[0].1;
+        let mut w = Writer::writing(limits, 256).unwrap();
+        put_resource_request(&mut w, request).unwrap();
+        let needle = w.finish();
+        let request_at = unique_offset(&bytes, &needle);
+        bad = bytes.clone();
+        bad[request_at + 24] = 99;
+        reject(&bad, FlowCheckpointWireError::InvalidTag);
+        let key = b"scan.context";
+        let at = bytes.windows(key.len()).position(|w| w == key).unwrap();
+        bad = bytes.clone();
+        bad[at] = 0xff;
+        reject(&bad, FlowCheckpointWireError::InvalidUtf8);
+        for end in [0, 7, 9, 13, 21, 37, bytes.len() - 1] {
+            reject(&bytes[..end], FlowCheckpointWireError::Truncated);
+        }
+        // A schema discriminator precedes every later mode/trailing violation.
+        bad = bytes.clone();
+        bad[8..10].copy_from_slice(&2u16.to_le_bytes());
+        *bad.last_mut().unwrap() = 9;
+        bad.push(0);
+        reject(&bad, FlowCheckpointWireError::UnsupportedSchema(2));
+        // Opposite-version valid bytes are rejected without fallback.
+        let runtime = FlowRuntime::new();
+        let codecs = FlowCheckpointCodecs::new();
+        let v1 = runtime
+            .capture_checkpoint(&codecs, limits.flow)
+            .unwrap()
+            .encode_wire_v1(limits)
+            .unwrap();
+        reject(&v1, FlowCheckpointWireError::InvalidTag);
+        let v2 = runtime
+            .capture_checkpoint_v2(&codecs, limits.flow)
+            .unwrap()
+            .encode_wire_v2(limits)
+            .unwrap();
+        reject(&v2, FlowCheckpointWireError::InvalidTag);
+    }
+}
