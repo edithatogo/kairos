@@ -11,7 +11,9 @@ use std::num::{NonZeroU64, NonZeroUsize};
 
 const MAGIC: &[u8; 8] = b"KFLOWV1\0";
 const MAGIC_V2: &[u8; 8] = b"KFLOWV2\0";
+const MAGIC_V4: &[u8; 8] = b"KFLOWV4\0";
 const WIRE_SCHEMA: u16 = 1;
+const MAX_WIRE_QUEUE_ORDER_KEY_BYTES: usize = 128;
 
 /// Limits for one canonical Flow wire image. The embedded Flow limits apply
 /// to their corresponding aggregate collections and payload classes.
@@ -75,6 +77,7 @@ struct Writer {
     key_bytes: usize,
     payload_bytes: usize,
     records: usize,
+    key_limit_label: &'static str,
 }
 
 impl Writer {
@@ -86,6 +89,7 @@ impl Writer {
             key_bytes: 0,
             payload_bytes: 0,
             records: 0,
+            key_limit_label: "aggregate key byte",
         }
     }
 
@@ -104,6 +108,7 @@ impl Writer {
             key_bytes: 0,
             payload_bytes: 0,
             records: 0,
+            key_limit_label: "aggregate key byte",
         })
     }
 
@@ -162,10 +167,31 @@ impl Writer {
             .checked_add(v.len())
             .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
         if self.key_bytes > self.limits.flow.max_key_bytes {
-            return Err(FlowCheckpointWireError::LimitExceeded("aggregate key byte"));
+            return Err(FlowCheckpointWireError::LimitExceeded(self.key_limit_label));
         }
         self.usize(v.len())?;
         self.raw(v.as_bytes())
+    }
+    fn opaque_key(&mut self, value: &[u8]) -> Result<(), FlowCheckpointWireError> {
+        if value.is_empty() {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "stable queue-order key",
+            ));
+        }
+        if value.len() > MAX_WIRE_QUEUE_ORDER_KEY_BYTES {
+            return Err(FlowCheckpointWireError::LimitExceeded(
+                "queue order key bytes",
+            ));
+        }
+        self.key_bytes = self
+            .key_bytes
+            .checked_add(value.len())
+            .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+        if self.key_bytes > self.limits.flow.max_key_bytes {
+            return Err(FlowCheckpointWireError::LimitExceeded(self.key_limit_label));
+        }
+        self.usize(value.len())?;
+        self.raw(value)
     }
     fn payload(&mut self, v: &[u8]) -> Result<(), FlowCheckpointWireError> {
         self.payload_bytes = self
@@ -211,6 +237,7 @@ struct Reader<'a> {
     registrations: usize,
     pending_operations: usize,
     scanning_dispatch: bool,
+    key_limit_label: &'static str,
 }
 
 impl<'a> Reader<'a> {
@@ -234,6 +261,7 @@ impl<'a> Reader<'a> {
             registrations: 0,
             pending_operations: 0,
             scanning_dispatch: false,
+            key_limit_label: "aggregate key byte",
         })
     }
     fn raw(&mut self, len: usize) -> Result<&'a [u8], FlowCheckpointWireError> {
@@ -403,10 +431,52 @@ impl<'a> Reader<'a> {
             .checked_add(n)
             .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
         if self.key_bytes > self.limits.flow.max_key_bytes {
-            return Err(FlowCheckpointWireError::LimitExceeded("aggregate key byte"));
+            return Err(FlowCheckpointWireError::LimitExceeded(self.key_limit_label));
         }
         std::str::from_utf8(self.raw(n)?).map_err(|_| FlowCheckpointWireError::InvalidUtf8)?;
         Ok(())
+    }
+    fn scan_opaque_key(&mut self) -> WResult {
+        let n = self.usize()?;
+        if n == 0 {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "stable queue-order key",
+            ));
+        }
+        if n > MAX_WIRE_QUEUE_ORDER_KEY_BYTES {
+            return Err(FlowCheckpointWireError::LimitExceeded(
+                "queue order key bytes",
+            ));
+        }
+        self.key_bytes = self
+            .key_bytes
+            .checked_add(n)
+            .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+        if self.key_bytes > self.limits.flow.max_key_bytes {
+            return Err(FlowCheckpointWireError::LimitExceeded(self.key_limit_label));
+        }
+        self.raw(n)?;
+        Ok(())
+    }
+    fn opaque_key(&mut self) -> Result<Vec<u8>, FlowCheckpointWireError> {
+        let n = self.usize()?;
+        if n == 0 {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "stable queue-order key",
+            ));
+        }
+        if n > MAX_WIRE_QUEUE_ORDER_KEY_BYTES {
+            return Err(FlowCheckpointWireError::LimitExceeded(
+                "queue order key bytes",
+            ));
+        }
+        let bytes = self.raw(n)?;
+        let mut value = Vec::new();
+        value
+            .try_reserve_exact(n)
+            .map_err(|_| FlowCheckpointWireError::AllocationFailed)?;
+        value.extend_from_slice(bytes);
+        Ok(value)
     }
     fn scan_payload(&mut self) -> WResult {
         let n = self.usize()?;
@@ -3942,6 +4012,12 @@ thread_local! {
     static V3_CANONICAL_VALIDATION_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static V3_OUTPUT_ALLOCATION_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
+#[cfg(test)]
+thread_local! {
+    static V4_OWNED_DECODE_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static V4_CANONICAL_VALIDATION_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static V4_OUTPUT_ALLOCATION_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
 fn scan_flow_v3(bytes: &[u8], limits: FlowCheckpointWireLimits) -> WResult {
     let mut r = Reader::new(bytes, limits)?;
     if r.raw(8)? != MAGIC_V3 {
@@ -4067,6 +4143,173 @@ fn scan_flow_v3(bytes: &[u8], limits: FlowCheckpointWireLimits) -> WResult {
         }
     })?;
     r.finish()
+}
+
+fn scan_flow_v4(bytes: &[u8], limits: FlowCheckpointWireLimits) -> WResult {
+    let mut r = Reader::new(bytes, limits)?;
+    r.key_limit_label = "key bytes";
+    if r.raw(8)? != MAGIC_V4 {
+        return Err(FlowCheckpointWireError::InvalidTag);
+    }
+    let schema = r.u16()?;
+    if schema != WIRE_SCHEMA {
+        return Err(FlowCheckpointWireError::UnsupportedSchema(schema));
+    }
+    if r.u32()? != FLOW_CHECKPOINT_VERSION_V4 {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "Flow checkpoint version",
+        ));
+    }
+    if r.u64()? == 0 || r.usize()? == 0 {
+        return Err(FlowCheckpointWireError::InvalidValue("zero Flow limit"));
+    }
+    r.u64()?;
+    scan_opt_time(&mut r)?;
+    r.u64()?;
+    scan_halt(&mut r)?;
+    scan_scheduler(&mut r)?;
+    scan_world(&mut r)?;
+    let cap = r.limits.flow.max_resources;
+    scan_vec(&mut r, cap, "resource", 12, |r| {
+        get_resource(r)?;
+        Ok(())
+    })?;
+    let cap = r.limits.flow.max_requests;
+    scan_vec(&mut r, cap, "request", 12, |r| {
+        get_request(r)?;
+        Ok(())
+    })?;
+    let cap = r.limits.flow.max_actors;
+    scan_vec(&mut r, cap, "actor", 12, |r| {
+        get_entity(r)?;
+        Ok(())
+    })?;
+    let cap = r.limits.flow.max_actors;
+    scan_vec(&mut r, cap, "actor domain", 24, |r| {
+        get_entity(r)?;
+        get_entity(r)?;
+        Ok(())
+    })?;
+    let cap = r.limits.flow.max_works;
+    scan_vec(&mut r, cap, "work registration", 30, scan_work_registration)?;
+    scan_registration_vec(&mut r, 20, scan_context_registration)?;
+    scan_registration_vec(&mut r, 26, scan_callback_registration)?;
+    scan_registration_vec(&mut r, 26, scan_callback_registration)?;
+    scan_registration_vec(&mut r, 26, scan_callback_registration)?;
+    scan_builtin_stores_v3(&mut r)?;
+    scan_registration_vec(&mut r, 28, scan_context_store)?;
+    scan_registration_vec(&mut r, 12, |r| {
+        r.scan_key()?;
+        r.u32()?;
+        Ok(())
+    })?;
+    scan_registration_vec(&mut r, 28, scan_restart_store)?;
+    let n = r.count(r.limits.flow.max_commands, "command")?;
+    r.require_min_items(n, 13)?;
+    let mut gates = 0usize;
+    let mut previous = None;
+    for _ in 0..n {
+        let event = get_event(&mut r)?;
+        if previous.is_some_and(|p| p >= event) {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "noncanonical order or duplicate entry",
+            ));
+        }
+        previous = Some(event);
+        if scan_command_v3(&mut r)? {
+            gates = gates
+                .checked_add(1)
+                .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+        }
+    }
+    if gates > r.limits.flow.max_commands {
+        return Err(FlowCheckpointWireError::LimitExceeded("pending command"));
+    }
+    r.pending_count(gates)?;
+    let cap = r.limits.flow.max_notifications;
+    scan_vec(&mut r, cap, "notification", 126, |r| {
+        get_event(r)?;
+        scan_notification(r)
+    })?;
+    let n = r.count(r.limits.flow.max_pending_operations, "pending release")?;
+    r.pending_count(n)?;
+    scan_vec_counted(&mut r, n, 20, |r| {
+        get_lease(r)?;
+        Ok(())
+    })?;
+    let n = r.count(r.limits.flow.max_pending_operations, "pending despawn")?;
+    r.pending_count(n)?;
+    scan_vec_counted(&mut r, n, 12, |r| {
+        get_entity(r)?;
+        Ok(())
+    })?;
+    r.u64()?;
+    r.u64()?;
+    r.u64()?;
+    r.u64()?;
+    r.u64()?;
+    let n = r.count(r.limits.flow.max_resources, "resource grant flag")?;
+    r.require_min_items(n, 13)?;
+    let mut prev = None;
+    for _ in 0..n {
+        let id = get_resource(&mut r)?;
+        if prev.is_some_and(|p| p >= id) {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "noncanonical order or duplicate entry",
+            ));
+        }
+        prev = Some(id);
+        r.bool()?;
+    }
+    scan_opt_time(&mut r)?;
+    let n = r.count(r.limits.flow.max_resources, "allocation mode")?;
+    scan_vec_counted(&mut r, n, 13, |r| {
+        get_resource(r)?;
+        match r.u8()? {
+            0 | 1 => Ok(()),
+            _ => Err(FlowCheckpointWireError::InvalidTag),
+        }
+    })?;
+    scan_queue_order_metadata_v4(&mut r)?;
+    r.finish()
+}
+
+fn scan_queue_order_metadata_v4(r: &mut Reader<'_>) -> WResult {
+    let mode_count = r.count(r.limits.flow.max_resources, "queue order mode rows")?;
+    r.require_min_items(mode_count, 13)?;
+    let mut previous_resource = None;
+    for _ in 0..mode_count {
+        let resource = get_resource(r)?;
+        match r.u8()? {
+            0 | 1 => {}
+            _ => return Err(FlowCheckpointWireError::InvalidTag),
+        }
+        if previous_resource.is_some_and(|previous| previous >= resource) {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "queue-order metadata canonical order",
+            ));
+        }
+        previous_resource = Some(resource);
+    }
+
+    let request_count = r.count(r.limits.flow.max_requests, "queue order request rows")?;
+    r.require_min_items(request_count, 13)?;
+    let mut previous_request = None;
+    for _ in 0..request_count {
+        let request = get_request(r)?;
+        match r.u8()? {
+            0 => {}
+            1 => r.scan_opaque_key()?,
+            _ => return Err(FlowCheckpointWireError::InvalidTag),
+        }
+        if previous_request.is_some_and(|previous| previous >= request) {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "queue-order metadata canonical order",
+            ));
+        }
+        previous_request = Some(request);
+    }
+    Ok(())
 }
 
 fn scan_command_v3(r: &mut Reader<'_>) -> Result<bool, FlowCheckpointWireError> {
@@ -4337,6 +4580,160 @@ fn preflight_counts_v3(image: &FlowCheckpointV3, limits: FlowCheckpointWireLimit
     Ok(())
 }
 
+fn preflight_counts_v4(image: &FlowCheckpointV4, limits: FlowCheckpointWireLimits) -> WResult {
+    let f = limits.flow;
+    let mut rows = 0usize;
+    let mut sparse = 0usize;
+    macro_rules! store {
+        ($s:expr) => {
+            if let Some(s) = $s {
+                rows = rows
+                    .checked_add(s.rows.len())
+                    .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+                sparse = sparse
+                    .checked_add(s.sparse_slots)
+                    .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+            }
+        };
+    }
+    store!(image.builtins.capacities.as_ref());
+    store!(image.builtins.queues.as_ref());
+    store!(image.builtins.requests.as_ref());
+    store!(image.builtins.deadlines.as_ref());
+    store!(image.builtins.preempting.as_ref());
+    store!(image.builtins.allocations.as_ref());
+    store!(image.builtins.work_specs.as_ref());
+    store!(image.builtins.work_roles.as_ref());
+    store!(image.builtins.work_progress.as_ref());
+    for s in &image.context_stores {
+        rows = rows
+            .checked_add(s.rows.len())
+            .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+        sparse = sparse
+            .checked_add(s.sparse_slots)
+            .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+    }
+    for s in &image.restart_stores {
+        rows = rows
+            .checked_add(s.rows.len())
+            .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+        sparse = sparse
+            .checked_add(s.sparse_slots)
+            .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+    }
+    let registrations = image
+        .contexts
+        .len()
+        .checked_add(image.handlers.len())
+        .and_then(|n| n.checked_add(image.continuations.len()))
+        .and_then(|n| n.checked_add(image.domains.len()))
+        .and_then(|n| n.checked_add(image.context_stores.len()))
+        .and_then(|n| n.checked_add(image.restart_store_manifest.len()))
+        .and_then(|n| n.checked_add(image.restart_stores.len()))
+        .and_then(|n| {
+            image
+                .handlers
+                .iter()
+                .chain(&image.continuations)
+                .chain(&image.domains)
+                .try_fold(n, |n, c| n.checked_add(c.callback_ids.len()))
+        })
+        .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+    let pending = image
+        .pending_releases
+        .len()
+        .checked_add(image.pending_despawns.len())
+        .and_then(|n| {
+            n.checked_add(
+                image
+                    .commands
+                    .iter()
+                    .filter(|(_, c)| {
+                        matches!(
+                            c,
+                            FlowCommandV3::GrantEnabled(..) | FlowCommandV3::AllocationFlush(..)
+                        )
+                    })
+                    .count(),
+            )
+        })
+        .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+    if image.queue_order_modes.len() > f.max_resources {
+        return Err(FlowCheckpointWireError::LimitExceeded(
+            "queue order mode rows",
+        ));
+    }
+    if image.request_queue_orders.len() > f.max_requests {
+        return Err(FlowCheckpointWireError::LimitExceeded(
+            "queue order request rows",
+        ));
+    }
+    let mut queue_key_bytes = 0usize;
+    for (_, ordering) in &image.request_queue_orders {
+        if let FlowRequestQueueOrderV4::StableKey(bytes) = ordering {
+            if bytes.is_empty() {
+                return Err(FlowCheckpointWireError::InvalidValue(
+                    "stable queue-order key",
+                ));
+            }
+            if bytes.len() > MAX_WIRE_QUEUE_ORDER_KEY_BYTES {
+                return Err(FlowCheckpointWireError::LimitExceeded(
+                    "queue order key bytes",
+                ));
+            }
+            queue_key_bytes = queue_key_bytes
+                .checked_add(bytes.len())
+                .ok_or(FlowCheckpointWireError::IntegerOverflow)?;
+            if queue_key_bytes > f.max_key_bytes {
+                return Err(FlowCheckpointWireError::LimitExceeded("key bytes"));
+            }
+        }
+    }
+    if image.world.slots.len() > f.max_entities
+        || image.world.free_indices.len() > f.max_entities
+        || image.world.live_entities.len() > f.max_entities
+        || image.scheduler.entries.len() > f.max_scheduler_entries
+        || image.resources.len() > f.max_resources
+        || image.resource_grant_flags.len() > f.max_resources
+        || image.allocation_modes.len() > f.max_resources
+        || image.requests.len() > f.max_requests
+        || image.actors.len() > f.max_actors
+        || image.work_registrations.len() > f.max_works
+        || image.actor_domains.len() > f.max_actors
+        || image.commands.len() > f.max_commands
+        || image.notifications.len() > f.max_notifications
+        || pending > f.max_pending_operations
+        || rows > f.max_component_rows
+        || sparse > f.max_sparse_slots
+        || registrations > f.max_registrations
+    {
+        return Err(FlowCheckpointWireError::LimitExceeded("Flow collection"));
+    }
+    if image.builtins.queues.as_ref().is_some_and(|s| {
+        s.rows
+            .iter()
+            .any(|(_, q)| q.requests.len() > f.max_requests)
+    }) || image
+        .builtins
+        .allocations
+        .as_ref()
+        .is_some_and(|s| s.rows.iter().any(|(_, a)| a.leases.len() > f.max_requests))
+        || image
+            .builtins
+            .deadlines
+            .as_ref()
+            .is_some_and(|s| s.rows.iter().any(|(_, d)| d.entries.len() > f.max_requests))
+        || image
+            .builtins
+            .preempting
+            .as_ref()
+            .is_some_and(|s| s.rows.iter().any(|(_, p)| p.keys.len() > f.max_requests))
+    {
+        return Err(FlowCheckpointWireError::LimitExceeded("Flow collection"));
+    }
+    Ok(())
+}
+
 fn validate_canonical_order_v3(i: &FlowCheckpointV3) -> WResult {
     #[cfg(test)]
     V3_CANONICAL_VALIDATION_CALLS.with(|calls| calls.set(calls.get().saturating_add(1)));
@@ -4456,6 +4853,237 @@ fn validate_canonical_order_v3(i: &FlowCheckpointV3) -> WResult {
     Ok(())
 }
 
+fn validate_canonical_order_v4(i: &FlowCheckpointV4) -> WResult {
+    #[cfg(test)]
+    V4_CANONICAL_VALIDATION_CALLS.with(|calls| calls.set(calls.get().saturating_add(1)));
+    let ordered = strict_by(&i.resources, |a, b| a.cmp(b))
+        && strict_by(&i.requests, |a, b| a.cmp(b))
+        && strict_by(&i.actors, |a, b| a.cmp(b))
+        && strict_by(&i.actor_domains, |a, b| a.0.cmp(&b.0))
+        && strict_by(&i.work_registrations, |a, b| a.id.cmp(&b.id))
+        && strict_by(&i.contexts, |a, b| a.runtime_key.cmp(&b.runtime_key))
+        && strict_by(&i.handlers, |a, b| a.runtime_key.cmp(&b.runtime_key))
+        && strict_by(&i.continuations, |a, b| a.runtime_key.cmp(&b.runtime_key))
+        && strict_by(&i.domains, |a, b| {
+            (&a.runtime_key, a.kind).cmp(&(&b.runtime_key, b.kind))
+        })
+        && strict_by(&i.context_stores, |a, b| a.codec_key.cmp(&b.codec_key))
+        && strict_by(&i.restart_store_manifest, |a, b| a.0.cmp(&b.0))
+        && strict_by(&i.restart_stores, |a, b| a.codec_key.cmp(&b.codec_key))
+        && strict_by(&i.commands, |a, b| a.0.cmp(&b.0))
+        && strict_by(&i.pending_releases, |a, b| a.cmp(b))
+        && strict_by(&i.pending_despawns, |a, b| a.cmp(b))
+        && strict_by(&i.scheduler.entries, |a, b| a.sequence.cmp(&b.sequence))
+        && strict_by(&i.resource_grant_flags, |a, b| a.0.cmp(&b.0));
+    if !ordered {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "noncanonical order or duplicate entry",
+        ));
+    }
+    if i.resources.len() != i.resource_grant_flags.len()
+        || !i
+            .resources
+            .iter()
+            .zip(&i.resource_grant_flags)
+            .all(|(r, (f, _))| r == f)
+    {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "resource grant flags",
+        ));
+    }
+    if i.started_frontier != (i.scheduler.dispatched_events > 0).then_some(i.scheduler.now) {
+        return Err(FlowCheckpointWireError::InvalidValue("started frontier"));
+    }
+    if !strict_by(&i.allocation_modes, |a, b| a.0.cmp(&b.0)) {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "noncanonical order or duplicate entry",
+        ));
+    }
+    if i.resources.len() != i.allocation_modes.len()
+        || !i
+            .resources
+            .iter()
+            .zip(&i.allocation_modes)
+            .all(|(r, (m, _))| r == m)
+    {
+        return Err(FlowCheckpointWireError::InvalidValue("allocation modes"));
+    }
+    if i.scheduler
+        .entries
+        .iter()
+        .any(|e| e.id.index != e.sequence || e.id.generation != e.id.index as u32)
+    {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "scheduler event order",
+        ));
+    }
+    ensure_unique(i.world.free_indices.iter().copied())?;
+    ensure_unique(i.world.live_entities.iter().copied())?;
+    ensure_unique(i.notifications.iter().map(|(event, _)| *event))?;
+    ensure_unique(i.actor_domains.iter().map(|(_, work)| *work))?;
+    macro_rules! unique_rows {
+        ($s:expr) => {
+            if let Some(s) = $s {
+                ensure_unique(s.rows.iter().map(|(id, _)| *id))?;
+            }
+        };
+    }
+    unique_rows!(i.builtins.capacities.as_ref());
+    unique_rows!(i.builtins.queues.as_ref());
+    unique_rows!(i.builtins.requests.as_ref());
+    unique_rows!(i.builtins.deadlines.as_ref());
+    unique_rows!(i.builtins.preempting.as_ref());
+    unique_rows!(i.builtins.allocations.as_ref());
+    unique_rows!(i.builtins.work_specs.as_ref());
+    unique_rows!(i.builtins.work_roles.as_ref());
+    unique_rows!(i.builtins.work_progress.as_ref());
+    for s in &i.context_stores {
+        ensure_unique(s.rows.iter().map(|(id, _)| *id))?;
+    }
+    for s in &i.restart_stores {
+        ensure_unique(s.rows.iter().map(|(id, _, _)| *id))?;
+    }
+    if i.notifications.iter().any(|(_, n)| n.kind > 1) {
+        return Err(FlowCheckpointWireError::InvalidTag);
+    }
+    if let Some(s) = &i.builtins.queues {
+        for (_, q) in &s.rows {
+            if !q.requests.iter().is_sorted() {
+                return Err(FlowCheckpointWireError::InvalidValue("queue key order"));
+            }
+        }
+    }
+    if let Some(s) = &i.builtins.deadlines {
+        for (_, v) in &s.rows {
+            if !v.entries.windows(2).all(|w| w[0] < w[1]) {
+                return Err(FlowCheckpointWireError::InvalidValue("deadline key order"));
+            }
+        }
+    }
+    if let Some(s) = &i.builtins.preempting {
+        for (_, v) in &s.rows {
+            if !v.keys.windows(2).all(|w| w[0] < w[1]) {
+                return Err(FlowCheckpointWireError::InvalidValue(
+                    "preemption key order",
+                ));
+            }
+        }
+    }
+    validate_queue_order_metadata_wire_v4(i)?;
+    Ok(())
+}
+
+fn validate_queue_order_metadata_wire_v4(i: &FlowCheckpointV4) -> WResult {
+    if !strict_by(&i.queue_order_modes, |a, b| a.0.cmp(&b.0))
+        || !strict_by(&i.request_queue_orders, |a, b| a.0.cmp(&b.0))
+    {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "queue-order metadata canonical order",
+        ));
+    }
+    let resources: std::collections::BTreeSet<_> = i.resources.iter().copied().collect();
+    if resources.len() != i.resources.len()
+        || i.queue_order_modes.len() != resources.len()
+        || i.queue_order_modes
+            .iter()
+            .any(|(id, _)| !resources.contains(id))
+    {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "queue-order metadata coverage",
+        ));
+    }
+    let modes: std::collections::BTreeMap<_, _> = i
+        .queue_order_modes
+        .iter()
+        .map(|(id, mode)| (*id, *mode))
+        .collect();
+    let request_ids: std::collections::BTreeSet<_> = i.requests.iter().copied().collect();
+    if request_ids.len() != i.requests.len()
+        || i.request_queue_orders.len() != i.requests.len()
+        || i.request_queue_orders
+            .iter()
+            .any(|(id, _)| !request_ids.contains(id))
+    {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "queue-order metadata coverage",
+        ));
+    }
+    let mut request_values = std::collections::BTreeMap::new();
+    if let Some(store) = &i.builtins.requests {
+        if store.rows.len() != i.requests.len() {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "queue-order metadata coverage",
+            ));
+        }
+        for (entity, request) in &store.rows {
+            if request_values.insert(RequestId(*entity), request).is_some() {
+                return Err(FlowCheckpointWireError::InvalidValue(
+                    "queue-order metadata coverage",
+                ));
+            }
+        }
+    }
+    if request_values
+        .keys()
+        .copied()
+        .collect::<std::collections::BTreeSet<_>>()
+        != request_ids
+    {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "queue-order metadata coverage",
+        ));
+    }
+    let terminal = |state| {
+        matches!(
+            state,
+            RequestState::Released
+                | RequestState::Cancelled
+                | RequestState::TimedOut
+                | RequestState::Completed
+                | RequestState::Aborted
+        )
+    };
+    let mut removed_modes = std::collections::BTreeMap::new();
+    for (request_id, ordering) in &i.request_queue_orders {
+        let request =
+            request_values
+                .get(request_id)
+                .ok_or(FlowCheckpointWireError::InvalidValue(
+                    "queue-order metadata coverage",
+                ))?;
+        let stable = matches!(ordering, FlowRequestQueueOrderV4::StableKey(_));
+        match modes.get(&request.resource) {
+            Some(FlowQueueOrdering::AdmissionOrder) if stable => {
+                return Err(FlowCheckpointWireError::InvalidValue(
+                    "queue-order metadata coverage",
+                ));
+            }
+            Some(FlowQueueOrdering::StableKey) if !stable => {
+                return Err(FlowCheckpointWireError::InvalidValue(
+                    "queue-order metadata coverage",
+                ));
+            }
+            Some(_) => {}
+            None => {
+                if !terminal(request.state) {
+                    return Err(FlowCheckpointWireError::InvalidValue(
+                        "queue-order metadata coverage",
+                    ));
+                }
+                if removed_modes
+                    .insert(request.resource, stable)
+                    .is_some_and(|previous| previous != stable)
+                {
+                    return Err(FlowCheckpointWireError::InvalidValue(
+                        "queue-order metadata coverage",
+                    ));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 fn encode_flow_v3(i: &FlowCheckpointV3, w: &mut Writer) -> WResult {
     w.raw(MAGIC_V3)?;
     w.u16(WIRE_SCHEMA)?;
@@ -4514,6 +5142,131 @@ fn encode_flow_v3(i: &FlowCheckpointV3, w: &mut Writer) -> WResult {
             FlowAllocationMode::Deferred => 1,
         })
     })
+}
+
+fn encode_flow_v4_body(i: &FlowCheckpointV4, w: &mut Writer) -> WResult {
+    w.u32(i.version)?;
+    w.u64(i.config.max_same_tick_flow_transitions.get())?;
+    w.usize(i.callback_config.max_callback_commands.get())?;
+    w.u64(i.next_batch_identity)?;
+    put_option_time(w, i.budget_tick)?;
+    w.u64(i.budget_consumed)?;
+    put_option(w, i.budget_halt, put_halt)?;
+    put_scheduler(w, &i.scheduler)?;
+    put_world(w, &i.world)?;
+    put_vec(w, &i.resources, |w, x| put_resource(w, *x))?;
+    put_vec(w, &i.requests, |w, x| put_request(w, *x))?;
+    put_vec(w, &i.actors, |w, x| put_entity(w, *x))?;
+    put_vec(w, &i.actor_domains, |w, (a, b)| {
+        put_entity(w, *a)?;
+        put_entity(w, *b)
+    })?;
+    put_vec(w, &i.work_registrations, put_work_registration)?;
+    put_vec(w, &i.contexts, put_context_registration)?;
+    put_vec(w, &i.handlers, put_callback_registration)?;
+    put_vec(w, &i.continuations, put_callback_registration)?;
+    put_vec(w, &i.domains, put_callback_registration)?;
+    put_builtin_stores(w, &i.builtins)?;
+    put_vec(w, &i.context_stores, put_context_store)?;
+    put_vec(w, &i.restart_store_manifest, |w, (key, version)| {
+        w.key(key)?;
+        w.u32(*version)
+    })?;
+    put_vec(w, &i.restart_stores, put_restart_store)?;
+    put_vec(w, &i.commands, |w, (id, c)| {
+        put_event(w, *id)?;
+        put_command_v3(w, *c)
+    })?;
+    put_vec(w, &i.notifications, |w, (id, n)| {
+        put_event(w, *id)?;
+        put_notification(w, n)
+    })?;
+    put_vec(w, &i.pending_releases, |w, id| put_lease(w, *id))?;
+    put_vec(w, &i.pending_despawns, |w, id| put_entity(w, *id))?;
+    w.u64(i.created)?;
+    w.u64(i.destroyed)?;
+    w.u64(i.scheduled)?;
+    w.u64(i.next_admission)?;
+    w.u64(i.next_lease)?;
+    put_vec(w, &i.resource_grant_flags, |w, (resource, enabled)| {
+        put_resource(w, *resource)?;
+        w.bool(*enabled)
+    })?;
+    put_option_time(w, i.started_frontier)?;
+    put_vec(w, &i.allocation_modes, |w, (resource, mode)| {
+        put_resource(w, *resource)?;
+        w.u8(match mode {
+            FlowAllocationMode::Eager => 0,
+            FlowAllocationMode::Deferred => 1,
+        })
+    })
+}
+
+fn encode_flow_v4(i: &FlowCheckpointV4, w: &mut Writer) -> WResult {
+    w.raw(MAGIC_V4)?;
+    w.u16(WIRE_SCHEMA)?;
+    encode_flow_v4_body(i, w)?;
+    put_vec(w, &i.queue_order_modes, |w, (resource, mode)| {
+        put_resource(w, *resource)?;
+        w.u8(match mode {
+            FlowQueueOrdering::AdmissionOrder => 0,
+            FlowQueueOrdering::StableKey => 1,
+        })
+    })?;
+    put_vec(w, &i.request_queue_orders, |w, (request, ordering)| {
+        put_request(w, *request)?;
+        match ordering {
+            FlowRequestQueueOrderV4::AdmissionOrder => w.u8(0),
+            FlowRequestQueueOrderV4::StableKey(bytes) => {
+                w.u8(1)?;
+                w.opaque_key(bytes)
+            }
+        }
+    })
+}
+
+impl FlowCheckpointV4 {
+    /// Encode a complete V4 image in the direct canonical wire format.
+    #[doc(hidden)]
+    pub fn encode_wire_v4(
+        &self,
+        limits: FlowCheckpointWireLimits,
+    ) -> Result<Vec<u8>, FlowCheckpointWireError> {
+        if self.version != FLOW_CHECKPOINT_VERSION_V4 {
+            return Err(FlowCheckpointWireError::InvalidValue(
+                "Flow checkpoint version",
+            ));
+        }
+        preflight_counts_v4(self, limits)?;
+        let mut measure = Writer::measure(limits);
+        measure.key_limit_label = "key bytes";
+        encode_flow_v4(self, &mut measure)?;
+        validate_canonical_order_v4(self)?;
+        #[cfg(test)]
+        V4_OUTPUT_ALLOCATION_CALLS.with(|calls| calls.set(calls.get().saturating_add(1)));
+        let mut writer = Writer::writing(limits, measure.len)?;
+        writer.key_limit_label = "key bytes";
+        encode_flow_v4(self, &mut writer)?;
+        Ok(writer.finish())
+    }
+
+    /// Scan and decode a complete V4 image without falling back to older formats.
+    #[doc(hidden)]
+    pub fn decode_wire_v4(
+        bytes: &[u8],
+        limits: FlowCheckpointWireLimits,
+    ) -> Result<Self, FlowCheckpointWireError> {
+        scan_flow_v4(bytes, limits)?;
+        #[cfg(test)]
+        V4_OWNED_DECODE_CALLS.with(|calls| calls.set(calls.get().saturating_add(1)));
+        let mut reader = Reader::new(bytes, limits)?;
+        reader.key_limit_label = "key bytes";
+        let image = decode_flow_v4(&mut reader)?;
+        reader.finish()?;
+        preflight_counts_v4(&image, limits)?;
+        validate_canonical_order_v4(&image)?;
+        Ok(image)
+    }
 }
 
 fn decode_flow_v3(r: &mut Reader<'_>) -> WResult<FlowCheckpointV3> {
@@ -4648,6 +5401,418 @@ fn decode_flow_v3(r: &mut Reader<'_>) -> WResult<FlowCheckpointV3> {
         started_frontier,
         allocation_modes,
     })
+}
+fn decode_flow_v4(r: &mut Reader<'_>) -> WResult<FlowCheckpointV4> {
+    if r.raw(MAGIC_V4.len())? != MAGIC_V4 {
+        return Err(FlowCheckpointWireError::InvalidTag);
+    }
+    let schema = r.u16()?;
+    if schema != WIRE_SCHEMA {
+        return Err(FlowCheckpointWireError::UnsupportedSchema(schema));
+    }
+    let version = r.u32()?;
+    if version != FLOW_CHECKPOINT_VERSION_V4 {
+        return Err(FlowCheckpointWireError::InvalidValue(
+            "Flow checkpoint version",
+        ));
+    }
+    let config = FlowConfig {
+        max_same_tick_flow_transitions: NonZeroU64::new(r.u64()?).ok_or(
+            FlowCheckpointWireError::InvalidValue("zero transition budget"),
+        )?,
+    };
+    let callback_config = FlowCallbackConfig {
+        max_callback_commands: NonZeroUsize::new(r.usize()?)
+            .ok_or(FlowCheckpointWireError::InvalidValue("zero callback limit"))?,
+    };
+    let next_batch_identity = r.u64()?;
+    let budget_tick = get_option_time(r)?;
+    let budget_consumed = r.u64()?;
+    let budget_halt = r.option(get_halt)?;
+    let scheduler = get_scheduler(r)?;
+    let world = get_world(r)?;
+    let resources = get_vec(r, r.limits.flow.max_resources, "resource", 12, get_resource)?;
+    let requests = get_vec(r, r.limits.flow.max_requests, "request", 12, get_request)?;
+    let actors = get_vec(r, r.limits.flow.max_actors, "actor", 12, get_entity)?;
+    let actor_domains = get_vec(r, r.limits.flow.max_actors, "actor domain", 24, |r| {
+        Ok((get_entity(r)?, get_entity(r)?))
+    })?;
+    let work_registrations = get_vec(
+        r,
+        r.limits.flow.max_works,
+        "work registration",
+        30,
+        get_work_registration,
+    )?;
+    let contexts = get_registration_vec(r, 20, get_context_registration)?;
+    let handlers = get_registration_vec(r, 26, get_callback_registration)?;
+    let continuations = get_registration_vec(r, 26, get_callback_registration)?;
+    let domains = get_registration_vec(r, 26, get_callback_registration)?;
+    let builtins = get_builtin_stores(r)?;
+    let context_stores = get_registration_vec(r, 28, get_context_store)?;
+    let restart_store_manifest = get_registration_vec(r, 12, |r| Ok((r.key()?, r.u32()?)))?;
+    let restart_stores = get_registration_vec(r, 28, get_restart_store)?;
+    let commands = get_vec(r, r.limits.flow.max_commands, "command", 13, |r| {
+        let event = get_event(r)?;
+        let command = get_command_v3(r)?;
+        if matches!(
+            command,
+            FlowCommandV3::GrantEnabled(..) | FlowCommandV3::AllocationFlush(..)
+        ) {
+            r.pending_count(1)?;
+        }
+        Ok((event, command))
+    })?;
+    let notifications = get_vec(
+        r,
+        r.limits.flow.max_notifications,
+        "notification",
+        126,
+        |r| Ok((get_event(r)?, get_notification(r)?)),
+    )?;
+    let release_count = r.count(r.limits.flow.max_pending_operations, "pending release")?;
+    r.pending_count(release_count)?;
+    let pending_releases = get_vec_counted(r, release_count, 20, get_lease)?;
+    let despawn_count = r.count(r.limits.flow.max_pending_operations, "pending despawn")?;
+    r.pending_count(despawn_count)?;
+    let pending_despawns = get_vec_counted(r, despawn_count, 12, get_entity)?;
+    let created = r.u64()?;
+    let destroyed = r.u64()?;
+    let scheduled = r.u64()?;
+    let next_admission = r.u64()?;
+    let next_lease = r.u64()?;
+    let resource_grant_flags = get_vec(
+        r,
+        r.limits.flow.max_resources,
+        "resource grant flag",
+        13,
+        |r| Ok((get_resource(r)?, r.bool()?)),
+    )?;
+    let started_frontier = get_option_time(r)?;
+    let allocation_modes = get_vec(r, r.limits.flow.max_resources, "allocation mode", 13, |r| {
+        let resource = get_resource(r)?;
+        let mode = match r.u8()? {
+            0 => FlowAllocationMode::Eager,
+            1 => FlowAllocationMode::Deferred,
+            _ => return Err(FlowCheckpointWireError::InvalidTag),
+        };
+        Ok((resource, mode))
+    })?;
+    let queue_order_modes = get_vec(
+        r,
+        r.limits.flow.max_resources,
+        "queue order mode rows",
+        13,
+        |r| {
+            let resource = get_resource(r)?;
+            let mode = match r.u8()? {
+                0 => FlowQueueOrdering::AdmissionOrder,
+                1 => FlowQueueOrdering::StableKey,
+                _ => return Err(FlowCheckpointWireError::InvalidTag),
+            };
+            Ok((resource, mode))
+        },
+    )?;
+    let request_queue_orders = get_vec(
+        r,
+        r.limits.flow.max_requests,
+        "queue order request rows",
+        13,
+        |r| {
+            let request = get_request(r)?;
+            let ordering = match r.u8()? {
+                0 => FlowRequestQueueOrderV4::AdmissionOrder,
+                1 => FlowRequestQueueOrderV4::StableKey(r.opaque_key()?),
+                _ => return Err(FlowCheckpointWireError::InvalidTag),
+            };
+            Ok((request, ordering))
+        },
+    )?;
+    let base = FlowCheckpointV3 {
+        version,
+        config,
+        callback_config,
+        next_batch_identity,
+        budget_tick,
+        budget_consumed,
+        budget_halt,
+        scheduler,
+        world,
+        resources,
+        requests,
+        actors,
+        actor_domains,
+        work_registrations,
+        contexts,
+        handlers,
+        continuations,
+        domains,
+        builtins,
+        context_stores,
+        restart_store_manifest,
+        restart_stores,
+        commands,
+        notifications,
+        pending_releases,
+        pending_despawns,
+        created,
+        destroyed,
+        scheduled,
+        next_admission,
+        next_lease,
+        resource_grant_flags,
+        started_frontier,
+        allocation_modes,
+    };
+    Ok(FlowCheckpointV4 {
+        version: base.version,
+        config: base.config,
+        callback_config: base.callback_config,
+        next_batch_identity: base.next_batch_identity,
+        budget_tick: base.budget_tick,
+        budget_consumed: base.budget_consumed,
+        budget_halt: base.budget_halt,
+        scheduler: base.scheduler,
+        world: base.world,
+        resources: base.resources,
+        requests: base.requests,
+        actors: base.actors,
+        actor_domains: base.actor_domains,
+        work_registrations: base.work_registrations,
+        contexts: base.contexts,
+        handlers: base.handlers,
+        continuations: base.continuations,
+        domains: base.domains,
+        builtins: base.builtins,
+        context_stores: base.context_stores,
+        restart_store_manifest: base.restart_store_manifest,
+        restart_stores: base.restart_stores,
+        commands: base.commands,
+        notifications: base.notifications,
+        pending_releases: base.pending_releases,
+        pending_despawns: base.pending_despawns,
+        created: base.created,
+        destroyed: base.destroyed,
+        scheduled: base.scheduled,
+        next_admission: base.next_admission,
+        next_lease: base.next_lease,
+        resource_grant_flags: base.resource_grant_flags,
+        started_frontier: base.started_frontier,
+        allocation_modes: base.allocation_modes,
+        queue_order_modes,
+        request_queue_orders,
+    })
+}
+
+#[cfg(test)]
+mod v4_wire_preflight_tests {
+    use super::*;
+
+    fn first_grant_flag_offset(bytes: &[u8]) -> usize {
+        let limits = FlowCheckpointWireLimits::default();
+        let mut r = Reader::new(bytes, limits).unwrap();
+        r.raw(8).unwrap();
+        r.u16().unwrap();
+        r.u32().unwrap();
+        r.u64().unwrap();
+        r.usize().unwrap();
+        r.u64().unwrap();
+        scan_opt_time(&mut r).unwrap();
+        r.u64().unwrap();
+        scan_halt(&mut r).unwrap();
+        scan_scheduler(&mut r).unwrap();
+        scan_world(&mut r).unwrap();
+        scan_vec(&mut r, limits.flow.max_resources, "resource", 12, |r| {
+            get_resource(r)?;
+            Ok(())
+        })
+        .unwrap();
+        scan_vec(&mut r, limits.flow.max_requests, "request", 12, |r| {
+            get_request(r)?;
+            Ok(())
+        })
+        .unwrap();
+        scan_vec(&mut r, limits.flow.max_actors, "actor", 12, |r| {
+            get_entity(r)?;
+            Ok(())
+        })
+        .unwrap();
+        scan_vec(&mut r, limits.flow.max_actors, "actor domain", 24, |r| {
+            get_entity(r)?;
+            get_entity(r)?;
+            Ok(())
+        })
+        .unwrap();
+        scan_vec(
+            &mut r,
+            limits.flow.max_works,
+            "work registration",
+            30,
+            scan_work_registration,
+        )
+        .unwrap();
+        scan_registration_vec(&mut r, 20, scan_context_registration).unwrap();
+        scan_registration_vec(&mut r, 26, scan_callback_registration).unwrap();
+        scan_registration_vec(&mut r, 26, scan_callback_registration).unwrap();
+        scan_registration_vec(&mut r, 26, scan_callback_registration).unwrap();
+        scan_builtin_stores_v3(&mut r).unwrap();
+        scan_registration_vec(&mut r, 28, scan_context_store).unwrap();
+        scan_registration_vec(&mut r, 12, |r| {
+            r.scan_key()?;
+            r.u32()?;
+            Ok(())
+        })
+        .unwrap();
+        scan_registration_vec(&mut r, 28, scan_restart_store).unwrap();
+        let commands = r.count(limits.flow.max_commands, "command").unwrap();
+        r.require_min_items(commands, 13).unwrap();
+        for _ in 0..commands {
+            get_event(&mut r).unwrap();
+            scan_command_v3(&mut r).unwrap();
+        }
+        scan_vec(
+            &mut r,
+            limits.flow.max_notifications,
+            "notification",
+            126,
+            |r| {
+                get_event(r)?;
+                scan_notification(r)
+            },
+        )
+        .unwrap();
+        for _ in 0..2 {
+            let count = r
+                .count(limits.flow.max_pending_operations, "pending operation")
+                .unwrap();
+            assert_eq!(count, 0);
+            r.pending_count(count).unwrap();
+        }
+        // The test fixture has no pending releases or despawns, so their two
+        // count words are zero and the five counters follow directly.
+        r.u64().unwrap();
+        r.u64().unwrap();
+        r.u64().unwrap();
+        r.u64().unwrap();
+        r.u64().unwrap();
+        let count = r
+            .count(limits.flow.max_resources, "resource grant flag")
+            .unwrap();
+        assert_eq!(count, 1);
+        get_resource(&mut r).unwrap();
+        r.at
+    }
+
+    #[test]
+    fn v4_scanner_rejects_final_row_before_owned_decode() {
+        let mut flow = FlowRuntime::new();
+        flow.create_resource(0).unwrap();
+        let image = flow
+            .capture_checkpoint_v4(
+                &FlowCheckpointCodecs::new(),
+                FlowCheckpointLimits::default(),
+            )
+            .unwrap();
+        let mut bytes = image
+            .encode_wire_v4(FlowCheckpointWireLimits::default())
+            .unwrap();
+        // One mode row (ResourceId plus tag), followed by the empty request vector.
+        let tag = bytes.len() - 8 - 1;
+        bytes[tag] = 2;
+        V4_OWNED_DECODE_CALLS.with(|calls| calls.set(0));
+        assert_eq!(
+            FlowCheckpointV4::decode_wire_v4(&bytes, FlowCheckpointWireLimits::default()),
+            Err(FlowCheckpointWireError::InvalidTag)
+        );
+        V4_OWNED_DECODE_CALLS.with(|calls| assert_eq!(calls.get(), 0));
+        let mut trailing = image
+            .encode_wire_v4(FlowCheckpointWireLimits::default())
+            .unwrap();
+        trailing.push(0);
+        V4_OWNED_DECODE_CALLS.with(|calls| calls.set(0));
+        assert_eq!(
+            FlowCheckpointV4::decode_wire_v4(&trailing, FlowCheckpointWireLimits::default()),
+            Err(FlowCheckpointWireError::TrailingBytes)
+        );
+        V4_OWNED_DECODE_CALLS.with(|calls| assert_eq!(calls.get(), 0));
+    }
+
+    #[test]
+    fn v4_scanner_rejects_invalid_resource_grant_boolean() {
+        let mut flow = FlowRuntime::new();
+        flow.create_resource(0).unwrap();
+        let image = flow
+            .capture_checkpoint_v4(
+                &FlowCheckpointCodecs::new(),
+                FlowCheckpointLimits::default(),
+            )
+            .unwrap();
+        let mut bytes = image
+            .encode_wire_v4(FlowCheckpointWireLimits::default())
+            .unwrap();
+        let offset = first_grant_flag_offset(&bytes);
+        assert_eq!(bytes[offset], 1);
+        bytes[offset] = 2;
+        assert_eq!(
+            FlowCheckpointV4::decode_wire_v4(&bytes, FlowCheckpointWireLimits::default()),
+            Err(FlowCheckpointWireError::InvalidBoolean)
+        );
+    }
+
+    #[test]
+    fn v4_measurement_failure_precedes_single_output_allocation() {
+        let image = FlowRuntime::new()
+            .capture_checkpoint_v4(
+                &FlowCheckpointCodecs::new(),
+                FlowCheckpointLimits::default(),
+            )
+            .unwrap();
+        V4_OUTPUT_ALLOCATION_CALLS.with(|calls| calls.set(0));
+        assert!(matches!(
+            image.encode_wire_v4(FlowCheckpointWireLimits {
+                max_wire_bytes: 1,
+                ..FlowCheckpointWireLimits::default()
+            }),
+            Err(FlowCheckpointWireError::LimitExceeded("total byte"))
+        ));
+        V4_OUTPUT_ALLOCATION_CALLS.with(|calls| assert_eq!(calls.get(), 0));
+        image
+            .encode_wire_v4(FlowCheckpointWireLimits::default())
+            .unwrap();
+        V4_OUTPUT_ALLOCATION_CALLS.with(|calls| assert_eq!(calls.get(), 1));
+    }
+
+    #[test]
+    fn v4_wire_lengths_and_record_sums_use_checked_arithmetic() {
+        let mut writer = Writer::measure(FlowCheckpointWireLimits::default());
+        writer.len = usize::MAX;
+        assert_eq!(
+            writer.raw(&[0]),
+            Err(FlowCheckpointWireError::IntegerOverflow)
+        );
+        let mut writer = Writer::measure(FlowCheckpointWireLimits::default());
+        writer.records = usize::MAX;
+        assert_eq!(
+            writer.count(1),
+            Err(FlowCheckpointWireError::IntegerOverflow)
+        );
+        let mut writer = Writer::measure(FlowCheckpointWireLimits::default());
+        writer.key_bytes = usize::MAX;
+        assert_eq!(
+            writer.opaque_key(b"k"),
+            Err(FlowCheckpointWireError::IntegerOverflow)
+        );
+
+        #[cfg(target_pointer_width = "32")]
+        {
+            let bytes = u64::MAX.to_le_bytes();
+            let mut reader = Reader::new(&bytes, FlowCheckpointWireLimits::default()).unwrap();
+            assert_eq!(
+                reader.usize(),
+                Err(FlowCheckpointWireError::IntegerOverflow)
+            );
+        }
+    }
 }
 fn put_command_v3(w: &mut Writer, c: FlowCommandV3) -> WResult {
     match c {
