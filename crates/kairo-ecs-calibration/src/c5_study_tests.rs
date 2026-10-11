@@ -130,11 +130,9 @@ fn plan_is_canonical_bounded_and_pairs_candidate_independent_schedules() {
         json!({"route_ticks":1,"work_ticks":2})
     );
     let tasks = a["tasks"].as_array().unwrap();
-    assert!(
-        tasks
-            .windows(2)
-            .all(|w| w[0]["task_id"].as_str() < w[1]["task_id"].as_str())
-    );
+    assert!(tasks
+        .windows(2)
+        .all(|w| w[0]["task_id"].as_str() < w[1]["task_id"].as_str()));
     let training: Vec<_> = tasks.iter().filter(|t| t["split"] == "training").collect();
     assert_eq!(training.len(), 9);
     let one: Vec<_> = training
@@ -150,14 +148,12 @@ fn plan_is_canonical_bounded_and_pairs_candidate_independent_schedules() {
     let confirmation = tasks.iter().find(|t| t["split"] == "confirmation").unwrap();
     assert_eq!(confirmation["records"][0]["case_id"], "validation");
     assert_eq!(confirmation["seed_schedule_id"], SCHEDULES[2]);
-    assert!(
-        plan(&{
-            let mut c = cfg.clone();
-            c["budget"]["max_tasks"] = json!(1);
-            c
-        })
-        .is_err()
-    );
+    assert!(plan(&{
+        let mut c = cfg.clone();
+        c["budget"]["max_tasks"] = json!(1);
+        c
+    })
+    .is_err());
 }
 
 #[test]
@@ -174,13 +170,11 @@ fn invalid_zero_candidate_is_retained_as_attempt_not_enumeration_hole() {
         .filter(|t| t["valid_candidate"] == false)
         .count();
     assert_eq!(invalid, 12);
-    assert!(
-        p["tasks"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|t| t["params"] == json!({"route_ticks":0,"work_ticks":0}))
-    );
+    assert!(p["tasks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|t| t["params"] == json!({"route_ticks":0,"work_ticks":0})));
 }
 
 #[test]
@@ -190,32 +184,24 @@ fn result_inventory_and_identity_are_exact_and_duplicate_attempts_fail() {
     let mut attempts = complete_attempts(&cfg, &p);
     assert!(summarize(&cfg, &attempts).is_ok());
     attempts.pop();
-    assert!(
-        summarize(&cfg, &attempts)
-            .unwrap_err()
-            .contains("incomplete")
-    );
+    assert!(summarize(&cfg, &attempts)
+        .unwrap_err()
+        .contains("incomplete"));
     let mut attempts = complete_attempts(&cfg, &p);
     attempts[0]["params"]["route_ticks"] = json!(999);
-    assert!(
-        summarize(&cfg, &attempts)
-            .unwrap_err()
-            .contains("identity mismatch")
-    );
+    assert!(summarize(&cfg, &attempts)
+        .unwrap_err()
+        .contains("identity mismatch"));
     let mut attempts = complete_attempts(&cfg, &p);
     attempts[0]["completion_error"] = json!(999);
-    assert!(
-        summarize(&cfg, &attempts)
-            .unwrap_err()
-            .contains("differs from successful per-case")
-    );
+    assert!(summarize(&cfg, &attempts)
+        .unwrap_err()
+        .contains("differs from successful per-case"));
     let mut attempts = complete_attempts(&cfg, &p);
     attempts.push(attempts[0].clone());
-    assert!(
-        summarize(&cfg, &attempts)
-            .unwrap_err()
-            .contains("duplicate")
-    );
+    assert!(summarize(&cfg, &attempts)
+        .unwrap_err()
+        .contains("duplicate"));
 }
 
 #[test]
@@ -304,11 +290,9 @@ fn mixed_failure_and_source_censoring_are_exclusive_and_case_penalized() {
         .unwrap();
     bad["eligible_count"] = json!(2);
     bad["failed_count"] = json!(0);
-    assert!(
-        summarize(&cfg, &forged)
-            .unwrap_err()
-            .contains("exclusive case outcome partition")
-    );
+    assert!(summarize(&cfg, &forged)
+        .unwrap_err()
+        .contains("exclusive case outcome partition"));
 }
 
 #[test]
@@ -321,15 +305,13 @@ fn validation_ridge_freezes_winner_then_final_test_is_winner_only() {
     assert_eq!(s["ridge"], true);
     assert_eq!(s["identifiability"], "non_identifiable_ridge");
     assert_eq!(s["next_tasks"].as_array().unwrap().len(), 2);
-    assert!(
-        s["next_tasks"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .all(|t| t["candidate_id"] == "c000002"
-                && t["split"] == "final_test"
-                && t["seed_schedule_id"] == SCHEDULES[3])
-    );
+    assert!(s["next_tasks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|t| t["candidate_id"] == "c000002"
+            && t["split"] == "final_test"
+            && t["seed_schedule_id"] == SCHEDULES[3]));
     let final_tasks = final_tasks(&cfg, "c000002").unwrap();
     assert_eq!(s["next_tasks"], json!(final_tasks));
     let mut all = attempts;
@@ -446,11 +428,9 @@ fn per_split_case_cap_is_checked_before_task_materialization() {
         rows.push(json!({"case_id":format!("extra-{i}"),"day":format!("day-extra-{i}"),"start_tick":0,"end_tick":0,"transit_ticks":0}));
     }
     cfg["trace"] = json!(rows);
-    assert!(
-        plan(&cfg)
-            .unwrap_err()
-            .contains("trace rows per split exceed 4096")
-    );
+    assert!(plan(&cfg)
+        .unwrap_err()
+        .contains("trace rows per split exceed 4096"));
 }
 
 #[test]
@@ -472,4 +452,20 @@ fn fixed_confirmation_uses_bounded_hoeffding_and_reports_cap_indeterminacy() {
     let attempts = complete_attempts(&cfg, &p);
     let s = summarize(&cfg, &attempts).unwrap();
     assert_eq!(s["mc_indeterminate"], false);
+}
+
+#[test]
+fn oversized_repeated_case_payload_rejects_before_task_cloning() {
+    let mut cfg = study();
+    cfg["budget"]["replications"] = json!(100);
+    cfg["budget"]["max_tasks"] = json!(10_000);
+    let rows = cfg["trace"].as_array_mut().unwrap();
+    for i in 0..60 {
+        rows.push(json!({"case_id":format!("long-{i}-{}", "x".repeat(500)),
+            "day":format!("long-day-{i}-{}", "y".repeat(500)),
+            "start_tick":0,"end_tick":1,"transit_ticks":0}));
+    }
+    assert!(plan(&cfg)
+        .unwrap_err()
+        .contains("estimated plan output exceeds 16 MiB"));
 }

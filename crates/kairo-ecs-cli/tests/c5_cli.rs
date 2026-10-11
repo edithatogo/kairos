@@ -148,10 +148,8 @@ fn c5_calibrate_rejects_unknown_study_schema_before_creating_output() {
         output_dir.to_str().unwrap(),
     ]);
     assert!(!result.status.success());
-    assert!(
-        String::from_utf8_lossy(&result.stderr)
-            .contains("unsupported or missing study schema_version")
-    );
+    assert!(String::from_utf8_lossy(&result.stderr)
+        .contains("unsupported or missing study schema_version"));
     assert!(!output_dir.exists());
     let _ = std::fs::remove_dir_all(&dir);
 }

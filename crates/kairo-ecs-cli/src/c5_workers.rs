@@ -8,10 +8,10 @@ use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
-use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::{Component, Path, PathBuf};
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Mutex;
 use std::thread;
 
 const SHARD_SCHEMA: &str = "kairoecs.c5-task-shard.v1";
@@ -112,37 +112,35 @@ where
     thread::scope(|scope| {
         let mut handles = Vec::with_capacity(thread_count);
         for _ in 0..thread_count {
-            handles.push(scope.spawn(|| {
-                loop {
-                    let index = next.fetch_add(1, Ordering::Relaxed);
-                    let Some((task_id, task, task_hash)) = selected.get(index) else {
-                        break;
-                    };
-                    let result = match catch_unwind(AssertUnwindSafe(|| evaluator(task))) {
-                        Ok(Ok(value)) => value,
-                        Ok(Err(error)) => {
-                            errors
-                                .lock()
-                                .expect("error mutex poisoned")
-                                .push((task_id.clone(), error));
-                            continue;
-                        }
-                        Err(_) => {
-                            errors
-                                .lock()
-                                .expect("error mutex poisoned")
-                                .push((task_id.clone(), "evaluator panicked".into()));
-                            continue;
-                        }
-                    };
-                    if let Err(error) =
-                        publish_shard(&output, task_id, task_hash, &binding_hash, &result)
-                    {
+            handles.push(scope.spawn(|| loop {
+                let index = next.fetch_add(1, Ordering::Relaxed);
+                let Some((task_id, task, task_hash)) = selected.get(index) else {
+                    break;
+                };
+                let result = match catch_unwind(AssertUnwindSafe(|| evaluator(task))) {
+                    Ok(Ok(value)) => value,
+                    Ok(Err(error)) => {
                         errors
                             .lock()
                             .expect("error mutex poisoned")
                             .push((task_id.clone(), error));
+                        continue;
                     }
+                    Err(_) => {
+                        errors
+                            .lock()
+                            .expect("error mutex poisoned")
+                            .push((task_id.clone(), "evaluator panicked".into()));
+                        continue;
+                    }
+                };
+                if let Err(error) =
+                    publish_shard(&output, task_id, task_hash, &binding_hash, &result)
+                {
+                    errors
+                        .lock()
+                        .expect("error mutex poisoned")
+                        .push((task_id.clone(), error));
                 }
             }));
         }
@@ -605,13 +603,11 @@ mod tests {
         let shard_path = output.join(name);
         let valid_bytes = fs::read(&shard_path).unwrap();
         let calls = AtomicUsize::new(0);
-        assert!(
-            execute(&input, 1, &output, "changed", None, |_| {
-                calls.fetch_add(1, Ordering::SeqCst);
-                Ok(Value::Null)
-            })
-            .is_err()
-        );
+        assert!(execute(&input, 1, &output, "changed", None, |_| {
+            calls.fetch_add(1, Ordering::SeqCst);
+            Ok(Value::Null)
+        })
+        .is_err());
         assert_eq!(calls.load(Ordering::SeqCst), 0);
 
         for (field, value) in [
@@ -623,13 +619,11 @@ mod tests {
             shard[field] = value;
             fs::write(&shard_path, canonical_bytes(&shard).unwrap()).unwrap();
             let calls = AtomicUsize::new(0);
-            assert!(
-                execute(&input, 1, &output, "b", None, |_| {
-                    calls.fetch_add(1, Ordering::SeqCst);
-                    Ok(Value::Null)
-                })
-                .is_err()
-            );
+            assert!(execute(&input, 1, &output, "b", None, |_| {
+                calls.fetch_add(1, Ordering::SeqCst);
+                Ok(Value::Null)
+            })
+            .is_err());
             assert_eq!(calls.load(Ordering::SeqCst), 0, "{field}");
         }
         let mut unknown: Value = serde_json::from_slice(&valid_bytes).unwrap();
@@ -641,24 +635,20 @@ mod tests {
         let mut drifted = input.clone();
         drifted[0]["x"] = Value::from(999);
         let calls = AtomicUsize::new(0);
-        assert!(
-            execute(&drifted, 1, &output, "b", None, |_| {
-                calls.fetch_add(1, Ordering::SeqCst);
-                Ok(Value::Null)
-            })
-            .is_err()
-        );
+        assert!(execute(&drifted, 1, &output, "b", None, |_| {
+            calls.fetch_add(1, Ordering::SeqCst);
+            Ok(Value::Null)
+        })
+        .is_err());
         assert_eq!(calls.load(Ordering::SeqCst), 0);
 
         fs::write(output.join("unrecognized.json"), b"{}").unwrap();
         let calls = AtomicUsize::new(0);
-        assert!(
-            execute(&input, 1, &output, "b", None, |_| {
-                calls.fetch_add(1, Ordering::SeqCst);
-                Ok(Value::Null)
-            })
-            .is_err()
-        );
+        assert!(execute(&input, 1, &output, "b", None, |_| {
+            calls.fetch_add(1, Ordering::SeqCst);
+            Ok(Value::Null)
+        })
+        .is_err());
         assert_eq!(calls.load(Ordering::SeqCst), 0);
         let _ = fs::remove_dir_all(output);
     }
@@ -677,16 +667,14 @@ mod tests {
         let output = temp_dir("panic");
         let input = tasks(4);
         let calls = AtomicUsize::new(0);
-        assert!(
-            execute(&input, 1, &output, "b", None, |task| {
-                calls.fetch_add(1, Ordering::SeqCst);
-                if task["task_id"] == "t000" {
-                    panic!("injected evaluator panic");
-                }
-                Ok(serde_json::json!({"x": task["x"]}))
-            })
-            .is_err()
-        );
+        assert!(execute(&input, 1, &output, "b", None, |task| {
+            calls.fetch_add(1, Ordering::SeqCst);
+            if task["task_id"] == "t000" {
+                panic!("injected evaluator panic");
+            }
+            Ok(serde_json::json!({"x": task["x"]}))
+        })
+        .is_err());
         assert_eq!(calls.load(Ordering::SeqCst), 4);
         assert_eq!(fs::read_dir(&output).unwrap().count(), 3);
         let _ = fs::remove_dir_all(output);

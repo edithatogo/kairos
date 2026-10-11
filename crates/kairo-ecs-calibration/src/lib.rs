@@ -109,7 +109,7 @@ mod flow_bridge;
 #[cfg(feature = "flow")]
 #[doc(hidden)]
 pub mod experimental_c2_replay {
-    pub use crate::c2_checkpoint_journal::{JournalError, restore_demo, save_demo};
+    pub use crate::c2_checkpoint_journal::{restore_demo, save_demo, JournalError};
 }
 
 // Private C4.2 numeric implementation; no public API or sidecar promises.

@@ -2,7 +2,7 @@
 //! This module is synthetic development infrastructure, not a stable API.
 
 use crate::seed_map::{CalibrationSeedMap, SeedPurpose};
-use serde_json::{Map, Value, json};
+use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -461,8 +461,14 @@ fn preflight_plan_bytes(
     study_id: &str,
 ) -> Result<(), String> {
     let counts = [replications, replications, confirmation_replications];
-    let per_task_overhead = 512usize
-        .checked_add(study_id.len())
+    // A conservative envelope allowance includes names, maximal integer fields,
+    // hashes and candidate metadata. Count escaped identity bytes explicitly.
+    let per_task_overhead = 1024usize
+        .checked_add(
+            serde_json::to_vec(study_id)
+                .map_err(|e| e.to_string())?
+                .len(),
+        )
         .and_then(|n| n.checked_add(serde_json::to_vec(noise).ok()?.len()))
         .ok_or_else(|| err("plan byte size overflow"))?;
     let mut estimated = serde_json::to_vec(candidates)

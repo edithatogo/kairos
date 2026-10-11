@@ -9,7 +9,7 @@ use kairo_ecs_des::{
     FlowCheckpointCodecs, FlowCheckpointLimits, FlowRuntime, WorkHandlers, WorkState,
 };
 use kairo_ecs_types::{SimDuration, SimTime};
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 

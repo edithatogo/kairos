@@ -25,8 +25,8 @@ use kairo_ecs_abm::spatial::{
     EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1,
 };
 use kairo_ecs_abm::{
-    TransitContext, TransitContextCheckpointLimitsV1, TransitContextCheckpointV1,
-    register_transit_context, register_transit_context_checkpoint_domain,
+    register_transit_context, register_transit_context_checkpoint_domain, TransitContext,
+    TransitContextCheckpointLimitsV1, TransitContextCheckpointV1,
 };
 use kairo_ecs_des::fidelity::{FidelityAdapter, FidelityMode, FidelityPolicy};
 use kairo_ecs_des::{

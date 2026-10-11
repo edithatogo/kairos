@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_types::{EventKind, ScheduleRequest, SimTime, StepOutcome};
-use scenario::{ScenarioManifest, load_scenario, load_seed_manifest, validate_scenario_and_seed};
+use scenario::{load_scenario, load_seed_manifest, validate_scenario_and_seed, ScenarioManifest};
 
 fn main() {
     if let Err(error) = run(env::args().skip(1).collect()) {
