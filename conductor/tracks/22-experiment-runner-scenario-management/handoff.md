@@ -251,3 +251,19 @@ to positive V3 routing controls while retaining every explicit V1/V2 rejection
 and zero-codec assertion before successful routing. Keep exact mode/Flush and
 positive codec counts; preserve test names and all true legacy goldens. The
 eight-Rust-path scope supersedes the initial six-path proposal for this reason.
+
+
+## E2 V3 consumer parallel qualification - 12 October 2026
+
+Track22 consumes the complete routed Image/Ref/FlowCommandV3 view from source
+`c9091ce049a9d156c260bbc9f670f0e9bd4073e8`; dispatch waits for its final routing
+acceptance and reviewed packets. The owner contract is
+`conductor/design/des/e2-flow-checkpoint-v3-consumers.md`. Three isolated lanes own
+shadow_native.rs/c5_native.rs (preview), flow_bridge.rs (coherent inline proofs),
+and c2_portable_checkpoint.rs plus nested process_tests.rs (portable). All are
+under crates/kairo-ecs-calibration/src. Each has a separate result/log prefix.
+Test-first consumer qualification preserves shared routing and coherent validator
+production code. Necessary shared fixes require separate ownership/rebinding.
+Workers source-commit once after review and release; root joins all three and
+qualifies the exact clean HEAD before parent pin/ED integration. Existing22process
+cases and19goldens remain mandatory beside new actual V3 fresh-child cases.
