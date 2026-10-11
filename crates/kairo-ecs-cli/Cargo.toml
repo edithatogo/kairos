@@ -10,3 +10,7 @@ rust-version.workspace = true
 [dependencies]
 kairo-ecs-core = { path = "../kairo-ecs-core" , version = "=0.0.0" }
 kairo-ecs-types = { path = "../kairo-ecs-types" , version = "=0.0.0" }
+
+kairo-ecs-calibration = { path = "../kairo-ecs-calibration", version = "=0.1.0", features = ["flow"] }
+serde_json = { version = "=1.0.149", features = ["arbitrary_precision"] }
+sha2 = "=0.11.0"

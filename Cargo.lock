@@ -698,8 +698,11 @@ dependencies = [
 name = "kairo-ecs-cli"
 version = "0.1.0"
 dependencies = [
+ "kairo-ecs-calibration",
  "kairo-ecs-core",
  "kairo-ecs-types",
+ "serde_json",
+ "sha2",
 ]
 
 [[package]]
