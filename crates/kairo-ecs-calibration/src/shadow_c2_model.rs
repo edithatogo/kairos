@@ -170,6 +170,9 @@ impl SyntheticFlowProbeModel {
             return Err(ShadowError::LimitExceeded);
         }
         for resource in snapshot.resources.values() {
+            if resource.claims.values().any(|units| *units == 0) {
+                return Err(ShadowError::InvalidInput("zero-unit resource claim"));
+            }
             let occupied = resource
                 .claims
                 .values()
@@ -1364,6 +1367,14 @@ mod tests {
         resource.capacity = 1;
         resource.claims.clear();
 
+        let mut malformed = snapshot.clone();
+        malformed
+            .resources
+            .get_mut(&model.config.target_resource)
+            .unwrap()
+            .claims
+            .insert("zero".into(), 0);
+        assert!(model.validate(&malformed, &input).is_err());
         let adapter = crate::shadow_native::NativeFlowAdapter {
             model,
             max_image_bytes: MAX_OUTER,

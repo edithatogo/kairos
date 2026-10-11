@@ -302,6 +302,9 @@ fn canonical_config(config: &Value) -> Result<Validated, String> {
             ));
         }
         let row = json!({"case_id":case,"day":day,"start_tick":start,"end_tick":clipped_end,"exposure_ticks":exposure,"transit_ticks":if censored { None } else { transit },"censored":censored});
+        if split_rows[split_idx].len() >= 4096 {
+            return Err(err("trace rows per split exceed 4096 case cap"));
+        }
         split_rows[split_idx].push(row);
     }
     if split_rows.iter().any(Vec::is_empty) {
@@ -743,9 +746,7 @@ pub(crate) fn summarize(config: &Value, attempts: &[Value]) -> Result<Value, Str
             let result = supplied[task["task_id"].as_str().unwrap()];
             let split = result["split"].as_str().unwrap();
             let s = task_score(result, &c)?;
-            if !params_valid(params) {
-                failures += 1;
-            } else if result["outcome"] != "complete" {
+            if !params_valid(params) || result["outcome"] != "complete" {
                 failures += 1;
             }
             match split {

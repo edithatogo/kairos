@@ -182,7 +182,7 @@ jobs:
           export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
           "$task_rustc" -vV | tee "$log_dir/toolchain.log"
           grep -Fx 'release: 1.99.0' "$log_dir/toolchain.log"
-          cargo test --locked -p kairo-ecs-calibration --features flow --lib c5_ 2>&1 | tee "$log_dir/study-native-tests.log"
+          cargo test --locked -p kairo-ecs-calibration --features flow,kairo-ecs-abm/test-support --lib c5_ 2>&1 | tee "$log_dir/study-native-tests.log"
           cargo test --locked -p kairo-ecs-cli 2>&1 | tee "$log_dir/cli-tests.log"
           cargo build --locked -p kairo-ecs-cli 2>&1 | tee "$log_dir/build.log"
           python3 scripts/qualify_c5.py --binary target/debug/kairo-ecs-cli --output "$log_dir/process" 2>&1 | tee "$log_dir/process.log"

@@ -58,6 +58,16 @@ def main():
         assert result['schema_version'] == 'kairoecs.c5-calibration-run.v1', result
         assert result['status'] == 'complete', result
     baseline = out / 'w1'
+    summary = json.loads((baseline/'summary.json').read_text())
+    assert summary['winner'] == 'c000004', summary
+    assert summary['ranking'][0] == {'candidate_id':'c000004','score':0.0}, summary
+    winner = next(c for c in summary['candidates'] if c['candidate_id']=='c000004')
+    assert winner['params'] == {'route_ticks':2,'work_ticks':3}, winner
+    assert summary['mc_indeterminate'] is True, summary
+    final = summary['final_test']
+    assert final['mean_completion_error'] == 0.0, final
+    assert final['completed_count'] == final['attempt_count'] == 2, final
+    assert final['censored_count'] == final['failed_count'] == 0, final
     def compare(directory):
         expected = sorted(p.relative_to(baseline) for p in baseline.rglob('*') if p.is_file())
         actual = sorted(p.relative_to(directory) for p in directory.rglob('*') if p.is_file() and not p.name.startswith('.c5tmp-'))

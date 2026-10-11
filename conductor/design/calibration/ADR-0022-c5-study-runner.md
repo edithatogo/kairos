@@ -92,8 +92,8 @@ Evaluate rederives task and rejects forged fields before invoking native code.
 Summarize validates exact task IDs and all identity fields, counts, finite metrics,
 and complete initial inventory; it never ranks incomplete batches. Canonical
 ordered reductions normalize completion/transit errors by fixed scale and weight.
-Any noncomplete outcome contributes the explicit failure penalty; coverage remains
-visible. Validation alone freezes winner, ties ordered by candidate ID; record
+Each uncovered case contributes the explicit failure penalty; eligible-case errors
+remain in mixed outcomes. Coverage remains visible. Validation alone freezes winner, ties ordered by candidate ID; record
 ridges, bound hits and nonidentifiability. Confirmation uses fixed independent
 samples with bounded-score Hoeffding half-width (score capped to failure penalty,
 with cap disclosed), no optional stopping; unmet precision => mc_indeterminate.
@@ -149,3 +149,43 @@ fixed precision cap; exact native 1/2/N worker/results/ranking/shard equivalence
 stop/restart in fresh process equals full run; corrupt/config drift/duplicate shard
 reject; trace verification; real shadow/free separation; unchanged legacy fixtures.
 No acceptance until independent integrated review and executed evidence.
+
+
+## Integration review refinements — 11 October 2026
+
+The initial dispatch hash is preserved in the parent dispatch record. Independent
+review and executed integration failures led to these concrete refinements:
+
+- Results use `kairoecs.calibration.result.v1`, numeric replication IDs, exact
+  per-case inventories and exclusive failed/censored/missing/eligible counts.
+  Summary recomputes means from native records; malformed aggregate claims reject.
+- Mixed task score is `(eligible * weighted_normalized_error + uncovered *
+  failure_penalty) / total`, capped at failure_penalty. Missing required transit
+  measurement is uncovered. A zero transit weight permits unavailable transit.
+- Limits are 10,000 tasks, 4,096 rows per partition and 1,000,000 events per task.
+  Inputs and per-case start+horizon must fit the exact integer range through 2^53.
+  Noise-array order and repeated entries retain their sampling weights.
+- Fixed confirmation estimates simulator variability conditional on the supplied
+  trace. For scores in [0,B], the fixed-sample half-width is
+  `B * sqrt(log(2/alpha)/(2*n))`; no optional stopping or simultaneous ranking
+  confidence is claimed. The chosen winner's independent confirmation is valid
+  conditional on validation selection. The tiny example remains MC-indeterminate.
+  Formula basis: [Hoeffding notes](https://ai.stanford.edu/~gwthomas/notes/concentration.html).
+- Study service CRN is sampled before native admission. The sealed C3 adapter's
+  fixed-duration internal seed contract remains separate and is reported honestly.
+  Empty-anchor checkpoint hooks are registered symmetrically in start/restore;
+  occupied-anchor registrations are unchanged.
+- Final-test execution uses one shared native FCFS resource and actual completion
+  transitions, applying each case's own horizon. Observed completion never drives
+  the native trajectory. Invalid sampled duration persists as a failed attempt.
+- CLI orchestrates final tasks only after validation freezes a winner. The hidden
+  stateless evaluator admits exact task schemas for a supplied candidate; summary
+  enforces that submitted final tasks belong to the validation winner. This is an
+  internal protocol, not an access-control boundary for data already in the input.
+- Qualification must recover route2/work3 with zero held-out error, bind a clean
+  source commit/tree and lock hash to the executable, and compare whole durable
+  bundles across 1/2/4 workers, cooperative stop and actual process termination.
+
+This adapter verifies normalized synthetic JSON records. General source mapping,
+Cairns/generic ED fitting, stable public API and clinical/release acceptance remain
+separate gates. Python only drives qualification; production execution is Rust.
