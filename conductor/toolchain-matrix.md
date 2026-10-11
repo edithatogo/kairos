@@ -111,3 +111,20 @@ The `version-drop-policy-check` gate fails if a version disappears from the matr
 3. Run `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1`.
 4. Run focused workflow syntax/static validation if available locally.
 5. Update Track 30 `test-matrix.md`, `risk-register.md`, and `handoff.md` with exact evidence and commands.
+
+## C5 commissioned development exception — 11 October 2026
+
+The user explicitly requires C5 to use Rust 1.99 only, with no earlier-version
+support work. The unreleased `kairo-ecs-calibration` and `kairo-ecs-cli` packages
+therefore declare `rust-version = "1.99"` for this development branch. This is a
+package-wide declaration, including default/no-flow consumers; Cargo cannot
+express a per-feature minimum. It supersedes the previous calibration 1.88 and
+CLI inherited minimum for these two packages under that explicit commissioning
+authority. The workspace core minimum and other package declarations are not
+changed. No older compiler is tested or accepted for C5.
+
+This dated exception records the support change for review in draft PR #245;
+it is not an upstream release announcement or evidence that the general release
+notice period has elapsed. Public API/release qualification remains open.
+The Conductor workspace validation also checks the actual compiler is 1.99.0,
+uses the lockfile, and does not silently select an unpinned Windows GNU compiler.

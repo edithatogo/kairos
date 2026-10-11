@@ -304,6 +304,16 @@ fn validation_ridge_freezes_winner_then_final_test_is_winner_only() {
     assert_eq!(s["winner"], "c000002"); // first canonical member of (1,4),(2,3),(3,2)
     assert_eq!(s["ridge"], true);
     assert_eq!(s["identifiability"], "non_identifiable_ridge");
+    let winner = s["candidates"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|candidate| candidate["candidate_id"] == "c000002")
+        .unwrap();
+    assert_eq!(
+        winner["bound_hits"],
+        json!({"route_ticks":true,"work_ticks":true})
+    );
     assert_eq!(s["next_tasks"].as_array().unwrap().len(), 2);
     assert!(s["next_tasks"]
         .as_array()
@@ -399,6 +409,31 @@ fn training_only_censoring_and_bootstrap_oracles_are_hand_computable() {
     assert_eq!(clipped["end_tick"], Value::Null);
     assert_eq!(clipped["censored"], true);
     assert_eq!(clipped["transit_ticks"], Value::Null);
+
+    let mut cutoff = study();
+    cutoff["splits"]["training"] = json!([0, 4]);
+    cutoff["splits"]["validation"] = json!([6, 10]);
+    cutoff["trace"].as_array_mut().unwrap().push(json!({
+        "case_id":"train-cutoff", "day":"day-cutoff", "start_tick":3,
+        "end_tick":6, "transit_ticks":0
+    }));
+    let cutoff_plan = plan(&cutoff).unwrap();
+    let clipped_at_cutoff = cutoff_plan["tasks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|task| task["split"] == "training")
+        .unwrap()["records"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|record| record["case_id"] == "train-cutoff")
+        .unwrap();
+    assert_eq!(clipped_at_cutoff["start_tick"], 3);
+    assert_eq!(clipped_at_cutoff["exposure_ticks"], 1);
+    assert_eq!(clipped_at_cutoff["end_tick"], Value::Null);
+    assert_eq!(clipped_at_cutoff["censored"], true);
+    assert_eq!(clipped_at_cutoff["transit_ticks"], Value::Null);
 }
 
 #[test]

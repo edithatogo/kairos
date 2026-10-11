@@ -205,6 +205,46 @@ fn legacy_track22_validate_and_replay_outputs_remain_unchanged() {
 }
 
 #[test]
+fn legacy_resume_plan_writes_the_versioned_plan_without_seed_manifest() {
+    let workspace = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .unwrap();
+    let scenario = workspace.join("examples/experiments/factory_bottleneck_v1.scenario.toml");
+    let artifact_parent = workspace.join(".artifacts/c5-legacy-resume-plan");
+    std::fs::create_dir_all(&artifact_parent).unwrap();
+    let output_dir = artifact_parent.join(format!("resume-plan-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&output_dir);
+
+    let result = Command::new(env!("CARGO_BIN_EXE_kairo-ecs-cli"))
+        .current_dir(workspace)
+        .args([
+            "resume-plan",
+            "--scenario",
+            scenario.to_str().unwrap(),
+            "--output",
+            output_dir.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+
+    assert!(
+        result.status.success(),
+        "resume-plan failed: {}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    assert_eq!(
+        String::from_utf8(result.stdout).unwrap(),
+        "{\"status\":\"ok\",\"scenario_id\":\"factory_bottleneck_v1\",\"checkpoint_every_events\":2}\n"
+    );
+    assert_eq!(
+        std::fs::read_to_string(output_dir.join("resumability-plan.json")).unwrap(),
+        "{\n  \"schema_version\": \"kairoecs.resumability-plan.v1\",\n  \"scenario_id\": \"factory_bottleneck_v1\",\n  \"checkpoint_every_events\": 2,\n  \"resume_requires\": [\"scenario manifest\", \"seed manifest\", \"last completed event index\", \"summary hash comparison\"]\n}\n"
+    );
+    let _ = std::fs::remove_dir_all(&output_dir);
+}
+
+#[test]
 fn c5_calibration_worker_equivalence_resume_corruption_and_replay_modes() {
     let root = artifact_root("end-to-end");
     let study_path = root.join("study.json");

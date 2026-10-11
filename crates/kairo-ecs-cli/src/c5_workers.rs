@@ -509,51 +509,68 @@ mod tests {
             .collect()
     }
 
+    fn seeded_delay_schedule(repetition: u64, count: usize) -> Vec<u64> {
+        (0..count)
+            .map(|index| {
+                let mut value = 0xc5a5_2026_1011_0001u64
+                    ^ repetition.wrapping_mul(0x9e37_79b9_7f4a_7c15)
+                    ^ (index as u64).wrapping_mul(0xd1b5_4a32_d192_ed03);
+                value = (value ^ (value >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+                value = (value ^ (value >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
+                ((value ^ (value >> 31)) % 13) + 1
+            })
+            .collect()
+    }
+
     #[test]
-    fn worker_count_and_completion_order_do_not_change_shards_or_results() {
-        let one = temp_dir("one");
-        let two = temp_dir("two");
-        let many = temp_dir("many");
+    fn worker_counts_and_seeded_delay_schedules_preserve_shards_and_results() {
         let input = tasks(12);
-        let first = execute(&input, 1, &one, "binding", None, |task| {
+        let baseline_dir = temp_dir("schedule-baseline");
+        let baseline = execute(&input, 1, &baseline_dir, "binding", None, |task| {
             Ok(serde_json::json!({"value": task["x"].as_u64().unwrap() * 3}))
         })
         .unwrap();
-        let middle = execute(&input, 2, &two, "binding", None, |task| {
-            let id = task["x"].as_u64().unwrap();
-            std::thread::sleep(std::time::Duration::from_millis((id % 3) * 2));
-            Ok(serde_json::json!({"value": id * 3}))
-        })
-        .unwrap();
-        let second = execute(&input, 4, &many, "binding", None, |task| {
-            let id = task["x"].as_u64().unwrap();
-            std::thread::sleep(std::time::Duration::from_millis((11 - id) * 2));
-            Ok(serde_json::json!({"value": id * 3}))
-        })
-        .unwrap();
-        assert_eq!(first, second);
-        assert_eq!(first, middle);
-        for task in &input {
-            let name = format!(
-                "task-{}.json",
-                digest(task["task_id"].as_str().unwrap().as_bytes())
-            );
-            assert_eq!(
-                fs::read(one.join(&name)).unwrap(),
-                fs::read(many.join(name)).unwrap()
-            );
-            let name = format!(
-                "task-{}.json",
-                digest(task["task_id"].as_str().unwrap().as_bytes())
-            );
-            assert_eq!(
-                fs::read(one.join(&name)).unwrap(),
-                fs::read(two.join(name)).unwrap()
-            );
+
+        let schedules: Vec<_> = (0..5)
+            .map(|repetition| seeded_delay_schedule(repetition, input.len()))
+            .collect();
+        assert!(schedules
+            .iter()
+            .all(|schedule| schedule.iter().all(|ms| (1..=13).contains(ms))));
+        for left in 0..schedules.len() {
+            for right in left + 1..schedules.len() {
+                assert_ne!(schedules[left], schedules[right]);
+            }
         }
-        let _ = fs::remove_dir_all(one);
-        let _ = fs::remove_dir_all(two);
-        let _ = fs::remove_dir_all(many);
+
+        for workers in [1, 2, 4] {
+            for (repetition, schedule) in schedules.iter().enumerate() {
+                let output = temp_dir(&format!("schedule-w{workers}-r{repetition}"));
+                let result = execute(&input, workers, &output, "binding", None, |task| {
+                    let index = task["x"].as_u64().unwrap() as usize;
+                    std::thread::sleep(std::time::Duration::from_millis(schedule[index]));
+                    Ok(serde_json::json!({"value": task["x"].as_u64().unwrap() * 3}))
+                })
+                .unwrap();
+                assert_eq!(
+                    result, baseline,
+                    "workers={workers}, repetition={repetition}"
+                );
+                for task in &input {
+                    let name = format!(
+                        "task-{}.json",
+                        digest(task["task_id"].as_str().unwrap().as_bytes())
+                    );
+                    assert_eq!(
+                        fs::read(baseline_dir.join(&name)).unwrap(),
+                        fs::read(output.join(name)).unwrap(),
+                        "workers={workers}, repetition={repetition}"
+                    );
+                }
+                fs::remove_dir_all(output).unwrap();
+            }
+        }
+        fs::remove_dir_all(baseline_dir).unwrap();
     }
 
     #[test]
