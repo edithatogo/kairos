@@ -16,6 +16,25 @@ use std::collections::BTreeMap;
 fn error(e: impl std::fmt::Debug) -> String {
     format!("native: {e:?}")
 }
+
+fn next_preview_tick(
+    flow: &FlowRuntime,
+    codecs: &FlowCheckpointCodecs,
+    limits: FlowCheckpointLimits,
+) -> Result<Option<u128>, String> {
+    let image = flow
+        .capture_checkpoint_image(codecs, limits)
+        .map_err(error)?;
+    Ok(image
+        .as_ref()
+        .scheduler()
+        .entries
+        .iter()
+        .filter(|entry| entry.live)
+        .map(|entry| entry.request.at.ticks())
+        .min())
+}
+
 fn number(v: &Value, key: &str) -> Result<u64, String> {
     v[key]
         .as_u64()
@@ -367,16 +386,7 @@ fn free_run(config: &Value, task: &Value) -> Result<Value, String> {
     let mut completions = vec![None; pending.len()];
     let mut events = 0;
     while events < number(task, "max_events")? {
-        let image = flow
-            .capture_checkpoint(&codecs, FlowCheckpointLimits::default())
-            .map_err(error)?;
-        let next = image
-            .scheduler
-            .entries
-            .iter()
-            .filter(|e| e.live)
-            .map(|e| e.request.at.ticks())
-            .min();
+        let next = next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default())?;
         if next.is_none_or(|t| t > horizon) {
             break;
         }
@@ -432,6 +442,100 @@ pub(crate) fn replay(config: &Value, mode: &str) -> Result<Value, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use kairo_ecs_des::{
+        FlowCheckpointError, FlowCheckpointImage, FlowHandlerCodeIds, RequestState, WorkState,
+    };
+
+    fn gated_preview_runtime() -> (
+        FlowRuntime,
+        FlowCheckpointCodecs,
+        kairo_ecs_des::ResourceId,
+        kairo_ecs_des::RequestId,
+        kairo_ecs_des::WorkId,
+    ) {
+        let mut flow = FlowRuntime::new();
+        flow.register_work_handlers("c5.free", WorkHandlers::<u32>::default())
+            .unwrap();
+        let resource = flow.create_resource(1).unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let work = flow
+            .create_work(owner, SimDuration::from_ticks(5), "c5.free", 0u32)
+            .unwrap();
+        let request = flow
+            .acquire(resource)
+            .owner(owner)
+            .timed_work(work)
+            .at(SimTime::from_ticks(0))
+            .submit()
+            .unwrap();
+        flow.schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(2), 0)
+            .unwrap();
+        flow.schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(7), 0)
+            .unwrap();
+
+        let mut codecs = FlowCheckpointCodecs::new();
+        codecs
+            .register_context::<u32>(
+                "c5.free",
+                1,
+                |value, cap| {
+                    if cap < 4 {
+                        return Err(kairo_ecs_des::FlowCheckpointCodecError("cap".into()));
+                    }
+                    Ok(value.to_le_bytes().to_vec())
+                },
+                |bytes, _| {
+                    Ok(u32::from_le_bytes(bytes.try_into().map_err(|_| {
+                        kairo_ecs_des::FlowCheckpointCodecError("u32".into())
+                    })?))
+                },
+            )
+            .unwrap();
+        codecs
+            .register_work_handlers::<u32>(
+                "c5.free",
+                FlowHandlerCodeIds::default(),
+                WorkHandlers::default(),
+            )
+            .unwrap();
+        let dispatch = flow.step().unwrap().unwrap();
+        assert_eq!(dispatch.at, SimTime::from_ticks(0));
+        assert_eq!(dispatch.error, None);
+        assert_eq!(flow.work_progress(work).unwrap().state, WorkState::Active);
+        (flow, codecs, resource, request, work)
+    }
+
+    #[derive(Debug, Eq, PartialEq)]
+    struct PreviewState {
+        image: FlowCheckpointImage,
+        now: SimTime,
+        dispatched_events: u64,
+        resource: kairo_ecs_des::ResourceSnapshot,
+        grant_enabled: bool,
+        request: kairo_ecs_des::ResourceRequest,
+        work: kairo_ecs_des::WorkProgress,
+    }
+
+    fn preview_state(
+        flow: &FlowRuntime,
+        codecs: &FlowCheckpointCodecs,
+        resource: kairo_ecs_des::ResourceId,
+        request: kairo_ecs_des::RequestId,
+        work: kairo_ecs_des::WorkId,
+    ) -> PreviewState {
+        PreviewState {
+            image: flow
+                .capture_checkpoint_image(codecs, FlowCheckpointLimits::default())
+                .unwrap(),
+            now: flow.now(),
+            dispatched_events: flow.budget_snapshot().scheduler.dispatched_events,
+            resource: flow.resource(resource).unwrap(),
+            grant_enabled: flow.resource_grant_enabled(resource).unwrap(),
+            request: flow.request(request).unwrap(),
+            work: flow.work_progress(work).unwrap(),
+        }
+    }
+
     fn study() -> Value {
         serde_json::from_str(include_str!("../../../examples/calibration/c5/study.json")).unwrap()
     }
@@ -534,6 +638,71 @@ mod tests {
         c["trace"][1]["end_tick"] = json!(190);
         let changed = replay(&c, "free").unwrap();
         assert_eq!(changed["result"]["records"][1]["predicted_tick"], "108");
+    }
+
+    #[test]
+    fn c5_native_preview_preserves_pending_disable_and_completion() {
+        let (mut flow, codecs, resource, request, work) = gated_preview_runtime();
+        assert!(matches!(
+            flow.capture_checkpoint(&codecs, FlowCheckpointLimits::default()),
+            Err(FlowCheckpointError::InvalidState(_))
+        ));
+        let before = preview_state(&flow, &codecs, resource, request, work);
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(2)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            before
+        );
+        assert_eq!(before.now, SimTime::from_ticks(0));
+        assert_eq!(before.request.state, RequestState::Active);
+        assert_eq!(before.work.state, WorkState::Active);
+        assert_eq!(before.resource.active.len(), 1);
+        assert!(before.grant_enabled);
+
+        let disable = flow.step().unwrap().unwrap();
+        assert_eq!(disable.at, SimTime::from_ticks(2));
+        assert_eq!(disable.error, None);
+        assert!(!flow.resource_grant_enabled(resource).unwrap());
+        let before = preview_state(&flow, &codecs, resource, request, work);
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(5)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            before
+        );
+        assert_eq!(before.now, SimTime::from_ticks(2));
+        assert_eq!(before.request.state, RequestState::Active);
+        assert_eq!(before.work.state, WorkState::Active);
+        assert_eq!(before.resource.active.len(), 1);
+        assert!(!before.grant_enabled);
+
+        let completion = flow.step().unwrap().unwrap();
+        assert_eq!(completion.at, SimTime::from_ticks(5));
+        assert_eq!(completion.error, None);
+        assert_eq!(
+            flow.work_progress(work).unwrap().state,
+            WorkState::Completed
+        );
+    }
+
+    #[test]
+    fn c5_native_preview_limit_error_propagates_without_v1_fallback() {
+        let (flow, codecs, _, _, _) = gated_preview_runtime();
+        let limits = FlowCheckpointLimits {
+            max_commands: 0,
+            ..FlowCheckpointLimits::default()
+        };
+        let expected = flow.capture_checkpoint_image(&codecs, limits).unwrap_err();
+        assert!(matches!(expected, FlowCheckpointError::LimitExceeded(_)));
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, limits),
+            Err(error(expected))
+        );
     }
     #[test]
     fn c5_native_complete_study_and_final_holdout_are_separate() {

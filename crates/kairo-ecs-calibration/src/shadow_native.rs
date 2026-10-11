@@ -64,10 +64,11 @@ impl<M: FlowProbeModel> ProbeAdapter for NativeFlowAdapter<M> {
         let image = self
             .model
             .flow(runtime)
-            .capture_checkpoint(self.model.codecs(runtime), self.model.capture_limits())
+            .capture_checkpoint_image(self.model.codecs(runtime), self.model.capture_limits())
             .map_err(|error| ShadowError::Adapter(format!("native preview: {error:?}")))?;
         Ok(image
-            .scheduler
+            .as_ref()
+            .scheduler()
             .entries
             .iter()
             .filter(|entry| entry.live)
@@ -199,8 +200,8 @@ mod tests {
     use crate::seed_map::{CalibrationSeedMap, SeedPurpose};
     use crate::shadow_pool::{PoolLimits, ProbePool};
     use kairo_ecs_des::{
-        FlowCheckpointCodecError, FlowCheckpointRebindV1, FlowHandlerCodeIds, WorkHandlers, WorkId,
-        WorkState,
+        FlowCheckpointCodecError, FlowCheckpointRebindV1, FlowHandlerCodeIds, RequestId,
+        RequestState, ResourceId, WorkHandlers, WorkId, WorkState,
     };
     use kairo_ecs_types::{SimDuration, SimTime};
     use std::collections::BTreeMap;
@@ -297,6 +298,111 @@ mod tests {
             ))
         }
     }
+
+    struct GatedWorld {
+        flow: FlowRuntime,
+        codecs: FlowCheckpointCodecs,
+        resource: ResourceId,
+        request: RequestId,
+        work: WorkId,
+    }
+
+    struct GatedModel {
+        enable_at: Option<u128>,
+    }
+
+    impl FlowProbeModel for GatedModel {
+        type World = GatedWorld;
+
+        fn start(&self, _: &LedgerSnapshot, _: &ProbeInput) -> Result<GatedWorld, ShadowError> {
+            let mut flow = FlowRuntime::new();
+            flow.register_work_handlers("c3.native", WorkHandlers::<u32>::default())
+                .unwrap();
+            let owner = flow.spawn_actor().unwrap();
+            let resource = flow.create_resource(1).unwrap();
+            let work = flow
+                .create_work(owner, SimDuration::from_ticks(5), "c3.native", 7u32)
+                .unwrap();
+            flow.schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(0), 0)
+                .unwrap();
+            let request = flow
+                .acquire(resource)
+                .owner(owner)
+                .timed_work(work)
+                .at(SimTime::from_ticks(0))
+                .submit()
+                .unwrap();
+            if let Some(enable_at) = self.enable_at {
+                flow.schedule_resource_grant_enabled(
+                    resource,
+                    true,
+                    SimTime::from_ticks(enable_at),
+                    0,
+                )
+                .unwrap();
+            }
+            let mut codecs = FlowCheckpointCodecs::new();
+            codecs
+                .register_context::<u32>("c3.native", 1, enc, dec)
+                .unwrap();
+            codecs
+                .register_work_handlers::<u32>(
+                    "c3.native",
+                    FlowHandlerCodeIds::default(),
+                    WorkHandlers::default(),
+                )
+                .unwrap();
+            Ok(GatedWorld {
+                flow,
+                codecs,
+                resource,
+                request,
+                work,
+            })
+        }
+
+        fn flow<'a>(&self, world: &'a GatedWorld) -> &'a FlowRuntime {
+            &world.flow
+        }
+
+        fn flow_mut<'a>(&self, world: &'a mut GatedWorld) -> &'a mut FlowRuntime {
+            &mut world.flow
+        }
+
+        fn codecs<'a>(&self, world: &'a GatedWorld) -> &'a FlowCheckpointCodecs {
+            &world.codecs
+        }
+
+        fn capture_limits(&self) -> FlowCheckpointLimits {
+            FlowCheckpointLimits::default()
+        }
+
+        fn completed(&self, world: &GatedWorld) -> Result<bool, ShadowError> {
+            Ok(world.flow.work_progress(world.work).unwrap().state == WorkState::Completed)
+        }
+
+        fn after_dispatch(&self, _: &mut GatedWorld, _: &FlowDispatch) -> Result<(), ShadowError> {
+            Ok(())
+        }
+
+        fn checkpoint(&self, _: &GatedWorld, _: usize) -> Result<Vec<u8>, ShadowError> {
+            Err(ShadowError::Adapter(
+                "gated fixture does not implement capture".into(),
+            ))
+        }
+
+        fn restore(
+            &self,
+            _: &LedgerSnapshot,
+            _: &ProbeInput,
+            _: &[u8],
+        ) -> Result<GatedWorld, ShadowError> {
+            Err(ShadowError::Adapter(
+                "gated fixture does not implement restore".into(),
+            ))
+        }
+    }
+
     fn inputs() -> (LedgerSnapshot, ProbeInput) {
         let snapshot = LedgerSnapshot {
             frontier: 1,
@@ -363,6 +469,104 @@ mod tests {
             }
         }
         assert_eq!(target, Some(5));
+    }
+
+    #[test]
+    fn native_preview_handles_v2_pending_disable_and_horizon_without_advancing() {
+        let adapter = NativeFlowAdapter {
+            model: GatedModel { enable_at: Some(3) },
+            max_image_bytes: 4096,
+        };
+        let (snapshot, input) = inputs();
+        let mut world = adapter.start(&snapshot, &input).unwrap();
+        let mut dispatched = Vec::new();
+
+        loop {
+            let before = world
+                .flow
+                .capture_checkpoint_image(&world.codecs, FlowCheckpointLimits::default())
+                .unwrap();
+            let next = adapter.next_tick(&world).unwrap().unwrap();
+            assert_eq!(
+                world
+                    .flow
+                    .capture_checkpoint_image(&world.codecs, FlowCheckpointLimits::default())
+                    .unwrap(),
+                before
+            );
+            if next > 6 {
+                assert_eq!(next, 8);
+                break;
+            }
+            let receipt = adapter.step(&mut world).unwrap();
+            assert_eq!(receipt.dispatched_at, next);
+            assert_eq!(receipt.failure, None);
+            dispatched.push(receipt.dispatched_at);
+        }
+
+        assert_eq!(dispatched, vec![0, 0, 3]);
+        assert_eq!(adapter.now(&world), 3);
+        assert_eq!(
+            world.flow.work_progress(world.work).unwrap().state,
+            WorkState::Active
+        );
+        assert_eq!(
+            world.flow.request(world.request).unwrap().state,
+            RequestState::Active
+        );
+        assert_eq!(world.flow.resource(world.resource).unwrap().active.len(), 1);
+
+        let mut completed_world = adapter.start(&snapshot, &input).unwrap();
+        loop {
+            let next = adapter.next_tick(&completed_world).unwrap().unwrap();
+            let receipt = adapter.step(&mut completed_world).unwrap();
+            assert_eq!(receipt.dispatched_at, next);
+            assert_eq!(receipt.failure, None);
+            if let Some(target) = receipt.target {
+                assert_eq!(target, 8);
+                break;
+            }
+        }
+        assert_eq!(
+            completed_world
+                .flow
+                .work_progress(completed_world.work)
+                .unwrap()
+                .state,
+            WorkState::Completed
+        );
+    }
+
+    #[test]
+    fn native_preview_disabled_queue_has_no_next_event_or_completion() {
+        let adapter = NativeFlowAdapter {
+            model: GatedModel { enable_at: None },
+            max_image_bytes: 4096,
+        };
+        let (snapshot, input) = inputs();
+        let mut world = adapter.start(&snapshot, &input).unwrap();
+        let mut dispatched = Vec::new();
+
+        while let Some(next) = adapter.next_tick(&world).unwrap() {
+            let receipt = adapter.step(&mut world).unwrap();
+            assert_eq!(receipt.dispatched_at, next);
+            assert_eq!(receipt.failure, None);
+            assert_eq!(receipt.target, None);
+            dispatched.push(next);
+        }
+
+        assert_eq!(dispatched, vec![0, 0]);
+        assert_eq!(adapter.next_tick(&world).unwrap(), None);
+        assert_eq!(adapter.now(&world), 0);
+        assert_eq!(
+            world.flow.request(world.request).unwrap().state,
+            RequestState::Queued
+        );
+        assert_eq!(world.flow.resource(world.resource).unwrap().queued.len(), 1);
+        assert_eq!(
+            world.flow.work_progress(world.work).unwrap().state,
+            WorkState::Pending
+        );
     }
     #[test]
     fn native_model_cannot_hide_extra_dispatches_from_probe_budget() {
