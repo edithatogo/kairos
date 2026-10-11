@@ -443,7 +443,8 @@ pub(crate) fn replay(config: &Value, mode: &str) -> Result<Value, String> {
 mod tests {
     use super::*;
     use kairo_ecs_des::{
-        FlowCheckpointError, FlowCheckpointImage, FlowHandlerCodeIds, RequestState, WorkState,
+        FlowAllocationMode, FlowCheckpointError, FlowCheckpointImage, FlowHandlerCodeIds,
+        RequestState, WorkState,
     };
 
     fn gated_preview_runtime() -> (
@@ -503,6 +504,208 @@ mod tests {
         assert_eq!(dispatch.error, None);
         assert_eq!(flow.work_progress(work).unwrap().state, WorkState::Active);
         (flow, codecs, resource, request, work)
+    }
+
+    fn c5_preview_codecs() -> FlowCheckpointCodecs {
+        let mut codecs = FlowCheckpointCodecs::new();
+        codecs
+            .register_context::<u32>(
+                "c5.free",
+                1,
+                |value, cap| {
+                    if cap < 4 {
+                        return Err(kairo_ecs_des::FlowCheckpointCodecError("cap".into()));
+                    }
+                    Ok(value.to_le_bytes().to_vec())
+                },
+                |bytes, _| {
+                    Ok(u32::from_le_bytes(bytes.try_into().map_err(|_| {
+                        kairo_ecs_des::FlowCheckpointCodecError("u32".into())
+                    })?))
+                },
+            )
+            .unwrap();
+        codecs
+            .register_work_handlers::<u32>(
+                "c5.free",
+                FlowHandlerCodeIds::default(),
+                WorkHandlers::default(),
+            )
+            .unwrap();
+        codecs
+    }
+
+    fn count_c5_preview_completion(
+        context: &mut u32,
+        _: &kairo_ecs_des::FlowCallbackSnapshot,
+        _: &mut kairo_ecs_des::FlowCommandSink,
+    ) {
+        *context += 1;
+    }
+
+    fn c5_preview_callback_codecs() -> FlowCheckpointCodecs {
+        let mut codecs = c5_preview_codecs();
+        codecs
+            .register_work_continuations(
+                "c5.free",
+                kairo_ecs_des::FlowContinuationCodeIds {
+                    on_complete: Some(kairo_ecs_des::FlowCallbackCodeV1 {
+                        stable_id: "c5.preview.completion-counter".into(),
+                        version: 1,
+                    }),
+                    ..Default::default()
+                },
+                kairo_ecs_des::FlowContinuations {
+                    on_complete: Some(count_c5_preview_completion),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        codecs
+    }
+
+    fn deferred_preview_runtime(
+        duration: u128,
+        transition_limit: Option<std::num::NonZeroU64>,
+    ) -> (
+        FlowRuntime,
+        FlowCheckpointCodecs,
+        kairo_ecs_des::ResourceId,
+        kairo_ecs_des::RequestId,
+        kairo_ecs_des::WorkId,
+    ) {
+        let mut flow = FlowRuntime::with_config(kairo_ecs_des::FlowConfig {
+            max_same_tick_flow_transitions: transition_limit
+                .unwrap_or_else(|| std::num::NonZeroU64::new(100_000).unwrap()),
+        });
+        flow.register_work_handlers("c5.free", WorkHandlers::<u32>::default())
+            .unwrap();
+        let resource = flow
+            .create_resource_with_allocation_mode(1, FlowAllocationMode::Deferred)
+            .unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let work = flow
+            .create_work(owner, SimDuration::from_ticks(duration), "c5.free", 7u32)
+            .unwrap();
+        let request = flow
+            .acquire(resource)
+            .owner(owner)
+            .timed_work(work)
+            .at(SimTime::from_ticks(0))
+            .submit()
+            .unwrap();
+        let codecs = c5_preview_codecs();
+        (flow, codecs, resource, request, work)
+    }
+
+    fn drain_c5_through(
+        flow: &mut FlowRuntime,
+        event: kairo_ecs_types::EventId,
+        tick: SimTime,
+    ) -> Vec<kairo_ecs_des::FlowDispatch> {
+        let mut dispatches = Vec::new();
+        for _ in 0..16 {
+            let dispatch = flow.step().unwrap().expect("scheduled event closure");
+            assert_eq!(dispatch.at, tick);
+            let reached = dispatch.event == event;
+            dispatches.push(dispatch);
+            if reached {
+                return dispatches;
+            }
+        }
+        panic!("event closure exceeded bound");
+    }
+
+    fn stale_completion_runtime() -> (
+        FlowRuntime,
+        FlowCheckpointCodecs,
+        kairo_ecs_des::ResourceId,
+        kairo_ecs_des::RequestId,
+        kairo_ecs_des::WorkId,
+        kairo_ecs_des::RequestId,
+        kairo_ecs_des::WorkId,
+    ) {
+        // Rebuild this fixture with a submit at tick one so useful completion is
+        // tick fourteen, while its superseded tick-eleven event remains live.
+        let mut flow = FlowRuntime::new();
+        flow.register_work_handlers("c5.free", WorkHandlers::<u32>::default())
+            .unwrap();
+        flow.register_work_continuations(
+            "c5.free",
+            kairo_ecs_des::FlowContinuations {
+                on_complete: Some(count_c5_preview_completion),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let resource = flow
+            .create_resource_with_allocation_mode(1, FlowAllocationMode::Deferred)
+            .unwrap();
+        let low_owner = flow.spawn_actor().unwrap();
+        let low_work = flow
+            .create_work(low_owner, SimDuration::from_ticks(10), "c5.free", 0u32)
+            .unwrap();
+        let low = flow
+            .acquire(resource)
+            .owner(low_owner)
+            .timed_work(low_work)
+            .at(SimTime::from_ticks(1))
+            .priority(10)
+            .preemptible(kairo_ecs_des::PreemptionStrategy::Suspend)
+            .submit()
+            .unwrap();
+        let first_flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(1), i32::MAX)
+            .unwrap();
+        drain_c5_through(&mut flow, first_flush, SimTime::from_ticks(1));
+        assert_eq!(flow.request(low).unwrap().state, RequestState::Active);
+
+        let urgent_owner = flow.spawn_actor().unwrap();
+        let urgent_work = flow
+            .create_work(urgent_owner, SimDuration::from_ticks(2), "c5.free", 0u32)
+            .unwrap();
+        let urgent = flow
+            .acquire(resource)
+            .owner(urgent_owner)
+            .timed_work(urgent_work)
+            .at(SimTime::from_ticks(4))
+            .priority(1)
+            .can_preempt(true)
+            .submit()
+            .unwrap();
+        let preempt_flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(4), i32::MAX)
+            .unwrap();
+        drain_c5_through(&mut flow, preempt_flush, SimTime::from_ticks(4));
+        assert_eq!(flow.request(low).unwrap().state, RequestState::Suspended);
+        assert_eq!(flow.request(urgent).unwrap().state, RequestState::Active);
+
+        let resume_flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(7), i32::MAX)
+            .unwrap();
+        // Consume the urgent useful completion at six before the explicit
+        // deferred readmission at seven.
+        let urgent_done = flow.step().unwrap().expect("urgent completion at six");
+        assert_eq!(urgent_done.at, SimTime::from_ticks(6));
+        assert!(urgent_done.records.iter().any(|record| {
+            record.request == urgent
+                && record.transition == kairo_ecs_des::LifecycleTransition::Completed
+        }));
+        let notification = flow.step().unwrap().expect("urgent completion callback");
+        assert_eq!(notification.at, SimTime::from_ticks(6));
+        assert_eq!(flow.work_context::<u32>(urgent_work), Ok(&1));
+        drain_c5_through(&mut flow, resume_flush, SimTime::from_ticks(7));
+        assert_eq!(flow.request(low).unwrap().state, RequestState::Active);
+        assert_eq!(flow.now(), SimTime::from_ticks(7));
+        (
+            flow,
+            c5_preview_callback_codecs(),
+            resource,
+            low,
+            low_work,
+            urgent,
+            urgent_work,
+        )
     }
 
     #[derive(Debug, Eq, PartialEq)]
@@ -693,6 +896,312 @@ mod tests {
     #[test]
     fn c5_native_preview_limit_error_propagates_without_v1_fallback() {
         let (flow, codecs, _, _, _) = gated_preview_runtime();
+        let limits = FlowCheckpointLimits {
+            max_commands: 0,
+            ..FlowCheckpointLimits::default()
+        };
+        let expected = flow.capture_checkpoint_image(&codecs, limits).unwrap_err();
+        assert!(matches!(expected, FlowCheckpointError::LimitExceeded(_)));
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, limits),
+            Err(error(expected))
+        );
+    }
+
+    #[test]
+    fn preview_v3_deferred_pending_flush_without_advancement() {
+        let (mut flow, codecs, resource, request, work) = deferred_preview_runtime(5, None);
+        let submit = flow.step().unwrap().expect("Submit at zero");
+        assert_eq!(submit.at, SimTime::from_ticks(0));
+        assert_eq!(flow.request(request).unwrap().state, RequestState::Queued);
+        assert!(flow.request(request).unwrap().lease.is_none());
+        let flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(4), i32::MAX)
+            .unwrap();
+
+        let before = preview_state(&flow, &codecs, resource, request, work);
+        assert!(matches!(before.image, FlowCheckpointImage::V3(_)));
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(4)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            before
+        );
+
+        let admission = flow.step().unwrap().expect("Flush at four");
+        assert_eq!(admission.event, flush);
+        assert_eq!(admission.at, SimTime::from_ticks(4));
+        assert!(admission.records.iter().any(|record| {
+            record.request == request
+                && record.transition == kairo_ecs_des::LifecycleTransition::Granted
+        }));
+        assert_eq!(flow.request(request).unwrap().state, RequestState::Active);
+        let before = preview_state(&flow, &codecs, resource, request, work);
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(9)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            before
+        );
+
+        let completion = flow.step().unwrap().expect("useful completion at nine");
+        assert_eq!(completion.at, SimTime::from_ticks(9));
+        assert!(completion.records.iter().any(|record| {
+            record.request == request
+                && record.transition == kairo_ecs_des::LifecycleTransition::Completed
+        }));
+        assert_eq!(
+            flow.work_progress(work).unwrap().state,
+            WorkState::Completed
+        );
+
+        let (mut stale, stale_codecs, stale_resource, low, low_work, _, callback_work) =
+            stale_completion_runtime();
+        let callback_context_before = (
+            *stale.work_context::<u32>(low_work).unwrap(),
+            *stale.work_context::<u32>(callback_work).unwrap(),
+        );
+        assert_eq!(callback_context_before, (0, 1));
+        let before = preview_state(&stale, &stale_codecs, stale_resource, low, low_work);
+        assert_eq!(
+            next_preview_tick(&stale, &stale_codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(11)
+        );
+        assert_eq!(
+            preview_state(&stale, &stale_codecs, stale_resource, low, low_work),
+            before
+        );
+        assert_eq!(
+            (
+                *stale.work_context::<u32>(low_work).unwrap(),
+                *stale.work_context::<u32>(callback_work).unwrap(),
+            ),
+            callback_context_before
+        );
+        let stale_image = stale
+            .capture_checkpoint_image(&stale_codecs, FlowCheckpointLimits::default())
+            .unwrap();
+        let FlowCheckpointImage::V3(stale_v3) = stale_image else {
+            panic!("Deferred stale completion must capture as V3");
+        };
+        let stored_progress = stale_v3
+            .builtins
+            .work_progress
+            .as_ref()
+            .unwrap()
+            .rows
+            .iter()
+            .find(|(id, _)| *id == low_work.entity_id())
+            .unwrap()
+            .1
+            .clone();
+        let stale_dispatch = stale
+            .step()
+            .unwrap()
+            .expect("live stale completion at eleven");
+        assert_eq!(stale_dispatch.at, SimTime::from_ticks(11));
+        assert!(stale_dispatch.records.is_empty());
+        assert_eq!(
+            (
+                *stale.work_context::<u32>(low_work).unwrap(),
+                *stale.work_context::<u32>(callback_work).unwrap(),
+            ),
+            callback_context_before
+        );
+        let after_image = stale
+            .capture_checkpoint_image(&stale_codecs, FlowCheckpointLimits::default())
+            .unwrap();
+        let FlowCheckpointImage::V3(after_v3) = after_image else {
+            panic!("stale dispatch remains a V3 image");
+        };
+        assert_eq!(
+            after_v3
+                .builtins
+                .work_progress
+                .as_ref()
+                .unwrap()
+                .rows
+                .iter()
+                .find(|(id, _)| *id == low_work.entity_id())
+                .unwrap()
+                .1,
+            stored_progress
+        );
+        assert_eq!(
+            stale.work_progress(low_work).unwrap().useful_elapsed,
+            SimDuration::from_ticks(7)
+        );
+        assert_eq!(
+            stale.work_progress(low_work).unwrap().remaining,
+            SimDuration::from_ticks(3)
+        );
+        assert_eq!(
+            next_preview_tick(&stale, &stale_codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(14)
+        );
+        let useful_completion = stale
+            .step()
+            .unwrap()
+            .expect("new lease completion at fourteen");
+        assert_eq!(useful_completion.at, SimTime::from_ticks(14));
+        assert!(useful_completion.records.iter().any(|record| {
+            record.request == low
+                && record.transition == kairo_ecs_des::LifecycleTransition::Completed
+        }));
+    }
+
+    #[test]
+    fn preview_v3_disabled_queue_has_no_invented_completion() {
+        let mut flow = FlowRuntime::new();
+        flow.register_work_handlers("c5.free", WorkHandlers::<u32>::default())
+            .unwrap();
+        let resource = flow
+            .create_resource_with_allocation_mode(1, FlowAllocationMode::Deferred)
+            .unwrap();
+        let disable = flow
+            .schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(0), i32::MIN)
+            .unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let work = flow
+            .create_work(owner, SimDuration::from_ticks(5), "c5.free", 1u32)
+            .unwrap();
+        let request = flow
+            .acquire(resource)
+            .owner(owner)
+            .timed_work(work)
+            .at(SimTime::from_ticks(0))
+            .submit()
+            .unwrap();
+        let flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(0), i32::MAX)
+            .unwrap();
+        let codecs = c5_preview_codecs();
+        let pending = preview_state(&flow, &codecs, resource, request, work);
+        assert_eq!(pending.request.state, RequestState::Pending);
+        assert!(pending.request.lease.is_none());
+        let pending_image = flow
+            .capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
+            .unwrap();
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(0)
+        );
+        assert_eq!(
+            flow.capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
+                .unwrap(),
+            pending_image
+        );
+
+        let disable_dispatch = flow.step().unwrap().expect("Disable event");
+        assert_eq!(disable_dispatch.event, disable);
+        assert_eq!(disable_dispatch.at, SimTime::from_ticks(0));
+        assert_eq!(flow.resource_grant_enabled(resource), Ok(false));
+        let submit_event = flow
+            .capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
+            .unwrap()
+            .as_ref()
+            .commands()
+            .find_map(|(event, command)| {
+                (command == kairo_ecs_des::FlowCommandV3::Submit(request)).then_some(event)
+            })
+            .expect("live Submit command");
+        let submit_dispatch = flow.step().unwrap().expect("Submit event");
+        assert_eq!(submit_dispatch.event, submit_event);
+        assert_eq!(submit_dispatch.at, SimTime::from_ticks(0));
+        assert_eq!(flow.request(request).unwrap().state, RequestState::Queued);
+        assert!(flow.request(request).unwrap().lease.is_none());
+        let flush_dispatch = flow.step().unwrap().expect("Flush event");
+        assert_eq!(flush_dispatch.event, flush);
+        assert_eq!(flush_dispatch.at, SimTime::from_ticks(0));
+        assert_eq!(flow.request(request).unwrap().state, RequestState::Queued);
+        assert!(flow.request(request).unwrap().lease.is_none());
+        assert!(flow.resource(resource).unwrap().active.is_empty());
+        let after_closure = preview_state(&flow, &codecs, resource, request, work);
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            None
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            after_closure
+        );
+    }
+
+    #[test]
+    fn preview_v3_halted_live_tick_and_repeat_step_error() {
+        let limit = std::num::NonZeroU64::new(1).unwrap();
+        let (mut flow, codecs, resource, request, work) = deferred_preview_runtime(4, Some(limit));
+        let submit = flow
+            .step()
+            .unwrap()
+            .expect("Submit consumes the tick budget");
+        assert_eq!(submit.at, SimTime::from_ticks(0));
+        assert_eq!(flow.request(request).unwrap().state, RequestState::Queued);
+        let flush = flow
+            .schedule_allocation_flush(resource, flow.now(), i32::MAX)
+            .unwrap();
+        let before_halt = preview_state(&flow, &codecs, resource, request, work);
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(0)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            before_halt
+        );
+        let first_error = flow.step().unwrap_err();
+        assert!(matches!(
+            first_error,
+            kairo_ecs_des::FlowError::SameTickBudgetExceeded {
+                at_ticks: 0,
+                limit: 1
+            }
+        ));
+        let halted_budget = flow.budget_snapshot();
+        let halted = preview_state(&flow, &codecs, resource, request, work);
+        let FlowCheckpointImage::V3(halted_image) = &halted.image else {
+            panic!("halted Deferred image must be V3");
+        };
+        assert!(halted_image.budget_halt.is_some());
+        assert!(halted_image.commands.iter().any(|(event, command)| {
+            *event == flush && *command == kairo_ecs_des::FlowCommandV3::AllocationFlush(resource)
+        }));
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(0)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            halted
+        );
+        assert_eq!(flow.step().unwrap_err(), first_error);
+        assert_eq!(flow.budget_snapshot(), halted_budget);
+        assert_eq!(
+            flow.capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
+                .unwrap(),
+            halted.image
+        );
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(0)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            halted
+        );
+    }
+
+    #[test]
+    fn preview_v3_capture_limit_error_without_legacy_fallback() {
+        let (flow, codecs, _, _, _) = deferred_preview_runtime(5, None);
+        let valid = flow
+            .capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
+            .unwrap();
+        assert!(matches!(valid, FlowCheckpointImage::V3(_)));
         let limits = FlowCheckpointLimits {
             max_commands: 0,
             ..FlowCheckpointLimits::default()
