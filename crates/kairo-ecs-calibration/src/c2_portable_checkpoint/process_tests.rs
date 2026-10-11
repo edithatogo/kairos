@@ -18,12 +18,14 @@ use kairo_ecs_abm::{
 };
 use kairo_ecs_des::fidelity::{FidelityMode, FidelityPolicy};
 use kairo_ecs_des::{
-    FlowCallbackCodeV1, FlowCheckpointCodecError, FlowCheckpointCodecs, FlowCheckpointLimits,
-    FlowCheckpointRebindV1, FlowCheckpointWireLimits, FlowDomainControl, FlowHandlerCodeIds,
-    FlowRuntime, PreemptionStrategy, WorkHandlers,
+    FlowCallbackCodeV1, FlowCheckpointCodecError, FlowCheckpointCodecs, FlowCheckpointError,
+    FlowCheckpointImage, FlowCheckpointLimits, FlowCheckpointRebindV1, FlowCheckpointRef,
+    FlowCheckpointWireError, FlowCheckpointWireLimits, FlowCommandV2, FlowDomainControl,
+    FlowHandlerCodeIds, FlowRuntime, PreemptionStrategy, WorkHandlers,
 };
 use kairo_ecs_types::{EntityId, EventKind, SimDuration, SimTime};
 use sha2::{Digest, Sha256};
+use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -33,6 +35,7 @@ use std::sync::Arc;
 const CHILD_PATH: &str = "KAIROS_C2_PROCESS_MATRIX_FILE";
 const CHILD_CASE: &str = "KAIROS_C2_PROCESS_MATRIX_CASE";
 const TRACE_MARKER: &str = "C2_PORTABLE_PROCESS_TRACE:";
+thread_local! { static FLOW_CODEC_DECODER_CALLS: Cell<usize> = const { Cell::new(0) }; }
 const CONTEXT_CODEC: &str = "c2.matrix.context";
 const TEMPLATE_CODEC: &str = "c2.matrix.template";
 const TRANSIT_CODEC: &str = "c2.matrix.transit";
@@ -223,6 +226,12 @@ fn spec(name: &str) -> Result<CaseSpec, C2PortableCheckpointError> {
             cut: Cut::ControlPending,
             pending_policy: false,
         },
+        "transit-moving-control-future-gate" => CaseSpec {
+            name: "transit-moving-control-future-gate",
+            works: vec![one(FidelityMode::Micro, route(), "routed")],
+            cut: Cut::ControlPending,
+            pending_policy: false,
+        },
         "transit-rejected-control-noncapturable" => CaseSpec {
             name: "transit-rejected-control-noncapturable",
             works: vec![one(FidelityMode::Micro, route(), "routed")],
@@ -231,6 +240,12 @@ fn spec(name: &str) -> Result<CaseSpec, C2PortableCheckpointError> {
         },
         "transit-arrived-queued" => CaseSpec {
             name: "transit-arrived-queued",
+            works: vec![one(FidelityMode::Micro, route(), "routed")],
+            cut: Cut::Arrived,
+            pending_policy: false,
+        },
+        "service-arrival-disabled-pending-submit" => CaseSpec {
+            name: "service-arrival-disabled-pending-submit",
             works: vec![one(FidelityMode::Micro, route(), "routed")],
             cut: Cut::Arrived,
             pending_policy: false,
@@ -255,6 +270,12 @@ fn spec(name: &str) -> Result<CaseSpec, C2PortableCheckpointError> {
         },
         "service-suspend-pending-cut-sample20" => CaseSpec {
             name: "service-suspend-pending-cut-sample20",
+            works: vec![one(FidelityMode::Macro, None, "service20")],
+            cut: Cut::ServiceSuspendPending,
+            pending_policy: false,
+        },
+        "service-suspend-pending-enable-gate" => CaseSpec {
+            name: "service-suspend-pending-enable-gate",
             works: vec![one(FidelityMode::Macro, None, "service20")],
             cut: Cut::ServiceSuspendPending,
             pending_policy: false,
@@ -395,6 +416,7 @@ fn decode_owned_context(
     bytes: &[u8],
     _: &FlowCheckpointRebindV1,
 ) -> Result<OwnedContext, FlowCheckpointCodecError> {
+    FLOW_CODEC_DECODER_CALLS.with(|calls| calls.set(calls.get() + 1));
     let (marker, payload) = bytes
         .split_at_checked(8)
         .ok_or_else(|| FlowCheckpointCodecError("truncated context marker".to_owned()))?;
@@ -872,7 +894,19 @@ fn paused_mixed_route_progress(
     context.progress_at(at).unwrap()
 }
 
-fn cut_runtime(runtime: &mut MatrixRuntime, cut: Cut) {
+fn cut_runtime(runtime: &mut MatrixRuntime, case: &CaseSpec) {
+    let cut = case.cut;
+    if case.name == "service-arrival-disabled-pending-submit" {
+        let resource = runtime.bounds[0].acquire_intent().resource;
+        runtime
+            .flow
+            .schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(9_999), i32::MAX)
+            .unwrap();
+        runtime
+            .flow
+            .schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(10_005), i32::MAX)
+            .unwrap();
+    }
     match cut {
         Cut::Ready | Cut::SubmittedPending | Cut::SubmittedActive | Cut::MultiGraphMixed => {}
         Cut::RejectedStart => {
@@ -1298,6 +1332,47 @@ fn cut_runtime(runtime: &mut MatrixRuntime, cut: Cut) {
             );
         }
     }
+    if case.name == "transit-moving-control-future-gate" {
+        let resource = runtime.bounds[0].acquire_intent().resource;
+        runtime
+            .flow
+            .schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(5_001), i32::MAX)
+            .unwrap();
+        runtime
+            .flow
+            .schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(5_012), i32::MAX)
+            .unwrap();
+    } else if case.name == "service-arrival-disabled-pending-submit" {
+        let resource = runtime.bounds[0].acquire_intent().resource;
+        assert_eq!(runtime.flow.now(), SimTime::from_ticks(10_000));
+        assert_eq!(runtime.flow.resource_grant_enabled(resource), Ok(false));
+        assert!(finish_arrived(runtime));
+        let submitted = runtime.submitted.last().unwrap();
+        assert_eq!(
+            runtime.flow.request(submitted.request()).unwrap().state,
+            kairo_ecs_des::RequestState::Pending
+        );
+    } else if case.name == "service-suspend-pending-enable-gate" {
+        let resource = runtime.submitted[0].acquire_intent().resource;
+        assert_eq!(runtime.flow.now(), SimTime::from_ticks(8));
+        let disable = runtime
+            .flow
+            .schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(9), i32::MAX)
+            .unwrap();
+        let dispatch = runtime
+            .flow
+            .step()
+            .unwrap()
+            .expect("disable event after suspension");
+        assert_eq!(dispatch.event, disable);
+        assert_eq!(dispatch.at, SimTime::from_ticks(9));
+        assert!(dispatch.error.is_none());
+        assert_eq!(runtime.flow.resource_grant_enabled(resource), Ok(false));
+        runtime
+            .flow
+            .schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(12), i32::MAX)
+            .unwrap();
+    }
 }
 
 fn resolver<'a>(
@@ -1341,6 +1416,36 @@ fn capture_bytes(runtime: &MatrixRuntime) -> Vec<u8> {
     .to_vec()
 }
 
+fn flow_image_from_outer(bytes: &[u8]) -> FlowCheckpointImage {
+    let body = checkpoint_envelope::decode(bytes, binding(), limits().envelope).unwrap();
+    let sections = C2SectionDirectoryViewV1::parse(&body, limits().sections).unwrap();
+    FlowCheckpointImage::decode_wire(sections.flow(), limits().flow).unwrap()
+}
+
+fn outer_with_flow_section(outer: &[u8], flow: &[u8]) -> Vec<u8> {
+    let body = checkpoint_envelope::decode(outer, binding(), limits().envelope).unwrap();
+    let sections = C2SectionDirectoryViewV1::parse(&body, limits().sections).unwrap();
+    let bound: Vec<_> = sections
+        .bound_records()
+        .map(|row| C2RecordBytesV1::new(row.source_work, row.payload.to_vec()))
+        .collect();
+    let submitted: Vec<_> = sections
+        .submitted_records()
+        .map(|row| C2RecordBytesV1::new(row.source_work, row.payload.to_vec()))
+        .collect();
+    let body = C2BodyPartsV1 {
+        flow,
+        fidelity: sections.fidelity(),
+        provider: sections.provider(),
+        seed_registry: sections.seed_registry(),
+        bound: &bound,
+        submitted: &submitted,
+    }
+    .encode(limits().sections)
+    .unwrap();
+    checkpoint_envelope::encode(&body, binding(), limits().envelope).unwrap()
+}
+
 fn push_snapshot(runtime: &MatrixRuntime, trace: &mut Vec<u8>, label: &str) {
     let bytes = capture_bytes(runtime);
     push_frame(trace, label, &bytes);
@@ -1372,6 +1477,61 @@ fn finish_arrived(runtime: &mut MatrixRuntime) -> bool {
 }
 
 fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
+    let gated = matches!(
+        case.name,
+        "transit-moving-control-future-gate"
+            | "service-arrival-disabled-pending-submit"
+            | "service-suspend-pending-enable-gate"
+    );
+    if gated {
+        let expected_sample = if case.name == "transit-moving-control-future-gate" {
+            27
+        } else {
+            20
+        };
+        let sample = runtime
+            .bounds
+            .first()
+            .map(|b| b.sampled_duration())
+            .or_else(|| runtime.submitted.first().map(|b| b.sampled_duration()))
+            .unwrap();
+        assert_eq!(
+            sample,
+            SimDuration::from_ticks(expected_sample),
+            "frozen gated sample for {}",
+            case.name
+        );
+    }
+    let service_work = runtime
+        .bounds
+        .first()
+        .map(|bound| bound.work())
+        .or_else(|| runtime.submitted.first().map(|submitted| submitted.work()))
+        .unwrap();
+    let gated_resource = runtime
+        .bounds
+        .first()
+        .map(|bound| bound.acquire_intent().resource)
+        .or_else(|| {
+            runtime
+                .submitted
+                .first()
+                .map(|submitted| submitted.acquire_intent().resource)
+        })
+        .unwrap();
+    let gated_events: Vec<_> = if gated {
+        runtime.flow.capture_checkpoint_image(&runtime.codecs, limits().flow.flow).unwrap()
+            .as_ref().commands().filter_map(|(event, command)| {
+                matches!(command, FlowCommandV2::GrantEnabled(resource, _) if resource == gated_resource)
+                    .then_some(event)
+            }).collect()
+    } else {
+        Vec::new()
+    };
+    let mut service_transitions = Vec::new();
+    let mut observed_gates = Vec::new();
+    let mut observed_phases = Vec::new();
+    let mut urgent_completed_at = None;
     let mut trace = Vec::new();
     let mut urgent_request = None;
     let mut control_resume_scheduled = false;
@@ -1488,8 +1648,18 @@ fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
         }
         push_snapshot(runtime, &mut trace, "after-resume-command");
     } else if case.cut == Cut::Arrived {
-        assert!(finish_arrived(runtime));
-        push_snapshot(runtime, &mut trace, "after-finish-arrival");
+        if case.name == "service-arrival-disabled-pending-submit" {
+            let submitted = runtime.submitted.last().unwrap();
+            let resource = submitted.acquire_intent().resource;
+            assert_eq!(runtime.flow.resource_grant_enabled(resource), Ok(false));
+            assert_eq!(
+                runtime.flow.request(submitted.request()).unwrap().state,
+                kairo_ecs_des::RequestState::Pending
+            );
+        } else {
+            assert!(finish_arrived(runtime));
+            push_snapshot(runtime, &mut trace, "after-finish-arrival");
+        }
     }
 
     if case.cut == Cut::MultiGraphMixed {
@@ -1548,6 +1718,22 @@ fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
             }
         }
     }
+    if case.name == "service-suspend-pending-enable-gate" {
+        let service_request = runtime.submitted[0].request();
+        let resource = runtime.submitted[0].acquire_intent().resource;
+        urgent_request = runtime
+            .flow
+            .resource(resource)
+            .unwrap()
+            .allocations
+            .iter()
+            .map(|allocation| allocation.request)
+            .find(|request| *request != service_request);
+        assert!(
+            urgent_request.is_some(),
+            "urgent preemptor remains active at cut"
+        );
+    }
     if matches!(case.cut, Cut::ServiceSuspend | Cut::ServiceRestart) {
         let strategy = if case.cut == Cut::ServiceSuspend {
             PreemptionStrategy::Suspend
@@ -1595,6 +1781,63 @@ fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
         let Some(dispatch) = step_and_observe(runtime) else {
             break;
         };
+        if gated {
+            for record in &dispatch.records {
+                if record.snapshot.work == Some(service_work) {
+                    service_transitions.push((dispatch.at.ticks(), record.transition));
+                }
+                if Some(record.request) == urgent_request
+                    && record.transition == kairo_ecs_des::LifecycleTransition::Completed
+                {
+                    urgent_completed_at = Some(dispatch.at.ticks());
+                }
+            }
+            let expected_gate = match case.name {
+                "transit-moving-control-future-gate" => match dispatch.at.ticks() {
+                    5_001 => Some(false),
+                    5_012 => Some(true),
+                    _ => None,
+                },
+                "service-arrival-disabled-pending-submit" if dispatch.at.ticks() == 10_005 => {
+                    Some(true)
+                }
+                "service-suspend-pending-enable-gate" if dispatch.at.ticks() == 12 => Some(true),
+                _ => None,
+            };
+            if let Some(enabled) = expected_gate.filter(|_| gated_events.contains(&dispatch.event))
+            {
+                assert_eq!(
+                    runtime.flow.resource_grant_enabled(gated_resource),
+                    Ok(enabled)
+                );
+                observed_gates.push((dispatch.at.ticks(), enabled));
+            }
+            if case.name == "transit-moving-control-future-gate" {
+                if let Some(bound) = runtime.bounds.first() {
+                    let carrier = bound.carrier_id_for_checkpoint().unwrap();
+                    let phase = runtime
+                        .flow
+                        .work_context::<TransitContext>(carrier)
+                        .unwrap()
+                        .phase();
+                    observed_phases.push((dispatch.at.ticks(), phase));
+                }
+            }
+            if case.name == "service-arrival-disabled-pending-submit"
+                && dispatch.at.ticks() < 10_005
+            {
+                let request = runtime
+                    .flow
+                    .request(runtime.submitted[0].request())
+                    .unwrap();
+                assert_eq!(request.state, kairo_ecs_des::RequestState::Queued);
+                assert!(request.lease.is_none());
+                assert_eq!(
+                    runtime.flow.resource_grant_enabled(gated_resource),
+                    Ok(false)
+                );
+            }
+        }
         if matches!(
             case.cut,
             Cut::ServiceSuspend
@@ -1621,22 +1864,62 @@ fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
                 }
             }
             if dispatch.at == SimTime::from_ticks(10) {
-                if matches!(case.cut, Cut::ServiceSuspend | Cut::ServiceRestart) {
+                if matches!(case.cut, Cut::ServiceSuspend | Cut::ServiceRestart)
+                    || case.name == "service-suspend-pending-enable-gate"
+                {
                     assert_eq!(
                         runtime.flow.request(urgent_request.unwrap()).unwrap().state,
                         kairo_ecs_des::RequestState::Completed
                     );
                 }
                 let progress = runtime.flow.work_progress(service_work).unwrap();
-                assert_eq!(progress.state, kairo_ecs_des::WorkState::Active);
-                if matches!(case.cut, Cut::ServiceRestart | Cut::ServiceRestartPending) {
-                    assert_eq!(progress.attempt_revision, 1);
-                    assert_eq!(progress.useful_elapsed, SimDuration::ZERO);
-                    assert_eq!(progress.remaining, SimDuration::from_ticks(20));
-                } else {
+                if case.name == "service-suspend-pending-enable-gate" {
+                    assert_eq!(progress.state, kairo_ecs_des::WorkState::Suspended);
                     assert_eq!(progress.useful_elapsed, SimDuration::from_ticks(3));
                     assert_eq!(progress.remaining, SimDuration::from_ticks(17));
+                    assert_eq!(
+                        runtime
+                            .flow
+                            .resource_grant_enabled(runtime.submitted[0].acquire_intent().resource),
+                        Ok(false)
+                    );
+                } else {
+                    assert_eq!(progress.state, kairo_ecs_des::WorkState::Active);
+                    if matches!(case.cut, Cut::ServiceRestart | Cut::ServiceRestartPending) {
+                        assert_eq!(progress.attempt_revision, 1);
+                        assert_eq!(progress.useful_elapsed, SimDuration::ZERO);
+                        assert_eq!(progress.remaining, SimDuration::from_ticks(20));
+                    } else {
+                        assert_eq!(progress.useful_elapsed, SimDuration::from_ticks(3));
+                        assert_eq!(progress.remaining, SimDuration::from_ticks(17));
+                    }
                 }
+            }
+            if case.name == "service-suspend-pending-enable-gate"
+                && dispatch.at == SimTime::from_ticks(12)
+            {
+                assert_eq!(
+                    runtime
+                        .flow
+                        .resource_grant_enabled(runtime.submitted[0].acquire_intent().resource),
+                    Ok(true)
+                );
+                let progress = runtime.flow.work_progress(service_work).unwrap();
+                assert_eq!(progress.state, kairo_ecs_des::WorkState::Active);
+                assert_eq!(progress.useful_elapsed, SimDuration::from_ticks(3));
+                assert_eq!(progress.remaining, SimDuration::from_ticks(17));
+            }
+            if case.name == "service-suspend-pending-enable-gate"
+                && dispatch.at == SimTime::from_ticks(29)
+            {
+                let progress = runtime.flow.work_progress(service_work).unwrap();
+                assert_eq!(
+                    runtime.flow.request(service_request).unwrap().state,
+                    kairo_ecs_des::RequestState::Completed
+                );
+                assert_eq!(progress.state, kairo_ecs_des::WorkState::Completed);
+                assert_eq!(progress.useful_elapsed, SimDuration::from_ticks(20));
+                assert_eq!(progress.remaining, SimDuration::ZERO);
             }
         }
         push_frame(
@@ -1692,6 +1975,63 @@ fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
         if step == 127 {
             panic!("suffix exceeded the bounded event count");
         }
+    }
+    if gated {
+        use kairo_ecs_des::LifecycleTransition::{Completed, Granted, Queued, Resumed};
+        let (expected_transitions, expected_gates) = match case.name {
+            "transit-moving-control-future-gate" => {
+                assert!(
+                    observed_phases.contains(&(1, TransitPhase::Paused)),
+                    "Pause must dispatch"
+                );
+                assert!(
+                    observed_phases.contains(&(1, TransitPhase::Moving)),
+                    "Resume must restore movement"
+                );
+                assert!(
+                    observed_phases.contains(&(10_000, TransitPhase::Arrived)),
+                    "route must arrive"
+                );
+                (
+                    vec![(10_000, Queued), (10_000, Granted), (10_027, Completed)],
+                    vec![(5_001, false), (5_012, true)],
+                )
+            }
+            "service-arrival-disabled-pending-submit" => (
+                vec![(10_000, Queued), (10_005, Granted), (10_025, Completed)],
+                vec![(10_005, true)],
+            ),
+            "service-suspend-pending-enable-gate" => {
+                assert_eq!(urgent_completed_at, Some(10));
+                (vec![(12, Resumed), (29, Completed)], vec![(12, true)])
+            }
+            _ => unreachable!(),
+        };
+        assert_eq!(
+            service_transitions, expected_transitions,
+            "exact lifecycle for {}",
+            case.name
+        );
+        assert_eq!(
+            observed_gates, expected_gates,
+            "required gate dispatches for {}",
+            case.name
+        );
+        let submitted = runtime
+            .submitted
+            .iter()
+            .find(|record| record.work() == service_work)
+            .unwrap();
+        assert_eq!(
+            runtime.flow.request(submitted.request()).unwrap().state,
+            kairo_ecs_des::RequestState::Completed
+        );
+        let progress = runtime.flow.work_progress(service_work).unwrap();
+        assert_eq!(progress.state, kairo_ecs_des::WorkState::Completed);
+        assert_eq!(progress.original_duration, submitted.sampled_duration());
+        assert_eq!(progress.useful_elapsed, submitted.sampled_duration());
+        assert_eq!(progress.remaining, SimDuration::ZERO);
+        assert_eq!(runtime.flow.resource(gated_resource).unwrap().available, 1);
     }
     if case.cut == Cut::MultiGraphMixed {
         let work_ids: Vec<_> = runtime
@@ -1765,19 +2105,23 @@ fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
 }
 
 fn artifact_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
-        .join("..")
-        .join(".artifacts")
-        .join("c2-process-matrix")
+    std::env::var_os("KAIRO_C2_PROCESS_ARTIFACT_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("..")
+                .join("..")
+                .join(".artifacts")
+                .join("c2-process-matrix")
+        })
 }
 
-fn unique_file(case_name: &str) -> PathBuf {
+fn unique_file(artifact_dir: &Path, case_name: &str) -> PathBuf {
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    artifact_dir().join(format!("{case_name}-{}-{now}.c2", std::process::id()))
+    artifact_dir.join(format!("{case_name}-{}-{now}.c2", std::process::id()))
 }
 
 fn hex(bytes: &[u8]) -> String {
@@ -1790,7 +2134,7 @@ fn hex(bytes: &[u8]) -> String {
     output
 }
 
-fn child_output(file: &Path, case: &CaseSpec) -> Output {
+fn child_output(file: &Path, case: &CaseSpec, process_artifacts: &Path) -> Output {
     Command::new(std::env::current_exe().unwrap())
         .args([
             "--exact",
@@ -1799,6 +2143,7 @@ fn child_output(file: &Path, case: &CaseSpec) -> Output {
         ])
         .env(CHILD_PATH, file)
         .env(CHILD_CASE, case.name)
+        .env("KAIRO_C2_PROCESS_ARTIFACT_DIR", process_artifacts)
         .output()
         .unwrap()
 }
@@ -1810,8 +2155,9 @@ fn append_invocation_record(
     expected_trace: &[u8],
     actual_trace: &str,
     child_status: Option<i32>,
+    process_artifacts: &Path,
 ) {
-    let record_path = artifact_dir().join("process-invocations.txt");
+    let record_path = process_artifacts.join("process-invocations.txt");
     let cwd = std::env::current_dir().unwrap();
     let mut record = std::fs::OpenOptions::new()
         .create(true)
@@ -1843,10 +2189,449 @@ fn append_invocation_record(
     writeln!(record).unwrap();
 }
 
+fn run_fresh_process_case(case: &CaseSpec, process_artifacts: &Path) {
+    let mut source = source_case(case);
+    let bytes = capture_bytes(&source);
+    let file = unique_file(process_artifacts, case.name);
+    let image = C2PortableCheckpointV1::from_bytes(bytes.clone(), binding(), limits()).unwrap();
+    image.save_no_clobber(&file, binding(), limits()).unwrap();
+    let expected = run_suffix(case, &mut source);
+    let output = child_output(&file, case, process_artifacts);
+    let stdout = String::from_utf8(output.stdout.clone()).unwrap();
+    let stderr = String::from_utf8(output.stderr.clone()).unwrap();
+    std::fs::write(file.with_extension("child.stdout.log"), &output.stdout).unwrap();
+    std::fs::write(file.with_extension("child.stderr.log"), &output.stderr).unwrap();
+    assert!(
+        output.status.success(),
+        "case {} child status {:?}, stderr: {}",
+        case.name,
+        output.status.code(),
+        stderr
+    );
+    let actual = stdout
+        .lines()
+        .find_map(|line| line.strip_prefix(TRACE_MARKER))
+        .unwrap_or_else(|| panic!("case {} child emitted no complete trace", case.name));
+    assert_eq!(actual, hex(&expected), "suffix mismatch for {}", case.name);
+    append_invocation_record(
+        case,
+        &file,
+        &bytes,
+        &expected,
+        actual,
+        output.status.code(),
+        process_artifacts,
+    );
+}
+
 fn source_case(case: &CaseSpec) -> MatrixRuntime {
     let mut runtime = build_runtime(case);
-    cut_runtime(&mut runtime, case.cut);
+    cut_runtime(&mut runtime, case);
+    if matches!(
+        case.name,
+        "transit-moving-control-future-gate"
+            | "service-arrival-disabled-pending-submit"
+            | "service-suspend-pending-enable-gate"
+    ) {
+        let sample = runtime
+            .bounds
+            .first()
+            .map(|b| b.sampled_duration())
+            .or_else(|| runtime.submitted.first().map(|b| b.sampled_duration()))
+            .unwrap();
+        eprintln!(
+            "gated fixture {} sampled duration {}",
+            case.name,
+            sample.ticks()
+        );
+    }
     runtime
+}
+
+const LEGACY_ENVELOPE_SHA256: [(&str, &str); 19] = [
+    (
+        "macro-zero-ready",
+        "f335b8aeabf302214a54f90ca46dfc1bd22cfb47b317c4e8a0677061704d0421",
+    ),
+    (
+        "micro-zero-ready",
+        "67422a57a9b5b265b41296825d5871a78433a82d12faa91d8d4013d4965b3cc0",
+    ),
+    (
+        "transit-ready",
+        "37d78f67bdd3b55cdc4b6ddbca30dcb392dd642afd344adf2728b31d413a0332",
+    ),
+    (
+        "transit-rejected-start-retry",
+        "9552feb83ca964eb4d610f753680885f22c3dae28e064dcdb4f3256acbf32572",
+    ),
+    (
+        "transit-rejected-progress-retry",
+        "4d219323237f07394a87ec75caf515910600b37fa87052473202ac414d4cd877",
+    ),
+    (
+        "transit-moving-mid-edge",
+        "d98b7b22567b8348d97a7dc3a1804492456a3f1b8b6ecf81e63a9759a2f5be39",
+    ),
+    (
+        "transit-paused-ready",
+        "6131687faa8c27042484ad0fb5810162550babe2b2cb3080a131f7d714682fd5",
+    ),
+    (
+        "transit-paused-mid-edge",
+        "02feba95ec3baadc96e1b0f1cd4443d7a681bdf28a4aa03851528f80ac18ae94",
+    ),
+    (
+        "transit-paused-mid-edge-native-activity",
+        "f649252b16b3ed4fcd32d05409eb0abab579d01cd570e6840ee6026dc30d5211",
+    ),
+    (
+        "transit-paused-at-end",
+        "35e5146fdd61f191da55f2253495c50e96c0704f58e86576983a504333135c42",
+    ),
+    (
+        "transit-control-command-pending",
+        "799f2d6711f7054357b7ad5c60c9885c10f3bb049a396d81df2dd6d691957b15",
+    ),
+    (
+        "transit-arrived-queued",
+        "e8f4bb61b4eebbf51867a778f2da9e139f38f09da379023c1cdd17d4ac388e0c",
+    ),
+    (
+        "submitted-pending",
+        "6ae384b17d1322996cd121e588ee806bb240c4f80a8435d369d665a785a98441",
+    ),
+    (
+        "submitted-active",
+        "925378362fb828e1c4a4247f6bac08ec8a19fb25618ee01758b9c6614a32e0cc",
+    ),
+    (
+        "service-suspend-sample20",
+        "76c88aea3c91f8ea3c54afe0f011a9dddf6e331caee7bb11e493195799b99fc2",
+    ),
+    (
+        "service-restart-sample20",
+        "cf659e54c34433554064a8812e0bd021a56148ab055781bfd7c24bd51a600913",
+    ),
+    (
+        "service-suspend-pending-cut-sample20",
+        "650a6194092c8444d719a44cab77fbaaa8913792a88399c86e856cffa1544886",
+    ),
+    (
+        "service-restart-pending-cut-sample20",
+        "f52bbbc6fba5d7f0df966e2bd8ed8a2cba6a37af49575d876954d1103bfb2147",
+    ),
+    (
+        "multi-graph-mixed-frozen-pending",
+        "7f5221cc9ceb0b365fcb9eb406fb005f78294ad9fb0c83d6e3c128cde2f1be8b",
+    ),
+];
+
+#[test]
+fn portable_v1_full_envelope_golden_parity() {
+    assert_eq!(LEGACY_ENVELOPE_SHA256.len(), 19);
+    for (name, expected) in LEGACY_ENVELOPE_SHA256 {
+        let case = spec(name).unwrap();
+        let runtime = source_case(&case);
+        let bytes = capture_bytes(&runtime);
+        assert_eq!(
+            hex(&Sha256::digest(&bytes)),
+            expected,
+            "legacy envelope changed for {name}"
+        );
+    }
+
+    let case = spec("transit-ready").unwrap();
+    let runtime = source_case(&case);
+    let outer = capture_bytes(&runtime);
+    let body = checkpoint_envelope::decode(&outer, binding(), limits().envelope).unwrap();
+    let sections = C2SectionDirectoryViewV1::parse(&body, limits().sections).unwrap();
+    let direct = runtime
+        .flow
+        .capture_checkpoint(&runtime.codecs, limits().flow.flow)
+        .unwrap()
+        .encode_wire_v1(limits().flow)
+        .unwrap();
+    assert_eq!(sections.flow(), direct.as_slice());
+    assert!(matches!(
+        flow_image_from_outer(&outer),
+        FlowCheckpointImage::V1(_)
+    ));
+}
+
+#[test]
+fn portable_v2_gated_process_continuation() {
+    let process_artifacts = artifact_dir().join("gated-matrix");
+    std::fs::create_dir_all(&process_artifacts).unwrap();
+    std::fs::write(process_artifacts.join("process-invocations.txt"), b"").unwrap();
+
+    for name in [
+        "transit-moving-control-future-gate",
+        "service-arrival-disabled-pending-submit",
+        "service-suspend-pending-enable-gate",
+    ] {
+        let case = spec(name).unwrap();
+        let source = source_case(&case);
+        let bytes = capture_bytes(&source);
+        let image = flow_image_from_outer(&bytes);
+        let FlowCheckpointRef::V2(v2) = image.as_ref() else {
+            panic!("{name} must route its complete gated image through V2");
+        };
+        let resource = source
+            .bounds
+            .first()
+            .map(|bound| bound.acquire_intent().resource)
+            .or_else(|| {
+                source
+                    .submitted
+                    .first()
+                    .map(|record| record.acquire_intent().resource)
+            })
+            .unwrap();
+        let expected_enabled = name == "transit-moving-control-future-gate";
+        assert_eq!(
+            v2.resource_grant_flags
+                .iter()
+                .find(|(id, _)| *id == resource)
+                .map(|(_, value)| *value),
+            Some(expected_enabled),
+            "cut grant flag for {name}"
+        );
+        match name {
+            "transit-moving-control-future-gate" => {
+                assert_eq!(v2.started_frontier, Some(SimTime::ZERO));
+                let pause = v2
+                    .commands
+                    .iter()
+                    .copied()
+                    .find_map(|(event, command)| {
+                        matches!(
+                            command,
+                            FlowCommandV2::DomainControl(_, _, FlowDomainControl::Pause)
+                        )
+                        .then_some(event)
+                    })
+                    .expect("pending transit Pause command");
+                assert!(v2
+                    .scheduler
+                    .entries
+                    .iter()
+                    .any(|entry| entry.id == pause && entry.live));
+                for (enabled, tick) in [(false, 5_001), (true, 5_012)] {
+                    let event = v2
+                        .commands
+                        .iter()
+                        .copied()
+                        .find_map(|(event, command)| {
+                            (command == FlowCommandV2::GrantEnabled(resource, enabled))
+                                .then_some(event)
+                        })
+                        .expect("future gate command");
+                    assert!(v2.scheduler.entries.iter().any(|entry| {
+                        entry.id == event
+                            && entry.live
+                            && entry.request.at == SimTime::from_ticks(tick)
+                    }));
+                }
+            }
+            "service-arrival-disabled-pending-submit" => {
+                assert_eq!(v2.started_frontier, Some(SimTime::from_ticks(10_000)));
+                let submitted = source.submitted.last().unwrap();
+                assert_eq!(
+                    source.flow.request(submitted.request()).unwrap().state,
+                    kairo_ecs_des::RequestState::Pending
+                );
+                let submit = v2
+                    .commands
+                    .iter()
+                    .copied()
+                    .find_map(|(event, command)| {
+                        (command == FlowCommandV2::Submit(submitted.request())).then_some(event)
+                    })
+                    .expect("live Submit before grant");
+                assert!(v2.scheduler.entries.iter().any(|entry| {
+                    entry.id == submit
+                        && entry.live
+                        && entry.request.at == SimTime::from_ticks(10_000)
+                }));
+                let enable = v2
+                    .commands
+                    .iter()
+                    .copied()
+                    .find_map(|(event, command)| {
+                        (command == FlowCommandV2::GrantEnabled(resource, true)).then_some(event)
+                    })
+                    .expect("future Enable");
+                assert!(v2.scheduler.entries.iter().any(|entry| {
+                    entry.id == enable
+                        && entry.live
+                        && entry.request.at == SimTime::from_ticks(10_005)
+                }));
+            }
+            "service-suspend-pending-enable-gate" => {
+                assert_eq!(v2.started_frontier, Some(SimTime::from_ticks(9)));
+                let submitted = &source.submitted[0];
+                let progress = source.flow.work_progress(submitted.work()).unwrap();
+                assert_eq!(progress.state, kairo_ecs_des::WorkState::Suspended);
+                assert_eq!(progress.useful_elapsed, SimDuration::from_ticks(3));
+                assert_eq!(progress.remaining, SimDuration::from_ticks(17));
+                assert!(v2.commands.iter().copied().any(|(_, command)| {
+                    command == FlowCommandV2::GrantEnabled(resource, true)
+                }));
+            }
+            _ => unreachable!(),
+        }
+        run_fresh_process_case(&case, &process_artifacts);
+    }
+}
+
+#[test]
+fn portable_v2_malformed_inner_sections_reject_before_codecs() {
+    let case = spec("service-arrival-disabled-pending-submit").unwrap();
+    let runtime = source_case(&case);
+    let valid_outer = capture_bytes(&runtime);
+    let FlowCheckpointImage::V2(v2) = flow_image_from_outer(&valid_outer) else {
+        panic!("gated malformed fixture must be V2");
+    };
+    let (gate_event, gate_resource, gate_enabled) = v2
+        .commands
+        .iter()
+        .find_map(|(event, command)| match command {
+            FlowCommandV2::GrantEnabled(resource, enabled) => Some((*event, *resource, *enabled)),
+            _ => None,
+        })
+        .expect("pending gate command");
+    let wire = FlowCheckpointImage::V2(v2.clone())
+        .encode_wire(limits().flow)
+        .unwrap();
+
+    let restore = |bytes: &[u8]| {
+        let image =
+            C2PortableCheckpointV1::from_bytes(bytes.to_vec(), binding(), limits()).unwrap();
+        let mut trusted = resolver(&runtime.bindings);
+        match image.restore::<Vec<u8>, OwnedContext>(
+            &runtime.codecs,
+            &mut trusted,
+            binding(),
+            limits(),
+        ) {
+            Ok(_) => panic!("malformed inner Flow image unexpectedly restored"),
+            Err(error) => error,
+        }
+    };
+    let expect_no_codec = |bytes: &[u8], expected: fn(&C2PortableCheckpointError) -> bool| {
+        FLOW_CODEC_DECODER_CALLS.with(|calls| calls.set(0));
+        let error = restore(bytes);
+        assert!(expected(&error), "unexpected boundary error: {error:?}");
+        assert_eq!(FLOW_CODEC_DECODER_CALLS.with(Cell::get), 0);
+    };
+
+    let mut bad_version = wire.clone();
+    bad_version[10] = 3;
+    let outer = outer_with_flow_section(&valid_outer, &bad_version);
+    expect_no_codec(&outer, |error| {
+        matches!(
+            error,
+            C2PortableCheckpointError::FlowWire(FlowCheckpointWireError::InvalidValue(
+                "Flow checkpoint version"
+            ))
+        )
+    });
+
+    let resource_id = gate_resource.entity_id();
+    let mut command_pattern = Vec::new();
+    command_pattern.extend_from_slice(&gate_event.index.to_le_bytes());
+    command_pattern.extend_from_slice(&gate_event.generation.to_le_bytes());
+    command_pattern.push(12);
+    command_pattern.extend_from_slice(&resource_id.index.to_le_bytes());
+    command_pattern.extend_from_slice(&resource_id.generation.to_le_bytes());
+    command_pattern.push(u8::from(gate_enabled));
+    let command_positions: Vec<_> = wire
+        .windows(command_pattern.len())
+        .enumerate()
+        .filter_map(|(offset, window)| (window == command_pattern).then_some(offset))
+        .collect();
+    assert_eq!(
+        command_positions.len(),
+        1,
+        "complete command pattern must be unique"
+    );
+    let command_start = command_positions[0];
+    let mut bad_tag = wire.clone();
+    bad_tag[command_start + 12] = u8::MAX;
+    let outer = outer_with_flow_section(&valid_outer, &bad_tag);
+    expect_no_codec(&outer, |error| {
+        matches!(
+            error,
+            C2PortableCheckpointError::FlowWire(FlowCheckpointWireError::InvalidTag)
+        )
+    });
+
+    let frontier_len = if v2.started_frontier.is_some() { 17 } else { 1 };
+    let row_count = v2.resource_grant_flags.len();
+    let rows_start = wire.len() - frontier_len - row_count * 13;
+    assert_eq!(
+        &wire[rows_start - 8..rows_start],
+        &(row_count as u64).to_le_bytes()
+    );
+    let mut target_row = None;
+    for (index, (resource, enabled)) in v2.resource_grant_flags.iter().enumerate() {
+        let offset = rows_start + index * 13;
+        assert_eq!(
+            &wire[offset..offset + 12],
+            &resource_id_bytes(resource.entity_id())
+        );
+        assert_eq!(wire[offset + 12], u8::from(*enabled));
+        if *resource == gate_resource {
+            target_row = Some(offset);
+        }
+    }
+    let flag_start = target_row.expect("canonical grant flag row");
+    let mut bad_flag = wire.clone();
+    bad_flag[flag_start + 12] = 2;
+    let outer = outer_with_flow_section(&valid_outer, &bad_flag);
+    expect_no_codec(&outer, |error| {
+        matches!(
+            error,
+            C2PortableCheckpointError::FlowWire(FlowCheckpointWireError::InvalidBoolean)
+        )
+    });
+
+    let mut bad_join = v2;
+    let event_entry = bad_join
+        .scheduler
+        .entries
+        .iter_mut()
+        .find(|entry| entry.id == gate_event)
+        .expect("gate scheduler entry");
+    event_entry.request.kind = EventKind::custom(0xFFFF);
+    let bad_join_wire = FlowCheckpointImage::V2(bad_join)
+        .encode_wire(limits().flow)
+        .unwrap();
+    let outer = outer_with_flow_section(&valid_outer, &bad_join_wire);
+    expect_no_codec(&outer, |error| {
+        matches!(
+            error,
+            C2PortableCheckpointError::Flow(FlowCheckpointError::InvalidState(
+                "command scheduler kind mismatch"
+            ))
+        )
+    });
+
+    FLOW_CODEC_DECODER_CALLS.with(|calls| calls.set(0));
+    let image = C2PortableCheckpointV1::from_bytes(valid_outer, binding(), limits()).unwrap();
+    let mut trusted = resolver(&runtime.bindings);
+    let _restored = image
+        .restore::<Vec<u8>, OwnedContext>(&runtime.codecs, &mut trusted, binding(), limits())
+        .unwrap();
+    assert!(FLOW_CODEC_DECODER_CALLS.with(Cell::get) > 0);
+}
+
+fn resource_id_bytes(id: EntityId) -> [u8; 12] {
+    let mut bytes = [0; 12];
+    bytes[..8].copy_from_slice(&id.index.to_le_bytes());
+    bytes[8..].copy_from_slice(&id.generation.to_le_bytes());
+    bytes
 }
 
 #[test]
@@ -1872,13 +2657,14 @@ fn full_owner_image_restores_in_a_new_process_and_matches_uninterrupted_suffix()
         "service-restart-pending-cut-sample20",
         "multi-graph-mixed-frozen-pending",
     ];
-    std::fs::create_dir_all(artifact_dir()).unwrap();
-    std::fs::write(artifact_dir().join("process-invocations.txt"), b"").unwrap();
+    let process_artifacts = artifact_dir().join("legacy-matrix");
+    std::fs::create_dir_all(&process_artifacts).unwrap();
+    std::fs::write(process_artifacts.join("process-invocations.txt"), b"").unwrap();
     for name in names {
         let case = spec(name).unwrap();
         let mut source = source_case(&case);
         let bytes = capture_bytes(&source);
-        let file = unique_file(case.name);
+        let file = unique_file(&process_artifacts, case.name);
         let image = C2PortableCheckpointV1::from_bytes(bytes.clone(), binding(), limits()).unwrap();
         image.save_no_clobber(&file, binding(), limits()).unwrap();
 
@@ -1888,7 +2674,7 @@ fn full_owner_image_restores_in_a_new_process_and_matches_uninterrupted_suffix()
         // transit cursor/tickets/history, frozen decisions, sampled draws,
         // provider strata, registry entries and route receipts.
         let expected = run_suffix(&case, &mut source);
-        let output = child_output(&file, &case);
+        let output = child_output(&file, &case, &process_artifacts);
         let stdout = String::from_utf8(output.stdout.clone()).unwrap();
         let stderr = String::from_utf8(output.stderr.clone()).unwrap();
         std::fs::write(file.with_extension("child.stdout.log"), &output.stdout).unwrap();
@@ -1912,6 +2698,7 @@ fn full_owner_image_restores_in_a_new_process_and_matches_uninterrupted_suffix()
             &expected,
             actual,
             output.status.code(),
+            &process_artifacts,
         );
     }
 }

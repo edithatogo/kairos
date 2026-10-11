@@ -32,8 +32,7 @@ use kairo_ecs_des::fidelity::{
     FidelityCheckpointWireLimits,
 };
 use kairo_ecs_des::{
-    FlowCheckpointCodecs, FlowCheckpointRef, FlowCheckpointV1, FlowCheckpointWireLimits,
-    FlowRuntime,
+    FlowCheckpointCodecs, FlowCheckpointImage, FlowCheckpointWireLimits, FlowRuntime,
 };
 use kairo_ecs_types::EntityId;
 use std::collections::{BTreeMap, BTreeSet};
@@ -267,8 +266,8 @@ impl C2PortableCheckpointV1 {
             return Err(C2PortableCheckpointError::InvalidState);
         }
         let flow_wire = flow_limits_with_budget(limits.flow, remaining);
-        let flow_image = flow.capture_checkpoint(codecs, flow_wire.flow)?;
-        let flow_bytes = flow_image.encode_wire_v1(flow_wire)?;
+        let flow_image = flow.capture_checkpoint_image(codecs, flow_wire.flow)?;
+        let flow_bytes = flow_image.encode_wire(flow_wire)?;
         take_payload_budget(&mut remaining, &flow_bytes)?;
 
         let fidelity_wire = fidelity_limits_with_budget(limits.fidelity, remaining);
@@ -328,13 +327,8 @@ impl C2PortableCheckpointV1 {
                 .map_err(|_| C2PortableCheckpointError::InvalidState)?;
             take_payload_budget(&mut remaining, &encoded)?;
             bound_records.push(C2RecordBytesV1::new(work, encoded));
-            validate_coherent_cut(
-                FlowCheckpointRef::V1(&flow_image),
-                flow,
-                record,
-                bridge_wire.native,
-            )
-            .map_err(C2PortableCheckpointError::Bridge)?;
+            validate_coherent_cut(flow_image.as_ref(), flow, record, bridge_wire.native)
+                .map_err(C2PortableCheckpointError::Bridge)?;
         }
 
         let mut submitted_records = Vec::new();
@@ -436,7 +430,7 @@ impl C2PortableCheckpointV1 {
         // Owner wire formats preflight their complete bounded payloads before
         // constructing the staged Flow or invoking caller codecs. Each decoded
         // image remains detached until all cross-owner checks have succeeded.
-        let flow_image = FlowCheckpointV1::decode_wire_v1(sections.flow(), limits.flow)?;
+        let flow_image = FlowCheckpointImage::decode_wire(sections.flow(), limits.flow)?;
         let provider_image = IntrinsicWorkProviderCheckpointV1::decode_wire_v1(
             sections.provider(),
             limits.provider,
@@ -467,11 +461,9 @@ impl C2PortableCheckpointV1 {
             }
             submitted_images.push((row.source_work, image));
         }
-        let (flow, rebind) = FlowRuntime::restore_checkpoint_with_rebind(
-            flow_image.clone(),
-            codecs,
-            limits.flow.flow,
-        )?;
+        let (flow, rebind) = flow_image
+            .clone()
+            .restore_with_rebind(codecs, limits.flow.flow)?;
         let fidelity_image = FidelityAdapterCheckpointV1::decode_wire_v1(
             sections.fidelity(),
             &rebind,
@@ -548,13 +540,8 @@ impl C2PortableCheckpointV1 {
                     limits.bridge.native,
                 )
                 .map_err(C2PortableCheckpointError::Bridge)?;
-            validate_coherent_cut(
-                FlowCheckpointRef::V1(&flow_image),
-                &flow,
-                &restored,
-                limits.bridge.native,
-            )
-            .map_err(C2PortableCheckpointError::Bridge)?;
+            validate_coherent_cut(flow_image.as_ref(), &flow, &restored, limits.bridge.native)
+                .map_err(C2PortableCheckpointError::Bridge)?;
             records.insert(source_work, RestoredBridgeRecord::Bound(Box::new(restored)));
         }
         for (source_work, image) in submitted_images {
