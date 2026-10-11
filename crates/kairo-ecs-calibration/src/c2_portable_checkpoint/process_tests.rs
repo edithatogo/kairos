@@ -1120,7 +1120,7 @@ fn create_v3_fixture(runtime: &mut MatrixRuntime, case: &CaseSpec) -> PortableV3
         if case.name == "portable-v3-mixed-tick6-trigger-first" {
             (-5, -10)
         } else {
-            (-10, 0)
+            (-10, 1)
         };
     let urgent_at = match case.cut {
         Cut::V3Mixed => SimTime::from_ticks(4),
