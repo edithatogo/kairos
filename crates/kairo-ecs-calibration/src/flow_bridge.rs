@@ -2307,9 +2307,9 @@ mod tests {
     };
     use kairo_ecs_des::fidelity::{FidelityCheckpointLimits, FidelityPolicy};
     use kairo_ecs_des::{
-        FlowBatchRejection, FlowCallbackCodeV1, FlowCheckpointCodecError, FlowCheckpointCodecs,
-        FlowCheckpointLimits, FlowCheckpointRebindV1, FlowDispatch, FlowHandlerCodeIds,
-        FlowRuntime, LifecycleTransition, RequestState, WorkHandlers,
+        FlowAllocationMode, FlowBatchRejection, FlowCallbackCodeV1, FlowCheckpointCodecError,
+        FlowCheckpointCodecs, FlowCheckpointLimits, FlowCheckpointRebindV1, FlowDispatch,
+        FlowHandlerCodeIds, FlowRuntime, LifecycleTransition, RequestState, WorkHandlers,
     };
     use kairo_ecs_des::{FlowCheckpointImage, FlowCheckpointRef};
     use std::cell::RefCell;
@@ -2522,10 +2522,33 @@ mod tests {
         FidelityAdapter,
         ResourceId,
     ) {
+        input_with_allocation_mode(
+            mode,
+            transit,
+            purpose,
+            mismatch_key,
+            FlowAllocationMode::Eager,
+        )
+    }
+
+    fn input_with_allocation_mode(
+        mode: FidelityMode,
+        transit: TransitIntent,
+        purpose: SeedPurpose,
+        mismatch_key: bool,
+        allocation_mode: FlowAllocationMode,
+    ) -> (
+        WorkPreparationInput<u32, u32>,
+        FlowRuntime,
+        FidelityAdapter,
+        ResourceId,
+    ) {
         let mut flow = FlowRuntime::new();
         let owner = flow.spawn_actor().unwrap();
         let carrier_actor = flow.spawn_actor().unwrap();
-        let resource = flow.create_resource(1).unwrap();
+        let resource = flow
+            .create_resource_with_allocation_mode(1, allocation_mode)
+            .unwrap();
 
         let mut seed_map = CalibrationSeedMap::new(1, "bridge-test", 19).unwrap();
         let key = seed_map
@@ -2822,6 +2845,107 @@ mod tests {
         .unwrap();
         flow.capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
             .unwrap()
+    }
+
+    fn bound_deferred_route_with_adapter(
+    ) -> (FlowRuntime, FidelityAdapter, BoundIntrinsicWork<u32, u32>) {
+        let (input, mut flow, mut adapter, _) = input_with_allocation_mode(
+            FidelityMode::Micro,
+            TransitIntent::Route,
+            SeedPurpose::Service,
+            false,
+            FlowAllocationMode::Deferred,
+        );
+        register_transit_context(&mut flow, "bridge.transit", EventKind::custom(0xC20)).unwrap();
+        flow.register_work_handlers("bridge.context", WorkHandlers::<u32>::default())
+            .unwrap();
+        let prepared = must_prepare(input.prepare(&flow, &mut adapter, &provider()));
+        let created = must_create(prepared.create(&mut flow));
+        let bound = must_bind(created.bind(&flow));
+        (flow, adapter, bound)
+    }
+
+    fn schedule_deferred_v3_calendar(
+        flow: &mut FlowRuntime,
+        bound: &BoundIntrinsicWork<u32, u32>,
+    ) -> (EventId, EventId) {
+        let enable = flow
+            .schedule_resource_grant_enabled(
+                bound.acquire.resource,
+                true,
+                SimTime::from_ticks(20),
+                0,
+            )
+            .unwrap();
+        let flush = flow
+            .schedule_allocation_flush(bound.acquire.resource, SimTime::from_ticks(30), 0)
+            .unwrap();
+        (enable, flush)
+    }
+
+    fn capture_coherent_v3(
+        flow: &FlowRuntime,
+        bound: &BoundIntrinsicWork<u32, u32>,
+    ) -> kairo_ecs_des::FlowCheckpointV3 {
+        let FlowCheckpointImage::V3(image) = capture_real_transit_flow_image_any(flow, bound)
+        else {
+            panic!("a live Deferred resource must route capture to V3");
+        };
+        image
+    }
+
+    fn assert_coherent_v3_roundtrip(
+        flow: &FlowRuntime,
+        adapter: &FidelityAdapter,
+        bound: &BoundIntrinsicWork<u32, u32>,
+        image: &kairo_ecs_des::FlowCheckpointV3,
+    ) {
+        assert_eq!(image.started_frontier, Some(flow.now()));
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V3(image),
+                flow,
+                bound,
+                bridge_checkpoint_limits(),
+            ),
+            Ok(())
+        );
+
+        let bridge_image = BoundIntrinsicWorkCheckpointV1::capture(
+            bound,
+            flow,
+            adapter,
+            bridge_checkpoint_limits(),
+        )
+        .unwrap();
+        let graph = route_graph(bound);
+        let codecs = native_codecs_for_transit(flow, bound);
+        let (restored_flow, rebind) = FlowCheckpointImage::V3(image.clone())
+            .restore_with_rebind(&codecs, FlowCheckpointLimits::default())
+            .unwrap();
+        let restored_adapter =
+            restore_adapter_for_flow(adapter, flow, &restored_flow, bound.work());
+        let restored_bound = BoundIntrinsicWorkCheckpointV1::restore::<u32, u32>(
+            bridge_image,
+            &restored_flow,
+            &restored_adapter,
+            &bound.expected_service_key,
+            &rebind,
+            Some(graph),
+            bridge_checkpoint_limits(),
+        )
+        .unwrap();
+        let restored_image = capture_coherent_v3(&restored_flow, &restored_bound);
+        assert_eq!(&restored_image, image);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V3(&restored_image),
+                &restored_flow,
+                &restored_bound,
+                bridge_checkpoint_limits(),
+            ),
+            Ok(())
+        );
     }
 
     #[test]
@@ -3595,6 +3719,238 @@ mod tests {
             ),
             Err(BridgeCheckpointError::InvalidState)
         );
+    }
+
+    #[test]
+    fn coherent_v3_transit_control_and_owned_field_mutations() {
+        let (mut flow, adapter, mut bound) = bound_deferred_route_with_adapter();
+        let (enable, flush) = schedule_deferred_v3_calendar(&mut flow, &bound);
+        bound.start_transit(&mut flow).unwrap();
+        let start = flow.step().unwrap().expect("real transit start event");
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &start),
+            Ok(TransitObservation::Progress)
+        );
+        let pause_at = flow.now();
+        let pause = bound
+            .schedule_transit_control(&mut flow, FlowDomainControl::Pause, pause_at, 0)
+            .unwrap();
+        let pause_dispatch = flow.step().unwrap().expect("real pause control");
+        assert_eq!(pause_dispatch.event, pause);
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &pause_dispatch),
+            Ok(TransitObservation::Paused)
+        );
+        let resume = bound
+            .schedule_transit_control(
+                &mut flow,
+                FlowDomainControl::Resume,
+                SimTime::from_ticks(1),
+                0,
+            )
+            .unwrap();
+
+        let image = capture_coherent_v3(&flow, &bound);
+        assert!(image.commands.iter().any(|(id, command)| *id == enable
+            && matches!(command, kairo_ecs_des::FlowCommandV3::GrantEnabled(_, true))));
+        assert!(image.commands.iter().any(|(id, command)| *id == flush
+            && matches!(command, kairo_ecs_des::FlowCommandV3::AllocationFlush(_))));
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V3(&image),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Ok(())
+        );
+        assert_coherent_v3_roundtrip(&flow, &adapter, &bound, &image);
+
+        let domain = bound
+            .pending_event
+            .expect("paused transit retains its domain frontier");
+        let mut wrong_domain_tick = image.clone();
+        wrong_domain_tick
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == domain)
+            .unwrap()
+            .request
+            .at = SimTime::from_ticks(2);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V3(&wrong_domain_tick),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+
+        let mut wrong_domain_priority = image.clone();
+        wrong_domain_priority
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == domain)
+            .unwrap()
+            .request
+            .priority = i32::MAX;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V3(&wrong_domain_priority),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+
+        let mut wrong_domain_kind = image.clone();
+        wrong_domain_kind
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == domain)
+            .unwrap()
+            .request
+            .kind = EventKind::custom(0xC21);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V3(&wrong_domain_kind),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+
+        let mut wrong_control_entity = image.clone();
+        let row = wrong_control_entity
+            .commands
+            .iter_mut()
+            .find(|(id, _)| *id == resume)
+            .unwrap();
+        if let kairo_ecs_des::FlowCommandV3::DomainControl(entity, _, _) = &mut row.1 {
+            *entity = bound.work();
+        } else {
+            panic!("resume control command must be present");
+        }
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V3(&wrong_control_entity),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+
+        let resume_dispatch = flow.step().unwrap().expect("real resume control");
+        assert_eq!(resume_dispatch.event, resume);
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &resume_dispatch),
+            Ok(TransitObservation::Resumed)
+        );
+    }
+
+    #[test]
+    fn coherent_v3_arrived_pending_submit_join() {
+        let (mut flow, adapter, mut bound) = bound_deferred_route_with_adapter();
+        let (enable, flush) = schedule_deferred_v3_calendar(&mut flow, &bound);
+        bound.start_transit(&mut flow).unwrap();
+        let mut arrived = false;
+        for _ in 0..8 {
+            let dispatch = flow.step().unwrap().expect("bounded transit dispatch");
+            if bound.observe_transit_dispatch(&flow, &dispatch).unwrap()
+                == TransitObservation::Arrived
+            {
+                arrived = true;
+                break;
+            }
+        }
+        assert!(
+            arrived,
+            "real route must reach the observed arrival frontier"
+        );
+        let arrival = bound.pending_event.expect("arrival Submit remains pending");
+        let request = bound
+            .arrival_request
+            .expect("arrival owns its Submit request");
+        assert_eq!(flow.request(request).unwrap().state, RequestState::Pending);
+        let image = capture_coherent_v3(&flow, &bound);
+        assert!(image
+            .commands
+            .iter()
+            .any(|(id, command)| *id == arrival && matches!(command, kairo_ecs_des::FlowCommandV3::Submit(actual) if *actual == request)));
+        assert!(image.commands.iter().any(|(id, command)| *id == enable
+            && matches!(command, kairo_ecs_des::FlowCommandV3::GrantEnabled(_, true))));
+        assert!(image.commands.iter().any(|(id, command)| *id == flush
+            && matches!(command, kairo_ecs_des::FlowCommandV3::AllocationFlush(_))));
+        assert_coherent_v3_roundtrip(&flow, &adapter, &bound, &image);
+
+        let mut wrong_submit_tick = image.clone();
+        wrong_submit_tick
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == arrival)
+            .unwrap()
+            .request
+            .at = SimTime::from_ticks(bound.arrival_at.unwrap().ticks() + 1);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V3(&wrong_submit_tick),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+
+        let mut wrong_submit_priority = image.clone();
+        wrong_submit_priority
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == arrival)
+            .unwrap()
+            .request
+            .priority = i32::MAX;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V3(&wrong_submit_priority),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+    }
+
+    #[test]
+    fn coherent_v3_observed_frontier_required() {
+        let (mut flow, adapter, mut bound) = bound_deferred_route_with_adapter();
+        let (_enable, _flush) = schedule_deferred_v3_calendar(&mut flow, &bound);
+        bound.start_transit(&mut flow).unwrap();
+        let start = flow.step().unwrap().expect("real transit start event");
+        let unobserved = capture_coherent_v3(&flow, &bound);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V3(&unobserved),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &start),
+            Ok(TransitObservation::Progress)
+        );
+        let observed = capture_coherent_v3(&flow, &bound);
+        assert_coherent_v3_roundtrip(&flow, &adapter, &bound, &observed);
     }
 
     #[test]
