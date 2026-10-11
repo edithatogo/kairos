@@ -420,19 +420,21 @@ fn submit_arrived_service(
         .unwrap()
 }
 
-fn service_completion_suffix(
-    flow: &mut FlowRuntime,
-    request: kairo_ecs_des::RequestId,
-    resource: kairo_ecs_des::ResourceId,
-    service: WorkId,
-) -> Vec<(
+type ServiceCompletionSnapshot = (
     (u64, u32),
     SimTime,
     RequestState,
     Option<kairo_ecs_des::LeaseId>,
     kairo_ecs_des::WorkProgress,
     kairo_ecs_des::ResourceSnapshot,
-)> {
+);
+
+fn service_completion_suffix(
+    flow: &mut FlowRuntime,
+    request: kairo_ecs_des::RequestId,
+    resource: kairo_ecs_des::ResourceId,
+    service: WorkId,
+) -> Vec<ServiceCompletionSnapshot> {
     let mut suffix = Vec::new();
     for _ in 0..4 {
         let dispatch = step_ok(flow);
