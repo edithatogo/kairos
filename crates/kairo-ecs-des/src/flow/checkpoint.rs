@@ -777,6 +777,7 @@ impl FlowRuntime {
         codecs: &FlowCheckpointCodecs,
         limits: FlowCheckpointLimits,
     ) -> Result<FlowCheckpointV1, FlowCheckpointError> {
+        self.ensure_legacy_checkpoint_supported()?;
         if self.grant_enabled.values().any(|enabled| !enabled)
             || !self.pending_grant_boundaries.is_empty()
             || self
@@ -809,6 +810,7 @@ impl FlowRuntime {
         codecs: &FlowCheckpointCodecs,
         limits: FlowCheckpointLimits,
     ) -> Result<v2::FlowCheckpointParts, FlowCheckpointError> {
+        self.ensure_legacy_checkpoint_supported()?;
         let component_limits = checkpoint_limits(limits);
         let check_count = |value: usize, max: usize, label| {
             if value > max {
@@ -1657,6 +1659,11 @@ impl TryFrom<Command> for FlowCommandV1 {
             Command::GrantEnabled(..) => {
                 return Err(FlowCheckpointError::InvalidState(
                     "V1 cannot represent a resource grant boundary",
+                ));
+            }
+            Command::AllocationFlush(..) => {
+                return Err(FlowCheckpointError::InvalidState(
+                    "V1 cannot represent deferred resource allocation",
                 ));
             }
             Command::Remove(id) => Self::Remove(id),
@@ -3532,6 +3539,12 @@ impl FlowRuntime {
             runtime.works.insert(WorkId(work.id), descriptor);
         }
         runtime.resources = image.resources.into_iter().collect();
+        runtime.allocation_modes = runtime
+            .resources
+            .iter()
+            .copied()
+            .map(|resource| (resource, FlowAllocationMode::Eager))
+            .collect();
         runtime.grant_enabled = image.resource_grant_flags.into_iter().collect();
         runtime.pending_grant_boundaries = validated_grant_boundaries;
         runtime.requests = image.requests.into_iter().collect();
@@ -4343,5 +4356,31 @@ mod rebind_view_tests {
         assert!(view.resolve_issued_event(EventId::new(6, 7)).is_err());
         assert!(view.resolve_ticket(9, 0).is_err());
         assert!(view.resolve_ticket(8, 12).is_err());
+    }
+}
+
+#[cfg(test)]
+mod deferred_command_conversion_tests {
+    use super::*;
+
+    #[test]
+    fn v1_and_v2_command_conversions_fail_closed_for_allocation_flush() {
+        let mut runtime = FlowRuntime::new();
+        let resource = runtime
+            .create_resource_with_allocation_mode(1, FlowAllocationMode::Deferred)
+            .unwrap();
+        let command = Command::AllocationFlush(resource);
+        assert!(matches!(
+            FlowCommandV1::try_from(command),
+            Err(FlowCheckpointError::InvalidState(
+                "V1 cannot represent deferred resource allocation"
+            ))
+        ));
+        assert!(matches!(
+            FlowCommandV2::try_from(command),
+            Err(FlowCheckpointError::InvalidState(
+                "V2 cannot represent deferred resource allocation"
+            ))
+        ));
     }
 }

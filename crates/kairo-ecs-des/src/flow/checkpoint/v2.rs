@@ -390,6 +390,11 @@ impl TryFrom<Command> for FlowCommandV2 {
             Command::Domain(a, b) => Self::Domain(a, b),
             Command::DomainControl(a, b, c) => Self::DomainControl(a, b, c),
             Command::GrantEnabled(a, b) => Self::GrantEnabled(a, b),
+            Command::AllocationFlush(..) => {
+                return Err(FlowCheckpointError::InvalidState(
+                    "V2 cannot represent deferred resource allocation",
+                ));
+            }
         })
     }
 }

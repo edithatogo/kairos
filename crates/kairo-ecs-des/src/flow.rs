@@ -46,6 +46,27 @@ pub enum ResourceGrantAdmissionError {
     FrontierReached,
 }
 
+/// Immutable allocation behavior selected when a resource is created.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum FlowAllocationMode {
+    Eager,
+    Deferred,
+}
+
+/// Admission failures for an explicit deferred-resource allocation flush.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
+pub enum ResourceAllocationAdmissionError {
+    /// An existing Flow validation failed before any flush state was published.
+    #[error(transparent)]
+    Flow(#[from] FlowError),
+    /// The resource was not created in deferred allocation mode.
+    #[error("resource allocation is not deferred")]
+    NotDeferred,
+    /// A flush boundary already exists for this resource and tick.
+    #[error("duplicate resource allocation flush")]
+    DuplicateFlush,
+}
+
 #[cfg(test)]
 mod submit_scheduler_capacity_tests {
     use super::*;
@@ -994,12 +1015,13 @@ pub struct FlowRun {
     pub dispatches: Vec<FlowDispatch>,
     pub budget_exhausted: bool,
 }
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Command {
     Submit(RequestId),
     Release(LeaseId),
     Capacity(ResourceId, u32),
     GrantEnabled(ResourceId, bool),
+    AllocationFlush(ResourceId),
     Remove(ResourceId),
     Despawn(EntityId),
     Deadline(RequestId),
@@ -1396,6 +1418,8 @@ pub struct FlowRuntime {
     resources: BTreeSet<ResourceId>,
     grant_enabled: BTreeMap<ResourceId, bool>,
     pending_grant_boundaries: BTreeMap<(ResourceId, SimTime), EventId>,
+    allocation_modes: BTreeMap<ResourceId, FlowAllocationMode>,
+    pending_allocation_flushes: BTreeMap<(ResourceId, SimTime), EventId>,
     requests: BTreeSet<RequestId>,
     actors: BTreeSet<EntityId>,
     works: BTreeMap<WorkId, WorkDescriptor>,
@@ -1448,6 +1472,8 @@ impl FlowRuntime {
             resources: BTreeSet::new(),
             grant_enabled: BTreeMap::new(),
             pending_grant_boundaries: BTreeMap::new(),
+            allocation_modes: BTreeMap::new(),
+            pending_allocation_flushes: BTreeMap::new(),
             requests: BTreeSet::new(),
             actors: BTreeSet::new(),
             works: BTreeMap::new(),
@@ -1526,6 +1552,15 @@ impl FlowRuntime {
         Ok(id)
     }
     pub fn create_resource(&mut self, total: u32) -> Result<ResourceId, FlowError> {
+        self.create_resource_with_allocation_mode(total, FlowAllocationMode::Eager)
+    }
+
+    /// Create a resource with immutable allocation behavior.
+    pub fn create_resource_with_allocation_mode(
+        &mut self,
+        total: u32,
+        mode: FlowAllocationMode,
+    ) -> Result<ResourceId, FlowError> {
         let id = ResourceId(self.spawn()?);
         let _ = self.registry.insert(id.0, ResourceCapacity { total });
         let _ = self
@@ -1535,7 +1570,87 @@ impl FlowRuntime {
         let _ = self.registry.insert(id.0, PreemptingWaiters::default());
         let _ = self.registry.insert(id.0, ActiveAllocations::default());
         self.resources.insert(id);
+        self.allocation_modes.insert(id, mode);
         Ok(id)
+    }
+
+    /// Return the immutable allocation behavior for a live resource.
+    pub fn resource_allocation_mode(
+        &self,
+        resource: ResourceId,
+    ) -> Result<FlowAllocationMode, FlowError> {
+        self.resource(resource)?;
+        self.allocation_modes
+            .get(&resource)
+            .copied()
+            .ok_or(FlowError::InvalidState)
+    }
+
+    fn ensure_legacy_checkpoint_supported(&self) -> Result<(), checkpoint::FlowCheckpointError> {
+        let mode_keys_match = self.allocation_modes.len() == self.resources.len()
+            && self
+                .allocation_modes
+                .keys()
+                .all(|resource| self.resources.contains(resource));
+        if !mode_keys_match
+            || self
+                .allocation_modes
+                .values()
+                .any(|mode| *mode == FlowAllocationMode::Deferred)
+            || !self.pending_allocation_flushes.is_empty()
+            || self
+                .commands
+                .values()
+                .any(|command| matches!(command, Command::AllocationFlush(..)))
+        {
+            return Err(checkpoint::FlowCheckpointError::InvalidState(
+                "V1/V2 cannot represent deferred resource allocation",
+            ));
+        }
+        Ok(())
+    }
+
+    /// Schedule an explicit allocation pass for one deferred resource.
+    /// A current-tick flush is allowed, including after the tick has started.
+    pub fn schedule_allocation_flush(
+        &mut self,
+        resource: ResourceId,
+        at: SimTime,
+        scheduler_priority: i32,
+    ) -> Result<EventId, ResourceAllocationAdmissionError> {
+        self.resource(resource)?;
+        if self.resource_allocation_mode(resource)? != FlowAllocationMode::Deferred {
+            return Err(ResourceAllocationAdmissionError::NotDeferred);
+        }
+        if at < self.now() {
+            return Err(FlowError::PastCommand.into());
+        }
+        if self
+            .commands
+            .values()
+            .any(|command| matches!(command, Command::Remove(id) if *id == resource))
+        {
+            return Err(FlowError::ResourceInUse.into());
+        }
+        if self
+            .pending_allocation_flushes
+            .contains_key(&(resource, at))
+        {
+            return Err(ResourceAllocationAdmissionError::DuplicateFlush);
+        }
+        self.check_running()?;
+        self.check_schedule(at)?;
+        self.check_scheduler_event_capacity(1)?;
+        if self.scheduled >= OPERATION_CAP
+            || self.pending_allocation_flushes.len() as u64 >= OPERATION_CAP
+        {
+            return Err(FlowError::CounterOverflow.into());
+        }
+        let event =
+            self.schedule_command(Command::AllocationFlush(resource), at, scheduler_priority)?;
+        self.pending_allocation_flushes
+            .insert((resource, at), event);
+        Ok(event)
     }
 
     /// Schedule an experimental grant eligibility boundary for one resource.
@@ -2458,6 +2573,13 @@ impl FlowRuntime {
         {
             return Err(FlowError::ResourceInUse);
         }
+        if self
+            .pending_allocation_flushes
+            .keys()
+            .any(|(resource, _)| *resource == id)
+        {
+            return Err(FlowError::InvalidState);
+        }
         self.schedule(Command::Remove(id), self.now())
     }
     pub fn despawn_actor(&mut self, id: EntityId) -> Result<(), FlowError> {
@@ -2516,6 +2638,13 @@ impl FlowRuntime {
             .ok_or(FlowError::InvalidState)?;
         if let Command::GrantEnabled(resource, _) = command {
             if self.pending_grant_boundaries.get(&(resource, preview.at)) != Some(&preview.id) {
+                return Err(FlowError::InvalidState);
+            }
+        }
+        if let Command::AllocationFlush(resource) = command {
+            if self.pending_allocation_flushes.get(&(resource, preview.at)) != Some(&preview.id)
+                || self.resource_allocation_mode(resource)? != FlowAllocationMode::Deferred
+            {
                 return Err(FlowError::InvalidState);
             }
         }
@@ -2602,6 +2731,12 @@ impl FlowRuntime {
         if let Command::GrantEnabled(resource, _) = command {
             let removed = self
                 .pending_grant_boundaries
+                .remove(&(resource, preview.at));
+            debug_assert_eq!(removed, Some(preview.id));
+        }
+        if let Command::AllocationFlush(resource) = command {
+            let removed = self
+                .pending_allocation_flushes
                 .remove(&(resource, preview.at));
             debug_assert_eq!(removed, Some(preview.id));
         }
@@ -3359,9 +3494,10 @@ impl FlowRuntime {
                 .get(&lease.request)
                 .map(|r| BTreeSet::from([r.resource]))
                 .unwrap_or_default(),
-            Command::Capacity(id, _) | Command::Remove(id) | Command::GrantEnabled(id, _) => {
-                BTreeSet::from([id])
-            }
+            Command::Capacity(id, _)
+            | Command::Remove(id)
+            | Command::GrantEnabled(id, _)
+            | Command::AllocationFlush(id) => BTreeSet::from([id]),
             Command::Notify | Command::Domain(..) | Command::DomainControl(..) => BTreeSet::new(),
             Command::Despawn(owner) => self
                 .requests
@@ -3698,6 +3834,13 @@ impl FlowRuntime {
                     {
                         return Err(FlowError::ResourceInUse);
                     }
+                    if self
+                        .pending_allocation_flushes
+                        .keys()
+                        .any(|(resource, _)| *resource == id)
+                    {
+                        return Err(FlowError::InvalidState);
+                    }
                     let staged = resources.get(&id).ok_or(FlowError::InvalidState)?;
                     if staged.deadline_expected_len != staged.deadline.len()
                         || staged.deadline_expected_len > staged.queue.len()
@@ -3711,6 +3854,14 @@ impl FlowRuntime {
                     }
                     resources.remove(&id);
                     remove_resource = Some(id);
+                }
+                Command::AllocationFlush(id) => {
+                    if !resources.contains_key(&id)
+                        || self.resource_allocation_mode(id)? != FlowAllocationMode::Deferred
+                    {
+                        return Err(FlowError::InvalidResource);
+                    }
+                    affected.insert(id);
                 }
                 Command::Despawn(owner) => {
                     self.actor(owner)?;
@@ -3883,6 +4034,11 @@ impl FlowRuntime {
         }
         for id in affected {
             let resource = resources.get_mut(&id).ok_or(FlowError::InvalidState)?;
+            if self.allocation_modes.get(&id) == Some(&FlowAllocationMode::Deferred)
+                && !matches!(command, Command::AllocationFlush(flush_id) if flush_id == id)
+            {
+                continue;
+            }
             let pending_disable = if let Some(event) =
                 self.pending_grant_boundaries.get(&(id, outcome.at))
             {
@@ -4478,6 +4634,7 @@ impl FlowRuntime {
             self.registry.remove::<ActiveAllocations>(id.0);
             self.resources.remove(&id);
             self.grant_enabled.remove(&id);
+            self.allocation_modes.remove(&id);
             self.world.despawn(id.0);
         }
         for (work, cleanup) in removed_works {
@@ -8066,6 +8223,112 @@ mod resource_grant_gate_atomicity_tests {
         assert_eq!(
             flow.commands.keys().copied().collect::<Vec<_>>(),
             before_commands
+        );
+    }
+}
+
+#[cfg(test)]
+mod deferred_allocation_private_tests {
+    use super::*;
+
+    #[test]
+    fn flush_budget_halt_keeps_command_index_and_runtime_state_uncommitted() {
+        let mut flow = FlowRuntime::with_config(FlowConfig {
+            max_same_tick_flow_transitions: NonZeroU64::new(1).unwrap(),
+        });
+        let resource = flow
+            .create_resource_with_allocation_mode(1, FlowAllocationMode::Deferred)
+            .unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let work = flow
+            .create_work(owner, SimDuration::from_ticks(10), "halt.private", ())
+            .unwrap();
+        let request = flow
+            .acquire(resource)
+            .owner(owner)
+            .timed_work(work)
+            .submit()
+            .unwrap();
+        flow.step().unwrap().unwrap();
+        let flush = flow
+            .schedule_allocation_flush(resource, flow.now(), i32::MAX)
+            .unwrap();
+        let expected_preview = flow.scheduler.peek_next();
+        let expected_scheduler = flow.scheduler.stats();
+        let expected_commands = flow.commands.clone();
+        let expected_flushes = flow.pending_allocation_flushes.clone();
+        let expected_request = flow.request(request).unwrap();
+        let expected_progress = flow.work_progress(work).unwrap();
+        let expected_scheduled = flow.scheduled;
+        let expected_created = flow.created;
+        let halt = FlowError::SameTickBudgetExceeded {
+            at_ticks: 0,
+            limit: 1,
+        };
+
+        assert_eq!(flow.step(), Err(halt));
+        assert_eq!(flow.scheduler.peek_next(), expected_preview);
+        assert_eq!(flow.scheduler.stats(), expected_scheduler);
+        assert_eq!(flow.commands, expected_commands);
+        assert_eq!(flow.pending_allocation_flushes, expected_flushes);
+        assert_eq!(
+            flow.pending_allocation_flushes
+                .get(&(resource, SimTime::ZERO)),
+            Some(&flush)
+        );
+        assert_eq!(flow.request(request).unwrap(), expected_request);
+        assert_eq!(flow.work_progress(work).unwrap(), expected_progress);
+        assert_eq!(flow.scheduled, expected_scheduled);
+        assert_eq!(flow.created, expected_created);
+        assert_eq!(flow.step(), Err(halt));
+        assert!(flow.budget_snapshot().halted.is_some());
+    }
+
+    #[test]
+    fn flush_admission_counter_rejections_leave_scheduler_and_index_unchanged() {
+        let mut flow = FlowRuntime::new();
+        let resource = flow
+            .create_resource_with_allocation_mode(1, FlowAllocationMode::Deferred)
+            .unwrap();
+        let before_scheduled = flow.scheduled;
+        let before_scheduler = flow.scheduler.stats();
+        let before_commands = flow.commands.clone();
+        flow.scheduler_event_cap_for_test = Some(0);
+        assert_eq!(
+            flow.schedule_allocation_flush(resource, SimTime::ZERO, 0),
+            Err(ResourceAllocationAdmissionError::Flow(
+                FlowError::CounterOverflow
+            ))
+        );
+        assert_eq!(flow.scheduler.stats(), before_scheduler);
+        assert_eq!(flow.commands, before_commands);
+        assert!(flow.pending_allocation_flushes.is_empty());
+
+        flow.scheduler_event_cap_for_test = None;
+        flow.scheduled = OPERATION_CAP;
+        assert_eq!(
+            flow.schedule_allocation_flush(resource, SimTime::ZERO, 0),
+            Err(ResourceAllocationAdmissionError::Flow(
+                FlowError::CounterOverflow
+            ))
+        );
+        assert_eq!(flow.scheduler.stats(), before_scheduler);
+        assert_eq!(flow.commands, before_commands);
+        assert!(flow.pending_allocation_flushes.is_empty());
+        flow.scheduled = before_scheduled;
+        let mut control = FlowRuntime::new();
+        let control_resource = control
+            .create_resource_with_allocation_mode(1, FlowAllocationMode::Deferred)
+            .unwrap();
+        assert_eq!(
+            flow.schedule_allocation_flush(resource, SimTime::ZERO, 0),
+            control.schedule_allocation_flush(control_resource, SimTime::ZERO, 0)
+        );
+        assert_eq!(flow.scheduler.stats(), control.scheduler.stats());
+        assert_eq!(flow.commands, control.commands);
+        assert_eq!(
+            flow.pending_allocation_flushes,
+            control.pending_allocation_flushes
         );
     }
 }
