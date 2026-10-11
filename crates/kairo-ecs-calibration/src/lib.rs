@@ -255,12 +255,22 @@ pub mod experimental_c5 {
         ))
     }
     pub fn evaluate(study: &str, task: &str) -> Result<String, C5Error> {
-        output(crate::c5_native::evaluate(&parse(study)?, &parse(task)?))
+        let study = parse(study)?;
+        let task = parse(task)?;
+        crate::c5_native::admitted(&study, &task).map_err(C5Error::InvalidInput)?;
+        let value = crate::c5_native::evaluate(&study, &task).map_err(C5Error::Execution)?;
+        serde_json::to_string(&value).map_err(|e| C5Error::Execution(e.to_string()))
     }
     pub fn verify_trace(study: &str) -> Result<String, C5Error> {
         output(crate::c5_native::verify_trace(&parse(study)?))
     }
     pub fn replay(study: &str, mode: &str) -> Result<String, C5Error> {
-        output(crate::c5_native::replay(&parse(study)?, mode))
+        let study = parse(study)?;
+        crate::c5_study::plan(&study).map_err(C5Error::InvalidInput)?;
+        if mode != "shadow" && mode != "free" {
+            return Err(C5Error::InvalidInput("unsupported replay mode".into()));
+        }
+        let value = crate::c5_native::replay(&study, mode).map_err(C5Error::Execution)?;
+        serde_json::to_string(&value).map_err(|e| C5Error::Execution(e.to_string()))
     }
 }

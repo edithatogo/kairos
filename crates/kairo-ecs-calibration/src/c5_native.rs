@@ -27,7 +27,10 @@ fn string<'a>(v: &'a Value, key: &str) -> Result<&'a str, String> {
         .ok_or_else(|| format!("invalid string {key}"))
 }
 fn digest(v: &Value) -> String {
-    format!("{:x}", Sha256::digest(v.to_string().as_bytes()))
+    Sha256::digest(v.to_string().as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 pub(crate) fn verify_trace(config: &Value) -> Result<Value, String> {
@@ -47,7 +50,7 @@ pub(crate) fn verify_trace(config: &Value) -> Result<Value, String> {
     )
 }
 
-fn admitted(config: &Value, task: &Value) -> Result<(), String> {
+pub(crate) fn admitted(config: &Value, task: &Value) -> Result<(), String> {
     let p = crate::c5_study::plan(config)?;
     let mut expected = p["tasks"].as_array().ok_or("plan tasks")?.clone();
     if task["split"] == "final_test" {
@@ -196,7 +199,7 @@ fn shadow_case(config: &Value, task: &Value, row: &Value) -> Result<Value, Strin
         }
     }
     Ok(
-        json!({"case_id":row["case_id"],"predicted_tick":predicted.map(|n|n.to_string()),"observed_tick":row["end_tick"],"predicted_transit_ticks":adapter.model.arrival_tick(&world).and_then(|n|n.checked_sub(at)).map(|n|n.to_string()),"study_service_seed":seed,"native_events":count,"snapshot_digest":format!("{:x}",Sha256::digest(snap.digest)),"outcome":if predicted.is_some(){"complete"}else{"censored"},"sampled_work_ticks":work.to_string(),"runtime_seed_contract":"sealed-c3-fixed-duration-v1; study randomness sampled before native admission"}),
+        json!({"case_id":row["case_id"],"predicted_tick":predicted.map(|n|n.to_string()),"observed_tick":row["end_tick"],"observed_censored":row["censored"],"predicted_transit_ticks":adapter.model.arrival_tick(&world).and_then(|n|n.checked_sub(at)).map(|n|n.to_string()),"study_service_seed":seed,"native_events":count,"snapshot_digest":snap.digest.iter().map(|b|format!("{b:02x}")).collect::<String>(),"outcome":if predicted.is_some(){"complete"}else{"censored"},"sampled_work_ticks":work.to_string(),"runtime_seed_contract":"sealed-c3-fixed-duration-v1; study randomness sampled before native admission"}),
     )
 }
 
@@ -217,13 +220,26 @@ fn evaluate_admitted(config: &Value, task: &Value) -> Result<Value, String> {
     let mut censored = 0u64;
     let mut missing = 0u64;
     let mut failed = 0u64;
+    let free = if task["split"] == "final_test" && !invalid {
+        Some(free_run(config, task)?)
+    } else {
+        None
+    };
     for row in rows {
         if invalid {
             failed += 1;
             records.push(json!({"case_id":row["case_id"],"outcome":"invalid","reason":"zero parameter duration"}));
             continue;
         }
-        let native = shadow_case(config, task, row);
+        let native = if let Some(free) = &free {
+            free["records"]
+                .as_array()
+                .and_then(|r| r.iter().find(|r| r["case_id"] == row["case_id"]))
+                .cloned()
+                .ok_or_else(|| "free record missing".to_owned())
+        } else {
+            shadow_case(config, task, row)
+        };
         match native {
             Err(reason) => {
                 failed += 1;
@@ -233,22 +249,28 @@ fn evaluate_admitted(config: &Value, task: &Value) -> Result<Value, String> {
                 let pred = record["predicted_tick"]
                     .as_str()
                     .and_then(|n| n.parse::<u128>().ok());
-                if row["censored"] == true || pred.is_none() {
-                    censored += 1;
-                } else if let Some(observed) = row["end_tick"].as_u64() {
-                    eligible += 1;
-                    completion += pred.unwrap().abs_diff(observed.into()) as f64;
-                } else {
-                    missing += 1;
-                }
-                if let (Some(observed), Some(predicted)) = (
-                    row["transit_ticks"].as_u64(),
+                let transit_pair = row["transit_ticks"].as_u64().zip(
                     record["predicted_transit_ticks"]
                         .as_str()
                         .and_then(|s| s.parse::<u128>().ok()),
-                ) {
-                    transit_count += 1;
-                    transit += predicted.abs_diff(observed.into()) as f64;
+                );
+                let need_transit = config["objective"]["transit_weight"]
+                    .as_f64()
+                    .unwrap_or(0.0)
+                    > 0.0;
+                if row["censored"] == true || pred.is_none() {
+                    censored += 1;
+                } else if need_transit && transit_pair.is_none() {
+                    missing += 1;
+                } else if let Some(observed) = row["end_tick"].as_u64() {
+                    eligible += 1;
+                    completion += pred.unwrap().abs_diff(observed.into()) as f64;
+                    if let Some((observed, predicted)) = transit_pair {
+                        transit_count += 1;
+                        transit += predicted.abs_diff(observed.into()) as f64;
+                    }
+                } else {
+                    missing += 1;
                 }
                 records.push(record);
             }
@@ -266,14 +288,18 @@ fn evaluate_admitted(config: &Value, task: &Value) -> Result<Value, String> {
         "complete"
     };
     Ok(
-        json!({"schema_version":"kairoecs.calibration.result.v1","task_id":task["task_id"],"study_hash":task["study_hash"],"candidate_id":task["candidate_id"],"replication_id":task["replication_id"],"split":task["split"],"seed_schedule_id":task["seed_schedule_id"],"params":task["params"],"outcome":outcome,"completion_error":if eligible>0 {Some(completion/eligible as f64)} else {None},"transit_error":if transit_count>0 {Some(transit/transit_count as f64)}else{None},"eligible_count":eligible,"censored_count":censored,"missing_count":missing,"failed_count":failed,"records":records}),
+        json!({"schema_version":"kairoecs.calibration.result.v1","task_id":task["task_id"],"study_hash":task["study_hash"],"candidate_id":task["candidate_id"],"replication_id":task["replication_id"],"split":task["split"],"seed_schedule_id":task["seed_schedule_id"],"params":task["params"],"outcome":outcome,"replay_role":if free.is_some(){"free"}else{"shadow"},"seed_map_version":1,"root_seed":config["root_seed"],"completion_error":if eligible>0 {Some(completion/eligible as f64)} else {None},"transit_error":if transit_count>0 {Some(transit/transit_count as f64)}else{None},"eligible_count":eligible,"censored_count":censored,"missing_count":missing,"failed_count":failed,"records":records}),
     )
 }
 
 // A distinct free-running shared FCFS resource. Arrivals/transit and work are
 // inputs; observed completions are consulted only after simulation for reporting.
 fn free_run(config: &Value, task: &Value) -> Result<Value, String> {
-    let mut rows = task["records"].as_array().ok_or("records")?.clone();
+    let input = task["records"].as_array().ok_or("records")?;
+    if input.len() > 4096 {
+        return Err("free runtime row inventory cap".into());
+    }
+    let mut rows = input.clone();
     rows.sort_by_key(|r| {
         (
             r["start_tick"].as_u64().unwrap_or(0),
@@ -362,7 +388,7 @@ fn free_run(config: &Value, task: &Value) -> Result<Value, String> {
         } else {
             None
         };
-        result.push(json!({"case_id":row["case_id"],"predicted_tick":predicted,"observed_tick":row["end_tick"],"study_service_seed":seed,"outcome":if predicted.is_some(){"complete"}else{"censored"}}));
+        result.push(json!({"case_id":row["case_id"],"predicted_tick":predicted,"observed_tick":row["end_tick"],"observed_censored":row["censored"],"study_service_seed":seed,"native_events":events,"event_count_scope":"shared-task","predicted_transit_ticks":route.to_string(),"outcome":if predicted.is_some(){"complete"}else{"censored"}}));
     }
     Ok(
         json!({"mode":"free","resource_capacity":1,"records":result,"native_events":events,"prediction_uses_observed_completion":false}),
@@ -414,7 +440,7 @@ mod tests {
         let c = study();
         let t = task(&c);
         let result = evaluate(&c, &t).unwrap();
-        assert_eq!(result["outcome"], "complete");
+        assert_eq!(result["outcome"], "complete", "{result}");
         assert_eq!(result["completion_error"], 0.0);
         assert_eq!(result["transit_error"], 0.0);
         assert_eq!(result["records"][0]["predicted_tick"], "105");
@@ -472,6 +498,7 @@ mod tests {
             .map(|t| evaluate(&c, t).unwrap())
             .collect::<Vec<_>>();
         for (i, result) in results.iter().enumerate() {
+            assert_eq!(result["outcome"], "complete", "{result}");
             assert_eq!(
                 result["records"][0]["study_service_seed"],
                 results[0]["records"][0]["study_service_seed"]
@@ -507,6 +534,7 @@ mod tests {
             .collect::<Vec<_>>();
         let before = crate::c5_study::summarize(&c, &attempts).unwrap();
         assert_eq!(before["complete"], false);
+        assert_eq!(before["winner"], "c000004", "{before}");
         for t in before["next_tasks"].as_array().unwrap() {
             attempts.push(evaluate(&c, t).unwrap());
         }

@@ -294,10 +294,10 @@ impl CalibrationSeedMap {
     /// Derive and register the expected identity without creating another
     /// advancing stream. Repeated requests for the same identity are stable.
     #[cfg_attr(
-        not(test),
+        not(any(test, feature = "flow")),
         expect(
             dead_code,
-            reason = "Opaque C2.2 expected keys are currently consumed by private provider code and tests"
+            reason = "Opaque C2.2 expected keys are consumed by private provider and C5 flow code"
         )
     )]
     pub(crate) fn key_for(
