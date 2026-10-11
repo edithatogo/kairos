@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "packet_id": "C5.workers.review-fixes.v1",
+  "status": "ready_for_review",
+  "base_commit": "c23deabff482fa27bbd43dfebda36f6a35cbb4f7",
+  "changed_paths": [
+    "crates/kairo-ecs-cli/src/c5_workers.rs",
+    ".artifacts/c5-workers/README.md",
+    ".artifacts/c5-workers/result.json"
+  ],
+  "verification": [
+    {
+      "command": "Rust 1.99 cargo test --manifest-path .artifacts/c5-workers/harness/Cargo.toml",
+      "exit_status": 0,
+      "passed": 9,
+      "failed": 0
+    },
+    {
+      "command": "Rust 1.99 rustfmt --edition 2024 crates/kairo-ecs-cli/src/c5_workers.rs",
+      "exit_status": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit_status": 0
+    }
+  ],
+  "unverified": [
+    "Native kairo-ecs-cli focused cargo test awaits coordinator wiring of mod c5_workers in main.rs."
+  ],
+  "notes": [
+    "Shard reads are capped at MAX_SHARD_BYTES plus one sentinel byte regardless of prior metadata size.",
+    "Evaluator panics are converted to typed task errors and remaining selected tasks still complete and persist.",
+    "No task-level acceptance or calibration integration is claimed."
+  ]
+}
