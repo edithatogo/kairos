@@ -21,3 +21,6 @@ __pycache__/
 .pytest_cache/
 crates/kairo-ecs-pyo3/
 .serena/
+
+# Bounded C5 local execution evidence is archived explicitly in Conductor.
+.artifacts/c5*/
