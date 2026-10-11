@@ -1,0 +1,84 @@
+{
+  "schema_version": "kairoecs.calibration.study.v1",
+  "study_id": "synthetic-c5",
+  "dataset_id": "synthetic",
+  "mapping_version": "normalized-ticks.v1",
+  "adapter": "synthetic_flow_probe.v1",
+  "root_seed": 42,
+  "parameters": {
+    "route_ticks": {
+      "unit": "tick",
+      "values": [
+        1,
+        2,
+        3
+      ]
+    },
+    "work_ticks": {
+      "unit": "tick",
+      "values": [
+        2,
+        3,
+        4
+      ]
+    }
+  },
+  "objective": {
+    "completion_weight": 1,
+    "transit_weight": 1,
+    "scale_ticks": 1,
+    "failure_penalty": 1000,
+    "tie_tolerance": 0
+  },
+  "budget": {
+    "max_candidates": 100,
+    "replications": 2,
+    "confirmation_replications": 2,
+    "final_test_replications": 2,
+    "max_tasks": 10000,
+    "horizon_ticks": 1000,
+    "max_events": 1000
+  },
+  "precision": {
+    "kind": "fixed_confirmation",
+    "target_half_width": 1,
+    "alpha": 0.05
+  },
+  "splits": {
+    "training": [
+      0,
+      100
+    ],
+    "validation": [
+      100,
+      200
+    ],
+    "final_test": [
+      200,
+      300
+    ]
+  },
+  "trace": [
+    {
+      "case_id": "training-1",
+      "day": "training-1",
+      "start_tick": 0,
+      "end_tick": 5,
+      "transit_ticks": 2
+    },
+    {
+      "case_id": "validation-1",
+      "day": "validation-1",
+      "start_tick": 100,
+      "end_tick": 105,
+      "transit_ticks": 2
+    },
+    {
+      "case_id": "test-1",
+      "day": "test-1",
+      "start_tick": 200,
+      "end_tick": 205,
+      "transit_ticks": 2
+    }
+  ]
+}
