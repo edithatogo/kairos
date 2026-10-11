@@ -31,6 +31,21 @@ impl ResourceId {
     }
 }
 
+/// Admission failures for experimental resource grant eligibility boundaries.
+/// Gate commands remain ordinary scheduled Flow commands after admission.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, thiserror::Error)]
+pub enum ResourceGrantAdmissionError {
+    /// An existing Flow validation failed before any gate state was published.
+    #[error(transparent)]
+    Flow(#[from] FlowError),
+    /// A boundary already exists for this resource and tick.
+    #[error("duplicate resource grant boundary")]
+    DuplicateBoundary,
+    /// The requested tick has already entered the started scheduler frontier.
+    #[error("resource grant boundary is at or behind the started frontier")]
+    FrontierReached,
+}
+
 #[cfg(test)]
 mod submit_scheduler_capacity_tests {
     use super::*;
@@ -984,6 +999,7 @@ enum Command {
     Submit(RequestId),
     Release(LeaseId),
     Capacity(ResourceId, u32),
+    GrantEnabled(ResourceId, bool),
     Remove(ResourceId),
     Despawn(EntityId),
     Deadline(RequestId),
@@ -1262,6 +1278,7 @@ fn first_preempting_waiter(
 }
 struct DispatchPlan {
     resources: BTreeMap<ResourceId, OwnedResourceStage>,
+    grant_enabled: BTreeMap<ResourceId, bool>,
     requests: BTreeMap<RequestId, ResourceRequest>,
     progress: BTreeMap<WorkId, WorkProgress>,
     tokens: Vec<(Command, SimTime, Option<Notification>)>,
@@ -1377,6 +1394,8 @@ pub struct FlowRuntime {
     world: World,
     registry: ComponentRegistry,
     resources: BTreeSet<ResourceId>,
+    grant_enabled: BTreeMap<ResourceId, bool>,
+    pending_grant_boundaries: BTreeMap<(ResourceId, SimTime), EventId>,
     requests: BTreeSet<RequestId>,
     actors: BTreeSet<EntityId>,
     works: BTreeMap<WorkId, WorkDescriptor>,
@@ -1427,6 +1446,8 @@ impl FlowRuntime {
             world: World::new(),
             registry: ComponentRegistry::new(),
             resources: BTreeSet::new(),
+            grant_enabled: BTreeMap::new(),
+            pending_grant_boundaries: BTreeMap::new(),
             requests: BTreeSet::new(),
             actors: BTreeSet::new(),
             works: BTreeMap::new(),
@@ -1515,6 +1536,57 @@ impl FlowRuntime {
         let _ = self.registry.insert(id.0, ActiveAllocations::default());
         self.resources.insert(id);
         Ok(id)
+    }
+
+    /// Schedule an experimental grant eligibility boundary for one resource.
+    /// Boundaries at a started tick are rejected so same-tick ingress cannot
+    /// retroactively change grants already dispatched at that frontier.
+    pub fn schedule_resource_grant_enabled(
+        &mut self,
+        resource: ResourceId,
+        enabled: bool,
+        at: SimTime,
+        scheduler_priority: i32,
+    ) -> Result<EventId, ResourceGrantAdmissionError> {
+        self.resource(resource)?;
+        if at < self.now() {
+            return Err(FlowError::PastCommand.into());
+        }
+        if self.scheduler.stats().dispatched_events > 0 && at <= self.now() {
+            return Err(ResourceGrantAdmissionError::FrontierReached);
+        }
+        if self.pending_grant_boundaries.contains_key(&(resource, at)) {
+            return Err(ResourceGrantAdmissionError::DuplicateBoundary);
+        }
+        if self
+            .commands
+            .values()
+            .any(|command| matches!(command, Command::Remove(id) if *id == resource))
+        {
+            return Err(FlowError::ResourceInUse.into());
+        }
+        self.check_running()?;
+        self.check_schedule(at)?;
+        self.check_scheduler_event_capacity(1)?;
+        if self.scheduled >= OPERATION_CAP
+            || self.pending_grant_boundaries.len() as u64 >= OPERATION_CAP
+        {
+            return Err(FlowError::CounterOverflow.into());
+        }
+        let event = self.schedule_command(
+            Command::GrantEnabled(resource, enabled),
+            at,
+            scheduler_priority,
+        )?;
+        self.pending_grant_boundaries.insert((resource, at), event);
+        Ok(event)
+    }
+
+    /// Return the committed experimental grant eligibility flag for a resource.
+    /// Pending future boundaries are deliberately not projected by this accessor.
+    pub fn resource_grant_enabled(&self, resource: ResourceId) -> Result<bool, FlowError> {
+        self.resource(resource)?;
+        Ok(self.grant_enabled.get(&resource).copied().unwrap_or(true))
     }
     fn actor(&self, id: EntityId) -> Result<(), FlowError> {
         if self.actors.contains(&id) && self.world.is_alive(id) {
@@ -2378,7 +2450,12 @@ impl FlowRuntime {
     pub fn remove_resource(&mut self, id: ResourceId) -> Result<(), FlowError> {
         self.check_running()?;
         self.resource(id)?;
-        if self.in_use(id) {
+        if self.in_use(id)
+            || self
+                .pending_grant_boundaries
+                .keys()
+                .any(|(resource, _)| *resource == id)
+        {
             return Err(FlowError::ResourceInUse);
         }
         self.schedule(Command::Remove(id), self.now())
@@ -2437,6 +2514,11 @@ impl FlowRuntime {
             .get(&preview.id)
             .cloned()
             .ok_or(FlowError::InvalidState)?;
+        if let Command::GrantEnabled(resource, _) = command {
+            if self.pending_grant_boundaries.get(&(resource, preview.at)) != Some(&preview.id) {
+                return Err(FlowError::InvalidState);
+            }
+        }
         let mut outcome = FlowDispatch {
             event: preview.id,
             at: preview.at,
@@ -2517,6 +2599,12 @@ impl FlowRuntime {
             _ => unreachable!("validated live scheduler head"),
         }
         self.commands.remove(&preview.id);
+        if let Command::GrantEnabled(resource, _) = command {
+            let removed = self
+                .pending_grant_boundaries
+                .remove(&(resource, preview.at));
+            debug_assert_eq!(removed, Some(preview.id));
+        }
         if let Command::Release(lease) = command {
             self.pending_releases.remove(&lease);
         }
@@ -3256,6 +3344,7 @@ impl FlowRuntime {
         let mut remove_actor = None;
         let mut admission = self.next_admission;
         let mut lease_revision = self.next_lease;
+        let mut grant_enabled = BTreeMap::new();
         // Expire only resources causally targeted by this event.
         let boundary_targets: BTreeSet<ResourceId> = match command {
             Command::Submit(id)
@@ -3270,7 +3359,9 @@ impl FlowRuntime {
                 .get(&lease.request)
                 .map(|r| BTreeSet::from([r.resource]))
                 .unwrap_or_default(),
-            Command::Capacity(id, _) | Command::Remove(id) => BTreeSet::from([id]),
+            Command::Capacity(id, _) | Command::Remove(id) | Command::GrantEnabled(id, _) => {
+                BTreeSet::from([id])
+            }
             Command::Notify | Command::Domain(..) | Command::DomainControl(..) => BTreeSet::new(),
             Command::Despawn(owner) => self
                 .requests
@@ -3575,6 +3666,13 @@ impl FlowRuntime {
                     resource.capacity.total = total;
                     affected.insert(id);
                 }
+                Command::GrantEnabled(id, enabled) => {
+                    if !resources.contains_key(&id) {
+                        return Err(FlowError::InvalidResource);
+                    }
+                    grant_enabled.insert(id, enabled);
+                    affected.insert(id);
+                }
                 Command::Remove(id) => {
                     if !resources.contains_key(&id) {
                         return Err(FlowError::InvalidResource);
@@ -3591,6 +3689,13 @@ impl FlowRuntime {
                                 )
                         })
                     }) {
+                        return Err(FlowError::ResourceInUse);
+                    }
+                    if self
+                        .pending_grant_boundaries
+                        .keys()
+                        .any(|(resource, _)| *resource == id)
+                    {
                         return Err(FlowError::ResourceInUse);
                     }
                     let staged = resources.get(&id).ok_or(FlowError::InvalidState)?;
@@ -3778,6 +3883,26 @@ impl FlowRuntime {
         }
         for id in affected {
             let resource = resources.get_mut(&id).ok_or(FlowError::InvalidState)?;
+            let pending_disable = if let Some(event) =
+                self.pending_grant_boundaries.get(&(id, outcome.at))
+            {
+                match self.commands.get(event) {
+                    Some(Command::GrantEnabled(gate_resource, enabled)) if *gate_resource == id => {
+                        !enabled
+                    }
+                    _ => return Err(FlowError::InvalidState),
+                }
+            } else {
+                false
+            };
+            let closed = !grant_enabled
+                .get(&id)
+                .copied()
+                .unwrap_or_else(|| self.grant_enabled.get(&id).copied().unwrap_or(true))
+                || pending_disable;
+            if closed {
+                continue;
+            }
             loop {
                 let key = if resource.active.leases.len() < resource.capacity.total as usize {
                     resource.queue.iter().next().copied()
@@ -4185,6 +4310,7 @@ impl FlowRuntime {
         }
         Ok(Some(DispatchPlan {
             resources: owned_resources,
+            grant_enabled,
             requests: requests.into_writes(),
             progress: progress.into_writes(),
             tokens,
@@ -4201,6 +4327,7 @@ impl FlowRuntime {
     fn commit_plan(&mut self, plan: DispatchPlan) {
         let DispatchPlan {
             resources,
+            grant_enabled,
             requests,
             progress,
             tokens,
@@ -4320,6 +4447,9 @@ impl FlowRuntime {
         for (id, p) in progress {
             let _ = self.registry.insert(id.0, p);
         }
+        for (id, enabled) in grant_enabled {
+            self.grant_enabled.insert(id, enabled);
+        }
         for (id, context) in prepared {
             context.install(&mut self.registry, id.0);
         }
@@ -4347,6 +4477,7 @@ impl FlowRuntime {
             self.registry.remove::<PreemptingWaiters>(id.0);
             self.registry.remove::<ActiveAllocations>(id.0);
             self.resources.remove(&id);
+            self.grant_enabled.remove(&id);
             self.world.despawn(id.0);
         }
         for (work, cleanup) in removed_works {
@@ -7556,5 +7687,385 @@ mod schedule_domain_binding_tests {
         );
         assert_eq!(past.budget_snapshot(), before_rejected_schedule);
         assert_eq!(past.work_context::<BoundContext>(carrier).unwrap().0, None);
+    }
+}
+
+#[cfg(test)]
+mod resource_grant_gate_atomicity_tests {
+    use super::*;
+
+    #[derive(Debug, Eq, PartialEq)]
+    struct GateSnapshot {
+        scheduler: SchedulerStats,
+        created: u64,
+        scheduled: u64,
+        command_payloads: Vec<(EventId, String)>,
+        pending: BTreeMap<(ResourceId, SimTime), EventId>,
+        enabled: BTreeMap<ResourceId, bool>,
+        requests: Vec<(RequestId, ResourceRequest)>,
+        work_progress: Vec<(WorkId, WorkProgress)>,
+        resources: Vec<(ResourceId, ResourceSnapshot)>,
+        world: kairo_ecs_state::WorldSnapshot,
+    }
+
+    fn snapshot(flow: &FlowRuntime) -> GateSnapshot {
+        GateSnapshot {
+            scheduler: flow.scheduler.stats(),
+            created: flow.created,
+            scheduled: flow.scheduled,
+            command_payloads: flow
+                .commands
+                .iter()
+                .map(|(id, command)| (*id, format!("{command:?}")))
+                .collect(),
+            pending: flow.pending_grant_boundaries.clone(),
+            enabled: flow.grant_enabled.clone(),
+            requests: flow
+                .requests
+                .iter()
+                .map(|id| (*id, flow.request(*id).unwrap()))
+                .collect(),
+            work_progress: flow
+                .works
+                .keys()
+                .map(|id| (*id, flow.work_progress(*id).unwrap()))
+                .collect(),
+            resources: flow
+                .resources
+                .iter()
+                .map(|id| (*id, flow.resource(*id).unwrap()))
+                .collect(),
+            world: flow.world.snapshot(),
+        }
+    }
+
+    #[test]
+    fn scheduler_and_command_budget_rejections_preserve_state_and_next_event_id() {
+        let mut constrained = FlowRuntime::new();
+        let resource = constrained.create_resource(1).unwrap();
+        let mut control = FlowRuntime::new();
+        let control_resource = control.create_resource(1).unwrap();
+        let before = snapshot(&constrained);
+        constrained.scheduler_event_cap_for_test = Some(0);
+        assert_eq!(
+            constrained.schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(1), 0),
+            Err(ResourceGrantAdmissionError::Flow(
+                FlowError::CounterOverflow
+            ))
+        );
+        assert_eq!(snapshot(&constrained), before);
+        constrained.scheduler_event_cap_for_test = None;
+        assert_eq!(
+            constrained.schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(1), 0),
+            control.schedule_resource_grant_enabled(
+                control_resource,
+                false,
+                SimTime::from_ticks(1),
+                0
+            )
+        );
+
+        let mut constrained = FlowRuntime::new();
+        let resource = constrained.create_resource(1).unwrap();
+        let mut control = FlowRuntime::new();
+        let control_resource = control.create_resource(1).unwrap();
+        constrained.scheduled = OPERATION_CAP;
+        let before = snapshot(&constrained);
+        assert_eq!(
+            constrained.schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(1), 0),
+            Err(ResourceGrantAdmissionError::Flow(
+                FlowError::CounterOverflow
+            ))
+        );
+        assert_eq!(snapshot(&constrained), before);
+        constrained.scheduled = 0;
+        assert_eq!(
+            constrained.schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(1), 0),
+            control.schedule_resource_grant_enabled(
+                control_resource,
+                false,
+                SimTime::from_ticks(1),
+                0
+            )
+        );
+    }
+
+    #[test]
+    fn precommit_budget_halt_preserves_gate_index_flags_and_claims() {
+        let config = FlowConfig {
+            max_same_tick_flow_transitions: NonZeroU64::new(1).unwrap(),
+        };
+        let mut flow = FlowRuntime::with_config(config);
+        let resource = flow.create_resource(1).unwrap();
+        let first_owner = flow.spawn_actor().unwrap();
+        let second_owner = flow.spawn_actor().unwrap();
+        let first_work = flow
+            .create_work(
+                first_owner,
+                SimDuration::from_ticks(10),
+                "gate-halt-first",
+                (),
+            )
+            .unwrap();
+        let second_work = flow
+            .create_work(
+                second_owner,
+                SimDuration::from_ticks(10),
+                "gate-halt-second",
+                (),
+            )
+            .unwrap();
+        let first = flow
+            .acquire(resource)
+            .owner(first_owner)
+            .timed_work(first_work)
+            .at(SimTime::from_ticks(1))
+            .scheduler_priority(-10)
+            .submit()
+            .unwrap();
+        flow.schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(1), 0)
+            .unwrap();
+        flow.run_for(2).unwrap();
+        assert_eq!(flow.request(first).unwrap().state, RequestState::Queued);
+
+        let enable_event = flow
+            .schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(2), 10)
+            .unwrap();
+        let second = flow
+            .acquire(resource)
+            .owner(second_owner)
+            .timed_work(second_work)
+            .at(SimTime::from_ticks(2))
+            .scheduler_priority(-10)
+            .submit()
+            .unwrap();
+        flow.run_for(1).unwrap();
+        assert_eq!(flow.request(second).unwrap().state, RequestState::Queued);
+        let before_stats = flow.scheduler.stats();
+        let before_pending = flow.pending_grant_boundaries.clone();
+        let before_commands: Vec<_> = flow.commands.keys().copied().collect();
+        let before_resource = flow.resource(resource).unwrap();
+        assert_eq!(flow.resource_grant_enabled(resource), Ok(false));
+
+        assert!(matches!(
+            flow.step(),
+            Err(FlowError::SameTickBudgetExceeded {
+                at_ticks: 2,
+                limit: 1
+            })
+        ));
+        assert_eq!(flow.scheduler.stats(), before_stats);
+        assert_eq!(flow.pending_grant_boundaries, before_pending);
+        assert_eq!(
+            flow.commands.keys().copied().collect::<Vec<_>>(),
+            before_commands
+        );
+        assert_eq!(flow.scheduler.peek_next().unwrap().id, enable_event);
+        assert_eq!(flow.resource_grant_enabled(resource), Ok(false));
+        assert_eq!(flow.resource(resource).unwrap(), before_resource);
+    }
+
+    #[test]
+    fn dispatched_semantic_rejection_advances_frontier_but_keeps_gate_token() {
+        let mut flow = FlowRuntime::new();
+        let resource = flow.create_resource(1).unwrap();
+        let other = flow.create_resource(1).unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let work = flow
+            .create_work(owner, SimDuration::from_ticks(10), "gate-reject", ())
+            .unwrap();
+        flow.acquire(resource)
+            .owner(owner)
+            .timed_work(work)
+            .submit()
+            .unwrap();
+        flow.run_for(1).unwrap();
+        let gate = flow
+            .schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(1), 0)
+            .unwrap();
+        let remove = flow
+            .schedule_command(Command::Remove(resource), SimTime::from_ticks(1), -10)
+            .unwrap();
+        let before = flow.scheduler.stats().dispatched_events;
+        let rejected = flow.step().unwrap().unwrap();
+        assert_eq!(rejected.event, remove);
+        assert_eq!(rejected.error, Some(FlowError::ResourceInUse));
+        assert_eq!(flow.scheduler.stats().dispatched_events, before + 1);
+        assert_eq!(
+            flow.pending_grant_boundaries
+                .get(&(resource, SimTime::from_ticks(1))),
+            Some(&gate)
+        );
+        assert_eq!(
+            flow.schedule_resource_grant_enabled(other, false, SimTime::from_ticks(1), 0),
+            Err(ResourceGrantAdmissionError::FrontierReached)
+        );
+    }
+
+    #[test]
+    fn rejected_identity_time_frontier_duplicate_and_remove_conflicts_preserve_next_id() {
+        let mut flow = FlowRuntime::new();
+        let resource = flow.create_resource(1).unwrap();
+        let mut control = FlowRuntime::new();
+        let control_resource = control.create_resource(1).unwrap();
+        flow.schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(0), 0)
+            .unwrap();
+        control
+            .schedule_resource_grant_enabled(control_resource, false, SimTime::from_ticks(0), 0)
+            .unwrap();
+        let before = snapshot(&flow);
+        let before_resource = flow.resource(resource).unwrap();
+        assert_eq!(
+            flow.schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(0), 0),
+            Err(ResourceGrantAdmissionError::DuplicateBoundary)
+        );
+        assert_eq!(snapshot(&flow), before);
+        assert_eq!(flow.resource(resource).unwrap(), before_resource);
+        assert_eq!(
+            flow.schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(1), 0),
+            control.schedule_resource_grant_enabled(
+                control_resource,
+                true,
+                SimTime::from_ticks(1),
+                0
+            )
+        );
+
+        let mut flow = FlowRuntime::new();
+        let resource = flow.create_resource(1).unwrap();
+        let mut control = FlowRuntime::new();
+        let control_resource = control.create_resource(1).unwrap();
+        flow.schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(1), 0)
+            .unwrap();
+        control
+            .schedule_resource_grant_enabled(control_resource, false, SimTime::from_ticks(1), 0)
+            .unwrap();
+        flow.step().unwrap();
+        control.step().unwrap();
+        let before = snapshot(&flow);
+        assert_eq!(
+            flow.schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(0), 0),
+            Err(ResourceGrantAdmissionError::Flow(FlowError::PastCommand))
+        );
+        assert_eq!(snapshot(&flow), before);
+        assert_eq!(
+            flow.schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(2), 0),
+            control.schedule_resource_grant_enabled(
+                control_resource,
+                true,
+                SimTime::from_ticks(2),
+                0
+            )
+        );
+
+        let mut flow = FlowRuntime::new();
+        let resource = flow.create_resource(1).unwrap();
+        let mut control = FlowRuntime::new();
+        let control_resource = control.create_resource(1).unwrap();
+        flow.schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(0), 0)
+            .unwrap();
+        control
+            .schedule_resource_grant_enabled(control_resource, false, SimTime::from_ticks(0), 0)
+            .unwrap();
+        flow.step().unwrap();
+        control.step().unwrap();
+        let before = snapshot(&flow);
+        assert_eq!(
+            flow.schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(0), 0),
+            Err(ResourceGrantAdmissionError::FrontierReached)
+        );
+        assert_eq!(snapshot(&flow), before);
+        assert_eq!(
+            flow.schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(1), 0),
+            control.schedule_resource_grant_enabled(
+                control_resource,
+                true,
+                SimTime::from_ticks(1),
+                0
+            )
+        );
+
+        let mut flow = FlowRuntime::new();
+        let live = flow.create_resource(1).unwrap();
+        let stale = flow.create_resource(1).unwrap();
+        let mut control = FlowRuntime::new();
+        let control_live = control.create_resource(1).unwrap();
+        let control_stale = control.create_resource(1).unwrap();
+        flow.remove_resource(stale).unwrap();
+        control.remove_resource(control_stale).unwrap();
+        flow.step().unwrap();
+        control.step().unwrap();
+        let before = snapshot(&flow);
+        assert_eq!(
+            flow.schedule_resource_grant_enabled(stale, false, SimTime::from_ticks(1), 0),
+            Err(ResourceGrantAdmissionError::Flow(
+                FlowError::InvalidResource
+            ))
+        );
+        assert_eq!(snapshot(&flow), before);
+        assert_eq!(
+            flow.schedule_resource_grant_enabled(live, false, SimTime::from_ticks(1), 0),
+            control.schedule_resource_grant_enabled(control_live, false, SimTime::from_ticks(1), 0)
+        );
+
+        let mut flow = FlowRuntime::new();
+        let removed = flow.create_resource(1).unwrap();
+        let other = flow.create_resource(1).unwrap();
+        let mut control = FlowRuntime::new();
+        let control_removed = control.create_resource(1).unwrap();
+        let control_other = control.create_resource(1).unwrap();
+        flow.remove_resource(removed).unwrap();
+        control.remove_resource(control_removed).unwrap();
+        let before = snapshot(&flow);
+        assert_eq!(
+            flow.schedule_resource_grant_enabled(removed, false, SimTime::from_ticks(1), 0),
+            Err(ResourceGrantAdmissionError::Flow(FlowError::ResourceInUse))
+        );
+        assert_eq!(snapshot(&flow), before);
+        assert_eq!(
+            flow.schedule_resource_grant_enabled(other, false, SimTime::from_ticks(1), 0),
+            control.schedule_resource_grant_enabled(
+                control_other,
+                false,
+                SimTime::from_ticks(1),
+                0
+            )
+        );
+    }
+
+    #[test]
+    fn mismatched_pending_gate_join_fails_before_allocation_or_dispatch() {
+        let mut flow = FlowRuntime::new();
+        let resource = flow.create_resource(1).unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let work = flow
+            .create_work(owner, SimDuration::from_ticks(3), "gate-join", ())
+            .unwrap();
+        flow.schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(1), 10)
+            .unwrap();
+        flow.acquire(resource)
+            .owner(owner)
+            .timed_work(work)
+            .at(SimTime::from_ticks(1))
+            .scheduler_priority(-10)
+            .submit()
+            .unwrap();
+        let submit_event = flow
+            .commands
+            .iter()
+            .find_map(|(event, command)| matches!(command, Command::Submit(_)).then_some(*event))
+            .unwrap();
+        flow.pending_grant_boundaries
+            .insert((resource, SimTime::from_ticks(1)), submit_event);
+        let before_stats = flow.scheduler.stats();
+        let before_resource = flow.resource(resource).unwrap();
+        let before_commands: Vec<_> = flow.commands.keys().copied().collect();
+        assert_eq!(flow.step(), Err(FlowError::InvalidState));
+        assert_eq!(flow.scheduler.stats(), before_stats);
+        assert_eq!(flow.resource(resource).unwrap(), before_resource);
+        assert_eq!(
+            flow.commands.keys().copied().collect::<Vec<_>>(),
+            before_commands
+        );
     }
 }

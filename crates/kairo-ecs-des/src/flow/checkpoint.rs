@@ -772,6 +772,17 @@ impl FlowRuntime {
         codecs: &FlowCheckpointCodecs,
         limits: FlowCheckpointLimits,
     ) -> Result<FlowCheckpointV1, FlowCheckpointError> {
+        if self.grant_enabled.values().any(|enabled| !enabled)
+            || !self.pending_grant_boundaries.is_empty()
+            || self
+                .commands
+                .values()
+                .any(|command| matches!(command, Command::GrantEnabled(..)))
+        {
+            return Err(FlowCheckpointError::InvalidState(
+                "V1 cannot represent resource grant eligibility gates",
+            ));
+        }
         let component_limits = checkpoint_limits(limits);
         let check_count = |value: usize, max: usize, label| {
             if value > max {
@@ -1212,8 +1223,8 @@ impl FlowRuntime {
             commands: self
                 .commands
                 .iter()
-                .map(|(id, command)| (*id, (*command).into()))
-                .collect(),
+                .map(|(id, command)| Ok((*id, FlowCommandV1::try_from(*command)?)))
+                .collect::<Result<_, FlowCheckpointError>>()?,
             notifications: self
                 .notifications
                 .iter()
@@ -1482,12 +1493,19 @@ impl<T: 'static, C: 'static> RestartCodec for RestartCodecImpl<T, C> {
     }
 }
 
-impl From<Command> for FlowCommandV1 {
-    fn from(command: Command) -> Self {
-        match command {
+impl TryFrom<Command> for FlowCommandV1 {
+    type Error = FlowCheckpointError;
+
+    fn try_from(command: Command) -> Result<Self, Self::Error> {
+        Ok(match command {
             Command::Submit(id) => Self::Submit(id),
             Command::Release(id) => Self::Release(id),
             Command::Capacity(id, value) => Self::Capacity(id, value),
+            Command::GrantEnabled(..) => {
+                return Err(FlowCheckpointError::InvalidState(
+                    "V1 cannot represent a resource grant boundary",
+                ));
+            }
             Command::Remove(id) => Self::Remove(id),
             Command::Despawn(id) => Self::Despawn(id),
             Command::Deadline(id) => Self::Deadline(id),
@@ -1499,7 +1517,7 @@ impl From<Command> for FlowCommandV1 {
             Command::Notify => Self::Notify,
             Command::Domain(work, kind) => Self::Domain(work, kind),
             Command::DomainControl(work, kind, action) => Self::DomainControl(work, kind, action),
-        }
+        })
     }
 }
 
@@ -3093,6 +3111,13 @@ impl FlowRuntime {
             runtime.works.insert(WorkId(work.id), descriptor);
         }
         runtime.resources = image.resources.into_iter().collect();
+        runtime.grant_enabled = runtime
+            .resources
+            .iter()
+            .copied()
+            .map(|resource| (resource, true))
+            .collect();
+        runtime.pending_grant_boundaries.clear();
         runtime.requests = image.requests.into_iter().collect();
         runtime.actors = image.actors.into_iter().collect();
         runtime.actor_domains = image
