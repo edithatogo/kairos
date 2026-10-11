@@ -1,5 +1,10 @@
 # Changelog
 
+
+## Experimental C5 study runner (2026-10-11)
+
+- Add bounded synthetic calibration search, independent confirmation, native shadow/free replay, CLI provenance and deterministic local CPU shards with task-boundary crash recovery. Rust 1.99.0 qualification is required; no clinical validation or stable model API is claimed.
+
 KairoECS uses a curated changelog. Keep user-facing changes here.
 
 Format:

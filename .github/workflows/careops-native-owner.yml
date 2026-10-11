@@ -13,6 +13,9 @@ on:
       - 'crates/kairo-ecs-abm/**'
       - 'crates/kairo-ecs-arrow/**'
       - 'crates/kairo-ecs-calibration/**'
+      - 'crates/kairo-ecs-cli/**'
+      - 'examples/calibration/c5/**'
+      - 'scripts/qualify_c5.py'
       - 'crates/kairo-ecs-arrow-io/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
@@ -165,6 +168,33 @@ jobs:
             .artifacts/c2-process-matrix/
             .artifacts/c2-generic-context-tests/
             .artifacts/c2-identity-rng/
+          retention-days: 7
+          if-no-files-found: error
+      - name: C5 native study CLI worker and hard-kill resume qualification
+        env:
+          EXPECTED_OS: ${{ matrix.os }}
+        run: |
+          set -euo pipefail
+          log_dir=".artifacts/ci/native/c5/${EXPECTED_OS}"
+          mkdir -p "$log_dir"
+          task_rustc="$(rustup which --toolchain 1.99.0 rustc)"
+          task_bin="$(dirname "$task_rustc")"
+          export RUSTC="$task_rustc" RUSTDOC="$task_bin/rustdoc" PATH="$task_bin:$PATH"
+          "$task_rustc" -vV | tee "$log_dir/toolchain.log"
+          grep -Fx 'release: 1.99.0' "$log_dir/toolchain.log"
+          cargo test --locked -p kairo-ecs-calibration --features flow --lib c5_ 2>&1 | tee "$log_dir/study-native-tests.log"
+          cargo test --locked -p kairo-ecs-cli 2>&1 | tee "$log_dir/cli-tests.log"
+          cargo build --locked -p kairo-ecs-cli 2>&1 | tee "$log_dir/build.log"
+          python3 scripts/qualify_c5.py --binary target/debug/kairo-ecs-cli --output "$log_dir/process" 2>&1 | tee "$log_dir/process.log"
+          git rev-parse HEAD > "$log_dir/source.log"
+          git rev-parse 'HEAD^{tree}' > "$log_dir/source-tree.log"
+          shasum -a 256 crates/kairo-ecs-calibration/src/c5_*.rs crates/kairo-ecs-cli/src/c5_*.rs crates/kairo-ecs-cli/src/main.rs crates/kairo-ecs-cli/src/scenario.rs crates/kairo-ecs-cli/build.rs Cargo.lock > "$log_dir/source.sha256"
+      - name: Preserve C5 native evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: c5-native-${{ matrix.os }}
+          path: .artifacts/ci/native/c5/${{ matrix.os }}/
           retention-days: 7
           if-no-files-found: error
       - name: C3 native shadow acceptance and fresh-process recovery on Rust 1.99.0
