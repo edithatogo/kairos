@@ -2311,6 +2311,7 @@ mod tests {
         FlowCheckpointLimits, FlowCheckpointRebindV1, FlowDispatch, FlowHandlerCodeIds,
         FlowRuntime, LifecycleTransition, RequestState, WorkHandlers,
     };
+    use kairo_ecs_des::{FlowCheckpointImage, FlowCheckpointRef};
     use std::cell::RefCell;
     use std::rc::Rc;
 
@@ -2762,6 +2763,67 @@ mod tests {
             .unwrap()
     }
 
+    fn native_codecs_for_transit(
+        flow: &FlowRuntime,
+        bound: &BoundIntrinsicWork<u32, u32>,
+    ) -> kairo_ecs_des::FlowCheckpointCodecs {
+        let mut codecs = native_test_codecs();
+        register_transit_context_checkpoint_codec(
+            &mut codecs,
+            "bridge.transit",
+            flow.identity(),
+            route_graph(bound),
+            TransitContextCheckpointLimitsV1::new(128, 16 * 1024, 1024, 32 * 1024),
+        )
+        .unwrap();
+        register_transit_context_checkpoint_domain(
+            &mut codecs,
+            "bridge.transit",
+            EventKind::custom(0xC20),
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.plan".to_owned(),
+                version: 1,
+            },
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.accept".to_owned(),
+                version: 1,
+            },
+        )
+        .unwrap();
+        codecs
+    }
+
+    fn capture_real_transit_flow_image_any(
+        flow: &FlowRuntime,
+        bound: &BoundIntrinsicWork<u32, u32>,
+    ) -> FlowCheckpointImage {
+        let mut codecs = native_test_codecs();
+        register_transit_context_checkpoint_codec(
+            &mut codecs,
+            "bridge.transit",
+            flow.identity(),
+            route_graph(bound),
+            TransitContextCheckpointLimitsV1::new(128, 16 * 1024, 1024, 32 * 1024),
+        )
+        .unwrap();
+        register_transit_context_checkpoint_domain(
+            &mut codecs,
+            "bridge.transit",
+            EventKind::custom(0xC20),
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.plan".to_owned(),
+                version: 1,
+            },
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.accept".to_owned(),
+                version: 1,
+            },
+        )
+        .unwrap();
+        flow.capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
+            .unwrap()
+    }
+
     #[test]
     fn bound_bridge_wire_roundtrips_complete_zero_route_image() {
         let (flow, adapter, bound) =
@@ -2852,7 +2914,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             checkpoint_wire::validate_coherent_cut(
-                &flow_image,
+                FlowCheckpointRef::V1(&flow_image),
                 &flow,
                 &bound,
                 bridge_checkpoint_limits()
@@ -2863,7 +2925,7 @@ mod tests {
         missing_control.commands.retain(|(id, _)| *id != control);
         assert_eq!(
             checkpoint_wire::validate_coherent_cut(
-                &missing_control,
+                FlowCheckpointRef::V1(&missing_control),
                 &flow,
                 &bound,
                 bridge_checkpoint_limits()
@@ -2876,7 +2938,7 @@ mod tests {
             .retain(|(id, _)| Some(*id) != bound.pending_event);
         assert_eq!(
             checkpoint_wire::validate_coherent_cut(
-                &inconsistent,
+                FlowCheckpointRef::V1(&inconsistent),
                 &flow,
                 &bound,
                 bridge_checkpoint_limits()
@@ -2892,7 +2954,7 @@ mod tests {
         let before = capture_real_transit_flow_image(&flow, &bound);
         assert_eq!(
             checkpoint_wire::validate_coherent_cut(
-                &before,
+                FlowCheckpointRef::V1(&before),
                 &flow,
                 &bound,
                 bridge_checkpoint_limits(),
@@ -2907,7 +2969,7 @@ mod tests {
         let unobserved = capture_real_transit_flow_image(&flow, &bound);
         assert_eq!(
             checkpoint_wire::validate_coherent_cut(
-                &unobserved,
+                FlowCheckpointRef::V1(&unobserved),
                 &flow,
                 &bound,
                 bridge_checkpoint_limits(),
@@ -2938,7 +3000,7 @@ mod tests {
         let flow_image = capture_real_transit_flow_image(&flow, &bound);
         assert_eq!(
             checkpoint_wire::validate_coherent_cut(
-                &flow_image,
+                FlowCheckpointRef::V1(&flow_image),
                 &flow,
                 &bound,
                 bridge_checkpoint_limits(),
@@ -2951,10 +3013,585 @@ mod tests {
             .retain(|(event, _)| Some(*event) != bound.pending_event);
         assert_eq!(
             checkpoint_wire::validate_coherent_cut(
-                &without_submit,
+                FlowCheckpointRef::V1(&without_submit),
                 &flow,
                 &bound,
                 bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+    }
+
+    #[test]
+    fn coherent_v2_requires_observed_domain_frontier() {
+        let (mut flow, _adapter, mut bound) = bound_route_with_adapter();
+        bound.start_transit(&mut flow).unwrap();
+        flow.schedule_resource_grant_enabled(
+            bound.acquire.resource,
+            false,
+            SimTime::from_ticks(100),
+            0,
+        )
+        .unwrap();
+
+        let before = capture_real_transit_flow_image_any(&flow, &bound);
+        let FlowCheckpointImage::V2(before_v2) = &before else {
+            panic!("pending grant gate requires a complete V2 image");
+        };
+        assert!(before_v2
+            .commands
+            .iter()
+            .any(|(_, command)| matches!(command, kairo_ecs_des::FlowCommandV2::GrantEnabled(..))));
+        assert!(matches!(
+            flow.capture_checkpoint(
+                &native_codecs_for_transit(&flow, &bound),
+                FlowCheckpointLimits::default()
+            ),
+            Err(kairo_ecs_des::FlowCheckpointError::InvalidState(_))
+        ));
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                before.as_ref(),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Ok(())
+        );
+
+        let dispatch = flow.step().unwrap().expect("the domain start is next");
+        let unobserved = capture_real_transit_flow_image_any(&flow, &bound);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                unobserved.as_ref(),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let observed = bound.observe_transit_dispatch(&flow, &dispatch).unwrap();
+        assert_eq!(observed, TransitObservation::Progress);
+        let after = capture_real_transit_flow_image_any(&flow, &bound);
+        assert!(matches!(after, FlowCheckpointImage::V2(_)));
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                after.as_ref(),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn coherent_v2_transit_and_control_join_rejects_independent_mutations() {
+        let (mut flow, _adapter, mut bound) = bound_route_with_adapter();
+        bound.start_transit(&mut flow).unwrap();
+        let control = bound
+            .schedule_transit_control(
+                &mut flow,
+                FlowDomainControl::Pause,
+                SimTime::from_ticks(1),
+                0,
+            )
+            .unwrap();
+        flow.schedule_resource_grant_enabled(
+            bound.acquire.resource,
+            false,
+            SimTime::from_ticks(100),
+            0,
+        )
+        .unwrap();
+        let image = capture_real_transit_flow_image_any(&flow, &bound);
+        let FlowCheckpointImage::V2(v2) = image else {
+            panic!("pending grant gate requires a complete V2 image");
+        };
+        let source_before_validation = capture_real_transit_flow_image_any(&flow, &bound);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&v2),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Ok(())
+        );
+        assert_eq!(
+            capture_real_transit_flow_image_any(&flow, &bound),
+            source_before_validation
+        );
+        let domain = bound.pending_event.unwrap();
+        for (event, mutate) in [(domain, 0usize), (control, 1usize)] {
+            let mut changed = v2.clone();
+            changed.commands.retain(|(id, _)| *id != event);
+            assert_eq!(
+                checkpoint_wire::validate_coherent_cut(
+                    FlowCheckpointRef::V2(&changed),
+                    &flow,
+                    &bound,
+                    bridge_checkpoint_limits(),
+                ),
+                Err(BridgeCheckpointError::InvalidState),
+                "missing command mutation {mutate}"
+            );
+        }
+        let mut wrong_domain = v2.clone();
+        let row = wrong_domain
+            .commands
+            .iter_mut()
+            .find(|(id, _)| *id == domain)
+            .unwrap();
+        row.1 = kairo_ecs_des::FlowCommandV2::Domain(bound.work, bound.kind.unwrap());
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_domain),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_control = v2.clone();
+        let row = wrong_control
+            .commands
+            .iter_mut()
+            .find(|(id, _)| *id == control)
+            .unwrap();
+        if let kairo_ecs_des::FlowCommandV2::DomainControl(_, _, action) = &mut row.1 {
+            *action = kairo_ecs_des::FlowDomainControl::Resume;
+        } else {
+            panic!("control command must be present");
+        }
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_control),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut no_domain_event = v2.clone();
+        no_domain_event
+            .scheduler
+            .entries
+            .retain(|entry| entry.id != domain);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&no_domain_event),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut no_control_event = v2.clone();
+        no_control_event
+            .scheduler
+            .entries
+            .retain(|entry| entry.id != control);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&no_control_event),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut nonlive_domain = v2.clone();
+        nonlive_domain
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == domain)
+            .unwrap()
+            .live = false;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&nonlive_domain),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_domain_id = v2.clone();
+        wrong_domain_id
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == domain)
+            .unwrap()
+            .id = EventId::new(u64::MAX, u32::MAX);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_domain_id),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_domain_tick = v2.clone();
+        wrong_domain_tick
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == domain)
+            .unwrap()
+            .request
+            .at = SimTime::from_ticks(99);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_domain_tick),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_domain_priority = v2.clone();
+        wrong_domain_priority
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == domain)
+            .unwrap()
+            .request
+            .priority = i32::MAX;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_domain_priority),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_domain_kind = v2.clone();
+        wrong_domain_kind
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == domain)
+            .unwrap()
+            .request
+            .kind = EventKind::custom(0xC21);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_domain_kind),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_domain_kind_command = v2.clone();
+        let row = wrong_domain_kind_command
+            .commands
+            .iter_mut()
+            .find(|(id, _)| *id == domain)
+            .unwrap();
+        row.1 =
+            kairo_ecs_des::FlowCommandV2::Domain(bound.carrier.unwrap(), EventKind::custom(0xC21));
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_domain_kind_command),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_control_carrier = v2.clone();
+        let row = wrong_control_carrier
+            .commands
+            .iter_mut()
+            .find(|(id, _)| *id == control)
+            .unwrap();
+        row.1 = kairo_ecs_des::FlowCommandV2::DomainControl(
+            bound.work,
+            bound.kind.unwrap(),
+            kairo_ecs_des::FlowDomainControl::Pause,
+        );
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_control_carrier),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_control_kind = v2.clone();
+        let row = wrong_control_kind
+            .commands
+            .iter_mut()
+            .find(|(id, _)| *id == control)
+            .unwrap();
+        row.1 = kairo_ecs_des::FlowCommandV2::DomainControl(
+            bound.carrier.unwrap(),
+            EventKind::custom(0xC21),
+            kairo_ecs_des::FlowDomainControl::Pause,
+        );
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_control_kind),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut nonlive_control = v2.clone();
+        nonlive_control
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == control)
+            .unwrap()
+            .live = false;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&nonlive_control),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut foreign_control_entity = v2.clone();
+        foreign_control_entity
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == control)
+            .unwrap()
+            .request
+            .entity = Some(EntityId::new(u64::MAX, u32::MAX));
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&foreign_control_entity),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut no_control_entity = v2.clone();
+        no_control_entity
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == control)
+            .unwrap()
+            .request
+            .entity = None;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&no_control_entity),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Ok(())
+        );
+        let mut changed_context = v2.clone();
+        changed_context
+            .context_stores
+            .iter_mut()
+            .find(|store| store.codec_key == "bridge.transit")
+            .unwrap()
+            .rows
+            .iter_mut()
+            .find(|(owner, _)| *owner == bound.carrier.unwrap().entity_id())
+            .unwrap()
+            .1
+            .push(0);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&changed_context),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        assert_eq!(
+            capture_real_transit_flow_image_any(&flow, &bound),
+            source_before_validation
+        );
+    }
+
+    #[test]
+    fn coherent_v2_observed_arrival_requires_queued_submit_join() {
+        let (mut flow, _adapter, mut bound) = bound_route_with_adapter();
+        flow.schedule_resource_grant_enabled(
+            bound.acquire.resource,
+            false,
+            SimTime::from_ticks(0),
+            0,
+        )
+        .unwrap();
+        assert!(
+            flow.step().unwrap().is_some(),
+            "dispatch the actual disable boundary"
+        );
+        assert_eq!(
+            flow.resource_grant_enabled(bound.acquire.resource),
+            Ok(false)
+        );
+        flow.schedule_resource_grant_enabled(
+            bound.acquire.resource,
+            true,
+            SimTime::from_ticks(100),
+            0,
+        )
+        .unwrap();
+        bound.start_transit(&mut flow).unwrap();
+        loop {
+            let dispatch = flow.step().unwrap().expect("transit event remains pending");
+            if bound.observe_transit_dispatch(&flow, &dispatch).unwrap()
+                == TransitObservation::Arrived
+            {
+                break;
+            }
+        }
+        let image = capture_real_transit_flow_image_any(&flow, &bound);
+        let FlowCheckpointImage::V2(v2) = image else {
+            panic!("pending grant gate requires a complete V2 image");
+        };
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&v2),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Ok(())
+        );
+        let arrival = bound.pending_event.unwrap();
+        let request = bound.arrival_request.unwrap();
+        assert_eq!(flow.request(request).unwrap().state, RequestState::Pending);
+        assert!(v2.commands.iter().any(|(id, command)| {
+            *id == arrival
+                && matches!(command, kairo_ecs_des::FlowCommandV2::Submit(actual) if *actual == request)
+        }));
+        assert!(v2.commands.iter().any(|(_, command)| {
+            matches!(command, kairo_ecs_des::FlowCommandV2::GrantEnabled(resource, true)
+                if *resource == bound.acquire.resource)
+        }));
+        let mut missing_submit = v2.clone();
+        missing_submit.commands.retain(|(id, _)| *id != arrival);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&missing_submit),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut missing_scheduler = v2.clone();
+        missing_scheduler
+            .scheduler
+            .entries
+            .retain(|entry| entry.id != arrival);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&missing_scheduler),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits(),
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut replaced_submit = v2.clone();
+        let row = replaced_submit
+            .commands
+            .iter_mut()
+            .find(|(id, _)| *id == arrival)
+            .unwrap();
+        row.1 = kairo_ecs_des::FlowCommandV2::Cancel(request);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&replaced_submit),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut nonlive_arrival = v2.clone();
+        nonlive_arrival
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == arrival)
+            .unwrap()
+            .live = false;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&nonlive_arrival),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_arrival_id = v2.clone();
+        wrong_arrival_id
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == arrival)
+            .unwrap()
+            .id = EventId::new(u64::MAX, u32::MAX);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_arrival_id),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_arrival_tick = v2.clone();
+        wrong_arrival_tick
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == arrival)
+            .unwrap()
+            .request
+            .at = SimTime::from_ticks(99);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_arrival_tick),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_arrival_priority = v2.clone();
+        wrong_arrival_priority
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == arrival)
+            .unwrap()
+            .request
+            .priority = i32::MAX;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V2(&wrong_arrival_priority),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
             ),
             Err(BridgeCheckpointError::InvalidState)
         );

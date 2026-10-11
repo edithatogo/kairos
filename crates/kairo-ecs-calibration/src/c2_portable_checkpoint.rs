@@ -32,7 +32,8 @@ use kairo_ecs_des::fidelity::{
     FidelityCheckpointWireLimits,
 };
 use kairo_ecs_des::{
-    FlowCheckpointCodecs, FlowCheckpointV1, FlowCheckpointWireLimits, FlowRuntime,
+    FlowCheckpointCodecs, FlowCheckpointRef, FlowCheckpointV1, FlowCheckpointWireLimits,
+    FlowRuntime,
 };
 use kairo_ecs_types::EntityId;
 use std::collections::{BTreeMap, BTreeSet};
@@ -327,8 +328,13 @@ impl C2PortableCheckpointV1 {
                 .map_err(|_| C2PortableCheckpointError::InvalidState)?;
             take_payload_budget(&mut remaining, &encoded)?;
             bound_records.push(C2RecordBytesV1::new(work, encoded));
-            validate_coherent_cut(&flow_image, flow, record, bridge_wire.native)
-                .map_err(C2PortableCheckpointError::Bridge)?;
+            validate_coherent_cut(
+                FlowCheckpointRef::V1(&flow_image),
+                flow,
+                record,
+                bridge_wire.native,
+            )
+            .map_err(C2PortableCheckpointError::Bridge)?;
         }
 
         let mut submitted_records = Vec::new();
@@ -542,8 +548,13 @@ impl C2PortableCheckpointV1 {
                     limits.bridge.native,
                 )
                 .map_err(C2PortableCheckpointError::Bridge)?;
-            validate_coherent_cut(&flow_image, &flow, &restored, limits.bridge.native)
-                .map_err(C2PortableCheckpointError::Bridge)?;
+            validate_coherent_cut(
+                FlowCheckpointRef::V1(&flow_image),
+                &flow,
+                &restored,
+                limits.bridge.native,
+            )
+            .map_err(C2PortableCheckpointError::Bridge)?;
             records.insert(source_work, RestoredBridgeRecord::Bound(Box::new(restored)));
         }
         for (source_work, image) in submitted_images {

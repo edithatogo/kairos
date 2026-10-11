@@ -92,7 +92,7 @@ impl SubmittedIntrinsicWorkCheckpointV1 {
 /// This compares the actual source carrier to the captured Flow context row,
 /// then checks the event/command/scheduler frontier that the bridge observed.
 pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
-    flow_image: &kairo_ecs_des::FlowCheckpointV1,
+    flow_image: kairo_ecs_des::FlowCheckpointRef<'_>,
     source: &FlowRuntime,
     bound: &BoundIntrinsicWork<T, C>,
     limits: BridgeCheckpointLimits,
@@ -120,12 +120,12 @@ pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
         .map_err(|_| BridgeCheckpointError::InvalidState)?;
     let work = carrier.entity_id();
     let registration = flow_image
-        .work_registrations
+        .work_registrations()
         .iter()
         .find(|row| row.id == work)
         .ok_or(BridgeCheckpointError::InvalidState)?;
     let context_store = flow_image
-        .context_stores
+        .context_stores()
         .iter()
         .find(|store| store.codec_key == registration.context_codec_key)
         .ok_or(BridgeCheckpointError::InvalidState)?;
@@ -145,7 +145,7 @@ pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
     }
 
     let has_live = |event: EventId, at: SimTime, priority: i32| {
-        flow_image.scheduler.entries.iter().any(|entry| {
+        flow_image.scheduler().entries.iter().any(|entry| {
             entry.live
                 && entry.id == event
                 && entry.request.at == at
@@ -154,16 +154,16 @@ pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
         })
     };
     let has_domain_command = |event: EventId| {
-        flow_image.commands.iter().any(|(id, command)| {
-            *id == event
-                && matches!(command, kairo_ecs_des::FlowCommandV1::Domain(id, kind)
-                if *id == carrier && Some(*kind) == bound.kind)
+        flow_image.commands().any(|(id, command)| {
+            id == event
+                && matches!(command, kairo_ecs_des::FlowCommandV2::Domain(id, kind)
+                if id == carrier && Some(kind) == bound.kind)
         })
     };
     let has_submit_command = |event: EventId, request: RequestId| {
-        flow_image.commands.iter().any(|(id, command)| {
-            *id == event
-                && matches!(command, kairo_ecs_des::FlowCommandV1::Submit(actual)
+        flow_image.commands().any(|(id, command)| {
+            id == event
+                && matches!(command, kairo_ecs_des::FlowCommandV2::Submit(actual)
                     if actual.entity_id() == request.entity_id())
         })
     };
@@ -243,7 +243,7 @@ pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
                         .arrival_request
                         .ok_or(BridgeCheckpointError::InvalidState)?,
                 )
-                || !flow_image.scheduler.entries.iter().any(|entry| {
+                || !flow_image.scheduler().entries.iter().any(|entry| {
                     entry.live
                         && entry.id == event
                         && Some(entry.request.at) == bound.arrival_at
@@ -258,7 +258,7 @@ pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
     }
     for (event, control) in &bound.controls {
         let Some(entry) = flow_image
-            .scheduler
+            .scheduler()
             .entries
             .iter()
             .find(|entry| entry.live && entry.id == *event)
@@ -269,11 +269,11 @@ pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
             FlowDomainControl::Pause => kairo_ecs_des::FlowDomainControl::Pause,
             FlowDomainControl::Resume => kairo_ecs_des::FlowDomainControl::Resume,
         };
-        if !flow_image.commands.iter().any(|(id, command)| {
-            *id == *event
+        if !flow_image.commands().any(|(id, command)| {
+            id == *event
                 && matches!(command,
-            kairo_ecs_des::FlowCommandV1::DomainControl(id, kind, actual)
-                if *id == carrier && Some(*kind) == bound.kind && *actual == action)
+            kairo_ecs_des::FlowCommandV2::DomainControl(id, kind, actual)
+                if id == carrier && Some(kind) == bound.kind && actual == action)
         }) || (entry.request.entity.is_some() && entry.request.entity != Some(work))
         {
             return Err(BridgeCheckpointError::InvalidState);
