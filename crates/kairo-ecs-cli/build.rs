@@ -1,6 +1,16 @@
 use std::process::Command;
 fn main() {
-    println!("cargo:rerun-if-changed=../../Cargo.lock");
+    // Source edits can rebuild dependencies without changing Git HEAD/index.
+    // Watch the source tree so embedded cleanliness never survives such a build.
+    for path in [
+        "../../crates",
+        "../../Cargo.toml",
+        "../../Cargo.lock",
+        "../../rust-toolchain.toml",
+        "../../.gitignore",
+    ] {
+        println!("cargo:rerun-if-changed={path}");
+    }
     for name in ["HEAD", "index"] {
         if let Ok(o) = Command::new("git")
             .args(["rev-parse", "--git-path", name])
@@ -34,7 +44,7 @@ fn main() {
         }
     }
     let dirty = Command::new("git")
-        .args(["status", "--porcelain", "--untracked-files=no"])
+        .args(["status", "--porcelain"])
         .output()
         .ok()
         .filter(|o| o.status.success())
