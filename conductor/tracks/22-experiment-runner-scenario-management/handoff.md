@@ -269,3 +269,5 @@ qualifies the exact clean HEAD before parent pin/ED integration. Existing22proce
 cases and19goldens remain mandatory beside new actual V3 fresh-child cases.
 
 Consumer dispatch base incorporates separately reviewed routing lint repair `5efb3710a2cb1b81256e948f45c27328a2de4e1d`. Each source lane uses targeted calibration all-target strict Clippy as its first compile gate, then focused runtime proofs and owned formatting; joined full four-package gates remain mandatory.
+
+Consumer source base now incorporates exact private routing-test range-pattern repair `f4f28deb5cc103075716ad34f5d44068f621e441`; all consumer packets must bind this source-equivalent base after clean-head acceptance. Preserve previous prepared packets, which were never dispatched.

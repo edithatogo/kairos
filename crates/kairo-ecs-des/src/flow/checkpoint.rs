@@ -5118,7 +5118,7 @@ mod routing_capture_tests {
                         "allocation flush targets an invalid resource",
                     )
                 }
-                6 | 7 | 8 => {
+                6..=8 => {
                     let mut scheduler = source
                         .scheduler
                         .checkpoint_state(SchedulerCheckpointLimits {

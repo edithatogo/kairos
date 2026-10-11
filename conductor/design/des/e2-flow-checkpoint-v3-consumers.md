@@ -137,3 +137,7 @@ Then one authoritative Flow clock/state ED adapter, followed by parallel staff32
 interruption24 and space32 fixture bindings; composition and remaining delivery
 phases stay mandatory. No clinical/empirical/hardware/release completion follows
 from these local synthetic checks.
+
+## Final routing dependency rebind
+
+The exact private-test range-pattern repair `f4f28deb5cc103075716ad34f5d44068f621e441` supersedes the earlier routing candidate for dispatch. It passed a prospectively reviewed full-target strict Clippy source check, seven focused proofs and formatting before commit. Both prior final Clippy failures remain preserved; clean-head final acceptance still gates consumer dispatch. No consumer behavioral oracle or owned source scope changes.
