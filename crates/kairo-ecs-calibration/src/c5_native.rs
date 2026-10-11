@@ -9,7 +9,7 @@ use kairo_ecs_des::{
     FlowCheckpointCodecs, FlowCheckpointLimits, FlowRuntime, WorkHandlers, WorkState,
 };
 use kairo_ecs_types::{SimDuration, SimTime};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 
@@ -221,7 +221,7 @@ fn evaluate_admitted(config: &Value, task: &Value) -> Result<Value, String> {
     let mut missing = 0u64;
     let mut failed = 0u64;
     let free = if task["split"] == "final_test" && !invalid {
-        Some(free_run(config, task)?)
+        Some(free_run(config, task))
     } else {
         None
     };
@@ -231,7 +231,9 @@ fn evaluate_admitted(config: &Value, task: &Value) -> Result<Value, String> {
             records.push(json!({"case_id":row["case_id"],"outcome":"invalid","reason":"zero parameter duration"}));
             continue;
         }
-        let native = if let Some(free) = &free {
+        let native = if let Some(Err(reason)) = &free {
+            Err(reason.clone())
+        } else if let Some(Ok(free)) = &free {
             free["records"]
                 .as_array()
                 .and_then(|r| r.iter().find(|r| r["case_id"] == row["case_id"]))
@@ -543,5 +545,56 @@ mod tests {
         assert_eq!(before["ranking"], after["ranking"]);
         attempts.reverse();
         assert_eq!(crate::c5_study::summarize(&c, &attempts).unwrap(), after);
+    }
+    #[test]
+    fn c5_native_noisy_recovery_and_confounded_ridge_are_distinct() {
+        let mut c = study();
+        c["service_noise_ticks"] = json!([-1, 0, 1]);
+        c["budget"]["replications"] = json!(8);
+        let summarize_native = |c: &Value| {
+            let p = crate::c5_study::plan(c).unwrap();
+            let results = p["tasks"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|t| {
+                    let r = evaluate(c, t).unwrap();
+                    assert_eq!(r["outcome"], "complete", "{r}");
+                    r
+                })
+                .collect::<Vec<_>>();
+            crate::c5_study::summarize(c, &results).unwrap()
+        };
+        let noisy = summarize_native(&c);
+        let winner = noisy["candidates"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|v| v["candidate_id"] == noisy["winner"])
+            .unwrap();
+        assert_eq!(winner["params"]["route_ticks"], 2);
+        assert!(winner["params"]["work_ticks"].as_u64().unwrap().abs_diff(3) <= 1);
+        assert_eq!(noisy["mc_indeterminate"], true);
+        let mut c = study();
+        c["objective"]["transit_weight"] = json!(0);
+        for row in c["trace"].as_array_mut().unwrap() {
+            row.as_object_mut().unwrap().remove("transit_ticks");
+        }
+        let ridge = summarize_native(&c);
+        assert_eq!(ridge["ridge"], true);
+        assert_eq!(ridge["identifiability"], "non_identifiable_ridge");
+        assert_eq!(ridge["ranking"][0]["score"], 0.0);
+    }
+    #[test]
+    fn c5_native_free_runtime_failure_is_a_durable_attempt() {
+        let mut c = study();
+        c["service_noise_ticks"] = json!([-100]);
+        let t = crate::c5_study::final_tasks(&c, "c000004")
+            .unwrap()
+            .remove(0);
+        let r = evaluate(&c, &t).unwrap();
+        assert_eq!(r["outcome"], "failed");
+        assert_eq!(r["failed_count"], 1);
+        assert_eq!(r["eligible_count"], 0);
     }
 }
