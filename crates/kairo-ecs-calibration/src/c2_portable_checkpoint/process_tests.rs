@@ -18,10 +18,12 @@ use kairo_ecs_abm::{
 };
 use kairo_ecs_des::fidelity::{FidelityMode, FidelityPolicy};
 use kairo_ecs_des::{
-    FlowCallbackCodeV1, FlowCheckpointCodecError, FlowCheckpointCodecs, FlowCheckpointError,
-    FlowCheckpointImage, FlowCheckpointLimits, FlowCheckpointRebindV1, FlowCheckpointRef,
-    FlowCheckpointWireError, FlowCheckpointWireLimits, FlowCommandV2, FlowCommandV3,
-    FlowDomainControl, FlowHandlerCodeIds, FlowRuntime, PreemptionStrategy, WorkHandlers,
+    FlowAcquireCommand, FlowAllocationMode, FlowCallbackCodeV1, FlowCheckpointCodecError,
+    FlowCheckpointCodecs, FlowCheckpointError, FlowCheckpointImage, FlowCheckpointLimits,
+    FlowCheckpointRebindV1, FlowCheckpointRef, FlowCheckpointWireError, FlowCheckpointWireLimits,
+    FlowCommandV2, FlowCommandV3, FlowConfig, FlowContinuationCodeIds, FlowContinuations,
+    FlowDomainControl, FlowHandlerCodeIds, FlowOwnedCommand, FlowRuntime, PreemptionStrategy,
+    RequestId, ResourceId, WorkHandlers, WorkId,
 };
 use kairo_ecs_types::{EntityId, EventKind, SimDuration, SimTime};
 use sha2::{Digest, Sha256};
@@ -36,9 +38,11 @@ const CHILD_PATH: &str = "KAIROS_C2_PROCESS_MATRIX_FILE";
 const CHILD_CASE: &str = "KAIROS_C2_PROCESS_MATRIX_CASE";
 const TRACE_MARKER: &str = "C2_PORTABLE_PROCESS_TRACE:";
 thread_local! { static FLOW_CODEC_DECODER_CALLS: Cell<usize> = const { Cell::new(0) }; }
+thread_local! { static PORTABLE_V3_IDS: Cell<Option<PortableV3Ids>> = const { Cell::new(None) }; }
 const CONTEXT_CODEC: &str = "c2.matrix.context";
 const TEMPLATE_CODEC: &str = "c2.matrix.template";
 const TRANSIT_CODEC: &str = "c2.matrix.transit";
+const V3_CONTEXT_CODEC: &str = "c2.matrix.v3-readiness";
 const STUDY_ID: &str = "c2-portable-process-matrix";
 const ROOT_SEED: u64 = 0xC2_2026_1010;
 const EVENT_KIND_RED: EventKind = EventKind::custom(0xCA20);
@@ -49,6 +53,163 @@ const TRANSIT_LIMITS: TransitContextCheckpointLimitsV1 =
 struct OwnedContext {
     payload: Box<[u8]>,
     marker: u64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct PortableV3Readiness {
+    deferred: ResourceId,
+    trigger_resource: ResourceId,
+    ready_owner: EntityId,
+    ready_work: WorkId,
+    low_work: WorkId,
+    urgent_work: WorkId,
+    calls: u64,
+    ready_at: Option<SimTime>,
+    emitted: bool,
+}
+
+#[derive(Clone, Copy)]
+struct PortableV3Ids {
+    deferred: ResourceId,
+    trigger_work: WorkId,
+    trigger_request: RequestId,
+    ready_work: WorkId,
+    low_work: WorkId,
+    low_request: RequestId,
+    urgent_request: RequestId,
+    flush: Option<kairo_ecs_types::EventId>,
+    stale_completion: Option<kairo_ecs_types::EventId>,
+    stale_revision: Option<u64>,
+}
+
+fn put_entity(output: &mut Vec<u8>, id: EntityId) {
+    output.extend_from_slice(&id.index.to_le_bytes());
+    output.extend_from_slice(&id.generation.to_le_bytes());
+}
+
+fn take_entity(bytes: &mut &[u8]) -> Result<EntityId, FlowCheckpointCodecError> {
+    let (index, rest) = bytes
+        .split_at_checked(8)
+        .ok_or_else(|| FlowCheckpointCodecError("truncated V3 fixture identity".into()))?;
+    let (generation, rest) = rest
+        .split_at_checked(4)
+        .ok_or_else(|| FlowCheckpointCodecError("truncated V3 fixture identity".into()))?;
+    *bytes = rest;
+    Ok(EntityId::new(
+        u64::from_le_bytes(index.try_into().unwrap()),
+        u32::from_le_bytes(generation.try_into().unwrap()),
+    ))
+}
+
+fn encode_v3_readiness(
+    value: &PortableV3Readiness,
+    max_bytes: usize,
+) -> Result<Vec<u8>, FlowCheckpointCodecError> {
+    let mut output = Vec::with_capacity(160);
+    for id in [
+        value.deferred.entity_id(),
+        value.trigger_resource.entity_id(),
+        value.ready_owner,
+        value.ready_work.entity_id(),
+        value.low_work.entity_id(),
+        value.urgent_work.entity_id(),
+    ] {
+        put_entity(&mut output, id);
+    }
+    output.extend_from_slice(&value.calls.to_le_bytes());
+    match value.ready_at {
+        Some(at) => {
+            output.push(1);
+            output.extend_from_slice(&at.ticks().to_le_bytes());
+        }
+        None => output.push(0),
+    }
+    output.push(u8::from(value.emitted));
+    if output.len() > max_bytes {
+        return Err(FlowCheckpointCodecError("V3 fixture exceeds cap".into()));
+    }
+    Ok(output)
+}
+
+fn decode_v3_readiness(
+    bytes: &[u8],
+    rebind: &FlowCheckpointRebindV1,
+) -> Result<PortableV3Readiness, FlowCheckpointCodecError> {
+    let mut rest = bytes;
+    let deferred = rebind.resolve_resource(take_entity(&mut rest)?)?;
+    let trigger_resource = rebind.resolve_resource(take_entity(&mut rest)?)?;
+    let ready_owner = rebind.resolve_actor(take_entity(&mut rest)?)?;
+    let ready_work = rebind.resolve_work(take_entity(&mut rest)?)?;
+    let low_work = rebind.resolve_work(take_entity(&mut rest)?)?;
+    let urgent_work = rebind.resolve_work(take_entity(&mut rest)?)?;
+    let (calls, rest) = rest
+        .split_at_checked(8)
+        .ok_or_else(|| FlowCheckpointCodecError("truncated V3 fixture counter".into()))?;
+    let (has_ready_at, mut rest) = rest
+        .split_at_checked(1)
+        .ok_or_else(|| FlowCheckpointCodecError("truncated V3 fixture time".into()))?;
+    let ready_at = match has_ready_at[0] {
+        0 => None,
+        1 => {
+            let (ticks, tail) = rest
+                .split_at_checked(16)
+                .ok_or_else(|| FlowCheckpointCodecError("truncated V3 fixture time".into()))?;
+            rest = tail;
+            Some(SimTime::from_ticks(u128::from_le_bytes(
+                ticks.try_into().unwrap(),
+            )))
+        }
+        _ => return Err(FlowCheckpointCodecError("invalid V3 fixture option".into())),
+    };
+    let (emitted, tail) = rest
+        .split_at_checked(1)
+        .ok_or_else(|| FlowCheckpointCodecError("truncated V3 fixture flag".into()))?;
+    if tail.is_empty() && emitted[0] <= 1 {
+        Ok(PortableV3Readiness {
+            deferred,
+            trigger_resource,
+            ready_owner,
+            ready_work,
+            low_work,
+            urgent_work,
+            calls: u64::from_le_bytes(calls.try_into().unwrap()),
+            ready_at,
+            emitted: emitted[0] != 0,
+        })
+    } else {
+        Err(FlowCheckpointCodecError("invalid V3 fixture tail".into()))
+    }
+}
+
+fn complete_readiness(
+    context: &mut PortableV3Readiness,
+    snapshot: &kairo_ecs_des::FlowCallbackSnapshot,
+    sink: &mut kairo_ecs_des::FlowCommandSink,
+) {
+    if matches!(
+        &snapshot.cause,
+        kairo_ecs_des::FlowCallbackCause::Work {
+            transition: kairo_ecs_des::LifecycleTransition::Completed,
+            ..
+        }
+    ) {
+        context.calls += 1;
+        context.ready_at = Some(snapshot.delivery.at);
+        context.emitted = sink
+            .emit(FlowOwnedCommand::Acquire(FlowAcquireCommand {
+                resource: context.deferred,
+                owner: context.ready_owner,
+                work: Some(context.ready_work),
+                at: snapshot.delivery.at,
+                priority_level: 0,
+                deadline: None,
+                scheduler_priority: 0,
+                timed: true,
+                can_preempt: false,
+                preemptible: None,
+            }))
+            .is_ok();
+    }
 }
 
 #[derive(Clone)]
@@ -88,6 +249,9 @@ enum Cut {
     ServiceRestart,
     ServiceSuspendPending,
     ServiceRestartPending,
+    V3Mixed,
+    V3CurrentTick,
+    V3Halt,
 }
 
 #[derive(Clone)]
@@ -312,6 +476,30 @@ fn spec(name: &str) -> Result<CaseSpec, C2PortableCheckpointError> {
             cut: Cut::MultiGraphMixed,
             pending_policy: true,
         },
+        "portable-v3-mixed-tick6-trigger-first" | "portable-v3-mixed-tick6-urgent-first" => {
+            CaseSpec {
+                name: if name == "portable-v3-mixed-tick6-trigger-first" {
+                    "portable-v3-mixed-tick6-trigger-first"
+                } else {
+                    "portable-v3-mixed-tick6-urgent-first"
+                },
+                works: vec![one(FidelityMode::Micro, route(), "routed")],
+                cut: Cut::V3Mixed,
+                pending_policy: false,
+            }
+        }
+        "portable-v3-currenttick-flush" => CaseSpec {
+            name: "portable-v3-currenttick-flush",
+            works: vec![one(FidelityMode::Micro, route(), "routed")],
+            cut: Cut::V3CurrentTick,
+            pending_policy: false,
+        },
+        "portable-v3-preflush-budget-halt" => CaseSpec {
+            name: "portable-v3-preflush-budget-halt",
+            works: vec![one(FidelityMode::Micro, route(), "routed")],
+            cut: Cut::V3Halt,
+            pending_policy: false,
+        },
         _ => return Err(C2PortableCheckpointError::InvalidState),
     };
     Ok(result)
@@ -478,6 +666,39 @@ fn matrix_codecs(
     case: &CaseSpec,
 ) -> FlowCheckpointCodecs {
     let mut codecs = base_codecs();
+    if matches!(case.cut, Cut::V3Mixed | Cut::V3CurrentTick | Cut::V3Halt) {
+        codecs
+            .register_context::<PortableV3Readiness>(
+                V3_CONTEXT_CODEC,
+                1,
+                encode_v3_readiness,
+                decode_v3_readiness,
+            )
+            .unwrap();
+        codecs
+            .register_work_handlers::<PortableV3Readiness>(
+                V3_CONTEXT_CODEC,
+                FlowHandlerCodeIds::default(),
+                WorkHandlers::default(),
+            )
+            .unwrap();
+        codecs
+            .register_work_continuations::<PortableV3Readiness>(
+                V3_CONTEXT_CODEC,
+                FlowContinuationCodeIds {
+                    on_complete: Some(FlowCallbackCodeV1 {
+                        stable_id: "c2.matrix.v3-readiness.complete".into(),
+                        version: 1,
+                    }),
+                    ..Default::default()
+                },
+                FlowContinuations {
+                    on_complete: Some(complete_readiness),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+    }
     let graphs = graph_catalog(case);
     if !graphs.is_empty() {
         let carrier_graphs = trusted_carrier_graphs(case);
@@ -669,7 +890,13 @@ struct MatrixRuntime {
 
 fn build_runtime(case: &CaseSpec) -> MatrixRuntime {
     let graphs = graph_catalog(case);
-    let mut flow = FlowRuntime::new();
+    let mut flow = if case.cut == Cut::V3Halt {
+        FlowRuntime::with_config(FlowConfig {
+            max_same_tick_flow_transitions: std::num::NonZeroU64::new(1).unwrap(),
+        })
+    } else {
+        FlowRuntime::new()
+    };
     flow.register_work_handlers(CONTEXT_CODEC, WorkHandlers::<OwnedContext>::default())
         .unwrap();
     for (graph_spec, _) in &graphs {
@@ -787,7 +1014,7 @@ fn build_runtime(case: &CaseSpec) -> MatrixRuntime {
         assert_eq!(bindings[&work].service_key, key);
     }
     let codecs = matrix_codecs(flow.identity(), case);
-    MatrixRuntime {
+    let mut runtime = MatrixRuntime {
         flow,
         adapter,
         provider,
@@ -796,6 +1023,267 @@ fn build_runtime(case: &CaseSpec) -> MatrixRuntime {
         submitted: Vec::new(),
         codecs,
         bindings,
+    };
+    if matches!(case.cut, Cut::V3Mixed | Cut::V3CurrentTick | Cut::V3Halt) {
+        let ids = create_v3_fixture(&mut runtime, case);
+        PORTABLE_V3_IDS.with(|slot| slot.set(Some(ids)));
+    }
+    runtime
+}
+
+fn create_v3_fixture(runtime: &mut MatrixRuntime, case: &CaseSpec) -> PortableV3Ids {
+    runtime
+        .flow
+        .register_work_handlers::<PortableV3Readiness>(V3_CONTEXT_CODEC, WorkHandlers::default())
+        .unwrap();
+    runtime
+        .flow
+        .register_work_continuations(
+            V3_CONTEXT_CODEC,
+            FlowContinuations {
+                on_complete: Some(complete_readiness),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    let deferred = runtime
+        .flow
+        .create_resource_with_allocation_mode(1, FlowAllocationMode::Deferred)
+        .unwrap();
+    let trigger_resource = runtime.flow.create_resource(1).unwrap();
+    let low_owner = runtime.flow.spawn_actor().unwrap();
+    let urgent_owner = runtime.flow.spawn_actor().unwrap();
+    let trigger_owner = runtime.flow.spawn_actor().unwrap();
+    let ready_owner = runtime.flow.spawn_actor().unwrap();
+    let low_work = runtime
+        .flow
+        .create_work(
+            low_owner,
+            SimDuration::from_ticks(10),
+            CONTEXT_CODEC,
+            make_context(&b"v3-low".to_vec()),
+        )
+        .unwrap();
+    let urgent_work = runtime
+        .flow
+        .create_work(
+            urgent_owner,
+            SimDuration::from_ticks(2),
+            CONTEXT_CODEC,
+            make_context(&b"v3-urgent".to_vec()),
+        )
+        .unwrap();
+    let ready_work = runtime
+        .flow
+        .create_work(
+            ready_owner,
+            SimDuration::from_ticks(1),
+            CONTEXT_CODEC,
+            make_context(&b"v3-ready".to_vec()),
+        )
+        .unwrap();
+    let trigger_work = runtime
+        .flow
+        .create_work(
+            trigger_owner,
+            SimDuration::from_ticks(2),
+            V3_CONTEXT_CODEC,
+            PortableV3Readiness {
+                deferred,
+                trigger_resource,
+                ready_owner,
+                ready_work,
+                low_work,
+                urgent_work,
+                calls: 0,
+                ready_at: None,
+                emitted: false,
+            },
+        )
+        .unwrap();
+    let mixed = case.cut == Cut::V3Mixed;
+    let low_request = runtime
+        .flow
+        .acquire(deferred)
+        .owner(low_owner)
+        .timed_work(low_work)
+        .at(if mixed {
+            SimTime::from_ticks(1)
+        } else {
+            SimTime::ZERO
+        })
+        .priority(10)
+        .preemptible(PreemptionStrategy::Suspend)
+        .submit()
+        .unwrap();
+    let (urgent_priority, trigger_priority) =
+        if case.name == "portable-v3-mixed-tick6-trigger-first" {
+            (-5, -10)
+        } else {
+            (-10, 1)
+        };
+    let urgent_at = match case.cut {
+        Cut::V3Mixed => SimTime::from_ticks(4),
+        Cut::V3CurrentTick => SimTime::ZERO,
+        _ => SimTime::from_ticks(100),
+    };
+    let (urgent_level, urgent_can_preempt) = if mixed { (1, true) } else { (20, false) };
+    let mut urgent_builder = runtime
+        .flow
+        .acquire(deferred)
+        .owner(urgent_owner)
+        .timed_work(urgent_work)
+        .at(urgent_at)
+        .priority(urgent_level)
+        .can_preempt(urgent_can_preempt);
+    urgent_builder = urgent_builder.scheduler_priority(urgent_priority);
+    let urgent_request = urgent_builder.submit().unwrap();
+    let trigger_request = runtime
+        .flow
+        .acquire(trigger_resource)
+        .owner(trigger_owner)
+        .timed_work(trigger_work)
+        .at(if mixed {
+            SimTime::from_ticks(4)
+        } else {
+            SimTime::from_ticks(100)
+        })
+        .scheduler_priority(trigger_priority)
+        .submit()
+        .unwrap();
+    PortableV3Ids {
+        deferred,
+        trigger_work,
+        trigger_request,
+        ready_work,
+        low_work,
+        low_request,
+        urgent_request,
+        flush: None,
+        stale_completion: None,
+        stale_revision: None,
+    }
+}
+
+fn portable_v3_ids() -> PortableV3Ids {
+    PORTABLE_V3_IDS.with(|slot| slot.get().expect("compiled V3 case IDs were prepared"))
+}
+
+/// Rebuild V3 fixture identities from the restored checkpoint image itself.
+/// The process child has no access to the source process's thread-local IDs;
+/// every join below is checked against an actual native row and scheduler
+/// entry before the IDs are rebound into the child runtime.
+fn restored_portable_v3_ids(runtime: &MatrixRuntime, case: &CaseSpec) -> PortableV3Ids {
+    let image = runtime
+        .flow
+        .capture_checkpoint_image(&runtime.codecs, limits().flow.flow)
+        .unwrap();
+    let FlowCheckpointImage::V3(v3) = image else {
+        panic!("portable V3 fixture must restore a V3 Flow image");
+    };
+    let registrations: Vec<_> = v3
+        .work_registrations
+        .iter()
+        .filter(|row| row.context_codec_key == V3_CONTEXT_CODEC)
+        .collect();
+    let [registration] = registrations.as_slice() else {
+        panic!("restored V3 image must identify one readiness work registration");
+    };
+    let requests = &v3
+        .builtins
+        .requests
+        .as_ref()
+        .expect("restored requests")
+        .rows;
+    let trigger_rows: Vec<_> = requests
+        .iter()
+        .filter(|(_, row)| {
+            row.work
+                .is_some_and(|work| work.entity_id() == registration.id)
+        })
+        .collect();
+    let [(_, trigger_row)] = trigger_rows.as_slice() else {
+        panic!("unique trigger request joins readiness registration");
+    };
+    let trigger_work = trigger_row.work.unwrap();
+    let context = runtime
+        .flow
+        .work_context::<PortableV3Readiness>(trigger_work)
+        .unwrap();
+    let request_for_work = |work: WorkId, resource: ResourceId| {
+        let spec = runtime.flow.work(work).unwrap();
+        let request = spec.request.expect("fixture work retains its request ID");
+        let rows: Vec<_> = requests
+            .iter()
+            .filter(|(id, _)| *id == request.entity_id())
+            .collect();
+        let [(_, row)] = rows.as_slice() else {
+            panic!("unique restored request row");
+        };
+        assert_eq!(row.work, Some(work));
+        assert_eq!(row.owner, spec.owner);
+        assert_eq!(row.resource, resource);
+        assert_eq!(runtime.flow.request(request).unwrap(), *row);
+        request
+    };
+    let low_request = request_for_work(context.low_work, context.deferred);
+    let urgent_request = request_for_work(context.urgent_work, context.deferred);
+    let trigger_request = request_for_work(trigger_work, context.trigger_resource);
+    assert_eq!(
+        runtime.flow.work(context.ready_work).unwrap().owner,
+        context.ready_owner
+    );
+    assert!(v3
+        .allocation_modes
+        .contains(&(context.deferred, FlowAllocationMode::Deferred)));
+    let live_event = |event: kairo_ecs_types::EventId, at: SimTime| {
+        v3.scheduler
+            .entries
+            .iter()
+            .any(|entry| entry.id == event && entry.live && entry.request.at == at)
+    };
+    let flushes: Vec<_> = v3
+        .commands
+        .iter()
+        .filter_map(|(event, command)| {
+            (*command == FlowCommandV3::AllocationFlush(context.deferred)
+                && live_event(*event, runtime.flow.now()))
+            .then_some(*event)
+        })
+        .collect();
+    let [flush] = flushes.as_slice() else {
+        panic!("unique live current-tick deferred Flush");
+    };
+    let stale: Vec<_> = v3
+        .commands
+        .iter()
+        .filter_map(|(event, command)| match command {
+            FlowCommandV3::Completion(request, _, revision, due)
+                if *request == low_request
+                    && *due == SimTime::from_ticks(11)
+                    && live_event(*event, *due) =>
+            {
+                Some((*event, *revision))
+            }
+            _ => None,
+        })
+        .collect();
+    let (stale_completion, stale_revision) = match stale.as_slice() {
+        [] if case.cut != Cut::V3Mixed => (None, None),
+        [(event, revision)] => (Some(*event), Some(*revision)),
+        _ => panic!("mixed cut requires unique LIVE low Completion11"),
+    };
+    PortableV3Ids {
+        deferred: context.deferred,
+        trigger_work,
+        trigger_request,
+        ready_work: context.ready_work,
+        low_work: context.low_work,
+        low_request,
+        urgent_request,
+        flush: Some(*flush),
+        stale_completion,
+        stale_revision,
     }
 }
 
@@ -821,6 +1309,213 @@ fn limits() -> C2PortableCheckpointLimitsV1 {
         max_wire_bytes: 512 * 1024,
     };
     limits
+}
+
+fn drain_v3_through(
+    flow: &mut FlowRuntime,
+    event: kairo_ecs_types::EventId,
+    tick: SimTime,
+) -> Vec<kairo_ecs_des::FlowDispatch> {
+    let mut result = Vec::new();
+    for _ in 0..64 {
+        let dispatch = flow.step().unwrap().expect("V3 fixture cut event");
+        assert_eq!(dispatch.at, tick, "V3 fixture crossed expected cut tick");
+        let reached = dispatch.event == event;
+        result.push(dispatch);
+        if reached {
+            return result;
+        }
+    }
+    panic!("V3 fixture exceeded bounded event closure before {event:?}");
+}
+
+fn cut_v3_fixture(runtime: &mut MatrixRuntime, case: &CaseSpec) {
+    let mut ids = portable_v3_ids();
+    match case.cut {
+        Cut::V3Mixed => {
+            let initial_flush = runtime
+                .flow
+                .schedule_allocation_flush(ids.deferred, SimTime::from_ticks(1), i32::MAX)
+                .unwrap();
+            let initial =
+                drain_v3_through(&mut runtime.flow, initial_flush, SimTime::from_ticks(1));
+            assert!(initial.iter().any(|dispatch| {
+                dispatch.records.iter().any(|record| {
+                    record.request == ids.low_request
+                        && record.transition == kairo_ecs_des::LifecycleTransition::Granted
+                })
+            }));
+            let preemption_flush = runtime
+                .flow
+                .schedule_allocation_flush(ids.deferred, SimTime::from_ticks(4), 0)
+                .unwrap();
+            let mut got_urgent = false;
+            let mut got_trigger = false;
+            let mut got_flush = false;
+            for _ in 0..64 {
+                let dispatch = runtime.flow.step().unwrap().expect("tick-four V3 event");
+                assert_eq!(dispatch.at, SimTime::from_ticks(4));
+                got_urgent |= dispatch.records.iter().any(|record| {
+                    record.request == ids.urgent_request
+                        && record.transition == kairo_ecs_des::LifecycleTransition::Granted
+                });
+                got_trigger |= dispatch.records.iter().any(|record| {
+                    record.request == ids.trigger_request
+                        && record.transition == kairo_ecs_des::LifecycleTransition::Granted
+                });
+                got_flush |= dispatch.event == preemption_flush;
+                if got_urgent && got_trigger && got_flush {
+                    break;
+                }
+            }
+            assert!(got_urgent && got_trigger && got_flush);
+            assert_eq!(
+                runtime.flow.request(ids.low_request).unwrap().state,
+                kairo_ecs_des::RequestState::Suspended
+            );
+            let progress = runtime.flow.work_progress(ids.low_work).unwrap();
+            assert_eq!(progress.useful_elapsed, SimDuration::from_ticks(3));
+            assert_eq!(progress.remaining, SimDuration::from_ticks(7));
+            let flush = runtime
+                .flow
+                .schedule_allocation_flush(ids.deferred, SimTime::from_ticks(6), i32::MAX)
+                .unwrap();
+            let mut first = None;
+            for _ in 0..64 {
+                let dispatch = runtime.flow.step().unwrap().expect("tick-six completion");
+                assert_eq!(dispatch.at, SimTime::from_ticks(6));
+                let completed = dispatch.records.iter().find_map(|record| {
+                    (record.transition == kairo_ecs_des::LifecycleTransition::Completed)
+                        .then_some(record.request)
+                });
+                if completed.is_some() {
+                    first = completed;
+                    break;
+                }
+            }
+            let expected = if case.name == "portable-v3-mixed-tick6-trigger-first" {
+                ids.trigger_request
+            } else {
+                ids.urgent_request
+            };
+            assert_eq!(first, Some(expected), "actual tick-six completion order");
+            let image = flow_image_from_outer(&capture_bytes(runtime));
+            let FlowCheckpointImage::V3(v3) = image else {
+                panic!("Deferred Flow owner image routes through V3");
+            };
+            assert!(v3.commands.iter().any(|(event, command)| {
+                *event == flush && *command == FlowCommandV3::AllocationFlush(ids.deferred)
+            }));
+            assert!(v3.commands.iter().any(|(_, command)| {
+                matches!(command, FlowCommandV3::Completion(request, _, _, due)
+                    if *request == ids.low_request && *due == SimTime::from_ticks(11))
+            }));
+            assert!(v3.commands.iter().any(|(_, command)| {
+                matches!(command, FlowCommandV3::Completion(request, _, _, due)
+                    if *request == if expected == ids.trigger_request { ids.urgent_request } else { ids.trigger_request }
+                        && *due == SimTime::from_ticks(6))
+            }));
+            let (stale_event, stale_revision) = v3
+                .commands
+                .iter()
+                .find_map(|(event, command)| match command {
+                    FlowCommandV3::Completion(request, _, revision, due)
+                        if *request == ids.low_request && *due == SimTime::from_ticks(11) =>
+                    {
+                        Some((*event, *revision))
+                    }
+                    _ => None,
+                })
+                .expect("retained stale LIVE completion at tick eleven");
+            ids.stale_completion = Some(stale_event);
+            ids.stale_revision = Some(stale_revision);
+            let stale_row = v3
+                .scheduler
+                .entries
+                .iter()
+                .find(|entry| Some(entry.id) == ids.stale_completion)
+                .expect("stale completion scheduler row");
+            assert!(stale_row.live);
+            assert_eq!(stale_row.request.at, SimTime::from_ticks(11));
+            ids.flush = Some(flush);
+            let context = runtime
+                .flow
+                .work_context::<PortableV3Readiness>(ids.trigger_work)
+                .unwrap();
+            assert_eq!(
+                (context.calls, context.ready_at, context.emitted),
+                (0, None, false)
+            );
+        }
+        Cut::V3CurrentTick => {
+            runtime
+                .flow
+                .step()
+                .unwrap()
+                .expect("initial same-tick Submit");
+            let first_flush = runtime
+                .flow
+                .schedule_allocation_flush(ids.deferred, runtime.flow.now(), i32::MAX)
+                .unwrap();
+            let first_cut = runtime.flow.now();
+            let first = drain_v3_through(&mut runtime.flow, first_flush, first_cut);
+            assert!(first.iter().any(|dispatch| dispatch.event == first_flush));
+            assert_eq!(
+                runtime.flow.request(ids.low_request).unwrap().state,
+                kairo_ecs_des::RequestState::Active
+            );
+            let lease = runtime
+                .flow
+                .request(ids.low_request)
+                .unwrap()
+                .lease
+                .unwrap();
+            runtime.flow.release(lease, runtime.flow.now()).unwrap();
+            let second_flush = runtime
+                .flow
+                .schedule_allocation_flush(ids.deferred, runtime.flow.now(), i32::MAX)
+                .unwrap();
+            ids.flush = Some(second_flush);
+            let image = flow_image_from_outer(&capture_bytes(runtime));
+            let FlowCheckpointImage::V3(v3) = image else {
+                panic!("Deferred readmission image routes through V3");
+            };
+            assert_eq!(v3.started_frontier, Some(SimTime::ZERO));
+            assert!(v3.pending_releases.contains(&lease));
+            assert!(v3.commands.iter().any(|(event, command)| {
+                *event == second_flush && *command == FlowCommandV3::AllocationFlush(ids.deferred)
+            }));
+        }
+        Cut::V3Halt => {
+            runtime.flow.step().unwrap().expect("halt fixture Submit");
+            ids.flush = Some(
+                runtime
+                    .flow
+                    .schedule_allocation_flush(ids.deferred, runtime.flow.now(), i32::MAX)
+                    .unwrap(),
+            );
+            let first_halt = runtime.flow.step();
+            assert_eq!(
+                first_halt,
+                Err(kairo_ecs_des::FlowError::SameTickBudgetExceeded {
+                    at_ticks: 0,
+                    limit: 1,
+                })
+            );
+            let image = flow_image_from_outer(&capture_bytes(runtime));
+            let FlowCheckpointImage::V3(v3) = image else {
+                panic!("halted Deferred image routes through V3");
+            };
+            assert!(v3.budget_halt.is_some());
+            assert_eq!(v3.started_frontier, Some(SimTime::ZERO));
+            assert!(v3.commands.iter().any(|(event, command)| {
+                Some(*event) == ids.flush
+                    && *command == FlowCommandV3::AllocationFlush(ids.deferred)
+            }));
+        }
+        _ => unreachable!(),
+    }
+    PORTABLE_V3_IDS.with(|slot| slot.set(Some(ids)));
 }
 
 fn add_dispatch_observation(
@@ -896,6 +1591,10 @@ fn paused_mixed_route_progress(
 
 fn cut_runtime(runtime: &mut MatrixRuntime, case: &CaseSpec) {
     let cut = case.cut;
+    if matches!(cut, Cut::V3Mixed | Cut::V3CurrentTick | Cut::V3Halt) {
+        cut_v3_fixture(runtime, case);
+        return;
+    }
     if case.name == "service-arrival-disabled-pending-submit" {
         let resource = runtime.bounds[0].acquire_intent().resource;
         runtime
@@ -908,6 +1607,7 @@ fn cut_runtime(runtime: &mut MatrixRuntime, case: &CaseSpec) {
             .unwrap();
     }
     match cut {
+        Cut::V3Mixed | Cut::V3CurrentTick | Cut::V3Halt => unreachable!(),
         Cut::Ready | Cut::SubmittedPending | Cut::SubmittedActive | Cut::MultiGraphMixed => {}
         Cut::RejectedStart => {
             let original = runtime.bounds[0].start_transit(&mut runtime.flow).unwrap();
@@ -1451,6 +2151,183 @@ fn push_snapshot(runtime: &MatrixRuntime, trace: &mut Vec<u8>, label: &str) {
     push_frame(trace, label, &bytes);
 }
 
+fn run_v3_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
+    let ids = portable_v3_ids();
+    let mut trace = Vec::new();
+    push_snapshot(runtime, &mut trace, "v3-restored-cut");
+    match case.cut {
+        Cut::V3Mixed => {
+            let flush = ids.flush.expect("tick-six Flush");
+            let tail = drain_v3_through(&mut runtime.flow, flush, SimTime::from_ticks(6));
+            assert!(tail.iter().any(|dispatch| dispatch.event == flush));
+            push_snapshot(runtime, &mut trace, "v3-after-tick6-flush-and-notify");
+            let context = runtime
+                .flow
+                .work_context::<PortableV3Readiness>(ids.trigger_work)
+                .unwrap();
+            assert_eq!(context.calls, 1);
+            assert_eq!(context.ready_at, Some(SimTime::from_ticks(6)));
+            assert!(context.emitted);
+            let ready_request = runtime.flow.work(ids.ready_work).unwrap().request.unwrap();
+            assert_eq!(
+                runtime.flow.request(ready_request).unwrap().state,
+                kairo_ecs_des::RequestState::Active
+            );
+            let mut ready_completed = false;
+            for _ in 0..64 {
+                let dispatch = runtime.flow.step().unwrap().expect("tick-seven closure");
+                assert!(dispatch.at <= SimTime::from_ticks(7));
+                ready_completed |= dispatch.records.iter().any(|record| {
+                    record.request == ready_request
+                        && record.at == SimTime::from_ticks(7)
+                        && record.transition == kairo_ecs_des::LifecycleTransition::Completed
+                });
+                if ready_completed {
+                    break;
+                }
+            }
+            assert!(ready_completed, "bounded tick-seven completion");
+            push_snapshot(runtime, &mut trace, "v3-ready-completed-tick7");
+            let resume_flush = runtime
+                .flow
+                .schedule_allocation_flush(ids.deferred, SimTime::from_ticks(7), i32::MAX)
+                .unwrap();
+            let resumed = drain_v3_through(&mut runtime.flow, resume_flush, SimTime::from_ticks(7));
+            assert!(resumed.iter().any(|dispatch| {
+                dispatch.records.iter().any(|record| {
+                    record.request == ids.low_request
+                        && record.at == SimTime::from_ticks(7)
+                        && record.transition == kairo_ecs_des::LifecycleTransition::Resumed
+                })
+            }));
+            assert_eq!(
+                runtime.flow.work_progress(ids.low_work).unwrap().remaining,
+                SimDuration::from_ticks(7)
+            );
+            push_snapshot(runtime, &mut trace, "v3-low-resumed-tick7");
+
+            let stale = ids.stale_completion.expect("live stale Completion11");
+            let mut saw_stale = false;
+            for _ in 0..64 {
+                let request_before = runtime.flow.request(ids.low_request).unwrap();
+                let progress_before = runtime.flow.work_progress(ids.low_work).unwrap();
+                let FlowCheckpointImage::V3(image_before) = runtime
+                    .flow
+                    .capture_checkpoint_image(&runtime.codecs, limits().flow.flow)
+                    .unwrap()
+                else {
+                    panic!("stale completion state must remain V3");
+                };
+                let stored_progress_before = image_before.builtins.work_progress.clone();
+                let resource_before = runtime.flow.resource(ids.deferred).unwrap();
+                let dispatch = runtime.flow.step().unwrap().expect("live Completion11");
+                assert!(dispatch.at <= SimTime::from_ticks(11));
+                if dispatch.event == stale {
+                    assert_eq!(dispatch.at, SimTime::from_ticks(11));
+                    assert_eq!(dispatch.error, None);
+                    assert!(dispatch.records.is_empty());
+                    assert!(dispatch.callback_batches.is_empty());
+                    assert_eq!(request_before.state, kairo_ecs_des::RequestState::Active);
+                    assert_eq!(
+                        runtime.flow.request(ids.low_request).unwrap(),
+                        request_before
+                    );
+                    assert_ne!(
+                        progress_before.execution_revision,
+                        ids.stale_revision.unwrap()
+                    );
+                    assert_eq!(progress_before.completion_at, Some(SimTime::from_ticks(14)));
+                    assert_eq!(progress_before.useful_elapsed, SimDuration::from_ticks(3));
+                    assert_eq!(progress_before.remaining, SimDuration::from_ticks(7));
+                    let inspected = runtime.flow.work_progress(ids.low_work).unwrap();
+                    assert_eq!(inspected.useful_elapsed, SimDuration::from_ticks(7));
+                    assert_eq!(inspected.remaining, SimDuration::from_ticks(3));
+                    let FlowCheckpointImage::V3(image_after) = runtime
+                        .flow
+                        .capture_checkpoint_image(&runtime.codecs, limits().flow.flow)
+                        .unwrap()
+                    else {
+                        panic!("post-stale state must remain V3");
+                    };
+                    assert_eq!(image_after.builtins.work_progress, stored_progress_before);
+                    assert_eq!(
+                        runtime.flow.resource(ids.deferred).unwrap(),
+                        resource_before
+                    );
+                    saw_stale = true;
+                    push_snapshot(runtime, &mut trace, "v3-stale-completion11-noop");
+                    break;
+                }
+            }
+            assert!(saw_stale, "bounded search reached retained Completion11");
+            let mut low_completed = false;
+            for _ in 0..64 {
+                let dispatch = runtime
+                    .flow
+                    .step()
+                    .unwrap()
+                    .expect("tick-fourteen completion");
+                assert!(dispatch.at <= SimTime::from_ticks(14));
+                low_completed |= dispatch.records.iter().any(|record| {
+                    record.request == ids.low_request
+                        && record.at == SimTime::from_ticks(14)
+                        && record.transition == kairo_ecs_des::LifecycleTransition::Completed
+                });
+                if low_completed {
+                    break;
+                }
+            }
+            assert!(low_completed, "bounded tick-fourteen completion");
+            assert_eq!(
+                runtime.flow.request(ids.low_request).unwrap().state,
+                kairo_ecs_des::RequestState::Completed
+            );
+            push_snapshot(runtime, &mut trace, "v3-final-tick14");
+        }
+        Cut::V3CurrentTick => {
+            let flush = ids.flush.expect("same-tick re-admission Flush");
+            let dispatches = drain_v3_through(&mut runtime.flow, flush, SimTime::ZERO);
+            assert!(dispatches.iter().any(|dispatch| {
+                dispatch.event == flush
+                    && dispatch.records.iter().any(|record| {
+                        record.request == ids.urgent_request
+                            && record.at == SimTime::ZERO
+                            && record.transition == kairo_ecs_des::LifecycleTransition::Granted
+                    })
+            }));
+            assert_eq!(
+                runtime.flow.request(ids.low_request).unwrap().state,
+                kairo_ecs_des::RequestState::Released
+            );
+            assert_eq!(
+                runtime.flow.request(ids.urgent_request).unwrap().state,
+                kairo_ecs_des::RequestState::Active
+            );
+            push_snapshot(
+                runtime,
+                &mut trace,
+                "v3-currenttick-released-and-readmitted",
+            );
+        }
+        Cut::V3Halt => {
+            let pending = capture_bytes(runtime);
+            let budget = runtime.flow.budget_snapshot();
+            assert_eq!(
+                runtime.flow.step(),
+                Err(kairo_ecs_des::FlowError::SameTickBudgetExceeded {
+                    at_ticks: 0,
+                    limit: 1,
+                })
+            );
+            assert_eq!(runtime.flow.budget_snapshot(), budget);
+            assert_eq!(capture_bytes(runtime), pending);
+            push_snapshot(runtime, &mut trace, "v3-repeated-budget-halt-preserved");
+        }
+        _ => unreachable!(),
+    }
+    trace
+}
+
 fn push_frame(trace: &mut Vec<u8>, label: &str, bytes: &[u8]) {
     let label_len = u16::try_from(label.len()).unwrap();
     let image_len = u64::try_from(bytes.len()).unwrap();
@@ -1477,6 +2354,9 @@ fn finish_arrived(runtime: &mut MatrixRuntime) -> bool {
 }
 
 fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
+    if matches!(case.cut, Cut::V3Mixed | Cut::V3CurrentTick | Cut::V3Halt) {
+        return run_v3_suffix(case, runtime);
+    }
     let gated = matches!(
         case.name,
         "transit-moving-control-future-gate"
@@ -2134,6 +3014,29 @@ fn hex(bytes: &[u8]) -> String {
     output
 }
 
+fn decode_hex(value: &str) -> Result<Vec<u8>, &'static str> {
+    if !value.len().is_multiple_of(2) {
+        return Err("odd hex length");
+    }
+    value
+        .as_bytes()
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|pair| {
+            let digit = |byte: u8| match byte {
+                b'0'..=b'9' => Some(byte - b'0'),
+                b'a'..=b'f' => Some(byte - b'a' + 10),
+                b'A'..=b'F' => Some(byte - b'A' + 10),
+                _ => None,
+            };
+            let high = digit(pair[0]).ok_or("invalid hex digit")?;
+            let low = digit(pair[1]).ok_or("invalid hex digit")?;
+            Ok((high << 4) | low)
+        })
+        .collect()
+}
+
 fn child_output(file: &Path, case: &CaseSpec, process_artifacts: &Path) -> Output {
     Command::new(std::env::current_exe().unwrap())
         .args([
@@ -2213,6 +3116,32 @@ fn run_fresh_process_case(case: &CaseSpec, process_artifacts: &Path) {
         .find_map(|line| line.strip_prefix(TRACE_MARKER))
         .unwrap_or_else(|| panic!("case {} child emitted no complete trace", case.name));
     assert_eq!(actual, hex(&expected), "suffix mismatch for {}", case.name);
+    if case.name.starts_with("portable-v3-") {
+        let decoded = decode_hex(actual).expect("child trace must be valid hexadecimal bytes");
+        assert_eq!(
+            decoded, expected,
+            "decoded byte trace mismatch for {}",
+            case.name
+        );
+        let mut proof = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(process_artifacts.join("decoded-trace-byte-hashes.txt"))
+            .unwrap();
+        writeln!(proof, "case={}", case.name).unwrap();
+        writeln!(
+            proof,
+            "expected_raw_sha256={}",
+            hex(&Sha256::digest(&expected))
+        )
+        .unwrap();
+        writeln!(
+            proof,
+            "actual_decoded_raw_sha256={}",
+            hex(&Sha256::digest(&decoded))
+        )
+        .unwrap();
+    }
     append_invocation_record(
         case,
         &file,
@@ -2627,6 +3556,93 @@ fn portable_v2_malformed_inner_sections_reject_before_codecs() {
     assert!(FLOW_CODEC_DECODER_CALLS.with(Cell::get) > 0);
 }
 
+#[test]
+fn portable_v3_mixed_interior_cuts_fresh_process_continuation() {
+    let process_artifacts = artifact_dir().join("v3-mixed-interior");
+    std::fs::create_dir_all(&process_artifacts).unwrap();
+    std::fs::write(process_artifacts.join("process-invocations.txt"), b"").unwrap();
+    for name in [
+        "portable-v3-mixed-tick6-trigger-first",
+        "portable-v3-mixed-tick6-urgent-first",
+    ] {
+        let case = spec(name).unwrap();
+        run_fresh_process_case(&case, &process_artifacts);
+    }
+}
+
+#[test]
+fn portable_v3_current_tick_flush_fresh_process_continuation() {
+    let process_artifacts = artifact_dir().join("v3-currenttick-flush");
+    std::fs::create_dir_all(&process_artifacts).unwrap();
+    std::fs::write(process_artifacts.join("process-invocations.txt"), b"").unwrap();
+    let case = spec("portable-v3-currenttick-flush").unwrap();
+    run_fresh_process_case(&case, &process_artifacts);
+}
+
+#[test]
+fn portable_v3_halted_envelope_fresh_process_preserves_state() {
+    let process_artifacts = artifact_dir().join("v3-halted-envelope");
+    std::fs::create_dir_all(&process_artifacts).unwrap();
+    std::fs::write(process_artifacts.join("process-invocations.txt"), b"").unwrap();
+    let case = spec("portable-v3-preflush-budget-halt").unwrap();
+    run_fresh_process_case(&case, &process_artifacts);
+}
+
+#[test]
+fn portable_v3_malformed_inner_resealed_outer_rejects_precodec() {
+    let case = spec("portable-v3-mixed-tick6-trigger-first").unwrap();
+    let runtime = source_case(&case);
+    let valid_outer = capture_bytes(&runtime);
+    let FlowCheckpointImage::V3(mut v3) = flow_image_from_outer(&valid_outer) else {
+        panic!("malformed V3 fixture must contain a structurally decoded V3 image");
+    };
+    FLOW_CODEC_DECODER_CALLS.with(|calls| calls.set(0));
+    let positive =
+        C2PortableCheckpointV1::from_bytes(valid_outer.clone(), binding(), limits()).unwrap();
+    let mut trusted = resolver(&runtime.bindings);
+    let _restored = positive
+        .restore::<Vec<u8>, OwnedContext>(&runtime.codecs, &mut trusted, binding(), limits())
+        .unwrap();
+    assert!(
+        FLOW_CODEC_DECODER_CALLS.with(Cell::get) > 0,
+        "valid V3 baseline exercises codecs"
+    );
+
+    let flush = portable_v3_ids().flush.expect("pending tick-six flush");
+    let row = v3
+        .scheduler
+        .entries
+        .iter_mut()
+        .find(|entry| entry.id == flush)
+        .expect("pending Flush scheduler row");
+    row.request.kind = EventKind::custom(0xFFFF);
+    let malformed_flow = FlowCheckpointImage::V3(v3)
+        .encode_wire(limits().flow)
+        .expect("mutated V3 inner image remains structurally encodable");
+    let resealed_outer = outer_with_flow_section(&valid_outer, &malformed_flow);
+    let malformed =
+        C2PortableCheckpointV1::from_bytes(resealed_outer, binding(), limits()).unwrap();
+    FLOW_CODEC_DECODER_CALLS.with(|calls| calls.set(0));
+    let mut trusted = resolver(&runtime.bindings);
+    let error = match malformed.restore::<Vec<u8>, OwnedContext>(
+        &runtime.codecs,
+        &mut trusted,
+        binding(),
+        limits(),
+    ) {
+        Ok(_) => panic!("malformed V3 native join unexpectedly restored"),
+        Err(error) => error,
+    };
+    assert!(
+        matches!(
+            error,
+            C2PortableCheckpointError::Flow(FlowCheckpointError::InvalidState(_))
+        ),
+        "native V3 join validation rejects before codec ownership: {error:?}"
+    );
+    assert_eq!(FLOW_CODEC_DECODER_CALLS.with(Cell::get), 0);
+}
+
 fn resource_id_bytes(id: EntityId) -> [u8; 12] {
     let mut bytes = [0; 12];
     bytes[..8].copy_from_slice(&id.index.to_le_bytes());
@@ -2802,6 +3818,7 @@ fn restore_child_entrypoint() {
     let scratch_flow = FlowRuntime::new();
     let restore_codecs = matrix_codecs(scratch_flow.identity(), &case);
     let bindings = trusted_bindings(&case);
+    let _fixture_ids = build_runtime(&case);
     let image = C2PortableCheckpointV1::read_file(Path::new(&file), binding(), limits()).unwrap();
     let expected_image_bytes = image.as_bytes().to_vec();
     let restored = {
@@ -2830,6 +3847,10 @@ fn restore_child_entrypoint() {
     runtime
         .submitted
         .sort_by_key(|item| item.work().entity_id());
+    if matches!(case.cut, Cut::V3Mixed | Cut::V3CurrentTick | Cut::V3Halt) {
+        let child_ids = restored_portable_v3_ids(&runtime, &case);
+        PORTABLE_V3_IDS.with(|slot| slot.set(Some(child_ids)));
+    }
     let exact_reencoded = capture_bytes(&runtime);
     assert_eq!(exact_reencoded, expected_image_bytes);
     let trace = run_suffix(&case, &mut runtime);
