@@ -3,8 +3,8 @@
 ## Authority and dependency
 
 Coordinator preparation under the full CareOps delivery goal. Routing source is
-`c9091ce049a9d156c260bbc9f670f0e9bd4073e8`. Its source review and focused tests
-are complete; final clean-head qualification is running separately. This document
+`c9091ce049a9d156c260bbc9f670f0e9bd4073e8`. Its reviewed lint-only repair is `5efb3710a2cb1b81256e948f45c27328a2de4e1d`.
+Final clean-head qualification of that repair is separately required. This document
 does not assert acceptance. Dispatch requires routing acceptance, independent
 contract review, exact base/input hashes and a reviewed bounded packet per lane.
 Rust/Cargo 1.99.0 only. No publication, parent pin or ED acceptance here.
@@ -113,10 +113,15 @@ Submit/Flush. Four new plus22preserved cases give26process cases after integrati
 ## Execution, review and integration
 
 Each lane packet binds exact source API context, required names and cases, inputs,
-three prospective commands (targeted compile, named focused runtime proofs,
+three prospective commands (targeted strict lint-compile, named focused runtime proofs,
 owned-file format), result/log ownership and maximum3failed DEVELOPMENT executions.
 Keep immutable started/terminal receipts, actual argv/cwd/HEAD/toolchain and source
-hashes before/after each command. No full suite/Clippy in a source-stage lane.
+hashes before/after each command. The first command is targeted single-package
+`cargo clippy --locked -p kairo-ecs-calibration --features flow --all-targets -- -D warnings`.
+It typechecks tests and catches style issues before source commit. No full
+four-package suite/Clippy in a source-stage lane; final joined strict Clippy stays
+mandatory. This prospective improvement follows the preserved routing test-style
+failure; no earlier failed command is reclassified or erased.
 
 After independent frozen source/evidence review, one scoped SOURCE commit then
 immediate release. A source commit is not consumer acceptance. Root joins the three

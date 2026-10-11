@@ -593,7 +593,7 @@ fn run_checkpointed_readiness_order(trigger_completion_first: bool) {
             let request_before = runtime.request(low).unwrap();
             let progress_before = runtime.work_progress(low_work).unwrap();
             let stored_progress_before =
-                capture_routed(&runtime, &codecs, FlowCheckpointLimits::default())
+                capture_routed(runtime, &codecs, FlowCheckpointLimits::default())
                     .unwrap()
                     .builtins
                     .work_progress;
@@ -621,7 +621,7 @@ fn run_checkpointed_readiness_order(trigger_completion_first: bool) {
                 observed_at_eleven.cumulative_busy = SimDuration::from_ticks(7);
                 assert_eq!(runtime.work_progress(low_work).unwrap(), observed_at_eleven);
                 assert_eq!(
-                    capture_routed(&runtime, &codecs, FlowCheckpointLimits::default())
+                    capture_routed(runtime, &codecs, FlowCheckpointLimits::default())
                         .unwrap()
                         .builtins
                         .work_progress,
@@ -1003,8 +1003,10 @@ fn restart_source(mode: FlowAllocationMode) -> (FlowRuntime, FlowCheckpointCodec
 #[test]
 fn routing_v3_legacy_limits_errors_restart_and_wire_parity() {
     let (source, codecs) = restart_source(FlowAllocationMode::Eager);
-    let mut limits = FlowCheckpointLimits::default();
-    limits.max_registrations = 4;
+    let mut limits = FlowCheckpointLimits {
+        max_registrations: 4,
+        ..FlowCheckpointLimits::default()
+    };
     ENCODE_CALLS.with(|n| n.set(0));
     let direct = source.capture_checkpoint(&codecs, limits).unwrap();
     assert_eq!(ENCODE_CALLS.with(|n| n.get()), 2);
