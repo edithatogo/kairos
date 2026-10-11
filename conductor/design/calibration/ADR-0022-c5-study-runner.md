@@ -1,6 +1,7 @@
 # ADR-0022 — experimental C5 finite study and durable CPU runner
 
-Status: accepted internal implementation contract, pending executable qualification.
+Status: accepted internal implementation contract; local executable qualification
+is recorded in `conductor/evidence/c5-local-qualification-20261011`.
 Owners: 21 search/objective/native adapter, 22 CLI/shards, 01 unchanged seed-map,
 25 additive hidden experimental JSON facade review. Coordinator owns integration.
 C3 baseline da327cf263ff6e4507f48f597c201bb269680d51. Rust 1.99.0 exclusively.

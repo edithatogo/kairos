@@ -51,3 +51,69 @@ The replay command writes the local smoke evidence set:
 - `docs/trustworthy-simulation/scenario-evidence.md`
 - `scenarios/manifest-index.json`
 - `conductor/tracks/22-experiment-runner-scenario-management/handoff.md`
+
+## Experimental C5 finite-study commands
+
+The commands below are an experimental, Rust-native lane for the normalized
+synthetic study in [`examples/calibration/c5`](../../examples/calibration/c5/README.md).
+They do not replace or change the legacy scenario/seed commands above. C5 currently
+accepts versioned synthetic JSON with integer tick values and declared training,
+validation, and final-test partitions. It is not a general trace importer or a
+clinical/operational calibration tool. See the [C5 implementation contract](../../conductor/design/calibration/ADR-0022-c5-study-runner.md)
+for schema and validation boundaries.
+
+From the Kairos repository root, build with the pinned Rust 1.99 toolchain and run
+the binary directly:
+
+```sh
+cargo +1.99.0 build -p kairo-ecs-cli
+./target/debug/kairo-ecs-cli verify trace --study examples/calibration/c5/study.json
+./target/debug/kairo-ecs-cli replay --study examples/calibration/c5/study.json --mode shadow --output .artifacts/c5/shadow
+./target/debug/kairo-ecs-cli replay --study examples/calibration/c5/study.json --mode free --output .artifacts/c5/free
+```
+
+`verify trace` checks the study's normalized records and partition/censor
+boundaries. Shadow replay anchors observations from the supplied trace and runs
+independent native probes. Free replay uses a shared FCFS native resource; observed
+completions do not drive native time or state. Both outputs identify the synthetic
+adapter and replay mode. Each output path must be new.
+
+Run a study with a chosen worker count. The output directory must not already exist
+unless `--resume` names that same directory:
+
+```sh
+./target/debug/kairo-ecs-cli calibrate --study examples/calibration/c5/study.json --output .artifacts/c5/run-w1 --workers 1
+```
+
+The run stores provenance, initial and final task shards, the validation-stage
+summary, the final summary, and a run receipt. Work is durable at completed task
+boundaries; resume does not claim to checkpoint a live simulation world. Resume
+requires the same exact study bytes, executable, source/build and lock provenance,
+and any optional scenario/seed manifest bytes used for the original run.
+
+To exercise cooperative stop and resume in a fresh process, use the same directory
+and binary for both commands:
+
+```sh
+./target/debug/kairo-ecs-cli calibrate --study examples/calibration/c5/study.json --output .artifacts/c5/resume --workers 1 --stop-after 3
+./target/debug/kairo-ecs-cli calibrate --study examples/calibration/c5/study.json --output .artifacts/c5/resume --resume .artifacts/c5/resume --workers 4
+```
+
+The checked-in fixture's validation ranking recovers candidate `c000004`
+(`route_ticks=2`, `work_ticks=3`) with score `0`. Its held-out final-test summary
+has mean completion error `0` across two completed, uncensored, non-failed attempts.
+The fixture deliberately has too few fixed confirmation replications to meet the
+declared precision target, so `mc_indeterminate` remains `true`; the exact winner
+and held-out result do not turn that confirmation into a precision claim. Missing
+required transit measurements contribute the configured failure penalty.
+
+Compare two complete runs whose provenance bindings match (for example, runs made
+with different worker counts using the same binary and study):
+
+```sh
+./target/debug/kairo-ecs-cli compare-runs --left .artifacts/c5/run-w1 --right .artifacts/c5/run-w4 --output .artifacts/c5/compare.json
+```
+
+The comparison checks provenance compatibility and artifact integrity before
+reporting summaries. It does not establish cross-version or cross-machine
+equivalence, empirical validity, clinical usefulness, or performance.

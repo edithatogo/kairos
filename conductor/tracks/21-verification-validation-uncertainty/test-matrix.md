@@ -79,3 +79,11 @@ records 351 full calibration passes, 26 release shadow passes, native fresh-proc
 recovery, actual IPC/Parquet roundtrip and independent manual readback. Hosted C3
 qualification, C3.4/parent acceptance and parent pin remain pending. Historical
 owner-track Done scopes are unchanged; no C5, public API, clinical or release gate closes.
+
+## C5 scoped supplement — 11 October 2026
+
+Experimental synthetic study/CLI/CPU recovery source15d3ab0 is reviewed locally.
+See [C5 executed evidence and limitations](../../evidence/c5-local-qualification-20261011/README.md)
+and [ADR-0022](../../design/calibration/ADR-0022-c5-study-runner.md).
+Historical Done and stable public API/release scopes are unchanged. Parent C5
+acceptance requires successor hosted gates and independent artifact readback.

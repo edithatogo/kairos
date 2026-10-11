@@ -666,3 +666,12 @@ macOS aarch64; PR244 has 47 successful checks and two declared conditional skips
 hosted-pending status for this tested source. Parent pin/phase acceptance awaits
 this documentation successor's final checks. Historical owner status scopes,
 C5, public API, empirical/clinical, ED MVP and release gates remain separate.
+
+## C5 experimental study and runner — local review 2026-10-11
+
+C5 source `15d3ab0` integrates bounded study search, actual native shadow/free
+execution, CLI and deterministic CPU task shards. Local executed evidence and
+independent review are retained in [C5 qualification](evidence/c5-local-qualification-20261011/README.md).
+Rust1.99 only; historical whole-track statuses retain their original scope.
+Parent C5 acceptance additionally requires successor hosted checks and readback.
+No stable API, ED/clinical, release, merge or general performance claim follows.

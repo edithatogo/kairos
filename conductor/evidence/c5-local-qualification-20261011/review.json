@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "scope": "C5 experimental synthetic implementation",
+  "source_commit": "15d3ab01a9236e9a434b09487ea51e1f16015e38",
+  "coordinator": "root",
+  "requested_worker_model": "gpt-6-luna",
+  "served_model_attestation": false,
+  "findings": [
+    {
+      "finding": "CLI worker import and SHA2 digest formatting",
+      "disposition": "fixed and regression covered"
+    },
+    {
+      "finding": "exclusive case counts and mixed censor penalties",
+      "disposition": "fixed and regression covered"
+    },
+    {
+      "finding": "empty-anchor runtime/checkpoint registration",
+      "disposition": "fixed and regression covered"
+    },
+    {
+      "finding": "actual native free completion and individual cutoff",
+      "disposition": "fixed and regression covered"
+    },
+    {
+      "finding": "clean source executable provenance and source-edit refresh",
+      "disposition": "fixed and regression covered"
+    },
+    {
+      "finding": "oversized plan payload preflight regression",
+      "disposition": "fixed and regression covered"
+    }
+  ],
+  "reviews": [
+    {
+      "reviewer": "c5_workers",
+      "scope": "CLI shards/resume; process proof/CI",
+      "result": "no remaining blocker"
+    },
+    {
+      "reviewer": "c5_study",
+      "scope": "native CRN, data independence and held-out cutoff",
+      "result": "cutoff finding closed by readback"
+    },
+    {
+      "reviewer": "c5_cli",
+      "scope": "legacy/API/manifests; native semantic qualification",
+      "result": "source provenance finding fixed; formatting source successor checked"
+    }
+  ],
+  "limitations": [
+    "Synthetic normalized JSON only",
+    "Fixed confirmation conditional on trace; example MC precision indeterminate",
+    "No stable API, empirical/clinical, release, speedup or merge claim",
+    "Local source review is not hosted acceptance"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "Cargo.lock": "ed5308f05c1a7adf131839b14e4ead9a4142fe9f24c2e861aea83029f5a5aad9",
+  "crates/kairo-ecs-calibration/src/c5_native.rs": "cb1ff11876db06786a8334df6843e7ce7ce6131e238c971a44e4051033d1acdb",
+  "crates/kairo-ecs-calibration/src/c5_study.rs": "44545cbad2d2179e0324cce3d01f1f3cb0fcf8e89b569a9ce336c056271d5fab",
+  "crates/kairo-ecs-calibration/src/c5_study_tests.rs": "b8daa1bcb2beb48c365fe83187836117563d55f74cdc5bc755d176c86ab37d98",
+  "crates/kairo-ecs-calibration/src/lib.rs": "2e34da5c6ff3810619c6afdecb37c6d4c7bfa11dc54326912c8fbbab4f5d42da",
+  "crates/kairo-ecs-calibration/src/seed_map.rs": "228f3886f9af4a9f58fbfb3f5d8175bad592a091932eb5418f1927c83537522a",
+  "crates/kairo-ecs-calibration/src/shadow_c2_model.rs": "7b7c687248eef3c38753617658d6f413672e7abf0f985b40124805651e6ab4d2",
+  "crates/kairo-ecs-cli/Cargo.toml": "6a1ac4026b85d27605e3144374117f9fdbe4525b01fb3a1035d163a65bed0609",
+  "crates/kairo-ecs-cli/build.rs": "6803d09aa0fcbbfbc60e386274fd278fa7ca3a1b8a6f3a24ae8d3be41255a68c",
+  "crates/kairo-ecs-cli/src/c5_cli.rs": "47ae2b7cf8313f08f47ee86b1dd0cfa83b65cda1009d0da3aa733a6db868cd16",
+  "crates/kairo-ecs-cli/src/c5_workers.rs": "e5f7a2833a2affffd5a6d549af8089705052040e04f257d184c61ce9901ec236",
+  "crates/kairo-ecs-cli/src/main.rs": "09e3da056ec41c2ab4a8205cbbe8e710dafebf176b9efbc46e6337afc7c433f7",
+  "crates/kairo-ecs-cli/src/scenario.rs": "a77aad57c315d31dd0ead912efc60a82b175117746b0953396bd4129cf00c523",
+  "crates/kairo-ecs-cli/tests/c5_cli.rs": "26ee1855d813a92eaec09fd63a576b810400a852c6792756bc67868d821dd391",
+  "scripts/qualify_c5.py": "a4595c3518ab9731a53ba41ebbf1ec2b375805a39bc434d1b0f4f7885d129e91"
+}

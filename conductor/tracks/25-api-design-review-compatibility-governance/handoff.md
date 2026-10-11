@@ -168,3 +168,11 @@ Approved internal experimental direction adds KnowledgeAvailable to a public enu
 ## Q5.3 Flow compatibility handoff — 2026-10-05
 
 The Q5.3 source-bound compatibility/migration qualification is at Kairos `eae890b0a2a3524a543ec4ee4aca61346e273b52` on `origin/codex/careops-q53-compatibility` (stacked/draft development PR #218); see the CareOps Sim parent `conductor/evidence/q5.3-completion-20261005/`. The external legacy consumer fixture and source-linked migration guide preserve the legacy `Resource`/`DESContext` surface within the tested cases; they are not a general semver guarantee. Flow remains experimental. The existing Track 25 Q0.1 note remains applicable: concrete Flow symbols still require Track 25 review before release. No symbol-level review, stable promotion, formal release-gate run, release approval, or security-gate waiver is claimed here; historical Track 25 status and plan remain unchanged.
+
+## C5 scoped supplement — 11 October 2026
+
+Experimental synthetic study/CLI/CPU recovery source15d3ab0 is reviewed locally.
+See [C5 executed evidence and limitations](../../evidence/c5-local-qualification-20261011/README.md)
+and [ADR-0022](../../design/calibration/ADR-0022-c5-study-runner.md).
+Historical Done and stable public API/release scopes are unchanged. Parent C5
+acceptance requires successor hosted gates and independent artifact readback.

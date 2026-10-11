@@ -24,3 +24,6 @@ crates/kairo-ecs-pyo3/
 
 # Bounded C5 local execution evidence is archived explicitly in Conductor.
 .artifacts/c5*/
+
+# Native CI logs are generated evidence, never source inputs.
+.artifacts/ci/

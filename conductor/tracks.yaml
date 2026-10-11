@@ -314,6 +314,7 @@ tracks:
       - sbom-plan
       - vulnerability-policy
   - id: 21
+    # C5 scoped local review: evidence/c5-local-qualification-20261011; historical status unchanged.
     # C3 source faeb8e9 hosted-qualified: evidence/c3-hosted-qualification-20261010; parent successor acceptance pending.
     name: Verification, Validation & Uncertainty
     status: Done
@@ -330,6 +331,7 @@ tracks:
       - replay-fixture
       - seed-manifest
   - id: 22
+    # C5 scoped local review: evidence/c5-local-qualification-20261011; historical status unchanged.
     # C3 source faeb8e9 hosted-qualified: evidence/c3-hosted-qualification-20261010; parent successor acceptance pending.
     name: Experiment Runner & Scenario Management
     status: Done
@@ -372,6 +374,7 @@ tracks:
       - browser-smoke
       - non-core-dependency-check
   - id: 25
+    # C5 scoped local review: evidence/c5-local-qualification-20261011; historical status unchanged.
     name: API Design Review & Compatibility Governance
     status: Done
     owner: api-governance-agent

@@ -193,3 +193,11 @@ macOS aarch64; PR244 has 47 successful checks and two declared conditional skips
 hosted-pending status for this tested source. Parent pin/phase acceptance awaits
 this documentation successor's final checks. Historical owner status scopes,
 C5, public API, empirical/clinical, ED MVP and release gates remain separate.
+
+## C5 scoped supplement — 11 October 2026
+
+Experimental synthetic study/CLI/CPU recovery source15d3ab0 is reviewed locally.
+See [C5 executed evidence and limitations](../../evidence/c5-local-qualification-20261011/README.md)
+and [ADR-0022](../../design/calibration/ADR-0022-c5-study-runner.md).
+Historical Done and stable public API/release scopes are unchanged. Parent C5
+acceptance requires successor hosted gates and independent artifact readback.

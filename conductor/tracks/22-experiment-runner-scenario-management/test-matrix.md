@@ -45,3 +45,11 @@ node scripts/validation/validate-tracks21-27.mjs
 ## Phase closeout gate
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` and `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1` must pass before any phase advances; this enforces `$conductor-review`, auto-apply of accepted fixes, phase-closeout ledger evidence, cleaned commit/push evidence, and blocker recording. At actual closeout, run `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` after commit and push.
+
+## C5 scoped supplement — 11 October 2026
+
+Experimental synthetic study/CLI/CPU recovery source15d3ab0 is reviewed locally.
+See [C5 executed evidence and limitations](../../evidence/c5-local-qualification-20261011/README.md)
+and [ADR-0022](../../design/calibration/ADR-0022-c5-study-runner.md).
+Historical Done and stable public API/release scopes are unchanged. Parent C5
+acceptance requires successor hosted gates and independent artifact readback.

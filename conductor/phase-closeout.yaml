@@ -320,7 +320,7 @@ entries:
     phase: "implementation-closeout"
     state: closed
     review_command: "$conductor-review"
-    review_result: "Track 25 advanced to Done after PR #21 merged, compatibility release-gate validation passed, the Track 21-27 aggregate validator passed, review threads were resolved, and the clean closeout commit recorded the status promotion."
+    review_result: "Track 25 advanced to Done after PR #21 merged, compatibility release-gate validation passed, the Track 21-27 aggregate validator passed, review threads were resolved, and the clean closeout commit recorded the status promotion. C5 source15d3ab0 local implementation and independent review are recorded in conductor/evidence/c5-local-qualification-20261011/README.md; this scoped supplement does not change historical closure. Parent acceptance requires successor hosted proof."
     fixes_applied: true
     validation_commands:
       - "pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1"
@@ -517,7 +517,7 @@ entries:
     phase: "implementation-review"
     state: closed
     review_command: "$conductor-review"
-    review_result: "Track 21 advanced to Done after the VVUQ note, replay fixture boundary, seed/scenario manifest references, and cross-track evidence boundaries passed the focused Track 21-27 validator batch. Supplemental C1 evidence at runtime 7f72b7d9a9b6ae62e481a59b2cc04ce37da0a4a5 and integrated 87d591c484bc937f7536a0e700b1400968b9549a: conductor/evidence/c1.4-integrated-20261005/README.md; parent acceptance awaits final governance successor gates. Historical commit and closure scope remain unchanged. C3 local experimental implementation reviewed at 6f2c4e305e8b885b67f534035e5a72ac5673a094; conductor/evidence/c3-local-qualification-20261010 records passing Rust 1.99 native, recovery, metadata and physical sidecar gates. Hosted C3 and parent C3.4 acceptance remain pending. C3 scoped synthetic source faeb8e97d3021080c2dd60f0e2f065607e7666e7 passed Rust 1.99 local and hosted native gates; evidence/c3-hosted-qualification-20261010 records run38047961900 and independent two-host readback. This supplements historical scope; final parent pin awaits governance successor checks."
+    review_result: "Track 21 advanced to Done after the VVUQ note, replay fixture boundary, seed/scenario manifest references, and cross-track evidence boundaries passed the focused Track 21-27 validator batch. Supplemental C1 evidence at runtime 7f72b7d9a9b6ae62e481a59b2cc04ce37da0a4a5 and integrated 87d591c484bc937f7536a0e700b1400968b9549a: conductor/evidence/c1.4-integrated-20261005/README.md; parent acceptance awaits final governance successor gates. Historical commit and closure scope remain unchanged. C3 local experimental implementation reviewed at 6f2c4e305e8b885b67f534035e5a72ac5673a094; conductor/evidence/c3-local-qualification-20261010 records passing Rust 1.99 native, recovery, metadata and physical sidecar gates. Hosted C3 and parent C3.4 acceptance remain pending. C3 scoped synthetic source faeb8e97d3021080c2dd60f0e2f065607e7666e7 passed Rust 1.99 local and hosted native gates; evidence/c3-hosted-qualification-20261010 records run38047961900 and independent two-host readback. This supplements historical scope; final parent pin awaits governance successor checks. C5 source15d3ab0 local implementation and independent review are recorded in conductor/evidence/c5-local-qualification-20261011/README.md; this scoped supplement does not change historical closure. Parent acceptance requires successor hosted proof."
     fixes_applied: true
     validation_commands:
       - "node scripts/validation/validate-vvuq-note.mjs"
@@ -531,7 +531,7 @@ entries:
     phase: "implementation-review"
     state: closed
     review_command: "$conductor-review"
-    review_result: "Track 22 advanced to Done after GNU-toolchain runtime smoke validated the scenario validation, replay, and resumability commands and the scenario runner evidence was reconciled. C3 scoped synthetic source faeb8e97d3021080c2dd60f0e2f065607e7666e7 passed Rust 1.99 local and hosted native gates; evidence/c3-hosted-qualification-20261010 records run38047961900 and independent two-host readback. This supplements historical scope; final parent pin awaits governance successor checks."
+    review_result: "Track 22 advanced to Done after GNU-toolchain runtime smoke validated the scenario validation, replay, and resumability commands and the scenario runner evidence was reconciled. C3 scoped synthetic source faeb8e97d3021080c2dd60f0e2f065607e7666e7 passed Rust 1.99 local and hosted native gates; evidence/c3-hosted-qualification-20261010 records run38047961900 and independent two-host readback. This supplements historical scope; final parent pin awaits governance successor checks. C5 source15d3ab0 local implementation and independent review are recorded in conductor/evidence/c5-local-qualification-20261011/README.md; this scoped supplement does not change historical closure. Parent acceptance requires successor hosted proof."
     fixes_applied: true
     validation_commands:
       - "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/scenarios/validate-track22-smoke.ps1"
