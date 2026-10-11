@@ -27,40 +27,72 @@ fn result_for(task: &Value, outcome: &str) -> Value {
     let params = &task["params"];
     let sum =
         params["route_ticks"].as_u64().unwrap_or(0) + params["work_ticks"].as_u64().unwrap_or(0);
-    let completion_error = if outcome == "complete" {
-        Some(sum.abs_diff(5) as f64)
-    } else {
-        None
-    };
-    let transit_error = if outcome == "complete" {
-        Some(0.0)
-    } else {
-        None
-    };
+    let score = sum.abs_diff(5);
     let task_records = task["records"].as_array().unwrap();
-    let records:Vec<Value>=task_records.iter().map(|r|{
-        let input_censored=r["censored"]==true;
-        let valid=outcome=="complete"||outcome=="censored";
-        let mut rec=json!({"case_id":r["case_id"],"outcome":if valid{"complete"}else{outcome},"observed_censored":input_censored});
-        if valid {rec["predicted_tick"]=json!("5");rec["observed_tick"]=r["end_tick"].clone();rec["study_service_seed"]=json!(1);rec["native_events"]=json!(0);rec["predicted_transit_ticks"]=json!("0");}
-        rec
-    }).collect();
-    let censored_count = records
+    let records: Vec<Value> = task_records
         .iter()
-        .filter(|r| r["observed_censored"] == true)
-        .count();
-    let failed_count = if outcome == "failed" || outcome == "invalid" {
-        task_records.len() - censored_count
-    } else {
-        0
-    };
-    let eligible_count = task_records.len() - censored_count - failed_count;
+        .map(|r| {
+            let input_censored = r["censored"] == true;
+            let valid = outcome == "complete" || outcome == "censored";
+            let row_outcome = if valid {
+                "complete"
+            } else if outcome == "invalid" {
+                "invalid"
+            } else {
+                "failed"
+            };
+            let mut rec = json!({"case_id":r["case_id"],"outcome":row_outcome,"observed_censored":input_censored});
+            if valid {
+                let observed = r["end_tick"].as_u64().unwrap_or(0);
+                rec["predicted_tick"] = json!((observed + score).to_string());
+                rec["observed_tick"] = r["end_tick"].clone();
+                rec["study_service_seed"] = json!(1);
+                rec["native_events"] = json!(0);
+                rec["predicted_transit_ticks"] = r["transit_ticks"].as_u64().map(|n| json!(n.to_string())).unwrap_or(Value::Null);
+            }
+            rec
+        })
+        .collect();
+    let mut eligible_count = 0usize;
+    let mut censored_count = 0usize;
+    let mut missing_count = 0usize;
+    let mut failed_count = 0usize;
+    let mut completion_errors = Vec::new();
+    let mut transit_errors = Vec::new();
+    for (record, source) in records.iter().zip(task_records) {
+        if ["failed", "invalid"].contains(&record["outcome"].as_str().unwrap()) {
+            failed_count += 1;
+        } else if source["censored"] == true || record["outcome"] == "censored" {
+            censored_count += 1;
+        } else if record["outcome"] == "missing" {
+            missing_count += 1;
+        } else {
+            eligible_count += 1;
+            let predicted = record["predicted_tick"]
+                .as_str()
+                .unwrap()
+                .parse::<u64>()
+                .unwrap();
+            let observed = source["end_tick"].as_u64().unwrap();
+            completion_errors.push(predicted.abs_diff(observed) as f64);
+        }
+        if let (Some(a), Some(b)) = (
+            source["transit_ticks"].as_u64(),
+            record["predicted_transit_ticks"]
+                .as_str()
+                .and_then(|s| s.parse::<u64>().ok()),
+        ) {
+            transit_errors.push(a.abs_diff(b) as f64);
+        }
+    }
+    let completion_error = (!completion_errors.is_empty()).then(|| mean(&completion_errors));
+    let transit_error = (!transit_errors.is_empty()).then(|| mean(&transit_errors));
     json!({
         "schema_version":ATTEMPT_SCHEMA,
         "task_id":task["task_id"],"study_hash":task["study_hash"],"candidate_id":task["candidate_id"],
         "replication_id":task["replication_id"],"split":task["split"],"seed_schedule_id":task["seed_schedule_id"],"params":params,
         "outcome":outcome,"completion_error":completion_error,"transit_error":transit_error,
-        "eligible_count":eligible_count,"censored_count":censored_count,"missing_count":0,"failed_count":failed_count,"records":records
+        "eligible_count":eligible_count,"censored_count":censored_count,"missing_count":missing_count,"failed_count":failed_count,"records":records
     })
 }
 
@@ -171,11 +203,111 @@ fn result_inventory_and_identity_are_exact_and_duplicate_attempts_fail() {
             .contains("identity mismatch")
     );
     let mut attempts = complete_attempts(&cfg, &p);
+    attempts[0]["completion_error"] = json!(999);
+    assert!(
+        summarize(&cfg, &attempts)
+            .unwrap_err()
+            .contains("differs from successful per-case")
+    );
+    let mut attempts = complete_attempts(&cfg, &p);
     attempts.push(attempts[0].clone());
     assert!(
         summarize(&cfg, &attempts)
             .unwrap_err()
             .contains("duplicate")
+    );
+}
+
+#[test]
+fn required_missing_transit_metric_moves_observation_to_penalty_bucket() {
+    let cfg = study();
+    let p = plan(&cfg).unwrap();
+    let mut attempts = complete_attempts(&cfg, &p);
+    let task = p["tasks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|t| t["split"] == "validation" && t["candidate_id"] == "c000000")
+        .unwrap();
+    let result = attempts
+        .iter_mut()
+        .find(|r| r["task_id"] == task["task_id"])
+        .unwrap();
+    result["records"][0]["predicted_transit_ticks"] = Value::Null;
+    result["outcome"] = json!("missing");
+    result["completion_error"] = Value::Null;
+    result["transit_error"] = Value::Null;
+    result["eligible_count"] = json!(0);
+    result["missing_count"] = json!(1);
+    let summary = summarize(&cfg, &attempts).unwrap();
+    let candidate = summary["candidates"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["candidate_id"] == "c000000")
+        .unwrap();
+    assert!(candidate["validation_objective_mean"].as_f64().unwrap() >= 100.0);
+}
+
+#[test]
+fn mixed_failure_and_source_censoring_are_exclusive_and_case_penalized() {
+    let cfg = study();
+    let p = plan(&cfg).unwrap();
+    let mut attempts = complete_attempts(&cfg, &p);
+    let task = p["tasks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|t| t["candidate_id"] == "c000000" && t["split"] == "training")
+        .unwrap();
+    let result_index = attempts
+        .iter()
+        .position(|r| r["task_id"] == task["task_id"])
+        .unwrap();
+    let mut result = attempts[result_index].clone();
+    result["records"][1]["outcome"] = json!("failed");
+    result["records"][1]
+        .as_object_mut()
+        .unwrap()
+        .remove("predicted_tick");
+    result["records"][1]
+        .as_object_mut()
+        .unwrap()
+        .remove("predicted_transit_ticks");
+    result["records"][1]
+        .as_object_mut()
+        .unwrap()
+        .remove("study_service_seed");
+    result["records"][1]
+        .as_object_mut()
+        .unwrap()
+        .remove("native_events");
+    result["records"][1]["reason"] = json!("fixture failure");
+    result["outcome"] = json!("failed");
+    result["eligible_count"] = json!(1);
+    result["censored_count"] = json!(1);
+    result["missing_count"] = json!(0);
+    result["failed_count"] = json!(1);
+    attempts[result_index] = result.clone();
+    // One eligible row has normalized objective error 2; two uncovered rows
+    // receive the declared penalty, regardless of the aggregate outer outcome.
+    let expected = (2.0 + 2.0 * 100.0) / 3.0;
+    assert!(summarize(&cfg, &attempts).is_ok());
+    assert!(
+        (task_score(&result, &canonical_config(&cfg).unwrap()).unwrap() - expected).abs() < 1e-12
+    );
+
+    let mut forged = attempts.clone();
+    let bad = forged
+        .iter_mut()
+        .find(|r| r["task_id"] == task["task_id"])
+        .unwrap();
+    bad["eligible_count"] = json!(2);
+    bad["failed_count"] = json!(0);
+    assert!(
+        summarize(&cfg, &forged)
+            .unwrap_err()
+            .contains("exclusive case outcome partition")
     );
 }
 
@@ -249,6 +381,26 @@ fn training_only_censoring_and_bootstrap_oracles_are_hand_computable() {
     assert!((d["event_rate_per_tick"].as_f64().unwrap() - 2.0 / 7.0).abs() < 1e-12);
     assert_eq!(bootstrap_mean_variance(&[0.0, 10.0]), Some(12.5));
     assert_eq!(bootstrap_mean_variance(&[0.0, 0.0, 10.0, 10.0]), Some(6.25));
+    let mut grouped = study();
+    grouped["splits"] = json!({"training":[0,20],"validation":[20,30],"final_test":[30,40]});
+    grouped["trace"] = json!([
+        {"case_id":"a1","day":"a","start_tick":0,"end_tick":0,"transit_ticks":0},
+        {"case_id":"a2","day":"a","start_tick":1,"end_tick":1,"transit_ticks":0},
+        {"case_id":"b1","day":"b","start_tick":0,"end_tick":10,"transit_ticks":0},
+        {"case_id":"b2","day":"b","start_tick":0,"end_tick":10,"transit_ticks":0},
+        {"case_id":"v","day":"v","start_tick":20,"end_tick":21,"transit_ticks":0},
+        {"case_id":"f","day":"f","start_tick":30,"end_tick":31,"transit_ticks":0}
+    ]);
+    let grouped_diagnostics = &plan(&grouped).unwrap()["diagnostics"]["training"];
+    assert_eq!(grouped_diagnostics["day_cluster_means"], json!([0.0, 10.0]));
+    assert_eq!(
+        grouped_diagnostics["day_cluster_bootstrap_variance"],
+        json!(12.5)
+    );
+    assert_eq!(
+        grouped_diagnostics["row_iid_bootstrap_variance"],
+        json!(6.25)
+    );
     let training = p["tasks"]
         .as_array()
         .unwrap()
@@ -280,6 +432,25 @@ fn leakage_and_bad_configuration_are_rejected_before_dispatch() {
     let mut cfg = study();
     cfg["parameters"]["route_ticks"]["unit"] = json!("minutes");
     assert!(plan(&cfg).unwrap_err().contains("tick parameter"));
+    let mut cfg = study();
+    cfg["trace"][0]["start_tick"] = json!(1);
+    cfg["budget"]["horizon_ticks"] = json!(MAX_EXACT_TICK);
+    assert!(plan(&cfg).unwrap_err().contains("start_tick plus horizon"));
+}
+
+#[test]
+fn per_split_case_cap_is_checked_before_task_materialization() {
+    let mut cfg = study();
+    let mut rows = cfg["trace"].as_array().unwrap().clone();
+    for i in 0..4093 {
+        rows.push(json!({"case_id":format!("extra-{i}"),"day":format!("day-extra-{i}"),"start_tick":0,"end_tick":0,"transit_ticks":0}));
+    }
+    cfg["trace"] = json!(rows);
+    assert!(
+        plan(&cfg)
+            .unwrap_err()
+            .contains("trace rows per split exceed 4096")
+    );
 }
 
 #[test]

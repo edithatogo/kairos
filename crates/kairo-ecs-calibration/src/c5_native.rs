@@ -578,7 +578,7 @@ mod tests {
         let mut c = study();
         c["objective"]["transit_weight"] = json!(0);
         for row in c["trace"].as_array_mut().unwrap() {
-            row.as_object_mut().unwrap().remove("transit_ticks");
+            row["transit_ticks"] = Value::Null;
         }
         let ridge = summarize_native(&c);
         assert_eq!(ridge["ridge"], true);

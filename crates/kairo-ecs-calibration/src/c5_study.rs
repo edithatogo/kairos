@@ -179,7 +179,7 @@ fn canonical_config(config: &Value) -> Result<Validated, String> {
         "final_test_replications",
         10_000,
     )?;
-    let max_tasks = bounded_count(field(budget, "max_tasks")?, "max_tasks", 1_000_000)?;
+    let max_tasks = bounded_count(field(budget, "max_tasks")?, "max_tasks", 10_000)?;
     let horizon_ticks = pos(field(budget, "horizon_ticks")?, "horizon_ticks")?;
     let max_events = bounded_count(field(budget, "max_events")?, "max_events", 1_000_000)? as u64;
     if horizon_ticks > MAX_EXACT_TICK {
@@ -206,6 +206,19 @@ fn canonical_config(config: &Value) -> Result<Validated, String> {
     let training = interval(field(splits, "training")?, "training")?;
     let validation = interval(field(splits, "validation")?, "validation")?;
     let final_test = interval(field(splits, "final_test")?, "final_test")?;
+    if [
+        training.0,
+        training.1,
+        validation.0,
+        validation.1,
+        final_test.0,
+        final_test.1,
+    ]
+    .iter()
+    .any(|tick| *tick > MAX_EXACT_TICK)
+    {
+        return Err(err("split bound exceeds exact numeric metric range"));
+    }
     if training.0 >= training.1
         || validation.0 >= validation.1
         || final_test.0 >= final_test.1
@@ -220,8 +233,8 @@ fn canonical_config(config: &Value) -> Result<Validated, String> {
     let trace = field(config, "trace")?
         .as_array()
         .ok_or_else(|| err("trace must be an array"))?;
-    if trace.is_empty() || trace.len() > 1_000_000 {
-        return Err(err("trace size out of bounds"));
+    if trace.is_empty() || trace.len() > 3 * 4096 {
+        return Err(err("trace exceeds total 12288 case cap"));
     }
     let mut cases = BTreeSet::new();
     let mut split_rows: [Vec<Value>; 3] = [Vec::new(), Vec::new(), Vec::new()];
@@ -265,6 +278,14 @@ fn canonical_config(config: &Value) -> Result<Validated, String> {
                 "trace case {case} starts outside declared splits"
             )));
         };
+        if start
+            .checked_add(horizon_ticks)
+            .is_none_or(|h| h > MAX_EXACT_TICK)
+        {
+            return Err(err(
+                "start_tick plus horizon_ticks exceeds exact numeric metric range",
+            ));
+        }
         let bounds = [training, validation, final_test][split_idx];
         let censored = end.is_none_or(|e| e >= bounds.1);
         if !censored && transit.is_some_and(|t| end.is_some_and(|e| t > e.saturating_sub(start))) {
@@ -285,6 +306,9 @@ fn canonical_config(config: &Value) -> Result<Validated, String> {
     }
     if split_rows.iter().any(Vec::is_empty) {
         return Err(err("each declared split must contain trace rows"));
+    }
+    if split_rows.iter().any(|rows| rows.len() > 4096) {
+        return Err(err("trace rows per split exceed 4096 case cap"));
     }
     // Day clusters are a statistical resampling unit and may not leak across splits.
     let mut day_splits: BTreeMap<String, usize> = BTreeMap::new();
@@ -699,7 +723,7 @@ pub(crate) fn summarize(config: &Value, attempts: &[Value]) -> Result<Value, Str
             return Err(err("duplicate task result"));
         }
         if let Some(task) = expected.get(&id) {
-            validate_result(task, result)?;
+            validate_result(task, result, &c)?;
         } else if result.get("split").and_then(Value::as_str) == Some("final_test") { /* checked after winner freeze */
         } else {
             return Err(err("unknown task result"));
@@ -715,33 +739,14 @@ pub(crate) fn summarize(config: &Value, attempts: &[Value]) -> Result<Value, Str
         let mut validation_scores = Vec::new();
         let mut confirmation_scores = Vec::new();
         let mut train_scores = Vec::new();
-        let mut valid = true;
         for task in initial.iter().filter(|t| t["candidate_id"] == cid) {
             let result = supplied[task["task_id"].as_str().unwrap()];
             let split = result["split"].as_str().unwrap();
-            if !params_valid(params) || result["outcome"] != "complete" {
+            let s = task_score(result, &c)?;
+            if !params_valid(params) {
                 failures += 1;
-                if split == "validation" {
-                    validation_scores.push(c.failure_penalty);
-                } else if split == "confirmation" {
-                    confirmation_scores.push(c.failure_penalty);
-                }
-                continue;
-            }
-            let completion = finite_metric(result, "completion_error")?;
-            let transit = finite_metric(result, "transit_error")?;
-            if completion.is_none() && c.completion_weight > 0.0
-                || transit.is_none() && c.transit_weight > 0.0
-            {
-                valid = false;
-                continue;
-            }
-            let s = ((completion.unwrap_or(0.0) * c.completion_weight
-                + transit.unwrap_or(0.0) * c.transit_weight)
-                / c.scale_ticks as f64)
-                .min(c.failure_penalty);
-            if !s.is_finite() {
-                return Err(err("nonfinite objective score"));
+            } else if result["outcome"] != "complete" {
+                failures += 1;
             }
             match split {
                 "training" => train_scores.push(s),
@@ -754,14 +759,14 @@ pub(crate) fn summarize(config: &Value, attempts: &[Value]) -> Result<Value, Str
             if v.is_empty() {
                 None
             } else {
-                Some(v.iter().sum::<f64>() / v.len() as f64)
+                Some(v.iter().map(|x| *x / v.len() as f64).sum::<f64>())
             }
         };
         let val = avg(&validation_scores);
         let conf = avg(&confirmation_scores);
         let status = if !params_valid(params) {
             "invalid_candidate"
-        } else if valid && val.is_some() && conf.is_some() {
+        } else if val.is_some() && conf.is_some() {
             "complete"
         } else {
             "mc_indeterminate"
@@ -797,14 +802,21 @@ pub(crate) fn summarize(config: &Value, attempts: &[Value]) -> Result<Value, Str
         if final_results.len() != final_expected.len() {
             return Err(err("final-test task inventory mismatch"));
         }
+        let mut seen_final = BTreeSet::new();
         for r in &final_results {
             let id = r["task_id"]
                 .as_str()
                 .ok_or_else(|| err("final result task id"))?;
+            if !seen_final.insert(id) {
+                return Err(err("duplicate final-test task result"));
+            }
             let t = final_expected
                 .get(id)
                 .ok_or_else(|| err("unexpected final-test task"))?;
-            validate_result(t, r)?;
+            validate_result(t, r, &c)?;
+        }
+        if seen_final.len() != final_expected.len() {
+            return Err(err("incomplete final-test task inventory"));
         }
     }
     let initial_only = final_results.is_empty();
@@ -821,29 +833,29 @@ pub(crate) fn summarize(config: &Value, attempts: &[Value]) -> Result<Value, Str
         .filter_map(|r| r["task_id"].as_str().map(|id| (id, *r)))
         .collect();
     let mut final_errors = Vec::new();
+    let mut final_scores = Vec::new();
     let mut final_failures = 0usize;
     let mut final_censored = 0usize;
     if !initial_only {
         for t in &next {
             let r = final_by_id[t["task_id"].as_str().unwrap()];
-            if r["outcome"] == "complete" {
-                if let Some(value) = finite_metric(r, "completion_error")? {
-                    final_errors.push(value);
-                }
-            } else {
-                final_failures += usize::from(
-                    r["outcome"] == "failed"
-                        || r["outcome"] == "invalid"
-                        || r["outcome"] == "missing",
-                );
-                final_censored += usize::from(r["outcome"] == "censored");
+            final_scores.push(task_score(r, &c)?);
+            if let Some(value) = finite_metric(r, "completion_error")? {
+                final_errors.push(value);
             }
+            final_failures += usize::from(r["failed_count"].as_u64().unwrap_or(0) > 0);
+            final_censored += usize::from(r["censored_count"].as_u64().unwrap_or(0) > 0);
         }
     }
     let final_score = if final_errors.is_empty() {
         None
     } else {
-        Some(final_errors.iter().sum::<f64>() / final_errors.len() as f64)
+        Some(mean(&final_errors))
+    };
+    let final_objective_score = if final_scores.is_empty() {
+        None
+    } else {
+        Some(mean(&final_scores))
     };
     let next_tasks = if initial_only && winner.is_some() {
         json!(next)
@@ -851,11 +863,11 @@ pub(crate) fn summarize(config: &Value, attempts: &[Value]) -> Result<Value, Str
         json!([])
     };
     Ok(
-        json!({"schema_version":"kairoecs.calibration.summary.v1","study_hash":study_hash,"complete":complete,"ranking":ranking.iter().map(|(i,s)|json!({"candidate_id":candidate_id(*i),"score":s})).collect::<Vec<_>>(),"candidates":candidate_summaries,"winner":winner,"winner_frozen":winner.is_some(),"ridge":ridge,"identifiability":if ridge{"non_identifiable_ridge"}else{"not_demonstrated"},"mc_indeterminate":mc_indeterminate,"precision":{"kind":"fixed_confirmation","target_half_width":c.target_half_width,"alpha":c.alpha,"confirmation_replications":c.confirmation_replications,"bounded_score_hoeffding_half_width":confirmation_half_width(&c),"validity":"bounded_score_hoeffding_no_optional_stopping"},"final_test":{"winner_only":true,"mean_completion_error":final_score,"completed_count":final_errors.len(),"failed_count":final_failures,"censored_count":final_censored,"attempt_count":final_results.len()},"training_diagnostics":training_diagnostics(&c),"next_tasks":next_tasks}),
+        json!({"schema_version":"kairoecs.calibration.summary.v1","study_hash":study_hash,"complete":complete,"ranking":ranking.iter().map(|(i,s)|json!({"candidate_id":candidate_id(*i),"score":s})).collect::<Vec<_>>(),"candidates":candidate_summaries,"winner":winner,"winner_frozen":winner.is_some(),"ridge":ridge,"identifiability":if ridge{"non_identifiable_ridge"}else{"not_demonstrated"},"mc_indeterminate":mc_indeterminate,"precision":{"kind":"fixed_confirmation","target_half_width":c.target_half_width,"alpha":c.alpha,"confirmation_replications":c.confirmation_replications,"bounded_score_hoeffding_half_width":confirmation_half_width(&c),"validity":"bounded_score_hoeffding_no_optional_stopping"},"final_test":{"winner_only":true,"mean_completion_error":final_score,"mean_objective_score":final_objective_score,"completed_count":final_results.iter().filter(|r|r["outcome"]=="complete").count(),"failed_count":final_failures,"censored_count":final_censored,"attempt_count":final_results.len()},"training_diagnostics":training_diagnostics(&c),"next_tasks":next_tasks}),
     )
 }
 
-fn validate_result(task: &Value, result: &Value) -> Result<(), String> {
+fn validate_result(task: &Value, result: &Value, c: &Validated) -> Result<(), String> {
     if result.get("schema_version").and_then(Value::as_str) != Some(ATTEMPT_SCHEMA) {
         return Err(err("unsupported result schema"));
     }
@@ -911,11 +923,6 @@ fn validate_result(task: &Value, result: &Value) -> Result<(), String> {
     if count_sum != expected.len() as u64 {
         return Err(err("result counts do not partition task records"));
     }
-    if outcome == "complete" && (counts[1] != 0 || counts[2] != 0 || counts[3] != 0) {
-        return Err(err(
-            "complete result has censored, missing, or failed records",
-        ));
-    }
     if task["valid_candidate"] == false && outcome != "invalid" {
         return Err(err("invalid candidate cannot produce a complete result"));
     }
@@ -924,7 +931,9 @@ fn validate_result(task: &Value, result: &Value) -> Result<(), String> {
         .and_then(Value::as_array)
         .ok_or_else(|| err("result records must be an array"))?;
     let mut actual = BTreeSet::new();
-    let mut observed_censored = 0u64;
+    let mut derived = [0u64; 4]; // eligible, censored, missing, failed
+    let mut completion_errors = Vec::new();
+    let mut transit_errors = Vec::new();
     for record in records {
         let case = string(field(record, "case_id")?, "result case_id")?;
         if !actual.insert(case.to_owned()) {
@@ -950,9 +959,6 @@ fn validate_result(task: &Value, result: &Value) -> Result<(), String> {
         let observed_flag = record.get("observed_censored").and_then(Value::as_bool);
         if observed_flag.is_some_and(|flag| flag != expected_censored) {
             return Err(err("observed censor flag differs from trace"));
-        }
-        if expected_censored || row_outcome == "censored" {
-            observed_censored += 1;
         }
         if !["failed", "invalid", "missing"].contains(&row_outcome) && observed_flag.is_none() {
             return Err(err("successful case lacks observed_censored flag"));
@@ -984,6 +990,41 @@ fn validate_result(task: &Value, result: &Value) -> Result<(), String> {
                 }
             }
         }
+        let observed_transit = expected_row["transit_ticks"].as_u64();
+        let predicted_transit = if ["failed", "invalid", "missing"].contains(&row_outcome) {
+            None
+        } else {
+            parse_tick_string(
+                &record["predicted_transit_ticks"],
+                "predicted_transit_ticks",
+            )?
+        };
+        let bucket = if ["failed", "invalid"].contains(&row_outcome) {
+            3
+        } else if expected_censored || row_outcome == "censored" {
+            1
+        } else if row_outcome == "missing" {
+            2
+        } else {
+            let predicted = parse_tick_string(&record["predicted_tick"], "predicted_tick")?;
+            let observed = expected_row["end_tick"]
+                .as_u64()
+                .ok_or_else(|| err("eligible trace row lacks observed completion"))?;
+            let Some(predicted) = predicted else {
+                return Err(err("completed prediction has null predicted_tick"));
+            };
+            if c.transit_weight > 0.0 && (observed_transit.is_none() || predicted_transit.is_none())
+            {
+                2
+            } else {
+                completion_errors.push(predicted.abs_diff(u128::from(observed)) as f64);
+                if let (Some(observed), Some(predicted)) = (observed_transit, predicted_transit) {
+                    transit_errors.push(predicted.abs_diff(u128::from(observed)) as f64);
+                }
+                0
+            }
+        };
+        derived[bucket] += 1;
     }
     let expected_cases: BTreeSet<String> = expected
         .iter()
@@ -992,17 +1033,98 @@ fn validate_result(task: &Value, result: &Value) -> Result<(), String> {
     if actual != expected_cases {
         return Err(err("result case inventory mismatch"));
     }
-    if observed_censored != counts[1] {
-        return Err(err("censored count differs from case records"));
+    if derived != [counts[0], counts[1], counts[2], counts[3]] {
+        return Err(err(
+            "aggregate counts differ from exclusive case outcome partition",
+        ));
     }
-    if outcome == "complete" {
-        if result["completion_error"].is_null() || result["transit_error"].is_null() {
-            return Err(err(
-                "complete result must provide both finite objective metrics",
-            ));
+    let expected_outcome = if task["valid_candidate"] == false {
+        "invalid"
+    } else if derived[3] > 0 {
+        "failed"
+    } else if derived[1] > 0 {
+        "censored"
+    } else if derived[2] > 0 || derived[0] == 0 {
+        "missing"
+    } else {
+        "complete"
+    };
+    if outcome != expected_outcome {
+        return Err(err("outer outcome differs from case outcome partition"));
+    }
+    let expected_completion = (!completion_errors.is_empty()).then(|| mean(&completion_errors));
+    let expected_transit = (!transit_errors.is_empty()).then(|| mean(&transit_errors));
+    assert_metric_matches(result, "completion_error", expected_completion)?;
+    assert_metric_matches(result, "transit_error", expected_transit)?;
+    Ok(())
+}
+
+fn parse_tick_string(v: &Value, name: &str) -> Result<Option<u128>, String> {
+    if v.is_null() {
+        return Ok(None);
+    }
+    let s = string(v, name)?;
+    let n = s
+        .parse::<u128>()
+        .map_err(|_| err(format!("invalid {name}")))?;
+    if n > u128::from(MAX_EXACT_TICK) || n.to_string() != s {
+        return Err(err(format!("invalid canonical {name}")));
+    }
+    Ok(Some(n))
+}
+
+fn mean(xs: &[f64]) -> f64 {
+    xs.iter().map(|x| *x / xs.len() as f64).sum::<f64>()
+}
+
+fn assert_metric_matches(result: &Value, key: &str, expected: Option<f64>) -> Result<(), String> {
+    let actual = finite_metric(result, key)?;
+    match (actual, expected) {
+        (None, None) => Ok(()),
+        (Some(a), Some(b)) if (a - b).abs() <= 1e-9 * b.abs().max(1.0) => Ok(()),
+        _ => Err(err(format!(
+            "{key} differs from successful per-case records"
+        ))),
+    }
+}
+
+fn task_score(result: &Value, c: &Validated) -> Result<f64, String> {
+    let records = result["records"]
+        .as_array()
+        .ok_or_else(|| err("result records"))?;
+    let total = records.len();
+    if total == 0 {
+        return Err(err("task has no records"));
+    }
+    let eligible = u64v(&result["eligible_count"], "eligible_count")? as usize;
+    let completion = finite_metric(result, "completion_error")?;
+    let transit = finite_metric(result, "transit_error")?;
+    if eligible > 0 && c.completion_weight > 0.0 && completion.is_none() {
+        return Err(err("eligible case lacks required completion metric"));
+    }
+    if eligible > 0 && c.transit_weight > 0.0 && transit.is_none() {
+        return Err(err("eligible case lacks required transit metric"));
+    }
+    let mut observed = 0.0;
+    for (weight, error) in [
+        (c.completion_weight, completion.unwrap_or(0.0)),
+        (c.transit_weight, transit.unwrap_or(0.0)),
+    ] {
+        let scaled = error / c.scale_ticks as f64;
+        if scaled > 0.0 && weight >= (c.failure_penalty - observed) / scaled {
+            observed = c.failure_penalty;
+            break;
+        }
+        observed += weight * scaled;
+        if !observed.is_finite() || observed >= c.failure_penalty {
+            observed = c.failure_penalty;
+            break;
         }
     }
-    Ok(())
+    let eligible_fraction = eligible as f64 / total as f64;
+    // Algebraically equals the eligible/uncovered weighted mean, but remains finite
+    // even when the declared penalty is near f64::MAX.
+    Ok(c.failure_penalty - eligible_fraction * (c.failure_penalty - observed))
 }
 fn finite_metric(result: &Value, key: &str) -> Result<Option<f64>, String> {
     match field(result, key)? {
@@ -1034,7 +1156,12 @@ fn confirmation_half_width(c: &Validated) -> f64 {
     if n == 0.0 {
         f64::INFINITY
     } else {
-        c.failure_penalty * (2.0 / c.alpha).ln().sqrt() / (2.0 * n).sqrt()
+        let factor = ((2.0_f64.ln() - c.alpha.ln()) / (2.0 * n)).sqrt();
+        if factor >= 1.0 {
+            c.failure_penalty
+        } else {
+            c.failure_penalty * factor
+        }
     }
 }
 

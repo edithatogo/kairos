@@ -12,6 +12,17 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def source_state(root):
+    def git(*args):
+        return subprocess.check_output(['git', *args], cwd=root, text=True).strip()
+
+    return {
+        'commit': git('rev-parse', 'HEAD'),
+        'tree': git('rev-parse', 'HEAD^{tree}'),
+        'dirty': bool(git('status', '--porcelain')),
+    }
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--binary', required=True, type=Path)
@@ -20,6 +31,10 @@ def main():
     root = Path(__file__).resolve().parents[1]
     binary = args.binary.resolve(strict=True)
     out = args.output.absolute()
+    source_before = source_state(root)
+    if source_before['dirty']:
+        raise RuntimeError('qualification requires a clean source worktree')
+    lock_hash = digest(root / 'Cargo.lock')
     out.mkdir(parents=True, exist_ok=False)
     study = root / 'examples/calibration/c5/study.json'
     commands = []
@@ -40,6 +55,7 @@ def main():
 
     for workers in (1, 2, 4):
         result = run(f'workers-{workers}', ['calibrate','--study',study,'--output',out/f'w{workers}','--workers',workers])
+        assert result['schema_version'] == 'kairoecs.c5-calibration-run.v1', result
         assert result['status'] == 'complete', result
     baseline = out / 'w1'
     def compare(directory):
@@ -50,10 +66,14 @@ def main():
             assert (baseline/path).read_bytes() == (directory/path).read_bytes(), str(path)
     compare(out/'w2')
     compare(out/'w4')
-    run('comparison',['compare-runs','--left',baseline,'--right',out/'w4'])
+    comparison = run('comparison',['compare-runs','--left',baseline,'--right',out/'w4'])
+    assert comparison['schema_version'] == 'kairoecs.c5-run-comparison.v1', comparison
+    assert comparison['compatible'] is True, comparison
     partial = run('partial',['calibrate','--study',study,'--output',out/'resume','--workers',2,'--stop-after',3])
     assert partial['status']=='incomplete', partial
-    run('resume',['calibrate','--study',study,'--output',out/'resume','--resume',out/'resume','--workers',4])
+    resumed = run('resume',['calibrate','--study',study,'--output',out/'resume','--resume',out/'resume','--workers',4])
+    assert resumed['schema_version'] == 'kairoecs.c5-calibration-run.v1', resumed
+    assert resumed['status'] == 'complete', resumed
     compare(out/'resume')
 
     # Kill after a complete durable shard appears, without a cooperative stop flag.
@@ -77,16 +97,30 @@ def main():
             if process.poll() is None:
                 process.kill()
                 process.wait()
-    run('killed-resume',['calibrate','--study',study,'--output',killed,'--resume',killed,'--workers',2])
+    killed_resume = run('killed-resume',['calibrate','--study',study,'--output',killed,'--resume',killed,'--workers',2])
+    assert killed_resume['schema_version'] == 'kairoecs.c5-calibration-run.v1', killed_resume
+    assert killed_resume['status'] == 'complete', killed_resume
     compare(killed)
-    run('verify',['verify','trace','--study',study])
+    verification = run('verify',['verify','trace','--study',study])
+    assert verification['schema_version'] == 'kairoecs.c5-trace-verification.v1', verification
+    assert verification['result']['schema_version'] == 'kairoecs.calibration.trace-report.v1', verification
+    assert verification['result']['status'] == 'valid', verification
     for mode in ('shadow','free'):
-        run(f'replay-{mode}',['replay','--study',study,'--mode',mode,'--output',out/f'replay-{mode}'])
+        replay = run(f'replay-{mode}',['replay','--study',study,'--mode',mode,'--output',out/f'replay-{mode}'])
+        assert replay['schema_version'] == 'kairoecs.c5-replay-result.v1', replay
+        assert replay['mode'] == mode and replay['adapter'] == 'synthetic_flow_probe.v1', replay
+        assert replay['result']['schema_version'] == 'kairoecs.calibration.replay.v1', replay
+        assert replay['result']['mode'] == mode, replay
     provenance=json.loads((baseline/'provenance.json').read_text())
     assert provenance['toolchain'].startswith('rustc 1.99.0 '),provenance
     assert provenance['executable_sha256']==digest(binary)
-    result=dict(schema_version=1,status='pass',source_commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),
-                source_tree=subprocess.check_output(['git','rev-parse','HEAD^{tree}'],cwd=root,text=True).strip(),
+    assert provenance['source_commit'] == source_before['commit'], provenance
+    assert provenance['source_dirty'] == 'false', provenance
+    assert provenance['cargo_lock_sha256'] == lock_hash, provenance
+    source_after = source_state(root)
+    assert source_after == source_before, (source_before, source_after)
+    result=dict(schema_version=1,status='pass',source_commit=source_before['commit'],
+                source_tree=source_before['tree'], source_dirty=False,
                 binary_sha256=digest(binary),study_sha256=digest(study),workers=[1,2,4],
                 cooperative_resume='byte_identical',hard_kill_resume='byte_identical',
                 summary_sha256=digest(baseline/'summary.json'),summary=json.loads((baseline/'summary.json').read_text()),
