@@ -10,10 +10,11 @@ pub use flow_adapter::{
     register_flow_agent_behavior, register_transit_context,
     register_transit_context_checkpoint_codec, register_transit_context_checkpoint_domain,
     schedule_flow_agent_update, schedule_transit_control, schedule_transit_start,
-    FlowAgentBehavior, FlowAgentContext, FlowAgentHandle, TransitArrivalHandoff,
+    FlowAgentBehavior, FlowAgentContext, FlowAgentHandle, TransitArrivalActionCheckpointV2,
+    TransitArrivalCauseCheckpointV2, TransitArrivalHandoff, TransitArrivalWitnessCheckpointV2,
     TransitCommandPurposeCheckpointV1, TransitContext, TransitContextCheckpointError,
-    TransitContextCheckpointLimitsV1, TransitContextCheckpointV1, TransitContextWireError,
-    TransitPhase, TransitProgress,
+    TransitContextCheckpointLimitsV1, TransitContextCheckpointV1, TransitContextCheckpointV2,
+    TransitContextWireError, TransitPhase, TransitProgress,
 };
 
 use kairo_ecs_core::Scheduler;
