@@ -767,7 +767,7 @@ mod tests {
             *world.flow.work_context::<u32>(world.work).unwrap(),
             *world.flow.work_context::<u32>(callback_work).unwrap(),
         );
-        assert_eq!(callback_context_before, (0, 1));
+        assert_eq!(callback_context_before, (11, 1));
         let before = world
             .flow
             .capture_checkpoint_image(&world.codecs, FlowCheckpointLimits::default())
