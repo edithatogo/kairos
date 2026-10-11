@@ -400,3 +400,20 @@ to positive V3 routing controls while retaining every explicit V1/V2 rejection
 and zero-codec assertion before successful routing. Keep exact mode/Flush and
 positive codec counts; preserve test names and all true legacy goldens. The
 eight-Rust-path scope supersedes the initial six-path proposal for this reason.
+
+
+## E2 public Flow preview handoff — 12 October 2026
+
+Consumer qualification has root acceptance GO at Kairos commit `7d3917833b7fa27b5ea0727d00381ec5a6915d60`. The reviewed final result has SHA-256 `81013567d3d54f4168e3f1149f4a69749e54b4e898a761ddd447c745834ab9bb`. The parent acceptance provenance path is `/Users/doughnut/Documents/careops-sim-session-worktrees/c2-implementation-20261006/conductor/evidence/e2.2-v3-consumer-completion-20261012/acceptance.json`. This is an absolute cross-repository provenance path; it is not a Kairos-relative link. Root archives the acceptance record there.
+
+The next prerequisite is public Flow preview for parent execution that respects the observation horizon. Track03's des-api-agent proposes `FlowRuntime::peek_next(&mut self) -> Option<ScheduledEventPreview>`, delegating to the existing Core scheduler. Root serves as the Track03 scoped owner under the user's full delivery authority and has accepted the public contract after independent design review. The reviewed ADR and independently reviewed bound packet gate source dispatch. Core, calibration exports, checkpoint DTOs and wire layouts remain outside this packet. No public stats API is added.
+
+Seven actual runtime proof families cover the empty runtime, ordered live head, cancelled tombstone pruning, Deferred and disabled Flush state, live stale Completion11 before useful Completion14, repeated exact budget halt, and horizon equality versus a future event. The tombstone proof is an inline private-state fixture. External proofs compare public checkpoint, budget and domain images.
+
+The coordinator owns the ADR, handoff and acceptance records. The source writer owns `crates/kairo-ecs-des/src/flow.rs`, new `crates/kairo-ecs-des/tests/flow_preview_v1.rs`, `conductor/design/des/e2-flow-preview-v1.md`, and its dedicated local result and logs. Up to three failed development executions permit bounded corrections within the reviewed scope; every receipt remains preserved. Stop at the ceiling or when a change exceeds the packet. Final qualification stops on any failed gate. Source remains frozen during captured gates.
+
+After independent frozen review, make one scoped source commit and release the claim immediately. Root then integrates and qualifies the exact clean head before API acceptance. A parent pin update is a separate coordinated task. Consumer qualification does not establish ED runtime, clinical, empirical or release acceptance.
+
+The concrete trigger is: root records consumer acceptance; materialize and commit the reviewed owner ADR and this handoff in an isolated documentation worktree based on `7d3917833b7fa27b5ea0727d00381ec5a6915d60`; bind the resulting current head, hashes, paths, commands and bounded context; independently review the packet; acquire a fresh isolated source claim; dispatch the worker. Source review and combined qualification follow before parent integration.
+
+Reuse the existing 30-minute continuation heartbeat. It provides recovery, not acceptance or write authority. Do not create a duplicate automation or a hook that bypasses the gates. Missing owner review or changed inputs block dispatch; read-only ED contract planning may continue meanwhile.
