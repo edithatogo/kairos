@@ -350,3 +350,44 @@ macOS aarch64; PR244 has 47 successful checks and two declared conditional skips
 hosted-pending status for this tested source. Parent pin/phase acceptance awaits
 this documentation successor's final checks. Historical owner status scopes,
 C5, public API, empirical/clinical, ED MVP and release gates remain separate.
+
+
+## E2 V3 routing cross-track handoff - 12 October 2026
+
+Coordinator-authorized preparation under the full CareOps delivery goal. Accepted
+explicit native V3 commit is `0813991b6dddb11635b790a9eb065651b85dd238`;
+explicit wire core is `3eae7b741d9957d651883bda646aead18961c220`, with public
+wire qualification joined at `81f889f66969c27048a8d23a58b47c5a75132807`.
+Parent acceptance is `ef0ddc8d4c70e6f0926f45a681e6f728cbc69ab8`. These accept
+explicit APIs only. Routing implementation requires the separately accepted
+routing contract, reviewed hash-bound source packet and narrow claim.
+
+The atomic routing change owns exactly these six Rust paths (plus its separately
+bound result/log outputs):
+
+- `crates/kairo-ecs-des/src/flow/checkpoint.rs`
+- `crates/kairo-ecs-des/src/flow/checkpoint/v2.rs`
+- `crates/kairo-ecs-des/src/flow/checkpoint/wire.rs`
+- `crates/kairo-ecs-calibration/src/flow_bridge/checkpoint_wire.rs`
+- `crates/kairo-ecs-calibration/src/c2_portable_checkpoint/process_tests.rs`
+- New `crates/kairo-ecs-des/tests/flow_checkpoint_routing_v3.rs`
+
+The shared borrowed command stream becomes the complete, allocation-free
+`Iterator<Item = (EventId, FlowCommandV3)>`, retaining event IDs, ordering,
+AllocationFlush and live stale Completion commands. No variant filtering, V3
+projection, capture retry/fallback, runtime mutation or duplicate codec invocation
+is permitted. Preserve legacy V1/V2 bounds, validation/error precedence and exact
+bytes, including the nonempty restart-registration boundary and old envelope
+goldens. Both handoff files must be input-hash bound in the future source packet.
+
+Track03 owns the native format choice, common Image/Ref iterator and wire routing.
+Its cross-track dependency is limited to the common command matches in the two
+calibration paths listed above: three coherent predicates and the portable
+process-test GrantEnabled match. Preserve those predicates and all direct legacy
+DTO matchers. This six-source-path size exception is necessary for an atomic
+compiling item-type migration; it does not authorize unrelated consumer edits.
+
+After accepted routing, separately qualify three disjoint consumer lanes:
+preview (`shadow_native.rs` and `c5_native.rs`), coherent (`flow_bridge.rs`), and
+portable (`c2_portable_checkpoint.rs` and nested `process_tests.rs`). Their actual
+V3 behavior, combined acceptance and the parent dependency pin remain open.
