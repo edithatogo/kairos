@@ -63,26 +63,27 @@ pub struct FlowCheckpointV2 {
 /// Full-state representation shared by capture, validation, and restore.
 /// It never narrows commands or drops V2-only state.
 pub(super) struct FlowCheckpointParts {
-    state: FlowCheckpointV2,
+    state: FlowCheckpointV3,
     origin: PartsOrigin,
 }
 
 #[derive(Clone, Copy)]
-enum PartsOrigin {
+pub(super) enum PartsOrigin {
     Capture,
     LegacyV1,
     NativeV2,
+    NativeV3,
 }
 
 impl FlowCheckpointParts {
     pub(super) fn from_v2(image: FlowCheckpointV2) -> Self {
         Self {
-            state: image,
+            state: FlowCheckpointV3::from_v2(image),
             origin: PartsOrigin::NativeV2,
         }
     }
 
-    pub(super) fn from_capture(image: FlowCheckpointV2) -> Self {
+    pub(super) fn from_capture(image: FlowCheckpointV3) -> Self {
         Self {
             state: image,
             origin: PartsOrigin::Capture,
@@ -91,19 +92,25 @@ impl FlowCheckpointParts {
 
     pub(super) fn from_v1(image: FlowCheckpointV1) -> Self {
         Self {
-            state: image.into_v2(),
+            state: FlowCheckpointV3::from_v1(image),
             origin: PartsOrigin::LegacyV1,
         }
     }
 
-    pub(super) fn into_v2(self) -> FlowCheckpointV2 {
-        let _origin = self.origin;
-        self.state
+    pub(super) fn from_v3(image: FlowCheckpointV3) -> Self {
+        Self {
+            state: image,
+            origin: PartsOrigin::NativeV3,
+        }
+    }
+
+    pub(super) fn into_v3(self) -> (FlowCheckpointV3, PartsOrigin) {
+        (self.state, self.origin)
     }
 }
 
 impl Deref for FlowCheckpointParts {
-    type Target = FlowCheckpointV2;
+    type Target = FlowCheckpointV3;
 
     fn deref(&self) -> &Self::Target {
         &self.state
@@ -434,7 +441,7 @@ mod tests {
         // New resources use implicit true; insert an actual stale sparse flag.
         stale.grant_enabled.insert(resource, true);
         assert!(matches!(
-            stale.capture_checkpoint_parts(&codecs, limits),
+            stale.capture_checkpoint_parts(&codecs, limits, true),
             Err(FlowCheckpointError::InvalidState(_))
         ));
 
@@ -445,7 +452,7 @@ mod tests {
             .unwrap();
         corrupt.pending_grant_boundaries.clear();
         assert!(matches!(
-            corrupt.capture_checkpoint_parts(&codecs, limits),
+            corrupt.capture_checkpoint_parts(&codecs, limits, true),
             Err(FlowCheckpointError::InvalidState(_))
         ));
     }
