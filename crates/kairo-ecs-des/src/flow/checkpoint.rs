@@ -15,7 +15,12 @@ use std::any::{Any, TypeId};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
+mod v2;
 mod wire;
+pub use v2::{
+    FlowCheckpointImage, FlowCheckpointRef, FlowCheckpointV2, FlowCommandV2,
+    FLOW_CHECKPOINT_VERSION_V2,
+};
 pub use wire::{FlowCheckpointWireError, FlowCheckpointWireLimits};
 
 const FLOW_CHECKPOINT_VERSION_V1: u32 = 1;
@@ -783,6 +788,27 @@ impl FlowRuntime {
                 "V1 cannot represent resource grant eligibility gates",
             ));
         }
+        self.capture_checkpoint_parts(codecs, limits)?
+            .into_v2()
+            .into_v1()
+    }
+
+    /// Capture the complete native V2 image, including resource gate state.
+    #[doc(hidden)]
+    pub fn capture_checkpoint_v2(
+        &self,
+        codecs: &FlowCheckpointCodecs,
+        limits: FlowCheckpointLimits,
+    ) -> Result<FlowCheckpointV2, FlowCheckpointError> {
+        self.capture_checkpoint_parts(codecs, limits)
+            .map(v2::FlowCheckpointParts::into_v2)
+    }
+
+    fn capture_checkpoint_parts(
+        &self,
+        codecs: &FlowCheckpointCodecs,
+        limits: FlowCheckpointLimits,
+    ) -> Result<v2::FlowCheckpointParts, FlowCheckpointError> {
         let component_limits = checkpoint_limits(limits);
         let check_count = |value: usize, max: usize, label| {
             if value > max {
@@ -963,14 +989,9 @@ impl FlowRuntime {
             ));
         }
 
-        let scheduler = self
-            .scheduler
-            .checkpoint_state(SchedulerCheckpointLimits {
-                max_entries: limits.max_scheduler_entries,
-            })
-            .map_err(|_| {
-                FlowCheckpointError::InvalidState("scheduler checkpoint rejected source")
-            })?;
+        // Cache/live-event joins are checked after every allocation-bearing source
+        // dimension has been bounded and before any caller codec can run.
+        let scheduler = self.validate_grant_checkpoint_cache(limits)?;
         let world = self
             .world
             .checkpoint_state(WorldCheckpointLimits {
@@ -1193,8 +1214,8 @@ impl FlowRuntime {
             .iter()
             .map(|store| (store.codec_key.clone(), store.version))
             .collect();
-        Ok(FlowCheckpointV1 {
-            version: FLOW_CHECKPOINT_VERSION_V1,
+        let parts = v2::FlowCheckpointParts::from_capture(FlowCheckpointV2 {
+            version: v2::FLOW_CHECKPOINT_VERSION_V2,
             config: self.config,
             callback_config: self.callback_config,
             next_batch_identity: self.next_batch_identity,
@@ -1223,7 +1244,7 @@ impl FlowRuntime {
             commands: self
                 .commands
                 .iter()
-                .map(|(id, command)| Ok((*id, FlowCommandV1::try_from(*command)?)))
+                .map(|(id, command)| Ok((*id, FlowCommandV2::try_from(*command)?)))
                 .collect::<Result<_, FlowCheckpointError>>()?,
             notifications: self
                 .notifications
@@ -1237,7 +1258,139 @@ impl FlowRuntime {
             scheduled: self.scheduled,
             next_admission: self.next_admission,
             next_lease: self.next_lease,
-        })
+            resource_grant_flags: self
+                .resources
+                .iter()
+                .map(|resource| {
+                    (
+                        *resource,
+                        self.grant_enabled.get(resource).copied().unwrap_or(true),
+                    )
+                })
+                .collect(),
+            started_frontier: (self.scheduler.stats().dispatched_events > 0)
+                .then(|| self.scheduler.now()),
+        });
+        Ok(parts)
+    }
+
+    /// Capture the narrowest lossless native image for the current state.
+    #[doc(hidden)]
+    pub fn capture_checkpoint_image(
+        &self,
+        codecs: &FlowCheckpointCodecs,
+        limits: FlowCheckpointLimits,
+    ) -> Result<FlowCheckpointImage, FlowCheckpointError> {
+        let image = self.capture_checkpoint_parts(codecs, limits)?.into_v2();
+        if image
+            .resource_grant_flags
+            .iter()
+            .all(|(_, enabled)| *enabled)
+            && image
+                .commands
+                .iter()
+                .all(|(_, command)| !matches!(command, FlowCommandV2::GrantEnabled(..)))
+        {
+            Ok(FlowCheckpointImage::V1(image.into_v1()?))
+        } else {
+            Ok(FlowCheckpointImage::V2(image))
+        }
+    }
+
+    fn validate_grant_checkpoint_cache(
+        &self,
+        limits: FlowCheckpointLimits,
+    ) -> Result<SchedulerCheckpointV1, FlowCheckpointError> {
+        if self.resources.len() > limits.max_resources || self.commands.len() > limits.max_commands
+        {
+            return Err(FlowCheckpointError::LimitExceeded("grant state"));
+        }
+        let gate_count = self
+            .commands
+            .values()
+            .filter(|command| matches!(command, Command::GrantEnabled(..)))
+            .count();
+        let pending_count = self
+            .pending_releases
+            .len()
+            .checked_add(self.pending_despawns.len())
+            .and_then(|count| count.checked_add(gate_count))
+            .ok_or(FlowCheckpointError::LimitExceeded("pending operations"))?;
+        if pending_count > limits.max_pending_operations {
+            return Err(FlowCheckpointError::LimitExceeded("pending operations"));
+        }
+        if self
+            .grant_enabled
+            .keys()
+            .any(|resource| !self.resources.contains(resource))
+        {
+            return Err(FlowCheckpointError::InvalidState(
+                "grant flag names a stale resource",
+            ));
+        }
+        let scheduler = self
+            .scheduler
+            .checkpoint_state(SchedulerCheckpointLimits {
+                max_entries: limits.max_scheduler_entries,
+            })
+            .map_err(|_| {
+                FlowCheckpointError::InvalidState("scheduler checkpoint rejected source")
+            })?;
+        let live: BTreeMap<_, _> = scheduler
+            .entries
+            .iter()
+            .filter(|entry| entry.live)
+            .map(|entry| (entry.id, entry))
+            .collect();
+        let mut derived = BTreeMap::new();
+        let removed_resources: BTreeSet<_> = self
+            .commands
+            .values()
+            .filter_map(|command| match command {
+                Command::Remove(resource) => Some(*resource),
+                _ => None,
+            })
+            .collect();
+        for (event, command) in &self.commands {
+            if let Command::GrantEnabled(resource, enabled) = command {
+                if !self.resources.contains(resource) {
+                    return Err(FlowCheckpointError::InvalidState(
+                        "grant command names a stale resource",
+                    ));
+                }
+                if removed_resources.contains(resource) {
+                    return Err(FlowCheckpointError::InvalidState(
+                        "grant boundary conflicts with resource removal",
+                    ));
+                }
+                let entry = live.get(event).ok_or(FlowCheckpointError::InvalidState(
+                    "grant command is not a live scheduler event",
+                ))?;
+                if entry.request.kind.code() != FLOW_COMMAND_DISPATCH_EVENT_KIND {
+                    return Err(FlowCheckpointError::InvalidState(
+                        "grant command scheduler kind mismatch",
+                    ));
+                }
+                if entry.request.entity.is_some() {
+                    return Err(FlowCheckpointError::InvalidState(
+                        "grant command scheduler entity mismatch",
+                    ));
+                }
+                let key = (*resource, entry.request.at);
+                if derived.insert(key, *event).is_some() {
+                    return Err(FlowCheckpointError::InvalidState(
+                        "duplicate grant boundary",
+                    ));
+                }
+                let _ = enabled;
+            }
+        }
+        if derived != self.pending_grant_boundaries {
+            return Err(FlowCheckpointError::InvalidState(
+                "pending grant index does not match commands",
+            ));
+        }
+        Ok(scheduler)
     }
 }
 
@@ -1551,6 +1704,185 @@ fn checkpoint_limits(limits: FlowCheckpointLimits) -> ComponentCheckpointLimits 
     }
 }
 
+fn preflight_v1_normalization(
+    image: &FlowCheckpointV1,
+    limits: FlowCheckpointLimits,
+) -> Result<(), FlowCheckpointError> {
+    for (value, max, label) in [
+        (
+            image.scheduler.entries.len(),
+            limits.max_scheduler_entries,
+            "scheduler entries",
+        ),
+        (image.world.slots.len(), limits.max_entities, "entities"),
+        (image.resources.len(), limits.max_resources, "resources"),
+        (image.requests.len(), limits.max_requests, "requests"),
+        (image.actors.len(), limits.max_actors, "actors"),
+        (
+            image.actor_domains.len(),
+            limits.max_actors,
+            "actor domains",
+        ),
+        (image.work_registrations.len(), limits.max_works, "works"),
+        (image.commands.len(), limits.max_commands, "commands"),
+        (
+            image.notifications.len(),
+            limits.max_notifications,
+            "notifications",
+        ),
+    ] {
+        if value > max {
+            return Err(FlowCheckpointError::LimitExceeded(label));
+        }
+    }
+    let pending = image
+        .pending_releases
+        .len()
+        .checked_add(image.pending_despawns.len())
+        .ok_or(FlowCheckpointError::LimitExceeded("pending operations"))?;
+    if pending > limits.max_pending_operations {
+        return Err(FlowCheckpointError::LimitExceeded("pending operations"));
+    }
+    for (value, label) in [
+        (image.contexts.len(), "contexts"),
+        (image.handlers.len(), "handlers"),
+        (image.continuations.len(), "continuations"),
+        (image.domains.len(), "domains"),
+        (image.context_stores.len(), "context stores"),
+        (image.restart_stores.len(), "restart stores"),
+        (image.restart_store_manifest.len(), "restart store manifest"),
+    ] {
+        if value > limits.max_registrations {
+            return Err(FlowCheckpointError::LimitExceeded(label));
+        }
+    }
+    let registrations = image
+        .contexts
+        .len()
+        .checked_add(image.handlers.len())
+        .and_then(|n| n.checked_add(image.continuations.len()))
+        .and_then(|n| n.checked_add(image.domains.len()))
+        .and_then(|n| n.checked_add(image.context_stores.len()))
+        .and_then(|n| n.checked_add(image.restart_stores.len()))
+        .ok_or(FlowCheckpointError::LimitExceeded("registrations"))?;
+    let callback_ids = image
+        .handlers
+        .iter()
+        .chain(&image.continuations)
+        .chain(&image.domains)
+        .try_fold(0usize, |n, entry| n.checked_add(entry.callback_ids.len()))
+        .ok_or(FlowCheckpointError::LimitExceeded("registrations"))?;
+    if registrations
+        .checked_add(callback_ids)
+        .is_none_or(|n| n > limits.max_registrations)
+    {
+        return Err(FlowCheckpointError::LimitExceeded("registrations"));
+    }
+
+    // Count dimensions and payloads without allocating normalization indexes.
+    let mut rows = 0usize;
+    let mut sparse = 0usize;
+    let mut payload = 0usize;
+    let mut keys = 0usize;
+    let mut add_key = |key: &str| -> Result<(), FlowCheckpointError> {
+        keys = keys
+            .checked_add(key.len())
+            .ok_or(FlowCheckpointError::LimitExceeded("key bytes"))?;
+        if keys > limits.max_key_bytes {
+            return Err(FlowCheckpointError::LimitExceeded("key bytes"));
+        }
+        Ok(())
+    };
+    let mut add_store =
+        |row_count: usize, sparse_slots: usize| -> Result<(), FlowCheckpointError> {
+            if row_count > limits.max_component_rows || sparse_slots > limits.max_sparse_slots {
+                return Err(FlowCheckpointError::LimitExceeded("component store"));
+            }
+            rows = rows
+                .checked_add(row_count)
+                .ok_or(FlowCheckpointError::LimitExceeded("component row"))?;
+            sparse = sparse
+                .checked_add(sparse_slots)
+                .ok_or(FlowCheckpointError::LimitExceeded("sparse slot"))?;
+            if rows > limits.max_component_rows {
+                return Err(FlowCheckpointError::LimitExceeded("component row"));
+            }
+            if sparse > limits.max_sparse_slots {
+                return Err(FlowCheckpointError::LimitExceeded("sparse slot"));
+            }
+            Ok(())
+        };
+    macro_rules! store_shape {
+        ($store:expr) => {
+            if let Some(store) = $store.as_ref() {
+                add_store(store.rows.len(), store.sparse_slots)?;
+            }
+        };
+    }
+    store_shape!(image.builtins.capacities);
+    store_shape!(image.builtins.queues);
+    store_shape!(image.builtins.requests);
+    store_shape!(image.builtins.deadlines);
+    store_shape!(image.builtins.preempting);
+    store_shape!(image.builtins.allocations);
+    store_shape!(image.builtins.work_specs);
+    store_shape!(image.builtins.work_roles);
+    store_shape!(image.builtins.work_progress);
+    for store in &image.context_stores {
+        add_store(store.rows.len(), store.sparse_slots)?;
+        add_key(&store.codec_key)?;
+        for (_, bytes) in &store.rows {
+            payload = payload
+                .checked_add(bytes.len())
+                .ok_or(FlowCheckpointError::LimitExceeded("payload bytes"))?;
+        }
+    }
+    for store in &image.restart_stores {
+        add_store(store.rows.len(), store.sparse_slots)?;
+        add_key(&store.codec_key)?;
+        for (_, factory, bytes) in &store.rows {
+            add_key(factory)?;
+            payload = payload
+                .checked_add(bytes.len())
+                .ok_or(FlowCheckpointError::LimitExceeded("payload bytes"))?;
+        }
+    }
+    for (key, _) in &image.restart_store_manifest {
+        add_key(key)?;
+    }
+    for work in &image.work_registrations {
+        add_key(&work.context_runtime_key)?;
+        add_key(&work.context_codec_key)?;
+        if let Some(key) = &work.restart_codec_key {
+            add_key(key)?;
+        }
+    }
+    for context in &image.contexts {
+        add_key(&context.runtime_key)?;
+        add_key(&context.codec_key)?;
+    }
+    for callback in image
+        .handlers
+        .iter()
+        .chain(&image.continuations)
+        .chain(&image.domains)
+    {
+        add_key(&callback.runtime_key)?;
+        add_key(&callback.context_codec_key)?;
+        for (slot, code) in &callback.callback_ids {
+            add_key(slot)?;
+            add_key(&code.stable_id)?;
+        }
+    }
+    if payload > limits.max_payload_bytes {
+        return Err(FlowCheckpointError::LimitExceeded("payload bytes"));
+    }
+    drop(add_key);
+    drop(add_store);
+
+    Ok(())
+}
+
 fn capture_store<T: Clone + 'static>(
     registry: &ComponentRegistry,
     limits: ComponentCheckpointLimits,
@@ -1621,7 +1953,7 @@ fn validate_rows<P>(
 }
 
 fn validate_request_relationships(
-    image: &FlowCheckpointV1,
+    image: &FlowCheckpointV2,
     resources: &BTreeSet<ResourceId>,
     requests: &BTreeSet<RequestId>,
     actors: &BTreeSet<EntityId>,
@@ -1826,23 +2158,23 @@ fn validate_request_relationships(
 }
 
 fn validate_command_references(
-    image: &FlowCheckpointV1,
+    image: &FlowCheckpointV2,
     resources: &BTreeSet<ResourceId>,
     requests: &BTreeSet<RequestId>,
 ) -> Result<(), FlowCheckpointError> {
     for (_, command) in &image.commands {
         let valid = match command {
-            FlowCommandV1::Submit(request)
-            | FlowCommandV1::Deadline(request)
-            | FlowCommandV1::Cancel(request)
-            | FlowCommandV1::Reprioritize(request, _)
-            | FlowCommandV1::Completion(request, _, _, _) => requests.contains(request),
-            FlowCommandV1::Release(lease) => requests.contains(&lease.request_id()),
-            FlowCommandV1::Capacity(resource, _) | FlowCommandV1::Remove(resource) => {
-                resources.contains(resource)
-            }
-            FlowCommandV1::Despawn(_) | FlowCommandV1::Notify => true,
-            FlowCommandV1::Domain(_, _) | FlowCommandV1::DomainControl(_, _, _) => true,
+            FlowCommandV2::Submit(request)
+            | FlowCommandV2::Deadline(request)
+            | FlowCommandV2::Cancel(request)
+            | FlowCommandV2::Reprioritize(request, _)
+            | FlowCommandV2::Completion(request, _, _, _) => requests.contains(request),
+            FlowCommandV2::Release(lease) => requests.contains(&lease.request_id()),
+            FlowCommandV2::Capacity(resource, _)
+            | FlowCommandV2::Remove(resource)
+            | FlowCommandV2::GrantEnabled(resource, _) => resources.contains(resource),
+            FlowCommandV2::Despawn(_) | FlowCommandV2::Notify => true,
+            FlowCommandV2::Domain(_, _) | FlowCommandV2::DomainControl(_, _, _) => true,
         };
         if !valid {
             return Err(FlowCheckpointError::InvalidState(
@@ -1853,7 +2185,7 @@ fn validate_command_references(
     Ok(())
 }
 
-fn validate_timed_work_lifecycle(image: &FlowCheckpointV1) -> Result<(), FlowCheckpointError> {
+fn validate_timed_work_lifecycle(image: &FlowCheckpointV2) -> Result<(), FlowCheckpointError> {
     let invalid = || FlowCheckpointError::InvalidState("timed work lifecycle mismatch");
     let requests: BTreeMap<_, _> = image
         .builtins
@@ -1879,7 +2211,7 @@ fn validate_timed_work_lifecycle(image: &FlowCheckpointV1) -> Result<(), FlowChe
         .collect();
     let mut completions = BTreeMap::new();
     for (event, command) in &image.commands {
-        if let FlowCommandV1::Completion(request, lease, revision, due) = command {
+        if let FlowCommandV2::Completion(request, lease, revision, due) = command {
             if completions
                 .insert((*request, *lease, *revision, *due), *event)
                 .is_some()
@@ -1939,7 +2271,7 @@ fn validate_timed_work_lifecycle(image: &FlowCheckpointV1) -> Result<(), FlowChe
         }
     }
     for (event, command) in &image.commands {
-        if let FlowCommandV1::Completion(request, lease, revision, due) = command {
+        if let FlowCommandV2::Completion(request, lease, revision, due) = command {
             if lease.request_id() != *request || lease.revision() >= image.next_lease {
                 return Err(invalid());
             }
@@ -2048,6 +2380,38 @@ impl FlowRuntime {
         if image.version != FLOW_CHECKPOINT_VERSION_V1 {
             return Err(FlowCheckpointError::UnsupportedVersion(image.version));
         }
+        preflight_v1_normalization(&image, limits)?;
+        Self::restore_checkpoint_parts(v2::FlowCheckpointParts::from_v1(image), codecs, limits)
+    }
+
+    /// Restore a complete V2 image after full structural and cross-field validation.
+    #[doc(hidden)]
+    pub fn restore_checkpoint_v2(
+        image: FlowCheckpointV2,
+        codecs: &FlowCheckpointCodecs,
+        limits: FlowCheckpointLimits,
+    ) -> Result<Self, FlowCheckpointError> {
+        Self::restore_checkpoint_v2_with_rebind(image, codecs, limits).map(|(runtime, _)| runtime)
+    }
+
+    #[doc(hidden)]
+    pub fn restore_checkpoint_v2_with_rebind(
+        image: FlowCheckpointV2,
+        codecs: &FlowCheckpointCodecs,
+        limits: FlowCheckpointLimits,
+    ) -> Result<(Self, FlowCheckpointRebindV1), FlowCheckpointError> {
+        if image.version != v2::FLOW_CHECKPOINT_VERSION_V2 {
+            return Err(FlowCheckpointError::UnsupportedVersion(image.version));
+        }
+        Self::restore_checkpoint_parts(v2::FlowCheckpointParts::from_v2(image), codecs, limits)
+    }
+
+    fn restore_checkpoint_parts(
+        parts: v2::FlowCheckpointParts,
+        codecs: &FlowCheckpointCodecs,
+        limits: FlowCheckpointLimits,
+    ) -> Result<(Self, FlowCheckpointRebindV1), FlowCheckpointError> {
+        let image = parts.into_v2();
         let component_limits = checkpoint_limits(limits);
         let check_count = |value: usize, max: usize, label| {
             if value > max {
@@ -2068,6 +2432,11 @@ impl FlowRuntime {
             "actor domains",
         )?;
         check_count(image.resources.len(), limits.max_resources, "resources")?;
+        check_count(
+            image.resource_grant_flags.len(),
+            limits.max_resources,
+            "resource grant flags",
+        )?;
         check_count(image.requests.len(), limits.max_requests, "requests")?;
         check_count(image.actors.len(), limits.max_actors, "actors")?;
         check_count(image.work_registrations.len(), limits.max_works, "works")?;
@@ -2077,14 +2446,35 @@ impl FlowRuntime {
             limits.max_notifications,
             "notifications",
         )?;
+        let gate_count = image
+            .commands
+            .iter()
+            .filter(|(_, command)| matches!(command, FlowCommandV2::GrantEnabled(..)))
+            .count();
+        let pending_count = image
+            .pending_releases
+            .len()
+            .checked_add(image.pending_despawns.len())
+            .and_then(|n| n.checked_add(gate_count))
+            .ok_or(FlowCheckpointError::LimitExceeded("pending operations"))?;
         check_count(
-            image
-                .pending_releases
-                .len()
-                .saturating_add(image.pending_despawns.len()),
+            pending_count,
             limits.max_pending_operations,
             "pending operations",
         )?;
+        let expected_frontier =
+            (image.scheduler.dispatched_events > 0).then_some(image.scheduler.now);
+        if image.started_frontier != expected_frontier
+            || image
+                .resource_grant_flags
+                .windows(2)
+                .any(|pair| pair[0].0 >= pair[1].0)
+            || image.resources.len() != image.resource_grant_flags.len()
+        {
+            return Err(FlowCheckpointError::InvalidState(
+                "resource grant flags or started frontier are not canonical",
+            ));
+        }
         check_count(
             image.context_stores.len(),
             limits.max_registrations,
@@ -2215,7 +2605,7 @@ impl FlowRuntime {
             .commands
             .iter()
             .filter_map(|(_, command)| match command {
-                FlowCommandV1::Release(lease) | FlowCommandV1::Completion(_, lease, _, _) => {
+                FlowCommandV2::Release(lease) | FlowCommandV2::Completion(_, lease, _, _) => {
                     Some(lease.revision())
                 }
                 _ => None,
@@ -2304,7 +2694,7 @@ impl FlowRuntime {
             .commands
             .iter()
             .filter_map(|(_, command)| {
-                if let FlowCommandV1::Release(lease) = command {
+                if let FlowCommandV2::Release(lease) = command {
                     Some(*lease)
                 } else {
                     None
@@ -2315,7 +2705,7 @@ impl FlowRuntime {
             .commands
             .iter()
             .filter_map(|(_, command)| {
-                if let FlowCommandV1::Despawn(actor) = command {
+                if let FlowCommandV2::Despawn(actor) = command {
                     Some(*actor)
                 } else {
                     None
@@ -2365,16 +2755,37 @@ impl FlowRuntime {
                 "scheduler command inventory mismatch",
             ));
         }
+        let mut validated_grant_boundaries = BTreeMap::new();
+        let removed_resources: BTreeSet<_> = image
+            .commands
+            .iter()
+            .filter_map(|(_, command)| match command {
+                FlowCommandV2::Remove(resource) => Some(*resource),
+                _ => None,
+            })
+            .collect();
         for (event, command) in &image.commands {
             let entry = live_events
                 .get(event)
                 .ok_or(FlowCheckpointError::InvalidState(
                     "command is not a live scheduler event",
                 ))?;
-            if entry.request.kind.code() != command_event_kind(*command) {
+            if entry.request.kind.code() != command_event_kind_v2(*command) {
                 return Err(FlowCheckpointError::InvalidState(
                     "command scheduler kind mismatch",
                 ));
+            }
+            if let FlowCommandV2::GrantEnabled(resource, _) = command {
+                if entry.request.entity.is_some()
+                    || removed_resources.contains(resource)
+                    || validated_grant_boundaries
+                        .insert((*resource, entry.request.at), *event)
+                        .is_some()
+                {
+                    return Err(FlowCheckpointError::InvalidState(
+                        "invalid or conflicting grant boundary join",
+                    ));
+                }
             }
         }
         let command_by_event: BTreeMap<_, _> = image
@@ -2383,7 +2794,7 @@ impl FlowRuntime {
             .map(|(id, command)| (*id, command))
             .collect();
         for (event, _) in &image.notifications {
-            if !matches!(command_by_event.get(event), Some(FlowCommandV1::Notify)) {
+            if !matches!(command_by_event.get(event), Some(FlowCommandV2::Notify)) {
                 return Err(FlowCheckpointError::InvalidState(
                     "notification has no delivery command",
                 ));
@@ -2563,6 +2974,16 @@ impl FlowRuntime {
         check_count(totals.1, limits.max_sparse_slots, "sparse slots")?;
 
         let resources: BTreeSet<_> = image.resources.iter().copied().collect();
+        if resources.len() != image.resources.len()
+            || image
+                .resource_grant_flags
+                .iter()
+                .any(|(resource, _)| !resources.contains(resource))
+        {
+            return Err(FlowCheckpointError::InvalidState(
+                "resource grant flags or started frontier are not canonical",
+            ));
+        }
         let requests: BTreeSet<_> = image.requests.iter().copied().collect();
         let resource_entities: BTreeSet<_> = resources.iter().map(|id| id.entity_id()).collect();
         let request_entities: BTreeSet<_> = requests.iter().map(|id| id.entity_id()).collect();
@@ -3111,13 +3532,8 @@ impl FlowRuntime {
             runtime.works.insert(WorkId(work.id), descriptor);
         }
         runtime.resources = image.resources.into_iter().collect();
-        runtime.grant_enabled = runtime
-            .resources
-            .iter()
-            .copied()
-            .map(|resource| (resource, true))
-            .collect();
-        runtime.pending_grant_boundaries.clear();
+        runtime.grant_enabled = image.resource_grant_flags.into_iter().collect();
+        runtime.pending_grant_boundaries = validated_grant_boundaries;
         runtime.requests = image.requests.into_iter().collect();
         runtime.actors = image.actors.into_iter().collect();
         runtime.actor_domains = image
@@ -3164,18 +3580,18 @@ fn role_from_image(role: FlowWorkRoleV1) -> WorkRole {
     }
 }
 
-fn command_event_kind(command: FlowCommandV1) -> u32 {
+fn command_event_kind_v2(command: FlowCommandV2) -> u32 {
     match command {
-        FlowCommandV1::Domain(_, kind) | FlowCommandV1::DomainControl(_, kind, _) => kind.code(),
-        FlowCommandV1::Deadline(_) => FLOW_WAITING_DEADLINE_EVENT_KIND,
-        FlowCommandV1::Completion(..) => FLOW_TIMED_COMPLETION_EVENT_KIND,
-        FlowCommandV1::Notify => FLOW_WORK_NOTIFICATION_EVENT_KIND,
+        FlowCommandV2::Domain(_, kind) | FlowCommandV2::DomainControl(_, kind, _) => kind.code(),
+        FlowCommandV2::Deadline(_) => FLOW_WAITING_DEADLINE_EVENT_KIND,
+        FlowCommandV2::Completion(..) => FLOW_TIMED_COMPLETION_EVENT_KIND,
+        FlowCommandV2::Notify => FLOW_WORK_NOTIFICATION_EVENT_KIND,
         _ => FLOW_COMMAND_DISPATCH_EVENT_KIND,
     }
 }
 
 fn checkpoint_rebind_view(
-    image: &FlowCheckpointV1,
+    image: &FlowCheckpointV2,
     identity: FlowRuntimeIdentity,
 ) -> FlowCheckpointRebindV1 {
     let mut works: BTreeSet<_> = image
@@ -3270,29 +3686,31 @@ fn checkpoint_rebind_view(
     for (event, command) in &image.commands {
         events.insert(*event);
         match command {
-            FlowCommandV1::Submit(request)
-            | FlowCommandV1::Deadline(request)
-            | FlowCommandV1::Cancel(request)
-            | FlowCommandV1::Reprioritize(request, _) => {
+            FlowCommandV2::Submit(request)
+            | FlowCommandV2::Deadline(request)
+            | FlowCommandV2::Cancel(request)
+            | FlowCommandV2::Reprioritize(request, _) => {
                 requests.insert(request.entity_id());
             }
-            FlowCommandV1::Release(lease) => {
+            FlowCommandV2::Release(lease) => {
                 requests.insert(lease.request_id().entity_id());
             }
-            FlowCommandV1::Capacity(resource, _) | FlowCommandV1::Remove(resource) => {
+            FlowCommandV2::Capacity(resource, _)
+            | FlowCommandV2::Remove(resource)
+            | FlowCommandV2::GrantEnabled(resource, _) => {
                 resources.insert(resource.entity_id());
             }
-            FlowCommandV1::Despawn(actor) => {
+            FlowCommandV2::Despawn(actor) => {
                 actors.insert(*actor);
             }
-            FlowCommandV1::Completion(request, lease, _, _) => {
+            FlowCommandV2::Completion(request, lease, _, _) => {
                 requests.insert(request.entity_id());
                 requests.insert(lease.request_id().entity_id());
             }
-            FlowCommandV1::Domain(work, _) | FlowCommandV1::DomainControl(work, _, _) => {
+            FlowCommandV2::Domain(work, _) | FlowCommandV2::DomainControl(work, _, _) => {
                 works.insert(work.entity_id());
             }
-            FlowCommandV1::Notify => {}
+            FlowCommandV2::Notify => {}
         }
     }
     for (_, notification) in &image.notifications {
