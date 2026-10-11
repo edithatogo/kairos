@@ -836,8 +836,32 @@ fn transit_checkpoint_v2_native_acquire_historical_refs_and_v1_bytes() {
     assert!(
         matches!(v2.action, TransitArrivalActionCheckpointV2::Acquire { owner: saved_owner, work: Some(saved_work), .. } if saved_owner == owner && saved_work == service.entity_id())
     );
+
+    // A real completed request retains historical owner/work evidence while
+    // the legacy context stays at its original Ready cut.
+    let request = submit_arrived_service(&mut flow, resource, owner, service, SimTime::ZERO);
+    for _ in 0..4 {
+        if flow.request(request).unwrap().state == RequestState::Completed {
+            break;
+        }
+        step_ok(&mut flow);
+    }
+    assert_eq!(
+        flow.request(request).unwrap().state,
+        RequestState::Completed
+    );
     flow.despawn_actor(owner).unwrap();
-    step_ok(&mut flow);
+    for _ in 0..8 {
+        if flow.work(service).is_err() {
+            break;
+        }
+        step_ok(&mut flow);
+    }
+    assert!(flow.work(service).is_err());
+    assert_eq!(
+        flow.request(request).unwrap().state,
+        RequestState::Completed
+    );
     let captured = capture(&flow, Arc::new(graph));
     assert!(matches!(
         captured.dto.action,
@@ -851,6 +875,102 @@ fn transit_checkpoint_v2_native_acquire_historical_refs_and_v1_bytes() {
             .unwrap()
             .phase(),
         TransitPhase::Ready
+    );
+
+    // A separate legacy context reaches the route frontier only when Resume
+    // arrives at tick five, preserving V1 time and real Acquire admission.
+    let mut late_flow = FlowRuntime::new();
+    register_transit_context(&mut late_flow, "native-v2", KIND).unwrap();
+    let late_owner = late_flow.spawn_actor().unwrap();
+    let late_carrier_actor = late_flow.spawn_actor().unwrap();
+    let late_resource = late_flow.create_resource(1).unwrap();
+    let late_service = late_flow
+        .create_work(late_owner, SimDuration::from_ticks(4), "service", ())
+        .unwrap();
+    let (_, late_route) = graph_route(&[2]);
+    let late_context = TransitContext::new(
+        &late_flow,
+        late_route,
+        FlowAcquireCommand {
+            resource: late_resource,
+            owner: late_owner,
+            work: Some(late_service),
+            at: SimTime::ZERO,
+            priority_level: 4,
+            deadline: None,
+            scheduler_priority: 1,
+            timed: true,
+            can_preempt: false,
+            preemptible: None,
+        },
+        SimTime::ZERO,
+    )
+    .unwrap();
+    let late_carrier = late_flow
+        .create_actor_domain_context(late_carrier_actor, "native-v2", KIND, late_context)
+        .unwrap();
+    schedule_transit_start(&mut late_flow, late_carrier, KIND, SimTime::ZERO, 0).unwrap();
+    step_ok(&mut late_flow);
+    schedule_transit_control(
+        &mut late_flow,
+        late_carrier,
+        KIND,
+        FlowDomainControl::Pause,
+        SimTime::from_ticks(2),
+        -2,
+    )
+    .unwrap();
+    step_ok(&mut late_flow);
+    step_ok(&mut late_flow); // Consume the stale Progress event while paused.
+    schedule_transit_control(
+        &mut late_flow,
+        late_carrier,
+        KIND,
+        FlowDomainControl::Resume,
+        SimTime::from_ticks(5),
+        -1,
+    )
+    .unwrap();
+    let late_arrival = step_ok(&mut late_flow);
+    assert_eq!(late_arrival.at, SimTime::from_ticks(5));
+    assert_eq!(
+        late_flow
+            .work_context::<TransitContext>(late_carrier)
+            .unwrap()
+            .phase(),
+        TransitPhase::Arrived
+    );
+    let late_v1 = late_flow
+        .work_context::<TransitContext>(late_carrier)
+        .unwrap()
+        .checkpoint_v1(&late_flow.identity(), LIMITS)
+        .unwrap();
+    assert_eq!(late_v1.last_advanced_at_ticks, 5);
+    assert!(late_flow
+        .work_context::<TransitContext>(late_carrier)
+        .unwrap()
+        .checkpoint_bytes_v1(&late_flow.identity(), LIMITS)
+        .unwrap()
+        .starts_with(b"KTCXCPV1"));
+    let kairo_ecs_des::FlowBatchReceipt::Accepted(admissions) = &late_arrival.callback_batches[0]
+    else {
+        panic!("late Resume must accept the legacy Acquire");
+    };
+    assert_eq!(admissions.len(), 1);
+    let late_request = admissions[0].request.unwrap();
+    assert_eq!(
+        late_flow.work(late_service).unwrap().request,
+        Some(late_request)
+    );
+    for _ in 0..4 {
+        if late_flow.request(late_request).unwrap().state == RequestState::Completed {
+            break;
+        }
+        step_ok(&mut late_flow);
+    }
+    assert_eq!(
+        late_flow.request(late_request).unwrap().state,
+        RequestState::Completed
     );
 }
 
@@ -945,7 +1065,9 @@ fn transit_checkpoint_v2_native_bounds_versions_and_atomic_restore() {
     let captured = capture(&moving.flow, moving.graph.clone());
     let mut invalid_ticket = captured.dto.clone();
     let (batch, index) = invalid_ticket.next_progress_ticket.unwrap();
-    invalid_ticket.next_progress_ticket = Some((batch, index + 1));
+    let max_callback_commands = captured.image.callback_config.max_callback_commands.get();
+    assert!(index < max_callback_commands);
+    invalid_ticket.next_progress_ticket = Some((batch, max_callback_commands));
     let (restored, error) = captured.restore_with(invalid_ticket);
     assert!(restored.is_err());
     assert_eq!(error, Some(TransitContextCheckpointError::InvalidTicket));

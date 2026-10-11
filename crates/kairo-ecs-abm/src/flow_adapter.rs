@@ -1712,6 +1712,7 @@ impl TransitContext {
                 self.expected_due = None;
             }
         }
+        self.last_advanced_at = at;
         self.phase = TransitPhase::Arrived;
         Ok(())
     }
