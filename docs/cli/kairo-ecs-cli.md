@@ -117,3 +117,11 @@ with different worker counts using the same binary and study):
 The comparison checks provenance compatibility and artifact integrity before
 reporting summaries. It does not establish cross-version or cross-machine
 equivalence, empirical validity, clinical usefulness, or performance.
+
+### Platform recovery boundary
+
+Completed files are flushed before no-overwrite publication. Unix also syncs the
+containing directory. Windows support is limited to process-termination recovery;
+there is no Windows directory-entry flush or power-loss durability guarantee.
+A completed shard is validated before reuse; recovery does not restore a live
+simulation world. See the C5 acceptance evidence for platforms actually exercised.

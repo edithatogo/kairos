@@ -33,7 +33,7 @@ Replay output directories must be new.
 ```
 
 Each new run path must not exist. On resume, `--resume` must name the same existing
-path as `--output`. Recovery is at durable task-shard boundaries in separate
+path as `--output`. Recovery is at validated completed task-shard boundaries in separate
 `initial-shards/` and `final-shards/` directories. It does not restore a running
 world or partial task. Resume verifies provenance: use the same executable bytes,
 study bytes, source/build and lock metadata, and optional scenario/seed manifest
@@ -58,3 +58,11 @@ empirical, clinical, cross-site, or performance result.
 
 For the complete CLI reference and the retained legacy scenario commands, see
 [`docs/cli/kairo-ecs-cli.md`](../../../docs/cli/kairo-ecs-cli.md).
+
+### Platform recovery boundary
+
+Completed files are flushed before no-overwrite publication. Unix also syncs the
+containing directory. Windows support is limited to process-termination recovery;
+there is no Windows directory-entry flush or power-loss durability guarantee.
+A completed shard is validated before reuse; recovery does not restore a live
+simulation world. See the C5 acceptance evidence for platforms actually exercised.

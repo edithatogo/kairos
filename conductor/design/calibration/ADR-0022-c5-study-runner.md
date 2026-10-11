@@ -128,11 +128,18 @@ on callback failure: finish/join selected work and return error; retry completed
 Shard envelope `kairoecs.c5-task-shard.v1` binds task_id,task_hash,binding_hash,result,
 result_hash. Filename SHA256(task_id), no raw identity in paths. Prevalidate complete
 existing inventory, bounds and hashes before dispatch; unknown shards reject except
-reserved orphan temps. Publish create_new temp + sync + hard_link no-replace + directory
-sync; validate equivalent winner, never overwrite. Reject symlink path components.
+reserved orphan temps. Publish create_new temporary file + file sync_all + hard_link
+no-replace; on Unix also sync the containing directory. Validate equivalent winner,
+never overwrite, and reject symlink path components. Windows recovery is limited
+to process termination; directory-entry flushing is not performed and no Windows
+power-loss durability guarantee is made. Actual platform qualification is recorded
+in the acceptance evidence, not inferred from compilation.
 Initial and final task phases use separate shard directories for restart. CLI reruns
 initial summary, derives final tasks, then joins all attempts. No world checkpoint
-claim: crash/resume occurs at durable completed task boundaries.
+claim: crash/resume occurs at validated completed task-shard boundaries. The C2
+journal publisher uses the same platform boundary: file flush and no-replace
+publication on all platforms, directory sync on Unix only. Windows drive/UNC
+prefixes are assembled with their root before filesystem validation.
 
 ## Ownership, review and oracles
 
