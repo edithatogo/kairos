@@ -266,6 +266,55 @@ pub struct TransitProgress {
     pub phase: TransitPhase,
 }
 
+#[derive(Clone)]
+enum TransitArrivalAction {
+    Acquire(FlowAcquireCommand),
+    Handoff { progress_scheduler_priority: i32 },
+}
+
+#[derive(Clone, Copy)]
+struct TransitArrivalWitness {
+    event: EventId,
+    at: SimTime,
+    // Retained as provenance; FlowDispatch currently exposes no callback-cause field.
+    cause: TransitArrivalCause,
+}
+
+#[derive(Clone, Copy)]
+enum TransitArrivalCause {
+    Domain,
+    Resume,
+}
+
+/// Read-only proof of one committed native transit arrival.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TransitArrivalHandoff {
+    carrier: WorkId,
+    service_work: WorkId,
+    owner: EntityId,
+    arrived_at: SimTime,
+    arrival_event: EventId,
+    runtime: FlowRuntimeIdentity,
+}
+
+impl TransitArrivalHandoff {
+    pub fn carrier(&self) -> WorkId {
+        self.carrier
+    }
+    pub fn service_work(&self) -> WorkId {
+        self.service_work
+    }
+    pub fn owner(&self) -> EntityId {
+        self.owner
+    }
+    pub fn arrived_at(&self) -> SimTime {
+        self.arrived_at
+    }
+    pub fn arrival_event(&self) -> EventId {
+        self.arrival_event
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum TransitCommandPurpose {
     Start { due: SimTime },
@@ -279,7 +328,9 @@ pub struct TransitContext {
     route_plan: RoutePlan,
     progress: TransitProgressState,
     service_work: WorkId,
-    acquire: FlowAcquireCommand,
+    service_owner: EntityId,
+    action: TransitArrivalAction,
+    arrival_witness: Option<TransitArrivalWitness>,
     carrier: Option<WorkId>,
     kind: Option<EventKind>,
     start_at: SimTime,
@@ -307,6 +358,9 @@ impl TransitContext {
         if &self.runtime != source_identity {
             return Err(TransitContextCheckpointError::LineageMismatch);
         }
+        let TransitArrivalAction::Acquire(acquire) = &self.action else {
+            return Err(TransitContextCheckpointError::InvalidState);
+        };
         let (segment_index, elapsed) = self
             .progress
             .checkpoint_cursor()
@@ -318,8 +372,8 @@ impl TransitContext {
             phase: self.phase,
             paused_from: self.paused_from,
             initial_start_pending: self.initial_start_pending,
-            acquire_timed: self.acquire.timed,
-            acquire_at_ticks: self.acquire.at.ticks(),
+            acquire_timed: acquire.timed,
+            acquire_at_ticks: acquire.at.ticks(),
             start_at_ticks: self.start_at.ticks(),
             last_advanced_at_ticks: self.last_advanced_at.ticks(),
             has_carrier: self.carrier.is_some(),
@@ -343,16 +397,16 @@ impl TransitContext {
             segment_index,
             elapsed_in_segment_ticks: elapsed.ticks(),
             service_work: self.service_work.entity_id(),
-            acquire_resource: self.acquire.resource.entity_id(),
-            acquire_owner: self.acquire.owner,
-            acquire_work: self.acquire.work.map(WorkId::entity_id),
-            acquire_at_ticks: self.acquire.at.ticks(),
-            acquire_priority_level: self.acquire.priority_level,
-            acquire_deadline_ticks: self.acquire.deadline.map(SimTime::ticks),
-            acquire_scheduler_priority: self.acquire.scheduler_priority,
-            acquire_timed: self.acquire.timed,
-            acquire_can_preempt: self.acquire.can_preempt,
-            acquire_preemptible: self.acquire.preemptible,
+            acquire_resource: acquire.resource.entity_id(),
+            acquire_owner: acquire.owner,
+            acquire_work: acquire.work.map(WorkId::entity_id),
+            acquire_at_ticks: acquire.at.ticks(),
+            acquire_priority_level: acquire.priority_level,
+            acquire_deadline_ticks: acquire.deadline.map(SimTime::ticks),
+            acquire_scheduler_priority: acquire.scheduler_priority,
+            acquire_timed: acquire.timed,
+            acquire_can_preempt: acquire.can_preempt,
+            acquire_preemptible: acquire.preemptible,
             carrier: self.carrier.map(WorkId::entity_id),
             kind: self.kind,
             start_at_ticks: self.start_at.ticks(),
@@ -513,7 +567,9 @@ impl TransitContextCheckpointV1 {
             route_plan,
             progress,
             service_work,
-            acquire,
+            service_owner: self.acquire_owner,
+            action: TransitArrivalAction::Acquire(acquire),
+            arrival_witness: None,
             carrier,
             kind: self.kind,
             start_at: SimTime::from_ticks(self.start_at_ticks),
@@ -712,7 +768,52 @@ impl TransitContext {
             route_plan: route,
             progress,
             service_work: work,
-            acquire,
+            service_owner: spec.owner,
+            action: TransitArrivalAction::Acquire(acquire),
+            arrival_witness: None,
+            carrier: None,
+            kind: None,
+            start_at: start,
+            phase: TransitPhase::Ready,
+            paused_from: None,
+            last_advanced_at: start,
+            initial_start_pending: true,
+            expected_event: None,
+            expected_due: None,
+            command_ticket: None,
+            arrival_ticket: None,
+            next_progress_ticket: None,
+        })
+    }
+
+    /// Create transit for pending service work without manufacturing an Acquire.
+    pub fn new_handoff(
+        flow: &FlowRuntime,
+        route: RoutePlan,
+        service_work: WorkId,
+        start: SimTime,
+        progress_scheduler_priority: i32,
+    ) -> Result<Self, TransitError> {
+        let spec = flow
+            .work(service_work)
+            .map_err(|_| TransitError::InvalidProgress)?;
+        let progress = flow
+            .work_progress(service_work)
+            .map_err(|_| TransitError::InvalidProgress)?;
+        if start < flow.now() || spec.request.is_some() || progress.state != WorkState::Pending {
+            return Err(TransitError::InvalidProgress);
+        }
+        let progress = TransitProgressState::new(route.clone())?;
+        Ok(Self {
+            runtime: flow.identity(),
+            route_plan: route,
+            progress,
+            service_work,
+            service_owner: spec.owner,
+            action: TransitArrivalAction::Handoff {
+                progress_scheduler_priority,
+            },
+            arrival_witness: None,
             carrier: None,
             kind: None,
             start_at: start,
@@ -758,6 +859,55 @@ impl TransitContext {
         self.next_progress_ticket
     }
 
+    fn arrival_handoff(
+        &self,
+        flow: &FlowRuntime,
+        carrier: WorkId,
+    ) -> Result<Option<TransitArrivalHandoff>, FlowError> {
+        if self.runtime != flow.identity() || self.carrier.is_some_and(|bound| bound != carrier) {
+            return Err(FlowError::InvalidWork);
+        }
+        let carrier_owner = flow.work(carrier)?.owner;
+        if flow
+            .actor_domain_context(carrier_owner)
+            .map_err(|_| FlowError::InvalidWork)?
+            != carrier
+        {
+            return Err(FlowError::InvalidWork);
+        }
+        if !matches!(&self.action, TransitArrivalAction::Handoff { .. }) {
+            return Ok(None);
+        }
+        let service = flow.work(self.service_work)?;
+        if service.owner != self.service_owner {
+            return Err(FlowError::InvalidWork);
+        }
+        if service.request.is_some() {
+            return Ok(None);
+        }
+        let Some(witness) = self.arrival_witness else {
+            return Ok(None);
+        };
+        if self.phase != TransitPhase::Arrived
+            || self
+                .progress
+                .remaining()
+                .map_err(|_| FlowError::InvalidWork)?
+                != SimDuration::ZERO
+        {
+            return Err(FlowError::InvalidWork);
+        }
+        let _provenance = witness.cause;
+        Ok(Some(TransitArrivalHandoff {
+            carrier,
+            service_work: self.service_work,
+            owner: self.service_owner,
+            arrived_at: witness.at,
+            arrival_event: witness.event,
+            runtime: self.runtime.clone(),
+        }))
+    }
+
     pub fn progress_at(&self, at: SimTime) -> Result<TransitProgress, TransitError> {
         let mut state = self.progress.clone();
         if self.phase == TransitPhase::Moving {
@@ -794,7 +944,7 @@ impl TransitContext {
         match snapshot.cause {
             FlowCallbackCause::Domain { .. } => next.plan_domain(snapshot, at, sink)?,
             FlowCallbackCause::DomainControl { action, .. } => {
-                next.plan_control(action, at, sink)?
+                next.plan_control(action, snapshot, at, sink)?
             }
             FlowCallbackCause::Work { .. } => return Err(FlowError::InvalidWork),
         }
@@ -830,7 +980,7 @@ impl TransitContext {
             self.expected_due = None;
             self.phase = TransitPhase::Moving;
             self.last_advanced_at = at;
-            return self.schedule_next_or_arrive(at, sink);
+            return self.schedule_next_or_arrive(snapshot, at, sink);
         }
         if self.phase != TransitPhase::Moving
             || self.expected_event != Some(snapshot.delivery.id)
@@ -853,12 +1003,13 @@ impl TransitContext {
         self.expected_event = None;
         self.expected_due = None;
         self.next_progress_ticket = None;
-        self.schedule_next_or_arrive(at, sink)
+        self.schedule_next_or_arrive(snapshot, at, sink)
     }
 
     fn plan_control(
         &mut self,
         action: FlowDomainControl,
+        snapshot: &FlowCallbackSnapshot,
         at: SimTime,
         sink: &mut FlowCommandSink,
     ) -> Result<(), FlowError> {
@@ -910,7 +1061,7 @@ impl TransitContext {
                             .map_err(|_| FlowError::InvalidWork)?
                             == SimDuration::ZERO
                         {
-                            return self.emit_arrival(at, sink);
+                            return self.emit_arrival(snapshot, at, sink);
                         }
                         let remaining = self
                             .progress
@@ -935,6 +1086,7 @@ impl TransitContext {
 
     fn schedule_next_or_arrive(
         &mut self,
+        snapshot: &FlowCallbackSnapshot,
         at: SimTime,
         sink: &mut FlowCommandSink,
     ) -> Result<(), FlowError> {
@@ -944,7 +1096,7 @@ impl TransitContext {
             .map_err(|_| FlowError::InvalidWork)?
             == SimDuration::ZERO
         {
-            return self.emit_arrival(at, sink);
+            return self.emit_arrival(snapshot, at, sink);
         }
         let remaining = self
             .progress
@@ -967,7 +1119,12 @@ impl TransitContext {
             work: self.carrier.ok_or(FlowError::InvalidWork)?,
             kind: self.kind.ok_or(FlowError::InvalidWork)?,
             at: due,
-            scheduler_priority: self.acquire.scheduler_priority,
+            scheduler_priority: match &self.action {
+                TransitArrivalAction::Acquire(acquire) => acquire.scheduler_priority,
+                TransitArrivalAction::Handoff {
+                    progress_scheduler_priority,
+                } => *progress_scheduler_priority,
+            },
         })?;
         self.command_ticket = Some((ticket, purpose));
         self.expected_event = None;
@@ -978,12 +1135,41 @@ impl TransitContext {
         Ok(())
     }
 
-    fn emit_arrival(&mut self, at: SimTime, sink: &mut FlowCommandSink) -> Result<(), FlowError> {
-        let mut acquire = self.acquire.clone();
-        acquire.at = at;
-        let ticket = sink.emit(FlowOwnedCommand::Acquire(acquire))?;
-        self.command_ticket = Some((ticket, TransitCommandPurpose::Arrival));
-        self.arrival_ticket = Some(ticket);
+    fn emit_arrival(
+        &mut self,
+        snapshot: &FlowCallbackSnapshot,
+        at: SimTime,
+        sink: &mut FlowCommandSink,
+    ) -> Result<(), FlowError> {
+        match &self.action {
+            TransitArrivalAction::Acquire(acquire) => {
+                let mut acquire = acquire.clone();
+                acquire.at = at;
+                let ticket = sink.emit(FlowOwnedCommand::Acquire(acquire))?;
+                self.command_ticket = Some((ticket, TransitCommandPurpose::Arrival));
+                self.arrival_ticket = Some(ticket);
+            }
+            TransitArrivalAction::Handoff { .. } => {
+                let cause = match snapshot.cause {
+                    FlowCallbackCause::Domain { .. } => TransitArrivalCause::Domain,
+                    FlowCallbackCause::DomainControl {
+                        action: FlowDomainControl::Resume,
+                        ..
+                    } => TransitArrivalCause::Resume,
+                    _ => return Err(FlowError::InvalidWork),
+                };
+                self.arrival_witness = Some(TransitArrivalWitness {
+                    event: snapshot.delivery.id,
+                    at,
+                    cause,
+                });
+                self.command_ticket = None;
+                self.arrival_ticket = None;
+                self.next_progress_ticket = None;
+                self.expected_event = None;
+                self.expected_due = None;
+            }
+        }
         self.phase = TransitPhase::Arrived;
         Ok(())
     }
@@ -1010,6 +1196,52 @@ impl TransitContext {
             TransitCommandPurpose::Arrival => self.expected_due = None,
         }
     }
+}
+
+/// Observe only a committed transit-arrival witness for the supplied dispatch.
+pub fn observe_transit_arrival_handoff(
+    flow: &FlowRuntime,
+    carrier: WorkId,
+    dispatch: &kairo_ecs_des::FlowDispatch,
+) -> Result<Option<TransitArrivalHandoff>, FlowError> {
+    let context = flow.work_context::<TransitContext>(carrier)?;
+    let Some(handoff) = context.arrival_handoff(flow, carrier)? else {
+        return Ok(None);
+    };
+    if handoff.runtime != flow.identity() {
+        return Err(FlowError::InvalidWork);
+    }
+    if dispatch.event != handoff.arrival_event {
+        return Ok(None);
+    }
+    if dispatch.at != handoff.arrived_at
+        || dispatch.error.is_some()
+        || !matches!(
+            dispatch.callback_batches.as_slice(),
+            [FlowBatchReceipt::Accepted(rows)] if rows.is_empty()
+        )
+    {
+        return Err(FlowError::InvalidWork);
+    }
+    Ok(Some(handoff))
+}
+
+/// Read the committed handoff until the service WorkSpec is bound to a request.
+pub fn pending_transit_arrival_handoff(
+    flow: &FlowRuntime,
+    carrier: WorkId,
+) -> Result<Option<TransitArrivalHandoff>, FlowError> {
+    let context = flow.work_context::<TransitContext>(carrier)?;
+    let Some(handoff) = context.arrival_handoff(flow, carrier)? else {
+        return Ok(None);
+    };
+    if handoff.runtime != flow.identity() {
+        return Err(FlowError::InvalidWork);
+    }
+    if flow.work(handoff.service_work)?.request.is_some() {
+        return Ok(None);
+    }
+    Ok(Some(handoff))
 }
 
 fn max_time(left: SimTime, right: SimTime) -> SimTime {
