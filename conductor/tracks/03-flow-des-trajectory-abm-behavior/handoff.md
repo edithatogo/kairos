@@ -421,3 +421,14 @@ Reuse the existing 30-minute continuation heartbeat. It provides recovery, not a
 ## E2 stable queue ordering and transit arrival handoff
 
 Root coordinator serves as Track03 scoped owner under the user’s full CareOps delivery authority, with independent Sol review. Designs: [stable ordering](../../design/des/ADR-e2-stable-queue-order.md) and [arrival handoff](../../design/des/ADR-e2-transit-arrival-handoff.md). Native DES and ABM packets can run in separate worktrees after exact contracts/packets freeze; DES owns queue/index/capture guards, ABM owns transit mode/witness/V1 guard. Shared public Flow/work identity signatures remain unchanged. Native stages fail closed for unsupported persistence. Explicit Flow V4, Transit V2 and coherent/portable consumers are later dependency gates before parent pin and one-Flow ED integration. No source task or phase is marked complete by these designs.
+
+
+## E2.2 native queue order and arrival handoff: persistence handoff (12 October 2026)
+
+Native source join `ef20ae54b73dc47d59250c9b073c063311704413` passed Rust/Cargo 1.99.0 combined qualification: 876 passed, 0 failed, 6 ignored across 71 suite summaries; all 87 required proof names, 26 raw child continuations, four decoded V3 proofs and 19 literal outer-envelope goldens verified. Strict Clippy and formatting passed at the same clean source. Final result SHA-256 `ae8285021fa7c9ee3adc3e23b587048d58f946db66a21f214f5b391b927b42c6`. Preserve all failed native development attempts and the fixture-registration supplement in the parent evidence archive.
+
+Next reviewed native contracts:
+- [Flow V4 native checkpoint](../../design/des/ADR-e2-flow-checkpoint-v4-native.md): DES owns native DTO/capture/restore/index reconstruction; wire and automatic routing follow separately.
+- [TransitContext V2](../../design/des/ADR-e2-transit-context-v2.md): ABM owns native owner DTO/capture/restore, then its wire/codec boundary serially.
+
+The two native packets can run in parallel in isolated Kairos worktrees with disjoint crate ownership and Rust/Cargo 1.99.0. Root owns exact packet preparation, claims, integration and acceptance; worker completion alone does not unlock a dependent packet. No parent pin, E2 completion, empirical/clinical qualification or release acceptance follows from this native join.
