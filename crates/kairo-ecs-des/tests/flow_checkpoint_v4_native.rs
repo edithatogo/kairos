@@ -705,8 +705,10 @@ fn v4_key_row_and_checked_total_limits_preflight_before_decode() {
         .submit()
         .unwrap();
     let empty_codecs = FlowCheckpointCodecs::new();
-    let mut exact = FlowCheckpointLimits::default();
-    exact.max_key_bytes = 128;
+    let exact = FlowCheckpointLimits {
+        max_key_bytes: 128,
+        ..FlowCheckpointLimits::default()
+    };
     let image = flow.capture_checkpoint_v4(&empty_codecs, exact).unwrap();
     assert!(matches!(
         image.request_queue_orders.iter().find(|(id, _)| *id == request),
@@ -724,8 +726,10 @@ fn v4_key_row_and_checked_total_limits_preflight_before_decode() {
         FlowCheckpointError::LimitExceeded("key bytes")
     ));
 
-    let mut no_requests = FlowCheckpointLimits::default();
-    no_requests.max_requests = 0;
+    let no_requests = FlowCheckpointLimits {
+        max_requests: 0,
+        ..FlowCheckpointLimits::default()
+    };
     assert!(matches!(
         flow.capture_checkpoint_v4(&empty_codecs, no_requests),
         Err(FlowCheckpointError::LimitExceeded(
@@ -736,8 +740,10 @@ fn v4_key_row_and_checked_total_limits_preflight_before_decode() {
         assert_reject_before_codecs(image.clone(), &empty_codecs, no_requests),
         FlowCheckpointError::LimitExceeded("queue-order identity rows")
     ));
-    let mut no_resources = FlowCheckpointLimits::default();
-    no_resources.max_resources = 0;
+    let no_resources = FlowCheckpointLimits {
+        max_resources: 0,
+        ..FlowCheckpointLimits::default()
+    };
     assert!(matches!(
         flow.capture_checkpoint_v4(&empty_codecs, no_resources),
         Err(FlowCheckpointError::LimitExceeded("queue order mode rows"))
@@ -769,10 +775,10 @@ fn v4_key_row_and_checked_total_limits_preflight_before_decode() {
     aggregate_flow.step().unwrap().unwrap();
     let aggregate_codecs = codecs();
     let aggregate_default = FlowCheckpointLimits::default();
-    let v3 = aggregate_flow
-        .capture_checkpoint_v3(&aggregate_codecs, aggregate_default)
+    let baseline_image = aggregate_flow
+        .capture_checkpoint_v4(&aggregate_codecs, aggregate_default)
         .unwrap();
-    let serialized_string_bytes = v3
+    let serialized_string_bytes = baseline_image
         .work_registrations
         .iter()
         .map(|row| {
@@ -781,18 +787,22 @@ fn v4_key_row_and_checked_total_limits_preflight_before_decode() {
                 + row.restart_codec_key.as_ref().map_or(0, String::len)
         })
         .sum::<usize>()
-        + v3.contexts
+        + baseline_image
+            .contexts
             .iter()
             .map(|row| row.runtime_key.len() + row.codec_key.len())
             .sum::<usize>()
-        + v3.context_stores
+        + baseline_image
+            .context_stores
             .iter()
             .map(|store| store.codec_key.len())
             .sum::<usize>();
     assert_eq!(serialized_string_bytes, 15);
 
+    let capture_registration_key_bytes = "ctx".len() + "ctx".len();
+    assert_eq!(capture_registration_key_bytes, 6);
     let mut capture_exact = aggregate_default;
-    capture_exact.max_key_bytes = 128 + serialized_string_bytes + 6;
+    capture_exact.max_key_bytes = 128 + capture_registration_key_bytes;
     ENCODE_CALLS.with(|calls| calls.set(0));
     let aggregate_image = aggregate_flow
         .capture_checkpoint_v4(&aggregate_codecs, capture_exact)
@@ -838,8 +848,10 @@ fn v4_key_row_and_checked_total_limits_preflight_before_decode() {
         .submit()
         .unwrap();
     let payload_codecs = codecs();
-    let mut payload_exact = FlowCheckpointLimits::default();
-    payload_exact.max_payload_bytes = 8;
+    let payload_exact = FlowCheckpointLimits {
+        max_payload_bytes: 8,
+        ..FlowCheckpointLimits::default()
+    };
     ENCODE_CALLS.with(|calls| calls.set(0));
     payload_flow
         .capture_checkpoint_v4(&payload_codecs, payload_exact)
