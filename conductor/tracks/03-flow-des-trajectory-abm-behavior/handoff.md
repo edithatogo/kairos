@@ -362,7 +362,7 @@ Parent acceptance is `ef0ddc8d4c70e6f0926f45a681e6f728cbc69ab8`. These accept
 explicit APIs only. Routing implementation requires the separately accepted
 routing contract, reviewed hash-bound source packet and narrow claim.
 
-The atomic routing change owns exactly these six Rust paths (plus its separately
+The atomic routing change owns exactly these eight Rust paths (plus its separately
 bound result/log outputs):
 
 - `crates/kairo-ecs-des/src/flow/checkpoint.rs`
@@ -371,6 +371,8 @@ bound result/log outputs):
 - `crates/kairo-ecs-calibration/src/flow_bridge/checkpoint_wire.rs`
 - `crates/kairo-ecs-calibration/src/c2_portable_checkpoint/process_tests.rs`
 - New `crates/kairo-ecs-des/tests/flow_checkpoint_routing_v3.rs`
+- `crates/kairo-ecs-des/tests/flow_checkpoint_v3.rs` (narrow common-route assertion update only)
+- `crates/kairo-ecs-des/tests/flow_deferred_allocation_v1.rs` (narrow common-route assertion update only)
 
 The shared borrowed command stream becomes the complete, allocation-free
 `Iterator<Item = (EventId, FlowCommandV3)>`, retaining event IDs, ordering,
@@ -384,10 +386,17 @@ Track03 owns the native format choice, common Image/Ref iterator and wire routin
 Its cross-track dependency is limited to the common command matches in the two
 calibration paths listed above: three coherent predicates and the portable
 process-test GrantEnabled match. Preserve those predicates and all direct legacy
-DTO matchers. This six-source-path size exception is necessary for an atomic
+DTO matchers. This eight-source-path size exception is necessary for an atomic
 compiling item-type migration; it does not authorize unrelated consumer edits.
 
 After accepted routing, separately qualify three disjoint consumer lanes:
 preview (`shadow_native.rs` and `c5_native.rs`), coherent (`flow_bridge.rs`), and
 portable (`c2_portable_checkpoint.rs` and nested `process_tests.rs`). Their actual
 V3 behavior, combined acceptance and the parent dependency pin remain open.
+
+Compatibility correction: the two existing legacy-capture tests have three
+common-router assertions that currently reject Deferred state. Update only those
+to positive V3 routing controls while retaining every explicit V1/V2 rejection
+and zero-codec assertion before successful routing. Keep exact mode/Flush and
+positive codec counts; preserve test names and all true legacy goldens. The
+eight-Rust-path scope supersedes the initial six-path proposal for this reason.

@@ -213,7 +213,7 @@ Parent acceptance is `ef0ddc8d4c70e6f0926f45a681e6f728cbc69ab8`. These accept
 explicit APIs only. Routing implementation requires the separately accepted
 routing contract, reviewed hash-bound source packet and narrow claim.
 
-The atomic routing change owns exactly these six Rust paths (plus its separately
+The atomic routing change owns exactly these eight Rust paths (plus its separately
 bound result/log outputs):
 
 - `crates/kairo-ecs-des/src/flow/checkpoint.rs`
@@ -222,6 +222,8 @@ bound result/log outputs):
 - `crates/kairo-ecs-calibration/src/flow_bridge/checkpoint_wire.rs`
 - `crates/kairo-ecs-calibration/src/c2_portable_checkpoint/process_tests.rs`
 - New `crates/kairo-ecs-des/tests/flow_checkpoint_routing_v3.rs`
+- `crates/kairo-ecs-des/tests/flow_checkpoint_v3.rs` (narrow common-route assertion update only)
+- `crates/kairo-ecs-des/tests/flow_deferred_allocation_v1.rs` (narrow common-route assertion update only)
 
 The shared borrowed command stream becomes the complete, allocation-free
 `Iterator<Item = (EventId, FlowCommandV3)>`, retaining event IDs, ordering,
@@ -242,3 +244,10 @@ packets: coherent inline proofs in `flow_bridge.rs`, portable continuation in
 `shadow_native.rs`/`c5_native.rs` lane. These may run in parallel on the same
 accepted base with disjoint claims. Root joins and qualifies all consumers before
 updating the parent Kairos pin and beginning the complete ED runtime bindings.
+
+Compatibility correction: the two existing legacy-capture tests have three
+common-router assertions that currently reject Deferred state. Update only those
+to positive V3 routing controls while retaining every explicit V1/V2 rejection
+and zero-codec assertion before successful routing. Keep exact mode/Flush and
+positive codec counts; preserve test names and all true legacy goldens. The
+eight-Rust-path scope supersedes the initial six-path proposal for this reason.
