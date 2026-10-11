@@ -5,7 +5,7 @@ description = "KairoECS CLI for experiment execution and scenario management"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-rust-version.workspace = true
+rust-version = "1.99"
 
 [dependencies]
 kairo-ecs-core = { path = "../kairo-ecs-core" , version = "=0.0.0" }
