@@ -220,28 +220,47 @@ mod shadow_runner;
 mod shadow_c03;
 
 #[cfg(feature = "flow")]
-mod c5_study;
-#[cfg(feature = "flow")]
 mod c5_native;
+#[cfg(feature = "flow")]
+mod c5_study;
 #[cfg(feature = "flow")]
 #[doc(hidden)]
 pub mod experimental_c5 {
     #[derive(Debug, thiserror::Error)]
-    #[error("C5: {0}")]
-    pub struct C5Error(pub String);
-    fn parse(s: &str) -> Result<serde_json::Value,C5Error> {
-        if s.len()>16*1024*1024 { return Err(C5Error("input byte limit".into())); }
-        serde_json::from_str(s).map_err(|e| C5Error(format!("invalid JSON: {e}")))
+    pub enum C5Error {
+        #[error("C5 invalid input: {0}")]
+        InvalidInput(String),
+        #[error("C5 execution: {0}")]
+        Execution(String),
     }
-    fn output(v: Result<serde_json::Value,String>) -> Result<String,C5Error> {
-        serde_json::to_string(&v.map_err(C5Error)?).map_err(|e| C5Error(e.to_string()))
+    fn parse(s: &str) -> Result<serde_json::Value, C5Error> {
+        if s.len() > 16 * 1024 * 1024 {
+            return Err(C5Error::InvalidInput("input byte limit".into()));
+        }
+        serde_json::from_str(s).map_err(|e| C5Error::InvalidInput(format!("invalid JSON: {e}")))
     }
-    pub fn plan(study: &str) -> Result<String,C5Error> { output(crate::c5_study::plan(&parse(study)?)) }
-    pub fn summarize(study: &str, attempts: &str) -> Result<String,C5Error> {
-        let a=parse(attempts)?;
-        output(crate::c5_study::summarize(&parse(study)?,a.as_array().ok_or_else(||C5Error("attempts must be array".into()))?))
+    fn output(v: Result<serde_json::Value, String>) -> Result<String, C5Error> {
+        serde_json::to_string(&v.map_err(C5Error::InvalidInput)?)
+            .map_err(|e| C5Error::Execution(e.to_string()))
     }
-    pub fn evaluate(study: &str, task: &str) -> Result<String,C5Error> { output(crate::c5_native::evaluate(&parse(study)?,&parse(task)?)) }
-    pub fn verify_trace(study: &str) -> Result<String,C5Error> { output(crate::c5_native::verify_trace(&parse(study)?)) }
-    pub fn replay(study: &str, mode: &str) -> Result<String,C5Error> { output(crate::c5_native::replay(&parse(study)?,mode)) }
+    pub fn plan(study: &str) -> Result<String, C5Error> {
+        output(crate::c5_study::plan(&parse(study)?))
+    }
+    pub fn summarize(study: &str, attempts: &str) -> Result<String, C5Error> {
+        let a = parse(attempts)?;
+        output(crate::c5_study::summarize(
+            &parse(study)?,
+            a.as_array()
+                .ok_or_else(|| C5Error::InvalidInput("attempts must be array".into()))?,
+        ))
+    }
+    pub fn evaluate(study: &str, task: &str) -> Result<String, C5Error> {
+        output(crate::c5_native::evaluate(&parse(study)?, &parse(task)?))
+    }
+    pub fn verify_trace(study: &str) -> Result<String, C5Error> {
+        output(crate::c5_native::verify_trace(&parse(study)?))
+    }
+    pub fn replay(study: &str, mode: &str) -> Result<String, C5Error> {
+        output(crate::c5_native::replay(&parse(study)?, mode))
+    }
 }

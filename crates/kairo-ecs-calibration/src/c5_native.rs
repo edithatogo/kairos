@@ -220,6 +220,7 @@ fn evaluate_admitted(config: &Value, task: &Value) -> Result<Value, String> {
     for row in rows {
         if invalid {
             failed += 1;
+            records.push(json!({"case_id":row["case_id"],"outcome":"invalid","reason":"zero parameter duration"}));
             continue;
         }
         let native = shadow_case(config, task, row);
