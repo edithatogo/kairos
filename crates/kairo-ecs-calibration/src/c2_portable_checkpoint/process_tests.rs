@@ -20,8 +20,8 @@ use kairo_ecs_des::fidelity::{FidelityMode, FidelityPolicy};
 use kairo_ecs_des::{
     FlowCallbackCodeV1, FlowCheckpointCodecError, FlowCheckpointCodecs, FlowCheckpointError,
     FlowCheckpointImage, FlowCheckpointLimits, FlowCheckpointRebindV1, FlowCheckpointRef,
-    FlowCheckpointWireError, FlowCheckpointWireLimits, FlowCommandV2, FlowDomainControl,
-    FlowHandlerCodeIds, FlowRuntime, PreemptionStrategy, WorkHandlers,
+    FlowCheckpointWireError, FlowCheckpointWireLimits, FlowCommandV2, FlowCommandV3,
+    FlowDomainControl, FlowHandlerCodeIds, FlowRuntime, PreemptionStrategy, WorkHandlers,
 };
 use kairo_ecs_types::{EntityId, EventKind, SimDuration, SimTime};
 use sha2::{Digest, Sha256};
@@ -1522,7 +1522,7 @@ fn run_suffix(case: &CaseSpec, runtime: &mut MatrixRuntime) -> Vec<u8> {
     let gated_events: Vec<_> = if gated {
         runtime.flow.capture_checkpoint_image(&runtime.codecs, limits().flow.flow).unwrap()
             .as_ref().commands().filter_map(|(event, command)| {
-                matches!(command, FlowCommandV2::GrantEnabled(resource, _) if resource == gated_resource)
+                matches!(command, FlowCommandV3::GrantEnabled(resource, _) if resource == gated_resource)
                     .then_some(event)
             }).collect()
     } else {

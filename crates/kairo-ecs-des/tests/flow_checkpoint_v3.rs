@@ -1567,6 +1567,7 @@ fn native_v3_legacy_capture_rejects_deferred_before_codecs() {
         .unwrap();
     ENCODE_CALLS.with(|count| assert!(count.get() > 0));
     ENCODE_CALLS.with(|count| count.set(0));
+    CODEC_CALLS.with(|count| count.set(0));
     assert!(matches!(
         source.capture_checkpoint(&codecs, FlowCheckpointLimits::default()),
         Err(FlowCheckpointError::InvalidState(_))
@@ -1575,11 +1576,18 @@ fn native_v3_legacy_capture_rejects_deferred_before_codecs() {
         source.capture_checkpoint_v2(&codecs, FlowCheckpointLimits::default()),
         Err(FlowCheckpointError::InvalidState(_))
     ));
-    assert!(matches!(
-        source.capture_checkpoint_image(&codecs, FlowCheckpointLimits::default()),
-        Err(FlowCheckpointError::InvalidState(_))
-    ));
     ENCODE_CALLS.with(|count| assert_eq!(count.get(), 0));
+    let routed = source
+        .capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
+        .unwrap();
+    let kairo_ecs_des::FlowCheckpointImage::V3(routed) = routed else {
+        panic!("Deferred state routes losslessly to V3");
+    };
+    assert_eq!(routed.version, FLOW_CHECKPOINT_VERSION_V3);
+    assert_eq!(routed.allocation_modes.len(), 1);
+    assert_eq!(routed.allocation_modes[0].1, FlowAllocationMode::Deferred);
+    ENCODE_CALLS.with(|count| assert_eq!(count.get(), 1));
+    CODEC_CALLS.with(|count| assert_eq!(count.get(), 0));
 }
 
 #[test]

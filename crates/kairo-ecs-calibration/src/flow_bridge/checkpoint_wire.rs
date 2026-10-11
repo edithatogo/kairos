@@ -156,14 +156,14 @@ pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
     let has_domain_command = |event: EventId| {
         flow_image.commands().any(|(id, command)| {
             id == event
-                && matches!(command, kairo_ecs_des::FlowCommandV2::Domain(id, kind)
+                && matches!(command, kairo_ecs_des::FlowCommandV3::Domain(id, kind)
                 if id == carrier && Some(kind) == bound.kind)
         })
     };
     let has_submit_command = |event: EventId, request: RequestId| {
         flow_image.commands().any(|(id, command)| {
             id == event
-                && matches!(command, kairo_ecs_des::FlowCommandV2::Submit(actual)
+                && matches!(command, kairo_ecs_des::FlowCommandV3::Submit(actual)
                     if actual.entity_id() == request.entity_id())
         })
     };
@@ -272,7 +272,7 @@ pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
         if !flow_image.commands().any(|(id, command)| {
             id == *event
                 && matches!(command,
-            kairo_ecs_des::FlowCommandV2::DomainControl(id, kind, actual)
+            kairo_ecs_des::FlowCommandV3::DomainControl(id, kind, actual)
                 if id == carrier && Some(kind) == bound.kind && actual == action)
         }) || (entry.request.entity.is_some() && entry.request.entity != Some(work))
         {

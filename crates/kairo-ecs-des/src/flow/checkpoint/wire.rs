@@ -1067,10 +1067,11 @@ impl FlowCheckpointImage {
         match self {
             Self::V1(image) => image.encode_wire_v1(limits),
             Self::V2(image) => image.encode_wire_v2(limits),
+            Self::V3(image) => image.encode_wire_v3(limits),
         }
     }
 
-    /// Dispatch only by the two known wire magics.
+    /// Dispatch only by the three known wire magics.
     #[doc(hidden)]
     pub fn decode_wire(
         bytes: &[u8],
@@ -1082,6 +1083,9 @@ impl FlowCheckpointImage {
             }
             Some(magic) if magic == MAGIC_V2 => {
                 FlowCheckpointV2::decode_wire_v2(bytes, limits).map(Self::V2)
+            }
+            Some(magic) if magic == MAGIC_V3 => {
+                FlowCheckpointV3::decode_wire_v3(bytes, limits).map(Self::V3)
             }
             Some(_) => Err(FlowCheckpointWireError::InvalidTag),
             None => Err(FlowCheckpointWireError::Truncated),
@@ -5898,10 +5902,13 @@ mod wire_v3_tests {
         for reader in [
             FlowCheckpointV1::decode_wire_v1(&bytes, limits).map(|_| ()),
             FlowCheckpointV2::decode_wire_v2(&bytes, limits).map(|_| ()),
-            FlowCheckpointImage::decode_wire(&bytes, limits).map(|_| ()),
         ] {
             assert_eq!(reader.unwrap_err(), FlowCheckpointWireError::InvalidTag);
         }
+        assert_eq!(
+            FlowCheckpointImage::decode_wire(&bytes, limits).unwrap(),
+            FlowCheckpointImage::V3(image.clone())
+        );
         let mut bad = bytes.clone();
         bad[8..10].copy_from_slice(&77u16.to_le_bytes());
         reject(&bad, FlowCheckpointWireError::UnsupportedSchema(77));

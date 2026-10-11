@@ -122,6 +122,7 @@ impl Deref for FlowCheckpointParts {
 pub enum FlowCheckpointImage {
     V1(FlowCheckpointV1),
     V2(FlowCheckpointV2),
+    V3(FlowCheckpointV3),
 }
 
 #[doc(hidden)]
@@ -129,20 +130,23 @@ pub enum FlowCheckpointImage {
 pub enum FlowCheckpointRef<'a> {
     V1(&'a FlowCheckpointV1),
     V2(&'a FlowCheckpointV2),
+    V3(&'a FlowCheckpointV3),
 }
 
 enum FlowCommandIter<'a> {
     V1(std::slice::Iter<'a, (EventId, FlowCommandV1)>),
     V2(std::slice::Iter<'a, (EventId, FlowCommandV2)>),
+    V3(std::slice::Iter<'a, (EventId, FlowCommandV3)>),
 }
 
 impl Iterator for FlowCommandIter<'_> {
-    type Item = (EventId, FlowCommandV2);
+    type Item = (EventId, FlowCommandV3);
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             Self::V1(iter) => iter.next().map(|(id, command)| (*id, (*command).into())),
-            Self::V2(iter) => iter.next().copied(),
+            Self::V2(iter) => iter.next().map(|(id, command)| (*id, (*command).into())),
+            Self::V3(iter) => iter.next().copied(),
         }
     }
 }
@@ -152,6 +156,7 @@ impl FlowCheckpointImage {
         match self {
             Self::V1(image) => FlowCheckpointRef::V1(image),
             Self::V2(image) => FlowCheckpointRef::V2(image),
+            Self::V3(image) => FlowCheckpointRef::V3(image),
         }
     }
 
@@ -165,6 +170,9 @@ impl FlowCheckpointImage {
             Self::V2(image) => {
                 FlowRuntime::restore_checkpoint_v2_with_rebind(image, codecs, limits)
             }
+            Self::V3(image) => {
+                FlowRuntime::restore_checkpoint_v3_with_rebind(image, codecs, limits)
+            }
         }
     }
 }
@@ -174,6 +182,7 @@ impl<'a> FlowCheckpointRef<'a> {
         match self {
             Self::V1(image) => &image.scheduler,
             Self::V2(image) => &image.scheduler,
+            Self::V3(image) => &image.scheduler,
         }
     }
 
@@ -181,6 +190,7 @@ impl<'a> FlowCheckpointRef<'a> {
         match self {
             Self::V1(image) => &image.work_registrations,
             Self::V2(image) => &image.work_registrations,
+            Self::V3(image) => &image.work_registrations,
         }
     }
 
@@ -188,13 +198,15 @@ impl<'a> FlowCheckpointRef<'a> {
         match self {
             Self::V1(image) => &image.context_stores,
             Self::V2(image) => &image.context_stores,
+            Self::V3(image) => &image.context_stores,
         }
     }
 
-    pub fn commands(self) -> impl Iterator<Item = (EventId, FlowCommandV2)> + 'a {
+    pub fn commands(self) -> impl Iterator<Item = (EventId, FlowCommandV3)> + 'a {
         match self {
             Self::V1(image) => FlowCommandIter::V1(image.commands.iter()),
             Self::V2(image) => FlowCommandIter::V2(image.commands.iter()),
+            Self::V3(image) => FlowCommandIter::V3(image.commands.iter()),
         }
     }
 }

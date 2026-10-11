@@ -1344,11 +1344,26 @@ impl FlowRuntime {
         codecs: &FlowCheckpointCodecs,
         limits: FlowCheckpointLimits,
     ) -> Result<FlowCheckpointImage, FlowCheckpointError> {
+        // Select validation policy from the source inventory before capturing.
+        // Corrupt Deferred entries/cache/commands still select strict validation;
+        // no failed capture is retried or downgraded through a legacy image.
+        let requires_v3 = self
+            .allocation_modes
+            .values()
+            .any(|mode| *mode == FlowAllocationMode::Deferred)
+            || !self.pending_allocation_flushes.is_empty()
+            || self
+                .commands
+                .values()
+                .any(|command| matches!(command, Command::AllocationFlush(..)));
         let image = self
-            .capture_checkpoint_parts(codecs, limits, true)?
+            .capture_checkpoint_parts(codecs, limits, !requires_v3)?
             .into_v3()
-            .0
-            .into_v2()?;
+            .0;
+        if requires_v3 {
+            return Ok(FlowCheckpointImage::V3(image));
+        }
+        let image = image.into_v2()?;
         if image
             .resource_grant_flags
             .iter()
@@ -5006,5 +5021,229 @@ mod deferred_command_conversion_tests {
                 "V2 cannot represent deferred resource allocation"
             ))
         ));
+    }
+}
+
+#[cfg(test)]
+mod routing_capture_tests {
+    use super::*;
+    thread_local! { static ROUTING_ENCODERS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+    fn encode(value: &u64, remaining: usize) -> Result<Vec<u8>, FlowCheckpointCodecError> {
+        ROUTING_ENCODERS.with(|n| n.set(n.get() + 1));
+        if remaining < 8 {
+            return Err(FlowCheckpointCodecError("payload bound".into()));
+        }
+        Ok(value.to_le_bytes().to_vec())
+    }
+    fn decode(bytes: &[u8], _: &FlowCheckpointRebindV1) -> Result<u64, FlowCheckpointCodecError> {
+        Ok(u64::from_le_bytes(
+            bytes
+                .try_into()
+                .map_err(|_| FlowCheckpointCodecError("u64".into()))?,
+        ))
+    }
+    #[test]
+    fn routing_v3_capture_cache_corruption_rejects_before_codecs() {
+        for change in 0..12 {
+            let mut source = FlowRuntime::new();
+            let resource = source
+                .create_resource_with_allocation_mode(1, FlowAllocationMode::Deferred)
+                .unwrap();
+            let eager = source.create_resource(1).unwrap();
+            let owner = source.spawn_actor().unwrap();
+            let work = source
+                .create_work(owner, SimDuration::from_ticks(3), "routing.payload", 9_u64)
+                .unwrap();
+            let flush = source
+                .schedule_allocation_flush(resource, SimTime::from_ticks(4), 0)
+                .unwrap();
+            source
+                .schedule_resource_grant_enabled(eager, false, SimTime::from_ticks(1), 0)
+                .unwrap();
+            source.step().unwrap().unwrap();
+            let future_gate = source
+                .schedule_resource_grant_enabled(eager, true, SimTime::from_ticks(5), 0)
+                .unwrap();
+            let mut codecs = FlowCheckpointCodecs::new();
+            codecs
+                .register_context("routing.payload", 1, encode, decode)
+                .unwrap();
+            let mut limits = FlowCheckpointLimits::default();
+            ROUTING_ENCODERS.with(|n| n.set(0));
+            let valid = source.capture_checkpoint_image(&codecs, limits).unwrap();
+            assert!(matches!(valid, FlowCheckpointImage::V3(_)));
+            assert_eq!(ROUTING_ENCODERS.with(|n| n.get()), 1);
+            let stale = ResourceId(EntityId::new(u64::MAX, u32::MAX));
+            let expected = match change {
+                0 => {
+                    source.allocation_modes.remove(&resource);
+                    FlowCheckpointError::InvalidState(
+                        "allocation mode index does not match resources",
+                    )
+                }
+                1 => {
+                    source.allocation_modes.remove(&resource);
+                    source
+                        .allocation_modes
+                        .insert(stale, FlowAllocationMode::Deferred);
+                    FlowCheckpointError::InvalidState(
+                        "allocation mode index does not match resources",
+                    )
+                }
+                2 => {
+                    source
+                        .allocation_modes
+                        .insert(stale, FlowAllocationMode::Deferred);
+                    FlowCheckpointError::InvalidState(
+                        "allocation mode index does not match resources",
+                    )
+                }
+                3 => {
+                    source.pending_allocation_flushes.clear();
+                    FlowCheckpointError::InvalidState(
+                        "pending allocation flush index does not match commands",
+                    )
+                }
+                4 => {
+                    source.commands.insert(flush, Command::Notify);
+                    FlowCheckpointError::InvalidState(
+                        "pending allocation flush index does not match commands",
+                    )
+                }
+                5 => {
+                    source
+                        .commands
+                        .insert(flush, Command::AllocationFlush(eager));
+                    FlowCheckpointError::InvalidState(
+                        "allocation flush targets an invalid resource",
+                    )
+                }
+                6 | 7 | 8 => {
+                    let mut scheduler = source
+                        .scheduler
+                        .checkpoint_state(SchedulerCheckpointLimits {
+                            max_entries: limits.max_scheduler_entries,
+                        })
+                        .unwrap();
+                    let entry = scheduler
+                        .entries
+                        .iter_mut()
+                        .find(|e| e.id == flush)
+                        .unwrap();
+                    match change {
+                        6 => entry.request.kind = EventKind::custom(u32::MAX),
+                        7 => entry.request.entity = Some(owner),
+                        _ => entry.request.at = SimTime::ZERO,
+                    };
+                    source.scheduler = kairo_ecs_core::Scheduler::from_checkpoint_state(
+                        scheduler,
+                        SchedulerCheckpointLimits {
+                            max_entries: limits.max_scheduler_entries,
+                        },
+                    )
+                    .unwrap();
+                    FlowCheckpointError::InvalidState("allocation flush scheduler join mismatch")
+                }
+                9 => {
+                    source
+                        .commands
+                        .insert(future_gate, Command::Remove(resource));
+                    FlowCheckpointError::InvalidState(
+                        "allocation flush targets an invalid resource",
+                    )
+                }
+                10 => {
+                    limits.max_resources = 1;
+                    FlowCheckpointError::LimitExceeded("resources")
+                }
+                _ => {
+                    limits.max_pending_operations = 1;
+                    FlowCheckpointError::LimitExceeded("pending operations")
+                }
+            };
+            let maps = (
+                source.commands.clone(),
+                source.allocation_modes.clone(),
+                source.pending_allocation_flushes.clone(),
+                source.pending_grant_boundaries.clone(),
+                source.grant_enabled.clone(),
+                source.pending_releases.clone(),
+                source.pending_despawns.clone(),
+            );
+            let counters = (
+                source.budget_snapshot(),
+                source.created,
+                source.destroyed,
+                source.scheduled,
+                source.next_admission,
+                source.next_lease,
+            );
+            let scheduler = source
+                .scheduler
+                .checkpoint_state(SchedulerCheckpointLimits {
+                    max_entries: FlowCheckpointLimits::default().max_scheduler_entries,
+                })
+                .unwrap();
+            let world = source
+                .world
+                .checkpoint_state(WorldCheckpointLimits {
+                    max_slots: FlowCheckpointLimits::default().max_entities,
+                })
+                .unwrap();
+            let progress = source.work_progress(work).unwrap();
+            ROUTING_ENCODERS.with(|n| n.set(0));
+            assert_eq!(
+                source
+                    .capture_checkpoint_image(&codecs, limits)
+                    .err()
+                    .unwrap(),
+                expected,
+                "case{change}"
+            );
+            assert_eq!(ROUTING_ENCODERS.with(|n| n.get()), 0);
+            assert_eq!(
+                (
+                    source.commands.clone(),
+                    source.allocation_modes.clone(),
+                    source.pending_allocation_flushes.clone(),
+                    source.pending_grant_boundaries.clone(),
+                    source.grant_enabled.clone(),
+                    source.pending_releases.clone(),
+                    source.pending_despawns.clone()
+                ),
+                maps
+            );
+            assert_eq!(
+                (
+                    source.budget_snapshot(),
+                    source.created,
+                    source.destroyed,
+                    source.scheduled,
+                    source.next_admission,
+                    source.next_lease
+                ),
+                counters
+            );
+            assert_eq!(
+                source
+                    .scheduler
+                    .checkpoint_state(SchedulerCheckpointLimits {
+                        max_entries: FlowCheckpointLimits::default().max_scheduler_entries
+                    })
+                    .unwrap(),
+                scheduler
+            );
+            assert_eq!(
+                source
+                    .world
+                    .checkpoint_state(WorldCheckpointLimits {
+                        max_slots: FlowCheckpointLimits::default().max_entities
+                    })
+                    .unwrap(),
+                world
+            );
+            assert_eq!(source.work_progress(work).unwrap(), progress);
+            assert_eq!(*source.work_context::<u64>(work).unwrap(), 9);
+        }
     }
 }

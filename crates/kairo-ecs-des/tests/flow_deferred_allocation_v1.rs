@@ -1075,6 +1075,7 @@ fn deferred_legacy_capture_rejects_before_codecs() {
         .create_resource_with_allocation_mode(1, FlowAllocationMode::Deferred)
         .unwrap();
     ENCODER_CALLS.set(0);
+    DECODER_CALLS.set(0);
     assert!(matches!(
         empty_deferred.capture_checkpoint(&codecs, limits),
         Err(FlowCheckpointError::InvalidState(_))
@@ -1083,11 +1084,18 @@ fn deferred_legacy_capture_rejects_before_codecs() {
         empty_deferred.capture_checkpoint_v2(&codecs, limits),
         Err(FlowCheckpointError::InvalidState(_))
     ));
-    assert!(matches!(
-        empty_deferred.capture_checkpoint_image(&codecs, limits),
-        Err(FlowCheckpointError::InvalidState(_))
-    ));
     assert_eq!(ENCODER_CALLS.get(), 0);
+    let routed = empty_deferred
+        .capture_checkpoint_image(&codecs, limits)
+        .unwrap();
+    let kairo_ecs_des::FlowCheckpointImage::V3(routed) = routed else {
+        panic!("Empty Deferred resource still requires V3");
+    };
+    assert_eq!(routed.allocation_modes.len(), 1);
+    assert_eq!(routed.allocation_modes[0].1, FlowAllocationMode::Deferred);
+    assert!(routed.commands.is_empty());
+    assert_eq!(ENCODER_CALLS.get(), 0);
+    assert_eq!(DECODER_CALLS.get(), 0);
 
     let mut deferred = FlowRuntime::new();
     let resource = deferred
@@ -1097,7 +1105,7 @@ fn deferred_legacy_capture_rejects_before_codecs() {
     deferred
         .create_work(owner, SimDuration::from_ticks(3), "payload", 0x1234_u64)
         .unwrap();
-    deferred
+    let flush = deferred
         .schedule_allocation_flush(resource, t(4), 0)
         .unwrap();
 
@@ -1114,12 +1122,43 @@ fn deferred_legacy_capture_rejects_before_codecs() {
     ));
     assert_eq!(ENCODER_CALLS.get(), 0);
     assert_eq!(DECODER_CALLS.get(), 0);
-    assert!(matches!(
-        deferred.capture_checkpoint_image(&codecs, limits),
-        Err(FlowCheckpointError::InvalidState(_))
-    ));
     assert_eq!(ENCODER_CALLS.get(), 0);
     assert_eq!(DECODER_CALLS.get(), 0);
+    let routed = deferred.capture_checkpoint_image(&codecs, limits).unwrap();
+    let kairo_ecs_des::FlowCheckpointImage::V3(routed) = routed else {
+        panic!("Pending Deferred Flush requires V3");
+    };
+    assert_eq!(
+        routed.allocation_modes,
+        vec![(resource, FlowAllocationMode::Deferred)]
+    );
+    assert_eq!(
+        routed.commands,
+        vec![(
+            flush,
+            kairo_ecs_des::FlowCommandV3::AllocationFlush(resource)
+        )]
+    );
+    assert_eq!(ENCODER_CALLS.get(), 1);
+    assert_eq!(DECODER_CALLS.get(), 0);
+    DECODER_CALLS.set(0);
+    let (restored, _) = kairo_ecs_des::FlowCheckpointImage::V3(routed.clone())
+        .restore_with_rebind(&codecs, limits)
+        .unwrap();
+    assert_eq!(DECODER_CALLS.get(), 1);
+    assert_eq!(
+        restored.resource_allocation_mode(resource),
+        Ok(FlowAllocationMode::Deferred)
+    );
+    assert_eq!(
+        restored
+            .capture_checkpoint_v3(&codecs, limits)
+            .unwrap()
+            .commands,
+        routed.commands
+    );
+    ENCODER_CALLS.set(0);
+    DECODER_CALLS.set(0);
 
     let mut eager = FlowRuntime::new();
     let eager_owner = eager.spawn_actor().unwrap();
