@@ -89,6 +89,12 @@ pub fn load_seed_manifest(path: &Path) -> Result<SeedManifest, ScenarioError> {
     })
 }
 
+/// Optional C5 study reference. The CLI resolves and validates its path boundary.
+pub fn calibration_study_reference(path: &Path) -> Result<Option<String>, String> {
+    let fields = read_fields(path).map_err(|error| error.to_string())?;
+    Ok(fields.get("calibration_study").cloned())
+}
+
 pub fn validate_scenario_and_seed(
     scenario: &ScenarioManifest,
     seed: &SeedManifest,

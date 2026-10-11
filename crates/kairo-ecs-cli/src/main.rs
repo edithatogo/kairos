@@ -1,5 +1,7 @@
 #![forbid(unsafe_code)]
 
+mod c5_cli;
+mod c5_workers;
 mod scenario;
 
 use std::env;
@@ -8,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_types::{EventKind, ScheduleRequest, SimTime, StepOutcome};
-use scenario::{load_scenario, load_seed_manifest, validate_scenario_and_seed, ScenarioManifest};
+use scenario::{ScenarioManifest, load_scenario, load_seed_manifest, validate_scenario_and_seed};
 
 fn main() {
     if let Err(error) = run(env::args().skip(1).collect()) {
@@ -22,6 +24,14 @@ fn run(args: Vec<String>) -> Result<(), String> {
         print_help();
         return Ok(());
     };
+
+    if matches!(command, "verify" | "calibrate" | "compare-runs")
+        || (command == "replay" && (args.iter().any(|arg| arg == "--study" || arg == "--mode")))
+    {
+        let output = c5_cli::run(&args)?;
+        println!("{output}");
+        return Ok(());
+    }
 
     match command {
         "validate-scenario" => {
@@ -129,7 +139,7 @@ fn run(args: Vec<String>) -> Result<(), String> {
 
 fn print_help() {
     println!(
-        "kairo-ecs-cli\n\nCommands:\n  validate-scenario --scenario <path> --seed-manifest <path>\n  replay --scenario <path> --seed-manifest <path> --output <dir>\n  resume-plan --scenario <path> --output <dir>\n  run --scenario <path> [--seed-manifest <path>] [--output <dir>]\n  checkpoint --output <dir>\n  resume --checkpoint <path> --output <dir>"
+        "kairo-ecs-cli\n\nCommands:\n  validate-scenario --scenario <path> --seed-manifest <path>\n  replay --scenario <path> --seed-manifest <path> --output <dir>\n  verify trace --study <json> [--scenario <path> --seed-manifest <path>]\n  replay --study <json> --mode shadow|free [--scenario <path> --seed-manifest <path>] --output <dir>\n  calibrate --study <json> --output <dir> [--workers N] [--resume DIR] [--stop-after N]\n  compare-runs --left <dir> --right <dir> [--output <file>]\n  resume-plan --scenario <path> --output <dir>\n  run --scenario <path> [--seed-manifest <path>] [--output <dir>]\n  checkpoint --output <dir>\n  resume --checkpoint <path> --output <dir>"
     );
 }
 
