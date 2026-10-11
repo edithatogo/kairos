@@ -442,7 +442,7 @@ fn leakage_and_bad_configuration_are_rejected_before_dispatch() {
 fn per_split_case_cap_is_checked_before_task_materialization() {
     let mut cfg = study();
     let mut rows = cfg["trace"].as_array().unwrap().clone();
-    for i in 0..4093 {
+    for i in 0..4094 {
         rows.push(json!({"case_id":format!("extra-{i}"),"day":format!("day-extra-{i}"),"start_tick":0,"end_tick":0,"transit_ticks":0}));
     }
     cfg["trace"] = json!(rows);

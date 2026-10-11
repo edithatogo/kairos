@@ -25,8 +25,8 @@ use kairo_ecs_abm::spatial::{
     EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge, TransitGraphV1,
 };
 use kairo_ecs_abm::{
-    register_transit_context, register_transit_context_checkpoint_domain, TransitContext,
-    TransitContextCheckpointLimitsV1, TransitContextCheckpointV1,
+    TransitContext, TransitContextCheckpointLimitsV1, TransitContextCheckpointV1,
+    register_transit_context, register_transit_context_checkpoint_domain,
 };
 use kairo_ecs_des::fidelity::{FidelityAdapter, FidelityMode, FidelityPolicy};
 use kairo_ecs_des::{
@@ -321,6 +321,7 @@ fn graph(config: &SyntheticFlowConfig) -> Result<Arc<TransitGraphV1>, ShadowErro
 fn codecs(
     identity: kairo_ecs_des::FlowRuntimeIdentity,
     graph: Arc<TransitGraphV1>,
+    empty_anchor: bool,
 ) -> Result<FlowCheckpointCodecs, ShadowError> {
     let mut c = FlowCheckpointCodecs::new();
     c.register_context::<u32>(CONTEXT, 1, encode_u32, decode_u32)
@@ -335,6 +336,18 @@ fn codecs(
         .map_err(|e| ShadowError::Adapter(format!("restart template: {e:?}")))?;
     c.register_restart_factory::<u32, u32>(CONTEXT, "c3.native.factory", make_context)
         .map_err(|e| ShadowError::Adapter(format!("restart factory: {e:?}")))?;
+    if empty_anchor {
+        c.register_domain_hook::<u32>(
+            CONTEXT,
+            ANCHOR_EVENT,
+            empty_anchor_hook,
+            FlowCallbackCodeV1 {
+                stable_id: "c3.native.empty-anchor".into(),
+                version: 1,
+            },
+        )
+        .map_err(|e| ShadowError::Adapter(format!("anchor domain codec: {e:?}")))?;
+    }
     let enc_identity = identity;
     c.register_context_with_owner::<TransitContext>(
         TRANSIT,
@@ -366,6 +379,17 @@ fn codecs(
     )
     .map_err(|e| ShadowError::Adapter(format!("transit domain: {e:?}")))?;
     Ok(c)
+}
+
+fn empty_anchor(snapshot: &LedgerSnapshot) -> bool {
+    snapshot.resources.values().all(|r| r.claims.is_empty())
+}
+
+fn empty_anchor_hook(
+    _: &mut u32,
+    _: &kairo_ecs_des::FlowCallbackSnapshot,
+    _: &mut kairo_ecs_des::FlowCommandSink,
+) {
 }
 
 fn c2_limits() -> C2PortableCheckpointLimitsV1 {
@@ -513,19 +537,11 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
         let mut flow = FlowRuntime::new();
         flow.register_work_handlers(CONTEXT, WorkHandlers::<u32>::default())
             .map_err(|e| ShadowError::Adapter(format!("register handlers: {e:?}")))?;
-        let needs_anchor_materialization = snapshot
-            .resources
-            .values()
-            .all(|resource| resource.claims.is_empty());
-        if needs_anchor_materialization {
-            flow.register_domain_hook(
-                CONTEXT,
-                ANCHOR_EVENT,
-                |_: &mut u32,
-                 _: &kairo_ecs_des::FlowCallbackSnapshot,
-                 _: &mut kairo_ecs_des::FlowCommandSink| {},
-            )
-            .map_err(|e| ShadowError::Adapter(format!("anchor hook: {e:?}")))?;
+        // Preserve occupied-anchor checkpoint registrations. Empty anchors need
+        // the matching materialization hook in both runtime and restore codecs.
+        if empty_anchor(snapshot) {
+            flow.register_domain_hook(CONTEXT, ANCHOR_EVENT, empty_anchor_hook)
+                .map_err(|e| ShadowError::Adapter(format!("anchor hook: {e:?}")))?;
         }
         register_transit_context(&mut flow, TRANSIT, GRAPH_EVENT)
             .map_err(|e| ShadowError::Adapter(format!("register route context: {e:?}")))?;
@@ -747,7 +763,7 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
             .map_err(|e| ShadowError::Adapter(format!("route start: {e:?}")))?;
         let target_live = target.work();
         bound.push(target);
-        let codecs = codecs(flow.identity(), graph.clone())?;
+        let codecs = codecs(flow.identity(), graph.clone(), empty_anchor(snapshot))?;
         Ok(SyntheticWorld {
             flow,
             codecs,
@@ -881,7 +897,11 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
         if input.seed_key != target_key {
             return Err(ShadowError::IncompatibleCheckpoint);
         }
-        let dec_codecs = codecs(FlowRuntime::new().identity(), graph.clone())?;
+        let dec_codecs = codecs(
+            FlowRuntime::new().identity(),
+            graph.clone(),
+            empty_anchor(snapshot),
+        )?;
         let image = C2PortableCheckpointV1::from_bytes(bytes[20..].to_vec(), binding, c2_limits())
             .map_err(|_| ShadowError::IncompatibleCheckpoint)?;
         let mut restored_keys = BTreeMap::<EntityId, CalibrationStreamKey>::new();
@@ -1007,7 +1027,11 @@ impl FlowProbeModel for SyntheticFlowProbeModel {
             }
         }
         let target_live = target_live.ok_or(ShadowError::IncompatibleCheckpoint)?;
-        let new_codecs = codecs(restored.flow.identity(), graph.clone())?;
+        let new_codecs = codecs(
+            restored.flow.identity(),
+            graph.clone(),
+            empty_anchor(snapshot),
+        )?;
         Ok(SyntheticWorld {
             flow: restored.flow,
             codecs: new_codecs,
@@ -1122,6 +1146,7 @@ pub(crate) fn run_fixture() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::shadow::ProbeAdapter;
     use kairo_ecs_des::FlowDomainControl;
     use kairo_ecs_types::SimTime;
 
@@ -1323,6 +1348,31 @@ mod tests {
         }
         panic!("nonzero anchor fixture did not complete");
     }
+
+    #[test]
+    fn empty_resource_anchor_can_be_checkpointed_by_native_preview() {
+        let model = SyntheticFlowProbeModel {
+            config: SyntheticFlowConfig::default(),
+        };
+        let input = model.probe_input().unwrap();
+        let mut snapshot = fixture_snapshot(&model);
+        snapshot.at = 100;
+        let resource = snapshot
+            .resources
+            .get_mut(&model.config.target_resource)
+            .unwrap();
+        resource.capacity = 1;
+        resource.claims.clear();
+
+        let adapter = crate::shadow_native::NativeFlowAdapter {
+            model,
+            max_image_bytes: MAX_OUTER,
+        };
+        let world = adapter.start(&snapshot, &input).unwrap();
+        assert_eq!(adapter.now(&world), 100);
+        assert!(adapter.next_tick(&world).unwrap().is_some());
+    }
+
     #[test]
     fn routed_c2_image_restores_without_replaying_prediction_prefix() {
         run_fixture().unwrap();
