@@ -50,7 +50,7 @@ fn verify_command(args: &[String]) -> Result<String, String> {
     if let Some(output) = flags.get("--output") {
         write_file_no_replace(Path::new(output), &canonical_json(&result)?)?;
     }
-    Ok(canonical_json(&result)?)
+    canonical_json(&result)
 }
 
 fn replay_command(args: &[String]) -> Result<String, String> {
@@ -168,7 +168,7 @@ fn calibrate_command(args: &[String]) -> Result<String, String> {
     )
     .map_err(|error| format!("initial task execution: {error}"))?;
     if !initial.complete {
-        return Ok(canonical_json(&json!({
+        return canonical_json(&json!({
             "schema_version":"kairoecs.c5-calibration-progress.v1",
             "status":"incomplete",
             "phase":"initial",
@@ -176,7 +176,7 @@ fn calibrate_command(args: &[String]) -> Result<String, String> {
             "completed_tasks":initial.results.len(),
             "total_tasks":initial_tasks.len(),
             "resume":"calibrate --study <same-study> --output <same-dir> --resume <same-dir>"
-        }))?);
+        }));
     }
     let mut attempts: Vec<Value> = initial
         .results
@@ -210,7 +210,7 @@ fn calibrate_command(args: &[String]) -> Result<String, String> {
         )
         .map_err(|error| format!("final task execution: {error}"))?;
         if !final_execution.complete {
-            return Ok(canonical_json(&json!({
+            return canonical_json(&json!({
                 "schema_version":"kairoecs.c5-calibration-progress.v1",
                 "status":"incomplete",
                 "phase":"final_test",
@@ -219,7 +219,7 @@ fn calibrate_command(args: &[String]) -> Result<String, String> {
                 "total_tasks":final_tasks.len(),
                 "remaining_fresh_task_budget":remaining_stop_after,
                 "resume":"calibrate --study <same-study> --output <same-dir> --resume <same-dir>"
-            }))?);
+            }));
         }
         attempts.extend(final_execution.results.into_iter().map(|item| item.result));
     }

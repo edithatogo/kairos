@@ -264,9 +264,9 @@ fn evaluate_admitted(config: &Value, task: &Value) -> Result<Value, String> {
                     censored += 1;
                 } else if need_transit && transit_pair.is_none() {
                     missing += 1;
-                } else if let Some(observed) = row["end_tick"].as_u64() {
+                } else if let (Some(predicted), Some(observed)) = (pred, row["end_tick"].as_u64()) {
                     eligible += 1;
-                    completion += pred.unwrap().abs_diff(observed.into()) as f64;
+                    completion += predicted.abs_diff(observed.into()) as f64;
                     if let Some((observed, predicted)) = transit_pair {
                         transit_count += 1;
                         transit += predicted.abs_diff(observed.into()) as f64;
