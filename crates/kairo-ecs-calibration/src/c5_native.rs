@@ -357,8 +357,14 @@ fn free_run(config: &Value, task: &Value) -> Result<Value, String> {
             .at(SimTime::from_ticks(start + u128::from(route)))
             .submit()
             .map_err(error)?;
-        pending.push((row, work, seed));
+        pending.push((
+            row,
+            work,
+            seed,
+            start + u128::from(number(task, "horizon_ticks")?),
+        ));
     }
+    let mut completions = vec![None; pending.len()];
     let mut events = 0;
     while events < number(task, "max_events")? {
         let image = flow
@@ -381,15 +387,20 @@ fn free_run(config: &Value, task: &Value) -> Result<Value, String> {
         if let Some(e) = dispatch.error {
             return Err(error(e));
         }
+        // completion_at is a pending deadline, cleared by native completion.
+        // Capture the actual transition tick once, before the next dispatch.
+        for (i, (_, work, _, cutoff)) in pending.iter().enumerate() {
+            if completions[i].is_none()
+                && flow.now().ticks() <= *cutoff
+                && flow.work_progress(*work).map_err(error)?.state == WorkState::Completed
+            {
+                completions[i] = Some(flow.now().ticks());
+            }
+        }
     }
     let mut result = Vec::new();
-    for (row, work, seed) in pending {
-        let progress = flow.work_progress(work).map_err(error)?;
-        let predicted = if progress.state == WorkState::Completed {
-            progress.completion_at.map(|t| t.ticks().to_string())
-        } else {
-            None
-        };
+    for ((row, _, seed, _), completed) in pending.into_iter().zip(completions) {
+        let predicted = completed.map(|tick| tick.to_string());
         result.push(json!({"case_id":row["case_id"],"predicted_tick":predicted,"observed_tick":row["end_tick"],"observed_censored":row["censored"],"study_service_seed":seed,"native_events":events,"event_count_scope":"shared-task","predicted_transit_ticks":route.to_string(),"outcome":if predicted.is_some(){"complete"}else{"censored"}}));
     }
     Ok(
@@ -542,6 +553,8 @@ mod tests {
         }
         let after = crate::c5_study::summarize(&c, &attempts).unwrap();
         assert_eq!(after["complete"], true);
+        assert_eq!(after["final_test"]["mean_completion_error"], 0.0);
+        assert_eq!(after["final_test"]["censored_count"], 0);
         assert_eq!(before["ranking"], after["ranking"]);
         attempts.reverse();
         assert_eq!(crate::c5_study::summarize(&c, &attempts).unwrap(), after);
@@ -596,5 +609,17 @@ mod tests {
         assert_eq!(r["outcome"], "failed");
         assert_eq!(r["failed_count"], 1);
         assert_eq!(r["eligible_count"], 0);
+    }
+    #[test]
+    fn c5_native_free_cutoff_remains_per_case_when_later_cases_extend_run() {
+        let mut c = study();
+        c["parameters"]["route_ticks"]["values"] = json!([2]);
+        c["parameters"]["work_ticks"]["values"] = json!([3]);
+        c["budget"]["horizon_ticks"] = json!(4);
+        c["trace"].as_array_mut().unwrap().push(json!({"case_id":"validation-later","day":"validation-1","start_tick":120,"end_tick":125,"transit_ticks":2}));
+        let r = replay(&c, "free").unwrap();
+        assert_eq!(r["result"]["records"][0]["outcome"], "censored");
+        assert_eq!(r["result"]["records"][0]["predicted_tick"], Value::Null);
+        assert!(r["result"]["native_events"].as_u64().unwrap() > 1);
     }
 }
