@@ -676,6 +676,13 @@ fn matrix_codecs(
             )
             .unwrap();
         codecs
+            .register_work_handlers::<PortableV3Readiness>(
+                V3_CONTEXT_CODEC,
+                FlowHandlerCodeIds::default(),
+                WorkHandlers::default(),
+            )
+            .unwrap();
+        codecs
             .register_work_continuations::<PortableV3Readiness>(
                 V3_CONTEXT_CODEC,
                 FlowContinuationCodeIds {
@@ -1160,6 +1167,154 @@ fn create_v3_fixture(runtime: &mut MatrixRuntime, case: &CaseSpec) -> PortableV3
 
 fn portable_v3_ids() -> PortableV3Ids {
     PORTABLE_V3_IDS.with(|slot| slot.get().expect("compiled V3 case IDs were prepared"))
+}
+
+/// Rebuild V3 fixture identities from the restored checkpoint image itself.
+/// The process child has no access to the source process's thread-local IDs;
+/// every join below is checked against an actual native row and scheduler
+/// entry before the IDs are rebound into the child runtime.
+fn restored_portable_v3_ids(
+    image: &FlowCheckpointImage,
+    rebind: &FlowCheckpointRebindV1,
+) -> PortableV3Ids {
+    let FlowCheckpointImage::V3(v3) = image else {
+        panic!("portable V3 fixture must restore a V3 Flow image");
+    };
+    let registrations: Vec<_> = v3
+        .work_registrations
+        .iter()
+        .filter(|row| row.context_codec_key == V3_CONTEXT_CODEC)
+        .collect();
+    let [registration] = registrations.as_slice() else {
+        panic!("restored V3 image must identify one readiness work registration");
+    };
+    let context_store = v3
+        .context_stores
+        .iter()
+        .find(|store| store.codec_key == V3_CONTEXT_CODEC)
+        .expect("restored readiness context store");
+    let (_, payload) = context_store
+        .rows
+        .iter()
+        .find(|(work, _)| *work == registration.id)
+        .expect("readiness context row joins its work registration");
+    let context = decode_v3_readiness(payload, rebind).expect("validated readiness payload");
+    let trigger_work = rebind
+        .resolve_work(registration.id)
+        .expect("restored trigger work ID");
+
+    let work_specs = v3
+        .builtins
+        .work_specs
+        .as_ref()
+        .expect("restored work-spec component store");
+    let request_for_work = |work: WorkId| {
+        let (_, spec) = work_specs
+            .rows
+            .iter()
+            .find(|(id, _)| *id == work.entity_id())
+            .expect("context work ID joins a restored work-spec row");
+        let request = spec.request.expect("fixture work retains its request ID");
+        let (_, request_row) = v3
+            .builtins
+            .requests
+            .as_ref()
+            .expect("restored request component store")
+            .rows
+            .iter()
+            .find(|(id, _)| *id == request.entity_id())
+            .expect("work request ID joins a restored request row");
+        assert_eq!(request_row.work, Some(work));
+        assert_eq!(request_row.resource, context.deferred);
+        rebind
+            .resolve_request(request.entity_id())
+            .expect("restored request identity")
+    };
+    let low_request = request_for_work(context.low_work);
+    let urgent_request = request_for_work(context.urgent_work);
+    let trigger_request = {
+        let (_, spec) = work_specs
+            .rows
+            .iter()
+            .find(|(id, _)| *id == trigger_work.entity_id())
+            .expect("trigger work joins its restored work-spec row");
+        let request = spec.request.expect("trigger work retains its request ID");
+        let (_, request_row) = v3
+            .builtins
+            .requests
+            .as_ref()
+            .expect("restored request component store")
+            .rows
+            .iter()
+            .find(|(id, _)| *id == request.entity_id())
+            .expect("trigger request ID joins a restored request row");
+        assert_eq!(request_row.work, Some(trigger_work));
+        assert_eq!(request_row.resource, context.trigger_resource);
+        rebind
+            .resolve_request(request.entity_id())
+            .expect("restored trigger request identity")
+    };
+    assert!(v3
+        .allocation_modes
+        .contains(&(context.deferred, FlowAllocationMode::Deferred)));
+
+    let live_event = |event: kairo_ecs_types::EventId, at: SimTime| {
+        v3.scheduler
+            .entries
+            .iter()
+            .any(|entry| entry.id == event && entry.live && entry.request.at == at)
+    };
+    let flush = v3
+        .commands
+        .iter()
+        .find_map(|(event, command)| {
+            (*command == FlowCommandV3::AllocationFlush(context.deferred)
+                && live_event(*event, v3.scheduler.now))
+            .then_some(*event)
+        })
+        .expect("restored live Flush command joins deferred resource and scheduler row");
+    let stale_completion = v3
+        .commands
+        .iter()
+        .find_map(|(event, command)| match command {
+            FlowCommandV3::Completion(request, _, _, due)
+                if *request == low_request
+                    && *due == SimTime::from_ticks(11)
+                    && live_event(*event, *due) =>
+            {
+                Some(*event)
+            }
+            _ => None,
+        });
+    let stale_revision = stale_completion.map(|event| {
+        v3.commands
+            .iter()
+            .find_map(|(candidate, command)| match command {
+                FlowCommandV3::Completion(request, _, revision, due)
+                    if *candidate == event
+                        && *request == low_request
+                        && *due == SimTime::from_ticks(11) =>
+                {
+                    Some(*revision)
+                }
+                _ => None,
+            })
+            .expect("stale completion identity, request and due join")
+    });
+
+    PortableV3Ids {
+        deferred: context.deferred,
+        trigger_work,
+        trigger_request,
+        ready_work: context.ready_work,
+        low_work: context.low_work,
+        urgent_work: context.urgent_work,
+        low_request,
+        urgent_request,
+        flush: Some(flush),
+        stale_completion,
+        stale_revision,
+    }
 }
 
 fn limits() -> C2PortableCheckpointLimitsV1 {
@@ -3696,6 +3851,12 @@ fn restore_child_entrypoint() {
     let _fixture_ids = build_runtime(&case);
     let image = C2PortableCheckpointV1::read_file(Path::new(&file), binding(), limits()).unwrap();
     let expected_image_bytes = image.as_bytes().to_vec();
+    let flow_image = flow_image_from_outer(&expected_image_bytes);
+    let (_, rebind) = flow_image
+        .clone()
+        .restore_with_rebind(&restore_codecs, limits().flow.flow)
+        .unwrap();
+    let child_ids = restored_portable_v3_ids(&flow_image, &rebind);
     let restored = {
         let mut trusted = resolver(&bindings);
         image
@@ -3722,6 +3883,7 @@ fn restore_child_entrypoint() {
     runtime
         .submitted
         .sort_by_key(|item| item.work().entity_id());
+    PORTABLE_V3_IDS.with(|slot| slot.set(Some(child_ids)));
     let exact_reencoded = capture_bytes(&runtime);
     assert_eq!(exact_reencoded, expected_image_bytes);
     let trace = run_suffix(&case, &mut runtime);
