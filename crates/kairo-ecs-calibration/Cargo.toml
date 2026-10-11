@@ -4,7 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-rust-version = "1.88"
+rust-version = "1.99"
 
 [features]
 default = []
@@ -26,3 +26,7 @@ kairo-ecs-abm = { path = "../kairo-ecs-abm", version = "=0.1.0", optional = true
 arrow-array = { version = "=60.0.0", optional = true, default-features = false }
 arrow-schema = { version = "=60.0.0", optional = true, default-features = false }
 kairo-ecs-arrow-io = { path = "../kairo-ecs-arrow-io", version = "=0.1.0", optional = true, default-features = false }
+
+[dev-dependencies]
+# Negative Flow fixtures need this helper; production builds do not enable it.
+kairo-ecs-abm = { path = "../kairo-ecs-abm", version = "=0.1.0", features = ["test-support"] }

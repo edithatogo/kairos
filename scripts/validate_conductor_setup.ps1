@@ -4,28 +4,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function Test-RustupToolchainInstalled {
-    param([string]$Toolchain)
-
-    $toolchains = & rustup toolchain list 2>$null
-    if ($LASTEXITCODE -ne 0) {
-        return $false
-    }
-
-    return [bool](@($toolchains) | Where-Object { $_ -match "^$([regex]::Escape($Toolchain))\b" })
-}
-
-function Test-WindowsHost {
-    return ($env:OS -eq "Windows_NT") -or ((Get-Variable -Name IsWindows -ErrorAction SilentlyContinue) -and $IsWindows)
-}
-
 function Invoke-CargoWorkspaceTests {
-    if ((Test-WindowsHost) -and (Test-RustupToolchainInstalled -Toolchain "stable-x86_64-pc-windows-gnu")) {
-        & rustup run stable-x86_64-pc-windows-gnu cargo test --workspace
-    } else {
-        & cargo test --workspace
+    $rustVersion = & rustc --version
+    if ($LASTEXITCODE -ne 0 -or $rustVersion -notmatch '^rustc 1\.99\.0 ') {
+        throw "Conductor workspace qualification requires Rust 1.99.0; found $rustVersion"
     }
-
+    & cargo test --locked --workspace
     if ($LASTEXITCODE -ne 0) {
         throw "Cargo workspace tests failed with exit code $LASTEXITCODE"
     }
