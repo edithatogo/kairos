@@ -1537,6 +1537,17 @@ impl FlowRuntime {
     pub fn now(&self) -> SimTime {
         self.scheduler.now()
     }
+    /// Copy the next live scheduled event without dispatching it.
+    ///
+    /// Cancelled heap entries may be pruned. Preview leaves virtual time,
+    /// scheduler counters, live pending membership, and Flow domain state
+    /// unchanged. It returns a live stale Completion like any other event.
+    /// Later scheduling or cancellation may change the next event; this value
+    /// is an observation, not a reservation or dispatch ticket. Preview remains
+    /// available while the runtime is halted and does not clear that halt.
+    pub fn peek_next(&mut self) -> Option<ScheduledEventPreview> {
+        self.scheduler.peek_next()
+    }
     fn spawn(&mut self) -> Result<EntityId, FlowError> {
         self.check_running()?;
         if self.created >= OPERATION_CAP {
@@ -8330,5 +8341,86 @@ mod deferred_allocation_private_tests {
             flow.pending_allocation_flushes,
             control.pending_allocation_flushes
         );
+    }
+}
+
+#[cfg(test)]
+mod flow_preview_private_tests {
+    use super::*;
+
+    #[test]
+    fn flow_preview_cancelled_head_preserves_logical_state() {
+        let mut flow = FlowRuntime::new();
+        let resource = flow.create_resource(1).unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let work = flow
+            .create_work(owner, SimDuration::from_ticks(4), "preview.private", ())
+            .unwrap();
+        let request = flow
+            .acquire(resource)
+            .owner(owner)
+            .timed_work(work)
+            .at(SimTime::from_ticks(9))
+            .submit()
+            .unwrap();
+
+        let cancelled = flow
+            .schedule_command(Command::Capacity(resource, 2), SimTime::from_ticks(1), -3)
+            .unwrap();
+        let live = flow
+            .schedule_command(Command::Capacity(resource, 3), SimTime::from_ticks(2), 5)
+            .unwrap();
+        assert!(flow.scheduler.cancel(cancelled));
+        assert_eq!(
+            flow.commands.remove(&cancelled),
+            Some(Command::Capacity(resource, 2))
+        );
+
+        let before_now = flow.now();
+        let before_budget = flow.budget_snapshot();
+        let before_live_entries = flow
+            .scheduler
+            .checkpoint_state(kairo_ecs_core::checkpoint::SchedulerCheckpointLimits {
+                max_entries: 16,
+            })
+            .unwrap()
+            .entries
+            .into_iter()
+            .filter(|entry| entry.live)
+            .collect::<Vec<_>>();
+        let before_pending = flow.scheduler.pending_events();
+        let before_live_commands = flow.commands.clone();
+        let before_resource = flow.resource(resource).unwrap();
+        let before_request = flow.request(request).unwrap();
+        let before_progress = flow.work_progress(work).unwrap();
+        let expected = ScheduledEventPreview {
+            id: live,
+            at: SimTime::from_ticks(2),
+            priority: 5,
+            sequence: 2,
+            entity: None,
+            kind: EventKind::custom(FLOW_COMMAND_DISPATCH_EVENT_KIND),
+        };
+
+        assert_eq!(flow.peek_next(), Some(expected));
+        assert_eq!(flow.peek_next(), Some(expected));
+        assert_eq!(flow.now(), before_now);
+        assert_eq!(flow.budget_snapshot(), before_budget);
+        assert_eq!(flow.scheduler.pending_events(), before_pending);
+        let after_live_entries = flow
+            .scheduler
+            .checkpoint_state(kairo_ecs_core::checkpoint::SchedulerCheckpointLimits {
+                max_entries: 16,
+            })
+            .unwrap()
+            .entries
+            .into_iter()
+            .filter(|entry| entry.live)
+            .collect::<Vec<_>>();
+        assert_eq!(after_live_entries, before_live_entries);
+        assert_eq!(flow.commands, before_live_commands);
+        assert_eq!(flow.resource(resource).unwrap(), before_resource);
+        assert_eq!(flow.request(request).unwrap(), before_request);
+        assert_eq!(flow.work_progress(work).unwrap(), before_progress);
     }
 }
