@@ -17,12 +17,14 @@ use std::fmt::{Display, Formatter};
 
 mod v2;
 mod v3;
+mod v4;
 mod wire;
 pub use v2::{
     FlowCheckpointImage, FlowCheckpointRef, FlowCheckpointV2, FlowCommandV2,
     FLOW_CHECKPOINT_VERSION_V2,
 };
 pub use v3::{FlowCheckpointV3, FlowCommandV3, FLOW_CHECKPOINT_VERSION_V3};
+pub use v4::{FlowCheckpointV4, FlowRequestQueueOrderV4, FLOW_CHECKPOINT_VERSION_V4};
 pub use wire::{FlowCheckpointWireError, FlowCheckpointWireLimits};
 
 const FLOW_CHECKPOINT_VERSION_V1: u32 = 1;
@@ -677,7 +679,7 @@ impl FlowCheckpointCodecs {
     ) -> Result<(), FlowCheckpointError> {
         let key = codec_key.into();
         if key.trim().is_empty()
-            || version != 1
+            || version == 0
             || self.contexts.contains_key(&key)
             || self.context_types.contains_key(&TypeId::of::<C>())
         {
@@ -825,7 +827,23 @@ impl FlowRuntime {
         limits: FlowCheckpointLimits,
         legacy_format: bool,
     ) -> Result<v2::FlowCheckpointParts, FlowCheckpointError> {
-        self.ensure_queue_ordering_checkpoint_supported()?;
+        self.capture_checkpoint_parts_with_queue_order(codecs, limits, legacy_format, false)
+    }
+
+    fn capture_checkpoint_parts_with_queue_order(
+        &self,
+        codecs: &FlowCheckpointCodecs,
+        limits: FlowCheckpointLimits,
+        legacy_format: bool,
+        stable_queue_order_validated: bool,
+    ) -> Result<v2::FlowCheckpointParts, FlowCheckpointError> {
+        if stable_queue_order_validated {
+            self.validate_queue_order_indexes().map_err(|_| {
+                FlowCheckpointError::InvalidState("queue ordering indexes are inconsistent")
+            })?;
+        } else {
+            self.ensure_queue_ordering_checkpoint_supported()?;
+        }
         if legacy_format {
             self.ensure_legacy_checkpoint_supported()?;
         }
@@ -2956,7 +2974,12 @@ impl FlowRuntime {
             return Err(FlowCheckpointError::UnsupportedVersion(image.version));
         }
         preflight_v1_normalization(&image, limits)?;
-        Self::restore_checkpoint_parts(v2::FlowCheckpointParts::from_v1(image), codecs, limits)
+        Self::restore_checkpoint_parts(
+            v2::FlowCheckpointParts::from_v1(image),
+            codecs,
+            limits,
+            None,
+        )
     }
 
     /// Restore a complete V2 image after full structural and cross-field validation.
@@ -2979,7 +3002,12 @@ impl FlowRuntime {
             return Err(FlowCheckpointError::UnsupportedVersion(image.version));
         }
         preflight_v2_normalization(&image, limits)?;
-        Self::restore_checkpoint_parts(v2::FlowCheckpointParts::from_v2(image), codecs, limits)
+        Self::restore_checkpoint_parts(
+            v2::FlowCheckpointParts::from_v2(image),
+            codecs,
+            limits,
+            None,
+        )
     }
 
     /// Restore a complete native V3 image, including deferred allocation state.
@@ -3002,13 +3030,19 @@ impl FlowRuntime {
             return Err(FlowCheckpointError::UnsupportedVersion(image.version));
         }
         preflight_v3_normalization(&image, limits)?;
-        Self::restore_checkpoint_parts(v2::FlowCheckpointParts::from_v3(image), codecs, limits)
+        Self::restore_checkpoint_parts(
+            v2::FlowCheckpointParts::from_v3(image),
+            codecs,
+            limits,
+            None,
+        )
     }
 
     fn restore_checkpoint_parts(
         parts: v2::FlowCheckpointParts,
         codecs: &FlowCheckpointCodecs,
         limits: FlowCheckpointLimits,
+        queue_order_metadata: Option<v4::ValidatedQueueOrderMetadata>,
     ) -> Result<(Self, FlowCheckpointRebindV1), FlowCheckpointError> {
         let (image, origin) = parts.into_v3();
         let component_limits = checkpoint_limits(limits);
@@ -4215,13 +4249,23 @@ impl FlowRuntime {
         runtime.scheduled = image.scheduled;
         runtime.next_admission = image.next_admission;
         runtime.next_lease = image.next_lease;
-        runtime
-            .rebuild_admission_queue_order_indexes()
-            .map_err(|_| {
-                FlowCheckpointError::InvalidState(
-                    "restored admission queue ordering indexes are inconsistent",
-                )
-            })?;
+        if let Some(metadata) = queue_order_metadata {
+            runtime
+                .rebuild_queue_order_indexes_with_metadata(metadata.modes, metadata.keys)
+                .map_err(|_| {
+                    FlowCheckpointError::InvalidState(
+                        "restored queue ordering indexes are inconsistent",
+                    )
+                })?;
+        } else {
+            runtime
+                .rebuild_admission_queue_order_indexes()
+                .map_err(|_| {
+                    FlowCheckpointError::InvalidState(
+                        "restored admission queue ordering indexes are inconsistent",
+                    )
+                })?;
+        }
         Ok((runtime, rebind))
     }
 }

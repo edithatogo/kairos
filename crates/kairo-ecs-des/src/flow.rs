@@ -1939,8 +1939,31 @@ impl FlowRuntime {
             return Err(FlowError::InvalidState);
         }
         let mut orderings = BTreeMap::new();
+        for resource_id in &self.resources {
+            orderings.insert(*resource_id, FlowQueueOrdering::AdmissionOrder);
+        }
+        self.queue_orderings = orderings;
+        self.rebuild_queue_order_indexes()
+    }
+
+    pub(crate) fn rebuild_queue_order_indexes_with_metadata(
+        &mut self,
+        orderings: BTreeMap<ResourceId, FlowQueueOrdering>,
+        keys: BTreeMap<RequestId, FlowQueueOrderKey>,
+    ) -> Result<(), FlowError> {
+        self.queue_orderings = orderings;
+        self.queue_order_keys = keys;
+        self.rebuild_queue_order_indexes()
+    }
+
+    fn rebuild_queue_order_indexes(&mut self) -> Result<(), FlowError> {
         let mut indexes = BTreeMap::new();
         for resource_id in &self.resources {
+            let ordering = self
+                .queue_orderings
+                .get(resource_id)
+                .copied()
+                .ok_or(FlowError::InvalidState)?;
             let queue = self
                 .registry
                 .get::<ClaimQueue>(resource_id.entity_id())
@@ -1965,8 +1988,8 @@ impl FlowRuntime {
                     key.level,
                     key.enqueue_sequence,
                     key.request,
-                    FlowQueueOrdering::AdmissionOrder,
-                    None,
+                    ordering,
+                    self.queue_order_keys.get(&key.request),
                 )
                 .ok_or(FlowError::InvalidState)?;
                 if !queue_index.insert(effective.clone()) {
@@ -1986,8 +2009,8 @@ impl FlowRuntime {
                     key.level,
                     key.enqueue_sequence,
                     key.request,
-                    FlowQueueOrdering::AdmissionOrder,
-                    None,
+                    ordering,
+                    self.queue_order_keys.get(&key.request),
                 )
                 .ok_or(FlowError::InvalidState)?;
                 if !queue.requests.contains(key) || !preempting_index.contains(&effective) {
@@ -1996,7 +2019,6 @@ impl FlowRuntime {
             }
             let queue_len = queue_index.len();
             let preempting_len = preempting_index.len();
-            orderings.insert(*resource_id, FlowQueueOrdering::AdmissionOrder);
             indexes.insert(
                 *resource_id,
                 ResourceQueueOrderIndexes {
@@ -2007,7 +2029,6 @@ impl FlowRuntime {
                 },
             );
         }
-        self.queue_orderings = orderings;
         self.queue_order_indexes = indexes;
         self.validate_queue_order_indexes()
     }
