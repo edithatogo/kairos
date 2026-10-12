@@ -13,8 +13,12 @@ use crate::seed_map::checkpoint_wire::SeedWireLimits;
 use crate::work_duration::{IntrinsicDurationDistribution, IntrinsicWorkProvider};
 use kairo_ecs_abm::spatial::{EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge};
 use kairo_ecs_abm::{
-    register_transit_context, register_transit_context_checkpoint_domain, TransitContext,
-    TransitContextCheckpointLimitsV1, TransitContextCheckpointV1, TransitPhase,
+    TransitArrivalActionCheckpointV2, TransitContext, TransitContextCheckpointError,
+    TransitContextCheckpointLimitsV1, TransitContextCheckpointV1, TransitContextCheckpointV2,
+    TransitContextWireError, TransitPhase, observe_transit_arrival_handoff,
+    pending_transit_arrival_handoff, register_transit_context,
+    register_transit_context_checkpoint_codec_v2, register_transit_context_checkpoint_domain,
+    schedule_transit_control, schedule_transit_start,
 };
 use kairo_ecs_des::fidelity::{FidelityMode, FidelityPolicy};
 use kairo_ecs_des::{
@@ -22,8 +26,8 @@ use kairo_ecs_des::{
     FlowCheckpointCodecs, FlowCheckpointError, FlowCheckpointImage, FlowCheckpointLimits,
     FlowCheckpointRebindV1, FlowCheckpointRef, FlowCheckpointWireError, FlowCheckpointWireLimits,
     FlowCommandV2, FlowCommandV3, FlowConfig, FlowContinuationCodeIds, FlowContinuations,
-    FlowDomainControl, FlowHandlerCodeIds, FlowOwnedCommand, FlowRuntime, PreemptionStrategy,
-    RequestId, ResourceId, WorkHandlers, WorkId,
+    FlowDomainControl, FlowHandlerCodeIds, FlowOwnedCommand, FlowQueueOrderKey, FlowQueueOrdering,
+    FlowRuntime, PreemptionStrategy, RequestId, RequestState, ResourceId, WorkHandlers, WorkId,
 };
 use kairo_ecs_types::{EntityId, EventKind, SimDuration, SimTime};
 use sha2::{Digest, Sha256};
@@ -32,7 +36,7 @@ use std::collections::BTreeMap;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 const CHILD_PATH: &str = "KAIROS_C2_PROCESS_MATRIX_FILE";
 const CHILD_CASE: &str = "KAIROS_C2_PROCESS_MATRIX_CASE";
@@ -41,14 +45,33 @@ thread_local! { static FLOW_CODEC_DECODER_CALLS: Cell<usize> = const { Cell::new
 thread_local! { static PORTABLE_V3_IDS: Cell<Option<PortableV3Ids>> = const { Cell::new(None) }; }
 const CONTEXT_CODEC: &str = "c2.matrix.context";
 const TEMPLATE_CODEC: &str = "c2.matrix.template";
+const PORTABLE_HANDOFF_UNIT_CODEC: &str = "c2.portable.handoff.unit";
 const TRANSIT_CODEC: &str = "c2.matrix.transit";
 const V3_CONTEXT_CODEC: &str = "c2.matrix.v3-readiness";
 const STUDY_ID: &str = "c2-portable-process-matrix";
 const ROOT_SEED: u64 = 0xC2_2026_1010;
 const EVENT_KIND_RED: EventKind = EventKind::custom(0xCA20);
 const EVENT_KIND_BLUE: EventKind = EventKind::custom(0xCA21);
+const PORTABLE_HANDOFF_CODEC: &str = "c2.portable.handoff.v2";
+const PORTABLE_HANDOFF_KIND: EventKind = EventKind::custom(0xCA22);
+const PORTABLE_HANDOFF_LIMITS: TransitContextCheckpointLimitsV1 =
+    TransitContextCheckpointLimitsV1::new(64, 16 * 1024, 256, 32 * 1024);
 const TRANSIT_LIMITS: TransitContextCheckpointLimitsV1 =
     TransitContextCheckpointLimitsV1::new(256, 64 * 1024, 4096, 128 * 1024);
+
+fn encode_unit(_: &(), _: usize) -> Result<Vec<u8>, FlowCheckpointCodecError> {
+    Ok(Vec::new())
+}
+
+fn decode_unit(bytes: &[u8], _: &FlowCheckpointRebindV1) -> Result<(), FlowCheckpointCodecError> {
+    if bytes.is_empty() {
+        Ok(())
+    } else {
+        Err(FlowCheckpointCodecError(
+            "unit fixture payload must be empty".to_owned(),
+        ))
+    }
+}
 
 struct OwnedContext {
     payload: Box<[u8]>,
@@ -1031,6 +1054,570 @@ fn build_runtime(case: &CaseSpec) -> MatrixRuntime {
     runtime
 }
 
+struct PortableHandoffFixture {
+    runtime: MatrixRuntime,
+    graph: Arc<TransitGraphV1>,
+    carrier_actor: EntityId,
+    carrier: WorkId,
+    service: WorkId,
+    owner: EntityId,
+    resource: ResourceId,
+    stale_domain_event: Option<kairo_ecs_types::EventId>,
+    cut_dispatches: Vec<String>,
+    cut_trace: Vec<u8>,
+}
+
+fn portable_handoff_graph() -> (Arc<TransitGraphV1>, kairo_ecs_abm::spatial::RoutePlan) {
+    let nodes = vec![NodeId::new(1), NodeId::new(2), NodeId::new(3)];
+    let walk = MovementModeId::new("walk").unwrap();
+    let graph = Arc::new(
+        TransitGraphV1::new(
+            1,
+            nodes.clone(),
+            vec![
+                TransitEdge {
+                    id: EdgeId::new(1),
+                    from: nodes[0],
+                    to: nodes[1],
+                    length_mm: 2,
+                    allowed_modes: vec![walk.clone()],
+                },
+                TransitEdge {
+                    id: EdgeId::new(2),
+                    from: nodes[1],
+                    to: nodes[2],
+                    length_mm: 2,
+                    allowed_modes: vec![walk],
+                },
+            ],
+        )
+        .unwrap(),
+    );
+    let route = graph
+        .route(
+            nodes[0],
+            nodes[2],
+            &MovementProfile::new("walk", 1).unwrap(),
+            1,
+        )
+        .unwrap();
+    (graph, route)
+}
+
+fn portable_handoff_codecs(
+    identity: kairo_ecs_des::FlowRuntimeIdentity,
+    graph: Arc<TransitGraphV1>,
+) -> FlowCheckpointCodecs {
+    let mut codecs = FlowCheckpointCodecs::new();
+    codecs
+        .register_context::<()>(PORTABLE_HANDOFF_UNIT_CODEC, 1, encode_unit, decode_unit)
+        .unwrap();
+    register_transit_context_checkpoint_codec_v2(
+        &mut codecs,
+        PORTABLE_HANDOFF_CODEC,
+        identity,
+        graph,
+        PORTABLE_HANDOFF_LIMITS,
+    )
+    .unwrap();
+    register_transit_context_checkpoint_domain(
+        &mut codecs,
+        PORTABLE_HANDOFF_CODEC,
+        PORTABLE_HANDOFF_KIND,
+        FlowCallbackCodeV1 {
+            stable_id: "c2.portable.handoff.plan".to_owned(),
+            version: 1,
+        },
+        FlowCallbackCodeV1 {
+            stable_id: "c2.portable.handoff.receipt".to_owned(),
+            version: 1,
+        },
+    )
+    .unwrap();
+    codecs
+}
+
+fn portable_handoff_fixture(name: &str) -> PortableHandoffFixture {
+    let mut flow = FlowRuntime::new();
+    register_transit_context(&mut flow, PORTABLE_HANDOFF_CODEC, PORTABLE_HANDOFF_KIND).unwrap();
+    let owner = flow.spawn_actor().unwrap();
+    let carrier_actor = flow.spawn_actor().unwrap();
+    let service = flow
+        .create_work(
+            owner,
+            SimDuration::from_ticks(4),
+            PORTABLE_HANDOFF_UNIT_CODEC,
+            (),
+        )
+        .unwrap();
+    let resource = flow
+        .create_resource_with_queue_ordering(
+            1,
+            FlowAllocationMode::Eager,
+            FlowQueueOrdering::StableKey,
+        )
+        .unwrap();
+    let (graph, route) = portable_handoff_graph();
+    let context = TransitContext::new_handoff(&flow, route, service, SimTime::ZERO, 3).unwrap();
+    let carrier = flow
+        .create_actor_domain_context(
+            carrier_actor,
+            PORTABLE_HANDOFF_CODEC,
+            PORTABLE_HANDOFF_KIND,
+            context,
+        )
+        .unwrap();
+    let codecs = portable_handoff_codecs(flow.identity(), graph.clone());
+    let adapter = FidelityAdapter::new(FidelityPolicy::new(1, Some(FidelityMode::Macro)).unwrap());
+    let runtime = MatrixRuntime {
+        flow,
+        adapter,
+        provider: provider_for_matrix(),
+        seeds: seed_map(),
+        bounds: Vec::new(),
+        submitted: Vec::new(),
+        codecs,
+        bindings: BindingMap::new(),
+    };
+    let _ = name;
+    PortableHandoffFixture {
+        runtime,
+        graph,
+        carrier_actor,
+        carrier,
+        service,
+        owner,
+        resource,
+        stale_domain_event: None,
+        cut_dispatches: Vec::new(),
+        cut_trace: Vec::new(),
+    }
+}
+
+fn portable_handoff_record_cut(
+    fixture: &mut PortableHandoffFixture,
+    label: &str,
+    dispatch: &kairo_ecs_des::FlowDispatch,
+) {
+    let arrival_observation =
+        observe_transit_arrival_handoff(&fixture.runtime.flow, fixture.carrier, dispatch).unwrap();
+    fixture.cut_dispatches.push(format!(
+        "{label}:dispatch={dispatch:?};arrival_observer={arrival_observation:?}"
+    ));
+    let mut frame = Vec::new();
+    portable_handoff_append_frame(
+        &fixture.runtime,
+        fixture.carrier_actor,
+        label,
+        Some(dispatch),
+        &mut frame,
+    );
+    fixture.cut_trace.extend_from_slice(&frame);
+}
+
+fn portable_handoff_record_state_cut(fixture: &mut PortableHandoffFixture, label: &str) {
+    let mut frame = Vec::new();
+    portable_handoff_append_frame(
+        &fixture.runtime,
+        fixture.carrier_actor,
+        label,
+        None,
+        &mut frame,
+    );
+    fixture.cut_trace.extend_from_slice(&frame);
+}
+
+fn portable_handoff_start(fixture: &mut PortableHandoffFixture) {
+    schedule_transit_start(
+        &mut fixture.runtime.flow,
+        fixture.carrier,
+        PORTABLE_HANDOFF_KIND,
+        SimTime::ZERO,
+        0,
+    )
+    .unwrap();
+    let dispatch = step_and_observe(&mut fixture.runtime).unwrap();
+    portable_handoff_record_cut(fixture, "start", &dispatch);
+    assert!(matches!(
+        dispatch.callback_batches.as_slice(),
+        [kairo_ecs_des::FlowBatchReceipt::Accepted(rows)]
+            if rows.len() == 1 && rows[0].request.is_none()
+    ));
+}
+
+fn portable_handoff_arrive(
+    runtime: &mut MatrixRuntime,
+    carrier: WorkId,
+) -> kairo_ecs_des::FlowDispatch {
+    for _ in 0..32 {
+        let dispatch = step_and_observe(runtime).expect("bounded transit event");
+        if runtime
+            .flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .phase()
+            == TransitPhase::Arrived
+        {
+            return dispatch;
+        }
+    }
+    panic!("bounded portable Handoff route did not arrive")
+}
+
+fn portable_handoff_queue_order_case(fixture: &mut PortableHandoffFixture) {
+    let old = fixture.resource;
+    let old_owner = fixture.runtime.flow.spawn_actor().unwrap();
+    let old_request_at = fixture.runtime.flow.now();
+    let old_request = fixture
+        .runtime
+        .flow
+        .acquire(old)
+        .owner(old_owner)
+        .at(old_request_at)
+        .queue_order_key(FlowQueueOrderKey::new(b"old-terminal").unwrap())
+        .submit()
+        .unwrap();
+    let mut granted = false;
+    for index in 0..32 {
+        let dispatch = step_and_observe(&mut fixture.runtime).unwrap();
+        portable_handoff_record_cut(fixture, &format!("old-key-grant-{index}"), &dispatch);
+        if fixture.runtime.flow.request(old_request).unwrap().state == RequestState::Active {
+            granted = true;
+            break;
+        }
+    }
+    assert!(granted, "old StableKey request receives a real lease");
+    let old_lease = fixture
+        .runtime
+        .flow
+        .request(old_request)
+        .unwrap()
+        .lease
+        .expect("active old request owns a lease");
+    fixture
+        .runtime
+        .flow
+        .release(old_lease, fixture.runtime.flow.now())
+        .unwrap();
+    let mut released = false;
+    for index in 0..32 {
+        let dispatch = step_and_observe(&mut fixture.runtime).unwrap();
+        portable_handoff_record_cut(fixture, &format!("old-key-release-{index}"), &dispatch);
+        if fixture.runtime.flow.request(old_request).unwrap().state == RequestState::Released {
+            released = true;
+            break;
+        }
+    }
+    assert!(
+        released,
+        "old keyed request reaches a terminal Released state"
+    );
+    assert_eq!(
+        fixture
+            .runtime
+            .flow
+            .request_queue_order_key(old_request)
+            .unwrap()
+            .unwrap()
+            .as_bytes(),
+        b"old-terminal"
+    );
+    fixture.runtime.flow.remove_resource(old).unwrap();
+    let mut removed = false;
+    for index in 0..32 {
+        let dispatch = step_and_observe(&mut fixture.runtime).unwrap();
+        portable_handoff_record_cut(
+            fixture,
+            &format!("remove-stable-key-resource-{index}"),
+            &dispatch,
+        );
+        if fixture.runtime.flow.resource(old).is_err() {
+            removed = true;
+            break;
+        }
+    }
+    assert!(removed, "bounded Flow events remove the old keyed resource");
+    let replacement = fixture
+        .runtime
+        .flow
+        .create_resource_with_queue_ordering(
+            0,
+            FlowAllocationMode::Eager,
+            FlowQueueOrdering::StableKey,
+        )
+        .unwrap();
+    assert_eq!(old.entity_id().index, replacement.entity_id().index);
+    assert_ne!(
+        old.entity_id().generation,
+        replacement.entity_id().generation
+    );
+    fixture.resource = replacement;
+    let first_owner = fixture.runtime.flow.spawn_actor().unwrap();
+    let second_owner = fixture.runtime.flow.spawn_actor().unwrap();
+    let equal_owner = fixture.runtime.flow.spawn_actor().unwrap();
+    let admission_at = fixture.runtime.flow.now();
+    let first = fixture
+        .runtime
+        .flow
+        .acquire(fixture.resource)
+        .owner(first_owner)
+        .at(admission_at)
+        .queue_order_key(FlowQueueOrderKey::new(b"z-last").unwrap())
+        .submit()
+        .unwrap();
+    let second = fixture
+        .runtime
+        .flow
+        .acquire(fixture.resource)
+        .owner(second_owner)
+        .at(admission_at)
+        .queue_order_key(FlowQueueOrderKey::new(b"a-first").unwrap())
+        .submit()
+        .unwrap();
+    let equal = fixture
+        .runtime
+        .flow
+        .acquire(fixture.resource)
+        .owner(equal_owner)
+        .at(admission_at)
+        .queue_order_key(FlowQueueOrderKey::new(b"a-first").unwrap())
+        .submit()
+        .unwrap();
+    let mut ordered = false;
+    for index in 0..32 {
+        let dispatch = step_and_observe(&mut fixture.runtime).unwrap();
+        portable_handoff_record_cut(fixture, &format!("stable-key-admission-{index}"), &dispatch);
+        let current = fixture.runtime.flow.resource(fixture.resource).unwrap();
+        if current.queued.len() == 3 {
+            assert_eq!(current.queued, vec![second, equal, first]);
+            ordered = true;
+            break;
+        }
+    }
+    assert!(ordered, "all real StableKey waiters reach the queue");
+    let queued = fixture.runtime.flow.resource(fixture.resource).unwrap();
+    assert_eq!(queued.queued, vec![second, equal, first]);
+    fixture
+        .runtime
+        .flow
+        .cancel(first, fixture.runtime.flow.now())
+        .unwrap();
+    let cancelled = step_and_observe(&mut fixture.runtime).unwrap();
+    portable_handoff_record_cut(fixture, "stable-key-cancel", &cancelled);
+    assert_eq!(
+        fixture
+            .runtime
+            .flow
+            .request_queue_order_key(first)
+            .unwrap()
+            .unwrap()
+            .as_bytes(),
+        b"z-last"
+    );
+    for (request, key) in [
+        (second, b"a-first".as_slice()),
+        (equal, b"a-first".as_slice()),
+    ] {
+        assert_eq!(
+            fixture
+                .runtime
+                .flow
+                .request_queue_order_key(request)
+                .unwrap()
+                .unwrap()
+                .as_bytes(),
+            key
+        );
+    }
+}
+
+fn portable_handoff_prepare_cut(fixture: &mut PortableHandoffFixture, name: &str) {
+    match name {
+        "portable-v4-handoff-moving" => portable_handoff_start(fixture),
+        "portable-v4-handoff-paused-retained" => {
+            portable_handoff_start(fixture);
+            schedule_transit_control(
+                &mut fixture.runtime.flow,
+                fixture.carrier,
+                PORTABLE_HANDOFF_KIND,
+                FlowDomainControl::Pause,
+                SimTime::from_ticks(2),
+                -2,
+            )
+            .unwrap();
+            let paused = step_and_observe(&mut fixture.runtime).unwrap();
+            portable_handoff_record_cut(fixture, "pause-retained", &paused);
+            let dto = fixture
+                .runtime
+                .flow
+                .work_context::<TransitContext>(fixture.carrier)
+                .unwrap()
+                .checkpoint_v2(&fixture.runtime.flow.identity(), PORTABLE_HANDOFF_LIMITS)
+                .unwrap();
+            assert_eq!(dto.phase, TransitPhase::Paused);
+            assert_eq!(dto.paused_from, Some(TransitPhase::Moving));
+            assert!(dto.expected_event.is_some());
+        }
+        "portable-v4-handoff-paused-consumed" => {
+            portable_handoff_start(fixture);
+            schedule_transit_control(
+                &mut fixture.runtime.flow,
+                fixture.carrier,
+                PORTABLE_HANDOFF_KIND,
+                FlowDomainControl::Pause,
+                SimTime::from_ticks(2),
+                -2,
+            )
+            .unwrap();
+            let paused = step_and_observe(&mut fixture.runtime).unwrap();
+            portable_handoff_record_cut(fixture, "pause-consumed", &paused);
+            let consumed = step_and_observe(&mut fixture.runtime).unwrap();
+            portable_handoff_record_cut(fixture, "consume-stale-progress", &consumed);
+            let dto = fixture
+                .runtime
+                .flow
+                .work_context::<TransitContext>(fixture.carrier)
+                .unwrap()
+                .checkpoint_v2(&fixture.runtime.flow.identity(), PORTABLE_HANDOFF_LIMITS)
+                .unwrap();
+            assert_eq!(dto.phase, TransitPhase::Paused);
+            assert_eq!(dto.expected_event, None);
+            assert_eq!(dto.next_progress_ticket, None);
+        }
+        "portable-v4-handoff-arrived-unadmitted" | "portable-v4-handoff-admitted-completion" => {
+            portable_handoff_start(fixture);
+            let arrival = portable_handoff_arrive(&mut fixture.runtime, fixture.carrier);
+            portable_handoff_record_cut(fixture, "arrival", &arrival);
+            assert!(
+                observe_transit_arrival_handoff(&fixture.runtime.flow, fixture.carrier, &arrival)
+                    .unwrap()
+                    .is_some()
+            );
+            if name == "portable-v4-handoff-admitted-completion" {
+                portable_handoff_submit_service(fixture);
+                portable_handoff_record_state_cut(fixture, "admitted-cut-before-submit-dispatch");
+                assert!(
+                    fixture
+                        .runtime
+                        .flow
+                        .work(fixture.service)
+                        .unwrap()
+                        .request
+                        .is_some()
+                );
+                assert!(
+                    pending_transit_arrival_handoff(&fixture.runtime.flow, fixture.carrier)
+                        .unwrap()
+                        .is_none()
+                );
+                assert!(
+                    observe_transit_arrival_handoff(
+                        &fixture.runtime.flow,
+                        fixture.carrier,
+                        &arrival
+                    )
+                    .unwrap()
+                    .is_none()
+                );
+            }
+        }
+        "portable-v4-handoff-frontier-resume-live-domain" => {
+            portable_handoff_start(fixture);
+            let first_progress = step_and_observe(&mut fixture.runtime).unwrap();
+            portable_handoff_record_cut(fixture, "progress-before-frontier", &first_progress);
+            assert!(first_progress.error.is_none());
+            assert_eq!(
+                fixture
+                    .runtime
+                    .flow
+                    .work_context::<TransitContext>(fixture.carrier)
+                    .unwrap()
+                    .phase(),
+                TransitPhase::Moving
+            );
+            let original = fixture
+                .runtime
+                .flow
+                .work_context::<TransitContext>(fixture.carrier)
+                .unwrap()
+                .checkpoint_v2(&fixture.runtime.flow.identity(), PORTABLE_HANDOFF_LIMITS)
+                .unwrap()
+                .expected_event
+                .unwrap();
+            let frontier = fixture
+                .runtime
+                .flow
+                .work_context::<TransitContext>(fixture.carrier)
+                .unwrap()
+                .checkpoint_v2(&fixture.runtime.flow.identity(), PORTABLE_HANDOFF_LIMITS)
+                .unwrap()
+                .expected_due_ticks
+                .map(SimTime::from_ticks)
+                .unwrap();
+            schedule_transit_control(
+                &mut fixture.runtime.flow,
+                fixture.carrier,
+                PORTABLE_HANDOFF_KIND,
+                FlowDomainControl::Pause,
+                frontier,
+                -2,
+            )
+            .unwrap();
+            let resume = schedule_transit_control(
+                &mut fixture.runtime.flow,
+                fixture.carrier,
+                PORTABLE_HANDOFF_KIND,
+                FlowDomainControl::Resume,
+                frontier,
+                -1,
+            )
+            .unwrap();
+            let pause = step_and_observe(&mut fixture.runtime).unwrap();
+            portable_handoff_record_cut(fixture, "frontier-pause", &pause);
+            let arrival = step_and_observe(&mut fixture.runtime).unwrap();
+            portable_handoff_record_cut(fixture, "frontier-resume-arrival", &arrival);
+            assert_eq!(arrival.event, resume);
+            let dto = fixture
+                .runtime
+                .flow
+                .work_context::<TransitContext>(fixture.carrier)
+                .unwrap()
+                .checkpoint_v2(&fixture.runtime.flow.identity(), PORTABLE_HANDOFF_LIMITS)
+                .unwrap();
+            assert_eq!(dto.phase, TransitPhase::Arrived);
+            assert_eq!(
+                dto.arrival_witness.unwrap().event,
+                (resume.index, resume.generation)
+            );
+            fixture.stale_domain_event =
+                Some(kairo_ecs_types::EventId::new(original.0, original.1));
+            assert_eq!(
+                dto.arrival_witness.unwrap().cause,
+                kairo_ecs_abm::TransitArrivalCauseCheckpointV2::Resume
+            );
+        }
+        "portable-v4-handoff-stable-key-generation-ties" => {
+            portable_handoff_start(fixture);
+            portable_handoff_queue_order_case(fixture);
+        }
+        _ => panic!("unknown portable Handoff child case: {name}"),
+    }
+}
+
+fn portable_handoff_submit_service(fixture: &mut PortableHandoffFixture) -> RequestId {
+    let at = fixture.runtime.flow.now();
+    fixture
+        .runtime
+        .flow
+        .acquire(fixture.resource)
+        .owner(fixture.owner)
+        .at(at)
+        .timed_work(fixture.service)
+        .queue_order_key(FlowQueueOrderKey::new(b"handoff-service").unwrap())
+        .submit()
+        .unwrap()
+}
+
 fn create_v3_fixture(runtime: &mut MatrixRuntime, case: &CaseSpec) -> PortableV3Ids {
     runtime
         .flow
@@ -1233,9 +1820,10 @@ fn restored_portable_v3_ids(runtime: &MatrixRuntime, case: &CaseSpec) -> Portabl
         runtime.flow.work(context.ready_work).unwrap().owner,
         context.ready_owner
     );
-    assert!(v3
-        .allocation_modes
-        .contains(&(context.deferred, FlowAllocationMode::Deferred)));
+    assert!(
+        v3.allocation_modes
+            .contains(&(context.deferred, FlowAllocationMode::Deferred))
+    );
     let live_event = |event: kairo_ecs_types::EventId, at: SimTime| {
         v3.scheduler
             .entries
@@ -1699,9 +2287,11 @@ fn cut_runtime(runtime: &mut MatrixRuntime, case: &CaseSpec) {
                     if rejection.error == kairo_ecs_des::FlowError::InvalidState
                         && rejection.failed_ticket.is_none()
             ));
-            assert!(runtime.bounds[0]
-                .observe_transit_dispatch(&runtime.flow, &rejected_pause)
-                .is_err());
+            assert!(
+                runtime.bounds[0]
+                    .observe_transit_dispatch(&runtime.flow, &rejected_pause)
+                    .is_err()
+            );
             let carrier = runtime.bounds[0].carrier_id_for_checkpoint().unwrap();
             let context = runtime
                 .flow
@@ -2082,7 +2672,7 @@ fn resolver<'a>(
     &SeedIdentity,
     &FlowRuntime,
 ) -> Result<TrustedC2WorkBindingV1, C2PortableCheckpointError>
-       + 'a {
++ 'a {
     move |work, identity, _| {
         let binding = bindings
             .get(&work)
@@ -3153,6 +3743,862 @@ fn run_fresh_process_case(case: &CaseSpec, process_artifacts: &Path) {
     );
 }
 
+fn portable_handoff_carrier(runtime: &MatrixRuntime, actor: EntityId) -> WorkId {
+    runtime.flow.actor_domain_context(actor).unwrap()
+}
+
+fn portable_handoff_context_bytes(runtime: &MatrixRuntime, carrier: WorkId) -> Vec<u8> {
+    runtime
+        .flow
+        .work_context::<TransitContext>(carrier)
+        .unwrap()
+        .checkpoint_bytes_v2(&runtime.flow.identity(), PORTABLE_HANDOFF_LIMITS)
+        .unwrap()
+}
+
+fn portable_handoff_append_frame(
+    runtime: &MatrixRuntime,
+    carrier_actor: EntityId,
+    label: &str,
+    dispatch: Option<&kairo_ecs_des::FlowDispatch>,
+    trace: &mut Vec<u8>,
+) {
+    let carrier = portable_handoff_carrier(runtime, carrier_actor);
+    let context = runtime
+        .flow
+        .work_context::<TransitContext>(carrier)
+        .unwrap();
+    let service = context.service_work();
+    let dto = context
+        .checkpoint_v2(&runtime.flow.identity(), PORTABLE_HANDOFF_LIMITS)
+        .unwrap();
+    let dto_bytes = dto.encode_bytes_v2(PORTABLE_HANDOFF_LIMITS).unwrap();
+    let outer = capture_bytes(runtime);
+    let image = flow_image_from_outer(&outer);
+    assert!(matches!(image, FlowCheckpointImage::V4(_)));
+    let flow_bytes = image.encode_wire(limits().flow).unwrap();
+    let (requests, resources) = match &image {
+        FlowCheckpointImage::V4(v4) => (&v4.requests, &v4.resources),
+        _ => unreachable!("portable Handoff source must capture native V4"),
+    };
+    let queue_rows: Vec<_> = requests
+        .iter()
+        .map(|request| {
+            (
+                *request,
+                runtime
+                    .flow
+                    .request_queue_order_key(*request)
+                    .unwrap()
+                    .map(|key| key.as_bytes().to_vec()),
+                runtime.flow.request(*request).unwrap(),
+            )
+        })
+        .collect();
+    let resource_rows: Vec<_> = resources
+        .iter()
+        .map(|resource| (*resource, runtime.flow.resource(*resource).unwrap()))
+        .collect();
+    let state = format!(
+        "dispatch={dispatch:?};service={:?};progress={:?};requests={queue_rows:?};resources={resource_rows:?}",
+        runtime.flow.work(service).unwrap(),
+        runtime.flow.work_progress(service).unwrap(),
+    );
+    let mut payload_trace = Vec::new();
+    push_frame(&mut payload_trace, &format!("{label}:flow-v4"), &flow_bytes);
+    push_frame(
+        &mut payload_trace,
+        &format!("{label}:transit-v2"),
+        &dto_bytes,
+    );
+    push_frame(&mut payload_trace, &format!("{label}:outer-c2"), &outer);
+    push_frame(
+        &mut payload_trace,
+        &format!("{label}:state"),
+        state.as_bytes(),
+    );
+    let arrival_observation = dispatch
+        .map(|dispatch| observe_transit_arrival_handoff(&runtime.flow, carrier, dispatch))
+        .transpose()
+        .unwrap();
+    let metadata = format!(
+        "version=1\nbytes={}\nsha256={}\nhex={}\narrival_observer={arrival_observation:?}",
+        payload_trace.len(),
+        hex(&Sha256::digest(&payload_trace)),
+        hex(&payload_trace),
+    );
+    push_frame(trace, &format!("{label}:metadata-v1"), metadata.as_bytes());
+    trace.extend_from_slice(&payload_trace);
+}
+
+fn portable_handoff_step(
+    runtime: &mut MatrixRuntime,
+    carrier_actor: EntityId,
+    label: &str,
+    trace: &mut Vec<u8>,
+) -> kairo_ecs_des::FlowDispatch {
+    let dispatch = step_and_observe(runtime).expect("portable Handoff suffix event");
+    portable_handoff_append_frame(runtime, carrier_actor, label, Some(&dispatch), trace);
+    dispatch
+}
+
+fn portable_handoff_suffix(
+    name: &str,
+    runtime: &mut MatrixRuntime,
+    carrier_actor: EntityId,
+    resource: ResourceId,
+) -> Vec<u8> {
+    let carrier = portable_handoff_carrier(runtime, carrier_actor);
+    let service = runtime
+        .flow
+        .work_context::<TransitContext>(carrier)
+        .unwrap()
+        .service_work();
+    let mut trace = Vec::new();
+    portable_handoff_append_frame(runtime, carrier_actor, "restored-cut", None, &mut trace);
+    if name == "portable-v4-handoff-frontier-resume-live-domain" {
+        let before_outer = capture_bytes(runtime);
+        let before_context = portable_handoff_context_bytes(runtime, carrier);
+        let before_work = runtime.flow.work(service).unwrap();
+        let before_progress = runtime.flow.work_progress(service).unwrap();
+        let (before_v4, stale_event) = match flow_image_from_outer(&before_outer) {
+            FlowCheckpointImage::V4(image) => {
+                let witness = portable_handoff_context_bytes(runtime, carrier);
+                let dto = context_from_v2_bytes(&witness);
+                let arrival = dto.arrival_witness.unwrap().event;
+                let stale = image
+                    .commands
+                    .iter()
+                    .find(|(event, command)| {
+                        (event.index, event.generation) != arrival
+                            && matches!(command, FlowCommandV3::Domain(_, _))
+                    })
+                    .map(|(event, _)| *event)
+                    .expect("frontier Handoff keeps the old Domain event live");
+                (image, stale)
+            }
+            _ => unreachable!("portable Handoff source must capture V4"),
+        };
+        let stale = portable_handoff_step(
+            runtime,
+            carrier_actor,
+            "frontier-stale-domain-consumed",
+            &mut trace,
+        );
+        assert_eq!(stale.event, stale_event);
+        assert!(
+            stale.error.is_none(),
+            "stale Domain event is accepted as a no-op"
+        );
+        assert!(
+            stale.records.is_empty(),
+            "stale Domain event emits no lifecycle receipt"
+        );
+        assert!(matches!(
+            stale.callback_batches.as_slice(),
+            [kairo_ecs_des::FlowBatchReceipt::Accepted(rows)] if rows.is_empty()
+        ));
+        let after_outer = capture_bytes(runtime);
+        let after_context = portable_handoff_context_bytes(runtime, carrier);
+        assert_eq!(after_context, before_context);
+        assert_eq!(runtime.flow.work(service).unwrap(), before_work);
+        assert_eq!(
+            runtime.flow.work_progress(service).unwrap(),
+            before_progress
+        );
+        assert_ne!(
+            after_outer, before_outer,
+            "the stale event itself is consumed"
+        );
+        let FlowCheckpointImage::V4(after_v4) = flow_image_from_outer(&after_outer) else {
+            unreachable!("portable Handoff no-op remains a V4 image");
+        };
+        let mut expected_v4 = before_v4;
+        expected_v4
+            .commands
+            .retain(|(event, _)| *event != stale_event);
+        expected_v4
+            .scheduler
+            .entries
+            .retain(|entry| entry.id != stale_event);
+        expected_v4.scheduler.now = stale.at;
+        expected_v4.scheduler.dispatched_events += 1;
+        expected_v4.next_batch_identity += 1;
+        let consumed_before = if expected_v4.budget_tick == Some(stale.at) {
+            expected_v4.budget_consumed
+        } else {
+            0
+        };
+        expected_v4.budget_tick = Some(stale.at);
+        expected_v4.budget_consumed = consumed_before + 1;
+        assert_eq!(
+            after_v4, expected_v4,
+            "stale event changes only its command, heap entry, and documented scheduler accounting"
+        );
+        portable_handoff_append_frame(
+            runtime,
+            carrier_actor,
+            "frontier-after-stale-domain",
+            Some(&stale),
+            &mut trace,
+        );
+        return trace;
+    }
+    if name == "portable-v4-handoff-paused-retained"
+        || name == "portable-v4-handoff-paused-consumed"
+    {
+        let resume_at = if name == "portable-v4-handoff-paused-retained" {
+            runtime.flow.now()
+        } else {
+            SimTime::from_ticks(5)
+        };
+        schedule_transit_control(
+            &mut runtime.flow,
+            carrier,
+            PORTABLE_HANDOFF_KIND,
+            FlowDomainControl::Resume,
+            resume_at,
+            -3,
+        )
+        .unwrap();
+        for index in 0..32 {
+            let dispatch = portable_handoff_step(
+                runtime,
+                carrier_actor,
+                &format!("resume-suffix-{index}"),
+                &mut trace,
+            );
+            if runtime
+                .flow
+                .work_context::<TransitContext>(carrier)
+                .unwrap()
+                .phase()
+                == TransitPhase::Arrived
+            {
+                assert!(
+                    observe_transit_arrival_handoff(&runtime.flow, carrier, &dispatch)
+                        .unwrap()
+                        .is_some()
+                );
+                return trace;
+            }
+        }
+        panic!("bounded resumed Handoff suffix did not arrive");
+    }
+    if name == "portable-v4-handoff-arrived-unadmitted" {
+        assert!(
+            pending_transit_arrival_handoff(&runtime.flow, carrier)
+                .unwrap()
+                .is_some()
+        );
+        let service_owner = runtime.flow.work(service).unwrap().owner;
+        let submit_at = runtime.flow.now();
+        let request = runtime
+            .flow
+            .acquire(resource)
+            .owner(service_owner)
+            .at(submit_at)
+            .timed_work(service)
+            .queue_order_key(FlowQueueOrderKey::new(b"handoff-service").unwrap())
+            .submit()
+            .unwrap();
+        assert_eq!(runtime.flow.work(service).unwrap().request, Some(request));
+        assert!(
+            pending_transit_arrival_handoff(&runtime.flow, carrier)
+                .unwrap()
+                .is_none()
+        );
+    } else if name == "portable-v4-handoff-admitted-completion" {
+        let request = runtime.flow.work(service).unwrap().request.unwrap();
+        assert_eq!(
+            runtime.flow.request(request).unwrap().state,
+            RequestState::Pending
+        );
+        assert!(
+            pending_transit_arrival_handoff(&runtime.flow, carrier)
+                .unwrap()
+                .is_none()
+        );
+    }
+    if name == "portable-v4-handoff-admitted-completion"
+        || name == "portable-v4-handoff-arrived-unadmitted"
+    {
+        let mut observed_submit_dispatch = false;
+        for index in 0..16 {
+            let dispatch = portable_handoff_step(
+                runtime,
+                carrier_actor,
+                &format!("service-completion-{index}"),
+                &mut trace,
+            );
+            if !observed_submit_dispatch {
+                assert!(dispatch.error.is_none());
+                assert!(
+                    observe_transit_arrival_handoff(&runtime.flow, carrier, &dispatch)
+                        .unwrap()
+                        .is_none(),
+                    "observer suppresses after the actual restored Submit dispatch"
+                );
+                assert!(
+                    pending_transit_arrival_handoff(&runtime.flow, carrier)
+                        .unwrap()
+                        .is_none()
+                );
+                observed_submit_dispatch = true;
+            }
+            let request = runtime.flow.work(service).unwrap().request.unwrap();
+            if runtime.flow.request(request).unwrap().state == RequestState::Completed {
+                assert!(dispatch.error.is_none());
+                return trace;
+            }
+        }
+        assert!(observed_submit_dispatch);
+        panic!("bounded Handoff service request did not complete");
+    }
+    for index in 0..32 {
+        let dispatch = portable_handoff_step(
+            runtime,
+            carrier_actor,
+            &format!("transit-suffix-{index}"),
+            &mut trace,
+        );
+        if runtime
+            .flow
+            .work_context::<TransitContext>(carrier)
+            .unwrap()
+            .phase()
+            == TransitPhase::Arrived
+        {
+            assert!(
+                observe_transit_arrival_handoff(&runtime.flow, carrier, &dispatch)
+                    .unwrap()
+                    .is_some()
+            );
+            return trace;
+        }
+    }
+    panic!("bounded portable Handoff suffix did not arrive");
+}
+
+fn context_from_v2_bytes(bytes: &[u8]) -> TransitContextCheckpointV2 {
+    TransitContextCheckpointV2::decode_bytes_v2(bytes, PORTABLE_HANDOFF_LIMITS).unwrap()
+}
+
+fn portable_handoff_child_output(file: &Path, case: &str, process_artifacts: &Path) -> Output {
+    Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "c2_portable_checkpoint::tests::process_tests::restore_child_entrypoint",
+            "--nocapture",
+        ])
+        .env(CHILD_PATH, file)
+        .env(CHILD_CASE, case)
+        .env("KAIRO_C2_PROCESS_ARTIFACT_DIR", process_artifacts)
+        .output()
+        .unwrap()
+}
+
+fn portable_handoff_run_fresh_case(case: &str, process_artifacts: &Path) {
+    let mut fixture = portable_handoff_fixture(case);
+    portable_handoff_prepare_cut(&mut fixture, case);
+    let checkpoint = capture_bytes(&fixture.runtime);
+    assert!(matches!(
+        flow_image_from_outer(&checkpoint),
+        FlowCheckpointImage::V4(_)
+    ));
+    let source_context = fixture
+        .runtime
+        .flow
+        .work_context::<TransitContext>(fixture.carrier)
+        .unwrap();
+    let source_dto = source_context
+        .checkpoint_v2(&fixture.runtime.flow.identity(), PORTABLE_HANDOFF_LIMITS)
+        .unwrap();
+    assert_eq!(source_dto.schema_version, 2);
+    assert!(matches!(
+        source_dto.action,
+        TransitArrivalActionCheckpointV2::Handoff { .. }
+    ));
+    let file = unique_file(process_artifacts, case);
+    C2PortableCheckpointV1::from_bytes(checkpoint.clone(), binding(), limits())
+        .unwrap()
+        .save_no_clobber(&file, binding(), limits())
+        .unwrap();
+    let source_admission = format!("{:?}", fixture.runtime.flow.work(fixture.service).unwrap());
+    let source_suffix = portable_handoff_suffix(
+        case,
+        &mut fixture.runtime,
+        fixture.carrier_actor,
+        fixture.resource,
+    );
+    let output = portable_handoff_child_output(&file, case, process_artifacts);
+    let stdout = String::from_utf8(output.stdout.clone()).unwrap();
+    let stderr = String::from_utf8(output.stderr.clone()).unwrap();
+    std::fs::write(file.with_extension("child.stdout.log"), &output.stdout).unwrap();
+    std::fs::write(file.with_extension("child.stderr.log"), &output.stderr).unwrap();
+    assert!(
+        output.status.success(),
+        "case {case} child failed: {stderr}"
+    );
+    let trace_hex = stdout
+        .lines()
+        .find_map(|line| line.strip_prefix(TRACE_MARKER))
+        .expect("child emitted raw process trace");
+    let child_trace = decode_hex(trace_hex).expect("child trace is hex");
+    assert_eq!(child_trace, source_suffix, "raw suffix mismatch for {case}");
+    let reencoded_hash = stdout
+        .lines()
+        .find_map(|line| line.strip_prefix("C2_PORTABLE_HANDOFF_REENCODE_SHA256:"))
+        .expect("child emitted restored image re-encode hash");
+    let checkpoint_hash = hex(&Sha256::digest(&checkpoint));
+    assert_eq!(reencoded_hash, checkpoint_hash);
+    let file_hex = hex(&checkpoint);
+    let case_record = process_artifacts.join("process-invocations.txt");
+    let mut record = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(case_record)
+        .unwrap();
+    writeln!(record, "case={case}").unwrap();
+    writeln!(record, "cwd={}", std::env::current_dir().unwrap().display()).unwrap();
+    writeln!(record, "argv=--exact c2_portable_checkpoint::tests::process_tests::restore_child_entrypoint --nocapture").unwrap();
+    writeln!(record, "input_file={}", file.display()).unwrap();
+    writeln!(record, "input_bytes={}", checkpoint.len()).unwrap();
+    writeln!(record, "input_sha256={checkpoint_hash}").unwrap();
+    writeln!(record, "input_hex={file_hex}").unwrap();
+    writeln!(record, "flow_format=V4").unwrap();
+    writeln!(record, "transit_schema={}", source_dto.schema_version).unwrap();
+    writeln!(record, "source_phase={:?}", source_dto.phase).unwrap();
+    writeln!(record, "source_cut_dispatches={:?}", fixture.cut_dispatches).unwrap();
+    writeln!(
+        record,
+        "source_stale_domain_event={:?}",
+        fixture.stale_domain_event
+    )
+    .unwrap();
+    writeln!(record, "source_cut_trace_version=1").unwrap();
+    writeln!(record, "source_cut_trace_bytes={}", fixture.cut_trace.len()).unwrap();
+    writeln!(
+        record,
+        "source_cut_trace_sha256={}",
+        hex(&Sha256::digest(&fixture.cut_trace))
+    )
+    .unwrap();
+    writeln!(record, "source_cut_trace_hex={}", hex(&fixture.cut_trace)).unwrap();
+    writeln!(record, "source_admission={source_admission}").unwrap();
+    writeln!(record, "child_exit_code={:?}", output.status.code()).unwrap();
+    let stdout_path = file.with_extension("child.stdout.log");
+    let stderr_path = file.with_extension("child.stderr.log");
+    writeln!(record, "stdout_path={}", stdout_path.display()).unwrap();
+    writeln!(
+        record,
+        "stdout_sha256={}",
+        hex(&Sha256::digest(&output.stdout))
+    )
+    .unwrap();
+    writeln!(record, "stderr_path={}", stderr_path.display()).unwrap();
+    writeln!(
+        record,
+        "stderr_sha256={}",
+        hex(&Sha256::digest(&output.stderr))
+    )
+    .unwrap();
+    writeln!(
+        record,
+        "expected_trace_sha256={}",
+        hex(&Sha256::digest(&source_suffix))
+    )
+    .unwrap();
+    writeln!(
+        record,
+        "actual_trace_hex_sha256={}",
+        hex(&Sha256::digest(trace_hex.as_bytes()))
+    )
+    .unwrap();
+    writeln!(
+        record,
+        "decoded_trace_sha256={}",
+        hex(&Sha256::digest(&child_trace))
+    )
+    .unwrap();
+    writeln!(record, "restored_image_reencode_sha256={reencoded_hash}").unwrap();
+    writeln!(record).unwrap();
+}
+
+#[test]
+fn portable_v4_handoff_seven_fresh_process_cases() {
+    let process_artifacts = artifact_dir();
+    for case in [
+        "portable-v4-handoff-moving",
+        "portable-v4-handoff-paused-retained",
+        "portable-v4-handoff-paused-consumed",
+        "portable-v4-handoff-arrived-unadmitted",
+        "portable-v4-handoff-frontier-resume-live-domain",
+        "portable-v4-handoff-admitted-completion",
+        "portable-v4-handoff-stable-key-generation-ties",
+    ] {
+        portable_handoff_run_fresh_case(case, &process_artifacts);
+    }
+}
+
+fn portable_handoff_instrumented_codecs(
+    identity: kairo_ecs_des::FlowRuntimeIdentity,
+    graph: Arc<TransitGraphV1>,
+    rebind_slot: Arc<Mutex<Option<FlowCheckpointRebindV1>>>,
+) -> FlowCheckpointCodecs {
+    let mut codecs = FlowCheckpointCodecs::new();
+    codecs
+        .register_context::<()>(PORTABLE_HANDOFF_UNIT_CODEC, 1, encode_unit, decode_unit)
+        .unwrap();
+    let decode_graph = graph.clone();
+    codecs
+        .register_context_with_owner::<TransitContext>(
+            PORTABLE_HANDOFF_CODEC,
+            2,
+            move |context, remaining| {
+                let mut bounded = PORTABLE_HANDOFF_LIMITS;
+                bounded.max_total_bytes = bounded.max_total_bytes.min(remaining);
+                context
+                    .checkpoint_bytes_v2(&identity, bounded)
+                    .map_err(|error| FlowCheckpointCodecError(error.to_string()))
+            },
+            move |bytes, row_owner, rebind| {
+                *rebind_slot.lock().unwrap() = Some(rebind.clone());
+                TransitContextCheckpointV2::restore_bytes_v2(
+                    bytes,
+                    &decode_graph,
+                    rebind,
+                    row_owner,
+                    PORTABLE_HANDOFF_LIMITS,
+                )
+                .map_err(|error| FlowCheckpointCodecError(error.to_string()))
+            },
+        )
+        .unwrap();
+    register_transit_context_checkpoint_domain(
+        &mut codecs,
+        PORTABLE_HANDOFF_CODEC,
+        PORTABLE_HANDOFF_KIND,
+        FlowCallbackCodeV1 {
+            stable_id: "c2.portable.handoff.plan".to_owned(),
+            version: 1,
+        },
+        FlowCallbackCodeV1 {
+            stable_id: "c2.portable.handoff.receipt".to_owned(),
+            version: 1,
+        },
+    )
+    .unwrap();
+    codecs
+}
+
+fn portable_handoff_test_rebind() -> (TransitContextCheckpointV2, FlowCheckpointRebindV1, EntityId)
+{
+    let fixture = portable_handoff_fixture("controls");
+    let bytes = capture_bytes(&fixture.runtime);
+    let saved = flow_image_from_outer(&bytes);
+    let FlowCheckpointImage::V4(v4) = &saved else {
+        panic!("portable Handoff controls require V4");
+    };
+    let row_owner = v4
+        .context_stores
+        .iter()
+        .find(|store| store.codec_key == PORTABLE_HANDOFF_CODEC)
+        .and_then(|store| store.rows.first())
+        .map(|row| row.0)
+        .unwrap();
+    let dto = context_from_v2_bytes(
+        v4.context_stores
+            .iter()
+            .find(|store| store.codec_key == PORTABLE_HANDOFF_CODEC)
+            .and_then(|store| store.rows.first())
+            .map(|row| row.1.as_slice())
+            .unwrap(),
+    );
+    let rebind_slot = Arc::new(Mutex::new(None));
+    let scratch = FlowRuntime::new();
+    let codecs = portable_handoff_instrumented_codecs(
+        scratch.identity(),
+        fixture.graph,
+        rebind_slot.clone(),
+    );
+    saved
+        .restore_with_rebind(&codecs, limits().flow.flow)
+        .unwrap();
+    let rebind = rebind_slot
+        .lock()
+        .unwrap()
+        .clone()
+        .expect("V2 owner codec observed the actual restore rebind");
+    (dto, rebind, row_owner)
+}
+
+#[test]
+fn portable_v4_handoff_schema2_rebind_negative_controls() {
+    let (dto, rebind, row_owner) = portable_handoff_test_rebind();
+    let graph = portable_handoff_graph().0;
+    assert!(
+        dto.restore_for_owner(&graph, &rebind, row_owner, PORTABLE_HANDOFF_LIMITS)
+            .is_ok()
+    );
+
+    let wrong_graph = TransitGraphV1::new(2, vec![NodeId::new(1)], Vec::new()).unwrap();
+    let wrong_graph_result =
+        dto.restore_for_owner(&wrong_graph, &rebind, row_owner, PORTABLE_HANDOFF_LIMITS);
+    assert!(matches!(
+        wrong_graph_result,
+        Err(TransitContextCheckpointError::InvalidRoute)
+    ));
+    assert!(matches!(
+        dto.restore_for_owner(
+            &graph,
+            &rebind,
+            EntityId::new(1, 0),
+            PORTABLE_HANDOFF_LIMITS
+        ),
+        Err(TransitContextCheckpointError::InvalidReference)
+    ));
+    let mut unsupported = dto.clone();
+    unsupported.schema_version = 3;
+    assert!(matches!(
+        unsupported.restore_for_owner(&graph, &rebind, row_owner, PORTABLE_HANDOFF_LIMITS),
+        Err(TransitContextCheckpointError::UnsupportedVersion(3))
+    ));
+    let wrong_owner = rebind.resolve_work_binding(row_owner).unwrap().0;
+    assert_ne!(wrong_owner, dto.service_owner);
+    let mut wrong_service_owner = dto.clone();
+    wrong_service_owner.service_owner = wrong_owner;
+    assert!(matches!(
+        wrong_service_owner.restore_for_owner(&graph, &rebind, row_owner, PORTABLE_HANDOFF_LIMITS,),
+        Err(TransitContextCheckpointError::InvalidReference)
+    ));
+    let v1 = {
+        let fixture = portable_handoff_fixture("v1-no-fallback");
+        let (_, route) = portable_handoff_graph();
+        let acquire = FlowAcquireCommand {
+            resource: fixture.resource,
+            owner: fixture.owner,
+            work: Some(fixture.service),
+            at: SimTime::ZERO,
+            priority_level: 0,
+            deadline: None,
+            scheduler_priority: 0,
+            timed: true,
+            can_preempt: false,
+            preemptible: None,
+        };
+        let context =
+            TransitContext::new(&fixture.runtime.flow, route, acquire, SimTime::ZERO).unwrap();
+        context
+            .checkpoint_bytes_v1(&fixture.runtime.flow.identity(), TRANSIT_LIMITS)
+            .unwrap()
+    };
+    assert_eq!(
+        TransitContextCheckpointV2::decode_bytes_v2(&v1, PORTABLE_HANDOFF_LIMITS),
+        Err(TransitContextWireError::InvalidData)
+    );
+}
+
+#[test]
+fn portable_v4_handoff_schema2_caps_and_no_fallback() {
+    let (dto, _, _) = portable_handoff_test_rebind();
+    let segment_count = dto.route.segments.len();
+    let graph_bytes = dto.route.graph_canonical_bytes.len();
+    let encoded = dto.encode_bytes_v2(PORTABLE_HANDOFF_LIMITS).unwrap();
+    let exact_segments = TransitContextCheckpointLimitsV1::new(
+        segment_count,
+        PORTABLE_HANDOFF_LIMITS.max_graph_bytes,
+        PORTABLE_HANDOFF_LIMITS.max_mode_bytes,
+        PORTABLE_HANDOFF_LIMITS.max_total_bytes,
+    );
+    assert!(TransitContextCheckpointV2::decode_bytes_v2(&encoded, exact_segments).is_ok());
+    let one_short_segments = TransitContextCheckpointLimitsV1::new(
+        segment_count.saturating_sub(1),
+        PORTABLE_HANDOFF_LIMITS.max_graph_bytes,
+        PORTABLE_HANDOFF_LIMITS.max_mode_bytes,
+        PORTABLE_HANDOFF_LIMITS.max_total_bytes,
+    );
+    assert_eq!(
+        TransitContextCheckpointV2::decode_bytes_v2(&encoded, one_short_segments),
+        Err(TransitContextWireError::LimitExceeded)
+    );
+    let exact_graph = TransitContextCheckpointLimitsV1::new(
+        PORTABLE_HANDOFF_LIMITS.max_segments,
+        graph_bytes,
+        PORTABLE_HANDOFF_LIMITS.max_mode_bytes,
+        PORTABLE_HANDOFF_LIMITS.max_total_bytes,
+    );
+    assert!(TransitContextCheckpointV2::decode_bytes_v2(&encoded, exact_graph).is_ok());
+    let one_short_graph = TransitContextCheckpointLimitsV1::new(
+        PORTABLE_HANDOFF_LIMITS.max_segments,
+        graph_bytes.saturating_sub(1),
+        PORTABLE_HANDOFF_LIMITS.max_mode_bytes,
+        PORTABLE_HANDOFF_LIMITS.max_total_bytes,
+    );
+    assert_eq!(
+        TransitContextCheckpointV2::decode_bytes_v2(&encoded, one_short_graph),
+        Err(TransitContextWireError::LimitExceeded)
+    );
+    let exact_total = TransitContextCheckpointLimitsV1::new(
+        PORTABLE_HANDOFF_LIMITS.max_segments,
+        PORTABLE_HANDOFF_LIMITS.max_graph_bytes,
+        PORTABLE_HANDOFF_LIMITS.max_mode_bytes,
+        encoded.len(),
+    );
+    assert!(TransitContextCheckpointV2::decode_bytes_v2(&encoded, exact_total).is_ok());
+    let one_short_total = TransitContextCheckpointLimitsV1::new(
+        PORTABLE_HANDOFF_LIMITS.max_segments,
+        PORTABLE_HANDOFF_LIMITS.max_graph_bytes,
+        PORTABLE_HANDOFF_LIMITS.max_mode_bytes,
+        encoded.len() - 1,
+    );
+    assert_eq!(
+        TransitContextCheckpointV2::decode_bytes_v2(&encoded, one_short_total),
+        Err(TransitContextWireError::LimitExceeded)
+    );
+    let mut trailing = encoded.clone();
+    trailing.push(0);
+    assert_eq!(
+        TransitContextCheckpointV2::decode_bytes_v2(&trailing, PORTABLE_HANDOFF_LIMITS),
+        Err(TransitContextWireError::TrailingBytes)
+    );
+
+    let fixture = portable_handoff_fixture("outer-limits");
+    let outer = capture_bytes(&fixture.runtime);
+    let outer_body = checkpoint_envelope::decode(&outer, binding(), limits().envelope).unwrap();
+    let exact = C2PortableCheckpointLimitsV1 {
+        envelope: checkpoint_envelope::CheckpointEnvelopeLimits {
+            max_file_bytes: outer.len(),
+            max_body_bytes: outer_body.len(),
+        },
+        ..limits()
+    };
+    assert!(C2PortableCheckpointV1::from_bytes(outer.clone(), binding(), exact).is_ok());
+    let file_one_short = C2PortableCheckpointLimitsV1 {
+        envelope: checkpoint_envelope::CheckpointEnvelopeLimits {
+            max_file_bytes: outer.len() - 1,
+            max_body_bytes: outer_body.len(),
+        },
+        ..limits()
+    };
+    assert!(matches!(
+        C2PortableCheckpointV1::from_bytes(outer.clone(), binding(), file_one_short),
+        Err(C2PortableCheckpointError::Envelope(
+            checkpoint_envelope::CheckpointEnvelopeError::LimitExceeded
+        ))
+    ));
+    let body_one_short = C2PortableCheckpointLimitsV1 {
+        envelope: checkpoint_envelope::CheckpointEnvelopeLimits {
+            max_file_bytes: outer.len(),
+            max_body_bytes: outer_body.len() - 1,
+        },
+        ..limits()
+    };
+    assert!(matches!(
+        C2PortableCheckpointV1::from_bytes(outer, binding(), body_one_short),
+        Err(C2PortableCheckpointError::Envelope(
+            checkpoint_envelope::CheckpointEnvelopeError::LimitExceeded
+        ))
+    ));
+}
+
+fn restore_portable_handoff_child(file: &Path, case: &str) {
+    let image = C2PortableCheckpointV1::read_file(file, binding(), limits()).unwrap();
+    let outer = image.as_bytes().to_vec();
+    let saved_image = flow_image_from_outer(&outer);
+    let FlowCheckpointImage::V4(saved_v4) = &saved_image else {
+        panic!("portable Handoff child requires a V4 Flow image");
+    };
+    let graph = portable_handoff_graph().0;
+    let scratch = FlowRuntime::new();
+    let restore_codecs = portable_handoff_codecs(scratch.identity(), graph.clone());
+    let mut no_bridge_records = |_: EntityId,
+                                 _: &SeedIdentity,
+                                 _: &FlowRuntime|
+     -> Result<TrustedC2WorkBindingV1, C2PortableCheckpointError> {
+        Err(C2PortableCheckpointError::InvalidState)
+    };
+    let restored = image
+        .restore::<Vec<u8>, OwnedContext>(
+            &restore_codecs,
+            &mut no_bridge_records,
+            binding(),
+            limits(),
+        )
+        .unwrap();
+
+    // Resolve the carrier only from validated outer rows and the returned
+    // runtime. The source process's IDs are not passed to this child.
+    let carrier_row = saved_v4
+        .context_stores
+        .iter()
+        .find(|store| store.codec_key == PORTABLE_HANDOFF_CODEC)
+        .and_then(|store| store.rows.first())
+        .map(|row| row.0)
+        .expect("V4 image contains the schema-2 carrier row");
+    let carrier_actor = saved_v4
+        .actor_domains
+        .iter()
+        .find(|(_, work)| *work == carrier_row)
+        .map(|(actor, _)| *actor)
+        .expect("saved carrier row joins to its actor");
+    let carrier = restored.flow.actor_domain_context(carrier_actor).unwrap();
+    assert_eq!(carrier.entity_id(), carrier_row);
+    let service = restored
+        .flow
+        .work_context::<TransitContext>(carrier)
+        .unwrap()
+        .service_work();
+    let service_owner = restored.flow.work(service).unwrap().owner;
+    let row_owner = saved_v4
+        .work_registrations
+        .iter()
+        .find(|row| row.id == carrier_row)
+        .expect("V4 image has carrier registration");
+    assert_eq!(row_owner.context_codec_key, PORTABLE_HANDOFF_CODEC);
+    assert!(saved_v4.actors.contains(&service_owner));
+
+    let resource = saved_v4
+        .queue_order_modes
+        .iter()
+        .find_map(|(resource, ordering)| {
+            (*ordering == FlowQueueOrdering::StableKey).then_some(*resource)
+        })
+        .expect("V4 image has the live StableKey resource");
+    let RestoredC2 {
+        flow,
+        adapter,
+        provider,
+        seed_registry,
+        records,
+    } = restored;
+    assert!(records.is_empty(), "Handoff child has no C2 bridge records");
+    let capture_codecs = portable_handoff_codecs(flow.identity(), graph);
+    let mut runtime = MatrixRuntime {
+        flow,
+        adapter,
+        provider,
+        seeds: seed_registry,
+        bounds: Vec::new(),
+        submitted: Vec::new(),
+        codecs: capture_codecs,
+        bindings: BindingMap::new(),
+    };
+    let restored_bytes = capture_bytes(&runtime);
+    assert_eq!(
+        restored_bytes, outer,
+        "portable Handoff child re-encodes the same image"
+    );
+    println!(
+        "C2_PORTABLE_HANDOFF_REENCODE_SHA256:{}",
+        hex(&Sha256::digest(&restored_bytes))
+    );
+    // The restore decoder used the actual C2 owner row and callback rebind;
+    // re-encoding now uses the restored runtime identity.
+    let trace = portable_handoff_suffix(case, &mut runtime, carrier_actor, resource);
+    println!("{TRACE_MARKER}{}", hex(&trace));
+}
+
 fn source_case(case: &CaseSpec) -> MatrixRuntime {
     let mut runtime = build_runtime(case);
     cut_runtime(&mut runtime, case);
@@ -3341,11 +4787,12 @@ fn portable_v2_gated_process_continuation() {
                         .then_some(event)
                     })
                     .expect("pending transit Pause command");
-                assert!(v2
-                    .scheduler
-                    .entries
-                    .iter()
-                    .any(|entry| entry.id == pause && entry.live));
+                assert!(
+                    v2.scheduler
+                        .entries
+                        .iter()
+                        .any(|entry| entry.id == pause && entry.live)
+                );
                 for (enabled, tick) in [(false, 5_001), (true, 5_012)] {
                     let event = v2
                         .commands
@@ -3814,6 +5261,10 @@ fn restore_child_entrypoint() {
     let (Ok(file), Ok(case_name)) = (std::env::var(CHILD_PATH), std::env::var(CHILD_CASE)) else {
         return;
     };
+    if case_name.starts_with("portable-v4-handoff-") {
+        restore_portable_handoff_child(Path::new(&file), &case_name);
+        return;
+    }
     let case = spec(&case_name).unwrap();
     let scratch_flow = FlowRuntime::new();
     let restore_codecs = matrix_codecs(scratch_flow.identity(), &case);
