@@ -3,3 +3,8 @@
 # file, rule and line; new occurrences remain scanned. Keep merge history.
 # Evidence: Actions run37258123261/job111599430617; source lines55-57.
 7b13355c5ed31fc9b8e380d937ffc4e3342717b8:conformance/c43/statistical_diagnostics.py:generic-api-key:56
+
+# Reviewed C2.3 evidence hashes: SHA256 of frozen spatial API fixture, not credentials.
+# Exact historical commit/file/rule/line only; source blob independently matched.
+8c38664fd8d7587b01434a6eb7e0316ba5e12df9:conductor/evidence/c2.3-routing-time-20261005/worker/result.json:generic-api-key:30
+8c38664fd8d7587b01434a6eb7e0316ba5e12df9:conductor/evidence/c2.3-routing-time-20261005/external-api/result.json:generic-api-key:31

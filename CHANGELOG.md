@@ -16,6 +16,10 @@ Format:
 
 ### Added
 
+- Add experimental doc-hidden scheduler/entity-allocator checkpoint state DTOs and a crate-private calibration seed-registry image, with validated bounded imports preserving IDs, ordering and generations; complete Flow/context codecs and fresh-process portable restart remain in development.
+
+- Experimental doc-hidden calibration C2 replay APIs now save and restore one sealed synthetic scenario, validate its private route receipt, and require the same executable for both processes; this adds no stable API, general recovery, or C5 claim.
+
 - Experimental private `kairo-ecs-calibration` diagnostics now report exact per-cohort tie counts and source-derived coverage warnings in the sidecar manifest. Independent readback binds metric provenance and rejects missing or forged diagnostics; the frozen calibration Arrow schemas and `event_log.v1` remain unchanged.
 
 - Experimental `kairo-ecs-calibration` C4.3 sidecars now use actual Arrow IPC file/stream and Parquet with deterministic records, run/event joins and retained raw provenance. Native owner CI requires complete manifests and independently verifies types, nulls, hashes and counts across framing sizes. `event_log.v1` remains unchanged; public API, C4.4/C-04 and release acceptance remain open.
@@ -52,6 +56,8 @@ Format:
 - Track 45 docs-platform SOTA gate for the active Astro/Starlight site, covering versioning, the local polyglot plugin, llms.txt output, icons, generated search, and archived release-route evidence.
 
 ### Changed
+
+- Current C2 development CI now pins Rust 1.99.0 and exercises the DES/ABM/calibration Flow suite plus same-binary replay save/restore and existing-target sentinel checks on Linux and macOS; Cargo `rust-version` metadata remains unchanged and unverified by this profile.
 
 - The optional Python Arrow extra now requires PyArrow 25.0.1 or later; the supported Python range remains 3.10–3.14.
 

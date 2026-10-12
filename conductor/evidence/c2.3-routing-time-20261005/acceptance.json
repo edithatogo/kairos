@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "acceptance_type": "coordinator_local_leaf_acceptance",
+  "source_commit": "d9607405b1c9a3998f7a9dbf4d623b0a07419787",
+  "base_commit": "44fd7d45b7badcc2904a924e815f45a2b38df15d",
+  "leaves": {
+    "C2.3.routing": {
+      "status": "local_leaf_accepted_hosted_and_parent_join_pending",
+      "source_commit": "d9607405b1c9a3998f7a9dbf4d623b0a07419787"
+    },
+    "C2.3.time": {
+      "status": "local_leaf_accepted_hosted_and_parent_join_pending",
+      "source_commit": "d9607405b1c9a3998f7a9dbf4d623b0a07419787"
+    }
+  },
+  "source_scope": {
+    "paths": [
+      "crates/kairo-ecs-abm/src/lib.rs",
+      "crates/kairo-ecs-abm/src/spatial.rs"
+    ],
+    "sha256": [
+      {
+        "path": "crates/kairo-ecs-abm/src/lib.rs",
+        "digest_sha256": "fe29728ba48c0e614da2844e18a84202021efa4a370ca6aec8dbe7bd13f541af"
+      },
+      {
+        "path": "crates/kairo-ecs-abm/src/spatial.rs",
+        "digest_sha256": "502d317e916e48aee69c16fd1ffb5978bc0e805a0f302d868431e09d5df2f079"
+      }
+    ],
+    "new_dependencies": false,
+    "manifest_or_lock_changes": false,
+    "fixture_or_runner_changes": false
+  },
+  "local_checks": {
+    "C20_route_fixture": {
+      "named_tests": 9,
+      "passed": 9,
+      "failed": 0,
+      "ignored": 0,
+      "final_source_commit": "d9607405b1c9a3998f7a9dbf4d623b0a07419787"
+    },
+    "Rust_1_76_default_ABM_tests": {
+      "exit_status": 0
+    },
+    "Rust_1_99_strict_all_target_clippy": {
+      "exit_status": 0
+    },
+    "C23_external_public_API_smoke": {
+      "named_tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0,
+      "filtered": 0,
+      "final_source_commit": "d9607405b1c9a3998f7a9dbf4d623b0a07419787"
+    },
+    "source_review": "Coordinator independently checked final source/contract and confirmed the source hash matched the reviewed implementation with no concrete blocker."
+  },
+  "evidence_files": [
+    {
+      "path": "README.md",
+      "digest_sha256": "e93d5ae4135c463501986ae8513388df35ab6fff1b6b2516382d1351e9d0740b"
+    },
+    {
+      "path": "external-api/native.log",
+      "digest_sha256": "842286ac69bf86e1e672df74c05db84a3de2320e872c692fec7f4281fe3fe6fa"
+    },
+    {
+      "path": "external-api/result.json",
+      "digest_sha256": "51c16a35577b07e4436f418fd201e50b656d9f84972b59d5f70b172527da149b"
+    },
+    {
+      "path": "independent-review.json",
+      "digest_sha256": "464409165714e97aee95db39377841f4f85e2593f7176fe9e7ce2275201fa3b2"
+    },
+    {
+      "path": "worker/1.76.0-test.log",
+      "digest_sha256": "bacb4df0259806ed89c59b282c247787681f480b41670a24081f73042354cf4e"
+    },
+    {
+      "path": "worker/1.99.0-clippy.log",
+      "digest_sha256": "03c264199e5eb0b748e39dd4aa087282ea601f29dfcbb965e77e30f3e149eca0"
+    },
+    {
+      "path": "worker/C2.0/logs/cargo-test.log",
+      "digest_sha256": "162bf3453b19b4a2af95d180576df743c8e70fc63cf432015bcf0a699ebf5c51"
+    },
+    {
+      "path": "worker/C2.0/logs/commands.log",
+      "digest_sha256": "f9ba17e894af98b29ceb2412d36022b794b95b1fa0e64f26e26c13a43c2e88f6"
+    },
+    {
+      "path": "worker/C2.0/logs/toolchain.log",
+      "digest_sha256": "fc03afbebb6a249cfec7c0cf9f9479f1fa925aa44b1bee5ef086ca96add4bc9a"
+    },
+    {
+      "path": "worker/C2.0/result.json",
+      "digest_sha256": "279e191550899054ec6bcbcad38bd7eba3b70c191c10b13ad97f85605e24cd58"
+    },
+    {
+      "path": "worker/attempt1/1.76.0-test.log",
+      "digest_sha256": "8a0735804896e28be93063babee9ce1ce6c751d4fa109cce68e7f1bc72396067"
+    },
+    {
+      "path": "worker/attempt1/1.99.0-clippy.log",
+      "digest_sha256": "407c3d1f96de61263809a9da435c708ed7edeae48b7d940d9e88efd3e4848b55"
+    },
+    {
+      "path": "worker/result.json",
+      "digest_sha256": "3974f2d0ab2f339caea80b6a13373e51b1782675155ff79490690fc100a593ac"
+    }
+  ],
+  "scope_limits": {
+    "full_C2_3_accepted": false,
+    "progress_dispatch_accepted": false,
+    "hosted_exact_head_acceptance": false,
+    "stable_API_or_release_accepted": false,
+    "full_C2_0_runtime_accepted": false,
+    "checkpoint_restore_accepted": false,
+    "ED_operational_acceptance": false
+  }
+}
