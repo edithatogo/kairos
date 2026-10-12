@@ -1,12 +1,74 @@
 //! Optional calibration primitives; no empirical or clinical acceptance.
 #![forbid(unsafe_code)]
 
+#[cfg(feature = "flow")]
+#[expect(
+    dead_code,
+    reason = "Complete C2 composite assembler consumes the reviewed envelope next"
+)]
+mod checkpoint_envelope;
+#[cfg(feature = "flow")]
+#[expect(
+    dead_code,
+    reason = "Complete C2 composite assembler consumes the reviewed section directory next"
+)]
+mod checkpoint_sections;
+
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2 composite transaction is exercised by focused owner tests"
+    )
+)]
+mod c2_portable_checkpoint;
+
+#[cfg(feature = "flow")]
+mod route_receipt;
 pub mod seed_map;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2.3 model dispatch helper is qualified by its focused tests; runtime integration remains separate"
+    )
+)]
+mod staff_dispatch;
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2.3 resource lifecycle adapter is exercised by focused actual-Flow tests; coordinator acceptance remains separate"
+    )
+)]
+mod staff_flow_lifecycle;
 #[expect(
     dead_code,
     reason = "Private C2.2 provider is exercised by source conformance; Flow integration is a later instance"
 )]
 mod work_duration;
+
+// Experimental adapter for actual Flow work; it remains crate-private while
+// C2.2 transit, checkpoint and public-API joins are unfinished.
+#[cfg(feature = "flow")]
+mod c2_checkpoint_journal;
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2.2 Flow bridge is exercised by focused actual-runtime tests; the paired runtime join is a later instance"
+    )
+)]
+mod flow_bridge;
+
+#[cfg(feature = "flow")]
+#[doc(hidden)]
+pub mod experimental_c2_replay {
+    pub use crate::c2_checkpoint_journal::{restore_demo, save_demo, JournalError};
+}
 
 // Private C4.2 numeric implementation; no public API or sidecar promises.
 #[expect(

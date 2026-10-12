@@ -1,6 +1,6 @@
 # Test Matrix: Track 30 Toolchain & Version Support Matrix
 
-Last updated: 2026-05-07.
+Last updated: 2026-10-09.
 
 | Check | Alpha | Beta | RC | 1.0 | Current evidence |
 |---|---:|---:|---:|---:|---|
@@ -22,12 +22,19 @@ Last updated: 2026-05-07.
 | Deprecation notice appears in release notes for 2 cycles before removal | no | partial | yes | yes | Matrix policy now requires it; release-note implementation remains Track 15/16 scope. |
 | New major language versions are added to the matrix within 1 release cycle | yes | yes | yes | yes | Runner coverage policy now requires refresh within one KairoECS release cycle. |
 
+## C2 current-development qualification profile
+
+The current C2 development profile uses pinned Rust `1.99.0` only. This does
+not qualify Cargo-declared older MSRVs, alter a minimum, imply upstream
+discontinuation, or relabel historical receipts. No beta runtime lane is part
+of this profile.
+
 ## Focused Validation Commands
 
 | Command | Result | Evidence |
 |---|---|---|
-| `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` | Pass | Static matrix, workflow trigger, and gate checks passed locally on 2026-05-07. |
-| `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem rust -ExpectedPrefix 1.98` | Pass | GitHub Actions installs the current stable Rust channel and validates it against the live 1.98 release line. |
+| `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1` | Expected red pending workflow owner integration | This validator now expects Rust channel `1.99.0` and prefix `1.99`; `.github/workflows/toolchain-check.yml` is owned by Track 13 and still has the prior `stable`/`beta` matrix in this isolated packet. Observed first mismatch: `Missing workflow lane matching matrix: channel: "1.99.0"`; log `.artifacts/c2-current-toolchain-policy/static-validator.log`. Root will validate after integrating that workflow change. |
+| `toolchain_bin='/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin'; PATH="$toolchain_bin:$PATH"; for tool in rustc cargo rustfmt; do tool_path=$(command -v "$tool") || exit 1; case "$tool_path" in "$toolchain_bin"/*) ;; *) exit 2 ;; esac; version=$("$tool" --version) || exit 1; printf '%s\n' "$tool_path: $version"; done; case "$(rustc --version)" in *1.99.0*) ;; *) exit 3 ;; esac; case "$(cargo --version)" in *1.99.0*) ;; *) exit 4 ;; esac` | Pass | All three executables resolve under the Rustup 1.99.0 ARM64 toolchain; rustc and Cargo report 1.99.0, rustfmt reports its component version. Log `.artifacts/c2-current-toolchain-policy/rust-installed-final.log`. This does not test or qualify older declared MSRVs. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem python -ExpectedPrefix 3.13` | Pass | Local `python --version` reports Python 3.13.x and matches the expected prefix. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem node -ExpectedPrefix 24` | Pass | Local Node reports 24.x. |
 | `pwsh -NoProfile -File conductor/tracks/30-toolchain-version-support-matrix/validate-toolchain-matrix.ps1 -CheckInstalled -Ecosystem dotnet -ExpectedPrefix 11.0` | Pass | Local .NET reports 11.0; the machine currently defaults to preview, not the stable 10.0 SDK lane. |

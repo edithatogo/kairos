@@ -153,3 +153,31 @@ This approval does not promote Track 39 to owner of the experiment-runner CLI,
 does not add production resumability evidence, and does not change the broader
 Track 22 boundary: real experiment execution, checkpoint state semantics,
 resume semantics, `collect`, and `analyze` remain Track 22 follow-up work.
+
+
+## C2 portable state foundation — 2026-10-09
+
+ADR-0016 defines owner-derived full-state capture/import rather than fixed-recipe
+replay. Native component source `e5a130223fad6148dabea2379f767514bd1eaeb3` integrates
+independently reviewed scheduler, entity allocator and calibration seed registry
+images. Core/state expose doc-hidden Rust-only native DTO seams; no engine byte
+codec/serde dependency, public FFI contract or scheduler/RNG/allocator algorithm
+changed. All physical scheduler entries and live/cancelled membership/counters,
+world slot generations/free LIFO/dense order, and every seed logical identity and
+purpose are preserved. Limits and invariants validate before destination state
+construction; allocator validation is linear with bounded scratch.
+
+Rust1.99-only combined core/state/DES/ABM/calibration flow qualification:527 passed,
+zero failed,five ignored/54 groups; strict five-package Clippy and workspace format
+pass. Worker failures/corrections remain retained in the parent evidence. This is
+component acceptance, not complete portable checkpoint or phase acceptance.
+
+Dependency handoff: Track01 supplies scheduler/entity state; Track03 must add full
+Flow/components and approved context/handler codecs; Track21 must integrate policy,
+providers, streams and bridge state; Track22 owns the outer durable envelope,
+coherent frontier, fresh-runtime identity rebinding, commit/recovery and runner
+ledger. Full C2 legal modes/progress states remain the required outcome. Unknown
+extension state fails closed; no silent state loss or frozen-recipe substitution.
+C5 worker/candidate crash equivalence, stable API/release and clinical gates remain
+separate required evidence. No track completion or upstream acceptance ledger is
+changed by this experimental handoff.
