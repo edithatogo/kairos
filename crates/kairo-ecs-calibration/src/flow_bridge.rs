@@ -2302,8 +2302,9 @@ mod tests {
     use kairo_ecs_abm::spatial::{EdgeId, MovementModeId, NodeId, TransitEdge};
     use kairo_ecs_abm::{
         register_transit_context, register_transit_context_checkpoint_codec,
-        register_transit_context_checkpoint_domain, register_transit_context_reject_first_for_test,
-        TransitContext, TransitContextCheckpointLimitsV1, TransitContextCheckpointV1,
+        register_transit_context_checkpoint_codec_v2, register_transit_context_checkpoint_domain,
+        register_transit_context_reject_first_for_test, TransitContext,
+        TransitContextCheckpointLimitsV1, TransitContextCheckpointV1,
     };
     use kairo_ecs_des::fidelity::{FidelityCheckpointLimits, FidelityPolicy};
     use kairo_ecs_des::{
@@ -2845,6 +2846,240 @@ mod tests {
         .unwrap();
         flow.capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
             .unwrap()
+    }
+
+    fn native_codecs_for_transit_v2(
+        flow: &FlowRuntime,
+        bound: &BoundIntrinsicWork<u32, u32>,
+    ) -> FlowCheckpointCodecs {
+        let mut codecs = native_test_codecs();
+        register_transit_context_checkpoint_codec_v2(
+            &mut codecs,
+            "bridge.transit",
+            flow.identity(),
+            route_graph(bound),
+            TransitContextCheckpointLimitsV1::new(128, 16 * 1024, 1024, 32 * 1024),
+        )
+        .unwrap();
+        register_transit_context_checkpoint_domain(
+            &mut codecs,
+            "bridge.transit",
+            EventKind::custom(0xC20),
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.plan".to_owned(),
+                version: 1,
+            },
+            FlowCallbackCodeV1 {
+                stable_id: "test.bridge.transit.accept".to_owned(),
+                version: 1,
+            },
+        )
+        .unwrap();
+        codecs
+    }
+
+    fn add_stable_key_queue_state(
+        flow: &mut FlowRuntime,
+        bound: &BoundIntrinsicWork<u32, u32>,
+    ) -> (ResourceId, RequestId) {
+        let owner = flow.spawn_actor().unwrap();
+        let resource = flow
+            .create_resource_with_queue_ordering(
+                0,
+                FlowAllocationMode::Eager,
+                kairo_ecs_des::FlowQueueOrdering::StableKey,
+            )
+            .unwrap();
+        let work = flow
+            .create_work(owner, SimDuration::from_ticks(3), "bridge.context", 73_u32)
+            .unwrap();
+        let request = flow
+            .acquire(resource)
+            .owner(owner)
+            .timed_work(work)
+            .queue_order_key(kairo_ecs_des::FlowQueueOrderKey::new(b"coherent-v4-queue").unwrap())
+            .submit()
+            .unwrap();
+        let codecs = native_codecs_for_transit_v2(flow, bound);
+        let FlowCheckpointImage::V4(before_submit) = flow
+            .capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
+            .unwrap()
+        else {
+            panic!("StableKey request metadata selects V4 before Submit");
+        };
+        let submit_event = before_submit
+            .commands
+            .iter()
+            .find_map(|(event, command)| {
+                matches!(command, kairo_ecs_des::FlowCommandV3::Submit(actual) if *actual == request)
+                    .then_some(*event)
+            })
+            .expect("the actual request has a captured Submit command");
+        assert!(before_submit
+            .scheduler
+            .entries
+            .iter()
+            .any(|entry| { entry.live && entry.id == submit_event }));
+        let _submission = flow
+            .step()
+            .expect("stable-key request submission remains at the source cut")
+            .expect("the real stable-key Submit event");
+        assert_eq!(_submission.event, submit_event);
+        assert_eq!(_submission.error, None);
+        assert_eq!(flow.now(), SimTime::from_ticks(0));
+        assert_eq!(flow.request(request).unwrap().state, RequestState::Queued);
+        assert_eq!(
+            flow.request_queue_order_key(request)
+                .unwrap()
+                .unwrap()
+                .as_bytes(),
+            b"coherent-v4-queue"
+        );
+        (resource, request)
+    }
+
+    fn capture_coherent_v4(
+        flow: &FlowRuntime,
+        bound: &BoundIntrinsicWork<u32, u32>,
+    ) -> kairo_ecs_des::FlowCheckpointV4 {
+        let codecs = native_codecs_for_transit_v2(flow, bound);
+        let FlowCheckpointImage::V4(image) = flow
+            .capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
+            .unwrap()
+        else {
+            panic!("a stable-key request queue must route capture to V4");
+        };
+        assert!(image.request_queue_orders.iter().any(|(_, order)| matches!(
+            order,
+            kairo_ecs_des::FlowRequestQueueOrderV4::StableKey(key)
+                if key.as_slice() == b"coherent-v4-queue"
+        )));
+        image
+    }
+
+    fn assert_coherent_v4_roundtrip(
+        flow: &mut FlowRuntime,
+        adapter: &FidelityAdapter,
+        bound: &mut BoundIntrinsicWork<u32, u32>,
+        image: &kairo_ecs_des::FlowCheckpointV4,
+    ) {
+        assert!(!image.request_queue_orders.is_empty());
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(image),
+                flow,
+                bound,
+                bridge_checkpoint_limits(),
+            ),
+            Ok(())
+        );
+        let bridge_image = BoundIntrinsicWorkCheckpointV1::capture(
+            bound,
+            flow,
+            adapter,
+            bridge_checkpoint_limits(),
+        )
+        .unwrap();
+        let graph = route_graph(bound);
+        let codecs = native_codecs_for_transit_v2(flow, bound);
+        let (restored_flow, rebind) = FlowCheckpointImage::V4(image.clone())
+            .restore_with_rebind(&codecs, FlowCheckpointLimits::default())
+            .unwrap();
+        let restored_adapter =
+            restore_adapter_for_flow(adapter, flow, &restored_flow, bound.work());
+        let restored_bound = BoundIntrinsicWorkCheckpointV1::restore::<u32, u32>(
+            bridge_image,
+            &restored_flow,
+            &restored_adapter,
+            &bound.expected_service_key,
+            &rebind,
+            Some(graph),
+            bridge_checkpoint_limits(),
+        )
+        .unwrap();
+        assert_eq!(restored_flow.budget_snapshot(), flow.budget_snapshot());
+        assert_eq!(
+            restored_flow.work_progress(restored_bound.work()).unwrap(),
+            flow.work_progress(bound.work()).unwrap()
+        );
+        assert_eq!(restored_bound.sampled_duration(), bound.sampled_duration());
+        assert_eq!(restored_bound.draw_position(), bound.draw_position());
+        assert_eq!(
+            restored_bound.service_draw_position(),
+            bound.service_draw_position()
+        );
+        let restored_image = capture_coherent_v4(&restored_flow, &restored_bound);
+        assert_eq!(&restored_image, image);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&restored_image),
+                &restored_flow,
+                &restored_bound,
+                bridge_checkpoint_limits(),
+            ),
+            Ok(())
+        );
+        let source_suffix = run_coherent_v4_suffix(flow, bound);
+        let mut restored_flow = restored_flow;
+        let mut restored_bound = restored_bound;
+        let restored_suffix = run_coherent_v4_suffix(&mut restored_flow, &mut restored_bound);
+        assert_eq!(source_suffix.0, restored_suffix.0);
+        assert_eq!(source_suffix.1, restored_suffix.1);
+        assert_eq!(source_suffix.2, restored_suffix.2);
+        assert_eq!(source_suffix.3, restored_suffix.3);
+        assert_eq!(source_suffix.4, restored_suffix.4);
+        assert_eq!(source_suffix.5, restored_suffix.5);
+    }
+
+    fn run_coherent_v4_suffix(
+        flow: &mut FlowRuntime,
+        bound: &mut BoundIntrinsicWork<u32, u32>,
+    ) -> (
+        Vec<FlowDispatch>,
+        kairo_ecs_des::WorkProgress,
+        kairo_ecs_des::FlowCheckpointV4,
+        SimDuration,
+        u64,
+        u64,
+    ) {
+        let mut dispatches = Vec::new();
+        for _ in 0..24 {
+            if flow.work_progress(bound.work()).unwrap().state == WorkState::Completed {
+                break;
+            }
+            let dispatch = flow.step().unwrap().expect("bounded suffix dispatch");
+            let is_control = bound
+                .controls
+                .iter()
+                .any(|(event, _)| *event == dispatch.event);
+            let is_transit = bound.pending_event == Some(dispatch.event)
+                && !dispatch.callback_batches.is_empty();
+            if is_control || is_transit {
+                bound
+                    .observe_transit_dispatch(flow, &dispatch)
+                    .expect("source/restored transit dispatch is observed");
+            }
+            dispatches.push(dispatch);
+        }
+        let progress = flow.work_progress(bound.work()).unwrap();
+        assert_eq!(progress.state, WorkState::Completed);
+        assert!(dispatches.iter().any(|dispatch| dispatch
+            .records
+            .iter()
+            .any(|record| { record.transition == LifecycleTransition::Granted })));
+        assert!(dispatches.iter().any(|dispatch| dispatch
+            .records
+            .iter()
+            .any(|record| { record.transition == LifecycleTransition::Completed })));
+        let image = capture_coherent_v4(flow, bound);
+        (
+            dispatches,
+            progress,
+            image,
+            bound.sampled_duration(),
+            bound.draw_position(),
+            bound.service_draw_position(),
+        )
     }
 
     fn bound_deferred_route_with_adapter(
@@ -3951,6 +4186,614 @@ mod tests {
         );
         let observed = capture_coherent_v3(&flow, &bound);
         assert_coherent_v3_roundtrip(&flow, &adapter, &bound, &observed);
+    }
+
+    #[test]
+    fn coherent_v4_v2_acquire_transit_controls_owned_mutations() {
+        let (mut flow, adapter, mut bound) = bound_deferred_route_with_adapter();
+        let _queue = add_stable_key_queue_state(&mut flow, &bound);
+        let (enable, flush) = schedule_deferred_v3_calendar(&mut flow, &bound);
+        bound.start_transit(&mut flow).unwrap();
+        let start = flow.step().unwrap().expect("real transit start event");
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &start),
+            Ok(TransitObservation::Progress)
+        );
+        let pause_at = flow.now();
+        let pause = bound
+            .schedule_transit_control(&mut flow, FlowDomainControl::Pause, pause_at, 0)
+            .unwrap();
+        let pause_dispatch = flow.step().unwrap().expect("real pause control");
+        assert_eq!(pause_dispatch.event, pause);
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &pause_dispatch),
+            Ok(TransitObservation::Paused)
+        );
+        let resume = bound
+            .schedule_transit_control(
+                &mut flow,
+                FlowDomainControl::Resume,
+                SimTime::from_ticks(1),
+                0,
+            )
+            .unwrap();
+        let image = capture_coherent_v4(&flow, &bound);
+        assert!(!image.request_queue_orders.is_empty());
+        assert!(image.commands.iter().any(|(id, command)| *id == enable
+            && matches!(command, kairo_ecs_des::FlowCommandV3::GrantEnabled(_, true))));
+        assert!(image.commands.iter().any(|(id, command)| *id == flush
+            && matches!(command, kairo_ecs_des::FlowCommandV3::AllocationFlush(_))));
+
+        let event = bound.pending_event.unwrap();
+        let mut wrong_due = image.clone();
+        wrong_due
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == event)
+            .unwrap()
+            .request
+            .at = SimTime::from_ticks(2);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&wrong_due),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_priority = image.clone();
+        wrong_priority
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == event)
+            .unwrap()
+            .request
+            .priority = i32::MAX;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&wrong_priority),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_kind = image.clone();
+        wrong_kind
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == event)
+            .unwrap()
+            .request
+            .kind = EventKind::custom(0xC21);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&wrong_kind),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_control = image.clone();
+        let row = wrong_control
+            .commands
+            .iter_mut()
+            .find(|(id, _)| *id == resume)
+            .unwrap();
+        if let kairo_ecs_des::FlowCommandV3::DomainControl(entity, _, _) = &mut row.1 {
+            *entity = bound.work();
+        } else {
+            panic!("resume control command must be present");
+        }
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&wrong_control),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let carrier = bound.carrier.unwrap().entity_id();
+        let mut wrong_context = image.clone();
+        let store = wrong_context
+            .context_stores
+            .iter_mut()
+            .find(|store| store.codec_key == "bridge.transit")
+            .unwrap();
+        store
+            .rows
+            .iter_mut()
+            .find(|(owner, _)| *owner == carrier)
+            .unwrap()
+            .1[0] ^= 1;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&wrong_context),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        assert_coherent_v4_roundtrip(&mut flow, &adapter, &mut bound, &image);
+    }
+
+    #[test]
+    fn coherent_v4_v2_acquire_arrived_pending_submit() {
+        let (mut flow, adapter, mut bound) = bound_deferred_route_with_adapter();
+        let (_queue_resource, queued_request) = add_stable_key_queue_state(&mut flow, &bound);
+        let (_enable, _flush) = schedule_deferred_v3_calendar(&mut flow, &bound);
+        bound.start_transit(&mut flow).unwrap();
+        let mut arrived = false;
+        for _ in 0..8 {
+            let dispatch = flow.step().unwrap().expect("bounded transit dispatch");
+            if bound.observe_transit_dispatch(&flow, &dispatch).unwrap()
+                == TransitObservation::Arrived
+            {
+                arrived = true;
+                break;
+            }
+        }
+        assert!(
+            arrived,
+            "real route must reach the observed arrival frontier"
+        );
+        let arrival = bound.pending_event.unwrap();
+        let request = bound.arrival_request.unwrap();
+        assert_eq!(flow.request(request).unwrap().state, RequestState::Pending);
+        let image = capture_coherent_v4(&flow, &bound);
+        assert!(image.commands.iter().any(|(id, command)| *id == arrival
+            && matches!(command, kairo_ecs_des::FlowCommandV3::Submit(actual) if *actual == request)));
+        let mut missing = image.clone();
+        missing.commands.retain(|(id, _)| *id != arrival);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&missing),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut replaced = image.clone();
+        let row = replaced
+            .commands
+            .iter_mut()
+            .find(|(id, _)| *id == arrival)
+            .unwrap();
+        row.1 = kairo_ecs_des::FlowCommandV3::Submit(queued_request);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&replaced),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut nonlive = image.clone();
+        nonlive
+            .scheduler
+            .entries
+            .iter_mut()
+            .find(|entry| entry.id == arrival)
+            .unwrap()
+            .live = false;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&nonlive),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        assert_coherent_v4_roundtrip(&mut flow, &adapter, &mut bound, &image);
+    }
+
+    #[test]
+    fn coherent_v4_v2_acquire_observed_frontier_required() {
+        let (mut flow, adapter, mut bound) = bound_deferred_route_with_adapter();
+        let _queue = add_stable_key_queue_state(&mut flow, &bound);
+        let (_enable, _flush) = schedule_deferred_v3_calendar(&mut flow, &bound);
+        bound.start_transit(&mut flow).unwrap();
+        let start = flow.step().unwrap().expect("real transit start event");
+        let unobserved = capture_coherent_v4(&flow, &bound);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&unobserved),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        assert_eq!(
+            bound.observe_transit_dispatch(&flow, &start),
+            Ok(TransitObservation::Progress)
+        );
+        let observed = capture_coherent_v4(&flow, &bound);
+        assert_eq!(observed, unobserved);
+        assert!(!observed.request_queue_orders.is_empty());
+        assert_coherent_v4_roundtrip(&mut flow, &adapter, &mut bound, &observed);
+    }
+
+    #[test]
+    fn coherent_v4_v2_acquire_manifest_and_action_failclosed() {
+        let (mut flow, _adapter, mut bound) = bound_deferred_route_with_adapter();
+        let _queue = add_stable_key_queue_state(&mut flow, &bound);
+        let start = bound.start_transit(&mut flow).unwrap();
+        assert_eq!(bound.pending_event, Some(start));
+        assert!(bound.carrier.is_some());
+        let image = capture_coherent_v4(&flow, &bound);
+        assert!(image
+            .scheduler
+            .entries
+            .iter()
+            .any(|entry| entry.live && entry.id == start));
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&image),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Ok(())
+        );
+        let acquire_context = flow
+            .work_context::<TransitContext>(bound.carrier.unwrap())
+            .unwrap();
+        let native_limits =
+            TransitContextCheckpointLimitsV1::new(128, 16 * 1024, 4096, 16 * 1024 + 4096 + 512);
+        let acquire_native = acquire_context
+            .checkpoint_v2(&flow.identity(), native_limits)
+            .unwrap();
+        assert!(checkpoint_wire::v2_action_matches_acquire(
+            &acquire_native,
+            &bound
+        ));
+        let mut wrong_version = image.clone();
+        wrong_version
+            .contexts
+            .iter_mut()
+            .find(|row| row.codec_key == "bridge.transit")
+            .unwrap()
+            .version = 1;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&wrong_version),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut unknown_version = image.clone();
+        unknown_version
+            .contexts
+            .iter_mut()
+            .find(|row| row.codec_key == "bridge.transit")
+            .unwrap()
+            .version = 9;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&unknown_version),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_key = image.clone();
+        wrong_key
+            .work_registrations
+            .iter_mut()
+            .find(|row| Some(row.id) == bound.carrier.map(WorkId::entity_id))
+            .unwrap()
+            .context_codec_key = "wrong.codec".to_owned();
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&wrong_key),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut wrong_owner = image.clone();
+        let carrier = bound.carrier.unwrap().entity_id();
+        wrong_owner
+            .context_stores
+            .iter_mut()
+            .find(|store| store.codec_key == "bridge.transit")
+            .unwrap()
+            .rows
+            .iter_mut()
+            .find(|(owner, _)| *owner == carrier)
+            .unwrap()
+            .0 = bound.work().entity_id();
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&wrong_owner),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut schema1_payload = image.clone();
+        let context = flow
+            .work_context::<TransitContext>(bound.carrier.unwrap())
+            .unwrap();
+        let limits = TransitContextCheckpointLimitsV1::new(128, 16 * 1024, 4096, 32 * 1024);
+        let schema1_bytes = context
+            .checkpoint_bytes_v1(&flow.identity(), limits)
+            .unwrap();
+        schema1_payload
+            .context_stores
+            .iter_mut()
+            .find(|store| store.codec_key == "bridge.transit")
+            .unwrap()
+            .rows
+            .iter_mut()
+            .find(|(owner, _)| *owner == carrier)
+            .unwrap()
+            .1 = schema1_bytes;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&schema1_payload),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut duplicate_store = image.clone();
+        let transit_store = duplicate_store
+            .context_stores
+            .iter()
+            .find(|store| store.codec_key == "bridge.transit")
+            .unwrap()
+            .clone();
+        duplicate_store.context_stores.push(transit_store);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&duplicate_store),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+        let mut duplicate_manifest = image.clone();
+        let transit_manifest = duplicate_manifest
+            .contexts
+            .iter()
+            .find(|row| row.codec_key == "bridge.transit")
+            .unwrap()
+            .clone();
+        duplicate_manifest.contexts.push(transit_manifest);
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&duplicate_manifest),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+
+        // Build a genuine native Handoff TransitContext on the same runtime and
+        // validate that the Acquire consumer rejects its actual V2 action.
+        let (graph, origin, destination, profile, ticks_per_second) = match &bound.transit {
+            TransitRequest::Route {
+                graph,
+                origin,
+                destination,
+                profile,
+                ticks_per_second,
+                ..
+            } => (
+                graph.clone(),
+                *origin,
+                *destination,
+                profile.clone(),
+                *ticks_per_second,
+            ),
+            TransitRequest::Zero => unreachable!(),
+        };
+        let route = graph
+            .route(origin, destination, &profile, ticks_per_second)
+            .unwrap();
+        let handoff = TransitContext::new_handoff(&flow, route, bound.work, flow.now(), 0).unwrap();
+        let handoff_actor = flow.spawn_actor().unwrap();
+        let handoff_carrier = flow
+            .create_actor_domain_context(
+                handoff_actor,
+                "bridge.transit",
+                EventKind::custom(0xC20),
+                handoff,
+            )
+            .unwrap();
+        let mut handoff_bound = bound;
+        handoff_bound.carrier = Some(handoff_carrier);
+        handoff_bound.kind = Some(EventKind::custom(0xC20));
+        let handoff_image = capture_coherent_v4(&flow, &handoff_bound);
+        let handoff_context = flow
+            .work_context::<TransitContext>(handoff_carrier)
+            .unwrap();
+        let wire_limits =
+            TransitContextCheckpointLimitsV1::new(128, 16 * 1024, 4096, 16 * 1024 + 4096);
+        let handoff_native = handoff_context
+            .checkpoint_v2(&flow.identity(), native_limits)
+            .unwrap();
+        assert!(matches!(
+            &handoff_native.action,
+            kairo_ecs_abm::TransitArrivalActionCheckpointV2::Handoff { .. }
+        ));
+        let handoff_bytes = handoff_native.encode_bytes_v2(wire_limits).unwrap();
+        let handoff_id = handoff_carrier.entity_id();
+        let registration = handoff_image
+            .work_registrations
+            .iter()
+            .find(|row| row.id == handoff_id)
+            .unwrap();
+        let manifest = handoff_image
+            .contexts
+            .iter()
+            .find(|row| row.runtime_key == registration.context_runtime_key)
+            .unwrap();
+        let store = handoff_image
+            .context_stores
+            .iter()
+            .find(|row| row.codec_key == registration.context_codec_key)
+            .unwrap();
+        assert_eq!(manifest.codec_key, registration.context_codec_key);
+        assert_eq!(manifest.version, 2);
+        assert_eq!(store.version, 2);
+        assert_eq!(
+            store
+                .rows
+                .iter()
+                .find(|(owner, _)| *owner == handoff_id)
+                .unwrap()
+                .1,
+            handoff_bytes
+        );
+        assert!(!checkpoint_wire::v2_action_matches_acquire(
+            &handoff_native,
+            &handoff_bound
+        ));
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&handoff_image),
+                &flow,
+                &handoff_bound,
+                bridge_checkpoint_limits()
+            ),
+            Err(BridgeCheckpointError::InvalidState)
+        );
+    }
+
+    #[test]
+    fn coherent_v4_v2_acquire_limits_no_fallback() {
+        let (mut bound, mut flow) =
+            bound_route_at_with_registration(SimTime::ZERO, 100, register_transit_context);
+        let _queue = add_stable_key_queue_state(&mut flow, &bound);
+        let start = bound.start_transit(&mut flow).unwrap();
+        assert_eq!(bound.pending_event, Some(start));
+        assert!(bound.carrier.is_some());
+        let image = capture_coherent_v4(&flow, &bound);
+        assert!(image
+            .scheduler
+            .entries
+            .iter()
+            .any(|entry| entry.live && entry.id == start));
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&image),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Ok(())
+        );
+        let mut overflow = bridge_checkpoint_limits();
+        overflow.max_canonical_bytes = usize::MAX;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&image),
+                &flow,
+                &bound,
+                overflow
+            ),
+            Err(BridgeCheckpointError::LimitExceeded)
+        );
+        let carrier = bound.carrier.unwrap().entity_id();
+        let wire_bytes = image
+            .context_stores
+            .iter()
+            .find(|store| store.codec_key == "bridge.transit")
+            .unwrap()
+            .rows
+            .iter()
+            .find(|(owner, _)| *owner == carrier)
+            .unwrap()
+            .1
+            .len();
+        let mut exact = bridge_checkpoint_limits();
+        assert!(wire_bytes > 4096);
+        exact.max_canonical_bytes = wire_bytes.saturating_sub(4096);
+        assert!(exact.max_canonical_bytes >= route_graph(&bound).canonical_bytes_ref().len());
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&image),
+                &flow,
+                &bound,
+                exact
+            ),
+            Ok(())
+        );
+        let mut one_below = exact;
+        one_below.max_canonical_bytes -= 1;
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V4(&image),
+                &flow,
+                &bound,
+                one_below
+            ),
+            Err(BridgeCheckpointError::LimitExceeded)
+        );
+    }
+
+    #[test]
+    fn coherent_v4_legacy_acquire_v1_bytes_unchanged() {
+        let (mut flow, _adapter, mut bound) = bound_route_with_adapter();
+        let start = bound.start_transit(&mut flow).unwrap();
+        assert_eq!(bound.pending_event, Some(start));
+        assert!(bound.carrier.is_some());
+        let image = capture_real_transit_flow_image_any(&flow, &bound);
+        let FlowCheckpointImage::V1(image) = image else {
+            panic!("legacy capture must remain V1");
+        };
+        assert!(image
+            .scheduler
+            .entries
+            .iter()
+            .any(|entry| entry.live && entry.id == start));
+        assert_eq!(
+            checkpoint_wire::validate_coherent_cut(
+                FlowCheckpointRef::V1(&image),
+                &flow,
+                &bound,
+                bridge_checkpoint_limits()
+            ),
+            Ok(())
+        );
+        let context = flow
+            .work_context::<TransitContext>(bound.carrier.unwrap())
+            .unwrap();
+        let limits = TransitContextCheckpointLimitsV1::new(128, 16 * 1024, 1024, 32 * 1024);
+        let bytes = context
+            .checkpoint_bytes_v1(&flow.identity(), limits)
+            .unwrap();
+        let stored = image
+            .context_stores
+            .iter()
+            .find(|store| store.codec_key == "bridge.transit")
+            .unwrap()
+            .rows
+            .iter()
+            .find(|(owner, _)| *owner == bound.carrier.unwrap().entity_id())
+            .unwrap();
+        assert_eq!(stored.1, bytes);
     }
 
     #[test]

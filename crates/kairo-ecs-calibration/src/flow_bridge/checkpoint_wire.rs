@@ -106,43 +106,131 @@ pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
     let context = source
         .work_context::<TransitContext>(carrier)
         .map_err(BridgeCheckpointError::Flow)?;
+    let work = carrier.entity_id();
+    let (manifest, stores, registrations) = match flow_image {
+        kairo_ecs_des::FlowCheckpointRef::V1(image) => (
+            &image.contexts,
+            &image.context_stores,
+            &image.work_registrations,
+        ),
+        kairo_ecs_des::FlowCheckpointRef::V2(image) => (
+            &image.contexts,
+            &image.context_stores,
+            &image.work_registrations,
+        ),
+        kairo_ecs_des::FlowCheckpointRef::V3(image) => (
+            &image.contexts,
+            &image.context_stores,
+            &image.work_registrations,
+        ),
+        kairo_ecs_des::FlowCheckpointRef::V4(image) => (
+            &image.contexts,
+            &image.context_stores,
+            &image.work_registrations,
+        ),
+    };
+    let registration = exactly_one(registrations.iter().filter(|row| row.id == work))?;
+    let manifest_row = exactly_one(
+        manifest
+            .iter()
+            .filter(|row| row.runtime_key == registration.context_runtime_key),
+    )?;
+    if manifest_row.codec_key != registration.context_codec_key {
+        return Err(BridgeCheckpointError::InvalidState);
+    }
+    let context_store = exactly_one(
+        stores
+            .iter()
+            .filter(|store| store.codec_key == registration.context_codec_key),
+    )?;
+    let stored = exactly_one(
+        context_store
+            .rows
+            .iter()
+            .filter(|(owner, _)| *owner == work),
+    )?;
+    if manifest_row.version != context_store.version || !matches!(manifest_row.version, 1 | 2) {
+        return Err(BridgeCheckpointError::InvalidState);
+    }
+    let native_budget = limits.max_canonical_bytes.saturating_add(4096);
     let context_limits = kairo_ecs_abm::TransitContextCheckpointLimitsV1::new(
         limits.max_route_segments,
         limits.max_canonical_bytes,
         limits.max_identifier_bytes,
-        limits.max_canonical_bytes.saturating_add(4096),
+        native_budget,
     );
-    let native = context
-        .checkpoint_v1(&source.identity(), context_limits)
-        .map_err(|_| BridgeCheckpointError::InvalidState)?;
-    let context_wire = native
-        .encode_bytes_v1(context_limits)
-        .map_err(|_| BridgeCheckpointError::InvalidState)?;
-    let work = carrier.entity_id();
-    let registration = flow_image
-        .work_registrations()
-        .iter()
-        .find(|row| row.id == work)
-        .ok_or(BridgeCheckpointError::InvalidState)?;
-    let context_store = flow_image
-        .context_stores()
-        .iter()
-        .find(|store| store.codec_key == registration.context_codec_key)
-        .ok_or(BridgeCheckpointError::InvalidState)?;
-    let stored = context_store
-        .rows
-        .iter()
-        .find(|(owner, _)| *owner == work)
-        .ok_or(BridgeCheckpointError::InvalidState)?;
-    if stored.1 != context_wire
-        || native.service_work != bound.work.entity_id()
-        || (!native.initial_start_pending
-            && (native.carrier != Some(work) || native.kind != bound.kind))
-        || native.acquire_owner != bound.acquire.owner
-        || native.acquire_resource != bound.acquire.resource.entity_id()
-    {
-        return Err(BridgeCheckpointError::InvalidState);
-    }
+    let (phase, expected_event, expected_due_ticks) = match manifest_row.version {
+        1 => {
+            let native = context
+                .checkpoint_v1(&source.identity(), context_limits)
+                .map_err(|_| BridgeCheckpointError::InvalidState)?;
+            let context_wire = native
+                .encode_bytes_v1(context_limits)
+                .map_err(|_| BridgeCheckpointError::InvalidState)?;
+            if stored.1 != context_wire
+                || native.service_work != bound.work.entity_id()
+                || (!native.initial_start_pending
+                    && (native.carrier != Some(work) || native.kind != bound.kind))
+                || native.acquire_owner != bound.acquire.owner
+                || native.acquire_resource != bound.acquire.resource.entity_id()
+            {
+                return Err(BridgeCheckpointError::InvalidState);
+            }
+            (
+                native.phase,
+                native.expected_event,
+                native.expected_due_ticks,
+            )
+        }
+        2 => {
+            let wire_budget = limits
+                .max_canonical_bytes
+                .checked_add(4096)
+                .ok_or(BridgeCheckpointError::LimitExceeded)?;
+            let native_wire_budget = wire_budget
+                .checked_add(512)
+                .ok_or(BridgeCheckpointError::LimitExceeded)?;
+            let native_limits = kairo_ecs_abm::TransitContextCheckpointLimitsV1::new(
+                limits.max_route_segments,
+                limits.max_canonical_bytes,
+                limits.max_identifier_bytes,
+                native_wire_budget,
+            );
+            let native = context
+                .checkpoint_v2(&source.identity(), native_limits)
+                .map_err(|error| match error {
+                    kairo_ecs_abm::TransitContextCheckpointError::LimitExceeded => {
+                        BridgeCheckpointError::LimitExceeded
+                    }
+                    _ => BridgeCheckpointError::InvalidState,
+                })?;
+            let context_wire =
+                native
+                    .encode_bytes_v2(context_limits)
+                    .map_err(|error| match error {
+                        kairo_ecs_abm::TransitContextWireError::LimitExceeded => {
+                            BridgeCheckpointError::LimitExceeded
+                        }
+                        _ => BridgeCheckpointError::InvalidState,
+                    })?;
+            let acquire_matches = v2_action_matches_acquire(&native, bound);
+            if stored.1 != context_wire
+                || !acquire_matches
+                || native.service_work != bound.work.entity_id()
+                || native.service_owner != bound.acquire.owner
+                || (!native.initial_start_pending
+                    && (native.carrier != Some(work) || native.kind != bound.kind))
+            {
+                return Err(BridgeCheckpointError::InvalidState);
+            }
+            (
+                native.phase,
+                native.expected_event,
+                native.expected_due_ticks,
+            )
+        }
+        _ => unreachable!("manifest version was checked"),
+    };
 
     let has_live = |event: EventId, at: SimTime, priority: i32| {
         flow_image.scheduler().entries.iter().any(|entry| {
@@ -168,9 +256,9 @@ pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
         })
     };
     match (
-        native.phase,
-        native.expected_event,
-        native.expected_due_ticks,
+        phase,
+        expected_event,
+        expected_due_ticks,
         bound.pending_event,
     ) {
         (
@@ -280,6 +368,46 @@ pub(crate) fn validate_coherent_cut<T: Clone + 'static, C: 'static>(
         }
     }
     Ok(())
+}
+
+pub(super) fn v2_action_matches_acquire<T: Clone + 'static, C: 'static>(
+    native: &kairo_ecs_abm::TransitContextCheckpointV2,
+    bound: &BoundIntrinsicWork<T, C>,
+) -> bool {
+    matches!(
+        &native.action,
+        kairo_ecs_abm::TransitArrivalActionCheckpointV2::Acquire {
+            resource,
+            owner,
+            work: Some(acquire_work),
+            at_ticks,
+            priority_level,
+            deadline_ticks,
+            scheduler_priority,
+            timed,
+            can_preempt,
+            preemptible,
+        } if *resource == bound.acquire.resource.entity_id()
+            && *owner == bound.acquire.owner
+            && *acquire_work == bound.work.entity_id()
+            && *at_ticks == bound.acquire.at.ticks()
+            && *priority_level == bound.acquire.priority_level
+            && *deadline_ticks == bound.acquire.deadline.map(SimTime::ticks)
+            && *scheduler_priority == bound.acquire.scheduler_priority
+            && *timed
+            && *can_preempt == bound.acquire.can_preempt
+            && *preemptible == bound.acquire.preemptible
+    )
+}
+
+fn exactly_one<'a, T>(
+    mut values: impl Iterator<Item = &'a T>,
+) -> Result<&'a T, BridgeCheckpointError> {
+    let value = values.next().ok_or(BridgeCheckpointError::InvalidState)?;
+    if values.next().is_some() {
+        return Err(BridgeCheckpointError::InvalidState);
+    }
+    Ok(value)
 }
 
 fn route_limits(l: BridgeWireLimits) -> RouteReceiptWireLimits {
