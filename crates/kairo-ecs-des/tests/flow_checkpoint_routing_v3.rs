@@ -1188,6 +1188,7 @@ fn routing_v3_complete_command_iterator_all_versions() {
                 i.commands.iter().map(|(e, c)| (*e, (*c).into())).collect()
             }
             FlowCheckpointImage::V3(i) => i.commands.clone(),
+            FlowCheckpointImage::V4(_) => panic!("legacy iterator fixture must remain V1/V2/V3"),
         };
         assert_eq!(image.as_ref().commands().collect::<Vec<_>>(), expected);
         assert_eq!(image.as_ref().commands().collect::<Vec<_>>(), expected);

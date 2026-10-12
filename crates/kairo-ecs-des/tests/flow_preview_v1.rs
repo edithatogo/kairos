@@ -55,6 +55,7 @@ fn expected_head(image: &FlowCheckpointImage) -> Option<ScheduledEventPreview> {
         FlowCheckpointImage::V1(image) => &image.scheduler.entries,
         FlowCheckpointImage::V2(image) => &image.scheduler.entries,
         FlowCheckpointImage::V3(image) => &image.scheduler.entries,
+        FlowCheckpointImage::V4(image) => &image.scheduler.entries,
     };
     entries
         .iter()
