@@ -1,0 +1,19 @@
+# Preview consumers of actual FlowV4
+
+Status: root and GPT-6.1-sol reviewed owner contract; implementation is pending. Accepted Transit V2 wire source is 92735f04573a2d66dee8a789827ac235f7f41034. Source dispatch requires accepted DES V4 routing joined with this base, a freshly bound packet and an exclusive path claim. This document alone does not authorize execution.
+Reviewed owner contract; bind actual accepted DESrouting +ABMwire cleanjoinedsource and docsHEAD before dispatch. No preliminary four-package gate is required merely to prepare consumers: join byte-verified accepted sources first; final joinedconsumerqualification remains mandatory. Root is owner/coordinator, independent Sol source/seam review. Rust1.99 only.
+
+Exactly two owned sources: crates/kairo-ecs-calibration/src/shadow_native.rs and crates/kairo-ecs-calibration/src/c5_native.rs. Use current public FlowRuntime::peek_next and automatic capture_checkpoint_image/as_ref; no ABM/DES/public API changes. Existing V3 fourfamily tests in BOTH entrypoints remain unchanged. New actual fixtures must assert ImageV4 at every tested cut, with nonempty stable-key request metadata on a real native StableKey resource. Do not rely only on enum hand-construction or empty mode marker.
+
+Four proof families in EACH entrypoint, eight required names:
+- preview_v4_deferred_pending_flush_shadow / preview_v4_deferred_pending_flush_c5: actual Deferred allocationFlush4 head preview does not advance or allocate; complete image/work/progress unchanged; actual Flush dispatch then completion9; stable key/order retained.
+- preview_v4_disabled_pending_submit_shadow / preview_v4_disabled_pending_submit_c5: actual disabled Pending before Submit; after Disable/Submit Queued; disabledFlush yields no grant/head; enabledclosure later selects exactkeyorder. Preview image/scheduler/budget/domain state equality; no callbacks executed.
+- preview_v4_repeated_halt_shadow / preview_v4_repeated_halt_c5: actual Some0halted head repeats SameTickBudgetExceeded; exact complete nativeV4 capture before/after preview and repeatedstep, including LIVE head/key/cache/disabled/deferred state, unchanged timestamp.
+- preview_v4_stale_completion_and_limits_shadow / preview_v4_stale_completion_and_limits_c5: actual mixedpreemption/live staleCompletion11 versus inspectedfrontier7/3 and usefulCompletion14; preview returns realstaleLIVEhead, no progress/servicecallback/context/counter mutation. Exact V4 capture limit rejection visible with noV3fallback and validpositivebaseline.
+
+Use real native stable queue requests with exact immutable1..128keys and actualAdmissionOrder secondary resources only when scenario requires. If adding stable state to existing V3 fixture, keep V3 sourcefixture unchanged and create separateV4fixture; acceptedold golden/trace expectations unchanged. Capture logicalstate excludes permitted peek tombstone physicalpruning only where independentinline proofalreadycovers it; consumers compare native checkpoint full logicalimage. Pure DTO tests/selectornames do not count.
+
+Three gates: strict calibration all-targetClippy, full calibration package tests all8new names+old8V3families, exactly2fileformat. Formatfirst; maximum3failed DEVELOPMENT executions/rootreviewSTOP eachfailure, pairedrawreceipts at identicalsourcehashes beforecommit. Source acceptance previewonly; final commonjoinedfourpackage proof/26oldchildren+4V3decoded+19literalgoldens and allnewchildren beforepin. No productionHandoffprovenance or EDacceptance.
+
+
+Fixed tick targets7/3/11/14 (andFlush4/completion9) refer only to the independently verified existing runtimefixture eventtrace. New V4 fixtures must reproduce and assert actual source dispatch/head/callbackcontext/progress trace before applying those expectedticks, including explicit LIVE staleCompletion identity. They are not unconditional engine invariants; any changed fixture timing needs source-backed owner review, not test expectation edits.
