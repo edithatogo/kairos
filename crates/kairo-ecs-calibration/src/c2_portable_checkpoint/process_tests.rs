@@ -4342,7 +4342,7 @@ fn portable_v4_handoff_schema2_rebind_negative_controls() {
             .is_ok()
     );
 
-    let wrong_graph = TransitGraphV1::new(2, vec![NodeId::new(1)], Vec::new()).unwrap();
+    let wrong_graph = TransitGraphV1::new(1, vec![NodeId::new(1)], Vec::new()).unwrap();
     let wrong_graph_result =
         dto.restore_for_owner(&wrong_graph, &rebind, row_owner, PORTABLE_HANDOFF_LIMITS);
     assert!(matches!(
