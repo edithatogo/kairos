@@ -1138,6 +1138,7 @@ impl FlowCheckpointImage {
             Self::V1(image) => image.encode_wire_v1(limits),
             Self::V2(image) => image.encode_wire_v2(limits),
             Self::V3(image) => image.encode_wire_v3(limits),
+            Self::V4(image) => image.encode_wire_v4(limits),
         }
     }
 
@@ -1156,6 +1157,9 @@ impl FlowCheckpointImage {
             }
             Some(magic) if magic == MAGIC_V3 => {
                 FlowCheckpointV3::decode_wire_v3(bytes, limits).map(Self::V3)
+            }
+            Some(magic) if magic == MAGIC_V4 => {
+                FlowCheckpointV4::decode_wire_v4(bytes, limits).map(Self::V4)
             }
             Some(_) => Err(FlowCheckpointWireError::InvalidTag),
             None => Err(FlowCheckpointWireError::Truncated),

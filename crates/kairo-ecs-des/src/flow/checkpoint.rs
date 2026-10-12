@@ -1363,6 +1363,19 @@ impl FlowRuntime {
         codecs: &FlowCheckpointCodecs,
         limits: FlowCheckpointLimits,
     ) -> Result<FlowCheckpointImage, FlowCheckpointError> {
+        // Stable ordering is a V4 representability requirement. Select from the
+        // source inventory before capture so V4 validation errors never fall
+        // back to a legacy DTO.
+        let requires_v4 = self
+            .queue_orderings
+            .values()
+            .any(|ordering| *ordering == FlowQueueOrdering::StableKey)
+            || !self.queue_order_keys.is_empty();
+        if requires_v4 {
+            return self
+                .capture_checkpoint_v4(codecs, limits)
+                .map(FlowCheckpointImage::V4);
+        }
         self.ensure_queue_ordering_checkpoint_supported()?;
         // Select validation policy from the source inventory before capturing.
         // Corrupt Deferred entries/cache/commands still select strict validation;
@@ -5297,6 +5310,196 @@ mod routing_capture_tests {
             );
             assert_eq!(source.work_progress(work).unwrap(), progress);
             assert_eq!(*source.work_context::<u64>(work).unwrap(), 9);
+        }
+    }
+}
+
+#[cfg(test)]
+mod routing_v4_capture_tests {
+    use super::*;
+
+    thread_local! {
+        static V4_ROUTING_ENCODERS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    }
+
+    fn encode(value: &u64, remaining: usize) -> Result<Vec<u8>, FlowCheckpointCodecError> {
+        V4_ROUTING_ENCODERS.with(|calls| calls.set(calls.get() + 1));
+        if remaining < 8 {
+            return Err(FlowCheckpointCodecError("payload bound".into()));
+        }
+        Ok(value.to_le_bytes().to_vec())
+    }
+
+    fn decode(bytes: &[u8], _: &FlowCheckpointRebindV1) -> Result<u64, FlowCheckpointCodecError> {
+        Ok(u64::from_le_bytes(
+            bytes
+                .try_into()
+                .map_err(|_| FlowCheckpointCodecError("bad u64".into()))?,
+        ))
+    }
+
+    fn source() -> (
+        FlowRuntime,
+        FlowCheckpointCodecs,
+        ResourceId,
+        RequestId,
+        WorkId,
+    ) {
+        let mut runtime = FlowRuntime::new();
+        let owner = runtime.spawn_actor().unwrap();
+        let resource = runtime
+            .create_resource_with_queue_ordering(
+                1,
+                FlowAllocationMode::Eager,
+                FlowQueueOrdering::StableKey,
+            )
+            .unwrap();
+        let work = runtime
+            .create_work(owner, SimDuration::from_ticks(4), "routing.v4", 17_u64)
+            .unwrap();
+        let request = runtime
+            .acquire(resource)
+            .owner(owner)
+            .timed_work(work)
+            .queue_order_key(FlowQueueOrderKey::new(b"source-key").unwrap())
+            .submit()
+            .unwrap();
+        runtime.step().unwrap().unwrap();
+        let mut codecs = FlowCheckpointCodecs::new();
+        codecs
+            .register_context("routing.v4", 1, encode, decode)
+            .unwrap();
+        (runtime, codecs, resource, request, work)
+    }
+
+    #[test]
+    fn routing_v4_corrupt_source_and_limits_never_fallback() {
+        for corruption in 0..3 {
+            let (mut runtime, codecs, resource, request, work) = source();
+            V4_ROUTING_ENCODERS.with(|calls| calls.set(0));
+            let selected = runtime
+                .capture_checkpoint_image(&codecs, FlowCheckpointLimits::default())
+                .unwrap();
+            assert!(matches!(selected, FlowCheckpointImage::V4(_)));
+            V4_ROUTING_ENCODERS.with(|calls| assert_eq!(calls.get(), 1));
+
+            let exact_limits = FlowCheckpointLimits {
+                max_resources: 1,
+                max_requests: 1,
+                ..FlowCheckpointLimits::default()
+            };
+            V4_ROUTING_ENCODERS.with(|calls| calls.set(0));
+            assert!(runtime
+                .capture_checkpoint_image(&codecs, exact_limits)
+                .is_ok());
+            V4_ROUTING_ENCODERS.with(|calls| assert_eq!(calls.get(), 1));
+            for exceeded in [
+                FlowCheckpointLimits {
+                    max_resources: 0,
+                    ..FlowCheckpointLimits::default()
+                },
+                FlowCheckpointLimits {
+                    max_requests: 0,
+                    ..FlowCheckpointLimits::default()
+                },
+            ] {
+                V4_ROUTING_ENCODERS.with(|calls| calls.set(0));
+                assert!(matches!(
+                    runtime.capture_checkpoint_image(&codecs, exceeded),
+                    Err(FlowCheckpointError::LimitExceeded(_))
+                ));
+                V4_ROUTING_ENCODERS.with(|calls| assert_eq!(calls.get(), 0));
+            }
+
+            match corruption {
+                0 => {
+                    runtime.queue_order_keys.remove(&request);
+                }
+                1 => {
+                    runtime.queue_orderings.remove(&resource);
+                }
+                _ => {
+                    runtime.queue_order_indexes.remove(&resource);
+                }
+            }
+            let source_snapshot = (
+                runtime.resources.clone(),
+                runtime.requests.clone(),
+                runtime.queue_orderings.clone(),
+                runtime.queue_order_keys.clone(),
+                runtime.queue_order_indexes.clone(),
+                runtime.commands.clone(),
+                runtime.budget_snapshot(),
+                runtime.created,
+                runtime.destroyed,
+                runtime.scheduled,
+                runtime.next_admission,
+                runtime.next_lease,
+            );
+            let work_snapshot = (
+                runtime.work_progress(work).unwrap(),
+                *runtime.work_context::<u64>(work).unwrap(),
+            );
+            let scheduler = runtime
+                .scheduler
+                .checkpoint_state(SchedulerCheckpointLimits {
+                    max_entries: FlowCheckpointLimits::default().max_scheduler_entries,
+                })
+                .unwrap();
+            let world = runtime
+                .world
+                .checkpoint_state(WorldCheckpointLimits {
+                    max_slots: FlowCheckpointLimits::default().max_entities,
+                })
+                .unwrap();
+            V4_ROUTING_ENCODERS.with(|calls| calls.set(0));
+            assert!(matches!(
+                runtime.capture_checkpoint_image(&codecs, FlowCheckpointLimits::default()),
+                Err(FlowCheckpointError::InvalidState(_))
+            ));
+            V4_ROUTING_ENCODERS.with(|calls| assert_eq!(calls.get(), 0));
+            assert_eq!(
+                (
+                    runtime.resources.clone(),
+                    runtime.requests.clone(),
+                    runtime.queue_orderings.clone(),
+                    runtime.queue_order_keys.clone(),
+                    runtime.queue_order_indexes.clone(),
+                    runtime.commands.clone(),
+                    runtime.budget_snapshot(),
+                    runtime.created,
+                    runtime.destroyed,
+                    runtime.scheduled,
+                    runtime.next_admission,
+                    runtime.next_lease,
+                ),
+                source_snapshot
+            );
+            assert_eq!(
+                (
+                    runtime.work_progress(work).unwrap(),
+                    *runtime.work_context::<u64>(work).unwrap(),
+                ),
+                work_snapshot
+            );
+            assert_eq!(
+                runtime
+                    .scheduler
+                    .checkpoint_state(SchedulerCheckpointLimits {
+                        max_entries: FlowCheckpointLimits::default().max_scheduler_entries,
+                    })
+                    .unwrap(),
+                scheduler
+            );
+            assert_eq!(
+                runtime
+                    .world
+                    .checkpoint_state(WorldCheckpointLimits {
+                        max_slots: FlowCheckpointLimits::default().max_entities,
+                    })
+                    .unwrap(),
+                world
+            );
         }
     }
 }
