@@ -201,7 +201,8 @@ mod tests {
     use crate::shadow_pool::{PoolLimits, ProbePool};
     use kairo_ecs_des::{
         FlowAllocationMode, FlowCheckpointCodecError, FlowCheckpointImage, FlowCheckpointLimits,
-        FlowCheckpointRebindV1, FlowHandlerCodeIds, PreemptionStrategy, RequestId, RequestState,
+        FlowCheckpointRebindV1, FlowCommandV3, FlowHandlerCodeIds, FlowQueueOrderKey,
+        FlowQueueOrdering, FlowRequestQueueOrderV4, PreemptionStrategy, RequestId, RequestState,
         ResourceId, WorkHandlers, WorkId, WorkState,
     };
     use kairo_ecs_types::{SimDuration, SimTime};
@@ -502,6 +503,216 @@ mod tests {
         }
     }
 
+    fn v4_preview_codecs() -> FlowCheckpointCodecs {
+        let mut codecs = FlowCheckpointCodecs::new();
+        codecs
+            .register_context::<u32>("preview.v4", 1, enc, dec)
+            .unwrap();
+        codecs
+            .register_work_handlers::<u32>(
+                "preview.v4",
+                FlowHandlerCodeIds::default(),
+                WorkHandlers::default(),
+            )
+            .unwrap();
+        codecs
+    }
+
+    fn count_v4_preview_completion(
+        context: &mut u32,
+        _: &kairo_ecs_des::FlowCallbackSnapshot,
+        _: &mut kairo_ecs_des::FlowCommandSink,
+    ) {
+        *context += 1;
+    }
+
+    fn v4_preview_callback_codecs() -> FlowCheckpointCodecs {
+        let mut codecs = v4_preview_codecs();
+        codecs
+            .register_work_continuations(
+                "preview.v4",
+                kairo_ecs_des::FlowContinuationCodeIds {
+                    on_complete: Some(kairo_ecs_des::FlowCallbackCodeV1 {
+                        stable_id: "preview.v4.completion-counter".into(),
+                        version: 1,
+                    }),
+                    ..Default::default()
+                },
+                kairo_ecs_des::FlowContinuations {
+                    on_complete: Some(count_v4_preview_completion),
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+        codecs
+    }
+
+    fn v4_preview_world(
+        duration: u128,
+        mode: FlowAllocationMode,
+        transition_limit: Option<std::num::NonZeroU64>,
+        order_key: &[u8],
+    ) -> V3PreviewWorld {
+        let mut flow = FlowRuntime::with_config(kairo_ecs_des::FlowConfig {
+            max_same_tick_flow_transitions: transition_limit
+                .unwrap_or_else(|| std::num::NonZeroU64::new(100_000).unwrap()),
+        });
+        flow.register_work_handlers("preview.v4", WorkHandlers::<u32>::default())
+            .unwrap();
+        let resource = flow
+            .create_resource_with_queue_ordering(1, mode, FlowQueueOrdering::StableKey)
+            .unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let work = flow
+            .create_work(owner, SimDuration::from_ticks(duration), "preview.v4", 7u32)
+            .unwrap();
+        let request = flow
+            .acquire(resource)
+            .owner(owner)
+            .timed_work(work)
+            .at(SimTime::from_ticks(0))
+            .queue_order_key(FlowQueueOrderKey::new(order_key).unwrap())
+            .submit()
+            .unwrap();
+        V3PreviewWorld {
+            flow,
+            codecs: v4_preview_codecs(),
+            resource,
+            request,
+            work,
+            last_dispatch: None,
+        }
+    }
+
+    #[derive(Debug, Eq, PartialEq)]
+    struct V4PreviewObservation {
+        image: FlowCheckpointImage,
+        now: SimTime,
+        budget: kairo_ecs_des::FlowBudgetSnapshot,
+        resource: kairo_ecs_des::ResourceSnapshot,
+        grant_enabled: bool,
+        request: kairo_ecs_des::ResourceRequest,
+        progress: kairo_ecs_des::WorkProgress,
+        context: u32,
+    }
+
+    fn v4_preview_observation(world: &V3PreviewWorld) -> V4PreviewObservation {
+        V4PreviewObservation {
+            image: world
+                .flow
+                .capture_checkpoint_image(&world.codecs, FlowCheckpointLimits::default())
+                .unwrap(),
+            now: world.flow.now(),
+            budget: world.flow.budget_snapshot(),
+            resource: world.flow.resource(world.resource).unwrap(),
+            grant_enabled: world.flow.resource_grant_enabled(world.resource).unwrap(),
+            request: world.flow.request(world.request).unwrap(),
+            progress: world.flow.work_progress(world.work).unwrap(),
+            context: *world.flow.work_context::<u32>(world.work).unwrap(),
+        }
+    }
+
+    fn assert_v4_key(image: &FlowCheckpointImage, request: RequestId, expected: &[u8]) {
+        let FlowCheckpointImage::V4(image) = image else {
+            panic!("StableKey native preview must select V4");
+        };
+        assert!(image
+            .queue_order_modes
+            .iter()
+            .any(|(_, mode)| *mode == FlowQueueOrdering::StableKey));
+        assert!(image.request_queue_orders.iter().any(|(id, order)| {
+            *id == request
+                && matches!(order, FlowRequestQueueOrderV4::StableKey(bytes) if bytes == expected)
+        }));
+    }
+
+    fn stale_v4_preview_world() -> (V3PreviewWorld, WorkId) {
+        let mut flow = FlowRuntime::new();
+        flow.register_work_handlers("preview.v4", WorkHandlers::<u32>::default())
+            .unwrap();
+        flow.register_work_continuations(
+            "preview.v4",
+            kairo_ecs_des::FlowContinuations {
+                on_complete: Some(count_v4_preview_completion),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let resource = flow
+            .create_resource_with_queue_ordering(
+                1,
+                FlowAllocationMode::Deferred,
+                FlowQueueOrdering::StableKey,
+            )
+            .unwrap();
+        let low_owner = flow.spawn_actor().unwrap();
+        let low_work = flow
+            .create_work(low_owner, SimDuration::from_ticks(10), "preview.v4", 11u32)
+            .unwrap();
+        let low = flow
+            .acquire(resource)
+            .owner(low_owner)
+            .timed_work(low_work)
+            .at(SimTime::from_ticks(1))
+            .priority(10)
+            .preemptible(PreemptionStrategy::Suspend)
+            .queue_order_key(FlowQueueOrderKey::new(b"low").unwrap())
+            .submit()
+            .unwrap();
+        let first_flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(1), i32::MAX)
+            .unwrap();
+        drain_shadow_through(&mut flow, first_flush, SimTime::from_ticks(1));
+        assert_eq!(flow.request(low).unwrap().state, RequestState::Active);
+
+        let urgent_owner = flow.spawn_actor().unwrap();
+        let urgent_work = flow
+            .create_work(urgent_owner, SimDuration::from_ticks(2), "preview.v4", 0u32)
+            .unwrap();
+        let urgent = flow
+            .acquire(resource)
+            .owner(urgent_owner)
+            .timed_work(urgent_work)
+            .at(SimTime::from_ticks(4))
+            .priority(1)
+            .can_preempt(true)
+            .queue_order_key(FlowQueueOrderKey::new(b"urgent").unwrap())
+            .submit()
+            .unwrap();
+        let preempt_flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(4), i32::MAX)
+            .unwrap();
+        drain_shadow_through(&mut flow, preempt_flush, SimTime::from_ticks(4));
+        assert_eq!(flow.request(low).unwrap().state, RequestState::Suspended);
+        assert_eq!(flow.request(urgent).unwrap().state, RequestState::Active);
+
+        let resume_flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(7), i32::MAX)
+            .unwrap();
+        let completion = flow.step().unwrap().expect("urgent completion at six");
+        assert_eq!(completion.at, SimTime::from_ticks(6));
+        assert!(completion.records.iter().any(|record| {
+            record.request == urgent
+                && record.transition == kairo_ecs_des::LifecycleTransition::Completed
+        }));
+        let notification = flow.step().unwrap().expect("urgent callback notification");
+        assert_eq!(notification.at, SimTime::from_ticks(6));
+        assert_eq!(flow.work_context::<u32>(urgent_work), Ok(&1));
+        drain_shadow_through(&mut flow, resume_flush, SimTime::from_ticks(7));
+        assert_eq!(flow.request(low).unwrap().state, RequestState::Active);
+        (
+            V3PreviewWorld {
+                flow,
+                codecs: v4_preview_callback_codecs(),
+                resource,
+                request: low,
+                work: low_work,
+                last_dispatch: None,
+            },
+            urgent_work,
+        )
+    }
+
     impl FlowProbeModel for V3PreviewModel {
         type World = V3PreviewWorld;
 
@@ -567,6 +778,255 @@ mod tests {
             }
         }
         panic!("event closure exceeded bound");
+    }
+
+    #[test]
+    fn preview_v4_deferred_pending_flush_shadow() {
+        let adapter = v3_preview_adapter(FlowCheckpointLimits::default());
+        let mut world = v4_preview_world(5, FlowAllocationMode::Deferred, None, b"flush");
+        let submit = world.flow.step().unwrap().expect("Submit at zero");
+        assert_eq!(submit.at, SimTime::from_ticks(0));
+        assert_eq!(
+            world.flow.request(world.request).unwrap().state,
+            RequestState::Queued
+        );
+        assert!(world.flow.request(world.request).unwrap().lease.is_none());
+        let flush = world
+            .flow
+            .schedule_allocation_flush(world.resource, SimTime::from_ticks(4), i32::MAX)
+            .unwrap();
+        let before = v4_preview_observation(&world);
+        assert_v4_key(&before.image, world.request, b"flush");
+        assert_eq!(adapter.next_tick(&world).unwrap(), Some(4));
+        assert_eq!(v4_preview_observation(&world), before);
+        let step = adapter.step(&mut world).unwrap();
+        assert_eq!(world.last_dispatch.as_ref().unwrap().event, flush);
+        assert_eq!(step.dispatched_at, 4);
+        assert_eq!(step.target, None);
+        assert_eq!(
+            world.flow.request(world.request).unwrap().state,
+            RequestState::Active
+        );
+        let after_grant = v4_preview_observation(&world);
+        assert_v4_key(&after_grant.image, world.request, b"flush");
+        assert_eq!(adapter.next_tick(&world).unwrap(), Some(9));
+        assert_eq!(v4_preview_observation(&world), after_grant);
+        let completion = adapter.step(&mut world).unwrap();
+        assert_eq!(completion.dispatched_at, 9);
+        assert_eq!(completion.target, Some(9));
+        assert_eq!(
+            world.flow.request(world.request).unwrap().state,
+            RequestState::Completed
+        );
+        assert_v4_key(
+            &v4_preview_observation(&world).image,
+            world.request,
+            b"flush",
+        );
+    }
+
+    #[test]
+    fn preview_v4_disabled_pending_submit_shadow() {
+        let adapter = v3_preview_adapter(FlowCheckpointLimits::default());
+        let mut flow = FlowRuntime::new();
+        flow.register_work_handlers("preview.v4", WorkHandlers::<u32>::default())
+            .unwrap();
+        let resource = flow
+            .create_resource_with_queue_ordering(
+                1,
+                FlowAllocationMode::Deferred,
+                FlowQueueOrdering::StableKey,
+            )
+            .unwrap();
+        let mut requests = Vec::new();
+        let mut works = Vec::new();
+        for key in [b"z".as_slice(), b"a".as_slice()] {
+            let owner = flow.spawn_actor().unwrap();
+            let work = flow
+                .create_work(owner, SimDuration::from_ticks(5), "preview.v4", 0u32)
+                .unwrap();
+            let request = flow
+                .acquire(resource)
+                .owner(owner)
+                .timed_work(work)
+                .at(SimTime::from_ticks(0))
+                .queue_order_key(FlowQueueOrderKey::new(key).unwrap())
+                .submit()
+                .unwrap();
+            requests.push(request);
+            works.push(work);
+        }
+        let disable = flow
+            .schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(0), i32::MIN)
+            .unwrap();
+        let flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(0), i32::MAX)
+            .unwrap();
+        let world = |flow, request, work| V3PreviewWorld {
+            flow,
+            codecs: v4_preview_codecs(),
+            resource,
+            request,
+            work,
+            last_dispatch: None,
+        };
+        let mut world = world(flow, requests[0], works[0]);
+        assert_eq!(
+            world.flow.request(requests[0]).unwrap().state,
+            RequestState::Pending
+        );
+        assert_eq!(
+            world.flow.request(requests[1]).unwrap().state,
+            RequestState::Pending
+        );
+        let pending = v4_preview_observation(&world);
+        assert_v4_key(&pending.image, requests[0], b"z");
+        assert_v4_key(&pending.image, requests[1], b"a");
+        assert_eq!(adapter.next_tick(&world).unwrap(), Some(0));
+        assert_eq!(v4_preview_observation(&world), pending);
+        let disabled = adapter.step(&mut world).unwrap();
+        assert_eq!(world.last_dispatch.as_ref().unwrap().event, disable);
+        assert_eq!(disabled.dispatched_at, 0);
+        assert!(!world.flow.resource_grant_enabled(resource).unwrap());
+        for _ in 0..2 {
+            let submitted = adapter.step(&mut world).unwrap();
+            assert_eq!(submitted.dispatched_at, 0);
+        }
+        assert_eq!(
+            world.flow.request(requests[0]).unwrap().state,
+            RequestState::Queued
+        );
+        assert_eq!(
+            world.flow.request(requests[1]).unwrap().state,
+            RequestState::Queued
+        );
+        let closed = adapter.step(&mut world).unwrap();
+        assert_eq!(world.last_dispatch.as_ref().unwrap().event, flush);
+        assert_eq!(closed.dispatched_at, 0);
+        assert!(world.flow.request(requests[0]).unwrap().lease.is_none());
+        assert!(world.flow.request(requests[1]).unwrap().lease.is_none());
+        let closed_image = v4_preview_observation(&world);
+        assert_v4_key(&closed_image.image, requests[0], b"z");
+        assert_v4_key(&closed_image.image, requests[1], b"a");
+        assert_eq!(adapter.next_tick(&world).unwrap(), None);
+        assert_eq!(v4_preview_observation(&world), closed_image);
+        let enable = world
+            .flow
+            .schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(1), i32::MIN)
+            .unwrap();
+        let grant_flush = world
+            .flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(1), i32::MAX)
+            .unwrap();
+        assert_eq!(adapter.step(&mut world).unwrap().dispatched_at, 1);
+        assert_eq!(world.last_dispatch.as_ref().unwrap().event, enable);
+        assert_eq!(adapter.step(&mut world).unwrap().dispatched_at, 1);
+        assert_eq!(world.last_dispatch.as_ref().unwrap().event, grant_flush);
+        assert_eq!(
+            world.flow.request(requests[1]).unwrap().state,
+            RequestState::Active
+        );
+        assert_eq!(
+            world.flow.request(requests[0]).unwrap().state,
+            RequestState::Queued
+        );
+        assert_eq!(world.flow.request(requests[0]).unwrap().lease, None);
+    }
+
+    #[test]
+    fn preview_v4_repeated_halt_shadow() {
+        let adapter = v3_preview_adapter(FlowCheckpointLimits::default());
+        let limit = std::num::NonZeroU64::new(1);
+        let mut world = v4_preview_world(5, FlowAllocationMode::Deferred, limit, b"halt");
+        let _submit = world.flow.step().unwrap().expect("Submit at zero");
+        let flush = world
+            .flow
+            .schedule_allocation_flush(world.resource, SimTime::from_ticks(0), i32::MAX)
+            .unwrap();
+        let before = v4_preview_observation(&world);
+        assert_v4_key(&before.image, world.request, b"halt");
+        assert_eq!(adapter.next_tick(&world).unwrap(), Some(0));
+        assert_eq!(v4_preview_observation(&world), before);
+        let expected = ShadowError::Adapter(
+            "native dispatch: SameTickBudgetExceeded { at_ticks: 0, limit: 1 }".into(),
+        );
+        assert_eq!(adapter.step(&mut world).unwrap_err(), expected);
+        let halted = v4_preview_observation(&world);
+        assert!(
+            matches!(&halted.image, FlowCheckpointImage::V4(image) if image.budget_halt.is_some())
+        );
+        assert_v4_key(&halted.image, world.request, b"halt");
+        assert_eq!(
+            world.flow.peek_next().expect("live scheduler event").id,
+            flush
+        );
+        assert_eq!(adapter.next_tick(&world).unwrap(), Some(0));
+        assert_eq!(v4_preview_observation(&world), halted);
+        assert_eq!(adapter.step(&mut world).unwrap_err(), expected);
+        assert_eq!(v4_preview_observation(&world), halted);
+    }
+
+    #[test]
+    fn preview_v4_stale_completion_and_limits_shadow() {
+        let adapter = v3_preview_adapter(FlowCheckpointLimits::default());
+        let (mut world, urgent_work) = stale_v4_preview_world();
+        assert_eq!(world.flow.work_context::<u32>(world.work), Ok(&11));
+        assert_eq!(world.flow.work_context::<u32>(urgent_work), Ok(&1));
+        let before = v4_preview_observation(&world);
+        assert_v4_key(&before.image, world.request, b"low");
+        let stale = match &before.image {
+            FlowCheckpointImage::V4(image) => image
+                .commands
+                .iter()
+                .find_map(|(id, command)| {
+                    matches!(command, FlowCommandV3::Completion(request, _, _, at)
+                    if *request == world.request && *at == SimTime::from_ticks(11))
+                    .then_some(*id)
+                })
+                .expect("live stale completion command at eleven"),
+            _ => panic!("keyed runtime must capture V4"),
+        };
+        let actual = world.flow.peek_next().expect("live scheduler event");
+        assert_eq!(actual.id, stale);
+        assert_eq!(actual.at, SimTime::from_ticks(11));
+        assert_eq!(adapter.next_tick(&world).unwrap(), Some(11));
+        assert_eq!(v4_preview_observation(&world), before);
+        let no_op = adapter.step(&mut world).unwrap();
+        assert_eq!(world.last_dispatch.as_ref().unwrap().event, stale);
+        assert_eq!(no_op.dispatched_at, 11);
+        assert!(world.last_dispatch.as_ref().unwrap().records.is_empty());
+        assert_eq!(world.flow.work_context::<u32>(world.work), Ok(&11));
+        assert_eq!(world.flow.work_context::<u32>(urgent_work), Ok(&1));
+        assert_eq!(
+            world.flow.work_progress(world.work).unwrap().useful_elapsed,
+            SimDuration::from_ticks(7)
+        );
+        assert_eq!(
+            world.flow.work_progress(world.work).unwrap().remaining,
+            SimDuration::from_ticks(3)
+        );
+        assert_eq!(adapter.next_tick(&world).unwrap(), Some(14));
+        let useful = adapter.step(&mut world).unwrap();
+        assert_eq!(useful.dispatched_at, 14);
+        assert_eq!(useful.target, Some(14));
+
+        let limited = v4_preview_world(5, FlowAllocationMode::Deferred, None, b"limit");
+        let baseline = v4_preview_observation(&limited);
+        assert_v4_key(&baseline.image, limited.request, b"limit");
+        let limits = FlowCheckpointLimits {
+            max_commands: 0,
+            ..FlowCheckpointLimits::default()
+        };
+        let limit_adapter = v3_preview_adapter(limits);
+        let expected = limited
+            .flow
+            .capture_checkpoint_image(&limited.codecs, limits)
+            .unwrap_err();
+        assert_eq!(
+            limit_adapter.next_tick(&limited).unwrap_err(),
+            ShadowError::Adapter(format!("native preview: {expected:?}"))
+        );
+        assert_eq!(v4_preview_observation(&limited), baseline);
     }
 
     fn stale_shadow_preview_world() -> (V3PreviewWorld, WorkId) {

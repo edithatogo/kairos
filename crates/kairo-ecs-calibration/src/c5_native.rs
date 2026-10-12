@@ -443,7 +443,8 @@ pub(crate) fn replay(config: &Value, mode: &str) -> Result<Value, String> {
 mod tests {
     use super::*;
     use kairo_ecs_des::{
-        FlowAllocationMode, FlowCheckpointError, FlowCheckpointImage, FlowHandlerCodeIds,
+        FlowAllocationMode, FlowCheckpointError, FlowCheckpointImage, FlowCommandV3,
+        FlowHandlerCodeIds, FlowQueueOrderKey, FlowQueueOrdering, FlowRequestQueueOrderV4,
         RequestState, WorkState,
     };
 
@@ -598,6 +599,148 @@ mod tests {
         (flow, codecs, resource, request, work)
     }
 
+    fn deferred_v4_preview_runtime(
+        duration: u128,
+        transition_limit: Option<std::num::NonZeroU64>,
+        key: &[u8],
+    ) -> (
+        FlowRuntime,
+        FlowCheckpointCodecs,
+        kairo_ecs_des::ResourceId,
+        kairo_ecs_des::RequestId,
+        kairo_ecs_des::WorkId,
+    ) {
+        let mut flow = FlowRuntime::with_config(kairo_ecs_des::FlowConfig {
+            max_same_tick_flow_transitions: transition_limit
+                .unwrap_or_else(|| std::num::NonZeroU64::new(100_000).unwrap()),
+        });
+        flow.register_work_handlers("c5.free", WorkHandlers::<u32>::default())
+            .unwrap();
+        let resource = flow
+            .create_resource_with_queue_ordering(
+                1,
+                FlowAllocationMode::Deferred,
+                FlowQueueOrdering::StableKey,
+            )
+            .unwrap();
+        let owner = flow.spawn_actor().unwrap();
+        let work = flow
+            .create_work(owner, SimDuration::from_ticks(duration), "c5.free", 7u32)
+            .unwrap();
+        let request = flow
+            .acquire(resource)
+            .owner(owner)
+            .timed_work(work)
+            .at(SimTime::from_ticks(0))
+            .queue_order_key(FlowQueueOrderKey::new(key).unwrap())
+            .submit()
+            .unwrap();
+        (flow, c5_preview_codecs(), resource, request, work)
+    }
+
+    fn c5_v4_key(image: &FlowCheckpointImage, request: kairo_ecs_des::RequestId, key: &[u8]) {
+        let FlowCheckpointImage::V4(image) = image else {
+            panic!("StableKey native preview must select V4");
+        };
+        assert!(image
+            .queue_order_modes
+            .iter()
+            .any(|(_, mode)| *mode == FlowQueueOrdering::StableKey));
+        assert!(image.request_queue_orders.iter().any(|(id, order)| {
+            *id == request
+                && matches!(order, FlowRequestQueueOrderV4::StableKey(bytes) if bytes == key)
+        }));
+    }
+
+    fn stale_v4_preview_runtime() -> (
+        FlowRuntime,
+        FlowCheckpointCodecs,
+        kairo_ecs_des::ResourceId,
+        kairo_ecs_des::RequestId,
+        kairo_ecs_des::WorkId,
+        kairo_ecs_des::RequestId,
+        kairo_ecs_des::WorkId,
+    ) {
+        let mut flow = FlowRuntime::new();
+        flow.register_work_handlers("c5.free", WorkHandlers::<u32>::default())
+            .unwrap();
+        flow.register_work_continuations(
+            "c5.free",
+            kairo_ecs_des::FlowContinuations {
+                on_complete: Some(count_c5_preview_completion),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let resource = flow
+            .create_resource_with_queue_ordering(
+                1,
+                FlowAllocationMode::Deferred,
+                FlowQueueOrdering::StableKey,
+            )
+            .unwrap();
+        let low_owner = flow.spawn_actor().unwrap();
+        let low_work = flow
+            .create_work(low_owner, SimDuration::from_ticks(10), "c5.free", 11u32)
+            .unwrap();
+        let low = flow
+            .acquire(resource)
+            .owner(low_owner)
+            .timed_work(low_work)
+            .at(SimTime::from_ticks(1))
+            .priority(10)
+            .preemptible(kairo_ecs_des::PreemptionStrategy::Suspend)
+            .queue_order_key(FlowQueueOrderKey::new(b"low").unwrap())
+            .submit()
+            .unwrap();
+        let first_flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(1), i32::MAX)
+            .unwrap();
+        drain_c5_through(&mut flow, first_flush, SimTime::from_ticks(1));
+        assert_eq!(flow.request(low).unwrap().state, RequestState::Active);
+        let urgent_owner = flow.spawn_actor().unwrap();
+        let urgent_work = flow
+            .create_work(urgent_owner, SimDuration::from_ticks(2), "c5.free", 0u32)
+            .unwrap();
+        let urgent = flow
+            .acquire(resource)
+            .owner(urgent_owner)
+            .timed_work(urgent_work)
+            .at(SimTime::from_ticks(4))
+            .priority(1)
+            .can_preempt(true)
+            .queue_order_key(FlowQueueOrderKey::new(b"urgent").unwrap())
+            .submit()
+            .unwrap();
+        let preempt_flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(4), i32::MAX)
+            .unwrap();
+        drain_c5_through(&mut flow, preempt_flush, SimTime::from_ticks(4));
+        assert_eq!(flow.request(low).unwrap().state, RequestState::Suspended);
+        assert_eq!(flow.request(urgent).unwrap().state, RequestState::Active);
+        let resume_flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(7), i32::MAX)
+            .unwrap();
+        let completion = flow.step().unwrap().expect("urgent completion at six");
+        assert_eq!(completion.at, SimTime::from_ticks(6));
+        assert!(completion.records.iter().any(|row| row.request == urgent
+            && row.transition == kairo_ecs_des::LifecycleTransition::Completed));
+        let notification = flow.step().unwrap().expect("completion notification");
+        assert_eq!(notification.at, SimTime::from_ticks(6));
+        assert_eq!(flow.work_context::<u32>(urgent_work), Ok(&1));
+        drain_c5_through(&mut flow, resume_flush, SimTime::from_ticks(7));
+        assert_eq!(flow.request(low).unwrap().state, RequestState::Active);
+        (
+            flow,
+            c5_preview_callback_codecs(),
+            resource,
+            low,
+            low_work,
+            urgent,
+            urgent_work,
+        )
+    }
+
     fn drain_c5_through(
         flow: &mut FlowRuntime,
         event: kairo_ecs_types::EventId,
@@ -737,6 +880,291 @@ mod tests {
             request: flow.request(request).unwrap(),
             work: flow.work_progress(work).unwrap(),
         }
+    }
+
+    #[test]
+    fn preview_v4_deferred_pending_flush_c5() {
+        let (mut flow, codecs, resource, request, work) =
+            deferred_v4_preview_runtime(5, None, b"flush");
+        let submit = flow.step().unwrap().expect("Submit at zero");
+        assert_eq!(submit.at, SimTime::from_ticks(0));
+        assert_eq!(submit.error, None);
+        assert_eq!(flow.request(request).unwrap().state, RequestState::Queued);
+        assert!(flow.request(request).unwrap().lease.is_none());
+        let flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(4), i32::MAX)
+            .unwrap();
+        let before = preview_state(&flow, &codecs, resource, request, work);
+        c5_v4_key(&before.image, request, b"flush");
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(4)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            before
+        );
+        let granted = flow.step().unwrap().expect("allocation flush at four");
+        assert_eq!(granted.event, flush);
+        assert_eq!(granted.at, SimTime::from_ticks(4));
+        assert_eq!(granted.error, None);
+        assert_eq!(flow.request(request).unwrap().state, RequestState::Active);
+        let after_grant = preview_state(&flow, &codecs, resource, request, work);
+        c5_v4_key(&after_grant.image, request, b"flush");
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(9)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            after_grant
+        );
+        let completed = flow.step().unwrap().expect("timed completion at nine");
+        assert_eq!(completed.at, SimTime::from_ticks(9));
+        assert_eq!(completed.error, None);
+        assert_eq!(
+            flow.request(request).unwrap().state,
+            RequestState::Completed
+        );
+    }
+
+    #[test]
+    fn preview_v4_disabled_pending_submit_c5() {
+        let mut flow = FlowRuntime::new();
+        flow.register_work_handlers("c5.free", WorkHandlers::<u32>::default())
+            .unwrap();
+        let resource = flow
+            .create_resource_with_queue_ordering(
+                1,
+                FlowAllocationMode::Deferred,
+                FlowQueueOrdering::StableKey,
+            )
+            .unwrap();
+        let mut requests = Vec::new();
+        let mut works = Vec::new();
+        for key in [b"z".as_slice(), b"a".as_slice()] {
+            let owner = flow.spawn_actor().unwrap();
+            let work = flow
+                .create_work(owner, SimDuration::from_ticks(5), "c5.free", 0u32)
+                .unwrap();
+            let request = flow
+                .acquire(resource)
+                .owner(owner)
+                .timed_work(work)
+                .at(SimTime::from_ticks(0))
+                .queue_order_key(FlowQueueOrderKey::new(key).unwrap())
+                .submit()
+                .unwrap();
+            requests.push(request);
+            works.push(work);
+        }
+        let codecs = c5_preview_codecs();
+        let disable = flow
+            .schedule_resource_grant_enabled(resource, false, SimTime::from_ticks(0), i32::MIN)
+            .unwrap();
+        let flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(0), i32::MAX)
+            .unwrap();
+        assert_eq!(
+            flow.request(requests[0]).unwrap().state,
+            RequestState::Pending
+        );
+        assert_eq!(
+            flow.request(requests[1]).unwrap().state,
+            RequestState::Pending
+        );
+        let before = preview_state(&flow, &codecs, resource, requests[0], works[0]);
+        c5_v4_key(&before.image, requests[0], b"z");
+        c5_v4_key(&before.image, requests[1], b"a");
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(0)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, requests[0], works[0]),
+            before
+        );
+        let disabled = flow.step().unwrap().expect("disable at zero");
+        assert_eq!(disabled.event, disable);
+        assert_eq!(disabled.error, None);
+        assert!(!flow.resource_grant_enabled(resource).unwrap());
+        for _ in 0..2 {
+            let submitted = flow.step().unwrap().expect("pending submit at zero");
+            assert_eq!(submitted.at, SimTime::from_ticks(0));
+            assert_eq!(submitted.error, None);
+        }
+        assert_eq!(
+            flow.request(requests[0]).unwrap().state,
+            RequestState::Queued
+        );
+        assert_eq!(
+            flow.request(requests[1]).unwrap().state,
+            RequestState::Queued
+        );
+        let closed = flow.step().unwrap().expect("disabled allocation flush");
+        assert_eq!(closed.event, flush);
+        assert_eq!(closed.at, SimTime::from_ticks(0));
+        assert_eq!(closed.error, None);
+        assert!(flow.request(requests[0]).unwrap().lease.is_none());
+        assert!(flow.request(requests[1]).unwrap().lease.is_none());
+        let after = preview_state(&flow, &codecs, resource, requests[0], works[0]);
+        c5_v4_key(&after.image, requests[0], b"z");
+        c5_v4_key(&after.image, requests[1], b"a");
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            None
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, requests[0], works[0]),
+            after
+        );
+        let enable = flow
+            .schedule_resource_grant_enabled(resource, true, SimTime::from_ticks(1), i32::MIN)
+            .unwrap();
+        let grant_flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(1), i32::MAX)
+            .unwrap();
+        let enabled = flow.step().unwrap().expect("enable at one");
+        assert_eq!(enabled.event, enable);
+        assert_eq!(enabled.error, None);
+        let grant = flow.step().unwrap().expect("enabled flush at one");
+        assert_eq!(grant.event, grant_flush);
+        assert_eq!(grant.error, None);
+        assert_eq!(
+            flow.request(requests[1]).unwrap().state,
+            RequestState::Active
+        );
+        assert_eq!(
+            flow.request(requests[0]).unwrap().state,
+            RequestState::Queued
+        );
+        assert!(flow.request(requests[0]).unwrap().lease.is_none());
+    }
+
+    #[test]
+    fn preview_v4_repeated_halt_c5() {
+        let (mut flow, codecs, resource, request, work) =
+            deferred_v4_preview_runtime(5, std::num::NonZeroU64::new(1), b"halt");
+        let submit = flow.step().unwrap().expect("Submit at zero");
+        assert_eq!(submit.error, None);
+        let flush = flow
+            .schedule_allocation_flush(resource, SimTime::from_ticks(0), i32::MAX)
+            .unwrap();
+        let before = preview_state(&flow, &codecs, resource, request, work);
+        c5_v4_key(&before.image, request, b"halt");
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(0)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            before
+        );
+        let expected = kairo_ecs_des::FlowError::SameTickBudgetExceeded {
+            at_ticks: 0,
+            limit: 1,
+        };
+        let first = flow.step().unwrap_err();
+        assert_eq!(first, expected);
+        let halted = preview_state(&flow, &codecs, resource, request, work);
+        assert!(
+            matches!(&halted.image, FlowCheckpointImage::V4(image) if image.budget_halt.is_some())
+        );
+        c5_v4_key(&halted.image, request, b"halt");
+        assert_eq!(flow.peek_next().expect("live scheduler event").id, flush);
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(0)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            halted
+        );
+        let second = flow.step().unwrap_err();
+        assert_eq!(second, expected);
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            halted
+        );
+    }
+
+    #[test]
+    fn preview_v4_stale_completion_and_limits_c5() {
+        let (mut flow, codecs, resource, low, low_work, urgent, urgent_work) =
+            stale_v4_preview_runtime();
+        assert_eq!(flow.work_context::<u32>(low_work), Ok(&11));
+        assert_eq!(flow.work_context::<u32>(urgent_work), Ok(&1));
+        let before = preview_state(&flow, &codecs, resource, low, low_work);
+        c5_v4_key(&before.image, low, b"low");
+        let stale = match &before.image {
+            FlowCheckpointImage::V4(image) => image
+                .commands
+                .iter()
+                .find_map(|(id, command)| {
+                    matches!(command, FlowCommandV3::Completion(request, _, _, at)
+                    if *request == low && *at == SimTime::from_ticks(11))
+                    .then_some(*id)
+                })
+                .expect("live stale completion command at eleven"),
+            _ => panic!("keyed runtime must capture V4"),
+        };
+        let preview = flow.peek_next().expect("live scheduler event");
+        assert_eq!(preview.id, stale);
+        assert_eq!(preview.at, SimTime::from_ticks(11));
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(11)
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, low, low_work),
+            before
+        );
+        let no_op = flow.step().unwrap().expect("stale completion dispatch");
+        assert_eq!(no_op.event, stale);
+        assert_eq!(no_op.at, SimTime::from_ticks(11));
+        assert_eq!(no_op.error, None);
+        assert!(no_op.records.is_empty());
+        assert_eq!(flow.request(urgent).unwrap().state, RequestState::Completed);
+        assert_eq!(
+            flow.work_progress(urgent_work).unwrap().state,
+            WorkState::Completed
+        );
+        assert_eq!(flow.work_context::<u32>(low_work), Ok(&11));
+        assert_eq!(flow.work_context::<u32>(urgent_work), Ok(&1));
+        assert_eq!(
+            flow.work_progress(low_work).unwrap().useful_elapsed,
+            SimDuration::from_ticks(7)
+        );
+        assert_eq!(
+            flow.work_progress(low_work).unwrap().remaining,
+            SimDuration::from_ticks(3)
+        );
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, FlowCheckpointLimits::default()).unwrap(),
+            Some(14)
+        );
+        let useful = flow.step().unwrap().expect("useful completion at fourteen");
+        assert_eq!(useful.at, SimTime::from_ticks(14));
+        assert_eq!(useful.error, None);
+
+        let (flow, codecs, resource, request, work) =
+            deferred_v4_preview_runtime(5, None, b"limit");
+        let before = preview_state(&flow, &codecs, resource, request, work);
+        c5_v4_key(&before.image, request, b"limit");
+        let limits = FlowCheckpointLimits {
+            max_commands: 0,
+            ..FlowCheckpointLimits::default()
+        };
+        let expected = flow.capture_checkpoint_image(&codecs, limits).unwrap_err();
+        assert!(matches!(expected, FlowCheckpointError::LimitExceeded(_)));
+        assert_eq!(
+            next_preview_tick(&flow, &codecs, limits),
+            Err(error(expected))
+        );
+        assert_eq!(
+            preview_state(&flow, &codecs, resource, request, work),
+            before
+        );
     }
 
     fn study() -> Value {
