@@ -679,7 +679,7 @@ impl FlowCheckpointCodecs {
     ) -> Result<(), FlowCheckpointError> {
         let key = codec_key.into();
         if key.trim().is_empty()
-            || version != 1
+            || version == 0
             || self.contexts.contains_key(&key)
             || self.context_types.contains_key(&TypeId::of::<C>())
         {
