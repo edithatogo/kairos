@@ -291,6 +291,10 @@ fn routing_v4_all_keyed_lifetimes_and_removed_generation() {
 #[test]
 fn routing_v4_ref_borrowed_accessors_and_commands_complete() {
     let mut runtime = FlowRuntime::new();
+    let kind = kairo_ecs_types::EventKind::custom(91);
+    runtime
+        .register_domain_view_hook("ctx", kind, noop_domain)
+        .unwrap();
     let owner = runtime.spawn_actor().unwrap();
     let active_resource = runtime
         .create_resource_with_queue_ordering(
@@ -329,10 +333,6 @@ fn routing_v4_ref_borrowed_accessors_and_commands_complete() {
         .unwrap();
     let grant_boundary = runtime
         .schedule_resource_grant_enabled(active_resource, false, t(10), 0)
-        .unwrap();
-    let kind = kairo_ecs_types::EventKind::custom(91);
-    runtime
-        .register_domain_view_hook("ctx", kind, noop_domain)
         .unwrap();
     let mut codecset = codecs();
     codecset
@@ -641,7 +641,7 @@ fn routing_v4_malformed_metadata_and_limits_never_fallback() {
 
 #[test]
 fn routing_v4_legacy_minimal_selection_unchanged() {
-    let codecs = FlowCheckpointCodecs::new();
+    let codecs = codecs();
     let mut eager = FlowRuntime::new();
     eager.create_resource(1).unwrap();
     assert_eq!(
@@ -720,22 +720,38 @@ fn routing_v4_legacy_minimal_selection_unchanged() {
     let mut halted = FlowRuntime::with_config(kairo_ecs_des::FlowConfig {
         max_same_tick_flow_transitions: std::num::NonZeroU64::new(1).unwrap(),
     });
-    let first = halted.create_resource(1).unwrap();
-    let second = halted.create_resource(1).unwrap();
-    halted
-        .schedule_resource_grant_enabled(first, false, t(1), 0)
+    let owner = halted.spawn_actor().unwrap();
+    let resource = halted.create_resource(1).unwrap();
+    let work = halted
+        .create_work(owner, duration(10), "ctx", 42_u64)
         .unwrap();
     halted
-        .schedule_resource_grant_enabled(second, false, t(1), 0)
+        .acquire(resource)
+        .owner(owner)
+        .timed_work(work)
+        .submit()
         .unwrap();
-    halted.step().unwrap().unwrap();
+    let gate = halted
+        .schedule_resource_grant_enabled(resource, false, t(8), 0)
+        .unwrap();
     assert!(matches!(
         halted.step(),
-        Err(kairo_ecs_des::FlowError::SameTickBudgetExceeded { .. })
+        Err(kairo_ecs_des::FlowError::SameTickBudgetExceeded {
+            at_ticks: 0,
+            limit: 1
+        })
     ));
+    assert_eq!(halted.budget_snapshot().tick, None);
+    assert_eq!(halted.budget_snapshot().consumed, 0);
+    let halted_v2 = halted.capture_checkpoint_v2(&codecs, limits()).unwrap();
+    assert!(halted_v2.budget_halt.is_some());
+    assert_eq!(halted_v2.started_frontier, None);
+    assert!(halted_v2.commands.iter().any(|(id, command)| {
+        *id == gate && *command == kairo_ecs_des::FlowCommandV2::GrantEnabled(resource, false)
+    }));
     assert_eq!(
         halted.capture_checkpoint_image(&codecs, limits()).unwrap(),
-        FlowCheckpointImage::V2(halted.capture_checkpoint_v2(&codecs, limits()).unwrap())
+        FlowCheckpointImage::V2(halted_v2)
     );
 }
 
