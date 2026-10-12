@@ -575,7 +575,7 @@ fn assert_queue_order_checkpoint_rejected(
     let expected = kairo_ecs_des::FlowCheckpointError::InvalidState(
         "V1/V2/V3 cannot represent stable queue ordering",
     );
-    for capture in ["v1", "v2", "v3", "image"] {
+    for capture in ["v1", "v2", "v3"] {
         QUEUE_ORDER_CODEC_CALLS.with(|calls| calls.set(0));
         let error = match capture {
             "v1" => flow
@@ -584,11 +584,8 @@ fn assert_queue_order_checkpoint_rejected(
             "v2" => flow
                 .capture_checkpoint_v2(codecs, Default::default())
                 .unwrap_err(),
-            "v3" => flow
-                .capture_checkpoint_v3(codecs, Default::default())
-                .unwrap_err(),
             _ => flow
-                .capture_checkpoint_image(codecs, Default::default())
+                .capture_checkpoint_v3(codecs, Default::default())
                 .unwrap_err(),
         };
         assert_eq!(error, expected, "capture entrypoint {capture}");
@@ -615,8 +612,16 @@ fn queue_order_legacy_capture_fails_before_codec_for_all_key_lifetimes() {
     let codecs = queue_order_codecs();
     let resource = stable_resource(&mut flow);
 
-    // An empty opt-in resource is itself unrepresentable.
+    // An empty opt-in resource is unrepresentable in direct legacy versions.
     assert_queue_order_checkpoint_rejected(&flow, &codecs);
+    assert_eq!(
+        flow.capture_checkpoint_image(&codecs, Default::default())
+            .unwrap(),
+        kairo_ecs_des::FlowCheckpointImage::V4(
+            flow.capture_checkpoint_v4(&codecs, Default::default())
+                .unwrap()
+        )
+    );
 
     // A pending request retains its immutable key before Submit dispatch.
     let pending = flow
@@ -685,6 +690,14 @@ fn queue_order_legacy_capture_fails_before_codec_for_all_key_lifetimes() {
         Err(kairo_ecs_des::FlowError::InvalidResource)
     );
     assert_queue_order_checkpoint_rejected(&flow, &codecs);
+    assert_eq!(
+        flow.capture_checkpoint_image(&codecs, Default::default())
+            .unwrap(),
+        kairo_ecs_des::FlowCheckpointImage::V4(
+            flow.capture_checkpoint_v4(&codecs, Default::default())
+                .unwrap()
+        )
+    );
 
     // Keyed Deferred mode remains guarded even with grant eligibility disabled
     // and the keyed request already queued behind the gate.

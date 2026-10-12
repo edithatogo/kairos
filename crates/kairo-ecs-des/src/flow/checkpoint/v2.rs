@@ -123,6 +123,7 @@ pub enum FlowCheckpointImage {
     V1(FlowCheckpointV1),
     V2(FlowCheckpointV2),
     V3(FlowCheckpointV3),
+    V4(FlowCheckpointV4),
 }
 
 #[doc(hidden)]
@@ -131,6 +132,7 @@ pub enum FlowCheckpointRef<'a> {
     V1(&'a FlowCheckpointV1),
     V2(&'a FlowCheckpointV2),
     V3(&'a FlowCheckpointV3),
+    V4(&'a FlowCheckpointV4),
 }
 
 enum FlowCommandIter<'a> {
@@ -157,6 +159,7 @@ impl FlowCheckpointImage {
             Self::V1(image) => FlowCheckpointRef::V1(image),
             Self::V2(image) => FlowCheckpointRef::V2(image),
             Self::V3(image) => FlowCheckpointRef::V3(image),
+            Self::V4(image) => FlowCheckpointRef::V4(image),
         }
     }
 
@@ -173,6 +176,9 @@ impl FlowCheckpointImage {
             Self::V3(image) => {
                 FlowRuntime::restore_checkpoint_v3_with_rebind(image, codecs, limits)
             }
+            Self::V4(image) => {
+                FlowRuntime::restore_checkpoint_v4_with_rebind(image, codecs, limits)
+            }
         }
     }
 }
@@ -183,6 +189,7 @@ impl<'a> FlowCheckpointRef<'a> {
             Self::V1(image) => &image.scheduler,
             Self::V2(image) => &image.scheduler,
             Self::V3(image) => &image.scheduler,
+            Self::V4(image) => &image.scheduler,
         }
     }
 
@@ -191,6 +198,7 @@ impl<'a> FlowCheckpointRef<'a> {
             Self::V1(image) => &image.work_registrations,
             Self::V2(image) => &image.work_registrations,
             Self::V3(image) => &image.work_registrations,
+            Self::V4(image) => &image.work_registrations,
         }
     }
 
@@ -199,6 +207,7 @@ impl<'a> FlowCheckpointRef<'a> {
             Self::V1(image) => &image.context_stores,
             Self::V2(image) => &image.context_stores,
             Self::V3(image) => &image.context_stores,
+            Self::V4(image) => &image.context_stores,
         }
     }
 
@@ -207,6 +216,7 @@ impl<'a> FlowCheckpointRef<'a> {
             Self::V1(image) => FlowCommandIter::V1(image.commands.iter()),
             Self::V2(image) => FlowCommandIter::V2(image.commands.iter()),
             Self::V3(image) => FlowCommandIter::V3(image.commands.iter()),
+            Self::V4(image) => FlowCommandIter::V3(image.commands.iter()),
         }
     }
 }
