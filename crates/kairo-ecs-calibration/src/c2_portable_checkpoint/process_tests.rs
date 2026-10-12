@@ -13,12 +13,11 @@ use crate::seed_map::checkpoint_wire::SeedWireLimits;
 use crate::work_duration::{IntrinsicDurationDistribution, IntrinsicWorkProvider};
 use kairo_ecs_abm::spatial::{EdgeId, MovementModeId, MovementProfile, NodeId, TransitEdge};
 use kairo_ecs_abm::{
-    TransitArrivalActionCheckpointV2, TransitContext, TransitContextCheckpointError,
-    TransitContextCheckpointLimitsV1, TransitContextCheckpointV1, TransitContextCheckpointV2,
-    TransitContextWireError, TransitPhase, observe_transit_arrival_handoff,
-    pending_transit_arrival_handoff, register_transit_context,
+    observe_transit_arrival_handoff, pending_transit_arrival_handoff, register_transit_context,
     register_transit_context_checkpoint_codec_v2, register_transit_context_checkpoint_domain,
-    schedule_transit_control, schedule_transit_start,
+    schedule_transit_control, schedule_transit_start, TransitArrivalActionCheckpointV2,
+    TransitContext, TransitContextCheckpointError, TransitContextCheckpointLimitsV1,
+    TransitContextCheckpointV1, TransitContextCheckpointV2, TransitContextWireError, TransitPhase,
 };
 use kairo_ecs_des::fidelity::{FidelityMode, FidelityPolicy};
 use kairo_ecs_des::{
@@ -1488,37 +1487,35 @@ fn portable_handoff_prepare_cut(fixture: &mut PortableHandoffFixture, name: &str
             portable_handoff_start(fixture);
             let arrival = portable_handoff_arrive(&mut fixture.runtime, fixture.carrier);
             portable_handoff_record_cut(fixture, "arrival", &arrival);
-            assert!(
-                observe_transit_arrival_handoff(&fixture.runtime.flow, fixture.carrier, &arrival)
-                    .unwrap()
-                    .is_some()
-            );
+            assert!(observe_transit_arrival_handoff(
+                &fixture.runtime.flow,
+                fixture.carrier,
+                &arrival
+            )
+            .unwrap()
+            .is_some());
             if name == "portable-v4-handoff-admitted-completion" {
                 portable_handoff_submit_service(fixture);
                 portable_handoff_record_state_cut(fixture, "admitted-cut-before-submit-dispatch");
-                assert!(
-                    fixture
-                        .runtime
-                        .flow
-                        .work(fixture.service)
-                        .unwrap()
-                        .request
-                        .is_some()
-                );
+                assert!(fixture
+                    .runtime
+                    .flow
+                    .work(fixture.service)
+                    .unwrap()
+                    .request
+                    .is_some());
                 assert!(
                     pending_transit_arrival_handoff(&fixture.runtime.flow, fixture.carrier)
                         .unwrap()
                         .is_none()
                 );
-                assert!(
-                    observe_transit_arrival_handoff(
-                        &fixture.runtime.flow,
-                        fixture.carrier,
-                        &arrival
-                    )
-                    .unwrap()
-                    .is_none()
-                );
+                assert!(observe_transit_arrival_handoff(
+                    &fixture.runtime.flow,
+                    fixture.carrier,
+                    &arrival
+                )
+                .unwrap()
+                .is_none());
             }
         }
         "portable-v4-handoff-frontier-resume-live-domain" => {
@@ -1820,10 +1817,9 @@ fn restored_portable_v3_ids(runtime: &MatrixRuntime, case: &CaseSpec) -> Portabl
         runtime.flow.work(context.ready_work).unwrap().owner,
         context.ready_owner
     );
-    assert!(
-        v3.allocation_modes
-            .contains(&(context.deferred, FlowAllocationMode::Deferred))
-    );
+    assert!(v3
+        .allocation_modes
+        .contains(&(context.deferred, FlowAllocationMode::Deferred)));
     let live_event = |event: kairo_ecs_types::EventId, at: SimTime| {
         v3.scheduler
             .entries
@@ -2287,11 +2283,9 @@ fn cut_runtime(runtime: &mut MatrixRuntime, case: &CaseSpec) {
                     if rejection.error == kairo_ecs_des::FlowError::InvalidState
                         && rejection.failed_ticket.is_none()
             ));
-            assert!(
-                runtime.bounds[0]
-                    .observe_transit_dispatch(&runtime.flow, &rejected_pause)
-                    .is_err()
-            );
+            assert!(runtime.bounds[0]
+                .observe_transit_dispatch(&runtime.flow, &rejected_pause)
+                .is_err());
             let carrier = runtime.bounds[0].carrier_id_for_checkpoint().unwrap();
             let context = runtime
                 .flow
@@ -2672,7 +2666,7 @@ fn resolver<'a>(
     &SeedIdentity,
     &FlowRuntime,
 ) -> Result<TrustedC2WorkBindingV1, C2PortableCheckpointError>
-+ 'a {
+       + 'a {
     move |work, identity, _| {
         let binding = bindings
             .get(&work)
@@ -3986,11 +3980,9 @@ fn portable_handoff_suffix(
         panic!("bounded resumed Handoff suffix did not arrive");
     }
     if name == "portable-v4-handoff-arrived-unadmitted" {
-        assert!(
-            pending_transit_arrival_handoff(&runtime.flow, carrier)
-                .unwrap()
-                .is_some()
-        );
+        assert!(pending_transit_arrival_handoff(&runtime.flow, carrier)
+            .unwrap()
+            .is_some());
         let service_owner = runtime.flow.work(service).unwrap().owner;
         let submit_at = runtime.flow.now();
         let request = runtime
@@ -4003,22 +3995,18 @@ fn portable_handoff_suffix(
             .submit()
             .unwrap();
         assert_eq!(runtime.flow.work(service).unwrap().request, Some(request));
-        assert!(
-            pending_transit_arrival_handoff(&runtime.flow, carrier)
-                .unwrap()
-                .is_none()
-        );
+        assert!(pending_transit_arrival_handoff(&runtime.flow, carrier)
+            .unwrap()
+            .is_none());
     } else if name == "portable-v4-handoff-admitted-completion" {
         let request = runtime.flow.work(service).unwrap().request.unwrap();
         assert_eq!(
             runtime.flow.request(request).unwrap().state,
             RequestState::Pending
         );
-        assert!(
-            pending_transit_arrival_handoff(&runtime.flow, carrier)
-                .unwrap()
-                .is_none()
-        );
+        assert!(pending_transit_arrival_handoff(&runtime.flow, carrier)
+            .unwrap()
+            .is_none());
     }
     if name == "portable-v4-handoff-admitted-completion"
         || name == "portable-v4-handoff-arrived-unadmitted"
@@ -4039,11 +4027,9 @@ fn portable_handoff_suffix(
                         .is_none(),
                     "observer suppresses after the actual restored Submit dispatch"
                 );
-                assert!(
-                    pending_transit_arrival_handoff(&runtime.flow, carrier)
-                        .unwrap()
-                        .is_none()
-                );
+                assert!(pending_transit_arrival_handoff(&runtime.flow, carrier)
+                    .unwrap()
+                    .is_none());
                 observed_submit_dispatch = true;
             }
             let request = runtime.flow.work(service).unwrap().request.unwrap();
@@ -4337,10 +4323,9 @@ fn portable_handoff_test_rebind() -> (TransitContextCheckpointV2, FlowCheckpoint
 fn portable_v4_handoff_schema2_rebind_negative_controls() {
     let (dto, rebind, row_owner) = portable_handoff_test_rebind();
     let graph = portable_handoff_graph().0;
-    assert!(
-        dto.restore_for_owner(&graph, &rebind, row_owner, PORTABLE_HANDOFF_LIMITS)
-            .is_ok()
-    );
+    assert!(dto
+        .restore_for_owner(&graph, &rebind, row_owner, PORTABLE_HANDOFF_LIMITS)
+        .is_ok());
 
     let wrong_graph = TransitGraphV1::new(1, vec![NodeId::new(1)], Vec::new()).unwrap();
     let wrong_graph_result =
@@ -4787,12 +4772,11 @@ fn portable_v2_gated_process_continuation() {
                         .then_some(event)
                     })
                     .expect("pending transit Pause command");
-                assert!(
-                    v2.scheduler
-                        .entries
-                        .iter()
-                        .any(|entry| entry.id == pause && entry.live)
-                );
+                assert!(v2
+                    .scheduler
+                    .entries
+                    .iter()
+                    .any(|entry| entry.id == pause && entry.live));
                 for (enabled, tick) in [(false, 5_001), (true, 5_012)] {
                     let event = v2
                         .commands
