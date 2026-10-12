@@ -3,8 +3,14 @@ use super::*;
 use std::sync::Arc;
 
 const MAGIC: &[u8; 8] = b"KTCXCPV1";
+const MAGIC_V2: &[u8; 8] = b"KTCXCPV2";
 const WIRE_SCHEMA: u32 = 1;
 const SEGMENT_BYTES: usize = 64;
+
+#[cfg(test)]
+std::thread_local! {
+    static V2_OWNED_DECODE_STARTS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
 
 /// Errors from the experimental TransitContext v1 byte codec.
 #[doc(hidden)]
@@ -278,6 +284,301 @@ impl TransitContextCheckpointV1 {
     }
 }
 
+/// Register the distinct, caller-owned TransitContext schema-2 byte codec.
+#[doc(hidden)]
+pub fn register_transit_context_checkpoint_codec_v2(
+    codecs: &mut FlowCheckpointCodecs,
+    codec_key: impl Into<String>,
+    source_identity: FlowRuntimeIdentity,
+    trusted_graph: Arc<TransitGraphV1>,
+    limits: TransitContextCheckpointLimitsV1,
+) -> Result<(), FlowCheckpointError> {
+    codecs.register_context_with_owner::<TransitContext>(
+        codec_key,
+        2,
+        move |context, remaining| {
+            let mut bounded = limits;
+            bounded.max_total_bytes = bounded.max_total_bytes.min(remaining);
+            context
+                .checkpoint_bytes_v2(&source_identity, bounded)
+                .map_err(|error| FlowCheckpointCodecError(error.to_string()))
+        },
+        move |bytes, row_owner, view| {
+            TransitContextCheckpointV2::restore_bytes_v2(
+                bytes,
+                &trusted_graph,
+                view,
+                row_owner,
+                limits,
+            )
+            .map_err(|error| FlowCheckpointCodecError(error.to_string()))
+        },
+    )
+}
+
+impl TransitContext {
+    /// Capture the complete native V2 state as canonical bounded wire bytes.
+    #[doc(hidden)]
+    pub fn checkpoint_bytes_v2(
+        &self,
+        source_identity: &FlowRuntimeIdentity,
+        limits: TransitContextCheckpointLimitsV1,
+    ) -> Result<Vec<u8>, TransitContextWireError> {
+        let image = self.checkpoint_v2(source_identity, relaxed_native_limits(limits)?)?;
+        image.encode_bytes_v2(limits)
+    }
+}
+
+impl TransitContextCheckpointV2 {
+    /// Encode all native V2 fields using canonical little-endian bytes.
+    #[doc(hidden)]
+    pub fn encode_bytes_v2(
+        &self,
+        limits: TransitContextCheckpointLimitsV1,
+    ) -> Result<Vec<u8>, TransitContextWireError> {
+        validate_v2_image_limits(self, limits)?;
+        validate_v2_shape(self, None).map_err(TransitContextWireError::Native)?;
+        let length = encoded_len_v2(self)?;
+        if length > limits.max_total_bytes {
+            return Err(TransitContextWireError::LimitExceeded);
+        }
+        let mut output = Vec::new();
+        output
+            .try_reserve_exact(length)
+            .map_err(|_| TransitContextWireError::AllocationFailure)?;
+        let mut writer = Writer { bytes: &mut output };
+        writer.raw(MAGIC_V2);
+        writer.u32(WIRE_SCHEMA);
+        writer.u32(self.schema_version);
+        write_route(&mut writer, &self.route)?;
+        writer.usize(self.segment_index)?;
+        writer.u128(self.elapsed_in_segment_ticks);
+        writer.entity(self.service_work);
+        writer.entity(self.service_owner);
+        write_action_v2(&mut writer, &self.action)?;
+        writer.option(self.arrival_witness, |w, witness| {
+            w.u64(witness.event.0);
+            w.u32(witness.event.1);
+            w.u128(witness.at_ticks);
+            w.u8(match witness.cause {
+                TransitArrivalCauseCheckpointV2::Domain => 0,
+                TransitArrivalCauseCheckpointV2::Resume => 1,
+            });
+            Ok(())
+        })?;
+        writer.option(self.carrier, |w, carrier| {
+            w.entity(carrier);
+            Ok(())
+        })?;
+        writer.option(self.kind, |w, kind| {
+            w.u32(kind.code());
+            Ok(())
+        })?;
+        writer.u128(self.start_at_ticks);
+        writer.phase(self.phase);
+        writer.option(self.paused_from, |w, phase| {
+            w.phase(phase);
+            Ok(())
+        })?;
+        writer.u128(self.last_advanced_at_ticks);
+        writer.bool(self.initial_start_pending);
+        writer.option(self.expected_event, |w, event| {
+            w.u64(event.0);
+            w.u32(event.1);
+            Ok(())
+        })?;
+        writer.option(self.expected_due_ticks, |w, ticks| {
+            w.u128(ticks);
+            Ok(())
+        })?;
+        writer.option(self.command_ticket, |w, (batch, index, purpose)| {
+            w.u64(batch);
+            w.usize(index)?;
+            w.purpose(purpose);
+            Ok(())
+        })?;
+        writer.option(self.arrival_ticket, |w, (batch, index)| {
+            w.u64(batch);
+            w.usize(index)?;
+            Ok(())
+        })?;
+        writer.option(self.next_progress_ticket, |w, (batch, index)| {
+            w.u64(batch);
+            w.usize(index)?;
+            Ok(())
+        })?;
+        if output.len() != length {
+            return Err(TransitContextWireError::InvalidData);
+        }
+        Ok(output)
+    }
+
+    /// Decode a bounded V2 payload after allocation-free field preflight.
+    #[doc(hidden)]
+    pub fn decode_bytes_v2(
+        bytes: &[u8],
+        limits: TransitContextCheckpointLimitsV1,
+    ) -> Result<Self, TransitContextWireError> {
+        preflight_v2(bytes, limits)?;
+        #[cfg(test)]
+        V2_OWNED_DECODE_STARTS.with(|count| count.set(count.get() + 1));
+        let mut reader = Reader::new(bytes);
+        reader.raw(MAGIC_V2.len())?;
+        let _wire_schema = reader.u32()?;
+        let schema_version = reader.u32()?;
+        let route = read_route(&mut reader)?;
+        let segment_index = reader.usize()?;
+        let elapsed_in_segment_ticks = reader.u128()?;
+        let service_work = reader.entity()?;
+        let service_owner = reader.entity()?;
+        let action = read_action_v2(&mut reader)?;
+        let arrival_witness = reader.option(|r| {
+            let event = (r.u64()?, r.u32()?);
+            let at_ticks = r.u128()?;
+            let cause = match r.u8()? {
+                0 => TransitArrivalCauseCheckpointV2::Domain,
+                1 => TransitArrivalCauseCheckpointV2::Resume,
+                _ => return Err(TransitContextWireError::InvalidData),
+            };
+            Ok(TransitArrivalWitnessCheckpointV2 {
+                event,
+                at_ticks,
+                cause,
+            })
+        })?;
+        let carrier = reader.option(|r| r.entity())?;
+        let kind = reader.option(|r| r.u32().map(EventKind::custom))?;
+        let start_at_ticks = reader.u128()?;
+        let phase = reader.phase()?;
+        let paused_from = reader.option(|r| r.phase())?;
+        let last_advanced_at_ticks = reader.u128()?;
+        let initial_start_pending = reader.bool()?;
+        let expected_event = reader.option(|r| Ok((r.u64()?, r.u32()?)))?;
+        let expected_due_ticks = reader.option(|r| r.u128())?;
+        let command_ticket = reader.option(|r| Ok((r.u64()?, r.usize()?, r.purpose()?)))?;
+        let arrival_ticket = reader.option(|r| Ok((r.u64()?, r.usize()?)))?;
+        let next_progress_ticket = reader.option(|r| Ok((r.u64()?, r.usize()?)))?;
+        if !reader.is_done() {
+            return Err(TransitContextWireError::TrailingBytes);
+        }
+        let image = Self {
+            schema_version,
+            route,
+            segment_index,
+            elapsed_in_segment_ticks,
+            service_work,
+            service_owner,
+            action,
+            arrival_witness,
+            carrier,
+            kind,
+            start_at_ticks,
+            phase,
+            paused_from,
+            last_advanced_at_ticks,
+            initial_start_pending,
+            expected_event,
+            expected_due_ticks,
+            command_ticket,
+            arrival_ticket,
+            next_progress_ticket,
+        };
+        validate_v2_image_limits(&image, limits)?;
+        validate_v2_shape(&image, None).map_err(TransitContextWireError::Native)?;
+        Ok(image)
+    }
+
+    /// Decode then rebind through the caller's trusted graph and validated Flow image.
+    #[doc(hidden)]
+    pub fn restore_bytes_v2(
+        bytes: &[u8],
+        trusted_graph: &TransitGraphV1,
+        rebind: &FlowCheckpointRebindV1,
+        row_owner: EntityId,
+        limits: TransitContextCheckpointLimitsV1,
+    ) -> Result<TransitContext, TransitContextWireError> {
+        Self::decode_bytes_v2(bytes, limits)?
+            .restore_for_owner(
+                trusted_graph,
+                rebind,
+                row_owner,
+                relaxed_native_limits(limits)?,
+            )
+            .map_err(Into::into)
+    }
+}
+
+fn write_action_v2(
+    writer: &mut Writer<'_>,
+    action: &TransitArrivalActionCheckpointV2,
+) -> Result<(), TransitContextWireError> {
+    match action {
+        TransitArrivalActionCheckpointV2::Acquire {
+            resource,
+            owner,
+            work,
+            at_ticks,
+            priority_level,
+            deadline_ticks,
+            scheduler_priority,
+            timed,
+            can_preempt,
+            preemptible,
+        } => {
+            writer.u8(0);
+            writer.entity(*resource);
+            writer.entity(*owner);
+            writer.option(*work, |w, id| {
+                w.entity(id);
+                Ok(())
+            })?;
+            writer.u128(*at_ticks);
+            writer.i32(*priority_level);
+            writer.option(*deadline_ticks, |w, ticks| {
+                w.u128(ticks);
+                Ok(())
+            })?;
+            writer.i32(*scheduler_priority);
+            writer.bool(*timed);
+            writer.bool(*can_preempt);
+            writer.option(*preemptible, |w, strategy| {
+                w.preemption(strategy);
+                Ok(())
+            })?;
+        }
+        TransitArrivalActionCheckpointV2::Handoff {
+            progress_scheduler_priority,
+        } => {
+            writer.u8(1);
+            writer.i32(*progress_scheduler_priority);
+        }
+    }
+    Ok(())
+}
+
+fn read_action_v2(
+    reader: &mut Reader<'_>,
+) -> Result<TransitArrivalActionCheckpointV2, TransitContextWireError> {
+    match reader.u8()? {
+        0 => Ok(TransitArrivalActionCheckpointV2::Acquire {
+            resource: reader.entity()?,
+            owner: reader.entity()?,
+            work: reader.option(|r| r.entity())?,
+            at_ticks: reader.u128()?,
+            priority_level: reader.i32()?,
+            deadline_ticks: reader.option(|r| r.u128())?,
+            scheduler_priority: reader.i32()?,
+            timed: reader.bool()?,
+            can_preempt: reader.bool()?,
+            preemptible: reader.option(|r| r.preemption())?,
+        }),
+        1 => Ok(TransitArrivalActionCheckpointV2::Handoff {
+            progress_scheduler_priority: reader.i32()?,
+        }),
+        _ => Err(TransitContextWireError::InvalidData),
+    }
+}
+
 fn validate_image_limits(
     image: &TransitContextCheckpointV1,
     limits: TransitContextCheckpointLimitsV1,
@@ -302,6 +603,34 @@ fn validate_image_limits(
         .route
         .validate_limits(&route_limits)
         .map_err(|error| TransitContextWireError::Native(map_route_checkpoint_error(error)))?;
+    Ok(())
+}
+
+fn validate_v2_image_limits(
+    image: &TransitContextCheckpointV2,
+    limits: TransitContextCheckpointLimitsV1,
+) -> Result<(), TransitContextWireError> {
+    if image.schema_version != TRANSIT_CONTEXT_SCHEMA_V2 {
+        return Err(TransitContextWireError::UnsupportedVersion(
+            image.schema_version,
+        ));
+    }
+    if image.route.schema_version != 1 {
+        return Err(TransitContextWireError::UnsupportedVersion(
+            image.route.schema_version,
+        ));
+    }
+    let route_limits = RoutePlanImageLimitsV1::new(
+        limits.max_segments,
+        limits.max_graph_bytes,
+        limits.max_mode_bytes,
+        limits.max_total_bytes,
+    );
+    image
+        .route
+        .validate_limits(&route_limits)
+        .map_err(map_route_checkpoint_error)
+        .map_err(TransitContextWireError::from)?;
     Ok(())
 }
 
@@ -343,6 +672,61 @@ fn encoded_len(image: &TransitContextCheckpointV1) -> Result<usize, TransitConte
     add(1 + image.acquire_work.map_or(0, |_| 12))?;
     add(16 + 4 + 1 + image.acquire_deadline_ticks.map_or(0, |_| 16) + 4 + 2)?;
     add(1 + image.acquire_preemptible.map_or(0, |_| 1))?;
+    add(1 + image.carrier.map_or(0, |_| 12))?;
+    add(1 + image.kind.map_or(0, |_| 4))?;
+    add(16 + 1 + 1 + image.paused_from.map_or(0, |_| 1) + 16 + 1)?;
+    add(1 + image.expected_event.map_or(0, |_| 12))?;
+    add(1 + image.expected_due_ticks.map_or(0, |_| 16))?;
+    add(1 + image.command_ticket.map_or(0, |(_, _, purpose)| {
+        17 + match purpose {
+            TransitCommandPurposeCheckpointV1::Start { .. }
+            | TransitCommandPurposeCheckpointV1::Progress { .. } => 16,
+            TransitCommandPurposeCheckpointV1::Arrival => 0,
+        }
+    }))?;
+    add(1 + image.arrival_ticket.map_or(0, |_| 16))?;
+    add(1 + image.next_progress_ticket.map_or(0, |_| 16))?;
+    Ok(length)
+}
+
+fn encoded_len_v2(image: &TransitContextCheckpointV2) -> Result<usize, TransitContextWireError> {
+    let mut length = 16usize; // magic, wire schema, native schema
+    let mut add = |amount: usize| {
+        length = length
+            .checked_add(amount)
+            .ok_or(TransitContextWireError::LimitExceeded)?;
+        Ok::<(), TransitContextWireError>(())
+    };
+    add(28)?; // route schema, origin, destination, segment count
+    add(image
+        .route
+        .segments
+        .len()
+        .checked_mul(SEGMENT_BYTES)
+        .ok_or(TransitContextWireError::LimitExceeded)?)?;
+    add(32)?; // route distance and duration
+    add(8usize
+        .checked_add(image.route.movement_mode.len())
+        .ok_or(TransitContextWireError::LimitExceeded)?)?;
+    add(28usize
+        .checked_add(image.route.graph_canonical_bytes.len())
+        .ok_or(TransitContextWireError::LimitExceeded)?)?;
+    add(8 + 16 + 12 + 12)?; // cursor and service identities
+    match &image.action {
+        TransitArrivalActionCheckpointV2::Acquire {
+            work,
+            deadline_ticks,
+            preemptible,
+            ..
+        } => {
+            add(1 + 12 + 12)?; // action tag, resource and owner
+            add(1 + work.map_or(0, |_| 12))?;
+            add(16 + 4 + 1 + deadline_ticks.map_or(0, |_| 16))?;
+            add(4 + 1 + 1 + 1 + preemptible.map_or(0, |_| 1))?;
+        }
+        TransitArrivalActionCheckpointV2::Handoff { .. } => add(1 + 4)?,
+    }
+    add(1 + image.arrival_witness.map_or(0, |_| 12 + 16 + 1))?;
     add(1 + image.carrier.map_or(0, |_| 12))?;
     add(1 + image.kind.map_or(0, |_| 4))?;
     add(16 + 1 + 1 + image.paused_from.map_or(0, |_| 1) + 16 + 1)?;
@@ -714,4 +1098,139 @@ fn preflight(
         return Err(TransitContextWireError::TrailingBytes);
     }
     Ok(())
+}
+
+fn preflight_v2(
+    bytes: &[u8],
+    limits: TransitContextCheckpointLimitsV1,
+) -> Result<(), TransitContextWireError> {
+    if bytes.len() > limits.max_total_bytes {
+        return Err(TransitContextWireError::LimitExceeded);
+    }
+    let mut reader = Reader::new(bytes);
+    if reader.raw(MAGIC_V2.len())? != MAGIC_V2 {
+        return Err(TransitContextWireError::InvalidData);
+    }
+    let wire_schema = reader.u32()?;
+    if wire_schema != WIRE_SCHEMA {
+        return Err(TransitContextWireError::UnsupportedVersion(wire_schema));
+    }
+    let native_schema = reader.u32()?;
+    if native_schema != TRANSIT_CONTEXT_SCHEMA_V2 {
+        return Err(TransitContextWireError::UnsupportedVersion(native_schema));
+    }
+    let route_schema = reader.u32()?;
+    if route_schema != 1 {
+        return Err(TransitContextWireError::UnsupportedVersion(route_schema));
+    }
+    let _origin = reader.u64()?;
+    let _destination = reader.u64()?;
+    let segment_count = reader.usize()?;
+    if segment_count > limits.max_segments {
+        return Err(TransitContextWireError::LimitExceeded);
+    }
+    let segment_bytes = segment_count
+        .checked_mul(SEGMENT_BYTES)
+        .ok_or(TransitContextWireError::LimitExceeded)?;
+    reader.raw(segment_bytes)?;
+    let _distance = reader.u128()?;
+    let _duration = reader.u128()?;
+    let mode_len = reader.usize()?;
+    if mode_len > limits.max_mode_bytes {
+        return Err(TransitContextWireError::LimitExceeded);
+    }
+    std::str::from_utf8(reader.raw(mode_len)?).map_err(|_| TransitContextWireError::InvalidUtf8)?;
+    let _speed = reader.u64()?;
+    let _ticks_per_second = reader.u64()?;
+    let _graph_version = reader.u32()?;
+    let graph_len = reader.usize()?;
+    if graph_len > limits.max_graph_bytes {
+        return Err(TransitContextWireError::LimitExceeded);
+    }
+    reader.raw(graph_len)?;
+    let _segment_index = reader.usize()?;
+    let _elapsed = reader.u128()?;
+    reader.entity()?;
+    reader.entity()?;
+    match reader.u8()? {
+        0 => {
+            reader.entity()?;
+            reader.entity()?;
+            reader.option(|r| r.entity())?;
+            let _at = reader.u128()?;
+            let _priority = reader.i32()?;
+            reader.option(|r| r.u128())?;
+            let _scheduler_priority = reader.i32()?;
+            reader.bool()?;
+            reader.bool()?;
+            reader.option(|r| r.preemption())?;
+        }
+        1 => {
+            let _progress_scheduler_priority = reader.i32()?;
+        }
+        _ => return Err(TransitContextWireError::InvalidData),
+    }
+    reader.option(|r| {
+        let _event = (r.u64()?, r.u32()?);
+        let _at = r.u128()?;
+        match r.u8()? {
+            0 | 1 => Ok(()),
+            _ => Err(TransitContextWireError::InvalidData),
+        }
+    })?;
+    reader.option(|r| r.entity())?;
+    reader.option(|r| r.u32())?;
+    let _start = reader.u128()?;
+    reader.phase()?;
+    reader.option(|r| r.phase())?;
+    let _last = reader.u128()?;
+    reader.bool()?;
+    reader.option(|r| Ok((r.u64()?, r.u32()?)))?;
+    reader.option(|r| r.u128())?;
+    reader.option(|r| Ok((r.u64()?, r.usize()?, r.purpose()?)))?;
+    reader.option(|r| Ok((r.u64()?, r.usize()?)))?;
+    reader.option(|r| Ok((r.u64()?, r.usize()?)))?;
+    if !reader.is_done() {
+        return Err(TransitContextWireError::TrailingBytes);
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod v2_preflight_allocation_tests {
+    use super::*;
+
+    const GOLDEN: &str = "4b544358435056320100000002000000010000000100000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000077616c6b0100000000000000010000000000000001000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000001000000000000000000000000030000000000000000000000010000000000000000000000010200000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000";
+
+    fn golden_bytes() -> Vec<u8> {
+        let (pairs, remainder) = GOLDEN.as_bytes().as_chunks::<2>();
+        assert!(remainder.is_empty());
+        pairs
+            .iter()
+            .map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap())
+            .collect()
+    }
+
+    #[test]
+    fn malformed_final_field_and_suffix_fail_before_owned_decode() {
+        let limits = TransitContextCheckpointLimitsV1::new(16, 4096, 64, 8192);
+        let valid = golden_bytes();
+        V2_OWNED_DECODE_STARTS.with(|count| count.set(0));
+        assert!(TransitContextCheckpointV2::decode_bytes_v2(&valid, limits).is_ok());
+        assert_eq!(V2_OWNED_DECODE_STARTS.with(std::cell::Cell::get), 1);
+
+        let mut bad_last = valid.clone();
+        bad_last[272] = 2;
+        assert_eq!(
+            TransitContextCheckpointV2::decode_bytes_v2(&bad_last, limits),
+            Err(TransitContextWireError::InvalidData)
+        );
+        let mut trailing = valid;
+        trailing.push(0);
+        assert_eq!(
+            TransitContextCheckpointV2::decode_bytes_v2(&trailing, limits),
+            Err(TransitContextWireError::TrailingBytes)
+        );
+        assert_eq!(V2_OWNED_DECODE_STARTS.with(std::cell::Cell::get), 1);
+    }
 }

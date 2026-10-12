@@ -18,7 +18,8 @@ use std::fmt::{Display, Formatter};
 
 mod transit_checkpoint_wire;
 pub use transit_checkpoint_wire::{
-    register_transit_context_checkpoint_codec, TransitContextWireError,
+    register_transit_context_checkpoint_codec, register_transit_context_checkpoint_codec_v2,
+    TransitContextWireError,
 };
 
 const TRANSIT_CONTEXT_SCHEMA_V1: u32 = 1;

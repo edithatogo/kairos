@@ -8,13 +8,14 @@ pub use flow_adapter::register_transit_context_reject_first_for_test;
 pub use flow_adapter::{
     create_flow_agent, observe_transit_arrival_handoff, pending_transit_arrival_handoff,
     register_flow_agent_behavior, register_transit_context,
-    register_transit_context_checkpoint_codec, register_transit_context_checkpoint_domain,
-    schedule_flow_agent_update, schedule_transit_control, schedule_transit_start,
-    FlowAgentBehavior, FlowAgentContext, FlowAgentHandle, TransitArrivalActionCheckpointV2,
-    TransitArrivalCauseCheckpointV2, TransitArrivalHandoff, TransitArrivalWitnessCheckpointV2,
-    TransitCommandPurposeCheckpointV1, TransitContext, TransitContextCheckpointError,
-    TransitContextCheckpointLimitsV1, TransitContextCheckpointV1, TransitContextCheckpointV2,
-    TransitContextWireError, TransitPhase, TransitProgress,
+    register_transit_context_checkpoint_codec, register_transit_context_checkpoint_codec_v2,
+    register_transit_context_checkpoint_domain, schedule_flow_agent_update,
+    schedule_transit_control, schedule_transit_start, FlowAgentBehavior, FlowAgentContext,
+    FlowAgentHandle, TransitArrivalActionCheckpointV2, TransitArrivalCauseCheckpointV2,
+    TransitArrivalHandoff, TransitArrivalWitnessCheckpointV2, TransitCommandPurposeCheckpointV1,
+    TransitContext, TransitContextCheckpointError, TransitContextCheckpointLimitsV1,
+    TransitContextCheckpointV1, TransitContextCheckpointV2, TransitContextWireError, TransitPhase,
+    TransitProgress,
 };
 
 use kairo_ecs_core::Scheduler;
