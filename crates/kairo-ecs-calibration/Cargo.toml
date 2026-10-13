@@ -30,3 +30,7 @@ kairo-ecs-arrow-io = { path = "../kairo-ecs-arrow-io", version = "=0.1.0", optio
 [dev-dependencies]
 # Negative Flow fixtures need this helper; production builds do not enable it.
 kairo-ecs-abm = { path = "../kairo-ecs-abm", version = "=0.1.0", features = ["test-support"] }
+
+[[test]]
+name = "grid_search_fixtures"
+required-features = ["flow"]
