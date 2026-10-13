@@ -5,7 +5,9 @@ use kairo_ecs_des::{
 };
 use kairo_ecs_types::SimDuration;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Mutex;
 
+static TEST_MUTEX: Mutex<()> = Mutex::new(());
 static OWNER_DECODE_CALLS: AtomicUsize = AtomicUsize::new(0);
 static PLAIN_DECODE_CALLS: AtomicUsize = AtomicUsize::new(0);
 static ENCODE_CALLS: AtomicUsize = AtomicUsize::new(0);
@@ -138,6 +140,7 @@ fn context_versions_v4(image: &FlowCheckpointV4) -> Vec<u32> {
 
 #[test]
 fn context_codec_nonzero_versions_roundtrip_actual_runtime() {
+    let _lock = TEST_MUTEX.lock().unwrap();
     OWNER_DECODE_CALLS.store(0, Ordering::SeqCst);
     PLAIN_DECODE_CALLS.store(0, Ordering::SeqCst);
     ENCODE_CALLS.store(0, Ordering::SeqCst);
@@ -294,6 +297,7 @@ fn context_codec_nonzero_versions_roundtrip_actual_runtime() {
 
 #[test]
 fn context_codec_zero_and_duplicate_registration_atomic() {
+    let _lock = TEST_MUTEX.lock().unwrap();
     OWNER_DECODE_CALLS.store(0, Ordering::SeqCst);
     PLAIN_DECODE_CALLS.store(0, Ordering::SeqCst);
     ENCODE_CALLS.store(0, Ordering::SeqCst);
@@ -379,6 +383,7 @@ fn context_codec_zero_and_duplicate_registration_atomic() {
 
 #[test]
 fn context_codec_manifest_mismatch_rejects_before_decoder() {
+    let _lock = TEST_MUTEX.lock().unwrap();
     OWNER_DECODE_CALLS.store(0, Ordering::SeqCst);
     let mut runtime = FlowRuntime::new();
     let actor = runtime.spawn_actor().unwrap();
@@ -453,6 +458,7 @@ fn context_codec_manifest_mismatch_rejects_before_decoder() {
 
 #[test]
 fn context_codec_legacy_wire_versions_preserve_schema_and_bytes() {
+    let _lock = TEST_MUTEX.lock().unwrap();
     PLAIN_DECODE_CALLS.store(0, Ordering::SeqCst);
     let mut codecs = FlowCheckpointCodecs::new();
     codecs
