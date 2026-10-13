@@ -106,6 +106,10 @@ mod c2_checkpoint_journal;
 )]
 mod flow_bridge;
 
+#[cfg(all(test, feature = "flow"))]
+#[path = "../../../conformance/c20/paired_flow_c20_v2.rs"]
+mod paired_flow_c20_v2;
+
 #[cfg(feature = "flow")]
 #[doc(hidden)]
 pub mod experimental_c2_replay {

@@ -138,6 +138,32 @@ fn cap(value: usize, remaining: usize) -> usize {
     value.min(remaining)
 }
 
+/// Supported ADR-0009 cut: no bridge work, or one submitted item that is idle
+/// queued or already completed. Active, suspended, and in-flight transit are
+/// rejected before any owner image is encoded.
+fn ensure_adr0009_first_leaf_boundary<T: Clone + 'static, C: 'static>(
+    flow: &FlowRuntime,
+    bound: &[BoundIntrinsicWork<T, C>],
+    submitted: &[SubmittedIntrinsicWork<T, C>],
+) -> Result<(), C2PortableCheckpointError> {
+    if !bound.is_empty() || submitted.len() > 1 {
+        return Err(C2PortableCheckpointError::InvalidState);
+    }
+    if let Some(record) = submitted.first() {
+        let state = flow
+            .request(record.request())
+            .map_err(|_| C2PortableCheckpointError::InvalidState)?
+            .state;
+        if !matches!(
+            state,
+            kairo_ecs_des::RequestState::Queued | kairo_ecs_des::RequestState::Completed
+        ) {
+            return Err(C2PortableCheckpointError::InvalidState);
+        }
+    }
+    Ok(())
+}
+
 fn body_owner_budget(
     limits: C2PortableCheckpointLimitsV1,
     records: usize,
@@ -376,6 +402,36 @@ impl C2PortableCheckpointV1 {
         .encode(limits.sections)?;
         let bytes = checkpoint_envelope::encode(&body, binding, limits.envelope)?;
         Ok(Self { bytes })
+    }
+
+    /// ADR-0009 first-leaf capture. Rejects an active or suspended boundary
+    /// before the composite encoder runs, so a refused cut cannot publish bytes.
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn capture_adr0009_first_leaf<T: Clone + 'static, C: 'static>(
+        flow: &FlowRuntime,
+        adapter: &FidelityAdapter,
+        provider: &IntrinsicWorkProvider,
+        seed_registry: &CalibrationSeedMap,
+        bound: &[BoundIntrinsicWork<T, C>],
+        submitted: &[SubmittedIntrinsicWork<T, C>],
+        codecs: &FlowCheckpointCodecs,
+        resolve_binding: &mut TrustedC2BindingResolver<'_>,
+        binding: CheckpointBindingV1,
+        limits: C2PortableCheckpointLimitsV1,
+    ) -> Result<Self, C2PortableCheckpointError> {
+        ensure_adr0009_first_leaf_boundary(flow, bound, submitted)?;
+        Self::capture(
+            flow,
+            adapter,
+            provider,
+            seed_registry,
+            bound,
+            submitted,
+            codecs,
+            resolve_binding,
+            binding,
+            limits,
+        )
     }
 
     pub(crate) fn from_bytes(
@@ -1108,4 +1164,8 @@ mod tests {
     #[cfg(test)]
     #[path = "generic_context_tests.rs"]
     mod generic_context_tests;
+
+    #[cfg(test)]
+    #[path = "adr0009_paired_restore.rs"]
+    mod adr0009_paired_restore;
 }
