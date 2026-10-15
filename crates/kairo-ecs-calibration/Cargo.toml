@@ -34,3 +34,8 @@ kairo-ecs-abm = { path = "../kairo-ecs-abm", version = "=0.1.0", features = ["te
 [[test]]
 name = "grid_search_fixtures"
 required-features = ["flow"]
+
+[[test]]
+name = "c61_ed_fixture_calibration"
+required-features = ["flow"]
+
