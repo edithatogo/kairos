@@ -5,6 +5,7 @@
 
 pub mod buffer;
 pub mod compute;
+pub mod numeric_batch;
 pub mod transfer;
 
 #[cfg(feature = "cuda-backend")]
@@ -24,4 +25,5 @@ pub use compute::{
     GpuState, GpuStateFootprint, GpuStepStats, GpuWorkloadKind, CUDA_BACKEND_NOT_CONFIGURED,
     DEFAULT_WORKGROUP_SIZE, TRACK32_TARGET_MEMORY_BUDGET, WGPU_BACKEND_NOT_CONFIGURED,
 };
+pub use numeric_batch::*;
 pub use transfer::{TransferDirection, TransferPlan, TransferStep};
