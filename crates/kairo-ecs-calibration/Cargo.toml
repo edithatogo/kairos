@@ -39,3 +39,7 @@ required-features = ["flow"]
 name = "c61_ed_fixture_calibration"
 required-features = ["flow"]
 
+[[test]]
+name = "c62_ed_holdout_evaluation"
+required-features = ["flow"]
+
