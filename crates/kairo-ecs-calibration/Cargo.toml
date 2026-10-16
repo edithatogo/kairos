@@ -43,3 +43,7 @@ required-features = ["flow"]
 name = "c62_ed_holdout_evaluation"
 required-features = ["flow"]
 
+[[test]]
+name = "c63_compatibility_replay_performance"
+required-features = ["flow"]
+
