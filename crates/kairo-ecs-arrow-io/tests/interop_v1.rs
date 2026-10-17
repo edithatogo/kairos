@@ -95,7 +95,7 @@ fn ticks_array(rows: &[Row]) -> FixedSizeBinaryArray {
     let mut builder = FixedSizeBinaryBuilder::with_capacity(rows.len(), 16);
     for row in rows {
         builder
-            .append_value(&row.ticks.to_le_bytes())
+            .append_value(row.ticks.to_le_bytes())
             .expect("tick value is exactly sixteen bytes");
     }
     builder.finish()
