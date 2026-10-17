@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "fixture": "flow_runtime_identity_v1",
+  "status": "native-development-conformance",
+  "owners": ["03", "12", "21", "25"],
+  "source": "flow-runtime-identity-v1.tsv",
+  "consumer": "crates/kairo-ecs-des/tests/fidelity_lineage_v1.rs",
+  "command": "cargo test --locked -p kairo-ecs-des --test fidelity_lineage_v1",
+  "assertions": [
+    "fresh runtimes have unequal opaque ownership tokens despite colliding WorkIds",
+    "clones and moves retain identity and Debug hides addresses",
+    "failed admission cannot bind a runtime",
+    "foreign terminal work cannot bypass bound Pending/Active/Suspended work",
+    "failed operations preserve pending policy, admitted decisions, Flow progress and context"
+  ],
+  "limitations": [
+    "in-process Rust ownership only; no token serialized in fixtures or telemetry",
+    "no C ABI, binding, portable checkpoint or cross-process identity claim",
+    "bootstrap conformance manifest ready IDs remain unchanged"
+  ]
+}

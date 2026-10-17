@@ -1,0 +1,26 @@
+{
+  "baseline": "8cd03c8f791ae58b33e5cc61b244071937a839ac",
+  "fixture_test_source": "6a17578a16d4bb13969961dfd116b3afaf7c8c6c",
+  "changed_paths": [
+    "conductor/design/calibration/c4.1-fixture-clarifications-v1.md",
+    "conductor/design/calibration/c4.1-fixture-contract-v1.md",
+    "conductor/design/calibration/c4.1-invalid-runtime-clarifications-v1.md",
+    "conductor/design/calibration/c4.1-status-unit-clarifications-v1.md",
+    "conformance/c41/README.md",
+    "conformance/c41/fixtures.json",
+    "conformance/c41/generate_reference.py",
+    "conformance/c41/reference.json",
+    "conformance/c41/requirements-reference.lock",
+    "conformance/c41/test_reference.py",
+    "conformance/c41/wheel-provenance.json",
+    "crates/kairo-ecs-calibration/tests/metrics_c41.rs"
+  ],
+  "protected_runtime_api_dependencies_schemas_ci_changes": [],
+  "full_compatibility_source": "54089285b888b09ce665e0cede26b662b7e884e6",
+  "native_source_equivalent": true,
+  "fresh_final_fixture_native_tests": [
+    "Rust1.99",
+    "Rust1.88"
+  ],
+  "clinical_or_release_acceptance": false
+}

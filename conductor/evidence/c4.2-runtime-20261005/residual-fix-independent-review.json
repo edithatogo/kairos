@@ -1,0 +1,16 @@
+{
+  "reviewer": "c42_runtime_report",
+  "status": "pass_scoped_source",
+  "source_sha256": "1844042b8841340ea16eaa93da9d293ea3003d03bc49ed567df66ada9ca3cb8f",
+  "test_sha256_at_review": "f485cd91073a24483193771feae87a50f0a637cc5f1ebf13a87801b63bb53c68",
+  "fixed_defects": [
+    "full-batch row coherence before summary prevents current-pair earlyreturnloss",
+    "same-key group/time mismatch invalid",
+    "one-pass ordered PairMap removes repeated scan",
+    "simulation wrong-side observed tick rejected"
+  ],
+  "additional_confirmed_defects": [],
+  "retracted_false_positive": "Reviewer omitted preceding actual-group union; unknown-group invalid buckets alreadypreserved",
+  "tests_run_by_reviewer": false,
+  "final_tests_and_commit": "pending coordinator integration"
+}

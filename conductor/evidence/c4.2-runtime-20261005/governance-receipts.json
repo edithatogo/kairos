@@ -1,0 +1,65 @@
+[
+  {
+    "id": "c42-governance-validate_conformance_fixtures",
+    "argv": [
+      "pwsh",
+      "-File",
+      "scripts/validate_conformance_fixtures.ps1"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "f13e39f48a30f3562e16c7edb52a12f4399542c3",
+    "env_overrides": {},
+    "started_utc": "2026-10-04T23:40:48.052895+00:00",
+    "ended_utc": "2026-10-04T23:40:48.870591+00:00",
+    "duration_seconds": 0.8174038329161704,
+    "exit_status": 0,
+    "input_sha256": {
+      "scripts/validate_conformance_fixtures.ps1": "6ed6737c5e7e5ac9086747c6dec7c3f1726dc0e3f2ab7ba6519f6227a74786b6"
+    },
+    "log": "c42-governance-validate_conformance_fixtures.log",
+    "log_sha256": "91e517d07a0c044263e1b0aa3da1415c904a3af510627fd19d26c2e8878f3fbb",
+    "interpretation": "Existing governance/fixture integrity only; no runtime phase completion inferred"
+  },
+  {
+    "id": "c42-governance-validate_conductor_phase_gates",
+    "argv": [
+      "pwsh",
+      "-File",
+      "scripts/validate_conductor_phase_gates.ps1"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "f13e39f48a30f3562e16c7edb52a12f4399542c3",
+    "env_overrides": {},
+    "started_utc": "2026-10-04T23:40:48.897292+00:00",
+    "ended_utc": "2026-10-04T23:40:49.819838+00:00",
+    "duration_seconds": 0.9225376669783145,
+    "exit_status": 0,
+    "input_sha256": {
+      "scripts/validate_conductor_phase_gates.ps1": "5e1a339c75360cfae6a46588e527cebd6f1810d75c7d37b66f942207031a4994"
+    },
+    "log": "c42-governance-validate_conductor_phase_gates.log",
+    "log_sha256": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2",
+    "interpretation": "Existing governance/fixture integrity only; no runtime phase completion inferred"
+  },
+  {
+    "id": "c42-governance-validate_conductor_dag",
+    "argv": [
+      "pwsh",
+      "-File",
+      "scripts/validate_conductor_dag.ps1"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "f13e39f48a30f3562e16c7edb52a12f4399542c3",
+    "env_overrides": {},
+    "started_utc": "2026-10-04T23:40:49.840917+00:00",
+    "ended_utc": "2026-10-04T23:40:50.706965+00:00",
+    "duration_seconds": 0.8660375839099288,
+    "exit_status": 0,
+    "input_sha256": {
+      "scripts/validate_conductor_dag.ps1": "9bf3d75f96091c43be9b30006585187d571276899bc7f3607314def2859a3183"
+    },
+    "log": "c42-governance-validate_conductor_dag.log",
+    "log_sha256": "1b6c16661033b4e48f46dba859451989697ae70fb9781bc42e78673960a0508a",
+    "interpretation": "Existing governance/fixture integrity only; no runtime phase completion inferred"
+  }
+]

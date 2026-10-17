@@ -1,0 +1,26 @@
+{
+  "scope": "coordination evidence limitations, not runtime test failures",
+  "events": [
+    {
+      "event": "initial cargo invocation",
+      "detail": "System Homebrew cargo did not understand +toolchain; corrected to rustup run; not counted as behavior-red test"
+    },
+    {
+      "event": "residual original lease expired",
+      "detail": "Writer explicitly stopped; exact worktree and full hashes verified, stash preserved; expired reservation recovered with owner-stopped assertion, fresh claim and qualified rerun before commit"
+    },
+    {
+      "event": "original residual output path",
+      "detail": "Worker initially used ignored target outside declared prefix; final targeted rerun used declared artifacts target"
+    },
+    {
+      "event": "residual fix packet preparation",
+      "detail": "Worker wrote preparation packet under coordinator-owned parent artifact prefix; no subsequent writes authorized there. Original packet preserved; own child packet normalized after red run; no retroactive predispatch validator pass claimed"
+    },
+    {
+      "event": "toolchain-check log redirection",
+      "detail": "Missing ignored log directory prevented command launching; directory explicitly created and actual command rerun with receipt; not counted as test failure"
+    }
+  ],
+  "acceptance_rule": "final runtime/source/retention gates require scoped reruns; no unattended harness compliance certification"
+}

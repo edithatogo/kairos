@@ -1,0 +1,45 @@
+{
+  "two_independent_builds_identical": true,
+  "executions": [
+    {
+      "argv": [
+        "python3",
+        "/private/tmp/careops-c41-20261005/.artifacts/c41/build_retained_archive.py"
+      ],
+      "cwd": "/private/tmp/careops-c41-20261005",
+      "started_utc": "2026-10-04T21:49:30.903727+00:00",
+      "exit_status": 0,
+      "stdout": {
+        "artifact": "qualification.tar.gz",
+        "sha256": "27f37424cd9e154d963fad1500a3b5385f95c1929734cfe2254acd65ec3e7930",
+        "compressed_bytes": 69976,
+        "member_count": 137,
+        "uncompressed_bytes": 477686,
+        "every_member_independently_read_back": true,
+        "deterministic_tar_gzip_metadata": true,
+        "excluded": "build caches, wheels, venv, private claims/tokens"
+      },
+      "builder_sha256": "8f47c5466e0deae8f71d9c3e5cfa676e4f111aec542724213e2b72a20057d269"
+    },
+    {
+      "argv": [
+        "python3",
+        "/private/tmp/careops-c41-20261005/.artifacts/c41/build_retained_archive.py"
+      ],
+      "cwd": "/private/tmp/careops-c41-20261005",
+      "started_utc": "2026-10-04T21:49:31.226045+00:00",
+      "exit_status": 0,
+      "stdout": {
+        "artifact": "qualification.tar.gz",
+        "sha256": "27f37424cd9e154d963fad1500a3b5385f95c1929734cfe2254acd65ec3e7930",
+        "compressed_bytes": 69976,
+        "member_count": 137,
+        "uncompressed_bytes": 477686,
+        "every_member_independently_read_back": true,
+        "deterministic_tar_gzip_metadata": true,
+        "excluded": "build caches, wheels, venv, private claims/tokens"
+      },
+      "builder_sha256": "8f47c5466e0deae8f71d9c3e5cfa676e4f111aec542724213e2b72a20057d269"
+    }
+  ]
+}

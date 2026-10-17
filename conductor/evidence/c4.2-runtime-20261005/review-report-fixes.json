@@ -1,0 +1,15 @@
+{
+  "producer_worker_source": "05809c1b1e97e4802e23634bfd5da086b136f379",
+  "root_fixes": [
+    "default rejected_input field in supplied primarycounts",
+    "nulls retainedmissing oninvalid",
+    "attempted support counts exclude nulls",
+    "numeric/nonstringinputs rejected notnullimputed",
+    "defaultCI asserts42 metricsandmetadata againstindependentoracle"
+  ],
+  "integrated_tests": {
+    "runtime_adapter": 5,
+    "cohort_adapter": 4
+  },
+  "status": "passed at editedsource; finalsource qualification stillpending"
+}

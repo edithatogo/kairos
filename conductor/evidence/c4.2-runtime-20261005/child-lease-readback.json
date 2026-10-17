@@ -1,0 +1,38 @@
+{
+  "leases": [
+    {
+      "lease_id": "569e97c0a7ef4bcab8a78a1f5c8ecb5e",
+      "owner": "c42_residual",
+      "task": "C4.2.residual.20261005",
+      "worktree": "/private/tmp/kairos-c42-residual-20261005",
+      "paths": [
+        ".artifacts/c42-residual",
+        "crates/kairo-ecs-calibration/src/residuals.rs",
+        "crates/kairo-ecs-calibration/tests/residuals_c42.rs"
+      ],
+      "base_sha": "5b7b567810e3e2311acd6bfbbb6a5301266c608f",
+      "expires_at": 1791155925.5244858,
+      "input_hashes": {
+        "conductor/design/calibration/c4.2-runtime-contract-v1.md": "67ac4a4b3652f007e1ff03b17d7550cae24499053d4366e0aa186272709a5774",
+        "crates/kairo-ecs-calibration/Cargo.toml": "d6a92198037af8d5de50d835718b7ea955f6f41bc7a7b48388f44aa150a5904d"
+      },
+      "expired": false
+    },
+    {
+      "lease_id": "b6263e86bc4f467394fd26d0e52dc35c",
+      "owner": "root-track49-compat-evidence",
+      "task": "track49-compat-source-record-reviewed",
+      "worktree": "/Volumes/PortableSSD/codex-worktrees/kairos-track49-external-freeze-20261004",
+      "paths": [
+        "artifacts/track49-compat-delivery-20261005",
+        "conductor/tracks/49-distributed-mpi-grpc-state-synchronization/mpi-compatibility-source-evidence-20261005.md"
+      ],
+      "base_sha": "38ff05ef6f678c89ef07c0e2453113d3272734be",
+      "expires_at": 1791156568.215143,
+      "input_hashes": {
+        "conductor/tracks/49-distributed-mpi-grpc-state-synchronization/mpi-conversion-candidate-evidence-20261005.md": "48363a16fb06667872b86c14c198c79b02584fea169573eb8dc15d17d8085dd8"
+      },
+      "expired": false
+    }
+  ]
+}

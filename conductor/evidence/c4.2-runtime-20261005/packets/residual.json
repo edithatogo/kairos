@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "packet_id": "C4.2.residual.20261005",
+  "task_id": "C4.2",
+  "target_repo": ".",
+  "target_repository": "/private/tmp/kairos-c42-residual-20261005",
+  "base_commit": "5b7b567810e3e2311acd6bfbbb6a5301266c608f",
+  "model_role": "worker",
+  "model_candidate": "gpt-6-luna",
+  "objective": "Implement bounded private C4.2 residual under reviewed contract",
+  "context_paths": [
+    "AGENTS.md",
+    "conductor/design/calibration/c4.2-runtime-contract-v1.md",
+    "crates/kairo-ecs-calibration/Cargo.toml"
+  ],
+  "input_hashes": {
+    "AGENTS.md": "f1e9c7076e13e6d83de2759434dde92119426250dd880770ae6d661be29b2b35",
+    "conductor/design/calibration/c4.2-runtime-contract-v1.md": "67ac4a4b3652f007e1ff03b17d7550cae24499053d4366e0aa186272709a5774",
+    "crates/kairo-ecs-calibration/Cargo.toml": "d6a92198037af8d5de50d835718b7ea955f6f41bc7a7b48388f44aa150a5904d"
+  },
+  "write_paths": [
+    "crates/kairo-ecs-calibration/src/residuals.rs",
+    "crates/kairo-ecs-calibration/tests/residuals_c42.rs",
+    ".artifacts/c42-residual"
+  ],
+  "protected_paths": [
+    "Cargo.toml",
+    "Cargo.lock",
+    ".github",
+    "schemas",
+    "crates/kairo-ecs-des",
+    "crates/kairo-ecs-abm",
+    "conformance/c41",
+    "conductor/tracks.yaml"
+  ],
+  "leaf_dependencies": [],
+  "interface_contract": "conductor/design/calibration/c4.2-runtime-contract-v1.md",
+  "steps": [
+    "Behavior tests first; retain actual missing-implementation red",
+    "Implement only owned paths against approved contract",
+    "Execute exact scoped gates with receipts; scope check single commit release"
+  ],
+  "verification": [
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--test",
+        "residuals_c42"
+      ],
+      "cwd": ".",
+      "expected_exit": 0,
+      "oracle": "Behavioral edge/overflow/permutation tests; initial red recorded separately"
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "rustfmt",
+        "--edition",
+        "2021",
+        "--check",
+        "crates/kairo-ecs-calibration/src/residuals.rs",
+        "crates/kairo-ecs-calibration/tests/residuals_c42.rs"
+      ],
+      "cwd": ".",
+      "expected_exit": 0,
+      "oracle": "Owned Rust formatting"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": ".",
+      "expected_exit": 0,
+      "oracle": "Whitespace/scope"
+    }
+  ],
+  "acceptance": [
+    "Private API only; exact checked ticks and contract semantics",
+    "No Cargo/locks/frozen fixture/CI edits",
+    "Actual 42-case runtime gate and cross-floor checks at coordinator integration"
+  ],
+  "result_path": ".artifacts/c42-residual/result.json",
+  "stop_conditions": [
+    "contract/hash/base drift",
+    "scope conflict",
+    "ambiguous semantics",
+    "unavailable toolchain"
+  ],
+  "context_budget_bytes": 24000,
+  "status": "prepared",
+  "dispatch_revision": "Approved exact installed toolchain invocation: Homebrew cargo is not rustup shim"
+}
