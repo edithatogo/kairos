@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "leaf": "C2.2.durations.provider",
+  "source_commit": "a2b8f6c89ed84839d8590e2b938afcd6d4f919fe",
+  "base": "d497d5f16e9904dc510ffb8599190e7c60c31891",
+  "status": "local_instance_accepted_hosted_publication_pending",
+  "required_named_provider_seed_tests": 22,
+  "canonical_conformance_passed": 24,
+  "canonical_and_msrv_library_passed": 61,
+  "existing_library_ignored": 2,
+  "strict_clippy_exit": 0,
+  "format_exit": 0,
+  "independent_review": "d35_gate_review confirmed opaque-key correction and redacted Debug; no remaining source blocker. Coordinator independently verified raw log hashes and canonical strict clippy/unit/format.",
+  "gap_resolved": "SampledWorkDuration retains original opaque key, equal timing with different identities remains distinguishable; private regression covers Debug redaction.",
+  "new_dependencies": false,
+  "source_paths": [
+    "crates/kairo-ecs-calibration/src/seed_map.rs",
+    "crates/kairo-ecs-calibration/src/work_duration.rs",
+    "crates/kairo-ecs-calibration/src/lib.rs"
+  ],
+  "artifact_sha256": {
+    "worker-result.json": "252d04bd0c5103c6d5b9ad27cfa0f2c91f9ef5766d856e3ab6d3376e18d8f8e1",
+    "provider-native.json": "eefa2d7cf460b74199051b2bd99bac3c263d2e4a70f5873b9c3e891379da8175",
+    "provider-native.log": "3ff61ae2065c800ea8ea16f7031fda39b8e99fcdada0405dec86cc7bc15b6512",
+    "msrv-188.log": "ae0d6c0789b06a3bab628c95e0a638c6dbd972575413f8d9bd0b6e755f2e6468",
+    "baseline-red.json": "49617e4f5d1eded9e231d71376bf0f131843907f2ad84e6ed30cd82f10597d08",
+    "baseline-red.log": "2fea35eb34675bce7cae8470c3daf5a3b1821289f1fa971d332365e43d009163",
+    "canonical-qualification.json": "aeb37ea697d9ba9569542904211e34af736d3b1b2258bfa49bf2ee49d0c317a5",
+    "canonical-clippy.log": "7b93d4456d867782898033f7faaf8caa8687203193f54dbf17319f950d3537e2",
+    "canonical-unit.log": "be7d6acc9bc0ef85c76bfa10d9a82e3d5d2447c1e867c06c4d120babc351af67",
+    "canonical-format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "parent_C2.2_accepted": false,
+  "full_C2_runtime_accepted": false,
+  "portable_checkpoint_accepted": false,
+  "clinical_or_empirical_fit_accepted": false
+}

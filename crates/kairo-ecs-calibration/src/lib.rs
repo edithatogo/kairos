@@ -2,6 +2,11 @@
 #![forbid(unsafe_code)]
 
 pub mod seed_map;
+#[expect(
+    dead_code,
+    reason = "Private C2.2 provider is exercised by source conformance; Flow integration is a later instance"
+)]
+mod work_duration;
 
 // Private C4.2 numeric implementation; no public API or sidecar promises.
 #[expect(
