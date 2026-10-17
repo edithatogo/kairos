@@ -276,6 +276,7 @@ pub enum GpuComputeError {
 pub enum GpuBackendAvailability {
     CpuFallback,
     BackendNotConfigured(&'static str),
+    RealDevice,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -305,6 +306,16 @@ impl GpuBackendCapabilities {
             max_workgroup_size: DEFAULT_WORKGROUP_SIZE,
             supports_zero_copy_borrow: false,
             supports_unified_memory: false,
+        }
+    }
+
+    pub const fn real_device(backend_name: &'static str, max_workgroup_size: u32) -> Self {
+        Self {
+            backend_name,
+            availability: GpuBackendAvailability::RealDevice,
+            max_workgroup_size,
+            supports_zero_copy_borrow: true,
+            supports_unified_memory: true,
         }
     }
 }
