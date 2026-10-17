@@ -1,0 +1,19 @@
+{
+  "id": "Q5.2.preempting.index.fixture.compatibility.extension",
+  "status": "reviewed_root_dispatch_approved",
+  "worker_base": "40c29e321a9f082f617bc1a03f343fa4b73bb47c",
+  "additional_owned_path": "crates/kairo-ecs-des/src/flow/q52_key_removal_tests.rs",
+  "source_sha256": "ee6e1e748cd3d4a95f1a81e90433d0f9b3e9f48739b38a3ab476586d257d8a04",
+  "existing_owned_fixture": "crates/kairo-ecs-des/src/flow.rs::tests::second_replacement_overflow_rolls_back_first_eviction",
+  "review": "Independent reviewer examined both exact original fixtures and approved this setup-only repair; coordinator confirms old assertions/faults unchanged. No production scan or semantic waiver.",
+  "finding": "Two existing unit fixtures directly change Queued Request.can_preempt after admission to defer preemption during setup; that previously needed no derived cache. They must now update private cache consistently before injecting their intended separate faults. This is not a canonical conformance fixture change.",
+  "steps": [
+    "Only in wrong_waiting_key_fails_replacement_atomically, after can_preempt=true setup, derive authoritative waiting_key_for from request before corrupt_waiting_key. Insert exact original key into PreemptingWaiters.keys and set consistent expected_len. Then inject the existing primary queue wrong-key fault; preserve every existing InvalidState/head/stats/request/work-progress/queue/counter assertion. Add a preempting-cache snapshot and unchanged equality assertion.",
+    "Only in second_replacement_overflow_rolls_back_first_eviction, seed both queued high requests exact valid keys and expected_len after the existing can_preempt=true setup, before setting next_lease=u64::MAX-1. Preserve every existing CounterOverflow/full rollback assertion; also snapshot/assert preempting cache+witness unchanged.",
+    "No other test, canonical hash/expected trace, source policy, workload, dependency or threshold changes. Do not broaden production scans to compensate for stale fixture setup. Preserve the 115-pass/2-fail pre-correction debug log and passing pre-correction quality logs; rerun all required original packet gates after correction."
+  ],
+  "ownership_protocol": "Root explicitly extends only this active same-worker claim after conflict/source/input checks; worker copies this approved contract to the additional owned tracked contract path and stages that document only. Coordinator freezes its hash using tracked-text snapshot and checks complete context<=24000 before renewed author dispatch. Original frozen packet remains unchanged.",
+  "acceptance": "Fixture repair and regression tests only; performance, canonical comparison, hosted and Q5.2 completion gates remain separate.",
+  "additional_owned_contract_path": "conductor/design/queue/q5.2-preempting-fixture-extension-20261004.json",
+  "preparation_correction": "Earlier attempt to freeze an ignored artifact copy was rejected by the tracked-text context guard before any input or source changes. Preserve that artifact/attempt as evidence; it is not execution authority."
+}

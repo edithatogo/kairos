@@ -20,6 +20,14 @@ struct BundleGuard {
     path: PathBuf,
     complete: bool,
 }
+struct ChunkOutputs<'a> {
+    events: &'a mut BufWriter<File>,
+    exclusions: &'a mut BufWriter<File>,
+    outcomes: &'a mut BufWriter<File>,
+    diagnostics: &'a mut BufWriter<File>,
+    outcome_count: &'a mut u64,
+    censor_counts: &'a mut std::collections::BTreeMap<String, u64>,
+}
 impl Drop for BundleGuard {
     fn drop(&mut self) {
         if !self.complete {
@@ -89,7 +97,7 @@ pub(crate) fn ingest(
         let mut pending = Vec::new();
         let mut pending_bytes = template_bytes;
         let mut source_rows = SourceLines::open(input, config.normalization.max_chunk_bytes)?;
-        while let Some(decoded) = source_rows.next() {
+        for decoded in source_rows.by_ref() {
             let row = decoded?;
             let row_bytes = serde_json::to_vec(&row).map_err(|e| e.to_string())?.len();
             let next_bytes = pending_bytes
@@ -106,12 +114,14 @@ pub(crate) fn ingest(
                 map_chunk(
                     &mut normalizer,
                     std::mem::take(&mut pending),
-                    &mut events,
-                    &mut exclusions,
-                    &mut outcomes,
-                    &mut diagnostics,
-                    &mut outcome_count,
-                    &mut censor_counts,
+                    ChunkOutputs {
+                        events: &mut events,
+                        exclusions: &mut exclusions,
+                        outcomes: &mut outcomes,
+                        diagnostics: &mut diagnostics,
+                        outcome_count: &mut outcome_count,
+                        censor_counts: &mut censor_counts,
+                    },
                 )?;
                 pending_bytes = template_bytes;
             }
@@ -135,12 +145,14 @@ pub(crate) fn ingest(
             map_chunk(
                 &mut normalizer,
                 pending,
-                &mut events,
-                &mut exclusions,
-                &mut outcomes,
-                &mut diagnostics,
-                &mut outcome_count,
-                &mut censor_counts,
+                ChunkOutputs {
+                    events: &mut events,
+                    exclusions: &mut exclusions,
+                    outcomes: &mut outcomes,
+                    diagnostics: &mut diagnostics,
+                    outcome_count: &mut outcome_count,
+                    censor_counts: &mut censor_counts,
+                },
             )?;
         }
         actual_input_evidence.push(source_rows.digest());
@@ -252,13 +264,16 @@ pub(crate) fn ingest(
 fn map_chunk(
     normalizer: &mut Normalizer,
     rows: Vec<Value>,
-    events: &mut BufWriter<File>,
-    exclusions: &mut BufWriter<File>,
-    outcomes: &mut BufWriter<File>,
-    diagnostics: &mut BufWriter<File>,
-    outcome_count: &mut u64,
-    censor_counts: &mut std::collections::BTreeMap<String, u64>,
+    outputs: ChunkOutputs<'_>,
 ) -> Result<(), String> {
+    let ChunkOutputs {
+        events,
+        exclusions,
+        outcomes,
+        diagnostics,
+        outcome_count,
+        censor_counts,
+    } = outputs;
     let mapped = normalizer.push(rows)?;
     for row in mapped.events {
         write_row(events, &row)?;
