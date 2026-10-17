@@ -1,0 +1,9 @@
+   Compiling kairo-ecs-arrow v0.1.0 (/private/tmp/careops-c12-legacy-parent-20261004/libs/kairos/crates/kairo-ecs-arrow)
+    Finished test [unoptimized + debuginfo] target(s) in 8.20s
+     Running tests/legacy_smoke_bytes_v1.rs (.artifacts/mvp/C1.2.deps.legacy_floor_20261004/target-1.76/debug/deps/legacy_smoke_bytes_v1-d02d44f37d18b77e)
+
+running 1 test
+test legacy_smoke_bytes_match_frozen_custom_format_and_roundtrip ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

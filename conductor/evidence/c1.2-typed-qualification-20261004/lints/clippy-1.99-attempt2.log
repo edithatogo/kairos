@@ -1,0 +1,12 @@
+cwd=/private/tmp/careops-c12-lint-parent-20261004/libs/kairos
+62f20dc68f81fc639786ee22c21b2c709c7f9393
+rustc 1.99.0 (b940084d7 2026-09-28)
+binary: rustc
+commit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4
+commit-date: 2026-09-28
+host: aarch64-apple-darwin
+release: 1.99.0
+LLVM version: 23.1.1
+cargo 1.99.0 (5f94df478 2026-08-27)
+    Checking kairo-ecs-arrow-io v0.1.0 (/private/tmp/careops-c12-lint-parent-20261004/libs/kairos/crates/kairo-ecs-arrow-io)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.20s

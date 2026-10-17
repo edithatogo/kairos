@@ -1,0 +1,7 @@
+rustc 1.76.0 (07dca489a 2024-02-04)
+binary: rustc
+commit-hash: 07dca489ac2d933c78d3c5158e3f43beefeb02ce
+commit-date: 2024-02-04
+host: aarch64-apple-darwin
+release: 1.76.0
+LLVM version: 17.0.6

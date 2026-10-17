@@ -1,0 +1,55 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling thiserror v2.0.20
+   Compiling syn v3.0.6
+   Compiling thiserror-impl v2.0.20
+    Checking kairo-ecs-arrow-io v0.1.0 (/private/tmp/careops-c11-acceptance-parent-20261004/libs/kairos/crates/kairo-ecs-arrow-io)
+warning: methods `check_input_len`, `check_columns`, `next_batch_count`, and `next_row_count` are never used
+  --> crates/kairo-ecs-arrow-io/src/limits.rs:47:19
+   |
+33 | impl IoLimits {
+   | ------------- methods in this implementation
+...
+47 |     pub(crate) fn check_input_len(self, len: usize) -> Result<(), IoError> {
+   |                   ^^^^^^^^^^^^^^^
+...
+55 |     pub(crate) fn check_columns(self, columns: usize) -> Result<(), IoError> {
+   |                   ^^^^^^^^^^^^^
+...
+62 |     pub(crate) fn next_batch_count(self, count: usize) -> Result<usize, IoError> {
+   |                   ^^^^^^^^^^^^^^^^
+...
+72 |     pub(crate) fn next_row_count(self, count: usize, rows: usize) -> Result<usize, IoError> {
+   |                   ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: struct `BoundedBuffer` is never constructed
+   --> crates/kairo-ecs-arrow-io/src/limits.rs:123:19
+    |
+123 | pub(crate) struct BoundedBuffer {
+    |                   ^^^^^^^^^^^^^
+
+warning: associated items `new`, `into_inner`, and `limit_error` are never used
+   --> crates/kairo-ecs-arrow-io/src/limits.rs:130:19
+    |
+129 | impl BoundedBuffer {
+    | ------------------ associated items in this implementation
+130 |     pub(crate) fn new(limit: usize, exceeded: Arc<AtomicBool>) -> Self {
+    |                   ^^^
+...
+138 |     pub(crate) fn into_inner(self) -> Vec<u8> {
+    |                   ^^^^^^^^^^
+...
+142 |     fn limit_error(&self) -> io::Error {
+    |        ^^^^^^^^^^^
+
+warning: function `output_limit_hit` is never used
+   --> crates/kairo-ecs-arrow-io/src/limits.rs:170:15
+    |
+170 | pub(crate) fn output_limit_hit(exceeded: &AtomicBool) -> bool {
+    |               ^^^^^^^^^^^^^^^^
+
+warning: `kairo-ecs-arrow-io` (lib) generated 4 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.57s
