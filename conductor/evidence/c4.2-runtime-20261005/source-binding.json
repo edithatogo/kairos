@@ -1,0 +1,26 @@
+[
+  {
+    "id": "c42-source-binding-tests",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c42"
+    ],
+    "env": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "inputs": [
+      "crates/kairo-ecs-calibration/src/metrics.rs",
+      "crates/kairo-ecs-calibration/tests/metrics_c42.rs",
+      "conformance/c41/fixtures.json"
+    ]
+  }
+]

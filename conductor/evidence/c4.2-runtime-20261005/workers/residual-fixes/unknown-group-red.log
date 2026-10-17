@@ -1,0 +1,22 @@
+   Compiling kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c42-residual-fixes-20261005/crates/kairo-ecs-calibration)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.04s
+     Running tests/residuals_c42.rs (.artifacts/c42-residual-fixes/target/debug/deps/residuals_c42-11203b933e5dedb9)
+
+running 1 test
+test unknown_row_group_is_retained_when_other_groups_are_declared ... FAILED
+
+failures:
+
+---- unknown_row_group_is_retained_when_other_groups_are_declared stdout ----
+
+thread 'unknown_row_group_is_retained_when_other_groups_are_declared' (48666474) panicked at crates/kairo-ecs-calibration/tests/../src/residuals.rs:342:57:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    unknown_row_group_is_retained_when_other_groups_are_declared
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 22 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p kairo-ecs-calibration --test residuals_c42`

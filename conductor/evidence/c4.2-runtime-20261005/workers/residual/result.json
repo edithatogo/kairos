@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "task_id": "C4.2.residual.20261005",
+  "status": "ready_for_review",
+  "repository": "/private/tmp/kairos-c42-residual-20261005",
+  "base_commit": "5b7b567810e3e2311acd6bfbbb6a5301266c608f",
+  "contract": "conductor/design/calibration/c4.2-runtime-contract-v1.md",
+  "contract_sha256": "67ac4a4b3652f007e1ff03b17d7550cae24499053d4366e0aa186272709a5774",
+  "package_manifest_sha256": "d6a92198037af8d5de50d835718b7ea955f6f41bc7a7b48388f44aa150a5904d",
+  "source_sha256": {
+    "crates/kairo-ecs-calibration/src/residuals.rs": "41da72e534b9898db87e67fdd1b0571d6cc18816d059a26b41dc2f53197945a1",
+    "crates/kairo-ecs-calibration/tests/residuals_c42.rs": "c89dbc7b8f9a20958e1c9e0851f942ff9edaabb214a930b3a650d74370f9530b"
+  },
+  "toolchain": {
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "target_dir": ".artifacts/c42-residual/target"
+  },
+  "checks": [
+    {
+      "command": "CARGO_TARGET_DIR=.artifacts/c42-residual/target rustup run 1.99.0 cargo test --manifest-path /private/tmp/kairos-c42-residual-20261005/Cargo.toml --locked -p kairo-ecs-calibration --test residuals_c42",
+      "cwd": "/private/tmp/kairos-c42-residual-20261005",
+      "head": "5b7b567810e3e2311acd6bfbbb6a5301266c608f",
+      "exit_code": 0,
+      "result": "18 passed, 0 failed",
+      "log": ".artifacts/c42-residual/recovered-final-test.log",
+      "log_sha256": "efa0744304332ecfe0b29b24807675367df927fb7ea4e214acc89c8b541a542d"
+    },
+    {
+      "command": "rustup run 1.99.0 rustfmt --edition 2021 --check crates/kairo-ecs-calibration/src/residuals.rs crates/kairo-ecs-calibration/tests/residuals_c42.rs",
+      "cwd": "/private/tmp/kairos-c42-residual-20261005",
+      "head": "5b7b567810e3e2311acd6bfbbb6a5301266c608f",
+      "exit_code": 0,
+      "log": ".artifacts/c42-residual/fmt-recovered.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "/private/tmp/kairos-c42-residual-20261005",
+      "head": "5b7b567810e3e2311acd6bfbbb6a5301266c608f",
+      "exit_code": 0,
+      "log": ".artifacts/c42-residual/diff-recovered.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "red_phase": {
+    "result": "expected failure: residual module file absent before implementation",
+    "exit_code": 101,
+    "log": ".artifacts/c42-residual/red.log",
+    "log_sha256": "f6850aacda681859fbd686c0aab2115b08006c83d3ac7cec2b73796fc113f36a"
+  },
+  "history": [
+    "Earlier scoped test iterations exposed and then fixed window accounting, empty invalid-window group output, invalid-group row retention, and review-driven validation rules; only the final 18-test run is acceptance evidence.",
+    "An expired-lease stop occurred; the coordinator verified the prior writer stopped, recovered the lease, and restored the two owned files byte-identically before work resumed."
+  ],
+  "scope": [
+    "Only src/residuals.rs and tests/residuals_c42.rs are source changes.",
+    "Private API only; no public API, dependencies, Cargo files, Arrow, or scheduler changes.",
+    "C4.2 integration, 42-case runtime producer qualification, and acceptance remain coordinator gates."
+  ],
+  "artifact_path": ".artifacts/c42-residual/result.json"
+}

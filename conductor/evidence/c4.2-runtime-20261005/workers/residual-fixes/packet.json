@@ -1,0 +1,130 @@
+{
+  "packet_id": "C4.2.residual-fixes.20261005",
+  "task_id": "C4.2",
+  "target_repo": ".",
+  "base_commit": "2660b37fc8a03db72008bc364ce9ab9db0ebff49",
+  "status": "prepared",
+  "objective": "Fix whole-batch validation and pairing defects in the private C4.2 residual module, with focused behavioral evidence.",
+  "context_paths": [
+    "AGENTS.md",
+    "conductor/design/calibration/c4.2-runtime-contract-v1.md",
+    "crates/kairo-ecs-calibration/Cargo.toml"
+  ],
+  "context_budget_bytes": 24000,
+  "context_snapshots": [
+    {
+      "path": ".artifacts/c42-residual-fixes/context-contracts.json",
+      "sha256": "3b1291b0dd6635a6a645a0f212bd8b2a76dd912ccb301ad8524a8be7cec977ee",
+      "input_bytes": 9406
+    },
+    {
+      "path": ".artifacts/c42-residual-fixes/context-source.json",
+      "sha256": "d40d7d08bfcd2f79ee2e8fa49d55d301722e96d9f3b01aeb88138496f31ca7b0",
+      "input_bytes": 17015
+    },
+    {
+      "path": ".artifacts/c42-residual-fixes/context-tests.json",
+      "sha256": "4fdff2fad5ea844638c1c11542f854b225d369c0c316b516f2a3412a4da3d429",
+      "input_bytes": 10536
+    }
+  ],
+  "input_hashes": {
+    "AGENTS.md": "f1e9c7076e13e6d83de2759434dde92119426250dd880770ae6d661be29b2b35",
+    "conductor/design/calibration/c4.2-runtime-contract-v1.md": "67ac4a4b3652f007e1ff03b17d7550cae24499053d4366e0aa186272709a5774",
+    "crates/kairo-ecs-calibration/Cargo.toml": "d6a92198037af8d5de50d835718b7ea955f6f41bc7a7b48388f44aa150a5904d"
+  },
+  "write_paths": [
+    "crates/kairo-ecs-calibration/src/residuals.rs",
+    "crates/kairo-ecs-calibration/tests/residuals_c42.rs",
+    ".artifacts/c42-residual-fixes"
+  ],
+  "protected_paths": [
+    "Cargo.toml",
+    "Cargo.lock",
+    ".github",
+    "schemas",
+    "crates/kairo-ecs-des",
+    "crates/kairo-ecs-abm",
+    "conformance/c41",
+    "conductor/design/calibration/c4.2-runtime-contract-v1.md",
+    "crates/kairo-ecs-calibration/src/lib.rs",
+    "crates/kairo-ecs-calibration/src/metrics.rs"
+  ],
+  "leaf_dependencies": [],
+  "interface_contract": "conductor/design/calibration/c4.2-runtime-contract-v1.md",
+  "steps": [
+    "Add regression tests first and retain the actual red run.",
+    "Use one BTreeMap pairing pass and validate all rows and pair coherence before producing summaries.",
+    "Preserve every raw row and all applicable diagnostics on invalid input.",
+    "Run scoped tests, formatter, strict residual-test Clippy and diff check; record receipts; scope-check; single commit; release claim."
+  ],
+  "verification": [
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "cargo",
+        "test",
+        "--manifest-path",
+        "/private/tmp/kairos-c42-residual-fixes-20261005/Cargo.toml",
+        "--locked",
+        "-p",
+        "kairo-ecs-calibration",
+        "--test",
+        "residuals_c42"
+      ],
+      "cwd": ".",
+      "expected_exit": 0,
+      "oracle": "All residual behavior tests pass, including invalid batch retention/permutation, cross-group same key, wrong-side ticks, and a bounded large cohort."
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "clippy-driver",
+        "--test",
+        "crates/kairo-ecs-calibration/tests/residuals_c42.rs",
+        "--edition=2021",
+        "-D",
+        "warnings",
+        "-o",
+        ".artifacts/c42-residual-fixes/residuals_c42_test_bin"
+      ],
+      "cwd": ".",
+      "expected_exit": 0,
+      "oracle": "Strict residual module plus behavior-test lint. Package-level cargo Clippy is attempted separately and any disjoint base-source lint blockers are recorded."
+    },
+    {
+      "argv": [
+        "rustup",
+        "run",
+        "1.99.0",
+        "rustfmt",
+        "--edition",
+        "2021",
+        "--check",
+        "crates/kairo-ecs-calibration/src/residuals.rs",
+        "crates/kairo-ecs-calibration/tests/residuals_c42.rs"
+      ],
+      "cwd": ".",
+      "expected_exit": 0,
+      "oracle": "Both owned Rust files are rustfmt clean."
+    }
+  ],
+  "acceptance": [
+    "Linear-log stable pairing with no repeated whole-input lookups.",
+    "Invalid whole-batch inputs retain all rows and diagnostic counts.",
+    "No edits outside the two owned source/test paths."
+  ],
+  "result_path": ".artifacts/c42-residual-fixes/result.json",
+  "stop_conditions": [
+    "Base or immutable input hash drift",
+    "Conflicting writer claim",
+    "Contract ambiguity",
+    "Unavailable toolchain"
+  ],
+  "dispatch_note": "Packet normalized after test-first red run because coordinator review clarified canonical packet fields; do not represent its validation as pre-dispatch proof. The immutable docs/manifest bindings were validated separately from mutable source/test snapshots.",
+  "size_exception": false
+}

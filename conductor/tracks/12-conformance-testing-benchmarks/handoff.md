@@ -149,3 +149,7 @@ C4.2 gate. See [retained review and evidence](../../evidence/c4.1-preparation-20
 Track 21 owns semantics and Track 12 the references; this does not advance an
 upstream phase or change historical registry/ledger status. C4.2 runtime,
 C4.3 sidecars and C4.4/C-04 acceptance remain open; no release claim follows.
+
+## C4.2 bounded private runtime — 5 October 2026
+
+Runtime source `59d7dbb0c004654e3da90951d42e2b983ef23993`: 42 actual cases independently conform; 119 calibration tests pass on Rust1.99/1.88, strict current Clippy and formatting pass. Paired residuals, fixed groups/source windows, diagnostic retention, provenance binding and ordered reduction are implemented privately. [Retained evidence](../../evidence/c4.2-runtime-20261005/README.md). This supersedes the historical C4.1 runtime-not-implemented boundary only for this experimental leaf; public API, C4.3, C4.4/C-04 and clinical/release gates stay open. No upstream phase/registry/ledger status advances. Hosted successor checks and parent pin acceptance are separate.

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "c42-governance-validate_conformance_fixtures",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "pwsh",
+      "-File",
+      "scripts/validate_conformance_fixtures.ps1"
+    ],
+    "inputs": [
+      "scripts/validate_conformance_fixtures.ps1"
+    ],
+    "interpretation": "Existing governance/fixture integrity only; no runtime phase completion inferred"
+  },
+  {
+    "id": "c42-governance-validate_conductor_phase_gates",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "pwsh",
+      "-File",
+      "scripts/validate_conductor_phase_gates.ps1"
+    ],
+    "inputs": [
+      "scripts/validate_conductor_phase_gates.ps1"
+    ],
+    "interpretation": "Existing governance/fixture integrity only; no runtime phase completion inferred"
+  },
+  {
+    "id": "c42-governance-validate_conductor_dag",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "pwsh",
+      "-File",
+      "scripts/validate_conductor_dag.ps1"
+    ],
+    "inputs": [
+      "scripts/validate_conductor_dag.ps1"
+    ],
+    "interpretation": "Existing governance/fixture integrity only; no runtime phase completion inferred"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "head": "d64e1b3318b9b6c4f31d9ee41c3075e4686ccac9",
+  "reviewer": "c42_distance",
+  "producer_source_sha256": "6f00d63c0d44ba0cd3139b61658f2bc4acd8f6c434d5c8ddbbdeec315a1ad586",
+  "scope": [
+    "root cohort identity/window/coverage",
+    "actual report input-only generation/default42oracle",
+    "report commit and compiledsource bytebinding"
+  ],
+  "status": "changes_required",
+  "remaining_issue": "C42_TOOLCHAIN must equal observed rustc version; root correcting",
+  "own_numeric_code_excluded": true
+}

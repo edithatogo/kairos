@@ -1,0 +1,49 @@
+[
+  {
+    "id": "c42-report-default",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c42"
+    ],
+    "env": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "inputs": [
+      "crates/kairo-ecs-calibration/src/metrics.rs",
+      "crates/kairo-ecs-calibration/tests/metrics_c42.rs",
+      "conformance/c41/fixtures.json"
+    ]
+  },
+  {
+    "id": "c42-cohort-target",
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "cohorts_c42"
+    ],
+    "env": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "inputs": [
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs",
+      "crates/kairo-ecs-calibration/tests/cohorts_c42.rs"
+    ]
+  }
+]
