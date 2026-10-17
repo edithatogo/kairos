@@ -73,3 +73,84 @@ Reviewed collector504aa4a integrated as68b8d7a. Absolute Cargo/rustc1.98.1, bina
 Explicit1.98 workspace CI458/coverage92.59% and matching1.76 local PDES94 tests are accepted. The workspace doc-test command at7c35f2a exited0 across25 targets with zero runnable examples, separately preserved in benches/pdes/evidence/track48-doctests-7c35f2a/. CHANGELOG d62891e and global evidence synchronization eb02a14 are committed; previous pending statements describe historical review snapshots. Exact-head push/hosted security/package gates and live distributed acceptance remain pending. Track48 stays In Progress; Track49 dependency/production authority unchanged.
 
 During compiler-fix coordination, an expired worker lease was explicitly recovered only after interruption; exact edits were preserved in stashes. A displayed cooperative lease token was revoked and rotated before continuation. No token is committed or active. Original failed attempts and superseded raw evidence remain preserved.
+
+## Plan reconciliation against the merged native slice — 17 October 2026
+
+This packet is **documentation-only**. It changes no Rust source, no public API, no
+schema, no fixture and no workflow. Its purpose is to stop this track's plan and
+review record from understating work that is already merged on `main`.
+
+### Verified merged state
+
+| PR | Merge commit | Content |
+|---|---|---|
+| #199 | `786f50b` | Preview event-owned optimistic runtime and rollback evidence |
+| #204 | `1afe522` | Checked optimistic message codec bridge |
+| #207 | `55fd635` | Handler-owned Time Warp execution and retirement |
+
+`55fd635` merged the reviewed-cut native source `35914c3` and records hosted
+feedback fixes: the newer-stable `AtomicU64::fetch_update` deprecation, a missing
+`time-warp` feature guard on one held-out, native poisoned-participant reporting,
+and obsolete public documentation. Every "hosted native delivery pending" or
+"hosted checks remain pending" statement above is therefore historical for those
+slices. The pre-merge sources `9bf478e`, `8b56c94` and `35914c3` named in this
+record are PR branch sources and are correctly absent from main's squashed
+history; that absence is not missing work.
+
+### Commands executed in this packet
+
+Working directory: `/Volumes/PortableSSD/codex-worktrees/kairos-track48-closeout-20261017`
+(clean isolated worktree). HEAD `fb0868897aa6c0f41689443e1d1c5dbbd2ad92b9`, branch
+`codex/track48-closeout-reconciliation-20261017`, source tree unmodified by this
+packet. Toolchain: actual Homebrew `rustc 1.99.0 (b940084d7 2026-09-28)`,
+`cargo 1.99.0`, `node v26.12.0`, `PowerShell 7.6.7`, `Darwin arm64`.
+
+| Command | Exit | Result |
+|---|---|---|
+| `cargo test -p kairo-ecs-pdes --features pdes,time-warp --locked` | 0 | 167 passed, 0 failed, 0 ignored |
+| `cargo test -p kairo-ecs-pdes --features pdes --locked` | 0 | 39 passed, 0 failed |
+| `cargo check --benches -p kairo-ecs-pdes --features pdes,time-warp --locked` | 0 | Benchmark compilation clean |
+| `cargo fmt --all --check` | 0 | No formatting diff |
+| `cargo clippy -p kairo-ecs-pdes --all-targets --features pdes,time-warp --locked -- -D warnings` | 0 | No warnings |
+| `node scripts/validation/validate-hpc-parity-evidence.mjs` | 0 | `HPC parity evidence validation passed.` |
+| `python3 -m unittest discover -s benches/pdes -p test_collect_time_warp_evidence.py` | 0 | 12 tests, OK |
+| `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | 0 | 0 errors, 0 warnings |
+| `pwsh -NoProfile -File scripts/validate_conductor_dag.ps1` | 0 | 0 errors, 0 warnings |
+
+The 167-test result independently reproduces the count recorded for #207. These
+are local checks on a documentation-only diff. They are **not** a hosted Actions
+run, a release acceptance, or distributed proof, and they do not certify the
+pinned 1.98.1/1.76.0 claims, which rest on the separate compiler-bound receipts.
+
+### Findings raised by this reconciliation
+
+- **Medium — the plan understated merged work.** Phase 2.1 and all of Phase 4/5
+  carried no status marker at all, so the ledger read as far less complete than
+  the merged implementation. Corrected with per-task evidence.
+- **Medium — `docs/design/track48-api-review.md` cannot be updated from this
+  track.** `docs/design/` is an owned path of Track 25 (`api-governance-agent`),
+  so Track 48 must not write it. That file still ends at the
+  constructor/root-routing record and does not describe the merged handler-owned
+  execution surface, its new error variants, or its blocked-replacement and
+  group-cut reporting behavior. Recorded as a Track 25 request in
+  `docs-design-api-review-handoff.md` rather than edited across the boundary.
+- **High — the real blocker is not local implementation.** Everything achievable
+  in a single-process worktree is now delivered and merged. Track 48 stays In
+  Progress for live distributed acceptance (real MPI 2/4-rank and gRPC 2-process
+  rollback, cancellation, failure/recovery, migration, cross-participant GVT with
+  raw artifacts and checksums), hosted security/package gates on any new pull
+  request, and a renewed human Track 49 phase-entry disposition. Those are
+  recorded as open in `plan.md` and are not waived, approximated or marked done.
+- **Low — one prior claim was invalidated by harness, not by judgment.** An
+  earlier attempt bound `plan.md` as a read-only lease input and then edited it.
+  `agent_session.py check` rejected the write on input-hash drift. The lease was
+  released, the edit preserved outside the checkout, a fresh claim taken with
+  `plan.md` as a write target, and the edit re-applied. Recorded for audit
+  rather than presented as a first-attempt success.
+
+### Not performed by this packet
+
+No push, no pull request, no hosted check, no release, no publication, no Track 49
+dispatch, no global status/phase-file edit, and no independent review. The
+reconciliation diff still needs `$conductor-review` and hosted verification
+before any status movement.
