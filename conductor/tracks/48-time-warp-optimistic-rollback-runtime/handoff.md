@@ -286,3 +286,21 @@ The [constructor foundation](owned-construction-evidence.md) and [owned root-rou
 ## Accepted owned native leaf — 4 October 2026
 
 The [current acceptance record](owned-native-acceptance-20261004.md) supersedes earlier pending local/compiler snapshots: source9bf478e passes166 PDES tests on each explicitly bound1.98.1/1.76.0 compiler; fullCI530/530,coverage92.59%,locked doctests,benchmark smoke/12 collector tests,manifest and local phase/clean gates pass. Original failed receipts remain historical. Track48 stays In Progress pending hosted native delivery and live distributed acceptance. Changed interface semantics expire the previous conditional Track49 entry disposition; fresh specific human disposition and reviewed production packet are required. Global status/phase files and parent pin remain with their current parallel owners.
+
+## Plan and review reconciliation — 17 October 2026
+
+Documentation-only packet on branch `codex/track48-closeout-reconciliation-20261017` at clean `fb08688`. No Rust source, public API, schema, fixture or workflow changed. The native implementation is merged on `main` as `786f50b` (#199), `1afe522` (#204) and `55fd635` (#207); earlier "hosted delivery pending" wording is historical for those slices, and the pre-merge sources `9bf478e`, `8b56c94` and `35914c3` are PR branch sources rather than missing main history.
+
+`plan.md` now carries a per-task reconciled ledger with evidence, keeps Task 5.3 open, and lists the gates this worktree cannot close. `review-report.md` records the executed command receipt (167-test `pdes,time-warp` lane, 39-test conservative lane, benchmark compile, fmt, strict Clippy, HPC parity manifest, 12 collector tests, phase gates and DAG, all exit 0 under actual Homebrew Rust1.99.0) and the findings raised. `docs/pdes/production-optimistic-runtime.md` drops the resolved hosted-check wording and points at the joined owned runtime guide.
+
+The API-assessment half of the plan's review-fix item is handed to Track 25 in `docs-design-api-review-handoff.md`, because `docs/design/` is Track 25 owned and Track 48 must not write it. That item stays `[~]` for that reason, not for missing work.
+
+Track 48 stays In Progress. Live distributed acceptance, hosted security/package gates for any new pull request, and a renewed human Track 49 phase-entry disposition remain open and unwaived. This packet has had no independent review and no hosted verification; it requires `$conductor-review` before any status movement. Global status/phase files and the parent pin remain with their recorded parallel owners.
+
+## Distributed blocker readback — 17 October 2026
+
+Pull request #255 opened for the reconciliation packet; hosted checks recorded on that exact head rather than asserted.
+
+A read-only source and environment readback now specifies the distributed blocker instead of leaving it open-ended. The local toolchain is **not** the obstacle: `mpiexec`, `mpicc` and `ompi_info` all report Open MPI 5.0.11 and `protoc` reports libprotoc 36.2 on this Darwin arm64 host. The obstacle is that `kairo-ecs-mpi` and `kairo-ecs-grpc` carry **empty** `mpi = []` and `grpc = []` marker features with no `rsmpi`/`mpi-sys` and no `tonic`/`prost`, have no integration-test directories at all, and therefore cannot satisfy the `multirank_smoke` and `two_process_smoke` targets that Track 49's own test matrix requires. Because those features are empty, `cargo test --features mpi` compiles no transport code and must never be reported as real MPI execution.
+
+Clearing this requires Track 49 path ownership, Track 49 gate ownership, supply-chain and advisory review for a new dependency set per `SECURITY.md`, and a fresh maintainer phase-entry disposition. None is delegated to Track 48. Full evidence, ownership analysis and concrete next steps are in [distributed-blocker-readback-20261017.md](distributed-blocker-readback-20261017.md).

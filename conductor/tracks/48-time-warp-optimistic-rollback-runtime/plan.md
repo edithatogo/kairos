@@ -2,13 +2,25 @@
 
 ## Current delivery boundary
 
-The June scaffold checkboxes below are historical task records. The resumed
-local event-owned implementation, 15 held-outs, combined 94-test crate lane,
-sparse/dense raw benchmark and public API review are recorded in `handoff.md`.
-Compiler audit invalidates the earlier nominal 1.98.1/1.76.0 labels; explicit
-compiler-path Rust1.76 rerun remains pending. Explicit pinned Rust1.98 root just ci now passes (458 tests, coverage92.59%, fmt/Clippy/rustdoc/deny/audit). Local phase/manifest/DAG/clean
-checks passed at7a432ab, as reported by the coordinator. Current work does not
-mark a phase or Track48 Done, authorize Track49, or waive distributed acceptance.
+The native implementation is merged on `main`: `786f50b` (#199 preview
+event-owned runtime), `1afe522` (#204 codec bridge) and `55fd635` (#207
+handler-owned execution and retirement). Task checkboxes below are now
+reconciled against that merged state rather than the June scaffold records.
+The compiler audit that withdrew the earlier nominal 1.98.1/1.76.0 labels stays
+resolved by the explicit compiler-path reruns recorded in `handoff.md` and
+`test-matrix.md`; historical labels remain withdrawn.
+
+Track 48 remains **In Progress**. The remaining open work is not local
+implementation: live distributed acceptance (real MPI 2/4-rank and gRPC
+2-process rollback, cancellation, failure/recovery, migration and cross-participant
+GVT) plus hosted security/package gates. Those are not achievable in this
+worktree and are not waived here. No entry below authorizes Track49 production
+dispatch, a phase Done claim, or any release/publication statement.
+
+## Reconciled task ledger — 17 October 2026
+
+Every completed line below is backed by a merged commit or a command executed
+in this worktree; the per-command receipt is in `review-report.md`.
 
 ## Phase 0 - TDD baseline
 
@@ -26,7 +38,10 @@ mark a phase or Track48 Done, authorize Track49, or waive distributed acceptance
 
 ## Phase 2 - Optimistic execution
 
-- Task 2.1: Execute beyond safe time when optimistic mode is enabled.
+- [x] Task 2.1: Execute beyond safe time when optimistic mode is enabled.
+  `OptimisticRuntime` and `run_owned_until_with_budget` advance LPs past
+  conservative incoming safe-time waits to a caller horizon, and no driver API
+  blocks on a conservative safe-time barrier.
 - [x] Task 2.2: Detect straggler messages and roll back affected LPs.
 - [x] Task 2.3: Re-emit anti-messages for invalidated sends.
 
@@ -40,17 +55,33 @@ mark a phase or Track48 Done, authorize Track49, or waive distributed acceptance
 
 ## Phase 4 - Benchmarks and docs
 
-- Task 4.1: Benchmark optimistic vs conservative runtime on sparse and dense
-  cross-LP traffic.
-- Task 4.2: Document when Time Warp is counterproductive.
-- Task 4.3: Handoff anti-message requirements to Track 49.
+- [x] Task 4.1: Benchmark optimistic vs conservative runtime on sparse and dense
+  cross-LP traffic. `benches/pdes/time_warp.rs` plus the accepted
+  compiler-bound evidence in `benches/pdes/evidence/track48-68b8d7a/`; collector
+  validation rerun green in this worktree.
+- [x] Task 4.2: Document when Time Warp is counterproductive.
+  `docs/pdes/production-optimistic-runtime.md` section "When optimism can cost
+  more" records handler-cost, cascade-amplification and snapshot-copy caveats
+  with the measurement requirement.
+- [x] Task 4.3: Handoff anti-message requirements to Track 49.
+  `distributed-interface-handoff.md` and
+  `external-accounting-interface-proposal-20261004.md`. These are reviewed
+  proposals only; they grant no Track49 production dispatch, dependency waiver
+  or status advance.
 
 ## Phase 5 - Closeout
 
-- Task 5.1: Run feature-gated tests, clippy, conductor gates, and benchmark
-  smoke checks.
-- Task 5.2: Run `$conductor-review` and apply accepted fixes.
-- Task 5.3: Push and verify GitHub Actions before status advancement.
+- [x] Task 5.1: Run feature-gated tests, clippy, conductor gates, and benchmark
+  smoke checks. Re-executed green in this worktree on 17 October 2026; see
+  `review-report.md` for command, cwd, HEAD, toolchain and exit status.
+- [x] Task 5.2: Run `$conductor-review` and apply accepted fixes. Findings and
+  corrective actions are recorded in `review-report.md`; the delivered native
+  slices carry recorded independent review. The 17 October reconciliation
+  slice is documentation-only and has **not** had independent review.
+- [ ] Task 5.3: Push and verify GitHub Actions before status advancement.
+  Open. #199/#204/#207 were pushed and hosted-verified before merge, but this
+  reconciliation slice is unpushed and unverified, and the live distributed
+  gate is unmet.
 
 ## Phase closeout gate
 
@@ -74,8 +105,41 @@ phase begins:
 
 ## Review fixes — bounded delivery packet
 
-- [~] Record current local capability, compiler-label correction and public API assessment in review-report.md and docs/design/track48-api-review.md; coordinator integration and remaining gates stay pending.
+- [x] Record current local capability, compiler-label correction and public API
+  assessment in `review-report.md`. Reconciled against the merged #207 state on
+  17 October 2026.
+- [~] Mirror the same assessment into `docs/design/track48-api-review.md`.
+  **Blocked on ownership, not on effort**: `docs/design/` is an owned path of
+  Track 25 (`api-governance-agent`) per `conductor/tracks.yaml`, so Track 48 may
+  not write it. The existing file stops at the constructor/root-routing record
+  and does not describe the merged handler-owned execution surface. Request and
+  required content are recorded in `docs-design-api-review-handoff.md` for Track
+  25 to action.
+
+## Open gates that this worktree cannot close
+
+These are the actual Track 48 blockers. None is a local implementation gap.
+
+- Live distributed acceptance: real MPI 2/4-rank and gRPC 2-process
+  rollback/cancellation, failure and recovery, migration and cross-participant
+  GVT, with raw artifacts and checksums. The blocker is **not** the local
+  toolchain: Open MPI 5.0.11 and `protoc` are installed here. It is missing
+  implementation in Track 49's owned crates, whose `mpi`/`grpc` features are
+  empty markers with no real backend and no launch tests. Verified detail and
+  ownership analysis are in
+  [distributed-blocker-readback-20261017.md](distributed-blocker-readback-20261017.md).
+- Hosted exact-head security and package gates on any new pull request. EXC-193
+  is PR #193-only and EXC-199 is an unapproved proposal; neither applies.
+- Renewed human phase-entry disposition for Track 49. The 4 October conditional
+  entry expired when bound interface/local semantics changed at #207.
+- Global `conductor/status.md`, `conductor/phase-closeout.yaml` and readiness
+  data remain with their recorded parallel owners.
 
 ## Accepted owned native leaf — 4 October 2026
 
 The [current acceptance record](owned-native-acceptance-20261004.md) supersedes earlier pending local/compiler snapshots: source9bf478e passes166 PDES tests on each explicitly bound1.98.1/1.76.0 compiler; fullCI530/530,coverage92.59%,locked doctests,benchmark smoke/12 collector tests,manifest and local phase/clean gates pass. Original failed receipts remain historical. Track48 stays In Progress pending hosted native delivery and live distributed acceptance. Changed interface semantics expire the previous conditional Track49 entry disposition; fresh specific human disposition and reviewed production packet are required. Global status/phase files and parent pin remain with their current parallel owners.
+
+Hosted native delivery is now resolved: the reviewed-cut native source `35914c3`
+merged as `55fd635` (#207) after hosted feedback fixes, so that slice's pending
+hosted-delivery wording above is historical. Track 48 still stays In Progress,
+now solely for live distributed acceptance and the open gates listed above.
