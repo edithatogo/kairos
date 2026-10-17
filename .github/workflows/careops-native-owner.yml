@@ -21,6 +21,7 @@ on:
       - 'scripts/c1-arrow-io-python-tools.lock'
       - 'conformance/c43/**'
       - 'conductor/design/calibration/c4.3-arrow-output-v1.md'
+      - 'conductor/design/calibration/c4.4-statistical-diagnostics*.md'
       - 'tests/conformance/queue_simpy_v1*'
       - 'benches/queue/qualify_native_v1.py'
       - 'benches/queue/test_qualify_native_v1.py'
@@ -185,9 +186,13 @@ jobs:
           "$task_cargo" test --locked -p kairo-ecs-arrow-io --all-features 2>&1 | tee "$log_dir/test.log"
           "$task_cargo" test --locked -p kairo-ecs-arrow --features resource-lifecycle-io 2>&1 | tee "$log_dir/resource-lifecycle.log"
           export C43_OUTPUT_DIR="$GITHUB_WORKSPACE/$log_dir/c43-rust-output"
+          export C44_DIAGNOSTICS_DIR="$GITHUB_WORKSPACE/$log_dir/c44-diagnostic-cases"
           "$task_cargo" test --locked -p kairo-ecs-calibration --no-default-features --features ipc,parquet --test arrow_output_c43 --test sidecar_adapter_c43 --test sidecar_pipeline_c43 c43_ 2>&1 | tee "$log_dir/c43-native.log"
           "$python_dir/bin/python" conformance/c43/readback.py --self-test 2>&1 | tee "$log_dir/c43-reader-controls.log"
-          "$python_dir/bin/python" conformance/c43/readback.py --require-manifests --mutation-controls "$C43_OUTPUT_DIR" 2>&1 | tee "$log_dir/c43-readback.log"
+          "$python_dir/bin/python" conformance/c43/readback.py --require-manifests --require-statistical-diagnostics --mutation-controls "$C43_OUTPUT_DIR" 2>&1 | tee "$log_dir/c43-readback.log"
+          for case_name in overlap-and-ties empty-and-insufficient; do
+            "$python_dir/bin/python" conformance/c43/statistical_diagnostics.py "$C44_DIAGNOSTICS_DIR/$case_name" 2>&1 | tee "$log_dir/c44-$case_name-readback.log"
+          done
           test -s "$output_dir/rust.ipc_file"
           test -s "$output_dir/rust.ipc_stream"
           test -s "$output_dir/rust.parquet"
@@ -292,10 +297,14 @@ jobs:
             both) calibration_args+=(--features 'ipc,parquet') ;;
           esac
           export C43_OUTPUT_DIR="$GITHUB_WORKSPACE/$log_dir/c43-rust-output"
+          export C44_DIAGNOSTICS_DIR="$GITHUB_WORKSPACE/$log_dir/c44-diagnostic-cases"
           "$task_cargo" "${calibration_args[@]}" c43_ 2>&1 | tee "$log_dir/c43-native.log"
           if [ "$FEATURE_SET" = both ]; then
             "$RUNNER_TEMP/c1-arrow-io-python/bin/python" conformance/c43/readback.py --self-test 2>&1 | tee "$log_dir/c43-reader-controls.log"
-            "$RUNNER_TEMP/c1-arrow-io-python/bin/python" conformance/c43/readback.py --require-manifests --mutation-controls "$C43_OUTPUT_DIR" 2>&1 | tee "$log_dir/c43-readback.log"
+            "$RUNNER_TEMP/c1-arrow-io-python/bin/python" conformance/c43/readback.py --require-manifests --require-statistical-diagnostics --mutation-controls "$C43_OUTPUT_DIR" 2>&1 | tee "$log_dir/c43-readback.log"
+            for case_name in overlap-and-ties empty-and-insufficient; do
+              "$RUNNER_TEMP/c1-arrow-io-python/bin/python" conformance/c43/statistical_diagnostics.py "$C44_DIAGNOSTICS_DIR/$case_name" 2>&1 | tee "$log_dir/c44-$case_name-readback.log"
+            done
           fi
           if [ "$FEATURE_SET" = both ]; then
             test -s "$KAIROS_INTEROP_OUTDIR/rust.ipc_file"

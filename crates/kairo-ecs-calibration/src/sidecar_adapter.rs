@@ -101,6 +101,7 @@ pub(crate) struct Output {
     pub metrics: Vec<Value>,
     pub joins: Vec<JoinRecord>,
     pub group_diagnostics: Vec<Value>,
+    pub metric_group_diagnostics: Vec<Value>,
     pub metric_raw_rows: Vec<Value>,
     pub raw_diagnostics: Value,
 }
@@ -274,7 +275,8 @@ pub(crate) fn build_sidecars(input: &Input) -> Result<Output, AdapterFailure> {
         });
     }
 
-    let metrics = make_metrics(input, &summaries).map_err(|reason| fail(&reason))?;
+    let (metrics, metric_group_diagnostics) =
+        make_metrics(input, &summaries).map_err(|reason| fail(&reason))?;
     let group_diagnostics = residual_group_diagnostics(&summaries);
     residuals_out.sort_by_key(residual_sort_key);
     Ok(Output {
@@ -282,6 +284,7 @@ pub(crate) fn build_sidecars(input: &Input) -> Result<Output, AdapterFailure> {
         metrics,
         joins,
         group_diagnostics,
+        metric_group_diagnostics,
         metric_raw_rows,
         raw_diagnostics,
     })
@@ -339,7 +342,9 @@ pub(crate) fn join_manifest_json(output: &Output) -> Value {
         })
         .collect::<Vec<_>>();
     json!({ "version":"c43.join_manifest.v1", "counts":output.raw_diagnostics,
-        "rows":joins, "group_summaries":output.group_diagnostics, "metric_raw_records":output.metric_raw_rows })
+        "rows":joins, "group_summaries":output.group_diagnostics,
+        "metric_group_diagnostics":output.metric_group_diagnostics,
+        "metric_raw_records":output.metric_raw_rows })
 }
 
 fn metric_raw_rows(input: &Input) -> Vec<Value> {
@@ -575,6 +580,7 @@ fn validate_metric_inputs(input: &Input) -> Result<(), String> {
         return Err("metric spec has an empty or duplicate fixed cohort identity".into());
     }
     let mut mapped = BTreeMap::new();
+    let mut canonical_strata = BTreeSet::new();
     for group in &input.metric_strata {
         if !s.groups.contains(&group.group)
             || group.strata.get("candidate_id") != Some(&Value::String(b.candidate_id.clone()))
@@ -582,6 +588,9 @@ fn validate_metric_inputs(input: &Input) -> Result<(), String> {
             || mapped.insert(group.group.as_str(), &group.strata).is_some()
         {
             return Err("invalid fixed group-to-strata mapping".into());
+        }
+        if !canonical_strata.insert(canonical_json_value(&group.strata).to_string()) {
+            return Err("duplicate canonical strata mapping".into());
         }
     }
     if input
@@ -603,6 +612,22 @@ fn validate_metric_inputs(input: &Input) -> Result<(), String> {
         return Err("residual group has no explicit metric strata mapping".into());
     }
     Ok(())
+}
+
+fn canonical_json_value(value: &Value) -> Value {
+    match value {
+        Value::Object(object) => {
+            let mut keys: Vec<_> = object.keys().collect();
+            keys.sort_unstable();
+            let mut canonical = Map::new();
+            for key in keys {
+                canonical.insert(key.clone(), canonical_json_value(&object[key]));
+            }
+            Value::Object(canonical)
+        }
+        Value::Array(values) => Value::Array(values.iter().map(canonical_json_value).collect()),
+        scalar => scalar.clone(),
+    }
 }
 
 fn validate_metric_rows(rows: &[MetricRow], groups: &BTreeSet<&str>) -> Result<(), String> {
@@ -729,7 +754,10 @@ fn noncomputed_status(reference: &[&SidecarRow], simulation: &[&SidecarRow]) -> 
     "missing_observed"
 }
 
-fn make_metrics(input: &Input, summaries: &[residuals::Summary]) -> Result<Vec<Value>, String> {
+fn make_metrics(
+    input: &Input,
+    summaries: &[residuals::Summary],
+) -> Result<(Vec<Value>, Vec<Value>), String> {
     let cohort_id = &input.metric_spec.identity;
     let metric_groups = input
         .metric_strata
@@ -746,6 +774,7 @@ fn make_metrics(input: &Input, summaries: &[residuals::Summary]) -> Result<Vec<V
         provenance_verified: input.metric_spec.provenance_verified,
     };
     let mut output = Vec::new();
+    let mut group_diagnostics = Vec::new();
     for group_metric in metric_cohorts::compare_groups(
         &cohort_spec,
         &input.reference_metric.identity,
@@ -756,6 +785,17 @@ fn make_metrics(input: &Input, summaries: &[residuals::Summary]) -> Result<Vec<V
         let strata = metric_groups
             .get(group_metric.group.as_str())
             .ok_or("metric kernel emitted undeclared group")?;
+        let status = status_metric(group_metric.status);
+        group_diagnostics.push(json!({
+            "group": group_metric.group,
+            "strata": strata,
+            "status": status,
+            "reference_count": group_metric.reference_count,
+            "simulation_count": group_metric.simulation_count,
+            "reference_tie_count": group_metric.reference_tie_count,
+            "simulation_tie_count": group_metric.simulation_tie_count,
+            "coverage_warnings": group_metric.coverage_warnings,
+        }));
         let mut diagnostics = group_metric.reference_diagnostics;
         add_diagnostics(&mut diagnostics, group_metric.simulation_diagnostics)?;
         let common = metric_record_common(
@@ -772,7 +812,7 @@ fn make_metrics(input: &Input, summaries: &[residuals::Summary]) -> Result<Vec<V
             group_metric.reference_count,
             group_metric.simulation_count,
             group_metric.unmatched_count,
-            status_metric(group_metric.status),
+            status,
         )?;
         for (metric, value, units) in [
             ("W1", group_metric.w1, cohort_id.unit.as_str()),
@@ -831,7 +871,7 @@ fn make_metrics(input: &Input, summaries: &[residuals::Summary]) -> Result<Vec<V
         }
     }
     output.sort_by_key(metric_sort_key);
-    Ok(output)
+    Ok((output, group_diagnostics))
 }
 
 fn group_label_for_residual<'a>(group: &GroupKey, input: &'a Input) -> &'a str {

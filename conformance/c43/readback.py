@@ -13,6 +13,9 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from statistical_diagnostics import validate as validate_statistical_diagnostics
+from statistical_diagnostics import self_test as statistical_self_test
+
 import pyarrow as pa
 import pyarrow.ipc as ipc
 import pyarrow.parquet as pq
@@ -751,9 +754,9 @@ def _require_manifests(directory: Path) -> None:
 
 
 def readback(directory: Path, *, include_framings: bool = True,
-             require_manifests: bool = False) -> dict[str, Any]:
+             require_manifests: bool = False, require_statistical_diagnostics: bool = False) -> dict[str, Any]:
     directory = directory.resolve()
-    if require_manifests:
+    if require_manifests or require_statistical_diagnostics:
         _require_manifests(directory)
     if hashlib.sha256(C0_SCHEMA_PATH.read_bytes()).hexdigest() != C0_SCHEMA_SHA256:
         fail("C0 logical schema digest changed from packet-bound source")
@@ -783,6 +786,10 @@ def readback(directory: Path, *, include_framings: bool = True,
             verify_physical(table, kind, records)
             evidence["formats"][path.name] = {"rows": table.num_rows, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
     check_event_joins(directory, logical["residual"])
+    if (directory / "join_manifest.json").is_file():
+        evidence["statistical_diagnostics"] = validate_statistical_diagnostics(
+            load_json(directory / "join_manifest.json"), load_json(directory / "source_manifest.json"),
+            logical["metric"], required=require_statistical_diagnostics)
     evidence["event_join"] = "checked" if (directory / "join_manifest.json").exists() or (directory / "source_manifest.json").exists() else "not_supplied"
     evidence["legacy_event_schema_sha256"] = EVENT_SCHEMA_SHA256
     evidence["c0_logical_schema_sha256"] = hashlib.sha256(C0_SCHEMA_PATH.read_bytes()).hexdigest()
@@ -790,7 +797,8 @@ def readback(directory: Path, *, include_framings: bool = True,
     evidence["python"] = sys.version
     if include_framings:
         evidence["framing_variants"] = {
-            path.name: readback(path, include_framings=False, require_manifests=require_manifests)
+            path.name: readback(path, include_framings=False, require_manifests=require_manifests,
+                                require_statistical_diagnostics=require_statistical_diagnostics)
             for path in sorted(directory.glob("framing-*")) if path.is_dir()
         }
     return evidence
@@ -859,6 +867,37 @@ def actual_manifest_mutation_controls(directory: Path) -> list[dict[str, Any]]:
     return results
 
 
+def statistical_manifest_mutation_controls(directory: Path) -> list[dict[str, Any]]:
+    mutations = (
+        ("missing_statistics", lambda j, s: j.pop("metric_group_diagnostics")),
+        ("empty_statistics", lambda j, s: j.__setitem__("metric_group_diagnostics", [])),
+        ("forged_tie_count", lambda j, s: j["metric_group_diagnostics"][0].__setitem__("reference_tie_count", 99)),
+        ("boolean_tie_count", lambda j, s: j["metric_group_diagnostics"][0].__setitem__("reference_tie_count", True)),
+        ("forged_warnings", lambda j, s: j["metric_group_diagnostics"][0].__setitem__("coverage_warnings", ["invented"])),
+        ("forged_sample_count", lambda j, s: j["metric_group_diagnostics"][0].__setitem__("reference_count", 99)),
+        ("missing_declared_groups", lambda j, s: s.pop("metric_groups")),
+        ("forged_strata", lambda j, s: j["metric_group_diagnostics"][0].__setitem__("strata", {})),
+        ("omitted_source_seed_contract", lambda j, s: s["runs"][0].pop("seed_contract_version")),
+        ("mismatched_source_seed_contract", lambda j, s: s["runs"][0].__setitem__("seed_contract_version", "other-seed-v2")),
+        ("omitted_source_candidate", lambda j, s: s["runs"][0].pop("candidate_id")),
+        ("mismatched_source_candidate", lambda j, s: s["runs"][0].__setitem__("candidate_id", "other-candidate")),
+    )
+    results = []
+    for name, mutate in mutations:
+        with tempfile.TemporaryDirectory(prefix=f"c44-mut-{name}-") as temp:
+            target = Path(temp) / "runtime"
+            shutil.copytree(directory, target, ignore=shutil.ignore_patterns("framing-*"))
+            join = load_json(target / "join_manifest.json")
+            source = load_json(target / "source_manifest.json")
+            mutate(join, source)
+            (target / "join_manifest.json").write_text(canonical(join) + "\n")
+            (target / "source_manifest.json").write_text(canonical(source) + "\n")
+            observed = _expect_reject(lambda: readback(target, include_framings=False,
+                                                       require_statistical_diagnostics=True), name)
+            results.append({"control": name, "expected": "reject", "observed": observed})
+    return results
+
+
 def _refresh_residual_raw_hash(manifest: dict[str, Any]) -> None:
     raw_records = [raw for row in manifest["rows"] for raw in row["raw_records"]]
     encoded = "[" + ",".join(sorted(canonical(r) for r in raw_records)) + "]"
@@ -895,6 +934,7 @@ def _fixture_rows() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
 
 
 def _self_test() -> dict[str, Any]:
+    statistics_controls = statistical_self_test()
     residuals, metrics = _fixture_rows()
     expected = {"residual": residuals, "metric": metrics}
     with tempfile.TemporaryDirectory(prefix="c43-readback-") as temp:
@@ -938,7 +978,7 @@ def _self_test() -> dict[str, Any]:
         rejection = _expect_reject(lambda: readback(root), "wrong_metadata")
         controls.append({"id": "wrong_metadata", "file": "residual.parquet", "rejection": rejection})
     return {"status": "pass", "pyarrow": pa.__version__, "logical_schema_validation": "bounded evaluator for unchanged C0 residual/metric definitions; fails closed on unsupported keywords",
-            "controls": controls,
+            "controls": controls, "statistical_controls": statistics_controls,
             "positive_oracle": "typed Arrow IPC file/stream and Parquet tables match independently frozen schemas and canonical logical records; residual 0-to-u128-max exact difference retained"}
 
 
@@ -957,15 +997,20 @@ def main() -> int:
                         help="copy actual producer outputs and verify manifest mutations and missing-evidence controls reject")
     parser.add_argument("--require-manifests", action="store_true",
                         help="require nonempty join/source manifests and event_log.smoke for runtime output")
+    parser.add_argument("--require-statistical-diagnostics", action="store_true",
+                        help="require and independently reconcile source-derived C4.4 tie counts and coverage warnings")
     parser.add_argument("directory", nargs="?", type=Path)
     args = parser.parse_args()
     try:
         if args.self_test:
             result = _self_test()
         elif args.directory:
-            result = readback(args.directory, require_manifests=args.require_manifests)
+            result = readback(args.directory, require_manifests=args.require_manifests,
+                              require_statistical_diagnostics=args.require_statistical_diagnostics)
             if args.mutation_controls:
                 result["actual_manifest_mutation_controls"] = actual_manifest_mutation_controls(args.directory)
+                if args.require_statistical_diagnostics:
+                    result["statistical_manifest_mutation_controls"] = statistical_manifest_mutation_controls(args.directory)
         else:
             fail("directory is required unless --self-test")
         print(json.dumps(result, sort_keys=True, indent=2))
