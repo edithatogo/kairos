@@ -1,0 +1,1 @@
+{"argv": ["pwsh", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/validate_conductor_dag.ps1"], "exit": 0}

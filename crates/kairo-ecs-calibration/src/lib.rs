@@ -1,6 +1,48 @@
 //! Optional calibration primitives; no empirical or clinical acceptance.
 #![forbid(unsafe_code)]
 
+#[expect(
+    dead_code,
+    reason = "Private C3 interfaces are being joined by bounded owner packets"
+)]
+mod shadow;
+#[expect(
+    dead_code,
+    reason = "Private C3 observed replay join is under qualification"
+)]
+mod shadow_ledger;
+#[cfg(feature = "flow")]
+#[expect(
+    dead_code,
+    reason = "Private C3 native adapter is qualified by focused owner fixtures"
+)]
+mod shadow_native;
+#[cfg_attr(
+    not(all(test, feature = "flow")),
+    expect(
+        dead_code,
+        reason = "Private C3 probe pool join is under qualification"
+    )
+)]
+mod shadow_pool;
+#[cfg_attr(
+    not(all(test, feature = "flow", any(feature = "ipc", feature = "parquet"))),
+    expect(
+        dead_code,
+        reason = "Private C3 residual projection join is under qualification"
+    )
+)]
+mod shadow_report;
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C3 portable recovery join is under qualification"
+    )
+)]
+mod shadow_wire;
+
 #[cfg(feature = "flow")]
 #[expect(
     dead_code,
@@ -154,3 +196,25 @@ mod arrow_output;
     reason = "Private C4.3 run/event adapter is qualified by integration tests; public API review remains open"
 )]
 mod sidecar_adapter;
+
+#[cfg(any(feature = "ipc", feature = "parquet"))]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Private C3 sidecar join awaits phase acceptance")
+)]
+mod shadow_sidecars;
+
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Private synthetic C3 native qualification model")
+)]
+mod shadow_c2_model;
+#[expect(
+    dead_code,
+    reason = "Private C3 runner is undergoing native qualification"
+)]
+mod shadow_runner;
+
+#[cfg(all(test, feature = "flow"))]
+mod shadow_c03;

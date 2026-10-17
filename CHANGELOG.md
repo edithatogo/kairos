@@ -16,6 +16,8 @@ Format:
 
 ### Added
 
+- Experimental private C3 native shadow development CI now runs on Rust 1.99.0 Linux/macOS and retains fresh-process recovery outputs; this is development evidence only and does not assert release, clinical, or public API acceptance.
+
 - Add experimental doc-hidden scheduler/entity-allocator checkpoint state DTOs and a crate-private calibration seed-registry image, with validated bounded imports preserving IDs, ordering and generations; complete Flow/context codecs and fresh-process portable restart remain in development.
 
 - Experimental doc-hidden calibration C2 replay APIs now save and restore one sealed synthetic scenario, validate its private route receipt, and require the same executable for both processes; this adds no stable API, general recovery, or C5 claim.

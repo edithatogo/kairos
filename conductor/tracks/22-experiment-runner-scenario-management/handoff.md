@@ -181,3 +181,15 @@ extension state fails closed; no silent state loss or frozen-recipe substitution
 C5 worker/candidate crash equivalence, stable API/release and clinical gates remain
 separate required evidence. No track completion or upstream acceptance ledger is
 changed by this experimental handoff.
+
+## C3 scoped synthetic implementation — hosted qualification 2026-10-10
+
+Experimental/private C3 source `faeb8e97d3021080c2dd60f0e2f065607e7666e7` passes
+local and hosted Rust 1.99.0 gates, including native isolated Flow/C2 probes,
+observed source preservation, bounded recovery, exact process/image readback and
+physical IPC/Parquet records. Native run38047961900 passed on Ubuntu x86_64 and
+macOS aarch64; PR244 has 47 successful checks and two declared conditional skips.
+[Hosted evidence](../../evidence/c3-hosted-qualification-20261010/README.md) supplements the earlier local record and supersedes its
+hosted-pending status for this tested source. Parent pin/phase acceptance awaits
+this documentation successor's final checks. Historical owner status scopes,
+C5, public API, empirical/clinical, ED MVP and release gates remain separate.
