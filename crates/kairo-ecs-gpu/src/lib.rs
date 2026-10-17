@@ -6,6 +6,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod benchmark;
 pub mod buffer;
 pub mod compute;
 pub mod numeric_batch;
@@ -23,6 +24,7 @@ pub const CANDIDATE_SCORING_WGSL: &str = include_str!("shaders/candidate_scoring
 pub const ABM_STEP_WGSL: &str = include_str!("shaders/abm_step.wgsl");
 pub const DES_DISPATCH_WGSL: &str = include_str!("shaders/des_dispatch.wgsl");
 
+pub use benchmark::*;
 pub use buffer::{BufferUsage, GpuBuffer, GpuBufferError, TypedGpuBuffer};
 pub use compute::{
     AgentParticle, CpuFallbackCompute, DesEvent, DispatchShape, GpuBackendAvailability,

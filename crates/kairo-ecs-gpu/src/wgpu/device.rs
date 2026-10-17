@@ -156,6 +156,14 @@ impl DeviceMetadata {
             max_workgroup_dimensions: [0, 0, 0],
         }
     }
+
+    /// Whether this device backend represents real physical hardware acceleration (Metal, Vulkan, Dx12).
+    pub fn is_hardware_accelerated(&self) -> bool {
+        matches!(
+            self.backend_api,
+            BackendApi::Metal | BackendApi::Vulkan | BackendApi::Dx12
+        )
+    }
 }
 
 /// Operational status of the device compute backend.
