@@ -1,0 +1,19 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.85s
+     Running tests/distance_c42.rs (.artifacts/c42-distance/target/debug/deps/distance_c42-6bf2497d64ce31f2)
+
+running 12 tests
+test deterministic_100k_point_shift_timing ... ignored, bounded synthetic distance timing receipt; coordinator executes once
+test both_empty_populations_are_empty ... ok
+test checked_arithmetic_overflow_is_invalid ... ok
+test identical_populations_compute_zero_distances ... ok
+test exact_common_origin_offsets_are_checked_before_conversion ... ok
+test null_aligned_zero_weight_stays_in_count_and_adds_no_mass ... ok
+test positive_rational_tick_scale_is_supported_exactly ... ok
+test scale_and_algorithm_weight_contract_are_enforced ... ok
+test signed_rational_supports_are_exactly_ordered ... ok
+test tied_weighted_support_permutation_is_bitwise_stable ... ok
+test ties_are_aggregated_before_cdf_updates ... ok
+test weighted_descriptive_uses_exact_per_side_normalization ... ok
+
+test result: ok. 11 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

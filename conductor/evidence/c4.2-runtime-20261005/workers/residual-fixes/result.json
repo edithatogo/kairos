@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "task_id": "C4.2.residual-fixes.20261005",
+  "status": "ready_for_review",
+  "repository": "/private/tmp/kairos-c42-residual-fixes-20261005",
+  "branch": "codex/c42-residual-fixes-20261005",
+  "base_commit": "2660b37fc8a03db72008bc364ce9ab9db0ebff49",
+  "contract": "conductor/design/calibration/c4.2-runtime-contract-v1.md",
+  "contract_sha256": "67ac4a4b3652f007e1ff03b17d7550cae24499053d4366e0aa186272709a5774",
+  "package_manifest_sha256": "d6a92198037af8d5de50d835718b7ea955f6f41bc7a7b48388f44aa150a5904d",
+  "source_sha256": {
+    "crates/kairo-ecs-calibration/src/residuals.rs": "1844042b8841340ea16eaa93da9d293ea3003d03bc49ed567df66ada9ca3cb8f",
+    "crates/kairo-ecs-calibration/tests/residuals_c42.rs": "250dfe3f9fbb1bfccf35e1c7dca8cb394a061068092d36a96e71eff3d84be91d"
+  },
+  "toolchain": {
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "target_dir": ".artifacts/c42-residual-fixes/target"
+  },
+  "packet": {
+    "path": ".artifacts/c42-residual-fixes/packet.json",
+    "sha256": "57596603c7032e4e7589a6df63adf0d11f14bf135dde22abf2e7c22450422d76",
+    "validation": "parent tools/tasks.py packet_errors(Path(child), packet) returned []",
+    "validation_sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "timing_note": "Canonical packet fields were normalized after the first test-first red run and test edits; this is not represented as pre-dispatch packet validation. Its immutable doc/manifest input bindings were checked and its bounded initial source snapshots are separately hashed."
+  },
+  "checks": [
+    {
+      "command": "CARGO_TARGET_DIR=.artifacts/c42-residual-fixes/target rustup run 1.99.0 cargo test --manifest-path /private/tmp/kairos-c42-residual-fixes-20261005/Cargo.toml --locked -p kairo-ecs-calibration --test residuals_c42",
+      "cwd": "/private/tmp/kairos-c42-residual-fixes-20261005",
+      "head": "2660b37fc8a03db72008bc364ce9ab9db0ebff49",
+      "exit_code": 0,
+      "result": "23 passed, 0 failed",
+      "log": ".artifacts/c42-residual-fixes/final-test.log",
+      "log_sha256": "15133b10713541d9babf3a95d98409ccf66f5a0be62da190048cef50e8d77730"
+    },
+    {
+      "command": "rustup run 1.99.0 clippy-driver --test crates/kairo-ecs-calibration/tests/residuals_c42.rs --edition=2021 -D warnings -o .artifacts/c42-residual-fixes/residuals_c42_test_bin",
+      "cwd": "/private/tmp/kairos-c42-residual-fixes-20261005",
+      "head": "2660b37fc8a03db72008bc364ce9ab9db0ebff49",
+      "exit_code": 0,
+      "result": "Strict Clippy passed for path-imported residual module and behavioral test target.",
+      "log": ".artifacts/c42-residual-fixes/clippy-driver.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "rustup run 1.99.0 rustfmt --edition 2021 --check crates/kairo-ecs-calibration/src/residuals.rs crates/kairo-ecs-calibration/tests/residuals_c42.rs",
+      "cwd": "/private/tmp/kairos-c42-residual-fixes-20261005",
+      "head": "2660b37fc8a03db72008bc364ce9ab9db0ebff49",
+      "exit_code": 0,
+      "log": ".artifacts/c42-residual-fixes/rustfmt.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": "git diff --check",
+      "cwd": "/private/tmp/kairos-c42-residual-fixes-20261005",
+      "head": "2660b37fc8a03db72008bc364ce9ab9db0ebff49",
+      "exit_code": 0,
+      "log": ".artifacts/c42-residual-fixes/diff-check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "clippy_note": {
+    "command": "CARGO_TARGET_DIR=.artifacts/c42-residual-fixes/target rustup run 1.99.0 cargo clippy --manifest-path /private/tmp/kairos-c42-residual-fixes-20261005/Cargo.toml --locked -p kairo-ecs-calibration --test residuals_c42 -- -D warnings",
+    "exit_code": 101,
+    "result": "Blocked by three pre-existing strict lint findings in out-of-scope crates/kairo-ecs-calibration/src/metrics.rs (manual_abs_diff, if_same_then_else, collapsible_if). No lint allowances or edits to that path were made; integration owner will rerun all-target strict Clippy after its separate metrics fixes.",
+    "log": ".artifacts/c42-residual-fixes/clippy-cargo.log",
+    "log_sha256": "1821396a0654afda07657889b7166f269f0ad26e7ac64e5662a8b57383338b5a"
+  },
+  "red_phase": {
+    "command": "CARGO_TARGET_DIR=.artifacts/c42-residual-fixes/target rustup run 1.99.0 cargo test --manifest-path /private/tmp/kairos-c42-residual-fixes-20261005/Cargo.toml --locked -p kairo-ecs-calibration --test residuals_c42",
+    "exit_code": 101,
+    "result": "22 tests, 3 failed: incomplete invalid-batch retention, same-key cross-group acceptance, and contradictory simulation observed ticks.",
+    "log": ".artifacts/c42-residual-fixes/red.log",
+    "log_sha256": "060249596cf095b540bc98e16d04a78f213be9b6740dc68b204ea71486fefee0"
+  },
+  "unknown_group_control": {
+    "result": "Focused regression passes on final source. A separate deliberate fault-injection control temporarily removed actual-row-group inclusion, producing the expected panic; source was restored byte-identically before final gates. Independent review then confirmed the final source already included this protection and retracted the claimed current-code defect.",
+    "log": ".artifacts/c42-residual-fixes/unknown-group-red.log",
+    "log_sha256": "6b22d3db3144d23415521ebae7ff65f51b56432c477ae420f6145a5bb719253f",
+    "restored_source_sha256": "1844042b8841340ea16eaa93da9d293ea3003d03bc49ed567df66ada9ca3cb8f"
+  },
+  "history": [
+    "Focused coverage now checks invalid middle records under both input orders, all rows/raw counts retained, logical-key reuse across groups, simulation wrong-side observed ticks, large paired input, and unknown groups while other groups are declared.",
+    "No public API, dependency, Cargo, Arrow, scheduler, or fixture changes. Only the two owned files are source changes."
+  ],
+  "artifact_path": ".artifacts/c42-residual-fixes/result.json"
+}

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "c42-full-native",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "a785819ae78cbe18fd1aeca18b8280dd9be1720b",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "started_utc": "2026-10-04T23:24:58.201242+00:00",
+    "ended_utc": "2026-10-04T23:25:11.223853+00:00",
+    "duration_seconds": 13.022275707917288,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/src/lib.rs": "c04bf2fe5a2529969eaa95822649a18775525fa2e234603717bb0975a589eef7",
+      "crates/kairo-ecs-calibration/src/metrics.rs": "82653d0bfa6b5df39934c9ac77b5ebe8af9776fb09ed6395e1388635de74ea99",
+      "crates/kairo-ecs-calibration/src/residuals.rs": "41da72e534b9898db87e67fdd1b0571d6cc18816d059a26b41dc2f53197945a1",
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs": "f62c6f3f2352dee945d769144b236805f512667e701f536cd6ca3003de004b20"
+    },
+    "log": "c42-full-native.log",
+    "log_sha256": "07e6657de56f29bc9d3d3b9a1bcd1843a81b6c5cd53bbbe445160dfec113cf32",
+    "interpretation": "ordinary gate"
+  },
+  {
+    "id": "c42-strict-clippy",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "clippy",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "a785819ae78cbe18fd1aeca18b8280dd9be1720b",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "started_utc": "2026-10-04T23:25:11.246820+00:00",
+    "ended_utc": "2026-10-04T23:25:15.122364+00:00",
+    "duration_seconds": 3.8755133331287652,
+    "exit_status": 101,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/src/lib.rs": "c04bf2fe5a2529969eaa95822649a18775525fa2e234603717bb0975a589eef7",
+      "crates/kairo-ecs-calibration/src/metrics.rs": "82653d0bfa6b5df39934c9ac77b5ebe8af9776fb09ed6395e1388635de74ea99",
+      "crates/kairo-ecs-calibration/src/residuals.rs": "41da72e534b9898db87e67fdd1b0571d6cc18816d059a26b41dc2f53197945a1",
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs": "f62c6f3f2352dee945d769144b236805f512667e701f536cd6ca3003de004b20"
+    },
+    "log": "c42-strict-clippy.log",
+    "log_sha256": "356fdf9043ab41af581429e4d0d73c82ef83cd579e8cf38382d48db15261e5cf",
+    "interpretation": "ordinary gate"
+  }
+]

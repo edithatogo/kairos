@@ -1,0 +1,111 @@
+[
+  {
+    "id": "c42-negative-commit",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c42",
+      "default_actual_producer_executes_all_frozen_cases",
+      "--",
+      "--exact"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target",
+      "C42_REPORT_PATH": ".artifacts/c42-report/negative-runtime.json",
+      "C42_PRODUCER_COMMIT": "0000000000000000000000000000000000000000"
+    },
+    "started_utc": "2026-10-04T23:45:38.259652+00:00",
+    "ended_utc": "2026-10-04T23:45:39.355029+00:00",
+    "duration_seconds": 1.09502145787701,
+    "exit_status": 101,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/tests/metrics_c42.rs": "ab00a3c48df57ddb97c9e78582c519e61b55d3587e9bfac49c6245b7078e14fc",
+      "crates/kairo-ecs-calibration/src/metrics.rs": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4"
+    },
+    "log": "c42-negative-commit.log",
+    "log_sha256": "f62214f267bdb54b99f73944390f9dc6557b82e585d05832e07529b1759556fd",
+    "interpretation": "Expected rejection negativecontrol, not ordinary pass"
+  },
+  {
+    "id": "c42-negative-toolchain",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c42",
+      "default_actual_producer_executes_all_frozen_cases",
+      "--",
+      "--exact"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target",
+      "C42_REPORT_PATH": ".artifacts/c42-report/negative-runtime.json",
+      "C42_PRODUCER_COMMIT": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+      "C42_TOOLCHAIN": "invented-toolchain"
+    },
+    "started_utc": "2026-10-04T23:45:39.430181+00:00",
+    "ended_utc": "2026-10-04T23:45:40.718074+00:00",
+    "duration_seconds": 1.287857583956793,
+    "exit_status": 101,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/tests/metrics_c42.rs": "ab00a3c48df57ddb97c9e78582c519e61b55d3587e9bfac49c6245b7078e14fc",
+      "crates/kairo-ecs-calibration/src/metrics.rs": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4"
+    },
+    "log": "c42-negative-toolchain.log",
+    "log_sha256": "ccbed75c16089ba1c5741764df894b65a0bbf24c8de7d31187793cb373fbfa76",
+    "interpretation": "Expected rejection negativecontrol, not ordinary pass"
+  },
+  {
+    "id": "c42-negative-mutated-metric",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c41",
+      "c42_candidate_report",
+      "--",
+      "--ignored",
+      "--exact"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target",
+      "C41_CANDIDATE_REPORT": "/private/tmp/careops-c42-20261005/.artifacts/c42/mutated-actual-runtime.json"
+    },
+    "started_utc": "2026-10-04T23:45:40.743008+00:00",
+    "ended_utc": "2026-10-04T23:45:40.965396+00:00",
+    "duration_seconds": 0.22264175000600517,
+    "exit_status": 101,
+    "input_sha256": {
+      "/private/tmp/careops-c42-20261005/.artifacts/c42/mutated-actual-runtime.json": "8d222fbf4bcd54d65f782cb2881204fe202257d06892c34d1c875a4dce9324aa",
+      "crates/kairo-ecs-calibration/tests/metrics_c41.rs": "1f328d402820ea2d851b4031a7f62663cc27212a4e1466ca31cb61b1a4dcb084"
+    },
+    "log": "c42-negative-mutated-metric.log",
+    "log_sha256": "301f2be1b543c1c7f78bd77b3e10ad06c5f38c07e692cb731f4f24443c8f6bfa",
+    "interpretation": "Expected rejection mutatedactualoutput, no tolerance change"
+  }
+]

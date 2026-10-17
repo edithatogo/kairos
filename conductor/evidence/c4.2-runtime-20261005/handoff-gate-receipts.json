@@ -1,0 +1,40 @@
+[
+  {
+    "argv": [
+      "node",
+      "scripts/validation/validate-track21-27-evidence-boundaries.mjs"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "started_utc": "2026-10-04T23:49:29.333438+00:00",
+    "exit_status": 0,
+    "log": "handoff-gate-0.log",
+    "log_sha256": "43f9728f0dee84168284ee07749700b7967eedd396f8b749c0c8c882f4cc32d5"
+  },
+  {
+    "argv": [
+      "pwsh",
+      "-File",
+      "scripts/validate_conductor_phase_gates.ps1"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "started_utc": "2026-10-04T23:49:29.517353+00:00",
+    "exit_status": 0,
+    "log": "handoff-gate-1.log",
+    "log_sha256": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2"
+  },
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "started_utc": "2026-10-04T23:49:30.385706+00:00",
+    "exit_status": 0,
+    "log": "handoff-gate-2.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]
