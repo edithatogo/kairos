@@ -53,7 +53,7 @@ jobs:
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14.8"
+          python-version: "3.15.0"
 
       - name: Validate cloud and HPC manifests
         run: python cloud/validate_cloud_hpc.py
@@ -82,9 +82,9 @@ jobs:
           cd /tmp/kairo-output
           sha256sum -c telemetry.arrow.sha256
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "24.21.0"
+          node-version: "24.22.0"
 
       - name: Validate free compute blocker routes
         run: node scripts/validation/validate-free-compute-routes.mjs
