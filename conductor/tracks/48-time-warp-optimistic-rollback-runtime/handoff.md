@@ -296,3 +296,11 @@ Documentation-only packet on branch `codex/track48-closeout-reconciliation-20261
 The API-assessment half of the plan's review-fix item is handed to Track 25 in `docs-design-api-review-handoff.md`, because `docs/design/` is Track 25 owned and Track 48 must not write it. That item stays `[~]` for that reason, not for missing work.
 
 Track 48 stays In Progress. Live distributed acceptance, hosted security/package gates for any new pull request, and a renewed human Track 49 phase-entry disposition remain open and unwaived. This packet has had no independent review and no hosted verification; it requires `$conductor-review` before any status movement. Global status/phase files and the parent pin remain with their recorded parallel owners.
+
+## Distributed blocker readback — 17 October 2026
+
+Pull request #255 opened for the reconciliation packet; hosted checks recorded on that exact head rather than asserted.
+
+A read-only source and environment readback now specifies the distributed blocker instead of leaving it open-ended. The local toolchain is **not** the obstacle: `mpiexec`, `mpicc` and `ompi_info` all report Open MPI 5.0.11 and `protoc` reports libprotoc 36.2 on this Darwin arm64 host. The obstacle is that `kairo-ecs-mpi` and `kairo-ecs-grpc` carry **empty** `mpi = []` and `grpc = []` marker features with no `rsmpi`/`mpi-sys` and no `tonic`/`prost`, have no integration-test directories at all, and therefore cannot satisfy the `multirank_smoke` and `two_process_smoke` targets that Track 49's own test matrix requires. Because those features are empty, `cargo test --features mpi` compiles no transport code and must never be reported as real MPI execution.
+
+Clearing this requires Track 49 path ownership, Track 49 gate ownership, supply-chain and advisory review for a new dependency set per `SECURITY.md`, and a fresh maintainer phase-entry disposition. None is delegated to Track 48. Full evidence, ownership analysis and concrete next steps are in [distributed-blocker-readback-20261017.md](distributed-blocker-readback-20261017.md).

@@ -122,7 +122,12 @@ These are the actual Track 48 blockers. None is a local implementation gap.
 
 - Live distributed acceptance: real MPI 2/4-rank and gRPC 2-process
   rollback/cancellation, failure and recovery, migration and cross-participant
-  GVT, with raw artifacts and checksums.
+  GVT, with raw artifacts and checksums. The blocker is **not** the local
+  toolchain: Open MPI 5.0.11 and `protoc` are installed here. It is missing
+  implementation in Track 49's owned crates, whose `mpi`/`grpc` features are
+  empty markers with no real backend and no launch tests. Verified detail and
+  ownership analysis are in
+  [distributed-blocker-readback-20261017.md](distributed-blocker-readback-20261017.md).
 - Hosted exact-head security and package gates on any new pull request. EXC-193
   is PR #193-only and EXC-199 is an unapproved proposal; neither applies.
 - Renewed human phase-entry disposition for Track 49. The 4 October conditional
