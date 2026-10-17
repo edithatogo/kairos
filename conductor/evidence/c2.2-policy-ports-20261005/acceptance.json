@@ -1,0 +1,23 @@
+{
+  "status": "local_test_ports_accepted_hosted_publication_pending",
+  "reviewer": "root independent source and receipt readback",
+  "mode_source": "ac56c999eca60bbdb08a39edbbad4ececaa87302",
+  "lineage_source": "51128b6217a83fc51b73aec11d48e4ff603862f7",
+  "integrated_reviewed_api_doc_head": "6ffdff8",
+  "files_sha256": {
+    "mode-result.json": "3f34dfc138543acf50d99f72b96007a2791127d1c4b7c5bb31ff4dba59f5e08f",
+    "mode-1.log": "2b737650bea5a6047c90b14136be656f0fe2abd8500e4bc56dc3b4ab20861f94",
+    "mode-2.log": "efc578437384e579d7f2a5c843feaec0195d4459735b1bb0c4686dab5bb24a93",
+    "mode-3.log": "d6e582c74e6097127f4f4f7813a43c79f08d7354c90f4ace611f19e335d54050",
+    "lineage-2.log": "b6e77be647114d77ae49702abef196e33f231cef7ffce0ec4292d21ae2f3cd10",
+    "lineage-3.log": "1e7b78f5ccd5d72a0f6042b5627564de38bc9e3063daab4389c42a4531571cb9",
+    "lineage-1.log": "5dab96fae051f8121eb515a533d01d6f77781fb6405a2111bbef28828bf4dbc5",
+    "lineage-result.json": "aee6181aa9dc6a87e8ce068cefb6efcc8913a1a6a9096750321e978ef4fa3643"
+  },
+  "body_preservation_exact": true,
+  "all_13_named_cases_once_each_rust_176_and_199": true,
+  "root_rustfmt_and_diff_check_exit": 0,
+  "full_policy_accepted": false,
+  "c2_runtime_accepted": false,
+  "ed_mvp_accepted": false
+}

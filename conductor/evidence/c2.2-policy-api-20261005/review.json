@@ -1,0 +1,113 @@
+{
+  "review_type": "read_only_experimental_api_proposal_review",
+  "target_repository": "/private/tmp/careops-c22-policy-20261005/libs/kairos",
+  "observed_head": "2f69a3929706f4e4966e0b0a2ed5b7f6851a0b87",
+  "runtime_test_or_acceptance_claim": false,
+  "source_export_authorized_by_adr": false,
+  "current_surface": {
+    "module_declaration": "crates/kairo-ecs-des/src/lib.rs: mod fidelity;",
+    "external_visibility": "None of the fidelity declarations are externally reachable today: the module is private despite pub declarations inside it.",
+    "source_visibility_note": "FlowRuntime, WorkId, WorkState and FlowRuntimeIdentity are public through the public flow module/re-export. FlowRuntimeIdentity is an already-public opaque type with a private tuple field, public Clone/PartialEq/Eq/Debug, no public constructor and no serialization representation; FlowRuntime::identity(&self) -> FlowRuntimeIdentity is already public."
+  },
+  "current_experimental_declarations_if_module_is_approved_for_export": {
+    "types": [
+      {
+        "name": "FidelityMode",
+        "declaration": "pub enum FidelityMode { Macro, Micro }",
+        "traits": "Clone, Copy, Debug, Eq, PartialEq"
+      },
+      {
+        "name": "FidelityScope",
+        "declaration": "pub enum FidelityScope { EntitySubsystem, Entity, Subsystem, Global }",
+        "traits": "Clone, Copy, Debug, Eq, PartialEq"
+      },
+      {
+        "name": "FidelityError",
+        "declaration": "pub enum FidelityError { UnsupportedVersion(u32), InvalidSubsystem, MissingPolicy, InvalidWork, DuplicateAdmission, BusyBoundary, NoPendingPolicy }",
+        "traits": "Clone, Copy, Debug, thiserror::Error, Eq, PartialEq"
+      },
+      {
+        "name": "FidelityDecision",
+        "declaration": "pub struct FidelityDecision { pub mode: FidelityMode, pub scope: FidelityScope, pub policy_version: u32 }",
+        "traits": "Clone, Copy, Debug, Eq, PartialEq"
+      },
+      {
+        "name": "FidelityPolicy",
+        "declaration": "pub struct FidelityPolicy { private fields: version, global, entity, subsystem, entity_subsystem }",
+        "traits": "Clone, Debug, Eq, PartialEq"
+      },
+      {
+        "name": "FidelityAdapter",
+        "declaration": "pub struct FidelityAdapter { private fields: policy, pending, admitted, bound_runtime }",
+        "traits": "Debug, Eq, PartialEq; Clone exists only under cfg(test) for snapshots; no Clone in production"
+      }
+    ],
+    "methods": [
+      "FidelityPolicy::new(version: u32, global: Option<FidelityMode>) -> Result<FidelityPolicy, FidelityError>",
+      "FidelityPolicy::set_entity(&mut self, entity: EntityId, mode: FidelityMode) -> Result<(), FidelityError>",
+      "FidelityPolicy::set_subsystem(&mut self, subsystem: &str, mode: FidelityMode) -> Result<(), FidelityError>",
+      "FidelityPolicy::set_entity_subsystem(&mut self, entity: EntityId, subsystem: &str, mode: FidelityMode) -> Result<(), FidelityError>",
+      "FidelityPolicy::resolve(&self, entity: EntityId, subsystem: &str) -> Result<FidelityDecision, FidelityError>",
+      "FidelityAdapter::new(policy: FidelityPolicy) -> FidelityAdapter",
+      "FidelityAdapter::admit(&mut self, flow: &FlowRuntime, work: WorkId, subsystem: &str) -> Result<FidelityDecision, FidelityError>",
+      "FidelityAdapter::decision(&self, work: WorkId) -> Option<&FidelityDecision>",
+      "FidelityAdapter::stage_policy(&mut self, policy: FidelityPolicy) -> ()",
+      "FidelityAdapter::apply_at_boundary(&mut self, flow: &FlowRuntime) -> Result<(), FidelityError>"
+    ],
+    "semantics_represented_by_current_code": [
+      "Version 1 policies, validated exact subsystem identity, and exact scope precedence entity+subsystem > entity > subsystem > global.",
+      "Admission resolves the actual owner of an existing Pending work; adapter binds to one FlowRuntime lineage on successful admission; duplicate and foreign/missing/non-Pending work fail closed.",
+      "Staging replaces the single pending policy. Boundary application checks all admitted work; Pending/Active/Suspended blocks, missing/despawned bound work fails closed, and success affects future admissions only.",
+      "Current admit is post-creation: it does not freeze policy before provider sampling/work creation and is not the C20 borrowing permit."
+    ]
+  },
+  "later_frozen_permit_not_current_export": {
+    "source": "conductor/design/calibration/c20-admission-bridge-v1.md, Frozen policy permit section",
+    "exact_contract_signatures": [
+      "pub struct FidelityAdmissionPermit<'a> { /* private, non-Clone */ }",
+      "impl FidelityAdapter { pub fn prepare_admission<'a>(&'a mut self, flow: &FlowRuntime, owner: EntityId, subsystem: &str) -> Result<FidelityAdmissionPermit<'a>, FidelityError>; }",
+      "impl<'a> FidelityAdmissionPermit<'a> { pub fn decision(&self) -> FidelityDecision; pub fn bind(self, flow: &FlowRuntime, work: WorkId, expected: SimDuration) -> Result<FidelityDecision, (Self, FidelityError)>; }"
+    ],
+    "requirements": [
+      "Permit mutably borrows adapter across real work creation/binding so staging/application cannot change the frozen decision.",
+      "Validate actual actor/runtime lineage before resolving; bind one actual Pending work only when owner, lineage and original duration match.",
+      "Failures do not mutate adapter or Flow; where specified they return the permit for retry. Adapter runtime lineage binds only on successful bind.",
+      "Permit and its owner/runtime/decision fields are private, non-Clone/non-serialized and excluded from seed/event/checkpoint bytes.",
+      "Existing admit remains compatible and retains its test coverage."
+    ],
+    "visibility": "The permit is a later experimental API addition, not among current source declarations. Calibration can use it across crates only after coordinator-approved DES experimental export; keep provider/bridge state crate-private in calibration and preserve DES-to-calibration dependency prohibition."
+  },
+  "compatibility_and_api_findings": [
+    {
+      "finding": "No current external fidelity API exists because lib.rs declares private mod fidelity; ADR-0007 proposes pub mod fidelity but explicitly says no source export is authorized by the ADR alone.",
+      "disposition": "Conditional acceptance of the API shape only after the coordinator records exact names/signatures, independent objections and dispositions, compatibility review, and acceptance. Do not treat this read-only review as authorization."
+    },
+    {
+      "finding": "Existing fidelity_mode_c21.rs and fidelity_lineage_v1.rs path-include fidelity.rs into external integration-test crates and rely on the cfg(test)-only FidelityAdapter::clone snapshot. Promoting those tests to production module imports before moving them in-crate would lose their test-only Clone context and fail to compile.",
+      "disposition": "Port mode tests into an in-crate test module first, then port lineage tests and remove the final path-included copy; reconcile original test cases/oracles before exporting the module. Do not enable production Clone or weaken snapshots."
+    },
+    {
+      "finding": "FlowRuntime::actor(&self, id: EntityId) -> Result<(), FlowError> exists in flow.rs but is private to that module. The C20 permit contract calls for crate-private actor validation so sibling fidelity code can validate a real actor. FlowRuntimeIdentity is already public and re-exported; its token representation/constructor remain opaque by design.",
+      "disposition": "A crate-private-only validator/access adjustment may be needed when permit implementation starts. Preserve no new public actor helper/signature and no external world mutation. Do this only after path-included external tests are removed. Preserve the existing public FlowRuntimeIdentity type and FlowRuntime::identity method exactly; do not narrow/reclassify them or export token representation/constructor/serialization."
+    },
+    {
+      "finding": "The current types use existing stable Rust constructs and existing thiserror/types dependencies; proposal introduces no required DES dependency or DES-to-calibration edge. Fidelity adapter state is process-local and has no portable serialization promise.",
+      "disposition": "Retain default DES Rust 1.76 compatibility. Calibration optional flow feature remains a separate later Rust 1.88 gate with actual production DES/ABM dependencies; canonical Rust 1.99 tests/clippy/fmt and production-feature compile are still required by ADR-0007. No check was run in this review."
+    }
+  ],
+  "review_disposition": {
+    "architecture_objection": "No objection to the conditional experimental API shape described by ADR-0007 and the frozen C20 contract, provided the staged test-port/export/permit order and visibility constraints above are preserved.",
+    "implementation_acceptance": "Not granted. Current module remains private; exact exports, test migration, permit implementation, production calibration integration, toolchain gates and hosted/native evidence remain open.",
+    "evidence_scope": "Read only fidelity.rs, DES lib.rs, ADR-0007, c20-admission-bridge-v1 and c2-execution-admission-v1 at observed HEAD. No edits, tests, builds, API publication or runtime qualification.",
+    "existing_public_api_preservation": "No proposed restriction narrows an already-public API: FlowRuntimeIdentity and FlowRuntime::identity are public today. The recommendation is only to preserve their existing opaque behavior and keep future actor validation crate-private."
+  },
+  "source_references": [
+    "crates/kairo-ecs-des/src/fidelity.rs:1-234",
+    "crates/kairo-ecs-des/src/lib.rs:1-10",
+    "crates/kairo-ecs-des/src/flow.rs:1331 (actor validator declaration)",
+    "conductor/design/calibration/ADR-0007-c2-experimental-api-adoption.md:1-47,56-64",
+    "conductor/design/calibration/c20-admission-bridge-v1.md:1-44",
+    "conductor/design/calibration/c2-execution-admission-v1.md:35-55",
+    "crates/kairo-ecs-des/src/flow.rs:1162-1179,1263-1269"
+  ]
+}

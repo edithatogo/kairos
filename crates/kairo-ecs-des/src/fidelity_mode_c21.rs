@@ -1,10 +1,7 @@
-use kairo_ecs_des::{FlowRuntime, FlowRuntimeIdentity, PreemptionStrategy, WorkId, WorkState};
+use crate::{FlowRuntime, PreemptionStrategy, WorkId, WorkState};
 use kairo_ecs_types::{SimDuration, SimTime};
 
-#[path = "../src/fidelity.rs"]
-mod fidelity;
-
-use fidelity::{
+use crate::fidelity::{
     FidelityAdapter, FidelityDecision, FidelityError, FidelityMode, FidelityPolicy, FidelityScope,
 };
 

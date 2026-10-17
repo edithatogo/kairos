@@ -3,9 +3,14 @@
 mod flow;
 pub use flow::*;
 
-// Private experimental C2 adapter; public API review and integrated delivery remain open.
-#[allow(dead_code)]
-mod fidelity;
+// Experimental C2 fidelity API; integrated delivery remains open.
+pub mod fidelity;
+
+#[cfg(test)]
+mod fidelity_mode_c21;
+
+#[cfg(test)]
+mod fidelity_lineage_v1;
 
 mod preemption;
 
