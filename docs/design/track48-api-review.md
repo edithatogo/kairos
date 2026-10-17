@@ -160,3 +160,174 @@ The new public error variant is intentionally source-breaking for exhaustive dow
 The [owned preview guide](../pdes/owned-optimistic-runtime.md) describes accepted constructor/root routing, opaque actual-issuer tickets/admission capabilities, canonical lifecycle synchronization, full-authority storage identity and shared bounded root/receipt accounting. Source `8a8d9c9` plus independent fixtures `68c3197` passed the full 138-test crate lane on actual matching Rust1.98.1 and1.76.0, plus formatting/strict all-target Clippy; [the source-bound record](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/owned-root-routing-evidence.md) preserves receipts and failed attempts. Public authority remains unordered; engine execution ordering is unchanged.
 
 This is an additive opt-in alpha surface with new public error variants, so exhaustive downstream error matches may need updates. No C ABI, Arrow, language binding, published conformance catalog or dependency schema changes are accepted here. Native capabilities are process-local and cannot certify persistence or cross-process/rank execution. Full owned handler/rollback/retirement/group-cut APIs are frozen for implementation; no local/full-CI/hosted acceptance is inferred for that pending join. Exact-head fresh CI, hosted checks, normal PR merge and real distributed evidence remain required.
+
+
+## Handler-owned execution and retirement — merged surface — 17 October 2026
+
+**Authorization note.** `docs/design/` is an owned path of Track 25
+(`api-governance-agent`). This section was written under explicit sole-maintainer
+authorization on 17 October 2026, because the preceding section still described
+the handler-owned execution surface as "frozen for implementation" while that
+surface is in fact merged. The Track 48-authored request is retained at
+`conductor/tracks/48-time-warp-optimistic-rollback-runtime/docs-design-api-review-handoff.md`.
+Track 25 remains the owning reviewer of this file.
+
+### Intake
+
+| Field | Value |
+|---|---|
+| Proposed by | Track 48 implementation programme, with maintainer authorization |
+| Affected root | `crates/kairo-ecs-pdes` |
+| Surface family | `rust_api` |
+| Current status / release stage | Opt-in feature preview / alpha |
+| Compatibility level | Additive owned-execution surface; alpha exhaustive-error-enum expansion |
+| Merged in | `786f50b` (#199), `1afe522` (#204), `55fd635` (#207) |
+| Decision | Accepted for bounded local process-local use; distributed/release acceptance pending |
+
+### Problem and proposed change
+
+The earlier owned slice could construct owners, register peers and route roots,
+but had no owned handler execution, rollback, cancellation or retirement path.
+The merged surface adds handler-owned execution with source authority and actual
+input incarnations, exact output obligations, latest-successor and ancestor
+barriers, reserved local replacement slots, atomic participant cuts, strict
+fossil floors and bounded root identities. The readable contract is
+[owned-optimistic-runtime.md](../pdes/owned-optimistic-runtime.md); the behavioral
+and API detail is in
+[owned-handler-retirement-leaf.md](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/owned-handler-retirement-leaf.md)
+and
+[owned-handler-retirement-api.md](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/owned-handler-retirement-api.md).
+
+### Compatibility classification and migration
+
+| Surface | Current root | Change type | Breaking? | Maturity / notes |
+|---|---|---|---|---|
+| Rust API | `crates/kairo-ecs-pdes` | Additive owned execution, retirement and group-cut methods; many new error variants | Exhaustive `OptimisticError` matches may require edits | Feature preview; opt-in behind `time-warp` |
+| C ABI | `include/kairo_ecs.h` | None | No | Existing maturity unchanged |
+| Arrow schema | `schemas/arrow/event_log_v1.schema.json` | None | No | Existing maturity unchanged |
+| Host APIs | Existing binding roots | None | No | No adapter or package pin change |
+| Shared fixtures | `conformance/fixtures` | None | No | No published fixture output/version change |
+
+`OptimisticError` now carries 73 public variants. The expansion is intentionally
+source-breaking for downstream exhaustive matches in this opt-in alpha surface,
+and no `#[non_exhaustive]` attribute or unrelated error is used to mask that
+limitation. Consumers should add a catch-all arm before beta promotion. No root
+is renamed, split, merged or removed; core scheduler ordering, `SimTime`
+representation and `RemoteEvent` are unchanged.
+
+### Added owned execution, accounting and retirement API
+
+Execution and progress:
+
+- `run_owned_until_with_budget` — executes staged owned handlers; a positive round
+  validates and publishes its complete output batch, while suffix rollback and
+  executed cancellation each consume one control budget unit.
+- `accounting_snapshot` — observation of owned frontiers, local/outbound minima
+  and unique reserved/retained receipt counts. It is explicitly **not** a global
+  cut.
+
+Routing, admission and completion:
+
+- `ready_native_sends` — obtain opaque remote tickets from retained outbox
+  obligations. `outbound_pending` is inspection only; a returned or copied
+  `OptimisticMessage`, an `as_anti` conversion or an observer copy cannot mint a
+  ticket.
+- `admit_native` — the actual destination owner accepts a ticket, accounting
+  retains the root and returns a capability bound to both actual owners. It does
+  not prove handler execution or retirement.
+- `acknowledge_native_admission` — the source closes only its exact outbox
+  obligation and keeps completion readback plus the root-cohort reservation.
+
+Retirement:
+
+- `pending_native_retirement_requests`, `receive_native_retirement`,
+  `applied_native_retirements`, `acknowledge_native_retirement` — exchange
+  cancellation obligations for recorded downstream outputs. Applied proofs,
+  source admission/completion facts and predecessor/ancestor barriers determine
+  when replacements become eligible. An admission acknowledgement alone proves no
+  handler effect and no retirement.
+
+Fossil collection:
+
+- `fossil_collect_native_group` — atomic common cut across the complete actual
+  ownership group, for use after inputs are closed and execution/channel
+  obligations permit. Raw owned `fossil_collect` rejects with
+  `NativeGroupCutRequired`.
+
+### Consumer-visible reporting behavior
+
+Two merged changes alter values consumers may read from public reports and are
+called out here because they are observable, not internal:
+
+1. A **blocked local replacement** now consumes capacity and is included in the
+   public pending-event **and** pending-positive totals, not only the reserved
+   count. This defect was found by review, not by a test asserting intent.
+2. A failed native group cut reports **every already-poisoned participant** in
+   sorted, deduplicated order while preserving the originally selected failing
+   runtime, preflight behavior and committed floors.
+
+### Memory ownership and safety
+
+The runtime owns model instances, retained pre-event snapshots, pending inputs,
+replay markers, send records, receipts, transitions and cancellation metadata.
+Models must supply independently owned snapshots containing values, membership,
+deterministic RNG state and reversible output state; shared interior aliases and
+irreversible external handler effects are unsupported. Snapshot capture,
+`Clone`, restore, handler invocation, `Drop` and process destruction execute
+outside peer lifecycle gates, and a safely clone-free path is valid. Counts bound
+retained object numbers and do not establish total model memory bytes or
+allocation immunity. The crate declares `#![forbid(unsafe_code)]`, so the merged
+surface introduces no unsafe code path.
+
+### Error model and thread safety
+
+Typed preflight errors reject malformed external input before queue or authority
+mutation. Snapshot, `Clone`, restore, handler and `Drop` panics, failed
+restoration and invalid complete post-handler output batches poison the runtime
+without partial publication; the first fatal cause is preserved alongside the
+original trigger. `CommittedCleanupFailed` retains published observer messages,
+counters, pending state and consumed budget and does not undo publication.
+
+The local driver still mutates through exclusive `&mut self` and introduces no
+concurrent worker, shared-model synchronization or simultaneous CPU-execution
+guarantee. Peer gates are acquired internally through deduplicated
+`RwLockReadGuard`s during validation and publication so that runtime `Drop` can
+invalidate a gate before model destructors run. A cloned `NativeAccountingAuthority`
+holds a weak lifecycle witness and does not keep its runtime alive; `is_live` is a
+point-in-time observation. Model `Send`/`Sync` properties do not establish
+distributed safety, and an allocation failure in snapshot construction or restore
+was not fault-injected.
+
+### Maturity, limits and what this does not certify
+
+All native tickets, acknowledgements, retirement proofs and cut participants bind
+actual **process-local** actors. They are not wire-authenticated records and
+cannot be serialized into remote proof. Durable restart, authenticated external
+accounting, MPI/gRPC acceptance, migration and distributed GVT remain separate
+implementation and evidence gates. The verified blocker is recorded at
+[distributed-blocker-readback-20261017.md](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/distributed-blocker-readback-20261017.md):
+Open MPI 5.0.11 is available locally, but `kairo-ecs-mpi` and `kairo-ecs-grpc`
+carry empty `mpi = []` / `grpc = []` marker features with no real backend and no
+launch tests, so no distributed claim may be inferred from this alpha surface.
+
+### Verification recorded for this surface
+
+The merged native source `35914c3` passed 167 PDES tests on each explicitly bound
+Rust 1.98.1 and 1.76.0 compiler, full workspace CI 531/531 with zero skipped and
+core coverage 92.59%, plus formatting, strict Clippy, rustdoc, `cargo-deny`,
+`cargo-audit`, benchmark compilation, 12 collector validation tests, locked
+workspace doctests and the local manifest and Conductor gates. Independent
+acceptance of 18 execution cases is recorded in
+[owned-native-acceptance-20261004.md](../../conductor/tracks/48-time-warp-optimistic-rollback-runtime/owned-native-acceptance-20261004.md),
+with hash-bound receipts under `benches/pdes/evidence/`.
+
+### Reviewer record and release decision
+
+No human release-manager signoff, protected-root enrollment, stable promotion or
+publication approval is asserted or fabricated here. Track 48 remains **In
+Progress**. The 4 October 2026 conditional Track 49 phase entry expired when bound
+interface and local semantics changed at #207; it is not reused or hash-refreshed.
+First allowed stage remains opt-in feature-gated alpha preview. Any beta or
+stable promotion requires a fresh API review covering consumer edits,
+deterministic shared outputs, protected roots and the distributed evidence that
+does not yet exist.
