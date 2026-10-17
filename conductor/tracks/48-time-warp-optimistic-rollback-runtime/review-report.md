@@ -154,3 +154,47 @@ No push, no pull request, no hosted check, no release, no publication, no Track 
 dispatch, no global status/phase-file edit, and no independent review. The
 reconciliation diff still needs `$conductor-review` and hosted verification
 before any status movement.
+
+## `$conductor-review` of the reconciliation diff — 17 October 2026
+
+Review scope `fb08688..72b6120`: 6 files, 359 insertions, 19 deletions, all
+Markdown inside Track 48 owned paths plus one owned guide. No Rust, schema,
+fixture or workflow change, so style compliance is judged against
+`conductor/code_styleguides/docs.md` (maturity labels retained, no new benchmark
+claim published, no new public example added).
+
+### Findings raised by review and corrected in `72b6120`'s successor
+
+- **Medium — an unverifiable source-to-PR mapping was asserted.** The first draft
+  of the `docs/pdes` correction stated that `3cd6d56`, `7a432ab` and `68b8d7a` were
+  "pushed, hosted-verified and merged as" `786f50b`, `1afe522` and `55fd635`
+  respectively. `git cat-file` shows none of those three review hashes exist in
+  this repository, so the 1:1 correspondence was asserted without evidence. In a
+  document whose entire purpose is accuracy, that is the same class of defect this
+  track's review history repeatedly rejects. Corrected to state the merged PRs
+  without a per-source mapping, and to say explicitly that the pre-merge review
+  hashes are not reachable commits.
+- **Low — a wrong cross-reference.** The same paragraph said the superseded
+  hosted-check wording appeared "below", but it was the sentence being replaced,
+  i.e. above; the only later occurrence of "hosted" on that page refers to
+  evidence records, not check status. Corrected.
+- **Low — an evidence claim rested on an inconclusive check.** The first
+  `rsmpi`/`mpi-sys`/`libmpi` search was piped into `head`, which masks grep's exit
+  status, so the "absent" result was not actually established. Re-run without the
+  pipe: every repository match is prose asserting those crates are *not*
+  implemented, and no manifest contains them. The readback now states the
+  evidence precisely and cites Track 49's independent corroboration
+  (`first-production-leaf-preparation-20261004.md`, pending `plan.md` Task 1.1,
+  and the `mpi-smoke` entry in `conductor/quality-gates.md`).
+
+### Checks re-run after the fixes
+
+Phase gates, conductor artifact validation, DAG validation, strict clean-tree git
+closeout and the docs workflow validator (real Astro build) all exit 0. See the
+handoff entry for the exact head.
+
+### Residual risk
+
+This remains a self-review. No independent reviewer has read the reconciliation
+diff, and no hosted run has been accepted for it. Nothing here supports a status
+change.

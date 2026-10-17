@@ -17,12 +17,16 @@ the explicitly bound Rust 1.98.1 workspace lane passed all 458 tests, core line
 coverage (92.59%), formatting, Clippy, rustdoc and Rust security checks.
 Matching Cargo/rustc 1.76.0 also passed the complete 94-test local PDES lane
 at `7a432ab`, verified independently from source hashes and compiler cache.
-Compiler-bound benchmark evidence is accepted at `68b8d7a`. The `3cd6d56`, `7a432ab`
-and `68b8d7a` hosted-check wording below is historical: those slices were later
-pushed, hosted-verified and merged as `786f50b` (#199), `1afe522` (#204) and
-`55fd635` (#207), the last of which added handler-owned execution and retirement.
-The joined native runtime is described in
-[owned-optimistic-runtime.md](owned-optimistic-runtime.md). No distributed
+Compiler-bound benchmark evidence is accepted at `68b8d7a`. The hosted-check
+status recorded above is historical: the preview runtime, codec bridge and
+handler-owned execution slices have since been pushed, hosted-verified and merged
+as `786f50b` (#199), `1afe522` (#204) and `55fd635` (#207), the last of which added
+handler-owned execution and retirement. Exact source-to-pull-request
+correspondence for the pre-merge review hashes quoted on this page (`3cd6d56`,
+`7a432ab`, `68b8d7a`, `ec9828e`) is **not** reproducible from this repository,
+because those commits predate the squashed merge history; read them as historical
+review snapshots, not as reachable commits. The joined native runtime is described
+in [owned-optimistic-runtime.md](owned-optimistic-runtime.md). No distributed
 acceptance or Track48 Done follows from these local results.
 
 ## Model contract

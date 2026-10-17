@@ -34,7 +34,7 @@ here.
 
 | Fact | Evidence |
 |---|---|
-| `kairo-ecs-mpi` has no real MPI binding | `crates/kairo-ecs-mpi/Cargo.toml` declares only `kairo-ecs-pdes` and `kairo-ecs-types`; no `rsmpi`, `mpi-sys` or `libmpi` anywhere in the workspace manifest or crate source |
+| `kairo-ecs-mpi` has no real MPI binding | `crates/kairo-ecs-mpi/Cargo.toml` declares only `kairo-ecs-pdes` and `kairo-ecs-types`; a repository-wide search for `rsmpi`, `mpi-sys` and `libmpi` returns only prose stating they are *not* implemented, never a manifest or source binding |
 | Its `mpi` feature is an empty marker | `crates/kairo-ecs-mpi/Cargo.toml` line 14: `mpi = []` |
 | The crate has no integration tests | `crates/kairo-ecs-mpi/tests/` does not exist |
 | `kairo-ecs-grpc` has no real transport | `crates/kairo-ecs-grpc/src/lib.rs` line 590: "Placeholder transport preserving the Track 35 API without requiring tonic yet"; no `tonic` or `prost` dependency |
@@ -46,6 +46,14 @@ Because both `mpi` and `grpc` are empty feature markers, running
 `cargo test -p kairo-ecs-mpi --features mpi` compiles **no** additional transport
 code. A green result from that command is a protocol/emulator contract result and
 must never be reported as real MPI or real gRPC execution.
+
+This readback is independently corroborated by Track 49's own records:
+`conductor/tracks/49-distributed-mpi-grpc-state-synchronization/first-production-leaf-preparation-20261004.md`
+states that the current `grpc=[]`/`mpi=[]` features and source are dependency-free
+placeholders with no `tonic`/`prost`/`rsmpi` lock entries, and Track 49 `plan.md`
+Task 1.1 — "Add `rsmpi` dependency behind `mpi`" — is still pending.
+`conductor/quality-gates.md` likewise describes `mpi-smoke` as validating the
+transport protocol emulator, with real `rsmpi` transport as future work.
 
 ## Ownership and governance consequences
 
