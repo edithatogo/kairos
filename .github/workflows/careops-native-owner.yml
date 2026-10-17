@@ -125,7 +125,7 @@ jobs:
           name: q51-conformance-${{ matrix.os }}
           path: .artifacts/ci/q51/
           retention-days: 7
-          if-no-files-found: ignore
+          if-no-files-found: error
       - name: Test Arrow IO with Rust 1.99.0
         env:
           EXPECTED_OS: ${{ matrix.os }}
@@ -156,12 +156,14 @@ jobs:
           test ! -e "$output_dir"
           mkdir -p "$output_dir"
           export KAIROS_INTEROP_OUTDIR="$output_dir"
+          export KAIROS_C11_PHYSICAL_OUTDIR="$GITHUB_WORKSPACE/$log_dir/c11-rust-output"
           "$task_cargo" test --locked -p kairo-ecs-arrow-io --all-features 2>&1 | tee "$log_dir/test.log"
           "$task_cargo" test --locked -p kairo-ecs-arrow --features resource-lifecycle-io 2>&1 | tee "$log_dir/resource-lifecycle.log"
           test -s "$output_dir/rust.ipc_file"
           test -s "$output_dir/rust.ipc_stream"
           test -s "$output_dir/rust.parquet"
           "$python_dir/bin/python" "$fixtures" --check-rust "$output_dir" 2>&1 | tee "$log_dir/pyarrow-readback.log"
+          "$python_dir/bin/python" crates/kairo-ecs-arrow-io/tests/fixtures/calibration_physical_v2/generate.py --check-rust "$KAIROS_C11_PHYSICAL_OUTDIR" 2>&1 | tee "$log_dir/c11-pyarrow-readback.log"
       - name: Preserve Arrow IO Rust 1.98 evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -177,7 +179,7 @@ jobs:
           name: careops-owner-failure-${{ matrix.os }}
           path: .artifacts/ci/native/
           retention-days: 7
-          if-no-files-found: ignore
+          if-no-files-found: error
 
   arrow-io-floor:
     name: Arrow IO Rust 1.88 (${{ matrix.os }}, ${{ matrix.features }})
