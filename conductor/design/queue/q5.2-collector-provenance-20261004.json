@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "id": "Q5.2.collector.runtime-source-provenance",
+  "status": "review_required",
+  "model": "gpt-6-luna",
+  "base": "40c29e321a9f082f617bc1a03f343fa4b73bb47c",
+  "context_budget_bytes": 24000,
+  "owned_paths": [
+    "benches/queue/run_v1.py",
+    "benches/queue/test_run_v1.py",
+    ".artifacts/q52-provenance",
+    ".artifacts/q52-runtime"
+  ],
+  "readonly_context": [
+    "AGENTS.md",
+    "conductor/design/queue/q5.2-collector-provenance-20261004.json"
+  ],
+  "source_sha256": {
+    "benches/queue/run_v1.py": "f37d3ba5970b09ae8f7c24ad9e891920ea02487dc17c60bd20acddbb9d953a0f",
+    "benches/queue/test_run_v1.py": "e4806a5354425d865a44736428ab59e39176ab787404cd03ce30931f4995fbde"
+  },
+  "finding": "Existing immutable clean HEAD/binary checks qualify prior bounded data, but SOURCE_PATHS omits newly separated runtime modules. Expand actual source input hashes before final measurement and reject incomplete metadata dictionaries. Do not relabel prior result scope.",
+  "steps": [
+    "Extend SOURCE_PATHS with preemption.rs and flow/{record_delta,queue_delta,deadline_index,preempting_index}.rs. Keep existing paths. Add rust-toolchain.toml to BUILD_INPUT_PATHS. The preempting_index module is a separately approved concurrent leaf and must be integrated before any real collector build/measurement; this small Python-only leaf cannot manufacture that file.",
+    "bounded_measurement_provenance_qualified must fail closed unless build-after contains all BUILD_INPUT_PATHS and start/end contain all SOURCE_PATHS, in addition to existing clean-HEAD/toolchain/binary/drift/readback checks. Require declared input values to be nonempty valid lowercase64hex SHA256 strings. Do not accept arbitrary subset dictionaries as complete provenance. Preserve existing matched start/end/build digest comparisons and all error handling.",
+    "Add meaningful provenance mutation tests: missing new helper hash in start/end or build; changed helper between start/end; missing Rust toolchain build hash; malformed source digest. Existing fixture mocks adapt to current declared source family, not fabricated real measurements. Retain all18 collector regressions.",
+    "No Rust code, public API, workload/case generator/input contract, timeout/repeat policy, statistical summaries, dependencies or performance thresholds change. No provenance pass on legacy receipts whose declared scope omitted helpers.",
+    "Fresh private claim; readonly packet+AGENTS only, verify source hashes; no mutable source frozen as lease input. Preserve actual attempts/commands/cwd/head/toolchain/output hashes. One commit after separate scopecheck then immediate release."
+  ],
+  "commands": [
+    "/opt/homebrew/bin/python3 -m unittest discover -s benches/queue -p test_run_v1.py -v",
+    "/opt/homebrew/bin/python3 -m py_compile benches/queue/run_v1.py benches/queue/test_run_v1.py",
+    "git diff --check"
+  ],
+  "dispatch": "Independent review and separate explicit root approval of exact source-bound packet required; no implementation authority from preparation.",
+  "qualification": "Python collector tests only; no Rust compilation/performance/CI/Q5.2 acceptance claim."
+}

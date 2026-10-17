@@ -1,0 +1,70 @@
+{
+  "status": "accepted_synthetic_C01",
+  "qualified_source_commit": "edcc4b353485141b69521e616d9a05ef50ff3042",
+  "source_sha256": {
+    "crates/kairo-ecs-calibration/src/ingestion_c01.rs": "74c15fcb1dae7e82eae8499701dd5b52040dbbee83ca10360cb47c4b00131836",
+    "crates/kairo-ecs-calibration/src/ingestion_sort.rs": "5825a6734401eca2f5c079dafe35a9f20a81dfda49b1182ceb30548c207fb156",
+    "crates/kairo-ecs-calibration/src/ingestion_normalize.rs": "cb09f92ea2fcd523e732e3263c830c163bd2511934ed461bf1a8b8347fdf28ea",
+    "crates/kairo-ecs-calibration/src/ingestion_validate.rs": "ada2db9b91c9f79b6a4d8ed7801075ca21fa5aa839209708e42e3c295d74a523",
+    "crates/kairo-ecs-calibration/src/ingestion_pipeline.rs": "6af9f7b928e83634c189b16e7c33469abf0262b4fc7e887e1c16b59e915b9264",
+    "crates/kairo-ecs-calibration/src/lib.rs": "c31f062a3967d8dcdf614f72ef276eed55c50582db98dc7781db56bdbcb98507",
+    "conformance/c01/physical_dimensions.py": "e9dff7a91d193f7eea2b5ea1fd0e8a9b3ee5457bb3a1b5f13d0e229ab7ccb0fe",
+    "crates/kairo-ecs-arrow-io/tests/ingestion_physical_v1.rs": "e51e8871f48f856db955358cb6d44ec2607be744d152cd9207c3f3b02141dacb",
+    "Cargo.lock": "711f5d19b22d454a394334402e5829ec8e0a0287f4febaef807767e1529bda8b"
+  },
+  "archive_sha256": "a2953764232f9c3596c8650840f5baf04d36649803e82750d4aefc5b8f549e75",
+  "archive_files": 2207,
+  "archive_inventory_sha256": "945849c1adcf6538b4825d5f3efbc15e83d928902b6086502387de872312b22b",
+  "matrix": {
+    "actual_executions": 108,
+    "aliases": 3780,
+    "all_alias_source_sha_and_byte_length_match": true,
+    "cache_key": "exact profile + exact ordered NDJSON bytes + frozen template bytes + frozen config bytes + validation policy bytes + chunk/run-row/run-byte limits + same code/toolchain evidence",
+    "checked_alias_sources": 3780,
+    "distinct_profile_input_fingerprints": 6,
+    "index_sha256": "c9b579a5dfe1af00647472a21bad81954ca757592ce066295e646008c107569d",
+    "matrix_points": 3888,
+    "profiles": [
+      "long-valid",
+      "wide-valid",
+      "long-quarantine"
+    ],
+    "schema_version": "c01.transport-rust-matrix.v1",
+    "transport_bundles": 216
+  },
+  "scope": "C01only; fullC1.4 staysopen; syntheticfixturequalification doesnotcertify clinical/releases orbroaderKairos PR gates",
+  "physical": {
+    "actual_runs": 24,
+    "ordered_files": 648,
+    "reader_sources": 216,
+    "payload_negatives": 3
+  },
+  "baselines": {
+    "long-valid": [
+      6,
+      0,
+      1,
+      2
+    ],
+    "wide-valid": [
+      6,
+      0,
+      3,
+      2
+    ],
+    "long-quarantine": [
+      3,
+      3,
+      1,
+      2
+    ]
+  },
+  "baseline_count_order": [
+    "events",
+    "quarantine",
+    "exclusions",
+    "outcomes"
+  ],
+  "policy_supplement": "Retained originalconfigs; explicitpolicy/buildmetadata supplied afterbyteexact source/template/4population comparison; independent C0 validatedall3actualbaselines",
+  "attempts": "OriginalfailedC0 interpreter and relativepathRust invocation retained; finalactualrun1passed0ignored; laterretentionrerunfinalpassed"
+}

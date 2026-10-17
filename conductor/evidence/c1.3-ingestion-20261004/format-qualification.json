@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/cargo",
+    "fmt",
+    "--all",
+    "--",
+    "--check"
+  ],
+  "cwd": "/private/tmp/careops-c13-parent-20261004/libs/kairos",
+  "source_base": "ca111a2121ce2fe6faba2b111f1c5a2e9decfd64",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "",
+  "format_argv": [
+    "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustfmt",
+    "--edition",
+    "2021",
+    "crates/kairo-ecs-arrow-io/tests/ingestion_physical_v1.rs"
+  ],
+  "source_sha256": {
+    "crates/kairo-ecs-arrow-io/tests/ingestion_physical_v1.rs": "e51e8871f48f856db955358cb6d44ec2607be744d152cd9207c3f3b02141dacb"
+  },
+  "scope": "Rust2021 formatting only; adapter test assertions and production runtime unchanged"
+}

@@ -16,7 +16,10 @@ Format:
 
 ### Added
 
+- Experimental private C1 ingestion adapters now pass scoped CI lint qualification without promoting their API; dry-run package/workflow inventories and MSRV metadata match the optional calibration and Arrow IO lanes.
+
 - Experimental calibration physical schema v2 qualification now freezes every nested Arrow type, nullability and metadata field, exercises IPC and Parquet separately at the Rust 1.88 floor, and retains exact PyArrow readback evidence. Legacy telemetry remains a custom smoke format with its own Rust 1.76 compatibility qualification.
+- Supplementary `kairo-ecs-des` queue, victim-selection and FlowRuntime benchmark harnesses record deterministic inputs, outcome checks, process memory and release-build provenance. Representative 100,000-request Flow scaling remains unresolved; these development measurements do not establish release or performance acceptance.
 
 - Security reporting guidance now links to the repository's verified private vulnerability reporting route and explains coordinated public disclosure.
 - Scheduler property, bounded fuzz, mutation, and core-coverage gates, with one instrumented workspace test pass and selected GitHub Actions publishers.
@@ -78,6 +81,7 @@ Format:
 
 - Workspace Clippy now validates the private C1 mapper with behavior-preserving context structs, and the Q0.1 design disposition links directly to its evidence in the parent repository.
 - CI metadata and release packaging inventories now include the current Rust toolchain, native-owner workflow, and Arrow/calibration crates; Arrow IO passes current stable Clippy.
+- `kairo-ecs-des` waiting-claim cancellation, reprioritization, despawn and replacement use exact priority keys rather than scanning to delete a request; corrupt keys reject atomically, preserving independent lifecycle ordering.
 - Python's optional Arrow extra now requires PyArrow 14.0.2 or later to exclude releases affected by an upstream Arrow reader security advisory.
 - Upgrade Astro to 7.3.5 and its Starlight integration/plugins to security-compatible releases, fixing the critical Astro image-optimization remote-code-execution alert.
 - Updated TypeScript binding development dependencies (Vitest 4.1.11, Vite 8.3.1, and PostCSS 8.5.28) and raised the TypeScript template Vitest pin to 4.1.11.
