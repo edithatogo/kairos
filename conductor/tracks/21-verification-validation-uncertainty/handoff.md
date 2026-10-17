@@ -141,3 +141,31 @@ Add reference-data validation evidence and quantitative uncertainty artifacts be
 ## C1 shared temporal helper prerequisite (2026-10-04)
 
 Consume the role-preserving helper under ADR-0005; pure calibration remains Arrow-free. Mapping/count/schema and full C1 joins are pending. See `../../design/calibration/c1-shared-temporal-helper-v1.md`. This is a scoped development extension; historical closeout evidence remains unchanged.
+
+## C1 scoped integrated qualification — 2026-10-05
+
+C1.4 review uses runtime source `7f72b7d9a9b6ae62e481a59b2cc04ce37da0a4a5` and integrated source `87d591c484bc937f7536a0e700b1400968b9549a`.
+The [retained evidence](../../evidence/c1.4-integrated-20261005/README.md)
+contains fresh C-01 transport runs, independent IPC/Parquet readback and
+reconciled counts. The 90 C1 runtime files are byte-identical across these heads;
+accepted Q5.2 source is preserved. The integrated source has 48 successful hosted
+checks and two expected conditional skips. Final governance successor requires
+fresh phase, strict-clean and exact-head owner CI before parent pin acceptance.
+This supplements existing owner scope; C2, public API review, release and clinical
+validation remain open. Historical Track 04/21 closure remains unchanged.
+
+
+## C4.1 bounded fixture preparation — 2026-10-05
+
+Accepted experimental fixture/test source `6a17578a16d4bb13969961dfd116b3afaf7c8c6c`
+adds generic `conformance/c41` and one private calibration integration test.
+42 fixtures, exact/pinned independent references, 8 native and 10 Python tests
+qualify fixture preparation only. Missing/runtime-mock reports fail the opt-in
+C4.2 gate. See [retained review and evidence](../../evidence/c4.1-preparation-20261005/README.md).
+Track 21 owns semantics and Track 12 the references; this does not advance an
+upstream phase or change historical registry/ledger status. C4.2 runtime,
+C4.3 sidecars and C4.4/C-04 acceptance remain open; no release claim follows.
+
+## C4.2 bounded private runtime — 5 October 2026
+
+Runtime source `59d7dbb0c004654e3da90951d42e2b983ef23993`: 42 actual cases independently conform; 119 calibration tests pass on Rust1.99/1.88, strict current Clippy and formatting pass. Paired residuals, fixed groups/source windows, diagnostic retention, provenance binding and ordered reduction are implemented privately. [Retained evidence](../../evidence/c4.2-runtime-20261005/README.md). This supersedes the historical C4.1 runtime-not-implemented boundary only for this experimental leaf; public API, C4.3, C4.4/C-04 and clinical/release gates stay open. No upstream phase/registry/ledger status advances. Hosted successor checks and parent pin acceptance are separate.

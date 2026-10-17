@@ -1,0 +1,165 @@
+[
+  {
+    "id": "c42-final-full-native",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "started_utc": "2026-10-04T23:44:13.093679+00:00",
+    "ended_utc": "2026-10-04T23:44:29.764453+00:00",
+    "duration_seconds": 16.67029537516646,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/src/lib.rs": "c04bf2fe5a2529969eaa95822649a18775525fa2e234603717bb0975a589eef7",
+      "crates/kairo-ecs-calibration/src/metrics.rs": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4",
+      "crates/kairo-ecs-calibration/src/residuals.rs": "1844042b8841340ea16eaa93da9d293ea3003d03bc49ed567df66ada9ca3cb8f",
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs": "f62c6f3f2352dee945d769144b236805f512667e701f536cd6ca3003de004b20"
+    },
+    "log": "c42-final-full-native.log",
+    "log_sha256": "7f00c4b796cad958966c5c5e0f6b4177d72637fb8b186c5861625f428cf193de",
+    "interpretation": "ordinary gate"
+  },
+  {
+    "id": "c42-final-strict-clippy",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "clippy",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "started_utc": "2026-10-04T23:44:29.794331+00:00",
+    "ended_utc": "2026-10-04T23:44:32.916981+00:00",
+    "duration_seconds": 3.1226270829793066,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/src/lib.rs": "c04bf2fe5a2529969eaa95822649a18775525fa2e234603717bb0975a589eef7",
+      "crates/kairo-ecs-calibration/src/metrics.rs": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4",
+      "crates/kairo-ecs-calibration/src/residuals.rs": "1844042b8841340ea16eaa93da9d293ea3003d03bc49ed567df66ada9ca3cb8f",
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs": "f62c6f3f2352dee945d769144b236805f512667e701f536cd6ca3003de004b20"
+    },
+    "log": "c42-final-strict-clippy.log",
+    "log_sha256": "b52afb9bf68f2a5f50f09b30709c0e63102eb51eda7ed9b3629e88d7f5be4ac4",
+    "interpretation": "ordinary gate"
+  },
+  {
+    "id": "c42-final-workspace-format",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "started_utc": "2026-10-04T23:44:32.934173+00:00",
+    "ended_utc": "2026-10-04T23:44:34.482729+00:00",
+    "duration_seconds": 1.548549999948591,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/src/lib.rs": "c04bf2fe5a2529969eaa95822649a18775525fa2e234603717bb0975a589eef7",
+      "crates/kairo-ecs-calibration/src/metrics.rs": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4",
+      "crates/kairo-ecs-calibration/src/residuals.rs": "1844042b8841340ea16eaa93da9d293ea3003d03bc49ed567df66ada9ca3cb8f",
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs": "f62c6f3f2352dee945d769144b236805f512667e701f536cd6ca3003de004b20"
+    },
+    "log": "c42-final-workspace-format.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "interpretation": "ordinary gate"
+  },
+  {
+    "id": "c42-floor-native",
+    "argv": [
+      "rustup",
+      "run",
+      "1.88.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target-floor"
+    },
+    "started_utc": "2026-10-04T23:44:34.518165+00:00",
+    "ended_utc": "2026-10-04T23:45:06.778863+00:00",
+    "duration_seconds": 32.259096541209146,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/src/lib.rs": "c04bf2fe5a2529969eaa95822649a18775525fa2e234603717bb0975a589eef7",
+      "crates/kairo-ecs-calibration/src/metrics.rs": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4",
+      "crates/kairo-ecs-calibration/src/residuals.rs": "1844042b8841340ea16eaa93da9d293ea3003d03bc49ed567df66ada9ca3cb8f",
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs": "f62c6f3f2352dee945d769144b236805f512667e701f536cd6ca3003de004b20"
+    },
+    "log": "c42-floor-native.log",
+    "log_sha256": "c56b58262a1cbdb5bc78832c21f343f40a1a9135fe3eba5920ba17cfdd00efa5",
+    "interpretation": "ordinary gate"
+  },
+  {
+    "id": "c42-synthetic-100k-timing",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "distance_c42",
+      "deterministic_100k_point_shift_timing",
+      "--",
+      "--ignored",
+      "--nocapture"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "59d7dbb0c004654e3da90951d42e2b983ef23993",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "started_utc": "2026-10-04T23:45:06.811134+00:00",
+    "ended_utc": "2026-10-04T23:45:09.838392+00:00",
+    "duration_seconds": 3.0272314997855574,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/src/metrics.rs": "4797f79cb72f673eac1259a604e0680686aec7086d23f12cf9d45b90be3fd6a4",
+      "crates/kairo-ecs-calibration/tests/distance_c42.rs": "d382f719e3dd77e1a37c0753947447a0ad556e3c58f92d56f2dcb1d2a8a6fa7e"
+    },
+    "log": "c42-synthetic-100k-timing.log",
+    "log_sha256": "c73d499a263ed296bf06bd7c619d2dcac91fa2f47cceaae22d9f06f62b953034",
+    "interpretation": "Single debug synthetic timing; not release performance or speedup evidence"
+  }
+]

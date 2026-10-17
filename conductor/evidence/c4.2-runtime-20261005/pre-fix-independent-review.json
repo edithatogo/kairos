@@ -1,0 +1,20 @@
+{
+  "pre_fix_head": "2660b37fc8a03db72008bc364ce9ab9db0ebff49",
+  "independent_residual_reviewer": "c42_runtime_report",
+  "status": "changes_required",
+  "confirmed_defects": [
+    "whole-group invalid early return dropped other rows",
+    "same-key group mismatch became unmatched",
+    "quadratic per-key scans",
+    "wrong-side observed ticks admitted on simulation failures/infeasibility"
+  ],
+  "other_semantics_reviewed": [
+    "exact full-u128 residual signs",
+    "canonical compensated descriptive summaries",
+    "source-clock half-open window and missing clock",
+    "C0.2 logical key",
+    "independent overlapping diagnostic counts",
+    "origin precision classifications"
+  ],
+  "final_fix_review": "pending"
+}

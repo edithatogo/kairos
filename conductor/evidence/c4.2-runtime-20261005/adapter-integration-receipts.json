@@ -1,0 +1,65 @@
+[
+  {
+    "id": "c42-report-default",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "metrics_c42"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "25134e70a749b45a431ee05c598ae23c1ff53fa6",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "started_utc": "2026-10-04T23:22:03.164953+00:00",
+    "ended_utc": "2026-10-04T23:22:06.738441+00:00",
+    "duration_seconds": 3.5729295830242336,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/src/metrics.rs": "bf2b72f1f4938634ed1c57b7892c5a6bf90235f3f8fc9c5f59859d5b80f2186e",
+      "crates/kairo-ecs-calibration/tests/metrics_c42.rs": "c6b9974227926fe9f1e9f85cdda06e265b11ca76ee57a30508bdd336bb7faffc",
+      "conformance/c41/fixtures.json": "f2b35392e64245475d039d55761344eaeebd6cb0499342436c63840325ed0e6b"
+    },
+    "log": "c42-report-default.log",
+    "log_sha256": "94b5c3fd32f6e3df8615a1f1d29ccb2a2273d0194440a0d40f85b52f78e97405",
+    "interpretation": "ordinary gate"
+  },
+  {
+    "id": "c42-cohort-target",
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "cohorts_c42"
+    ],
+    "cwd": "/private/tmp/kairos-c42-20261005",
+    "head": "25134e70a749b45a431ee05c598ae23c1ff53fa6",
+    "env_overrides": {
+      "CARGO_TARGET_DIR": "/private/tmp/kairos-c42-20261005/.artifacts/c42-cohorts/target"
+    },
+    "started_utc": "2026-10-04T23:22:06.761522+00:00",
+    "ended_utc": "2026-10-04T23:22:07.068686+00:00",
+    "duration_seconds": 0.3071614580694586,
+    "exit_status": 0,
+    "input_sha256": {
+      "crates/kairo-ecs-calibration/src/metric_cohorts.rs": "f62c6f3f2352dee945d769144b236805f512667e701f536cd6ca3003de004b20",
+      "crates/kairo-ecs-calibration/tests/cohorts_c42.rs": "a2e862c9c2ba51742450e73d3a9dc9b2cdf91572a4f2e6e89f3a3e1fb4790aac"
+    },
+    "log": "c42-cohort-target.log",
+    "log_sha256": "867b142367e222576cd76d8f7af8b7083318c2aa1b0cc78c9e58e40eb4d8309b",
+    "interpretation": "ordinary gate"
+  }
+]

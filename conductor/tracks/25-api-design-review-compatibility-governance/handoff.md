@@ -164,3 +164,7 @@ does not close Track 25 or replace its remaining phase gates.
 ## C1 shared temporal helper prerequisite (2026-10-04)
 
 Approved internal experimental direction adds KnowledgeAvailable to a public enum; exhaustive matches require migration. Release hold remains; no universal nonbreaking or external-owner claim. See `../../design/calibration/c1-shared-temporal-helper-v1.md`. This is a scoped development extension; historical closeout evidence remains unchanged.
+
+## Q5.3 Flow compatibility handoff — 2026-10-05
+
+The Q5.3 source-bound compatibility/migration qualification is at Kairos `eae890b0a2a3524a543ec4ee4aca61346e273b52` on `origin/codex/careops-q53-compatibility` (stacked/draft development PR #218); see the CareOps Sim parent `conductor/evidence/q5.3-completion-20261005/`. The external legacy consumer fixture and source-linked migration guide preserve the legacy `Resource`/`DESContext` surface within the tested cases; they are not a general semver guarantee. Flow remains experimental. The existing Track 25 Q0.1 note remains applicable: concrete Flow symbols still require Track 25 review before release. No symbol-level review, stable promotion, formal release-gate run, release approval, or security-gate waiver is claimed here; historical Track 25 status and plan remain unchanged.

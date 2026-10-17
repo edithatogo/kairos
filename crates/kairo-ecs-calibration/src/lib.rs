@@ -3,6 +3,19 @@
 
 pub mod seed_map;
 
+// Private C4.2 numeric implementation; no public API or sidecar promises.
+#[expect(
+    dead_code,
+    reason = "Private cohort adapter is qualified by C4.2 integration tests; public API review remains open"
+)]
+mod metric_cohorts;
+mod metrics;
+#[expect(
+    dead_code,
+    reason = "Private residual adapter is qualified by C4.2 integration tests; public API review remains open"
+)]
+mod residuals;
+
 // Kept crate-private under Track 21's no-public-API-without-ADR boundary.
 #[cfg_attr(
     not(test),

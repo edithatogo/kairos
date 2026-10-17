@@ -137,3 +137,15 @@ The sidecar is a 27-field typed Arrow RecordBatch from immutable captured record
 The earlier Q4.3/1.98.1 result at b6671d75b77e2e98f4cd63dd6a73d7472c00ceb7 remains above as historical provenance. The lifecycle sidecar is qualified as a bounded development extension at tested clean source S 1123ad4bd0c9121a4a8f5f0be1229fbafc9861f6 on `origin/codex/careops-q4-lifecycle`; local Rust 1.99.0, optional Rust 1.88.0 and default Rust 1.76.0 gates, plus exact two-host owner run https://github.com/edithatogo/kairos/actions/runs/37192093779, are bound by `conductor/evidence/q4-development-source-qualification-20261004.json`.
 
 Track 04 remains Done only for its historical R2 schema/versioning/roundtrip scope. This does not complete the broader Arrow track, stable API, C1/C2, Track 22 portability or release. Parent pin integration is pending; successor G requires fresh phase/strict/exact-head owner evidence.
+
+## C1 scoped integrated qualification — 2026-10-05
+
+C1.4 review uses runtime source `7f72b7d9a9b6ae62e481a59b2cc04ce37da0a4a5` and integrated source `87d591c484bc937f7536a0e700b1400968b9549a`.
+The [retained evidence](../../evidence/c1.4-integrated-20261005/README.md)
+contains fresh C-01 transport runs, independent IPC/Parquet readback and
+reconciled counts. The 90 C1 runtime files are byte-identical across these heads;
+accepted Q5.2 source is preserved. The integrated source has 48 successful hosted
+checks and two expected conditional skips. Final governance successor requires
+fresh phase, strict-clean and exact-head owner CI before parent pin acceptance.
+This supplements existing owner scope; C2, public API review, release and clinical
+validation remain open. Historical Track 04/21 closure remains unchanged.
