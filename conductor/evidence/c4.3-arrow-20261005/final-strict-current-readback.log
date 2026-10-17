@@ -1,0 +1,231 @@
+{
+  "actual_manifest_mutation_controls": [
+    {
+      "control": "residual_pairs",
+      "expected": "reject",
+      "observed": "ValueError: join_manifest residual_pairs differs from residual records"
+    },
+    {
+      "control": "residual_raw_rows",
+      "expected": "reject",
+      "observed": "ValueError: join_manifest residual_raw_rows differs from retained raw records"
+    },
+    {
+      "control": "residual_hash",
+      "expected": "reject",
+      "observed": "ValueError: join_manifest residual_raw_rows_canonical_sha256 differs from canonical raw_records array"
+    },
+    {
+      "control": "metric_raw_count",
+      "expected": "reject",
+      "observed": "ValueError: metric reference raw-row count differs from join/source manifest"
+    },
+    {
+      "control": "metric_hash",
+      "expected": "reject",
+      "observed": "ValueError: metric_raw_rows_canonical_sha256 differs from retained metric raw records"
+    },
+    {
+      "control": "group_unmatched",
+      "expected": "reject",
+      "observed": "ValueError: C4.2 group diagnostic unmatched_count expected 9, got 4"
+    },
+    {
+      "control": "event_handle",
+      "expected": "reject",
+      "observed": "ValueError: join_manifest row 0 event handle bytes disagree with causal_ref"
+    },
+    {
+      "control": "residual_status",
+      "expected": "reject",
+      "observed": "ValueError: join_manifest residual status/uniqueness differs from sidecar"
+    },
+    {
+      "control": "missing_join_manifest.json",
+      "expected": "reject",
+      "observed": "ValueError: required runtime evidence missing or empty: join_manifest.json"
+    },
+    {
+      "control": "empty_join_manifest.json",
+      "expected": "reject",
+      "observed": "ValueError: required runtime evidence missing or empty: join_manifest.json"
+    },
+    {
+      "control": "missing_source_manifest.json",
+      "expected": "reject",
+      "observed": "ValueError: required runtime evidence missing or empty: source_manifest.json"
+    },
+    {
+      "control": "empty_source_manifest.json",
+      "expected": "reject",
+      "observed": "ValueError: required runtime evidence missing or empty: source_manifest.json"
+    },
+    {
+      "control": "missing_event_log.smoke",
+      "expected": "reject",
+      "observed": "ValueError: required runtime evidence missing or empty: event_log.smoke"
+    },
+    {
+      "control": "empty_event_log.smoke",
+      "expected": "reject",
+      "observed": "ValueError: required runtime evidence missing or empty: event_log.smoke"
+    },
+    {
+      "control": "raw_clock_contradiction",
+      "expected": "reject",
+      "observed": "ValueError: raw residual source clock differs from join row"
+    }
+  ],
+  "c0_logical_schema_sha256": "8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842",
+  "counts": {
+    "metric": 7,
+    "residual": 8
+  },
+  "directory": "/private/tmp/kairos-c43-20261005/.artifacts/c43-root/accepted-current",
+  "event_join": "checked",
+  "formats": {
+    "metric.ipc_file": {
+      "rows": 7,
+      "sha256": "245228c545090fe7c93be558baff2e666b28288b80ff3960341cc43d7e5560f8"
+    },
+    "metric.ipc_stream": {
+      "rows": 7,
+      "sha256": "9f308920f50db2acc8fe874cfc0a02bb0b19b474aa7ba90fc36dd591e5e77059"
+    },
+    "metric.parquet": {
+      "rows": 7,
+      "sha256": "19abe034080fa6d70a00e2faefef7d4980250137694a9a5485eac761d8e4797c"
+    },
+    "residual.ipc_file": {
+      "rows": 8,
+      "sha256": "ab0ff50aa99fce46b9658c3c25d8d8dbfb1677b2889b1ae6e935af707732f074"
+    },
+    "residual.ipc_stream": {
+      "rows": 8,
+      "sha256": "73cfe3708b21549925b479737a5801b060c6213c5f2a6f3d26a8955de88b36fc"
+    },
+    "residual.parquet": {
+      "rows": 8,
+      "sha256": "08fe7dab8de26786cdbe0bcad501c1fb608a36d0b78872f2f71af6c3003c999e"
+    }
+  },
+  "framing_variants": {
+    "framing-1": {
+      "c0_logical_schema_sha256": "8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842",
+      "counts": {
+        "metric": 7,
+        "residual": 8
+      },
+      "directory": "/private/tmp/kairos-c43-20261005/.artifacts/c43-root/accepted-current/framing-1",
+      "event_join": "checked",
+      "formats": {
+        "metric.ipc_file": {
+          "rows": 7,
+          "sha256": "211f796878f5239d6413ab195b08eee4318cc841ea1b7e1031a52b34aa24536c"
+        },
+        "metric.ipc_stream": {
+          "rows": 7,
+          "sha256": "ea40e5a7f9738e047af9563de17967c01fbdb74e82a57b7298fbc669ca9b839b"
+        },
+        "metric.parquet": {
+          "rows": 7,
+          "sha256": "6075c1149dfdad972587d6e848684fc757962ae5ce5974303666950b5b9f5c3e"
+        },
+        "residual.ipc_file": {
+          "rows": 8,
+          "sha256": "3ae11cf21c6ae749dc6575e0c476346ee34b4201c8fc4b7a226e56406103ddd6"
+        },
+        "residual.ipc_stream": {
+          "rows": 8,
+          "sha256": "2eaeb81b4d2d71f8e2c8954959b8cc32548003c6f35a9dc9a0d6a6102d533590"
+        },
+        "residual.parquet": {
+          "rows": 8,
+          "sha256": "27afae10fc5eb520b40550a405ba2dbd3f095dc0620bf7787387575507873b83"
+        }
+      },
+      "legacy_event_schema_sha256": "2e8025a5997f1e056956d47db3b18d3e01e3b0fd865d7235803811ae2aab9dcc",
+      "pyarrow": "25.0.1",
+      "python": "3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]"
+    },
+    "framing-2": {
+      "c0_logical_schema_sha256": "8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842",
+      "counts": {
+        "metric": 7,
+        "residual": 8
+      },
+      "directory": "/private/tmp/kairos-c43-20261005/.artifacts/c43-root/accepted-current/framing-2",
+      "event_join": "checked",
+      "formats": {
+        "metric.ipc_file": {
+          "rows": 7,
+          "sha256": "02828ec73dbb47ec801ea97576f053b471dd21ebdd096d7c4fc888ce167cc6a2"
+        },
+        "metric.ipc_stream": {
+          "rows": 7,
+          "sha256": "bea9bc79c25c62a813777d2de1776ada2d4a1fbeac0e9c76d9a0e7aecec89f8b"
+        },
+        "metric.parquet": {
+          "rows": 7,
+          "sha256": "f7896a7f4b4215cb3812cf9f99d4c9b1fed42216dcd6b388ab144c9f9aca192d"
+        },
+        "residual.ipc_file": {
+          "rows": 8,
+          "sha256": "321f9909bb52538c724e53fa6fb71d0c5891f93de00d73474d332aaa927feb43"
+        },
+        "residual.ipc_stream": {
+          "rows": 8,
+          "sha256": "71996955fef915b632e9848cc3840992d7a3b11983d5ebb78e562cdb99bb3552"
+        },
+        "residual.parquet": {
+          "rows": 8,
+          "sha256": "0f3b1c28e73751559965a14ad2fafe40b160524e0c092c40c59fc74673199df0"
+        }
+      },
+      "legacy_event_schema_sha256": "2e8025a5997f1e056956d47db3b18d3e01e3b0fd865d7235803811ae2aab9dcc",
+      "pyarrow": "25.0.1",
+      "python": "3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]"
+    },
+    "framing-64": {
+      "c0_logical_schema_sha256": "8c46db62f691f243385a4ebdf8a7a3d3670e2655dd0c3f82cba4335ced2a3842",
+      "counts": {
+        "metric": 7,
+        "residual": 8
+      },
+      "directory": "/private/tmp/kairos-c43-20261005/.artifacts/c43-root/accepted-current/framing-64",
+      "event_join": "checked",
+      "formats": {
+        "metric.ipc_file": {
+          "rows": 7,
+          "sha256": "245228c545090fe7c93be558baff2e666b28288b80ff3960341cc43d7e5560f8"
+        },
+        "metric.ipc_stream": {
+          "rows": 7,
+          "sha256": "9f308920f50db2acc8fe874cfc0a02bb0b19b474aa7ba90fc36dd591e5e77059"
+        },
+        "metric.parquet": {
+          "rows": 7,
+          "sha256": "19abe034080fa6d70a00e2faefef7d4980250137694a9a5485eac761d8e4797c"
+        },
+        "residual.ipc_file": {
+          "rows": 8,
+          "sha256": "ab0ff50aa99fce46b9658c3c25d8d8dbfb1677b2889b1ae6e935af707732f074"
+        },
+        "residual.ipc_stream": {
+          "rows": 8,
+          "sha256": "73cfe3708b21549925b479737a5801b060c6213c5f2a6f3d26a8955de88b36fc"
+        },
+        "residual.parquet": {
+          "rows": 8,
+          "sha256": "08fe7dab8de26786cdbe0bcad501c1fb608a36d0b78872f2f71af6c3003c999e"
+        }
+      },
+      "legacy_event_schema_sha256": "2e8025a5997f1e056956d47db3b18d3e01e3b0fd865d7235803811ae2aab9dcc",
+      "pyarrow": "25.0.1",
+      "python": "3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]"
+    }
+  },
+  "legacy_event_schema_sha256": "2e8025a5997f1e056956d47db3b18d3e01e3b0fd865d7235803811ae2aab9dcc",
+  "pyarrow": "25.0.1",
+  "python": "3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]"
+}

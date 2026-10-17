@@ -1,0 +1,80 @@
+{
+  "source_commit": "ddf93fc0c4348654a127494b975a22dbe2d5ea0b",
+  "native_source_binding": {
+    "accepted-current-full": {
+      "executed_head": "5ae258601aa469efc399901fc258b381f10f9dc0",
+      "all_compiled_production_source_sha256_matches_final": true,
+      "production_source_files": 15,
+      "final_test_only_manifest_copy_qualified_separately": true
+    },
+    "accepted-current-clippy": {
+      "executed_head": "5ae258601aa469efc399901fc258b381f10f9dc0",
+      "all_compiled_production_source_sha256_matches_final": true,
+      "production_source_files": 15,
+      "final_test_only_manifest_copy_qualified_separately": true
+    },
+    "accepted-floor-native": {
+      "executed_head": "5ae258601aa469efc399901fc258b381f10f9dc0",
+      "all_compiled_production_source_sha256_matches_final": true,
+      "production_source_files": 15,
+      "final_test_only_manifest_copy_qualified_separately": true
+    },
+    "ci-shaped-current-native": {
+      "executed_head": "56df9a45168c496a434fab20f7009248338e2065",
+      "all_production_and_reader_source_sha256_matches_final": true,
+      "source_files": 17,
+      "test_only_list_format_successor": "ddf93fc; final formatted pipeline executed separately"
+    },
+    "ci-shaped-current-clippy": {
+      "executed_head": "56df9a45168c496a434fab20f7009248338e2065",
+      "all_production_and_reader_source_sha256_matches_final": true,
+      "source_files": 17,
+      "test_only_list_format_successor": "ddf93fc; final formatted pipeline executed separately"
+    },
+    "final-current-pipeline": {
+      "executed_head": "ddf93fc0c4348654a127494b975a22dbe2d5ea0b",
+      "all_source_sha256_matches_final": true,
+      "tests_passed": 2,
+      "receipt_sha256": "fea49527c8ee922df1f4f5c4b51f6e4ccd80ec6260827b2e1deef568e88f104b"
+    }
+  },
+  "actual_native_tests_current": 140,
+  "named_ignored_default": 4,
+  "floor_c43_tests": 21,
+  "required_manifests": [
+    "join_manifest.json",
+    "source_manifest.json",
+    "event_log.smoke"
+  ],
+  "strict_reader_mutation_rejections_each": 15,
+  "physical_formats": [
+    "IPC file",
+    "IPC stream",
+    "Parquet"
+  ],
+  "framing_sizes": [
+    1,
+    2,
+    64
+  ],
+  "fixture_counts": {
+    "residual_raw": 15,
+    "residual_pairs": 8,
+    "metric_raw": 4,
+    "metric_records": 7,
+    "matched_pairs": 3,
+    "unmatched_raw_instances": 9
+  },
+  "public_api": "open",
+  "C4.4/C-04": "open",
+  "release_and_clinical_acceptance": false,
+  "hosted_successor": "pending; recorded separately after publication",
+  "final_floor_pipeline": {
+    "worker_commit": "1e2872aa9c9b878c3fa179a183f582aa0093bdad",
+    "pipeline_tests_passed": 2,
+    "strict_recursive_readback_controls_rejected": 15,
+    "final_successor": "ddf93fc formats the copied-file name array only; production modules byte-identical and current formatted pipeline independently executed."
+  },
+  "archive_sha256": "88732ce4024f3f4040a1c625ade58d98cceb810721ef06ce68c408ea2bae8218",
+  "local_disposition": "C4.3 private sidecars locally qualified; exact-head hosted successor and parent pin recorded separately."
+}

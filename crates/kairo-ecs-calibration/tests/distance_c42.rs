@@ -26,6 +26,27 @@ fn identical_populations_compute_zero_distances() {
     assert_eq!(result.ks_d, Some(0.0));
     assert_eq!((result.reference_count, result.simulation_count), (2, 2));
     assert_eq!(result.precision, Precision::NotApplicable);
+    assert_eq!(
+        (result.reference_tie_count, result.simulation_tie_count),
+        (Some(0), Some(0))
+    );
+}
+
+#[test]
+fn tie_counts_use_exact_supports_within_each_side() {
+    let result = compare(&req(
+        &[Some("1/2"), Some("0.5"), Some("1"), Some("2")],
+        &[Some("1/2"), Some("3/2")],
+    ));
+    assert_eq!(
+        (result.reference_tie_count, result.simulation_tie_count),
+        (Some(1), Some(0))
+    );
+    let empty = compare(&req(&[], &[Some("0"), Some("0")]));
+    assert_eq!(
+        (empty.reference_tie_count, empty.simulation_tie_count),
+        (Some(0), Some(1))
+    );
 }
 
 #[test]
@@ -54,6 +75,30 @@ fn both_empty_populations_are_empty() {
     let result = compare(&req(&[], &[]));
     assert_eq!(result.status, MetricStatus::Empty);
     assert_eq!((result.w1, result.ks_d), (None, None));
+    assert_eq!(
+        (result.reference_tie_count, result.simulation_tie_count),
+        (Some(0), Some(0))
+    );
+}
+
+#[test]
+fn weighted_ties_include_zero_weight_observations() {
+    let request = MetricRequest {
+        reference: &[Some("0"), Some("0"), Some("1")],
+        simulation: &[Some("0"), Some("1")],
+        reference_weights: Some(&["0", "0", "1"]),
+        simulation_weights: Some(&["1", "0"]),
+        algorithm_version: "weighted_descriptive.v1",
+        origin: None,
+        scale_ticks: "1",
+    };
+    let result = compare(&request);
+    assert_eq!(result.status, MetricStatus::Computed);
+    assert_eq!((result.reference_count, result.simulation_count), (3, 2));
+    assert_eq!(
+        (result.reference_tie_count, result.simulation_tie_count),
+        (Some(1), Some(0))
+    );
 }
 
 #[test]
@@ -64,6 +109,10 @@ fn checked_arithmetic_overflow_is_invalid() {
     assert_eq!(result.status, MetricStatus::Invalid);
     assert_eq!((result.reference_count, result.simulation_count), (0, 0));
     assert_eq!((result.w1, result.ks_d), (None, None));
+    assert_eq!(
+        (result.reference_tie_count, result.simulation_tie_count),
+        (None, None)
+    );
 }
 
 #[test]
@@ -84,6 +133,10 @@ fn weighted_descriptive_uses_exact_per_side_normalization() {
     assert_eq!(result.w1, Some(1.0));
     assert_eq!(result.ks_d, Some(0.5));
     assert_eq!((result.reference_count, result.simulation_count), (2, 2));
+    assert_eq!(
+        (result.reference_tie_count, result.simulation_tie_count),
+        (Some(0), Some(0))
+    );
 }
 
 #[test]
