@@ -1,0 +1,11 @@
+{
+  "compiled_source_head": "79fac7ea52b8c21650759ef2d137104fa421c48d",
+  "archive_sha256": "a56460e1c7327ca6046713b61be9f7c9cf5fe27694f6560adca20adfeb3681a0",
+  "archive_bytes": 1549529,
+  "members": 592,
+  "manifested_files": 591,
+  "canonical_tar_sha256": "140822cb0a2943bb95e90d7c0e7e0704e8649eaba824a37e8c206469694c8a1a",
+  "manifest_sha256": "7d414a374895ef0672e567ce45817752366f76859f87ebc3acb43ddc3436b90a",
+  "build_python": "3.14.8",
+  "zlib_runtime": "1.2.12"
+}

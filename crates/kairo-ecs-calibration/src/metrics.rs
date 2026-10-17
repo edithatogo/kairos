@@ -39,6 +39,8 @@ pub(crate) struct MetricResult {
     pub ks_d: Option<f64>,
     pub reference_count: usize,
     pub simulation_count: usize,
+    pub reference_tie_count: Option<usize>,
+    pub simulation_tie_count: Option<usize>,
     pub precision: Precision,
 }
 
@@ -272,6 +274,8 @@ fn invalid(precision: Precision) -> MetricResult {
         ks_d: None,
         reference_count: 0,
         simulation_count: 0,
+        reference_tie_count: None,
+        simulation_tie_count: None,
         precision,
     }
 }
@@ -354,6 +358,8 @@ pub(crate) fn compare(request: &MetricRequest<'_>) -> MetricResult {
     }
     let ref_count = reference.len();
     let sim_count = simulation.len();
+    let reference_tie_count = Some(tie_count(&reference));
+    let simulation_tie_count = Some(tie_count(&simulation));
     if ref_count == 0 && sim_count == 0 {
         return MetricResult {
             status: MetricStatus::Empty,
@@ -361,6 +367,8 @@ pub(crate) fn compare(request: &MetricRequest<'_>) -> MetricResult {
             ks_d: None,
             reference_count: 0,
             simulation_count: 0,
+            reference_tie_count,
+            simulation_tie_count,
             precision: result_precision,
         };
     }
@@ -377,6 +385,8 @@ pub(crate) fn compare(request: &MetricRequest<'_>) -> MetricResult {
             ks_d: None,
             reference_count: ref_count,
             simulation_count: sim_count,
+            reference_tie_count,
+            simulation_tie_count,
             precision: result_precision,
         };
     }
@@ -412,8 +422,19 @@ pub(crate) fn compare(request: &MetricRequest<'_>) -> MetricResult {
         ks_d: Some(ks),
         reference_count: ref_count,
         simulation_count: sim_count,
+        reference_tie_count,
+        simulation_tie_count,
         precision: result_precision,
     }
+}
+
+fn tie_count(points: &[Point]) -> usize {
+    let distinct = points
+        .iter()
+        .enumerate()
+        .filter(|(index, point)| *index == 0 || points[*index - 1].x != point.x)
+        .count();
+    points.len() - distinct
 }
 
 fn parse_points(

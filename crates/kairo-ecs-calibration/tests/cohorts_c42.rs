@@ -150,9 +150,76 @@ fn nonpoint_outcomes_remain_counted_with_overlap() {
     assert_eq!(got[0].reference_diagnostics.censored, 4);
     assert_eq!(got[0].reference_diagnostics.failed, 1);
     assert_eq!(got[0].reference_diagnostics.infeasible, 1);
+    assert_eq!(
+        got[0].coverage_warnings,
+        vec![
+            "censored_observations_present",
+            "excluded_observations_present",
+            "failed_outcomes_present",
+            "infeasible_outcomes_present",
+            "missing_outcomes_present",
+            "uncensored_subset_no_survival_correction",
+        ]
+    );
     r[0].value = Some("0".into());
     assert_eq!(
         compare_groups(&spec(), &id, &id, &r, &[])[0].status,
         Status::Invalid
     );
+}
+
+#[test]
+fn tied_warning_uses_selected_supports_and_unverified_ties_stay_unknown() {
+    let id = identity();
+    let r = vec![point("a", Some(10), "1/2"), point("b", Some(11), "0.5")];
+    let s = vec![point("c", Some(10), "1/2")];
+    let got = compare_groups(&spec(), &id, &id, &r, &s);
+    assert_eq!(got[0].reference_tie_count, Some(1));
+    assert_eq!(got[0].simulation_tie_count, Some(0));
+    assert!(got[0]
+        .coverage_warnings
+        .iter()
+        .any(|w| w == "tied_observations_present"));
+    let mut cfg = spec();
+    cfg.provenance_verified = false;
+    let got = compare_groups(&cfg, &id, &id, &r, &s);
+    assert_eq!(got[0].reference_tie_count, None);
+    assert_eq!(got[0].simulation_tie_count, None);
+    assert!(!got[0]
+        .coverage_warnings
+        .iter()
+        .any(|w| w == "tied_observations_present"));
+    let mut attempted = r.clone();
+    let mut censored = point("censored", Some(10), "0");
+    censored.value = None;
+    censored.outcome = Outcome::Censored;
+    attempted.push(censored);
+    let got = compare_groups(&cfg, &id, &id, &attempted, &s);
+    assert_eq!(got[0].status, Status::Unverified);
+    assert_eq!(got[0].reference_tie_count, None);
+    assert!(got[0]
+        .coverage_warnings
+        .contains(&"censored_observations_present".into()));
+    assert!(got[0]
+        .coverage_warnings
+        .contains(&"uncensored_subset_no_survival_correction".into()));
+}
+
+#[test]
+fn excluded_censor_warns_without_inventing_ties_for_empty_declared_group() {
+    let id = identity();
+    let mut censored = point("c", Some(10), "0");
+    censored.value = None;
+    censored.outcome = Outcome::Censored;
+    censored.excluded = true;
+    let got = compare_groups(&spec(), &id, &id, &[censored], &[]);
+    assert_eq!(got[0].status, Status::Empty);
+    assert_eq!(got[0].reference_tie_count, Some(0));
+    assert!(got[0]
+        .coverage_warnings
+        .contains(&"uncensored_subset_no_survival_correction".into()));
+    assert!(got[0]
+        .coverage_warnings
+        .contains(&"excluded_observations_present".into()));
+    assert_eq!(got[1].coverage_warnings, Vec::<String>::new());
 }

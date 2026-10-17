@@ -1,0 +1,57 @@
+{
+  "task": "C4.3 independent archive byte/member/hash/safety readback",
+  "worktree": "/private/tmp/kairos-c43-archive-audit-20261005",
+  "head": "543a5dd4c6b3b3b2b890ee258fa7e77cea86505f",
+  "context": {
+    "authority": "Reviewed packet /private/tmp/c43-archive-audit-packet.json",
+    "paths": [
+      "AGENTS.md",
+      "conductor/design/calibration/c4.3-arrow-output-v1.md"
+    ],
+    "sha256": {
+      "AGENTS.md": "f1e9c7076e13e6d83de2759434dde92119426250dd880770ae6d661be29b2b35",
+      "conductor/design/calibration/c4.3-arrow-output-v1.md": "df908f2ccc34589aca9f5b9ce5f54254c1315830ea5d2cc4d5c63e792ff76cbf"
+    },
+    "budget_bytes": 24000,
+    "bounded_snapshot_created": true
+  },
+  "verification": {
+    "argv": [
+      "python3",
+      ".artifacts/c43-archive-audit/verify_archive.py",
+      "/private/tmp/kairos-c43-20261005/.artifacts/c43-root/qualification.tar.gz"
+    ],
+    "cwd": "/private/tmp/kairos-c43-archive-audit-20261005",
+    "toolchain": "Python 3.11.6",
+    "exit_status": 0,
+    "archive": {
+      "path": "/private/tmp/kairos-c43-20261005/.artifacts/c43-root/qualification.tar.gz",
+      "bytes": 595221,
+      "sha256": "0382dcf41f38b9635e1de91d8bba4d32c8bf834a47c6bd3fffc32acf6f3f3233",
+      "source_commit": "543a5dd4c6b3b3b2b890ee258fa7e77cea86505f"
+    },
+    "member_checks": {
+      "total_including_manifest": 416,
+      "manifested_files": 415,
+      "names_sorted_unique_safe": true,
+      "regular_files_only": true,
+      "manifest_size_sha256_exact": true,
+      "deterministic_gzip_tar_metadata": true,
+      "independent_full_reserialization_byte_equal": true,
+      "reserialized_sha256": "0382dcf41f38b9635e1de91d8bba4d32c8bf834a47c6bd3fffc32acf6f3f3233"
+    }
+  },
+  "verifier": {
+    "path": ".artifacts/c43-archive-audit/verify_archive.py",
+    "sha256": "8e2816666667952e18e9167abf9224746a973cf8f97a30e3cc0810e2cda67597"
+  },
+  "scope": {
+    "write_paths": [
+      ".artifacts/c43-archive-audit/verify_archive.py",
+      ".artifacts/c43-archive-audit/result.json"
+    ],
+    "source_mutations": [],
+    "commit_created": false
+  },
+  "status": "pass"
+}

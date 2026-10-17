@@ -1,0 +1,197 @@
+{
+  "base_commit": "c6d914fff4527f9c415c45df42db509cfdc95342",
+  "claim": "green mode requires all 14 provider and 8 inherited seed tests to run and pass; fixture success is not capability acceptance",
+  "command": {
+    "argv": [
+      "rustup",
+      "run",
+      "1.99.0",
+      "cargo",
+      "test",
+      "--locked",
+      "-p",
+      "kairo-ecs-calibration",
+      "--test",
+      "work_duration_c20",
+      "--",
+      "--nocapture"
+    ],
+    "cargo_test_summary": "test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out;",
+    "cwd": "/private/tmp/careops-c22-duration-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.provider/disposable",
+    "exit_status": 0,
+    "expected_exit_status": 0,
+    "expected_missing_api_signature": false,
+    "expected_test_names": [
+      "canonical_golden_samples_and_draw_positions_match",
+      "distribution_constructors_return_exact_typed_errors",
+      "exact_cumulative_boundaries_select_the_next_support_bucket",
+      "fixed_distribution_also_validates_purpose_and_identity",
+      "fixed_u128_max_is_lossless_and_consumes_no_draws",
+      "malformed_and_missing_lookups_preserve_stream_and_do_not_alias",
+      "opaque_identity_restore_requires_every_identity_component_and_preserves_position",
+      "provider_dispatches_exact_stratum_and_advances_only_on_success",
+      "provider_version_validation_precedes_strata_and_ids_are_fail_closed",
+      "real_large_total_rejects_first_draw_and_counts_both_transitions",
+      "seed_map::tests::every_identity_field_and_root_seed_change_the_frame_and_derived_seed",
+      "seed_map::tests::finite_registry_is_idempotent_for_same_identity_and_rejects_collision",
+      "seed_map::tests::identity_validation_rejects_invalid_and_oversized_ids",
+      "seed_map::tests::length_framing_separates_ambiguous_concatenations",
+      "seed_map::tests::normative_golden_bytes_digest_seed_and_draws_match",
+      "seed_map::tests::overflow_does_not_advance_rng_or_draw_position",
+      "seed_map::tests::purpose_tags_are_exact_u32_little_endian_values",
+      "seed_map::tests::unknown_snapshot_versions_and_seed_mismatch_fail_closed",
+      "stratum_ids_enforce_utf8_byte_and_control_limits_and_debug_redacts_identity",
+      "support_order_is_preserved_and_equal_order_is_repeatable",
+      "wrong_expected_task_is_identity_mismatch_without_stream_advance",
+      "wrong_purpose_precedes_key_mismatch_and_failure_preserves_stream"
+    ],
+    "green_oracle": true,
+    "log": ".artifacts/mvp/C2.0.red-tests.provider/logs/cargo-native-red.log",
+    "log_sha256": "3ff61ae2065c800ea8ea16f7031fda39b8e99fcdada0405dec86cc7bc15b6512",
+    "missing_api_compiler_diagnostic": null,
+    "missing_source_errno": null,
+    "missing_source_error": null,
+    "observed_test_results": [
+      {
+        "name": "distribution_constructors_return_exact_typed_errors",
+        "status": "ok"
+      },
+      {
+        "name": "canonical_golden_samples_and_draw_positions_match",
+        "status": "ok"
+      },
+      {
+        "name": "exact_cumulative_boundaries_select_the_next_support_bucket",
+        "status": "ok"
+      },
+      {
+        "name": "fixed_u128_max_is_lossless_and_consumes_no_draws",
+        "status": "ok"
+      },
+      {
+        "name": "malformed_and_missing_lookups_preserve_stream_and_do_not_alias",
+        "status": "ok"
+      },
+      {
+        "name": "opaque_identity_restore_requires_every_identity_component_and_preserves_position",
+        "status": "ok"
+      },
+      {
+        "name": "provider_version_validation_precedes_strata_and_ids_are_fail_closed",
+        "status": "ok"
+      },
+      {
+        "name": "fixed_distribution_also_validates_purpose_and_identity",
+        "status": "ok"
+      },
+      {
+        "name": "real_large_total_rejects_first_draw_and_counts_both_transitions",
+        "status": "ok"
+      },
+      {
+        "name": "provider_dispatches_exact_stratum_and_advances_only_on_success",
+        "status": "ok"
+      },
+      {
+        "name": "seed_map::tests::every_identity_field_and_root_seed_change_the_frame_and_derived_seed",
+        "status": "ok"
+      },
+      {
+        "name": "seed_map::tests::finite_registry_is_idempotent_for_same_identity_and_rejects_collision",
+        "status": "ok"
+      },
+      {
+        "name": "seed_map::tests::purpose_tags_are_exact_u32_little_endian_values",
+        "status": "ok"
+      },
+      {
+        "name": "seed_map::tests::overflow_does_not_advance_rng_or_draw_position",
+        "status": "ok"
+      },
+      {
+        "name": "seed_map::tests::identity_validation_rejects_invalid_and_oversized_ids",
+        "status": "ok"
+      },
+      {
+        "name": "seed_map::tests::length_framing_separates_ambiguous_concatenations",
+        "status": "ok"
+      },
+      {
+        "name": "seed_map::tests::normative_golden_bytes_digest_seed_and_draws_match",
+        "status": "ok"
+      },
+      {
+        "name": "seed_map::tests::unknown_snapshot_versions_and_seed_mismatch_fail_closed",
+        "status": "ok"
+      },
+      {
+        "name": "wrong_expected_task_is_identity_mismatch_without_stream_advance",
+        "status": "ok"
+      },
+      {
+        "name": "seed_map::tests::rejected_sample_then_draw_position_overflow_preserves_owner",
+        "status": "ok"
+      },
+      {
+        "name": "stratum_ids_enforce_utf8_byte_and_control_limits_and_debug_redacts_identity",
+        "status": "ok"
+      },
+      {
+        "name": "work_duration::tests::sampled_duration_retains_opaque_identity_without_debug_leakage",
+        "status": "ok"
+      },
+      {
+        "name": "wrong_purpose_precedes_key_mismatch_and_failure_preserves_stream",
+        "status": "ok"
+      },
+      {
+        "name": "support_order_is_preserved_and_equal_order_is_repeatable",
+        "status": "ok"
+      }
+    ],
+    "required_test_passes": {
+      "canonical_golden_samples_and_draw_positions_match": true,
+      "distribution_constructors_return_exact_typed_errors": true,
+      "exact_cumulative_boundaries_select_the_next_support_bucket": true,
+      "fixed_distribution_also_validates_purpose_and_identity": true,
+      "fixed_u128_max_is_lossless_and_consumes_no_draws": true,
+      "malformed_and_missing_lookups_preserve_stream_and_do_not_alias": true,
+      "opaque_identity_restore_requires_every_identity_component_and_preserves_position": true,
+      "provider_dispatches_exact_stratum_and_advances_only_on_success": true,
+      "provider_version_validation_precedes_strata_and_ids_are_fail_closed": true,
+      "real_large_total_rejects_first_draw_and_counts_both_transitions": true,
+      "seed_map::tests::every_identity_field_and_root_seed_change_the_frame_and_derived_seed": true,
+      "seed_map::tests::finite_registry_is_idempotent_for_same_identity_and_rejects_collision": true,
+      "seed_map::tests::identity_validation_rejects_invalid_and_oversized_ids": true,
+      "seed_map::tests::length_framing_separates_ambiguous_concatenations": true,
+      "seed_map::tests::normative_golden_bytes_digest_seed_and_draws_match": true,
+      "seed_map::tests::overflow_does_not_advance_rng_or_draw_position": true,
+      "seed_map::tests::purpose_tags_are_exact_u32_little_endian_values": true,
+      "seed_map::tests::unknown_snapshot_versions_and_seed_mismatch_fail_closed": true,
+      "stratum_ids_enforce_utf8_byte_and_control_limits_and_debug_redacts_identity": true,
+      "support_order_is_preserved_and_equal_order_is_repeatable": true,
+      "wrong_expected_task_is_identity_mismatch_without_stream_advance": true,
+      "wrong_purpose_precedes_key_mismatch_and_failure_preserves_stream": true
+    }
+  },
+  "committed_workspace": "a2b8f6c89ed84839d8590e2b938afcd6d4f919fe",
+  "expectation": "green",
+  "fixture": "conformance/c20/work_duration_c20.rs",
+  "fixture_sha256": "eba6baebe352c10cc1f235141178fede807c2d0560b46593c6a8a32ea78f0ad7",
+  "green_expectation_unverified": false,
+  "limitations": [
+    "The disposable archive overlays the actual fixture into the native calibration crate test target.",
+    "The nonzero native result is expected because work_duration.rs is absent; it is not behavioral qualification.",
+    "No live crate source, Cargo manifest, or lockfile was changed.",
+    "Runtime tests must be rerun after the reviewed provider implementation exists."
+  ],
+  "overlay_path": "crates/kairo-ecs-calibration/tests/work_duration_c20.rs",
+  "packet_id": "C2.0.red-tests.provider",
+  "task_status": "ready_for_review",
+  "toolchain": {
+    "path_prefix": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin",
+    "rustc": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustc",
+    "rustdoc": "/Users/doughnut/.rustup/toolchains/1.99.0-aarch64-apple-darwin/bin/rustdoc",
+    "version": "1.99.0"
+  }
+}

@@ -16,6 +16,10 @@ Format:
 
 ### Added
 
+- Experimental private `kairo-ecs-calibration` diagnostics now report exact per-cohort tie counts and source-derived coverage warnings in the sidecar manifest. Independent readback binds metric provenance and rejects missing or forged diagnostics; the frozen calibration Arrow schemas and `event_log.v1` remain unchanged.
+
+- Experimental `kairo-ecs-calibration` C4.3 sidecars now use actual Arrow IPC file/stream and Parquet with deterministic records, run/event joins and retained raw provenance. Native owner CI requires complete manifests and independently verifies types, nulls, hashes and counts across framing sizes. `event_log.v1` remains unchanged; public API, C4.4/C-04 and release acceptance remain open.
+
 - Experimental private C1 ingestion adapters now pass scoped CI lint qualification without promoting their API; dry-run package/workflow inventories and MSRV metadata match the optional calibration and Arrow IO lanes.
 
 - Experimental calibration physical schema v2 qualification now freezes every nested Arrow type, nullability and metadata field, exercises IPC and Parquet separately at the Rust 1.88 floor, and retains exact PyArrow readback evidence. Legacy telemetry remains a custom smoke format with its own Rust 1.76 compatibility qualification.
@@ -82,6 +86,7 @@ Format:
 - Workspace Clippy now validates the private C1 mapper with behavior-preserving context structs, and the Q0.1 design disposition links directly to its evidence in the parent repository.
 - CI metadata and release packaging inventories now include the current Rust toolchain, native-owner workflow, and Arrow/calibration crates; Arrow IO passes current stable Clippy.
 - `kairo-ecs-des` waiting-claim cancellation, reprioritization, despawn and replacement use exact priority keys rather than scanning to delete a request; corrupt keys reject atomically, preserving independent lifecycle ordering.
+
 - Python's optional Arrow extra now requires PyArrow 14.0.2 or later to exclude releases affected by an upstream Arrow reader security advisory.
 - Upgrade Astro to 7.3.5 and its Starlight integration/plugins to security-compatible releases, fixing the critical Astro image-optimization remote-code-execution alert.
 - Updated TypeScript binding development dependencies (Vitest 4.1.11, Vite 8.3.1, and PostCSS 8.5.28) and raised the TypeScript template Vitest pin to 4.1.11.

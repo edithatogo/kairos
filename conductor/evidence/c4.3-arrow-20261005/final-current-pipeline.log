@@ -1,0 +1,11 @@
+   Compiling kairo-ecs-rng v0.0.0 (/private/tmp/kairos-c43-20261005/crates/kairo-ecs-rng)
+   Compiling kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c43-20261005/crates/kairo-ecs-calibration)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.51s
+     Running tests/sidecar_pipeline_c43.rs (.artifacts/c43-root/target/debug/deps/sidecar_pipeline_c43-00ff2aff373c094c)
+
+running 2 tests
+test c43_empty_runtime_preserves_typed_residual_schema_and_null_metrics ... ok
+test c43_runtime_records_and_hashes_survive_permutation_and_physical_framing ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+

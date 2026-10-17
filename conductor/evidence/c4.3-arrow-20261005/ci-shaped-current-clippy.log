@@ -1,0 +1,30 @@
+    Blocking waiting for file lock on build directory
+    Checking libm v0.2.16
+    Checking libc v0.2.186
+    Checking zerocopy v0.8.48
+    Checking thiserror v2.0.20
+    Checking flatbuffers v25.12.19
+    Checking zmij v1.0.21
+    Checking serde_core v1.0.228
+    Checking kairo-ecs-arrow v0.1.0 (/private/tmp/kairos-c43-20261005/crates/kairo-ecs-arrow)
+    Checking getrandom v0.3.4
+    Checking cpufeatures v0.3.1
+    Checking sha2 v0.11.0
+    Checking num-traits v0.2.19
+    Checking num-integer v0.1.47
+    Checking chrono v0.4.45
+    Checking num-complex v0.4.6
+    Checking num-bigint v0.5.1
+    Checking serde_json v1.0.149
+    Checking half v2.7.1
+    Checking ahash v0.8.12
+    Checking arrow-buffer v60.0.0
+    Checking arrow-data v60.0.0
+    Checking arrow-array v60.0.0
+    Checking arrow-cmp v60.0.0
+    Checking arrow-select v60.0.0
+    Checking arrow-ipc v60.0.0
+    Checking parquet v60.0.0
+    Checking kairo-ecs-arrow-io v0.1.0 (/private/tmp/kairos-c43-20261005/crates/kairo-ecs-arrow-io)
+    Checking kairo-ecs-calibration v0.1.0 (/private/tmp/kairos-c43-20261005/crates/kairo-ecs-calibration)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 46.26s

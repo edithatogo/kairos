@@ -680,8 +680,11 @@ dependencies = [
 name = "kairo-ecs-calibration"
 version = "0.1.0"
 dependencies = [
+ "arrow-array",
+ "arrow-schema",
  "chrono",
  "kairo-ecs-arrow",
+ "kairo-ecs-arrow-io",
  "kairo-ecs-rng",
  "kairo-ecs-types",
  "serde_json",

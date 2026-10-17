@@ -1,0 +1,11 @@
+{
+  "incoming_commit": "fd211888a4f435bc3679fd40589e40b482b92cf7",
+  "all_incoming_blobs_identical": true,
+  "full_diff_check_exit": 2,
+  "only_inherited_log_blank_lines": [
+    "conductor/evidence/c4.3-arrow-20261005/ci-shaped-current-native.log",
+    "conductor/evidence/c4.3-arrow-20261005/final-current-pipeline.log"
+  ],
+  "scoped_nonartifact_diff_check_exit": 0,
+  "logs_preserved": true
+}

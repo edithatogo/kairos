@@ -1,0 +1,144 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling kairo-ecs-types v0.0.0 (/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.transaction-hook/disposable/20261005T040026.617408Z/source/crates/kairo-ecs-types)
+   Compiling thiserror v2.0.20
+   Compiling kairo-ecs-rng v0.0.0 (/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.transaction-hook/disposable/20261005T040026.617408Z/source/crates/kairo-ecs-rng)
+   Compiling kairo-ecs-core v0.0.0 (/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.transaction-hook/disposable/20261005T040026.617408Z/source/crates/kairo-ecs-core)
+   Compiling kairo-ecs-state v0.0.0 (/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.transaction-hook/disposable/20261005T040026.617408Z/source/crates/kairo-ecs-state)
+   Compiling syn v3.0.6
+   Compiling thiserror-impl v2.0.20
+   Compiling kairo-ecs-des v0.1.0 (/private/tmp/careops-c20-20261005/libs/kairos/.artifacts/mvp/C2.0.red-tests.transaction-hook/disposable/20261005T040026.617408Z/source/crates/kairo-ecs-des)
+error[E0432]: unresolved import `kairo_ecs_des::FlowDomainControl`
+ --> crates/kairo-ecs-des/tests/flow_domain_plan_c20.rs:8:44
+  |
+8 |     FlowCallbackSnapshot, FlowCommandSink, FlowDomainControl, FlowError, FlowOwnedCommand,
+  |                                            ^^^^^^^^^^^^^^^^^ no `FlowDomainControl` in the root
+
+error[E0599]: no variant named `DomainControl` found for enum `FlowCallbackCause`
+   --> crates/kairo-ecs-des/tests/flow_domain_plan_c20.rs:107:36
+    |
+107 |             let FlowCallbackCause::DomainControl { action, .. } = &snapshot.cause else {
+    |                                    ^^^^^^^^^^^^^ variant not found in `FlowCallbackCause`
+
+error[E0599]: no method named `register_domain_plan_hook` found for struct `FlowRuntime` in the current scope
+   --> crates/kairo-ecs-des/tests/flow_domain_plan_c20.rs:135:10
+    |
+135 |     flow.register_domain_plan_hook("c20.plan", PLAN_KIND, planned)
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: there is a method `register_domain_hook` with a similar name
+    |
+135 -     flow.register_domain_plan_hook("c20.plan", PLAN_KIND, planned)
+135 +     flow.register_domain_hook("c20.plan", PLAN_KIND, planned)
+    |
+
+error[E0599]: no method named `register_domain_plan_hook` found for struct `FlowRuntime` in the current scope
+   --> crates/kairo-ecs-des/tests/flow_domain_plan_c20.rs:137:10
+    |
+137 |     flow.register_domain_plan_hook("c20.plan", OTHER_KIND, planned)
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: there is a method `register_domain_hook` with a similar name
+    |
+137 -     flow.register_domain_plan_hook("c20.plan", OTHER_KIND, planned)
+137 +     flow.register_domain_hook("c20.plan", OTHER_KIND, planned)
+    |
+
+error[E0599]: no method named `schedule_domain_control` found for struct `FlowRuntime` in the current scope
+    --> crates/kairo-ecs-des/tests/flow_domain_plan_c20.rs:328:14
+     |
+ 328 |         flow.schedule_domain_control(carrier, PLAN_KIND, FlowDomainControl::Pause, t(33), 0),
+     |              ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: there is a method `schedule_domain` with a similar name, but with different arguments
+    --> crates/kairo-ecs-des/src/flow.rs:1672:5
+     |
+1672 | /     pub fn schedule_domain(
+1673 | |         &mut self,
+1674 | |         work: WorkId,
+1675 | |         kind: EventKind,
+1676 | |         at: SimTime,
+1677 | |         priority: i32,
+1678 | |     ) -> Result<EventId, FlowError> {
+     | |___________________________________^
+
+error[E0599]: no method named `schedule_domain_control` found for struct `FlowRuntime` in the current scope
+    --> crates/kairo-ecs-des/tests/flow_domain_plan_c20.rs:346:14
+     |
+ 345 | /         f.flow
+ 346 | |             .schedule_domain_control(f.carrier, PLAN_KIND, FlowDomainControl::Pause, t(33), 0),
+     | |_____________-^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: there is a method `schedule_domain` with a similar name, but with different arguments
+    --> crates/kairo-ecs-des/src/flow.rs:1672:5
+     |
+1672 | /     pub fn schedule_domain(
+1673 | |         &mut self,
+1674 | |         work: WorkId,
+1675 | |         kind: EventKind,
+1676 | |         at: SimTime,
+1677 | |         priority: i32,
+1678 | |     ) -> Result<EventId, FlowError> {
+     | |___________________________________^
+
+error[E0599]: no method named `schedule_domain_control` found for struct `FlowRuntime` in the current scope
+    --> crates/kairo-ecs-des/tests/flow_domain_plan_c20.rs:452:14
+     |
+ 451 | /         f.flow
+ 452 | |             .schedule_domain_control(f.carrier, OTHER_KIND, FlowDomainControl::Pause, t(1), 0,),
+     | |_____________-^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: there is a method `schedule_domain` with a similar name, but with different arguments
+    --> crates/kairo-ecs-des/src/flow.rs:1672:5
+     |
+1672 | /     pub fn schedule_domain(
+1673 | |         &mut self,
+1674 | |         work: WorkId,
+1675 | |         kind: EventKind,
+1676 | |         at: SimTime,
+1677 | |         priority: i32,
+1678 | |     ) -> Result<EventId, FlowError> {
+     | |___________________________________^
+
+error[E0599]: no method named `schedule_domain_control` found for struct `FlowRuntime` in the current scope
+    --> crates/kairo-ecs-des/tests/flow_domain_plan_c20.rs:459:10
+     |
+ 458 | /     f.flow
+ 459 | |         .schedule_domain_control(f.carrier, PLAN_KIND, FlowDomainControl::Resume, t(8), 1)
+     | |_________-^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: there is a method `schedule_domain` with a similar name, but with different arguments
+    --> crates/kairo-ecs-des/src/flow.rs:1672:5
+     |
+1672 | /     pub fn schedule_domain(
+1673 | |         &mut self,
+1674 | |         work: WorkId,
+1675 | |         kind: EventKind,
+1676 | |         at: SimTime,
+1677 | |         priority: i32,
+1678 | |     ) -> Result<EventId, FlowError> {
+     | |___________________________________^
+
+error[E0599]: no method named `schedule_domain_control` found for struct `FlowRuntime` in the current scope
+    --> crates/kairo-ecs-des/tests/flow_domain_plan_c20.rs:462:10
+     |
+ 461 | /     f.flow
+ 462 | |         .schedule_domain_control(f.carrier, PLAN_KIND, FlowDomainControl::Pause, t(8), -1)
+     | |_________-^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: there is a method `schedule_domain` with a similar name, but with different arguments
+    --> crates/kairo-ecs-des/src/flow.rs:1672:5
+     |
+1672 | /     pub fn schedule_domain(
+1673 | |         &mut self,
+1674 | |         work: WorkId,
+1675 | |         kind: EventKind,
+1676 | |         at: SimTime,
+1677 | |         priority: i32,
+1678 | |     ) -> Result<EventId, FlowError> {
+     | |___________________________________^
+
+Some errors have detailed explanations: E0432, E0599.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `kairo-ecs-des` (test "flow_domain_plan_c20") due to 9 previous errors

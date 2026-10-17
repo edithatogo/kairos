@@ -149,3 +149,7 @@ checks and two expected conditional skips. Final governance successor requires
 fresh phase, strict-clean and exact-head owner CI before parent pin acceptance.
 This supplements existing owner scope; C2, public API review, release and clinical
 validation remain open. Historical Track 04/21 closure remains unchanged.
+
+## C4.3 private calibration sidecars
+
+Actual calibration_residual.v1/calibration_metric.v1 Arrow IPC file/stream and Parquet codecs now use the [frozen physical contract](../../design/calibration/c4.3-arrow-output-v1.md). Full-width ticks, nulls, deterministic row keys, raw provenance and run/event joins are independently read back; event_log.v1 field types and smoke encoding remain unchanged. [Source-bound local qualification](../../evidence/c4.3-arrow-20261005/README.md) retains both toolchains and strict missing-evidence controls. Public API and C4.4/C-04 remain open; hosted/parent acceptance is separate.
