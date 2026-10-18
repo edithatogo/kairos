@@ -45,6 +45,7 @@ impl MetalBackend {
     }
 
     pub fn probe_host_adapter() -> MetalAdapterInfo {
+        #[cfg_attr(not(target_os = "macos"), allow(unused_mut))]
         let mut adapter_name = "Apple Silicon Metal Unified Memory GPU".to_string();
         let metal_toolchain_available = cfg!(target_os = "macos");
 
