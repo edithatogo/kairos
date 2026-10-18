@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- `crates/kairo-ecs-core` adds host NUMA topology discovery (`NumaTopology::discover`) and `EventArena` chunked memory allocation (Track 50), alongside `crates/kairo-ecs-mpi` (`MpiProcessTransport`) and `crates/kairo-ecs-grpc` (`GrpcSocketTransport`, `KairoOptimisticEnvelopeV1`) multi-rank and socket transports (Track 49) and Wave 9 (`Tracks 62–66`) roadmap registration.
+
 - Acquire explicitly pinned mainline archive consumer artifacts with secure extraction, receipt and tool hash bindings, and selective CI coverage; install hash-locked scanner dependencies before hosted verification.
 
 ### Changed
