@@ -458,31 +458,40 @@ export interface WasmBridgeLoaderOptions {
 }
 
 export class TimeTravelInspectorClient {
-  private tick: number = 0;
+  #tick = 0;
+  readonly engineState: { readonly currentTimeTicks: number };
 
-  constructor(private readonly engineState: { currentTimeTicks: number } = { currentTimeTicks: 0 }) {}
+  constructor(engineState: { readonly currentTimeTicks: number } = { currentTimeTicks: 0 }) {
+    this.engineState = engineState;
+  }
 
-  public snapshotJson(): string {
+  snapshotJson(): string {
     return JSON.stringify({
-      tick: this.tick,
-      stats: { now: this.tick, scheduled: 0, pending: 0, dispatched: this.tick, cancelled: 0 },
+      tick: this.#tick,
+      stats: {
+        now: this.#tick,
+        scheduled: 0,
+        pending: 0,
+        dispatched: this.#tick,
+        cancelled: 0,
+      },
       cow_delta_bytes: 64,
     });
   }
 
-  public stepAndRecord(): boolean {
-    this.tick += 1;
+  stepAndRecord(): boolean {
+    this.#tick += 1;
     return true;
   }
 
-  public historyLen(): number {
-    return this.tick + 1;
+  historyLen(): number {
+    return this.#tick + 1;
   }
 
-  public inspectTickJson(tick: number): string {
+  inspectTickJson(tick: number): string {
     return JSON.stringify({
       tick,
-      causal_provenance: `event-batch-${tick}`,
+      causal_provenance: `event-batch-${String(tick)}`,
       delta_stats: { events_processed: 1 },
     });
   }

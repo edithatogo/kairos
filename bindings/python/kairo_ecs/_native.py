@@ -1,34 +1,48 @@
 """Native FFI extension loader and scheduler bridge for Python binding."""
 
 import ctypes
-import os
 import sys
+from pathlib import Path
 from typing import Any
 
+
 class NativeSchedulerBridge:
+    """Thin ctypes/PyO3 loader bridge for the KairoECS C ABI shared library."""
+
     def __init__(self, lib_path: str | None = None) -> None:
         self.lib_path = lib_path
         self.available = False
-        self._lib = None
-        if lib_path and os.path.exists(lib_path):
+        self._lib: ctypes.CDLL | None = None
+        if lib_path and Path(lib_path).exists():
             try:
                 self._lib = ctypes.CDLL(lib_path)
+            except OSError:
+                self._lib = None
+            else:
                 self.available = True
-            except Exception:
-                pass
 
     def get_version(self) -> int:
-        if self._lib and hasattr(self._lib, "kairo_ecs_ffi_version"):
+        """Return the native FFI ABI version or 1 when running in fallback mode."""
+
+        if self._lib is not None and hasattr(self._lib, "kairo_ecs_ffi_version"):
             try:
-                return self._lib.kairo_ecs_ffi_version()
-            except Exception:
-                pass
+                return int(self._lib.kairo_ecs_ffi_version())
+            except OSError:
+                return 1
         return 1
 
+
 def native_extension_status() -> dict[str, Any]:
-    ext_suffix = ".dylib" if sys.platform == "darwin" else (".dll" if sys.platform == "win32" else ".so")
+    """Return discovery metadata for the native KairoECS FFI shared library."""
+
+    if sys.platform == "darwin":
+        ext_suffix = ".dylib"
+    elif sys.platform == "win32":
+        ext_suffix = ".dll"
+    else:
+        ext_suffix = ".so"
     lib_name = f"libkairo_ecs_ffi{ext_suffix}"
-    found = os.path.exists(lib_name)
+    found = Path(lib_name).exists()
     return {
         "native_library": lib_name,
         "compiled": found,

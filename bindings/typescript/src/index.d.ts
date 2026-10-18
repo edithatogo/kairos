@@ -125,3 +125,20 @@ export declare class SchedulerFacade {
 export declare function createSchedulerFacade(): SchedulerFacade;
 export declare function roundTripArrowEventLog(payload: ArrowEventLogPayload): ArrowEventLogPayload;
 export declare function compareScheduledEvents(left: SchedulerEvent, right: SchedulerEvent): number;
+
+export interface WasmBridgeLoaderOptions {
+  readonly wasmModulePath?: string;
+}
+
+export declare class TimeTravelInspectorClient {
+  readonly engineState: { readonly currentTimeTicks: number };
+  constructor(engineState?: { readonly currentTimeTicks: number });
+  snapshotJson(): string;
+  stepAndRecord(): boolean;
+  historyLen(): number;
+  inspectTickJson(tick: number): string;
+}
+
+export declare const WasmBridgeLoader: {
+  loadWasmEngine(options?: WasmBridgeLoaderOptions): Promise<TimeTravelInspectorClient>;
+};
