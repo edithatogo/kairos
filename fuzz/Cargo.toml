@@ -8,7 +8,7 @@ edition = "2021"
 cargo-fuzz = true
 
 [dependencies]
-libfuzzer-sys = "0.4"
+libfuzzer-sys = "0.4.13"
 kairo-ecs-core = { path = "../crates/kairo-ecs-core" }
 kairo-ecs-types = { path = "../crates/kairo-ecs-types" }
 
