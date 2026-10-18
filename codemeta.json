@@ -15,5 +15,6 @@
   ],
   "license": "https://spdx.org/licenses/Apache-2.0.html OR https://spdx.org/licenses/MIT.html",
   "codeRepository": "https://github.com/edithatogo/kairos",
-  "developmentStatus": "active"
+  "developmentStatus": "active",
+  "identifier": "RRID:SCR_029085"
 }

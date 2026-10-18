@@ -30,8 +30,8 @@ external evidence required by their issue contracts.
 
 | Issue | Current evidence | Next concrete step |
 |---|---|---|
-| #94 JOSS | Public-development age requirement unmet at this date; actual research-use evidence unestablished; paper is a seed. | Preserve public-development evidence, execute/document a real research workflow, and prepare the scoped paper with human authorship and AI disclosure. Reassess the current journal criteria before submission. |
-| #93 RRID | Required descriptive metadata prepared; no provider age/adoption threshold found. Native duplicate search unavailable. | Restore native registry access, verify aliases/URL against existing records, then submit the reviewed resource description and retain curator/readback evidence. |
+| #94 JOSS | Comprehensive paper draft (960 words) and bibliography prepared in `paper/`; age requirement pending until 6-month boundary. | Reassess public-development age at submission time, finalize author details, and submit to JOSS. |
+| #93 RRID | Curator accepted; assigned `RRID:SCR_029085`; resolvable via SciCrunch Registry. | Issue closed; retain identifier resolution evidence. |
 | #92 Software Heritage | Source revision archived and resolved; full visit, snapshot, matching tree and README retrieval verified. No release exists. | After a reviewed release exists, resolve its exact source and applicable archived tag/release object; reuse existing coverage. |
 
 The README license summary is reconciled with the existing dual-license grant
