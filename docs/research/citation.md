@@ -120,23 +120,12 @@ Release notes must include:
 
 If a release is not yet archived, the release note must say that explicitly.
 
-## Unreleased metadata and licensing (#91)
+## Named release metadata and licensing (#91)
 
-`0.4.0-alpha.1` is a planned metadata seed, not an existing Git tag or GitHub
-Release. The 2026-10-01 GitHub readback returned no tags and no releases; its
-commands and source revision are recorded in `release-metadata-status.json`.
-Publication dates are omitted until a named release exists. Cite the full commit
-SHA used for an experiment while working from unreleased source.
-
-The root LICENSE and LICENSE.md already grant Apache-2.0 OR MIT; Rust crate
-metadata inherits that same policy. This correction changes metadata, not rights.
-Binding packages retain their declared license subsets (Python, TypeScript and
-C# Apache-2.0; R MIT) under the existing root dual-license grant.
-
-Before switching the lifecycle record to `released`, record the full source SHA,
-version, license, tag and release URLs, artifact hashes/locations, and validation
-receipts; add the same actual publication date to CFF, CodeMeta and Zenodo.
-Run the local validator, then read back the tag, release and artifacts from GitHub.
-Local consistency cannot prove release publication or external acceptance. Issue
-#91 remains open until that reviewed exact-release evidence exists. No tag,
-release, DOI or provider submission is created by this metadata correction.
+`0.4.0-alpha.1` has been published as a pre-release tag `v0.4.0-alpha.1` on GitHub.
+The GitHub readback confirmed tag and release existence; exact source SHA, version,
+license, tag and release URLs, artifact hashes and validation receipts are recorded in
+`release-metadata-status.json`. The matching publication date `2026-10-18` is recorded
+across `CITATION.cff`, `codemeta.json`, and `.zenodo.json`. Archive status remains
+pre-release metadata seed, not yet DOI-minted, pending Zenodo draft deposition.
+Issue #91 is satisfied by this verified named release record.

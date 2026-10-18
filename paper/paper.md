@@ -8,6 +8,8 @@ tags:
   - apache-arrow
   - high-performance-computing
 authors:
+  - name: Dylan A Mordaunt
+    affiliation: 1
   - name: KairoECS contributors
     affiliation: 1
 affiliations:
