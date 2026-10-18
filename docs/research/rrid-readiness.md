@@ -11,7 +11,7 @@ Curator acceptance and RRID assignment are complete and verified. KairoECS
 is cataloged in the SciCrunch Registry / Resource Identification Portal under:
 
 - **RRID**: `SCR_029085` (persistent identifier: `RRID:SCR_029085`)
-- **Authoritative record**: <https://scicrunch.org/resources/data/record/nlx_144509-1/SCR_029085>
+- **Authoritative record**: `https://scicrunch.org/resources/data/record/nlx_144509-1/SCR_029085`
 - **Partner index resolution**: dkNET, NIF (Neuroscience Information Framework)
 - **Record metadata**:
   - Name: `KairoECS`
@@ -123,7 +123,7 @@ lookup above remains bounded; it does not establish exhaustive registry absence.
 The SciCrunch curator review was completed and approved:
 
 - **Assigned RRID**: `SCR_029085`
-- **Registry entry**: <https://scicrunch.org/resources/data/record/nlx_144509-1/SCR_029085>
+- **Registry entry**: `https://scicrunch.org/resources/data/record/nlx_144509-1/SCR_029085`
 - **Identifier resolution**: Resolves via `https://identifiers.org/RRID:SCR_029085` and `https://rrid.site/SCR_029085`
 - **Resource name**: `KairoECS`
 - **Description**: A Rust-first research simulation library designed for deterministic discrete-event simulation and agent-based modeling.

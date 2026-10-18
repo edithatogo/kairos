@@ -55,7 +55,7 @@ The required fields are:
 KairoECS is registered in the SciCrunch Registry / Resource Identification Portal:
 
 - **RRID**: `SCR_029085` (`RRID:SCR_029085`)
-- **Record**: <https://scicrunch.org/resources/data/record/nlx_144509-1/SCR_029085>
+- **Record**: `https://scicrunch.org/resources/data/record/nlx_144509-1/SCR_029085`
 - When citing KairoECS as a resource in research publications, reference the RRID (e.g. *KairoECS, RRID:SCR_029085*).
 
 ## DOI and Zenodo path
