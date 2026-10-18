@@ -21,9 +21,9 @@ validation evidence, and release-boundary claims across KairoECS.
 | Wave | Tracks | Status | Highlights |
 | --- | --- | --- | --- |
 | Wave 0–3: Foundation & Core Simulation | `00–17` | `Done` | `kairo-ecs-types`, `kairo-ecs-core`, `kairo-ecs-state` (`ArchetypeTable`), `kairo-ecs-rng`, `kairo-ecs-des`, `kairo-ecs-abm`, `kairo-ecs-ffi`, `kairo-ecs-arrow` |
-| Wave 4–5: Polyglot & Ecosystem Bindings | `18–33` | `Done` | Python (`PyO3` + `kairo_gym`), R (`extendr`), Julia (`ccall`), TypeScript/Wasm, C# (`.NET 10/11`), Go (`cgo`), UniFFI, Diplomat |
+| Wave 4–5: Polyglot & Ecosystem Bindings | `18–33` | `Done` | Python (pure-Python facade), R (`extendr`), Julia (`ccall`), TypeScript/Wasm, C# (`.NET 10/11`), Go (`cgo`), UniFFI, Diplomat |
 | Wave 6: Advanced Runtime & Docs Platform | `34–47` | `Done` | Conservative & Optimistic PDES, MPI/gRPC transports, GPU/WebGPU compute, FMI 2.0/3.0, Kafka/Flight streaming, ONNX/VecEnv ML, Starlight docs |
-| Wave 7: HPC Parity Wave | `48–55` | `1 Done` (`54`), `7 In Progress` (`48–53, 55`) | Generational bitset rollback, multi-rank MPI/gRPC sockets, `MetalBackend` & `PersistentGpuSession`, Apache Arrow 53 + Parquet Zstd, HDF5/ADIOS2 checkpoints, NUMA discovery |
+| Wave 7: HPC Parity Wave | `48–55` | `1 Done` (`54`), `7 In Progress` (`48–53, 55`) | Generational bitset rollback, multi-rank MPI/gRPC sockets, `MetalBackend` & `PersistentGpuSession`, in-repo Arrow-style batches + checkpoints, HDF5/ADIOS2 checkpoints, NUMA discovery |
 | Wave 8: Game Theory Ontology & Solvers | `56–61` | `Done` | `kairo-ecs-game-ontology` (Turtle/JSON-LD parser & codegen), `kairo-ecs-game-theory` (`PureNashSolver`, `LemkeHowsonSolver`, `SupportEnumerationSolver`, `BackwardInductionSolver`, `CfrPlusSolver`, `graph-relations`) |
 | Wave 9: Frontier SOTA & Multi-Core | `62–66` | `Done` | SimPy-parity preemptive resources, 2D continuous/CSR network ABM, FMI 3.0 + AAS digital twins, multi-threaded `ParallelVecEnv`, `ParallelEnsembleRunner`, Sobol/ABC-SMC, `CowWorldSnapshot` Wasm time-travel |
 
