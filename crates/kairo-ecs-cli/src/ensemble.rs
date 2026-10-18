@@ -235,41 +235,30 @@ impl SobolSensitivityAnalyzer {
         let mut total_effect = vec![0.0; dimensions];
 
         for d in 0..dimensions {
-            let mut sum_v1 = vec![0.0; threads];
-            let mut sum_v2 = vec![0.0; threads];
-
-            let a_chunks = a_matrix.chunks(chunk_size);
-            let b_chunks = b_matrix.chunks(chunk_size);
-            let yb_chunks = y_b.chunks(chunk_size);
-            let ya_chunks = y_a.chunks(chunk_size);
-
+            // Evaluate in parallel into per-index slots, then reduce sequentially in
+            // index order so results are bit-identical for any thread count.
+            let mut y_ab_all = vec![0.0; sample_size];
             std::thread::scope(|s| {
-                let mut sv1_chunks = sum_v1.iter_mut();
-                let mut sv2_chunks = sum_v2.iter_mut();
-
-                for (((ac, bc), ybc), yac) in a_chunks.zip(b_chunks).zip(yb_chunks).zip(ya_chunks) {
-                    let sv1 = sv1_chunks.next().unwrap();
-                    let sv2 = sv2_chunks.next().unwrap();
-
+                let yab_chunks = y_ab_all.chunks_mut(chunk_size);
+                let a_chunks = a_matrix.chunks(chunk_size);
+                let b_chunks = b_matrix.chunks(chunk_size);
+                for ((yab_c, ac), bc) in yab_chunks.zip(a_chunks).zip(b_chunks) {
                     s.spawn(move || {
-                        let mut local_v1 = 0.0;
-                        let mut local_v2 = 0.0;
                         for i in 0..ac.len() {
                             let mut ab_row = ac[i].clone();
                             ab_row[d] = bc[i][d];
-                            let y_ab = model_fn(&ab_row);
-
-                            local_v1 += ybc[i] * (y_ab - yac[i]);
-                            local_v2 += (yac[i] - y_ab).powi(2);
+                            yab_c[i] = model_fn(&ab_row);
                         }
-                        *sv1 = local_v1;
-                        *sv2 = local_v2;
                     });
                 }
             });
 
-            let total_v1: f64 = sum_v1.iter().sum();
-            let total_v2: f64 = sum_v2.iter().sum();
+            let mut total_v1 = 0.0;
+            let mut total_v2 = 0.0;
+            for i in 0..sample_size {
+                total_v1 += y_b[i] * (y_ab_all[i] - y_a[i]);
+                total_v2 += (y_a[i] - y_ab_all[i]).powi(2);
+            }
 
             if var_y > 1e-12 {
                 first_order[d] = (total_v1 / (sample_size as f64)) / var_y;

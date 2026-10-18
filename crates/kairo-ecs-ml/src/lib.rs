@@ -714,7 +714,7 @@ impl ParallelVecEnv {
         let obs_dim = self.obs_dim;
 
         std::thread::scope(|s| {
-            let mut obs_chunks = out_obs.chunks_mut(chunk_size * obs_dim);
+            let mut obs_chunks = out_obs.chunks_mut((chunk_size * obs_dim).max(1));
             let mut rew_chunks = out_rewards.chunks_mut(chunk_size);
             let mut term_chunks = out_terminated.chunks_mut(chunk_size);
             let mut trunc_chunks = out_truncated.chunks_mut(chunk_size);

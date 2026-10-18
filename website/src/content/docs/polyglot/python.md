@@ -3,27 +3,22 @@ title: Python
 description: Python 3.10–3.14 bindings, zero-copy Arrow telemetry, and Gymnasium/PettingZoo MARL wrappers.
 ---
 
-The Python binding (`bindings/python/`) exposes the KairoECS runtime to Python 3.10–3.14 with zero-copy Apache Arrow table export and a native multi-agent reinforcement learning (`kairo_gym`) interface.
+The Python binding (`bindings/python/`) provides a pure-Python scheduler facade for Python 3.10–3.14; native wheels and zero-copy Arrow export are planned.
 
-## Python Surface Overview
+## Current status
 
-| Module / Class | Purpose | Underlying Rust Crate |
-| --- | --- | --- |
-| `kairo_ecs` | Core simulation lifecycle (`create`, `step`, `snapshot`, `restore`, `export_arrow`) | `kairo-ecs-ffi`, `kairo-ecs-core`, `kairo-ecs-arrow` |
-| `kairo_gym.ParallelMarlVecEnv` | Batched multi-agent RL environment compatible with Gymnasium & PettingZoo Parallel API | `kairo-ecs-ml::ParallelVecEnv` |
-| `kairo_gym.OptunaObjective` | Deterministic ensemble objective wrapper for Optuna hyperparameter & SBI calibration | `kairo-ecs-cli::ensemble` |
-
-## Quickstart Example
+The shipped package is `kairo_ecs` (pure-Python scheduler facade). `kairo_ecs.ParallelVecEnv` is a
+**placeholder**: `step` returns zeroed observations and rewards and does not call the Rust
+`kairo-ecs-ml::ParallelVecEnv`. Native library loading (`_native.py`) is only a ctypes probe; PyO3/maturin
+wheels are not yet built. There is no `kairo_gym` module in this package.
 
 ```python
-from kairo_gym import ParallelMarlVecEnv
+from kairo_ecs import ParallelVecEnv
 
-# Vectorized multi-agent simulation stepping across 64 parallel worlds
-env = ParallelMarlVecEnv(num_envs=64, obs_dim=4, action_dim=2, seed=42)
-obs, info = env.reset()
-actions = [i % 2 for i in range(64)]
-next_obs, rewards, terminated, truncated, step_info = env.step(actions)
-assert len(rewards) == 64
+env = ParallelVecEnv(num_envs=4)
+obs, infos = env.reset()
+obs, rewards, terminated, truncated, infos = env.step([0, 1, 0, 1])
+assert len(rewards) == 4  # placeholder values
 ```
 
 Canonical sources:

@@ -88,7 +88,19 @@ impl MetalBackend {
     pub fn initialize_macos_hardware_only() -> Result<Self, GpuComputeError> {
         #[cfg(target_os = "macos")]
         {
-            Ok(Self::new())
+            let has_apple_gpu = std::process::Command::new("ioreg")
+                .args(["-r", "-c", "AGXAccelerator", "-d", "1"])
+                .output()
+                .map(|o| o.status.success() && String::from_utf8_lossy(&o.stdout).contains("AGX"))
+                .unwrap_or(false);
+            if has_apple_gpu {
+                Ok(Self::new())
+            } else {
+                Err(GpuComputeError::DeviceUnavailable {
+                    backend: METAL_BACKEND_NAME,
+                    reason: "no Apple AGX GPU detected on this macOS host",
+                })
+            }
         }
         #[cfg(not(target_os = "macos"))]
         {
