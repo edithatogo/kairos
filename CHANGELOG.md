@@ -43,6 +43,7 @@ Format:
 - Set the Rust workspace and supported toolchain to exact Rust 1.99.0. CI no longer maintains older Rust compatibility lanes; nightly Miri and fuzz execution remain unverified.
 
 - CI refreshes pinned action releases and package-validation runtimes while preserving compatibility floors.
+- Renovate updates pinned GitHub Actions dependencies across CI and release workflows to their latest immutable SHAs.
 
 - Python package extras now pin Ruff 0.16.10 for tests and require Gymnasium 0.29.1 or newer for the `python/kairo_gym` optional integration.
 
