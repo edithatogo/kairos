@@ -50,7 +50,7 @@ class StrictNpmAuditWorkflowTests(unittest.TestCase):
         self.assertEqual(manifest["overrides"]["postcss-selector-parser"], "7.1.6")
 
     def test_node_binary_is_resolved_before_both_suites_and_reused(self):
-        setup = self.job.index("uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020")
+        setup = self.job.index("uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1")
         derive = self.job.index("- name: Resolve and hash setup-node executable")
         legacy = self.job.index("- name: Run preserved 60-case cache regression")
         private = self.job.index("- name: Run qualified 248-case private-vendor regression")
