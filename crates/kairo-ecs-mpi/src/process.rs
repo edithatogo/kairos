@@ -4,8 +4,8 @@ use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::env;
 use std::fs::{self, File};
 use std::io::{self, Read, Write};
-use std::net::{SocketAddr, TcpListener, TcpStream};
-use std::path::PathBuf;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, TcpStream, UdpSocket};
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
@@ -24,6 +24,9 @@ const MSG_TYPE_BARRIER_RELEASE: u8 = 106;
 const MSG_TYPE_GVT: u8 = 107;
 const MSG_TYPE_GVT_REDUCED: u8 = 108;
 
+/// Maximum framed message size accepted before buffering (128 KiB).
+const MAX_FRAME_BYTES: usize = 128 * 1024;
+
 struct InboundConnection {
     stream: TcpStream,
     buf: Vec<u8>,
@@ -32,6 +35,7 @@ struct InboundConnection {
 /// Real multi-rank MPI transport communicating across distinct OS processes over sockets.
 pub struct MpiProcessTransport {
     session_id: String,
+    rendezvous_dir: PathBuf,
     rank: i32,
     size: usize,
     assignments: Vec<MpiRankAssignment>,
@@ -79,9 +83,13 @@ impl MpiProcessTransport {
         assignments: Vec<MpiRankAssignment>,
         session_id: &str,
     ) -> Result<Self, io::Error> {
-        let listener = TcpListener::bind("127.0.0.1:0")?;
+        let bind_spec = env::var("KAIRO_MPI_BIND_ADDR").unwrap_or_else(|_| "0.0.0.0:0".to_string());
+        let listener = TcpListener::bind(&bind_spec)?;
         listener.set_nonblocking(true)?;
-        let bound_addr = listener.local_addr()?;
+        let local_bound = listener.local_addr()?;
+        let bound_addr = resolve_advertised_addr(local_bound);
+        let rendezvous_dir = resolve_rendezvous_dir();
+        fs::create_dir_all(&rendezvous_dir)?;
 
         let mut lp_to_rank = HashMap::new();
         let mut local_lp = None;
@@ -112,8 +120,8 @@ impl MpiProcessTransport {
         let gvt_results_bg = Arc::clone(&gvt_results);
         let shutdown_bg = Arc::clone(&shutdown);
 
-        // Write this rank's bound address to rendezvous file
-        let addr_path = rendezvous_file_path(session_id, rank);
+        // Write this rank's advertised address to shared/configured rendezvous directory
+        let addr_path = rendezvous_file_path(&rendezvous_dir, session_id, rank);
         let mut file = File::create(&addr_path)?;
         file.write_all(bound_addr.to_string().as_bytes())?;
         file.flush()?;
@@ -139,34 +147,48 @@ impl MpiProcessTransport {
                 // Process existing connections
                 let mut i = 0;
                 while i < conns.len() {
-                    let mut dead = false;
+                    let mut eof = false;
+                    let mut malformed = false;
 
-                    // Read available bytes
+                    // Read available bytes with announced frame size cap
                     loop {
+                        if conns[i].buf.len() > MAX_FRAME_BYTES + 4 {
+                            malformed = true;
+                            break;
+                        }
                         match conns[i].stream.read(&mut chunk) {
                             Ok(0) => {
-                                dead = true;
+                                eof = true;
                                 break;
                             }
                             Ok(n) => {
                                 conns[i].buf.extend_from_slice(&chunk[..n]);
+                                if conns[i].buf.len() >= 4 {
+                                    let announced =
+                                        u32::from_be_bytes(conns[i].buf[0..4].try_into().unwrap())
+                                            as usize;
+                                    if announced == 0 || announced > MAX_FRAME_BYTES {
+                                        malformed = true;
+                                        break;
+                                    }
+                                }
                             }
                             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                                 break;
                             }
                             Err(_) => {
-                                dead = true;
+                                eof = true;
                                 break;
                             }
                         }
                     }
 
                     // Extract all complete frames
-                    while conns[i].buf.len() >= 4 {
+                    while !malformed && conns[i].buf.len() >= 4 {
                         let total_len =
                             u32::from_be_bytes(conns[i].buf[0..4].try_into().unwrap()) as usize;
-                        if total_len == 0 {
-                            dead = true;
+                        if total_len == 0 || total_len > MAX_FRAME_BYTES {
+                            malformed = true;
                             break;
                         }
                         if conns[i].buf.len() < 4 + total_len {
@@ -188,7 +210,7 @@ impl MpiProcessTransport {
                         );
                     }
 
-                    if dead {
+                    if eof || malformed {
                         conns.swap_remove(i);
                     } else {
                         i += 1;
@@ -201,6 +223,7 @@ impl MpiProcessTransport {
 
         Ok(Self {
             session_id: session_id.to_string(),
+            rendezvous_dir,
             rank,
             size,
             assignments,
@@ -257,7 +280,13 @@ impl MpiProcessTransport {
             }
         }
 
-        let addr_path = rendezvous_file_path(&self.session_id, target_rank);
+        if let Some(env_addr) = resolve_peer_addr_from_env(target_rank) {
+            let mut addrs = self.peer_addrs.lock().unwrap();
+            addrs.insert(target_rank, env_addr);
+            return Ok(env_addr);
+        }
+
+        let addr_path = rendezvous_file_path(&self.rendezvous_dir, &self.session_id, target_rank);
         let deadline = Instant::now() + Duration::from_secs(5);
 
         while Instant::now() < deadline {
@@ -285,6 +314,9 @@ impl MpiProcessTransport {
     ) -> Result<(), TransportError> {
         if target_rank == self.rank {
             return Ok(());
+        }
+        if payload.len() + 1 > MAX_FRAME_BYTES {
+            return Err(TransportError::UnknownLogicalProcess(self.local_lp));
         }
 
         let target_addr = self.resolve_peer_addr(target_rank)?;
@@ -314,7 +346,7 @@ impl Drop for MpiProcessTransport {
         self.shutdown.store(true, Ordering::Relaxed);
 
         // Remove own rendezvous file
-        let own_path = rendezvous_file_path(&self.session_id, self.rank);
+        let own_path = rendezvous_file_path(&self.rendezvous_dir, &self.session_id, self.rank);
         let _ = fs::remove_file(own_path);
 
         // Connect to own listener to unblock accept if pending
@@ -520,8 +552,58 @@ impl PdesTransport for MpiProcessTransport {
     }
 }
 
-fn rendezvous_file_path(session_id: &str, rank: i32) -> PathBuf {
-    env::temp_dir().join(format!("kairo_mpi_{session_id}_rank_{rank}.addr"))
+fn resolve_rendezvous_dir() -> PathBuf {
+    env::var("KAIRO_MPI_RENDEZVOUS_DIR")
+        .or_else(|_| env::var("SLURM_SUBMIT_DIR"))
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| env::temp_dir())
+}
+
+fn resolve_advertised_addr(local_bound: SocketAddr) -> SocketAddr {
+    if !local_bound.ip().is_unspecified() {
+        return local_bound;
+    }
+
+    if let Ok(ip_str) = env::var("KAIRO_MPI_ADVERTISE_IP") {
+        if let Ok(ip) = ip_str.parse::<IpAddr>() {
+            return SocketAddr::new(ip, local_bound.port());
+        }
+    }
+
+    // Probe routable outbound interface via non-transmitting UDP connect
+    if let Ok(probe) = UdpSocket::bind("0.0.0.0:0") {
+        if probe.connect("10.254.254.254:80").is_ok() {
+            if let Ok(addr) = probe.local_addr() {
+                if !addr.ip().is_unspecified() {
+                    return SocketAddr::new(addr.ip(), local_bound.port());
+                }
+            }
+        }
+    }
+
+    SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), local_bound.port())
+}
+
+fn resolve_peer_addr_from_env(target_rank: i32) -> Option<SocketAddr> {
+    let list = env::var("KAIRO_MPI_PEER_ADDRS").ok()?;
+    for entry in list.split([',', ';', ' ']) {
+        let trimmed = entry.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        if let Some((r_str, addr_str)) = trimmed.split_once("=") {
+            if r_str.trim().parse::<i32>().ok() == Some(target_rank) {
+                if let Ok(addr) = addr_str.trim().parse::<SocketAddr>() {
+                    return Some(addr);
+                }
+            }
+        }
+    }
+    None
+}
+
+fn rendezvous_file_path(dir: &Path, session_id: &str, rank: i32) -> PathBuf {
+    dir.join(format!("kairo_mpi_{session_id}_rank_{rank}.addr"))
 }
 
 fn write_framed_msg(stream: &mut TcpStream, msg_type: u8, payload: &[u8]) -> io::Result<()> {

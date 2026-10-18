@@ -236,3 +236,130 @@ fn run_child_worker(parent_port: u16, child_port: u16) {
 
     thread::sleep(Duration::from_millis(100));
 }
+
+#[test]
+fn socket_transport_preserves_optimistic_migration_telemetry_heartbeat_and_rejects_https() {
+    use kairo_ecs_grpc::{
+        AncestryFrame, GrpcComponentBlob, GrpcMigrationRequest, GrpcTelemetryBatch,
+        KairoOptimisticEnvelopeV1, OptimisticAuthorityMode, WireMessageKind, GRPC_PROTOCOL_ID,
+    };
+    use kairo_ecs_pdes::OptimisticMessageKind;
+    use kairo_ecs_types::EntityId;
+
+    let config = GrpcTransportConfig::default();
+
+    // 1. Reject https:// endpoints explicitly
+    let https_err = GrpcSocketTransport::bind(
+        LpId(1),
+        "127.0.0.1:0".parse().unwrap(),
+        vec![GrpcPeer {
+            lp_id: LpId(2),
+            endpoint: "https://127.0.0.1:50051".to_string(),
+        }],
+        config.clone(),
+    );
+    assert!(
+        https_err.is_err(),
+        "https:// endpoint must be rejected on plaintext socket"
+    );
+
+    // 2. Bind two local endpoints and verify optimistic, migration, telemetry, heartbeat, and round GVT
+    let probe_b = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port_b = probe_b.local_addr().unwrap().port();
+    drop(probe_b);
+
+    let mut node_b = GrpcSocketTransport::bind(
+        LpId(2),
+        format!("127.0.0.1:{port_b}").parse().unwrap(),
+        vec![],
+        config.clone(),
+    )
+    .unwrap();
+
+    let node_a = GrpcSocketTransport::bind(
+        LpId(1),
+        "127.0.0.1:0".parse().unwrap(),
+        vec![GrpcPeer {
+            lp_id: LpId(2),
+            endpoint: format!("http://127.0.0.1:{port_b}"),
+        }],
+        config,
+    )
+    .unwrap();
+
+    // Send anti-message envelope with non-zero incarnation
+    let env = KairoOptimisticEnvelopeV1 {
+        envelope_schema_version: 1,
+        protocol_id: GRPC_PROTOCOL_ID.to_string(),
+        protocol_version: 1,
+        authority_mode: OptimisticAuthorityMode::Scoped,
+        simulation_namespace: 0x42,
+        ownership_epoch: 3,
+        emission_epoch: 3,
+        source_lp: 1,
+        dest_lp: 2,
+        tick: 77,
+        ancestry_frames: vec![AncestryFrame::Root {
+            root_source_lp: 1,
+            root_sequence: 9,
+        }],
+        incarnation: 4,
+        kind: WireMessageKind::Anti,
+        event_payload: b"anti-cancel".to_vec(),
+    };
+    node_a.send_optimistic_envelope(LpId(2), &env).unwrap();
+
+    let mig = GrpcMigrationRequest {
+        entity: EntityId {
+            index: 12,
+            generation: 5,
+        },
+        source_lp: LpId(1),
+        dest_lp: LpId(2),
+        migration_id: "mig-12".to_string(),
+        components: vec![GrpcComponentBlob {
+            component_type_id: "state".to_string(),
+            payload: vec![1, 2, 3, 4],
+        }],
+    };
+    node_a.send_migration(LpId(2), &mig).unwrap();
+
+    let telem = GrpcTelemetryBatch {
+        source_lp: LpId(1),
+        tick_start: Tick::from_ticks(10),
+        tick_end: Tick::from_ticks(20),
+        arrow_ipc_payload: b"ipc-batch".to_vec(),
+    };
+    node_a.send_telemetry(LpId(2), &telem).unwrap();
+
+    let hb = WorkerHeartbeat {
+        lp_id: LpId(1),
+        elapsed_since_last_seen: Duration::from_millis(250),
+    };
+    node_a.send_heartbeat(LpId(2), &hb).unwrap();
+
+    let mut opt_msgs = Vec::new();
+    let mut migs = Vec::new();
+    let mut telems = Vec::new();
+    let mut hbs = Vec::new();
+
+    for _ in 0..50 {
+        opt_msgs.extend(node_b.recv_optimistic(LpId(2)).unwrap());
+        migs.extend(node_b.recv_migrations());
+        telems.extend(node_b.recv_telemetry());
+        hbs.extend(node_b.recv_heartbeats());
+        if !opt_msgs.is_empty() && !migs.is_empty() && !telems.is_empty() && !hbs.is_empty() {
+            break;
+        }
+        thread::sleep(Duration::from_millis(20));
+    }
+
+    assert_eq!(opt_msgs.len(), 1);
+    assert_eq!(opt_msgs[0].kind(), OptimisticMessageKind::Anti);
+    assert_eq!(opt_msgs[0].incarnation(), 4);
+    assert_eq!(opt_msgs[0].event().event_payload, b"anti-cancel");
+
+    assert_eq!(migs, vec![mig]);
+    assert_eq!(telems, vec![telem]);
+    assert_eq!(hbs, vec![hb]);
+}
