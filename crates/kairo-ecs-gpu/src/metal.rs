@@ -44,43 +44,57 @@ impl MetalBackend {
         }
     }
 
-    pub fn probe_host_adapter() -> MetalAdapterInfo {
+    /// Resolve the human-readable host adapter name.
+    ///
+    /// The probe shells out to platform tools, so it only exists on macOS.
+    /// Keeping it in a cfg-gated helper rather than a cfg-gated block inside
+    /// `probe_host_adapter` matters: with the block inline, a non-macOS build
+    /// leaves `adapter_name` permanently unmutated, which `-D warnings`
+    /// correctly rejects as `unused_mut`. CI runs on Linux, so that build is
+    /// the one that has to compile.
+    #[cfg(target_os = "macos")]
+    fn probe_adapter_name() -> String {
         let mut adapter_name = "Apple Silicon Metal Unified Memory GPU".to_string();
-        let metal_toolchain_available = cfg!(target_os = "macos");
 
-        #[cfg(target_os = "macos")]
+        if let Ok(output) = std::process::Command::new("sysctl")
+            .args(["-n", "machdep.cpu.brand_string"])
+            .output()
         {
-            if let Ok(output) = std::process::Command::new("sysctl")
-                .args(["-n", "machdep.cpu.brand_string"])
-                .output()
-            {
-                if output.status.success() {
-                    let brand = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                    if !brand.is_empty() {
-                        adapter_name = format!("Apple Silicon ({})", brand);
-                    }
+            if output.status.success() {
+                let brand = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                if !brand.is_empty() {
+                    adapter_name = format!("Apple Silicon ({})", brand);
                 }
-            } else if let Ok(output) = std::process::Command::new("ioreg")
-                .args(["-r", "-c", "AGXAccelerator", "-d", "1"])
-                .output()
-            {
-                if output.status.success() {
-                    let stdout = String::from_utf8_lossy(&output.stdout);
-                    if stdout.contains("Apple") {
-                        adapter_name = "Apple AGX Accelerator (Metal Unified Memory)".to_string();
-                    }
+            }
+        } else if let Ok(output) = std::process::Command::new("ioreg")
+            .args(["-r", "-c", "AGXAccelerator", "-d", "1"])
+            .output()
+        {
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                if stdout.contains("Apple") {
+                    adapter_name = "Apple AGX Accelerator (Metal Unified Memory)".to_string();
                 }
             }
         }
 
+        adapter_name
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    fn probe_adapter_name() -> String {
+        "Apple Silicon Metal Unified Memory GPU".to_string()
+    }
+
+    pub fn probe_host_adapter() -> MetalAdapterInfo {
         MetalAdapterInfo {
-            adapter_name,
+            adapter_name: Self::probe_adapter_name(),
             unified_memory: true,
             max_threads_per_threadgroup: 1024,
             worker_threads: std::thread::available_parallelism()
                 .map(|n| n.get())
                 .unwrap_or(4),
-            metal_toolchain_available,
+            metal_toolchain_available: cfg!(target_os = "macos"),
         }
     }
 
