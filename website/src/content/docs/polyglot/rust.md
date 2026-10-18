@@ -13,7 +13,7 @@ Rust is the primary implementation language of KairoECS. All 23 workspace crates
 | Discrete-Event & ABM | `kairo-ecs-des`, `kairo-ecs-abm` | `SimResource`, `PriorityResource`, `PreemptiveResource`, `Container`, `Store`, `GridSpace2D`, `ContinuousSpace2D`, `NetworkSpace` |
 | Game Theory & Ontology | `kairo-ecs-game-ontology`, `kairo-ecs-game-theory` | `NormalFormGame`, `PureNashSolver`, `LemkeHowsonSolver`, `SupportEnumerationSolver`, `ExtensiveFormGame`, `BackwardInductionSolver`, `CfrPlusSolver` |
 | Parallel, Distributed & GPU | `kairo-ecs-pdes`, `kairo-ecs-mpi`, `kairo-ecs-grpc`, `kairo-ecs-gpu`, `kairo-ecs-webgpu` | `TimeWarpPartition`, `MatternGvtTracker`, `MpiProcessTransport`, `GrpcSocketTransport`, `MetalBackend`, `PersistentGpuSession` |
-| Data, ML, FMI & CLI | `kairo-ecs-arrow`, `kairo-ecs-ml`, `kairo-ecs-fmi`, `kairo-ecs-debug`, `kairo-ecs-cli` | `ArrowTableBatch`, `ParquetColumnarFile`, `ParallelVecEnv`, `FmuPackage`, `CowWorldSnapshot`, `ParallelEnsembleRunner` |
+| Data, ML, FMI & CLI | `kairo-ecs-arrow`, `kairo-ecs-ml`, `kairo-ecs-fmi`, `kairo-ecs-debug`, `kairo-ecs-cli` | `ArrowRecordBatch`, `ParquetZstdCheckpointWriter`, `ParallelVecEnv`, `FmuPackage`, `CowWorldSnapshot`, `ParallelEnsembleRunner` |
 
 ## Example: Game Theory + Multi-Core Ensemble Execution
 
