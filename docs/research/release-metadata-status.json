@@ -1,18 +1,38 @@
 {
-  "status": "unreleased",
+  "status": "released",
   "planned_version": "0.4.0-alpha.1",
   "repository": "https://github.com/edithatogo/kairos",
   "license": "Apache-2.0 OR MIT",
-  "source_commit": "063e95491e54dbc23e79d017bb50c7ea16e123bc",
-  "observation_date": "2026-10-01",
+  "source_commit": "669520a324be8064b3c00424b94f1b53e77f98fb",
+  "observation_date": "2026-10-18",
   "github_readback": {
-    "tags": [],
-    "releases": [],
+    "tags": [
+      "v0.4.0-alpha.1"
+    ],
+    "releases": [
+      "v0.4.0-alpha.1"
+    ],
     "commands": [
       "gh api repos/edithatogo/kairos/tags",
       "gh api repos/edithatogo/kairos/releases"
     ]
   },
-  "release_evidence": null,
-  "remaining_gate": "Issue #91 stays open until a reviewed named-release record identifies its exact source commit, version, license, artifacts and validation receipts."
+  "release_evidence": {
+    "source_commit": "669520a324be8064b3c00424b94f1b53e77f98fb",
+    "version": "0.4.0-alpha.1",
+    "license": "Apache-2.0 OR MIT",
+    "tag_url": "https://github.com/edithatogo/kairos/releases/tag/v0.4.0-alpha.1",
+    "release_url": "https://github.com/edithatogo/kairos/releases/tag/v0.4.0-alpha.1",
+    "artifacts": [
+      "dist/kairos-source-0.4.0-alpha.1.tar.gz",
+      "dist/release-artifact-manifest.json",
+      "dist/SHA256SUMS"
+    ],
+    "validation_receipts": [
+      "track15-r2-local-registry-package-dry-run",
+      "validate-packaging-dry-run.ps1",
+      "validate-publication-readiness.mjs"
+    ]
+  },
+  "remaining_gate": "Issue #91 complete; named release record and validation receipts established."
 }

@@ -30,9 +30,10 @@ external evidence required by their issue contracts.
 
 | Issue | Current evidence | Next concrete step |
 |---|---|---|
-| #94 JOSS | Comprehensive paper draft (960 words) and bibliography prepared in `paper/`; age requirement pending until 6-month boundary. | Reassess public-development age at submission time, finalize author details, and submit to JOSS. |
+| #91 Release metadata | Named pre-release `v0.4.0-alpha.1` published on GitHub; source archive, release manifest, and SHA256SUMS verified. | Issue closed; release evidence record verified. |
+| #92 Software Heritage | Exact source archived; named release `v0.4.0-alpha.1` published and available for tag archival. | Trigger Software Heritage archival for tag `v0.4.0-alpha.1` and retain SWHID. |
 | #93 RRID | Curator accepted; assigned `RRID:SCR_029085`; resolvable via SciCrunch Registry. | Issue closed; retain identifier resolution evidence. |
-| #92 Software Heritage | Source revision archived and resolved; full visit, snapshot, matching tree and README retrieval verified. No release exists. | After a reviewed release exists, resolve its exact source and applicable archived tag/release object; reuse existing coverage. |
+| #94 JOSS | Comprehensive paper draft (952 words) and bibliography prepared in `paper/`; age requirement pending until 6-month boundary. | Reassess public-development age at submission time, finalize author details, and submit to JOSS. |
 
 The README license summary is reconciled with the existing dual-license grant
 as part of this assessment integration. No source rights, package publication
