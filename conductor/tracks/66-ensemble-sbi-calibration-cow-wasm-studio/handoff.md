@@ -1,53 +1,57 @@
 # Track 66 Handoff
 
-Status: Planned
+Status: Done
 
 Freshness: 2026-10-18
 
 ## Summary
 
-Track 66 (Parallel Ensemble Sweeps (Sobol/CRN), SBI Calibration & Copy-on-Write Wasm Studio) is registered as a `Planned` Wave 9 Native Spine, Ergonomics & Bleeding-Edge Parity track. It defines the execution plan to replace dependency-free R2 scaffolds with official upstream dependencies and bleeding-edge domain capabilities.
+Track 66 (Parallel Ensemble Sweeps (Sobol/CRN), SBI Calibration & Copy-on-Write Wasm Studio) is implemented, verified, and closed out as `Done` in Wave 9.
 
 ## Files changed
 
-- `conductor/tracks/66-ensemble-sbi-calibration-cow-wasm-studio/spec.md`
+- `crates/kairo-ecs-cli/src/ensemble.rs`
+- `crates/kairo-ecs-cli/src/main.rs`
+- `crates/kairo-ecs-debug/src/lib.rs`
+- `website/playground/index.html`
+- `website/playground/main.js`
+- `docs/validation/ensemble-sobol-and-abc-calibration.md`
+- `docs/debugging/cow-snapshots-and-wasm-studio.md`
 - `conductor/tracks/66-ensemble-sbi-calibration-cow-wasm-studio/plan.md`
-- `conductor/tracks/66-ensemble-sbi-calibration-cow-wasm-studio/agent-contract.md`
-- `conductor/tracks/66-ensemble-sbi-calibration-cow-wasm-studio/risk-register.md`
-- `conductor/tracks/66-ensemble-sbi-calibration-cow-wasm-studio/test-matrix.md`
+- `conductor/tracks/66-ensemble-sbi-calibration-cow-wasm-studio/review-report.md`
 - `conductor/tracks/66-ensemble-sbi-calibration-cow-wasm-studio/handoff.md`
 
 ## Contracts consumed
 
-- Tracks 21, 22, 24, 40, 63, 64 baseline contracts and schemas.
+- Upstream foundation, FFI, Arrow, ECS/DES/ABM, Game Theory, ML, and V&V/UQ contracts.
 
 ## Contracts changed
 
-- Registers Track 66 gates (`phase-closeout-check, sobol-lhs-crn-ensemble-runner, optuna-abc-smc-calibration-hook, cow-delta-snapshot-memory-budget, wasm-time-travel-inspector-smoke`) in `conductor/tracks.yaml`.
+- Delivered and verified all Track 66 required gates in `conductor/tracks.yaml`.
 
 ## Tests added
 
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`
+- `cargo test -p kairo-ecs-cli -p kairo-ecs-debug`
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_artifacts.ps1`
+- `pwsh -NoProfile -File scripts/validate_conductor_dag.ps1`
 
 ## Known risks
 
-- Implementation has not started yet; track is `Planned` and makes no runtime capability claims until Phase 0-3 tasks are executed and verified.
+- Optional ecosystem integrations remain feature-gated so default builds stay deterministic and lockfile-clean.
 
 ## Follow-up issues
 
-- Execute Phase 0-2 implementation tasks in `plan.md` and record task-level commits.
+- None; all Phase 0-2 implementation tasks in `plan.md` are complete.
 
 ## Integration notes
 
-- Coordinates with owned paths `crates/kairo-ecs-cli/, crates/kairo-ecs-debug/` via the single-maintainer harness.
+- Coordinated across owned paths via the single-maintainer harness.
 
 ## Phase closeout evidence
 
-- `$conductor-review`: initial track specification and registration reviewed for schema and validator compliance.
-- accepted fixes: aligned `spec.md`, `plan.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md` with Conductor phase-gate and artifact rules.
-- commit SHA: pending track registration commit.
-- pushed ref: pending push.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: required before advancing past `Planned`.
-- next-phase decision: remain `Planned` until Phase 0 implementation begins.
+- `$conductor-review`: completed implementation review in `conductor/tracks/66-ensemble-sbi-calibration-cow-wasm-studio/review-report.md` with zero open defects.
+- accepted fixes: verified rustfmt, clippy `-D warnings`, unit/doc tests, and binding smoke tests.
+- commit SHA: `daffd10675902d25a037b53d97256535eb350361`
+- pushed ref: `origin/codex/wave9-implementation-tracks-62-66`
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed on clean tree.
+- next-phase decision: Track 66 is `Done`.
