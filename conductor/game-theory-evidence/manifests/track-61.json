@@ -1,0 +1,46 @@
+{
+  "track_id": 61,
+  "track_name": "Extensive-Form Graph-ECS Runtime and Certification",
+  "phase": "track-closeout",
+  "status": "done",
+  "task_commits": [
+    {
+      "task": "0.1-3.3",
+      "commit_sha": "e374a3b5378493eaac2459830fe494e2380bf769",
+      "message": "Complete Track 61 extensive-form Graph-ECS runtime, backward induction, chance-weighted solver, CFR+, and multi-game certification",
+      "local_gates": [
+        "cargo test -p kairo-ecs-game-theory --features graph-relations",
+        "node scripts/validation/validate-multigame-certification.mjs --self-test"
+      ]
+    }
+  ],
+  "review": {
+    "command": "$conductor-review 61",
+    "result": "passed",
+    "accepted_fixes": [
+      "Added ChanceWeightedBackwardInductionSolver and multi-game certification manifests"
+    ]
+  },
+  "push": {
+    "ref": "origin/main",
+    "pushed_sha": "e374a3b5378493eaac2459830fe494e2380bf769"
+  },
+  "github_actions": {
+    "command": "gh pr checks --watch",
+    "result": "passed",
+    "run_url": "https://github.com/edithatogo/kairos/pull/261"
+  },
+  "validation": [
+    {
+      "command": "node scripts/validation/validate-multigame-certification.mjs --self-test",
+      "result": "passed",
+      "notes": "Verified normal-form and extensive-form Graph-ECS certification scenarios and negative fixtures"
+    }
+  ],
+  "evidence_paths": [
+    "crates/kairo-ecs-game-theory/src/extensive_form.rs",
+    "conductor/game-theory-evidence/multigame-certification/track-61-scenarios.json",
+    "docs/game-theory/extensive-form-runtime.md"
+  ],
+  "waivers": []
+}

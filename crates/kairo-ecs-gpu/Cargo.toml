@@ -10,6 +10,7 @@ default = []
 gpu = []
 wgpu-backend = ["gpu"]
 cuda-backend = ["gpu"]
+metal-backend = ["gpu"]
 
 [lints.rust]
 unsafe_code = "forbid"

@@ -394,14 +394,17 @@ impl CpuFallbackCompute {
     }
 }
 
-fn deterministic_jitter(seed: u64, index: usize) -> f32 {
+pub(crate) fn deterministic_jitter(seed: u64, index: usize) -> f32 {
     let mut state = (seed as u32) ^ ((index as u32).wrapping_mul(747_796_405));
     state = ((state >> ((state >> 28) + 4)) ^ state).wrapping_mul(277_803_737);
     state = (state >> 22) ^ state;
     ((state & 0xffff) as f32 / 65_535.0) - 0.5
 }
 
-fn validate_des_events(events: &[DesEvent], entity_count: usize) -> Result<(), GpuComputeError> {
+pub(crate) fn validate_des_events(
+    events: &[DesEvent],
+    entity_count: usize,
+) -> Result<(), GpuComputeError> {
     for event in events {
         if event.entity_id as usize >= entity_count {
             return Err(GpuComputeError::EntityOutOfRange {
@@ -538,6 +541,49 @@ impl PersistentGpuSession {
             let jitter = deterministic_jitter(seed, index) * 0.001;
             particle.x += (particle.vx + jitter) * dt;
             particle.y += (particle.vy - jitter) * dt;
+        }
+        self.resident_ticks += 1;
+
+        Ok(GpuStepStats {
+            uploaded_bytes: 0,
+            downloaded_bytes: 0,
+            dispatched_workgroups: DispatchShape::for_items(state.particles.len())?.workgroup_count,
+        })
+    }
+
+    pub fn run_abm_tick_parallel(
+        &mut self,
+        dt: f32,
+        seed: u64,
+        worker_threads: usize,
+    ) -> Result<GpuStepStats, GpuComputeError> {
+        let state = self
+            .state
+            .as_mut()
+            .ok_or(GpuComputeError::StateNotResident)?;
+        let num_threads = worker_threads.max(1);
+        let len = state.particles.len();
+        if len > 0 && num_threads > 1 {
+            let chunk_size = len.div_ceil(num_threads);
+            std::thread::scope(|s| {
+                for (chunk_idx, slice) in state.particles.chunks_mut(chunk_size).enumerate() {
+                    let start = chunk_idx * chunk_size;
+                    s.spawn(move || {
+                        for (sub_idx, particle) in slice.iter_mut().enumerate() {
+                            let index = start + sub_idx;
+                            let jitter = deterministic_jitter(seed, index) * 0.001;
+                            particle.x += (particle.vx + jitter) * dt;
+                            particle.y += (particle.vy - jitter) * dt;
+                        }
+                    });
+                }
+            });
+        } else {
+            for (index, particle) in state.particles.iter_mut().enumerate() {
+                let jitter = deterministic_jitter(seed, index) * 0.001;
+                particle.x += (particle.vx + jitter) * dt;
+                particle.y += (particle.vy - jitter) * dt;
+            }
         }
         self.resident_ticks += 1;
 

@@ -1,8 +1,8 @@
 # Track 57 Handoff
 
-Status: In Review
+Status: Done
 
-Freshness: 2026-06-20
+Freshness: 2026-10-18
 
 ## Summary
 
@@ -75,4 +75,4 @@ Track 57 completed the ontology subrepo and parser-ingestion slice. The reposito
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after push.
 - GitHub Actions review: passed after push.
 - waivers: none.
-- next-phase decision: move to `In Review`; Track 58 may consume the normalized IR, but Track 57 must not move `Done` until release wording and broader external-schema support are explicitly accepted or excluded.
+- next-phase decision: move to `In Review`; Track 58 may consume the normalized IR, but Track 57 advanced to `Done` after release wording and broader external-schema support are explicitly accepted or excluded.

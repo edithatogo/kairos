@@ -60,12 +60,12 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 53 | FMI 2/3 Co-Simulation Master Runtime | In Progress | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Done | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |
 | 55 | End-to-End Weak/Strong Scaling Certification | In Progress | `performance-agent + benchmark-agent + cloud-agent + release-agent` | See `conductor/tracks/55-*/spec.md` |
-| 56 | Game Theory Ontology Wave Charter and Evidence Gates | In Review | `ontology-agent + game-theory-agent + wave-manager-agent` | See `conductor/tracks/56-*/spec.md` |
-| 57 | Open Game Theory Ontology Subrepo and Schema Ingestion | In Review | `ontology-agent + rust-agent` | See `conductor/tracks/57-*/spec.md` |
-| 58 | Ontology-to-Rust Component Code Generation | In Review | `ontology-agent + ecs-agent + api-governance-agent` | See `conductor/tracks/58-*/spec.md` |
-| 59 | Feature-Gated Graph Relations ECS Module | In Review | `ecs-agent + core-scheduler-agent + conformance-agent` | See `conductor/tracks/59-*/spec.md` |
-| 60 | Normal-Form Multi-Game Runtime and Solvers | In Review | `game-theory-agent + ecs-agent + performance-agent` | See `conductor/tracks/60-*/spec.md` |
-| 61 | Extensive-Form Graph-ECS Runtime and Certification | In Review | `game-theory-agent + ecs-agent + benchmark-agent + redteam-agent` | See `conductor/tracks/61-*/spec.md` |
+| 56 | Game Theory Ontology Wave Charter and Evidence Gates | Done | `ontology-agent + game-theory-agent + wave-manager-agent` | See `conductor/tracks/56-*/spec.md` |
+| 57 | Open Game Theory Ontology Subrepo and Schema Ingestion | Done | `ontology-agent + rust-agent` | See `conductor/tracks/57-*/spec.md` |
+| 58 | Ontology-to-Rust Component Code Generation | Done | `ontology-agent + ecs-agent + api-governance-agent` | See `conductor/tracks/58-*/spec.md` |
+| 59 | Feature-Gated Graph Relations ECS Module | Done | `ecs-agent + core-scheduler-agent + conformance-agent` | See `conductor/tracks/59-*/spec.md` |
+| 60 | Normal-Form Multi-Game Runtime and Solvers | Done | `game-theory-agent + ecs-agent + performance-agent` | See `conductor/tracks/60-*/spec.md` |
+| 61 | Extensive-Form Graph-ECS Runtime and Certification | Done | `game-theory-agent + ecs-agent + benchmark-agent + redteam-agent` | See `conductor/tracks/61-*/spec.md` |
 | 62 | Official Apache Arrow, Parquet & Zero-Copy C Data Interface Spine | Done | `arrow-agent + ffi-agent + interop-agent` | See `conductor/tracks/62-*/spec.md` |
 | 63 | Native Polyglot Bindings (PyO3/Maturin, Wasm-Bindgen, Extendr & C ABI) | Done | `python-agent + typescript-agent + r-agent + julia-agent + csharp-agent + go-agent + ffi-agent` | See `conductor/tracks/63-*/spec.md` |
 | 64 | Archetype/SoA ECS Storage, Full DES Process/Resource Kernel & ABM Spatial Topologies | Done | `ecs-agent + des-api-agent + abm-api-agent + core-scheduler-agent` | See `conductor/tracks/64-*/spec.md` |
