@@ -1,0 +1,5 @@
+# Reviewed C4.4 false positive: this historical line is the literal validation
+# message "empty/duplicate raw key", not a credential. Scope is one commit,
+# file, rule and line; new occurrences remain scanned. Keep merge history.
+# Evidence: Actions run37258123261/job111599430617; source lines55-57.
+7b13355c5ed31fc9b8e380d937ffc4e3342717b8:conformance/c43/statistical_diagnostics.py:generic-api-key:56

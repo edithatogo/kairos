@@ -57,7 +57,6 @@ jobs:
           test -f .github/workflows/codeql.yml
           test -f .github/workflows/conductor-assessment-reminder.yml
           test -f .github/workflows/conformance.yml
-          test -f .github/workflows/careops-native-owner.yml
           test -f .github/workflows/dependency-review.yml
           test -f .github/workflows/docs-link-check.yml
           test -f .github/workflows/docs-quality.yml

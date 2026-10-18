@@ -1,0 +1,16 @@
+{
+  "reviewed_base": "e41241889b96ed4c9b5f5fa902d3a2282a50c876",
+  "reviewers": [
+    "c43_arrow_audit",
+    "c43_join_audit"
+  ],
+  "codec_review": "No actionable finding; exact-head independent readback pending.",
+  "join_finding": "Censor/missing category lost when simulation failure determines residual status.",
+  "resolution_commit": "4f50f5e",
+  "resolution": "Actual Censored then Missing source evidence selected independently of status; regression covers both Failed pairs; reviewer confirmed resolved.",
+  "remaining_scope": "C4.4/C-04, public API, release and clinical acceptance remain open.",
+  "reader_review": "Counts, raw hashes, full joins and nine manifest controls checked. Mixed-clock finding withdrawn after actual unchanged C42 kernel rejected contradictory logical-pair clocks.",
+  "mixed_clock_regression_commit": "d3c563f",
+  "final_gate_review": "Independent reader reviewer cleared both hosted strict gate invocations, propagated recursive requirements and actual per-framing manifest/smoke copies.",
+  "framing_source_commit": "56df9a4"
+}

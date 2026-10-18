@@ -74,6 +74,9 @@ pub(crate) struct GroupMetric {
     pub ks_d: Option<f64>,
     pub reference_count: usize,
     pub simulation_count: usize,
+    pub reference_tie_count: Option<usize>,
+    pub simulation_tie_count: Option<usize>,
+    pub coverage_warnings: Vec<String>,
     pub reference_diagnostics: Counts,
     pub simulation_diagnostics: Counts,
     pub unmatched_count: usize,
@@ -201,6 +204,36 @@ pub(crate) fn compare_groups(
                 MetricStatus::Invalid => Status::Invalid,
             }
         };
+        let reference_tie_count = result.as_ref().and_then(|r| r.reference_tie_count);
+        let simulation_tie_count = result.as_ref().and_then(|r| r.simulation_tie_count);
+        let mut coverage_warnings = BTreeSet::new();
+        if reference_diagnostics.censored > 0 || simulation_diagnostics.censored > 0 {
+            coverage_warnings.insert("censored_observations_present".to_owned());
+        }
+        if reference_diagnostics.excluded > 0 || simulation_diagnostics.excluded > 0 {
+            coverage_warnings.insert("excluded_observations_present".to_owned());
+        }
+        if reference_diagnostics.failed > 0 || simulation_diagnostics.failed > 0 {
+            coverage_warnings.insert("failed_outcomes_present".to_owned());
+        }
+        if reference_diagnostics.infeasible > 0 || simulation_diagnostics.infeasible > 0 {
+            coverage_warnings.insert("infeasible_outcomes_present".to_owned());
+        }
+        if reference_diagnostics.missing > 0 || simulation_diagnostics.missing > 0 {
+            coverage_warnings.insert("missing_outcomes_present".to_owned());
+        }
+        if reference_tie_count.is_some_and(|count| count > 0)
+            || simulation_tie_count.is_some_and(|count| count > 0)
+        {
+            coverage_warnings.insert("tied_observations_present".to_owned());
+        }
+        if reference
+            .iter()
+            .chain(simulation)
+            .any(|row| row.group == group && row.outcome == Outcome::Censored)
+        {
+            coverage_warnings.insert("uncensored_subset_no_survival_correction".to_owned());
+        }
         output.insert(
             group,
             GroupMetric {
@@ -210,6 +243,9 @@ pub(crate) fn compare_groups(
                 ks_d: result.as_ref().and_then(|r| r.ks_d),
                 reference_count: result.as_ref().map_or(0, |r| r.reference_count),
                 simulation_count: result.as_ref().map_or(0, |r| r.simulation_count),
+                reference_tie_count,
+                simulation_tie_count,
+                coverage_warnings: coverage_warnings.into_iter().collect(),
                 reference_diagnostics,
                 simulation_diagnostics,
                 unmatched_count: 0,
