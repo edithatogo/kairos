@@ -34,7 +34,7 @@ Scientific computational modeling requires reproducible, auditable, and performa
 3. **Reproducibility Gaps:** Lack of strict seed-level determinism, cross-platform float inconsistencies, and opaque internal memory states make bit-for-bit replay challenging across heterogeneous operating environments.
 4. **Data Interoperability:** Exporting telemetry across language boundaries typically incurs massive serialization penalties (e.g., JSON or CSV parsing), restricting real-time visualization and machine learning surrogate training.
 
-`KairoECS` directly addresses these challenges by delivering a native Rust core that enforces `#![forbid(unsafe_code)]`, guaranteed reproducible replay schedules across platforms, zero-copy columnar telemetry streams via Apache Arrow [@arrow2021], and idiomatic polyglot bindings for Python, TypeScript/Wasm, R, Julia, C#, and Go.
+`KairoECS` directly addresses these challenges by delivering a native Rust core that enforces `#![forbid(unsafe_code)]`, guaranteed reproducible replay schedules across platforms, columnar telemetry adapters aligned with Apache Arrow schemas [@arrow2021], and idiomatic polyglot bindings for Python, TypeScript/Wasm, R, Julia, C#, and Go.
 
 # State of the Field
 
@@ -45,7 +45,7 @@ The scientific simulation ecosystem features established frameworks tailored to 
 - **Repast Simphony and Repast HPC** [@north2013complex] offer robust agent simulation in Java and C++/MPI. However, developing cross-language workflows remains cumbersome, and integrating modern columnar data formats requires external tooling.
 - **Mesa** [@masad2015mesa] provides an extensible Python framework for ABM with visualization capabilities, but performance limits emerge when simulating complex spatial dynamics or high-density populations without Cython or Numba extensions.
 
-`KairoECS` complements these tools by providing a modular, typed engine that combines the speed and memory safety of Rust with zero-copy Arrow data interoperability, enabling researchers in Python, R, and Julia to orchestrate simulations without sacrificing core execution speed.
+`KairoECS` complements these tools by providing a modular, typed engine that combines the speed and memory safety of Rust with Arrow-aligned telemetry interoperability, enabling researchers in Python, R, and Julia to orchestrate simulations without sacrificing core execution speed.
 
 # Software Design and Architecture
 
@@ -53,8 +53,8 @@ The scientific simulation ecosystem features established frameworks tailored to 
 
 - **Deterministic Core Kernel (`kairo-ecs-core`):** Implements an event-first scheduling engine using integer-quantized virtual simulation time (`SimTime`). Event execution order is strictly deterministic, using hierarchical tie-breaking by timestamp, event priority, and unique event sequence identifiers.
 - **Entity-Component-System Storage (`kairo-ecs-state`):** Organizes world state into cache-friendly columnar component arrays rather than deep object hierarchies. Systems operate over contiguous memory slices, maximizing CPU cache utilization during agent state evaluations.
-- **Pseudo-Random Number Generation (`kairo-ecs-rng`):** Implements counter-based, deterministic PRNG streams (PCG and ChaCha-based generators) partitioned across entity and subsystem domains. Simulation replays produce identical state trajectories across operating systems and compilers.
-- **Columnar Telemetry (`kairo-ecs-arrow`):** Telemetry records, agent attributes, and event journals are emitted directly into in-memory Apache Arrow record batches, eliminating runtime serialization overhead and enabling immediate handoff to scientific data pipelines (Polars, DuckDB, Pandas).
+- **Pseudo-Random Number Generation (`kairo-ecs-rng`):** Implements stateful SplitMix64 deterministic PRNG streams (`DeterministicStream`) with independent entity seed derivation, ensuring reproducible state trajectories across operating systems and compilers.
+- **Columnar Telemetry Alignment (`kairo-ecs-arrow`):** Emits field-level schema-aligned telemetry records and event logs formatted for direct export and conversion into Apache Arrow record batches, supporting downstream scientific data pipelines (Polars, DuckDB, Arrow).
 - **Parallel and Distributed Engines (`kairo-ecs-pdes`, `kairo-ecs-mpi`):** Provides Conservative (Chandy-Misra-Bryant) and Optimistic (Time Warp) parallel discrete-event simulation algorithms [@fujimoto1990parallel] with rollback mechanisms and distributed state synchronization.
 - **Polyglot Foreign Function Interface (`kairo-ecs-ffi`):** Exposes C-ABI, UniFFI, Diplomat, and WebAssembly targets, powering native packages for Python (`pyarrow`), TypeScript/JavaScript (WebAssembly/WebGPU), R, Julia, C#, and Go.
 
