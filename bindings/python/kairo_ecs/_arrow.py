@@ -200,14 +200,21 @@ class EventLogBatch:
 
     def __arrow_c_schema__(self) -> Any:
         try:
-            return self.to_pyarrow_table().__arrow_c_schema__()
-        except RuntimeError:
+            return self.to_pyarrow_table().schema.__arrow_c_schema__()
+        except (RuntimeError, AttributeError):
             return _allocate_arrow_schema_capsule()
 
     def __arrow_c_array__(self, requested_schema: Any = None) -> tuple[Any, Any]:
         try:
-            return self.to_pyarrow_table().__arrow_c_array__(requested_schema=requested_schema)
-        except RuntimeError:
+            table = self.to_pyarrow_table()
+            batches = table.combine_chunks().to_batches()
+            if batches:
+                return batches[0].__arrow_c_array__(requested_schema=requested_schema)
+            import pyarrow as pa
+
+            empty_batch = pa.RecordBatch.from_pydict(self.to_column_dict(), schema=table.schema)
+            return empty_batch.__arrow_c_array__(requested_schema=requested_schema)
+        except (RuntimeError, AttributeError):
             return (_allocate_arrow_schema_capsule(), _allocate_arrow_array_capsule(len(self.records)))
 
     def export_arrow_c_capsule_descriptor(self) -> dict[str, Any]:
