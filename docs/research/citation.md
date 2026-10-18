@@ -129,3 +129,12 @@ license, tag and release URLs, artifact hashes and validation receipts are recor
 across `CITATION.cff`, `codemeta.json`, and `.zenodo.json`. Archive status remains
 pre-release metadata seed, not yet DOI-minted, pending Zenodo draft deposition.
 Issue #91 is satisfied by this verified named release record.
+
+## Software Heritage release archival (#92)
+
+`v0.4.0-alpha.1` is permanently archived in Software Heritage:
+- **Release SWHID**: `swh:1:rel:480ce15ee0ad54e18d3134844f39ad4224db0b2a`
+- **Revision SWHID**: `swh:1:rev:669520a292d4861cbe2971818100261cd62dedfc`
+- **Snapshot SWHID**: `swh:1:snp:8d3ee645d61fe5dd947ab2252be9d675938ccbc2`
+- **Archival Evidence**: Retained in `docs/research/swh-evidence.json` and `docs/research/swh-readiness.md`. Root tree and README byte hashes match git source bit-for-bit.
+

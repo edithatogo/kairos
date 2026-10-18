@@ -31,7 +31,7 @@ external evidence required by their issue contracts.
 | Issue | Current evidence | Next concrete step |
 |---|---|---|
 | #91 Release metadata | Named pre-release `v0.4.0-alpha.1` published on GitHub; source archive, release manifest, and SHA256SUMS verified. | Issue closed; release evidence record verified. |
-| #92 Software Heritage | Exact source archived; named release `v0.4.0-alpha.1` published and available for tag archival. | Trigger Software Heritage archival for tag `v0.4.0-alpha.1` and retain SWHID. |
+| #92 Software Heritage | Release `v0.4.0-alpha.1` permanently archived in Software Heritage (`swh:1:rel:480ce15ee0ad54e18d3134844f39ad4224db0b2a`). | Issue closed; authoritative release SWHID and tree matching verified. |
 | #93 RRID | Curator accepted; assigned `RRID:SCR_029085`; resolvable via SciCrunch Registry. | Issue closed; retain identifier resolution evidence. |
 | #94 JOSS | Comprehensive paper draft (952 words) and bibliography prepared in `paper/`; age requirement pending until 6-month boundary. | Reassess public-development age at submission time, finalize author details, and submit to JOSS. |
 
