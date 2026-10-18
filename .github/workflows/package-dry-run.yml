@@ -86,7 +86,7 @@ jobs:
           cp target/package/kairo-ecs-types-*.crate dist/packages/rust/
           python3 packaging/scripts/write_package_build_receipt.py --ecosystem rust --archive-dir dist/packages/rust --source-commit "$GITHUB_SHA" --command 'cargo package --locked --allow-dirty -p kairo-ecs-types' --toolchain "$(rustc --version); $(cargo --version)"
           python packaging/scripts/build_release_manifest.py --check
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kairos-package-rust
           path: dist/packages/rust/
@@ -115,7 +115,7 @@ jobs:
           python -m twine check "$GITHUB_WORKSPACE"/dist/packages/python/*
           cd "$GITHUB_WORKSPACE"
           python3 packaging/scripts/write_package_build_receipt.py --ecosystem python --archive-dir dist/packages/python --source-commit "$GITHUB_SHA" --command 'python -m build --no-isolation; python -m twine check' --toolchain "$(python --version); $(python -m build --version); $(python -m twine --version)"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kairos-package-python
           path: dist/packages/python/
@@ -147,7 +147,7 @@ jobs:
           cp ./*.tar.gz "$GITHUB_WORKSPACE/dist/packages/r/"
           cd "$GITHUB_WORKSPACE"
           python3 packaging/scripts/write_package_build_receipt.py --ecosystem r --archive-dir dist/packages/r --source-commit "$GITHUB_SHA" --command 'R CMD build; R CMD check --no-manual --no-tests' --toolchain "$(R --version | head -n 1)" --validation-notes 'R CMD check completed with one NOTE for unavailable optional suggested packages; package tests skipped by the specified --no-tests workflow command.'
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kairos-package-r
           path: dist/packages/r/
@@ -160,7 +160,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with: { node-version: '22.23.3' }
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with: { python-version: '3.14.8' }
@@ -221,7 +221,7 @@ jobs:
           npm pack --ignore-scripts --pack-destination "$GITHUB_WORKSPACE/dist/packages/typescript"
           cd "$GITHUB_WORKSPACE"
           python3 packaging/scripts/write_package_build_receipt.py --ecosystem typescript --archive-dir dist/packages/typescript --source-commit "$GITHUB_SHA" --command 'npm ci --ignore-scripts; npm run build; npm pack --ignore-scripts' --toolchain "$(node --version); $(npm --version)"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kairos-package-typescript
           path: dist/packages/typescript/
@@ -229,7 +229,7 @@ jobs:
           retention-days: 7
       - name: Retain raw npm audit and policy classification
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kairos-bootstrap-npm-audit
           path: artifacts/npm-audit-gate/
@@ -243,7 +243,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        with: { dotnet-version: '10.0.401' }
+        with: { dotnet-version: '10.0.402' }
       - name: dotnet pack dry run
         run: |
           test -f bindings/csharp/Kairo.ECS.sln
@@ -252,7 +252,7 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/dist/packages/nuget"
           dotnet pack bindings/csharp/src/Kairo.ECS/Kairo.ECS.csproj -c Release -p:TargetFrameworks=net10.0 --no-restore -p:RestoreLockedMode=true -p:UseSharedCompilation=false -m:1 -nr:false -o "$GITHUB_WORKSPACE/dist/packages/nuget"
           python3 packaging/scripts/write_package_build_receipt.py --ecosystem nuget --archive-dir dist/packages/nuget --source-commit "$GITHUB_SHA" --command 'dotnet restore --locked-mode; dotnet pack -c Release -p:TargetFrameworks=net10.0 --no-restore' --toolchain "dotnet $(dotnet --version)"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kairos-package-nuget
           path: dist/packages/nuget/
@@ -272,7 +272,7 @@ jobs:
           mkdir -p dist/packages/julia
           git archive --format=tar --prefix="KairoECS-${version}-source/" "${GITHUB_SHA}:bindings/julia" | gzip -n > "dist/packages/julia/KairoECS-${version}-source.tar.gz"
           python3 packaging/scripts/write_package_build_receipt.py --ecosystem julia --archive-dir dist/packages/julia --source-commit "$GITHUB_SHA" --command 'git archive bindings/julia; gzip -n' --toolchain "$(git --version); $(gzip --version | head -n 1)" --validation-notes 'Julia package tests run in the required ci-bindings workflow.'
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kairos-package-julia
           path: dist/packages/julia/
@@ -291,7 +291,7 @@ jobs:
           mkdir -p dist/packages/go
           git archive --format=tar --prefix="kairos-go-${GITHUB_SHA::12}/" "${GITHUB_SHA}:bindings/go" | gzip -n > "dist/packages/go/kairos-go-${GITHUB_SHA::12}-source.tar.gz"
           python3 packaging/scripts/write_package_build_receipt.py --ecosystem go --archive-dir dist/packages/go --source-commit "$GITHUB_SHA" --command 'git archive bindings/go; gzip -n' --toolchain "$(git --version); $(gzip --version | head -n 1)" --validation-notes 'Go module tests and vet run in the required ci-bindings workflow.'
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kairos-package-go
           path: dist/packages/go/
@@ -309,7 +309,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: kairos-package-*
           path: dist/package-archives
@@ -319,7 +319,7 @@ jobs:
             --input dist/package-archives \
             --output dist/retained-package-archives \
             --source-commit "$GITHUB_SHA"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kairos-actual-package-archives-${{ github.sha }}
           path: dist/retained-package-archives/
@@ -353,7 +353,7 @@ jobs:
         with:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: kairos-actual-package-archives-${{ github.sha }}
           path: dist/retained-package-archives
@@ -499,7 +499,7 @@ jobs:
           with source.open('rb') as incoming, target.open('xb') as outgoing:
               shutil.copyfileobj(incoming, outgoing, length=1024 * 1024)
           PY
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: kairos-package-archive-provenance-${{ github.sha }}
           path: dist/package-provenance-evidence/

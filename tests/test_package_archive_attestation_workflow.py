@@ -164,8 +164,8 @@ class PackageArchiveAttestationWorkflowTests(unittest.TestCase):
         self.assertEqual(self.workflow.count("attestations: write"), 1)
         self.assertNotIn("artifact-metadata: write", self.signer)
         self.assertIn("actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2", self.signer)
-        self.assertIn("actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1", self.signer)
-        self.assertIn("actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1", self.signer)
+        self.assertIn("actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2", self.signer)
+        self.assertIn("actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2", self.signer)
 
     def test_attestation_subjects_and_retained_bundle_are_explicit_and_nonpublishing(self) -> None:
         self.assertIn("subject-checksums: dist/package-provenance-evidence/package-archive-subjects.sha256", self.signer)

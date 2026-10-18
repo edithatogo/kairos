@@ -257,7 +257,7 @@ for (const workflow of workflowFiles) {
 }
 
 requireTerms('.github/workflows/ci-core.yml', [
-  'taiki-e/install-action@e407f7bafb71fd004bc5c2da3032e5470cbb6ef0',
+  'taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283',
   'cargo-nextest@0.9.146',
   'cargo-deny@0.20.2',
   'cargo-audit@0.22.2',
