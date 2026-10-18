@@ -1333,6 +1333,7 @@ mod tests {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ArrowDataType {
+    UInt16,
     UInt32,
     UInt64,
     Int32,
@@ -1340,11 +1341,14 @@ pub enum ArrowDataType {
     Float64,
     Utf8,
     Boolean,
+    FixedSizeBinary12,
+    FixedSizeBinary16,
 }
 
 impl ArrowDataType {
     pub const fn as_str(self) -> &'static str {
         match self {
+            Self::UInt16 => "UInt16",
             Self::UInt32 => "UInt32",
             Self::UInt64 => "UInt64",
             Self::Int32 => "Int32",
@@ -1352,6 +1356,39 @@ impl ArrowDataType {
             Self::Float64 => "Float64",
             Self::Utf8 => "Utf8",
             Self::Boolean => "Boolean",
+            Self::FixedSizeBinary12 => "FixedSizeBinary(12)",
+            Self::FixedSizeBinary16 => "FixedSizeBinary(16)",
+        }
+    }
+
+    fn tag(self) -> u8 {
+        match self {
+            Self::UInt16 => 1,
+            Self::UInt32 => 2,
+            Self::UInt64 => 3,
+            Self::Int32 => 4,
+            Self::Int64 => 5,
+            Self::Float64 => 6,
+            Self::Utf8 => 7,
+            Self::Boolean => 8,
+            Self::FixedSizeBinary12 => 9,
+            Self::FixedSizeBinary16 => 10,
+        }
+    }
+
+    fn from_tag(tag: u8) -> Result<Self, ArrowError> {
+        match tag {
+            1 => Ok(Self::UInt16),
+            2 => Ok(Self::UInt32),
+            3 => Ok(Self::UInt64),
+            4 => Ok(Self::Int32),
+            5 => Ok(Self::Int64),
+            6 => Ok(Self::Float64),
+            7 => Ok(Self::Utf8),
+            8 => Ok(Self::Boolean),
+            9 => Ok(Self::FixedSizeBinary12),
+            10 => Ok(Self::FixedSizeBinary16),
+            _ => Err(ArrowError::InvalidHexDigit),
         }
     }
 }
@@ -1382,11 +1419,11 @@ pub struct ArrowNativeSchema {
 impl ArrowNativeSchema {
     pub fn from_event_log_fields() -> Self {
         let fields = vec![
-            ArrowSchemaField::new("schema_version", ArrowDataType::UInt32, false),
+            ArrowSchemaField::new("schema_version", ArrowDataType::UInt16, false),
             ArrowSchemaField::new("run_id", ArrowDataType::Utf8, false),
-            ArrowSchemaField::new("event_id", ArrowDataType::UInt64, false),
-            ArrowSchemaField::new("entity_id", ArrowDataType::UInt64, true),
-            ArrowSchemaField::new("time_ticks", ArrowDataType::UInt64, false),
+            ArrowSchemaField::new("event_id", ArrowDataType::FixedSizeBinary12, false),
+            ArrowSchemaField::new("entity_id", ArrowDataType::FixedSizeBinary12, true),
+            ArrowSchemaField::new("time_ticks", ArrowDataType::FixedSizeBinary16, false),
             ArrowSchemaField::new("time_scale", ArrowDataType::Utf8, false),
             ArrowSchemaField::new("priority", ArrowDataType::Int32, false),
             ArrowSchemaField::new("sequence", ArrowDataType::UInt64, false),
@@ -1418,26 +1455,294 @@ impl ArrowNativeSchema {
     }
 
     pub fn verify_event_log_parity(&self) -> bool {
-        let expected = Self::from_event_log_fields();
-        self.fields == expected.fields
+        if self.fields.len() != EVENT_LOG_FIELDS.len() {
+            return false;
+        }
+        self.fields
+            .iter()
+            .zip(EVENT_LOG_FIELDS.iter())
+            .all(|(field, expected)| {
+                field.name == expected.name
+                    && field.data_type.as_str() == expected.data_type
+                    && field.nullable == expected.nullable
+            })
+    }
+
+    fn encode(&self, out: &mut Vec<u8>) {
+        out.extend_from_slice(&(self.fields.len() as u32).to_le_bytes());
+        for f in &self.fields {
+            encode_str(out, &f.name);
+            out.push(f.data_type.tag());
+            out.push(u8::from(f.nullable));
+        }
+        out.extend_from_slice(&(self.metadata.len() as u32).to_le_bytes());
+        for (k, v) in &self.metadata {
+            encode_str(out, k);
+            encode_str(out, v);
+        }
+    }
+
+    fn decode(cursor: &mut &[u8]) -> Result<Self, ArrowError> {
+        let field_count = read_u32(cursor)? as usize;
+        let mut fields = Vec::with_capacity(field_count);
+        for _ in 0..field_count {
+            let name = decode_str(cursor)?;
+            let dt = ArrowDataType::from_tag(read_u8(cursor)?)?;
+            let nullable = read_u8(cursor)? != 0;
+            fields.push(ArrowSchemaField::new(name, dt, nullable));
+        }
+        let meta_count = read_u32(cursor)? as usize;
+        let mut metadata = Vec::with_capacity(meta_count);
+        for _ in 0..meta_count {
+            let k = decode_str(cursor)?;
+            let v = decode_str(cursor)?;
+            metadata.push((k, v));
+        }
+        Ok(Self { fields, metadata })
     }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ArrowColumnBuffer {
+    UInt16(Vec<u16>),
     UInt32(Vec<u32>),
     UInt64(Vec<u64>),
     Int32(Vec<i32>),
     Int64(Vec<i64>),
     Float64(Vec<u64>),
     Utf8(Vec<String>),
+    NullableUtf8(Vec<Option<String>>),
     Boolean(Vec<bool>),
+    FixedSizeBinary12(Vec<[u8; 12]>),
+    NullableFixedSizeBinary12(Vec<Option<[u8; 12]>>),
+    FixedSizeBinary16(Vec<[u8; 16]>),
+}
+
+impl ArrowColumnBuffer {
+    fn encode(&self, out: &mut Vec<u8>) {
+        match self {
+            Self::UInt16(vals) => {
+                out.push(1);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for &v in vals {
+                    out.extend_from_slice(&v.to_le_bytes());
+                }
+            }
+            Self::UInt32(vals) => {
+                out.push(2);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for &v in vals {
+                    out.extend_from_slice(&v.to_le_bytes());
+                }
+            }
+            Self::UInt64(vals) => {
+                out.push(3);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for &v in vals {
+                    out.extend_from_slice(&v.to_le_bytes());
+                }
+            }
+            Self::Int32(vals) => {
+                out.push(4);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for &v in vals {
+                    out.extend_from_slice(&v.to_le_bytes());
+                }
+            }
+            Self::Int64(vals) => {
+                out.push(5);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for &v in vals {
+                    out.extend_from_slice(&v.to_le_bytes());
+                }
+            }
+            Self::Float64(vals) => {
+                out.push(6);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for &v in vals {
+                    out.extend_from_slice(&v.to_le_bytes());
+                }
+            }
+            Self::Utf8(vals) => {
+                out.push(7);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for s in vals {
+                    encode_str(out, s);
+                }
+            }
+            Self::NullableUtf8(vals) => {
+                out.push(8);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for opt in vals {
+                    match opt {
+                        Some(s) => {
+                            out.push(1);
+                            encode_str(out, s);
+                        }
+                        None => out.push(0),
+                    }
+                }
+            }
+            Self::Boolean(vals) => {
+                out.push(9);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for &b in vals {
+                    out.push(u8::from(b));
+                }
+            }
+            Self::FixedSizeBinary12(vals) => {
+                out.push(10);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for b in vals {
+                    out.extend_from_slice(b);
+                }
+            }
+            Self::NullableFixedSizeBinary12(vals) => {
+                out.push(11);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for opt in vals {
+                    match opt {
+                        Some(b) => {
+                            out.push(1);
+                            out.extend_from_slice(b);
+                        }
+                        None => out.push(0),
+                    }
+                }
+            }
+            Self::FixedSizeBinary16(vals) => {
+                out.push(12);
+                out.extend_from_slice(&(vals.len() as u32).to_le_bytes());
+                for b in vals {
+                    out.extend_from_slice(b);
+                }
+            }
+        }
+    }
+
+    fn decode(cursor: &mut &[u8]) -> Result<Self, ArrowError> {
+        let tag = read_u8(cursor)?;
+        let len = read_u32(cursor)? as usize;
+        match tag {
+            1 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    vals.push(read_u16(cursor)?);
+                }
+                Ok(Self::UInt16(vals))
+            }
+            2 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    vals.push(read_u32(cursor)?);
+                }
+                Ok(Self::UInt32(vals))
+            }
+            3 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    vals.push(read_u64(cursor)?);
+                }
+                Ok(Self::UInt64(vals))
+            }
+            4 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    vals.push(read_u32(cursor)? as i32);
+                }
+                Ok(Self::Int32(vals))
+            }
+            5 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    vals.push(read_u64(cursor)? as i64);
+                }
+                Ok(Self::Int64(vals))
+            }
+            6 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    vals.push(read_u64(cursor)?);
+                }
+                Ok(Self::Float64(vals))
+            }
+            7 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    vals.push(decode_str(cursor)?);
+                }
+                Ok(Self::Utf8(vals))
+            }
+            8 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let present = read_u8(cursor)? != 0;
+                    if present {
+                        vals.push(Some(decode_str(cursor)?));
+                    } else {
+                        vals.push(None);
+                    }
+                }
+                Ok(Self::NullableUtf8(vals))
+            }
+            9 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    vals.push(read_u8(cursor)? != 0);
+                }
+                Ok(Self::Boolean(vals))
+            }
+            10 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let bytes = read_bytes(cursor, 12)?;
+                    let mut arr = [0u8; 12];
+                    arr.copy_from_slice(bytes);
+                    vals.push(arr);
+                }
+                Ok(Self::FixedSizeBinary12(vals))
+            }
+            11 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let present = read_u8(cursor)? != 0;
+                    if present {
+                        let bytes = read_bytes(cursor, 12)?;
+                        let mut arr = [0u8; 12];
+                        arr.copy_from_slice(bytes);
+                        vals.push(Some(arr));
+                    } else {
+                        vals.push(None);
+                    }
+                }
+                Ok(Self::NullableFixedSizeBinary12(vals))
+            }
+            12 => {
+                let mut vals = Vec::with_capacity(len);
+                for _ in 0..len {
+                    let bytes = read_bytes(cursor, 16)?;
+                    let mut arr = [0u8; 16];
+                    arr.copy_from_slice(bytes);
+                    vals.push(arr);
+                }
+                Ok(Self::FixedSizeBinary16(vals))
+            }
+            _ => Err(ArrowError::InvalidHexDigit),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ArrowRecordBatch {
     pub row_count: usize,
     pub columns: Vec<ArrowColumnBuffer>,
+}
+
+fn encode_handle_12(index: u64, generation: u32) -> [u8; 12] {
+    let mut out = [0u8; 12];
+    out[0..8].copy_from_slice(&index.to_le_bytes());
+    out[8..12].copy_from_slice(&generation.to_le_bytes());
+    out
 }
 
 impl ArrowRecordBatch {
@@ -1457,35 +1762,31 @@ impl ArrowRecordBatch {
         let mut payload_refs = Vec::with_capacity(row_count);
 
         for r in records {
-            schema_versions.push(r.schema_version as u32);
+            schema_versions.push(r.schema_version);
             run_ids.push(r.run_id.clone());
-            event_ids.push((r.event_id.index << 32) | (r.event_id.generation as u64));
-            entity_ids.push(
-                r.entity_id
-                    .map(|e| (e.index << 32) | (e.generation as u64))
-                    .unwrap_or(0),
-            );
-            time_ticks.push((r.time_ticks & 0xFFFFFFFFFFFFFFFF) as u64);
+            event_ids.push(encode_handle_12(r.event_id.index, r.event_id.generation));
+            entity_ids.push(r.entity_id.map(|e| encode_handle_12(e.index, e.generation)));
+            time_ticks.push(r.time_ticks.to_le_bytes());
             time_scales.push(r.time_scale.clone());
             priorities.push(r.priority);
             sequences.push(r.sequence);
             event_kinds.push(r.event_kind.clone());
             statuses.push(r.status.as_str().to_string());
-            payload_refs.push(r.payload_ref.clone().unwrap_or_default());
+            payload_refs.push(r.payload_ref.clone());
         }
 
         let columns = vec![
-            ArrowColumnBuffer::UInt32(schema_versions),
+            ArrowColumnBuffer::UInt16(schema_versions),
             ArrowColumnBuffer::Utf8(run_ids),
-            ArrowColumnBuffer::UInt64(event_ids),
-            ArrowColumnBuffer::UInt64(entity_ids),
-            ArrowColumnBuffer::UInt64(time_ticks),
+            ArrowColumnBuffer::FixedSizeBinary12(event_ids),
+            ArrowColumnBuffer::NullableFixedSizeBinary12(entity_ids),
+            ArrowColumnBuffer::FixedSizeBinary16(time_ticks),
             ArrowColumnBuffer::Utf8(time_scales),
             ArrowColumnBuffer::Int32(priorities),
             ArrowColumnBuffer::UInt64(sequences),
             ArrowColumnBuffer::Utf8(event_kinds),
             ArrowColumnBuffer::Utf8(statuses),
-            ArrowColumnBuffer::Utf8(payload_refs),
+            ArrowColumnBuffer::NullableUtf8(payload_refs),
         ];
 
         Ok(Self { row_count, columns })
@@ -1535,19 +1836,75 @@ impl ArrowRecordBatch {
             ],
         }
     }
+
+    fn encode(&self, out: &mut Vec<u8>) {
+        out.extend_from_slice(&(self.row_count as u32).to_le_bytes());
+        out.extend_from_slice(&(self.columns.len() as u32).to_le_bytes());
+        for col in &self.columns {
+            col.encode(out);
+        }
+    }
+
+    fn decode(cursor: &mut &[u8]) -> Result<Self, ArrowError> {
+        let row_count = read_u32(cursor)? as usize;
+        let col_count = read_u32(cursor)? as usize;
+        let mut columns = Vec::with_capacity(col_count);
+        for _ in 0..col_count {
+            columns.push(ArrowColumnBuffer::decode(cursor)?);
+        }
+        Ok(Self { row_count, columns })
+    }
+}
+
+fn encode_str(out: &mut Vec<u8>, s: &str) {
+    let bytes = s.as_bytes();
+    out.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
+    out.extend_from_slice(bytes);
+}
+
+fn read_bytes<'a>(cursor: &mut &'a [u8], n: usize) -> Result<&'a [u8], ArrowError> {
+    if cursor.len() < n {
+        return Err(ArrowError::InvalidHexDigit);
+    }
+    let (head, tail) = cursor.split_at(n);
+    *cursor = tail;
+    Ok(head)
+}
+
+fn read_u8(cursor: &mut &[u8]) -> Result<u8, ArrowError> {
+    Ok(read_bytes(cursor, 1)?[0])
+}
+
+fn read_u16(cursor: &mut &[u8]) -> Result<u16, ArrowError> {
+    let b = read_bytes(cursor, 2)?;
+    Ok(u16::from_le_bytes([b[0], b[1]]))
+}
+
+fn read_u32(cursor: &mut &[u8]) -> Result<u32, ArrowError> {
+    let b = read_bytes(cursor, 4)?;
+    Ok(u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+}
+
+fn read_u64(cursor: &mut &[u8]) -> Result<u64, ArrowError> {
+    let b = read_bytes(cursor, 8)?;
+    let mut arr = [0u8; 8];
+    arr.copy_from_slice(b);
+    Ok(u64::from_le_bytes(arr))
+}
+
+fn decode_str(cursor: &mut &[u8]) -> Result<String, ArrowError> {
+    let len = read_u32(cursor)? as usize;
+    let bytes = read_bytes(cursor, len)?;
+    String::from_utf8(bytes.to_vec()).map_err(|_| ArrowError::InvalidHexDigit)
 }
 
 pub struct ArrowIpcStreamWriter;
 impl ArrowIpcStreamWriter {
     pub fn write_batch(schema: &ArrowNativeSchema, batch: &ArrowRecordBatch) -> Vec<u8> {
         let mut out = Vec::new();
-        out.extend_from_slice(b"ARROW1");
-        let schema_bytes = format!("{schema:?}").into_bytes();
-        out.extend_from_slice(&(schema_bytes.len() as u32).to_le_bytes());
-        out.extend_from_slice(&schema_bytes);
-        let batch_bytes = format!("{batch:?}").into_bytes();
-        out.extend_from_slice(&(batch_bytes.len() as u32).to_le_bytes());
-        out.extend_from_slice(&batch_bytes);
+        out.extend_from_slice(b"ARROW1\0\0");
+        schema.encode(&mut out);
+        batch.encode(&mut out);
         let checksum = fnv1a_hash(&out);
         out.extend_from_slice(&checksum.to_le_bytes());
         out
@@ -1557,16 +1914,24 @@ impl ArrowIpcStreamWriter {
 pub struct ArrowIpcStreamReader;
 impl ArrowIpcStreamReader {
     pub fn read_batch(data: &[u8]) -> Result<(ArrowNativeSchema, ArrowRecordBatch), ArrowError> {
-        if data.len() < 10 || &data[0..6] != b"ARROW1" {
+        if data.len() < 16 || &data[0..8] != b"ARROW1\0\0" {
             return Err(ArrowError::InvalidHexDigit);
         }
-        Ok((
-            ArrowNativeSchema::from_event_log_fields(),
-            ArrowRecordBatch {
-                row_count: 0,
-                columns: vec![],
-            },
-        ))
+        let payload_end = data.len() - 8;
+        let body = &data[..payload_end];
+        let mut checksum_bytes = [0u8; 8];
+        checksum_bytes.copy_from_slice(&data[payload_end..]);
+        let expected = u64::from_le_bytes(checksum_bytes);
+        if fnv1a_hash(body) != expected {
+            return Err(ArrowError::InvalidHexDigit);
+        }
+        let mut cursor = &body[8..];
+        let schema = ArrowNativeSchema::decode(&mut cursor)?;
+        let batch = ArrowRecordBatch::decode(&mut cursor)?;
+        if !cursor.is_empty() {
+            return Err(ArrowError::InvalidHexDigit);
+        }
+        Ok((schema, batch))
     }
 }
 
@@ -1575,9 +1940,12 @@ impl ParquetZstdCheckpointWriter {
     pub fn write_checkpoint(schema: &ArrowNativeSchema, batches: &[ArrowRecordBatch]) -> Vec<u8> {
         let mut out = Vec::new();
         out.extend_from_slice(b"PAR1");
-        let payload = format!("schema:{schema:?},batches:{batches:?}").into_bytes();
-        out.extend_from_slice(&(payload.len() as u64).to_le_bytes());
-        out.extend_from_slice(&payload);
+        schema.encode(&mut out);
+        out.extend_from_slice(&(batches.len() as u32).to_le_bytes());
+        for batch in batches {
+            batch.encode(&mut out);
+        }
+        out.extend_from_slice(b"PAR1");
         let checksum = sha256_simple(&out);
         out.extend_from_slice(&checksum);
         out
@@ -1589,17 +1957,27 @@ impl ParquetZstdCheckpointReader {
     pub fn read_checkpoint(
         data: &[u8],
     ) -> Result<(ArrowNativeSchema, Vec<ArrowRecordBatch>), ArrowError> {
-        if data.len() < 36 || &data[0..4] != b"PAR1" {
+        if data.len() < 40 || &data[0..4] != b"PAR1" {
             return Err(ArrowError::InvalidHexDigit);
         }
         let checksum_start = data.len() - 32;
         let body = &data[0..checksum_start];
         let expected_checksum = &data[checksum_start..];
         let actual_checksum = sha256_simple(body);
-        if expected_checksum != actual_checksum {
+        if expected_checksum != actual_checksum || &body[body.len() - 4..] != b"PAR1" {
             return Err(ArrowError::InvalidHexDigit);
         }
-        Ok((ArrowNativeSchema::from_event_log_fields(), vec![]))
+        let mut cursor = &body[4..body.len() - 4];
+        let schema = ArrowNativeSchema::decode(&mut cursor)?;
+        let count = read_u32(&mut cursor)? as usize;
+        let mut batches = Vec::with_capacity(count);
+        for _ in 0..count {
+            batches.push(ArrowRecordBatch::decode(&mut cursor)?);
+        }
+        if !cursor.is_empty() {
+            return Err(ArrowError::InvalidHexDigit);
+        }
+        Ok((schema, batches))
     }
 }
 
@@ -1640,12 +2018,14 @@ mod track62_tests {
 
     #[test]
     fn ipc_stream_roundtrip_test() {
+        let high_index = (u32::MAX as u64) + 77;
+        let high_ticks = (u64::MAX as u128) + 999;
         let event = DispatchedEvent::new(
-            EventId::new(1, 2),
-            SimTime::from_ticks(10),
+            EventId::new(high_index, 2),
+            SimTime::from_ticks(high_ticks),
             -3,
             4,
-            Some(EntityId::new(5, 6)),
+            Some(EntityId::new(high_index + 1, 6)),
             EventKind::custom(7),
         );
         let batch =
@@ -1653,8 +2033,9 @@ mod track62_tests {
         let native_batch = ArrowRecordBatch::from_event_log_batch(&batch).unwrap();
         let schema = ArrowNativeSchema::from_event_log_fields();
         let bytes = ArrowIpcStreamWriter::write_batch(&schema, &native_batch);
-        let (decoded_schema, _) = ArrowIpcStreamReader::read_batch(&bytes).unwrap();
-        assert_eq!(decoded_schema.fields.len(), schema.fields.len());
+        let (decoded_schema, decoded_batch) = ArrowIpcStreamReader::read_batch(&bytes).unwrap();
+        assert_eq!(decoded_schema, schema);
+        assert_eq!(decoded_batch, native_batch);
     }
 
     #[test]
@@ -1671,12 +2052,15 @@ mod track62_tests {
         let batch =
             EventLogBatch::new(vec![EventLogRecord::dispatched("parquet-run", event)]).unwrap();
         let native_batch = ArrowRecordBatch::from_event_log_batch(&batch).unwrap();
-        let checkpoint_bytes =
-            ParquetZstdCheckpointWriter::write_checkpoint(&schema, &[native_batch]);
+        let checkpoint_bytes = ParquetZstdCheckpointWriter::write_checkpoint(
+            &schema,
+            core::slice::from_ref(&native_batch),
+        );
 
-        let (decoded_schema, _) =
+        let (decoded_schema, decoded_batches) =
             ParquetZstdCheckpointReader::read_checkpoint(&checkpoint_bytes).unwrap();
-        assert_eq!(decoded_schema.fields.len(), schema.fields.len());
+        assert_eq!(decoded_schema, schema);
+        assert_eq!(decoded_batches, vec![native_batch]);
 
         let mut tampered = checkpoint_bytes.clone();
         let last_idx = tampered.len() - 1;

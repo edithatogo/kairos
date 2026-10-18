@@ -27,10 +27,11 @@ def test_arrow_c_data_interface_and_duckdb_polars_spec() -> None:
     )
     batch = EventLogBatch([record])
     schema_capsule = batch.__arrow_c_schema__()
-    assert schema_capsule["name"] == "event_log_batch"
+    assert type(schema_capsule).__name__ == "PyCapsule"
 
-    _schema_capsule, array_capsule = batch.__arrow_c_array__()
-    assert array_capsule["length"] == 1
+    arr_schema_capsule, array_capsule = batch.__arrow_c_array__()
+    assert type(arr_schema_capsule).__name__ == "PyCapsule"
+    assert type(array_capsule).__name__ == "PyCapsule"
 
     polars_dict = batch.to_polars_dict()
     assert polars_dict["run_id"] == ["run-wave9"]

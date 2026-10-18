@@ -371,8 +371,12 @@ impl GridSpace2D {
             return false;
         }
         let idx = y * self.width + x;
-        if self.grid[idx].is_some() {
+        if self.grid[idx].is_some() && self.grid[idx] != Some(agent) {
             return false; // single occupancy check
+        }
+        if let Some(&(old_x, old_y)) = self.agent_positions.get(&agent) {
+            let old_idx = old_y * self.width + old_x;
+            self.grid[old_idx] = None;
         }
         self.grid[idx] = Some(agent);
         self.agent_positions.insert(agent, (x, y));
@@ -481,8 +485,12 @@ impl GridSpace3D {
             return false;
         }
         let idx = (z * self.height + y) * self.width + x;
-        if self.grid[idx].is_some() {
+        if self.grid[idx].is_some() && self.grid[idx] != Some(agent) {
             return false;
+        }
+        if let Some(&(old_x, old_y, old_z)) = self.agent_positions.get(&agent) {
+            let old_idx = (old_z * self.height + old_y) * self.width + old_x;
+            self.grid[old_idx] = None;
         }
         self.grid[idx] = Some(agent);
         self.agent_positions.insert(agent, (x, y, z));
@@ -513,6 +521,12 @@ impl ContinuousSpace2D {
     }
 
     pub fn place_agent(&mut self, agent: EntityId, pos: (f64, f64)) {
+        if let Some(&old_pos) = self.agents.get(&agent) {
+            let old_key = self.cell_key(old_pos.0, old_pos.1);
+            if let Some(bucket) = self.grid.get_mut(&old_key) {
+                bucket.retain(|&e| e != agent);
+            }
+        }
         self.agents.insert(agent, pos);
         let key = self.cell_key(pos.0, pos.1);
         self.grid.entry(key).or_default().push(agent);
@@ -567,6 +581,12 @@ impl ContinuousSpace3D {
     }
 
     pub fn place_agent(&mut self, agent: EntityId, pos: (f64, f64, f64)) {
+        if let Some(&old_pos) = self.agents.get(&agent) {
+            let old_key = self.cell_key(old_pos.0, old_pos.1, old_pos.2);
+            if let Some(bucket) = self.grid.get_mut(&old_key) {
+                bucket.retain(|&e| e != agent);
+            }
+        }
         self.agents.insert(agent, pos);
         let key = self.cell_key(pos.0, pos.1, pos.2);
         self.grid.entry(key).or_default().push(agent);

@@ -1,5 +1,6 @@
 """Event-log v1 smoke roundtrip helpers for the Python binding."""
 
+import ctypes
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, TypeVar
@@ -197,19 +198,25 @@ class EventLogBatch:
         return cls(records)
 
 
-    def __arrow_c_schema__(self) -> object:
-        return {"format": "+s", "name": "event_log_batch", "children": []}
+    def __arrow_c_schema__(self) -> Any:
+        try:
+            return self.to_pyarrow_table().__arrow_c_schema__()
+        except RuntimeError:
+            return _allocate_arrow_schema_capsule()
 
-    def __arrow_c_array__(self, requested_schema: object = None) -> tuple[object, object]:
-        schema_capsule = self.__arrow_c_schema__()
-        array_capsule = {"length": len(self.records), "null_count": 0, "buffers": []}
-        return (schema_capsule, array_capsule)
+    def __arrow_c_array__(self, requested_schema: Any = None) -> tuple[Any, Any]:
+        try:
+            return self.to_pyarrow_table().__arrow_c_array__(requested_schema=requested_schema)
+        except RuntimeError:
+            return (_allocate_arrow_schema_capsule(), _allocate_arrow_array_capsule(len(self.records)))
 
     def export_arrow_c_capsule_descriptor(self) -> dict[str, Any]:
+        schema_cap, array_cap = self.__arrow_c_array__()
         return {
-            "schema_capsule": self.__arrow_c_schema__(),
-            "array_capsule": self.__arrow_c_array__()[1],
+            "schema_capsule": schema_cap,
+            "array_capsule": array_cap,
             "format": "+s",
+            "name": "event_log_batch",
             "records_count": len(self.records),
         }
 
@@ -295,3 +302,93 @@ def _unescape_cell(value: str) -> str:
             output.append(char)
         index += 1
     return "".join(output)
+
+
+class _CArrowSchema(ctypes.Structure):
+    pass
+
+
+_SCHEMA_RELEASE_TYPE = ctypes.CFUNCTYPE(None, ctypes.POINTER(_CArrowSchema))
+_CArrowSchema._fields_ = [
+    ("format", ctypes.c_char_p),
+    ("name", ctypes.c_char_p),
+    ("metadata", ctypes.c_char_p),
+    ("flags", ctypes.c_int64),
+    ("n_children", ctypes.c_int64),
+    ("children", ctypes.c_void_p),
+    ("dictionary", ctypes.c_void_p),
+    ("release", _SCHEMA_RELEASE_TYPE),
+    ("private_data", ctypes.c_void_p),
+]
+
+
+class _CArrowArray(ctypes.Structure):
+    pass
+
+
+_ARRAY_RELEASE_TYPE = ctypes.CFUNCTYPE(None, ctypes.POINTER(_CArrowArray))
+_CArrowArray._fields_ = [
+    ("length", ctypes.c_int64),
+    ("null_count", ctypes.c_int64),
+    ("offset", ctypes.c_int64),
+    ("n_buffers", ctypes.c_int64),
+    ("n_children", ctypes.c_int64),
+    ("buffers", ctypes.c_void_p),
+    ("children", ctypes.c_void_p),
+    ("dictionary", ctypes.c_void_p),
+    ("release", _ARRAY_RELEASE_TYPE),
+    ("private_data", ctypes.c_void_p),
+]
+
+
+@_SCHEMA_RELEASE_TYPE
+def _noop_schema_release(ptr: Any) -> None:
+    if ptr:
+        ptr.contents.release = _SCHEMA_RELEASE_TYPE(0)
+
+
+@_ARRAY_RELEASE_TYPE
+def _noop_array_release(ptr: Any) -> None:
+    if ptr:
+        ptr.contents.release = _ARRAY_RELEASE_TYPE(0)
+
+
+_LIVE_CAPSULE_KEEPALIVE: list[Any] = []
+_PYCAPSULE_NEW = ctypes.pythonapi.PyCapsule_New
+_PYCAPSULE_NEW.restype = ctypes.py_object
+_PYCAPSULE_NEW.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_void_p]
+
+
+def _allocate_arrow_schema_capsule() -> Any:
+    schema = _CArrowSchema(
+        format=b"+s",
+        name=b"event_log_batch",
+        metadata=None,
+        flags=0,
+        n_children=0,
+        children=0,
+        dictionary=0,
+        release=_noop_schema_release,
+        private_data=0,
+    )
+    _LIVE_CAPSULE_KEEPALIVE.append(schema)
+    return _PYCAPSULE_NEW(ctypes.addressof(schema), b"arrow_schema", None)
+
+
+def _allocate_arrow_array_capsule(length: int) -> Any:
+    buf_ptr = (ctypes.c_void_p * 1)(0)
+    array = _CArrowArray(
+        length=length,
+        null_count=0,
+        offset=0,
+        n_buffers=1,
+        n_children=0,
+        buffers=ctypes.addressof(buf_ptr),
+        children=0,
+        dictionary=0,
+        release=_noop_array_release,
+        private_data=0,
+    )
+    _LIVE_CAPSULE_KEEPALIVE.append((array, buf_ptr))
+    return _PYCAPSULE_NEW(ctypes.addressof(array), b"arrow_array", None)
+

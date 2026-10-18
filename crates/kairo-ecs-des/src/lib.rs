@@ -251,13 +251,12 @@ impl PreemptiveResource {
         priority: i32,
         work: u64,
         now: SimTime,
-    ) -> Result<(), PreemptedAllocation> {
+    ) -> Result<bool, PreemptedAllocation> {
         if (self.holders.len() as u64) < self.capacity {
             self.holders.push((entity, priority, work));
-            Ok(())
+            Ok(true)
         } else {
             // Check if any holder has lower priority than incoming entity
-            // Find holder with lowest priority
             if let Some(min_idx) = self
                 .holders
                 .iter()
@@ -267,7 +266,6 @@ impl PreemptiveResource {
             {
                 let holder = self.holders[min_idx];
                 if priority > holder.1 {
-                    // Preempt holder
                     self.holders.remove(min_idx);
                     self.holders.push((entity, priority, work));
                     return Err(PreemptedAllocation {
@@ -287,8 +285,20 @@ impl PreemptiveResource {
             });
             self.queue
                 .sort_by(|a, b| b.priority.cmp(&a.priority).then_with(|| a.seq.cmp(&b.seq)));
-            Ok(())
+            Ok(false)
         }
+    }
+
+    pub fn release(&mut self, entity: EntityId) -> Option<EntityId> {
+        if let Some(pos) = self.holders.iter().position(|&(e, _, _)| e == entity) {
+            self.holders.remove(pos);
+            if !self.queue.is_empty() {
+                let next = self.queue.remove(0);
+                self.holders.push((next.entity, next.priority, 0));
+                return Some(next.entity);
+            }
+        }
+        None
     }
 
     pub fn queue_length(&self) -> usize {

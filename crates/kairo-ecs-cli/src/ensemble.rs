@@ -208,14 +208,19 @@ impl AbcSmcCalibrator {
 
         for particle in particles {
             let sim_out = simulator(particle);
+            if reference_timeseries.is_empty()
+                || sim_out.len() != reference_timeseries.len()
+                || sim_out.iter().any(|v| !v.is_finite())
+            {
+                accepted.push(false);
+                weights.push(0.0);
+                continue;
+            }
             let mut dist = 0.0;
-            let len = reference_timeseries.len().min(sim_out.len());
-            for i in 0..len {
-                dist += (sim_out[i] - reference_timeseries[i]).abs();
+            for (s, r) in sim_out.iter().zip(reference_timeseries.iter()) {
+                dist += (s - r).abs();
             }
-            if len > 0 {
-                dist /= len as f64;
-            }
+            dist /= reference_timeseries.len() as f64;
 
             let is_accepted = dist <= self.tolerance;
             accepted.push(is_accepted);
