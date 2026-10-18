@@ -14,3 +14,7 @@ keywords:
   - apache-arrow
 license: "Apache-2.0 OR MIT"
 repository-code: "https://github.com/edithatogo/kairos"
+identifiers:
+  - type: other
+    value: "RRID:SCR_029085"
+    description: "Research Resource Identifier in the SciCrunch Registry"

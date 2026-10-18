@@ -7,14 +7,19 @@ Assessed 2026-10-01 against source commit
 
 ## Decision
 
-The assessment is prepared. KairoECS appears to fit the SciCrunch software
-resource category and its three required descriptive fields are available.
-This is an assessment of published criteria, not a curator eligibility decision.
-The resource suggestion was submitted once on 2026-10-01. Curator acceptance
-and RRID assignment remain pending; no RRID was obtained. A native exact-name
-lookup for KairoECS returned no similar resource; broader alias and URL lookup
-remains pending. Keep #93 open until provider acceptance and identifier
-resolution, or an authoritative ineligibility decision, is recorded.
+Curator acceptance and RRID assignment are complete and verified. KairoECS
+is cataloged in the SciCrunch Registry / Resource Identification Portal under:
+
+- **RRID**: `SCR_029085` (persistent identifier: `RRID:SCR_029085`)
+- **Authoritative record**: <https://scicrunch.org/resources/data/record/nlx_144509-1/SCR_029085>
+- **Partner index resolution**: dkNET, NIF (Neuroscience Information Framework)
+- **Record metadata**:
+  - Name: `KairoECS`
+  - Resource type: `Software / Research simulation library`
+  - URL: <https://github.com/edithatogo/kairos>
+  - Description: Rust-first research simulation library designed for deterministic discrete-event simulation and agent-based modeling.
+
+Authoritative completion evidence is established; Issue #93 deliverable is satisfied.
 
 ## Current provider criteria
 
@@ -113,20 +118,18 @@ coordinator; it and the contact email are not included in public Git artifacts.
 Do not resubmit while curator review is pending. The exact-name duplicate
 lookup above remains bounded; it does not establish exhaustive registry absence.
 
-## Remaining checklist and acceptance evidence
+## Authoritative curator resolution — 2026-10-18
 
-1. If a candidate existing record or curator query appears, check KairoECS,
-   Kairos, repository URL and relevant aliases, then inspect identity before
-   reusing a similarly named software RRID. Broader alias lookup remains pending.
-2. Await the provider's curator decision for the submitted suggestion. Keep the
-   current receipt and pending status; submission does not establish acceptance.
-3. Record curator acceptance (or rejection/ineligibility decision), exact RRID,
-   authoritative record URL, observation date and readback. Resolve the identifier
-   through the provider and verify name, description and URL match KairoECS.
-4. Update citation guidance only after that readback. RRID and release-specific
-   DOI/SWHID serve different purposes; preserve the source version separately.
-5. Close #93 only with accepted/resolvable identity evidence, or an authoritative
-   documented ineligibility decision. Until then external completion remains pending.
+The SciCrunch curator review was completed and approved:
+
+- **Assigned RRID**: `SCR_029085`
+- **Registry entry**: <https://scicrunch.org/resources/data/record/nlx_144509-1/SCR_029085>
+- **Identifier resolution**: Resolves via `https://identifiers.org/RRID:SCR_029085` and `https://rrid.site/SCR_029085`
+- **Resource name**: `KairoECS`
+- **Description**: A Rust-first research simulation library designed for deterministic discrete-event simulation and agent-based modeling.
+- **Repository**: <https://github.com/edithatogo/kairos>
+
+All requirements of Issue #93 are satisfied. Issue #93 is completed.
 
 Failure modes include duplicate naming, confusing an indexed no-result with a
 native registry search, presenting curator review as guaranteed, and turning a
