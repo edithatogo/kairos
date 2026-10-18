@@ -6,6 +6,8 @@ import {
   EVENT_LOG_SCHEMA_VERSION,
   NativeWasmNotConfiguredError,
   PACKAGE_NAME,
+  TimeTravelInspectorClient,
+  WasmBridgeLoader,
   createBindingSurfaceInfo,
   createSchedulerFacade,
   describeBindingSurface,
@@ -131,5 +133,22 @@ describe("native wasm loader contract", () => {
     expect(nativeWasmStatus().status).toBe("not-configured");
     await expect(loadNativeWasm()).rejects.toThrow(NativeWasmNotConfiguredError);
     await expect(loadNativeWasm({ load: () => ({ ok: true }) })).resolves.toEqual({ ok: true });
+  });
+});
+
+describe("WasmBridgeLoader and TimeTravelInspector", () => {
+  it("loads wasm engine and scrubs time-travel snapshots", async () => {
+    const client = await WasmBridgeLoader.loadWasmEngine();
+    expect(client).toBeInstanceOf(TimeTravelInspectorClient);
+    expect(client.historyLen()).toBe(1);
+
+    const snap = JSON.parse(client.snapshotJson()) as { cow_delta_bytes: number };
+    expect(snap.cow_delta_bytes).toBe(64);
+
+    expect(client.stepAndRecord()).toBe(true);
+    expect(client.historyLen()).toBe(2);
+
+    const inspect = JSON.parse(client.inspectTickJson(0)) as { causal_provenance: string };
+    expect(inspect.causal_provenance).toBe("event-batch-0");
   });
 });

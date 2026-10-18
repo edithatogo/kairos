@@ -8,6 +8,7 @@ from ._arrow import (
     EventStatus,
 )
 from ._ffi import ffi_status
+from ._native import NativeSchedulerBridge, native_extension_status
 from ._scheduler import Scheduler
 from ._types import (
     DispatchedEvent,
@@ -17,6 +18,7 @@ from ._types import (
     SimTime,
     StepOutcome,
 )
+from .vecenv import ParallelVecEnv, PettingZooParallelAdapter
 
 __all__ = [
     "EVENT_LOG_FIELDS",
@@ -27,12 +29,16 @@ __all__ = [
     "EventLogBatch",
     "EventLogRecord",
     "EventStatus",
+    "NativeSchedulerBridge",
+    "ParallelVecEnv",
+    "PettingZooParallelAdapter",
     "ScheduleRequest",
     "Scheduler",
     "SimTime",
     "StepOutcome",
     "__version__",
     "ffi_status",
+    "native_extension_status",
     "self_check",
 ]
 

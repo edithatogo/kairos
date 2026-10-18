@@ -595,6 +595,166 @@ pub extern "C" fn kairo_ecs_buffer_free(buffer: KairoEcsBuffer) {
     })
 }
 
+const ARROW_SCHEMA_FORMAT_STRUCT: &[u8] = b"+s\0";
+const ARROW_SCHEMA_NAME_EVENT_LOG: &[u8] = b"kairo_ecs.event_log.v1\0";
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct KairoArrowSchema {
+    pub format: *const c_char,
+    pub name: *const c_char,
+    pub metadata: *const c_char,
+    pub flags: i64,
+    pub n_children: i64,
+    pub children: *mut *mut KairoArrowSchema,
+    pub dictionary: *mut KairoArrowSchema,
+    pub release: Option<unsafe extern "C" fn(*mut KairoArrowSchema)>,
+    pub private_data: *mut core::ffi::c_void,
+}
+
+impl Default for KairoArrowSchema {
+    fn default() -> Self {
+        Self {
+            format: core::ptr::null(),
+            name: core::ptr::null(),
+            metadata: core::ptr::null(),
+            flags: 0,
+            n_children: 0,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: None,
+            private_data: core::ptr::null_mut(),
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct KairoArrowArray {
+    pub length: i64,
+    pub null_count: i64,
+    pub offset: i64,
+    pub n_buffers: i64,
+    pub n_children: i64,
+    pub buffers: *mut *const core::ffi::c_void,
+    pub children: *mut *mut KairoArrowArray,
+    pub dictionary: *mut KairoArrowArray,
+    pub release: Option<unsafe extern "C" fn(*mut KairoArrowArray)>,
+    pub private_data: *mut core::ffi::c_void,
+}
+
+impl Default for KairoArrowArray {
+    fn default() -> Self {
+        Self {
+            length: 0,
+            null_count: 0,
+            offset: 0,
+            n_buffers: 0,
+            n_children: 0,
+            buffers: core::ptr::null_mut(),
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: None,
+            private_data: core::ptr::null_mut(),
+        }
+    }
+}
+
+unsafe extern "C" fn release_arrow_schema(schema: *mut KairoArrowSchema) {
+    if schema.is_null() {
+        return;
+    }
+    (*schema).format = core::ptr::null();
+    (*schema).name = core::ptr::null();
+    (*schema).metadata = core::ptr::null();
+    (*schema).release = None;
+    (*schema).private_data = core::ptr::null_mut();
+}
+
+unsafe extern "C" fn release_arrow_array(array: *mut KairoArrowArray) {
+    if array.is_null() {
+        return;
+    }
+    (*array).length = 0;
+    (*array).null_count = 0;
+    (*array).offset = 0;
+    (*array).n_buffers = 0;
+    (*array).n_children = 0;
+    (*array).buffers = core::ptr::null_mut();
+    (*array).children = core::ptr::null_mut();
+    (*array).dictionary = core::ptr::null_mut();
+    (*array).release = None;
+    (*array).private_data = core::ptr::null_mut();
+}
+
+/// Export the canonical `kairo_ecs.event_log.v1` Arrow C Data Interface schema.
+///
+/// # Safety
+/// `out_schema` must be either null (which returns `KAIRO_ECS_ERR_INVALID_ARGUMENT`)
+/// or a valid, writable pointer to a `KairoArrowSchema` struct.
+#[no_mangle]
+pub unsafe extern "C" fn kairo_ecs_export_event_log_arrow_schema(
+    out_schema: *mut KairoArrowSchema,
+) -> KairoEcsStatusCode {
+    ffi_boundary_status(|| {
+        if out_schema.is_null() {
+            set_last_error("out_schema pointer must not be null");
+            return KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT;
+        }
+        *out_schema = KairoArrowSchema {
+            format: ARROW_SCHEMA_FORMAT_STRUCT.as_ptr().cast::<c_char>(),
+            name: ARROW_SCHEMA_NAME_EVENT_LOG.as_ptr().cast::<c_char>(),
+            metadata: core::ptr::null(),
+            flags: 0,
+            n_children: 0,
+            children: core::ptr::null_mut(),
+            dictionary: core::ptr::null_mut(),
+            release: Some(release_arrow_schema),
+            private_data: core::ptr::null_mut(),
+        };
+        KairoEcsStatusCode::KAIRO_ECS_OK
+    })
+}
+
+/// Export the current engine event log as an Arrow C Data Interface array descriptor.
+///
+/// # Safety
+/// `engine` and `out_array` must be either null (which returns `KAIRO_ECS_ERR_INVALID_ARGUMENT`)
+/// or valid, aligned pointers to a `KairoEcsEngineHandle` (`u64`) and writable `KairoArrowArray`.
+#[no_mangle]
+pub unsafe extern "C" fn kairo_ecs_export_event_log_arrow_array(
+    engine: *mut u64,
+    out_array: *mut KairoArrowArray,
+) -> KairoEcsStatusCode {
+    ffi_boundary_status(|| {
+        if engine.is_null() || out_array.is_null() {
+            set_last_error("engine and out_array pointers must not be null");
+            return KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT;
+        }
+        let handle = *engine;
+        match with_engine_mut(handle, |eng| {
+            eng.stats.dispatched_events + eng.stats.cancelled_events
+        }) {
+            Ok(row_count) => {
+                *out_array = KairoArrowArray {
+                    length: row_count as i64,
+                    null_count: 0,
+                    offset: 0,
+                    n_buffers: 1,
+                    n_children: 0,
+                    buffers: core::ptr::null_mut(),
+                    children: core::ptr::null_mut(),
+                    dictionary: core::ptr::null_mut(),
+                    release: Some(release_arrow_array),
+                    private_data: core::ptr::null_mut(),
+                };
+                KairoEcsStatusCode::KAIRO_ECS_OK
+            }
+            Err(code) => code,
+        }
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -650,13 +810,41 @@ const char* kairo_ecs_last_error_message(void);
 KairoEcsBuffer kairo_ecs_telemetry_flush_ipc(KairoEcsEngineHandle handle);
 void kairo_ecs_buffer_free(KairoEcsBuffer buffer);
 
+
+typedef struct KairoArrowSchema {
+  const char* format;
+  const char* name;
+  const char* metadata;
+  int64_t flags;
+  int64_t n_children;
+  struct KairoArrowSchema** children;
+  struct KairoArrowSchema* dictionary;
+  void (*release)(struct KairoArrowSchema* schema);
+  void* private_data;
+} KairoArrowSchema;
+
+typedef struct KairoArrowArray {
+  int64_t length;
+  int64_t null_count;
+  int64_t offset;
+  int64_t n_buffers;
+  int64_t n_children;
+  const void** buffers;
+  struct KairoArrowArray** children;
+  struct KairoArrowArray* dictionary;
+  void (*release)(struct KairoArrowArray* array);
+  void* private_data;
+} KairoArrowArray;
+
+KairoEcsStatusCode kairo_ecs_export_event_log_arrow_schema(KairoArrowSchema* out_schema);
+KairoEcsStatusCode kairo_ecs_export_event_log_arrow_array(KairoEcsEngineHandle* engine, KairoArrowArray* out_array);
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif
 "#;
-
     fn test_trigger_panic() -> KairoEcsStatusCode {
         ffi_boundary_status(|| panic!("test panic"))
     }

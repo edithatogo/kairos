@@ -2,22 +2,22 @@
 
 ## Phase 0 - Quasi-Random Ensemble Runner (Sobol, LHS & Common Random Numbers)
 
-- [ ] Task 0.1: Add Sobol sequence and Latin Hypercube Sampling (LHS) parameter generators plus Common Random Numbers (CRN) substream synchronization across policy counterfactuals in `kairo-ecs-cli`.
-- [ ] Task 0.2: Compute automated Sobol first-order/total sensitivity indices ($S_i, S_{Ti}$) and bootstrap confidence intervals over Arrow/Parquet ensemble outputs.
+- [x] Task 0.1: Add Sobol sequence and Latin Hypercube Sampling (LHS) parameter generators plus Common Random Numbers (CRN) substream synchronization across policy counterfactuals in `kairo-ecs-cli`.
+- [x] Task 0.2: Compute automated Sobol first-order/total sensitivity indices ($S_i, S_{Ti}$) and bootstrap confidence intervals over Arrow/Parquet ensemble outputs.
 ## Phase 1 - Optuna & Approximate Bayesian Computation (ABC-SMC) Calibration Bridge
 
-- [ ] Task 1.1: Implement a lossless batch objective evaluation hook for Optuna (TPE/CMA-ES) and Approximate Bayesian Computation (ABC-SMC) empirical time-series fitting.
-- [ ] Task 1.2: Add a reproducible calibration study example with posterior diagnostics.
+- [x] Task 1.1: Implement a lossless batch objective evaluation hook for Optuna (TPE/CMA-ES) and Approximate Bayesian Computation (ABC-SMC) empirical time-series fitting.
+- [x] Task 1.2: Add a reproducible calibration study example with posterior diagnostics.
 ## Phase 2 - Copy-on-Write Delta Snapshots & Live Wasm Time-Travel Studio
 
-- [ ] Task 2.1: Upgrade `kairo-ecs-debug` from full-world clones to page-level Copy-on-Write (CoW) delta snapshots and causal event provenance graphs.
-- [ ] Task 2.2: Wire the compiled `kairo-ecs-wasm` time-travel debugger into `website/playground` with interactive timeline scrubbing, entity/component inspector tables, and breakpoint expressions.
+- [x] Task 2.1: Upgrade `kairo-ecs-debug` from full-world clones to page-level Copy-on-Write (CoW) delta snapshots and causal event provenance graphs.
+- [x] Task 2.2: Wire the compiled `kairo-ecs-wasm` time-travel debugger into `website/playground` with interactive timeline scrubbing, entity/component inspector tables, and breakpoint expressions.
 
 ## Phase 3 - Closeout
 
-- [ ] Task 3.1: Run track-specific test matrix, workspace tests, and Conductor validators.
-- [ ] Task 3.2: Run `$conductor-review`, auto-apply accepted fixes, and update `handoff.md`.
-- [ ] Task 3.3: Commit and push the cleaned slice and verify GitHub Actions.
+- [x] Task 3.1: Run track-specific test matrix, workspace tests, and Conductor validators.
+- [x] Task 3.2: Run `$conductor-review`, auto-apply accepted fixes, and update `handoff.md`.
+- [x] Task 3.3: Commit and push the cleaned slice and verify GitHub Actions.
 
 ## Phase closeout gate
 

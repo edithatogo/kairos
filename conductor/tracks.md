@@ -66,11 +66,11 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 59 | Feature-Gated Graph Relations ECS Module | In Review | `ecs-agent + core-scheduler-agent + conformance-agent` | See `conductor/tracks/59-*/spec.md` |
 | 60 | Normal-Form Multi-Game Runtime and Solvers | In Review | `game-theory-agent + ecs-agent + performance-agent` | See `conductor/tracks/60-*/spec.md` |
 | 61 | Extensive-Form Graph-ECS Runtime and Certification | In Review | `game-theory-agent + ecs-agent + benchmark-agent + redteam-agent` | See `conductor/tracks/61-*/spec.md` |
-| 62 | Official Apache Arrow, Parquet & Zero-Copy C Data Interface Spine | Planned | `arrow-agent + ffi-agent + interop-agent` | See `conductor/tracks/62-*/spec.md` |
-| 63 | Native Polyglot Bindings (PyO3/Maturin, Wasm-Bindgen, Extendr & C ABI) | Planned | `python-agent + typescript-agent + r-agent + julia-agent + csharp-agent + go-agent + ffi-agent` | See `conductor/tracks/63-*/spec.md` |
-| 64 | Archetype/SoA ECS Storage, Full DES Process/Resource Kernel & ABM Spatial Topologies | Planned | `ecs-agent + des-api-agent + abm-api-agent + core-scheduler-agent` | See `conductor/tracks/64-*/spec.md` |
-| 65 | Vectorized Multi-World RL (VecEnv), PettingZoo Bridge & Advanced Game Theory Solvers | Planned | `game-theory-agent + ml-integration-agent + performance-agent` | See `conductor/tracks/65-*/spec.md` |
-| 66 | Parallel Ensemble Sweeps (Sobol/CRN), SBI Calibration & Copy-on-Write Wasm Studio | Planned | `vv-uq-agent + experiment-agent + timetravel-agent + playground-agent` | See `conductor/tracks/66-*/spec.md` |
+| 62 | Official Apache Arrow, Parquet & Zero-Copy C Data Interface Spine | Done | `arrow-agent + ffi-agent + interop-agent` | See `conductor/tracks/62-*/spec.md` |
+| 63 | Native Polyglot Bindings (PyO3/Maturin, Wasm-Bindgen, Extendr & C ABI) | Done | `python-agent + typescript-agent + r-agent + julia-agent + csharp-agent + go-agent + ffi-agent` | See `conductor/tracks/63-*/spec.md` |
+| 64 | Archetype/SoA ECS Storage, Full DES Process/Resource Kernel & ABM Spatial Topologies | Done | `ecs-agent + des-api-agent + abm-api-agent + core-scheduler-agent` | See `conductor/tracks/64-*/spec.md` |
+| 65 | Vectorized Multi-World RL (VecEnv), PettingZoo Bridge & Advanced Game Theory Solvers | Done | `game-theory-agent + ml-integration-agent + performance-agent` | See `conductor/tracks/65-*/spec.md` |
+| 66 | Parallel Ensemble Sweeps (Sobol/CRN), SBI Calibration & Copy-on-Write Wasm Studio | Done | `vv-uq-agent + experiment-agent + timetravel-agent + playground-agent` | See `conductor/tracks/66-*/spec.md` |
 
 ## Track status vocabulary
 

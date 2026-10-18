@@ -14,6 +14,13 @@ Format:
 
 ## Unreleased
 
+- Wave 9 (`Tracks 62–66`) implementation:
+  - `crates/kairo-ecs-arrow`, `crates/kairo-ecs-ffi`, and `include/kairo_ecs.h` add native Arrow schema/IPC stream/Parquet Zstd checkpointing and the zero-copy Arrow C Data Interface (`KairoArrowSchema`, `KairoArrowArray`, `kairo_ecs_export_event_log_arrow_schema`, `kairo_ecs_export_event_log_arrow_array`) (Track 62).
+  - `crates/kairo-ecs-wasm`, `bindings/python/kairo_ecs`, `bindings/typescript`, `bindings/r`, and `bindings/julia` add Wasm time-travel snapshot inspection, Python Arrow PyCapsule (`__arrow_c_schema__`, `__arrow_c_array__`) + DuckDB/Polars zero-copy helpers, `NativeSchedulerBridge`, and `ParallelVecEnv` / `PettingZooParallelAdapter` (Track 63).
+  - `crates/kairo-ecs-state`, `crates/kairo-ecs-des`, and `crates/kairo-ecs-abm` add 64-byte cache-line-aligned SoA columns (`Aligned64`, `AlignedColumn`), SimPy-parity `PriorityResource`/`PreemptiveResource`/`Container`/`Store`/`ConditionWait`/`RenegingQueue`/`ProcessCoroutine`, and 2D/3D/CSR spatial topologies (`GridSpace2D`, `GridSpace3D`, `ContinuousSpace2D`, `ContinuousSpace3D`, `GraphSpace`) (Track 64).
+  - `crates/kairo-ecs-game-theory` and `crates/kairo-ecs-ml` add `MixedNashSolver`, `LemkeHowsonSolver`, `nash_conv`, `exploitability`, `CorrelatedEquilibriumSolver`, `ReplicatorDynamics`, `CfrSolver` (Vanilla/`CFR+`/`LinearCFR`), and Rayon-parallel `ParallelVecEnv` across 1,024+ worlds (Track 65).
+  - `crates/kairo-ecs-cli`, `crates/kairo-ecs-debug`, and `website/playground` add `SobolSequence`, `LatinHypercubeSampler`, `CommonRandomNumbersPlan`, `SobolSensitivityAnalyzer`, `AbcSmcCalibrator`, `OptunaBatchObjective`, page-level Copy-on-Write (`CowSnapshotStore`), `CausalProvenanceGraph`, and interactive Wasm studio controls (Track 66).
+
 - `crates/kairo-ecs-core` adds host NUMA topology discovery (`NumaTopology::discover`) and `EventArena` chunked memory allocation (Track 50), alongside `crates/kairo-ecs-mpi` (`MpiProcessTransport`) and `crates/kairo-ecs-grpc` (`GrpcSocketTransport`, `KairoOptimisticEnvelopeV1`) multi-rank and socket transports (Track 49) and Wave 9 (`Tracks 62–66`) roadmap registration.
 
 - Acquire explicitly pinned mainline archive consumer artifacts with secure extraction, receipt and tool hash bindings, and selective CI coverage; install hash-locked scanner dependencies before hosted verification.

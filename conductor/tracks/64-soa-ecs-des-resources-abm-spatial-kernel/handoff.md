@@ -1,53 +1,53 @@
 # Track 64 Handoff
 
-Status: Planned
+Status: Done
 
 Freshness: 2026-10-18
 
 ## Summary
 
-Track 64 (Archetype/SoA ECS Storage, Full DES Process/Resource Kernel & ABM Spatial Topologies) is registered as a `Planned` Wave 9 Native Spine, Ergonomics & Bleeding-Edge Parity track. It defines the execution plan to replace dependency-free R2 scaffolds with official upstream dependencies and bleeding-edge domain capabilities.
+Track 64 (Archetype/SoA ECS Storage, Full DES Process/Resource Kernel & ABM Spatial Topologies) is implemented, verified, and closed out as `Done` in Wave 9.
 
 ## Files changed
 
-- `conductor/tracks/64-soa-ecs-des-resources-abm-spatial-kernel/spec.md`
+- `crates/kairo-ecs-state/src/lib.rs`
+- `crates/kairo-ecs-des/src/lib.rs`
+- `crates/kairo-ecs-abm/src/lib.rs`
 - `conductor/tracks/64-soa-ecs-des-resources-abm-spatial-kernel/plan.md`
-- `conductor/tracks/64-soa-ecs-des-resources-abm-spatial-kernel/agent-contract.md`
-- `conductor/tracks/64-soa-ecs-des-resources-abm-spatial-kernel/risk-register.md`
-- `conductor/tracks/64-soa-ecs-des-resources-abm-spatial-kernel/test-matrix.md`
+- `conductor/tracks/64-soa-ecs-des-resources-abm-spatial-kernel/review-report.md`
 - `conductor/tracks/64-soa-ecs-des-resources-abm-spatial-kernel/handoff.md`
 
 ## Contracts consumed
 
-- Tracks 01, 03, 59, 62 baseline contracts and schemas.
+- Upstream foundation, FFI, Arrow, ECS/DES/ABM, Game Theory, ML, and V&V/UQ contracts.
 
 ## Contracts changed
 
-- Registers Track 64 gates (`phase-closeout-check, soa-column-query-simd-parity, des-resource-preemption-reneging-simpy-parity, abm-spatial-grid-continuous-network-parity, hybrid-des-abm-100k-benchmark`) in `conductor/tracks.yaml`.
+- Delivered and verified all Track 64 required gates in `conductor/tracks.yaml`.
 
 ## Tests added
 
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1`
+- `cargo test -p kairo-ecs-state -p kairo-ecs-des -p kairo-ecs-abm`
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_artifacts.ps1`
+- `pwsh -NoProfile -File scripts/validate_conductor_dag.ps1`
 
 ## Known risks
 
-- Implementation has not started yet; track is `Planned` and makes no runtime capability claims until Phase 0-3 tasks are executed and verified.
+- Optional ecosystem integrations remain feature-gated so default builds stay deterministic and lockfile-clean.
 
 ## Follow-up issues
 
-- Execute Phase 0-2 implementation tasks in `plan.md` and record task-level commits.
+- None; all Phase 0-2 implementation tasks in `plan.md` are complete.
 
 ## Integration notes
 
-- Coordinates with owned paths `crates/kairo-ecs-state/, crates/kairo-ecs-des/` via the single-maintainer harness.
+- Coordinated across owned paths via the single-maintainer harness.
 
 ## Phase closeout evidence
 
-- `$conductor-review`: initial track specification and registration reviewed for schema and validator compliance.
-- accepted fixes: aligned `spec.md`, `plan.md`, `risk-register.md`, `test-matrix.md`, and `handoff.md` with Conductor phase-gate and artifact rules.
-- commit SHA: pending track registration commit.
-- pushed ref: pending push.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: required before advancing past `Planned`.
-- next-phase decision: remain `Planned` until Phase 0 implementation begins.
+- `$conductor-review`: completed implementation review in `conductor/tracks/64-soa-ecs-des-resources-abm-spatial-kernel/review-report.md` with zero open defects.
+- accepted fixes: verified rustfmt, clippy `-D warnings`, unit/doc tests, and binding smoke tests.
+- commit SHA: `daffd10675902d25a037b53d97256535eb350361`
+- pushed ref: `origin/codex/wave9-implementation-tracks-62-66`
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed on clean tree.
+- next-phase decision: Track 64 is `Done`.

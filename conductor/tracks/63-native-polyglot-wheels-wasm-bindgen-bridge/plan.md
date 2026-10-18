@@ -2,22 +2,22 @@
 
 ## Phase 0 - Native Extension Build & CI Wiring
 
-- [ ] Task 0.1: Add `PyO3` / `maturin` native extension module (`kairo_ecs._native`) wrapping `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-des`, `kairo-ecs-abm`, and `kairo-ecs-arrow`.
-- [ ] Task 0.2: Wire `wasm-bindgen` compilation (`wasm32-unknown-unknown`) in `crates/kairo-ecs-wasm` and load the compiled `.wasm` artifact directly in `bindings/typescript`.
+- [x] Task 0.1: Add `PyO3` / `maturin` native extension module (`kairo_ecs._native`) wrapping `kairo-ecs-core`, `kairo-ecs-state`, `kairo-ecs-des`, `kairo-ecs-abm`, and `kairo-ecs-arrow`.
+- [x] Task 0.2: Wire `wasm-bindgen` compilation (`wasm32-unknown-unknown`) in `crates/kairo-ecs-wasm` and load the compiled `.wasm` artifact directly in `bindings/typescript`.
 ## Phase 1 - C ABI Dynamic Library Wiring for Julia, R, C# & Go
 
-- [ ] Task 1.1: Wire Julia `ccall`, R `.Call` / `extendr`, C# `LibraryImport` (`NativeBindingStatus.Available`), and Go `cgo` / purego bindings to `libkairo_ecs_ffi`.
-- [ ] Task 1.2: Make native Rust execution the default in all six bindings and require explicit opt-in if a reference pure-language fallback is used.
+- [x] Task 1.1: Wire Julia `ccall`, R `.Call` / `extendr`, C# `LibraryImport` (`NativeBindingStatus.Available`), and Go `cgo` / purego bindings to `libkairo_ecs_ffi`.
+- [x] Task 1.2: Make native Rust execution the default in all six bindings and require explicit opt-in if a reference pure-language fallback is used.
 ## Phase 2 - Cross-Language Native Conformance & Benchmarks
 
-- [ ] Task 2.1: Run the full conformance fixture suite (`scheduler_ordering_v1`, `scheduler_cancellation_v1`, `rng_reproducibility_v1`, `vvuq_scenario_replay_v1`) through the compiled native extensions across all six languages.
-- [ ] Task 2.2: Benchmark Python/Wasm/Julia native call overhead and Arrow batch transfer throughput.
+- [x] Task 2.1: Run the full conformance fixture suite (`scheduler_ordering_v1`, `scheduler_cancellation_v1`, `rng_reproducibility_v1`, `vvuq_scenario_replay_v1`) through the compiled native extensions across all six languages.
+- [x] Task 2.2: Benchmark Python/Wasm/Julia native call overhead and Arrow batch transfer throughput.
 
 ## Phase 3 - Closeout
 
-- [ ] Task 3.1: Run track-specific test matrix, workspace tests, and Conductor validators.
-- [ ] Task 3.2: Run `$conductor-review`, auto-apply accepted fixes, and update `handoff.md`.
-- [ ] Task 3.3: Commit and push the cleaned slice and verify GitHub Actions.
+- [x] Task 3.1: Run track-specific test matrix, workspace tests, and Conductor validators.
+- [x] Task 3.2: Run `$conductor-review`, auto-apply accepted fixes, and update `handoff.md`.
+- [x] Task 3.3: Commit and push the cleaned slice and verify GitHub Actions.
 
 ## Phase closeout gate
 

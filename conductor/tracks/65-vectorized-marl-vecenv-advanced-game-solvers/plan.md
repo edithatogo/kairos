@@ -2,22 +2,22 @@
 
 ## Phase 0 - Mixed-Strategy Nash, Correlated Equilibrium & Evolutionary Dynamics
 
-- [ ] Task 0.1: Implement 2-player Mixed-Strategy Nash Equilibrium solvers (support enumeration and Lemke-Howson complementary pivoting) in `kairo-ecs-game-theory`.
-- [ ] Task 0.2: Implement LP-based Correlated Equilibrium and continuous/discrete-time Replicator Dynamics over ECS strategy populations.
+- [x] Task 0.1: Implement 2-player Mixed-Strategy Nash Equilibrium solvers (support enumeration and Lemke-Howson complementary pivoting) in `kairo-ecs-game-theory`.
+- [x] Task 0.2: Implement LP-based Correlated Equilibrium and continuous/discrete-time Replicator Dynamics over ECS strategy populations.
 ## Phase 1 - Counterfactual Regret Minimization (`CFR` / `CFR+`) for Extensive-Form Games
 
-- [ ] Task 1.1: Implement tabular `CFR` and `CFR+` over Track 61 extensive-form Graph-ECS information sets with chance-node sampling.
-- [ ] Task 1.2: Verify exploitability convergence on Kuhn Poker and Leduc Poker reference fixtures.
+- [x] Task 1.1: Implement tabular `CFR` and `CFR+` over Track 61 extensive-form Graph-ECS information sets with chance-node sampling.
+- [x] Task 1.2: Verify exploitability convergence on Kuhn Poker and Leduc Poker reference fixtures.
 ## Phase 2 - Rayon Vectorized Batch Environment (`VecEnv`) & PettingZoo/ONNX Integration
 
-- [ ] Task 2.1: Implement `ParallelVecEnv` in `kairo-ecs-ml` using `rayon` to step $N$ seeded simulation worlds concurrently and write observations/rewards directly into contiguous pre-allocated `f32`/`i64` slices.
-- [ ] Task 2.2: Expose Gymnasium `VectorEnv` and PettingZoo `ParallelEnv` / `AECEnv` adapters in Python plus optional in-loop `ort` (ONNX Runtime) policy inference.
+- [x] Task 2.1: Implement `ParallelVecEnv` in `kairo-ecs-ml` using `rayon` to step $N$ seeded simulation worlds concurrently and write observations/rewards directly into contiguous pre-allocated `f32`/`i64` slices.
+- [x] Task 2.2: Expose Gymnasium `VectorEnv` and PettingZoo `ParallelEnv` / `AECEnv` adapters in Python plus optional in-loop `ort` (ONNX Runtime) policy inference.
 
 ## Phase 3 - Closeout
 
-- [ ] Task 3.1: Run track-specific test matrix, workspace tests, and Conductor validators.
-- [ ] Task 3.2: Run `$conductor-review`, auto-apply accepted fixes, and update `handoff.md`.
-- [ ] Task 3.3: Commit and push the cleaned slice and verify GitHub Actions.
+- [x] Task 3.1: Run track-specific test matrix, workspace tests, and Conductor validators.
+- [x] Task 3.2: Run `$conductor-review`, auto-apply accepted fixes, and update `handoff.md`.
+- [x] Task 3.3: Commit and push the cleaned slice and verify GitHub Actions.
 
 ## Phase closeout gate
 

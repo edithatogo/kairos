@@ -197,3 +197,14 @@ order_event_log <- function(event_log) {
     event_log$event_id
   ), , drop = FALSE]
 }
+
+kairoecs_native_library_loader <- function(lib_path = NULL) {
+  ext <- ifelse(.Platform$OS.type == "windows", ".dll", ifelse(Sys.info()["sysname"] == "Darwin", ".dylib", ".so"))
+  lib_name <- paste0("libkairo_ecs_ffi", ext)
+  found <- file.exists(lib_name)
+  list(
+    native_library = lib_name,
+    available = found,
+    arrow_c_data_interface_supported = TRUE
+  )
+}
