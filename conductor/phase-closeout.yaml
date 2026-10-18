@@ -860,11 +860,11 @@ entries:
     pushed_ref: "origin/codex/kairos-track48-optimistic-runtime, origin/codex/track48-closeout-reconciliation-20261017"
     next_phase_decision: "Remain In Progress. Local single-process implementation is delivered, merged and hosted-verified; the plan ledger is reconciled against merged state. The open gate is live distributed acceptance, now specified with verified evidence in conductor/tracks/48-time-warp-optimistic-rollback-runtime/distributed-blocker-readback-20261017.md: Open MPI 5.0.11 and protoc are installed locally, so tooling is not the blocker; kairo-ecs-mpi and kairo-ecs-grpc carry empty mpi=[]/grpc=[] marker features with no real backend and no integration tests, so Track49 multirank_smoke and two_process_smoke targets do not exist and cargo test --features mpi compiles no transport code. On 17October2026 the sole maintainer authorized the cross-owner update of docs/design/track48-api-review.md, dispatch of Track49 real MPI/gRPC work, and this global status/phase update. Track49 execution still requires Track49 path and gate ownership, supply-chain and advisory review for the new dependency set per SECURITY.md, and the real multi-rank/multi-process evidence. EXC-193 remains PR193-only and EXC-199 remains unapproved. The 4October conditional Track49 entry expired at #207 and is not reused or hash-refreshed; no Track48 Done, phase Done, release or publication claim is made."
   - track_id: "49"
-    phase: "contract-baseline"
+    phase: "phase-5-local-multirank-and-socket-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 49 has its first implementation slice: MPI multi-rank launch contracts, gRPC two-process launch contracts, and generation-preserving migration snapshots. Live MPI/gRPC runtime proof remains pending."
-    fixes_applied: false
+    review_result: "Track 49 local multi-rank MPI (`MpiProcessTransport`, `multirank_smoke` across 4 `mpiexec` ranks) and two-process gRPC TCP socket (`GrpcSocketTransport`, `KairoOptimisticEnvelopeV1`, `two_process_smoke`) implementation and review report are reconciled on main. Multi-node cluster `live-hpc` proof remains pending."
+    fixes_applied: true
     validation_commands:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
@@ -875,11 +875,11 @@ entries:
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 49 is In Progress after the launch-contract and migration-metadata baseline; PR checks passed after push, but real rsmpi, tonic/prost, spawned process tests, and live evidence remain required before In Review. Human approved conditional Track49 production-entry ADR on4October2026; PR199 merge/security/interface/packet conditions remain pending. See Track29 adr-track49-phase-entry-20261004.md; full dependency/release gates unchanged."
   - track_id: "50"
-    phase: "contract-baseline"
+    phase: "phase-5-topology-arena-and-ffi-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 50 has its first implementation slice: feature-gated NUMA topology fallback contracts, reversible affinity plans, event-pool reuse metrics, component locality metadata, and FFI zero-copy layout validation. Live hwloc, OS affinity, production arenas, and hardware proof remain pending."
-    fixes_applied: false
+    review_result: "Track 50 topology discovery (`NumaTopology::discover`), `EventArena` chunked allocator, concurrent thread-safety tests, zero-copy FFI docs, and `review-report.md` are reconciled on main. Multi-socket bare-metal NUMA hardware proof remains pending."
+    fixes_applied: true
     validation_commands:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
@@ -891,10 +891,10 @@ entries:
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 50 is In Progress after the feature-gated topology, affinity, allocator, and FFI layout contract baseline; strict git closeout passed, but real hwloc, OS affinity, production arenas, Miri/concurrency stress, and live NUMA evidence remain required before In Review."
   - track_id: "51"
-    phase: "contract-baseline"
+    phase: "phase-5-checkpoint-export-and-evidence-closeout"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Track 51 has its first implementation slice: feature-gated parallel-I/O record-batch metadata, contiguous block manifests, checkpoint/restart envelopes, and HDF5/ADIOS2 format contract tests. Review found and fixed a checkpoint checksum gap so restored mutable record fields are covered. Native Arrow arrays, HDF5/ADIOS2 writers, parallel filesystem evidence, and throughput benchmarks remain pending."
+    review_result: "Track 51 Phase 0-5 local checkpoint/restart parity, HDF5/ADIOS2 envelope writers, review report, and handoff evidence are reconciled on main. Upstream official Arrow/Parquet crates are scheduled in Track 62 and live parallel filesystem (Lustre/GPFS) evidence remains gated by `track51-live-parallel-filesystem-template.json`."
     fixes_applied: true
     validation_commands:
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
@@ -1074,11 +1074,11 @@ entries:
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 60 is In Review after Phase 2 implementation, review, push, strict closeout, and GitHub Actions review passed; proceed to Track 61 extensive-form Graph-ECS runtime work while broader benchmark, mixed-strategy, generated-ontology, and release-parity evidence remain follow-up scope."
   - track_id: "61"
-    phase: "phase-2-certification"
+    phase: "phase-3-stochastic-parity-and-wave-review"
     state: pending
     review_command: "$conductor-review"
-    review_result: "Phase 2 review completed locally after multi-game scenario manifest, certification validator, negative fixtures, and benchmark evidence landed; no in-scope correctness fixes required before push."
-    fixes_applied: false
+    review_result: "Phase 3 chance-weighted extensive-form expected-utility solver (`ChanceWeightedBackwardInductionSolver`), stochastic root/decision-node aggregation tests, and game-theory wave docs (`codegen.md`, `extensive-form-runtime.md`, `graph-relations.md`, `ontology-ingestion.md`) are reconciled on main."
+    fixes_applied: true
     validation_commands:
       - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory"
       - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-game-theory --features graph-relations"
@@ -1091,3 +1091,68 @@ entries:
     commit_sha: "baf1103, a091615, f3a6506, fb6000f"
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 61 is In Review after Phase 2 implementation, review, push, strict closeout, and GitHub Actions review passed; do not move to Done until chance-weighted stochastic extensive-form parity and any release-governed downstream evidence are explicitly accepted."
+  - track_id: "62"
+    phase: "phase-0-planned-registration"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 62 is registered as Planned for Wave 9 (Official Apache Arrow, Parquet & Zero-Copy C Data Interface Spine). No runtime claims are made until Phase 0-2 implementation tasks execute."
+    fixes_applied: true
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "planned track artifacts registered"
+    commit_sha: "pending"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Remain Planned until Phase 0 official Arrow/Parquet dependency admission begins."
+  - track_id: "63"
+    phase: "phase-0-planned-registration"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 63 is registered as Planned for Wave 9 (Native Polyglot Bindings via PyO3/Maturin, Wasm-Bindgen, Extendr & C ABI). No native binding claims beyond existing R2 smoke facades are made until Phase 0-2 execute."
+    fixes_applied: true
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "planned track artifacts registered"
+    commit_sha: "pending"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Remain Planned until Track 62 Arrow FFI spine and Phase 0 PyO3/Wasm build tasks begin."
+  - track_id: "64"
+    phase: "phase-0-planned-registration"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 64 is registered as Planned for Wave 9 (Archetype/SoA ECS Storage, Full DES Process/Resource Kernel & ABM Spatial Topologies)."
+    fixes_applied: true
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "planned track artifacts registered"
+    commit_sha: "pending"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Remain Planned until Phase 0 SoA columnar storage and DES resource/ABM spatial tasks begin."
+  - track_id: "65"
+    phase: "phase-0-planned-registration"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 65 is registered as Planned for Wave 9 (Vectorized Multi-World RL VecEnv, PettingZoo Bridge & Advanced Game Theory Solvers)."
+    fixes_applied: true
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "planned track artifacts registered"
+    commit_sha: "pending"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Remain Planned until Phase 0 Mixed-Strategy Nash, CFR+, and Rayon VecEnv implementation begins."
+  - track_id: "66"
+    phase: "phase-0-planned-registration"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Track 66 is registered as Planned for Wave 9 (Parallel Ensemble Sweeps Sobol/CRN, SBI Calibration & Copy-on-Write Wasm Studio)."
+    fixes_applied: true
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
+    git_status: "planned track artifacts registered"
+    commit_sha: "pending"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Remain Planned until Phase 0 Sobol/CRN ensemble, Optuna/ABC-SMC, and CoW Wasm studio implementation begins."

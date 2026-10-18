@@ -944,3 +944,95 @@ tracks:
       - end-to-end-multigame-certification
       - task-level-commits
       - github-actions-review
+  - id: 62
+    name: Official Apache Arrow, Parquet & Zero-Copy C Data Interface Spine
+    status: Planned
+    owner: arrow-agent + ffi-agent + interop-agent
+    depends_on: ["02", "04", "25", "51"]
+    owned_paths:
+      - crates/kairo-ecs-arrow/
+      - crates/kairo-ecs-ffi/
+      - include/kairo_ecs.h
+      - schemas/arrow/
+      - docs/parallel-io/
+      - conductor/tracks/62-official-arrow-parquet-zero-copy-ffi-spine/
+    required_gates:
+      - phase-closeout-check
+      - official-arrow-crate-parity
+      - parquet-zstd-roundtrip
+      - arrow-c-data-interface-ffi
+      - pycapsule-duckdb-polars-smoke
+  - id: 63
+    name: Native Polyglot Bindings (PyO3/Maturin, Wasm-Bindgen, Extendr & C ABI)
+    status: Planned
+    owner: python-agent + typescript-agent + r-agent + julia-agent + csharp-agent + go-agent + ffi-agent
+    depends_on: ["02", "06", "07", "08", "09", "10", "11", "62"]
+    owned_paths:
+      - bindings/python/
+      - bindings/typescript/
+      - bindings/r/
+      - bindings/julia/
+      - bindings/csharp/
+      - bindings/go/
+      - crates/kairo-ecs-wasm/
+      - crates/kairo-ecs-ffi/
+      - conductor/tracks/63-native-polyglot-wheels-wasm-bindgen-bridge/
+    required_gates:
+      - phase-closeout-check
+      - pyo3-maturin-native-wheel
+      - wasm-bindgen-browser-node-parity
+      - c-abi-dyld-binding-conformance
+      - no-silent-fallback-scheduler
+  - id: 64
+    name: Archetype/SoA ECS Storage, Full DES Process/Resource Kernel & ABM Spatial Topologies
+    status: Planned
+    owner: ecs-agent + des-api-agent + abm-api-agent + core-scheduler-agent
+    depends_on: ["01", "03", "59", "62"]
+    owned_paths:
+      - crates/kairo-ecs-state/
+      - crates/kairo-ecs-des/
+      - crates/kairo-ecs-abm/
+      - examples/flow/
+      - conductor/tracks/64-soa-ecs-des-resources-abm-spatial-kernel/
+    required_gates:
+      - phase-closeout-check
+      - soa-column-query-simd-parity
+      - des-resource-preemption-reneging-simpy-parity
+      - abm-spatial-grid-continuous-network-parity
+      - hybrid-des-abm-100k-benchmark
+  - id: 65
+    name: Vectorized Multi-World RL (VecEnv), PettingZoo Bridge & Advanced Game Theory Solvers
+    status: Planned
+    owner: game-theory-agent + ml-integration-agent + performance-agent
+    depends_on: ["37", "60", "61", "63", "64"]
+    owned_paths:
+      - crates/kairo-ecs-game-theory/
+      - crates/kairo-ecs-ml/
+      - bindings/python/
+      - docs/game-theory/
+      - docs/ml/
+      - conductor/tracks/65-vectorized-marl-vecenv-advanced-game-solvers/
+    required_gates:
+      - phase-closeout-check
+      - mixed-nash-lemke-howson-parity
+      - cfr-plus-extensive-form-convergence
+      - rayon-vecenv-1024-worlds-throughput
+      - pettingzoo-gymnasium-api-conformance
+  - id: 66
+    name: Parallel Ensemble Sweeps (Sobol/CRN), SBI Calibration & Copy-on-Write Wasm Studio
+    status: Planned
+    owner: vv-uq-agent + experiment-agent + timetravel-agent + playground-agent
+    depends_on: ["21", "22", "24", "40", "63", "64"]
+    owned_paths:
+      - crates/kairo-ecs-cli/
+      - crates/kairo-ecs-debug/
+      - website/playground/
+      - docs/validation/
+      - docs/debugging/
+      - conductor/tracks/66-ensemble-sbi-calibration-cow-wasm-studio/
+    required_gates:
+      - phase-closeout-check
+      - sobol-lhs-crn-ensemble-runner
+      - optuna-abc-smc-calibration-hook
+      - cow-delta-snapshot-memory-budget
+      - wasm-time-travel-inspector-smoke

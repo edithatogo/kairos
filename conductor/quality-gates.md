@@ -369,6 +369,48 @@ Every gate listed in `conductor/tracks.yaml` must appear here as a bold gate ID.
 
 **end-to-end-multigame-certification**: validates Track 61 evidence spans ontology ingestion, codegen, graph relations, normal-form solvers, extensive-form solvers, benchmarks, review outcomes, pushed refs, and GitHub Actions review.
 
+### Tracks 62-66 native spine, ergonomics, and bleeding-edge competitor parity gates
+
+**official-arrow-crate-parity**: validates that `kairo-ecs-arrow` behind `arrow-native` maps `EVENT_LOG_FIELDS` and ECS component columns identically to upstream `arrow-schema` and `arrow-array` `RecordBatch` definitions while preserving default-off smoke compatibility.
+
+**parquet-zstd-roundtrip**: validates that `kairo-ecs-arrow` behind `parquet-native` writes and reads real Apache Parquet and Arrow IPC checkpoint files with SHA-256 footer metadata and Zstd compression.
+
+**arrow-c-data-interface-ffi**: validates that `kairo-ecs-ffi` and `include/kairo_ecs.h` export `FFI_ArrowArray` and `FFI_ArrowSchema` C ABI structures with deterministic release callbacks.
+
+**pycapsule-duckdb-polars-smoke**: validates that Python bindings expose `__arrow_c_array__` and `__arrow_c_stream__` PyCapsule protocols consumable zero-copy by PyArrow, Polars (`pl.from_arrow`), and DuckDB.
+
+**pyo3-maturin-native-wheel**: validates that `bindings/python` builds and passes conformance fixtures through a compiled `PyO3`/`maturin` native extension (`kairo_ecs._native`).
+
+**wasm-bindgen-browser-node-parity**: validates that `crates/kairo-ecs-wasm` compiles to `wasm32-unknown-unknown` via `wasm-bindgen` and passes conformance tests in `bindings/typescript`.
+
+**c-abi-dyld-binding-conformance**: validates that R, Julia, C#, and Go bindings dynamically link `libkairo_ecs_ffi` (`.dylib`/`.so`/`.dll`) and pass shared conformance fixtures against the native Rust scheduler.
+
+**no-silent-fallback-scheduler**: validates that language bindings execute the compiled Rust kernel by default and reject silent fallback to pure-host-language priority queues unless explicitly requested.
+
+**soa-column-query-simd-parity**: validates that `kairo-ecs-state` stores component columns in 64-byte cache-aligned Structure-of-Arrays (SoA) buffers and supports deterministic multi-component queries (`Query<(&A, &mut B)>`).
+
+**des-resource-preemption-reneging-simpy-parity**: validates that `kairo-ecs-des` implements `CapacityResource`, `PreemptiveResource`, `Container`, `Store`, wait conditions, balking, and reneging with trace parity against SimPy reference fixtures (`tests/conformance/queue_simpy_v1.py`).
+
+**abm-spatial-grid-continuous-network-parity**: validates that `kairo-ecs-abm` implements `GridSpace2D/3D`, `ContinuousSpace2D/3D` (spatial hash / k-d tree neighbor queries), and `GraphSpace` (CSR + `graph-relations`) with deterministic neighbor iteration.
+
+**hybrid-des-abm-100k-benchmark**: validates that the upgraded SoA ECS + DES resource + ABM spatial kernel meets or beats the 100k-event hybrid benchmark threshold.
+
+**mixed-nash-lemke-howson-parity**: validates 2-player Mixed-Strategy Nash Equilibrium (support enumeration and Lemke-Howson), Correlated Equilibrium, and Replicator Dynamics solvers against canonical game-theory fixtures.
+
+**cfr-plus-extensive-form-convergence**: validates tabular `CFR` and `CFR+` exploitability convergence over extensive-form Graph-ECS games with chance nodes (e.g., Kuhn and Leduc Poker fixtures).
+
+**rayon-vecenv-1024-worlds-throughput**: validates that `kairo-ecs-ml` steps 1,024+ parallel simulation worlds via `rayon` into contiguous observation/reward tensors deterministically.
+
+**pettingzoo-gymnasium-api-conformance**: validates that Python bindings expose Gymnasium `VectorEnv` and PettingZoo `ParallelEnv`/`AECEnv` multi-agent RL interfaces plus optional ONNX Runtime (`ort`) policy inference.
+
+**sobol-lhs-crn-ensemble-runner**: validates quasi-random Sobol and Latin Hypercube parameter sweeps with Common Random Numbers (CRN) substream synchronization and Sobol sensitivity index ($S_i, S_{Ti}$) output in `kairo-ecs-cli`.
+
+**optuna-abc-smc-calibration-hook**: validates batch objective evaluation hooks for Optuna and Approximate Bayesian Computation (ABC-SMC) empirical time-series parameter calibration.
+
+**cow-delta-snapshot-memory-budget**: validates that `kairo-ecs-debug` uses page-level Copy-on-Write (CoW) delta snapshots and causal provenance tracking within the configured memory budget.
+
+**wasm-time-travel-inspector-smoke**: validates that `website/playground` loads the compiled Wasm debugger for interactive timeline scrubbing, entity/component inspection, and breakpoint evaluation.
+
 ### Tracks 36-40 streaming, ML, FMI, cloud/HPC, and debugging gates
 
 **kafka-smoke**: `cargo test -p kairo-ecs-streaming --features kafka` - validates the dependency-free Kafka feature surface and adapter type alias exposed by the Track 36 R2 scaffold. It does not prove a live Kafka broker connection until a broker-backed integration harness is added.

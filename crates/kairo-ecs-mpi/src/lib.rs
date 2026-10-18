@@ -5,6 +5,9 @@ use std::collections::{BTreeMap, VecDeque};
 use kairo_ecs_pdes::{LpId, PdesMessage, PdesTransport, Tick, TransportError};
 use kairo_ecs_types::EntityId;
 
+pub mod process;
+pub use process::*;
+
 /// Dependency-free placeholder protocol identity for the local transport contract.
 pub const MPI_PROTOCOL_ID: &str = "kairo.ecs.distributed.mpi.v1";
 pub const MPI_PROTOCOL_VERSION: u16 = 1;

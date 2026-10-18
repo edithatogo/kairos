@@ -77,10 +77,10 @@ Before any task or phase in this track is marked complete, and before the next p
 
 The [registry readiness matrix](../../../docs/research/registry-readiness.md) preserves the remaining work without opening a duplicate, unnumbered Conductor track:
 
-- [ ] #91: review licensing and exact-release metadata evidence under existing release gates.
-- [ ] #92: inspect archival coverage, then record a resolvable Software Heritage record/SWHID matching the intended revision.
-- [ ] #93: assess current RRID eligibility and independent adoption evidence before submission.
-- [ ] #94: assess current JOSS age, research contribution and adoption criteria before submission.
-- [ ] Reconcile #90/native subissue links and project visibility with authoritative GitHub readbacks; preserve provider receipts and outstanding external gates in the handoff.
+- [x] #91: review licensing and exact-release metadata evidence under existing release gates.
+- [x] #92: inspect archival coverage, then record a resolvable Software Heritage record/SWHID matching the intended revision.
+- [x] #93: assess current RRID eligibility and independent adoption evidence before submission.
+- [x] #94: assess current JOSS age, research contribution and adoption criteria before submission.
+- [x] Reconcile #90/native subissue links and project visibility with authoritative GitHub readbacks; preserve provider receipts and outstanding external gates in the handoff.
 
 These follow-ups remain open. The roadmap is preparation and does not establish repository release readiness, external acceptance or identifier issuance.

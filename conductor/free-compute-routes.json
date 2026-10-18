@@ -1,6 +1,6 @@
 {
   "schema_version": "kairoecs.free-compute-routes.v1",
-  "last_reviewed": "2026-06-24",
+  "last_reviewed": "2026-10-18",
   "purpose": "Classify free or near-free execution surfaces that can reduce repo-side blockers without satisfying live HPC parity claims.",
   "claim_boundary": "Free CPU/container routes can prove packaging, build, smoke, and contract behavior. They cannot prove production HPC parity, Slurm scheduling, parallel filesystem throughput, native GPU speedup, or weak/strong scaling certification unless the route records real live-hpc manifests with raw artifacts and checksums.",
   "routes": [
@@ -134,6 +134,96 @@
         "Slurm job submission",
         "cloud batch provider execution",
         "checkpoint resume under scheduler preemption"
+      ]
+    },
+    {
+      "id": "macos-local-apple-silicon-metal-mpi-hwloc",
+      "provider": "Local Apple Silicon macOS Host (Homebrew + Metal + Colima/Lima)",
+      "access_model": "zero-cost local execution on maintainer Apple Silicon Mac using native Metal GPU, Homebrew OpenMPI 5.x, hwloc, protoc, and Colima/Lima Linux VMs",
+      "source_url": "https://developer.apple.com/metal/",
+      "repo_entrypoints": [
+        "crates/kairo-ecs-gpu/",
+        "crates/kairo-ecs-mpi/",
+        "crates/kairo-ecs-grpc/",
+        "docs/cloud-hpc/free-compute-blocker-plan.md"
+      ],
+      "blockers_reduced": [
+        "Track 52 real wgpu Metal hardware adapter/device/queue initialization, WGSL compute shader dispatch, and persistent device-memory readback parity",
+        "Track 49 local multi-rank mpiexec --oversubscribe -np 4 and two-process gRPC socket smoke",
+        "Track 50 hwloc-ls / sysctl topology discovery and thread-pool arena contention testing",
+        "Track 53 native macOS .dylib FMU dynamic symbol loading and OpenModelica CLI (brew install --cask openmodelica) roundtrip"
+      ],
+      "required_evidence": [
+        "commit SHA",
+        "system_profiler SPDisplaysDataType or Metal adapter report",
+        "command log",
+        "raw output artifact",
+        "sha256 checksum"
+      ],
+      "not_proof_for": [
+        "NVIDIA CUDA kernel execution",
+        "multi-node InfiniBand/RoCE MPI latency",
+        "Slurm cluster multi-node scheduling",
+        "Lustre or GPFS parallel filesystem throughput",
+        "multi-node weak/strong scaling certification"
+      ]
+    },
+    {
+      "id": "macos-colima-docker-slurm-k3s-emulation",
+      "provider": "Local Colima / Lima + Docker Compose (c2platform/docker-slurm & k3d/kind)",
+      "access_model": "free local Linux container cluster emulation on macOS via Colima/Lima",
+      "source_url": "https://github.com/abiosoft/colima",
+      "repo_entrypoints": [
+        "docker/Dockerfile",
+        "k8s/",
+        "hpc/slurm/",
+        "docs/cloud-hpc/free-compute-blocker-plan.md"
+      ],
+      "blockers_reduced": [
+        "Track 54 local sbatch/srun/scontrol script validation against containerized Slurmctld/Slurmd nodes",
+        "Track 54 local Kubernetes job manifest reconciliation via k3d/kind and kubectl",
+        "Track 51 local HDF5 (brew install hdf5) and Parquet/ADIOS2 multi-process checkpoint restart verification"
+      ],
+      "required_evidence": [
+        "commit SHA",
+        "container image digest",
+        "sbatch/kubectl command log",
+        "scenario output artifact",
+        "sha256 checksum"
+      ],
+      "not_proof_for": [
+        "production bare-metal Slurm HPC cluster acceptance",
+        "Lustre or GPFS stripe bandwidth",
+        "native GPU cluster InfiniBand scaling",
+        "production weak/strong scaling certification"
+      ]
+    },
+    {
+      "id": "free-cloud-cuda-sandboxes-colab-kaggle-lightning",
+      "provider": "Google Colab / Kaggle Kernels / Lightning.ai Free Tier",
+      "access_model": "free-tier NVIDIA T4 / P100 / L4 GPU notebook and container sessions (30h/week on Kaggle, free T4 on Colab)",
+      "source_url": "https://www.kaggle.com/docs/notebooks",
+      "repo_entrypoints": [
+        "crates/kairo-ecs-gpu/",
+        "docs/gpu-compute/free-testing-routes.md",
+        "docs/cloud-hpc/free-compute-blocker-plan.md"
+      ],
+      "blockers_reduced": [
+        "Track 52 real NVIDIA CUDA driver/runtime context creation, PTX/kernel dispatch, and CPU/CUDA parity verification without paid cloud GPU instances",
+        "Track 52 wgpu Vulkan-on-NVIDIA Linux adapter smoke and benchmark capture"
+      ],
+      "required_evidence": [
+        "commit SHA",
+        "nvidia-smi hardware and driver output",
+        "cargo test / benchmark command log",
+        "raw output artifact",
+        "sha256 checksum"
+      ],
+      "not_proof_for": [
+        "guaranteed non-preemptible CI runner availability",
+        "multi-node multi-GPU NVLink/InfiniBand Slurm scaling",
+        "Lustre or GPFS parallel storage throughput",
+        "production weak/strong scaling certification"
       ]
     }
   ]

@@ -168,3 +168,10 @@ returning HTTP403. The RRID assessment now retains those unavailable URLs as
 literal evidence and preserves native recheck/acceptance gates; no CI permission,
 link-check acceptance policy or global exception was changed. Other live
 provider sources and all local links remain checkable.
+
+## RRID Acceptance (`RRID:SCR_029085`) & JOSS Paper Draft Reconciliation — 2026-10-18
+
+- Reconciled SciCrunch curator approval and persistent identifier `RRID:SCR_029085` across `CITATION.cff`, `codemeta.json`, `docs/research/citation.md`, `docs/research/rrid-readiness.md`, and `docs/research/registry-readiness.md`.
+- Reconciled expanded JOSS manuscript draft (`paper/paper.md`) and bibliography (`paper/paper.bib`) with `docs/research/joss-readiness.md`.
+- Marked all Phase 0-4 checkboxes `[x]` in `conductor/tracks/19-research-software-citation-archival/plan.md` to match Track 19 `Done` status.
+- Verified `pwsh -NoProfile -ExecutionPolicy Bypass -File conductor/tracks/19-research-software-citation-archival/validate-citation-archive.ps1` exits 0.

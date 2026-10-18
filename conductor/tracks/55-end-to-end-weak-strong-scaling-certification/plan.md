@@ -20,7 +20,7 @@
 
 ## Phase 1 - Weak scaling
 
-- Task 1.1: Run weak scaling across increasing LP/rank/device counts.
+- Task 1.1: Run weak scaling across increasing LP/rank/device counts (supporting two-tier execution: local macOS multi-rank OpenMPI `mpiexec --oversubscribe` + Apple Metal + Colima Slurm emulation for `R3` engineering completion, and multi-node `live-hpc` manifests for `R4` cluster certification).
 - Task 1.2: Record throughput, efficiency, memory, I/O, rollback, and GVT
   metrics.
 - Task 1.3: Attach raw manifests and immutable artifact references.

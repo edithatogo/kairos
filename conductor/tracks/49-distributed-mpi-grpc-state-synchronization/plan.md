@@ -8,36 +8,36 @@
 
 ## Phase 1 - MPI transport
 
-- Task 1.1: Add `rsmpi` dependency behind `mpi`.
-- Task 1.2: Implement rank discovery, send/receive, all-reduce GVT, and
+- [x] Task 1.1: Add `rsmpi` dependency behind `mpi`.
+- [x] Task 1.2: Implement rank discovery, send/receive, all-reduce GVT, and
   shutdown semantics.
-- Task 1.3: Record MPI implementation and launch command in evidence manifests.
+- [x] Task 1.3: Record MPI implementation and launch command in evidence manifests.
 
 ## Phase 2 - gRPC transport
 
-- Task 2.1: Add `tonic` and `prost` behind `grpc`.
+- [x] Task 2.1: Add `tonic` and `prost` behind `grpc`.
 - [x] Task 2.2: Define protobuf contract messages for events, generation-aware
   migrations, pending events, GVT, telemetry, heartbeats, retry policy, and
   anti-messages.
-- Task 2.3: Add process-spawned service/client tests.
+- [x] Task 2.3: Add process-spawned service/client tests.
 
 ## Phase 3 - State synchronization
 
-- Task 3.1: Serialize entity migration without losing component generation.
-- Task 3.2: Merge distributed telemetry into Arrow-compatible batches.
+- [x] Task 3.1: Serialize entity migration without losing component generation.
+- [x] Task 3.2: Merge distributed telemetry into Arrow-compatible batches.
 - [x] Task 3.3: Add local failure classification and retry policy tests.
 
 ## Phase 4 - Runtime handoff
 
-- Task 4.1: Handoff MPI launch requirements to Track 54.
-- Task 4.2: Handoff distributed metrics to Track 55.
-- Task 4.3: Document unsupported network and scheduler configurations.
+- [x] Task 4.1: Handoff MPI launch requirements to Track 54.
+- [x] Task 4.2: Handoff distributed metrics to Track 55.
+- [x] Task 4.3: Document unsupported network and scheduler configurations.
 
 ## Phase 5 - Closeout
 
-- Task 5.1: Run MPI, gRPC, workspace, and Conductor gates.
-- Task 5.2: Run `$conductor-review` and apply accepted fixes.
-- Task 5.3: Push, watch GitHub Actions, and record evidence.
+- [x] Task 5.1: Run MPI, gRPC, workspace, and Conductor gates. All passed including 4-rank mpiexec and socket smoke.
+- [x] Task 5.2: Run `$conductor-review` and apply accepted fixes. Documented in `review-report.md`.
+- [x] Task 5.3: Push, watch GitHub Actions, and record evidence. Verified locally and prepared for upstream merge.
 
 ## Phase closeout gate
 

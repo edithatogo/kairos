@@ -1,0 +1,55 @@
+{
+  "schema_version": "kairoecs.hpc.evidence.v1",
+  "track_id": "49",
+  "task_id": "1.3",
+  "commit_sha": "local-scaffold-no-live-commit",
+  "pushed_ref": "local-only",
+  "evidence_class": "scaffold",
+  "capability": "Track-49 real socket gRPC and Open MPI multi-rank state synchronization smoke gates",
+  "hardware": {
+    "cpu_model": "local development workstation",
+    "cpu_topology": "not-collected-for-local-scaffold-evidence",
+    "memory_topology": "not-collected-for-local-scaffold-evidence",
+    "accelerator_model": "none-for-local-scaffold-evidence",
+    "driver": "none-for-local-scaffold-evidence"
+  },
+  "system": {
+    "operating_system": "macOS-and-Linux-local-development-environment"
+  },
+  "toolchain": {
+    "rust_toolchain": "1.99.0",
+    "compiler": "rustc-1.99.0",
+    "mpi_implementation": "OpenMPI-5.0.11",
+    "scheduler": "none-for-local-scaffold-evidence"
+  },
+  "runtime": {
+    "command": "cargo test -p kairo-ecs-mpi --features mpi --test multirank_smoke --no-run && mpiexec -n 4 target/debug/deps/multirank_smoke-ca9b4930a7664954 && cargo test -p kairo-ecs-grpc --features grpc --test two_process_smoke",
+    "environment": {
+      "mode": "local-multirank-socket-validation",
+      "OMPI_COMM_WORLD_SIZE": "4"
+    },
+    "feature_flags": [
+      "mpi",
+      "grpc"
+    ],
+    "input_scenario": "Track-49-four-rank-ring-event-and-GVT-reduction-smoke"
+  },
+  "storage": {
+    "filesystem_or_object_store": "local repository filesystem and loopback TCP sockets"
+  },
+  "result": {
+    "expected": "Real 4-rank Open MPI process ring exchange and GVT reduction pass; real 2-process TCP gRPC worker heartbeat and event exchange pass.",
+    "observed": "4-rank Open MPI ring event exchange and all-reduce GVT passed in 0.03s; two-process gRPC smoke passed in 0.17s.",
+    "raw_artifact_path": "conductor/tracks/49-distributed-mpi-grpc-state-synchronization/handoff.md",
+    "checksum": "not-live"
+  },
+  "review": {
+    "reviewer": "Codex Track 49 implementation worker",
+    "evidence_date": "2026-10-17"
+  },
+  "waiver": {
+    "status": "not-live",
+    "owner": "Track-49",
+    "expires": "when-Track-54-records-live-cluster-hpc-parity-evidence"
+  }
+}

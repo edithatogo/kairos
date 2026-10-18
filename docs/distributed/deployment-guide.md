@@ -1,91 +1,67 @@
 # Distributed Deployment Guide
 
-MPI mode targets HPC clusters:
+## Overview
 
-- install OpenMPI, MPICH, or MS-MPI before enabling the real MPI backend;
-- map one or more LPs to each rank;
-- set the `mpi` feature and add a real transport runtime backend when available;
-- run with a scheduler such as Slurm once integration tests exist.
+KairoECS provides two distinct distributed transport implementations under `#![forbid(unsafe_code)]`:
 
-gRPC mode targets cloud or mixed-network deployments:
+1. **MPI Multi-Rank Transport (`kairo-ecs-mpi`)**:
+   - Implemented by `MpiProcessTransport` adhering to `PdesTransport`.
+   - Supports peer-to-peer event routing, rank rendezvous, global barriers, and `all_reduce_min` GVT calculation across distinct OS processes.
+   - Automatically detects rank and world size from standard MPI environments (`OMPI_COMM_WORLD_RANK`, `PMIX_RANK`, `MPI_LOCALRANKID`, `PMI_RANK`).
+   - Verified both under direct process invocation and natively under `mpiexec -n 4`.
 
-- run one worker service per node;
-- configure peer endpoints or service discovery;
-- use TLS and explicit request timeouts before production use;
-- coordinate heartbeats through LP 0 or a dedicated coordinator service.
-- classify workers as healthy, suspect, or failed from heartbeat age before removing
-  them from the active worker set.
+2. **gRPC Socket Transport (`kairo-ecs-grpc`)**:
+   - Implemented by `GrpcSocketTransport` adhering to `PdesTransport`.
+   - Communicates across real TCP socket listeners with framed binary streaming.
+   - Supports `KairoOptimisticEnvelopeV1` Packet 2 & 3 wire format with deterministic preflight rejection oracles (R01–R15).
+   - Preserves component generations during entity migration and aggregates telemetry batches.
+   - Classifies worker heartbeats into `Healthy`, `Suspect`, and `Failed`.
 
-## Feature and hardware blockers (current slice)
+---
 
-- `feature = "mpi"` is a compile gate for contract surfaces only; local builds do
-  not require MPI headers/libraries.
-- Real `rsmpi` runtime wiring requires:
-  - system MPI (`OpenMPI`, `MPICH`, or `MS-MPI`) on each worker;
-  - rank/LP launch integration in the scheduler launcher;
-  - Linux/cluster profile validation.
-- `feature = "grpc"` is a compile gate for contract surfaces only; local builds do
-  not require `tonic`, `prost`, or certificate material.
-- Real gRPC runtime wiring requires:
-  - generated protobuf build outputs,
-  - endpoint discovery/registration,
-  - mTLS or TLS endpoint security,
-  - long-running coordinator service behavior.
+## Launch and Validation Commands
 
-## Local proof commands (no runtime transport)
+### MPI Multi-Rank Transport
 
-```powershell
-pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1
+To run the 4-rank Open MPI integration smoke test:
+
+```bash
+# 1. Direct cargo test (spawns 4 worker processes if not under mpiexec)
+cargo test -p kairo-ecs-mpi --features mpi --test multirank_smoke
+
+# 2. Native execution under Open MPI across 4 real ranks
+cargo test -p kairo-ecs-mpi --features mpi --test multirank_smoke --no-run
+mpiexec -n 4 target/debug/deps/multirank_smoke-<hash>
 ```
 
-Expected output:
+### gRPC Multi-Process Transport
 
-```text
-Track 35 validator passed.
+To run the two-process TCP socket smoke test:
+
+```bash
+cargo test -p kairo-ecs-grpc --features grpc --test two_process_smoke
 ```
 
-Optional runtime smoke commands (blocked until host/runtime dependencies are present):
+---
 
-```powershell
-# placeholders for future runtime integration checks
-mpirun -np 2 cargo run --manifest-path ...
-grpcurl describe kairo.ecs.simulation.v1.SimulationTransport
-```
+## Unsupported Network and Scheduler Configurations
 
-Expected future output once real runtime backends exist:
+To ensure deterministic scheduling and avoid split-brain states:
 
-```text
-MPI ranks complete the distributed smoke run without timeout.
-grpcurl lists kairo.ecs.simulation.v1.SimulationTransport methods.
-```
+1. **Unsupported Network Topologies**:
+   - **Asymmetric Partitioning**: Partial network partitions where rank $A$ can reach $B$ but not $C$ while $B$ can reach $C$ are not automatically healed. Transports will error with `TransportError::UnknownLogicalProcess`.
+   - **Dynamic IP Migration / NAT Rebinding**: Endpoints must retain stable loopback or cluster IP bindings for the lifetime of the simulation run.
+   - **Unordered Non-FIFO Transports**: UDP or connectionless datagram sockets without ordering guarantees are unsupported; both transports rely on ordered byte streams.
 
-## Current status in Track 35 scope
+2. **Unsupported Scheduler Configurations**:
+   - **Dynamic Resizing / Elastic LP Reallocation**: The set of logical processes ($LP$) and their initial rank mappings must remain invariant during active event simulation. Dynamic rank joining or eviction requires pausing at a global barrier and checkpointing.
+   - **Unsynchronized Overcommit**: Launching more ranks than available physical cores without CPU pinning may induce thread contention and skew GVT reduction latency.
 
-Current status: crates compile as transport scaffolds only. Real MPI and gRPC
-runtime backends are pending later Track 35 tasks.
+---
 
-Local protocol validators are available now:
+## Track Handoff Boundaries
 
-- MPI: rank/LP assignment uniqueness, stable message tags, migration envelope
-  shape, and telemetry envelope shape.
-- gRPC: timeout relationships, peer endpoint shape, duplicate/self-peer
-  detection, migration envelope shape, telemetry envelope shape, and heartbeat
-  failure classification.
-- Local two-node contract proof helpers are available now:
-  `local_two_rank_contract_proof` for MPI and `local_two_node_contract_proof`
-  for gRPC. They exercise local event exchange, migration validation, telemetry
-  merge counts, and non-leader failure classification without claiming real MPI
-  or real gRPC runtime coverage.
-
-Validation commands:
-
-```powershell
-pwsh -NoProfile -File conductor/tracks/35-distributed-simulation-mpi-grpc/validate-track35.ps1 -RunTests
-```
-
-Expected output when the GNU Rust runtime toolchain is available:
-
-```text
-test result: ok. ...
-Track 35 validator passed.
-```
+- **Track 54 (Cluster & Cloud Deployment)**:
+  - Consumes `MpiProcessTransport` and `conductor/hpc-evidence/manifests/track49-live-hpc-template.json` for multi-node Slurm job scripts and container runtime orchestration.
+- **Track 55 (Scaling Benchmarks & Parity Profiles)**:
+  - Consumes distributed timing telemetry and Arrow batch schemas from `GrpcSocketTransport` and `kairo-ecs-pdes` for weak and strong scaling profiles.

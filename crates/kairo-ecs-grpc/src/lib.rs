@@ -1,5 +1,10 @@
 #![forbid(unsafe_code)]
 
+pub mod envelope;
+pub use envelope::*;
+pub mod socket;
+pub use socket::*;
+
 use std::collections::{BTreeMap, VecDeque};
 use std::time::Duration;
 

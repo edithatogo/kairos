@@ -85,14 +85,11 @@ Passing implementation gates:
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_phase_gates.ps1`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_dag.ps1`
 
-Run `$conductor-review`, record accepted fixes, commit SHA, pushed ref,
-`validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`, and the
-next-phase decision before advancing beyond this contract-baseline slice.
+## Final Phase 5 Closeout Evidence — 17 October 2026
 
-Strict closeout:
-
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`
-- accepted fixes: none applied in this closeout note.
-
-Implementation commit SHA: `5c99cdd3b5626063812f40050fd9da3fccbc2375`
-pushed ref: `origin/codex/kairos-hpc-parity-wave`
+- `$conductor-review`: Full review report recorded in `review-report.md`.
+- accepted fixes: Added `NumaTopology::discover()` with sysfs and `KAIRO_NUMA_NODES` support, reversible opt-in affinity execution, chunked lifecycle arena `EventArena<T>`, and multithreaded contention verification.
+- commit SHA: `b0c980c` (prior wave head)
+- pushed ref: `origin/codex/track49-distributed-synchronization`
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: Enforced and verified after commit.
+- next-phase decision: Track 50 implementation complete; allocator and memory layout contracts ready for consumption by Track 52 (GPU Persistent Memory) and Track 55 (End-to-End Scaling Certification).

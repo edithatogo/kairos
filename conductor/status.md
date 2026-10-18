@@ -702,3 +702,23 @@ The archive does not claim production cloud/HPC runtime acceptance. Docker image
 ## Approved conditional Track49 entry — 4 October2026
 
 The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
+
+## Wave 9 Roadmap Registration & Mac/Free-Compute Strategy (2026-10-18)
+
+Added Tracks 62-66 (`Planned`) to transition KairoECS from dependency-free R2 contract scaffolds to official upstream dependencies and bleeding-edge competitor parity:
+
+- **Track 62:** Official Apache Arrow (`arrow-*`), Parquet (`parquet`), and Zero-Copy C Data Interface (`FFI_ArrowArray`/`FFI_ArrowSchema`) spine.
+- **Track 63:** Native compiled polyglot bindings (`PyO3`/`maturin`, `wasm-bindgen`, `extendr`, Julia/C#/Go C ABI dynamic linking) replacing pure-language fallback schedulers.
+- **Track 64:** 64-byte aligned Structure-of-Arrays (SoA) ECS storage, SimPy/AnyLogic-grade DES resources (`CapacityResource`, `PreemptiveResource`, `Container`, `Store`, wait conditions), and Agents.jl/Mesa-grade ABM spatial environments (`GridSpace`, `ContinuousSpace`, `GraphSpace`).
+- **Track 65:** Mixed-Strategy Nash (support enumeration & Lemke-Howson), Correlated Equilibrium, `CFR`/`CFR+`, Replicator Dynamics, PettingZoo adapters, and Rayon-parallelized `VecEnv` batch stepping.
+- **Track 66:** Quasi-random Sobol/LHS ensemble sweeps with Common Random Numbers (CRN), Optuna/ABC-SMC calibration hooks, Copy-on-Write (CoW) page-delta snapshots, and live Wasm time-travel debugging in the Playground.
+
+## Branch & Registry Reconciliation (2026-10-18)
+
+Reconciled all completed work from `codex/track49-distributed-synchronization` (`2e346b5`..`6d75df6`) with `main` (`0f22c48`):
+
+- **Track 48 (`In Progress`, `R2`):** Reconciled `review-report.md`, `docs/design/track48-api-review.md`, `distributed-blocker-readback-20261017.md`, and `plan.md`/`handoff.md` with the Track 49 multi-rank/socket transport resolution.
+- **Track 49 (`In Progress`, `R2`):** Integrated `MpiProcessTransport` (`crates/kairo-ecs-mpi/src/process.rs`), `multirank_smoke.rs` (4-rank `mpiexec`), `KairoOptimisticEnvelopeV1` (`crates/kairo-ecs-grpc/src/envelope.rs`), `GrpcSocketTransport` (`socket.rs`), `two_process_smoke.rs`, `transport-contract-packet2.md`, `review-report.md`, and Track 49 HPC evidence manifests while preserving all `main` external-accounting and PMIx/PRRTE/OpenMPI preparation records (`196fded`).
+- **Track 50 (`In Progress`, `R2`):** Integrated `NumaTopology::discover()`, `EventArena` chunked allocator, concurrent thread-safety tests in `kairo-ecs-core`, `docs/performance/` guides (`allocator-lifecycle.md`, `numa-topology.md`, `zero-copy-ffi.md`), and `review-report.md`.
+- **Track 51 (`In Progress`, `R2`):** Integrated Phase 5 closeout ledger, `review-report.md`, and `handoff.md` updates.
+- **Track 61 (`In Review`, `R3`):** Integrated Phase 3 stochastic chance-weighted solver closeout receipts and `docs/game-theory/` documentation (`codegen.md`, `extensive-form-runtime.md`, `graph-relations.md`, `ontology-ingestion.md`).
