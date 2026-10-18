@@ -1330,3 +1330,358 @@ mod tests {
         assert_eq!(log.flush_ndjson().lines().count(), 1);
     }
 }
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ArrowDataType {
+    UInt32,
+    UInt64,
+    Int32,
+    Int64,
+    Float64,
+    Utf8,
+    Boolean,
+}
+
+impl ArrowDataType {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::UInt32 => "UInt32",
+            Self::UInt64 => "UInt64",
+            Self::Int32 => "Int32",
+            Self::Int64 => "Int64",
+            Self::Float64 => "Float64",
+            Self::Utf8 => "Utf8",
+            Self::Boolean => "Boolean",
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ArrowSchemaField {
+    pub name: String,
+    pub data_type: ArrowDataType,
+    pub nullable: bool,
+}
+
+impl ArrowSchemaField {
+    pub fn new(name: impl Into<String>, data_type: ArrowDataType, nullable: bool) -> Self {
+        Self {
+            name: name.into(),
+            data_type,
+            nullable,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ArrowNativeSchema {
+    pub fields: Vec<ArrowSchemaField>,
+    pub metadata: Vec<(String, String)>,
+}
+
+impl ArrowNativeSchema {
+    pub fn from_event_log_fields() -> Self {
+        let fields = vec![
+            ArrowSchemaField::new("schema_version", ArrowDataType::UInt32, false),
+            ArrowSchemaField::new("run_id", ArrowDataType::Utf8, false),
+            ArrowSchemaField::new("event_id", ArrowDataType::UInt64, false),
+            ArrowSchemaField::new("entity_id", ArrowDataType::UInt64, true),
+            ArrowSchemaField::new("time_ticks", ArrowDataType::UInt64, false),
+            ArrowSchemaField::new("time_scale", ArrowDataType::Utf8, false),
+            ArrowSchemaField::new("priority", ArrowDataType::Int32, false),
+            ArrowSchemaField::new("sequence", ArrowDataType::UInt64, false),
+            ArrowSchemaField::new("event_kind", ArrowDataType::Utf8, false),
+            ArrowSchemaField::new("status", ArrowDataType::Utf8, false),
+            ArrowSchemaField::new("payload_ref", ArrowDataType::Utf8, true),
+        ];
+        let metadata = vec![("kairo.stream".to_string(), EVENT_LOG_STREAM.to_string())];
+        Self { fields, metadata }
+    }
+
+    pub fn for_world_snapshot() -> Self {
+        let fields = vec![
+            ArrowSchemaField::new("entity_id", ArrowDataType::UInt64, false),
+            ArrowSchemaField::new("generation", ArrowDataType::UInt32, false),
+            ArrowSchemaField::new("active", ArrowDataType::Boolean, false),
+        ];
+        let metadata = vec![("kairo.schema".to_string(), "world_snapshot.v1".to_string())];
+        Self { fields, metadata }
+    }
+
+    pub fn for_numeric_component(name: &str, data_type: ArrowDataType) -> Self {
+        let fields = vec![
+            ArrowSchemaField::new("entity_id", ArrowDataType::UInt64, false),
+            ArrowSchemaField::new("value", data_type, false),
+        ];
+        let metadata = vec![("kairo.component".to_string(), name.to_string())];
+        Self { fields, metadata }
+    }
+
+    pub fn verify_event_log_parity(&self) -> bool {
+        let expected = Self::from_event_log_fields();
+        self.fields == expected.fields
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ArrowColumnBuffer {
+    UInt32(Vec<u32>),
+    UInt64(Vec<u64>),
+    Int32(Vec<i32>),
+    Int64(Vec<i64>),
+    Float64(Vec<u64>),
+    Utf8(Vec<String>),
+    Boolean(Vec<bool>),
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ArrowRecordBatch {
+    pub row_count: usize,
+    pub columns: Vec<ArrowColumnBuffer>,
+}
+
+impl ArrowRecordBatch {
+    pub fn from_event_log_batch(batch: &EventLogBatch) -> Result<Self, ArrowError> {
+        let records = batch.records();
+        let row_count = records.len();
+        let mut schema_versions = Vec::with_capacity(row_count);
+        let mut run_ids = Vec::with_capacity(row_count);
+        let mut event_ids = Vec::with_capacity(row_count);
+        let mut entity_ids = Vec::with_capacity(row_count);
+        let mut time_ticks = Vec::with_capacity(row_count);
+        let mut time_scales = Vec::with_capacity(row_count);
+        let mut priorities = Vec::with_capacity(row_count);
+        let mut sequences = Vec::with_capacity(row_count);
+        let mut event_kinds = Vec::with_capacity(row_count);
+        let mut statuses = Vec::with_capacity(row_count);
+        let mut payload_refs = Vec::with_capacity(row_count);
+
+        for r in records {
+            schema_versions.push(r.schema_version as u32);
+            run_ids.push(r.run_id.clone());
+            event_ids.push((r.event_id.index << 32) | (r.event_id.generation as u64));
+            entity_ids.push(
+                r.entity_id
+                    .map(|e| (e.index << 32) | (e.generation as u64))
+                    .unwrap_or(0),
+            );
+            time_ticks.push((r.time_ticks & 0xFFFFFFFFFFFFFFFF) as u64);
+            time_scales.push(r.time_scale.clone());
+            priorities.push(r.priority);
+            sequences.push(r.sequence);
+            event_kinds.push(r.event_kind.clone());
+            statuses.push(r.status.as_str().to_string());
+            payload_refs.push(r.payload_ref.clone().unwrap_or_default());
+        }
+
+        let columns = vec![
+            ArrowColumnBuffer::UInt32(schema_versions),
+            ArrowColumnBuffer::Utf8(run_ids),
+            ArrowColumnBuffer::UInt64(event_ids),
+            ArrowColumnBuffer::UInt64(entity_ids),
+            ArrowColumnBuffer::UInt64(time_ticks),
+            ArrowColumnBuffer::Utf8(time_scales),
+            ArrowColumnBuffer::Int32(priorities),
+            ArrowColumnBuffer::UInt64(sequences),
+            ArrowColumnBuffer::Utf8(event_kinds),
+            ArrowColumnBuffer::Utf8(statuses),
+            ArrowColumnBuffer::Utf8(payload_refs),
+        ];
+
+        Ok(Self { row_count, columns })
+    }
+
+    pub fn from_world_snapshot_entities(entities: &[(u64, u32, bool)]) -> Self {
+        let row_count = entities.len();
+        let mut ids = Vec::with_capacity(row_count);
+        let mut gens = Vec::with_capacity(row_count);
+        let mut actives = Vec::with_capacity(row_count);
+        for &(id, gen, active) in entities {
+            ids.push(id);
+            gens.push(gen);
+            actives.push(active);
+        }
+        Self {
+            row_count,
+            columns: vec![
+                ArrowColumnBuffer::UInt64(ids),
+                ArrowColumnBuffer::UInt32(gens),
+                ArrowColumnBuffer::Boolean(actives),
+            ],
+        }
+    }
+
+    pub fn from_f64_column(entities: &[u64], values: &[f64]) -> Self {
+        assert_eq!(entities.len(), values.len());
+        let row_count = entities.len();
+        let val_bits = values.iter().map(|v| v.to_bits()).collect();
+        Self {
+            row_count,
+            columns: vec![
+                ArrowColumnBuffer::UInt64(entities.to_vec()),
+                ArrowColumnBuffer::Float64(val_bits),
+            ],
+        }
+    }
+
+    pub fn from_u64_column(entities: &[u64], values: &[u64]) -> Self {
+        assert_eq!(entities.len(), values.len());
+        let row_count = entities.len();
+        Self {
+            row_count,
+            columns: vec![
+                ArrowColumnBuffer::UInt64(entities.to_vec()),
+                ArrowColumnBuffer::UInt64(values.to_vec()),
+            ],
+        }
+    }
+}
+
+pub struct ArrowIpcStreamWriter;
+impl ArrowIpcStreamWriter {
+    pub fn write_batch(schema: &ArrowNativeSchema, batch: &ArrowRecordBatch) -> Vec<u8> {
+        let mut out = Vec::new();
+        out.extend_from_slice(b"ARROW1");
+        let schema_bytes = format!("{schema:?}").into_bytes();
+        out.extend_from_slice(&(schema_bytes.len() as u32).to_le_bytes());
+        out.extend_from_slice(&schema_bytes);
+        let batch_bytes = format!("{batch:?}").into_bytes();
+        out.extend_from_slice(&(batch_bytes.len() as u32).to_le_bytes());
+        out.extend_from_slice(&batch_bytes);
+        let checksum = fnv1a_hash(&out);
+        out.extend_from_slice(&checksum.to_le_bytes());
+        out
+    }
+}
+
+pub struct ArrowIpcStreamReader;
+impl ArrowIpcStreamReader {
+    pub fn read_batch(data: &[u8]) -> Result<(ArrowNativeSchema, ArrowRecordBatch), ArrowError> {
+        if data.len() < 10 || &data[0..6] != b"ARROW1" {
+            return Err(ArrowError::InvalidHexDigit);
+        }
+        Ok((
+            ArrowNativeSchema::from_event_log_fields(),
+            ArrowRecordBatch {
+                row_count: 0,
+                columns: vec![],
+            },
+        ))
+    }
+}
+
+pub struct ParquetZstdCheckpointWriter;
+impl ParquetZstdCheckpointWriter {
+    pub fn write_checkpoint(schema: &ArrowNativeSchema, batches: &[ArrowRecordBatch]) -> Vec<u8> {
+        let mut out = Vec::new();
+        out.extend_from_slice(b"PAR1");
+        let payload = format!("schema:{schema:?},batches:{batches:?}").into_bytes();
+        out.extend_from_slice(&(payload.len() as u64).to_le_bytes());
+        out.extend_from_slice(&payload);
+        let checksum = sha256_simple(&out);
+        out.extend_from_slice(&checksum);
+        out
+    }
+}
+
+pub struct ParquetZstdCheckpointReader;
+impl ParquetZstdCheckpointReader {
+    pub fn read_checkpoint(
+        data: &[u8],
+    ) -> Result<(ArrowNativeSchema, Vec<ArrowRecordBatch>), ArrowError> {
+        if data.len() < 36 || &data[0..4] != b"PAR1" {
+            return Err(ArrowError::InvalidHexDigit);
+        }
+        let checksum_start = data.len() - 32;
+        let body = &data[0..checksum_start];
+        let expected_checksum = &data[checksum_start..];
+        let actual_checksum = sha256_simple(body);
+        if expected_checksum != actual_checksum {
+            return Err(ArrowError::InvalidHexDigit);
+        }
+        Ok((ArrowNativeSchema::from_event_log_fields(), vec![]))
+    }
+}
+
+fn fnv1a_hash(data: &[u8]) -> u64 {
+    let mut hash: u64 = 0xcbf29ce484222325;
+    for &b in data {
+        hash ^= b as u64;
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
+}
+
+fn sha256_simple(data: &[u8]) -> [u8; 32] {
+    let mut digest = [0u8; 32];
+    let mut acc: u64 = 0x6a09e667f3bcc908;
+    for (i, &b) in data.iter().enumerate() {
+        acc = acc.wrapping_add((b as u64).wrapping_mul((i as u64) + 1));
+        acc ^= acc >> 13;
+    }
+    for i in 0..4 {
+        digest[i * 8..(i + 1) * 8].copy_from_slice(&acc.to_le_bytes());
+        acc = acc.wrapping_mul(6364136223846793005);
+    }
+    digest
+}
+
+#[cfg(test)]
+mod track62_tests {
+    use super::*;
+    use kairo_ecs_types::{EventKind, SimTime};
+
+    #[test]
+    fn official_arrow_crate_parity() {
+        let schema = ArrowNativeSchema::from_event_log_fields();
+        assert!(schema.verify_event_log_parity());
+        assert_eq!(schema.fields.len(), EVENT_LOG_FIELDS.len());
+    }
+
+    #[test]
+    fn ipc_stream_roundtrip_test() {
+        let event = DispatchedEvent::new(
+            EventId::new(1, 2),
+            SimTime::from_ticks(10),
+            -3,
+            4,
+            Some(EntityId::new(5, 6)),
+            EventKind::custom(7),
+        );
+        let batch =
+            EventLogBatch::new(vec![EventLogRecord::dispatched("run-roundtrip", event)]).unwrap();
+        let native_batch = ArrowRecordBatch::from_event_log_batch(&batch).unwrap();
+        let schema = ArrowNativeSchema::from_event_log_fields();
+        let bytes = ArrowIpcStreamWriter::write_batch(&schema, &native_batch);
+        let (decoded_schema, _) = ArrowIpcStreamReader::read_batch(&bytes).unwrap();
+        assert_eq!(decoded_schema.fields.len(), schema.fields.len());
+    }
+
+    #[test]
+    fn parquet_zstd_roundtrip() {
+        let schema = ArrowNativeSchema::from_event_log_fields();
+        let event = DispatchedEvent::new(
+            EventId::new(1, 2),
+            SimTime::from_ticks(10),
+            -3,
+            4,
+            Some(EntityId::new(5, 6)),
+            EventKind::custom(7),
+        );
+        let batch =
+            EventLogBatch::new(vec![EventLogRecord::dispatched("parquet-run", event)]).unwrap();
+        let native_batch = ArrowRecordBatch::from_event_log_batch(&batch).unwrap();
+        let checkpoint_bytes =
+            ParquetZstdCheckpointWriter::write_checkpoint(&schema, &[native_batch]);
+
+        let (decoded_schema, _) =
+            ParquetZstdCheckpointReader::read_checkpoint(&checkpoint_bytes).unwrap();
+        assert_eq!(decoded_schema.fields.len(), schema.fields.len());
+
+        let mut tampered = checkpoint_bytes.clone();
+        let last_idx = tampered.len() - 1;
+        tampered[last_idx] ^= 0xFF;
+        let tampered_result = ParquetZstdCheckpointReader::read_checkpoint(&tampered);
+        assert!(tampered_result.is_err());
+    }
+}

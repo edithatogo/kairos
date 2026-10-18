@@ -12,6 +12,8 @@ kairo-ecs-types = { path = "../kairo-ecs-types", version = "0.0.0" }
 
 [features]
 default = []
+arrow-native = []
+parquet-native = []
 parallel-io = []
 hdf5 = ["parallel-io"]
 adios2 = ["parallel-io"]

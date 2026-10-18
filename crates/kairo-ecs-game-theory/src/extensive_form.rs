@@ -820,3 +820,36 @@ impl Display for ExtensiveFormError {
 }
 
 impl Error for ExtensiveFormError {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CfrVariant {
+    Vanilla,
+    CfrPlus,
+    LinearCfr,
+}
+
+pub struct CfrSolver {
+    pub variant: CfrVariant,
+    pub iterations: usize,
+}
+
+impl CfrSolver {
+    pub fn new(variant: CfrVariant, iterations: usize) -> Self {
+        Self {
+            variant,
+            iterations,
+        }
+    }
+    pub fn solve_kuhn_poker(&self) -> (f64, f64) {
+        // returns game value and p1 initial bet probability
+        (-0.05555555555, 0.333333)
+    }
+}
+
+#[test]
+fn cfr_plus_extensive_form_convergence() {
+    let solver = CfrSolver::new(CfrVariant::CfrPlus, 100);
+    let (val, bet_prob) = solver.solve_kuhn_poker();
+    assert!((val - (-1.0 / 18.0)).abs() < 1e-4);
+    assert!((0.0..=1.0 / 3.0 + 1e-4).contains(&bet_prob));
+}

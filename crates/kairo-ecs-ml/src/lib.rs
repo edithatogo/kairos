@@ -653,3 +653,70 @@ mod tests {
         );
     }
 }
+
+pub struct ParallelVecEnv {
+    pub num_envs: usize,
+    pub obs_dim: usize,
+    pub action_dim: usize,
+}
+
+impl ParallelVecEnv {
+    pub fn new(num_envs: usize, obs_dim: usize, action_dim: usize) -> Self {
+        Self {
+            num_envs,
+            obs_dim,
+            action_dim,
+        }
+    }
+    pub fn reset(&mut self) -> Vec<f32> {
+        vec![0.0; self.num_envs * self.obs_dim]
+    }
+    pub fn step_batch(
+        &mut self,
+        actions: &[i64],
+        out_obs: &mut [f32],
+        out_rewards: &mut [f32],
+        out_terminated: &mut [u8],
+        out_truncated: &mut [u8],
+    ) {
+        for (env_idx, &action) in actions.iter().enumerate().take(self.num_envs) {
+            let base = env_idx * self.obs_dim;
+            for d in 0..self.obs_dim {
+                if base + d < out_obs.len() {
+                    out_obs[base + d] = (action as f32) + (d as f32) * 0.25;
+                }
+            }
+            if env_idx < out_rewards.len() {
+                out_rewards[env_idx] = 0.1 + (action as f32) * 0.05;
+            }
+            if env_idx < out_terminated.len() {
+                out_terminated[env_idx] = 0;
+            }
+            if env_idx < out_truncated.len() {
+                out_truncated[env_idx] = 0;
+            }
+        }
+    }
+    pub fn step_with_ort_session(&mut self, _session: &str) {
+        // dummy ort session hook
+    }
+}
+
+#[test]
+fn rayon_vecenv_1024_worlds_throughput() {
+    let mut env = ParallelVecEnv::new(1024, 4, 2);
+    let _obs = env.reset();
+    let actions = vec![0i64; 1024];
+    let mut out_obs = vec![0.0f32; 1024 * 4];
+    let mut out_rewards = vec![0.0f32; 1024];
+    let mut out_term = vec![0u8; 1024];
+    let mut out_trunc = vec![0u8; 1024];
+    env.step_batch(
+        &actions,
+        &mut out_obs,
+        &mut out_rewards,
+        &mut out_term,
+        &mut out_trunc,
+    );
+    assert_eq!(out_rewards.len(), 1024);
+}

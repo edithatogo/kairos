@@ -54,3 +54,16 @@
     <script src="main.js"></script>
   </body>
 </html>
+
+        <div class="timeline-controls" style="margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 8px;">
+          <label for="timeline-scrubber" style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Timeline Scrubber & Causal Inspector</label>
+          <input type="range" id="timeline-scrubber" min="0" max="100" value="0" style="width: 100%;">
+          <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.875rem; color: #4b5563;">
+            <span id="scrubber-tick-label">Tick: 0</span>
+            <span id="cow-stats-label">CoW Delta: 64 bytes</span>
+            <span id="causal-provenance-label">Provenance: init</span>
+          </div>
+          <div style="margin-top: 0.75rem;">
+            <input type="text" id="breakpoint-input" placeholder="Breakpoint filter expression (e.g. tick >= 5)" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px;">
+          </div>
+        </div>

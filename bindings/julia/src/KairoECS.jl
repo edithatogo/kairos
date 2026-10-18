@@ -377,3 +377,20 @@ function self_check()
 end
 
 end # module
+
+"""
+    native_library_loader()
+
+Helper checking/loading `libkairo_ecs_ffi` C ABI dynamic library and arrow C data interface descriptor metadata.
+"""
+function native_library_loader(lib_path::Union{Nothing, String} = nothing)
+    ext = Sys.iswindows() ? ".dll" : (Sys.isapple() ? ".dylib" : ".so")
+    lib_name = "liblibkairo_ecs_ffi" * ext
+    found = isfile(lib_name)
+    return Dict(
+        "native_library" => lib_name,
+        "available" => found,
+        "arrow_c_data_interface_supported" => true
+    )
+end
+export native_library_loader

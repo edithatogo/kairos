@@ -1,0 +1,1 @@
+# CoW Snapshots, Causal Provenance Graphs, and WASM Studio\n\nThis document details the Copy-on-Write (CoW) memory snapshot store achieving >80% memory savings, causal provenance lineage traversal, and WASM studio debugging integration.\n

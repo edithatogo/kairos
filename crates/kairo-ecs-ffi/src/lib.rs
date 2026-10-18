@@ -650,13 +650,41 @@ const char* kairo_ecs_last_error_message(void);
 KairoEcsBuffer kairo_ecs_telemetry_flush_ipc(KairoEcsEngineHandle handle);
 void kairo_ecs_buffer_free(KairoEcsBuffer buffer);
 
+
+typedef struct KairoArrowSchema {
+  const char* format;
+  const char* name;
+  const char* metadata;
+  int64_t flags;
+  int64_t n_children;
+  struct KairoArrowSchema** children;
+  struct KairoArrowSchema* dictionary;
+  void (*release)(struct KairoArrowSchema* schema);
+  void* private_data;
+} KairoArrowSchema;
+
+typedef struct KairoArrowArray {
+  int64_t length;
+  int64_t null_count;
+  int64_t offset;
+  int64_t n_buffers;
+  int64_t n_children;
+  const void** buffers;
+  struct KairoArrowArray** children;
+  struct KairoArrowArray* dictionary;
+  void (*release)(struct KairoArrowArray* array);
+  void* private_data;
+} KairoArrowArray;
+
+KairoEcsStatusCode kairo_ecs_export_event_log_arrow_schema(KairoArrowSchema* out_schema);
+KairoEcsStatusCode kairo_ecs_export_event_log_arrow_array(KairoEcsEngineHandle* engine, KairoArrowArray* out_array);
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif
 "#;
-
     fn test_trigger_panic() -> KairoEcsStatusCode {
         ffi_boundary_status(|| panic!("test panic"))
     }

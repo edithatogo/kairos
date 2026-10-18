@@ -780,3 +780,175 @@ mod tests {
         ));
     }
 }
+
+// Copy-on-Write snapshots and causal provenance graph for time-travel root-cause debugging.
+
+use std::collections::BTreeSet;
+use std::sync::Arc;
+
+/// Fixed-size page sharing trace snapshots.
+#[derive(Clone, Debug)]
+pub struct CowPage {
+    pub snapshots: Arc<Vec<TraceSnapshot>>,
+}
+
+/// CoW World Snapshot sharing unmodified pages via Arc::clone and allocating new pages on dirty writes.
+#[derive(Clone, Debug)]
+pub struct CowWorldSnapshot {
+    pub pages: Vec<CowPage>,
+    pub page_size: usize,
+    dirty_pages: BTreeSet<usize>,
+}
+
+impl CowWorldSnapshot {
+    pub fn new(page_size: usize) -> Self {
+        Self {
+            pages: vec![CowPage {
+                snapshots: Arc::new(Vec::new()),
+            }],
+            page_size: page_size.max(1),
+            dirty_pages: BTreeSet::new(),
+        }
+    }
+
+    pub fn apply_page_delta(&mut self, page_index: usize, new_snapshots: Vec<TraceSnapshot>) {
+        while self.pages.len() <= page_index {
+            self.pages.push(CowPage {
+                snapshots: Arc::new(Vec::new()),
+            });
+        }
+        self.pages[page_index] = CowPage {
+            snapshots: Arc::new(new_snapshots),
+        };
+        self.dirty_pages.insert(page_index);
+    }
+
+    pub fn shared_pages(&self) -> usize {
+        self.pages.len().saturating_sub(self.dirty_pages.len())
+    }
+
+    pub fn unique_pages(&self) -> usize {
+        self.dirty_pages.len()
+    }
+
+    pub fn memory_savings_ratio(&self) -> f64 {
+        let total = self.pages.len();
+        if total == 0 {
+            0.0
+        } else {
+            (self.shared_pages() as f64) / (total as f64)
+        }
+    }
+}
+
+/// CowSnapshotStore managing CoW world snapshots.
+#[derive(Clone, Debug, Default)]
+pub struct CowSnapshotStore {
+    snapshots: BTreeMap<u128, CowWorldSnapshot>,
+}
+
+impl CowSnapshotStore {
+    pub fn new() -> Self {
+        Self {
+            snapshots: BTreeMap::new(),
+        }
+    }
+
+    pub fn insert(&mut self, tick: u128, snapshot: CowWorldSnapshot) {
+        self.snapshots.insert(tick, snapshot);
+    }
+
+    pub fn get(&self, tick: u128) -> Option<&CowWorldSnapshot> {
+        self.snapshots.get(&tick)
+    }
+}
+
+/// Causal Provenance Graph tracking parent -> child event edges and lineage traversal.
+#[derive(Clone, Debug, Default)]
+pub struct CausalProvenanceGraph {
+    edges: BTreeMap<EventId, BTreeSet<EventId>>,
+    reverse_edges: BTreeMap<EventId, BTreeSet<EventId>>,
+}
+
+impl CausalProvenanceGraph {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn add_edge(&mut self, parent: EventId, child: EventId) {
+        self.edges.entry(parent).or_default().insert(child);
+        self.reverse_edges.entry(child).or_default().insert(parent);
+    }
+
+    pub fn causal_ancestors(&self, event_id: EventId) -> BTreeSet<EventId> {
+        let mut ancestors = BTreeSet::new();
+        let mut stack = vec![event_id];
+        while let Some(curr) = stack.pop() {
+            if let Some(parents) = self.reverse_edges.get(&curr) {
+                for &p in parents {
+                    if ancestors.insert(p) {
+                        stack.push(p);
+                    }
+                }
+            }
+        }
+        ancestors
+    }
+
+    pub fn causal_descendants(&self, event_id: EventId) -> BTreeSet<EventId> {
+        let mut descendants = BTreeSet::new();
+        let mut stack = vec![event_id];
+        while let Some(curr) = stack.pop() {
+            if let Some(children) = self.edges.get(&curr) {
+                for &c in children {
+                    if descendants.insert(c) {
+                        stack.push(c);
+                    }
+                }
+            }
+        }
+        descendants
+    }
+}
+
+#[cfg(test)]
+mod cow_tests {
+    use super::*;
+
+    #[test]
+    fn cow_delta_snapshot_memory_budget() {
+        let mut world = CowWorldSnapshot::new(10);
+        world.apply_page_delta(
+            0,
+            vec![TraceSnapshot {
+                tick: 0,
+                state: BTreeMap::new(),
+            }],
+        );
+        for _ in 1..10 {
+            world.pages.push(world.pages[0].clone());
+        }
+        assert!(world.memory_savings_ratio() > 0.8);
+    }
+
+    #[test]
+    fn causal_provenance_lineage() {
+        let mut graph = CausalProvenanceGraph::new();
+        let e1 = EventId::new(1, 0);
+        let e2 = EventId::new(2, 0);
+        let e3 = EventId::new(3, 0);
+        let e4 = EventId::new(4, 0);
+        graph.add_edge(e1, e2);
+        graph.add_edge(e2, e3);
+        graph.add_edge(e1, e4);
+
+        let ancestors = graph.causal_ancestors(e3);
+        assert!(ancestors.contains(&e1));
+        assert!(ancestors.contains(&e2));
+
+        let descendants = graph.causal_descendants(e1);
+        assert!(descendants.contains(&e2));
+        assert!(descendants.contains(&e3));
+        assert!(descendants.contains(&e4));
+    }
+}

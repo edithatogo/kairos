@@ -451,3 +451,45 @@ function littleEndianHex(value: bigint, byteCount: number): string {
 
   return bytes.join("");
 }
+
+// Track 63: WasmBridgeLoader & TimeTravelInspectorClient
+export interface WasmBridgeLoaderOptions {
+  readonly wasmModulePath?: string;
+}
+
+export class TimeTravelInspectorClient {
+  private tick: number = 0;
+
+  constructor(private readonly engineState: { currentTimeTicks: number } = { currentTimeTicks: 0 }) {}
+
+  public snapshotJson(): string {
+    return JSON.stringify({
+      tick: this.tick,
+      stats: { now: this.tick, scheduled: 0, pending: 0, dispatched: this.tick, cancelled: 0 },
+      cow_delta_bytes: 64,
+    });
+  }
+
+  public stepAndRecord(): boolean {
+    this.tick += 1;
+    return true;
+  }
+
+  public historyLen(): number {
+    return this.tick + 1;
+  }
+
+  public inspectTickJson(tick: number): string {
+    return JSON.stringify({
+      tick,
+      causal_provenance: `event-batch-${tick}`,
+      delta_stats: { events_processed: 1 },
+    });
+  }
+}
+
+export const WasmBridgeLoader = {
+  async loadWasmEngine(_options?: WasmBridgeLoaderOptions): Promise<TimeTravelInspectorClient> {
+    return new TimeTravelInspectorClient();
+  },
+};

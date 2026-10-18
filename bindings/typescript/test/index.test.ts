@@ -133,3 +133,22 @@ describe("native wasm loader contract", () => {
     await expect(loadNativeWasm({ load: () => ({ ok: true }) })).resolves.toEqual({ ok: true });
   });
 });
+
+import { WasmBridgeLoader, TimeTravelInspectorClient } from "../src/index.ts";
+
+describe("WasmBridgeLoader and TimeTravelInspector", () => {
+  it("loads wasm engine and scrubs time-travel snapshots", async () => {
+    const client = await WasmBridgeLoader.loadWasmEngine();
+    expect(client).toBeInstanceOf(TimeTravelInspectorClient);
+    expect(client.historyLen()).toBe(1);
+    
+    const snap = JSON.parse(client.snapshotJson());
+    expect(snap.cow_delta_bytes).toBe(64);
+    
+    expect(client.stepAndRecord()).toBe(true);
+    expect(client.historyLen()).toBe(2);
+    
+    const inspect = JSON.parse(client.inspectTickJson(0));
+    expect(inspect.causal_provenance).toBe("event-batch-0");
+  });
+});

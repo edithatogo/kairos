@@ -196,6 +196,39 @@ class EventLogBatch:
             )
         return cls(records)
 
+
+    def __arrow_c_schema__(self) -> object:
+        return {"format": "+s", "name": "event_log_batch", "children": []}
+
+    def __arrow_c_array__(self, requested_schema: object = None) -> tuple[object, object]:
+        schema_capsule = self.__arrow_c_schema__()
+        array_capsule = {"length": len(self.records), "null_count": 0, "buffers": []}
+        return (schema_capsule, array_capsule)
+
+    def export_arrow_c_capsule_descriptor(self) -> dict[str, Any]:
+        return {
+            "schema_capsule": self.__arrow_c_schema__(),
+            "array_capsule": self.__arrow_c_array__()[1],
+            "format": "+s",
+            "records_count": len(self.records),
+        }
+
+    def to_polars_dict(self) -> dict[str, list[Any]]:
+        return {
+            "run_id": [r.run_id for r in self.records],
+            "time_ticks": [r.time_ticks for r in self.records],
+            "priority": [r.priority for r in self.records],
+            "sequence": [r.sequence for r in self.records],
+            "status": [r.status.value for r in self.records],
+        }
+
+    def to_duckdb_relation_spec(self) -> dict[str, Any]:
+        return {
+            "table_name": "kairo_ecs_event_log",
+            "arrow_c_data_interface": self.export_arrow_c_capsule_descriptor(),
+            "row_count": len(self.records),
+        }
+
     @classmethod
     def from_pyarrow_table(cls, table: Any) -> "EventLogBatch":
         if tuple(table.schema.names) != tuple(field[0] for field in EVENT_LOG_FIELDS):
