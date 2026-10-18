@@ -34,3 +34,9 @@ Before any phase is accepted:
 - [x] Task 2.3: Record benchmark, review, push, and GitHub Actions evidence. Commit as `track 61 task 2.3: record multigame certification closeout`.
 
 Phase closeout repeats review, push, and GitHub Actions review.
+
+## Phase 3: Stochastic Parity & Final Wave Review
+
+- [x] Task 3.1: Add chance-weighted expected-utility solver (`ChanceWeightedBackwardInductionSolver`) and chance outcome traversal.
+- [x] Task 3.2: Verify stochastic root and decision-node chance aggregation tests (`tests/extensive_form_chance_solver.rs`).
+- [x] Task 3.3: Validate end-to-end wave evidence and certification manifests across Tracks 56-61.

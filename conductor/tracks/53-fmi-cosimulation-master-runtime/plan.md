@@ -28,7 +28,7 @@
 
 ## Phase 2 - Dynamic loading
 
-- Task 2.1: Add dynamic library loading behind `fmi-runtime`.
+- Task 2.1: Add official `libloading` dynamic library loading behind `fmi-runtime` supporting `.dylib` (macOS), `.so` (Linux), and `.dll` (Windows).
 - [x] Task 2.2: Bind FMI 2 lifecycle functions safely.
   - Red: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-fmi --features fmi-runtime,fmi2 --test fmi2_lifecycle` failed with missing `Fmi2LifecycleState`, checked raw-parts constructor, and null-component error.
   - Green: same command passed after adding explicit lifecycle state tracking, a null-rejecting unsafe checked constructor, idempotent terminate/free cleanup coverage, and safety docs.
@@ -43,7 +43,7 @@
 ## Phase 4 - Third-party roundtrip
 
 - Task 4.1: Package exported FMUs as valid zip artifacts.
-- Task 4.2: Validate with OpenModelica or equivalent tool.
+- Task 4.2: Validate with compiled Rust test `.fmu` dynamic libraries (`.dylib`/`.so`/`.dll`) and OpenModelica CLI (`omc` via Homebrew/Linux container) roundtrip.
 - Task 4.3: Handoff integrated scenario metrics to Track 55.
 
 ## Phase 5 - Closeout

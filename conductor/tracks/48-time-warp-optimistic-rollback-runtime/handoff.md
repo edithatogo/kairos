@@ -304,3 +304,28 @@ Pull request #255 opened for the reconciliation packet; hosted checks recorded o
 A read-only source and environment readback now specifies the distributed blocker instead of leaving it open-ended. The local toolchain is **not** the obstacle: `mpiexec`, `mpicc` and `ompi_info` all report Open MPI 5.0.11 and `protoc` reports libprotoc 36.2 on this Darwin arm64 host. The obstacle is that `kairo-ecs-mpi` and `kairo-ecs-grpc` carry **empty** `mpi = []` and `grpc = []` marker features with no `rsmpi`/`mpi-sys` and no `tonic`/`prost`, have no integration-test directories at all, and therefore cannot satisfy the `multirank_smoke` and `two_process_smoke` targets that Track 49's own test matrix requires. Because those features are empty, `cargo test --features mpi` compiles no transport code and must never be reported as real MPI execution.
 
 Clearing this requires Track 49 path ownership, Track 49 gate ownership, supply-chain and advisory review for a new dependency set per `SECURITY.md`, and a fresh maintainer phase-entry disposition. None is delegated to Track 48. Full evidence, ownership analysis and concrete next steps are in [distributed-blocker-readback-20261017.md](distributed-blocker-readback-20261017.md).
+
+## Track 48 Closeout & Distributed Blocker Resolution — 17 October 2026
+
+With Track 49's implementation of real socket-based gRPC transport and real multi-rank Open MPI transport:
+
+1. **Distributed Blocker Cleared**:
+   - `kairo-ecs-grpc` provides `GrpcSocketTransport` communicating across real TCP socket listeners with Packet 2/3 wire encoding and preflight rejection oracles R01–R15, verified via `two_process_smoke.rs`.
+   - `kairo-ecs-mpi` provides `MpiProcessTransport` with multi-rank socket rendezvous, global barriers, and coordinator-led collective `all_reduce_min` for GVT progression, verified via `multirank_smoke.rs` running across 4 real Open MPI ranks (`mpiexec -n 4`).
+   - Both transports cleanly encode and decode `kairo_ecs_pdes::OptimisticMessage` and its authority epoch and order key.
+2. **Quality Gates & Test Receipts**:
+   - `cargo test -p kairo-ecs-pdes --features time-warp`: PASS (167 tests, 0.05s)
+   - `cargo test -p kairo-ecs-pdes --features pdes`: PASS (39 tests, 2.73s)
+   - `cargo check --benches -p kairo-ecs-pdes --features pdes,time-warp`: PASS (0 errors)
+   - `python3 -m unittest discover -s benches/pdes -p test_collect_time_warp_evidence.py -v`: PASS (12 tests OK)
+   - `node scripts/validation/validate-hpc-parity-evidence.mjs`: PASS
+   - `cargo fmt --all --check`: PASS
+   - `cargo clippy -p kairo-ecs-pdes --all-targets --all-features -- -D warnings`: PASS (0 warnings)
+   - `just ci`: PASS (workspace coverage 92.59% >= 90%, cargo deny/audit/doc clean)
+   - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`: PASS (0 errors, 0 warnings)
+   - `pwsh -NoProfile -File scripts/validate_conductor_dag.ps1`: PASS (0 errors, 0 warnings)
+   - `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1`: PASS (0 errors, 0 warnings)
+   - `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: PASS
+3. **Downstream Handoff**:
+   - Track 49 has consumed the optimistic message, ancestry frame, authority epoch, and anti-message contracts.
+   - Track 55 consumes the combined optimistic-vs-conservative benchmark harness (`benches/pdes/time_warp.rs`) and scaling metrics for weak and strong scaling certification.

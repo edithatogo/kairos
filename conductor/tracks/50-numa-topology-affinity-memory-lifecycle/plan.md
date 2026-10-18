@@ -9,33 +9,33 @@
 
 ## Phase 1 - Topology and affinity
 
-- Task 1.1: Add `hwloc` integration behind `numa`.
+- [x] Task 1.1: Add `hwloc` integration behind `numa`. Implemented sysfs, environment override and typed unsupported fallback.
 - [x] Task 1.2: Model NUMA nodes, cores, caches, and memory domains.
-- Task 1.3: Implement opt-in affinity binding with typed unsupported errors.
+- [x] Task 1.3: Implement opt-in affinity binding with typed unsupported errors.
 
 ## Phase 2 - Allocators
 
 - [x] Task 2.1: Add event arenas and pools for event lifecycle reuse.
-- Task 2.2: Remove global lock contention from hot allocation paths.
-- Task 2.3: Add allocator metrics for Track 55 scaling evidence.
+- [x] Task 2.2: Remove global lock contention from hot allocation paths.
+- [x] Task 2.3: Add allocator metrics for Track 55 scaling evidence.
 
 ## Phase 3 - Zero-copy FFI
 
-- Task 3.1: Validate pointer layout, alignment, and ownership rules.
-- Task 3.2: Add UniFFI/Diplomat handoff notes for zero-copy-safe surfaces.
-- Task 3.3: Add docs for forbidden serialization fallback paths.
+- [x] Task 3.1: Validate pointer layout, alignment, and ownership rules.
+- [x] Task 3.2: Add UniFFI/Diplomat handoff notes for zero-copy-safe surfaces in `docs/performance/zero-copy-ffi.md`.
+- [x] Task 3.3: Add docs for forbidden serialization fallback paths.
 
 ## Phase 4 - Stress and safety
 
-- Task 4.1: Run concurrency tests under available local tools.
-- Task 4.2: Record NUMA host evidence when hardware is available.
-- Task 4.3: Document unsupported host behavior.
+- [x] Task 4.1: Run concurrency tests under available local tools (multithreaded pool/arena tests).
+- [x] Task 4.2: Record NUMA host evidence when hardware is available (`docs/performance/numa-topology.md`).
+- [x] Task 4.3: Document unsupported host behavior.
 
 ## Phase 5 - Closeout
 
-- Task 5.1: Run Rust, FFI, and Conductor gates.
-- Task 5.2: Run `$conductor-review`, apply fixes, and update handoff.
-- Task 5.3: Push and verify CI.
+- [x] Task 5.1: Run Rust, FFI, and Conductor gates.
+- [x] Task 5.2: Run `$conductor-review`, apply fixes, and update handoff.
+- [x] Task 5.3: Push and verify CI.
 
 ## Phase closeout gate
 

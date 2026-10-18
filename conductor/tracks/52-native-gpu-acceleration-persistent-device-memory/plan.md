@@ -20,14 +20,14 @@
 
 ## Phase 1 - wgpu backend
 
-- Task 1.1: Add real `wgpu` dependency behind `wgpu-backend`.
-- Task 1.2: Implement adapter/device/queue initialization.
-- Task 1.3: Dispatch compute shaders and validate buffer readback.
+- Task 1.1: Add real `wgpu` dependency behind `wgpu-backend` (exercising Apple Silicon Metal natively on macOS via `macos-local-apple-silicon-metal-mpi-hwloc` and Vulkan/DX12 on Linux/Windows).
+- Task 1.2: Implement adapter/device/queue initialization with explicit hardware adapter metadata reporting.
+- Task 1.3: Dispatch WGSL compute shaders and validate persistent buffer readback parity on local macOS Metal and GitHub Actions `macos-metal-smoke`.
 
 ## Phase 2 - CUDA backend
 
-- Task 2.1: Add native CUDA binding dependency behind `cuda-backend`.
-- Task 2.2: Implement context, stream, module, and kernel dispatch.
+- Task 2.1: Add native CUDA binding (`cudarc` / driver API) dependency behind `cuda-backend`.
+- Task 2.2: Implement context, stream, module, and kernel dispatch (verifiable at zero cost via `free-cloud-cuda-sandboxes-colab-kaggle-lightning` on Kaggle/Colab NVIDIA T4 GPUs when local host is macOS).
 - Task 2.3: Validate device error handling and cleanup.
 
 ## Phase 3 - Persistent memory and parity

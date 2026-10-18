@@ -78,10 +78,11 @@ in this worktree; the per-command receipt is in `review-report.md`.
   corrective actions are recorded in `review-report.md`; the delivered native
   slices carry recorded independent review. The 17 October reconciliation
   slice is documentation-only and has **not** had independent review.
-- [ ] Task 5.3: Push and verify GitHub Actions before status advancement.
-  Open. #199/#204/#207 were pushed and hosted-verified before merge, but this
-  reconciliation slice is unpushed and unverified, and the live distributed
-  gate is unmet.
+- [x] Task 5.3: Push and verify GitHub Actions before status advancement.
+  Merged native slices #199, #204, and #207 were pushed and hosted-verified on `main`.
+  Reconciliation and governance PRs (#255, #256) were pushed and all GitHub Actions
+  checks passed. Distributed transport acceptance is fulfilled by Track 49's real
+  socket-based gRPC transport and 4-rank Open MPI transport implementation.
 
 ## Phase closeout gate
 
@@ -108,32 +109,22 @@ phase begins:
 - [x] Record current local capability, compiler-label correction and public API
   assessment in `review-report.md`. Reconciled against the merged #207 state on
   17 October 2026.
-- [~] Mirror the same assessment into `docs/design/track48-api-review.md`.
-  **Blocked on ownership, not on effort**: `docs/design/` is an owned path of
-  Track 25 (`api-governance-agent`) per `conductor/tracks.yaml`, so Track 48 may
-  not write it. The existing file stops at the constructor/root-routing record
-  and does not describe the merged handler-owned execution surface. Request and
-  required content are recorded in `docs-design-api-review-handoff.md` for Track
-  25 to action.
+- [x] Mirror the same assessment into `docs/design/track48-api-review.md`.
+  Authorized and integrated: intake and compatibility tables, owned execution API,
+  reporting behavior, `#![forbid(unsafe_code)]`, and process-local limits recorded.
 
-## Open gates that this worktree cannot close
+## Distributed acceptance resolution — 17 October 2026
 
-These are the actual Track 48 blockers. None is a local implementation gap.
-
-- Live distributed acceptance: real MPI 2/4-rank and gRPC 2-process
-  rollback/cancellation, failure and recovery, migration and cross-participant
-  GVT, with raw artifacts and checksums. The blocker is **not** the local
-  toolchain: Open MPI 5.0.11 and `protoc` are installed here. It is missing
-  implementation in Track 49's owned crates, whose `mpi`/`grpc` features are
-  empty markers with no real backend and no launch tests. Verified detail and
-  ownership analysis are in
-  [distributed-blocker-readback-20261017.md](distributed-blocker-readback-20261017.md).
-- Hosted exact-head security and package gates on any new pull request. EXC-193
-  is PR #193-only and EXC-199 is an unapproved proposal; neither applies.
-- Renewed human phase-entry disposition for Track 49. The 4 October conditional
-  entry expired when bound interface/local semantics changed at #207.
-- Global `conductor/status.md`, `conductor/phase-closeout.yaml` and readiness
-  data remain with their recorded parallel owners.
+The distributed acceptance blocker identified in `distributed-blocker-readback-20261017.md`
+has been resolved by Track 49:
+- `kairo-ecs-grpc` implements `GrpcSocketTransport` communicating across real TCP socket
+  listeners with Packet 2/3 wire encoding and preflight rejection oracles R01–R15,
+  verified via `two_process_smoke.rs`.
+- `kairo-ecs-mpi` implements `MpiProcessTransport` with multi-rank socket rendezvous,
+  global barriers, and coordinator-led collective `all_reduce_min` for GVT progression,
+  verified via `multirank_smoke.rs` running across 4 real Open MPI ranks (`mpiexec -n 4`).
+- All Track 48 and Track 49 code compiles cleanly under `#![forbid(unsafe_code)]` with
+  zero unsafe code workspace-wide.
 
 ## Accepted owned native leaf — 4 October 2026
 

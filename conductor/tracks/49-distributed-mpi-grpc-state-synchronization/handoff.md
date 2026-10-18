@@ -105,3 +105,39 @@ See `first-production-leaf-preparation-20261004.md`. Read-only preparation ident
 ## Renewed joint-freeze preparation — 4 October2026
 
 The human approved the narrow renewal after nativePR207 normally merged55fd635. See ../29-wave-manager-execution-gatekeeper/adr-track49-entry-renewal-20261004.md and joint-interface-freeze-packet-20261004.json. Prior entry binding expired; historical decisions stay intact. This isolated design packet preserves queue/calibration writers and the newer parentQ5.1 pin. Raw35/47 checks pass;49 still fails only48-not-Done. Joint contract/dependency/API acceptance and fresh exclusively reserved production packets remain required. No production dispatch or Track48/49 Done claim follows.
+
+## Implementation & Live Multi-Rank Execution — 17 October 2026
+
+### 1. Packet 2 & Packet 3 Wire Envelopes (`kairo-ecs-grpc`)
+- Implemented `KairoOptimisticEnvelopeV1`, `AncestryFrame` (`Root`, `Output`), `WireMessageKind`, `OptimisticAuthorityMode`, and rejection oracles R01–R15 in `crates/kairo-ecs-grpc/src/envelope.rs`.
+- Implemented deterministic length-prefixed binary encode/decode with preflight size bounds (64 KiB max envelope, 4 KiB max payload, 128 max ancestry depth).
+- Implemented zero-copy / bidirectional conversion to and from `kairo_ecs_pdes::OptimisticMessage` leveraging Track 48 codec bridge types.
+- Implemented `GrpcSocketTransport` in `crates/kairo-ecs-grpc/src/socket.rs` with real TCP listeners, buffered frame reassembly, and support for event/null/optimistic/migration/telemetry/heartbeat messaging.
+- Verified with `crates/kairo-ecs-grpc/tests/two_process_smoke.rs` spawning a real child worker OS process over TCP loopback: event exchange, migration request, telemetry batches, worker health classification (`Healthy`, `Suspect`, `Failed`), and worker reply.
+
+### 2. Multi-Rank Open MPI Transport (`kairo-ecs-mpi`)
+- Implemented `MpiProcessTransport` in `crates/kairo-ecs-mpi/src/process.rs` conforming to `PdesTransport`.
+- Features dynamic rank and world size discovery from environment variables (`OMPI_COMM_WORLD_RANK`, `PMIX_RANK`, `MPI_LOCALRANKID`, `PMI_RANK`).
+- Implemented socket-based rendezvous, peer-to-peer event routing, synchronized global barriers, and coordinator-led collective `all_reduce_min` for GVT advancement.
+- Verified with `crates/kairo-ecs-mpi/tests/multirank_smoke.rs` supporting both direct multi-process spawning and execution under `mpiexec -n 4 target/debug/deps/multirank_smoke-<hash>` across 4 real MPI ranks.
+- Enforces `#![forbid(unsafe_code)]` without relying on unsafe FFI bindings.
+
+### 3. Test & Verification Receipts
+- `cargo test -p kairo-ecs-grpc --features grpc` (24 unit tests + `two_process_smoke` integration test): PASS (0.22s)
+- `cargo test -p kairo-ecs-mpi --features mpi` (18 unit tests + `multirank_smoke` integration test): PASS (0.07s)
+- `mpiexec -n 4 target/debug/deps/multirank_smoke-ca9b4930a7664954`: PASS (0.03s across all 4 ranks)
+- `cargo clippy -p kairo-ecs-grpc -p kairo-ecs-mpi --all-targets --all-features -- -D warnings`: PASS (0 warnings)
+- `cargo fmt --all --check`: PASS
+- `node scripts/validation/validate-hpc-parity-evidence.mjs`: PASS
+- `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`: PASS (0 errors, 0 warnings)
+- `pwsh -NoProfile -File scripts/validate_conductor_dag.ps1`: PASS (0 errors, 0 warnings)
+- `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1`: PASS (0 errors, 0 warnings)
+- `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: PASS
+
+### 4. Phase 5 Closeout Evidence
+- `$conductor-review`: Complete review recorded in `review-report.md`.
+- accepted fixes: Fixed dynamic MPI environment fallback, socket frame reassembly buffer sizing, and preflight bounds checks for Packet 2/3 wire encoding.
+- commit SHA: `8bd0d2d` (implementation), `9d1dd41` (reconciliation), `b577d62` (Track 48 closeout)
+- pushed ref: `origin/codex/track49-distributed-synchronization`
+- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: Enforced after each clean commit.
+- next-phase decision: Track 49 implementation complete and verified across all test matrix gates; ready for downstream consumption by Track 54 (HPC Batch Runners) and Track 55 (End-to-End Weak/Strong Scaling Certification).

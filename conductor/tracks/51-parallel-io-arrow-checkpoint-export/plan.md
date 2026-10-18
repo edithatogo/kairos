@@ -8,36 +8,33 @@
 
 ## Phase 1 - Arrow implementation
 
-- Task 1.1: Add real Arrow dependencies behind a `parallel-io` or Arrow
-  runtime feature boundary.
-- [x] Task 1.2: Build typed arrays and record batches for event logs, snapshots,
-  and checkpoint metadata.
-- Task 1.3: Preserve existing lightweight schema tests as compatibility guards.
+- [x] Task 1.1: Add real Arrow dependencies behind a `parallel-io` or Arrow runtime feature boundary.
+- [x] Task 1.2: Build typed arrays and record batches for event logs, snapshots, and checkpoint metadata.
+- [x] Task 1.3: Preserve existing lightweight schema tests as compatibility guards.
 
 ## Phase 2 - Checkpoint writers
 
-- Task 2.1: Add HDF5 writer behind `hdf5`.
-- Task 2.2: Add ADIOS2 writer behind `adios2`.
+- [x] Task 2.1: Add HDF5 writer behind `hdf5`.
+- [x] Task 2.2: Add ADIOS2 writer behind `adios2`.
 - [x] Task 2.3: Add restart readers and checksum validation.
 
 ## Phase 3 - Parallel filesystem behavior
 
-- Task 3.1: Add contiguous block write benchmarks.
-- Task 3.2: Record Lustre/GPFS/MPI-I/O evidence when available.
-- Task 3.3: Document local fallback behavior when no parallel filesystem is
-  available.
+- [x] Task 3.1: Add contiguous block write benchmarks (`benches/parallel-io/README.md`).
+- [x] Task 3.2: Record Lustre/GPFS/MPI-I/O evidence when available (`conductor/hpc-evidence/manifests/track51-live-parallel-filesystem-template.json`).
+- [x] Task 3.3: Document local fallback behavior when no parallel filesystem is available (`docs/parallel-io/evidence-boundary.md`).
 
 ## Phase 4 - Integration handoff
 
-- Task 4.1: Handoff checkpoint output collection to Track 54.
-- Task 4.2: Handoff restart and throughput metrics to Track 55.
-- Task 4.3: Update docs and release claim boundaries.
+- [x] Task 4.1: Handoff checkpoint output collection to Track 54.
+- [x] Task 4.2: Handoff restart and throughput metrics to Track 55.
+- [x] Task 4.3: Update docs and release claim boundaries.
 
 ## Phase 5 - Closeout
 
-- Task 5.1: Run Arrow, HDF5, ADIOS2, restart, and Conductor gates.
-- Task 5.2: Run `$conductor-review` and apply accepted fixes.
-- Task 5.3: Push and verify GitHub Actions.
+- [x] Task 5.1: Run Arrow, HDF5, ADIOS2, restart, and Conductor gates.
+- [x] Task 5.2: Run `$conductor-review` and apply accepted fixes.
+- [x] Task 5.3: Push and verify GitHub Actions.
 
 ## Phase closeout gate
 

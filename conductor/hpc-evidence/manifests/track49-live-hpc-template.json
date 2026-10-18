@@ -1,0 +1,55 @@
+{
+  "schema_version": "kairoecs.hpc.evidence.v1",
+  "track_id": "49",
+  "task_id": "4.1",
+  "commit_sha": "0000000000000000000000000000000000000000",
+  "pushed_ref": "refs/remotes/origin/<branch-containing-proof>",
+  "evidence_class": "live-hpc-template",
+  "capability": "Track-49 distributed MPI and gRPC multi-node state synchronization under cluster fabric",
+  "hardware": {
+    "cpu_model": "Replace with HPC cluster CPU model.",
+    "cpu_topology": "Replace with socket/core/thread/cache topology across cluster nodes.",
+    "memory_topology": "Replace with NUMA node, memory size, and locality topology.",
+    "accelerator_model": "Replace with GPU/accelerator model or state none when not relevant.",
+    "driver": "Replace with driver/runtime version or state none when not relevant."
+  },
+  "system": {
+    "operating_system": "Replace with Linux HPC cluster distribution and kernel version."
+  },
+  "toolchain": {
+    "rust_toolchain": "Replace with rustc/cargo version.",
+    "compiler": "Replace with C/C++ compiler version used for MPI build.",
+    "mpi_implementation": "Replace with cluster MPI implementation (e.g. OpenMPI 5.x, MPICH, Intel MPI).",
+    "scheduler": "Replace with Slurm/PBS/provider scheduler version."
+  },
+  "runtime": {
+    "command": "Replace with cluster mpiexec/srun launch command.",
+    "environment": {
+      "OMPI_COMM_WORLD_SIZE": "Replace with rank count.",
+      "KAIRO_DISTRIBUTED_FABRIC": "Replace with fabric (e.g. InfiniBand, RoCE, TCP)."
+    },
+    "feature_flags": [
+      "mpi",
+      "grpc"
+    ],
+    "input_scenario": "Replace with scenario, LP partition topology, and event injection workload."
+  },
+  "storage": {
+    "filesystem_or_object_store": "Replace with cluster parallel filesystem (Lustre, GPFS) or shared storage."
+  },
+  "result": {
+    "expected": "Distributed state synchronization with zero event loss and deterministic GVT progression.",
+    "observed": "Replace with measured inter-rank throughput, latency, and GVT advancement rate.",
+    "raw_artifact_path": "Replace with immutable artifact path.",
+    "checksum": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "review": {
+    "reviewer": "Replace with reviewer handle.",
+    "evidence_date": "2026-10-17"
+  },
+  "waiver": {
+    "status": "template-required",
+    "owner": "Track-54",
+    "expires": "when-Track-54-deploys-live-cluster-distributed-simulation"
+  }
+}

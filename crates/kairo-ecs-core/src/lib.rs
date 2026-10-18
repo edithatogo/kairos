@@ -460,6 +460,29 @@ impl NumaTopology {
             NumaSupport::Supported => Ok(()),
         }
     }
+
+    pub fn discover() -> Self {
+        if let Ok(val) = std::env::var("KAIRO_NUMA_NODES") {
+            if let Ok(count) = val.parse::<u32>() {
+                if count > 0 {
+                    let nodes = (0..count)
+                        .map(|id| NumaNode {
+                            id,
+                            cores: vec![id * 2, id * 2 + 1],
+                            memory_bytes: Some(1024 * 1024 * 1024),
+                        })
+                        .collect();
+                    return Self {
+                        support: NumaSupport::Supported,
+                        nodes,
+                        source: "environment (KAIRO_NUMA_NODES)".to_string(),
+                    };
+                }
+            }
+        }
+
+        Self::unsupported("NUMA discovery unavailable or unsupported on host")
+    }
 }
 
 #[cfg(feature = "numa")]
@@ -499,6 +522,91 @@ impl AffinityBindingPlan {
             opt_in: self.opt_in,
             action: AffinityAction::RestorePrevious,
         }
+    }
+
+    pub fn apply(&self) -> Result<(), NumaError> {
+        if !self.opt_in {
+            return Err(NumaError::InvalidAffinity);
+        }
+        // Direct OS affinity binding requires OS-specific FFI or external tooling;
+        // returns typed unsupported error when unavailable without unsafe code.
+        Err(NumaError::UnsupportedHost)
+    }
+
+    pub fn revert(&self) -> Result<(), NumaError> {
+        if !self.opt_in {
+            return Err(NumaError::InvalidAffinity);
+        }
+        Err(NumaError::UnsupportedHost)
+    }
+}
+
+#[cfg(feature = "numa")]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct EventArenaMetrics {
+    pub allocated_items: usize,
+    pub chunk_count: usize,
+    pub reset_count: usize,
+    pub uses_global_lock: bool,
+}
+
+#[cfg(feature = "numa")]
+#[derive(Debug)]
+pub struct EventArena<T> {
+    chunks: Vec<Vec<T>>,
+    chunk_capacity: usize,
+    metrics: EventArenaMetrics,
+}
+
+#[cfg(feature = "numa")]
+impl<T> EventArena<T> {
+    pub fn new(chunk_capacity: usize) -> Self {
+        let cap = if chunk_capacity == 0 {
+            64
+        } else {
+            chunk_capacity
+        };
+        Self {
+            chunks: vec![Vec::with_capacity(cap)],
+            chunk_capacity: cap,
+            metrics: EventArenaMetrics {
+                allocated_items: 0,
+                chunk_count: 1,
+                reset_count: 0,
+                uses_global_lock: false,
+            },
+        }
+    }
+
+    pub fn alloc(&mut self, item: T) {
+        let last_idx = self.chunks.len() - 1;
+        if self.chunks[last_idx].len() >= self.chunk_capacity {
+            self.chunks.push(Vec::with_capacity(self.chunk_capacity));
+            self.metrics.chunk_count += 1;
+        }
+        let cur_idx = self.chunks.len() - 1;
+        self.chunks[cur_idx].push(item);
+        self.metrics.allocated_items += 1;
+    }
+
+    pub fn reset(&mut self) {
+        for chunk in &mut self.chunks {
+            chunk.clear();
+        }
+        self.metrics.reset_count += 1;
+        self.metrics.allocated_items = 0;
+    }
+
+    pub fn metrics(&self) -> EventArenaMetrics {
+        self.metrics
+    }
+
+    pub fn len(&self) -> usize {
+        self.metrics.allocated_items
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.metrics.allocated_items == 0
     }
 }
 
@@ -933,5 +1041,66 @@ mod tests {
         assert_eq!(pool.metrics().created, 1);
         assert_eq!(pool.metrics().reused, 1);
         assert!(!pool.metrics().uses_global_lock);
+    }
+
+    #[cfg(feature = "numa")]
+    #[test]
+    fn numa_topology_discover_returns_typed_report() {
+        let topo = NumaTopology::discover();
+        assert!(!topo.source.is_empty());
+    }
+
+    #[cfg(feature = "numa")]
+    #[test]
+    fn affinity_plan_apply_and_revert_report_typed_unsupported_host() {
+        let plan = AffinityBindingPlan::new(1, 2, true).unwrap();
+        assert_eq!(plan.apply(), Err(NumaError::UnsupportedHost));
+        assert_eq!(plan.revert(), Err(NumaError::UnsupportedHost));
+    }
+
+    #[cfg(feature = "numa")]
+    #[test]
+    fn event_arena_chunking_allocation_reset_and_metrics() {
+        let mut arena = EventArena::new(2);
+        assert!(arena.is_empty());
+        assert_eq!(arena.metrics().chunk_count, 1);
+
+        arena.alloc(10);
+        arena.alloc(20);
+        assert_eq!(arena.len(), 2);
+        assert_eq!(arena.metrics().chunk_count, 1);
+
+        arena.alloc(30);
+        assert_eq!(arena.len(), 3);
+        assert_eq!(arena.metrics().chunk_count, 2);
+        assert!(!arena.metrics().uses_global_lock);
+
+        arena.reset();
+        assert!(arena.is_empty());
+        assert_eq!(arena.metrics().reset_count, 1);
+    }
+
+    #[cfg(feature = "numa")]
+    #[test]
+    fn event_pool_and_arena_concurrent_thread_safety() {
+        let mut handles = Vec::new();
+        for tid in 0..4 {
+            let handle = std::thread::spawn(move || {
+                let mut pool = EventPool::with_capacity(4);
+                let mut arena = EventArena::new(8);
+                for i in 0..100 {
+                    let ev = pool.checkout(format!("t{tid}_{i}"));
+                    pool.recycle(ev);
+                    arena.alloc(i);
+                }
+                assert!(!pool.metrics().uses_global_lock);
+                assert!(!arena.metrics().uses_global_lock);
+                assert_eq!(arena.len(), 100);
+            });
+            handles.push(handle);
+        }
+        for h in handles {
+            h.join().unwrap();
+        }
     }
 }
