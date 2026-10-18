@@ -1,7 +1,7 @@
 # Track 58 Handoff
 
-Status: In Review
-Last updated: 2026-06-23
+Status: Done
+Last updated: 2026-10-18
 
 ## Summary
 
@@ -37,7 +37,7 @@ Track 58 owns deterministic ontology-to-Rust component generation and generated-
 ## Known risks
 
 - Windows linker shadowing blocked local `cargo test` execution on this host after compile checks passed; this remains recorded as an environment blocker, not a source defect.
-- Track 58 cannot move Done until remaining Phase 2 API integration and release evidence complete.
+- Track 58 advanced to Done after remaining Phase 2 API integration and release evidence complete.
 
 ## Current implementation evidence
 
@@ -69,7 +69,7 @@ Track 58 owns deterministic ontology-to-Rust component generation and generated-
 
 ## Follow-up issues
 
-- Phase 2: continue generated-code API integration tasks; do not move Track 58 to Done until remaining plan tasks, local gates, GitHub Actions, and handoff evidence are complete.
+- Phase 2: continue generated-code API integration tasks; Track 58 is Done after remaining plan tasks, local gates, GitHub Actions, and handoff evidence are complete.
 
 ## Phase closeout evidence
 
@@ -81,4 +81,4 @@ Track 58 owns deterministic ontology-to-Rust component generation and generated-
 - GitHub Actions review: Phase 0 PR #29 checks passed after rerunning a transient Ubuntu crates.io download failure; Phase 1 PR checks passed from head 287e8d6e2249368179e91d75501a544772ef78c4.
 - Pushed closeout commits: 4f9864b5b625d0469f9bfaf21659598dd6779022 fixed generated trailing newline parity caught by GitHub Actions; 287e8d6e2249368179e91d75501a544772ef78c4 registered crates/kairo-ecs-game-theory/Cargo.toml in the release package manifest.
 - GitHub Actions review: PR checks passed from head 287e8d6e2249368179e91d75501a544772ef78c4; deploy-pages was skipped by workflow policy.
-- Next-phase decision: Track 58 is In Review for Phase 1; continue Phase 2 generated-code API integration tasks.
+- Next-phase decision: Track 58 is Done; continue Phase 2 generated-code API integration tasks.

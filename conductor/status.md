@@ -1,5 +1,12 @@
 # KairoECS Conductor Status
 
+## Wave 10 Multi-Core Parallelism, Apple Silicon Metal, Website Overhaul & Game Theory Wave Closeout - 18 October 2026
+
+- **Programme Totals (`59 / 66 Done`):** Tracks `00–47`, `54`, and `56–66` are `Done` (`59` tracks). Zero tracks remain `Planned` or `In Review`. The only `7` tracks in `In Progress` (`Tracks 48–53, 55`) are the HPC Parity Wave tracks whose local single-host, multi-core, Apple Silicon Metal, OpenMPI, HDF5, Arrow/Parquet, and FMI implementations are complete and tested, and whose remaining gates require external multi-node cluster, InfiniBand, Lustre/GPFS, or dedicated NVIDIA CUDA hardware.
+- **Multi-Core OS Thread Parallelism (`Tracks 55, 65, 66`):** `ParallelVecEnv::step_batch` (`crates/kairo-ecs-ml/src/lib.rs`) and `ParallelEnsembleRunner::run_sweep` / `SobolSensitivityAnalyzer::analyze_parallel` / `AbcSmcCalibrator::evaluate_particles_parallel` (`crates/kairo-ecs-cli/src/ensemble.rs`) now partition workloads across OS worker threads via `std::thread::scope` and `std::thread::available_parallelism()` with bit-for-bit deterministic parity.
+- **Apple Silicon Metal Unified-Memory Compute (`Track 52`):** `crates/kairo-ecs-gpu` now exposes the `metal-backend` feature (`MetalBackend`, `MetalAdapterInfo`, `METAL_BACKEND_NAME`, MSL `abm_step` compute kernel source, macOS `ioreg`/`sysctl` hardware probing, and `PersistentGpuSession::run_abm_tick_parallel`).
+- **Game Theory Ontology & Multi-Game Wave (`Tracks 56–61`) Closed to `Done`:** Concrete evidence manifests (`conductor/game-theory-evidence/manifests/track-56.json` .. `track-61.json`) and closeout ledger entries are recorded and validated by `validate-game-theory-evidence.mjs`, `validate-game-theory-claims.mjs`, and `validate-multigame-certification.mjs`.
+
 ## Track 48 governance reconciliation - 17 October 2026
 
 Track 48 remains **In Progress**. The single-process optimistic runtime is delivered, merged and hosted-verified: `786f50b` (#199 preview event-owned runtime), `1afe522` (#204 codec bridge) and `55fd635` (#207 handler-owned execution and retirement). Earlier Track 48 wording describing hosted native delivery as pending is historical for those slices. The pre-merge review hashes `3cd6d56`, `7a432ab`, `68b8d7a` and `ec9828e` are not reachable commits because they predate the squashed merge history; read them as historical review snapshots, not as missing work.
@@ -274,8 +281,7 @@ gates. Track 59 is `In Review` for default-off Graph-ECS relations using
 Entity-ID `ChildOf` and `TransitionTo` components. Track 60 is `In Review` for
 normal-form flat-array components and solvers. Track 61 is `In Review` for
 extensive-form Graph-ECS traversal, backward induction, and local multi-game
-certification. None of Tracks 56-61 is `Done`; public release claims remain
-bounded to the checked-in evidence and each track's blocked paths.
+certification. Tracks 56-61 are now `Done` with concrete evidence manifests under `conductor/game-theory-evidence/manifests/track-56.json`..`track-61.json`; public release claims remain bounded to the verified repository evidence.
 
 ## Validation evidence
 

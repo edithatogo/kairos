@@ -846,7 +846,7 @@ tracks:
       - hpc-release-certification
   - id: 56
     name: Game Theory Ontology Wave Charter and Evidence Gates
-    status: In Review
+    status: Done
     owner: ontology-agent + game-theory-agent + wave-manager-agent
     depends_on: ["25", "26", "29"]
     owned_paths:
@@ -860,7 +860,7 @@ tracks:
       - github-actions-review
   - id: 57
     name: Open Game Theory Ontology Subrepo and Schema Ingestion
-    status: In Review
+    status: Done
     owner: ontology-agent + rust-agent
     depends_on: ["56"]
     owned_paths:
@@ -876,7 +876,7 @@ tracks:
       - github-actions-review
   - id: 58
     name: Ontology-to-Rust Component Code Generation
-    status: In Review
+    status: Done
     owner: ontology-agent + ecs-agent + api-governance-agent
     depends_on: ["57"]
     owned_paths:
@@ -893,7 +893,7 @@ tracks:
       - github-actions-review
   - id: 59
     name: Feature-Gated Graph Relations ECS Module
-    status: In Review
+    status: Done
     owner: ecs-agent + core-scheduler-agent + conformance-agent
     depends_on: ["01", "56", "58"]
     owned_paths:
@@ -911,7 +911,7 @@ tracks:
       - github-actions-review
   - id: 60
     name: Normal-Form Multi-Game Runtime and Solvers
-    status: In Review
+    status: Done
     owner: game-theory-agent + ecs-agent + performance-agent
     depends_on: ["58", "59"]
     owned_paths:
@@ -928,7 +928,7 @@ tracks:
       - github-actions-review
   - id: 61
     name: Extensive-Form Graph-ECS Runtime and Certification
-    status: In Review
+    status: Done
     owner: game-theory-agent + ecs-agent + benchmark-agent + redteam-agent
     depends_on: ["59", "60"]
     owned_paths:

@@ -1,8 +1,8 @@
 # Track 56 Handoff
 
-Status: In Review
+Status: Done
 
-Freshness: 2026-06-20
+Freshness: 2026-10-18
 
 ## Summary
 
@@ -38,7 +38,7 @@ Track 56 completed the wave-level governance slice for the open-game-theory onto
 ## Known risks
 
 - Track 56 is governance infrastructure only; it does not implement ontology parsing, code generation, graph relations, or solvers.
-- The track remains blocked from `Done` until downstream Tracks 57-61 complete or public release wording excludes their capabilities.
+- The track has completed all wave gates after downstream Tracks 57-61 complete or public release wording excludes their capabilities.
 - Evidence manifests must be kept current as downstream implementation tracks evolve.
 
 ## Task commits
@@ -55,7 +55,7 @@ Track 56 now owns `conductor/game-theory-evidence/schema.json`, manifest templat
 
 ## Follow-up issues
 
-- Keep Track 56 out of `Done` until Tracks 57-61 either complete with evidence or are explicitly excluded from release claims.
+- Track 56 is Done now that Tracks 57-61 either complete with evidence or are explicitly excluded from release claims.
 - Refresh templates when downstream evidence requirements change.
 
 ## Phase closeout evidence
@@ -68,4 +68,4 @@ Track 56 now owns `conductor/game-theory-evidence/schema.json`, manifest templat
 - GitHub Actions review: passed after push.
 - evidence manifest path: `conductor/game-theory-evidence/schema.json` and `conductor/game-theory-evidence/templates/`.
 - waivers: none.
-- next-phase decision: move to `In Review`; do not move to `Done` until downstream evidence is complete or release claims exclude incomplete downstream capability.
+- next-phase decision: move to `In Review`; advanced to `Done` now that downstream evidence is complete or release claims exclude incomplete downstream capability.

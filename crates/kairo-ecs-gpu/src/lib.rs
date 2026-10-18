@@ -6,6 +6,7 @@
 pub mod buffer;
 pub mod compute;
 pub mod contract;
+pub mod metal;
 pub mod transfer;
 
 #[cfg(feature = "cuda-backend")]
@@ -33,4 +34,5 @@ pub use contract::{
     NativeBackendContractError, NativeGpuBackendRequest, PersistentDeviceMemory,
     ResidentDeviceBuffer,
 };
+pub use metal::{MetalAdapterInfo, MetalBackend, METAL_BACKEND_NAME};
 pub use transfer::{TransferDirection, TransferPlan, TransferStep};

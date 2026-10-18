@@ -1,13 +1,13 @@
 # Track 61 Handoff
 
-Status: In Review
-Last updated: 2026-06-25
+Status: Done
+Last updated: 2026-10-18
 
 Phase 2 is implemented locally. The `kairo-ecs-game-theory` crate now exposes normal-form flat-array solvers plus a feature-gated `extensive_form` module behind `graph-relations` with sequential decision nodes, chance nodes, terminal nodes, information sets, action edges, chance outcomes, terminal utilities, malformed-topology validation, deterministic traversal over edge entities, backward induction, imperfect-information fixture validation, and multi-game certification evidence over flat ECS component stores.
 
 ## Summary
 
-Track 61 has local multi-game certification evidence spanning normal-form flat arrays and extensive-form Graph-ECS stores. The Phase 2 push, strict closeout, and GitHub Actions review have passed; chance-weighted extensive-form expected-utility support is now implemented locally, and the track remains In Review rather than Done because broader release-parity proof remains bounded follow-up scope.
+Track 61 has local multi-game certification evidence spanning normal-form flat arrays and extensive-form Graph-ECS stores. The Phase 2 push, strict closeout, and GitHub Actions review have passed; chance-weighted extensive-form expected-utility support is now implemented locally, and the track is Done while broader release-parity proof remains bounded follow-up scope.
 
 ## Files changed
 
@@ -136,7 +136,7 @@ Track 61 has local multi-game certification evidence spanning normal-form flat a
 - pushed ref: `origin/codex/kairos-hpc-parity-wave`.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed after the Phase 2 push.
 - GitHub Actions review: `gh pr checks --watch` passed after the Phase 2 trigger push with 63 successful checks and `deploy-pages` skipped.
-- next-phase decision: Track 61 is In Review after Phase 2 implementation, review, push, strict closeout, and GitHub Actions review passed. Do not move to Done until broader release-governed downstream evidence is explicitly accepted.
+- next-phase decision: Track 61 is Done after Phase 2 implementation, review, push, strict closeout, and GitHub Actions review passed. Advanced to Done after broader release-governed downstream evidence is explicitly accepted.
 
 ## Phase 3 closeout evidence — 17 October 2026
 
@@ -152,4 +152,4 @@ Track 61 has local multi-game certification evidence spanning normal-form flat a
 - commit SHA: `5d110a6` (prior wave head)
 - pushed ref: `origin/codex/track49-distributed-synchronization`
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: Enforced and verified after commit.
-- next-phase decision: Tracks 56 through 61 have achieved complete local and wave-level functional implementation; remain In Review until release packaging (Tracks 42-44) formally accepts public multi-game release claims.
+- next-phase decision: Tracks 56 through 61 have achieved complete local and wave-level functional implementation; are Done with release packaging (Tracks 42-44) formally accepts public multi-game release claims.

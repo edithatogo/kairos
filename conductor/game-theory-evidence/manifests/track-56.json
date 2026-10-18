@@ -1,0 +1,52 @@
+{
+  "track_id": 56,
+  "track_name": "Game Theory Ontology Wave Charter and Evidence Gates",
+  "phase": "track-closeout",
+  "status": "done",
+  "task_commits": [
+    {
+      "task": "0.1-1.2",
+      "commit_sha": "e374a3b5378493eaac2459830fe494e2380bf769",
+      "message": "Complete Track 56 game-theory ontology wave charter, schema, claim boundary scanner, and negative fixtures",
+      "local_gates": [
+        "node scripts/validation/validate-game-theory-evidence.mjs --check-negative-fixtures",
+        "node scripts/validation/validate-game-theory-claims.mjs --check-negative-fixtures"
+      ]
+    }
+  ],
+  "review": {
+    "command": "$conductor-review 56",
+    "result": "passed",
+    "accepted_fixes": [
+      "Reconciled wave closeout and concrete manifest evidence across Tracks 56-61"
+    ]
+  },
+  "push": {
+    "ref": "origin/main",
+    "pushed_sha": "e374a3b5378493eaac2459830fe494e2380bf769"
+  },
+  "github_actions": {
+    "command": "gh pr checks --watch",
+    "result": "passed",
+    "run_url": "https://github.com/edithatogo/kairos/pull/261"
+  },
+  "validation": [
+    {
+      "command": "node scripts/validation/validate-game-theory-evidence.mjs --check-negative-fixtures",
+      "result": "passed",
+      "notes": "Verified schema, templates, concrete manifests, and negative fixtures"
+    },
+    {
+      "command": "node scripts/validation/validate-game-theory-claims.mjs --check-negative-fixtures",
+      "result": "passed",
+      "notes": "Verified claim boundaries and negative overclaim fixture"
+    }
+  ],
+  "evidence_paths": [
+    "conductor/game-theory-ontology-wave.md",
+    "conductor/game-theory-evidence/schema.json",
+    "scripts/validation/validate-game-theory-evidence.mjs",
+    "scripts/validation/validate-game-theory-claims.mjs"
+  ],
+  "waivers": []
+}

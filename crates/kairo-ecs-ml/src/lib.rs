@@ -658,19 +658,44 @@ pub struct ParallelVecEnv {
     pub num_envs: usize,
     pub obs_dim: usize,
     pub action_dim: usize,
+    pub num_threads: usize,
 }
 
 impl ParallelVecEnv {
     pub fn new(num_envs: usize, obs_dim: usize, action_dim: usize) -> Self {
+        let num_threads = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1);
         Self {
             num_envs,
             obs_dim,
             action_dim,
+            num_threads,
         }
     }
+
+    pub fn with_threads(
+        num_envs: usize,
+        obs_dim: usize,
+        action_dim: usize,
+        num_threads: usize,
+    ) -> Self {
+        Self {
+            num_envs,
+            obs_dim,
+            action_dim,
+            num_threads: num_threads.max(1),
+        }
+    }
+
+    pub fn num_threads(&self) -> usize {
+        self.num_threads
+    }
+
     pub fn reset(&mut self) -> Vec<f32> {
         vec![0.0; self.num_envs * self.obs_dim]
     }
+
     pub fn step_batch(
         &mut self,
         actions: &[i64],
@@ -679,24 +704,57 @@ impl ParallelVecEnv {
         out_terminated: &mut [u8],
         out_truncated: &mut [u8],
     ) {
-        for (env_idx, &action) in actions.iter().enumerate().take(self.num_envs) {
-            let base = env_idx * self.obs_dim;
-            for d in 0..self.obs_dim {
-                if base + d < out_obs.len() {
-                    out_obs[base + d] = (action as f32) + (d as f32) * 0.25;
-                }
-            }
-            if env_idx < out_rewards.len() {
-                out_rewards[env_idx] = 0.1 + (action as f32) * 0.05;
-            }
-            if env_idx < out_terminated.len() {
-                out_terminated[env_idx] = 0;
-            }
-            if env_idx < out_truncated.len() {
-                out_truncated[env_idx] = 0;
-            }
+        let num_envs = self.num_envs.min(actions.len());
+        if num_envs == 0 {
+            return;
         }
+        let threads = self.num_threads.max(1).min(num_envs);
+        let chunk_size = num_envs.div_ceil(threads);
+
+        let obs_dim = self.obs_dim;
+
+        std::thread::scope(|s| {
+            let mut obs_chunks = out_obs.chunks_mut(chunk_size * obs_dim);
+            let mut rew_chunks = out_rewards.chunks_mut(chunk_size);
+            let mut term_chunks = out_terminated.chunks_mut(chunk_size);
+            let mut trunc_chunks = out_truncated.chunks_mut(chunk_size);
+
+            for chunk_idx in 0..threads {
+                let start_env = chunk_idx * chunk_size;
+                if start_env >= num_envs {
+                    break;
+                }
+                let end_env = (start_env + chunk_size).min(num_envs);
+
+                let sub_obs = obs_chunks.next().unwrap_or(&mut []);
+                let sub_rew = rew_chunks.next().unwrap_or(&mut []);
+                let sub_term = term_chunks.next().unwrap_or(&mut []);
+                let sub_trunc = trunc_chunks.next().unwrap_or(&mut []);
+                let actions_slice = &actions[start_env..end_env];
+
+                s.spawn(move || {
+                    for (local_idx, &action) in actions_slice.iter().enumerate() {
+                        let base = local_idx * obs_dim;
+                        for d in 0..obs_dim {
+                            if base + d < sub_obs.len() {
+                                sub_obs[base + d] = (action as f32) + (d as f32) * 0.25;
+                            }
+                        }
+                        if local_idx < sub_rew.len() {
+                            sub_rew[local_idx] = 0.1 + (action as f32) * 0.05;
+                        }
+                        if local_idx < sub_term.len() {
+                            sub_term[local_idx] = 0;
+                        }
+                        if local_idx < sub_trunc.len() {
+                            sub_trunc[local_idx] = 0;
+                        }
+                    }
+                });
+            }
+        });
     }
+
     pub fn step_with_ort_session(&mut self, _session: &str) {
         // dummy ort session hook
     }
@@ -719,4 +777,32 @@ fn rayon_vecenv_1024_worlds_throughput() {
         &mut out_trunc,
     );
     assert_eq!(out_rewards.len(), 1024);
+}
+
+#[test]
+fn multicore_vecenv_thread_parity() {
+    let mut env1 = ParallelVecEnv::with_threads(1024, 4, 2, 1);
+    let mut env8 = ParallelVecEnv::with_threads(1024, 4, 2, 8);
+
+    let actions: Vec<i64> = (0..1024).map(|i| (i % 7) as i64).collect();
+
+    let mut obs1 = vec![0.0f32; 1024 * 4];
+    let mut rew1 = vec![0.0f32; 1024];
+    let mut term1 = vec![0u8; 1024];
+    let mut trunc1 = vec![0u8; 1024];
+
+    let mut obs8 = vec![0.0f32; 1024 * 4];
+    let mut rew8 = vec![0.0f32; 1024];
+    let mut term8 = vec![0u8; 1024];
+    let mut trunc8 = vec![0u8; 1024];
+
+    env1.step_batch(&actions, &mut obs1, &mut rew1, &mut term1, &mut trunc1);
+    env8.step_batch(&actions, &mut obs8, &mut rew8, &mut term8, &mut trunc8);
+
+    assert_eq!(obs1, obs8);
+    assert_eq!(rew1, rew8);
+    assert_eq!(term1, term8);
+    assert_eq!(trunc1, trunc8);
+    assert_eq!(env1.num_threads(), 1);
+    assert_eq!(env8.num_threads(), 8);
 }

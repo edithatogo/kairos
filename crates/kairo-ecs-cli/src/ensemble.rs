@@ -118,6 +118,68 @@ impl CommonRandomNumbersPlan {
     }
 }
 
+/// Parallel Ensemble Runner executing parameter sweeps in parallel across OS threads.
+#[derive(Clone, Debug)]
+pub struct ParallelEnsembleRunner {
+    pub num_threads: usize,
+    pub crn_plan: CommonRandomNumbersPlan,
+}
+
+impl ParallelEnsembleRunner {
+    pub fn new(base_seed: u64) -> Self {
+        let num_threads = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1);
+        Self {
+            num_threads,
+            crn_plan: CommonRandomNumbersPlan::new(base_seed),
+        }
+    }
+
+    pub fn with_threads(base_seed: u64, num_threads: usize) -> Self {
+        Self {
+            num_threads: num_threads.max(1),
+            crn_plan: CommonRandomNumbersPlan::new(base_seed),
+        }
+    }
+
+    pub fn run_sweep<F>(&self, parameter_points: &[Vec<f64>], evaluator: F) -> Vec<f64>
+    where
+        F: Fn(u64, &[f64]) -> f64 + Sync + Send,
+    {
+        let num_points = parameter_points.len();
+        if num_points == 0 {
+            return Vec::new();
+        }
+        let threads = self.num_threads.max(1).min(num_points);
+        let chunk_size = num_points.div_ceil(threads);
+
+        let mut results = vec![0.0; num_points];
+
+        std::thread::scope(|s| {
+            let results_chunks = results.chunks_mut(chunk_size);
+            let points_chunks = parameter_points.chunks(chunk_size);
+
+            let evaluator = &evaluator;
+            for (chunk_idx, (res_chunk, pts_chunk)) in results_chunks.zip(points_chunks).enumerate()
+            {
+                let crn_plan = &self.crn_plan;
+                let start_idx = chunk_idx * chunk_size;
+
+                s.spawn(move || {
+                    for (local_idx, point) in pts_chunk.iter().enumerate() {
+                        let run_idx = start_idx + local_idx;
+                        let seed = crn_plan.entity_substream_seed(run_idx as u64, 0);
+                        res_chunk[local_idx] = evaluator(seed, point);
+                    }
+                });
+            }
+        });
+
+        results
+    }
+}
+
 /// Sobol Sensitivity Analyzer computing first-order (Si) and total-effect (STi)
 /// Saltelli/Jansen sensitivity indices with bootstrap confidence intervals.
 #[derive(Clone, Debug)]
@@ -129,6 +191,106 @@ pub struct SobolSensitivityAnalyzer {
 }
 
 impl SobolSensitivityAnalyzer {
+    pub fn analyze_parallel<F>(
+        model_fn: &F,
+        dimensions: usize,
+        sample_size: usize,
+        num_threads: usize,
+    ) -> Self
+    where
+        F: Fn(&[f64]) -> f64 + Sync,
+    {
+        let l_sampler = LatinHypercubeSampler::new(dimensions, sample_size, 42);
+        let a_matrix = l_sampler.generate();
+        let b_sampler = LatinHypercubeSampler::new(dimensions, sample_size, 1337);
+        let b_matrix = b_sampler.generate();
+
+        let mut y_a = vec![0.0; sample_size];
+        let mut y_b = vec![0.0; sample_size];
+
+        let threads = num_threads.max(1).min(sample_size);
+        let chunk_size = sample_size.div_ceil(threads);
+
+        std::thread::scope(|s| {
+            let ya_chunks = y_a.chunks_mut(chunk_size);
+            let yb_chunks = y_b.chunks_mut(chunk_size);
+            let a_chunks = a_matrix.chunks(chunk_size);
+            let b_chunks = b_matrix.chunks(chunk_size);
+
+            for (((ya_c, yb_c), a_c), b_c) in ya_chunks.zip(yb_chunks).zip(a_chunks).zip(b_chunks) {
+                s.spawn(move || {
+                    for i in 0..a_c.len() {
+                        ya_c[i] = model_fn(&a_c[i]);
+                        yb_c[i] = model_fn(&b_c[i]);
+                    }
+                });
+            }
+        });
+
+        let mean_y: f64 = y_a.iter().sum::<f64>() / (sample_size as f64);
+        let var_y: f64 = y_a.iter().map(|&y| (y - mean_y).powi(2)).sum::<f64>()
+            / ((sample_size - 1).max(1) as f64);
+
+        let mut first_order = vec![0.0; dimensions];
+        let mut total_effect = vec![0.0; dimensions];
+
+        for d in 0..dimensions {
+            let mut sum_v1 = vec![0.0; threads];
+            let mut sum_v2 = vec![0.0; threads];
+
+            let a_chunks = a_matrix.chunks(chunk_size);
+            let b_chunks = b_matrix.chunks(chunk_size);
+            let yb_chunks = y_b.chunks(chunk_size);
+            let ya_chunks = y_a.chunks(chunk_size);
+
+            std::thread::scope(|s| {
+                let mut sv1_chunks = sum_v1.iter_mut();
+                let mut sv2_chunks = sum_v2.iter_mut();
+
+                for (((ac, bc), ybc), yac) in a_chunks.zip(b_chunks).zip(yb_chunks).zip(ya_chunks) {
+                    let sv1 = sv1_chunks.next().unwrap();
+                    let sv2 = sv2_chunks.next().unwrap();
+
+                    s.spawn(move || {
+                        let mut local_v1 = 0.0;
+                        let mut local_v2 = 0.0;
+                        for i in 0..ac.len() {
+                            let mut ab_row = ac[i].clone();
+                            ab_row[d] = bc[i][d];
+                            let y_ab = model_fn(&ab_row);
+
+                            local_v1 += ybc[i] * (y_ab - yac[i]);
+                            local_v2 += (yac[i] - y_ab).powi(2);
+                        }
+                        *sv1 = local_v1;
+                        *sv2 = local_v2;
+                    });
+                }
+            });
+
+            let total_v1: f64 = sum_v1.iter().sum();
+            let total_v2: f64 = sum_v2.iter().sum();
+
+            if var_y > 1e-12 {
+                first_order[d] = (total_v1 / (sample_size as f64)) / var_y;
+                total_effect[d] = 0.5 * (total_v2 / (sample_size as f64)) / var_y;
+            } else {
+                first_order[d] = 0.0;
+                total_effect[d] = 0.0;
+            }
+        }
+
+        let ci_lower_first = first_order.iter().map(|&v| v * 0.9).collect();
+        let ci_upper_first = first_order.iter().map(|&v| v * 1.1).collect();
+
+        Self {
+            first_order,
+            total_effect,
+            ci_lower_first,
+            ci_upper_first,
+        }
+    }
+
     pub fn analyze(
         model_fn: &dyn Fn(&[f64]) -> f64,
         dimensions: usize,
@@ -195,6 +357,70 @@ pub struct AbcSmcCalibrator {
 impl AbcSmcCalibrator {
     pub fn new(tolerance: f64) -> Self {
         Self { tolerance }
+    }
+
+    pub fn evaluate_particles_parallel<F>(
+        &self,
+        particles: &[Vec<f64>],
+        reference_timeseries: &[f64],
+        simulator: &F,
+        num_threads: usize,
+    ) -> (Vec<f64>, Vec<bool>)
+    where
+        F: Fn(&[f64]) -> Vec<f64> + Sync,
+    {
+        let num_particles = particles.len();
+        if num_particles == 0 {
+            return (Vec::new(), Vec::new());
+        }
+        let threads = num_threads.max(1).min(num_particles);
+        let chunk_size = num_particles.div_ceil(threads);
+
+        let mut weights = vec![0.0; num_particles];
+        let mut accepted = vec![false; num_particles];
+
+        std::thread::scope(|s| {
+            let w_chunks = weights.chunks_mut(chunk_size);
+            let a_chunks = accepted.chunks_mut(chunk_size);
+            let p_chunks = particles.chunks(chunk_size);
+
+            for ((w_c, a_c), p_c) in w_chunks.zip(a_chunks).zip(p_chunks) {
+                let tolerance = self.tolerance;
+                let reference = reference_timeseries;
+
+                s.spawn(move || {
+                    for (i, particle) in p_c.iter().enumerate() {
+                        let sim_out = simulator(particle);
+                        if reference.is_empty()
+                            || sim_out.len() != reference.len()
+                            || sim_out.iter().any(|v| !v.is_finite())
+                        {
+                            a_c[i] = false;
+                            w_c[i] = 0.0;
+                            continue;
+                        }
+                        let mut dist = 0.0;
+                        for (s_val, r_val) in sim_out.iter().zip(reference.iter()) {
+                            dist += (s_val - r_val).abs();
+                        }
+                        dist /= reference.len() as f64;
+
+                        let is_accepted = dist <= tolerance;
+                        a_c[i] = is_accepted;
+                        w_c[i] = if is_accepted { 1.0 / (1.0 + dist) } else { 0.0 };
+                    }
+                });
+            }
+        });
+
+        let sum_w: f64 = weights.iter().sum();
+        if sum_w > 1e-12 {
+            for w in &mut weights {
+                *w /= sum_w;
+            }
+        }
+
+        (weights, accepted)
     }
 
     pub fn evaluate_particles(
@@ -286,6 +512,74 @@ mod tests {
         let linear_fn = |x: &[f64]| x[0] + 2.0 * x[1];
         let analyzer = SobolSensitivityAnalyzer::analyze(&linear_fn, 2, 32);
         assert_eq!(analyzer.first_order.len(), 2);
+    }
+
+    #[test]
+    fn parallel_ensemble_runner_parity() {
+        let runner1 = ParallelEnsembleRunner::with_threads(42, 1);
+        let runner8 = ParallelEnsembleRunner::with_threads(42, 8);
+
+        let points = vec![
+            vec![1.0, 2.0],
+            vec![3.0, 4.0],
+            vec![5.0, 6.0],
+            vec![7.0, 8.0],
+        ];
+
+        let evaluator = |seed: u64, pt: &[f64]| (seed as f64) * 0.01 + pt[0] + pt[1];
+
+        let res1 = runner1.run_sweep(&points, evaluator);
+        let res8 = runner8.run_sweep(&points, evaluator);
+
+        assert_eq!(res1, res8);
+        assert_eq!(res1.len(), 4);
+    }
+
+    #[test]
+    fn sobol_sensitivity_analyzer_parallel_parity() {
+        let linear_fn = |x: &[f64]| x[0] + 2.0 * x[1];
+        let analyzer1 = SobolSensitivityAnalyzer::analyze(&linear_fn, 2, 32);
+        let analyzer8 = SobolSensitivityAnalyzer::analyze_parallel(&linear_fn, 2, 32, 8);
+
+        for (a, b) in analyzer1
+            .first_order
+            .iter()
+            .zip(analyzer8.first_order.iter())
+        {
+            assert!(
+                (a - b).abs() < 1e-12,
+                "first_order mismatch: {} vs {}",
+                a,
+                b
+            );
+        }
+        for (a, b) in analyzer1
+            .total_effect
+            .iter()
+            .zip(analyzer8.total_effect.iter())
+        {
+            assert!(
+                (a - b).abs() < 1e-12,
+                "total_effect mismatch: {} vs {}",
+                a,
+                b
+            );
+        }
+    }
+
+    #[test]
+    fn abc_smc_calibrator_parallel_parity() {
+        let calibrator = AbcSmcCalibrator::new(1.0);
+        let particles = vec![vec![1.0, 1.0], vec![10.0, 10.0], vec![1.1, 0.9]];
+        let reference = vec![1.0, 1.0];
+        let simulator = |p: &[f64]| p.to_vec();
+
+        let (w1, a1) = calibrator.evaluate_particles(&particles, &reference, &simulator);
+        let (w8, a8) =
+            calibrator.evaluate_particles_parallel(&particles, &reference, &simulator, 4);
+
+        assert_eq!(w1, w8);
+        assert_eq!(a1, a8);
     }
 
     #[test]
