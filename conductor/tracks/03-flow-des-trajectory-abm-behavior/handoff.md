@@ -319,3 +319,34 @@ actual work states to the lineage test; portable bootstrap ready IDs remain
 unchanged. Track25 API form is `docs/api/c2-flow-runtime-identity-review.md`.
 Independent review's divergent-clone objection is addressed by removing Clone
 from the production private adapter; test-only snapshots can still compare state.
+
+### C2.3 transit retry seam proposal — 2026-10-06
+
+C20's calibration bridge requires an atomic replacement EventId after a matching
+rejected transit start/progress callback. Calibration cannot mutate the private
+`TransitContext.expected_event`; a bare `schedule_domain` would leave the actual
+context treating the replacement as stale. The C2 coordinator proposed a hidden,
+experimental `schedule_transit_retry` shim over the existing Flow
+`schedule_domain_and_bind` primitive in
+[`ADR-0008-c20-transit-retry-seam.md`](../../design/calibration/ADR-0008-c20-transit-retry-seam.md).
+This is a Track03-owned `kairo-ecs-abm` path. Under the user's direct C2
+implementation instruction, the C2 coordinator records a one-task handoff for
+this experimental seam to the C2.3 worker in an isolated Kairos worktree. The
+bounded reservation is only `crates/kairo-ecs-abm/src/flow_adapter.rs`; keep the
+C20 calibration adapter responsible for actual dispatch provenance and retained
+priority. Require real rejected-start, rejected-progress, stale/replay,
+foreign-work/runtime and failure-atomic tests before integration. Track03 owner
+review remains required before any Track03 phase-status change. Public API/release
+gates remain open; this handoff does not alter the general Track03 ownership map.
+
+## C3 scoped synthetic implementation — hosted qualification 2026-10-10
+
+Experimental/private C3 source `faeb8e97d3021080c2dd60f0e2f065607e7666e7` passes
+local and hosted Rust 1.99.0 gates, including native isolated Flow/C2 probes,
+observed source preservation, bounded recovery, exact process/image readback and
+physical IPC/Parquet records. Native run38047961900 passed on Ubuntu x86_64 and
+macOS aarch64; PR244 has 47 successful checks and two declared conditional skips.
+[Hosted evidence](../../evidence/c3-hosted-qualification-20261010/README.md) supplements the earlier local record and supersedes its
+hosted-pending status for this tested source. Parent pin/phase acceptance awaits
+this documentation successor's final checks. Historical owner status scopes,
+C5, public API, empirical/clinical, ED MVP and release gates remain separate.

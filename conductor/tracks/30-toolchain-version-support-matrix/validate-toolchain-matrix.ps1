@@ -125,8 +125,8 @@ foreach ($token in @("conductor/toolchain-matrix.md", "bindings/python/pyproject
 }
 
 $laneExpectations = @(
-    @{ Matrix = 'Rust `1.98.x`'; Workflow = 'expected-prefix: "1.98"' }
-    @{ Matrix = 'Rust `beta`'; Workflow = 'expected-prefix: "1."' }
+    @{ Matrix = 'Current development qualification profile: pinned Rust `1.99.0` only'; Workflow = 'channel: "1.99.0"' }
+    @{ Matrix = 'Current development qualification profile: pinned Rust `1.99.0` only'; Workflow = 'expected-prefix: "1.99"' }
     @{ Matrix = 'CPython `3.10`'; Workflow = 'python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]' }
     @{ Matrix = 'CPython `3.14.x`'; Workflow = 'python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]' }
     @{ Matrix = 'R `4.6.x`'; Workflow = 'expected-prefix: "4.6"' }

@@ -1,0 +1,85 @@
+{
+  "review_type": "read_only_independent_experimental_spatial_api_review",
+  "proposal": "/tmp/c23-routing-time-binding-proposal.json",
+  "proposal_sha256": "3ce0713182ad0dc98963a1a585bcabac6edc18ffa8c99038dd29230edd5ef880",
+  "repository": "/private/tmp/kairos-c22-policy-api-20261005/libs/kairos",
+  "reviewed_head": "c23b6c8871a3341e9032cbdda97d8c365ddccb1a",
+  "route_source_base": "2f69a3929706f4e4966e0b0a2ed5b7f6851a0b87",
+  "source_delta_since_route_base": "No kairo-ecs-abm path changes observed between 2f69a39 and reviewed HEAD.",
+  "runtime_or_test_claim": false,
+  "current_implementation": "crates/kairo-ecs-abm/src/lib.rs exposes current ABM behavior API; no spatial module or transit route types exist. No tests/builds were run.",
+  "contract_and_api_match": {
+    "status": "The proposal's route/time API shape matches the frozen c20-transit-execution-v1 signatures/accessors and ADR-0007 spatial-module direction, subject to the blockers below.",
+    "exact_frozen_public_shapes": [
+      "NodeId::new(u64) -> NodeId; NodeId::value(self) -> u64; zero allowed.",
+      "EdgeId::new(u64) -> EdgeId; EdgeId::value(self) -> u64; zero allowed.",
+      "MovementModeId::new(&str) -> Result<MovementModeId, TransitError>; as_str(&self) -> &str.",
+      "TransitEdge { pub id: EdgeId, pub from: NodeId, pub to: NodeId, pub length_mm: u64, pub allowed_modes: Vec<MovementModeId> }.",
+      "TransitGraphV1::new(version: u32, nodes: Vec<NodeId>, edges: Vec<TransitEdge>) -> Result<Self, TransitError>; canonical_bytes(&self) -> Vec<u8>; route(&self, origin: NodeId, destination: NodeId, profile: &MovementProfile, ticks_per_second: u64) -> Result<RoutePlan, TransitError>.",
+      "MovementProfile::new(mode: &str, speed_mm_per_second: u64) -> Result<Self, TransitError>; mode(&self) -> &MovementModeId; speed_mm_per_second(&self) -> NonZeroU64.",
+      "RoutePlan getters: origin() -> NodeId; destination() -> NodeId; segments() -> &[RouteSegment]; distance_mm() -> u128; duration() -> SimDuration; profile() -> &MovementProfile; ticks_per_second() -> u64; graph_version() -> u32; graph_canonical_bytes() -> &[u8].",
+      "RouteSegment getters: edge_id() -> EdgeId; from() -> NodeId; to() -> NodeId; length_mm() -> u64; start_offset() -> SimDuration; end_offset() -> SimDuration.",
+      "Typed errors include UnsupportedVersion, InvalidGraph, InvalidMovementMode, InvalidSpeed, InvalidTickRate, UnknownNode, Unreachable, Overflow, InvalidProgress. TransitGraphV1 must fully validate immutable topology before construction."
+    ],
+    "behavior_match": [
+      "Full path ordering is (distance_mm, hop_count, full edge-ID sequence), with simple paths, not insertion order or only final edge ID.",
+      "Checked u128 distance accumulation and checked ceil(distance*ticks_per_second/speed); per-segment cumulative-ceiling differences sum exactly to total duration, including zero-tick segments. Zero tick rate is InvalidTickRate; origin==destination is empty/zero duration; distinct zero-length path remains valid.",
+      "Topology canonical bytes are sorted, include graph version and millimetre units, encode edge endpoints/length and sorted allowed modes, and are permutation-invariant. Profile/tick rate are separately exposed by RoutePlan and are not part of topology bytes. No SHA dependency or caller-supplied graph hash is added.",
+      "ABM currently has the workspace Rust 1.76 floor and an existing kairo-ecs-des dependency. The proposal requests no dependency/manifest/lock or DES edits. This preserves the one-way ABM-to-DES relationship and DES-to-calibration prohibition."
+    ]
+  },
+  "objections_and_required_dispositions": [
+    {
+      "priority": "blocking-before-implementation",
+      "finding": "The frozen contract requires canonical graph bytes to encode a domain/schema tag, graph version, millimetre units, sorted nodes/edges and length-framed modes, but does not specify literal tag bytes, integer endianness or count/string-length widths. The proposal's 'fixed domain/schema tag' and 'fixed-width integers' remain under-specified. Later calibration keys hash these actual bytes, so this is an observable compatibility format.",
+      "disposition": "Freeze an exact byte layout in the contract/addendum and coordinator decision before dispatch. Candidate layout: ASCII `KAIROS-TRANSIT-GRAPH` followed by NUL; schema version as u32 LE; unit marker bytes `mm` followed by NUL; node_count u64 LE then ascending NodeId values u64 LE; edge_count u64 LE then each edge sorted by EdgeId, with id/from/to/length_mm each u64 LE, followed by allowed_mode_count u64 LE and each mode sorted by raw UTF-8 byte sequence, encoded as byte_length u64 LE then exact bytes. No trailing bytes or Unicode normalization. Checked usize-to-u64 count/length conversion returns Overflow. Numeric NodeId/EdgeId zero remains ordinary data, never a sentinel. This is a proposed format, not yet frozen or authorized. Add an exact canonical-byte golden before downstream hashing is accepted."
+    },
+    {
+      "priority": "blocking-before-implementation",
+      "finding": "The proposal states MovementModeId validation as nonempty, at most 1024 UTF-8 bytes, no control characters and no boundary whitespace. The frozen C20 route contract calls it an exact canonical UTF-8 string and lists invalid mode IDs, but does not freeze those exact rejection rules. The nine fixture cases only assert the empty-string rejection, not byte/control/whitespace limits.",
+      "disposition": "Either bind the proposed validation rules as an explicit reviewed contract refinement (including no normalization/case-folding and exact UTF-8 byte identity) and add named boundary coverage in a separately bounded fixture update, or remove the extra restrictions from this implementation proposal until frozen. Do not infer these details from the separate fidelity subsystem-ID contract."
+    },
+    {
+      "priority": "scope-clarification",
+      "finding": "The proposal says selected spatial types are re-exported from the ABM crate root, while the frozen contract and ADR-0007 require an experimental `spatial` module and do not require root aliases. Root aliases are an additional public surface and may collide with existing or future ABM names.",
+      "disposition": "Approve only `pub mod spatial` with the frozen names under `kairo_ecs_abm::spatial::*`; omit crate-root type aliases unless separately enumerated and approved."
+    },
+    {
+      "priority": "review-gate",
+      "finding": "The immutable nine-test fixture exercises constructors and routing/time results but does not call every frozen accessor. In particular RoutePlan origin/destination/profile/ticks_per_second/graph_version/graph_canonical_bytes; RouteSegment from/to/length_mm; and MovementProfile getters are not all directly asserted by these nine cases.",
+      "disposition": "The existing fixture is sufficient for the bounded algorithm/time cases when its nine named tests pass, but API acceptance must independently inspect every exact signature and require a small external production-module API smoke for the omitted getters (including that RoutePlan.graph_canonical_bytes() returns the actual graph bytes and profile/tick getters report the values used). Keep this smoke as a separately reviewed gate if the 2-source-path packet cannot own it."
+    },
+    {
+      "priority": "runner-oracle-correction",
+      "finding": "The proposal says the runner does not explicitly count each named test exactly once. However run_routes_red.py targets the single `spatial_routes_c20` integration test, requires every one of the nine distinct expected `test NAME ... ok` lines, and requires exactly `9 passed; 0 failed; 0 ignored`; together these checks imply each named test ran exactly once for this target.",
+      "disposition": "Correct/remove the stated exact-once caveat. Preserve the runner and fixture unchanged. The recorded green runner receipt plus log is adequate for exact-once within this single-target command, subject to artifact/hash verification."
+    }
+  ],
+  "reviewed_byte_layout_candidate": {
+    "status": "candidate only; coordinator/contract decision required before dispatch",
+    "ordered_fields": [
+      "fixed domain tag bytes: ASCII KAIROS-TRANSIT-GRAPH followed by 0x00",
+      "schema/graph version: u32 little-endian",
+      "units tag: ASCII mm followed by 0x00",
+      "node count: u64 little-endian; NodeIds sorted numeric ascending as u64 little-endian",
+      "edge count: u64 little-endian; edges sorted by EdgeId numeric ascending",
+      "per edge: edge id, from node, to node, length_mm as u64 little-endian; allowed mode count u64 little-endian; modes sorted by exact UTF-8 bytes, each encoded with u64 little-endian byte length followed by exact UTF-8 bytes",
+      "no trailing bytes; checked count/length conversions; no normalization or case folding"
+    ],
+    "excluded": ["selected MovementProfile", "ticks_per_second", "caller-provided hash", "runtime/Flow identity"]
+  },
+  "disposition": {
+    "architecture": "No objection to combined route plus time in the ABM spatial module or to the two source paths/three-command bound, provided the blocking format and mode-identity contract details are resolved first and public export is restricted to the approved spatial module surface.",
+    "source_dispatch": "Not ready until canonical encoding and MovementModeId validation are frozen. Coordinator must also resolve root alias scope and the omitted-accessor smoke gate. No implementation or runtime acceptance is authorized by this review.",
+    "verification_scope": "Read proposal JSON, frozen C20 routing signatures/units/byte rules, immutable route fixture/runner, ADR-0007 and actual ABM source/Cargo surfaces at the reviewed child commit. No edits or tests."
+  },
+  "source_references": [
+    "conductor/design/calibration/c20-transit-execution-v1.md:35-88,145-169",
+    "conductor/design/calibration/ADR-0007-c2-experimental-api-adoption.md:20-27,31-47",
+    "conformance/c20/spatial_routes_c20.rs:1-250",
+    "conformance/c20/run_routes_red.py:20-31,130-191",
+    "crates/kairo-ecs-abm/src/lib.rs:1-150",
+    "crates/kairo-ecs-abm/Cargo.toml:1-15",
+    "Cargo.toml:workspace.package.rust-version"
+  ]
+}
