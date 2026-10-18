@@ -1,0 +1,7 @@
+    Checking kairo-ecs-types v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c22-policy-20261005/libs/kairos/crates/kairo-ecs-types)
+    Checking thiserror v2.0.20
+    Checking kairo-ecs-state v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c22-policy-20261005/libs/kairos/crates/kairo-ecs-state)
+    Checking kairo-ecs-rng v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c22-policy-20261005/libs/kairos/crates/kairo-ecs-rng)
+    Checking kairo-ecs-core v0.0.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c22-policy-20261005/libs/kairos/crates/kairo-ecs-core)
+    Checking kairo-ecs-des v0.1.0 (/Users/doughnut/Documents/careops-sim-session-worktrees/c22-policy-20261005/libs/kairos/crates/kairo-ecs-des)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.17s

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "status": "local_fidelity_export_smoke_verified_format_reviewed_hosted_and_full_policy_pending",
+  "scope": "C2.2.policy.fidelity_export only",
+  "source_tested_commit": "d926dea70199bf9e8a8d53a275376e8edb7f7934",
+  "reviewed_current_source_commit": "c6eb105119ac72e3f1425993268d76ab6592640e",
+  "post_test_change": "Whitespace-only rustfmt assertion wrapping in crates/kairo-ecs-des/tests/fidelity_api_c22.rs; independent review found no behavioral delta. Native commands were run at d926dea and were not rerun after this formatting-only commit.",
+  "verification": {
+    "rust_1_76_test": {
+      "exit_status": 0,
+      "mode_cases": 10,
+      "lineage_cases": 3,
+      "external_smoke_cases": 1,
+      "each_named_once": true,
+      "log_sha256": "bad56b026d11d4c8a9fc6965130e5f1a888285377209cedc6f6f60bc97c87a52"
+    },
+    "rust_1_99_test": {
+      "exit_status": 0,
+      "mode_cases": 10,
+      "lineage_cases": 3,
+      "external_smoke_cases": 1,
+      "each_named_once": true,
+      "log_sha256": "d11e8ed8aa0db7ba4023a9b29fa38fc8c6fe9f0ccb7b5da8d9f34dd8717789e0"
+    },
+    "rust_1_99_strict_clippy": {
+      "exit_status": 0,
+      "all_targets": true,
+      "deny_warnings": true,
+      "log_sha256": "dbb765aa64c2c279bea35932eed1840da38518130d386374d5995b0641924dc6"
+    },
+    "source_result_sha256": "d4b3e469fdebc02e7428170b3fdec9fe105ae7f7f2546592f80e9fc18d8d15b7"
+  },
+  "external_smoke": "external_fidelity_api_controls_actual_flow_policy_boundary; real Flow work exercised through Pending, Active and Completed with duplicate admission, BusyBoundary, staged policy application and future-only decision change.",
+  "scope_limits": {
+    "fidelity_adapter_production_clone": false,
+    "permit_implemented": false,
+    "actor_helper_added": false,
+    "fidelity_behavior_changed": false,
+    "dependencies_manifest_lock_changed": false,
+    "full_policy_accepted": false,
+    "c2_2_runtime_accepted": false,
+    "hosted_exact_head_ci": "pending coordinator/release gate"
+  }
+}

@@ -3,3 +3,6 @@
 # file, rule and line; new occurrences remain scanned. Keep merge history.
 # Evidence: Actions run37258123261/job111599430617; source lines55-57.
 7b13355c5ed31fc9b8e380d937ffc4e3342717b8:conformance/c43/statistical_diagnostics.py:generic-api-key:56
+# Reviewed C2.2 false positive: SHA256 file hash for fidelity_api_c22.rs in
+# result.json matched generic-api-key regex.
+bd46119ac01bf76bf7452ba0482cb128f4cc07db:conductor/evidence/c2.2-fidelity-export-20261005/result.json:generic-api-key:11
