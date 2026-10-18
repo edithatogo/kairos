@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "packet_id": "C2.3.progress.single-pending-start",
+  "task_id": "C2.3",
+  "instance_id": "single-pending-start",
+  "base_commit": "2d40b3c3bc1d21e5e55dcb33ee7a44b5404a4bf0",
+  "source_commit": "6d8e56341aabc54ea4e94455afb214b47d8a438a",
+  "status": "ready_for_review",
+  "changed_paths": ["crates/kairo-ecs-abm/src/flow_adapter.rs"],
+  "source_hashes": {
+    "crates/kairo-ecs-abm/src/flow_adapter.rs": "b15499455fd405298a68aee5ea2249db712d17f04144da57f3f7480a28ddc67f"
+  },
+  "input_hashes": {
+    "conductor/design/calibration/c20-transit-execution-v1.md": "40c8400a4030a836bcec41e18291cedc8ceee1dcab88fee43f88916863d0d491",
+    "crates/kairo-ecs-abm/src/flow_adapter.rs": "8b365771fcbd0d7c7d3bb8768715bf37c7509a7d6aa85e70724a043a1d9a12a4",
+    "Cargo.lock": "f2d9b7fd4e6c9756725e6bb01665d462e1b2148ae163dac40f8c583db33119a3",
+    ".artifacts/mvp/C2.3.progress.single-pending-start/context.md": "125d0aace7089a883bf719d7190426c4196bb1bfee5b38a68b84d3e6cb40c0f7"
+  },
+  "implemented": [
+    "schedule_transit_start now rejects while TransitContext retains a start EventId, before scheduler allocation, preventing duplicate scheduling from replacing a still-retained start identity.",
+    "Extended the actual same-tick alien-event fixture to attempt a duplicate start and verify InvalidWork, unchanged budget snapshot, unchanged retained EventId/due time, and subsequent movement start only from the original exact EventId."
+  ],
+  "verification": [
+    {
+      "command": "env PATH=/opt/homebrew/bin:$PATH CARGO_HOME=/tmp/careops-c23-cargo-home CARGO_TARGET_DIR=/tmp/careops-c23-transit-runtime-target /opt/homebrew/bin/cargo test --locked -p kairo-ecs-des -p kairo-ecs-abm",
+      "cwd": "/tmp/kairos-c23-transit-runtime",
+      "toolchain": {"cargo": "cargo 1.99.0 (5f94df478 2026-08-27) (Homebrew)", "rustc": "rustc 1.99.0 (b940084d7 2026-09-28) (Homebrew)"},
+      "exit_code": 0,
+      "result": "32 test result groups; 282 passed, 0 failed, 1 ignored",
+      "log": "/tmp/c23-single-pending-start-tests.log",
+      "sha256": "199da55d82eced426e0dd0658f8f02346d765a378c146ee66835f686e256fccc"
+    },
+    {
+      "command": "env PATH=/opt/homebrew/bin:$PATH CARGO_HOME=/tmp/careops-c23-cargo-home CARGO_TARGET_DIR=/tmp/careops-c23-transit-runtime-target /opt/homebrew/bin/cargo clippy --locked -p kairo-ecs-des -p kairo-ecs-abm --all-targets -- -D warnings",
+      "cwd": "/tmp/kairos-c23-transit-runtime",
+      "toolchain": {"cargo": "cargo 1.99.0 (5f94df478 2026-08-27) (Homebrew)", "rustc": "rustc 1.99.0 (b940084d7 2026-09-28) (Homebrew)"},
+      "exit_code": 0,
+      "log": "/tmp/c23-single-pending-start-clippy.log",
+      "sha256": "724d86984e4286d4c18b623d1f16880d95cf98ad6fef564264ee3d00824829ed"
+    },
+    {
+      "command": "env PATH=/opt/homebrew/bin:$PATH CARGO_HOME=/tmp/careops-c23-cargo-home /opt/homebrew/bin/cargo fmt --all -- --check",
+      "cwd": "/tmp/kairos-c23-transit-runtime",
+      "toolchain": {"cargo": "cargo 1.99.0 (5f94df478 2026-08-27) (Homebrew)", "rustc": "rustc 1.99.0 (b940084d7 2026-09-28) (Homebrew)"},
+      "exit_code": 0,
+      "log": "/tmp/c23-single-pending-start-fmt.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {"command": "git diff --check", "cwd": "/tmp/kairos-c23-transit-runtime", "exit_code": 0}
+  ],
+  "limitations": [
+    "This helper guard is for initial start scheduling. Replacement after a consumed/rejected start remains deferred to calibration BoundIntrinsicWork dispatch provenance and explicit one-shot retry.",
+    "C2.3 dispatch completion, C2.2 joins, C2.1 paired-runtime acceptance, and hosted/release/clinical claims are not established by this packet."
+  ]
+}

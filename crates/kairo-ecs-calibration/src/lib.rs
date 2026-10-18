@@ -1,12 +1,116 @@
 //! Optional calibration primitives; no empirical or clinical acceptance.
 #![forbid(unsafe_code)]
 
+#[expect(
+    dead_code,
+    reason = "Private C3 interfaces are being joined by bounded owner packets"
+)]
+mod shadow;
+#[expect(
+    dead_code,
+    reason = "Private C3 observed replay join is under qualification"
+)]
+mod shadow_ledger;
+#[cfg(feature = "flow")]
+#[expect(
+    dead_code,
+    reason = "Private C3 native adapter is qualified by focused owner fixtures"
+)]
+mod shadow_native;
+#[cfg_attr(
+    not(all(test, feature = "flow")),
+    expect(
+        dead_code,
+        reason = "Private C3 probe pool join is under qualification"
+    )
+)]
+mod shadow_pool;
+#[cfg_attr(
+    not(all(test, feature = "flow", any(feature = "ipc", feature = "parquet"))),
+    expect(
+        dead_code,
+        reason = "Private C3 residual projection join is under qualification"
+    )
+)]
+mod shadow_report;
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C3 portable recovery join is under qualification"
+    )
+)]
+mod shadow_wire;
+
+#[cfg(feature = "flow")]
+#[expect(
+    dead_code,
+    reason = "Complete C2 composite assembler consumes the reviewed envelope next"
+)]
+mod checkpoint_envelope;
+#[cfg(feature = "flow")]
+#[expect(
+    dead_code,
+    reason = "Complete C2 composite assembler consumes the reviewed section directory next"
+)]
+mod checkpoint_sections;
+
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2 composite transaction is exercised by focused owner tests"
+    )
+)]
+mod c2_portable_checkpoint;
+
+#[cfg(feature = "flow")]
+mod route_receipt;
 pub mod seed_map;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2.3 model dispatch helper is qualified by its focused tests; runtime integration remains separate"
+    )
+)]
+mod staff_dispatch;
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2.3 resource lifecycle adapter is exercised by focused actual-Flow tests; coordinator acceptance remains separate"
+    )
+)]
+mod staff_flow_lifecycle;
 #[expect(
     dead_code,
     reason = "Private C2.2 provider is exercised by source conformance; Flow integration is a later instance"
 )]
 mod work_duration;
+
+// Experimental adapter for actual Flow work; it remains crate-private while
+// C2.2 transit, checkpoint and public-API joins are unfinished.
+#[cfg(feature = "flow")]
+mod c2_checkpoint_journal;
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "Private C2.2 Flow bridge is exercised by focused actual-runtime tests; the paired runtime join is a later instance"
+    )
+)]
+mod flow_bridge;
+
+#[cfg(feature = "flow")]
+#[doc(hidden)]
+pub mod experimental_c2_replay {
+    pub use crate::c2_checkpoint_journal::{restore_demo, save_demo, JournalError};
+}
 
 // Private C4.2 numeric implementation; no public API or sidecar promises.
 #[expect(
@@ -92,3 +196,25 @@ mod arrow_output;
     reason = "Private C4.3 run/event adapter is qualified by integration tests; public API review remains open"
 )]
 mod sidecar_adapter;
+
+#[cfg(any(feature = "ipc", feature = "parquet"))]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Private C3 sidecar join awaits phase acceptance")
+)]
+mod shadow_sidecars;
+
+#[cfg(feature = "flow")]
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "Private synthetic C3 native qualification model")
+)]
+mod shadow_c2_model;
+#[expect(
+    dead_code,
+    reason = "Private C3 runner is undergoing native qualification"
+)]
+mod shadow_runner;
+
+#[cfg(all(test, feature = "flow"))]
+mod shadow_c03;

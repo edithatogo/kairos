@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "review_id": "C2.3.spatial.routing.independent_review",
+  "review_type": "read_only_source_algorithm_review",
+  "status": "preliminary_no_concrete_blocker_observed_at_snapshot; final writer commit not reviewed",
+  "target_child": "/Users/doughnut/Documents/careops-sim-session-worktrees/c23-routing-20261005/libs/kairos",
+  "observed_head": "d9607405b1c9a3998f7a9dbf4d623b0a07419787",
+  "worktree_state_at_observation": "clean; writer activity/commit may occur after this snapshot",
+  "source_sha256": "502d317e916e48aee69c16fd1ffb5978bc0e805a0f302d868431e09d5df2f079",
+  "frozen_contract": {
+    "path": "conductor/design/calibration/c23-spatial-api-adoption-20261005.md",
+    "sha256": "46957f3dc319de95417b68c5880aba034df9d0561cd6c404e2d9274e5aa9da10"
+  },
+  "original_oracle": {
+    "path": "conformance/c20/spatial_routes_c20.rs",
+    "sha256": "1ca26266d74bee8156f7262bc04c77ca344703b85eaa4249743101e8a9716de0",
+    "test_names": [
+      "rejects_invalid_version_graph_mode_speed_and_tick_rate",
+      "rejects_duplicate_edges_and_duplicate_allowed_modes",
+      "chooses_distance_then_hops_then_full_edge_id_sequence_and_ignores_zero_cycles",
+      "equal_distance_and_hop_count_use_lexicographic_full_edge_id_sequence",
+      "origin_equals_destination_is_empty_and_distinct_zero_route_is_valid",
+      "canonical_bytes_ignore_permutation_and_bind_sorted_modes",
+      "cumulative_ceiling_segment_increments_sum_to_total_duration",
+      "accumulates_distance_in_u128_beyond_u64",
+      "checked_tick_multiplication_overflow_is_reported"
+    ],
+    "runner_path": "conformance/c20/run_routes_red.py",
+    "runner_sha256": "1cbda8b0c63b9a474cf46f77746019442aa387f78f42dcdba76ea5f677c13360",
+    "runner_names_match_exactly": true,
+    "runner_requires_all_nine_named_pass_lines_and_exact_9_pass_0_fail_0_ignored_summary": true
+  },
+  "external_api_smoke": {
+    "path": "conformance/c23/spatial_api_smoke.rs",
+    "sha256": "328a85581f4cd66410f48d8479b7e8c592fb7fa7d3a5090e2db1f2b7a072210b",
+    "static_read_only_observation": "contains exact V1 topology-byte golden, exported getter checks, and MovementModeId length/Unicode/whitespace identity cases; not executed in this review"
+  },
+  "findings": [
+    {
+      "area": "label-setting route objective",
+      "status": "no_concrete_blocker_observed",
+      "evidence": "PathCandidate orders by checked u128 distance, then edge count (hops), then the full Vec<EdgeId> lexicographically. The min-heap uses Reverse and stale labels are discarded against best[node]. Every extension adds nonnegative distance and one hop, so label keys strictly increase even over zero-length edges. For a fixed suffix, distance/hop/full-ID order is preserved; unique graph EdgeIds make the full edge sequence identify the path."
+    },
+    {
+      "area": "simple paths and zero-length cycles",
+      "status": "no_concrete_blocker_observed",
+      "evidence": "Expansion rejects a node already in candidate.nodes. Any nonnegative cycle is dominated by removing it: positive length improves distance and a zero cycle preserves distance while reducing hops. Two internal focused tests cover a zero-cycle/full-sequence tie and dense zero-cost layers; original C20 test also covers zero cycles plus hop preference."
+    },
+    {
+      "area": "checked distance and time arithmetic",
+      "status": "no_concrete_blocker_observed",
+      "evidence": "Path and final route distances use checked u128 additions. ceil_ticks checks distance_mm*ticks_per_second before division, then checked-adds the remainder ceiling. Segment offsets use cumulative-distance ceilings, are checked monotone, and the final cumulative offset must equal total duration; zero-length edges can correctly have zero-tick increments."
+    },
+    {
+      "area": "canonical topology bytes",
+      "status": "no_concrete_blocker_observed",
+      "evidence": "Nodes are sorted by numeric NodeId; edges by numeric EdgeId; duplicate IDs and invalid references are rejected. Allowed mode IDs are sorted by their exact String ordering and duplicates rejected. Encoding follows the frozen tags/version/unit/counts/IDs/edge fields/mode byte-length/string order using little-endian integers, checked usize-to-u64 lengths, and no profile/runtime values."
+    },
+    {
+      "area": "original route oracle preservation",
+      "status": "no_concrete_blocker_observed",
+      "evidence": "The nine frozen C20 cases are present in the original source and runner TEST_NAMES in identical order: validation, duplicates, distance/hops/zero-cycle, full-sequence tie, origin-equals-destination/distinct zero path, permutation/canonical modes, cumulative ceilings, u128 distance, and tick multiplication overflow."
+    }
+  ],
+  "remaining_gates": [
+    "This was source review only; no tests or runner were executed.",
+    "Review final writer commit/hash after the active writer finishes.",
+    "Run the immutable C20 fixture runner in its actual expected mode and inspect durable raw log/hash; execute separate C23 external API smoke against production exports.",
+    "Canonical Rust 1.76 native tests, Rust 1.99 strict Clippy/formatting, and hosted exact-head CI remain independent gates."
+  ],
+  "scope_boundary": "No edits, claims, source/runtime execution, manifests, Flow/progress, remote actions, or final acceptance claim."
+}

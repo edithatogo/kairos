@@ -1,16 +1,19 @@
 #![forbid(unsafe_code)]
 
 mod flow;
+pub use flow::checkpoint::*;
 pub use flow::*;
 
-// Experimental C2 fidelity API; integrated delivery remains open.
+/// Experimental in-process Rust API for resolving and binding execution fidelity.
+///
+/// This preview is not a stable compatibility promise and is not exposed through
+/// FFI, host-language bindings, schemas, or checkpoints. A `FidelityAdapter`
+/// guards only work admitted through that adapter; copied `FidelityDecision`
+/// values are descriptive metadata, not admission authority. Its policy-boundary
+/// scan is limited to adapter-admitted work, and unknown or despawned bindings
+/// fail closed. The admission permit is non-cloneable in-memory state and cannot
+/// be serialized or rebound across runtime restoration.
 pub mod fidelity;
-
-#[cfg(test)]
-mod fidelity_mode_c21;
-
-#[cfg(test)]
-mod fidelity_lineage_v1;
 
 mod preemption;
 

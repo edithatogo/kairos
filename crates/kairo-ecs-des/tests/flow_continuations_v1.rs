@@ -141,6 +141,9 @@ fn callback(c: &mut Context, s: &FlowCallbackSnapshot, sink: &mut FlowCommandSin
         FlowCallbackCause::Domain { kind: k } => {
             assert_eq!(*k, kind(DOMAIN));
         }
+        FlowCallbackCause::DomainControl { .. } => {
+            panic!("domain controls use domain view hooks, not task continuations");
+        }
     }
     match c.mode {
         Mode::Empty => {}
