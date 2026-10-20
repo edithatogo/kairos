@@ -71,6 +71,9 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 64 | Archetype/SoA ECS Storage, Full DES Process/Resource Kernel & ABM Spatial Topologies | Done | `ecs-agent + des-api-agent + abm-api-agent + core-scheduler-agent` | See `conductor/tracks/64-*/spec.md` |
 | 65 | Vectorized Multi-World RL (VecEnv), PettingZoo Bridge & Advanced Game Theory Solvers | Done | `game-theory-agent + ml-integration-agent + performance-agent` | See `conductor/tracks/65-*/spec.md` |
 | 66 | Parallel Ensemble Sweeps (Sobol/CRN), SBI Calibration & Copy-on-Write Wasm Studio | Done | `vv-uq-agent + experiment-agent + timetravel-agent + playground-agent` | See `conductor/tracks/66-*/spec.md` |
+| 67 | Linked Entity Hierarchies, Dynamic Spawning & Cascaded Lifecycles | Planned | `ecs-agent + abm-api-agent + contracts-agent` | See `conductor/tracks/67-*/spec.md` |
+| 68 | Inter-Unit Boundary Channels & Asynchronous Handover Sinks | Planned | `des-api-agent + contracts-agent + streaming-agent` | See `conductor/tracks/68-*/spec.md` |
+| 69 | Stochastic Competing Risks & Non-Markovian Hazard Engine | Planned | `des-api-agent + vv-uq-agent + core-scheduler-agent` | See `conductor/tracks/69-*/spec.md` |
 
 ## Track status vocabulary
 
