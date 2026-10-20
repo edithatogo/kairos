@@ -52,3 +52,11 @@ Before any task or phase in this track is marked complete, and before the next p
 6. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` to verify recorded commits, pushed refs, and cleanup state.
 8. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
+## Proposed CareOps composition follow-up — 20 October 2026
+
+[Pending owner worklist](../../design/careops-composition-plan-20261020.md)
+records neutral relationship, allocation, transfer, progression, runner and
+observation requirements. Only rows naming this track are its prospective work;
+other owner rows require handoff. Existing accepted tasks and receipts retain
+their scope. Bind an exact-source packet and reconcile the owner registry/phase
+before implementation; this planning link does not reopen or complete a phase.
