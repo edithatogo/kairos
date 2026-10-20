@@ -1,5 +1,7 @@
 # KairoECS Tracks Index
 
+> **Current audit — 20 October 2026:** the registry records **60 Done / 67 total**, with **7 In Progress** (48–53, 55). Tracks **62–66 have disputed full-completion claims**; historical Done records do not satisfy their outstanding capability gates. See the [source audit and ordered owner plan](capability-reconciliation-20261020.md) for completed slices, implementation gaps, free Mac/NAS/CUDA routes and CareOps pin reconciliation. This notice supersedes broader capability claims in the historical entries below; lifecycle changes remain an explicit Track 29/owner reconciliation task.
+
 This file is the human-readable Conductor status index. Keep it in lockstep with `conductor/tracks.yaml`, which is the authoritative machine-readable source for status, ownership, dependencies, paths, and gates.
 
 | Track | Name | Status | Primary subagent | Artifact |

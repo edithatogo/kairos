@@ -1,6 +1,6 @@
 {
   "schema_version": "kairoecs.free-compute-routes.v1",
-  "last_reviewed": "2026-10-18",
+  "last_reviewed": "2026-10-20",
   "purpose": "Classify free or near-free execution surfaces that can reduce repo-side blockers without satisfying live HPC parity claims.",
   "claim_boundary": "Free CPU/container routes can prove packaging, build, smoke, and contract behavior. They cannot prove production HPC parity, Slurm scheduling, parallel filesystem throughput, native GPU speedup, or weak/strong scaling certification unless the route records real live-hpc manifests with raw artifacts and checksums.",
   "routes": [
@@ -224,6 +224,71 @@
         "multi-node multi-GPU NVLink/InfiniBand Slurm scaling",
         "Lustre or GPFS parallel storage throughput",
         "production weak/strong scaling certification"
+      ]
+    },
+    {
+      "id": "local-m1-max",
+      "provider": "Maintainer Mac",
+      "access_model": "Verified Apple M1 Max, 32 GiB; native Metal implementation still pending",
+      "source_url": "https://wgpu.rs/",
+      "repo_entrypoints": [
+        "conductor/capability-reconciliation-20261020.md"
+      ],
+      "blockers_reduced": [
+        "Track 52 real Metal implementation and parity",
+        "Arrow/Parquet interoperability"
+      ],
+      "required_evidence": [
+        "GPU identity and actual kernel submission/readback",
+        "CPU parity and timing logs"
+      ],
+      "not_proof_for": [
+        "CUDA",
+        "CPU fallback as GPU proof"
+      ]
+    },
+    {
+      "id": "local-pleiades-nas",
+      "provider": "Maintainer Pleiades NAS",
+      "access_model": "Verified Linux x86_64 i3-N300, Docker; single NUMA node; no NVIDIA device established",
+      "source_url": "https://slurm.schedmd.com/quickstart_admin.html",
+      "repo_entrypoints": [
+        "conductor/capability-reconciliation-20261020.md"
+      ],
+      "blockers_reduced": [
+        "Linux affinity and x86 portability",
+        "Container FMU and single-node Slurm integration",
+        "Second physical host transport qualification"
+      ],
+      "required_evidence": [
+        "Exact host/runtime identity",
+        "Raw real workload output and recovery evidence"
+      ],
+      "not_proof_for": [
+        "Multi-node NUMA locality",
+        "NVIDIA CUDA",
+        "InfiniBand or Lustre/GPFS"
+      ]
+    },
+    {
+      "id": "local-pleiades-cuda",
+      "provider": "Maintainer separate Pleiades computer",
+      "access_model": "User-reported NVIDIA CUDA GPU; OS/model/driver/access unverified; SSH probe timed out. Existing bare pleiades SSH alias routes NAS, not this computer.",
+      "source_url": "https://docs.nvidia.com/cuda/",
+      "repo_entrypoints": [
+        "conductor/capability-reconciliation-20261020.md"
+      ],
+      "blockers_reduced": [
+        "Track 52 CUDA qualification after access and backend implementation"
+      ],
+      "required_evidence": [
+        "Verified distinct host GPU/driver/toolkit identity",
+        "Real kernel/buffer execution and CPU parity",
+        "Transfer/compute timing and cleanup evidence"
+      ],
+      "not_proof_for": [
+        "nvidia-smi alone as compute proof",
+        "Automatic cluster or scaling certification"
       ]
     }
   ]
