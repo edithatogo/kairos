@@ -7,7 +7,7 @@ Introduce SimPy/DES-native asynchronous cross-boundary transit buffers (`Boundar
 ## Inputs
 
 - `crates/kairo-ecs-des` process and resource primitives from Track 64.
-- `crates/kairo-ecs-streaming` event channels.
+- Optional observability adapter to `crates/kairo-ecs-streaming`; the first single-process fixture uses the existing scheduler.
 - Tracks 01, 03, 64 contracts.
 
 ## Outputs
@@ -32,4 +32,14 @@ Introduce SimPy/DES-native asynchronous cross-boundary transit buffers (`Boundar
 
 ## Release implications
 
-Non-breaking addition to `kairo-ecs-des`. Existing single-unit DES processes continue unaffected. Adds inter-unit decoupled queuing primitives.
+Proposed additive DES extension; compatibility is an acceptance gate, not an assumption. Require conformance tests to preserve existing single-unit DES behaviour. Adds inter-unit decoupled queuing primitives.
+
+## Composition contract refinement — 20 October 2026
+
+Transfer is a versioned lifecycle with operation identity, ownership and explicit resource-release points. Receiver reservation, physical occupancy and responsibility are distinct. Require cancellation/expiry, retries, delayed acknowledgements and compensation after departure, not just an EgressSink callback. Start on one scheduler in one process; streaming is observability and a later transport adapter, not authoritative state. Generic envelopes carry opaque domain payloads; clinical acceptance, boarding policy, handover meaning and birth/completion callbacks belong downstream.
+
+See [owner worklist and downstream join](../../design/careops-composition-plan-20261020.md). All work remains pending. Prospective source filenames are resolved at dispatch; they are not evidence that APIs exist.
+
+## Acceptance and cross-owner gates
+
+Require the phase test matrix, meaningful negative controls, exact input/source/output hashes, deterministic replay and failure/recovery receipts. Coordinate Arrow modifications through 04/62 and shared scheduler/public contracts through 01/25. Current broad registry paths are prospective: reserve bounded disjoint files and rebind on source drift. Publication, hardware runtime and clinical validation remain separate.

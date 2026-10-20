@@ -37,7 +37,7 @@ User-facing methods below are semantic requirements, not invented existing APIs.
 
 ## Owner worklist and acceptance oracles
 
-### K-C01 — Relationship and identity mechanics (01/59, compatibility 25)
+### K-C01 — Relationship and identity mechanics (67; 01/59 review, compatibility 25)
 
 - [ ] Review neutral typed relationships, one-to-many cardinality and lifecycle ownership with the existing flat-ID graph representation; decide placement without forcing solver dependencies.
 - [ ] Specify stable external identity mappings distinct from recycled generational ECS handles, deterministic creation and relationship cleanup.
@@ -50,13 +50,13 @@ User-facing methods below are semantic requirements, not invented existing APIs.
 - [ ] Write failing machine/operator/tool contention fixtures including partial failure, duplicate cancellation, timeout-at-grant ties and no leaked holds; implement only the accepted mechanism.
 - [ ] Test non-interruptible work, safe interruption points, remaining-work/RNG ownership and retained dependencies. Clinical permission remains outside Kairos.
 
-### K-C03 — Transfer and channel ownership (03/01; 34/35 only for later distribution)
+### K-C03 — Transfer and channel ownership (68; 03/01 review, 34/35 only for later distribution)
 
 - [ ] Specify stable operation IDs, versioned envelopes, reserve/depart/arrive/acknowledge transitions, expiry, compensation and authority transfer.
 - [ ] Qualify a two-depot single-process fixture with delayed/duplicate messages, reject-after-departure and no lost/duplicated jobs or prematurely released resources.
 - [ ] Reuse checkpoint/recovery contracts; later demonstrate real process/transport failures separately. LP-per-service is a measured mapping, not the domain API.
 
-### K-C04 — Progression, competing events and calendars (03/64, 21 review)
+### K-C04 — Progression, competing events and calendars (69; 03/64/21 review)
 
 - [ ] Define state-dependent event/hazard rescheduling with explicit tie order, censoring, cancellation revisions and draw ownership while a job waits or travels.
 - [ ] Test competing failure/completion/intervention events and observation-only agent decisions without looking ahead at sampled future outcomes.
@@ -106,3 +106,16 @@ NwauCore is a command wrapper, not a calculator to transplant into the kernel.
 Run Conductor phase/DAG validation, local Markdown link checks and diff whitespace
 checks. No Rust runtime change is made, so passing planning checks is not evidence
 for any unchecked implementation item above. See the adjacent evidence record.
+
+## Parallel capability audit alignment
+
+Read back the separate audit commit `0cdc9ac` (20 October 2026). Preserve pinned
+CareOps Q/C, physical IO, ED and checkpoint/recovery capabilities in a candidate
+integration; mainline is not automatically a superset. Start K-C05's inventory
+and smallest experiment-orchestration reuse before broader resource extraction,
+while preserving its public facade and requiring two-consumer parity. This lane
+is independently useful and does not wait for all new domain tracks. The audit
+owns Mac/NAS/CUDA qualification and registry corrections; do not duplicate its
+hardware plan or equate CPU fallback with device execution. When combining with
+67–69 registration, recompute registry counts; its 67-track audit snapshot
+predates those three registrations.
