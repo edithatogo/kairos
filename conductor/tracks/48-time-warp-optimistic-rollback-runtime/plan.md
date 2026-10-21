@@ -134,3 +134,11 @@ Hosted native delivery is now resolved: the reviewed-cut native source `35914c3`
 merged as `55fd635` (#207) after hosted feedback fixes, so that slice's pending
 hosted-delivery wording above is historical. Track 48 still stays In Progress,
 now solely for live distributed acceptance and the open gates listed above.
+
+## Incorporated capability follow-up — 21 October 2026
+
+Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
+
+- [ ] CAP-48.1: With Track 49, exercise real two-host rollback, anti-message/GVT behavior and restart under injected message delay, duplication and worker failure; compare deterministic observables with the qualified single-host baseline.
+
+Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.

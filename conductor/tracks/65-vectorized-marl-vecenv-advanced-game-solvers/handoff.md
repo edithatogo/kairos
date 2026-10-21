@@ -53,3 +53,13 @@ Track 65 (Vectorized Multi-World RL (VecEnv), PettingZoo Bridge & Advanced Game 
 - pushed ref: `origin/codex/wave9-implementation-tracks-62-66`
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: passed on clean tree.
 - next-phase decision: Track 65 is `Done`.
+
+## Incorporated capability follow-up — 21 October 2026
+
+Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
+
+- [ ] CAP-65.1: Retain the strict-dominance regression A=[2,2,1,1], B=[2,1,2,1]: both players choose first action and NashConv=0; validate against independent best-response oracles. Qualify general CFR/Leduc separately from existing bounded Kuhn implementation.
+
+Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.
+
+This checklist is retained in the handoff because the current source reservation hashes plan.md as an input. Its owner must incorporate these leaves into the next bound packet; this update neither edits that input nor takes over source ownership.
