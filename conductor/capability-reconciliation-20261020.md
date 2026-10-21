@@ -4,7 +4,7 @@
 
 The maintainer requested a completion audit, free local execution options, a CareOps/Kairos abstraction review, and updates to both repositories' plans. This is a planning correction, not runtime dispatch, a release acceptance, or a transfer of ownership. Audit baseline: Kairos `f0d30e28c3299dcdb6ca138d95319ecaaf29a54a`; CareOps main `8ca0e5ecec2a41a86ebce32361adbde08dd191d3`; its Kairos pin `44261eb5cf8275f132f63a3396903d116d701dbe`.
 
-The registry records **67 tracks: 60 Done and 7 In Progress (48–53, 55)**. The earlier 59/66 tally is incorrect. These are lifecycle records, not 60 independently verified full capabilities. Tracks 62–66 have **disputed completion claims** against current source and must not be used as acceptance evidence for dependent upgrades. Preserve their historical closeout records while Track 29 and each owner reconcile scope, reopen incomplete leaves, and synchronize registry/phase ledgers. This audit does not silently reopen tracks or invalidate narrowly accepted historical slices.
+The registry records **67 tracks: 60 Done and 7 In Progress (48–53, 55)**. The earlier 59/66 tally is incorrect. These are lifecycle records, not 60 independently verified full capabilities. Tracks 62–66 have **disputed completion claims** against the audited source revision and must not be used as acceptance evidence for dependent upgrades. Preserve their historical closeout records while Track 29 and each owner reconcile scope, reopen incomplete leaves, and synchronize registry/phase ledgers. This audit does not silently reopen tracks or invalidate narrowly accepted historical slices.
 
 ## What is complete, and what remains
 
@@ -68,7 +68,7 @@ Keep healthcare concepts in CareOps domain/core layers: clinical triage and capa
 
 ## Coordination and review
 
-Work uses isolated branches and advisory path claims. Existing Kairos solver/CLI reservations remain protected even when expired; this patch changes no runtime source or owner plan used as a claim input. CareOps' active roadmap owner retains its registry, roadmap, task DAG and proposed upgrade/domain tracks. Its linked addendum carries the same acceptance requirements for integration without editing those owned paths. No chat messages were sent and no source claims were recovered.
+Work uses isolated branches and advisory path claims. Existing Kairos solver/CLI reservations remain protected even when expired; this patch changes no runtime source or owner plan used as a claim input. CareOps' active roadmap owner retains its registry, roadmap, task DAG and proposed upgrade/domain tracks. Its linked addendum carries the same acceptance requirements for integration without editing those owned paths. No chat messages were sent during the 20 October audit and no source claims were recovered.
 
 Review outcome: documentation scope only; no new dependency/API/ABI/schema change, pin change, release or hardware acceptance. The principal remaining risk is stale downstream language treating historical Done records as full capability proof. R0 and the prominent status notices make that discrepancy explicit until owners synchronize lifecycle records. Full `just ci` is not implied by documentation validation; validation results are recorded in the change description.
 
@@ -85,3 +85,15 @@ Date: 2026-10-20. Working directory: `/Volumes/PortableSSD/codex-worktrees/kairo
 | `node scripts/validation/validate-free-compute-routes.mjs` | 0 | `3a7dcf2d1a12b30d5ae410558559f3461f6138630409a8f41983a303685a421c` |
 
 Full runtime CI was not rerun for these documentation-only changes. Hosted checks and owner lifecycle reconciliation remain separate.
+
+## Review update — 21 October 2026
+
+The source and hardware findings above describe the explicit 20 October revisions/readbacks, not a fresh audit of remote main. GitHub CLI HTTPS requests, Git HTTPS/SSH fetches and the GitHub connector failed during this review; current remote heads, review threads, merge conflicts and hosted check results could not be verified. Do not mark either PR merge-ready from the local checks alone. No runtime capability or track closure is advanced by these review fixes.
+
+Review fixes remove the contradictory unverified OpenModelica cask instruction and fixed free-cloud GPU quota/model promises from the route catalog, distinguish generic TCP from real gRPC, and require source/input/toolchain/raw-artifact hashes for each new local route. The generic macOS tooling route and observed M1 Max inventory remain distinct; neither proves a working GPU backend.
+
+The maintainer explicitly authorized agent coordination on 21 October. The CareOps roadmap owner received C-R0–C-R7 for integration into its existing upgrade/domain plans and task DAG. Existing Kairos CLI/solver reservations remain protected; no corresponding live chat was identified in the available chat inventory. Their R4 requirements remain pending owner acknowledgement, not silently dispatched or accepted.
+
+Paired changes: [Kairos PR #266](https://github.com/edithatogo/kairos/pull/266) and [CareOps PR #173](https://github.com/edithatogo/careops-sim/pull/173). The CareOps plan integration is tracked separately by its owner; integration evidence must identify the actual commit/task mapping.
+
+Local review verification on 21 October at parent `0cdc9ac140c51faf80ee916ba10a7f11e1c70cbd`: `git diff --check` passed; Conductor phase gates, DAG and artifact validators plus the free-compute route validator all passed with no reported errors. Working directory and validator toolchain are the same as the retained planning receipt above. No new tests were added for this prose/catalog correction. Source inspection reconfirmed the audited capability boundaries; full runtime CI was not rerun.
