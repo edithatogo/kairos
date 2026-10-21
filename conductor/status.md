@@ -1,10 +1,19 @@
 # KairoECS Conductor Status
 
+> **Integrated planning registry — 21 October 2026:** 70 tracks: 60 recorded Done,
+> 7 In Progress (48–53, 55) and 3 Planned (67–69). The 20 October audit's 67-track
+> count is a historical snapshot before those registrations. Tracks62–66 have
+> disputed full-completion claims; recorded status is not exercised capability.
+> The [audit](capability-reconciliation-20261020.md) and
+> [composition plan](design/careops-composition-plan-20261020.md) are incorporated
+> together. Implementation and hardware gates remain pending; no Done status is
+> advanced by this planning integration.
+
 ## Wave 10 Multi-Core Parallelism, Apple Silicon Metal, Website Overhaul & Game Theory Wave Closeout - 18 October 2026
 
-- **Programme Totals (`59 / 66 Done`):** Tracks `00–47`, `54`, and `56–66` are `Done` (`59` tracks). Zero tracks remain `Planned` or `In Review`. The only `7` tracks in `In Progress` (`Tracks 48–53, 55`) are the HPC Parity Wave tracks whose local single-host, multi-core, Apple Silicon Metal, OpenMPI, HDF5, Arrow/Parquet, and FMI implementations are complete and tested, and whose remaining gates require external multi-node cluster, InfiniBand, Lustre/GPFS, or dedicated NVIDIA CUDA hardware.
+- **Recorded programme totals:** 60 of 67 tracks are recorded Done; 7 are In Progress. The current audit above distinguishes disputed completion and missing implementations from hardware-only gates.
 - **Multi-Core OS Thread Parallelism (`Tracks 55, 65, 66`):** `ParallelVecEnv::step_batch` (`crates/kairo-ecs-ml/src/lib.rs`) and `ParallelEnsembleRunner::run_sweep` / `SobolSensitivityAnalyzer::analyze_parallel` / `AbcSmcCalibrator::evaluate_particles_parallel` (`crates/kairo-ecs-cli/src/ensemble.rs`) now partition workloads across OS worker threads via `std::thread::scope` and `std::thread::available_parallelism()` with bit-for-bit deterministic parity.
-- **Apple Silicon Metal Unified-Memory Compute (`Track 52`):** `crates/kairo-ecs-gpu` now exposes the `metal-backend` feature (`MetalBackend`, `MetalAdapterInfo`, `METAL_BACKEND_NAME`, MSL `abm_step` compute kernel source, macOS `ioreg`/`sysctl` hardware probing, and `PersistentGpuSession::run_abm_tick_parallel`).
+- **Apple Silicon Metal surface / CPU fallback (`Track 52`, historical implementation note):** `crates/kairo-ecs-gpu` now exposes the `metal-backend` feature (`MetalBackend`, `MetalAdapterInfo`, `METAL_BACKEND_NAME`, MSL `abm_step` compute kernel source, macOS `ioreg`/`sysctl` hardware probing, and `PersistentGpuSession::run_abm_tick_parallel`).
 - **Game Theory Ontology & Multi-Game Wave (`Tracks 56–61`) Closed to `Done`:** Concrete evidence manifests (`conductor/game-theory-evidence/manifests/track-56.json` .. `track-61.json`) and closeout ledger entries are recorded and validated by `validate-game-theory-evidence.mjs`, `validate-game-theory-claims.mjs`, and `validate-multigame-certification.mjs`.
 
 ## Track 48 governance reconciliation - 17 October 2026

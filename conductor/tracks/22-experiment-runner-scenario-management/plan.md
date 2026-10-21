@@ -65,7 +65,16 @@ Before any task or phase in this track is marked complete, and before the next p
 6. Commit and push the cleaned slice, then record the commit SHA or blocker in `handoff.md`.
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree` to verify recorded commits, pushed refs, and cleanup state.
 8. Advance the next phase only after there is no in-scope unstaged or untracked work except documented draft satellites.
-## Proposed CareOps composition follow-up — 20 October 2026
+## Incorporated capability follow-up — 21 October 2026
+
+Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
+
+- [ ] CAP-22.1: Qualify a small experiment-lifecycle extraction from careops-sim batch_runner/api_runner through existing interfaces; preserve the consumer facade and use ED plus a neutral logistics consumer.
+- [ ] CAP-22.2: Require 1/2/4-worker seed/result parity, progress/cancellation, restart parity and crash recovery between output publication and completion recording; partial output must never be labelled complete. Coordinate exact CLI files with the existing Track 66 reservation before dispatch.
+
+Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.
+
+## Proposed careops-sim composition follow-up — 20 October 2026
 
 [Pending owner worklist](../../design/careops-composition-plan-20261020.md)
 records neutral relationship, allocation, transfer, progression, runner and

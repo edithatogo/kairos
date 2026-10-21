@@ -46,3 +46,26 @@ See [owner worklist and downstream join](../../design/careops-composition-plan-2
 ## Acceptance and cross-owner gates
 
 Require the phase test matrix, meaningful negative controls, exact input/source/output hashes, deterministic replay and failure/recovery receipts. Coordinate Arrow modifications through 04/62 and shared scheduler/public contracts through 01/25. Current broad registry paths are prospective: reserve bounded disjoint files and rebind on source drift. Publication, hardware runtime and clinical validation remain separate.
+
+## Dependencies
+
+Bind immutable source and only the scheduler/RNG/identity capabilities consumed
+from 01/03/64. Their status labels cannot waive consumer conformance. Track66
+interfaces are conditional on actual experiment use; no blanket completion gate.
+
+## Parallel-safe tracks
+
+Planning can proceed in disjoint files. Runtime changes require exact-file owner
+handoffs: 67 overlaps existing core/state/ABM owners; 68 and69 overlap DES. Shared
+scheduler/registry changes are serialized. A broad owned-path list is not a lease.
+
+## Acceptance criteria
+
+Pass the neutral negative controls and lifecycle/statistical oracles in test-matrix,
+public API/schema/checkpoint compatibility, deterministic replay and bounded recovery.
+Maturity remains planned/experimental until the existing coordinator accepts evidence.
+
+## Quality gates
+
+Run the test matrix and Conductor phase/DAG/artifact/coverage checks. Record exact
+source/features/input/toolchain/host/exit/output hashes and independent review.

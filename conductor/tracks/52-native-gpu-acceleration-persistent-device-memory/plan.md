@@ -74,3 +74,12 @@ phase begins:
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 8. Advance only after there is no in-scope unstaged or untracked work except
    documented draft satellites.
+
+## Incorporated capability follow-up — 21 October 2026
+
+Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
+
+- [ ] CAP-52.1: Qualify native Mac Metal kernel submission, buffer readback and CPU/reference parity with actual device provenance; reject CpuFallback as device acceptance.
+- [ ] CAP-52.2: Independently verify the separate Pleiades CUDA computer OS/GPU/driver/toolkit/access; the historical bare pleiades SSH alias addresses the NAS. Qualify real kernels, memory limits, cancellation/cleanup and separate initialization/transfer/compute timing before promotion.
+
+Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.

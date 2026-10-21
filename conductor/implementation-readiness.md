@@ -1,5 +1,14 @@
 # KairoECS Implementation Readiness
 
+> **Integrated planning registry — 21 October 2026:** 70 tracks: 60 recorded Done,
+> 7 In Progress (48–53, 55) and 3 Planned (67–69). The 20 October audit's 67-track
+> count is a historical snapshot before those registrations. Tracks62–66 have
+> disputed full-completion claims; recorded status is not exercised capability.
+> The [audit](capability-reconciliation-20261020.md) and
+> [composition plan](design/careops-composition-plan-20261020.md) are incorporated
+> together. Implementation and hardware gates remain pending; no Done status is
+> advanced by this planning integration.
+
 Last verified: 2026-10-18
 
 ## Purpose

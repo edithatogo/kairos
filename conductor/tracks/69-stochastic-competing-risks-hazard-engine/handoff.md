@@ -29,3 +29,28 @@ and path claims before dispatch; dependent contracts remain provisional.
 - pushed ref: none for this planning revision.
 - `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: runtime phase closeout pending; no hosted acceptance claimed.
 - next-phase decision: remain pending; bind Phase 0 only after contract and owner review.
+
+## Summary
+
+Pending composition plan incorporated with the capability audit; no runtime acceptance.
+
+## Files changed
+
+Track planning artifacts, owner worklist and registry mapping only.
+
+## Contracts consumed
+
+Exact-source scheduler/RNG/identity capabilities must be bound before implementation.
+
+## Contracts changed
+
+Proposed neutral semantics only; no public runtime API changed in this integration.
+
+## Tests added
+
+Behavioural oracles planned in test-matrix; implementation tests remain pending.
+
+## Known risks
+
+Shared ownership, unqualified prerequisite capabilities and compatibility drift;
+see risk-register and the bounded owner handoff requirements.

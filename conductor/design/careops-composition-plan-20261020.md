@@ -1,4 +1,4 @@
-# CareOps-driven composition: bounded upstream follow-up plan
+# careops-sim-driven composition: bounded upstream follow-up plan
 
 Authorised planning incorporation: 20 October 2026. All work below is pending.
 This supplement routes requirements to existing owners; it neither changes their
@@ -119,3 +119,14 @@ owns Mac/NAS/CUDA qualification and registry corrections; do not duplicate its
 hardware plan or equate CPU fallback with device execution. When combining with
 67–69 registration, recompute registry counts; its 67-track audit snapshot
 predates those three registrations.
+
+## Integrated review state — 21 October 2026
+
+The capability audit at fc971d5 and this composition branch are combined in PR266's
+integration candidate. Registry totals are now70 (60 recorded Done,7 In Progress,
+3 Planned); earlier67-track totals remain dated audit evidence. The CAP tasks and
+K-C worklist are complementary references, not duplicate engines or completion
+claims. Track65/66 plan files are preserved from the audit baseline; their pending
+CAP follow-up resides in handoff.md to avoid changing reserved worker inputs.
+Track69's whole-track66 prerequisite is removed; only actually consumed experiment
+capabilities require a handoff. All runtime reservations remain protected.

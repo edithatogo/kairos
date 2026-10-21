@@ -71,3 +71,11 @@ phase begins:
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 8. Advance only after there is no in-scope unstaged or untracked work except
    documented draft satellites.
+
+## Incorporated capability follow-up — 21 October 2026
+
+Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
+
+- [ ] CAP-55.1: Run physically distinct hosts with actual transport and failure/restart parity; single-node Slurm validates scheduler integration only. Measure equal-workload wall-time speedup/efficiency and memory limits rather than deriving efficiency from node counts. Preserve usable CPU delivery while optional HPC gates remain open.
+
+Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.

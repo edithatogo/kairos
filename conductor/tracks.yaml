@@ -1050,7 +1050,7 @@ tracks:
     required_gates:
       - phase-closeout-check
       - dynamic-entity-spawning-ecs-integrity
-      - linked-pair-lifecycle-cascading-parity
+      - typed-relationship-lifecycle-parity
       - composite-entity-telemetry-arrow-export
   - id: 68
     name: Inter-Unit Boundary Channels & Asynchronous Handover Sinks
@@ -1066,12 +1066,12 @@ tracks:
       - phase-closeout-check
       - boundary-channel-transit-delay-distribution
       - egress-sink-handover-backpressure-parity
-      - inter-unit-patient-conservation-accounting
+      - inter-unit-entity-conservation-accounting
   - id: 69
     name: Stochastic Competing Risks & Non-Markovian Hazard Engine
     status: Planned
     owner: des-api-agent + vv-uq-agent + core-scheduler-agent
-    depends_on: ["01", "03", "64", "66"]
+    depends_on: ["01", "03", "64"]
     owned_paths:
       - crates/kairo-ecs-rng/
       - crates/kairo-ecs-des/
