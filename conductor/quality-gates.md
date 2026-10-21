@@ -598,3 +598,29 @@ pwsh -NoProfile -File docs/design/validate-compatibility-pack.ps1 -ReleaseGate
 | Compatibility promise page | yes | yes | yes | yes |
 | Reproducibility docs | partial | yes | yes | yes |
 | Client-side search | no | yes | yes | yes |
+
+## Planned composition gates — Tracks 67–69
+
+These are **pending implementation acceptance gates**, not executed checks. Their
+registration supports planning validation only. Before dispatch, bind an actual
+owner test command, immutable source/features, fixture/input/seed, toolchain and
+retained output hash. A missing executable or oracle is unresolved, never a pass.
+Run neutral fixtures plus the relevant careops-sim adapter and independent controls;
+zero-exit document validators cannot satisfy the runtime gates below.
+
+| Required gate | Behavioural acceptance oracle / explicit failure |
+| --- | --- |
+| **dynamic-entity-spawning-ecs-integrity** | Safe mid-iteration spawn, deterministic IDs and bounded capacity; reject stale handles, duplicate creation and allocation failure without corrupted iteration |
+| **typed-relationship-lifecycle-parity** | One-to-many typed links with explicit detach/reparent/cascade rules; independent children survive, ownership cycles reject, and checkpoint/replay conserves identities |
+| **composite-entity-telemetry-arrow-export** | Versioned relationship IDs survive real Arrow IPC/Parquet export and independent-reader round trips; duplicate/missing links and incompatible schemas fail |
+| **boundary-channel-transit-delay-distribution** | Fixed-clock and seeded transit cases preserve units, tie order, bounded delay semantics and independently specified distribution controls; unsupported distributions remain unqualified |
+| **egress-sink-handover-backpressure-parity** | Reservation/occupancy/authority transitions preserve sender holds and destination capacity under rejection, expiry, cancellation and delayed acknowledgements |
+| **inter-unit-entity-conservation-accounting** | Single-scheduler two-depot fixture proves one logical effect per operation ID across duplicates/reordering/restart; lost/duplicated entities or premature resource release fail, without claiming network exactly-once delivery |
+| **competing-hazards-sampling-invariance** | Analytic exponential/piecewise cause-specific incidence and survival controls, valid zero hazard, deterministic ties and unchanged-covariate invariance with justified sample/error bounds |
+| **non-markovian-survival-clock-oracle** | Consumer-justified age-dependent family and time-varying reference test integrated/residual hazard, censoring and stale-event cancellation; silent duration clamps or unrelated redraws fail |
+| **independent-stream-rng-reproducibility** | Named process/entity streams preserve unrelated draws and checkpoint replay across 1/2/4 workers; test namespace collisions and policy-change alignment rather than matching seeds alone |
+
+All nine gates require negative controls and failure/recovery evidence before
+closeout. Public API/checkpoint/schema compatibility and existing phase/Conductor
+checks apply in addition. Neither planning registration nor a historical Done
+label waives the consumed-capability checks in the linked track specifications.

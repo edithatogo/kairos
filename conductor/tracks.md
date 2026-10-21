@@ -1,5 +1,14 @@
 # KairoECS Tracks Index
 
+> **Integrated planning registry — 21 October 2026:** 70 tracks: 60 recorded Done,
+> 7 In Progress (48–53, 55) and 3 Planned (67–69). The 20 October audit's 67-track
+> count is a historical snapshot before those registrations. Tracks62–66 have
+> disputed full-completion claims; recorded status is not exercised capability.
+> The [audit](capability-reconciliation-20261020.md) and
+> [composition plan](design/careops-composition-plan-20261020.md) are incorporated
+> together. Implementation and hardware gates remain pending; no Done status is
+> advanced by this planning integration.
+
 This file is the human-readable Conductor status index. Keep it in lockstep with `conductor/tracks.yaml`, which is the authoritative machine-readable source for status, ownership, dependencies, paths, and gates.
 
 | Track | Name | Status | Primary subagent | Artifact |
@@ -71,6 +80,9 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 64 | Archetype/SoA ECS Storage, Full DES Process/Resource Kernel & ABM Spatial Topologies | Done | `ecs-agent + des-api-agent + abm-api-agent + core-scheduler-agent` | See `conductor/tracks/64-*/spec.md` |
 | 65 | Vectorized Multi-World RL (VecEnv), PettingZoo Bridge & Advanced Game Theory Solvers | Done | `game-theory-agent + ml-integration-agent + performance-agent` | See `conductor/tracks/65-*/spec.md` |
 | 66 | Parallel Ensemble Sweeps (Sobol/CRN), SBI Calibration & Copy-on-Write Wasm Studio | Done | `vv-uq-agent + experiment-agent + timetravel-agent + playground-agent` | See `conductor/tracks/66-*/spec.md` |
+| 67 | Linked Entity Hierarchies, Dynamic Spawning & Cascaded Lifecycles | Planned | `ecs-agent + abm-api-agent + contracts-agent` | See `conductor/tracks/67-*/spec.md` |
+| 68 | Inter-Unit Boundary Channels & Asynchronous Handover Sinks | Planned | `des-api-agent + contracts-agent + streaming-agent` | See `conductor/tracks/68-*/spec.md` |
+| 69 | Stochastic Competing Risks & Non-Markovian Hazard Engine | Planned | `des-api-agent + vv-uq-agent + core-scheduler-agent` | See `conductor/tracks/69-*/spec.md` |
 
 ## Track status vocabulary
 

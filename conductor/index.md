@@ -15,3 +15,5 @@ A status label alone does not prove implementation or release acceptance.
 - [Implementation readiness](implementation-readiness.md)
 - [Phase closeout ledger](phase-closeout.yaml)
 - [Current status evidence](status.md)
+
+- [Pending CareOps composition owner plan](design/careops-composition-plan-20261020.md)

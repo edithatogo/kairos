@@ -62,3 +62,12 @@ phase begins:
 ## Approved conditional Track49 entry — 4 October2026
 
 The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
+
+## Incorporated capability follow-up — 21 October 2026
+
+Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
+
+- [ ] CAP-49.1: Implement and qualify actual MPI API and gRPC paths under reviewed dependencies; retain socket transport evidence under its true name. Four processes launched by mpiexec alone do not prove MPI transport.
+- [ ] CAP-49.2: Qualify Mac/NAS host identities and runtime/wire compatibility, then retain two-host failure/restart and serial-parity receipts; use exact source/input/toolchain and raw-output hashes.
+
+Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.

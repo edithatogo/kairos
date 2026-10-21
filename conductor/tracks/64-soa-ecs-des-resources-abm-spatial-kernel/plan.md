@@ -40,3 +40,21 @@ phase begins:
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 8. Advance only after there is no in-scope unstaged or untracked work except
    documented draft satellites.
+
+## Incorporated capability follow-up — 21 October 2026
+
+Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
+
+- [ ] CAP-64.1: Separate event joining from resource granting: implement and verify AllOf/AnyOf wait semantics independently of atomic bundle allocation. Preserve careops-sim Q/C/Flow compatibility before consumer migration.
+- [ ] CAP-64.2: Require contention, timeout-at-grant ties, cancellation, expiry, partial failure, rollback and stale-completion tests with resource conservation after every event. Keep safe clinical interruption policy in careops-sim; acquire-all versus staged approximation must be explicit.
+
+Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.
+
+## Proposed careops-sim composition follow-up — 20 October 2026
+
+[Pending owner worklist](../../design/careops-composition-plan-20261020.md)
+records neutral relationship, allocation, transfer, progression, runner and
+observation requirements. Only rows naming this track are its prospective work;
+other owner rows require handoff. Existing accepted tasks and receipts retain
+their scope. Bind an exact-source packet and reconcile the owner registry/phase
+before implementation; this planning link does not reopen or complete a phase.

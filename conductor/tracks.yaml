@@ -1036,3 +1036,50 @@ tracks:
       - optuna-abc-smc-calibration-hook
       - cow-delta-snapshot-memory-budget
       - wasm-time-travel-inspector-smoke
+  # Registration/dependency ADR: conductor/tracks/29-wave-manager-execution-gatekeeper/adr-composition-registration-20261021.md
+  - id: 67
+    name: Linked Entity Hierarchies, Dynamic Spawning & Cascaded Lifecycles
+    status: Planned
+    owner: ecs-agent + abm-api-agent + contracts-agent
+    depends_on: ["01", "03", "64"]
+    owned_paths:
+      - crates/kairo-ecs-core/
+      - crates/kairo-ecs-state/
+      - crates/kairo-ecs-abm/
+      - docs/design/linked-entities.md
+      - conductor/tracks/67-linked-entity-hierarchies-dynamic-spawning/
+    required_gates:
+      - phase-closeout-check
+      - dynamic-entity-spawning-ecs-integrity
+      - typed-relationship-lifecycle-parity
+      - composite-entity-telemetry-arrow-export
+  - id: 68
+    name: Inter-Unit Boundary Channels & Asynchronous Handover Sinks
+    status: Planned
+    owner: des-api-agent + contracts-agent + streaming-agent
+    depends_on: ["01", "03", "64"]
+    owned_paths:
+      - crates/kairo-ecs-des/
+      - crates/kairo-ecs-streaming/
+      - docs/design/boundary-channels.md
+      - conductor/tracks/68-inter-unit-boundary-channels-handover-sinks/
+    required_gates:
+      - phase-closeout-check
+      - boundary-channel-transit-delay-distribution
+      - egress-sink-handover-backpressure-parity
+      - inter-unit-entity-conservation-accounting
+  - id: 69
+    name: Stochastic Competing Risks & Non-Markovian Hazard Engine
+    status: Planned
+    owner: des-api-agent + vv-uq-agent + core-scheduler-agent
+    depends_on: ["01", "03", "64"]
+    owned_paths:
+      - crates/kairo-ecs-rng/
+      - crates/kairo-ecs-des/
+      - docs/design/competing-risks.md
+      - conductor/tracks/69-stochastic-competing-risks-hazard-engine/
+    required_gates:
+      - phase-closeout-check
+      - competing-hazards-sampling-invariance
+      - non-markovian-survival-clock-oracle
+      - independent-stream-rng-reproducibility

@@ -1,0 +1,159 @@
+# Capability reconciliation and execution plan — 20 October 2026
+
+**Repository scope:** This document concerns **kairos** and **careops-sim** (`/Users/doughnut/Documents/careops-sim`). The separate **careops** repository is outside scope. Earlier uses of “CareOps” in this audit meant the careops-sim simulation repository.
+
+## Decision and authority
+
+The maintainer requested a completion audit, free local execution options, a careops-sim/Kairos abstraction review, and updates to both repositories' plans. This is a planning correction, not runtime dispatch, a release acceptance, or a transfer of ownership. Audit baseline: Kairos `f0d30e28c3299dcdb6ca138d95319ecaaf29a54a`; careops-sim main `8ca0e5ecec2a41a86ebce32361adbde08dd191d3`; its Kairos pin `44261eb5cf8275f132f63a3396903d116d701dbe`.
+
+The registry records **67 tracks: 60 Done and 7 In Progress (48–53, 55)**. The earlier 59/66 tally is incorrect. These are lifecycle records, not 60 independently verified full capabilities. Tracks 62–66 have **disputed completion claims** against the audited source revision and must not be used as acceptance evidence for dependent upgrades. Preserve their historical closeout records while Track 29 and each owner reconcile scope, reopen incomplete leaves, and synchronize registry/phase ledgers. This audit does not silently reopen tracks or invalidate narrowly accepted historical slices.
+
+## What is complete, and what remains
+
+| Tracks | Source evidence at audited revision | Planning disposition / acceptance still needed |
+| --- | --- | --- |
+| 47–48 | Single-host conservative runtime and bounded optimistic runtime delivered; earlier implementation-pending descriptions are stale | 47 remains accepted for its bounded scope; 48 needs distributed rollback/GVT/recovery evidence |
+| 49 | Native socket multi-process transport and four-rank launcher smoke exist; Cargo has no rsmpi/mpi-sys or tonic/prost transport dependencies | Implement and exercise actual MPI API and gRPC transports if retaining those claims; socket and mpiexec-launched process evidence alone do not satisfy them |
+| 50 | `NumaTopology::discover` derives synthetic topology from KAIRO_NUMA_NODES; affinity application/reversion return UnsupportedHost | Real Linux discovery/affinity first; multiple NUMA-node locality measurement remains separate |
+| 51 / 62 | Main's `kairo-ecs-arrow` lacks official Arrow/Parquet dependencies; custom ARROW1/PAR1 encodings and a Zstd-named writer do not establish interoperable compressed files; HDF5/ADIOS2 wrappers are contracts | Reconcile existing real careops-sim-pin IO implementation before adding another backend; independent readers, compression, corrupt-input and recovery tests required |
+| 52 | `metal.rs` reports CpuFallback and calls CPU worker execution; the MSL kernel is empty; no real wgpu/CUDA dependencies | Real device kernel submission, buffers, telemetry, CPU parity and measured timing required; host discovery is not compute proof |
+| 53 | FMI2 raw lifecycle surface exists; FMI3 remains reserved | Real FMU loading, lifecycle/error handling and deterministic 1,000-step reference run required |
+| 55 | Local workers and ensembles are useful implementation | Real two-host execution and fault/restart evidence before cluster claims; measured scaling before performance claims |
+| 56–61 | Ontology parsing/codegen, game graphs and normal/extensive-form bounded solvers exist; focused package tests pass | Keep bounded completion; repair stale handoff text through owners, do not infer universal standards or arbitrary-game certification |
+| 63 | Python `_native.py` optionally loads ctypes for get_version; it does not supply a native default scheduler/PyO3 runtime | Native consumer execution, lifecycle, deterministic trace parity and packaging tests before claiming native SimPy replacement; Wasm has separate acceptance |
+| 64 | `ConditionWait::AllOf(usize)/AnyOf(usize)` declarations exist without scheduler wait semantics; basic resource/spatial/SoA pieces exist | Implement deterministic composite waits and atomic allocation/cancellation/rollback before downstream reliance |
+| 65 | LemkeHowsonSolver delegates a clamped 2x2 indifference helper; strict-dominance counterexample returns a non-equilibrium; Kuhn CFR implementation exists | Fix normal-form solver with independent best-response/NashConv oracles; retain bounded Kuhn evidence, separately qualify general CFR/Leduc |
+| 66 | Parallel ensemble/CoW pieces exist; Sobol direction numbers are ad hoc; ABC-SMC surface scores one tolerance population | Reference Sobol vectors and sensitivity benchmarks, true sequential populations/weights/resampling, replay/worker invariance and real browser study required |
+
+## Evidence and its limits
+
+The audit ran `cargo test --locked -p kairo-ecs-game-ontology -p kairo-ecs-game-theory -p kairo-ecs-arrow -p kairo-ecs-gpu -p kairo-ecs-mpi -p kairo-ecs-grpc --all-features --target-dir /tmp/kairos-capability-audit-target` at the Kairos baseline in the isolated audit checkout `/Users/doughnut/.codex/worktrees/kairos-capability-audit/kairos`: exit 0, Homebrew rustc 1.99.1, aarch64-apple-darwin, LLVM 23.1.3. That temporary checkout subsequently became unavailable. No retained full raw test log is claimed; the command result is a session observation. Package success does not establish the missing external capabilities above.
+
+`mpiexec -n 4 /tmp/kairos-capability-audit-target/debug/deps/multirank_smoke-cac21c060b41a92c --exact multirank_smoke_4ranks --nocapture` exited 0 with Open MPI 5.0.11. This launched four OS processes using the implemented socket path, not an MPI API implementation. Hosted core CI at the baseline passed: [run 39129031454](https://github.com/edithatogo/kairos/actions/runs/39129031454). Other scheduled workflows had failures; this is not an all-CI-green statement.
+
+Reproducible solver oracle: row-major payoffs `A=[2,2,1,1]`, `B=[2,1,2,1]`; both players have strictly dominant first actions. Calling `LemkeHowsonSolver::solve(&A,&B)` returns `[0.5,0.5]` for each player and `nash_conv=1`, whereas the pure first-action equilibrium has `nash_conv=0`. Local output `/tmp/kairos-capability-audit-target/dominance-audit.log` SHA-256 `0074d40c75fefc6720d206732aa650410c6863bfbeeb7853e60c8339304cfa05`; fixed deterministic input, no random seed. The local artifact is not a durable CI receipt; the existing solver owner should retain this case in its regression suite.
+
+## Free execution routes and qualification order
+
+No paid service or new hardware purchase is required for the first implementation and qualification leaves. Electricity/storage and installation work are still real costs. Software availability does not mean it has been installed or a workload has passed.
+
+| Host / route | Verified or reported state | Concrete first work and proof boundary |
+| --- | --- | --- |
+| Mac | Verified M1 Max, 10 CPU / 24 GPU cores, 32 GiB, macOS 27.0.1; Open MPI and Colima installed, Colima stopped | Native Rust tests, official Arrow/Parquet independent-reader checks; actual Metal via wgpu or reviewed native Metal backend. Capture device identity, submitted kernel, output/readback and CPU parity. No CUDA claim |
+| Pleiades NAS | SSH-verified Linux x86_64 Intel i3-N300, 8 cores, about 32 GiB, Docker 29.4.0; one NUMA node, Intel render device, no nvidia-smi | Native Linux/x86 portability, real affinity, Docker FMU and single-node Slurm integration; CPU transport peer after matching runtime/architecture review. No NVIDIA, multi-node NUMA, InfiniBand or parallel-filesystem claim |
+| Pleiades CUDA computer | Maintainer reports NVIDIA CUDA GPU; separate machine from NAS. SSH probe to pleiades.local:22 timed out | Read back OS/architecture, GPU model, driver/toolkit compatibility, memory and access first; then real CUDA kernel/buffer execution, deterministic CPU parity, failure cleanup and measured transfer/compute times. Hardware acceptance remains pending |
+| Colima/Linux containers on Mac | Installed but stopped | Free isolated Linux toolchain/OpenModelica/Slurm smoke route; preserve native Mac Metal lane. Containers do not create NUMA domains, a cluster or CUDA hardware |
+
+Host identity matters: the local SSH alias `pleiades` currently routes to the **NAS**, despite the separate CUDA computer's name. Use a verified explicit host configuration for each before dispatch. Do not overwrite existing aliases, bypass host-key verification, or infer credentials. No remote installation or workload was performed by this planning audit.
+
+Official route references: [wgpu native backends](https://wgpu.rs/), [Colima](https://github.com/abiosoft/colima), [OpenModelica macOS routes](https://openmodelica.org/download/download-mac/), [Open MPI SSH launch requirements](https://docs.open-mpi.org/en/main/launching-apps/ssh.html), [Arrow Rust](https://arrow.apache.org/rust/arrow/index.html), [Parquet Rust](https://arrow.apache.org/rust/parquet/index.html), [Slurm administration quick start](https://slurm.schedmd.com/quickstart_admin.html). OpenModelica's discontinued macOS binary route is not a basis for recommending an unverified Homebrew cask; use its documented container/source route. Mixed macOS/Linux distributed runs require explicit runtime/wire compatibility and cannot be assumed from launch success.
+
+## Ordered owner handoff and acceptance plan
+
+These unchecked leaves are recommendations incorporated into the plan, not new dispatch or claims on the owners' source files.
+
+- [ ] **R0 — Track 29 + owners 62–66:** reconcile disputed Done claims with this source evidence; choose bounded historical closure versus reopening incomplete acceptance, then synchronize tracks.yaml, tracks.md, phase-closeout.yaml and dependency gates. Preserve historical receipts and state why any status changes. Coordinate website correction with existing PR #264 instead of editing its files here.
+- [ ] **R1 — owners 03/04/21/22/25 + careops-sim upgrade owner:** build a symbol/fixture/dependency/receipt capability matrix for the careops-sim pin and main; identify a preserving integration revision; require native ED, Q/C and physical IO parity plus pin rollback before parent pin advancement.
+- [ ] **R2 — owners 49/50/51/53:** real transports, Linux topology/affinity, interoperable IO and FMU loading using Mac/NAS. Each leaf must declare dependencies, exact command/input hashes, host/toolchain, exit status and retained raw output; negative tests must distinguish unsupported host from success.
+- [ ] **R3 — owner 52 + careops-sim E6:** qualify Mac Metal first; qualify CUDA computer identity/access in parallel when available, then implement real CUDA. Compare exact CPU/reference outputs (or specified numerical tolerance), kernel/device evidence and timings. CPU fallback remains explicitly labelled.
+- [ ] **R4 — owners 64/65/66:** behavioral correctness gates for composite allocation/waits, strict-dominance solver regression, standard Sobol vectors and sequential ABC-SMC before performance or UI acceptance. Existing source reservations remain intact.
+- [ ] **R5 — owners 48/49/54/55 + careops-sim E7/E8:** real two-host run with failure injection, checkpoint/restart and deterministic parity; single-node Slurm proves scheduler integration only. Report speedup/efficiency from measured wall time, not constants or worker count. Larger HPC certification remains deferred until genuine infrastructure is available.
+- [ ] **R6 — owners 03/21/22/25:** extract only qualified reusable mechanisms from careops-sim as described below, with two distinct consuming scenarios and compatibility/recovery evidence.
+
+## careops-sim to Kairos boundary
+
+Prioritize reusable experiment orchestration from `batch_runner`/`api_runner`: deterministic seed partitioning, worker/resume equivalence, progress/cancellation, manifests and recovery. Extend existing Kairos experiment/calibration interfaces rather than introduce a second scheduler or runner. Preserve careops-sim public facades while changing the backend only after parity.
+
+Next candidates are generic allocation leases, interruption/preemption, handover/work continuation, eligibility predicates and dispatch hooks from operations. Require atomic acquire-all/release/cancel and stale-completion tests first; careops-sim `claim_atomic_multi_resource` is currently unsupported and main's AllOf enum is not an implementation. A second consumer (e.g. a nonclinical logistics fixture, followed by a real independent domain adapter) must demonstrate the proposed interface before a broad extraction.
+
+Keep healthcare concepts in careops-sim domain/core layers: clinical triage and capability vocabularies, patient/pathway semantics, maternal-neonatal linkage, clinical policy, site staffing rules and empirical mappings. Pass policies into generic primitives; do not import healthcare enums into Kairos. Existing calibration/Flow functionality on the careops-sim pin should be reconciled, not newly extracted a second time. The current arrival generator is count-conditioned synthetic ticks, not a qualified Poisson generator.
+
+## Coordination and review
+
+Work uses isolated branches and advisory path claims. Existing Kairos solver/CLI reservations remain protected even when expired; this patch changes no runtime source or owner plan used as a claim input. careops-sim' active roadmap owner retains its registry, roadmap, task DAG and proposed upgrade/domain tracks. Its linked addendum carries the same acceptance requirements for integration without editing those owned paths. No chat messages were sent during the 20 October audit and no source claims were recovered.
+
+Review outcome: documentation scope only; no new dependency/API/ABI/schema change, pin change, release or hardware acceptance. The principal remaining risk is stale downstream language treating historical Done records as full capability proof. R0 and the prominent status notices make that discrepancy explicit until owners synchronize lifecycle records. Full `just ci` is not implied by documentation validation; validation results are recorded in the change description.
+
+## Planning validation receipt
+
+Date: 2026-10-20. Working directory: `/Volumes/PortableSSD/codex-worktrees/kairos-capability-plans-20261020`. Base commit: `f0d30e28c3299dcdb6ca138d95319ecaaf29a54a`. Tools: Python 3.15.0, PowerShell 7.6.7, v26.12.0. Deterministic seed: not applicable (documentation validators). Table hashes cover concatenated stdout and stderr of the actual commands; this table is the retained summary artifact, not a substitute for hosted logs. Source inputs are the planning diff against this base; integration must bind the final commit from the PR.
+
+| Command | Exit | Output SHA-256 |
+| --- | --- | --- |
+| `git diff --check` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` | 0 | `adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2` |
+| `pwsh -NoProfile -File scripts/validate_conductor_dag.ps1` | 0 | `222356bfa3e996297fe63926559ab3a14d22d8d568657b6f962fa47cbbe0f164` |
+| `pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1` | 0 | `eddb2a82dc6bfa04ced2016884eeaffe1b60b7f0ae3b0e36a44e3ab1feebc324` |
+| `node scripts/validation/validate-free-compute-routes.mjs` | 0 | `3a7dcf2d1a12b30d5ae410558559f3461f6138630409a8f41983a303685a421c` |
+
+Full runtime CI was not rerun for these documentation-only changes. Hosted checks and owner lifecycle reconciliation remain separate.
+
+## Review update — 21 October 2026
+
+The source and hardware findings above describe the explicit 20 October revisions/readbacks, not a fresh audit of remote main. GitHub CLI HTTPS requests, Git HTTPS/SSH fetches and the GitHub connector failed during this review; current remote heads, review threads, merge conflicts and hosted check results could not be verified. Do not mark either PR merge-ready from the local checks alone. No runtime capability or track closure is advanced by these review fixes.
+
+Review fixes remove the contradictory unverified OpenModelica cask instruction and fixed free-cloud GPU quota/model promises from the route catalog, distinguish generic TCP from real gRPC, and require source/input/toolchain/raw-artifact hashes for each new local route. The generic macOS tooling route and observed M1 Max inventory remain distinct; neither proves a working GPU backend.
+
+The maintainer explicitly authorized agent coordination on 21 October. The careops-sim roadmap owner received C-R0–C-R7 for integration into its existing upgrade/domain plans and task DAG. Existing Kairos CLI/solver reservations remain protected; no corresponding live chat was identified in the available chat inventory. Their R4 requirements remain pending owner acknowledgement, not silently dispatched or accepted.
+
+Paired changes: [Kairos PR #266](https://github.com/edithatogo/kairos/pull/266) and [careops-sim PR #173](https://github.com/edithatogo/careops-sim/pull/173). The careops-sim plan integration is tracked separately by its owner; integration evidence must identify the actual commit/task mapping.
+
+Local review verification on 21 October at parent `0cdc9ac140c51faf80ee916ba10a7f11e1c70cbd`: `git diff --check` passed; Conductor phase gates, DAG and artifact validators plus the free-compute route validator all passed with no reported errors. Working directory and validator toolchain are the same as the retained planning receipt above. No new tests were added for this prose/catalog correction. Source inspection reconfirmed the audited capability boundaries; full runtime CI was not rerun.
+
+## Further refinements — 21 October 2026
+
+### Reconcile executable plans before expanding scope
+
+Read-only inspection found divergent planning copies: careops-sim main checkout at `fc4fdd6` with uncommitted plans still prescribes an automatic `f0d30e2` upgrade (R2.1) and AllOf/AnyOf atomic team allocation (A3.2). The contracts worktree at `576f50b` instead qualifies candidate selection and explicitly rejects AllOf as an allocator. The uncommitted `inter-agent-coordination-20261020.md` claims all active agents are aligned; that is not established by these conflicting copies. Preserve both versions and let the existing roadmap owner integrate the reviewed corrections and regenerate/check its task catalog. A clean lease store alone is not permission to overwrite uncommitted proposals.
+
+The local child branch `codex/careops-domain-capabilities-20261020` at `0157d0c` does register proposed Tracks 67–69. This is a branch-specific fact, not a change to the audit's 67-track mainline baseline or proof of remote acceptance. Tracks 68 and 69 both claim the whole DES crate; Track 67 overlaps existing core/state/ABM owners. Before dispatch, map exact files and interfaces to one writer, record owner handoffs, and qualify prerequisites from disputed Tracks 64/66. Do not infer that every new track needs all of Track 66: identify the particular RNG/experiment contract it consumes. The specs' non-breaking assertions are acceptance targets until public API/checkpoint/schema compatibility is demonstrated.
+
+### Small acceptance refinements, using existing tasks
+
+| Existing owner / plan | Refinement | Minimum behavioral oracle |
+| --- | --- | --- |
+| Kairos 29 + careops-sim R0/R2 | Keep lifecycle status separate from exercised capability; bind each consumed capability to immutable source, feature set, host/backend, command, input and retained output | Missing, mismatched or stale evidence leaves upgrade blocked; a zero-exit structural validator cannot certify physical IO, GPU, MPI or clinical fitness |
+| Kairos 03/22 + careops-sim C-R4/A0 | First extraction is a small experiment lifecycle interface, preserving careops-sim facade; benchmark whether further movement is worthwhile | Same results for 1/2/4 workers and restart; cancellation never publishes partial output as complete; manifest points only to committed output; crash between output write and completion record is recoverable |
+| Kairos 03/64 + careops-sim A3 | Freeze allocation commit and cancellation rules before a shared resource framework | Contending requests, timeout at grant time, partial failure and preemption conserve claims after every event; explicitly distinguish atomic bundle grant from staged acquisition |
+| Proposed 67 + careops-sim A5 | Separate typed relationships from ownership/destruction policy; support one-to-many and independent lifetimes | Removing a parent relationship cannot implicitly destroy a surviving dependent; stale handles, cycles, duplicate spawn, deterministic IDs/streams and checkpoint restore are tested with neutral and clinical adapters |
+| Proposed 68 + careops-sim A4 | Keep transfer semantics independent of transport; start with one scheduler and typed commands | Duplicate/reordered acknowledgements, cancellation after reservation, expiry at arrival and restart preserve exactly one domain transition per operation ID; avoid claims of network exactly-once delivery |
+| Proposed 69 + careops-sim A1/B1 | Define elapsed-age/residual-time semantics, covariate changes and RNG draw ownership before a generic hazard engine | Analytic exponential competing-risk reference, zero-hazard case, tie ordering, unchanged-covariate invariance, time-varying reference and censoring tests; failed calibration is not fixed by resampling unrelated clocks |
+| Kairos 52/55 + careops-sim E6/E8 | Require explicit backend provenance and measured benefit before promotion | CPU fallback cannot satisfy device acceptance; initialization/transfer/compute timings separated; throughput and latency compared at equal workload; include memory limits and cancellation/recovery, not only ideal output parity |
+
+CC-01–CC-08 in careops-sim already cover identity, transfer, allocation, progression, capacity, policy/clocks, reproducibility and observation. Reuse those contracts; the rows above refine implementation oracles rather than create another competing framework. Keep scientific/clinical parameter validation in its existing domain process. Retain the headless CPU baseline as usable delivery while optional acceleration remains unqualified.
+
+### Execution order and coordination boundary
+
+1. Reconcile planning copies and status claims; establish exact-file ownership and capability dependencies.
+2. Preserve the current qualified pin and freeze consumer/IO/recovery baselines.
+3. Implement and qualify one neutral primitive with two concrete consumers, then migrate the adapter incrementally.
+4. Qualify native device and physically distributed execution separately; promote only measured, supported capabilities.
+
+These refinements were sent to the existing careops-sim roadmap chat under the maintainer's coordination authorization. Message delivery is not confirmed plan incorporation; retain task mappings and the integration commit before reporting completion. No new runtime tracks, source edits, pin changes or takeovers were made by this refinement. GitHub readback still timed out, so remote branch/PR status is not inferred from local refs.
+
+Refinement validation: documentation diff against `7c0da42e3348900603046b297c163a2e3b1bf4ea`, in the same worktree/toolchain as the planning receipt. On 21 October, `git diff --check` and Conductor phase/DAG/artifact validators exited 0. These checks validate document structure, not the proposed runtime oracles.
+
+## Owner-plan incorporation — 21 October 2026
+
+Pending CAP leaves are now in the existing plans for Tracks 22, 29, 48–53, 55 and 62–64. Tracks 65–66 carry CAP checklists in their handoffs so their active reservations' plan-input hashes remain unchanged. This is incorporation of follow-up work, not completion or a runtime ownership transfer.
+
+- [Track 22 CAP tasks](tracks/22-experiment-runner-scenario-management/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 29 CAP tasks](tracks/29-wave-manager-execution-gatekeeper/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 48 CAP tasks](tracks/48-time-warp-optimistic-rollback-runtime/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 49 CAP tasks](tracks/49-distributed-mpi-grpc-state-synchronization/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 50 CAP tasks](tracks/50-numa-topology-affinity-memory-lifecycle/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 51 CAP tasks](tracks/51-parallel-io-arrow-checkpoint-export/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 52 CAP tasks](tracks/52-native-gpu-acceleration-persistent-device-memory/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 53 CAP tasks](tracks/53-fmi-cosimulation-master-runtime/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 55 CAP tasks](tracks/55-end-to-end-weak-strong-scaling-certification/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 62 CAP tasks](tracks/62-official-arrow-parquet-zero-copy-ffi-spine/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 63 CAP tasks](tracks/63-native-polyglot-wheels-wasm-bindgen-bridge/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 64 CAP tasks](tracks/64-soa-ecs-des-resources-abm-spatial-kernel/plan.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 65 CAP tasks](tracks/65-vectorized-marl-vecenv-advanced-game-solvers/handoff.md#incorporated-capability-follow-up--21-october-2026)
+- [Track 66 CAP tasks](tracks/66-ensemble-sbi-calibration-cow-wasm-studio/handoff.md#incorporated-capability-follow-up--21-october-2026)
+
+## Confirmed careops-sim plan incorporation
+
+Read back local integration commit `07a67fd` and naming clarification `7b671c3` on `codex/careops-roadmap-contracts-20261020`. C-R0–C-R7 are mapped into existing R/A task IDs, acceptance matrices and the regenerated catalog, with evidence in `conductor/evidence/pr173-roadmap-integration-20261021.md` on that branch. The owner retained 145 accepted / 80 pending tasks and reported passing context/catalog/MVP checks and 32 task-harness tests. No implementation checkbox was promoted by this planning integration. The original main checkout's divergent uncommitted proposals remain preserved; branch incorporation does not mean merge into main.
+
+This incorporation concerns **careops-sim**, not **careops**. Local validation of this documentation slice: diff whitespace checks and Kairos phase/DAG/artifact validators passed. Hosted state remains unverified.
