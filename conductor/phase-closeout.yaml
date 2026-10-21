@@ -1163,3 +1163,45 @@ entries:
     commit_sha: "e374a3b5378493eaac2459830fe494e2380bf769"
     pushed_ref: "origin/main"
     next_phase_decision: "Track 66 is Done with concrete evidence manifests and main-branch verification."
+  - track_id: "67"
+    phase: "phase-0-planned-registration"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning registration only; gate IDs and behavioural oracles are recorded in the test matrix. Executable bindings and implementation review remain pending."
+    fixes_applied: false
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "Pending implementation closeout; planning validation does not establish runtime acceptance"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Remain Planned. Bind owner-native executables and reviewed inputs before dispatch; require negative controls, runtime evidence and independent review before phase acceptance."
+  - track_id: "68"
+    phase: "phase-0-planned-registration"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning registration only; gate IDs and behavioural oracles are recorded in the test matrix. Executable bindings and implementation review remain pending."
+    fixes_applied: false
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "Pending implementation closeout; planning validation does not establish runtime acceptance"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Remain Planned. Bind owner-native executables and reviewed inputs before dispatch; require negative controls, runtime evidence and independent review before phase acceptance."
+  - track_id: "69"
+    phase: "phase-0-planned-registration"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning registration only; gate IDs and behavioural oracles are recorded in the test matrix. Executable bindings and implementation review remain pending."
+    fixes_applied: false
+    validation_commands:
+      - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "Pending implementation closeout; planning validation does not establish runtime acceptance"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Remain Planned. Bind owner-native executables and reviewed inputs before dispatch; require negative controls, runtime evidence and independent review before phase acceptance."

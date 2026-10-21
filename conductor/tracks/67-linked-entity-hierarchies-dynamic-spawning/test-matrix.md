@@ -10,6 +10,19 @@
 Resolve real executable targets at dispatch; future commands are not test results.
 Unavailable dependencies remain explicit and do not pass through mocks.
 
+## Registered acceptance gates
+
+All executable bindings below are **pending**. Before dispatch, the owner must
+bind a real test target, immutable source/features, fixture and seed, toolchain,
+and retained output hash. These rows define acceptance, not executed results.
+
+| Gate ID | Required oracle | Executable binding / status |
+| --- | --- | --- |
+| `phase-closeout-check` | Run the Conductor closeout checks below; implementation acceptance additionally requires runtime receipts and independent review. | Document commands listed below; implementation closeout pending |
+| `dynamic-entity-spawning-ecs-integrity` | Safe mid-iteration spawn, deterministic IDs and bounded capacity; reject stale handles, duplicate creation and allocation failure without corrupted iteration | Pending owner-native executable binding; no runtime pass |
+| `typed-relationship-lifecycle-parity` | One-to-many typed links with explicit detach/reparent/cascade rules; independent children survive, ownership cycles reject, and checkpoint/replay conserves identities | Pending owner-native executable binding; no runtime pass |
+| `composite-entity-telemetry-arrow-export` | Versioned relationship IDs survive real Arrow IPC/Parquet export and independent-reader round trips; duplicate/missing links and incompatible schemas fail | Pending owner-native executable binding; no runtime pass |
+
 ## Conductor closeout checks
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`

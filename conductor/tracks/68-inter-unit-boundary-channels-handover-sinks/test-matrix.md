@@ -10,6 +10,19 @@
 Resolve real executable targets at dispatch; future commands are not test results.
 Unavailable dependencies remain explicit and do not pass through mocks.
 
+## Registered acceptance gates
+
+All executable bindings below are **pending**. Before dispatch, the owner must
+bind a real test target, immutable source/features, fixture and seed, toolchain,
+and retained output hash. These rows define acceptance, not executed results.
+
+| Gate ID | Required oracle | Executable binding / status |
+| --- | --- | --- |
+| `phase-closeout-check` | Run the Conductor closeout checks below; implementation acceptance additionally requires runtime receipts and independent review. | Document commands listed below; implementation closeout pending |
+| `boundary-channel-transit-delay-distribution` | Fixed-clock and seeded transit cases preserve units, tie order, bounded delay semantics and independently specified distribution controls; unsupported distributions remain unqualified | Pending owner-native executable binding; no runtime pass |
+| `egress-sink-handover-backpressure-parity` | Reservation/occupancy/authority transitions preserve sender holds and destination capacity under rejection, expiry, cancellation and delayed acknowledgements | Pending owner-native executable binding; no runtime pass |
+| `inter-unit-entity-conservation-accounting` | Single-scheduler two-depot fixture proves one logical effect per operation ID across duplicates/reordering/restart; lost/duplicated entities or premature resource release fail, without claiming network exactly-once delivery | Pending owner-native executable binding; no runtime pass |
+
 ## Conductor closeout checks
 
 - `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1`
