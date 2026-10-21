@@ -1,5 +1,9 @@
 # careops-sim-driven composition: bounded upstream follow-up plan
 
+Repository scope: **careops-sim** and its upstream **Kairos**; the separate
+**careops** portfolio repository is not the target. Unqualified CareOps references
+below mean careops-sim.
+
 Authorised planning incorporation: 20 October 2026. All work below is pending.
 This supplement routes requirements to existing owners; it neither changes their
 historical status nor certifies completed APIs. Before implementation, the owner
@@ -77,17 +81,23 @@ User-facing methods below are semantic requirements, not invented existing APIs.
 
 ## Dispatch order and integration
 
-1. Audit exact current contracts/source and owner status; freeze K-C01/K-C02/K-C03
-   semantics first. Reject stale base/input hashes when binding.
-2. Implement the smallest neutral bundle and transfer fixtures under existing
-   owners. K-C04 follows only after required event/identity contracts are settled.
-3. Adapt CareOps ED → ward → community and birthing → bounded theatre → linked
-   destinations. Two downstream consumers plus neutral fixtures qualify reuse.
-4. Qualify K-C05/K-C06 with existing experiment/observation facilities and independent
-   readers. Keep unrelated GPU/FMI/cluster work outside the headless dependency gate.
-5. Run owner tests, conformance, compatibility and applicable Conductor/CI gates;
-   record exact commits, inputs, outputs, tools and limits. Only then promote a
-   downstream pin. API promotion/release remains separately reviewed.
+1. Audit exact contracts/source and owner status; freeze K-C01/K-C02/K-C03
+   semantics and the small experiment-lifecycle interface. Reject stale input hashes.
+2. Qualify the smallest K-C05/CAP-22 runner extraction first: preserve the careops-sim
+   facade, ED/logistics consumers, named streams, 1/2/4-worker parity, cancellation,
+   committed output manifests and crash/restart recovery. Do not create a second runner.
+3. Implement the neutral bundle/transfer fixtures under existing owners. K-C04
+   follows only after consumed event/identity contracts are qualified. Keep domain
+   resource migration behind the initial runner gate, as in careops-sim A0/A3.
+4. Adapt ED → ward → community and birthing → bounded theatre → linked destinations.
+   Two downstream consumers plus neutral fixtures qualify broader mechanism reuse.
+5. Extend K-C05 to the broader experiment matrix and qualify K-C06 observation/format
+   integration with independent readers. This later extension does not defer the
+   initial runner proof from step2. Unrelated GPU/FMI/cluster work stays outside
+   the headless dependency gate.
+6. Run owner conformance/compatibility and applicable Conductor/CI gates; record
+   exact commits, inputs, outputs, tools and limits. Promote a downstream pin only
+   after its required gates pass. Public API/release acceptance remains separate.
 
 ## Cross-repository handoff
 
@@ -130,3 +140,5 @@ claims. Track65/66 plan files are preserved from the audit baseline; their pendi
 CAP follow-up resides in handoff.md to avoid changing reserved worker inputs.
 Track69's whole-track66 prerequisite is removed; only actually consumed experiment
 capabilities require a handoff. All runtime reservations remain protected.
+
+[Registration and dependency ADR](../tracks/29-wave-manager-execution-gatekeeper/adr-composition-registration-20261021.md) records the pending owner/dependency decision and unchanged historical statuses.

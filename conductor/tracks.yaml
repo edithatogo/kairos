@@ -1036,6 +1036,7 @@ tracks:
       - optuna-abc-smc-calibration-hook
       - cow-delta-snapshot-memory-budget
       - wasm-time-travel-inspector-smoke
+  # Registration/dependency ADR: conductor/tracks/29-wave-manager-execution-gatekeeper/adr-composition-registration-20261021.md
   - id: 67
     name: Linked Entity Hierarchies, Dynamic Spawning & Cascaded Lifecycles
     status: Planned
