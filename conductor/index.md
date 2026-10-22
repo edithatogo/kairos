@@ -21,3 +21,7 @@ A status label alone does not prove implementation or release acceptance.
 ## Polars migration
 
 [Track 70](tracks/70-polars-native-data-processing/index.md) is Planned; no implementation started. Dependencies 04/62/63 are routing context, not runtime proof. Requalify source and interoperability. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
+
+## Separate library adoption tracks
+
+[Library adoption programme](library-adoption.md) registers rand, rand_distr, ECharts, petgraph and Three.js separately, after accepted Polars delivery in both repositories. All implementation remains pending.

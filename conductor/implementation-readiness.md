@@ -124,3 +124,7 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 ## Track 70 readiness
 
 [Track 70](tracks/70-polars-native-data-processing/index.md) is Planned; no implementation started. Dependencies 04/62/63 are routing context, not runtime proof. Requalify source and interoperability. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
+
+## Library adoption planning — 22 October 2026
+
+[Programme](library-adoption.md): Tracks 71 (rand), 72 (rand_distr) and 73 (petgraph) are Planned, implementation not started. ECharts and Three.js are separate CareOps tracks. Entry requires explicit cross-repository acceptance receipts; both Polars migrations come first. No current runtime or release gate is waived.

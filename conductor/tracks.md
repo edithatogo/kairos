@@ -105,3 +105,12 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 
 ---
 - [ ] **Track 70: Polars-native data processing and standard interchange** — Planned. [Track](tracks/70-polars-native-data-processing/index.md). CareOps follows accepted upstream delivery.
+
+---
+- [ ] **Track: rand deterministic RNG adoption** — Planned; implementation not started. [Track](tracks/71-rand-deterministic-rng/index.md).
+
+---
+- [ ] **Track: rand_distr statistical sampling adoption** — Planned; implementation not started. [Track](tracks/72-rand-distr-sampling/index.md).
+
+---
+- [ ] **Track: petgraph spatial topology and routing adoption** — Planned; implementation not started. [Track](tracks/73-petgraph-spatial-routing/index.md).
