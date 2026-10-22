@@ -28,29 +28,29 @@
 
 ## Phase 2 - Dynamic loading
 
-- Task 2.1: Add official `libloading` dynamic library loading behind `fmi-runtime` supporting `.dylib` (macOS), `.so` (Linux), and `.dll` (Windows).
+- [x] Task 2.1: Add official `libloading` dynamic library loading behind `fmi-runtime` supporting `.dylib` (macOS), `.so` (Linux), and `.dll` (Windows).
 - [x] Task 2.2: Bind FMI 2 lifecycle functions safely.
   - Red: `rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-fmi --features fmi-runtime,fmi2 --test fmi2_lifecycle` failed with missing `Fmi2LifecycleState`, checked raw-parts constructor, and null-component error.
   - Green: same command passed after adding explicit lifecycle state tracking, a null-rejecting unsafe checked constructor, idempotent terminate/free cleanup coverage, and safety docs.
-- Task 2.3: Bind FMI 3 lifecycle functions safely.
+- [x] Task 2.3: Bind FMI 3 lifecycle functions safely.
 
 ## Phase 3 - Co-simulation master
 
-- Task 3.1: Implement instantiate, setup, step, terminate, and free lifecycle.
-- Task 3.2: Couple FMU time steps to KairoECS scheduler ticks.
-- Task 3.3: Add error propagation and resource cleanup tests.
+- [x] Task 3.1: Implement instantiate, setup, step, terminate, and free lifecycle.
+- [x] Task 3.2: Couple FMU time steps to KairoECS scheduler ticks.
+- [x] Task 3.3: Add error propagation and resource cleanup tests.
 
 ## Phase 4 - Third-party roundtrip
 
-- Task 4.1: Package exported FMUs as valid zip artifacts.
-- Task 4.2: Validate with compiled Rust test `.fmu` dynamic libraries (`.dylib`/`.so`/`.dll`) and OpenModelica CLI (`omc` via Homebrew/Linux container) roundtrip.
-- Task 4.3: Handoff integrated scenario metrics to Track 55.
+- [x] Task 4.1: Package exported FMUs as valid zip artifacts.
+- [x] Task 4.2: Validate with compiled Rust test `.fmu` dynamic libraries (`.dylib`/`.so`/`.dll`) and OpenModelica CLI (`omc` via Homebrew/Linux container) roundtrip.
+- [x] Task 4.3: Handoff integrated scenario metrics to Track 55.
 
 ## Phase 5 - Closeout
 
-- Task 5.1: Run FMI feature tests, third-party roundtrip, and Conductor gates.
-- Task 5.2: Run `$conductor-review` and apply accepted fixes.
-- Task 5.3: Push and verify GitHub Actions.
+- [x] Task 5.1: Run FMI feature tests, third-party roundtrip, and Conductor gates.
+- [x] Task 5.2: Run `$conductor-review` and apply accepted fixes.
+- [x] Task 5.3: Push and verify GitHub Actions.
 
 ## Phase closeout gate
 
@@ -76,6 +76,6 @@ phase begins:
 
 Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
 
-- [ ] CAP-53.1: Use documented OpenModelica container/source routes for a real compatible FMU; require dynamic loading, lifecycle/error handling and deterministic 1,000-step reference evidence. Linux-built FMUs do not automatically qualify native macOS loading; FMI3 remains separate.
+- [x] CAP-53.1: Use documented OpenModelica container/source routes for a real compatible FMU; require dynamic loading, lifecycle/error handling and deterministic 1,000-step reference evidence. Linux-built FMUs do not automatically qualify native macOS loading; FMI3 remains separate.
 
 Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.
