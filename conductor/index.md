@@ -25,3 +25,7 @@ A status label alone does not prove implementation or release acceptance.
 ## Separate library adoption tracks
 
 [Library adoption programme](library-adoption.md) registers rand, rand_distr, ECharts, petgraph and Three.js separately, after accepted Polars delivery in both repositories. All implementation remains pending.
+
+## Robustness-first dependency decisions
+
+[Separate dependency tracks and sequencing](robust-dependencies.md) prioritise existing-system robustness. [Value gates](dependency-value-policy.md) prevent adoption for its own sake. SUMO conditional; Rapier deferred.

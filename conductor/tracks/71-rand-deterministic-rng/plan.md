@@ -44,3 +44,7 @@ phase begins:
 
 Registry changes are coordinated with their current writer. This planning revision
 does not close an implementation phase or authorise publication.
+
+## Robustness programme entry refinement
+
+Require accepted Kairos Tracks 74–77 after both Polars migrations before this track starts. Reconcile current manifests/CI rather than assuming the old MSRV prose: Kairos Cargo.toml currently declares Rust 1.99; historical 1.76 notes require source verification in both repositories. This supersedes the earlier instruction to presume an MSRV increase.

@@ -780,3 +780,7 @@ Reconciled all completed work from `codex/track49-distributed-synchronization` (
 ## Library adoption planning — 22 October 2026
 
 [Programme](library-adoption.md): Tracks 71 (rand), 72 (rand_distr) and 73 (petgraph) are Planned, implementation not started. ECharts and Three.js are separate CareOps tracks. Entry requires explicit cross-repository acceptance receipts; both Polars migrations come first. No current runtime or release gate is waived.
+
+## Robustness-first dependency registration — 22 October 2026
+
+[Tracks 74–92](robust-dependencies.md) are Planned; priority/evaluation/conditional classes are explicit. No implementation, installation or acceptance. Foundation gates 74–77 precede rand; Rayon 78 precedes CareOps ECharts through a manual receipt gate. Optional candidates do not block core work. SUMO remains CareOps-conditional; Rapier deferred.

@@ -114,3 +114,60 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 
 ---
 - [ ] **Track: petgraph spatial topology and routing adoption** — Planned; implementation not started. [Track](tracks/73-petgraph-spatial-routing/index.md).
+
+---
+- [ ] **Track 74: Serde typed control contracts** — Planned; foundation; value gate pending. [Track](tracks/74-serde-robustness/index.md).
+
+---
+- [ ] **Track 75: serde_json metadata and control encoding** — Planned; foundation; value gate pending. [Track](tracks/75-serde-json-robustness/index.md).
+
+---
+- [ ] **Track 76: toml scenario configuration parsing** — Planned; foundation; value gate pending. [Track](tracks/76-toml-robustness/index.md).
+
+---
+- [ ] **Track 77: Clap CLI consolidation** — Planned; foundation; value gate pending. [Track](tracks/77-clap-robustness/index.md).
+
+---
+- [ ] **Track 78: Rayon bounded independent-work execution** — Planned; foundation; value gate pending. [Track](tracks/78-rayon-robustness/index.md).
+
+---
+- [ ] **Track 79: zip FMU archive replacement** — Planned; subsystem; value gate pending. [Track](tracks/79-zip-robustness/index.md).
+
+---
+- [ ] **Track 80: quick-xml FMU metadata replacement** — Planned; subsystem; value gate pending. [Track](tracks/80-quick-xml-robustness/index.md).
+
+---
+- [ ] **Track 81: Prost distributed envelope encoding** — Planned; conditional; value gate pending. [Track](tracks/81-prost-robustness/index.md).
+
+---
+- [ ] **Track 82: Tokio bounded transport runtime** — Planned; conditional; value gate pending. [Track](tracks/82-tokio-robustness/index.md).
+
+---
+- [ ] **Track 83: Tonic interoperable RPC transport** — Planned; conditional; value gate pending. [Track](tracks/83-tonic-robustness/index.md).
+
+---
+- [ ] **Track 84: hecs ECS storage qualification** — Planned; evaluation; value gate pending. [Track](tracks/84-hecs-robustness/index.md).
+
+---
+- [ ] **Track 85: Clarabel convex solver qualification** — Planned; conditional; value gate pending. [Track](tracks/85-clarabel-robustness/index.md).
+
+---
+- [ ] **Track 86: rstar continuous spatial index qualification** — Planned; evaluation; value gate pending. [Track](tracks/86-rstar-robustness/index.md).
+
+---
+- [ ] **Track 87: geo geometry and route-position primitives** — Planned; conditional; value gate pending. [Track](tracks/87-geo-robustness/index.md).
+
+---
+- [ ] **Track 88: rsmpi native MPI qualification** — Planned; conditional; value gate pending. [Track](tracks/88-mpi-robustness/index.md).
+
+---
+- [ ] **Track 89: Tract inference qualification** — Planned; conditional; value gate pending. [Track](tracks/89-tract-robustness/index.md).
+
+---
+- [ ] **Track 90: Argmin calibration optimiser qualification** — Planned; conditional; value gate pending. [Track](tracks/90-argmin-robustness/index.md).
+
+---
+- [ ] **Track 91: rust-fmi adapter qualification** — Planned; evaluation; value gate pending. [Track](tracks/91-fmi-robustness/index.md).
+
+---
+- [ ] **Track 92: Sobol sequence qualification** — Planned; evaluation; value gate pending. [Track](tracks/92-sobol-burley-robustness/index.md).
