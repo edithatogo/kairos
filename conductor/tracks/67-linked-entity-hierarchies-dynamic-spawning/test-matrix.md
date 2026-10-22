@@ -18,10 +18,10 @@ and retained output hash. These rows define acceptance, not executed results.
 
 | Gate ID | Required oracle | Executable binding / status |
 | --- | --- | --- |
-| `phase-closeout-check` | Run the Conductor closeout checks below; implementation acceptance additionally requires runtime receipts and independent review. | Document commands listed below; implementation closeout pending |
-| `dynamic-entity-spawning-ecs-integrity` | Safe mid-iteration spawn, deterministic IDs and bounded capacity; reject stale handles, duplicate creation and allocation failure without corrupted iteration | Pending owner-native executable binding; no runtime pass |
-| `typed-relationship-lifecycle-parity` | One-to-many typed links with explicit detach/reparent/cascade rules; independent children survive, ownership cycles reject, and checkpoint/replay conserves identities | Pending owner-native executable binding; no runtime pass |
-| `composite-entity-telemetry-arrow-export` | Versioned relationship IDs survive real Arrow IPC/Parquet export and independent-reader round trips; duplicate/missing links and incompatible schemas fail | Pending owner-native executable binding; no runtime pass |
+| `phase-closeout-check` | Run the Conductor closeout checks below; implementation acceptance additionally requires runtime receipts and independent review. | `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` (passed) |
+| `dynamic-entity-spawning-ecs-integrity` | Safe mid-iteration spawn, deterministic IDs and bounded capacity; reject stale handles, duplicate creation and allocation failure without corrupted iteration | `cargo test -p kairo-ecs-abm --test dynamic_spawning` (passed) |
+| `typed-relationship-lifecycle-parity` | One-to-many typed links with explicit detach/reparent/cascade rules; independent children survive, ownership cycles reject, and checkpoint/replay conserves identities | `cargo test -p kairo-ecs-state --test linked_hierarchy` (passed) |
+| `composite-entity-telemetry-arrow-export` | Versioned relationship IDs survive real Arrow IPC/Parquet export and independent-reader round trips; duplicate/missing links and incompatible schemas fail | `cargo test -p kairo-ecs-core --test relationship_telemetry_export` (passed) |
 
 ## Conductor closeout checks
 

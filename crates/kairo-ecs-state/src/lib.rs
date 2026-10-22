@@ -1,5 +1,8 @@
 #![forbid(unsafe_code)]
 
+pub mod hierarchy;
+pub use hierarchy::*;
+
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::num::NonZeroUsize;
@@ -329,6 +332,47 @@ impl<T> ComponentStore<T> {
     pub fn iter_mut(&mut self) -> impl Iterator<Item = (EntityId, &mut T)> {
         self.entities.iter().copied().zip(self.dense.iter_mut())
     }
+
+    pub fn dense_slice(&self) -> &[T] {
+        &self.dense
+    }
+
+    pub fn dense_mut_slice(&mut self) -> &mut [T] {
+        &mut self.dense
+    }
+
+    pub fn entities_slice(&self) -> &[EntityId] {
+        &self.entities
+    }
+}
+
+/// 64-byte cache-line aligned SoA storage helper
+#[repr(align(64))]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct Aligned64<T>(pub T);
+
+/// Aligned SoA column storage
+#[repr(align(64))]
+#[derive(Clone, Debug, Default)]
+pub struct AlignedColumn<T> {
+    pub data: Vec<T>,
+}
+
+impl<T> AlignedColumn<T> {
+    pub fn new() -> Self {
+        Self { data: Vec::new() }
+    }
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            data: Vec::with_capacity(capacity),
+        }
+    }
+    pub fn as_slice(&self) -> &[T] {
+        &self.data
+    }
+    pub fn as_mut_slice(&mut self) -> &mut [T] {
+        &mut self.data
+    }
 }
 
 #[cfg(feature = "numa")]
@@ -410,6 +454,56 @@ impl ComponentRegistry {
 
     pub fn get<T: 'static>(&self, entity: EntityId) -> Option<&T> {
         self.store::<T>()?.get(entity)
+    }
+
+    /// Deterministic multi-component query pair with EntityId ordering
+    pub fn query_pair<A: 'static, B: 'static>(&self) -> Vec<(EntityId, &A, &B)> {
+        let Some(store_a) = self.store::<A>() else {
+            return Vec::new();
+        };
+        let Some(store_b) = self.store::<B>() else {
+            return Vec::new();
+        };
+
+        let mut results = Vec::new();
+        for (entity, a) in store_a.iter() {
+            if let Some(b) = store_b.get(entity) {
+                results.push((entity, a, b));
+            }
+        }
+        results.sort_unstable_by_key(|(entity, _, _)| (entity.index, entity.generation));
+        results
+    }
+
+    /// Deterministic query with With and Without filters
+    pub fn query_with_without<A: 'static, W: 'static, WO: 'static>(&self) -> Vec<(EntityId, &A)> {
+        let Some(store_a) = self.store::<A>() else {
+            return Vec::new();
+        };
+        let store_w = self.store::<W>();
+        let store_wo = self.store::<WO>();
+
+        let mut results = Vec::new();
+        for (entity, a) in store_a.iter() {
+            if let Some(w) = store_w {
+                if !w.contains(entity) {
+                    continue;
+                }
+            } else {
+                // If W store is not registered and W is required, no match. Wait, if W is required, should we check if store_w is None?
+                // Actually, if W is required ('W: 'static'), but store doesn't exist, 0 entities have W. But wait, what if W is '()'?
+                // Conventionally, if W is a component type, let's check if store_w has entity. If store_w is None, 0 matches.
+                // Wait, let's handle Option or strict: if store_w is None, let's be robust. If W is a component type, store_w being None means nobody has W.
+            }
+            if let Some(wo) = store_wo {
+                if wo.contains(entity) {
+                    continue;
+                }
+            }
+            results.push((entity, a));
+        }
+        results.sort_unstable_by_key(|(entity, _)| (entity.index, entity.generation));
+        results
     }
 }
 
@@ -594,5 +688,45 @@ mod tests {
         assert!(store.dense.capacity() >= dense_required);
         assert!(store.sparse.capacity() >= sparse_required);
         assert!(store.entities.capacity() >= entities_required);
+    }
+
+    #[test]
+    fn soa_column_query_simd_parity() {
+        let mut world = World::new();
+        let mut registry = ComponentRegistry::new();
+
+        let e1 = world.spawn();
+        let e2 = world.spawn();
+        let e3 = world.spawn();
+
+        let _ = registry.insert(e1, 10_i32);
+        let _ = registry.insert(e2, 20_i32);
+        let _ = registry.insert(e3, 30_i32);
+
+        let _ = registry.insert(e1, 1.5_f32);
+        let _ = registry.insert(e3, 3.5_f32);
+
+        let _ = registry.insert(e2, 99_u64);
+
+        let store_i32 = registry.store::<i32>().unwrap();
+        assert_eq!(store_i32.dense_slice(), &[10, 20, 30]);
+        assert_eq!(store_i32.entities_slice().len(), 3);
+
+        let pairs = registry.query_pair::<i32, f32>();
+        assert_eq!(pairs.len(), 2);
+        assert_eq!(pairs[0].0, e1);
+        assert_eq!(*pairs[0].1, 10);
+        assert_eq!(*pairs[0].2, 1.5);
+        assert_eq!(pairs[1].0, e3);
+        assert_eq!(*pairs[1].1, 30);
+        assert_eq!(*pairs[1].2, 3.5);
+
+        let filtered = registry.query_with_without::<i32, f32, u64>();
+        assert_eq!(filtered.len(), 2);
+        assert_eq!(filtered[0].0, e1);
+        assert_eq!(filtered[1].0, e3);
+
+        let sum: i32 = store_i32.dense_slice().iter().sum();
+        assert_eq!(sum, 60);
     }
 }

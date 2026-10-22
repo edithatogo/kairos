@@ -1,5 +1,8 @@
 #![forbid(unsafe_code)]
 
+pub mod linked_entity;
+pub use linked_entity::*;
+
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 
