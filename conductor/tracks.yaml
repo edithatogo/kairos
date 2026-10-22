@@ -1082,3 +1082,61 @@ tracks:
       - competing-hazards-sampling-invariance
       - non-markovian-survival-clock-oracle
       - independent-stream-rng-reproducibility
+  - id: 70
+    name: Polars-Native Data Processing and Standard Interchange
+    status: Planned
+    owner: arrow-agent + ffi-agent + conformance-agent
+    depends_on: ["04", "62", "63"]
+    owned_paths:
+      - conductor/tracks/70-polars-native-data-processing/
+      - crates/kairo-ecs-arrow/
+      - schemas/arrow/
+    required_gates:
+      - phase-closeout-check
+      - polars-native-contract
+      - independent-columnar-interop
+      - deterministic-data-parity
+      - durable-trace-recovery
+      - data-maintenance-performance
+
+  - id: 71
+    name: rand deterministic RNG adoption
+    status: Planned
+    owner: rng-agent + conformance-agent
+    depends_on: ["70", "69"]
+    owned_paths:
+      - conductor/tracks/71-rand-deterministic-rng/
+      - crates/kairo-ecs-rng/
+    required_gates:
+      - phase-closeout-check
+      - rng-versioned-replay
+      - rng-checkpoint-compatibility
+      - rng-dependency-cost
+
+  - id: 72
+    name: rand_distr statistical sampling adoption
+    status: Planned
+    owner: rng-agent + vv-uq-agent + des-api-agent
+    depends_on: ["71", "69"]
+    owned_paths:
+      - conductor/tracks/72-rand-distr-sampling/
+      - crates/kairo-ecs-rng/
+    required_gates:
+      - phase-closeout-check
+      - sampling-independent-oracles
+      - sampling-hazard-parity
+      - sampling-resume-cost
+
+  - id: 73
+    name: petgraph spatial topology and routing adoption
+    status: Planned
+    owner: abm-api-agent + contracts-agent
+    depends_on: ["72", "64"]
+    owned_paths:
+      - conductor/tracks/73-petgraph-spatial-routing/
+      - crates/kairo-ecs-abm/
+    required_gates:
+      - phase-closeout-check
+      - routing-deterministic-paths
+      - routing-multifloor-access
+      - routing-des-boundary

@@ -2,7 +2,7 @@ use crate::transfer::{TransferDirection, TransferPlan, TransferStep};
 
 /// Agent particle state used by the first GPU parity harness.
 #[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct AgentParticle {
     pub x: f32,
     pub y: f32,
@@ -300,6 +300,7 @@ pub enum GpuComputeError {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum GpuBackendAvailability {
+    Available,
     CpuFallback,
     BackendNotConfigured(&'static str),
 }

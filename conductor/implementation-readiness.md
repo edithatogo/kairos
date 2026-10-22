@@ -120,3 +120,11 @@ Track 00 is closed as `Done` after maintainer approval of the foundation naming 
 ## Approved conditional Track49 entry — 4 October2026
 
 The human sole maintainer explicitly approved Track49 production scheduling after scope clarification. See conductor/tracks/29-wave-manager-execution-gatekeeper/adr-track49-phase-entry-20261004.md. Dispatch remains conditional on normal PR199 merge, exact-head gates/security evidence, accepted local/interface proof and a separately reviewed reserved transport packet. Track48 remains In Progress; dependencies, full distributed acceptance and release gates are unchanged. The raw Track49 gate result is preserved, not rewritten as a pass.
+
+## Track 70 readiness
+
+[Track 70](tracks/70-polars-native-data-processing/index.md) is Planned; no implementation started. Dependencies 04/62/63 are routing context, not runtime proof. Requalify source and interoperability. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
+
+## Library adoption planning — 22 October 2026
+
+[Programme](library-adoption.md): Tracks 71 (rand), 72 (rand_distr) and 73 (petgraph) are Planned, implementation not started. ECharts and Three.js are separate CareOps tracks. Entry requires explicit cross-repository acceptance receipts; both Polars migrations come first. No current runtime or release gate is waived.

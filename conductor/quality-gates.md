@@ -624,3 +624,37 @@ All nine gates require negative controls and failure/recovery evidence before
 closeout. Public API/checkpoint/schema compatibility and existing phase/Conductor
 checks apply in addition. Neither planning registration nor a historical Done
 label waives the consumed-capability checks in the linked track specifications.
+
+## Track 70 prospective gates
+
+Runtime validators must be implemented and qualified before these gates pass; definitions: [test matrix](tracks/70-polars-native-data-processing/test-matrix.md).
+
+- **polars-native-contract**: required Track 70 oracle; currently pending.
+- **independent-columnar-interop**: required Track 70 oracle; currently pending.
+- **deterministic-data-parity**: required Track 70 oracle; currently pending.
+- **durable-trace-recovery**: required Track 70 oracle; currently pending.
+- **data-maintenance-performance**: required Track 70 oracle; currently pending.
+
+## Track 71 prospective gates
+
+Runtime evidence remains pending; [test matrix](tracks/71-rand-deterministic-rng/test-matrix.md).
+
+- **rng-versioned-replay**: Pinned generator known-answer vectors, full entity generations and purpose namespaces, intended CRN coupling, unrelated-draw isolation and 1/2/4-worker exact traces.
+- **rng-checkpoint-compatibility**: Roundtrip before/after partial-buffer draws and nonzero stream positions; uninterrupted versus resumed exact draws/events; malformed, old and unknown versions reject.
+- **rng-dependency-cost**: Reviewed MSRV/target matrix including Wasm, no accidental entropy source; build/binary and per-draw/whole-run cost; bespoke-generator deletion audit.
+
+## Track 72 prospective gates
+
+Runtime evidence remains pending; [test matrix](tracks/72-rand-distr-sampling/test-matrix.md).
+
+- **sampling-independent-oracles**: Analytical moments/CDF or quantile controls with fixed seeds, sample sizes and justified error bounds; tails, support, invalid/degenerate and bounded-integer cases.
+- **sampling-hazard-parity**: Independent exponential/piecewise survival and cause incidence, unchanged-covariate residual clocks, censoring and no hidden clamping; reviewed corrections separately identified.
+- **sampling-resume-cost**: Restart/worker equality on qualified targets, draw isolation and versioned manifests; actual production deletion and throughput/build cost.
+
+## Track 73 prospective gates
+
+Runtime evidence remains pending; [test matrix](tracks/73-petgraph-spatial-routing/test-matrix.md).
+
+- **routing-deterministic-paths**: Independent small-graph optimality, cost/hops/edge-ID ties, shuffled insertions, zero-cost cycles, directionality and overflow.
+- **routing-multifloor-access**: Synthetic multi-floor connectivity, inaccessible lifts/stairs/doors, disconnected destination, topology revision/cache invalidation and unit/identity rejection.
+- **routing-des-boundary**: Lift queues/resource waits remain authoritative DES state; route rendering does not schedule events; code/build/query-memory audit without fictitious deletion claims.

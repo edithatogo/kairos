@@ -8,9 +8,14 @@ rust-version.workspace = true
 [features]
 default = []
 gpu = []
-wgpu-backend = ["gpu"]
+wgpu-backend = ["gpu", "dep:wgpu", "dep:pollster"]
 cuda-backend = ["gpu"]
-metal-backend = ["gpu"]
+metal-backend = ["gpu", "wgpu-backend"]
 
 [lints.rust]
 unsafe_code = "forbid"
+
+[dependencies]
+bytemuck = { version = "1.25.2", features = ["derive"] }
+pollster = { version = "1.0.1", optional = true }
+wgpu = { version = "30.0.1", optional = true }

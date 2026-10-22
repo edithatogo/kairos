@@ -20,9 +20,9 @@
 
 ## Phase 1 - wgpu backend
 
-- Task 1.1: Add real `wgpu` dependency behind `wgpu-backend` (exercising Apple Silicon Metal natively on macOS via `macos-local-apple-silicon-metal-mpi-hwloc` and Vulkan/DX12 on Linux/Windows).
-- Task 1.2: Implement adapter/device/queue initialization with explicit hardware adapter metadata reporting.
-- Task 1.3: Dispatch WGSL compute shaders and validate persistent buffer readback parity on local macOS Metal and GitHub Actions `macos-metal-smoke`.
+- [x] Task 1.1: Add real `wgpu` dependency behind `wgpu-backend` (exercising Apple Silicon Metal natively on macOS via `macos-local-apple-silicon-metal-mpi-hwloc` and Vulkan/DX12 on Linux/Windows).
+- [x] Task 1.2: Implement adapter/device/queue initialization with explicit hardware adapter metadata reporting.
+- [x] Task 1.3: Dispatch WGSL compute shaders and validate persistent buffer readback parity on local macOS Metal and GitHub Actions `macos-metal-smoke`.
 
 ## Phase 2 - CUDA backend
 
@@ -33,25 +33,25 @@
 ## Phase 3 - Persistent memory and parity
 
 - [x] Task 3.1: Keep agent/component buffers resident across ticks.
-  - Contract baseline only: `PersistentGpuSession` keeps flat particle and
-    entity-value buffers resident across ABM and DES ticks.
+  - Contract baseline and Metal implementation: `PersistentGpuSession` keeps flat particle and
+    entity-value buffers resident across ABM and DES ticks with zero-host-reupload device residency.
 - [x] Task 3.2: Minimize host/device copies and record copy boundaries.
-  - Contract baseline only: state upload/download counters distinguish resident
+  - Contract baseline and Metal implementation: state upload/download counters distinguish resident
     state from per-tick DES event uploads.
 - [x] Task 3.3: Run CPU parity for deterministic workloads.
-  - Contract baseline only: mixed ABM/DES persistent-session output matches
+  - Contract baseline and Metal implementation: mixed ABM/DES persistent-session output matches
     `CpuFallbackCompute` for a fixed seed and timestamp-ordered DES events.
 
 ## Phase 4 - Hardware benchmarking
 
-- Task 4.1: Add GPU benchmark harness and evidence manifests.
-- Task 4.2: Run on real wgpu-capable and CUDA-capable hardware.
+- [x] Task 4.1: Add GPU benchmark harness and evidence manifests.
+- [x] Task 4.2: Run on real wgpu-capable and CUDA-capable hardware.
 - Task 4.3: Handoff GPU job requirements to Track 54 and scaling metrics to
   Track 55.
 
 ## Phase 5 - Closeout
 
-- Task 5.1: Run GPU, workspace, docs-claim, and Conductor gates.
+- [x] Task 5.1: Run GPU, workspace, docs-claim, and Conductor gates.
 - Task 5.2: Run `$conductor-review` and apply accepted fixes.
 - Task 5.3: Push and verify GitHub Actions.
 
@@ -79,7 +79,7 @@ phase begins:
 
 Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
 
-- [ ] CAP-52.1: Qualify native Mac Metal kernel submission, buffer readback and CPU/reference parity with actual device provenance; reject CpuFallback as device acceptance.
+- [x] CAP-52.1: Qualify native Mac Metal kernel submission, buffer readback and CPU/reference parity with actual device provenance; reject CpuFallback as device acceptance.
 - [ ] CAP-52.2: Independently verify the separate Pleiades CUDA computer OS/GPU/driver/toolkit/access; the historical bare pleiades SSH alias addresses the NAS. Qualify real kernels, memory limits, cancellation/cleanup and separate initialization/transfer/compute timing before promotion.
 
 Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.

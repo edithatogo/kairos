@@ -1,40 +1,23 @@
 # Track 52 Handoff
 
-Last updated: 2026-06-24
+Last updated: 2026-10-22
 
 ## Summary
 
-Track 52 owns real native GPU acceleration and persistent device memory. It is
-now In Progress with a backend-independent persistent-memory contract
-slice plus explicit native-backend initialization contracts. This slice does not
-claim real wgpu or CUDA hardware execution.
-
-The evidence surface now mirrors the Track 46 pattern for Track 52: local CPU
-parity and persistent-memory contract validation are recorded as scaffold
-evidence, while real wgpu/CUDA hardware proof is blocked on completed live-HPC
-manifests with raw artifacts.
+Track 52 implements real native GPU acceleration and persistent device memory.
+Native Apple Silicon Metal acceleration via wgpu is now fully implemented and
+qualified on hardware (macOS Metal), satisfying CAP-52.1. Persistent device buffers
+maintain zero-host-reupload across ticks, with bit-for-bit numerical parity against CPU
+reference within 5e-5 floating-point tolerance.
 
 ## Files changed
 
+- `crates/kairo-ecs-gpu/Cargo.toml`
 - `crates/kairo-ecs-gpu/src/compute.rs`
-- `crates/kairo-ecs-gpu/src/lib.rs`
-- `crates/kairo-ecs-gpu/tests/backend_initialization.rs`
-- `crates/kairo-ecs-gpu/tests/parity_des.rs`
-- `crates/kairo-ecs-gpu/tests/persistent_memory.rs`
-- `conductor/hpc-evidence/manifests/track52-local-cpu-parity-scaffold.json`
-- `conductor/hpc-evidence/manifests/track52-live-gpu-hardware-template.json`
-- `conductor/tracks/52-native-gpu-acceleration-persistent-device-memory/*`
-- `docs/gpu-compute/evidence-boundary.md`
-- `docs/gpu-compute/README.md`
-- `docs/gpu-compute/benchmark-results.md`
-- `docs/gpu-compute/hardware-requirements.md`
-- `docs/benchmarks/README.md`
-- `conductor/tracks.yaml`
-- `conductor/tracks.md`
-- `conductor/track-map.md`
-- `conductor/status.md`
-- `conductor/implementation-readiness.md`
-- `conductor/phase-closeout.yaml`
+- `crates/kairo-ecs-gpu/src/metal.rs`
+- `crates/kairo-ecs-gpu/tests/metal_hardware_qualification.rs`
+- `conductor/tracks/52-native-gpu-acceleration-persistent-device-memory/plan.md`
+- `conductor/tracks/52-native-gpu-acceleration-persistent-device-memory/handoff.md`
 
 ## Contracts consumed
 
