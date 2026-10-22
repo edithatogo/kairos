@@ -41,6 +41,9 @@ pub enum FmiError {
         path: PathBuf,
         message: String,
     },
+    LibraryLoadFailed(String),
+    SymbolNotFound(String),
+    InvalidInput(String),
 }
 
 impl fmt::Display for FmiError {
@@ -92,6 +95,9 @@ impl fmt::Display for FmiError {
                 path.display(),
                 message
             ),
+            Self::LibraryLoadFailed(msg) => write!(f, "FMI library load failed: {msg}"),
+            Self::SymbolNotFound(sym) => write!(f, "FMI symbol not found: {sym}"),
+            Self::InvalidInput(msg) => write!(f, "FMI invalid input: {msg}"),
         }
     }
 }
