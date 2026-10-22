@@ -2,8 +2,10 @@
 
 pub mod boundary;
 pub mod egress;
+pub mod hazard_clock;
 pub use boundary::*;
 pub use egress::*;
+pub use hazard_clock::*;
 
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_state::World;

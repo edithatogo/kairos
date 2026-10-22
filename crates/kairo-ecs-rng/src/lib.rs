@@ -1,5 +1,8 @@
 #![forbid(unsafe_code)]
 
+pub mod competing_risks;
+pub use competing_risks::*;
+
 use kairo_ecs_types::EntityId;
 
 /// Domain separator for run-seed mixing.
