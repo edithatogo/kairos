@@ -1,5 +1,10 @@
 #![forbid(unsafe_code)]
 
+pub mod boundary;
+pub mod egress;
+pub use boundary::*;
+pub use egress::*;
+
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_state::World;
 use kairo_ecs_types::*;
@@ -166,7 +171,7 @@ pub struct PriorityRequest {
 }
 
 pub struct PriorityResource {
-    pub name: String,
+    name: String,
     capacity: u64,
     available: u64,
     queue: Vec<PriorityRequest>,
@@ -182,6 +187,10 @@ impl PriorityResource {
             queue: Vec::new(),
             next_seq: 0,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
     pub fn request(&mut self, entity: EntityId, priority: i32, now: SimTime) -> bool {
@@ -227,7 +236,7 @@ pub struct PreemptedAllocation {
 }
 
 pub struct PreemptiveResource {
-    pub name: String,
+    name: String,
     capacity: u64,
     holders: Vec<(EntityId, i32, u64)>, // (entity, priority, remaining_work)
     queue: Vec<PriorityRequest>,
@@ -245,18 +254,23 @@ impl PreemptiveResource {
         }
     }
 
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
     pub fn request(
         &mut self,
         entity: EntityId,
         priority: i32,
         work: u64,
         now: SimTime,
-    ) -> Result<bool, PreemptedAllocation> {
+    ) -> Result<(), PreemptedAllocation> {
         if (self.holders.len() as u64) < self.capacity {
             self.holders.push((entity, priority, work));
-            Ok(true)
+            Ok(())
         } else {
             // Check if any holder has lower priority than incoming entity
+            // Find holder with lowest priority
             if let Some(min_idx) = self
                 .holders
                 .iter()
@@ -266,6 +280,7 @@ impl PreemptiveResource {
             {
                 let holder = self.holders[min_idx];
                 if priority > holder.1 {
+                    // Preempt holder
                     self.holders.remove(min_idx);
                     self.holders.push((entity, priority, work));
                     return Err(PreemptedAllocation {
@@ -285,20 +300,8 @@ impl PreemptiveResource {
             });
             self.queue
                 .sort_by(|a, b| b.priority.cmp(&a.priority).then_with(|| a.seq.cmp(&b.seq)));
-            Ok(false)
+            Ok(())
         }
-    }
-
-    pub fn release(&mut self, entity: EntityId) -> Option<EntityId> {
-        if let Some(pos) = self.holders.iter().position(|&(e, _, _)| e == entity) {
-            self.holders.remove(pos);
-            if !self.queue.is_empty() {
-                let next = self.queue.remove(0);
-                self.holders.push((next.entity, next.priority, 0));
-                return Some(next.entity);
-            }
-        }
-        None
     }
 
     pub fn queue_length(&self) -> usize {
@@ -311,7 +314,7 @@ impl PreemptiveResource {
 }
 
 pub struct Container {
-    pub name: String,
+    name: String,
     level: f64,
     capacity: f64,
 }
@@ -323,6 +326,10 @@ impl Container {
             level: initial_level.min(capacity),
             capacity,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
     pub fn level(&self) -> f64 {
@@ -353,7 +360,7 @@ impl Container {
 }
 
 pub struct Store<T> {
-    pub name: String,
+    name: String,
     capacity: usize,
     items: VecDeque<T>,
 }
@@ -365,6 +372,10 @@ impl<T> Store<T> {
             capacity,
             items: VecDeque::new(),
         }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
     }
 
     pub fn len(&self) -> usize {
@@ -406,7 +417,6 @@ pub struct RenegingRequest {
     pub max_wait: SimTime,
 }
 
-#[derive(Default)]
 pub struct RenegingQueue {
     queue: VecDeque<RenegingRequest>,
 }
@@ -439,12 +449,7 @@ impl RenegingQueue {
         let mut reneged = Vec::new();
         let mut remaining = VecDeque::new();
         while let Some(req) = self.queue.pop_front() {
-            if now.ticks()
-                >= req
-                    .requested_at
-                    .ticks()
-                    .saturating_add(req.max_wait.ticks())
-            {
+            if now.ticks() >= req.requested_at.ticks() + req.max_wait.ticks() {
                 reneged.push(req.entity);
             } else {
                 remaining.push_back(req);
@@ -475,6 +480,12 @@ impl RenegingQueue {
 
     pub fn is_empty(&self) -> bool {
         self.queue.is_empty()
+    }
+}
+
+impl Default for RenegingQueue {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

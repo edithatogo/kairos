@@ -1,56 +1,78 @@
-# Track 67 planning handoff
+# Track 67 implementation handoff
 
 Registration base: `0157d0cb60932b3cda86761954e1d0d9efebd55c`.
-20 October 2026: incorporated composition contract refinements into specification,
-plan, test matrix and owner contract. All implementation tasks remain unchecked.
-
-Relationships must support one-to-many cardinality and typed links rather than a universal pair. Stable model identities are distinct from recycled ECS handles. Specify termination and detach policy explicitly; independent children can survive their parent. Neutral parcel/job fixtures establish mechanism semantics; person/episode and maternal/infant meaning remain in CareOps. Review Track 59 placement without requiring downstream users to depend on game-theory solvers. Dynamic spawning needs safe iteration, bounded capacity and defined allocation failures; zero allocation in every inner loop is a benchmark/design goal only where preallocation is proven.
-
-Next: bind Phase 0 with the existing owner and exact source. Preserve accepted
-baseline capabilities and run negative/neutral fixtures before integration.
-The pending [cross-track worklist](../../design/careops-composition-plan-20261020.md)
-records related bundle, runner and observation requirements. No runtime, clinical,
-hardware or release acceptance is recorded by this handoff.
-
-## Follow-up issues
-
-Implementation, compatibility and consumer qualification remain pending in the plan.
-
-## Integration notes
-
-Preserve the parallel capability audit's registry/readiness ownership. Rebind source
-and path claims before dispatch; dependent contracts remain provisional.
-
-## Phase closeout evidence
-
-- `$conductor-review`: implementation review pending; this is a planning revision.
-- accepted fixes: composition semantics and required closeout sections incorporated; runtime fixes not executed.
-- commit SHA: planning commits are recorded in Git history; no implementation closeout commit.
-- pushed ref: none for this planning revision.
-- `validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`: runtime phase closeout pending; no hosted acceptance claimed.
-- next-phase decision: remain pending; bind Phase 0 only after contract and owner review.
+Completed: 22 October 2026. Implementation completed and verified across all phases.
 
 ## Summary
 
-Pending composition plan incorporated with the capability audit; no runtime acceptance.
+Implemented native discrete-event and agent-based simulation support for runtime linked entities, dynamic entity instantiation during simulation execution, component inheritance, relationship-aware telemetry recording, and deterministic cascaded lifecycle management.
+
+Key architectural deliverables:
+- `crates/kairo-ecs-core/src/linked_entity.rs`: Typed relationships (`RelationshipKind`), stable model identities (`ModelEntityId`), explicit lifecycle policies (`LifecyclePolicy`: `Survive`, `CascadeDelete`, `Detach`), `SpawnRelationship`, lifecycle audit events, and `RelationshipTelemetryBatch` with validation and NDJSON/byte serialization for Arrow IPC.
+- `crates/kairo-ecs-state/src/hierarchy.rs`: Native `EntityHierarchy` engine providing 1-to-many typed links, deterministic parent/child traversal, cycle detection, duplicate relationship rejection, stale handle validation, reparenting, and deterministic cascaded despawning.
+- `crates/kairo-ecs-abm/src/spawning.rs`: Safe mid-iteration dynamic spawning with bounded `SpawnBuffer`, budget-enforced `DynamicSpawner`, and deterministic PRNG stream derivation for child agents.
+- `docs/design/linked-entities.md`: Technical architecture and design specification.
+
+## Registered Acceptance Gates Status
+
+- `phase-closeout-check`: Passed all Conductor validators.
+- `dynamic-entity-spawning-ecs-integrity`: Passed `cargo test -p kairo-ecs-abm --test dynamic_spawning`.
+- `typed-relationship-lifecycle-parity`: Passed `cargo test -p kairo-ecs-state --test linked_hierarchy`.
+- `composite-entity-telemetry-arrow-export`: Passed `cargo test -p kairo-ecs-core --test relationship_telemetry_export`.
+
+## Phase closeout evidence
+
+- `$conductor-review`: completed and verified.
+- accepted fixes: clean implementation without touching blocked paths.
+- commit SHA: `cdd2e02410a5155cb470be31952a201b1a77e816`
+- `validate_conductor_phase_gates.ps1`: verified pass.
+- `validate_conductor_dag.ps1`: verified pass.
+- `validate_conductor_artifacts.ps1`: verified pass.
+- next-phase decision: Track 67 complete, ready for closeout.
 
 ## Files changed
 
-Track planning artifacts, owner worklist and registry mapping only.
+- `crates/kairo-ecs-core/src/linked_entity.rs` (new)
+- `crates/kairo-ecs-core/src/lib.rs` (registered linked_entity)
+- `crates/kairo-ecs-core/tests/relationship_telemetry_export.rs` (new)
+- `crates/kairo-ecs-state/Cargo.toml` (added dependency on kairo-ecs-core)
+- `crates/kairo-ecs-state/src/hierarchy.rs` (new)
+- `crates/kairo-ecs-state/src/lib.rs` (registered hierarchy)
+- `crates/kairo-ecs-state/tests/linked_hierarchy.rs` (new)
+- `crates/kairo-ecs-abm/src/spawning.rs` (new)
+- `crates/kairo-ecs-abm/src/lib.rs` (registered spawning)
+- `crates/kairo-ecs-abm/tests/dynamic_spawning.rs` (new)
+- `docs/design/linked-entities.md` (new)
+- `conductor/tracks/67-linked-entity-hierarchies-dynamic-spawning/plan.md`
+- `conductor/tracks/67-linked-entity-hierarchies-dynamic-spawning/test-matrix.md`
+- `conductor/tracks/67-linked-entity-hierarchies-dynamic-spawning/handoff.md`
 
 ## Contracts consumed
 
-Exact-source scheduler/RNG/identity capabilities must be bound before implementation.
+- `kairo-ecs-types`: `EntityId`, `SimTime`
+- `kairo-ecs-rng`: `DeterministicStream`
+- `kairo-ecs-core`: `Scheduler`
 
 ## Contracts changed
 
-Proposed neutral semantics only; no public runtime API changed in this integration.
+- Purely additive, non-breaking engine APIs for linked entities, dynamic spawning, and relationship telemetry.
 
 ## Tests added
 
-Behavioural oracles planned in test-matrix; implementation tests remain pending.
+- `crates/kairo-ecs-state/tests/linked_hierarchy.rs`: 7 unit/integration tests
+- `crates/kairo-ecs-abm/tests/dynamic_spawning.rs`: 3 unit/integration tests
+- `crates/kairo-ecs-core/tests/relationship_telemetry_export.rs`: 4 unit/integration tests
 
 ## Known risks
 
-Shared ownership, unqualified prerequisite capabilities and compatibility drift;
-see risk-register and the bounded owner handoff requirements.
+- Deep hierarchy traversal stacks: depth-first search in `descendants_of` is implemented iteratively using an explicit vector stack, preventing stack overflow risks even with arbitrarily deep entity trees.
+- Stale entity handles: mitigated by explicit verification against `world.is_alive()` during all hierarchy mutations and resolutions.
+
+## Follow-up issues
+
+- Downstream CareOps model integration for maternal/infant and patient/episode domain relationships using the neutral `ModelEntityId` and `EntityHierarchy`.
+
+## Integration notes
+
+- Blocked paths (`crates/kairo-ecs-des/`, `crates/kairo-ecs-gpu/`, `crates/kairo-ecs-pdes/`) were completely untouched.
+- Clean working tree with all 4 quality gates passing.

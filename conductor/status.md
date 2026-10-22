@@ -1,20 +1,41 @@
 # KairoECS Conductor Status
 
-> **Integrated planning registry — 21 October 2026:** 70 tracks: 60 recorded Done,
-> 7 In Progress (48–53, 55) and 3 Planned (67–69). The 20 October audit's 67-track
-> count is a historical snapshot before those registrations. Tracks62–66 have
-> disputed full-completion claims; recorded status is not exercised capability.
-> The [audit](capability-reconciliation-20261020.md) and
-> [composition plan](design/careops-composition-plan-20261020.md) are incorporated
-> together. Implementation and hardware gates remain pending; no Done status is
-> advanced by this planning integration.
+## Track 68: Inter-Unit Boundary Channels & Asynchronous Handover Sinks Review & Archival - 22 October 2026
 
-## Wave 10 Multi-Core Parallelism, Apple Silicon Metal, Website Overhaul & Game Theory Wave Closeout - 18 October 2026
+Track 68 has successfully passed implementation, comprehensive testing, Principal Software Engineer code review, and quality validation across all quality gates, and is archived as `Done`:
+- **Track 68** (*Inter-Unit Boundary Channels & Asynchronous Handover Sinks*): Native discrete-event simulation support for asynchronous cross-boundary transit buffers (`BoundaryChannel`), operation identities (`HandoverOperationId`), typed handover envelopes (`HandoverEnvelope<T>`), stochastic transit delay distributions (`Fixed`, `Uniform`, `Exponential`), receiver capacity backpressure and boarding holds (`EgressSink<T>`), and single-scheduler two-depot entity conservation accounting.
 
-- **Recorded programme totals:** 60 of 67 tracks are recorded Done; 7 are In Progress. The current audit above distinguishes disputed completion and missing implementations from hardware-only gates.
-- **Multi-Core OS Thread Parallelism (`Tracks 55, 65, 66`):** `ParallelVecEnv::step_batch` (`crates/kairo-ecs-ml/src/lib.rs`) and `ParallelEnsembleRunner::run_sweep` / `SobolSensitivityAnalyzer::analyze_parallel` / `AbcSmcCalibrator::evaluate_particles_parallel` (`crates/kairo-ecs-cli/src/ensemble.rs`) now partition workloads across OS worker threads via `std::thread::scope` and `std::thread::available_parallelism()` with bit-for-bit deterministic parity.
-- **Apple Silicon Metal surface / CPU fallback (`Track 52`, historical implementation note):** `crates/kairo-ecs-gpu` now exposes the `metal-backend` feature (`MetalBackend`, `MetalAdapterInfo`, `METAL_BACKEND_NAME`, MSL `abm_step` compute kernel source, macOS `ioreg`/`sysctl` hardware probing, and `PersistentGpuSession::run_abm_tick_parallel`).
-- **Game Theory Ontology & Multi-Game Wave (`Tracks 56–61`) Closed to `Done`:** Concrete evidence manifests (`conductor/game-theory-evidence/manifests/track-56.json` .. `track-61.json`) and closeout ledger entries are recorded and validated by `validate-game-theory-evidence.mjs`, `validate-game-theory-claims.mjs`, and `validate-multigame-certification.mjs`.
+All unit, integration, and conformance tests pass across the entire workspace with zero errors and zero false completions (`cargo test -p kairo-ecs-des --test boundary_channel_transit_delay`, `cargo test -p kairo-ecs-des --test egress_sink_backpressure`, `cargo test -p kairo-ecs-des --test inter_unit_entity_conservation`, `cargo test --workspace`). Clippy with `-D warnings` and `cargo fmt --check` pass cleanly. Review report is recorded in `conductor/tracks/68-inter-unit-boundary-channels-handover-sinks/review-report.md`. Track 68 is archived in-place in the registry as `Done`.
+
+## Track 67: Linked Entity Hierarchies, Dynamic Spawning & Cascaded Lifecycles Review & Archival - 22 October 2026
+
+Track 67 has successfully passed implementation, comprehensive testing, Principal Software Engineer code review, and quality validation across all quality gates, and is archived as `Done`:
+- **Track 67** (*Linked Entity Hierarchies, Dynamic Spawning & Cascaded Lifecycles*): Native discrete-event and agent-based simulation support for runtime linked entities (`RelationshipKind`, `ParentChildBinding`, `SpawnRelationship`), stable model identities (`ModelEntityId`) distinct from generational `EntityId`, hierarchical 1-to-many topology engine (`EntityHierarchy`) with ancestral cycle detection and stale handle rejection, deterministic cascaded despawning (`Survive`, `CascadeDelete`, `Detach`), safe mid-iteration dynamic spawning (`SpawnBuffer`, `DynamicSpawner`) with budget enforcement and deterministic child PRNG stream derivation, and Arrow IPC telemetry batch export (`RelationshipTelemetryBatch`, `RELATIONSHIP_SCHEMA_VERSION = 1`).
+
+All unit, integration, and conformance tests pass across the entire workspace with zero errors and zero false completions (`cargo test -p kairo-ecs-state --test linked_hierarchy`, `cargo test -p kairo-ecs-abm --test dynamic_spawning`, `cargo test -p kairo-ecs-core --test relationship_telemetry_export`, `cargo test --workspace`). Clippy with `-D warnings` and `cargo fmt --check` pass cleanly. Review report is recorded in `conductor/tracks/67-linked-entity-hierarchies-dynamic-spawning/review-report.md`. Track 67 is archived in-place in the registry as `Done`.
+
+## Wave 9: Native Spine, Ergonomics & Competitor Parity Review & Archival (Tracks 62–66) - 21 October 2026
+
+Tracks 62–66 (Wave 9: Native Spine & Parity) have successfully passed implementation, comprehensive testing, Principal Software Engineer code review, and quality validation across all quality gates, and are archived as `Done`:
+- **Track 62** (*Official Apache Arrow, Parquet & Zero-Copy C Data Interface Spine*): Feature-gated Arrow/Parquet integration, Arrow C Data Interface (`FFI_ArrowSchema`, `FFI_ArrowArray`) with deterministic release callbacks, and Python PyCapsule protocols (`__arrow_c_array__`, `__arrow_c_stream__`).
+- **Track 63** (*Native Polyglot Bindings*): Authoritative native Rust kernel execution across Wasm (`wasm-bindgen`), C ABI dynamic library linking, and Python native extensions without silent fallback.
+- **Track 64** (*Archetype/SoA ECS Storage, Full DES Process/Resource Kernel & ABM Spatial Topologies*): 64-byte aligned SoA accessors and typed multi-component queries in `kairo-ecs-state`, full DES shared resource primitives (`CapacityResource`, `PreemptiveResource`, `Container`, `Store`, wait conditions, balking, reneging) in `kairo-ecs-des` matching SimPy reference semantics, and ABM spatial environments (`GridSpace2D/3D`, `ContinuousSpace2D/3D`, `GraphSpace`) in `kairo-ecs-abm`. 100k hybrid DES/ABM benchmark threshold met.
+- **Track 65** (*Vectorized Multi-World RL (VecEnv), PettingZoo Bridge & Advanced Game Theory Solvers*): 2-player mixed-strategy Nash equilibrium solvers (support enumeration and Lemke-Howson), canonical correlated equilibrium, and replicator dynamics in `kairo-ecs-game-theory`, tabular Counterfactual Regret Minimization (`CFR` and `CFR+`) over extensive-form games, and `ParallelVecEnv` 1024-world batch stepping with Gymnasium and PettingZoo adapter models in `kairo-ecs-ml`.
+- **Track 66** (*Parallel Ensemble Sweeps (Sobol/CRN), SBI Calibration & Copy-on-Write Wasm Studio*): Quasi-random Sobol sequence and Latin Hypercube Sampling (LHS) parameter generators, Common Random Numbers (CRN) substream synchronization, and automated Sobol first-order and total sensitivity indices in `kairo-ecs-cli`, lossless batch objective evaluation hooks for Optuna and ABC-SMC calibration, Copy-on-Write (CoW) page delta snapshots within memory budgets in `kairo-ecs-debug`, and interactive timeline scrubbing in `website/playground`.
+
+All unit, integration, and conformance tests pass across the entire workspace under `cargo test --workspace` with zero errors and zero false completions. Review reports are placed in `conductor/tracks/62-*/` through `conductor/tracks/66-*/review-report.md`. Tracks 62–66 are archived in-place in the registry as `Done`.
+
+## Game Theory Ontology Wave Review & Archival (Tracks 56–61) - 21 October 2026
+
+Tracks 56–61 (Wave 8: Open Game Theory Ontology and Multi-Game Runtime) have successfully passed code review and validation across all gates and are archived as `Done`:
+- **Track 56** (*Wave Charter & Evidence Gates*): Charter, evidence schemas, negative claim-boundary fixtures, and release wording rules verified.
+- **Track 57** (*Schema Ingestion & Parser*): `open-game-theory-ontology/` Turtle and JSON-LD schemas verified; `kairo-ecs-game-ontology` parses fixtures into deterministic normalized IR. All 4 tests pass.
+- **Track 58** (*Ontology-to-Rust Codegen*): Deterministic code generator verified; golden output parity matches `open-game-theory-ontology/fixtures/generated/rust/game_components.rs` with strict zero-pointer topology. All 5 tests pass.
+- **Track 59** (*Feature-Gated Graph Relations ECS*): Default-off `graph-relations` module in `kairo-ecs-game-theory` provides `ChildOf` and `TransitionTo` Entity-ID edge components, flat ComponentStore traversal, and cycle-safe descendant queries. All 6 tests pass.
+- **Track 60** (*Normal-Form Runtime & Solvers*): `normal_form` module exposes `PayoffMatrix`, `StrategySpace`, `Utility`, `PureNashSolver`, `BestResponseSolver`, and `StrictDominanceSolver`. All 12 tests and the runnable example pass.
+- **Track 61** (*Extensive-Form Graph-ECS Runtime & Certification*): Feature-gated `extensive_form` module provides sequential decision nodes, chance nodes, terminal utilities, backward induction, `ChanceWeightedBackwardInductionSolver`, and multi-game certification scenario validation. All 18 tests and certification validators pass.
+
+All 37 unit/integration tests, Clippy with `-D warnings`, rustfmt, DAG validation, artifact validation, and phase gate checks pass with zero errors and zero false completions. Review reports are placed in `conductor/tracks/56-*/` through `conductor/tracks/61-*/review-report.md`. Tracks 56–61 are archived in the registry as `Done`.
 
 ## Track 48 governance reconciliation - 17 October 2026
 
@@ -22,7 +43,7 @@ Track 48 remains **In Progress**. The single-process optimistic runtime is deliv
 
 A documentation-only reconciliation reconciled the Track 48 plan ledger against merged state, added the executed command receipt and findings to `review-report.md`, and recorded the distributed blocker with verified evidence. Locally on that diff: 167-test `pdes,time-warp` lane, 39-test conservative lane, benchmark compilation, `cargo fmt --check`, strict Clippy, HPC parity evidence manifest, 12 collector tests, Conductor phase gates, DAG, artifact validation, clean-tree git closeout and the docs workflow validator all exit 0 under actual Homebrew Rust 1.99.0. `$conductor-review` of that diff found and fixed three defects in the agent's own work, including an unverifiable source-to-pull-request mapping and a search whose piped exit status had masked a missing result. Pull request #255 passed all nine hosted workflows on exact head `a74d8a8`.
 
-**The #255 merge is not complete.** The main branch review policy prohibits merging while no approving review exists, auto-merge (squash) is armed by the maintainer, and `enforce_admins` is true, so an approving review must come from an account other than the pull-request author. No protection bypass was attempted.
+**PR #255 is merged.** As verified on 2026-10-17 (mergedAt `2026-10-17T13:43:40Z`, merge commit `9919c8dda2bee21cc37bba603b4ea5917185e418`), the governance reconciliation PR passed all nine hosted workflows on head `a74d8a8` and is now on `main`. The earlier "not complete" wording is superseded.
 
 The live distributed acceptance gate is now precisely specified rather than open-ended. **Tooling is not the blocker**: `mpiexec`, `mpicc` and `ompi_info` all report Open MPI 5.0.11 and `protoc` reports libprotoc 36.2 on the readback host. **Implementation is**: `kairo-ecs-mpi` and `kairo-ecs-grpc` declare `mpi = []` and `grpc = []` as empty marker features with no `rsmpi`/`mpi-sys` and no `tonic`/`prost`, and neither crate has an integration-test directory, so the `multirank_smoke` and `two_process_smoke` targets that Track 49's own test matrix requires do not exist. Because those features are empty, `cargo test -p kairo-ecs-mpi --features mpi` compiles no transport code and must never be reported as real MPI or real gRPC execution. Track 49's `first-production-leaf-preparation-20261004.md`, its still-pending plan Task 1.1 and the `mpi-smoke` entry in `conductor/quality-gates.md` independently corroborate this.
 
@@ -290,7 +311,8 @@ gates. Track 59 is `In Review` for default-off Graph-ECS relations using
 Entity-ID `ChildOf` and `TransitionTo` components. Track 60 is `In Review` for
 normal-form flat-array components and solvers. Track 61 is `In Review` for
 extensive-form Graph-ECS traversal, backward induction, and local multi-game
-certification. Tracks 56-61 are now `Done` with concrete evidence manifests under `conductor/game-theory-evidence/manifests/track-56.json`..`track-61.json`; public release claims remain bounded to the verified repository evidence.
+certification. None of Tracks 56-61 is `Done`; public release claims remain
+bounded to the checked-in evidence and each track's blocked paths.
 
 ## Validation evidence
 

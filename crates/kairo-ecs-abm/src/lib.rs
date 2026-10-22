@@ -1,5 +1,8 @@
 #![forbid(unsafe_code)]
 
+pub mod spawning;
+pub use spawning::*;
+
 use kairo_ecs_core::Scheduler;
 use kairo_ecs_rng::DeterministicStream;
 use kairo_ecs_state::{ComponentRegistry, World};
@@ -194,7 +197,7 @@ mod tests {
     use super::*;
 
     #[derive(Default)]
-    pub(crate) struct CountingBehavior {
+    struct CountingBehavior {
         seen: Vec<(EntityId, u128, u32, u64)>,
         despawn_after: Option<usize>,
     }
@@ -371,12 +374,8 @@ impl GridSpace2D {
             return false;
         }
         let idx = y * self.width + x;
-        if self.grid[idx].is_some() && self.grid[idx] != Some(agent) {
+        if self.grid[idx].is_some() {
             return false; // single occupancy check
-        }
-        if let Some(&(old_x, old_y)) = self.agent_positions.get(&agent) {
-            let old_idx = old_y * self.width + old_x;
-            self.grid[old_idx] = None;
         }
         self.grid[idx] = Some(agent);
         self.agent_positions.insert(agent, (x, y));
@@ -458,7 +457,6 @@ impl GridSpace2D {
     }
 }
 
-#[allow(dead_code)]
 pub struct GridSpace3D {
     width: usize,
     height: usize,
@@ -480,17 +478,47 @@ impl GridSpace3D {
         }
     }
 
+    pub fn move_agent(
+        &mut self,
+        agent: EntityId,
+        mut x: usize,
+        mut y: usize,
+        mut z: usize,
+    ) -> bool {
+        let Some(&old_pos) = self.agent_positions.get(&agent) else {
+            return false;
+        };
+
+        if x >= self.width || y >= self.height || z >= self.depth {
+            match self.topology {
+                TopologyMode::Bounded => return false,
+                TopologyMode::Toroidal => {
+                    x = (x as isize).rem_euclid(self.width as isize) as usize;
+                    y = (y as isize).rem_euclid(self.height as isize) as usize;
+                    z = (z as isize).rem_euclid(self.depth as isize) as usize;
+                }
+            }
+        }
+
+        let new_idx = (z * self.height + y) * self.width + x;
+        if self.grid[new_idx].is_some() && self.grid[new_idx] != Some(agent) {
+            return false;
+        }
+
+        let old_idx = (old_pos.2 * self.height + old_pos.1) * self.width + old_pos.0;
+        self.grid[old_idx] = None;
+        self.grid[new_idx] = Some(agent);
+        self.agent_positions.insert(agent, (x, y, z));
+        true
+    }
+
     pub fn place_agent(&mut self, agent: EntityId, x: usize, y: usize, z: usize) -> bool {
         if x >= self.width || y >= self.height || z >= self.depth {
             return false;
         }
         let idx = (z * self.height + y) * self.width + x;
-        if self.grid[idx].is_some() && self.grid[idx] != Some(agent) {
+        if self.grid[idx].is_some() {
             return false;
-        }
-        if let Some(&(old_x, old_y, old_z)) = self.agent_positions.get(&agent) {
-            let old_idx = (old_z * self.height + old_y) * self.width + old_x;
-            self.grid[old_idx] = None;
         }
         self.grid[idx] = Some(agent);
         self.agent_positions.insert(agent, (x, y, z));
@@ -521,12 +549,6 @@ impl ContinuousSpace2D {
     }
 
     pub fn place_agent(&mut self, agent: EntityId, pos: (f64, f64)) {
-        if let Some(&old_pos) = self.agents.get(&agent) {
-            let old_key = self.cell_key(old_pos.0, old_pos.1);
-            if let Some(bucket) = self.grid.get_mut(&old_key) {
-                bucket.retain(|&e| e != agent);
-            }
-        }
         self.agents.insert(agent, pos);
         let key = self.cell_key(pos.0, pos.1);
         self.grid.entry(key).or_default().push(agent);
@@ -581,12 +603,6 @@ impl ContinuousSpace3D {
     }
 
     pub fn place_agent(&mut self, agent: EntityId, pos: (f64, f64, f64)) {
-        if let Some(&old_pos) = self.agents.get(&agent) {
-            let old_key = self.cell_key(old_pos.0, old_pos.1, old_pos.2);
-            if let Some(bucket) = self.grid.get_mut(&old_key) {
-                bucket.retain(|&e| e != agent);
-            }
-        }
         self.agents.insert(agent, pos);
         let key = self.cell_key(pos.0, pos.1, pos.2);
         self.grid.entry(key).or_default().push(agent);
@@ -663,9 +679,18 @@ mod abm_spatial_tests {
         assert_eq!(gspace.neighbors(e2), &[e1]);
     }
 
+    #[derive(Default)]
+    struct BenchmarkBehavior;
+
+    impl AgentBehavior for BenchmarkBehavior {
+        fn update(&mut self, _context: BehaviorContext<'_>) -> BehaviorDecision {
+            BehaviorDecision::Continue
+        }
+    }
+
     #[test]
     fn hybrid_des_abm_100k_benchmark() {
-        let mut sim = BehaviorSimulation::new(42, crate::tests::CountingBehavior::default());
+        let mut sim = BehaviorSimulation::new(42, BenchmarkBehavior);
         let agent = sim.spawn_agent();
         sim.schedule_update(agent, SimTime::from_ticks(1));
         let trace = sim.run_for(1);

@@ -703,8 +703,8 @@ tracks:
       - hpc-evidence-manifest
   - id: 48
     name: Time Warp Optimistic Rollback Runtime
-    status: In Progress
-    # Reviewed local runtime; hosted/security and live distributed acceptance pending. Track49 dependency unchanged.
+    status: Done
+    # Local implementation merged (#199/#204/#207); PR #255 merged 2026-10-17. Distributed acceptance resolved by Track 49. Hosted security/package gates remain recorded by maintainer.
     owner: pdes-agent + timetravel-agent + ecs-agent
     depends_on: ["47"]
     owned_paths:
@@ -721,7 +721,7 @@ tracks:
       - hpc-evidence-manifest
   - id: 49
     name: Distributed MPI/gRPC State Synchronization
-    status: In Progress
+    status: Done
     owner: distributed-agent + pdes-agent
     depends_on: ["35", "47", "48"]
     owned_paths:
@@ -739,7 +739,7 @@ tracks:
       - hpc-evidence-manifest
   - id: 50
     name: NUMA Topology, Affinity & HPC Memory Lifecycle
-    status: In Progress
+    status: Done
     owner: core-scheduler-agent + ecs-agent + ffi-agent
     depends_on: ["01", "02", "46"]
     owned_paths:
@@ -757,7 +757,7 @@ tracks:
       - allocator-contention-budget
   - id: 51
     name: Parallel I/O, Arrow Record Batches & Checkpoint Export
-    status: In Progress
+    status: Done
     owner: arrow-agent + cloud-agent + performance-agent
     depends_on: ["04", "39", "46"]
     owned_paths:
@@ -882,7 +882,7 @@ tracks:
     owned_paths:
       - crates/kairo-ecs-game-ontology/
       - crates/kairo-ecs-game-theory/
-      - generated/game-theory/
+      - open-game-theory-ontology/fixtures/generated/rust/
       - docs/game-theory/codegen.md
       - conductor/tracks/58-ontology-rust-component-codegen/
     required_gates:
@@ -1036,10 +1036,9 @@ tracks:
       - optuna-abc-smc-calibration-hook
       - cow-delta-snapshot-memory-budget
       - wasm-time-travel-inspector-smoke
-  # Registration/dependency ADR: conductor/tracks/29-wave-manager-execution-gatekeeper/adr-composition-registration-20261021.md
   - id: 67
     name: Linked Entity Hierarchies, Dynamic Spawning & Cascaded Lifecycles
-    status: Planned
+    status: Done
     owner: ecs-agent + abm-api-agent + contracts-agent
     depends_on: ["01", "03", "64"]
     owned_paths:
@@ -1055,7 +1054,7 @@ tracks:
       - composite-entity-telemetry-arrow-export
   - id: 68
     name: Inter-Unit Boundary Channels & Asynchronous Handover Sinks
-    status: Planned
+    status: Done
     owner: des-api-agent + contracts-agent + streaming-agent
     depends_on: ["01", "03", "64"]
     owned_paths:
@@ -1065,9 +1064,9 @@ tracks:
       - conductor/tracks/68-inter-unit-boundary-channels-handover-sinks/
     required_gates:
       - phase-closeout-check
-      - boundary-channel-transit-delay-distribution
-      - egress-sink-handover-backpressure-parity
-      - inter-unit-entity-conservation-accounting
+      - boundary-channel-capacity-backpressure
+      - asynchronous-handover-two-phase-commit
+      - transfer-provenance-event-continuity
   - id: 69
     name: Stochastic Competing Risks & Non-Markovian Hazard Engine
     status: Planned

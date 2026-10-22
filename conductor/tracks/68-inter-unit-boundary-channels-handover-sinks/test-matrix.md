@@ -18,10 +18,10 @@ and retained output hash. These rows define acceptance, not executed results.
 
 | Gate ID | Required oracle | Executable binding / status |
 | --- | --- | --- |
-| `phase-closeout-check` | Run the Conductor closeout checks below; implementation acceptance additionally requires runtime receipts and independent review. | Document commands listed below; implementation closeout pending |
-| `boundary-channel-transit-delay-distribution` | Fixed-clock and seeded transit cases preserve units, tie order, bounded delay semantics and independently specified distribution controls; unsupported distributions remain unqualified | Pending owner-native executable binding; no runtime pass |
-| `egress-sink-handover-backpressure-parity` | Reservation/occupancy/authority transitions preserve sender holds and destination capacity under rejection, expiry, cancellation and delayed acknowledgements | Pending owner-native executable binding; no runtime pass |
-| `inter-unit-entity-conservation-accounting` | Single-scheduler two-depot fixture proves one logical effect per operation ID across duplicates/reordering/restart; lost/duplicated entities or premature resource release fail, without claiming network exactly-once delivery | Pending owner-native executable binding; no runtime pass |
+| `phase-closeout-check` | Run the Conductor closeout checks below; implementation acceptance additionally requires runtime receipts and independent review. | `pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1` (passed) |
+| `boundary-channel-transit-delay-distribution` | Fixed-clock and seeded transit cases preserve units, tie order, bounded delay semantics and independently specified distribution controls; unsupported distributions remain unqualified | `cargo test -p kairo-ecs-des --test boundary_channel_transit_delay` (passed) |
+| `egress-sink-handover-backpressure-parity` | Reservation/occupancy/authority transitions preserve sender holds and destination capacity under rejection, expiry, cancellation and delayed acknowledgements | `cargo test -p kairo-ecs-des --test egress_sink_backpressure` (passed) |
+| `inter-unit-entity-conservation-accounting` | Single-scheduler two-depot fixture proves one logical effect per operation ID across duplicates/reordering/restart; lost/duplicated entities or premature resource release fail, without claiming network exactly-once delivery | `cargo test -p kairo-ecs-des --test inter_unit_entity_conservation` (passed) |
 
 ## Conductor closeout checks
 
