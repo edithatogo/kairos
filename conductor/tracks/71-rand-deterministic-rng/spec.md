@@ -48,3 +48,7 @@ Require accepted Kairos Tracks 74–77 after both Polars migrations before this 
 ## Dependency value gate
 
 Apply [robustness-first policy](../../dependency-value-policy.md): identify actual code/consumer benefit, freeze costs and independent tests, and stop rather than add an unjustified dependency.
+
+## Dependency sequencing refinement — 22 October 2026
+
+Track 95 thiserror acceptance additionally precedes this track; existing both-repository Polars and foundation gates remain. Track 96 property foundations already precede Polars; add RNG-specific invariants here without waiting for optional Track 99.

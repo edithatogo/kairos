@@ -171,3 +171,27 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 
 ---
 - [ ] **Track 92: Sobol sequence qualification** — Planned; evaluation; value gate pending. [Track](tracks/92-sobol-burley-robustness/index.md).
+
+---
+- [ ] **Track 93: sha2 robustness** — foundation; [plan](tracks/93-sha2-integrity/index.md).
+
+---
+- [ ] **Track 94: tempfile robustness** — foundation; [plan](tracks/94-tempfile-publication/index.md).
+
+---
+- [ ] **Track 95: thiserror robustness** — foundation; [plan](tracks/95-thiserror-contracts/index.md).
+
+---
+- [ ] **Track 96: proptest robustness** — foundation; [plan](tracks/96-proptest-invariants/index.md).
+
+---
+- [ ] **Track 97: tracing qualification** — conditional; [plan](tracks/97-tracing-diagnostics/index.md).
+
+---
+- [ ] **Track 98: loom qualification** — evaluation; [plan](tracks/98-loom-concurrency/index.md).
+
+---
+- [ ] **Track 99: proptest-state-machine qualification** — evaluation; [plan](tracks/99-proptest-state-machine/index.md).
+
+---
+- [ ] **Track 100: tracing-subscriber qualification** — conditional; [plan](tracks/100-tracing-subscriber/index.md).

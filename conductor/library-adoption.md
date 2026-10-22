@@ -16,9 +16,11 @@ The complete serial order includes the foundation tracks and Rayon shown below.
 
 ```mermaid
 flowchart TD
-    KP[Kairos 70 Polars accepted] --> CP[CareOps Polars R14 accepted]
+    P[Kairos 93 sha2 / 94 tempfile / 96 proptest] --> KP[Kairos 70 Polars accepted]
+    KP --> CP[CareOps Polars R14 accepted with parent foundation gates]
     CP --> F[Kairos 74–77 foundation accepted]
-    F --> KR[Kairos 71 rand accepted]
+    F --> E[Kairos 95 and parent thiserror]
+    E --> KR[Kairos 71 rand accepted]
     KR --> CR[CareOps rand R22 accepted]
     CR --> KD[Kairos 72 rand_distr accepted]
     KD --> CD[CareOps rand_distr R25 accepted]
@@ -29,7 +31,7 @@ flowchart TD
     CG --> TV[CareOps Three.js R35 accepted]
 ```
 
-Both Polars migrations must be accepted first. They preserve the existing RNG; subsequent rand and rand_distr changes each declare their own versioned trajectory break. ECharts is technically independent of routing/RNG, but follows them in this approved serial programme to prioritise maintenance reduction. No missing receipt is satisfied by a status label. External edges are explicit metadata/manual receipt gates; local task tools do not verify another repository. Accept upstream delivery before any downstream pin change. Routing waits for charts as a scheduling decision, not a Rust compile dependency.
+Both Polars migrations, including their new bounded prerequisites, must be accepted before later foundation/RNG adoption. They preserve the existing RNG; subsequent rand and rand_distr changes each declare their own versioned trajectory break. ECharts is technically independent of routing/RNG, but follows them in this approved serial programme to prioritise maintenance reduction. No missing receipt is satisfied by a status label. External edges are explicit metadata/manual receipt gates; local task tools do not verify another repository. Accept upstream delivery before any downstream pin change. Routing waits for charts as a scheduling decision, not a Rust compile dependency.
 
 ## Architectural boundaries
 
@@ -41,7 +43,7 @@ Use one Three.js viewer: orthographic parity first, perspective/multi-floor seco
 
 Capture baseline code, supported targets and representative workloads; pin and review exact dependency/features/licence/advisories and compatibility. Reconcile actual manifests, CI and parent pins before adoption: the historical Rust 1.76 planning floor is stale relative to Kairos Cargo.toml declaring 1.99; do not silently waive compatibility lanes. Independently test behaviour, failures/recovery and actual browser paths. Measure deleted/avoided bespoke production work alongside build/binary/bundle/memory/latency costs. Document retained exceptions and enforce baseline-derived budgets before replacement.
 
-Every phase requires Conductor review/fixes and exact command, cwd, commit, toolchain, input/seed hashes, exit codes and artifacts. Local validation, hosted CI, integration and release remain distinct. No new library has been installed and no implementation checkbox is complete. The current active Polars entry gate remains unchanged.
+Every phase requires Conductor review/fixes and exact command, cwd, commit, toolchain, input/seed hashes, exit codes and artifacts. Local validation, hosted CI, integration and release remain distinct. No new library has been installed and no implementation checkbox is complete. The Polars entry and R11 gates are refined by the dependency-sequencing register.
 
 This is repository engineering planning, not a maintained business document requiring SharePoint generation.
 
@@ -49,4 +51,8 @@ This is repository engineering planning, not a maintained business document requ
 
 ## Robustness-first refinement — 22 October 2026
 
-The [robustness programme](robust-dependencies.md) and [value policy](dependency-value-policy.md) take precedence over the earlier direct Polars-to-rand-to-chart sequence: after both Polars receipts, complete Kairos 74–77 before rand; after both sampling receipts, complete Kairos 78 before ECharts. Existing RNG/sampling/routing/viewer contracts remain, with value gates. Optional FMI/network/solver/ECS/spatial work does not block this core sequence. SUMO is conditional; Rapier deferred without executable work.
+The [robustness programme](robust-dependencies.md) and [value policy](dependency-value-policy.md) take precedence over the earlier direct Polars-to-rand-to-chart sequence: after both Polars receipts, complete Kairos 74–77, Kairos 95 and parent thiserror before rand; after both sampling receipts, complete Kairos 78 before ECharts. Existing RNG/sampling/routing/viewer contracts remain, with value gates. Optional FMI/network/solver/ECS/spatial work does not block this core sequence. SUMO is conditional; Rapier deferred without executable work.
+
+## Integrity and qualification refinement
+
+[Dependency sequencing](dependency-sequencing.md) is the current complete ordering. New canonical Kairos tracks: 93 sha2; 94 tempfile; 95 thiserror; 96 proptest; conditional 97 tracing, 98 Loom, 99 proptest-state-machine and 100 tracing-subscriber. Parent direct-use tracks cover sha2/tempfile/thiserror/proptest. No new dependency installed.

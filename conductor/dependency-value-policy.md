@@ -22,8 +22,12 @@ Retain DES scheduling/resource arbitration, domain clinical/hazard semantics, PD
 
 ## Priority and conditionality
 
-Foundation: Serde, serde_json, TOML and Clap, then accepted rand/rand_distr and Rayon. Existing Polars gates remain first; if Polars already removes a target, reconcile and close the redundant scope without rebuilding it. The documented 1.76 floor is stale relative to the current Kairos Cargo.toml declaration of 1.99; resolve actual manifests/CI/pins in both repositories, not by blindly raising an already higher floor.
+Foundation: Serde, serde_json, TOML and Clap, then accepted rand/rand_distr and Rayon. Bounded sha2/tempfile/proptest foundations precede Polars; if Polars already removes a target, reconcile and close the redundant scope without rebuilding it. The documented 1.76 floor is stale relative to the current Kairos Cargo.toml declaration of 1.99; resolve actual manifests/CI/pins in both repositories, not by blindly raising an already higher floor.
 
 Existing-subsystem work: ZIP/XML only for an active FMI consumer; assess whole rust-fmi replacement first to avoid double migration. Distributed and numerical libraries require active requirements and independent capability proof. hecs/rstar are evaluations with retain-current as a valid outcome, not mandated migrations.
 
 Geographic transport is later and consumer-gated. SUMO stays conditional on traffic interactions materially affecting the research/operational question; consider offline calibrated scenarios before live coupling. Rapier remains deferred, without executable adoption tasks. Road-network movement does not require rigid-body physics. DataFusion and WebGPU remain deferred.
+
+## Integrity and qualification refinement
+
+[Dependency sequencing](dependency-sequencing.md) is the current complete ordering. New canonical Kairos tracks: 93 sha2; 94 tempfile; 95 thiserror; 96 proptest; conditional 97 tracing, 98 Loom, 99 proptest-state-machine and 100 tracing-subscriber. Parent direct-use tracks cover sha2/tempfile/thiserror/proptest. No new dependency installed.

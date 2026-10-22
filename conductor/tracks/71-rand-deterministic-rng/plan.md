@@ -48,3 +48,7 @@ does not close an implementation phase or authorise publication.
 ## Robustness programme entry refinement
 
 Require accepted Kairos Tracks 74–77 after both Polars migrations before this track starts. Reconcile current manifests/CI rather than assuming the old MSRV prose: Kairos Cargo.toml currently declares Rust 1.99; historical 1.76 notes require source verification in both repositories. This supersedes the earlier instruction to presume an MSRV increase.
+
+## Dependency sequencing refinement — 22 October 2026
+
+Track 95 thiserror acceptance additionally precedes this track; existing both-repository Polars and foundation gates remain. Track 96 property foundations already precede Polars; add RNG-specific invariants here without waiting for optional Track 99.

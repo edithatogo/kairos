@@ -738,3 +738,35 @@ Runtime evidence remains pending; [test matrix](tracks/73-petgraph-spatial-routi
 ## Dependency value gate
 
 **dependency-value-proof**: satisfy [robustness-first policy](dependency-value-policy.md) before adoption; no-target/no-benefit/unsupported cases defer or reject. Net code/complexity includes adapters and operations. Performance and feature claims require measured evidence.
+
+### dependency-93-behaviour
+
+Independent standard empty/abc/multiblock/boundary-length vectors; Python hashlib or another independent implementation; single-bit corruption, truncated/invalid digest, full-byte coverage including high tick bits; old-format rejection/version tests. Do not treat the old custom hash as a SHA-256 oracle.
+
+### dependency-94-behaviour
+
+Concurrent directory creation/isolation; cleanup on normal/error paths; intentional retained diagnostics; same-filesystem publication, failure before/after persist, no-clobber and old-output preservation. End-to-end process-kill/disk-full/manifest recovery remains mandatory in Polars and is not certified by this prerequisite.
+
+### dependency-95-behaviour
+
+Error variant/code/message parity and source-chain tests; FFI mappings unchanged; no sensitive fields exposed. Count net deleted boilerplate and compile-time impact; leave trivial cases if conversion adds no value.
+
+### dependency-96-behaviour
+
+Mutation/negative controls show properties detect broken conservation, ordering and invalid-input rollback; seed replay and shrinking work; generated IDs include full ranges; test budgets enforced. New-format resume properties remain Track 70 acceptance responsibility.
+
+### dependency-97-behaviour
+
+Named diagnostic failure becomes explainable; disabled/enabled tracing yields identical simulation outputs; bounded overhead, field redaction, correlated run/worker IDs and backpressure behaviour.
+
+### dependency-98-behaviour
+
+A seeded concurrency bug is found; repaired model passes bounded interleavings; native tests agree; state-space/time budgets documented and unmodelled operations explicit.
+
+### dependency-99-behaviour
+
+Valid transitions/preconditions survive shrinking; injected conservation/replay bug produces reproducible minimal sequence; compare complexity and runtime against plain proptest.
+
+### dependency-100-behaviour
+
+Filtering/redaction, duplicate initialization handling, bounded logging/backpressure, stdout machine-output separation, enabled/disabled outcome equality and measured cost.

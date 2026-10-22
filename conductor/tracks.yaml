@@ -1086,7 +1086,7 @@ tracks:
     name: Polars-Native Data Processing and Standard Interchange
     status: Planned
     owner: arrow-agent + ffi-agent + conformance-agent
-    depends_on: ["04", "62", "63"]
+    depends_on: ["04", "62", "63", "93", "94", "96"]
     owned_paths:
       - conductor/tracks/70-polars-native-data-processing/
       - crates/kairo-ecs-arrow/
@@ -1103,7 +1103,7 @@ tracks:
     name: rand deterministic RNG adoption
     status: Planned
     owner: rng-agent + conformance-agent
-    depends_on: ["70", "69", "77"]
+    depends_on: ["70", "69", "77", "95"]
     owned_paths:
       - conductor/tracks/71-rand-deterministic-rng/
       - crates/kairo-ecs-rng/
@@ -1368,3 +1368,99 @@ tracks:
       - phase-closeout-check
       - dependency-value-proof
       - dependency-92-behaviour
+
+  - id: 93
+    name: sha2 robustness
+    status: Planned
+    owner: arrow-agent
+    depends_on: []
+    owned_paths:
+      - conductor/tracks/93-sha2-integrity/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-93-behaviour
+
+  - id: 94
+    name: tempfile robustness
+    status: Planned
+    owner: arrow-agent
+    depends_on: []
+    owned_paths:
+      - conductor/tracks/94-tempfile-publication/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-94-behaviour
+
+  - id: 95
+    name: thiserror robustness
+    status: Planned
+    owner: contracts-agent
+    depends_on: ["77"]
+    owned_paths:
+      - conductor/tracks/95-thiserror-contracts/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-95-behaviour
+
+  - id: 96
+    name: proptest robustness
+    status: Planned
+    owner: conformance-agent
+    depends_on: []
+    owned_paths:
+      - conductor/tracks/96-proptest-invariants/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-96-behaviour
+
+  - id: 97
+    name: tracing qualification
+    status: Planned
+    owner: contracts-agent
+    depends_on: ["78"]
+    owned_paths:
+      - conductor/tracks/97-tracing-diagnostics/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-97-behaviour
+
+  - id: 98
+    name: loom qualification
+    status: Planned
+    owner: conformance-agent
+    depends_on: ["78"]
+    owned_paths:
+      - conductor/tracks/98-loom-concurrency/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-98-behaviour
+
+  - id: 99
+    name: proptest-state-machine qualification
+    status: Planned
+    owner: conformance-agent
+    depends_on: ["96"]
+    owned_paths:
+      - conductor/tracks/99-proptest-state-machine/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-99-behaviour
+
+  - id: 100
+    name: tracing-subscriber qualification
+    status: Planned
+    owner: contracts-agent
+    depends_on: ["97"]
+    owned_paths:
+      - conductor/tracks/100-tracing-subscriber/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-100-behaviour
