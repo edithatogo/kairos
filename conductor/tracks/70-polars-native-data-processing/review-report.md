@@ -22,3 +22,7 @@ Exit status: 0 for each listed planning command. Artifacts: this report and the 
 
 ## Review disposition
 No unresolved planning blocker. Exact dependency/feature qualification is a first-phase deliverable and a stop gate, not assumed successful. All implementation checkboxes remain unchecked.
+
+## Harness exception and corrective audit
+
+The original precommit harness check returned exit 1: input hash drift for conductor/index.md. That file had been intentionally edited within the claimed conductor scope, but was mistakenly also registered as an immutable input. Commit commands nevertheless ran; the original precommit gate therefore did not pass. A postcommit diff-tree audit verified every changed path is inside conductor/. Released the original lease and acquired a fresh clean-tree claim with only unchanged workflow as immutable input, then recorded this exception and reran the scope check before the corrective commit. This correction does not retroactively turn the original failed gate into a pass.
