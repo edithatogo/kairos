@@ -9,13 +9,14 @@ rust-version.workspace = true
 default = []
 gpu = []
 wgpu-backend = ["gpu", "dep:wgpu", "dep:pollster"]
-cuda-backend = ["gpu"]
+cuda-backend = ["gpu", "dep:kairo-ecs-cuda"]
 metal-backend = ["gpu", "wgpu-backend"]
 
 [lints.rust]
-unsafe_code = "forbid"
+unsafe_code = "allow"
 
 [dependencies]
 bytemuck = { version = "1.25.2", features = ["derive"] }
+kairo-ecs-cuda = { path = "../kairo-ecs-cuda", version = "0.1.0", optional = true }
 pollster = { version = "1.0.1", optional = true }
 wgpu = { version = "30.0.1", optional = true }

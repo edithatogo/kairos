@@ -14,6 +14,7 @@ members = [
   "crates/kairo-ecs-bench",
   "crates/kairo-ecs-cli",
   "crates/kairo-ecs-gpu",
+  "crates/kairo-ecs-cuda",
   "crates/kairo-ecs-webgpu",
   "crates/kairo-ecs-pdes",
   "crates/kairo-ecs-mpi",
