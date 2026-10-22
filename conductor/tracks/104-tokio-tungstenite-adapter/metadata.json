@@ -1,0 +1,16 @@
+{
+  "track_id": "104-tokio-tungstenite-adapter",
+  "title": "tokio-tungstenite: conditional",
+  "library": "tokio-tungstenite",
+  "type": "evaluation",
+  "status": "new",
+  "created_at": "2026-10-22",
+  "updated_at": "2026-10-22",
+  "spec_approved": true,
+  "implementation_started": false,
+  "accepted_phases": [],
+  "priority_class": "conditional",
+  "adoption_decision": "pending_value_gate",
+  "external_dependencies": [],
+  "approval_basis": "User approved incorporation and sequencing; tooling consolidation distinguished from conditional adoption."
+}

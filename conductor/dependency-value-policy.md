@@ -31,3 +31,7 @@ Geographic transport is later and consumer-gated. SUMO stays conditional on traf
 ## Integrity and qualification refinement
 
 [Dependency sequencing](dependency-sequencing.md) is the current complete ordering. New canonical Kairos tracks: 93 sha2; 94 tempfile; 95 thiserror; 96 proptest; conditional 97 tracing, 98 Loom, 99 proptest-state-machine and 100 tracing-subscriber. Parent direct-use tracks cover sha2/tempfile/thiserror/proptest. No new dependency installed.
+
+## Optimisation versus adoption
+
+Prefer reusing qualified existing tooling (Criterion, Python jsonschema) over another framework. Schema libraries replace duplicated structural checks only; preserve domain validation. Capability placeholders and incorrectly named algorithms require truthful correction regardless of whether an alternative dependency is adopted.

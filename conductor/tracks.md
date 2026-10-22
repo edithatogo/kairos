@@ -195,3 +195,15 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 
 ---
 - [ ] **Track 100: tracing-subscriber qualification** — conditional; [plan](tracks/100-tracing-subscriber/index.md).
+
+---
+- [ ] **Track 101: criterion existing-tooling** — [record](tracks/101-criterion-consolidation/index.md).
+
+---
+- [ ] **Track 102: ode_solvers conditional** — [record](tracks/102-ode-solvers-qualification/index.md).
+
+---
+- [ ] **Track 103: tungstenite conditional** — [record](tracks/103-tungstenite-transport/index.md).
+
+---
+- [ ] **Track 104: tokio-tungstenite conditional** — [record](tracks/104-tokio-tungstenite-adapter/index.md).

@@ -1,0 +1,16 @@
+{
+  "track_id": "102-ode-solvers-qualification",
+  "title": "ode_solvers: conditional",
+  "library": "ode_solvers",
+  "type": "evaluation",
+  "status": "new",
+  "created_at": "2026-10-22",
+  "updated_at": "2026-10-22",
+  "spec_approved": true,
+  "implementation_started": false,
+  "accepted_phases": [],
+  "priority_class": "conditional",
+  "adoption_decision": "pending_value_gate",
+  "external_dependencies": [],
+  "approval_basis": "User approved incorporation and sequencing; tooling consolidation distinguished from conditional adoption."
+}

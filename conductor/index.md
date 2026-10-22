@@ -31,3 +31,5 @@ A status label alone does not prove implementation or release acceptance.
 [Separate dependency tracks and sequencing](robust-dependencies.md) prioritise existing-system robustness. [Value gates](dependency-value-policy.md) prevent adoption for its own sake. SUMO conditional; Rapier deferred.
 
 - [Dependency sequencing and prerequisite gates](dependency-sequencing.md)
+
+[Validation/tooling planning review](validation-tooling-review.md)

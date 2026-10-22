@@ -37,3 +37,26 @@ Current local CareOps main diverges from origin/main; reconcile source/ownership
 If reconciliation removes every candidate target, do not install a dependency to satisfy a graph edge. Record an accepted scope-elimination decision with evidence and update the affected prerequisite registry/receipt under coordinator review before dispatch; keep adoption tasks unimplemented. A no-go decision alone does not silently satisfy an existing gate.
 
 [Planning review and validation](dependency-sequencing-review.md)
+
+## Schema validation, existing tooling and conditional capabilities
+
+Refinement approved 22 October 2026; no runtime adoption.
+
+| Work | Kind | Owner and order |
+| --- | --- | --- |
+| Criterion 101 | Consolidate existing tooling | Kairos benchmark owner; no core prerequisite, then CareOps R68–R70 for actual microbenchmark consumers |
+| Rust jsonschema | New dependency qualification | CareOps R62–R64 after parent Polars R14 and upstream serde_json 75; shared schema contract before browser qualification |
+| Ajv | New dependency qualification | CareOps R65–R67 after schema R64; gates ECharts implementation R27 and affected live input acceptance |
+| ode_solvers 102 | Conditional scientific capability | Kairos after Rayon 78 and demonstrated continuous-dynamics need; independent of correcting existing RK4 claim |
+| Tungstenite 103 | Conditional real transport | Kairos after Rayon 78 and accepted live consumer; parent schemas before affected input acceptance |
+| tokio-tungstenite 104 | Conditional async adapter | Only after Tungstenite 103 and accepted Tokio 82; real async requirement, no automatic second transport |
+
+Core sequence otherwise remains intact. Rust schema qualification can run once parent Polars and upstream JSON contracts are accepted, while TOML/Clap/error/RNG/sampling/Rayon work proceeds in its existing order. ECharts R26 can prepare; R27 waits for Ajv R67. The existing Python jsonschema validator remains an independent oracle. No new schema validator is added to Kairos without an actual generic consumer. Shared schemas cover structure; authoritative clinical and cross-record decisions remain native domain logic.
+
+Benchmark consolidation is supporting work, not a blanket migration blocker. Each implementation track must still use an adequate baseline and its existing cost gates; do not replace specialist subprocess/GPU/MPI/RSS measurements with microbenchmarks.
+
+Track 65 owns the open Euler/RK4 mismatch independently of optional ODE selection. Do not revive stale numerical capability claims from names or self-roundtrip tests. Track 103 replaces an in-memory placeholder only when real transport is required; application ordering/resync/idempotency/backpressure and cancellation remain project-owned. Any live parent packet must verify accepted ABI schemas and actual browser/native transport, not simply the ECharts completion status.
+
+No ajv-cli, additional format plugin, transport framework or numerical backend is implicitly approved. Separate direct-dependency tracks are required if qualification demonstrates a need. SUMO remains conditional; Rapier remains deferred.
+
+[Validation/tooling planning review](validation-tooling-review.md)

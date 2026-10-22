@@ -1464,3 +1464,51 @@ tracks:
       - phase-closeout-check
       - dependency-value-proof
       - dependency-100-behaviour
+
+  - id: 101
+    name: criterion existing-tooling
+    status: Planned
+    owner: benchmark-agent
+    depends_on: []
+    owned_paths:
+      - conductor/tracks/101-criterion-consolidation/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-101-behaviour
+
+  - id: 102
+    name: ode_solvers conditional
+    status: Planned
+    owner: vv-uq-agent
+    depends_on: ["78"]
+    owned_paths:
+      - conductor/tracks/102-ode-solvers-qualification/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-102-behaviour
+
+  - id: 103
+    name: tungstenite conditional
+    status: Planned
+    owner: streaming-agent
+    depends_on: ["78"]
+    owned_paths:
+      - conductor/tracks/103-tungstenite-transport/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-103-behaviour
+
+  - id: 104
+    name: tokio-tungstenite conditional
+    status: Planned
+    owner: streaming-agent
+    depends_on: ["103", "82"]
+    owned_paths:
+      - conductor/tracks/104-tokio-tungstenite-adapter/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-104-behaviour
