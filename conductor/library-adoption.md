@@ -56,3 +56,7 @@ The [robustness programme](robust-dependencies.md) and [value policy](dependency
 ## Integrity and qualification refinement
 
 [Dependency sequencing](dependency-sequencing.md) is the current complete ordering. New canonical Kairos tracks: 93 sha2; 94 tempfile; 95 thiserror; 96 proptest; conditional 97 tracing, 98 Loom, 99 proptest-state-machine and 100 tracing-subscriber. Parent direct-use tracks cover sha2/tempfile/thiserror/proptest. No new dependency installed.
+
+## Validation/tooling refinement
+
+See [sequencing](dependency-sequencing.md): CareOps Rust schema qualification follows Polars/serde_json; Ajv precedes ECharts R27. Criterion consolidation supports existing gates without blocking all work. ODE/WebSocket dependencies remain conditional; the RK4 correctness finding is independent.

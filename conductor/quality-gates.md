@@ -770,3 +770,19 @@ Valid transitions/preconditions survive shrinking; injected conservation/replay 
 ### dependency-100-behaviour
 
 Filtering/redaction, duplicate initialization handling, bounded logging/backpressure, stdout machine-output separation, enabled/disabled outcome equality and measured cost.
+
+### dependency-101-behaviour
+
+Known injected regression is detected on a controlled host; repeated baselines, warmup/sample configuration and input hashes recorded; setup excluded appropriately, results consumed to prevent dead-code elimination, output metric/receipt parity, noise-aware thresholds. Report CPU affinity/power/toolchain where relevant; no claim that statistical significance proves user value.
+
+### dependency-102-behaviour
+
+Analytical reference solutions and expected convergence order; tolerance refinement and independent reference solver; conservation/positivity without hiding error by clamping; discontinuity/event-boundary fixtures, determinism on supported targets and bounded runtime. Qualify maintenance, platform support and needed solver class before selecting a release.
+
+### dependency-103-behaviour
+
+Real loopback browser/native interoperability; malformed/oversize/fragmented messages, close/ping/pong, slow-reader backpressure, reconnect/gaps, cancellation and no duplicate commands/arrivals. Explicit origin/auth/TLS boundary appropriate to deployment; no production service implied. Test renderer-off identical simulation outcomes; finite resource limits.
+
+### dependency-104-behaviour
+
+Cancellation-safe connection lifecycle, bounded queues/backpressure, shutdown/reconnect, slow consumers, no lost/duplicate command effects and same protocol conformance as Track 103. Measure actual benefit over accepted simpler transport and count transitive/build cost.

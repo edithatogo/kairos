@@ -1577,3 +1577,51 @@ entries:
     commit_sha: ""
     pushed_ref: ""
     next_phase_decision: "Verify value, prerequisites and owner handoffs"
+
+  - track_id: "101"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; qualification pending"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value and current owners"
+
+  - track_id: "102"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; qualification pending"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value and current owners"
+
+  - track_id: "103"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; qualification pending"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value and current owners"
+
+  - track_id: "104"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; qualification pending"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value and current owners"

@@ -63,3 +63,7 @@ Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/
 Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.
 
 This checklist is retained in the handoff because the current source reservation hashes plan.md as an input. Its owner must incorporate these leaves into the next bound packet; this update neither edits that input nor takes over source ownership.
+
+## Open correctness finding — continuous integrator naming
+
+Source inspection on 22 October 2026 found `step_continuous_rk4` in normal_form.rs performs one Euler-style derivative update followed by clamping/normalisation, not four RK stages. Current-owner review must establish actual consumers and the intended contract; then rename/document a deliberately supported Euler method or implement/qualify the promised RK4 behaviour with independent convergence tests. Preserve/version affected outputs; do not silently update goldens. This is an open finding, not an accepted fix. It does not depend on adopting ode_solvers Track 102, which remains conditional. Active game-theory ownership/leases remain intact.

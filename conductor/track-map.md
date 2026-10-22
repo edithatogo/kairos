@@ -517,3 +517,7 @@ writers. Track67 similarly coordinates existing core/state/ABM owners.
 ## Dependency sequencing refinement
 
 See [current sequencing](dependency-sequencing.md): bounded sha2/tempfile/proptest before Polars acceptance; thiserror after CLI foundation and before RNG; diagnostics/concurrency/state-machine additions conditional. No implementation acceptance.
+
+## Validation/tooling refinement
+
+[Sequencing](dependency-sequencing.md) registers Criterion reuse, schema-validation gates and conditional ODE/WebSocket work. No runtime acceptance.

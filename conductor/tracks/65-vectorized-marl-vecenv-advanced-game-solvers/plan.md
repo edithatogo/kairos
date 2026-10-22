@@ -38,3 +38,9 @@ phase begins:
 7. Run `pwsh -NoProfile -File scripts/validate_conductor_git_closeout.ps1 -RequireCleanWorkingTree`.
 8. Advance only after there is no in-scope unstaged or untracked work except
    documented draft satellites.
+
+## Open correctness finding — continuous integrator naming
+
+Source inspection on 22 October 2026 found `step_continuous_rk4` in normal_form.rs performs one Euler-style derivative update followed by clamping/normalisation, not four RK stages. Current-owner review must establish actual consumers and the intended contract; then rename/document a deliberately supported Euler method or implement/qualify the promised RK4 behaviour with independent convergence tests. Preserve/version affected outputs; do not silently update goldens. This is an open finding, not an accepted fix. It does not depend on adopting ode_solvers Track 102, which remains conditional. Active game-theory ownership/leases remain intact.
+
+- [ ] Task correctness-RK4: Owner-triage the Euler/RK4 mismatch, add independent convergence/contract tests, implement the justified correction and record version/consumer evidence before renewed continuous-RK4 claims.
