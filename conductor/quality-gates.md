@@ -658,3 +658,83 @@ Runtime evidence remains pending; [test matrix](tracks/73-petgraph-spatial-routi
 - **routing-deterministic-paths**: Independent small-graph optimality, cost/hops/edge-ID ties, shuffled insertions, zero-cost cycles, directionality and overflow.
 - **routing-multifloor-access**: Synthetic multi-floor connectivity, inaccessible lifts/stairs/doors, disconnected destination, topology revision/cache invalidation and unit/identity rejection.
 - **routing-des-boundary**: Lift queues/resource waits remain authoritative DES state; route rendering does not schedule events; code/build/query-memory audit without fictitious deletion claims.
+
+## Track 74 prospective gate
+
+**dependency-74-behaviour**: Roundtrip full-range IDs/ticks, optional fields and invalid versions; unknown/duplicate fields follow explicit reviewed policy; bounded input and no silent defaulting. Required future evidence: [matrix](tracks/74-serde-robustness/test-matrix.md).
+
+## Track 75 prospective gate
+
+**dependency-75-behaviour**: Independent parser reads escaped Unicode/control characters and exact integer/string representations; malformed, duplicate-key and oversized inputs reject as specified. Required future evidence: [matrix](tracks/75-serde-json-robustness/test-matrix.md).
+
+## Track 76 prospective gate
+
+**dependency-76-behaviour**: Sections, comments, quotes/escapes, arrays, duplicate keys, malformed tokens, missing fields, out-of-range values and existing fixture migration; independent valid TOML fixtures. Required future evidence: [matrix](tracks/76-toml-robustness/test-matrix.md).
+
+## Track 77 prospective gate
+
+**dependency-77-behaviour**: Subcommand/flag matrix, unknown/missing/duplicate args, paths with spaces, help and exit code snapshots, process-level invocations against real scenarios. Required future evidence: [matrix](tracks/77-clap-robustness/test-matrix.md).
+
+## Track 78 prospective gate
+
+**dependency-78-behaviour**: 1/2/4 worker exact traces/results, skewed tasks, small/large ensembles, panic/error propagation, cancellation ownership and thread count/RSS/latency versus baseline. Required future evidence: [matrix](tracks/78-rayon-robustness/test-matrix.md).
+
+## Track 79 prospective gate
+
+**dependency-79-behaviour**: Independent compressed/stored/ZIP64 fixtures where supported, malformed/truncated CRC, traversal, symlink/duplicate entries, expansion limit, partial extraction cleanup and FMU roundtrip. Required future evidence: [matrix](tracks/79-zip-robustness/test-matrix.md).
+
+## Track 80 prospective gate
+
+**dependency-80-behaviour**: Namespace/attribute ordering, escaped content, malformed/truncated XML, false root substrings, unsupported FMI versions and independent consumer parsing. Required future evidence: [matrix](tracks/80-quick-xml-robustness/test-matrix.md).
+
+## Track 81 prospective gate
+
+**dependency-81-behaviour**: Independent protobuf peer roundtrip; malformed/oversized/unknown fields and versions; full ticks/IDs, optionality and canonical semantic equality. Required future evidence: [matrix](tracks/81-prost-robustness/test-matrix.md).
+
+## Track 82 prospective gate
+
+**dependency-82-behaviour**: Real process shutdown/cancellation, slow consumers, saturation, reconnect and bounded resources; deterministic handoff ordering despite different IO timing. Required future evidence: [matrix](tracks/82-tokio-robustness/test-matrix.md).
+
+## Track 83 prospective gate
+
+**dependency-83-behaviour**: Independent non-Kairos gRPC peer, two-process failure/reconnect/backpressure and duplicate messages; wire version rejection, transport policy and unchanged PDES ordering. Required future evidence: [matrix](tracks/83-tonic-robustness/test-matrix.md).
+
+## Track 84 prospective gate
+
+**dependency-84-behaviour**: Representative spawn/despawn, sparse/dense query and mutation benchmarks; full ID/reuse limits, relationships, snapshot/rollback, consumer bindings and replay after restore; count all compatibility code. Required future evidence: [matrix](tracks/84-hecs-robustness/test-matrix.md).
+
+## Track 85 prospective gate
+
+**dependency-85-behaviour**: Known feasible/infeasible/unbounded cases, independent primal/dual residuals and equilibrium inequalities, degenerate payoffs, tolerances and reproducible platform policy. Required future evidence: [matrix](tracks/85-clarabel-robustness/test-matrix.md).
+
+## Track 86 prospective gate
+
+**dependency-86-behaviour**: Independent brute-force neighbour oracle, movement/removal, duplicate IDs, boundaries/nonfinite input and sparse/dense/skew dynamic workloads; update/query RSS/time. Required future evidence: [matrix](tracks/86-rstar-robustness/test-matrix.md).
+
+## Track 87 prospective gate
+
+**dependency-87-behaviour**: Known line/route distances and positions, endpoint/zero-length/multi-segment paths, coordinate-order and unit errors, geographic projection roundtrip and monotonic route progress. Required future evidence: [matrix](tracks/87-geo-robustness/test-matrix.md).
+
+## Track 88 prospective gate
+
+**dependency-88-behaviour**: Actual MPI implementation and multi-rank runs with independent API evidence, ordering/collectives, failures, deadlock controls and hardware/runtime provenance. Required future evidence: [matrix](tracks/88-mpi-robustness/test-matrix.md).
+
+## Track 89 prospective gate
+
+**dependency-89-behaviour**: Independent reference outputs for real model bytes, unsupported operator/model rejection, shape/type/nonfinite/oversized inputs, timeout/fallback and pinned model/version hashes. Required future evidence: [matrix](tracks/89-tract-robustness/test-matrix.md).
+
+## Track 90 prospective gate
+
+**dependency-90-behaviour**: Known analytical objectives, convergence/failure/bounds, independent solver reference, reproducible restart and noise/seed handling with justified termination tolerances. Required future evidence: [matrix](tracks/90-argmin-robustness/test-matrix.md).
+
+## Track 91 prospective gate
+
+**dependency-91-behaviour**: Independent reference FMUs, lifecycle errors, get/set/step, platform loading, schema and supported export roundtrip, restore if required and leak/cleanup failures. Required future evidence: [matrix](tracks/91-fmi-robustness/test-matrix.md).
+
+## Track 92 prospective gate
+
+**dependency-92-behaviour**: Independent sequence vectors/reference, dimension/index limits, reproducible scrambling, multidimensional coverage/integration controls and estimator regression. Required future evidence: [matrix](tracks/92-sobol-burley-robustness/test-matrix.md).
+
+## Dependency value gate
+
+**dependency-value-proof**: satisfy [robustness-first policy](dependency-value-policy.md) before adoption; no-target/no-benefit/unsupported cases defer or reject. Net code/complexity includes adapters and operations. Performance and feature claims require measured evidence.

@@ -38,3 +38,7 @@ Scheduler, resource lifecycle, clinical policy and unrelated/actively claimed pa
 ## Release implications
 
 Experimental alpha only. Any public API/checkpoint break requires ADR, compatibility documentation, conformance and red-team review. Planning does not authorize release, publication or certify runtime acceptance.
+
+## Dependency value gate
+
+Apply [robustness-first policy](../../dependency-value-policy.md): identify actual code/consumer benefit, freeze costs and independent tests, and stop rather than add an unjustified dependency.

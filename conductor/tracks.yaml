@@ -1103,7 +1103,7 @@ tracks:
     name: rand deterministic RNG adoption
     status: Planned
     owner: rng-agent + conformance-agent
-    depends_on: ["70", "69"]
+    depends_on: ["70", "69", "77"]
     owned_paths:
       - conductor/tracks/71-rand-deterministic-rng/
       - crates/kairo-ecs-rng/
@@ -1140,3 +1140,231 @@ tracks:
       - routing-deterministic-paths
       - routing-multifloor-access
       - routing-des-boundary
+
+  - id: 74
+    name: Serde typed control contracts
+    status: Planned
+    owner: contracts-agent
+    depends_on: ["70"]
+    owned_paths:
+      - conductor/tracks/74-serde-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-74-behaviour
+
+  - id: 75
+    name: serde_json metadata and control encoding
+    status: Planned
+    owner: contracts-agent
+    depends_on: ["74"]
+    owned_paths:
+      - conductor/tracks/75-serde-json-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-75-behaviour
+
+  - id: 76
+    name: toml scenario configuration parsing
+    status: Planned
+    owner: contracts-agent
+    depends_on: ["75"]
+    owned_paths:
+      - conductor/tracks/76-toml-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-76-behaviour
+
+  - id: 77
+    name: Clap CLI consolidation
+    status: Planned
+    owner: contracts-agent
+    depends_on: ["76"]
+    owned_paths:
+      - conductor/tracks/77-clap-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-77-behaviour
+
+  - id: 78
+    name: Rayon bounded independent-work execution
+    status: Planned
+    owner: experiment-agent
+    depends_on: ["72", "77"]
+    owned_paths:
+      - conductor/tracks/78-rayon-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-78-behaviour
+
+  - id: 79
+    name: zip FMU archive replacement
+    status: Planned
+    owner: fmi-agent
+    depends_on: ["78"]
+    owned_paths:
+      - conductor/tracks/79-zip-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-79-behaviour
+
+  - id: 80
+    name: quick-xml FMU metadata replacement
+    status: Planned
+    owner: fmi-agent
+    depends_on: ["79"]
+    owned_paths:
+      - conductor/tracks/80-quick-xml-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-80-behaviour
+
+  - id: 81
+    name: Prost distributed envelope encoding
+    status: Planned
+    owner: distributed-agent
+    depends_on: ["78"]
+    owned_paths:
+      - conductor/tracks/81-prost-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-81-behaviour
+
+  - id: 82
+    name: Tokio bounded transport runtime
+    status: Planned
+    owner: distributed-agent
+    depends_on: ["81"]
+    owned_paths:
+      - conductor/tracks/82-tokio-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-82-behaviour
+
+  - id: 83
+    name: Tonic interoperable RPC transport
+    status: Planned
+    owner: distributed-agent
+    depends_on: ["82"]
+    owned_paths:
+      - conductor/tracks/83-tonic-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-83-behaviour
+
+  - id: 84
+    name: hecs ECS storage qualification
+    status: Planned
+    owner: ecs-agent
+    depends_on: ["78", "64"]
+    owned_paths:
+      - conductor/tracks/84-hecs-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-84-behaviour
+
+  - id: 85
+    name: Clarabel convex solver qualification
+    status: Planned
+    owner: vv-uq-agent
+    depends_on: ["78"]
+    owned_paths:
+      - conductor/tracks/85-clarabel-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-85-behaviour
+
+  - id: 86
+    name: rstar continuous spatial index qualification
+    status: Planned
+    owner: abm-api-agent
+    depends_on: ["87"]
+    owned_paths:
+      - conductor/tracks/86-rstar-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-86-behaviour
+
+  - id: 87
+    name: geo geometry and route-position primitives
+    status: Planned
+    owner: abm-api-agent
+    depends_on: ["73"]
+    owned_paths:
+      - conductor/tracks/87-geo-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-87-behaviour
+
+  - id: 88
+    name: rsmpi native MPI qualification
+    status: Planned
+    owner: distributed-agent
+    depends_on: ["78"]
+    owned_paths:
+      - conductor/tracks/88-mpi-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-88-behaviour
+
+  - id: 89
+    name: Tract inference qualification
+    status: Planned
+    owner: ml-integration-agent
+    depends_on: ["78"]
+    owned_paths:
+      - conductor/tracks/89-tract-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-89-behaviour
+
+  - id: 90
+    name: Argmin calibration optimiser qualification
+    status: Planned
+    owner: vv-uq-agent
+    depends_on: ["78"]
+    owned_paths:
+      - conductor/tracks/90-argmin-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-90-behaviour
+
+  - id: 91
+    name: rust-fmi adapter qualification
+    status: Planned
+    owner: fmi-agent
+    depends_on: ["78"]
+    owned_paths:
+      - conductor/tracks/91-fmi-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-91-behaviour
+
+  - id: 92
+    name: Sobol sequence qualification
+    status: Planned
+    owner: experiment-agent
+    depends_on: ["72"]
+    owned_paths:
+      - conductor/tracks/92-sobol-burley-robustness/
+    required_gates:
+      - phase-closeout-check
+      - dependency-value-proof
+      - dependency-92-behaviour

@@ -1,0 +1,16 @@
+{
+  "track_id": "77-clap-robustness",
+  "title": "Clap CLI consolidation",
+  "library": "clap",
+  "type": "refactor",
+  "status": "new",
+  "created_at": "2026-10-22",
+  "updated_at": "2026-10-22",
+  "spec_approved": true,
+  "implementation_started": false,
+  "accepted_phases": [],
+  "priority_class": "foundation",
+  "adoption_decision": "pending_value_gate",
+  "external_dependencies": [],
+  "approval_basis": "User requested separate dependency tracks, robustness-first value gates and clear ownership. Candidate adoption remains evidence-gated."
+}
