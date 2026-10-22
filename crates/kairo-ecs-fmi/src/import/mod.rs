@@ -1,5 +1,8 @@
 pub mod fmu_loader;
 
+#[cfg(feature = "fmi-runtime")]
+pub mod dynamic_loader;
+
 #[cfg(feature = "fmi2")]
 pub mod fmi2;
 
