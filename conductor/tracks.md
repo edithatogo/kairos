@@ -73,7 +73,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 66 | Parallel Ensemble Sweeps (Sobol/CRN), SBI Calibration & Copy-on-Write Wasm Studio | Done | `vv-uq-agent + experiment-agent + timetravel-agent + playground-agent` | See `conductor/tracks/66-*/spec.md` |
 | 67 | Linked Entity Hierarchies, Dynamic Spawning & Cascaded Lifecycles | Done | `ecs-agent + abm-api-agent + contracts-agent` | See `conductor/tracks/67-*/spec.md` |
 | 68 | Inter-Unit Boundary Channels & Asynchronous Handover Sinks | Done | `des-api-agent + contracts-agent + streaming-agent` | See `conductor/tracks/68-*/spec.md` |
-| 69 | Stochastic Competing Risks & Non-Markovian Hazard Engine | In Progress | `des-api-agent + vv-uq-agent + core-scheduler-agent` | See `conductor/tracks/69-*/spec.md` |
+| 69 | Stochastic Competing Risks & Non-Markovian Hazard Engine | Done | `des-api-agent + vv-uq-agent + core-scheduler-agent` | See `conductor/tracks/69-*/spec.md` |
 
 ## Track status vocabulary
 

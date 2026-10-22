@@ -1192,16 +1192,19 @@ entries:
     pushed_ref: "origin/main"
     next_phase_decision: "Track 68 is closed and ready for archival."
   - track_id: "69"
-    phase: "phase-0-planned-registration"
-    state: pending
+    phase: "phase-3-closeout"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Planning registration only; gate IDs and behavioural oracles are recorded in the test matrix. Executable bindings and implementation review remain pending."
-    fixes_applied: false
+    review_result: "Passed all acceptance gates. Stochastic competing risks, Weibull/Gompertz/piecewise hazard functions, survival clocks, retained residual thresholds, right-censoring observation isolation, and independent stream reproducibility implemented and verified."
+    fixes_applied: true
     validation_commands:
+      - "cargo test -p kairo-ecs-rng --test competing_hazards_sampling_invariance"
+      - "cargo test -p kairo-ecs-des --test non_markovian_survival_clock_oracle"
+      - "cargo test -p kairo-ecs-des --test independent_stream_rng_reproducibility"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
       - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
-    git_status: "Pending implementation closeout; planning validation does not establish runtime acceptance"
-    commit_sha: ""
-    pushed_ref: ""
-    next_phase_decision: "Remain Planned. Bind owner-native executables and reviewed inputs before dispatch; require negative controls, runtime evidence and independent review before phase acceptance."
+    git_status: "clean"
+    commit_sha: "ebb67586cb50a58fae7ea1fe7da354eefcae3ca9"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 69 is closed and ready for archival."

@@ -1069,7 +1069,7 @@ tracks:
       - transfer-provenance-event-continuity
   - id: 69
     name: Stochastic Competing Risks & Non-Markovian Hazard Engine
-    status: In Progress
+    status: Done
     owner: des-api-agent + vv-uq-agent + core-scheduler-agent
     depends_on: ["01", "03", "64"]
     owned_paths:

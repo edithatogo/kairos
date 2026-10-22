@@ -1,5 +1,18 @@
 # KairoECS Conductor Status
 
+## Track 69: Stochastic Competing Risks & Non-Markovian Hazard Engine Review & Archival - 22 October 2026
+
+Track 69 has successfully passed implementation, comprehensive statistical and Monte Carlo validation, and Principal Software Engineer code review:
+- Multi-state competing risks hazard engine (`CompetingHazards`, `CompetingCause`, `TieBreaker`, `HazardRate`, `SurvivalClock`).
+- Supported hazard functions: Constant (Markovian exponential), Weibull (age-dependent failure/cure), Gompertz (accelerating risk), PiecewiseConstant, and degenerate Zero hazard.
+- Retained residual integrated hazard versus fresh threshold restart (`HazardInterruptionPolicy`).
+- Deterministic event rescheduling and stale handle invalidation in core discrete-event scheduler.
+- Right-censoring boundary support preserving latent state isolation.
+- Interruption and resumption (`pause`/`resume`) freezing cumulative hazard without burning progression.
+- Independent deterministic pseudo-random stream derivation (`derive_entity_seed`) ensuring worker non-interference and exact replay.
+
+All unit, integration, and conformance tests pass across the entire workspace with zero errors (`cargo test -p kairo-ecs-rng --test competing_hazards_sampling_invariance`, `cargo test -p kairo-ecs-des --test non_markovian_survival_clock_oracle`, `cargo test -p kairo-ecs-des --test independent_stream_rng_reproducibility`, `cargo test --workspace`). Clippy with `-D warnings` and `cargo fmt --check` pass cleanly. Track 69 is archived in-place in the registry as `Done`.
+
 ## Track 68: Inter-Unit Boundary Channels & Asynchronous Handover Sinks Review & Archival - 22 October 2026
 
 Track 68 has successfully passed implementation, comprehensive testing, Principal Software Engineer code review, and quality validation across all quality gates, and is archived as `Done`:
