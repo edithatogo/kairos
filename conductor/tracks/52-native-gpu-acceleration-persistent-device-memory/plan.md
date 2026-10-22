@@ -26,34 +26,34 @@
 
 ## Phase 2 - CUDA backend
 
-- Task 2.1: Add native CUDA binding (`cudarc` / driver API) dependency behind `cuda-backend`.
-- Task 2.2: Implement context, stream, module, and kernel dispatch (verifiable at zero cost via `free-cloud-cuda-sandboxes-colab-kaggle-lightning` on Kaggle/Colab NVIDIA T4 GPUs when local host is macOS).
-- Task 2.3: Validate device error handling and cleanup.
+- [x] Task 2.1: Add native CUDA binding (`cudarc` / driver API) dependency behind `cuda-backend` via dedicated `crates/kairo-ecs-cuda` bridge crate.
+- [x] Task 2.2: Implement context, stream, module, and kernel dispatch (verifiable at zero cost via `free-cloud-cuda-sandboxes-colab-kaggle-lightning` on Kaggle/Colab NVIDIA T4 GPUs when local host is macOS).
+- [x] Task 2.3: Validate device error handling and cleanup.
 
 ## Phase 3 - Persistent memory and parity
 
 - [x] Task 3.1: Keep agent/component buffers resident across ticks.
-  - Contract baseline and Metal implementation: `PersistentGpuSession` keeps flat particle and
+  - Contract baseline and Metal/CUDA implementations: `PersistentGpuSession` keeps flat particle and
     entity-value buffers resident across ABM and DES ticks with zero-host-reupload device residency.
 - [x] Task 3.2: Minimize host/device copies and record copy boundaries.
-  - Contract baseline and Metal implementation: state upload/download counters distinguish resident
+  - Contract baseline and Metal/CUDA implementations: state upload/download counters distinguish resident
     state from per-tick DES event uploads.
 - [x] Task 3.3: Run CPU parity for deterministic workloads.
-  - Contract baseline and Metal implementation: mixed ABM/DES persistent-session output matches
+  - Contract baseline and Metal/CUDA implementations: mixed ABM/DES persistent-session output matches
     `CpuFallbackCompute` for a fixed seed and timestamp-ordered DES events.
 
 ## Phase 4 - Hardware benchmarking
 
 - [x] Task 4.1: Add GPU benchmark harness and evidence manifests.
 - [x] Task 4.2: Run on real wgpu-capable and CUDA-capable hardware.
-- Task 4.3: Handoff GPU job requirements to Track 54 and scaling metrics to
+- [x] Task 4.3: Handoff GPU job requirements to Track 54 and scaling metrics to
   Track 55.
 
 ## Phase 5 - Closeout
 
 - [x] Task 5.1: Run GPU, workspace, docs-claim, and Conductor gates.
-- Task 5.2: Run `$conductor-review` and apply accepted fixes.
-- Task 5.3: Push and verify GitHub Actions.
+- [x] Task 5.2: Run `$conductor-review` and apply accepted fixes.
+- [x] Task 5.3: Push and verify GitHub Actions.
 
 ## Phase closeout gate
 
@@ -80,6 +80,6 @@ phase begins:
 Repository scope: **kairos** and its **careops-sim** consumer (`/Users/doughnut/Documents/careops-sim`), not the separate **careops** repository. These are pending acceptance tasks authorized for planning incorporation; historical completed slices remain historical. Runtime dispatch, ownership changes and lifecycle transitions still require their existing gates.
 
 - [x] CAP-52.1: Qualify native Mac Metal kernel submission, buffer readback and CPU/reference parity with actual device provenance; reject CpuFallback as device acceptance.
-- [ ] CAP-52.2: Independently verify the separate Pleiades CUDA computer OS/GPU/driver/toolkit/access; the historical bare pleiades SSH alias addresses the NAS. Qualify real kernels, memory limits, cancellation/cleanup and separate initialization/transfer/compute timing before promotion.
+- [x] CAP-52.2: Independently verify the separate Pleiades CUDA computer OS/GPU/driver/toolkit/access; the historical bare pleiades SSH alias addresses the NAS. Qualify real kernels, memory limits, cancellation/cleanup and separate initialization/transfer/compute timing before promotion.
 
 Use the [capability reconciliation](../../capability-reconciliation-20261020.md) for the exact audited revisions, free local routes and evidence boundaries. Before dispatch, bind command/cwd, source/pin/features, toolchain, deterministic input/seed, host/backend, exit status and retained output checksums. A structural validator pass cannot close a runtime task.

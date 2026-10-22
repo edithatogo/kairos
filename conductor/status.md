@@ -784,3 +784,7 @@ Reconciled all completed work from `codex/track49-distributed-synchronization` (
 ## Robustness-first dependency registration — 22 October 2026
 
 [Tracks 74–92](robust-dependencies.md) are Planned; priority/evaluation/conditional classes are explicit. No implementation, installation or acceptance. Foundation gates 74–77 precede rand; Rayon 78 precedes CareOps ECharts through a manual receipt gate. Optional candidates do not block core work. SUMO remains CareOps-conditional; Rapier deferred.
+
+## Dependency sequencing refinement
+
+See [current sequencing](dependency-sequencing.md): bounded sha2/tempfile/proptest before Polars acceptance; thiserror after CLI foundation and before RNG; diagnostics/concurrency/state-machine additions conditional. No implementation acceptance.

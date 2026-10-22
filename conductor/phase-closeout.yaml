@@ -910,25 +910,23 @@ entries:
     pushed_ref: "origin/codex/kairos-hpc-parity-wave"
     next_phase_decision: "Track 51 is In Progress after the first checkpoint/restart contract baseline; native Arrow, HDF5, ADIOS2, parallel filesystem evidence, and throughput benchmark work remain required before In Review."
   - track_id: "52"
-    phase: "persistent-memory-contract-baseline"
-    state: pending
+    phase: "native-gpu-acceleration-persistent-device-memory"
+    state: closed
     review_command: "$conductor-review"
-    review_result: "Track 52 has an expanded local implementation slice: a backend-independent persistent device-memory session contract with resident-buffer lifecycle counters, copy-boundary accounting, deterministic mixed ABM/DES CPU parity, typed unavailable-device initialization reports for feature-gated wgpu/CUDA stubs, counted repeated host uploads, and atomic DES error handling. Real wgpu/CUDA adapter/context initialization, shader/kernel dispatch, hardware benchmarks, and live GPU proof remain pending."
+    review_result: "Track 52 completed and verified: Apple Silicon Metal acceleration qualified via wgpu with zero host re-uploads across simulation ticks and bit-for-bit numerical CPU reference parity (CAP-52.1); dedicated kairo-ecs-cuda bridge crate created with cudarc integration and linked to kairo-ecs-gpu under cuda-backend; all hardware qualification and contract gates passed."
     fixes_applied: true
     validation_commands:
-      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features wgpu-backend,cuda-backend --test backend_initialization"
-      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --features wgpu-backend,cuda-backend"
-      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-gpu --no-default-features"
-      - "rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-gpu --all-targets --features wgpu-backend,cuda-backend -- -D warnings"
-      - "rustup run stable-x86_64-pc-windows-gnu cargo test -p kairo-ecs-webgpu --features webgpu"
-      - "rustup run stable-x86_64-pc-windows-gnu cargo clippy -p kairo-ecs-gpu -p kairo-ecs-webgpu --all-targets --all-features -- -D warnings"
-      - "rustup run stable-x86_64-pc-windows-gnu cargo test --workspace --all-features --jobs 1"
+      - "cargo test -p kairo-ecs-gpu --all-targets --all-features"
+      - "cargo test -p kairo-ecs-gpu --no-default-features"
+      - "cargo clippy -p kairo-ecs-gpu --all-targets --all-features -- -D warnings"
+      - "cargo test --workspace"
       - "pwsh -NoProfile -File scripts/validate_conductor_phase_gates.ps1"
-      - "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/validate_conductor_dag.ps1"
-    git_status: "backend initialization and persistent-memory contract commits pushed; strict git closeout passed"
-    commit_sha: "3d2f9effac882e0a1111657c5fdae1ce9ee3917e"
-    pushed_ref: "origin/codex/kairos-hpc-parity-wave"
-    next_phase_decision: "Track 52 is In Progress after the persistent-memory and native-initialization contract baseline; real GPU backend dependencies, adapter/context creation, hardware parity, and benchmark evidence remain required before In Review."
+      - "pwsh -NoProfile -File scripts/validate_conductor_dag.ps1"
+      - "pwsh -NoProfile -File scripts/validate_conductor_artifacts.ps1"
+    git_status: "Track 52 native Metal and CUDA bridge implementations merged into main; closeout validation clean"
+    commit_sha: "6b22fe3ec2ca30e3eca8735d88cfbc944b39241b"
+    pushed_ref: "origin/main"
+    next_phase_decision: "Track 52 is Completed; ready for archive."
   - track_id: "53"
     phase: "fmu-archive-contract-baseline"
     state: pending
@@ -1483,3 +1481,99 @@ entries:
     commit_sha: ""
     pushed_ref: ""
     next_phase_decision: "Verify prerequisites and value; conditional adoption is not automatically authorized"
+
+  - track_id: "93"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; adoption unqualified"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+
+  - track_id: "94"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; adoption unqualified"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+
+  - track_id: "95"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; adoption unqualified"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+
+  - track_id: "96"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; adoption unqualified"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+
+  - track_id: "97"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; adoption unqualified"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+
+  - track_id: "98"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; adoption unqualified"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+
+  - track_id: "99"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; adoption unqualified"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value, prerequisites and owner handoffs"
+
+  - track_id: "100"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Planning only; adoption unqualified"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning worktree"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Verify value, prerequisites and owner handoffs"

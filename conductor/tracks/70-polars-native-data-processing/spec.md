@@ -61,3 +61,7 @@ Record command, cwd, commit, toolchain, exact dependency/features, seed/input ha
 - Freeze actual Rust/Python version compatibility, row-index width, chunk sizing and thread budget during qualification; version names from web prose are not Cargo pins. Fail explicit size limits rather than truncate row indexes. Benchmark allocations and zero-copy claims separately from query speed.
 - Output publication is a local-filesystem contract in this migration. Validate path containment and collision handling; do not assume filesystem rename semantics for object stores. Flush/sync data and directories where supported before completed-manifest publication; document platform crash guarantees.
 - Capture pre-migration reference traces before deleting old implementations. Baselines are evidence, not permanent fallback code. Known methodological defects receive explicit review, not automatic golden-file acceptance.
+
+## Dependency sequencing refinement — 22 October 2026
+
+Tracks 93 sha2, 94 tempfile and 96 proptest are prerequisites before runtime migration. Read-only shared inventory may start first. These tracks qualify existing retained consumers/primitives; Polars still owns real format migration and full process-interruption/durability/replay acceptance. Do not repair the obsolete pseudo-Parquet format or introduce a permanent legacy backend.

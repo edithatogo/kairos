@@ -56,7 +56,7 @@ This file is the human-readable Conductor status index. Keep it in lockstep with
 | 49 | Distributed MPI/gRPC State Synchronization | In Progress | `distributed-agent + pdes-agent` | See `conductor/tracks/49-*/spec.md` |
 | 50 | NUMA Topology, Affinity & HPC Memory Lifecycle | In Progress | `core-scheduler-agent + ecs-agent + ffi-agent` | See `conductor/tracks/50-*/spec.md` |
 | 51 | Parallel I/O, Arrow Record Batches & Checkpoint Export | In Progress | `arrow-agent + cloud-agent + performance-agent` | See `conductor/tracks/51-*/spec.md` |
-| 52 | Native GPU Acceleration with Persistent Device Memory | In Progress | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
+| 52 | Native GPU Acceleration with Persistent Device Memory | Completed | `gpu-compute-agent + performance-agent` | See `conductor/tracks/52-*/spec.md` |
 | 53 | FMI 2/3 Co-Simulation Master Runtime | In Progress | `fmi-agent + ffi-agent + interop-agent` | See `conductor/tracks/53-*/spec.md` |
 | 54 | Slurm, Container & Cloud HPC Runtime Acceptance | Done | `cloud-agent + distributed-agent + gpu-compute-agent + release-agent` | See `conductor/tracks/54-*/spec.md` |
 | 55 | End-to-End Weak/Strong Scaling Certification | In Progress | `performance-agent + benchmark-agent + cloud-agent + release-agent` | See `conductor/tracks/55-*/spec.md` |
@@ -171,3 +171,27 @@ The human sole maintainer explicitly approved Track49 production scheduling afte
 
 ---
 - [ ] **Track 92: Sobol sequence qualification** — Planned; evaluation; value gate pending. [Track](tracks/92-sobol-burley-robustness/index.md).
+
+---
+- [ ] **Track 93: sha2 robustness** — foundation; [plan](tracks/93-sha2-integrity/index.md).
+
+---
+- [ ] **Track 94: tempfile robustness** — foundation; [plan](tracks/94-tempfile-publication/index.md).
+
+---
+- [ ] **Track 95: thiserror robustness** — foundation; [plan](tracks/95-thiserror-contracts/index.md).
+
+---
+- [ ] **Track 96: proptest robustness** — foundation; [plan](tracks/96-proptest-invariants/index.md).
+
+---
+- [ ] **Track 97: tracing qualification** — conditional; [plan](tracks/97-tracing-diagnostics/index.md).
+
+---
+- [ ] **Track 98: loom qualification** — evaluation; [plan](tracks/98-loom-concurrency/index.md).
+
+---
+- [ ] **Track 99: proptest-state-machine qualification** — evaluation; [plan](tracks/99-proptest-state-machine/index.md).
+
+---
+- [ ] **Track 100: tracing-subscriber qualification** — conditional; [plan](tracks/100-tracing-subscriber/index.md).

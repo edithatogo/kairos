@@ -61,3 +61,7 @@ phase begins:
 
 Registry changes are coordinated with their current writer. This planning revision
 does not close an implementation phase or authorise publication.
+
+## Dependency sequencing refinement — 22 October 2026
+
+Tracks 93 sha2, 94 tempfile and 96 proptest are prerequisites before runtime migration. Read-only shared inventory may start first. These tracks qualify existing retained consumers/primitives; Polars still owns real format migration and full process-interruption/durability/replay acceptance. Do not repair the obsolete pseudo-Parquet format or introduce a permanent legacy backend.

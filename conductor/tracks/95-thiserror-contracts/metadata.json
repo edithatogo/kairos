@@ -1,0 +1,16 @@
+{
+  "track_id": "95-thiserror-contracts",
+  "title": "thiserror robustness",
+  "library": "thiserror",
+  "type": "refactor",
+  "status": "new",
+  "created_at": "2026-10-22",
+  "updated_at": "2026-10-22",
+  "spec_approved": true,
+  "implementation_started": false,
+  "accepted_phases": [],
+  "priority_class": "foundation",
+  "adoption_decision": "pending_value_gate",
+  "external_dependencies": [],
+  "approval_basis": "User requested incorporation and sequencing of reviewed dependencies; runtime acceptance remains pending."
+}
