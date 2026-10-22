@@ -624,3 +624,13 @@ All nine gates require negative controls and failure/recovery evidence before
 closeout. Public API/checkpoint/schema compatibility and existing phase/Conductor
 checks apply in addition. Neither planning registration nor a historical Done
 label waives the consumed-capability checks in the linked track specifications.
+
+## Track 70 prospective gates
+
+Runtime validators must be implemented and qualified before these gates pass; definitions: [test matrix](tracks/70-polars-native-data-processing/test-matrix.md).
+
+- **polars-native-contract**: required Track 70 oracle; currently pending.
+- **independent-columnar-interop**: required Track 70 oracle; currently pending.
+- **deterministic-data-parity**: required Track 70 oracle; currently pending.
+- **durable-trace-recovery**: required Track 70 oracle; currently pending.
+- **data-maintenance-performance**: required Track 70 oracle; currently pending.

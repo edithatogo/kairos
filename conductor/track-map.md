@@ -501,3 +501,7 @@ contracts; disputed completion labels do not qualify them. Track69 does not depe
 on all of66; experiment interfaces require a separate evidence-bound handoff only
 when consumed. Tracks68/69 share DES ownership and cannot dispatch overlapping
 writers. Track67 similarly coordinates existing core/state/ABM owners.
+
+## Track 70 migration ordering
+
+[Track 70](tracks/70-polars-native-data-processing/index.md) is Planned; no implementation started. Dependencies 04/62/63 are routing context, not runtime proof. Requalify source and interoperability. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.

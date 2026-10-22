@@ -1082,3 +1082,19 @@ tracks:
       - competing-hazards-sampling-invariance
       - non-markovian-survival-clock-oracle
       - independent-stream-rng-reproducibility
+  - id: 70
+    name: Polars-Native Data Processing and Standard Interchange
+    status: Planned
+    owner: arrow-agent + ffi-agent + conformance-agent
+    depends_on: ["04", "62", "63"]
+    owned_paths:
+      - conductor/tracks/70-polars-native-data-processing/
+      - crates/kairo-ecs-arrow/
+      - schemas/arrow/
+    required_gates:
+      - phase-closeout-check
+      - polars-native-contract
+      - independent-columnar-interop
+      - deterministic-data-parity
+      - durable-trace-recovery
+      - data-maintenance-performance

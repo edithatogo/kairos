@@ -17,3 +17,7 @@ A status label alone does not prove implementation or release acceptance.
 - [Current status evidence](status.md)
 
 - [Pending CareOps composition owner plan](design/careops-composition-plan-20261020.md)
+
+## Polars migration
+
+[Track 70](tracks/70-polars-native-data-processing/index.md) is Planned; no implementation started. Dependencies 04/62/63 are routing context, not runtime proof. Requalify source and interoperability. Complete upstream Phase 4 before CareOps `polars_data_processing_20261022` adopts the pin.
