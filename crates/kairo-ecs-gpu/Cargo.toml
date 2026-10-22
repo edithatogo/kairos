@@ -9,7 +9,7 @@ rust-version.workspace = true
 default = []
 gpu = []
 wgpu-backend = ["gpu", "dep:wgpu", "dep:pollster"]
-cuda-backend = ["gpu", "dep:kairo-ecs-cuda"]
+cuda-backend = ["gpu", "dep:kairo-ecs-cuda", "kairo-ecs-cuda/cuda-12000"]
 metal-backend = ["gpu", "wgpu-backend"]
 
 [lints.rust]

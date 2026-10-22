@@ -12,7 +12,9 @@ unsafe_code = "allow"
 [features]
 default = []
 cuda = ["dep:cudarc"]
+cuda-12000 = ["cuda", "cudarc/cuda-12000"]
+cuda-13000 = ["cuda", "cudarc/cuda-13000"]
 
 [dependencies]
 bytemuck = { version = "1.25.2", features = ["derive"] }
-cudarc = { version = "0.19.10", default-features = false, features = ["driver", "nvrtc", "cuda-version-from-build-system", "dynamic-loading"], optional = true }
+cudarc = { version = "0.19.10", default-features = false, features = ["driver", "nvrtc", "dynamic-loading"], optional = true }

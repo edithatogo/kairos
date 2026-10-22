@@ -14,6 +14,9 @@ pub struct CudaParticle {
 }
 
 #[cfg(feature = "cuda")]
+use cudarc::driver::PushKernelArg;
+
+#[cfg(feature = "cuda")]
 unsafe impl cudarc::driver::DeviceRepr for CudaParticle {}
 
 pub const ABM_STEP_PTX: &str = r#"
@@ -86,8 +89,22 @@ pub struct CudaDeviceSession {
 #[cfg(feature = "cuda")]
 impl CudaDeviceSession {
     pub fn new(device_ordinal: usize) -> Result<Self, String> {
-        let ctx = cudarc::driver::safe::CudaContext::new(device_ordinal)
-            .map_err(|e| format!("failed to initialize CUDA context on device {device_ordinal}: {e:?}"))?;
+        let result =
+            std::panic::catch_unwind(|| cudarc::driver::safe::CudaContext::new(device_ordinal));
+        let ctx = match result {
+            Ok(Ok(ctx)) => ctx,
+            Ok(Err(e)) => {
+                return Err(format!(
+                    "failed to initialize CUDA context on device {device_ordinal}: {e:?}"
+                ))
+            }
+            Err(_) => {
+                return Err(
+                    "CUDA driver dynamic library unavailable or panicked during initialization"
+                        .to_string(),
+                )
+            }
+        };
         let stream = ctx.default_stream();
         let module = ctx
             .load_module(cudarc::nvrtc::Ptx::from_src(ABM_STEP_PTX))
@@ -115,7 +132,8 @@ impl CudaDeviceSession {
     }
 
     pub fn upload_particles(&mut self, particles: &[CudaParticle]) -> Result<usize, String> {
-        let d_buf = self.stream
+        let d_buf = self
+            .stream
             .clone_htod(particles)
             .map_err(|e| format!("HTOD copy failed: {e:?}"))?;
         let count = particles.len();
@@ -129,7 +147,10 @@ impl CudaDeviceSession {
             return Ok(0);
         }
 
-        let d_buf = self.particle_buffer.as_mut().ok_or("no particles uploaded")?;
+        let d_buf = self
+            .particle_buffer
+            .as_mut()
+            .ok_or("no particles uploaded")?;
         let count = self.particle_count as u32;
 
         let mut launcher = self.stream.launch_builder(&self.func);
@@ -147,15 +168,22 @@ impl CudaDeviceSession {
         };
 
         unsafe {
-            launcher.launch(cfg).map_err(|e| format!("kernel launch failed: {e:?}"))?;
+            launcher
+                .launch(cfg)
+                .map_err(|e| format!("kernel launch failed: {e:?}"))?;
         }
-        self.stream.synchronize().map_err(|e| format!("stream sync failed: {e:?}"))?;
+        self.stream
+            .synchronize()
+            .map_err(|e| format!("stream sync failed: {e:?}"))?;
 
         Ok(blocks)
     }
 
     pub fn download_particles(&self) -> Result<Vec<CudaParticle>, String> {
-        let d_buf = self.particle_buffer.as_ref().ok_or("no particles uploaded")?;
+        let d_buf = self
+            .particle_buffer
+            .as_ref()
+            .ok_or("no particles uploaded")?;
         self.stream
             .clone_dtoh(d_buf)
             .map_err(|e| format!("DTOH copy failed: {e:?}"))
