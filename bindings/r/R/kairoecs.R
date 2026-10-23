@@ -192,13 +192,33 @@ kairoecs_u64_decimal <- function(value) {
   sprintf("%.0f", as.numeric(value))
 }
 
-# Split an exact (<= 2^53) non-negative double tick count into u64 hi/lo
-# limbs. Supporting SchedulerFacade inputs stays inside the 2^53 double
-# precision limit; full u128 range interchange belongs to the native FFI
-# surface (documented unsupported here).
-kairoecs_u64_limbs <- function(value) {
+# Exact-integer guard shared by the facade's u64 projections: base-R doubles
+# represent integers exactly up to 2^53, so inputs beyond it reject explicitly
+# per the v2 contract ("overflow and malformed IDs reject explicitly"); the
+# documented full-u64/u128 interchange path is the native FFI surface.
+kairoecs_exact_integer <- function(value, what) {
   value <- as.numeric(value)
-  stopifnot(value >= 0, value == floor(value), value <= 2^53)
+  if (length(value) != 1 || is.na(value) || !is.finite(value) ||
+      value < 0 || value != floor(value)) {
+    stop(paste0(what, " must be a single non-negative integer value."), call. = FALSE)
+  }
+  if (value > 2^53) {
+    stop(
+      paste0(
+        what,
+        " exceeds the pure-R facade's exact precision limit (2^53);",
+        " the native FFI surface carries full u64/u128 interchange."
+      ),
+      call. = FALSE
+    )
+  }
+  value
+}
+
+# Split an exact (<= 2^53) non-negative double tick count into u64 hi/lo
+# limbs.
+kairoecs_u64_limbs <- function(value) {
+  value <- kairoecs_exact_integer(value, "time_ticks")
   hi <- floor(value / 2^64)
   lo <- value - hi * 2^64
   list(hi = hi, lo = lo)
@@ -212,8 +232,9 @@ kairoecs_entity_limbs <- function(entity_id) {
   if (length(entity_id) == 0 || is.na(entity_id[1])) {
     return(list(index = NA_character_, gen = NA_real_))
   }
+  entity_id <- kairoecs_exact_integer(entity_id, "entity_id")
   list(
-    index = kairoecs_u64_decimal(as.numeric(entity_id)),
+    index = kairoecs_u64_decimal(entity_id),
     gen = 0
   )
 }
@@ -257,11 +278,17 @@ normalize_event_log <- function(event_log) {
 }
 
 order_event_log <- function(event_log) {
+  # Limb ordering pairs the numeric view with a lexicographic decimal-string
+  # tie-break so externally supplied rows above the 2^53 double limit still
+  # sort in strict numeric limb order instead of collapsing in as.numeric().
   event_log[order(
     as.numeric(event_log$time_ticks_hi),
+    event_log$time_ticks_hi,
     as.numeric(event_log$time_ticks_lo),
+    event_log$time_ticks_lo,
     event_log$priority,
     as.numeric(event_log$sequence),
+    event_log$sequence,
     event_log$event_id_index
   ), , drop = FALSE]
 }
