@@ -13,7 +13,6 @@ unsafe_code = "allow"
 default = []
 cuda = ["dep:cudarc"]
 cuda-12000 = ["cuda", "cudarc/cuda-12000"]
-cuda-13000 = ["cuda", "cudarc/cuda-13000"]
 
 [dependencies]
 bytemuck = { version = "1.25.2", features = ["derive"] }
