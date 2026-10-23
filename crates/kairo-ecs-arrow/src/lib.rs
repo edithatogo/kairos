@@ -25,13 +25,12 @@ pub mod arrow_c_data;
 /// bounded per-replication parts staged beside their destination and renamed
 /// into place, manifest-last publication, and readers that require a
 /// completed manifest with valid file hashes. Same Polars isolation as the
-/// other Phase 3-adjacent modules: default-off, absent from minimal-core and
+/// other Track 70 modules: default-off, absent from minimal-core and
 /// browser/Wasm dependency graphs.
 ///
-/// Task 3.1 contract-first state: the type surface below is the reviewed
-/// contract, and every behavioral entry point fails explicitly with
-/// [`run_output::RunOutputError::NotImplementedUntilTask32`] until Task 3.2
-/// implements it. No fabricated durability behavior is exposed.
+/// Task 3.2 implements the Task 3.1 contract; the 15-test contract suite
+/// (merged to 14 order-robust tests for the process-global thread budget) is
+/// its acceptance oracle.
 #[cfg(feature = "polars-native")]
 pub mod run_output;
 
@@ -1116,7 +1115,10 @@ fn stable_hash(value: &str) -> u64 {
     stable_hash_bytes(value.as_bytes())
 }
 
-fn stable_hash_bytes(bytes: &[u8]) -> u64 {
+/// Track 70 Phase 3: the crate's canonical non-cryptographic content checksum
+/// (FNV-1a 64), shared with the run-output publication module's file
+/// attestation. Cryptographic digests are Track 93's qualification scope.
+pub(crate) fn stable_hash_bytes(bytes: &[u8]) -> u64 {
     bytes.iter().fold(0xcbf29ce484222325, |hash, byte| {
         (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3)
     })

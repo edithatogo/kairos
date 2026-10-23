@@ -1136,6 +1136,8 @@ dependencies = [
  "kairo-ecs-types",
  "polars",
  "polars-arrow",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
