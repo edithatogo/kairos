@@ -24,11 +24,24 @@ polars = { version = "0.45", default-features = false, features = ["lazy", "parq
 # dependencies: polars already pulls polars-arrow 0.45.1.
 polars-arrow = { version = "0.45.1", default-features = false, optional = true }
 
+# Track 70 Phase 3 Task 3.2: run-output manifest (de)serialization behind
+# `serde-runtime` (wired into `polars-native`). serde_json 1.x is already a
+# workspace dependency via kairo-ecs-core; serde derive is new to this crate
+# only.
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+
 [features]
 default = []
 # Real from Phase 0: official arrow_schema::Schema parity for EVENT_LOG_FIELDS.
 arrow-native = ["dep:arrow-schema"]
-polars-native = ["dep:polars", "dep:polars-arrow"]
+# Track 70 Phase 3 Task 3.2: serde/serde_json carry the run-output manifest
+# (`kairo_ecs.run_manifest.v1`, a small JSON checkpoint-control document —
+# spec keeps those Serde-owned). Already workspace dependencies elsewhere
+# (kairo-ecs-core); no new transitive trees. Maintainer override of the
+# Tracks 93/94/96 sequencing gate recorded in the track handoff.
+serde-runtime = ["dep:serde", "dep:serde_json"]
+polars-native = ["dep:polars", "dep:polars-arrow", "serde-runtime"]
 # Still a stub, as registered in #261. Admitting parquet pulls arrow-array,
 # which transitively pulls tiny-keccak (CC0-1.0); that licence decision belongs
 # to Track 29/20 and is deliberately not taken here.
