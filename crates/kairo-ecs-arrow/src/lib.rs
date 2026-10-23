@@ -4,6 +4,11 @@ use kairo_ecs_types::{DispatchedEvent, EntityId, EventId};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
+/// Track 62 Phase 0: official Arrow schema parity. Default-off, so the
+/// dependency-free smoke build and its byte output are unchanged.
+#[cfg(feature = "arrow-native")]
+pub mod native_schema;
+
 pub const SCHEMA_VERSION: u16 = 1;
 pub const EVENT_LOG_SCHEMA_MAJOR: u16 = 1;
 pub const EVENT_LOG_STREAM: &str = "kairo_ecs.event_log.v1";
@@ -293,6 +298,8 @@ pub enum ArrowError {
     Io(String),
     UnexpectedFieldHeader,
     UnexpectedStreamHeader,
+    /// Track 62: a declared column type string has no official Arrow mapping.
+    UnsupportedDataType(String),
     UnsupportedSchemaVersion(u16),
     WrongCellCount {
         expected: usize,
@@ -324,6 +331,12 @@ impl Display for ArrowError {
             Self::Io(error) => write!(f, "I/O error: {error}"),
             Self::UnexpectedFieldHeader => f.write_str("unexpected event-log field header"),
             Self::UnexpectedStreamHeader => f.write_str("unexpected event-log stream header"),
+            Self::UnsupportedDataType(declared) => {
+                write!(
+                    f,
+                    "declared column type has no official Arrow mapping: {declared}"
+                )
+            }
             Self::UnsupportedSchemaVersion(version) => {
                 write!(f, "unsupported event-log schema version: {version}")
             }
