@@ -1,0 +1,253 @@
+name: Python dependency inventory
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/python-dependency-inventory.yml'
+      - 'scripts/*python-tools.lock'
+      - 'scripts/python_runtime.py'
+      - 'python/kairo_gym/ci-requirements.lock'
+      - 'tests/test_dependency_inventory_workflow.py'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Qualify installed inventory (${{ matrix.id }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: bootstrap
+            lock: scripts/bootstrap-python-tools.lock
+          - id: archive
+            lock: scripts/archive-python-tools.lock
+          - id: package
+            lock: scripts/package-python-tools.lock
+          - id: gym
+            lock: python/kairo_gym/ci-requirements.lock
+    env:
+      INVENTORY_ID: ${{ matrix.id }}
+      LOCKFILE: ${{ matrix.lock }}
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      SOURCE_REF: ${{ format('refs/heads/{0}', github.head_ref || github.ref_name) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: edithatogo/careops
+          ref: cb62ad8666a4c6282f0e4c3dacca5cf4226ed2c4
+          path: artifacts/python-inventory-policy
+          sparse-checkout: portfolio-scripts/dependency_snapshot.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        id: python
+        with:
+          python-version: '3.15.1'
+      - name: Verify repository-local Python 3.15.1
+        id: runtime
+        run: python scripts/python_runtime.py --github
+      - name: Install the existing public hash lock
+        id: install
+        run: |
+          python -m pip --isolated install --index-url https://pypi.org/simple --only-binary=:all: --require-hashes -r "$LOCKFILE" --report "$RUNNER_TEMP/install-$INVENTORY_ID.json"
+      - name: Bind actual runtime, source lock and public wheel provenance
+        id: inspect
+        run: |
+          python -m pip inspect --local > "$RUNNER_TEMP/inspect-$INVENTORY_ID.json"
+          python - <<'PY'
+          import hashlib, json, os, platform, subprocess, sys
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          assert tuple(sys.version_info) == (3, 15, 1, 'final', 0)
+          assert Path(sys.prefix).resolve() == Path('.venv').resolve()
+          assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == os.environ['SOURCE_SHA']
+          lock = Path(os.environ['LOCKFILE'])
+          committed = subprocess.check_output(['git', 'show', os.environ['SOURCE_SHA'] + ':' + str(lock)])
+          assert committed == lock.read_bytes()
+          report = json.loads((Path(os.environ['RUNNER_TEMP']) / ('install-' + os.environ['INVENTORY_ID'] + '.json')).read_text())
+          for item in report['install']:
+              parsed = urlsplit(item['download_info']['url'])
+              assert parsed.scheme == 'https' and parsed.hostname in {'files.pythonhosted.org', 'pypi.org'}
+              assert not (parsed.username or parsed.password or parsed.query or parsed.fragment)
+              assert len(item['download_info']['archive_info']['hashes']['sha256']) == 64
+          output = Path('artifacts/python-dependency-inventory') / os.environ['INVENTORY_ID']
+          output.mkdir(parents=True, exist_ok=True)
+          receipt = {'sourceCommit': os.environ['SOURCE_SHA'], 'manifest': str(lock),
+                     'lockSha256': hashlib.sha256(committed).hexdigest(), 'python': platform.python_version(),
+                     'localPrefixVerified': True, 'publicWheelInstalls': len(report['install']),
+                     'scope': 'Actual installed tooling inventory, including bundled installer; no edges/extras/directness claims'}
+          (output / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          PY
+      - name: Prepare sanitized inventory with the qualified shared adapter
+        id: payload
+        run: |
+          python artifacts/python-inventory-policy/portfolio-scripts/dependency_snapshot.py --pip-inspect "$RUNNER_TEMP/inspect-$INVENTORY_ID.json" --output "artifacts/python-dependency-inventory/$INVENTORY_ID/snapshot.json" --sha "$SOURCE_SHA" --ref "$SOURCE_REF" --manifest "$LOCKFILE" --job-id "$GITHUB_RUN_ID.$INVENTORY_ID" --correlator "kairos-python315-inventory:$INVENTORY_ID" --scanned "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      - name: Preserve terminal evidence independently of Python setup
+        if: always()
+        env:
+          PYTHON_OUTCOME: ${{ steps.python.outcome }}
+          RUNTIME_OUTCOME: ${{ steps.runtime.outcome }}
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          INSPECT_OUTCOME: ${{ steps.inspect.outcome }}
+          PAYLOAD_OUTCOME: ${{ steps.payload.outcome }}
+        run: |
+          mkdir -p "artifacts/python-dependency-inventory/$INVENTORY_ID"
+          printf '{"python":"%s","runtime":"%s","install":"%s","inspect":"%s","payload":"%s","promoted":false}\n' "${PYTHON_OUTCOME:-skipped}" "${RUNTIME_OUTCOME:-skipped}" "${INSTALL_OUTCOME:-skipped}" "${INSPECT_OUTCOME:-skipped}" "${PAYLOAD_OUTCOME:-skipped}" > "artifacts/python-dependency-inventory/$INVENTORY_ID/terminal.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: python-inventory-input-${{ matrix.id }}
+          path: artifacts/python-dependency-inventory
+          if-no-files-found: error
+          retention-days: 14
+
+  submit:
+    name: Submit trusted-main inventories once
+    needs: prepare
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Dependency snapshot API; no source checkout or PR code runs in this job.
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: python-inventory-input-*
+          merge-multiple: true
+          path: artifacts/python-dependency-inventory
+      - name: Submit validated source-bound payloads without retries
+        id: submit
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          retries: 0
+          script: |
+            const fs = require('node:fs');
+            const crypto = require('node:crypto');
+            const assert = require('node:assert/strict');
+            assert.equal(context.ref, 'refs/heads/main');
+            assert.ok(['push','workflow_dispatch'].includes(context.eventName));
+            const root = 'artifacts/python-dependency-inventory';
+            const manifests = {bootstrap:'scripts/bootstrap-python-tools.lock',archive:'scripts/archive-python-tools.lock',package:'scripts/package-python-tools.lock',gym:'python/kairo_gym/ci-requirements.lock'};
+            const accepted = {sourceCommit:context.sha,state:'validating',submissions:[]};
+            const retain = () => fs.writeFileSync(root + '/accepted.json', JSON.stringify(accepted,null,2) + '\n');
+            retain();
+            const payloads = [];
+            for (const [id,manifest] of Object.entries(manifests)) {
+              const payload = JSON.parse(fs.readFileSync(root + '/' + id + '/snapshot.json'));
+              const receipt = JSON.parse(fs.readFileSync(root + '/' + id + '/receipt.json'));
+              assert.deepEqual(Object.keys(payload).sort(), ['version','sha','ref','job','detector','scanned','manifests','metadata'].sort());
+              assert.equal(payload.sha, context.sha); assert.equal(payload.ref, 'refs/heads/main');
+              assert.equal(payload.version, 0);
+              assert.equal(payload.detector.name, 'careops-pip-inspect-inventory');
+              assert.equal(payload.metadata.input_contract, 'installed-tooling-inventory-no-edge-or-extras-claims');
+              assert.equal(payload.job.id, context.runId + '.' + id);
+              assert.equal(payload.job.correlator, 'kairos-python315-inventory:' + id);
+              assert.deepEqual(Object.keys(payload.manifests), [manifest]);
+              assert.equal(receipt.sourceCommit, context.sha); assert.equal(receipt.python, '3.15.1');
+              assert.equal(receipt.localPrefixVerified, true); assert.equal(receipt.manifest, manifest);
+              const source = await github.rest.repos.getContent({...context.repo,path:manifest,ref:context.sha});
+              const digest = crypto.createHash('sha256').update(Buffer.from(source.data.content,'base64')).digest('hex');
+              assert.equal(digest, receipt.lockSha256);
+              payloads.push({id,manifest,payload});
+            }
+            for (const {id,manifest,payload} of payloads) {
+              const item = {id,manifest,state:'started'}; accepted.submissions.push(item); retain();
+              const response = await github.rest.dependencyGraph.createRepositorySnapshot({...context.repo,...payload,headers:{'X-GitHub-Api-Version':'2026-03-10'}});
+              assert.equal(response.status, 201); assert.ok(Number.isInteger(response.data.id) && response.data.id > 0);
+              Object.assign(item,{state:'accepted',snapshotId:response.data.id}); retain();
+            }
+            accepted.state = 'accepted'; retain();
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: python-inventory-accepted-${{ github.run_id }}
+          path: artifacts/python-dependency-inventory/accepted.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  verify:
+    name: Read back native package inventory
+    needs: submit
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: python-inventory-input-*
+          merge-multiple: true
+          path: artifacts/python-dependency-inventory
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: python-inventory-accepted-${{ github.run_id }}
+          path: artifacts/python-dependency-inventory
+      - name: Verify accepted responses and actual graph presence
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          retries: 0
+          script: |
+            const fs = require('node:fs');
+            const assert = require('node:assert/strict');
+            const root = 'artifacts/python-dependency-inventory';
+            const accepted = JSON.parse(fs.readFileSync(root + '/accepted.json'));
+            assert.equal(accepted.sourceCommit, context.sha); assert.equal(accepted.state, 'accepted');
+            assert.equal(accepted.submissions.length, 4);
+            const expected = new Set();
+            for (const item of accepted.submissions) {
+              assert.equal(item.state, 'accepted'); assert.ok(item.snapshotId > 0);
+              const payload = JSON.parse(fs.readFileSync(root + '/' + item.id + '/snapshot.json'));
+              assert.equal(payload.sha, context.sha);
+              for (const value of Object.values(payload.manifests[item.manifest].resolved)) expected.add(value.package_url);
+            }
+            // The synchronous export endpoint closes on 2026-11-13. Use the supported asynchronous flow.
+            const headers = {'X-GitHub-Api-Version':'2026-03-10'};
+            const generated = await github.request('GET /repos/{owner}/{repo}/dependency-graph/sbom/generate-report', {...context.repo,headers});
+            assert.equal(generated.status, 201);
+            const reportUrl = new URL(generated.data.sbom_url);
+            assert.equal(reportUrl.origin, 'https://api.github.com');
+            assert.equal(reportUrl.search, ''); assert.equal(reportUrl.hash, '');
+            const prefix = '/repos/' + context.repo.owner + '/' + context.repo.repo + '/dependency-graph/sbom/fetch-report/';
+            assert.ok(reportUrl.pathname.toLowerCase().startsWith(prefix.toLowerCase()));
+            const uuid = reportUrl.pathname.slice(prefix.length);
+            assert.match(uuid, /^[a-f0-9-]{36}$/);
+            const polls = [];
+            let missing = [...expected];
+            for (let attempt = 0; attempt < 6; attempt++) {
+              const response = await github.request('GET /repos/{owner}/{repo}/dependency-graph/sbom/fetch-report/{sbom_uuid}', {...context.repo,sbom_uuid:uuid,headers});
+              assert.ok([200,202].includes(response.status), 'Unexpected asynchronous export status.');
+              if (response.status === 200) {
+                const data = response.data;
+                const raw = typeof data === 'string' ? JSON.parse(data) :
+                  data instanceof ArrayBuffer || ArrayBuffer.isView(data) ? JSON.parse(Buffer.from(data).toString('utf8')) : data;
+                const document = raw.sbom || raw;
+                assert.equal(document.spdxVersion, 'SPDX-2.3');
+                const present = new Set(document.packages.flatMap(p => (p.externalRefs || []).filter(r => r.referenceType === 'purl').map(r => r.referenceLocator)));
+                missing = [...expected].filter(purl => !present.has(purl));
+              }
+              polls.push({attempt:attempt+1,status:response.status,missing}); core.info('Inventory readback missing: ' + missing.length);
+              fs.writeFileSync(root + '/readback.json', JSON.stringify({sourceCommit:context.sha,reportId:uuid,expectedPackages:expected.size,polls,scope:'Package presence only; no graph/edges/extras claims'},null,2) + '\n');
+              if (response.status === 200) break;
+              if (attempt < 5) await new Promise(resolve => setTimeout(resolve, 10000));
+            }
+            assert.equal(missing.length, 0, 'Accepted snapshot is not yet visible; rerun this read-only verification job, not submission.');
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: python-inventory-readback-${{ github.run_id }}
+          path: artifacts/python-dependency-inventory/readback.json
+          if-no-files-found: warn
+          retention-days: 14

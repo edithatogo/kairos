@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-24",
+  "baseCommit": "b824ee9546c0c482f8737e91eb8749edce76a93a",
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+  "python": "3.15.1",
+  "policyCommit": "cb62ad8666a4c6282f0e4c3dacca5cf4226ed2c4",
+  "policySha256": "aed9d0e1341a6309f1b3bfbb49fea2125240171b8640cb96296992229f1de971",
+  "localQualification": {
+    "allCommandExitsZero": true,
+    "rawReceiptSha256": "ca223bd0a6a1150f41d165e153d478d2921c2ed9bcd7691834e2e840d6c37a86",
+    "profiles": {
+      "bootstrap": {
+        "manifest": "scripts/bootstrap-python-tools.lock",
+        "packages": 36,
+        "snapshotSha256": "6892c389e605eab8ce9012987e0cfafa393e7f7d95236462ada6d452aa48e354",
+        "detector": "careops-pip-inspect-inventory"
+      },
+      "archive": {
+        "manifest": "scripts/archive-python-tools.lock",
+        "packages": 6,
+        "snapshotSha256": "325b5d49d0249b71aad04e0668c221a1d0a2d1d5ca2236479cbbb3f2df1d795e",
+        "detector": "careops-pip-inspect-inventory"
+      },
+      "package": {
+        "manifest": "scripts/package-python-tools.lock",
+        "packages": 28,
+        "snapshotSha256": "24e3773f90b72a8d18a92bea5a170b4b7c92b4d98aad6adb662adbddce6d6c73",
+        "detector": "careops-pip-inspect-inventory"
+      },
+      "gym": {
+        "manifest": "python/kairo_gym/ci-requirements.lock",
+        "packages": 6,
+        "snapshotSha256": "f41c29f525cfd3327ee57a5adff1e09b90a3457ac86c96fddb5e7bed6d091ce9",
+        "detector": "careops-pip-inspect-inventory"
+      }
+    }
+  },
+  "tests": {
+    "command": ".venv/bin/python -m unittest discover -s tests -p test_dependency_inventory_workflow.py -v",
+    "exit": 0,
+    "passed": 5,
+    "scope": "Actual inline native-boundary scripts executed with fictional network-free clients; all source locks validate before mutation, transport/ref/hash failures cannot post, write failure is not retried, bounded async readback and terminal no-Python evidence qualified."
+  },
+  "runtimeTests": {
+    "command": ".venv/bin/python -m unittest discover -s tests -p test_local_python_runtime.py -v",
+    "exit": 0,
+    "passed": 9
+  },
+  "workflowChecks": {
+    "command": "actionlint .github/workflows/python-dependency-inventory.yml .github/workflows/docs.yml",
+    "exit": 0
+  },
+  "boundaries": [
+    "PRs prepare sanitized inventory with contents:read. Only trusted main can submit with job-scoped contents:write; that job has no source checkout or untrusted package execution.",
+    "All4existing public hash locks are installed wheel-only on actual local3.15.1. No uv project, second lock or duplicate shared converter. Raw pip-inspect/install metadata is not uploaded.",
+    "Inventory detector/correlators are separate from graph evidence; no edges/extras/directness/runtime/index-provenance claims are invented. Caller provenance is retained separately.",
+    "POST has zero retries; accepted/unknown states remain in artifact. Read-only verification is a separate job, using the supported async SBOM API rather than the synchronous endpoint closing2026-11-13.",
+    "No automatic provider or security feature is disabled and no protected setting changes."
+  ],
+  "nativeSubmission": "Not executed locally; actual accepted API responses and graph package readback remain required after protected integration.",
+  "sources": [
+    {
+      "path": ".github/workflows/python-dependency-inventory.yml",
+      "sha256": "8eb1338b59864e78d71609f8170ee440593eaf1a1c5a71bdad647991291e5d6f"
+    },
+    {
+      "path": "tests/test_dependency_inventory_workflow.py",
+      "sha256": "a4ec888b5192a66978cdf6c8824c6aa8b3f9f6072c3ed8739423da658730ba11"
+    }
+  ],
+  "officialApi": "https://docs.github.com/en/rest/dependency-graph/dependency-submission",
+  "officialReadback": "https://docs.github.com/en/rest/dependency-graph/sboms"
+}

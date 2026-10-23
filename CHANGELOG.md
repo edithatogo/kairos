@@ -14,6 +14,9 @@ Format:
 
 ## Unreleased
 
+- `bindings/typescript` and its template use patched Vitest/Vite tooling; documentation diagrams execute patched DOMPurify/KaTeX through Mermaid public-core. Publishing docs verify dependency evidence before deployment.
+- CI qualifies source-bound Python 3.15.1 tooling inventories from existing public hash locks, with separate trusted-main submission and read-only native package verification; automatic provider limitations remain explicit.
+
 - `bindings/python`, development helpers, CI, and container tooling require final Python 3.15.1 through a verified repository-local environment; older active Python runners are retired. Rust tooling is qualified on 1.99.1, preserving simulation and RNG contracts.
 - `scripts/bootstrap-node-tools` keeps its locked npm artifact reproducible across Python compression-default changes and resolves patched ip-address 10.7.4; `website/package-lock.json` resolves patched Vite 8.3.5. Strict dependency audits retain their zero-vulnerability gate.
 - Conductor closeout records now reference actual main integrations; the development-tool validator follows the devcontainer runtime guard and supports existing three-digit track identifiers.
