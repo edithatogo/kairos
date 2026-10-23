@@ -1629,3 +1629,15 @@ entries:
     commit_sha: ""
     pushed_ref: ""
     next_phase_decision: "Verify value and current owners"
+
+  - track_id: "105"
+    phase: "0"
+    state: pending
+    review_command: "$conductor-review"
+    review_result: "Prior candidate evidence retained; current-main acceptance pending"
+    fixes_applied: false
+    validation_commands: []
+    git_status: "planning registration"
+    commit_sha: ""
+    pushed_ref: ""
+    next_phase_decision: "Reconcile active-use inventory, exact source evidence and owners"

@@ -1,0 +1,53 @@
+{
+  "base_commit": "f149d42fb4ccd24418dfd000919ad2ccdc4a98e6",
+  "tested_staged_tree": "fbe8e3a672f19767cc8d7cf7f0601f8536618896",
+  "cwd": "/Volumes/PortableSSD/codex-worktrees/kairos-python315-conductor",
+  "runtime": "Python 3.15.1",
+  "scope": "Planning registration only; no migration acceptance. Evidence generated after the tested tree snapshot.",
+  "results": [
+    {
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_conductor_phase_gates.ps1"
+      ],
+      "exit_status": 0,
+      "output": "conductor/tracks/105-python315-runtime-qualification/registration-evidence/check-1.log",
+      "sha256": "adfb3a1b1335bcc0c11862ff3968bad10d42656554bdd2007bd29739e4d883c2"
+    },
+    {
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_conductor_dag.ps1"
+      ],
+      "exit_status": 0,
+      "output": "conductor/tracks/105-python315-runtime-qualification/registration-evidence/check-2.log",
+      "sha256": "0d80658eb0a2d24265bc2b6c7609837b2d9de362419a3eacb619b998ecd0fbf9"
+    },
+    {
+      "argv": [
+        "pwsh",
+        "-NoProfile",
+        "-File",
+        "scripts/validate_track_no_skip_claims.ps1"
+      ],
+      "exit_status": 0,
+      "output": "conductor/tracks/105-python315-runtime-qualification/registration-evidence/check-3.log",
+      "sha256": "0d8e63643660e5cfe336e943c6b09053bfe864c4b8ad70576d99cee7220a50a4"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "exit_status": 0,
+      "output": "conductor/tracks/105-python315-runtime-qualification/registration-evidence/check-4.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

@@ -1512,3 +1512,15 @@ tracks:
       - phase-closeout-check
       - dependency-value-proof
       - dependency-104-behaviour
+
+  - id: 105
+    name: Python 3.15 Runtime Migration and Qualification
+    status: Planned
+    owner: python-agent + ci-agent + dx-agent
+    depends_on: []
+    owned_paths:
+      - conductor/tracks/105-python315-runtime-qualification/
+    required_gates:
+      - phase-closeout-check
+      - toolchain-matrix-current
+      - version-drop-policy-check
