@@ -61,3 +61,7 @@ Docker creates `/work/.venv`, verifies exact Python/prefix and selects it for th
 ## Container contract correction and active inventory
 
 The static cloud validator now requires the exact digest-pinned Python 3.15.1 runtime image and local `/work/.venv` contract, instead of the obsolete bare-Alpine assertion. Negative fixtures reject an old image, missing venv creation and wrong runtime PATH. The actual cloud validator and nine focused runtime/container cases pass. Root `.venv` is ignored explicitly, and a fresh Git fixture proves guard creation leaves tracked source clean. See [cloud correction receipt](cloud-validator-evidence/receipt.json) and [active-use inventory](inventory.md). Hosted/main/platform/handover proof remains open.
+
+## Prepublication source-digest review
+
+The new-commit gitleaks scan identified one source fingerprint in the runtime receipt: the recorded SHA256 of the public secret-scan workflow. It was recomputed against its recorded Git commit and matches. Only the exact historical finding is recorded, with no rule/path-wide exception. The current receipt retains identical path/hash data as explicit records, so a future squash does not repeat the credential-like key layout. The rescanned new branch history passes; see [security receipt](prepublication-security/receipt.json). Hosted full security remains required.

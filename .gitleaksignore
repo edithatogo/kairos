@@ -2,3 +2,6 @@
 # Scope and recomputation: Track49 secret-scan-false-positive-20261004.md
 ffb788b9107ae2c9a6b0bdc2d767faebdde1ac80:conductor/tracks/49-distributed-mpi-grpc-state-synchronization/joint-interface-freeze-packet-20261004.json:generic-api-key:15
 6752ce9d3f53483a8d1e68b699047b74f4ac4528:conductor/tracks/49-distributed-mpi-grpc-state-synchronization/joint-interface-freeze-packet-20261004.json:generic-api-key:15
+
+# Verified SHA256 of the public secret-scan workflow source; exact historical receipt only.
+b8e7c9fa9a5db328ba52a4cfdc779ab4780f000e:conductor/tracks/105-python315-runtime-qualification/local-runtime-evidence/receipt.json:generic-api-key:40
