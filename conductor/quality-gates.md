@@ -625,6 +625,37 @@ closeout. Public API/checkpoint/schema compatibility and existing phase/Conducto
 checks apply in addition. Neither planning registration nor a historical Done
 label waives the consumed-capability checks in the linked track specifications.
 
+## Track 68 registered transfer gates
+
+These IDs match the authoritative registry. Their acceptance requirements derive
+from the [Track 68 specification](tracks/68-inter-unit-boundary-channels-handover-sinks/spec.md)
+and [phase test matrix](tracks/68-inter-unit-boundary-channels-handover-sinks/test-matrix.md).
+Catalogue registration does not assert runtime acceptance or replace the existing
+transit-delay, handover-parity and entity-conservation oracles above. The owner
+must bind evidence to each registered ID at the exact source revision.
+
+**boundary-channel-capacity-backpressure**: Bounded two-depot fixtures verify
+sender holds and destination admission under saturation, rejection, expiry and
+cancellation. Distinguish reserved capacity from physical occupancy; neither
+capacity nor sender resources may be released prematurely. Verify deterministic
+ordering and failure/recovery under the existing single-process scheduler.
+
+**asynchronous-handover-two-phase-commit**: Verify the versioned transfer lifecycle,
+operation identity and ownership through reservation, departure, transit,
+arrival and acknowledgement. An accepted message is not a completed transfer.
+Retries and delayed/duplicate acknowledgements must be idempotent; cancellation
+before departure and compensation after departure must preserve the specified
+resource-release points. A two-phase handover label does not prove distributed
+atomicity; real process/transport faults require separate qualification.
+
+**transfer-provenance-event-continuity**: Verify one logical effect per operation
+ID, conservation of entity identity and versioned payload/provenance across
+boundary events, duplicate/reordered delivery, horizon censoring and
+checkpoint/resume in every transit state. Reject lost/duplicated entities,
+incompatible payloads and premature origin/destination/escort release. Coordinate
+Arrow schema changes through Tracks 04/62; telemetry is not authoritative state
+and does not prove network exactly-once delivery.
+
 ## Track 70 prospective gates
 
 Runtime validators must be implemented and qualified before these gates pass; definitions: [test matrix](tracks/70-polars-native-data-processing/test-matrix.md).
@@ -739,50 +770,50 @@ Runtime evidence remains pending; [test matrix](tracks/73-petgraph-spatial-routi
 
 **dependency-value-proof**: satisfy [robustness-first policy](dependency-value-policy.md) before adoption; no-target/no-benefit/unsupported cases defer or reject. Net code/complexity includes adapters and operations. Performance and feature claims require measured evidence.
 
-### dependency-93-behaviour
+### **dependency-93-behaviour**
 
 Independent standard empty/abc/multiblock/boundary-length vectors; Python hashlib or another independent implementation; single-bit corruption, truncated/invalid digest, full-byte coverage including high tick bits; old-format rejection/version tests. Do not treat the old custom hash as a SHA-256 oracle.
 
-### dependency-94-behaviour
+### **dependency-94-behaviour**
 
 Concurrent directory creation/isolation; cleanup on normal/error paths; intentional retained diagnostics; same-filesystem publication, failure before/after persist, no-clobber and old-output preservation. End-to-end process-kill/disk-full/manifest recovery remains mandatory in Polars and is not certified by this prerequisite.
 
-### dependency-95-behaviour
+### **dependency-95-behaviour**
 
 Error variant/code/message parity and source-chain tests; FFI mappings unchanged; no sensitive fields exposed. Count net deleted boilerplate and compile-time impact; leave trivial cases if conversion adds no value.
 
-### dependency-96-behaviour
+### **dependency-96-behaviour**
 
 Mutation/negative controls show properties detect broken conservation, ordering and invalid-input rollback; seed replay and shrinking work; generated IDs include full ranges; test budgets enforced. New-format resume properties remain Track 70 acceptance responsibility.
 
-### dependency-97-behaviour
+### **dependency-97-behaviour**
 
 Named diagnostic failure becomes explainable; disabled/enabled tracing yields identical simulation outputs; bounded overhead, field redaction, correlated run/worker IDs and backpressure behaviour.
 
-### dependency-98-behaviour
+### **dependency-98-behaviour**
 
 A seeded concurrency bug is found; repaired model passes bounded interleavings; native tests agree; state-space/time budgets documented and unmodelled operations explicit.
 
-### dependency-99-behaviour
+### **dependency-99-behaviour**
 
 Valid transitions/preconditions survive shrinking; injected conservation/replay bug produces reproducible minimal sequence; compare complexity and runtime against plain proptest.
 
-### dependency-100-behaviour
+### **dependency-100-behaviour**
 
 Filtering/redaction, duplicate initialization handling, bounded logging/backpressure, stdout machine-output separation, enabled/disabled outcome equality and measured cost.
 
-### dependency-101-behaviour
+### **dependency-101-behaviour**
 
 Known injected regression is detected on a controlled host; repeated baselines, warmup/sample configuration and input hashes recorded; setup excluded appropriately, results consumed to prevent dead-code elimination, output metric/receipt parity, noise-aware thresholds. Report CPU affinity/power/toolchain where relevant; no claim that statistical significance proves user value.
 
-### dependency-102-behaviour
+### **dependency-102-behaviour**
 
 Analytical reference solutions and expected convergence order; tolerance refinement and independent reference solver; conservation/positivity without hiding error by clamping; discontinuity/event-boundary fixtures, determinism on supported targets and bounded runtime. Qualify maintenance, platform support and needed solver class before selecting a release.
 
-### dependency-103-behaviour
+### **dependency-103-behaviour**
 
 Real loopback browser/native interoperability; malformed/oversize/fragmented messages, close/ping/pong, slow-reader backpressure, reconnect/gaps, cancellation and no duplicate commands/arrivals. Explicit origin/auth/TLS boundary appropriate to deployment; no production service implied. Test renderer-off identical simulation outcomes; finite resource limits.
 
-### dependency-104-behaviour
+### **dependency-104-behaviour**
 
 Cancellation-safe connection lifecycle, bounded queues/backpressure, shutdown/reconnect, slow consumers, no lost/duplicate command effects and same protocol conformance as Track 103. Measure actual benefit over accepted simpler transport and count transitive/build cost.
