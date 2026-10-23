@@ -21,6 +21,20 @@ pub mod polars_interop;
 #[cfg(feature = "polars-native")]
 pub mod arrow_c_data;
 
+/// Track 70 Phase 3: durable run-output publication — unique run directories,
+/// bounded per-replication parts staged beside their destination and renamed
+/// into place, manifest-last publication, and readers that require a
+/// completed manifest with valid file hashes. Same Polars isolation as the
+/// other Phase 3-adjacent modules: default-off, absent from minimal-core and
+/// browser/Wasm dependency graphs.
+///
+/// Task 3.1 contract-first state: the type surface below is the reviewed
+/// contract, and every behavioral entry point fails explicitly with
+/// [`run_output::RunOutputError::NotImplementedUntilTask32`] until Task 3.2
+/// implements it. No fabricated durability behavior is exposed.
+#[cfg(feature = "polars-native")]
+pub mod run_output;
+
 pub const SCHEMA_VERSION: u16 = 1;
 pub const SCHEMA_VERSION_V2: u16 = 2;
 pub const EVENT_LOG_SCHEMA_MAJOR: u16 = 1;
