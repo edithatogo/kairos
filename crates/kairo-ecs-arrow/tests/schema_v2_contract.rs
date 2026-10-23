@@ -4,7 +4,7 @@ use kairo_ecs_arrow::*;
 fn schema_v2_field_contract_and_fingerprint() {
     let fp = event_log_v2_schema_fingerprint();
     assert!(fp.starts_with("kairo_ecs.event_log.v2;major=2;fields="));
-    
+
     let fields = EVENT_LOG_FIELDS_V2;
     assert_eq!(fields[0].name, "schema_version");
     assert_eq!(fields[1].name, "run_id");
@@ -14,7 +14,7 @@ fn schema_v2_field_contract_and_fingerprint() {
     assert_eq!(fields[5].name, "entity_id_gen");
     assert_eq!(fields[6].name, "time_ticks_hi");
     assert_eq!(fields[7].name, "time_ticks_lo");
-    
+
     assert!(fields[4].nullable);
     assert!(fields[5].nullable);
     assert!(!fields[6].nullable);
