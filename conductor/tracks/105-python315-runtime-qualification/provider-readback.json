@@ -35,5 +35,31 @@
       "Actual candidate native readback accepts actor-verified edit while retaining Codecov drift"
     ]
   },
-  "limits": "Candidate live checkout dirty/source main checks retained; not a hosted candidate check or merged-main acceptance. Managed Python graph limitation remains separate from qualified51package inventory."
+  "limits": "Candidate live checkout dirty/source main checks retained; not a hosted candidate check or merged-main acceptance. Managed Python graph limitation remains separate from qualified51package inventory.",
+  "certifiSecurityCorrection": {
+    "advisory": "GHSA-6q48-6c7w-9gw2",
+    "alerts": [
+      98,
+      99
+    ],
+    "oldVersion": "2026.7.22",
+    "patchedVersion": "2026.10.19",
+    "oldBundleCompromisedRootPresent": true,
+    "newBundleCompromisedRootPresent": false,
+    "commands": 10,
+    "allCommandExitsZero": true,
+    "qualificationReceiptSha256": "27a91eea519242f1c0357315170e9fb7a9b9bb9663c267daf2fe1fcb53efd8f5",
+    "locks": [
+      {
+        "path": "scripts/bootstrap-python-tools.lock",
+        "sha256": "5ab64221b0d3ee7369752a0e4a691703c4b75ff033d1f641f508bd3d9e7611ab"
+      },
+      {
+        "path": "scripts/package-python-tools.lock",
+        "sha256": "a2d1060bf951a545a1a58e05dfcd7c0a0c0b957c607c651092a4747345e3a122"
+      }
+    ],
+    "nativeClosure": "Pending normal protected integration and updated package-inventory/native alert readback.",
+    "isolation": "Fresh repo-local3.15.1 environments; existing consumers preserved. Hash/wheel-only installs, public TLS Requests, SSL trust store load, Build/Twine smoke passed. Only certifi record and portable generator command changed in each lock."
+  }
 }

@@ -14,6 +14,8 @@ Format:
 
 ## Unreleased
 
+- Bootstrap and packaging Python hash locks resolve patched certifi 2026.10.19, removing the compromised emSign ECC G3 trust root while preserving verified Python 3.15.1 and existing tool versions.
+
 - `bindings/typescript` and its template use patched Vitest/Vite tooling; documentation diagrams execute patched DOMPurify/KaTeX through Mermaid public-core. Publishing docs verify dependency evidence before deployment.
 - CI qualifies source-bound Python 3.15.1 tooling inventories from existing public hash locks, with separate trusted-main submission and read-only native package verification; automatic provider limitations remain explicit.
 
