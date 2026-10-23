@@ -160,7 +160,8 @@ def repack(source_data: bytes) -> bytes:
             raise RuntimeError("npm bundle layout changed: parser is no longer the expected @npmcli/query dependency")
         vulnerable_package_paths: list[str] = []
 
-        with gzip.GzipFile(fileobj=output_buffer, mode="wb", mtime=0) as gzip_output:
+        # Pin compression: Python 3.15 changed the default from 9 to 6.
+        with gzip.GzipFile(fileobj=output_buffer, mode="wb", mtime=0, compresslevel=9) as gzip_output:
             with tarfile.open(
                 fileobj=gzip_output,
                 mode="w",
