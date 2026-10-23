@@ -706,6 +706,44 @@ impl Default for KairoArrowArray {
     }
 }
 
+/// ABI-compatible mirror of the Arrow C Stream Interface struct
+/// (https://arrow.apache.org/docs/format/CStreamInterface.html),
+/// field order matching polars-arrow's `ArrowArrayStream` for consumption
+/// through the populated stream export below. Like `KairoArrowSchema`, the
+/// producer's `release` callback acts on the struct whichever mirror the
+/// consumer holds, through identical offsets.
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct KairoArrowArrayStream {
+    pub get_schema: Option<
+        unsafe extern "C" fn(
+            *mut KairoArrowArrayStream,
+            out: *mut KairoArrowSchema,
+        ) -> core::ffi::c_int,
+    >,
+    pub get_next: Option<
+        unsafe extern "C" fn(
+            *mut KairoArrowArrayStream,
+            out: *mut KairoArrowArray,
+        ) -> core::ffi::c_int,
+    >,
+    pub get_last_error: Option<unsafe extern "C" fn(*mut KairoArrowArrayStream) -> *const c_char>,
+    pub release: Option<unsafe extern "C" fn(*mut KairoArrowArrayStream)>,
+    pub private_data: *mut core::ffi::c_void,
+}
+
+impl Default for KairoArrowArrayStream {
+    fn default() -> Self {
+        Self {
+            get_schema: None,
+            get_next: None,
+            get_last_error: None,
+            release: None,
+            private_data: core::ptr::null_mut(),
+        }
+    }
+}
+
 #[cfg(not(feature = "native-data"))]
 unsafe extern "C" fn release_arrow_schema(schema: *mut KairoArrowSchema) {
     if schema.is_null() {
@@ -886,13 +924,64 @@ fn export_array_body(engine: &EngineState) -> Result<KairoArrowArray, KairoEcsSt
     })
 }
 
+/// Bridge an owned polars-arrow C Data Interface stream export to the crate's
+/// ABI-compatible `KairoArrowArrayStream` mirror.
+#[cfg(feature = "native-data")]
+fn bridge_arrow_stream(
+    stream: kairo_ecs_arrow::arrow_c_data::ArrowArrayStream,
+) -> KairoArrowArrayStream {
+    use kairo_ecs_arrow::arrow_c_data::arrow_ffi as abi;
+
+    // SAFETY: `abi::ArrowArrayStream` (polars-arrow 0.45.1) and
+    // `KairoArrowArrayStream` are `#[repr(C)]` declarations of the identical
+    // Arrow C Stream Interface struct (get_schema, get_next, get_last_error,
+    // release, private_data — same order and pointer types). The move
+    // transfers the owned callbacks and private data as-is; the callbacks act
+    // through the same offsets on whichever mirror the consumer holds.
+    unsafe { core::mem::transmute::<abi::ArrowArrayStream, KairoArrowArrayStream>(stream) }
+}
+
+/// Populate the bounded multi-batch stream export (native-data builds).
+#[cfg(feature = "native-data")]
+fn export_stream_body(
+    engine: &EngineState,
+    max_batch_rows: usize,
+) -> Result<KairoArrowArrayStream, KairoEcsStatusCode> {
+    use kairo_ecs_arrow::arrow_c_data as acd;
+
+    let records = engine_event_log_records(engine);
+    let dataframe =
+        kairo_ecs_arrow::polars_interop::records_to_dataframe(&records).map_err(|error| {
+            set_last_error(&format!("event log export failed: {error}"));
+            KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
+        })?;
+    let stream = acd::export_stream(&dataframe, max_batch_rows, None).map_err(|error| {
+        set_last_error(&format!("event log export failed: {error}"));
+        KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
+    })?;
+    Ok(bridge_arrow_stream(stream))
+}
+
+/// Explicit capability-absent stream export (default builds): the C symbol
+/// stays present for ABI stability but fails with a descriptive last error
+/// naming the feature instead of fabricating a stream.
+#[cfg(not(feature = "native-data"))]
+fn export_stream_body(
+    _engine: &EngineState,
+    _max_batch_rows: usize,
+) -> Result<KairoArrowArrayStream, KairoEcsStatusCode> {
+    set_last_error("populated Arrow C stream export requires the native-data feature");
+    Err(KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT)
+}
+
 /// Export the event log as an owned populated Arrow C Stream split into
 /// bounded batches of at most `max_batch_rows` rows.
 ///
-/// Track 70 Phase 2 (Task 2.2): Rust-level export. The C-ABI symbol and the
-/// `include/kairo_ecs.h` declaration are Task 2.3 deliverables; native
-/// consumers use this function until then. Dropping the returned stream
-/// releases it exactly once (Arrow C Stream ABI).
+/// Track 70 Phase 2 (Task 2.2): Rust-level export returning the polars-arrow
+/// stream type directly. The Task 2.3 C-ABI symbol
+/// `kairo_ecs_export_event_log_arrow_stream` wraps the same export through
+/// the crate's ABI-compatible mirror. Dropping the returned stream releases
+/// it exactly once (Arrow C Stream ABI).
 #[cfg(feature = "native-data")]
 pub fn export_event_log_arrow_stream(
     engine_handle: u64,
@@ -959,6 +1048,49 @@ pub unsafe extern "C" fn kairo_ecs_export_event_log_arrow_array(
             Err(code) => return code,
         };
         *out_array = exported;
+        KairoEcsStatusCode::KAIRO_ECS_OK
+    })
+}
+
+/// Export the current engine event log as an owned populated Arrow C Stream
+/// split into bounded batches of at most `max_batch_rows` rows.
+///
+/// Track 70 Phase 2 (Task 2.3): C-ABI surface for Task 2.2's Rust-level
+/// stream export. `max_batch_rows` must be positive (`> 0`); larger values
+/// widen the batches but never change row order. Default (non-native-data)
+/// builds keep the symbol for ABI stability and fail with
+/// `KAIRO_ECS_ERR_INVALID_ARGUMENT` and a feature-naming last error rather
+/// than fabricating a stream.
+///
+/// # Safety
+/// `engine` must be either null (which returns `KAIRO_ECS_ERR_INVALID_ARGUMENT`)
+/// or a valid, aligned pointer to a `KairoEcsEngineHandle` (`u64`) engine
+/// handle; `out_stream` must be null (same error) or a valid, writable
+/// pointer to a `KairoArrowArrayStream` struct.
+#[no_mangle]
+pub unsafe extern "C" fn kairo_ecs_export_event_log_arrow_stream(
+    engine: *mut u64,
+    max_batch_rows: i64,
+    out_stream: *mut KairoArrowArrayStream,
+) -> KairoEcsStatusCode {
+    ffi_boundary_status(|| {
+        if engine.is_null() || out_stream.is_null() {
+            set_last_error("engine and out_stream pointers must not be null");
+            return KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT;
+        }
+        if max_batch_rows <= 0 {
+            set_last_error("max_batch_rows must be positive");
+            return KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT;
+        }
+        let handle = *engine;
+        let exported = match with_engine_mut(handle, |engine| {
+            export_stream_body(engine, max_batch_rows as usize)
+        }) {
+            Ok(Ok(stream)) => stream,
+            Ok(Err(code)) => return code,
+            Err(code) => return code,
+        };
+        *out_stream = exported;
         KairoEcsStatusCode::KAIRO_ECS_OK
     })
 }
@@ -1046,6 +1178,16 @@ typedef struct KairoArrowArray {
 
 KairoEcsStatusCode kairo_ecs_export_event_log_arrow_schema(KairoArrowSchema* out_schema);
 KairoEcsStatusCode kairo_ecs_export_event_log_arrow_array(KairoEcsEngineHandle* engine, KairoArrowArray* out_array);
+
+typedef struct KairoArrowArrayStream {
+  int (*get_schema)(struct KairoArrowArrayStream* stream, KairoArrowSchema* out_schema);
+  int (*get_next)(struct KairoArrowArrayStream* stream, KairoArrowArray* out_array);
+  const char* (*get_last_error)(struct KairoArrowArrayStream* stream);
+  void (*release)(struct KairoArrowArrayStream* stream);
+  void* private_data;
+} KairoArrowArrayStream;
+
+KairoEcsStatusCode kairo_ecs_export_event_log_arrow_stream(KairoEcsEngineHandle* engine, int64_t max_batch_rows, KairoArrowArrayStream* out_stream);
 
 #ifdef __cplusplus
 }

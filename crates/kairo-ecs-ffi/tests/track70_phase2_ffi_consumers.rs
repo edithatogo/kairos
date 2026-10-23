@@ -17,10 +17,16 @@
 //! - `cargo test -p kairo-ecs-ffi --features native-data --test track70_phase2_ffi_consumers`
 
 use kairo_ecs_ffi::{
-    kairo_ecs_cancel_event, kairo_ecs_engine_free, kairo_ecs_engine_new,
-    kairo_ecs_export_event_log_arrow_array, kairo_ecs_export_event_log_arrow_schema,
-    kairo_ecs_schedule_at, kairo_ecs_step, KairoArrowArray, KairoArrowSchema, KairoEcsStatusCode,
+    kairo_ecs_engine_free, kairo_ecs_engine_new, kairo_ecs_export_event_log_arrow_array,
+    kairo_ecs_export_event_log_arrow_schema, kairo_ecs_export_event_log_arrow_stream,
+    kairo_ecs_schedule_at, kairo_ecs_step, KairoArrowArray, KairoArrowArrayStream, KairoArrowSchema,
+    KairoEcsStatusCode,
 };
+// `native-data` builds exercise cancellation through the populated mixed
+// dispatch fixture below; default builds have no populated export surface, so
+// the direct symbol import would be unused there.
+#[cfg(feature = "native-data")]
+use kairo_ecs_ffi::kairo_ecs_cancel_event;
 
 /// Explicit v2 event-log identifiers required by spec.md ("Replace alpha
 /// tabular schemas with explicit v2 identifiers").
@@ -68,6 +74,46 @@ fn exported_array_release_invoked_exactly_once_and_engine_free_stays_sound() {
     );
     // The spent exported struct must remain a plain value across engine
     // destruction; freeing the engine never dangles the released surface.
+    assert_eq!(
+        kairo_ecs_engine_free(engine_handle),
+        KairoEcsStatusCode::KAIRO_ECS_OK
+    );
+}
+
+/// The C-ABI stream symbol exists in both feature builds for ABI stability;
+/// argument validation is therefore shared: null out-pointers and
+/// non-positive batch bounds must fail with an explicit argument error
+/// instead of dispatching either a fabricated stream or a panic.
+#[test]
+fn c_stream_symbol_argument_validation_is_explicit() {
+    let mut engine_handle = dispatched_engine(1);
+
+    let mut stream = KairoArrowArrayStream::default();
+    assert_eq!(
+        unsafe {
+            kairo_ecs_export_event_log_arrow_stream(&mut engine_handle, 2, core::ptr::null_mut())
+        },
+        KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT,
+        "null out_stream must be rejected explicitly"
+    );
+    assert_eq!(
+        unsafe { kairo_ecs_export_event_log_arrow_stream(core::ptr::null_mut(), 2, &mut stream,) },
+        KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT,
+        "null engine pointer must be rejected explicitly"
+    );
+    assert_eq!(
+        unsafe { kairo_ecs_export_event_log_arrow_stream(&mut engine_handle, 0, &mut stream) },
+        KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT,
+        "zero max_batch_rows must be rejected explicitly"
+    );
+    assert_eq!(
+        unsafe { kairo_ecs_export_event_log_arrow_stream(&mut engine_handle, -1, &mut stream) },
+        KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT,
+        "negative max_batch_rows must be rejected explicitly"
+    );
+    // An explicit failure must never emit a half-initialized importable
+    // stream: the callbacks stay unset until a successful export.
+    assert!(stream.release.is_none());
     assert_eq!(
         kairo_ecs_engine_free(engine_handle),
         KairoEcsStatusCode::KAIRO_ECS_OK
@@ -161,6 +207,20 @@ mod capability_absent {
         // export exists (Task 2.2); it is also guarded on the Python consumer side
         // by bindings/python/tests/test_track70_phase2_native_handoff.py.
         panic!("nullable generational IDs must null together in populated export");
+    }
+
+    #[test]
+    #[should_panic(expected = "populated Arrow C stream export requires the native-data feature")]
+    fn event_log_stream_export_requires_native_data_feature() {
+        let mut engine_handle = dispatched_engine(1);
+        let mut stream = KairoArrowArrayStream::default();
+        let status =
+            unsafe { kairo_ecs_export_event_log_arrow_stream(&mut engine_handle, 2, &mut stream) };
+        if status != KairoEcsStatusCode::KAIRO_ECS_OK {
+            panic!("populated Arrow C stream export requires the native-data feature");
+        }
+        // Reaching this point means the capability appeared without the
+        // feature enabled; the probe keeps the default-build expectation.
     }
 }
 
@@ -541,5 +601,59 @@ mod populated_acceptance {
             );
             assert_eq!(ticks_lo.value(0), 10);
         });
+    }
+
+    #[test]
+    fn c_stream_symbol_exports_bounded_batches_for_independent_consumers() {
+        let mut engine_handle = dispatched_engine(3);
+        let mut mirror = KairoArrowArrayStream::default();
+        assert_eq!(
+            unsafe { kairo_ecs_export_event_log_arrow_stream(&mut engine_handle, 2, &mut mirror) },
+            KairoEcsStatusCode::KAIRO_ECS_OK,
+            "native-data builds must expose the populated stream through the C symbol"
+        );
+        assert!(
+            mirror.release.is_some(),
+            "export must set the stream release callback"
+        );
+
+        // SAFETY: `KairoArrowArrayStream` and `abi::ArrowArrayStream` are
+        // ABI-compatible mirror structs of the Arrow C Stream Interface
+        // (identical repr(C) field order); the move transfers the owned
+        // callbacks and private data unchanged, exactly as the array bridge.
+        let stream =
+            unsafe { core::mem::transmute::<KairoArrowArrayStream, abi::ArrowArrayStream>(mirror) };
+        // SAFETY: the stream was produced by polars-arrow's export_iterator
+        // over valid populated struct arrays through the C export symbol;
+        // try_new validates the invariants it relies on.
+        let mut reader = unsafe { abi::ArrowArrayStreamReader::try_new(Box::new(stream)) }
+            .expect("stream reader must construct through the C-ABI export");
+        assert_eq!(
+            reader.field().name.as_str(),
+            EVENT_LOG_STREAM_V2,
+            "the C-ABI stream must carry the explicit v2 schema identifier"
+        );
+
+        let mut batch_lengths = Vec::new();
+        loop {
+            // SAFETY: the reader wraps a valid C stream conformant with the
+            // Arrow C Stream Interface.
+            let next = unsafe { reader.next() };
+            let Some(result) = next else { break };
+            let batch = result.expect("stream batches must import");
+            let struct_batch = batch
+                .as_any()
+                .downcast_ref::<StructArray>()
+                .expect("stream batches must be struct arrays");
+            assert_eq!(struct_batch.values().len(), EVENT_LOG_FIELDS_V2.len());
+            batch_lengths.push(struct_batch.len());
+        }
+        // Bounded windowing holds through the C ABI; dropping the reader
+        // released the stream exactly once (ArrowArrayStreamReader::Drop).
+        assert_eq!(
+            batch_lengths,
+            vec![2, 1],
+            "3 dispatched events at max_batch_rows=2 must window into bounded batches"
+        );
     }
 }

@@ -78,6 +78,16 @@ typedef struct KairoArrowArray {
 KairoEcsStatusCode kairo_ecs_export_event_log_arrow_schema(KairoArrowSchema* out_schema);
 KairoEcsStatusCode kairo_ecs_export_event_log_arrow_array(KairoEcsEngineHandle* engine, KairoArrowArray* out_array);
 
+typedef struct KairoArrowArrayStream {
+  int (*get_schema)(struct KairoArrowArrayStream* stream, KairoArrowSchema* out_schema);
+  int (*get_next)(struct KairoArrowArrayStream* stream, KairoArrowArray* out_array);
+  const char* (*get_last_error)(struct KairoArrowArrayStream* stream);
+  void (*release)(struct KairoArrowArrayStream* stream);
+  void* private_data;
+} KairoArrowArrayStream;
+
+KairoEcsStatusCode kairo_ecs_export_event_log_arrow_stream(KairoEcsEngineHandle* engine, int64_t max_batch_rows, KairoArrowArrayStream* out_stream);
+
 #ifdef __cplusplus
 }
 #endif
