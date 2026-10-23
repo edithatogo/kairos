@@ -16,13 +16,13 @@
 //! buffers behind the interface release callback. ABI-level *imports* and
 //! struct handoffs live in `crates/kairo-ecs-ffi` (which carries the audited
 //! `allow(unsafe_code)` boundary) and consume this module's exports plus the
-//! [`arrow_ffi`] re-export; see reviewer notes in the Track 70 handoff.
+//! [`crate::arrow_c_data::arrow_ffi`] re-export; see reviewer notes in the Track 70 handoff.
 //!
 //! # Ownership and copies (documented; no universal zero-copy claim)
 //!
 //! - Exported arrays/streams own their buffers through the C Data Interface
 //!   release callback. After handoff the buffers are immutable and outlive
-//!   source [`DataFrame`] destruction and any producing engine lifetime. The
+//!   source [`polars::prelude::DataFrame`] destruction and any producing engine lifetime. The
 //!   consumer must call `release` exactly once and null the holder first.
 //! - Primitive columns convert their existing Polars chunk buffers without
 //!   per-value copies; sliced stream windows share the same chunks. Logical
@@ -44,7 +44,8 @@
 //!
 //! # Multi-batch contract
 //!
-//! [`export_stream`] and [`build_v2_stream_arrays`] window the table into
+//! [`crate::arrow_c_data::export_stream`] and
+//! [`crate::arrow_c_data::build_v2_stream_arrays`] window the table into
 //! bounded record batches of at most `max_batch_rows` rows. Empty tables
 //! produce a schema-correct zero-batch stream; batch export of an empty
 //! table produces a length-0 struct array that still carries all 14 typed
@@ -306,7 +307,7 @@ pub fn build_v2_batch_arrays(
 }
 
 /// Build the bounded stream struct arrays without placing them in the C ABI,
-/// mirroring [`export_stream`]'s windowing exactly.
+/// mirroring [`crate::arrow_c_data::export_stream`]'s windowing exactly.
 pub fn build_v2_stream_arrays(
     df: &DataFrame,
     max_batch_rows: usize,

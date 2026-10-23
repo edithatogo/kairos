@@ -1,5 +1,29 @@
 # Review Report: Track 70 Polars-native data processing and standard interchange
 
+## Phase 3 Closeout Review (24 October 2026)
+
+### Summary
+Phase 3 (Durable output and execution budgets, Tasks 3.1–3.3) is complete. The contract-first sequence worked as designed: Task 3.1 shipped the `run_output` publication contract as explicit stubs with 15 failing tests; Task 3.2 implemented it and drove the oracle green (14/14 after one recorded merge); Task 3.3 added Criterion benchmarks with receipted tradeoffs. The durability contract — unique identity-derived run directories, bounded split parts staged→fsynced→renamed, manifest-last `kairo_ecs.run_manifest.v1`, readers requiring completed manifests with per-part hash/row/sequence re-attestation, resume watermarks that neither lose nor duplicate records, explicit disk-exhaustion failure with clean retry, and a configure-once thread budget — is implemented without touching scheduler/RNG/clinical semantics (payload/control separation holds).
+
+### Verification Checks
+- [x] **Plan Compliance**: Tasks 3.1–3.3 executed in order; the Tracks 93/94/96 override for Task 3.2 was user-approved and recorded with rationale and consumer-impact assessment (no `sha2`/`tempfile`/proptest adoption; only receipted `serde`+`serde_json` behind `serde-runtime` ⊂ `polars-native`).
+- [x] **Correctness & Safety**: `run_output.rs` contains no `unsafe` (crate-level forbid holds); the winner-only `POLARS_MAX_THREADS` mutation is guarded by a `OnceLock` single-winner (documented caller ordering obligation; `PoolAlreadyInitialized` reserved); `records_to_dataframe` validates Schema v2 explicitly, so v1 records cannot silently enter publication.
+- [x] **Style Compliance**: rust/ts/r/julia guides hold; errors hand-rolled consistent with `ArrowError`; no undocumented copies.
+- [x] **Contract**: manifest carries run/replication identity, effective-input hash (raw preserved separately), seed, units, schema fingerprint, library/source versions, table paths, row counts, labeled content hashes (`kairo-fnv1a64`), and completed status; capture-side sequence monotonicity enforced; in-part canonical ordering proven by independent Parquet readback.
+- [x] **Test Results**: durability oracle 14/14 green; default lib 9; polars-native lib 16; full default arrow suites ok; clippy `-D warnings` both modes; arrow fmt clean; WASM check clean and Polars-free; benches collected twice with no significant change between runs.
+- [x] **Test-matrix alignment**: durable-trace-recovery rows (interruption before/after part and manifest publication, disk failure, no missing/duplicate rows, manifest-last, bounded capture, multiple worker counts via concurrent bench, skew/high-cardinality benches) are covered by named native test targets with exact commands recorded.
+
+### Findings
+- **Contract corrections surfaced by red→green (recorded, not regressions)**: Task 3.1's API pinned the v1 `EventLogBatch` container — corrected to `&[EventLogRecord]` (the v2 path); the two order-fragile thread-budget tests merged into one order-robust test (process-global once-guard + multi-threaded runner); latent test-6 bug (run directory never created) fixed; `RunManifest.schema` widened to `String` for serde round-trip; additive `content_hash_algorithm` field. All oracle assertions preserved; every correction receipted in handoff.md.
+- **Fixed in this closeout (cross-owner, 2-line)**: pre-existing rustfmt 1.10.0 drift in `crates/kairo-ecs-ffi/tests/track70_phase2_ffi_consumers.rs` (import re-wrap, last touched in Task 2.3 `00f523c`) blocked `cargo fmt --all --check` and therefore the full `just ci` lane. Applied as an explicit recorded cross-owner fix (pure rustfmt output, no semantic change); the ffi-claim owners are notified via this report and the handoff.
+- **Recorded, not applied**: `arrow_c_data_interface_supported = TRUE` vs `configured = FALSE` loader-flag ambiguity (Track 63/07/08, carried from Phase 2); CLI "native-data by default" (Track 66); `RunOutputError::NotImplementedUntilTask32` variant retirement deferred to the Phase 4 deletion audit (never constructed; public-API removal belongs with the deletion pass); arrow-bench wiring into hosted thresholds (Track 31/ci-agent); disk-full staging-leftover cleanup at `complete` time (spec leaves recovery to the owner; leftovers never validate — polish candidate).
+- **Sequence sentinel documented**: capture-side sequences are 1-based; watermark 0 means "nothing published" (surfaces via the resume boundary disambiguation).
+
+### Phase Disposition
+Phase 3 is **CLOSED**. Next-phase decision: advance to Phase 4 (deletion audit and CareOps handoff) pending maintainer merge of the stacked Phase 3 PRs (#296 → #298 → #299) and this closeout PR.
+
+---
+
 ## Phase 2 Closeout Review (23 October 2026)
 
 ### Summary

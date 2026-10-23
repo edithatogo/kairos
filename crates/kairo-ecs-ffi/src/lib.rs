@@ -707,7 +707,7 @@ impl Default for KairoArrowArray {
 }
 
 /// ABI-compatible mirror of the Arrow C Stream Interface struct
-/// (https://arrow.apache.org/docs/format/CStreamInterface.html),
+/// (<https://arrow.apache.org/docs/format/CStreamInterface.html>),
 /// field order matching polars-arrow's `ArrowArrayStream` for consumption
 /// through the populated stream export below. Like `KairoArrowSchema`, the
 /// producer's `release` callback acts on the struct whichever mirror the
