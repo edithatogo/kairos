@@ -22,7 +22,7 @@ Retain DES scheduling/resource arbitration, domain clinical/hazard semantics, PD
 
 ## Priority and conditionality
 
-Foundation: Serde, serde_json, TOML and Clap, then accepted rand/rand_distr and Rayon. Bounded sha2/tempfile/proptest foundations precede Polars; if Polars already removes a target, reconcile and close the redundant scope without rebuilding it. The documented 1.76 floor is stale relative to the current Kairos Cargo.toml declaration of 1.99; resolve actual manifests/CI/pins in both repositories, not by blindly raising an already higher floor.
+Foundation: Serde, serde_json, TOML and Clap, then accepted rand/rand_distr and Rayon. Polars inventory and migration-boundary decisions come first. Separate sha2/tempfile/proptest tracks gate only named migration tasks with demonstrated retained consumers or required test oracles, never the whole migration. Record the path, owner, prerequisite receipt and oracle before affected dispatch. If Polars removes every target, record a reviewed scope-elimination decision without rebuilding it or claiming adoption. The documented 1.76 floor is stale relative to the current Kairos Cargo.toml declaration of 1.99; resolve actual manifests/CI/pins in both repositories, not by blindly raising an already higher floor.
 
 Existing-subsystem work: ZIP/XML only for an active FMI consumer; assess whole rust-fmi replacement first to avoid double migration. Distributed and numerical libraries require active requirements and independent capability proof. hecs/rstar are evaluations with retain-current as a valid outcome, not mandated migrations.
 
