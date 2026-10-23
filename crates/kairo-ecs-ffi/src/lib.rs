@@ -138,12 +138,34 @@ struct EngineState {
     next_event_handle: u64,
     event_handles: HashMap<u64, ScheduledEventHandle>,
     event_handles_by_id: HashMap<EventId, u64>,
+    // Track 70 Phase 2 (Task 2.2): monotonic per-engine event-log retention
+    // feeding the populated Arrow C Data export. `next_sequence` numbers every
+    // retained record; `dispatched_log` preserves dispatch order;
+    // `cancelled_log` appends in cancellation order.
+    next_sequence: u64,
+    dispatched_log: Vec<EngineEventRecord>,
+    cancelled_log: Vec<EngineEventRecord>,
+}
+
+/// Retained event columns the FFI event log can express today (see
+/// `engine_event_log_records`): FFI scheduling carries no entity and no
+/// payload reference, so v2 entity/payload columns stay null for this
+/// producer.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct EngineEventRecord {
+    id: EventId,
+    at_ticks: u64,
+    priority: i32,
+    kind: u32,
+    sequence: u64,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 struct ScheduledEventHandle {
     id: EventId,
     at_ticks: u64,
+    priority: i32,
+    kind: u32,
 }
 
 impl EngineState {
@@ -151,7 +173,7 @@ impl EngineState {
         *self = Self::default();
     }
 
-    fn record_event(&mut self, event_id: EventId, at_ticks: u64) -> u64 {
+    fn record_event(&mut self, event_id: EventId, at_ticks: u64, priority: i32, kind: u32) -> u64 {
         let handle = self
             .next_event_handle
             .checked_add(1)
@@ -162,6 +184,8 @@ impl EngineState {
             ScheduledEventHandle {
                 id: event_id,
                 at_ticks,
+                priority,
+                kind,
             },
         );
         self.event_handles_by_id.insert(event_id, handle);
@@ -183,7 +207,7 @@ impl EngineState {
         });
         self.stats.scheduled_events += 1;
         self.stats.pending_events = self.scheduler.pending_events() as u64;
-        self.record_event(event_id, at_ticks)
+        self.record_event(event_id, at_ticks, priority, kind)
     }
 
     fn schedule_after(&mut self, after_ticks: u64, priority: i32, kind: u32) -> Option<u64> {
@@ -203,6 +227,18 @@ impl EngineState {
                 self.stats.dispatched_events += 1;
                 self.stats.now_ticks = self.scheduler.now().ticks() as u64;
                 self.stats.pending_events = self.scheduler.pending_events() as u64;
+                if let Some(handle) = self.event_handles_by_id.get(&event.id).copied() {
+                    if let Some(scheduled) = self.event_handles.get(&handle) {
+                        self.dispatched_log.push(EngineEventRecord {
+                            id: event.id,
+                            at_ticks: scheduled.at_ticks,
+                            priority: scheduled.priority,
+                            kind: scheduled.kind,
+                            sequence: self.next_sequence,
+                        });
+                        self.next_sequence += 1;
+                    }
+                }
                 self.forget_event(event.id);
             }
             StepOutcome::Empty | StepOutcome::LimitReached => {
@@ -225,6 +261,14 @@ impl EngineState {
         let cancelled = self.scheduler.cancel(scheduled.id);
         if cancelled {
             self.stats.cancelled_events += 1;
+            self.cancelled_log.push(EngineEventRecord {
+                id: scheduled.id,
+                at_ticks: scheduled.at_ticks,
+                priority: scheduled.priority,
+                kind: scheduled.kind,
+                sequence: self.next_sequence,
+            });
+            self.next_sequence += 1;
         } else {
             set_last_error("event handle not found");
         }
@@ -595,7 +639,9 @@ pub extern "C" fn kairo_ecs_buffer_free(buffer: KairoEcsBuffer) {
     })
 }
 
+#[cfg(not(feature = "native-data"))]
 const ARROW_SCHEMA_FORMAT_STRUCT: &[u8] = b"+s\0";
+#[cfg(not(feature = "native-data"))]
 const ARROW_SCHEMA_NAME_EVENT_LOG: &[u8] = b"kairo_ecs.event_log.v1\0";
 
 #[repr(C)]
@@ -660,6 +706,7 @@ impl Default for KairoArrowArray {
     }
 }
 
+#[cfg(not(feature = "native-data"))]
 unsafe extern "C" fn release_arrow_schema(schema: *mut KairoArrowSchema) {
     if schema.is_null() {
         return;
@@ -671,6 +718,7 @@ unsafe extern "C" fn release_arrow_schema(schema: *mut KairoArrowSchema) {
     (*schema).private_data = core::ptr::null_mut();
 }
 
+#[cfg(not(feature = "native-data"))]
 unsafe extern "C" fn release_arrow_array(array: *mut KairoArrowArray) {
     if array.is_null() {
         return;
@@ -687,7 +735,186 @@ unsafe extern "C" fn release_arrow_array(array: *mut KairoArrowArray) {
     (*array).private_data = core::ptr::null_mut();
 }
 
-/// Export the canonical `kairo_ecs.event_log.v1` Arrow C Data Interface schema.
+/// Track 70 Phase 2 (Task 2.2): run identifier for FFI event-log exports.
+/// Run/replication identity manifests are Phase 3 deliverables; this constant
+/// is the FFI producer's stable run label until then.
+#[cfg(feature = "native-data")]
+const FFI_RUN_ID: &str = "ffi-engine";
+
+/// Build v2 event-log records from the engine's retained log. Output order is
+/// dispatch order for dispatched records, then cancellation order for
+/// cancelled records; `sequence` is the engine's monotonic record counter
+/// (dispatch order for dispatched events, the next free value at cancellation
+/// time for cancelled ones), so it is a stable canonical sort key.
+///
+/// The FFI scheduling surface carries no entity and no payload reference, so
+/// the v2 entity and payload columns stay null for every row of this
+/// producer.
+#[cfg(feature = "native-data")]
+fn engine_event_log_records(engine: &EngineState) -> Vec<kairo_ecs_arrow::EventLogRecord> {
+    use kairo_ecs_arrow::{EventLogRecord, EventStatus, SCHEMA_VERSION_V2, TIME_SCALE_TICKS};
+
+    let mut records = Vec::with_capacity(engine.dispatched_log.len() + engine.cancelled_log.len());
+    for record in engine.dispatched_log.iter().copied() {
+        records.push(EventLogRecord {
+            schema_version: SCHEMA_VERSION_V2,
+            run_id: FFI_RUN_ID.to_string(),
+            event_id: record.id,
+            entity_id: None,
+            time_ticks: u128::from(record.at_ticks),
+            time_scale: TIME_SCALE_TICKS.to_string(),
+            priority: record.priority,
+            sequence: record.sequence,
+            event_kind: format!("custom:{}", record.kind),
+            status: EventStatus::Dispatched,
+            payload_ref: None,
+        });
+    }
+    for record in engine.cancelled_log.iter().copied() {
+        records.push(EventLogRecord {
+            schema_version: SCHEMA_VERSION_V2,
+            run_id: FFI_RUN_ID.to_string(),
+            event_id: record.id,
+            entity_id: None,
+            time_ticks: u128::from(record.at_ticks),
+            time_scale: TIME_SCALE_TICKS.to_string(),
+            priority: record.priority,
+            sequence: record.sequence,
+            event_kind: format!("custom:{}", record.kind),
+            status: EventStatus::Cancelled,
+            payload_ref: None,
+        });
+    }
+    records
+}
+
+/// Track 70 Phase 2 (Task 2.2): bridge an owned polars-arrow C Data Interface
+/// array export to the crate's ABI-compatible `KairoArrowArray` mirror.
+#[cfg(feature = "native-data")]
+fn bridge_arrow_array(
+    array: kairo_ecs_arrow::arrow_c_data::arrow_ffi::ArrowArray,
+) -> KairoArrowArray {
+    // SAFETY: `kairo_ecs_arrow::arrow_c_data::arrow_ffi::ArrowArray`
+    // (polars-arrow 0.45.1) and `KairoArrowArray` are `#[repr(C)]`
+    // declarations of the identical Arrow C Data Interface struct
+    // (length, null_count, offset, n_buffers, n_children, buffers,
+    // children, dictionary, release, private_data — same order and types,
+    // see https://arrow.apache.org/docs/format/CDataInterface.html). The move
+    // transfers the owned release callback and its private data as-is; the
+    // release callback acts through the same offsets on whichever mirror the
+    // consumer holds.
+    unsafe { core::mem::transmute(array) }
+}
+
+/// Bridge an owned polars-arrow C Data Interface schema export to the crate's
+/// ABI-compatible `KairoArrowSchema` mirror.
+#[cfg(feature = "native-data")]
+fn bridge_arrow_schema(
+    schema: kairo_ecs_arrow::arrow_c_data::arrow_ffi::ArrowSchema,
+) -> KairoArrowSchema {
+    // SAFETY: ABI-compatible mirror of the Arrow C Data Interface
+    // `ArrowSchema` struct (format, name, metadata, flags, n_children,
+    // children, dictionary, release, private_data — same order and types);
+    // ownership transfers unchanged, as with `bridge_arrow_array`.
+    unsafe { core::mem::transmute(schema) }
+}
+
+/// Populate the v2 event-log schema export (native-data builds).
+#[cfg(feature = "native-data")]
+fn export_schema_body() -> Result<KairoArrowSchema, KairoEcsStatusCode> {
+    use kairo_ecs_arrow::arrow_c_data as acd;
+
+    let field = acd::event_log_v2_arrow_field();
+    let schema = acd::arrow_ffi::export_field_to_c(&field);
+    Ok(bridge_arrow_schema(schema))
+}
+
+/// Descriptor-only schema export (default builds; explicit capability-less
+/// fallback retained until every native-data consumer enables the feature).
+#[cfg(not(feature = "native-data"))]
+fn export_schema_body() -> Result<KairoArrowSchema, KairoEcsStatusCode> {
+    Ok(KairoArrowSchema {
+        format: ARROW_SCHEMA_FORMAT_STRUCT.as_ptr().cast::<c_char>(),
+        name: ARROW_SCHEMA_NAME_EVENT_LOG.as_ptr().cast::<c_char>(),
+        metadata: core::ptr::null(),
+        flags: 0,
+        n_children: 0,
+        children: core::ptr::null_mut(),
+        dictionary: core::ptr::null_mut(),
+        release: Some(release_arrow_schema),
+        private_data: core::ptr::null_mut(),
+    })
+}
+
+/// Populate the engine event log as one owned populated array export
+/// (native-data builds). Failure shapes map to explicit status codes with a
+/// descriptive last error: arrow conversion failures are producer-side
+/// schema violations and surface as `KAIRO_ECS_ERR_INVALID_ARGUMENT`.
+#[cfg(feature = "native-data")]
+fn export_array_body(engine: &EngineState) -> Result<KairoArrowArray, KairoEcsStatusCode> {
+    use kairo_ecs_arrow::arrow_c_data as acd;
+
+    let records = engine_event_log_records(engine);
+    let dataframe =
+        kairo_ecs_arrow::polars_interop::records_to_dataframe(&records).map_err(|error| {
+            set_last_error(&format!("event log export failed: {error}"));
+            KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
+        })?;
+    let struct_array = acd::build_v2_batch_arrays(&dataframe, None).map_err(|error| {
+        set_last_error(&format!("event log export failed: {error}"));
+        KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
+    })?;
+    let exported = acd::arrow_ffi::export_array_to_c(Box::new(struct_array));
+    Ok(bridge_arrow_array(exported))
+}
+
+/// Descriptor-only array export (default builds).
+#[cfg(not(feature = "native-data"))]
+fn export_array_body(engine: &EngineState) -> Result<KairoArrowArray, KairoEcsStatusCode> {
+    let row_count = engine.stats.dispatched_events + engine.stats.cancelled_events;
+    Ok(KairoArrowArray {
+        length: row_count as i64,
+        null_count: 0,
+        offset: 0,
+        n_buffers: 1,
+        n_children: 0,
+        buffers: core::ptr::null_mut(),
+        children: core::ptr::null_mut(),
+        dictionary: core::ptr::null_mut(),
+        release: Some(release_arrow_array),
+        private_data: core::ptr::null_mut(),
+    })
+}
+
+/// Export the event log as an owned populated Arrow C Stream split into
+/// bounded batches of at most `max_batch_rows` rows.
+///
+/// Track 70 Phase 2 (Task 2.2): Rust-level export. The C-ABI symbol and the
+/// `include/kairo_ecs.h` declaration are Task 2.3 deliverables; native
+/// consumers use this function until then. Dropping the returned stream
+/// releases it exactly once (Arrow C Stream ABI).
+#[cfg(feature = "native-data")]
+pub fn export_event_log_arrow_stream(
+    engine_handle: u64,
+    max_batch_rows: usize,
+) -> Result<kairo_ecs_arrow::arrow_c_data::ArrowArrayStream, KairoEcsStatusCode> {
+    use kairo_ecs_arrow::arrow_c_data as acd;
+
+    let dataframes = with_engine_mut(engine_handle, |engine| engine_event_log_records(engine))
+        .and_then(|records| {
+            kairo_ecs_arrow::polars_interop::records_to_dataframe(&records).map_err(|error| {
+                set_last_error(&format!("event log export failed: {error}"));
+                KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
+            })
+        })?;
+    acd::export_stream(&dataframes, max_batch_rows, None).map_err(|error| {
+        set_last_error(&format!("event log export failed: {error}"));
+        KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT
+    })
+}
+
+/// Export the canonical v2 Arrow C Data Interface schema for the engine
+/// event log.
 ///
 /// # Safety
 /// `out_schema` must be either null (which returns `KAIRO_ECS_ERR_INVALID_ARGUMENT`)
@@ -701,22 +928,16 @@ pub unsafe extern "C" fn kairo_ecs_export_event_log_arrow_schema(
             set_last_error("out_schema pointer must not be null");
             return KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT;
         }
-        *out_schema = KairoArrowSchema {
-            format: ARROW_SCHEMA_FORMAT_STRUCT.as_ptr().cast::<c_char>(),
-            name: ARROW_SCHEMA_NAME_EVENT_LOG.as_ptr().cast::<c_char>(),
-            metadata: core::ptr::null(),
-            flags: 0,
-            n_children: 0,
-            children: core::ptr::null_mut(),
-            dictionary: core::ptr::null_mut(),
-            release: Some(release_arrow_schema),
-            private_data: core::ptr::null_mut(),
+        *out_schema = match export_schema_body() {
+            Ok(schema) => schema,
+            Err(code) => return code,
         };
         KairoEcsStatusCode::KAIRO_ECS_OK
     })
 }
 
-/// Export the current engine event log as an Arrow C Data Interface array descriptor.
+/// Export the current engine event log as an owned populated Arrow C Data
+/// Interface array.
 ///
 /// # Safety
 /// `engine` and `out_array` must be either null (which returns `KAIRO_ECS_ERR_INVALID_ARGUMENT`)
@@ -732,26 +953,13 @@ pub unsafe extern "C" fn kairo_ecs_export_event_log_arrow_array(
             return KairoEcsStatusCode::KAIRO_ECS_ERR_INVALID_ARGUMENT;
         }
         let handle = *engine;
-        match with_engine_mut(handle, |eng| {
-            eng.stats.dispatched_events + eng.stats.cancelled_events
-        }) {
-            Ok(row_count) => {
-                *out_array = KairoArrowArray {
-                    length: row_count as i64,
-                    null_count: 0,
-                    offset: 0,
-                    n_buffers: 1,
-                    n_children: 0,
-                    buffers: core::ptr::null_mut(),
-                    children: core::ptr::null_mut(),
-                    dictionary: core::ptr::null_mut(),
-                    release: Some(release_arrow_array),
-                    private_data: core::ptr::null_mut(),
-                };
-                KairoEcsStatusCode::KAIRO_ECS_OK
-            }
-            Err(code) => code,
-        }
+        let exported = match with_engine_mut(handle, |engine| export_array_body(engine)) {
+            Ok(Ok(array)) => array,
+            Ok(Err(code)) => return code,
+            Err(code) => return code,
+        };
+        *out_array = exported;
+        KairoEcsStatusCode::KAIRO_ECS_OK
     })
 }
 

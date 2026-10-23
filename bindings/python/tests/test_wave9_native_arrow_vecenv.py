@@ -14,7 +14,7 @@ from kairo_ecs import (
 
 def test_arrow_c_data_interface_and_duckdb_polars_spec() -> None:
     record = EventLogRecord(
-        schema_version=1,
+        schema_version=2,
         run_id="run-wave9",
         event_id=EventId(1, 0),
         entity_id=None,
