@@ -1,24 +1,22 @@
-"""Track 70 Phase 2 Task 2.1 — failing consumer fixtures for native handoff.
+"""Track 70 Phase 2 Task 2.2 — real consumer acceptance tests for the native
+handoff.
 
-Following the Phase 0/1 characterization convention (`#[should_panic]` probes
-with explicit markers in the Rust suite), these fixtures are strict ``xfail``
-while Task 2.2 has not implemented owned populated Arrow C Data export and the
-v2 native schema for the Python consumer. Baseline at ``2ba9fb9``:
+These were strict ``xfail`` characterization probes under Task 2.1 (baseline
+at ``2ba9fb9``: v1 ``FixedSizeBinary`` schema, fabricated capsule fallbacks,
+``to_pylist()`` Python-row reconstruction). Task 2.2 implements owned
+populated Arrow C Data export and the explicit v2 native schema for the
+Python consumer, so each fixture is now a behavioural acceptance test:
 
-- ``kairo_ecs._arrow`` still declares schema v1 (``FixedSizeBinary`` handles,
-  single ``time_ticks`` fixed 16-byte field) instead of the v2 generational-ID
-  and tick-limb columns.
-- ``EventLogBatch.__arrow_c_array__`` falls back to fabricated capsules
-  (``_allocate_arrow_schema_capsule``/``_allocate_arrow_array_capsule``,
-  ``+s`` struct with ``n_children == 0`` and a single null buffer pointer)
-  whenever the pyarrow path is unavailable or raises.
-- ``EventLogBatch.from_pyarrow_table`` reconstructs rows via
-  ``table.to_pylist()`` — the Python-row reconstruction detour the spec
-  forbids.
+- ``kairo_ecs._arrow`` declares schema v2 (generational-ID and tick-limb
+  columns; strings exported as LargeUtf8 for independent-reader portability).
+- ``EventLogBatch.__arrow_c_array__`` exports real populated v2 capsules and
+  raises explicitly when the native export is unavailable — the
+  fabricated-capsule fallback is removed.
+- ``EventLogBatch.from_pyarrow_table`` reads columns first (one pull per
+  column) with the null-together generational-ID contract.
 
-When Task 2.2 lands, each fixture flips to ``XPASS`` and must be converted
-into a real behavioural acceptance test. pyarrow acts as the independent
-reader per the Track 70 test matrix row ``independent-columnar-interop``.
+pyarrow acts as the independent reader per the Track 70 test matrix row
+``independent-columnar-interop``.
 """
 
 from __future__ import annotations
@@ -47,15 +45,6 @@ V2_EVENT_LOG_FIELDS = (
     ("payload_ref", "Utf8", True),
 )
 
-_XFAIL = pytest.mark.xfail(
-    reason=(
-        "Track 70 Phase 2 pending (Task 2.2): Python still receives v1 "
-        "descriptors/fabricated capsule fallbacks instead of owned populated "
-        "v2 Arrow C Data tables"
-    ),
-    strict=True,
-)
-
 
 def _dispatched_batch(run_id: str, records: int) -> "kairo_ecs.EventLogBatch":
     """Build a deterministic batch of `records` dispatched custom events."""
@@ -71,7 +60,6 @@ def _dispatched_batch(run_id: str, records: int) -> "kairo_ecs.EventLogBatch":
     return kairo_ecs.EventLogBatch(batch_records)
 
 
-@_XFAIL
 def test_arrow_c_interface_exposes_v2_native_schema_fields() -> None:
     pytest.importorskip("pyarrow", exc_type=ModuleNotFoundError)
 
@@ -85,7 +73,6 @@ def test_arrow_c_interface_exposes_v2_native_schema_fields() -> None:
     assert record_batch.num_rows == 1
 
 
-@_XFAIL
 def test_populated_export_respects_null_together_generational_ids() -> None:
     pytest.importorskip("pyarrow", exc_type=ModuleNotFoundError)
 
@@ -111,7 +98,6 @@ def test_populated_export_respects_null_together_generational_ids() -> None:
     assert entity_gen.null_count == 1
 
 
-@_XFAIL
 def test_empty_event_log_export_stays_schema_valid() -> None:
     pytest.importorskip("pyarrow", exc_type=ModuleNotFoundError)
 
@@ -125,7 +111,6 @@ def test_empty_event_log_export_stays_schema_valid() -> None:
     assert record_batch.schema.names == [field[0] for field in V2_EVENT_LOG_FIELDS]
 
 
-@_XFAIL
 def test_failed_native_export_raises_instead_of_fabricating_capsules(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

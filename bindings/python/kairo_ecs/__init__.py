@@ -3,6 +3,7 @@
 from ._arrow import (
     EVENT_LOG_FIELDS,
     EVENT_LOG_STREAM,
+    SCHEMA_VERSION,
     EventLogBatch,
     EventLogRecord,
     EventStatus,
@@ -23,6 +24,7 @@ from .vecenv import ParallelVecEnv, PettingZooParallelAdapter
 __all__ = [
     "EVENT_LOG_FIELDS",
     "EVENT_LOG_STREAM",
+    "SCHEMA_VERSION",
     "DispatchedEvent",
     "EntityId",
     "EventId",

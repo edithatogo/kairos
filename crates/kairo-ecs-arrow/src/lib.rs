@@ -14,6 +14,13 @@ pub mod native_schema;
 #[cfg(feature = "polars-native")]
 pub mod polars_interop;
 
+/// Track 70 Phase 2: owned Arrow C Data Interface exports (populated arrays
+/// and bounded multi-batch streams) for Schema v2 event logs. Same Polars
+/// isolation as `polars_interop`: default-off, absent from minimal-core and
+/// browser/Wasm dependency graphs.
+#[cfg(feature = "polars-native")]
+pub mod arrow_c_data;
+
 pub const SCHEMA_VERSION: u16 = 1;
 pub const SCHEMA_VERSION_V2: u16 = 2;
 pub const EVENT_LOG_SCHEMA_MAJOR: u16 = 1;
@@ -358,6 +365,13 @@ pub enum ArrowError {
     /// Track 62: a declared column type string has no official Arrow mapping.
     UnsupportedDataType(String),
     UnsupportedSchemaVersion(u16),
+    /// Track 70 Phase 2: a requested schema does not deep-equal the canonical
+    /// v2 export, or the data shape violates the declared contract; the call
+    /// fails explicitly instead of coercing or truncating.
+    UnsupportedSchemaNegotiation(String),
+    /// Track 70 Phase 2: a call argument is outside the documented contract
+    /// (e.g. a zero-row batch bound).
+    InvalidArgument(&'static str),
     WrongCellCount {
         expected: usize,
         actual: usize,
@@ -397,6 +411,10 @@ impl Display for ArrowError {
             Self::UnsupportedSchemaVersion(version) => {
                 write!(f, "unsupported event-log schema version: {version}")
             }
+            Self::UnsupportedSchemaNegotiation(reason) => {
+                write!(f, "unsupported schema negotiation: {reason}")
+            }
+            Self::InvalidArgument(reason) => write!(f, "invalid argument: {reason}"),
             Self::WrongCellCount { expected, actual } => {
                 write!(f, "expected {expected} cells, got {actual}")
             }

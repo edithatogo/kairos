@@ -1135,6 +1135,7 @@ dependencies = [
  "arrow-schema",
  "kairo-ecs-types",
  "polars",
+ "polars-arrow",
 ]
 
 [[package]]
@@ -1215,6 +1216,7 @@ dependencies = [
 name = "kairo-ecs-ffi"
 version = "0.1.0"
 dependencies = [
+ "kairo-ecs-arrow",
  "kairo-ecs-core",
  "kairo-ecs-rng",
  "kairo-ecs-state",
