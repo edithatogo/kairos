@@ -10,11 +10,52 @@ use std::fmt::{Display, Formatter};
 pub mod native_schema;
 
 pub const SCHEMA_VERSION: u16 = 1;
+pub const SCHEMA_VERSION_V2: u16 = 2;
 pub const EVENT_LOG_SCHEMA_MAJOR: u16 = 1;
+pub const EVENT_LOG_SCHEMA_V2_MAJOR: u16 = 2;
 pub const EVENT_LOG_STREAM: &str = "kairo_ecs.event_log.v1";
+pub const EVENT_LOG_STREAM_V2: &str = "kairo_ecs.event_log.v2";
 pub const TIME_SCALE_TICKS: &str = "ticks";
 
 const SMOKE_HEADER: &str = "schema_version\trun_id\tevent_id_hex\tentity_id_hex\ttime_ticks_le_hex\ttime_scale\tpriority\tsequence\tevent_kind\tstatus\tpayload_ref";
+
+pub const EVENT_LOG_FIELDS_V2: &[EventLogField] = &[
+    EventLogField::new("schema_version", "UInt16", false),
+    EventLogField::new("run_id", "Utf8", false),
+    EventLogField::new("event_id_index", "UInt64", false),
+    EventLogField::new("event_id_gen", "UInt32", false),
+    EventLogField::new("entity_id_index", "UInt64", true),
+    EventLogField::new("entity_id_gen", "UInt32", true),
+    EventLogField::new("time_ticks_hi", "UInt64", false),
+    EventLogField::new("time_ticks_lo", "UInt64", false),
+    EventLogField::new("time_scale", "Utf8", false),
+    EventLogField::new("priority", "Int32", false),
+    EventLogField::new("sequence", "UInt64", false),
+    EventLogField::new("event_kind", "Utf8", false),
+    EventLogField::new("status", "Utf8", false),
+    EventLogField::new("payload_ref", "Utf8", true),
+];
+
+pub fn event_log_v2_schema_fingerprint() -> String {
+    let fields = EVENT_LOG_FIELDS_V2
+        .iter()
+        .map(|field| {
+            format!(
+                "{}:{}:{}",
+                field.name,
+                field.data_type,
+                if field.nullable {
+                    "nullable"
+                } else {
+                    "required"
+                }
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("|");
+
+    format!("{EVENT_LOG_STREAM_V2};major={EVENT_LOG_SCHEMA_V2_MAJOR};fields={fields}")
+}
 
 pub const EVENT_LOG_FIELDS: &[EventLogField] = &[
     EventLogField::new("schema_version", "UInt16", false),
