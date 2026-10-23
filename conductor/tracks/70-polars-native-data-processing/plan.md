@@ -21,7 +21,7 @@ Phase 0 and Phase 1 are complete. Phase 2 Task 2.1 failing consumer tests/fixtur
 
 - [x] Task 2.1: Add failing populated multi-batch/empty/null/lifetime/release tests and affected binding consumer fixtures.
 - [x] Task 2.2: Implement owned Arrow C Data arrays/streams and native Python-to-Polars handoff; remove dummy capsules and Python-row reconstruction. (23 October 2026: safe-only `kairo-ecs-arrow::arrow_c_data` export path, FFI populated/empty/null/mixed/stream acceptance under `native-data`, v2 Python columnar binding, 4 xfail fixtures converted; receipts in handoff.md. C-ABI symbol/header additions remain Task 2.3.)
-- [ ] Task 2.3: Update C headers, public data API users, all affected native bindings and browser/minimal-build paths; document actual copies and unsupported targets explicitly.
+- [x] Task 2.3: Update C headers, public data API users, all affected native bindings and browser/minimal-build paths; document actual copies and unsupported targets explicitly. (23 October 2026: `KairoArrowArrayStream` header type + `kairo_ecs_export_event_log_arrow_stream` C-ABI symbol with dual-mode explicit failure semantics; TypeScript, R (reachable v1 surface found during execution), and Julia facades migrated to Schema v2; per-binding copies/unsupported-targets documented in `bindings/README.md` and binding READMEs; receipts in handoff.md. The "native data CLIs enable native-data by default" spec clause is deferred with a Track 66 handoff note — no native-data CLI consumer exists yet.)
 - [ ] Task 2.4: Conductor — review and verify phase (workflow.md); apply accepted fixes, record rejected/cross-owner work, receipts, clean-tree check and explicit next-phase decision.
 
 ## Phase 3 — Durable output and execution budgets

@@ -24,13 +24,17 @@ describe("binding surface", () => {
 
     expect(PACKAGE_NAME).toBe("@kairo-ecs/typescript");
     expect(BINDING_KIND).toBe("typescript-wasm");
-    expect(EVENT_LOG_SCHEMA_VERSION).toBe(1);
+    expect(EVENT_LOG_SCHEMA_NAME).toBe("kairo_ecs.event_log.v2");
+    expect(EVENT_LOG_SCHEMA_VERSION).toBe(2);
     expect(EVENT_LOG_FIELDS.map(([name, dataType, nullable]) => [name, dataType, nullable])).toEqual([
       ["schema_version", "UInt16", false],
       ["run_id", "Utf8", false],
-      ["event_id", "FixedSizeBinary(12)", false],
-      ["entity_id", "FixedSizeBinary(12)", true],
-      ["time_ticks", "FixedSizeBinary(16)", false],
+      ["event_id_index", "UInt64", false],
+      ["event_id_gen", "UInt32", false],
+      ["entity_id_index", "UInt64", true],
+      ["entity_id_gen", "UInt32", true],
+      ["time_ticks_hi", "UInt64", false],
+      ["time_ticks_lo", "UInt64", false],
       ["time_scale", "Utf8", false],
       ["priority", "Int32", false],
       ["sequence", "UInt64", false],
@@ -71,15 +75,69 @@ describe("scheduler facade", () => {
     expect(eventLog.schema).toBe(EVENT_LOG_SCHEMA_NAME);
     expect(eventLog.schemaVersion).toBe(EVENT_LOG_SCHEMA_VERSION);
     expect(eventLog.fields).toEqual(EVENT_LOG_FIELDS);
-    expect(eventLog.rows.map((row) => [row.schemaVersion, row.eventKind, row.timeTicks, row.timeTicksLeHex, row.status])).toEqual([
-      [1, "first", "5", "05000000000000000000000000000000", "dispatched"],
-      [1, "cancelled", "7", "07000000000000000000000000000000", "cancelled"],
-      [1, "priority", "10", "0a000000000000000000000000000000", "dispatched"],
-      [1, "late", "10", "0a000000000000000000000000000000", "dispatched"],
-      [1, "sequence", "10", "0a000000000000000000000000000000", "dispatched"],
+    expect(
+      eventLog.rows.map((row) => [
+        row.schemaVersion,
+        row.eventKind,
+        row.timeTicksHi,
+        row.timeTicksLo,
+        row.eventIdIndex,
+        row.eventIdGen,
+        row.status,
+      ]),
+    ).toEqual([
+      [2, "first", "0", "5", "3", 0, "dispatched"],
+      [2, "cancelled", "0", "7", "2", 0, "cancelled"],
+      [2, "priority", "0", "10", "4", 0, "dispatched"],
+      [2, "late", "0", "10", "1", 0, "dispatched"],
+      [2, "sequence", "0", "10", "5", 0, "dispatched"],
     ]);
-    expect(eventLog.rows[0]?.eventIdHex.length).toBe(24);
+    // Null-together generational entity columns: the seeded events carry no
+    // entity, so both generation columns are null for every row.
+    expect(
+      eventLog.rows.map((row) => [row.entityIdIndex, row.entityIdGen]),
+    ).toEqual(eventLog.rows.map(() => [null, null]));
+    // Facade-local single-generation handles are projected explicitly (see
+    // README); the interchange keeps precision-safe decimal strings for u64.
+    expect(
+      eventLog.rows.every((row) => row.eventIdGen === 0 && /^\d+$/.test(row.eventIdIndex)),
+    ).toBe(true);
     expect(scheduler.cancel(dispatched[0]?.eventId ?? 0n)).toBe(false);
+    expect(roundTripArrowEventLog(eventLog)).toEqual(eventLog);
+  });
+
+  it("preserves full-range ticks in hi/lo limbs and nulls entity together", () => {
+    const scheduler = createSchedulerFacade();
+    const maxLimb = 2n ** 64n - 1n;
+    scheduler.scheduleAt({
+      timeTicks: (1n << 64n) + 42n,
+      entityId: 7n,
+      eventKind: "limb",
+    });
+    scheduler.scheduleAt({
+      timeTicks: maxLimb,
+      eventKind: "max-limb",
+    });
+
+    scheduler.runFor(2);
+    const eventLog = scheduler.eventLog("run-limbs");
+    // Rows are dispatch-ordered by (timeTicks, priority, sequence), so the
+    // max-limb event (2^64-1) dispatches before the limb event (2^64+42).
+    const [maxRow, limbRow] = eventLog.rows;
+
+    expect(limbRow?.timeTicksHi).toBe("1");
+    expect(limbRow?.timeTicksLo).toBe("42");
+    expect(limbRow?.entityIdIndex).toBe("7");
+    expect(limbRow?.entityIdGen).toBe(0);
+
+    // 2^64-1 splits into hi limb 0 and lo limb 2^64-1 (full u128 range is
+    // preserved across the hi/lo pair, lexicographically ordered).
+    expect(maxRow?.timeTicksHi).toBe("0");
+    expect(maxRow?.timeTicksLo).toBe("18446744073709551615");
+    // Null-together: the entity-less row leaves both columns null together.
+    expect(maxRow?.entityIdIndex).toBeNull();
+    expect(maxRow?.entityIdGen).toBeNull();
+
     expect(roundTripArrowEventLog(eventLog)).toEqual(eventLog);
   });
 
@@ -120,7 +178,7 @@ describe("scheduler facade", () => {
     expect(() =>
       roundTripArrowEventLog({
         schema: EVENT_LOG_SCHEMA_NAME,
-        schemaVersion: 2 as typeof EVENT_LOG_SCHEMA_VERSION,
+        schemaVersion: 1 as typeof EVENT_LOG_SCHEMA_VERSION,
         fields: EVENT_LOG_FIELDS,
         rows: [],
       }),
