@@ -1246,9 +1246,42 @@ impl ComponentRegistry {
         let Some(store) = self.store_mut::<C>() else {
             return;
         };
-        for ((entity, a), (_, b)) in staged_a.into_iter().zip(staged_b) {
-            if let Some(c) = store.get_mut(entity) {
-                visit(entity, &a, &b, c);
+        let mut it_a = staged_a.into_iter().peekable();
+        let mut it_b = staged_b.into_iter().peekable();
+
+        for &entity in &plan.entities {
+            // Discard any staged elements preceding the current entity
+            while let Some((e, _)) = it_a.peek() {
+                if *e < entity {
+                    it_a.next();
+                } else {
+                    break;
+                }
+            }
+            while let Some((e, _)) = it_b.peek() {
+                if *e < entity {
+                    it_b.next();
+                } else {
+                    break;
+                }
+            }
+
+            let has_a = it_a.peek().map(|(e, _)| *e == entity).unwrap_or(false);
+            let has_b = it_b.peek().map(|(e, _)| *e == entity).unwrap_or(false);
+
+            if has_a && has_b {
+                let (_, a) = it_a.next().unwrap();
+                let (_, b) = it_b.next().unwrap();
+                if let Some(c) = store.get_mut(entity) {
+                    visit(entity, &a, &b, c);
+                }
+            } else {
+                if has_a {
+                    it_a.next();
+                }
+                if has_b {
+                    it_b.next();
+                }
             }
         }
     }
@@ -1268,9 +1301,54 @@ impl ComponentRegistry {
         let Some(store) = self.store_mut::<D>() else {
             return;
         };
-        for (((entity, a), (_, b)), (_, c)) in staged_a.into_iter().zip(staged_b).zip(staged_c) {
-            if let Some(d) = store.get_mut(entity) {
-                visit(entity, &a, &b, &c, d);
+        let mut it_a = staged_a.into_iter().peekable();
+        let mut it_b = staged_b.into_iter().peekable();
+        let mut it_c = staged_c.into_iter().peekable();
+
+        for &entity in &plan.entities {
+            while let Some((e, _)) = it_a.peek() {
+                if *e < entity {
+                    it_a.next();
+                } else {
+                    break;
+                }
+            }
+            while let Some((e, _)) = it_b.peek() {
+                if *e < entity {
+                    it_b.next();
+                } else {
+                    break;
+                }
+            }
+            while let Some((e, _)) = it_c.peek() {
+                if *e < entity {
+                    it_c.next();
+                } else {
+                    break;
+                }
+            }
+
+            let has_a = it_a.peek().map(|(e, _)| *e == entity).unwrap_or(false);
+            let has_b = it_b.peek().map(|(e, _)| *e == entity).unwrap_or(false);
+            let has_c = it_c.peek().map(|(e, _)| *e == entity).unwrap_or(false);
+
+            if has_a && has_b && has_c {
+                let (_, a) = it_a.next().unwrap();
+                let (_, b) = it_b.next().unwrap();
+                let (_, c) = it_c.next().unwrap();
+                if let Some(d) = store.get_mut(entity) {
+                    visit(entity, &a, &b, &c, d);
+                }
+            } else {
+                if has_a {
+                    it_a.next();
+                }
+                if has_b {
+                    it_b.next();
+                }
+                if has_c {
+                    it_c.next();
+                }
             }
         }
     }
